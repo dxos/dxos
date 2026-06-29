@@ -64,6 +64,8 @@ const holdingTerm = (acquired: string | undefined, sold: string | undefined): 'l
  */
 export const ReportSections = ({ positions, trades, cash, openLots, closedLots }: ReportSectionsProps) => {
   const { t } = useTranslation(meta.profile.key);
+
+  // TODO(dmaretskyi): Use react-ui-table.
   return (
     <>
       <h2 className={HEADING}>{t('positions.heading', { count: positions.length })}</h2>

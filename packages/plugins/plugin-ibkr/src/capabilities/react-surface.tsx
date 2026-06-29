@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { PortfolioArticle, PortfolioProperties, PortfolioReportDetail } from '#containers';
+import { PortfolioArticle, PortfolioProperties, PortfolioReportDetail, InstrumentArticle, InstrumentCard } from '#containers';
 
 import { Ibkr } from '../types';
 
@@ -40,6 +40,18 @@ export default Capability.makeModule(() =>
           AppSurface.companion(AppSurface.Article, Ibkr.Portfolio),
         ),
         component: ({ data, role }) => <PortfolioReportDetail role={role} subject={data.subject} />,
+      }),
+      Surface.create({
+        id: 'instrumentArticle',
+        filter: AppSurface.object(AppSurface.Article, Ibkr.Instrument),
+        component: ({ data, role }) => (
+          <InstrumentArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
+      }),
+      Surface.create({
+        id: 'instrumentCard',
+        filter: AppSurface.object(AppSurface.CardContent, Ibkr.Instrument),
+        component: ({ data, role }) => <InstrumentCard role={role} subject={data.subject} />,
       }),
     ]),
   ),
