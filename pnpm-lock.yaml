@@ -150,6 +150,9 @@ catalogs:
     '@dnd-kit/utilities':
       specifier: ^3.2.0
       version: 3.2.0
+    '@dxos/ui-types':
+      specifier: ^0.9.0
+      version: 0.9.0
     '@dxos/wa-sqlite':
       specifier: ^0.2.1
       version: 0.2.1
@@ -13300,6 +13303,9 @@ importers:
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../../ui/ui-editor
+      '@dxos/ui-types':
+        specifier: 'catalog:'
+        version: 0.9.0
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -25688,6 +25694,9 @@ packages:
     resolution: {integrity: sha512-h65/pn2IPCCIWwdlR2BMLqRkDxpTEONA+HQW3n765HBijLYGyrnTCLa2YQt8VVjjSQD6EfFlTE6aS2Q/b6nb2g==}
     peerDependencies:
       react: ~19.2.7
+
+  '@dxos/ui-types@0.9.0':
+    resolution: {integrity: sha512-gRDfMBnD7WHCJml15O26MJ6roYfUZBTv29GYcWjsLeKbIU1/bY3yOD0GTdT2FLMVkzIVyFS98IEUZsKNIhy5nQ==}
 
   '@dxos/wa-sqlite@0.2.1':
     resolution: {integrity: sha512-RVktTCzwJ1ix1MP/LWDjpO1HOOP0JpnAtjB/Zp/csbrlBEhhYYpwIlgDJzCi1Ri4cWHOo04iy+YtlnjfshM1Zw==}
@@ -48364,6 +48373,10 @@ snapshots:
     dependencies:
       react: 19.2.7
       tslib: 2.8.1
+
+  '@dxos/ui-types@0.9.0':
+    dependencies:
+      i18next: 21.10.0
 
   '@dxos/wa-sqlite@0.2.1': {}
 
