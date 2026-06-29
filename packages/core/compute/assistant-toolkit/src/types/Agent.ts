@@ -119,9 +119,10 @@ export const makeInitialized = (
   skill: Skill.Skill,
 ): Effect.Effect<Agent, never, Database.Service> =>
   Effect.gen(function* () {
+    const { skills: propsSkills, contextObjects, ...agentProps } = props;
     const agent = yield* Database.add(
       Obj.make(Agent, {
-        ...props,
+        ...agentProps,
         instructions: Ref.make(Text.make({ content: props.instructions })),
         artifacts: props.artifacts ?? [],
         subscriptions: props.subscriptions ?? [],
@@ -144,8 +145,8 @@ export const makeInitialized = (
     Obj.setParent(feed, chat);
     yield* Effect.promise(() =>
       contextBinder.bind({
-        skills: [Ref.make(agentSkill), ...(props.skills ?? [])],
-        objects: [Ref.make(agent), Ref.make(chat), ...(props.contextObjects ?? [])],
+        skills: [Ref.make(agentSkill), ...(propsSkills ?? [])],
+        objects: [Ref.make(agent), Ref.make(chat), ...(contextObjects ?? [])],
       }),
     );
     yield* Database.add(
