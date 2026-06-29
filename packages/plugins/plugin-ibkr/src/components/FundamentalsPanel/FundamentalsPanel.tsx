@@ -35,7 +35,7 @@ const hasMetrics = (snapshot?: Ibkr.FundamentalsSnapshot): boolean =>
 /** Humanize an XBRL concept name for display, e.g. `StockholdersEquity` → `Stockholders Equity`. */
 const formatConceptLabel = (concept: string): string => concept.replace(/([A-Z])/g, ' $1').trim();
 
-// TOD
+// TODO(dmaretskyi): promote currency and percentage as core form formats.
 const formatFundamentalValue = (
   format: Format.TypeFormat | undefined,
   jsonPath: string | undefined,
