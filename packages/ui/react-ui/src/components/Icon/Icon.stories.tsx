@@ -86,6 +86,9 @@ export const Custom_DXOS: Story = {
  * Custom DXOS brand icons (the `dx--` set), sourced from `@dxos/brand` SVGs.
  */
 export const Brand: Story = {
+  args: {
+    icon: 'dx--dxos--regular',
+  },
   render: () => (
     <div className='flex gap-8'>
       {(['dxos', 'echo', 'halo', 'mesh', 'dxns', 'kube'] as const).map((name) => (
