@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Provider } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
+import { EffectEx } from '@dxos/effect';
 
 import { type Assistant, AssistantCapabilities, type ChatPresetProps, Ollama } from '#types';
 
@@ -32,6 +33,16 @@ export const usePresets = (settings: Assistant.Settings): UsePresets => {
 
   // Installed models reported by the bundled sidecar; used to offer only models actually present.
   const localModels = useAtomValue(ollamaManager?.state ?? Ollama.emptyState);
+
+  // When the bundled sidecar is the active provider, list installed models in the background so the
+  // chat selector is populated without first opening settings. Idempotent: kicks off only from the
+  // idle state, so it spawns the sidecar once when local models are in use (not on every launch);
+  // settings remains the explicit path for retrying after a failure.
+  useEffect(() => {
+    if (provider === Provider.builtIn.id && ollamaManager && localModels.kind === 'idle') {
+      void EffectEx.runPromise(ollamaManager.refresh);
+    }
+  }, [provider, ollamaManager, localModels.kind]);
 
   // Probe the external LM Studio server only when that provider is selected on desktop.
   const lmStudioProbeUrl =
