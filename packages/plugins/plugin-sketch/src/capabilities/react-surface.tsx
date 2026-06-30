@@ -23,9 +23,17 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Section, Sketch.Sketch),
           AppSurface.object(AppSurface.Slide, Sketch.Sketch),
         ),
-        component: ({ data: { subject, attendableId }, role }) => {
+        component: ({ data: { subject, attendableId, extrinsic }, role }) => {
           const settings = useAtomCapability(SketchCapabilities.Settings);
-          return <SketchArticle role={role} attendableId={attendableId} subject={subject} settings={settings} />;
+          return (
+            <SketchArticle
+              role={role}
+              attendableId={attendableId}
+              subject={subject}
+              settings={settings}
+              extrinsic={extrinsic}
+            />
+          );
         },
       }),
       Surface.create({

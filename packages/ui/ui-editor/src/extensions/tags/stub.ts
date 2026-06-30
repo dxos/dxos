@@ -13,6 +13,13 @@ import { type XmlWidgetProps, type XmlWidgetState } from './xml-tags';
 export interface XmlWidgetNotifier {
   mounted(widget: XmlWidgetState): void;
   unmounted(id: string): void;
+  /**
+   * Drop any mounted widgets whose id is not in `liveIds`. Needed because CM reuses a widget's DOM
+   * via `updateDOM` (without calling `destroy`) when a decoration's widget changes in place, so an
+   * id that is no longer present — e.g. a position-keyed id after an edit shifted the node — would
+   * otherwise leak a stale portal.
+   */
+  reconcile(liveIds: Set<string>): void;
 }
 
 /**
