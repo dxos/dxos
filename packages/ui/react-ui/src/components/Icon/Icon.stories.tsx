@@ -75,6 +75,13 @@ export const Static: Story = {
   },
 };
 
+export const Custom_DXOS: Story = {
+  args: {
+    icon: 'dx--dxos--regular',
+    classNames: getSize(16),
+  },
+};
+
 export const Dynamic: Story = {
   args: {
     icon: 'ph--github-logo--regular',
