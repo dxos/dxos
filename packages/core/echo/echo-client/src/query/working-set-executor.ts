@@ -7,8 +7,8 @@ import { filterMatchDoc, filterMatchObjectJSON } from '@dxos/echo-host/filter';
 import { type QueryPlan } from '@dxos/echo-host/query';
 import {
   EncodedReference,
-  EntityStructure,
   type EntityPropPath,
+  EntityStructure,
   type QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';

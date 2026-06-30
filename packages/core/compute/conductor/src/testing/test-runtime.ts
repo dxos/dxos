@@ -10,9 +10,9 @@ import { type URI } from '@dxos/keys';
 
 import { GraphExecutor } from '../compiler';
 import {
-  ComputeNodeContext,
   type ComputeGraphModel,
   type ComputeNode,
+  ComputeNodeContext,
   type ComputeRequirements,
   type ConductorError,
   type Executable,

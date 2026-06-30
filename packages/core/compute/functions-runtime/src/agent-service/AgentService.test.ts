@@ -16,7 +16,7 @@ import { expect } from 'vitest';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { PartialBlock, SessionLink } from '@dxos/assistant';
-import { Skill, Operation, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
+import { Operation, OperationHandlerSet, Process, ServiceResolver, Skill, Trace } from '@dxos/compute';
 import { getSession, hydrate } from '@dxos/compute/AgentService';
 import { Annotation, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -153,7 +153,7 @@ describe('Agent Service', () => {
         yield* agent.submitPrompt('What is the capital of France?');
         yield* agent.waitForCompletion();
 
-        const messages = yield* Feed.runQuery(agent.feed, Filter.type(Message.Message));
+        const messages = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('paris');
       },
@@ -258,7 +258,7 @@ describe('Agent Service', () => {
         agent = yield* getSession(agent.feed);
         yield* agent.waitForCompletion();
 
-        const messages = yield* Feed.runQuery(agent.feed, Filter.type(Message.Message));
+        const messages = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('cyberdyne');
       },
@@ -288,7 +288,7 @@ describe('Agent Service', () => {
         yield* agent.submitPrompt('What country did I just ask you about? Reply with just the country name.');
         yield* agent.waitForCompletion();
 
-        const messages = yield* Feed.runQuery(agent.feed, Filter.type(Message.Message));
+        const messages = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('paris');
         expect(text.toLocaleLowerCase()).toContain('france');
@@ -408,7 +408,7 @@ describe('Agent Service', () => {
         yield* source.waitForCompletion();
 
         // Branch point: the last message of the source conversation.
-        const sourceMessages = (yield* Feed.runQuery(source.feed, Filter.type(Message.Message))).filter(
+        const sourceMessages = (yield* Feed.query(source.feed, Filter.type(Message.Message)).run).filter(
           Obj.instanceOf(Message.Message),
         );
         const lastMessage = sourceMessages.sort((a, b) => a.created.localeCompare(b.created)).at(-1);
@@ -430,7 +430,7 @@ describe('Agent Service', () => {
         yield* fork.submitPrompt('What country did I just ask you about? Reply with just the country name.');
         yield* fork.waitForCompletion();
 
-        const forkText = (yield* Feed.runQuery(fork.feed, Filter.type(Message.Message)))
+        const forkText = (yield* Feed.query(fork.feed, Filter.type(Message.Message)).run)
           .filter(Obj.instanceOf(Message.Message))
           .map(Message.extractText)
           .join('\n');
@@ -474,7 +474,7 @@ describe('Agent Service', () => {
         const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
         expect(processes.some((process) => String(process.pid) !== firstPid)).toBe(true);
 
-        const messages = yield* Feed.runQuery(agent.feed, Filter.type(Message.Message));
+        const messages = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('france');
       },

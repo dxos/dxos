@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type HierarchyPointNode, hierarchy, linkHorizontal, tree as d3Tree } from 'd3';
+import { type HierarchyPointNode, tree as d3Tree, hierarchy, linkHorizontal } from 'd3';
 
 import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';

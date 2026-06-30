@@ -1,0 +1,17 @@
+layer: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - pack
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/testing/index.ts'
+      - '--platform=neutral'
+  demo:
+    command: 'pnpm exec vitest run src/Demo.test.ts'
+    options:
+      runInCI: false
+      cache: false

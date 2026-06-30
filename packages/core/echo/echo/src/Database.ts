@@ -6,9 +6,7 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Effectable from 'effect/Effectable';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { EffectEx } from '@dxos/effect';
@@ -24,6 +22,7 @@ import { type AnyProperties, EntityKind, KindId } from './internal/common/types'
 // Deep import (not the `./internal/Entity` barrel) to avoid a cycle:
 // Database → internal/Entity → entity → JsonSchema → Ref → Database.
 import { isInstanceOf } from './internal/Entity/type-uri';
+import * as queryInternal from './internal/Query';
 import type { Ref } from './internal/Ref/ref';
 import type * as Obj from './Obj';
 import type * as Query from './Query';
@@ -376,22 +375,5 @@ export const query: {
   Service.pipe(
     Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<any>),
     Effect.withSpan('Database.query'),
-    makeQueryResultEffect,
+    queryInternal.makeQueryResultEffect,
   );
-
-const makeQueryResultEffect = <T>(
-  eff: Effect.Effect<QueryResult.QueryResult<T>, never, Service>,
-): QueryResult.QueryResultEffect<T, never, Service> => {
-  return {
-    run: Effect.flatMap(eff, (result) => EffectEx.promiseWithCauseCapture(() => result.run())),
-    first: Effect.flatMap(eff, (result) =>
-      EffectEx.promiseWithCauseCapture(async () => Option.fromNullable(await result.firstOrUndefined())),
-    ),
-
-    // Effect internals
-    ...Effectable.CommitPrototype,
-    commit() {
-      return eff;
-    },
-  } as any;
-};

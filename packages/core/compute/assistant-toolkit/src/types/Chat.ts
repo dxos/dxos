@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Harness } from '@dxos/assistant';
-import { DXN, Annotation, Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 
@@ -29,7 +29,13 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      * Created lazily when the first task is recorded.
      */
     plan: Schema.optional(Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false))),
-  }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--sparkle--regular', hue: 'amber' })),
+  }).pipe(
+    LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({
+      icon: 'ph--sparkle--regular',
+      hue: 'amber',
+    }),
+  ),
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof Chat>) => Obj.make(Chat, props);

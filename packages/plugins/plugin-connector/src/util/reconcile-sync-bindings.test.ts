@@ -17,13 +17,13 @@ import { Expando } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
 import {
-  type ConnectorEntry,
   Connection,
+  type ConnectorEntry,
   MaterializeTargetInput,
   MaterializeTargetOutput,
   SyncBinding,
 } from '../types';
-import { reconcileSyncBindings, type SyncTargetSelection } from './reconcile-sync-bindings';
+import { type SyncTargetSelection, reconcileSyncBindings } from './reconcile-sync-bindings';
 
 describe('reconcileSyncBindings', () => {
   let builder: EchoTestBuilder;

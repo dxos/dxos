@@ -19,7 +19,7 @@ import { trim } from '@dxos/util';
 import { translations } from '#translations';
 
 import { Editor, type EditorViewProps } from '../components';
-import { assistant, type AssistantOptions } from './assistant-extension';
+import { type AssistantOptions, assistant } from './assistant-extension';
 
 // TODO(burdon): Factor out.
 const useTestGenerate = () => {
@@ -27,7 +27,7 @@ const useTestGenerate = () => {
   useEffect(() => {
     let disposed = false;
     const rt = ManagedRuntime.make(
-      AiService.model('ai.claude.model.claude-haiku-4-5').pipe(
+      AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
         Layer.provide(AiServiceTestingPreset('edge-remote')),
         Layer.orDie,
       ),

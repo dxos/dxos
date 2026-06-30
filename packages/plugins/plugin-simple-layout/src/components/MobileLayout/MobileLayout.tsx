@@ -120,7 +120,7 @@ export const MobileLayout = {
 
 export { useMobileLayout };
 
-export type { MobileLayoutRootProps, MobileLayoutPanelProps };
+export type { MobileLayoutPanelProps, MobileLayoutRootProps };
 
 /**
  * Prevents iOS (WKWebView) from shifting the layout when the keyboard appears.

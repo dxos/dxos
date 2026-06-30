@@ -2,13 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import { useEffect, useMemo } from 'react';
 
 import { type Space } from '@dxos/client/echo';
-import { Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
 import { random } from '@dxos/random';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -86,35 +83,3 @@ export class MessageBuilder extends AbstractMessageBuilder {
     return this.start;
   }
 }
-
-type UseTestTranscriptionQueue = (
-  space: Space | undefined,
-  running?: boolean,
-  interval?: number,
-) => Feed.Feed | undefined;
-
-/**
- * Test transcription feed.
- */
-export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
-  space: Space | undefined,
-  running = true,
-  interval = 1_000,
-) => {
-  const feed = useMemo(() => (space ? space.db.add(Feed.make({ name: 'transcription' })) : undefined), [space]);
-  const builder = useMemo(() => new MessageBuilder(space), [space]);
-
-  useEffect(() => {
-    if (!space || !feed || !running) {
-      return;
-    }
-    const i = setInterval(() => {
-      void builder.createMessage(Math.ceil(Math.random() * 3)).then(async (message) => {
-        await Feed.append(feed, [message]).pipe(Effect.provide(Database.layer(space.db)), EffectEx.runAndForwardErrors);
-      });
-    }, interval);
-    return () => clearInterval(i);
-  }, [space, feed, running, interval]);
-
-  return feed;
-};

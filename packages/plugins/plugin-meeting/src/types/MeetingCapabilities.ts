@@ -7,7 +7,7 @@
 import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
-import { type TranscriptionManager } from '@dxos/plugin-transcription';
+import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
 
 import { meta } from '#meta';
 
@@ -19,7 +19,7 @@ export const Settings = Capability.make<Atom.Writable<SettingsType.Settings>>(
 
 export type MeetingState = {
   activeMeeting?: Meeting.Meeting;
-  transcriptionManager?: TranscriptionManager;
+  transcriptionManager?: TranscriptionCapabilities.TranscriptionManager;
 };
 
 export type MeetingStateStore = {

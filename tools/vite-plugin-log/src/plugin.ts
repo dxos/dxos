@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { RolldownMagicString, type Plugin as RolldownPlugin } from 'rolldown';
-import { parseSync, type ConfigEnv, type IndexHtmlTransformContext, type Plugin, type UserConfig } from 'vite';
+import { type ConfigEnv, type IndexHtmlTransformContext, type Plugin, type UserConfig, parseSync } from 'vite';
 
 import { VITE_PLUGIN_LOG_SINK_PATH } from './constants.ts';
 import {

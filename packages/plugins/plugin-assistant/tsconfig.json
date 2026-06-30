@@ -100,6 +100,9 @@
       "path": "../../ui/lit-ui"
     },
     {
+      "path": "../../ui/react-primitives/react-list"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -146,6 +149,9 @@
     },
     {
       "path": "../../ui/react-ui-tabs"
+    },
+    {
+      "path": "../../ui/react-ui-transcription"
     },
     {
       "path": "../../ui/ui"

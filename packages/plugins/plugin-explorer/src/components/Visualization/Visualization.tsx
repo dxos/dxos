@@ -15,11 +15,11 @@ import {
   type ModelPoint,
   SVG,
   type SVGContext,
+  type TreeNode,
 } from '@dxos/react-ui-graph';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 import { type SlottableProps } from '@dxos/ui-types';
 
-import { type TreeNode } from '../Tree';
 import { type VisualizationVariant, type VisualizationVariantId, getVariant } from './variants';
 
 //

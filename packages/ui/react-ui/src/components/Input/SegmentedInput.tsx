@@ -4,7 +4,7 @@
 
 import { CalendarDate, CalendarDateTime, Time, parseDate, parseDateTime, parseTime } from '@internationalized/date';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentProps, forwardRef, ReactNode, useCallback, useState } from 'react';
+import React, { type ComponentProps, ReactNode, forwardRef, useCallback, useState } from 'react';
 import {
   DateField,
   type DateFieldProps,
@@ -119,12 +119,12 @@ const renderSegment = (segment: DateSegmentData, classNames = segmentClassNames)
 
 type SegmentedInputBaseProps = InputSharedProps &
   ThemedClassName<{
-    id?: string;
-    value?: string;
-    defaultValue?: string;
-    onValueChange?: (value: string) => void;
-    disabled?: boolean;
-    autoFocus?: boolean;
+    'id'?: string;
+    'value'?: string;
+    'defaultValue'?: string;
+    'onValueChange'?: (value: string) => void;
+    'disabled'?: boolean;
+    'autoFocus'?: boolean;
     'aria-label'?: string;
   }>;
 
@@ -234,13 +234,13 @@ const SegmentedDate = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateP
     const parsed = tryParse(parseDate, stringValue);
 
     const fieldProps: DateFieldProps<CalendarDate> = {
-      value: parsed,
-      onChange: (next) => setStringValue(next ? formatCalendarDate(next) : ''),
-      isDisabled: disabled,
+      'value': parsed,
+      'onChange': (next) => setStringValue(next ? formatCalendarDate(next) : ''),
+      'isDisabled': disabled,
       autoFocus,
       'aria-label': ariaLabel ?? 'date',
-      granularity: 'day',
-      shouldForceLeadingZeros: true,
+      'granularity': 'day',
+      'shouldForceLeadingZeros': true,
     };
 
     const field = (
@@ -320,14 +320,14 @@ const SegmentedTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedTimeP
     const parsed = tryParse(parseTime, stringValue);
 
     const fieldProps: TimeFieldProps<Time> = {
-      value: parsed,
-      onChange: (next) => setStringValue(next ? formatTime(next) : ''),
-      isDisabled: disabled,
+      'value': parsed,
+      'onChange': (next) => setStringValue(next ? formatTime(next) : ''),
+      'isDisabled': disabled,
       autoFocus,
       'aria-label': ariaLabel ?? 'time',
-      granularity: 'minute',
+      'granularity': 'minute',
       hourCycle,
-      shouldForceLeadingZeros: true,
+      'shouldForceLeadingZeros': true,
     };
 
     return (
@@ -395,14 +395,14 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
     const parsed = tryParse(parseDateTime, stringValue);
 
     const fieldProps: DateFieldProps<CalendarDateTime> = {
-      value: parsed,
-      onChange: (next) => setStringValue(next ? formatCalendarDateTime(next) : ''),
-      isDisabled: disabled,
+      'value': parsed,
+      'onChange': (next) => setStringValue(next ? formatCalendarDateTime(next) : ''),
+      'isDisabled': disabled,
       autoFocus,
       'aria-label': ariaLabel ?? 'date-time',
-      granularity: 'minute',
+      'granularity': 'minute',
       hourCycle,
-      shouldForceLeadingZeros: true,
+      'shouldForceLeadingZeros': true,
     };
 
     const field = (
@@ -458,6 +458,6 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
 );
 SegmentedDateTime.displayName = 'Input.SegmentedDateTime';
 
-export { SegmentedDate, SegmentedTime, SegmentedDateTime };
+export { SegmentedDate, SegmentedDateTime, SegmentedTime };
 
-export type { SegmentedDateProps, SegmentedTimeProps, SegmentedDateTimeProps };
+export type { SegmentedDateProps, SegmentedDateTimeProps, SegmentedTimeProps };

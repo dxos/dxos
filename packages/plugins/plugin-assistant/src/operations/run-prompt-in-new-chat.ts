@@ -8,7 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Skill, Operation, Instructions, Template } from '@dxos/compute';
+import { Instructions, Operation, Skill, Template } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

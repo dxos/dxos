@@ -92,36 +92,36 @@ git commit -m "chore(ui-theme): add n-775 neutral ramp step"
    *   7    float   popover, menu, toast, tooltip
    */
 --dx-elevation-0: light-dark(var(--color-neutral-200), var(--color-neutral-950)); /* void   */
---dx-elevation-1: light-dark(var(--color-neutral-175), var(--color-neutral-900)); /* rail   */
---dx-elevation-2: light-dark(var(--color-neutral-150), var(--color-neutral-875)); /* chrome */
---dx-elevation-3: light-dark(var(--color-neutral-125), var(--color-neutral-850)); /* canvas */
---dx-elevation-4: light-dark(var(--color-neutral-100), var(--color-neutral-825)); /* raised */
---dx-elevation-5: light-dark(var(--color-neutral-75), var(--color-neutral-800)); /* bar    */
---dx-elevation-6: light-dark(var(--color-neutral-50), var(--color-neutral-775)); /* modal  */
---dx-elevation-7: light-dark(white, var(--color-neutral-750)); /* float  */
+--dx-elevation-2: light-dark(var(--color-neutral-175), var(--color-neutral-900)); /* rail   */
+--dx-elevation-3: light-dark(var(--color-neutral-150), var(--color-neutral-875)); /* chrome */
+--dx-elevation-4: light-dark(var(--color-neutral-125), var(--color-neutral-850)); /* canvas */
+--dx-elevation-5: light-dark(var(--color-neutral-100), var(--color-neutral-825)); /* raised */
+--dx-elevation-6: light-dark(var(--color-neutral-75), var(--color-neutral-800)); /* bar    */
+--dx-elevation-7: light-dark(var(--color-neutral-50), var(--color-neutral-775)); /* modal  */
+--dx-elevation-8: light-dark(white, var(--color-neutral-750)); /* float  */
 ```
 
 - [ ] **Remap the named surface tokens.** Replace the existing individual `--color-*-surface` declarations in the `@theme` block with these (preserving the existing block structure, just changing the values). The complete set after the edit:
 
 ```css
 /* Surfaces — each maps to exactly one elevation level */
---color-deck-surface: var(--dx-elevation-3);
---color-base-surface: var(--dx-elevation-3);
---color-sidebar-surface: var(--dx-elevation-2);
---color-header-surface: var(--dx-elevation-2);
---color-toolbar-surface: var(--dx-elevation-5);
---color-card-surface: var(--dx-elevation-4);
---color-group-surface: var(--dx-elevation-4);
---color-group-alt-surface: var(--dx-elevation-4);
---color-input-surface: var(--dx-elevation-4);
---color-modal-surface: var(--dx-elevation-6);
---color-popover-surface: var(--dx-elevation-7); /* new — float tier */
+--color-deck-surface: var(--dx-elevation-4);
+--color-base-surface: var(--dx-elevation-4);
+--color-sidebar-surface: var(--dx-elevation-3);
+--color-header-surface: var(--dx-elevation-3);
+--color-toolbar-surface: var(--dx-elevation-6);
+--color-card-surface: var(--dx-elevation-5);
+--color-group-surface: var(--dx-elevation-5);
+--color-group-alt-surface: var(--dx-elevation-5);
+--color-input-surface: var(--dx-elevation-5);
+--color-modal-surface: var(--dx-elevation-7);
+--color-popover-surface: var(--dx-elevation-8); /* new — float tier */
 
 /* Sidebar / panel layout levels */
---color-l0-surface: var(--dx-elevation-1);
---color-l1-surface: var(--dx-elevation-2);
---color-r0-surface: var(--dx-elevation-2);
---color-r1-surface: var(--dx-elevation-2);
+--color-l0-surface: var(--dx-elevation-2);
+--color-l1-surface: var(--dx-elevation-3);
+--color-r0-surface: var(--dx-elevation-3);
+--color-r1-surface: var(--dx-elevation-3);
 ```
 
 Keep `--color-scrim-surface`, `--color-inverse-surface`, `--color-inverse-fg`, `--color-focus-surface`, `--color-attention-surface` unchanged — they are not elevation-driven.

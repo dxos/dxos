@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { compileEntry, executeScript, type LoadedFile } from './build';
+import { type LoadedFile, compileEntry, executeScript } from './build';
 import { resetCompiler } from './singleton';
 
 // Skipped from default fast-CI; opt in with VITEST_TAGS_FILTER="llm || compiler".

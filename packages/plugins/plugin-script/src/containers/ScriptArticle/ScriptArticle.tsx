@@ -11,7 +11,7 @@ import { Doc } from '@dxos/echo-doc';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel } from '@dxos/react-ui';
-import { createDataExtensions, listener, editorClassNames } from '@dxos/ui-editor';
+import { createDataExtensions, editorClassNames, listener } from '@dxos/ui-editor';
 
 import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '#components';
 import { useDeployState, useToolbarState } from '#hooks';

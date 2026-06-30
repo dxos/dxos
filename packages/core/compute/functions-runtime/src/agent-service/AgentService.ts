@@ -8,20 +8,19 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import type { ModelName } from '@dxos/ai';
 import { AiContext } from '@dxos/assistant';
-import { Skill, McpServer, Process } from '@dxos/compute';
+import { McpServer, Process, Skill } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import {
   AgentService,
   type GetSessionOptions,
-  getSession,
   type Service,
   type Session,
+  getSession,
 } from '@dxos/compute/AgentService';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { EID } from '@dxos/keys';
+import { DXN, EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
@@ -39,7 +38,8 @@ const isTerminalProcess = (state: Process.State): boolean =>
 export interface CreateSessionOptions {
   readonly skills?: Skill.Skill[];
   readonly context?: Ref.Ref<Obj.Unknown>[];
-  readonly model?: ModelName;
+  readonly model?: DXN.DXN;
+  readonly provider?: DXN.DXN;
   readonly systemPrompt?: string;
 }
 
@@ -63,7 +63,7 @@ export const createSession: (
     }),
   );
 
-  return yield* getSession(feed, { model: opts?.model });
+  return yield* getSession(feed, { model: opts?.model, provider: opts?.provider });
 }, Effect.scoped);
 
 export interface AgentServiceOptions {
@@ -71,7 +71,12 @@ export interface AgentServiceOptions {
   /**
    * Default model used by sessions that don't specify one explicitly.
    */
-  model?: ModelName;
+  model?: DXN.DXN;
+
+  /**
+   * Default provider used to resolve the model for sessions that don't specify one explicitly.
+   */
+  provider?: DXN.DXN;
 
   /**
    * Provider for space-level MCP server configs.
@@ -101,12 +106,16 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
       // The agent's model is bound to its process at spawn time, so the cache tracks the model
       // each session was created with. Requesting a different model for the same feed tears down
       // the old process and spawns a fresh one (see below).
-      const sessionCache = new Map<string, { model: ModelName | undefined; handle: AgentHandle; session: Session }>();
+      const sessionCache = new Map<
+        string,
+        { model: DXN.DXN | undefined; provider: DXN.DXN | undefined; handle: AgentHandle; session: Session }
+      >();
 
-      const makeExecutable = (model?: ModelName) =>
+      const makeExecutable = (model?: DXN.DXN, provider?: DXN.DXN) =>
         AgentProcess({
           systemPrompt: opts?.systemPrompt,
           model: model ?? opts?.model,
+          provider: provider ?? opts?.provider,
           getMcpServers: opts?.getMcpServers,
           enableToolBackgrounding: opts?.enableToolBackgrounding,
           delegationStrategy: opts?.delegationStrategy,
@@ -134,16 +143,21 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
         getSession: (feed: Feed.Feed, options?: GetSessionOptions) =>
           Effect.gen(function* () {
             const model = options?.model ?? opts?.model;
+            const provider = options?.provider ?? opts?.provider;
             const cached = sessionCache.get(feed.id);
             if (cached) {
-              if (cached.model === model && !isTerminalProcess(cached.handle.status.state)) {
+              if (
+                cached.model === model &&
+                cached.provider === provider &&
+                !isTerminalProcess(cached.handle.status.state)
+              ) {
                 return cached.session;
               }
 
               if (!isTerminalProcess(cached.handle.status.state)) {
-                // Model changed (e.g. the user toggled online/offline): terminate the existing
-                // process so the conversation continues on a fresh process bound to the new model.
-                // Conversation history is preserved via the feed, which the new process replays.
+                // Model or provider changed (e.g. the user toggled online/offline): terminate the
+                // existing process so the conversation continues on a fresh process bound to the new
+                // model. Conversation history is preserved via the feed, which the new process replays.
                 yield* cached.handle.terminate();
               }
               sessionCache.delete(feed.id);
@@ -152,7 +166,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
             const target = Obj.getURI(feed);
             const parsedEchoUri = EID.tryParse(target);
             const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
-            const executable = makeExecutable(model);
+            const executable = makeExecutable(model, provider);
 
             // Reuse a still-running process for this feed only when there was no cached session
             // (e.g. after the UI remounted). After a model change we always spawn a fresh process,
@@ -187,7 +201,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
               sessionCache.delete(feed.id);
             };
             const session = makeSession(handle, feed, releaseSession);
-            sessionCache.set(feed.id, { model, handle, session });
+            sessionCache.set(feed.id, { model, provider, handle, session });
             return session;
           }),
         hydrate: hydrateAgents,

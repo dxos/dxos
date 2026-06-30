@@ -22,8 +22,8 @@ import {
   DatabaseRoot,
   type EchoHost,
   type EdgeAutomergeReplicator,
-  type MeshEchoReplicator,
   type IMetadataStore,
+  type MeshEchoReplicator,
   type Space,
   type SpaceManager,
   type SpaceProtocol,
@@ -429,7 +429,7 @@ export class DataSpaceManager extends Resource {
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceDeleted',
         spaceKey,
-        deletedAt: new Date(),
+        'deletedAt': new Date(),
       },
     });
     await this._signingContext.recordCredential(credential);

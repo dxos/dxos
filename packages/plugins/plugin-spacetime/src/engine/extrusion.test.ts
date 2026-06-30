@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { ManifoldToplevel, Manifold } from 'manifold-3d';
+import type { Manifold, ManifoldToplevel } from 'manifold-3d';
 import { type ExpectStatic, afterAll, beforeAll, describe, test } from 'vitest';
 
-import { applyExtrusion, extractFaceBoundary, extractFaceBoundaryFromSolid, MIN_SIZE } from './extrusion';
+import { MIN_SIZE, applyExtrusion, extractFaceBoundary, extractFaceBoundaryFromSolid } from './extrusion';
 import { getFaceNormal } from './mesh-converter';
 
 /** Tolerance for floating-point comparisons in geometry tests. */

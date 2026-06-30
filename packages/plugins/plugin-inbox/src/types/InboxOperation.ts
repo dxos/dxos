@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
-import { Collection, Database, Obj, Ref, Type, DXN } from '@dxos/echo';
+import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import {
   Connection,
   GetSyncTargetsInput,
@@ -545,9 +545,8 @@ export const ExtractSummaryFromMessage = Operation.make({
 
 export const ExtractMessage = Operation.make({
   meta: { key: makeKey('extractMessage'), name: 'Extract Message' },
-  services: [Capability.Service, AiService.AiService],
+  services: [Capability.Service, AiService.AiService, Database.Service],
   input: Schema.Struct({
-    db: Database.Database,
     source: Obj.Unknown,
     extractorId: Schema.optional(Schema.String),
   }),
@@ -556,5 +555,39 @@ export const ExtractMessage = Operation.make({
     created: Schema.Number,
     updated: Schema.Number,
     summary: Schema.optional(Schema.String),
+  }),
+});
+
+/** Default parallel extraction limit for {@link ExtractMailbox}. */
+export const DEFAULT_EXTRACT_MAILBOX_CONCURRENCY = 5;
+
+export const ExtractMailbox = Operation.make({
+  meta: {
+    key: makeKey('extractMailbox'),
+    name: 'Extract Mailbox',
+    description: 'Runs a selected extractor over every message in a mailbox feed.',
+    icon: 'ph--magic-wand--regular',
+  },
+  services: [Capability.Service, AiService.AiService, Database.Service],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox whose feed messages are processed.',
+    }),
+    extractorId: Schema.String.annotations({
+      description: 'Registered ObjectExtractor id to run on each message.',
+    }),
+    concurrency: Schema.optional(
+      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+        description: 'Maximum number of messages to extract in parallel.',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    extractorId: Schema.String,
+    processed: Schema.Number,
+    succeeded: Schema.Number,
+    failed: Schema.Number,
+    created: Schema.Number,
+    updated: Schema.Number,
   }),
 });

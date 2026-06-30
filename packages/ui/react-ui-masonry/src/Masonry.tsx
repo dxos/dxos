@@ -186,7 +186,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
         <VirtuosoMasonry
           {...composableProps(props, {
             classNames: ['justify-center', '[&>div]:max-w-[var(--dx-masonry-column-max)]'],
-            style: { gap: `${gutter}rem`, '--dx-masonry-column-max': `${maxColumnWidth}rem` } as CSSProperties,
+            style: { 'gap': `${gutter}rem`, '--dx-masonry-column-max': `${maxColumnWidth}rem` } as CSSProperties,
           })}
           {...arrowNavigationAttrs}
           ItemContent={TileAdapter}
@@ -266,4 +266,4 @@ export const Masonry = {
   Viewport: MasonryViewport,
 };
 
-export type { MasonryRootProps, MasonryContentProps, MasonryViewportProps };
+export type { MasonryContentProps, MasonryRootProps, MasonryViewportProps };

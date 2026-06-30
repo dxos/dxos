@@ -4,7 +4,7 @@
 
 import * as semver from 'semver';
 
-import { EncodedReference, isEncodedReference, type QueryAST } from '@dxos/echo-protocol';
+import { EncodedReference, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { DXN, EID } from '@dxos/keys';
 
 import { getTypeURI } from '../Annotation/annotations';

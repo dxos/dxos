@@ -40,7 +40,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.UpdateChatName> =
           );
         } else {
           const feed = yield* Database.load(chat.feed);
-          const history = yield* Feed.runQuery(feed, Filter.type(Message.Message));
+          const history = yield* Feed.query(feed, Filter.type(Message.Message)).run;
           log.info('history', { history: history.length });
           const historyPrompt = yield* AiPreprocessor.preprocessPrompt(history, {
             system,
@@ -57,7 +57,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.UpdateChatName> =
         });
         log.info('chat name updated', { chat, newName: chat.name });
       },
-      Effect.provide(AiService.model('ai.claude.model.claude-haiku-4-5')),
+      Effect.provide(AiService.model('com.anthropic.model.claude-haiku-4-5.default')),
     ),
   ),
 );

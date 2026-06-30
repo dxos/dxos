@@ -88,15 +88,15 @@ type UseListNavigationOptions = {
 type UseListNavigationReturn = {
   /** Spread onto the container element. role/aria attrs + Tabster data-attrs + onFocus. */
   containerProps: {
-    role: 'list' | 'listbox' | 'grid';
+    'role': 'list' | 'listbox' | 'grid';
     'aria-orientation'?: 'vertical' | 'horizontal';
     'data-tabster': string;
-    onFocus: (e: FocusEvent<HTMLElement>) => void;
+    'onFocus': (e: FocusEvent<HTMLElement>) => void;
   };
   /** Apply to each item. role + tabIndex. */
   itemProps: (opts?: { disabled?: boolean }) => {
-    role: 'listitem' | 'option' | 'row';
-    tabIndex: number;
+    'role': 'listitem' | 'option' | 'row';
+    'tabIndex': number;
     'aria-disabled'?: true;
   };
 };
@@ -204,15 +204,15 @@ type DisclosureItemBinding = {
   panelId: string;
   /** Spread onto the trigger (caret/title) button. */
   triggerProps: {
-    id: string;
+    'id': string;
     'aria-expanded': boolean;
     'aria-controls': string;
-    onClick: () => void;
+    'onClick': () => void;
   };
   /** Spread onto the disclosed panel `<div>`. */
   panelProps: {
-    id: string;
-    role: 'region';
+    'id': string;
+    'role': 'region';
     'aria-labelledby': string;
   };
 };
@@ -253,8 +253,8 @@ type SelectionItemBinding = {
   /** Spread onto the row to bind click + focus + ARIA. */
   rowProps: {
     'aria-selected': boolean;
-    onClick: (e: MouseEvent) => void;
-    onFocus?: (e: FocusEvent) => void;
+    'onClick': (e: MouseEvent) => void;
+    'onFocus'?: (e: FocusEvent) => void;
   };
 };
 

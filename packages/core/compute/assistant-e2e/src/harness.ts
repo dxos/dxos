@@ -10,23 +10,23 @@ import * as Layer from 'effect/Layer';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 
-import { AiService, type ModelName } from '@dxos/ai';
+import { AiService } from '@dxos/ai';
 import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/ai/testing';
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { RunInstructions, SkillManagerSkill, DatabaseSkill, Chat } from '@dxos/assistant-toolkit';
+import { Chat, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import { type ClientOptions } from '@dxos/client';
 // Skill is imported so TypeScript can name Skill.Skill in the emitted .d.ts for getDefaultSkills
 // (SkillManagerSkill.make() returns Skill.Skill, which propagates into the inferred return type).
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { Operation, Instructions, ServiceResolver, Skill } from '@dxos/compute';
-import { configPreset, type ConfigPresetOptions } from '@dxos/config';
+import { Instructions, Operation, ServiceResolver, Skill } from '@dxos/compute';
+import { type ConfigPresetOptions, configPreset } from '@dxos/config';
 import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { traceFeedPrettyPrintSubscription } from '@dxos/functions-runtime/testing';
-import { type SpaceId } from '@dxos/keys';
+import { DXN, type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
@@ -64,7 +64,7 @@ interface AgentTestOptions extends Pick<Instructions.MakeProps, 'name' | 'skills
 
   expect?: 'success' | 'failure';
 
-  model?: ModelName;
+  model?: DXN.DXN;
 
   /**
    * @default 'direct'
@@ -179,7 +179,7 @@ const spaceServices = (spaceId: SpaceId) => ServiceResolver.provide({ space: spa
 const runInstructions = (
   harness: TestHarness,
   instructions: Instructions.Instructions,
-  model: ModelName,
+  model: DXN.DXN,
   spaceId: SpaceId,
   sessionChat?: boolean,
 ) =>
@@ -226,7 +226,9 @@ const logTraceEvents = <A>(harness: TestHarness, spaceId: SpaceId) =>
 export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Effect.Effect<void, any>) => {
   const model =
     options.model ??
-    (options.inferenceProvider === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
+    (options.inferenceProvider === 'ollama'
+      ? DXN.make('com.openai.model.gpt-oss-20b.default')
+      : DXN.make('com.anthropic.model.claude-opus-4-8.default'));
 
   const OutputSchema = Schema.Struct({
     completedCriteria: Schema.Struct({

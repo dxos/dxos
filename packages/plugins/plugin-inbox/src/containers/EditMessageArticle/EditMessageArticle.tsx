@@ -14,7 +14,7 @@ import { ServiceResolver } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
-import { assistant, type AssistantOptions } from '@dxos/react-ui-editor';
+import { type AssistantOptions, assistant } from '@dxos/react-ui-editor';
 import { type Message } from '@dxos/types';
 
 import { EditMessage } from '#components';
@@ -44,7 +44,7 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
           return response.text;
         }).pipe(
           Effect.provide(
-            AiService.model('ai.claude.model.claude-haiku-4-5').pipe(
+            AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
               Layer.orDie,
               Layer.provide(ServiceResolver.provide({ space: spaceId }, AiService.AiService)),
             ),

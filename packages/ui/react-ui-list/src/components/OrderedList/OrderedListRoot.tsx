@@ -17,8 +17,8 @@ import { mx } from '@dxos/ui-theme';
 import {
   type ReorderActive,
   type ReorderListController,
-  type UseListNavigationReturn,
   type UseListDisclosureReturn,
+  type UseListNavigationReturn,
   useListDisclosure,
   useListNavigation,
   useReorderAutoScroll,

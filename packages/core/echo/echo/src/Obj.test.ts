@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expectTypeOf, test, expect } from 'vitest';
+import { describe, expect, expectTypeOf, test } from 'vitest';
 
 import { EID } from '@dxos/keys';
 

@@ -16,7 +16,7 @@ import { AgentService, Credential, ServiceResolver } from '@dxos/compute';
 import { Database, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { useObject, type Space } from '@dxos/react-client/echo';
+import { type Space, useObject } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type Assistant } from '#types';
@@ -94,6 +94,7 @@ export const useChatProcessor = ({
       observableRegistry,
       registry,
       model: preset?.model,
+      provider: preset?.provider,
     });
   }, [runtime, session, registry, preset, chat, feed, space?.id]);
 

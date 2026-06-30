@@ -53,6 +53,7 @@ export const deployFunction = async (
   functionsServiceClient: FunctionsServiceClient,
   entryPoint: string,
   runtime: FunctionRuntimeKind,
+  ownerUri: string,
 ): Promise<Operation.PersistentOperation> => {
   const artifact = await bundleFunction({
     entryPoint,
@@ -60,7 +61,7 @@ export const deployFunction = async (
   });
   const func = await functionsServiceClient.deploy(Context.default(), {
     version: '0.0.1',
-    ownerPublicKey: space.key,
+    ownerUri,
     entryPoint: artifact.entryPoint,
     assets: artifact.assets,
     runtime,

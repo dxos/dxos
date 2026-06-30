@@ -10,12 +10,12 @@ import { customElement, property } from 'lit/decorators.js';
 
 import { DxAnchorActivate } from '@dxos/ui-types';
 
+// TODO(thure): There is a case (in)sensitivity issue here which is pernicious:
+//   Only refactoring the properties here to all-lowercase fixes the binding in `RefField.tsx`, but that
+//   should be unnecessary, and it isn’t an issue for `DxAvatar` or `DxGrid`. What’s going on?
+
 @customElement('dx-anchor')
 export class DxAnchor extends LitElement {
-  // TODO(thure): There is a case (in)sensitivity issue here which is pernicious:
-  //   Only refactoring the properties here to all-lowercase fixes the binding in `RefField.tsx`, but that
-  //   should be unnecessary, and it isn’t an issue for `DxAvatar` or `DxGrid`. What’s going on?
-
   @property({ type: String })
   dxn: string = '';
 
