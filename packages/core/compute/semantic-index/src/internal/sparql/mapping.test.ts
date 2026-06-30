@@ -56,6 +56,20 @@ describe('fact ↔ triples mapping', () => {
     expect(back).toEqual(fact);
   });
 
+  test('round-trips entity display labels (preserving surface casing)', ({ expect }) => {
+    const fact: Fact = {
+      ...FACT,
+      id: 'fact-4',
+      assertion: {
+        subject: { entity: 'dxos', label: 'DXOS' },
+        predicate: 'is',
+        object: { entity: 'open-source-project', label: 'an open source project' },
+      },
+    };
+    const [back] = triplesToFacts(factToTriples(fact));
+    expect(back).toEqual(fact);
+  });
+
   test('throws when a required predicate triple is missing', ({ expect }) => {
     const quads = factToTriples(FACT).filter((quad) => !quad.predicate.value.endsWith('#predicate'));
     expect(() => triplesToFacts(quads)).toThrow();

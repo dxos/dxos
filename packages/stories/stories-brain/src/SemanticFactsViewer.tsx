@@ -9,7 +9,7 @@ import { Empty, Listbox } from '@dxos/react-ui-list';
 import { type Type } from '@dxos/semantic-index';
 import { mx } from '@dxos/ui-theme';
 
-import { Group, factualityColor, formatDate, formatTerm, groupFacts, humanize } from './util';
+import { Group, factualityColor, formatDate, formatTerm, groupFacts } from './util';
 
 export type SemanticFactsViewerProps = ThemedClassName<{
   facts: Type.Fact[];
@@ -55,7 +55,7 @@ export const SemanticFactsViewer = ({ classNames, facts }: SemanticFactsViewerPr
 const SubjectGroup = ({ group }: { group: Group }) => (
   <div className='shrink-0 flex flex-col bg-card-surface border border-subdued-separator rounded-sm overflow-hidden'>
     <div className='flex px-3 py-1 items-center justify-between'>
-      <h3>{humanize(group.subject)}</h3>
+      <h3>{group.subject}</h3>
       {group.conflicted && (
         <Tag hue='warning'>
           <span className='flex items-center gap-1'>
@@ -66,7 +66,7 @@ const SubjectGroup = ({ group }: { group: Group }) => (
       )}
     </div>
     <Listbox.Root>
-      <Listbox.Content aria-label={humanize(group.subject)}>
+      <Listbox.Content aria-label={group.subject}>
         {group.facts.map((fact) => (
           <FactRow key={fact.id} fact={fact} conflicting={group.conflictedIds.has(fact.id)} />
         ))}

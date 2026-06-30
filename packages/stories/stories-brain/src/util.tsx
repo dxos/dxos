@@ -18,19 +18,27 @@ export const groupFacts = (facts: Type.Fact[], filter: string): Group[] => {
   const filtered = needle
     ? facts.filter((fact) => {
         const { subject, predicate, object } = fact.assertion;
-        return [termLabel(subject), predicate, termLabel(object)].some((value) => value.toLowerCase().includes(needle));
+        return [formatTerm(subject), predicate, formatTerm(object)].some((value) =>
+          value.toLowerCase().includes(needle),
+        );
       })
     : facts;
 
+  // Group by the entity slug (so `DXOS`/`dxos` collapse) but remember a display label for the header.
   const bySubject = new Map<string, Type.Fact[]>();
+  const labelByKey = new Map<string, string>();
   for (const fact of filtered) {
-    const key = termLabel(fact.assertion.subject);
+    const key = termKey(fact.assertion.subject);
     const list = bySubject.get(key) ?? [];
     list.push(fact);
     bySubject.set(key, list);
+    if (!labelByKey.has(key)) {
+      labelByKey.set(key, formatTerm(fact.assertion.subject));
+    }
   }
 
-  return [...bySubject.entries()].map(([subject, groupFactsList]) => {
+  return [...bySubject.entries()].map(([key, groupFactsList]) => {
+    const subject = labelByKey.get(key) ?? key;
     const byPredicate = new Map<string, Type.Fact[]>();
     for (const fact of groupFactsList) {
       const list = byPredicate.get(fact.assertion.predicate) ?? [];
@@ -40,7 +48,7 @@ export const groupFacts = (facts: Type.Fact[], filter: string): Group[] => {
 
     const conflictedIds = new Set<string>();
     for (const list of byPredicate.values()) {
-      const objects = new Set(list.map((fact) => termLabel(fact.assertion.object)));
+      const objects = new Set(list.map((fact) => termKey(fact.assertion.object)));
       if (objects.size > 1) {
         for (const fact of list) {
           conflictedIds.add(fact.id);
@@ -57,10 +65,12 @@ export const groupFacts = (facts: Type.Fact[], filter: string): Group[] => {
   });
 };
 
-export const termLabel = (term: Type.Term): string => ('entity' in term ? term.entity : term.literal);
+/** The join/grouping key: the entity slug (or literal). Casing variants collapse to one key. */
+export const termKey = (term: Type.Term): string => ('entity' in term ? term.entity : term.literal);
 
-/** Prettify entity ids for display; render literal values verbatim. */
-export const formatTerm = (term: Type.Term): string => ('entity' in term ? humanize(term.entity) : term.literal);
+/** Display form: the preserved surface label, else a prettified slug; literals render verbatim. */
+export const formatTerm = (term: Type.Term): string =>
+  'entity' in term ? (term.label ?? humanize(term.entity)) : term.literal;
 
 /** Render ids like `q3-board-meeting` as `Q3 Board Meeting`. */
 export const humanize = (value: string): string =>

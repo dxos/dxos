@@ -68,9 +68,9 @@ export const extractDocFacts = (
         const fact: Fact = {
           id: factId(doc.source, hash, index++),
           assertion: {
-            subject: { entity: normalizeEntityId(candidate.subject) },
+            subject: { entity: normalizeEntityId(candidate.subject), label: candidate.subject.trim() },
             predicate: candidate.predicate,
-            object: { entity: normalizeEntityId(candidate.object) },
+            object: { entity: normalizeEntityId(candidate.object), label: candidate.object.trim() },
             ...(candidate.validFrom ? { validFrom: candidate.validFrom } : {}),
             ...(candidate.validTo ? { validTo: candidate.validTo } : {}),
             ...(candidate.quote ? { quote: candidate.quote } : {}),

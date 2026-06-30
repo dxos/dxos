@@ -185,6 +185,10 @@ describe('SemanticPipeline', () => {
           if (!('entity' in fact.assertion.subject) || fact.assertion.subject.entity !== 'alice') {
             throw new Error('subject not linked');
           }
+          // The original surface form is preserved as the display label (the entity id is the slug).
+          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.label !== 'Alice') {
+            throw new Error(`subject label not preserved: ${JSON.stringify(fact.assertion.subject)}`);
+          }
           if (fact.assertion.predicate !== 'travelsTo') {
             throw new Error('predicate not extracted');
           }
