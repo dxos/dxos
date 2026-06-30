@@ -5,11 +5,17 @@
 /// <reference types="vite/client" />
 
 import * as Schema from 'effect/Schema';
-import React, { type ChangeEvent, type ComponentProps, useMemo, useRef } from 'react';
+import React, { type ChangeEvent, type ComponentProps, useCallback, useMemo } from 'react';
 
 import { type ChannelInfo } from '@dxos/crawler';
 import { Format } from '@dxos/echo';
-import { IconButton, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import {
+  IconButton,
+  Panel,
+  SystemIconButton,
+  type ThemedClassName,
+  Toolbar,
+} from '@dxos/react-ui';
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
 
 export const CrawlOptions = Schema.Struct({
@@ -52,6 +58,7 @@ export type CrawlPanelProps = ThemedClassName<{
  * the semantic store, and every handler.
  */
 export const CrawlPanel = ({
+  classNames,
   options,
   channels,
   busy,
@@ -62,7 +69,6 @@ export const CrawlPanel = ({
   onCrawl,
   onLoadFile,
   onReset,
-  classNames,
 }: CrawlPanelProps) => {
   // The `channel` field uses the form's built-in select, populated with the discovered channels.
   const fieldMap = useMemo<FormFieldMap>(
@@ -75,15 +81,16 @@ export const CrawlPanel = ({
     [channels],
   );
 
-  // Hidden file input opened by the toolbar button; read the picked .txt/.md as text and hand it up.
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = ''; // Allow re-picking the same file.
-    if (file) {
-      void file.text().then((text) => onLoadFile(file.name, text));
-    }
-  };
+  const handleFileChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = ''; // Allow re-picking the same file.
+      if (file) {
+        void file.text().then((text) => onLoadFile(file.name, text));
+      }
+    },
+    [onLoadFile],
+  );
 
   return (
     <Panel.Root classNames={classNames}>
@@ -103,19 +110,10 @@ export const CrawlPanel = ({
             disabled={!options.token || !options.channel || !!busy}
             onClick={onCrawl}
           />
-          <IconButton
-            icon='ph--file-arrow-up--regular'
-            iconOnly
-            label='Load file'
+          <SystemIconButton.Upload
             disabled={!!busy}
-            onClick={() => fileInputRef.current?.click()}
-          />
-          <input
-            ref={fileInputRef}
-            type='file'
             accept='.txt,.md,text/plain,text/markdown'
-            className='sr-only'
-            onChange={handleFileChange}
+            onFileChange={handleFileChange}
           />
           <Toolbar.Separator />
           <IconButton icon='ph--trash--regular' iconOnly label='Reset' disabled={!!busy} onClick={onReset} />

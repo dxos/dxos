@@ -53,7 +53,6 @@ export const QueryPanel = ({
   <Panel.Root classNames={classNames}>
     <Panel.Toolbar asChild>
       <Toolbar.Root>
-        <Toolbar.Text classNames='grow'>Query</Toolbar.Text>
         <Toolbar.Separator />
         <IconButton
           icon='ph--sparkle--regular'
