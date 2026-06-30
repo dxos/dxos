@@ -29,6 +29,8 @@ export type QueryPanelProps = ThemedClassName<{
   onQueryChange: (query: string) => void;
   onGenerate: () => void;
   onRun: () => void;
+  /** Restore the default query and clear the filter on the facts view (show all facts). */
+  onReset: () => void;
 }>;
 
 /**
@@ -45,6 +47,7 @@ export const QueryPanel = ({
   onQueryChange,
   onGenerate,
   onRun,
+  onReset,
   classNames,
 }: QueryPanelProps) => (
   <Panel.Root classNames={classNames}>
@@ -64,8 +67,8 @@ export const QueryPanel = ({
           icon='ph--arrow-counter-clockwise--regular'
           iconOnly
           label='Reset query'
-          disabled={!!busy || query === DEFAULT_SPARQL}
-          onClick={() => onQueryChange(DEFAULT_SPARQL)}
+          disabled={!!busy}
+          onClick={onReset}
         />
       </Toolbar.Root>
     </Panel.Toolbar>

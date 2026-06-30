@@ -245,6 +245,15 @@ const DefaultStory = (_: StoryArgs) => {
       setStatus(`SPARQL → ${results.length} fact(s)`);
     });
 
+  // Reset the query field to the default and clear the SPARQL filter by re-reading all facts.
+  const handleResetQuery = () =>
+    void guard('sparql', async () => {
+      setQuery(DEFAULT_SPARQL);
+      const results = await getStore().runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.query({}))));
+      setFacts(results);
+      setStatus(`Reset · ${results.length} fact(s)`);
+    });
+
   return (
     <div className='dx-container grid grid-cols-[1fr_2fr_1fr]'>
       <div role='none' className='grid grid-rows-2 gap-2 min-h-0'>
@@ -268,6 +277,7 @@ const DefaultStory = (_: StoryArgs) => {
           onQueryChange={setQuery}
           onGenerate={handleGenerate}
           onRun={handleRunSparql}
+          onReset={handleResetQuery}
         />
       </div>
       <SemanticFactsViewer facts={visibleFacts} />
