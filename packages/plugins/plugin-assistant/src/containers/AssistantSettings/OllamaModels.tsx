@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { Model, Provider } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
+import { EffectEx } from '@dxos/effect';
 import { List, ListItem } from '@dxos/react-list';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -46,12 +47,12 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
 
   // Ensure the sidecar is up and list installed models on mount.
   useEffect(() => {
-    void manager.refresh();
+    void EffectEx.runPromise(manager.refresh);
   }, [manager]);
 
   // Poll the loaded-into-memory set so the panel reflects which model is resident in real time.
   useEffect(() => {
-    const interval = setInterval(() => void manager.refreshLoaded(), LOADED_POLL_INTERVAL);
+    const interval = setInterval(() => void EffectEx.runPromise(manager.refreshLoaded), LOADED_POLL_INTERVAL);
     return () => clearInterval(interval);
   }, [manager]);
 
@@ -79,7 +80,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
       }
       setQuery('');
       setOpen(false);
-      void withPending(trimmed, () => manager.pull(trimmed))();
+      void withPending(trimmed, () => EffectEx.runPromise(manager.pull(trimmed)))();
     },
     [manager, withPending],
   );
@@ -126,7 +127,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                       disabled={pending[model.name]}
                       onClick={() =>
                         void withPending(model.name, () =>
-                          running ? manager.unload(model.name) : manager.load(model.name),
+                          EffectEx.runPromise(running ? manager.unload(model.name) : manager.load(model.name)),
                         )()
                       }
                     />
@@ -135,7 +136,9 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                       iconOnly
                       label={t('settings.ollama.remove.label')}
                       disabled={pending[model.name]}
-                      onClick={() => void withPending(model.name, () => manager.remove(model.name))()}
+                      onClick={() =>
+                        void withPending(model.name, () => EffectEx.runPromise(manager.remove(model.name)))()
+                      }
                     />
                   </div>
                   {(size || loadedLabel || error) && (
@@ -161,7 +164,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                       icon='ph--x--regular'
                       iconOnly
                       label={t('settings.ollama.cancel.label')}
-                      onClick={() => manager.cancel(name)}
+                      onClick={() => void EffectEx.runPromise(manager.cancel(name))}
                     />
                   </div>
                   <span className='text-sm text-description'>{status}</span>

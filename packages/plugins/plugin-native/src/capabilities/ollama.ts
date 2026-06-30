@@ -6,10 +6,13 @@ import { Atom } from '@effect-atom/atom-react';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
 import { Command } from '@tauri-apps/plugin-shell';
+import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
+import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schedule from 'effect/Schedule';
@@ -19,7 +22,6 @@ import { type AiModelResolver, Provider } from '@dxos/ai';
 import { OllamaAdmin, OllamaResolver } from '@dxos/ai/resolvers';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { AssistantCapabilities, type Ollama } from '@dxos/plugin-assistant';
 
@@ -50,185 +52,200 @@ export default Capability.makeModule(
       errors: {},
     }).pipe(Atom.keepAlive);
 
-    // Forcing the scoped sidecar layer spawns the process idempotently — the runtime is lazy and
-    // only spawns on first force, so opening settings starts Ollama rather than hitting a refused
-    // connection, and a chat already using the resolver does not spawn a second process.
-    const ensureRunning = (): Promise<string> =>
-      runtime.runPromise(Effect.map(OllamaSidecar, ({ endpoint }) => endpoint));
-
-    // In-flight pull controllers, so a pull can be cancelled.
-    const pullControllers = new Map<string, AbortController>();
+    // Read/update the reactive state atom as Effects.
+    const getState = Effect.sync(() => registry.get(stateAtom));
+    const updateState = (f: (state: Ollama.ModelsState) => Ollama.ModelsState): Effect.Effect<void> =>
+      Effect.sync(() => registry.set(stateAtom, f(registry.get(stateAtom))));
 
     // Connection-level failure (reaching the service); shown at the section, not tied to a model.
-    const fail = (error: string): void => {
-      registry.set(stateAtom, { ...registry.get(stateAtom), kind: 'failed', error });
-    };
+    const fail = (error: string): Effect.Effect<void> => updateState((state) => ({ ...state, kind: 'failed', error }));
 
     // Per-model action error (load/unload/remove/pull); shown inline on that model's row. Pass
     // `undefined` to clear.
-    const setError = (name: string, error: string | undefined): void => {
-      const current = registry.get(stateAtom);
-      const errors = { ...current.errors };
-      if (error) {
-        errors[name] = error;
-      } else {
-        delete errors[name];
-      }
-      registry.set(stateAtom, { ...current, errors });
-    };
+    const setError = (name: string, error: string | undefined): Effect.Effect<void> =>
+      updateState((state) => {
+        const errors = { ...state.errors };
+        if (error) {
+          errors[name] = error;
+        } else {
+          delete errors[name];
+        }
+        return { ...state, errors };
+      });
+
+    // Write (or clear, when `progress` is undefined) the in-flight progress for `name`.
+    const setProgress = (name: string, progress: OllamaAdmin.PullProgress | undefined): Effect.Effect<void> =>
+      updateState((state) => {
+        const pulls = { ...state.pulls };
+        if (progress) {
+          pulls[name] = progress;
+        } else {
+          delete pulls[name];
+        }
+        return { ...state, pulls };
+      });
+
+    // Force the scoped sidecar layer, spawning the process idempotently — the runtime is lazy and
+    // only spawns on first force, so opening settings starts Ollama rather than hitting a refused
+    // connection, and a chat already using the resolver does not spawn a second process. The endpoint
+    // is unused; forcing `OllamaSidecar` is what triggers the spawn. Failures surface as defects.
+    const ensureRunning: Effect.Effect<void> = Effect.asVoid(OllamaSidecar).pipe(Effect.provide(sidecarLayer));
+
+    // Run an admin effect with the HttpClient provided, folding its typed failure into an Either so
+    // callers branch on the result without a typed error channel.
+    const runAdmin = <A, E extends { readonly message: string }>(
+      effect: Effect.Effect<A, E, HttpClient.HttpClient>,
+    ): Effect.Effect<Either.Either<A, string>> =>
+      effect.pipe(Effect.provide(clientLayer), Effect.either, Effect.map(Either.mapLeft((error) => error.message)));
+
+    // In-flight pull fibers, so a pull can be cancelled via interruption.
+    const pullFibers = new Map<string, Fiber.RuntimeFiber<void>>();
 
     // Refresh only the loaded-into-memory set (cheap; no spawn). Logs load/unload transitions so the
     // console reflects which model is resident when a chat request triggers a load.
-    const refreshLoaded = async (): Promise<void> => {
-      const result = await runAdmin(admin.ps);
+    const refreshLoaded: Effect.Effect<void> = Effect.gen(function* () {
+      const result = yield* runAdmin(admin.ps);
       if (Either.isLeft(result)) {
         return;
       }
-      const current = registry.get(stateAtom);
-      const before = current.loaded.map((model) => model.name);
+      const before = (yield* getState).loaded.map((model) => model.name);
       const after = result.right.map((model) => model.name);
       if (before.join() !== after.join()) {
-        log.info('ollama loaded models changed', { loaded: after });
+        yield* Effect.sync(() => log.info('ollama loaded models changed', { loaded: after }));
       }
-      registry.set(stateAtom, { ...current, loaded: result.right });
-    };
+      yield* updateState((state) => ({ ...state, loaded: result.right }));
+    });
 
-    const refresh = async (): Promise<void> => {
-      registry.set(stateAtom, { ...registry.get(stateAtom), kind: 'loading', error: undefined });
-      try {
-        await ensureRunning();
-      } catch (error) {
-        return fail(formatError(error));
+    const refresh: Effect.Effect<void> = Effect.gen(function* () {
+      yield* updateState((state) => ({ ...state, kind: 'loading', error: undefined }));
+      const started = yield* Effect.exit(ensureRunning);
+      if (Exit.isFailure(started)) {
+        return yield* fail(formatError(Cause.squash(started.cause)));
       }
       // The sidecar process spawns before its HTTP server is listening, so retry until the first
       // `list` succeeds rather than reporting a spurious failure on startup.
-      const result = await runAdmin(
+      const result = yield* runAdmin(
         admin.list.pipe(Effect.retry({ schedule: Schedule.spaced(Duration.millis(300)), times: 29 })),
       );
       if (Either.isLeft(result)) {
-        return fail(result.left);
+        return yield* fail(result.left);
       }
-      registry.set(stateAtom, { ...registry.get(stateAtom), kind: 'ready', models: result.right, error: undefined });
-      log.info('ollama models', { installed: result.right.map((model) => model.name) });
-      await refreshLoaded();
-    };
+      yield* updateState((state) => ({ ...state, kind: 'ready', models: result.right, error: undefined }));
+      yield* Effect.sync(() => log.info('ollama models', { installed: result.right.map((model) => model.name) }));
+      yield* refreshLoaded;
+    });
 
-    // Write (or clear, when `progress` is undefined) the in-flight progress for `name`.
-    const setProgress = (name: string, progress: OllamaAdmin.PullProgress | undefined): void => {
-      const current = registry.get(stateAtom);
-      const pulls = { ...current.pulls };
-      if (progress) {
-        pulls[name] = progress;
-      } else {
-        delete pulls[name];
-      }
-      registry.set(stateAtom, { ...current, pulls });
-    };
+    const pull = (name: string): Effect.Effect<void> =>
+      Effect.gen(function* () {
+        const started = yield* Effect.exit(ensureRunning);
+        if (Exit.isFailure(started)) {
+          return yield* fail(formatError(Cause.squash(started.cause)));
+        }
+        yield* setError(name, undefined);
+        yield* Effect.sync(() => log.info('ollama pull started', { name }));
+        yield* setProgress(name, { status: 'starting' });
 
-    const pull = async (name: string): Promise<void> => {
-      try {
-        await ensureRunning();
-      } catch (error) {
-        return fail(formatError(error));
-      }
-
-      log.info('ollama pull started', { name });
-      setError(name, undefined);
-      const controller = new AbortController();
-      pullControllers.set(name, controller);
-      // Ollama reports `completed`/`total` per layer (digest); aggregate across layers so the
-      // overall percent is monotonic rather than resetting to 0 as each layer starts.
-      const downloaded = new Map<string, { completed: number; total: number }>();
-      setProgress(name, { status: 'starting' });
-      const error = await EffectEx.runPromise(
-        admin.pull(name).pipe(
-          Stream.runForEach((progress) =>
-            Effect.sync(() => {
-              if (progress.digest && progress.total) {
-                downloaded.set(progress.digest, { completed: progress.completed ?? 0, total: progress.total });
-                let completed = 0;
-                let total = 0;
-                for (const layer of downloaded.values()) {
-                  completed += layer.completed;
-                  total += layer.total;
-                }
-                setProgress(name, { status: progress.status, completed, total });
-              } else {
-                // Non-download phase (manifest, verifying, writing): keep the status label, drop totals.
-                setProgress(name, { status: progress.status });
+        // Ollama reports `completed`/`total` per layer (digest); aggregate across layers so the
+        // overall percent is monotonic rather than resetting to 0 as each layer starts.
+        const downloaded = new Map<string, { completed: number; total: number }>();
+        const onProgress = (progress: OllamaAdmin.PullProgress): Effect.Effect<void> =>
+          Effect.suspend(() => {
+            if (progress.digest && progress.total) {
+              downloaded.set(progress.digest, { completed: progress.completed ?? 0, total: progress.total });
+              let completed = 0;
+              let total = 0;
+              for (const layer of downloaded.values()) {
+                completed += layer.completed;
+                total += layer.total;
               }
-            }),
-          ),
+              return setProgress(name, { status: progress.status, completed, total });
+            }
+            // Non-download phase (manifest, verifying, writing): keep the status label, drop totals.
+            return setProgress(name, { status: progress.status });
+          });
+
+        // Run the pull on a daemon fiber so `cancel` can interrupt it; clear progress and drop the
+        // fiber on every exit path. A cancelled pull interrupts the fiber — treated as a no-op.
+        const work = admin.pull(name).pipe(
+          Stream.runForEach(onProgress),
           Effect.provide(clientLayer),
-          Effect.either,
-        ),
-        { signal: controller.signal },
-      )
-        .then((result): string | undefined => (Either.isLeft(result) ? result.left.message : undefined))
-        // A cancelled pull interrupts the fiber (runPromise rejects); treat it as a no-op below.
-        .catch((): string | undefined => undefined);
-      pullControllers.delete(name);
-      setProgress(name, undefined);
+          Effect.matchCauseEffect({
+            onFailure: (cause) =>
+              Cause.isInterruptedOnly(cause)
+                ? Effect.sync(() => log.info('ollama pull finished', { name, cancelled: true }))
+                : Effect.gen(function* () {
+                    const message = formatError(Cause.squash(cause));
+                    yield* Effect.sync(() => log.warn('ollama pull failed', { name, error: message }));
+                    yield* setError(name, message);
+                  }),
+            onSuccess: () =>
+              Effect.gen(function* () {
+                yield* Effect.sync(() => log.info('ollama pull finished', { name, cancelled: false }));
+                yield* refresh;
+              }),
+          }),
+          Effect.ensuring(setProgress(name, undefined)),
+          Effect.ensuring(Effect.sync(() => pullFibers.delete(name))),
+        );
 
-      if (error !== undefined && !controller.signal.aborted) {
-        log.warn('ollama pull failed', { name, error });
-        return setError(name, error);
-      }
-      log.info('ollama pull finished', { name, cancelled: controller.signal.aborted });
-      await refresh();
-    };
+        const fiber = yield* Effect.forkDaemon(work);
+        yield* Effect.sync(() => pullFibers.set(name, fiber));
+      });
 
-    const cancel = (name: string): void => {
-      log.info('ollama pull cancelled', { name });
-      pullControllers.get(name)?.abort();
-      pullControllers.delete(name);
-      setProgress(name, undefined);
-    };
+    const cancel = (name: string): Effect.Effect<void> =>
+      Effect.gen(function* () {
+        yield* Effect.sync(() => log.info('ollama pull cancelled', { name }));
+        const fiber = pullFibers.get(name);
+        if (fiber) {
+          // The pull's `ensuring` clears progress and drops the fiber on interruption.
+          yield* Fiber.interrupt(fiber);
+        }
+      });
 
-    const load = async (name: string): Promise<void> => {
-      setError(name, undefined);
-      try {
-        await ensureRunning();
-      } catch (error) {
-        return setError(name, formatError(error));
-      }
-      log.info('ollama load', { name });
-      const result = await runAdmin(admin.load(name));
-      if (Either.isLeft(result)) {
-        log.warn('ollama load failed', { name, error: result.left });
-        return setError(name, result.left);
-      }
-      await refreshLoaded();
-    };
+    const load = (name: string): Effect.Effect<void> =>
+      Effect.gen(function* () {
+        yield* setError(name, undefined);
+        const started = yield* Effect.exit(ensureRunning);
+        if (Exit.isFailure(started)) {
+          return yield* setError(name, formatError(Cause.squash(started.cause)));
+        }
+        yield* Effect.sync(() => log.info('ollama load', { name }));
+        const result = yield* runAdmin(admin.load(name));
+        if (Either.isLeft(result)) {
+          yield* Effect.sync(() => log.warn('ollama load failed', { name, error: result.left }));
+          return yield* setError(name, result.left);
+        }
+        yield* refreshLoaded;
+      });
 
-    const unload = async (name: string): Promise<void> => {
-      setError(name, undefined);
-      try {
-        await ensureRunning();
-      } catch (error) {
-        return setError(name, formatError(error));
-      }
-      log.info('ollama unload', { name });
-      const result = await runAdmin(admin.unload(name));
-      if (Either.isLeft(result)) {
-        return setError(name, result.left);
-      }
-      await refreshLoaded();
-    };
+    const unload = (name: string): Effect.Effect<void> =>
+      Effect.gen(function* () {
+        yield* setError(name, undefined);
+        const started = yield* Effect.exit(ensureRunning);
+        if (Exit.isFailure(started)) {
+          return yield* setError(name, formatError(Cause.squash(started.cause)));
+        }
+        yield* Effect.sync(() => log.info('ollama unload', { name }));
+        const result = yield* runAdmin(admin.unload(name));
+        if (Either.isLeft(result)) {
+          return yield* setError(name, result.left);
+        }
+        yield* refreshLoaded;
+      });
 
-    const remove = async (name: string): Promise<void> => {
-      setError(name, undefined);
-      try {
-        await ensureRunning();
-      } catch (error) {
-        return setError(name, formatError(error));
-      }
-      const result = await runAdmin(admin.remove(name));
-      if (Either.isLeft(result)) {
-        return setError(name, result.left);
-      }
-      await refresh();
-    };
+    const remove = (name: string): Effect.Effect<void> =>
+      Effect.gen(function* () {
+        yield* setError(name, undefined);
+        const started = yield* Effect.exit(ensureRunning);
+        if (Exit.isFailure(started)) {
+          return yield* setError(name, formatError(Cause.squash(started.cause)));
+        }
+        const result = yield* runAdmin(admin.remove(name));
+        if (Either.isLeft(result)) {
+          return yield* setError(name, result.left);
+        }
+        yield* refresh;
+      });
 
     const manager: Ollama.Manager = {
       endpoint: OLLAMA_HOST,
@@ -313,17 +330,6 @@ const formatError = (error: unknown): string =>
 
 /** Effect HttpClient layer shared by every admin call. */
 const clientLayer = FetchHttpClient.layer;
-
-/**
- * Run an admin effect (HttpClient provided) and fold its typed failure into a message, so the
- * Promise-based manager methods can branch on `Either.isLeft` without a typed error channel.
- */
-const runAdmin = <A, E extends { readonly message: string }>(
-  effect: Effect.Effect<A, E, HttpClient.HttpClient>,
-): Promise<Either.Either<A, string>> =>
-  EffectEx.runPromise(effect.pipe(Effect.provide(clientLayer), Effect.either)).then(
-    Either.mapLeft((error) => error.message),
-  );
 
 /**
  * Route a chunk of Ollama process output to the console by its structured log level. Ollama emits

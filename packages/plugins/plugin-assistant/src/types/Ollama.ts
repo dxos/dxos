@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import { Atom } from '@effect-atom/atom-react';
+import type * as Effect from 'effect/Effect';
 
 import { type OllamaAdmin } from '@dxos/ai/resolvers';
 
@@ -44,15 +45,15 @@ export type Manager = {
   readonly endpoint: string;
   state: Atom.Writable<ModelsState>;
   /** List installed models (and currently-loaded models). Ensures the sidecar is running. */
-  refresh: () => Promise<void>;
+  refresh: Effect.Effect<void>;
   /** Refresh only the currently-loaded models; cheap, for polling while a chat runs. */
-  refreshLoaded: () => Promise<void>;
-  pull: (name: string) => Promise<void>;
+  refreshLoaded: Effect.Effect<void>;
+  pull: (name: string) => Effect.Effect<void>;
   /** Abort an in-flight pull, leaving any already-downloaded layers in place. */
-  cancel: (name: string) => void;
+  cancel: (name: string) => Effect.Effect<void>;
   /** Load a model into memory (kept resident until unloaded). */
-  load: (name: string) => Promise<void>;
+  load: (name: string) => Effect.Effect<void>;
   /** Unload a model from memory. */
-  unload: (name: string) => Promise<void>;
-  remove: (name: string) => Promise<void>;
+  unload: (name: string) => Effect.Effect<void>;
+  remove: (name: string) => Effect.Effect<void>;
 };

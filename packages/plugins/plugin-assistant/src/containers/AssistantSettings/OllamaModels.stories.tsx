@@ -4,6 +4,7 @@
 
 import { Atom } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
@@ -20,13 +21,13 @@ import { OllamaModelsSection } from './OllamaModels';
 const makeFakeManager = (state: Ollama.ModelsState): Ollama.Manager => ({
   endpoint: 'http://localhost:21434',
   state: Atom.make(state),
-  refresh: async () => {},
-  refreshLoaded: async () => {},
-  pull: async () => {},
-  cancel: () => {},
-  load: async () => {},
-  unload: async () => {},
-  remove: async () => {},
+  refresh: Effect.void,
+  refreshLoaded: Effect.void,
+  pull: () => Effect.void,
+  cancel: () => Effect.void,
+  load: () => Effect.void,
+  unload: () => Effect.void,
+  remove: () => Effect.void,
 });
 
 const Render = ({ state }: { state: Ollama.ModelsState }) => {
