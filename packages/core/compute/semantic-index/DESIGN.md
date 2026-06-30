@@ -32,10 +32,33 @@ A **Fact** is the unit of storage: one extracted proposition plus its metadata.
 
 An **Entity** is a mention (person/org/place/event/concept/thing) with a label, aliases, and
 an optional `ref` (DXN of a canonical ECHO object once linked). Predicates are open strings
-in v1; a controlled-vocabulary normalization pass is future work.
+in v1 (see [Normalization](#normalization)).
 
 The model is defined with Effect Schema and is JSON-serializable. Conflicting or
 time-varying facts are simply multiple Facts — never merged at write time.
+
+## Normalization
+
+Guiding rule: **normalize the join key, never the display.** Extraction stays cheap and
+local; normalization is an improvable layer on top. The per-message Extract stage emits
+surface forms plus a light slug; the deeper layers are corpus-aware passes that can improve
+independently without re-extracting. Three layers, by increasing cost and context required:
+
+1. **Entity lexical — done.** Subject/object surface forms are slugged to an entity id
+   (`normalizeEntityId`: trim, lowercase, runs of non-alphanumerics → `-`), so `DXOS` / `dxos`
+   collapse to one entity; the original surface is kept as `label` for display. Deterministic,
+   per-mention.
+2. **Predicate / relation — planned.** Predicates are stored verbatim today, so paraphrases
+   don't match (`works at` ≠ `works for` ≠ `employed by`; a query for one misses the others).
+   Mirror the entity split: keep the surface predicate for display **and** a normalized
+   _relation key_ for matching, then query on the key. Start with deterministic
+   lemmatize/stem, with a controlled-vocabulary mapping as a later refinement. The LLM must
+   **not** be asked to invent a canonical predicate per call — independent calls would be
+   inconsistent.
+3. **Entity resolution / coreference — deferred.** Canonicalize aliases (`dmaretskyi` = `Dima`
+   = a Person) and link to ECHO objects by DXN. This needs corpus-wide context, so it runs as
+   a separate resolution pass over the accumulated store — the pattern `AgentRegistry` already
+   uses for message authors, extended to subjects/objects.
 
 ## Storage & query engine
 
@@ -101,61 +124,3 @@ certainty and **surfaces conflicts**, e.g.:
 
 > - alice (dxn:…:m1, 2026-06-06): alice travelsTo paris [probable, PR+]
 > - bob (dxn:…:m2, 2026-06-07): alice travelsTo rome [certain, CT+]
-
-### Example queries
-
-All facts asserted about an entity (as subject or object):
-
-```sparql
-PREFIX sx: <https://dxos.org/semantic#>
-SELECT ?fact ?p ?o WHERE {
-  { SELECT DISTINCT ?fact WHERE {
-      { ?fact sx:subject <https://dxos.org/semantic/entity/alice> }
-      UNION
-      { ?fact sx:object  <https://dxos.org/semantic/entity/alice> }
-  } }
-  ?fact ?p ?o .
-}
-```
-
-What a specific source claims, above a confidence threshold (`according-to` + filter):
-
-```sparql
-PREFIX sx:   <https://dxos.org/semantic#>
-PREFIX prov: <http://www.w3.org/ns/prov#>
-PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
-SELECT ?fact ?subject ?predicate ?object ?factuality WHERE {
-  ?fact prov:wasDerivedFrom "dxn:queue:space:m1" ;
-        sx:subject   ?subject ;
-        sx:predicate ?predicate ;
-        sx:object    ?object ;
-        sx:factuality ?factuality ;
-        sx:confidence ?conf .
-  FILTER(xsd:decimal(?conf) >= 0.5)
-}
-```
-
-Surface a conflict — everyone's claim about where Alice travels, with who said it and when
-(`as-of` / `according-to` resolution is applied by ordering/filtering these results):
-
-```sparql
-PREFIX sx:   <https://dxos.org/semantic#>
-PREFIX prov: <http://www.w3.org/ns/prov#>
-SELECT ?object ?agent ?when ?factuality WHERE {
-  ?fact sx:subject   <https://dxos.org/semantic/entity/alice> ;
-        sx:predicate "travelsTo" ;
-        sx:object    ?object ;
-        sx:factuality ?factuality ;
-        prov:wasAttributedTo ?agent ;
-        prov:generatedAtTime ?when .
-}
-ORDER BY DESC(?when)
-```
-
-## Status & deferred
-
-v1 covers the model, reified SQLite store + Comunica query path, extraction pipeline,
-fixtures-first harness, and the `semanticQuery` tool + comprehension eval. Deferred:
-browser OPFS / Cloudflare worker entrypoint + `wrangler dev` verification, live connector
-credentials, vector/embedding search (Workers AI + Vectorize / transformers.js) and a
-dedicated FTS index, and entity canonicalization to ECHO objects.
