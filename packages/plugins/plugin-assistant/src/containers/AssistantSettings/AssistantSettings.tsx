@@ -51,7 +51,7 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
       // `defaultLabel: null` drops the sentinel "Default" option — a provider is always concrete.
-      modelProvider: createSelectField({
+      'modelProvider': createSelectField({
         defaultLabel: null,
         options: [
           { value: Provider.edge.id, label: t('settings.provider.edge.label') },
