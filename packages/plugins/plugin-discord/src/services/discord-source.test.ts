@@ -49,6 +49,17 @@ describe('DiscordSource mapping', () => {
     expect(message?.text).toBe('DXOS rocks');
   });
 
+  test('normalizes mention markup so raw channel/user ids never reach extraction', () => {
+    const message = mapDiscordMessage(
+      sample({
+        content: 'Thread automatically created by <@900> in <#837690136044503110>',
+        mentions: [{ id: '900', username: 'dmaretskyi', global_name: 'Dima' }],
+      }),
+    );
+    expect(message?.text).toBe('Thread automatically created by @Dima in');
+    expect(message?.text).not.toContain('837690136044503110');
+  });
+
   test('falls back to username when global_name is absent', () => {
     const message = mapDiscordMessage(sample({ author: { id: 'u2', username: 'carol', global_name: null } }));
     expect(message?.author.displayName).toBe('carol');

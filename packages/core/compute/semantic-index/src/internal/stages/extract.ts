@@ -42,7 +42,9 @@ export interface ExtractPayload extends Schema.Schema.Type<typeof ExtractPayload
 
 const PROMPT = `You extract atomic propositions from a message as structured facts.
 For each proposition output: subject, predicate (a short verb phrase), object, optional validFrom/validTo (ISO dates), a FactBank factuality value (CT+ certain-positive, PR+ probable-positive, PS+ possible-positive, and their - and CTu/Uu variants), polarity (+/-/?), optional confidence 0..1, optional nature (epistemic/aleatory), and the source quote.
-Capture uncertainty in factuality (e.g. "probably" => PR+, "might" => PS+).`;
+Capture uncertainty in factuality (e.g. "probably" => PR+, "might" => PS+).
+Keep prepositions and particles that bind to the verb in the predicate, not the object: passive voice "X was created by Y" => predicate "was created by", object "Y" (just the agent). Likewise "moved to", "depends on", "reported by".
+The object must be a single concrete entity (a person, project, org, place, or thing) or a literal value — never a raw id, snowflake, URL, or channel reference. Drop the proposition if the only object would be such an opaque token.`;
 
 /** Run schema-constrained extraction for one chunk. */
 export const extractChunk = (

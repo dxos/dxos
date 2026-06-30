@@ -3,7 +3,7 @@
 //
 
 import { DiscordREST } from 'dfx';
-import type { GuildChannelResponse, MessageResponse, MyGuildResponse } from 'dfx/types';
+import type { GuildChannelResponse, MessageResponse, MyGuildResponse, UserResponse } from 'dfx/types';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -24,6 +24,22 @@ const isContentMessage = (raw: MessageResponse): boolean => {
 };
 
 /**
+ * Resolve Discord mention markup so raw snowflake ids never reach extraction: user mentions become
+ * `@displayName`, custom emoji collapse to `:name:`, and channel/role mentions (whose names aren't
+ * carried on the message) are dropped. Without this the extractor treats e.g. `<#837…>` as an entity.
+ */
+const normalizeMentions = (content: string, mentions: ReadonlyArray<UserResponse>): string => {
+  const names = new Map(mentions.map((user) => [user.id, user.global_name || user.username]));
+  return content
+    .replace(/<@!?(\d+)>/g, (_match, id) => `@${names.get(id) ?? 'user'}`)
+    .replace(/<#\d+>/g, '')
+    .replace(/<@&\d+>/g, '')
+    .replace(/<a?:(\w+):\d+>/g, ':$1:')
+    .replace(/ {2,}/g, ' ')
+    .trim();
+};
+
+/**
  * Map a raw Discord message to a crawler message. Unlike the feed-sync path (which keeps only the
  * sender's display name), this preserves the author's stable `id` so the agent registry tokenizes by
  * user id, not name.
@@ -40,7 +56,7 @@ export const mapDiscordMessage = (raw: MessageResponse): Type.Message | undefine
     raw.author.global_name && raw.author.global_name.length > 0 ? raw.author.global_name : raw.author.username;
   return {
     id: raw.id,
-    text: raw.content ?? '',
+    text: normalizeMentions(raw.content ?? '', raw.mentions ?? []),
     author: { id: raw.author.id, source: 'discord', username: raw.author.username, displayName },
     createdAt: raw.timestamp,
     ...(parentId ? { parentId } : {}),

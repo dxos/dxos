@@ -39,9 +39,9 @@ export const SemanticFactsViewer = ({ classNames, facts }: SemanticFactsViewerPr
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <ScrollArea.Root>
+        <ScrollArea.Root padding>
           <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
-            {groups.length === 0 && <Empty icon='ph--list--regular' label='No facts.' />}
+            {groups.length === 0 && <Empty label='No facts.' />}
             {groups.map((group) => (
               <SubjectGroup key={group.subject} group={group} />
             ))}
@@ -76,7 +76,7 @@ const SubjectGroup = ({ group }: { group: Group }) => (
 );
 
 const cellClassNames =
-  'bg-card-surface border border-subdued-separator rounded-sm px-1 py-0.5 font-medium whitespace-nowrap truncate';
+  'bg-card-surface border border-subdued-separator rounded-sm px-2 py-0.5 font-medium whitespace-nowrap truncate';
 
 const FactRow = ({ fact, conflicting }: { fact: Type.Fact; conflicting: boolean }) => {
   const { assertion, valence, attribution } = fact;
