@@ -59,6 +59,14 @@ export const QueryPanel = ({
           onClick={onGenerate}
         />
         <IconButton icon='ph--play--regular' iconOnly label='Run' disabled={!!busy || !query} onClick={onRun} />
+        <Toolbar.Separator />
+        <IconButton
+          icon='ph--arrow-counter-clockwise--regular'
+          iconOnly
+          label='Reset query'
+          disabled={!!busy || query === DEFAULT_SPARQL}
+          onClick={() => onQueryChange(DEFAULT_SPARQL)}
+        />
       </Toolbar.Root>
     </Panel.Toolbar>
     <Panel.Content classNames='dx-container'>
