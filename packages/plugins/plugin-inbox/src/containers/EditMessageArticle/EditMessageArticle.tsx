@@ -44,7 +44,7 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
           return response.text;
         }).pipe(
           Effect.provide(
-            AiService.model('ai.claude.model.claude-haiku-4-5').pipe(
+            AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
               Layer.orDie,
               Layer.provide(ServiceResolver.provide({ space: spaceId }, AiService.AiService)),
             ),

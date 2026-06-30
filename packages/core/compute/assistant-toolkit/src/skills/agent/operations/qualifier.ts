@@ -90,7 +90,7 @@ const handler: Operation.WithHandler<typeof Qualifier> = Qualifier.pipe(
           }
         }
       },
-      Effect.provide(AiService.model('ai.claude.model.claude-sonnet-4-5')),
+      Effect.provide(AiService.model('com.anthropic.model.claude-sonnet-4-6.default')),
     ),
   ),
 );

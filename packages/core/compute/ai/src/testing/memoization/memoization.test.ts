@@ -48,10 +48,11 @@ const layerTest = DateToolkit.toLayer({
   }),
 });
 
-const TestLayer = Layer.mergeAll(testingLayer, layerTest, AiService.model('ai.claude.model.claude-sonnet-4-6')).pipe(
-  Layer.provideMerge(MemoizedAiService.layerTest()),
-  Layer.provide(AiServiceTestingPreset('edge-remote')),
-);
+const TestLayer = Layer.mergeAll(
+  testingLayer,
+  layerTest,
+  AiService.model('com.anthropic.model.claude-sonnet-4-6.default'),
+).pipe(Layer.provideMerge(MemoizedAiService.layerTest()), Layer.provide(AiServiceTestingPreset('edge-remote')));
 
 class TestObjectReadToolkit extends Toolkit.make(
   Tool.make('read-object', {
@@ -266,7 +267,10 @@ describe('dynamic value matching', () => {
         }
       },
       Effect.provide(
-        Layer.mergeAll(TestObjectReadToolkit.layer, AiService.model('ai.claude.model.claude-sonnet-4-6')).pipe(
+        Layer.mergeAll(
+          TestObjectReadToolkit.layer,
+          AiService.model('com.anthropic.model.claude-sonnet-4-6.default'),
+        ).pipe(
           Layer.provideMerge(
             MemoizedAiService.layerTest({
               dynamicValuePatterns: [MemoizedLanguageModel.ENTITY_ID_PATTERN],

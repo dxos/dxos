@@ -8,8 +8,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import type * as Stream from 'effect/Stream';
 
-import type { ModelName } from '@dxos/ai';
 import type { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 import type * as Trace from './Trace';
 
@@ -82,6 +82,9 @@ export const getSession = Effect.serviceFunctionEffect(AgentService, (service) =
 export const hydrate = Effect.serviceFunctionEffect(AgentService, (service) => service.hydrate);
 
 export interface GetSessionOptions {
-  readonly model?: ModelName;
+  readonly model?: DXN.DXN;
+  // The catalog's shared model ids are served by several providers, so the provider must accompany
+  // the model into the agent process — the id alone does not identify a resolver.
+  readonly provider?: DXN.DXN;
   readonly systemPrompt?: string;
 }
