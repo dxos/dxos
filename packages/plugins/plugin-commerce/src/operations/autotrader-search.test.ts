@@ -52,8 +52,8 @@ const makeAutoTraderProvider = (): Provider.Provider =>
       method: 'GET',
       urlTemplate: 'https://www.autotrader.co.uk/car-search',
       query: {
-        make: { field: 'make' },
-        model: { field: 'model' },
+        'make': { field: 'make' },
+        'model': { field: 'model' },
         'price-to': { field: 'priceTo' },
       },
     },

@@ -19,10 +19,17 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
 import { stubParse } from '@dxos/nlp';
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
-import { translations } from '@dxos/plugin-transcription/translations';
 import { pos } from '@dxos/ui-editor';
+import { trim } from '@dxos/util';
 
-import { DefaultStory, SAMPLE_CONTENT, createMarkdownStoryDecorators } from './testing';
+import { DefaultStory, createMarkdownStoryDecorators } from './testing';
+
+export const SAMPLE_CONTENT = trim`
+  # Transcription
+
+  Place the cursor here, then click the microphone in the toolbar to start recording.
+
+`;
 
 /**
  * Story-only plugin contributing the part-of-speech decoration extension to every Markdown editor,
@@ -60,7 +67,6 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations,
   },
 } satisfies Meta<typeof DefaultStory>;
 

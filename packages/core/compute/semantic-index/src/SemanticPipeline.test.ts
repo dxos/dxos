@@ -16,10 +16,10 @@ import { countingAiService, failingAiService, mockAiService, queuedAiService } f
 
 // Discord channel fixture (snapshot of `plugin-discord:generate-fixtures`) as extraction documents.
 type FixtureMessage = {
-  id: string;
-  created?: string;
-  sender?: { name?: string };
-  blocks?: Array<{ _tag: string; text?: string }>;
+  'id': string;
+  'created'?: string;
+  'sender'?: { name?: string };
+  'blocks'?: Array<{ _tag: string; text?: string }>;
   '@meta'?: { keys?: Array<{ id?: string }> };
 };
 

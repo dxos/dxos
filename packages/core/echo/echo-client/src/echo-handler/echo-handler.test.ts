@@ -402,7 +402,7 @@ describe('Reactive Object with ECHO database', () => {
       const objData: any = (obj as any).toJSON();
       expect(objData).to.deep.contain({
         ...TEST_OBJECT,
-        id: obj.id,
+        'id': obj.id,
         '@type': 'dxn:com.example.type.example:0.1.0',
         '@meta': { keys: [] },
       });
@@ -823,11 +823,11 @@ describe('Reactive Object with ECHO database', () => {
 
       const employeeJson = JSON.parse(JSON.stringify(employee));
       expect(employeeJson).to.deep.eq({
-        id: employee.id,
+        'id': employee.id,
         '@meta': { keys: [] },
         '@type': 'dxn:com.example.type.expando:0.1.0',
-        name: 'John',
-        worksAt: EncodedReference.fromURI(EID.make({ entityId: org.id })),
+        'name': 'John',
+        'worksAt': EncodedReference.fromURI(EID.make({ entityId: org.id })),
       });
     });
 

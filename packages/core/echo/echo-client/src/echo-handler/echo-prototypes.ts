@@ -463,7 +463,7 @@ export const getDevtoolsFormatter = (target: ProxyTarget): DevtoolsFormatter => 
         const typeURI = getTypeURI(target);
 
         data = {
-          id: target[symbolInternals].id,
+          'id': target[symbolInternals].id,
           '@type': typeURI,
           '@meta': metaReified,
           ...data,

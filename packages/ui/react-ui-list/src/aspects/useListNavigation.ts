@@ -45,17 +45,17 @@ export type UseListNavigationReturn = {
    * stable contract.
    */
   containerProps: TabsterDOMAttribute & {
-    role: ContainerRole;
+    'role': ContainerRole;
     'aria-orientation'?: 'vertical' | 'horizontal';
-    onFocus: (event: FocusEvent<HTMLElement>) => void;
+    'onFocus': (event: FocusEvent<HTMLElement>) => void;
   };
   /**
    * Apply to each item. Returns role, tabIndex, and aria-disabled. Disabled options remain
    * focusable so screen readers can announce them, per WAI-ARIA listbox guidance.
    */
   itemProps: (opts?: { disabled?: boolean }) => {
-    role: ItemRole;
-    tabIndex: number;
+    'role': ItemRole;
+    'tabIndex': number;
     'aria-disabled'?: true;
   };
 };

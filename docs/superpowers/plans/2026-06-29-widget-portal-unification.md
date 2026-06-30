@@ -723,7 +723,7 @@ This creates the React component that replaces the `addBlockContainer` callback 
   import { PreviewComponent } from '../extensions/PreviewComponent';
 
   const unifiedRegistry = {
-    test: xmlRegistry.test,
+    'test': xmlRegistry.test,
     'dxn-preview': {
       block: true,
       urlSchemes: ['dxn:', 'echo:'],
