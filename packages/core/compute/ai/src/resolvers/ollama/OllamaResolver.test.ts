@@ -19,7 +19,7 @@ import * as Provider from '../../Provider';
 import { CalculatorLayer, CalculatorToolkit } from '../../testing/calculator';
 import * as OllamaResolver from './OllamaResolver';
 
-const MODEL = DXN.make('com.openai.model.gptOss20b');
+const MODEL = DXN.make('com.openai.model.gpt-oss-20b.default');
 
 const ResolverLayer = OllamaResolver.make().pipe(Layer.provide(FetchHttpClient.layer));
 

@@ -13,7 +13,7 @@ import { Message } from '@dxos/types';
 
 import { findReferences, insertReferences } from '../quotes';
 
-const EXTRACTION_MODEL = DXN.make('com.anthropic.model.claudeHaiku45');
+const EXTRACTION_MODEL = DXN.make('com.anthropic.model.claude-haiku-4-5.default');
 
 /**
  * Proper nouns extracted from transcript text.

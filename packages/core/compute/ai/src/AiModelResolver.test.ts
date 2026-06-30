@@ -19,8 +19,8 @@ import * as AiService from './AiService';
 import { AiModelNotAvailableError } from './errors';
 import * as LMStudioResolver from './resolvers/lmstudio/LMStudioResolver';
 
-const SONNET = DXN.make('com.anthropic.model.claudeSonnet46');
-const GEMMA = DXN.make('com.google.model.gemma327b');
+const SONNET = DXN.make('com.anthropic.model.claude-sonnet-4-6.default');
+const GEMMA = DXN.make('com.google.model.gemma-3-27b.default');
 
 const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
   Layer.provide(

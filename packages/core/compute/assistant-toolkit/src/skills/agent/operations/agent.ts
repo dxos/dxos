@@ -57,7 +57,7 @@ export default AgentWorker.pipe(
         })
         .pipe(
           Effect.provide(
-            Layer.mergeAll(AiService.model('com.anthropic.model.claudeOpus48'), ToolExecutionServices).pipe(
+            Layer.mergeAll(AiService.model('com.anthropic.model.claude-opus-4-8.default'), ToolExecutionServices).pipe(
               Layer.provideMerge(Operation.withInvocationOptions({ conversation: Obj.getURI(chatFeed) })),
             ),
           ),

@@ -18,7 +18,7 @@ describe('Local AI', () => {
   it.effect(
     'create and query database objects',
     agentTest({
-      model: DXN.make('com.openai.model.gptOss20b'),
+      model: DXN.make('com.openai.model.gpt-oss-20b.default'),
       inferenceProvider: 'ollama',
       disableLlmMemoization: true,
       instructions: trim`

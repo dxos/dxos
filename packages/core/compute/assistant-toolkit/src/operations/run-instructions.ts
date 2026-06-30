@@ -29,7 +29,7 @@ import { PromptError } from '../errors';
 import * as Chat from '../types/Chat';
 import { RunInstructions } from './definitions';
 
-const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claudeOpus48');
+const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.default');
 
 const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Schema.All => {
   // Routines default to Void output; completeJob still needs to accept arbitrary success payloads.

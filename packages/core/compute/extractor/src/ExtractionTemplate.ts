@@ -75,7 +75,7 @@ export const ExtractionTemplate = Schema.Struct({
 });
 export interface ExtractionTemplate extends Schema.Schema.Type<typeof ExtractionTemplate> {}
 
-export const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claudeHaiku45');
+export const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-haiku-4-5.default');
 
 /**
  * Code-side wiring for a template extractor. The LLM produces a payload validated against

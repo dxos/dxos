@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
-const MODEL = DXN.make('com.anthropic.model.claudeHaiku45');
+const MODEL = DXN.make('com.anthropic.model.claude-haiku-4-5.default');
 const CACHE_TTL_MS = 60 * 60 * 1000;
 const RECENT_LIMIT = 20;
 const MAX_PROMPTS = 3;

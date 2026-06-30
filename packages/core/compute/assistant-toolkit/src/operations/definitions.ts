@@ -34,7 +34,7 @@ export const RunInstructions = Operation.make({
     chat: Schema.optional(Ref.Ref(Chat.Chat)),
 
     /**
-     * @default dxn:com.anthropic.model.claudeOpus48
+     * @default dxn:com.anthropic.model.claude-opus-4-8.default
      */
     model: Schema.optional(DXN.Schema),
 

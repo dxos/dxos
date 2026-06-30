@@ -110,8 +110,8 @@ export const AssistantTestLayer = (
   const resolvedModel: DXN.DXN =
     options.model ??
     (options.aiServicePreset === 'ollama'
-      ? DXN.make('com.openai.model.gptOss20b')
-      : DXN.make('com.anthropic.model.claudeOpus48'));
+      ? DXN.make('com.openai.model.gpt-oss-20b.default')
+      : DXN.make('com.anthropic.model.claude-opus-4-8.default'));
 
   // The catalog's shared model ids need a provider to resolve; pair the resolved model with the
   // provider its preset registers a resolver for.

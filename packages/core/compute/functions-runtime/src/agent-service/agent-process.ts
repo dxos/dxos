@@ -129,9 +129,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const strategy = Option.fromNullable(options.delegationStrategy);
         let delegations: Delegation[] = [...(yield* DelegationsCell.get)];
 
-        const requestModelLayer = AiService.model(options.model ?? DXN.make('com.anthropic.model.claudeOpus48'), {
-          provider: options.provider,
-        });
+        const requestModelLayer = AiService.model(
+          options.model ?? DXN.make('com.anthropic.model.claude-opus-4-8.default'),
+          {
+            provider: options.provider,
+          },
+        );
 
         const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
 

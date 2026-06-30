@@ -85,7 +85,7 @@ describe('Edge instructions', { tags: ['functions-e2e'] }, () => {
         input: {
           instructions: Ref.make(instructions),
           input: {},
-          model: DXN.make('com.anthropic.model.claudeHaiku45'),
+          model: DXN.make('com.anthropic.model.claude-haiku-4-5.default'),
         },
       }),
     );

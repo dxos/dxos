@@ -66,7 +66,9 @@ class TestImageToolkit extends Toolkit.make(
 const TestLayer = Layer.mergeAll(
   TestPdfToolkit.layer,
   TestImageToolkit.layer,
-  AiService.model('com.anthropic.model.claudeOpus48').pipe(Layer.provideMerge(AiServiceTestingPreset('direct'))),
+  AiService.model('com.anthropic.model.claude-opus-4-8.default').pipe(
+    Layer.provideMerge(AiServiceTestingPreset('direct')),
+  ),
 );
 
 describe('ContentBlockToolResult', { tags: ['llm'] }, () => {

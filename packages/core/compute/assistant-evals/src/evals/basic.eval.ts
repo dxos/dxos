@@ -27,15 +27,15 @@ const task = createEvalRunner({
 evalite.each<VariantConfig>([
   {
     name: 'claude-haiku-4-5',
-    input: { model: DXN.make('com.anthropic.model.claudeHaiku45') },
+    input: { model: DXN.make('com.anthropic.model.claude-haiku-4-5.default') },
   },
   {
     name: 'claude-sonnet-4-5',
-    input: { model: DXN.make('com.anthropic.model.claudeSonnet46') },
+    input: { model: DXN.make('com.anthropic.model.claude-sonnet-4-6.default') },
   },
   {
     name: 'claude-opus-4-6',
-    input: { model: DXN.make('com.anthropic.model.claudeOpus48') },
+    input: { model: DXN.make('com.anthropic.model.claude-opus-4-8.default') },
   },
 ])('Question answering', {
   data: [

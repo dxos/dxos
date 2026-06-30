@@ -29,7 +29,7 @@ describe('PipelineConfig', () => {
 describe('resolveModel', () => {
   test('config override beats stage default beats preset default', ({ expect }) => {
     const stage = makeCorrectionStage();
-    const override = DXN.make('com.meta.model.llama321b');
+    const override = DXN.make('com.meta.model.llama-3-2-1b.instruct');
     expect(resolveModel({ id: 'correct', enabled: true, model: override }, stage)).toEqual(override);
     expect(resolveModel(undefined, stage)).toEqual(stage.model);
     expect(resolveModel({ id: 'correct', enabled: true }, { ...stage, model: undefined }, DEFAULT_STAGE_MODEL)).toEqual(

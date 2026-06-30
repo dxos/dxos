@@ -27,7 +27,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claudeOpus48');
+const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.default');
 
 const SYSTEM_INSTRUCTIONS = trim`
   You are running within an evaluation environment.

@@ -20,7 +20,7 @@ export type ExtractDocument = {
   readonly date?: string;
 };
 
-export const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claudeHaiku45');
+export const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-haiku-4-5.default');
 
 /** Flat LLM payload (entities are surface strings; linking happens in the pipeline). */
 export const ExtractPayload = Schema.Struct({

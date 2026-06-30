@@ -62,13 +62,38 @@ export const make: {
 // and LM Studio — the same curated catalog, each provider serving it under its own back-end name
 // (an Ollama pull tag vs an LM Studio model id). https://ollama.com/library https://lmstudio.ai/models
 const LOCAL_MODELS = [
-  { id: 'com.meta.model.llama321b', label: 'Llama 3.2 1B', ollama: 'llama3.2:1b', lmStudio: 'llama-3.2-1b-instruct' },
-  { id: 'com.meta.model.llama323b', label: 'Llama 3.2 3B', ollama: 'llama3.2:3b', lmStudio: 'llama-3.2-3b-instruct' },
-  { id: 'com.google.model.gemma412b', label: 'Gemma 4 12B', ollama: 'gemma4:12b', lmStudio: 'gemma-4-12b' },
-  { id: 'com.google.model.gemma426b', label: 'Gemma 4 26B', ollama: 'gemma4:26b', lmStudio: 'gemma-4-26b' },
-  { id: 'ai.qwen.model.qwen257b', label: 'Qwen 2.5 7B', ollama: 'qwen2.5:7b', lmStudio: 'qwen2.5-7b-instruct' },
-  { id: 'ai.qwen.model.qwen2532b', label: 'Qwen 2.5 32B', ollama: 'qwen2.5:32b', lmStudio: 'qwen2.5-32b-instruct' },
-  { id: 'com.openai.model.gptOss20b', label: 'GPT-OSS 20B', ollama: 'gpt-oss:20b', lmStudio: 'openai/gpt-oss-20b' },
+  {
+    id: 'com.meta.model.llama-3-2-1b.instruct',
+    label: 'Llama 3.2 1B',
+    ollama: 'llama3.2:1b',
+    lmStudio: 'llama-3.2-1b-instruct',
+  },
+  {
+    id: 'com.meta.model.llama-3-2-3b.instruct',
+    label: 'Llama 3.2 3B',
+    ollama: 'llama3.2:3b',
+    lmStudio: 'llama-3.2-3b-instruct',
+  },
+  { id: 'com.google.model.gemma-4-12b.default', label: 'Gemma 4 12B', ollama: 'gemma4:12b', lmStudio: 'gemma-4-12b' },
+  { id: 'com.google.model.gemma-4-26b.default', label: 'Gemma 4 26B', ollama: 'gemma4:26b', lmStudio: 'gemma-4-26b' },
+  {
+    id: 'com.alibaba.model.qwen-2-5-7b.instruct',
+    label: 'Qwen 2.5 7B',
+    ollama: 'qwen2.5:7b',
+    lmStudio: 'qwen2.5-7b-instruct',
+  },
+  {
+    id: 'com.alibaba.model.qwen-2-5-32b.instruct',
+    label: 'Qwen 2.5 32B',
+    ollama: 'qwen2.5:32b',
+    lmStudio: 'qwen2.5-32b-instruct',
+  },
+  {
+    id: 'com.openai.model.gpt-oss-20b.default',
+    label: 'GPT-OSS 20B',
+    ollama: 'gpt-oss:20b',
+    lmStudio: 'openai/gpt-oss-20b',
+  },
 ] as const;
 
 // Builds the local catalog for one provider, selecting that provider's back-end name per model.
@@ -83,19 +108,19 @@ const localModelsFor = (provider: DXN.DXN, backend: (model: (typeof LOCAL_MODELS
  */
 export const all: readonly Model[] = [
   // Edge — Anthropic Claude via the DXOS edge intermediary.
-  make('com.anthropic.model.claudeOpus48', {
+  make('com.anthropic.model.claude-opus-4-8.default', {
     provider: Provider.edge.id,
     backend: 'claude-opus-4-8',
     label: 'Claude Opus',
     characteristics: { maxTokens: 16_384, thinking: true, tools: true },
   }),
-  make('com.anthropic.model.claudeSonnet46', {
+  make('com.anthropic.model.claude-sonnet-4-6.default', {
     provider: Provider.edge.id,
     backend: 'claude-sonnet-4-6',
     label: 'Claude Sonnet',
     characteristics: { maxTokens: 16_384, tools: true },
   }),
-  make('com.anthropic.model.claudeHaiku45', {
+  make('com.anthropic.model.claude-haiku-4-5.default', {
     provider: Provider.edge.id,
     backend: 'claude-haiku-4-5',
     label: 'Claude Haiku',
@@ -110,8 +135,12 @@ export const all: readonly Model[] = [
 
   // OpenAI (direct).
   // TODO(wittjosiah): Remove.
-  make('com.openai.model.gpt4o', { provider: Provider.openai.id, backend: 'gpt-4o', label: 'GPT-4o' }),
-  make('com.openai.model.gpt4oMini', { provider: Provider.openai.id, backend: 'gpt-4o-mini', label: 'GPT-4o mini' }),
+  make('com.openai.model.gpt-4o.default', { provider: Provider.openai.id, backend: 'gpt-4o', label: 'GPT-4o' }),
+  make('com.openai.model.gpt-4o-mini.default', {
+    provider: Provider.openai.id,
+    backend: 'gpt-4o-mini',
+    label: 'GPT-4o mini',
+  }),
 ];
 
 /** Models served by a given provider. */
@@ -125,9 +154,9 @@ export const get = (provider: DXN.DXN, id: DXN.DXN): Model | undefined =>
 export const byId = (id: DXN.DXN): Model[] => all.filter((model) => model.id === id);
 
 // Default model per provider, used when no explicit selection is configured.
-export const DEFAULT_EDGE: DXN.DXN = DXN.make('com.anthropic.model.claudeSonnet46');
-export const DEFAULT_OLLAMA: DXN.DXN = DXN.make('com.meta.model.llama321b');
-export const DEFAULT_LMSTUDIO: DXN.DXN = DXN.make('com.meta.model.llama323b');
+export const DEFAULT_EDGE: DXN.DXN = DXN.make('com.anthropic.model.claude-sonnet-4-6.default');
+export const DEFAULT_OLLAMA: DXN.DXN = DXN.make('com.meta.model.llama-3-2-1b.instruct');
+export const DEFAULT_LMSTUDIO: DXN.DXN = DXN.make('com.meta.model.llama-3-2-3b.instruct');
 
 /** Capability flags for a model. */
 export type Capabilities = {
