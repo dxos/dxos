@@ -101,6 +101,8 @@ const drawDropCursor = ViewPlugin.fromClass(
     eventObservers: {
       dragover(event) {
         if (isFileDrag(event)) {
+          // Mark the editor a valid drop target so the `drop` event fires for external files.
+          event.preventDefault();
           this.setDropPos(this.view.posAtCoords({ x: event.clientX, y: event.clientY }));
         }
       },
@@ -120,6 +122,10 @@ const drawDropCursor = ViewPlugin.fromClass(
   },
 );
 
+/**
+ * Editor extension that accepts external file drops (drawing a drop cursor and invoking
+ * `options.onDrop`) while leaving internal drags — e.g. an embed's resize handle — untouched.
+ */
 export const dropFile = (options: DropOptions = {}): Extension => {
   return [
     styles,

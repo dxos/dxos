@@ -125,28 +125,39 @@ describe('TableModel sort view state', () => {
     disposables.splice(0).forEach((backend) => backend.dispose());
   });
 
-  const openModel = async (storage: Storage, object: Table.Table, projection: ProjectionModel): Promise<TableModel> => {
-    const registry = Registry.make();
-    const local = new LocalBackend({ registry, storage });
-    disposables.push(local);
-    const viewState = new ViewStateManager({ registry, backends: { memory: new MemoryBackend(), local } });
-    const model = new TableModel({
-      registry,
-      object,
-      projection,
-      viewState,
-      change: createTableDirectChangeCallback(object),
-    });
-    await model.open();
-    return model;
-  };
-
   test('column sort persists to the local view state and is restored after reload', async () => {
     const storage = fakeStorage();
-    const { object, projection } = createTableInputs(Registry.make());
-    const titleFieldId = projection.getFields().find((field) => field.path === 'title')!.id;
+    const schema = createEchoSchema(Type.getSchema(Test));
+    const view = ViewModel.make({ query: Query.select(Filter.type(schema)), jsonSchema: schema.jsonSchema });
+    const object = Table.make({ view });
 
-    const first = await openModel(storage, object, projection);
+    // Each reopen builds a fresh registry/manager/projection over the SAME table object (and its view),
+    // so it exercises a real reload rather than reusing projection state across instances.
+    const reopen = async (): Promise<TableModel> => {
+      const registry = Registry.make();
+      const local = new LocalBackend({ registry, storage });
+      disposables.push(local);
+      const viewState = new ViewStateManager({ registry, backends: { memory: new MemoryBackend(), local } });
+      const projection = new ProjectionModel({
+        registry,
+        view,
+        baseSchema: schema.jsonSchema,
+        change: createDirectChangeCallback(view.projection, JsonSchema.toJsonSchema(Type.getSchema(schema))),
+      });
+      projection.normalizeView();
+      const model = new TableModel({
+        registry,
+        object,
+        projection,
+        viewState,
+        change: createTableDirectChangeCallback(object),
+      });
+      await model.open();
+      return model;
+    };
+
+    const first = await reopen();
+    const titleFieldId = first.projection.getFields().find((field) => field.path === 'title')!.id;
     first.setSort(titleFieldId, 'asc');
     expect(first.getSorting()).toEqual({ fieldId: titleFieldId, direction: 'asc' });
     expect(JSON.parse(storage.getItem(`dxos:view-state:table-sort:${first.id}`)!)).toEqual({
@@ -155,8 +166,8 @@ describe('TableModel sort view state', () => {
     });
     await first.close();
 
-    // Reload: fresh registry/manager/model over the same storage + table object.
-    const second = await openModel(storage, object, projection);
+    // Reload: fresh registry/manager/projection over the same storage + table object.
+    const second = await reopen();
     expect(second.getSorting()).toEqual({ fieldId: titleFieldId, direction: 'asc' });
 
     second.clearSort();
@@ -164,7 +175,7 @@ describe('TableModel sort view state', () => {
     await second.close();
 
     // The cleared sort is also persisted: a further reload reads no sort.
-    const third = await openModel(storage, object, projection);
+    const third = await reopen();
     expect(third.getSorting()).toBeUndefined();
     await third.close();
   });

@@ -29,7 +29,7 @@ export type EntityListProps = ThemedClassName<{
  * listbox's selection-follows-focus keeps keyboard navigation working.
  */
 export const EntityList = ({ entities, selected, onSelect, classNames }: EntityListProps) => {
-  const pointerSelectionRef = useRef<string | undefined>(undefined);
+  const pointerSelectionRef = useRef<{ itemId: string; selected: string | undefined } | undefined>(undefined);
   return (
     <Panel.Root classNames={classNames}>
       <Panel.Toolbar asChild>
@@ -56,9 +56,19 @@ export const EntityList = ({ entities, selected, onSelect, classNames }: EntityL
                   key={entity.id}
                   id={entity.id}
                   onMouseDown={() => {
-                    pointerSelectionRef.current = selected;
+                    pointerSelectionRef.current = { itemId: entity.id, selected };
                   }}
-                  onClick={() => onSelect(pointerSelectionRef.current === entity.id ? undefined : entity.id)}
+                  onClick={() => {
+                    // Consume the pre-gesture selection captured on mouse-down (cleared each gesture so a
+                    // later click without a fresh mouse-down can't toggle against stale state).
+                    const pointerSelection = pointerSelectionRef.current;
+                    pointerSelectionRef.current = undefined;
+                    if (pointerSelection?.itemId === entity.id) {
+                      onSelect(pointerSelection.selected === entity.id ? undefined : entity.id);
+                    } else {
+                      onSelect(entity.id);
+                    }
+                  }}
                 >
                   <Listbox.ItemLabel>{entity.label}</Listbox.ItemLabel>
                   <span className='shrink-0 text-subdued tabular-nums'>{entity.count}</span>

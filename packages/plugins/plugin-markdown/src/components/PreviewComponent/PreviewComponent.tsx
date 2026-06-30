@@ -47,7 +47,10 @@ const scrollTopIntoViewIfNeeded = (element: HTMLElement): void => {
   let parent = element.parentElement;
   while (parent) {
     const { overflowY } = getComputedStyle(parent);
-    if ((overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') && parent.scrollHeight > parent.clientHeight) {
+    if (
+      (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') &&
+      parent.scrollHeight > parent.clientHeight
+    ) {
       break;
     }
     parent = parent.parentElement;
@@ -90,10 +93,11 @@ export const PreviewComponent = ({ dxn, label: alt, onOpen, view, range }: Previ
     setSize(height != null ? height / remSize : 'min-content');
   }, [height, remSize]);
 
-  // Persist the height (px) into the alt text on drop by rewriting the image node in the source.
-  // The node bounds and base label are re-derived from the live document (rather than the captured
-  // `range`/`label`, which can lag a prior edit before React re-renders the widget) to avoid
-  // truncating the node and duplicating its tail.
+  // Persist the height (px) into the alt text on drop by rewriting the image node in the source. The
+  // node bounds and base label are re-derived from the live document (the captured `range`/`label`
+  // can lag a prior edit before React re-renders the widget). When the same object is transcluded
+  // more than once, the node whose start is NEAREST the widget's range is chosen so a duplicate
+  // embed isn't rewritten by mistake.
   const handleResize = useCallback(
     (next: Size, commit?: boolean) => {
       setSize(next);
@@ -102,11 +106,15 @@ export const PreviewComponent = ({ dxn, label: alt, onOpen, view, range }: Previ
       }
       const doc = view.state.doc.toString();
       const marker = `](${dxn})`;
-      let close = doc.indexOf(marker, Math.max(0, range.from));
-      if (close < 0) {
-        close = doc.indexOf(marker);
+      let open = -1;
+      let close = -1;
+      for (let at = doc.indexOf(marker); at >= 0; at = doc.indexOf(marker, at + marker.length)) {
+        const start = doc.lastIndexOf('![', at);
+        if (start >= 0 && (open < 0 || Math.abs(start - range.from) < Math.abs(open - range.from))) {
+          open = start;
+          close = at;
+        }
       }
-      const open = close < 0 ? -1 : doc.lastIndexOf('![', close);
       if (open < 0) {
         return;
       }
