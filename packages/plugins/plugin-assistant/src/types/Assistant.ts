@@ -11,18 +11,19 @@ export type Chat = ChatModule.Chat;
 
 import { type DXN } from '@dxos/keys';
 
+// TODO(wittjosiah): Why are we re-exporting rather than using the setting namespace directly?
 // Re-export Settings as merged const/type (not as namespace).
-import * as SettingsModule from './Settings';
-export const Settings = SettingsModule.Settings;
-export type Settings = SettingsModule.Settings;
+import * as Settings$ from './Settings'; // eslint-disable-line
+export const Settings = Settings$.Settings;
+export type Settings = Settings$.Settings;
 
-export const ChatViews = SettingsModule.ChatViews;
-export const ChatView = SettingsModule.ChatView;
-export type ChatView = SettingsModule.ChatView;
+export const ChatViews = Settings$.ChatViews;
+export const ChatView = Settings$.ChatView;
+export type ChatView = Settings$.ChatView;
 
-export const ModelProviders: readonly DXN.DXN[] = SettingsModule.ModelProviders;
-export const ModelProvider = SettingsModule.ModelProvider;
-export type ModelProvider = SettingsModule.ModelProvider;
+export const ModelProviders: readonly DXN.DXN[] = Settings$.ModelProviders;
+export const ModelProvider = Settings$.ModelProvider;
+export type ModelProvider = Settings$.ModelProvider;
 
-export const ModelDefaults = SettingsModule.ModelDefaults;
-export type ModelDefaults = SettingsModule.ModelDefaults;
+export const ModelDefaults = Settings$.ModelDefaults;
+export type ModelDefaults = Settings$.ModelDefaults;

@@ -10,7 +10,6 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { type Operation } from '@dxos/compute';
 import { type Database, type Obj } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
 
 import {
   ExtractError,
@@ -68,14 +67,14 @@ export const ExtractionTemplate = Schema.Struct({
   kinds: Schema.Array(Schema.String),
   sourceTypes: Schema.Array(Schema.String),
   prompt: Schema.String,
-  /** Cheap/fast model used for extraction. Defaults to {@link DEFAULT_MODEL}. */
-  model: Schema.optional(DXN.Schema),
+  /** Cheap/fast model (an NSID name) used for extraction. Defaults to {@link DEFAULT_MODEL}. */
+  model: Schema.optional(Schema.String),
   targets: Schema.Array(TargetSpec),
   tags: Schema.optional(Schema.Array(TagSpec)),
 });
 export interface ExtractionTemplate extends Schema.Schema.Type<typeof ExtractionTemplate> {}
 
-export const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-haiku-4-5.default');
+export const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
 /**
  * Code-side wiring for a template extractor. The LLM produces a payload validated against
@@ -133,7 +132,7 @@ export const makeTemplateExtractor = <Payload, PayloadEncoded extends Record<str
       const tags = mergeTags(result.tags, template.tags);
       return tags ? { ...result, tags } : result;
     }).pipe(
-      Effect.provide(AiService.model(DXN.getName(template.model ?? DEFAULT_MODEL)).pipe(Layer.orDie)),
+      Effect.provide(AiService.model(template.model ?? DEFAULT_MODEL).pipe(Layer.orDie)),
       // Wrap genuine failures + defects (e.g. AiService unavailable) as ExtractError, but leave
       // fiber interruption untouched so cancellation propagates (neither catchAll nor
       // catchAllDefect catches interruption).

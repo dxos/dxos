@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { DXN } from '@dxos/echo';
-
 import { DEFAULT_STAGE_MODEL, type StageConfig } from './PipelineConfig';
 import { type Stage } from './Stage';
 
@@ -11,15 +9,11 @@ import { type Stage } from './Stage';
  * Resolve the model for a stage invocation. Precedence: per-stage config override → the stage's own
  * default → the preset/pipeline default → the global {@link DEFAULT_STAGE_MODEL}.
  *
- * `StageConfig.model` is a free-form string in the schema (to avoid pinning persisted data to the
- * current model catalog); it is parsed to a model DXN here for the `AiService` call.
+ * All are model NSID names (`StageConfig.model` is a free-form string in the schema to avoid pinning
+ * persisted data to the current catalog).
  */
 export const resolveModel = (
   stageConfig: StageConfig | undefined,
   stage: Stage<any, any>,
-  presetDefault?: DXN.DXN,
-): DXN.DXN =>
-  (stageConfig?.model ? DXN.tryMake(stageConfig.model) : undefined) ??
-  stage.model ??
-  presetDefault ??
-  DEFAULT_STAGE_MODEL;
+  presetDefault?: string,
+): string => stageConfig?.model ?? stage.model ?? presetDefault ?? DEFAULT_STAGE_MODEL;
