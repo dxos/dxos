@@ -11,7 +11,7 @@ import { type Obj } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { getNodeFillForObject } from '../../../util/node-color';
+import { getNodeFillForObject } from '../../../util';
 import { type TreeNode } from '../types';
 import { type TreeLayoutSlots, defaultTreeLayoutSlots } from './slots';
 import { useContainerSize } from './useContainerSize';

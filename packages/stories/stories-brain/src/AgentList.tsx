@@ -38,7 +38,7 @@ export const AgentList = ({ agents, selected, onSelect, classNames }: AgentListP
     </Panel.Toolbar>
     <Panel.Content classNames='overflow-auto'>
       {agents.length === 0 ? (
-        <Empty icon='ph--users--regular' label='No agents yet.' />
+        <Empty label='No agents.' />
       ) : (
         <Listbox.Root value={selected} onValueChange={onSelect}>
           <Listbox.Content aria-label='Agents'>

@@ -54,6 +54,7 @@ export const QueryPanel = ({
     <Panel.Toolbar asChild>
       <Toolbar.Root>
         <Toolbar.Text classNames='grow'>Query</Toolbar.Text>
+        <Toolbar.Separator />
         <IconButton
           icon='ph--sparkle--regular'
           iconOnly
@@ -62,7 +63,6 @@ export const QueryPanel = ({
           onClick={onGenerate}
         />
         <IconButton icon='ph--play--regular' iconOnly label='Run' disabled={!!busy || !query} onClick={onRun} />
-        <Toolbar.Separator />
         <IconButton
           icon='ph--arrow-counter-clockwise--regular'
           iconOnly
