@@ -14,7 +14,6 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AgentRegistry,
   type ChannelInfo,
-  type Profile,
   Source,
   type Stage,
   StateStore,
@@ -31,24 +30,23 @@ import {
   type Type,
   buildSparql,
   generateQuery,
-  normalizeEntityId,
   parseSparqlToQuery,
 } from '@dxos/semantic-index';
 
-import { AgentList } from './AgentList';
 import { type CrawlAction, CrawlOptions, CrawlPanel, initialOptions } from './CrawlPanel';
+import { EntityList } from './EntityList';
 import { DEFAULT_SPARQL, QueryPanel } from './QueryPanel';
 import { SemanticFactsViewer } from './SemanticFactsViewer';
+import { entitiesFromFacts } from './util';
 
 const CRAWL_STAGES: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
 
 const makeStore = () => ManagedRuntime.make(SemanticStore.layerMemory);
 
 // Browser persistence: the semantic store runs in-memory (OPFS SQLite is worker-only, so it can't run
-// on the storybook main thread), and the extracted facts + resolved agents are snapshotted to
-// localStorage — rehydrated on mount and re-saved after each crawl, so both survive reloads.
+// on the storybook main thread), and the extracted facts are snapshotted to localStorage —
+// rehydrated on mount and re-saved after each crawl, so they survive reloads (entities derive from them).
 const FACTS_STORAGE_KEY = 'dxos.crawler.facts';
-const AGENTS_STORAGE_KEY = 'dxos.crawler.agents';
 const save = (key: string, value: unknown) => {
   try {
     localStorage.setItem(key, JSON.stringify(value));
@@ -57,20 +55,13 @@ const save = (key: string, value: unknown) => {
   }
 };
 
-// Filter facts to a single agent's attributions; an undefined selection means "no filter". The
-// pipeline normalizes the author token into the entity id space (e.g. `discord-user:123` →
-// `discord-user-123`), so the agent's registry id must be normalized the same way to join against
-// the stored `attribution.agent`.
-const factsForAgent = (facts: Type.Fact[], agent?: string): Type.Fact[] =>
-  agent == null ? facts : facts.filter((fact) => fact.attribution.agent === normalizeEntityId(agent));
-
 type StoryArgs = {};
 
 /**
  * Drive the crawler from the browser: enter a Discord bot token + options, list the channels the bot
  * can read, choose one, crawl it through the pipeline (edge LLM extraction), view the facts, and
- * filter them by the resolved agents (third column). Composed from {@link CrawlPanel},
- * {@link SemanticFactsViewer} and {@link AgentList}.
+ * scope them by the entities mentioned (third column). Composed from {@link CrawlPanel},
+ * {@link SemanticFactsViewer} and {@link EntityList}.
  */
 const DefaultStory = (_: StoryArgs) => {
   const [options, setOptions] = useState<CrawlOptions>(initialOptions);
@@ -78,13 +69,14 @@ const DefaultStory = (_: StoryArgs) => {
   const [query, setQuery] = useState(DEFAULT_SPARQL);
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
   const [facts, setFacts] = useState<Type.Fact[]>([]);
-  const [agents, setAgents] = useState<Profile[]>([]);
-  const [selectedAgent, setSelectedAgent] = useState<string | undefined>(undefined);
+  const [context, setContext] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState<CrawlAction | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const visibleFacts = useMemo(() => factsForAgent(facts, selectedAgent), [facts, selectedAgent]);
+  // The entity column + context are derived from the facts (subjects/objects), so loaded documents
+  // populate them too — not just crawled message authors.
+  const entities = useMemo(() => entitiesFromFacts(facts), [facts]);
 
   // Stable in-memory store across crawls; recreated if disposed (StrictMode remount).
   const storeRef = useRef<ReturnType<typeof makeStore> | null>(null);
@@ -97,7 +89,7 @@ const DefaultStory = (_: StoryArgs) => {
     [],
   );
 
-  // Rehydrate persisted facts into the store + view on mount, plus the agent column snapshot.
+  // Rehydrate persisted facts into the store + view on mount (entities derive from them).
   useEffect(() => {
     const rawFacts = localStorage.getItem(FACTS_STORAGE_KEY);
     if (rawFacts) {
@@ -106,14 +98,6 @@ const DefaultStory = (_: StoryArgs) => {
         void getStore()
           .runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.putFacts(saved))))
           .then(() => setFacts(saved));
-      } catch {
-        // Ignore a malformed snapshot.
-      }
-    }
-    const rawAgents = localStorage.getItem(AGENTS_STORAGE_KEY);
-    if (rawAgents) {
-      try {
-        setAgents(JSON.parse(rawAgents));
       } catch {
         // Ignore a malformed snapshot.
       }
@@ -176,18 +160,16 @@ const DefaultStory = (_: StoryArgs) => {
           const extracted = yield* store.query({});
           // Every message is observed by the agent-profile stage, so the summed counts == messages seen.
           const messages = crawled.reduce((total, agent) => total + agent.messageCount, 0);
-          return { summary, messages, agents: crawled, facts: extracted };
+          return { summary, messages, facts: extracted };
         }).pipe(Effect.provide(perCrawl)),
       );
       setFacts(result.facts);
-      setAgents(result.agents);
       save(FACTS_STORAGE_KEY, result.facts);
-      save(AGENTS_STORAGE_KEY, result.agents);
       const skipped = result.summary.errored > 0 ? ` · ${result.summary.errored} skipped` : '';
       setStatus(
         result.messages === 0 && result.summary.errored === 0
           ? `No messages in the last ${options.maxDays}d — widen the lookback.`
-          : `Crawled ${result.messages} messages · ${result.agents.length} agents · ${result.facts.length} facts${skipped}`,
+          : `Crawled ${result.messages} messages · ${result.facts.length} facts${skipped}`,
       );
     });
   };
@@ -213,15 +195,13 @@ const DefaultStory = (_: StoryArgs) => {
       setStatus(`Processed ${name} · ${results.length} facts`);
     });
 
-  // Clear the persisted facts + agents (store + snapshots) and the current selection.
+  // Clear the persisted facts (store + snapshot) and the current context.
   const handleReset = () =>
     void guard('reset', async () => {
       await getStore().runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.clear())));
       localStorage.removeItem(FACTS_STORAGE_KEY);
-      localStorage.removeItem(AGENTS_STORAGE_KEY);
       setFacts([]);
-      setAgents([]);
-      setSelectedAgent(undefined);
+      setContext(undefined);
       setStatus('Cleared persisted facts.');
     });
 
@@ -280,64 +260,45 @@ const DefaultStory = (_: StoryArgs) => {
           onReset={handleResetQuery}
         />
       </div>
-      <SemanticFactsViewer facts={visibleFacts} />
-      <AgentList agents={agents} selected={selectedAgent} onSelect={setSelectedAgent} />
+      <SemanticFactsViewer facts={facts} context={context} />
+      <EntityList entities={entities} selected={context} onSelect={setContext} />
     </div>
   );
 };
 
-// A small hand-authored corpus exercised by the in-memory variant:
-// two agents (Alice, Bob) and the facts attributed to each.
-const SAMPLE_AGENTS: Profile[] = [
-  {
-    id: 'alice',
-    label: 'Alice',
-    identifiers: [{ namespace: 'example.com', value: 'alice' }],
-    messageCount: 2,
-  },
-  {
-    id: 'bob',
-    label: 'Bob',
-    identifiers: [{ namespace: 'example.com', value: 'bob' }],
-    messageCount: 2,
-  },
-];
-
-const sampleFact = (
-  id: string,
-  agent: string,
-  subject: string,
-  predicate: string,
-  object: string,
-  confidence: number,
-): Type.Fact => ({
+// A small hand-authored Alice/Bob corpus exercised by the in-memory variant.
+const sampleFact = (id: string, subject: string, predicate: string, object: string, confidence: number): Type.Fact => ({
   id,
-  assertion: { subject: { entity: subject }, predicate, object: { entity: object } },
+  assertion: {
+    subject: { entity: subject, label: subject === 'dxos' ? 'DXOS' : subject },
+    predicate,
+    object: { entity: object, label: object === 'dxos' ? 'DXOS' : object },
+  },
   valence: { factuality: 'CT+', polarity: '+', confidence },
-  attribution: { agent, source: `sample:${id}`, generatedAtTime: '2026-06-29T00:00:00.000Z' },
+  attribution: { source: `sample:${id}`, generatedAtTime: '2026-06-29T00:00:00.000Z' },
   recordedAt: '2026-06-29T00:00:00.000Z',
   extractor: { id: 'sample', model: 'sample', version: '1' },
   sourceHash: id,
 });
 
 const SAMPLE_FACTS: Type.Fact[] = [
-  sampleFact('s1', 'alice', 'alice', 'works at', 'DXOS', 0.95),
-  sampleFact('s2', 'alice', 'alice', 'met', 'bob', 0.8),
-  sampleFact('s3', 'bob', 'bob', 'works at', 'DXOS', 0.9),
-  sampleFact('s5', 'bob', 'bob', 'leads', 'engineering', 0.9),
-  sampleFact('s4', 'bob', 'bob', 'attended', 'blueyard summit', 0.7),
+  sampleFact('s1', 'alice', 'works at', 'dxos', 0.95),
+  sampleFact('s2', 'alice', 'met', 'bob', 0.8),
+  sampleFact('s3', 'bob', 'works at', 'dxos', 0.9),
+  sampleFact('s5', 'bob', 'leads', 'engineering', 0.9),
+  sampleFact('s4', 'bob', 'attended', 'blueyard summit', 0.7),
 ];
 
 /**
  * No crawl: seed an in-memory {@link SemanticStore} with a hand-authored Alice/Bob corpus, read the
- * facts back through it, and filter by agent. Reuses {@link SemanticFactsViewer} and {@link AgentList}
- * to show the columns are independent of the Discord pipeline.
+ * facts back through it, and navigate by entity. Reuses {@link SemanticFactsViewer} and
+ * {@link EntityList} to show the columns are independent of the Discord pipeline.
  */
 const InMemoryStory = (_: StoryArgs) => {
   const [facts, setFacts] = useState<Type.Fact[]>([]);
-  const [selectedAgent, setSelectedAgent] = useState<string | undefined>(undefined);
+  const [context, setContext] = useState<string | undefined>(undefined);
 
-  const visibleFacts = useMemo(() => factsForAgent(facts, selectedAgent), [facts, selectedAgent]);
+  const entities = useMemo(() => entitiesFromFacts(facts), [facts]);
 
   const storeRef = useRef<ReturnType<typeof makeStore> | null>(null);
   const getStore = () => (storeRef.current ??= makeStore());
@@ -364,8 +325,8 @@ const InMemoryStory = (_: StoryArgs) => {
 
   return (
     <div className='dx-container grid grid-cols-2 gap-2'>
-      <SemanticFactsViewer facts={visibleFacts} />
-      <AgentList agents={SAMPLE_AGENTS} selected={selectedAgent} onSelect={setSelectedAgent} />
+      <SemanticFactsViewer facts={facts} context={context} />
+      <EntityList entities={entities} selected={context} onSelect={setContext} />
     </div>
   );
 };

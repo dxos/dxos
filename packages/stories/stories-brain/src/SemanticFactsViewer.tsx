@@ -9,20 +9,31 @@ import { Empty, Listbox } from '@dxos/react-ui-list';
 import { type Type } from '@dxos/semantic-index';
 import { mx } from '@dxos/ui-theme';
 
-import { Group, factualityColor, formatDate, formatTerm, groupFacts } from './util';
+import { Group, factualityColor, formatDate, formatTerm, groupFacts, termKey } from './util';
 
 export type SemanticFactsViewerProps = ThemedClassName<{
   facts: Type.Fact[];
+  /** Context entity id; when set, scopes the view to facts where it is subject or object. */
+  context?: string;
 }>;
 
 /**
  * Read-only viewer for extracted semantic facts. Facts are grouped by subject entity and
  * conflicts (same subject + predicate, different objects) are highlighted as the headline signal.
- * Pure/presentational: no data fetching, no engine.
+ * When a `context` entity is set, the view is scoped to facts involving it. Pure/presentational.
  */
-export const SemanticFactsViewer = ({ classNames, facts }: SemanticFactsViewerProps) => {
+export const SemanticFactsViewer = ({ classNames, facts, context }: SemanticFactsViewerProps) => {
   const [filter, setFilter] = useState('');
-  const groups = useMemo(() => groupFacts(facts, filter), [facts, filter]);
+  const scoped = useMemo(
+    () =>
+      context == null
+        ? facts
+        : facts.filter(
+            (fact) => termKey(fact.assertion.subject) === context || termKey(fact.assertion.object) === context,
+          ),
+    [facts, context],
+  );
+  const groups = useMemo(() => groupFacts(scoped, filter), [scoped, filter]);
 
   return (
     <Panel.Root classNames={classNames}>
