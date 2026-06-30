@@ -24,6 +24,7 @@ const baseDir = resolve(__dirname, '../');
 const rootDir = resolve(baseDir, '../../');
 const staticDir = resolve(baseDir, './static');
 const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
+const dxosIconsDir = resolve(rootDir, 'packages/ui/brand/assets/icons');
 // tldraw self-hosts its fonts/icons; plugin-sketch points tldraw at `/assets/plugin-sketch` and the
 // app serves them via a copy step (see composer-app `copy:assets`). Mirror that here so sketch
 // surfaces render (tldraw blocks the editor behind an asset preload).
@@ -304,11 +305,20 @@ export const createConfig = ({
           DxosLogPlugin(),
 
           IconsPlugin({
-            assetPath: (name, variant) =>
-              `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+            // The leading negative lookahead restricts the `dx` set to the `regular` weight only
+            // (custom brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
+            symbolPattern:
+              '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+            assetPath: (iconSet, name, variant) => {
+              switch (iconSet) {
+                case 'dx':
+                  return `${dxosIconsDir}/${name}.svg`;
+                default:
+                  return `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
+              }
+            },
             contentPaths: content,
             spriteFile: 'icons.svg',
-            symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
           }),
 
           ThemePlugin({}),
