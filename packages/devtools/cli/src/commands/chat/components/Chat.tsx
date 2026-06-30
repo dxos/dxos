@@ -10,7 +10,6 @@ import { type AiSession, GenerationObserver } from '@dxos/assistant';
 import { Skill } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useAtomValue } from '@dxos/effect-atom-solid';
-import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { isTruthy } from '@dxos/util';
@@ -33,7 +32,7 @@ export type ChatProps = {
   db: Database.Database;
   processor: ChatProcessor;
   conversation: AiSession.Session;
-  model: DXN.DXN;
+  model: string;
   verbose?: boolean;
   onChatSelect?: (chat: Assistant.Chat) => void;
   onChatCreate?: ({ skills }: { skills: string[] }) => void;

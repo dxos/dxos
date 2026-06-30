@@ -33,7 +33,6 @@ import { Database, Feed, Registry, Tag, Type } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
 import { type TestContextService } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
-import { DXN } from '@dxos/keys';
 
 import { AgentService as AgentServiceRuntime } from '../agent-service';
 import * as FeedTraceSink from '../FeedTraceSink';
@@ -48,9 +47,9 @@ interface TestLayerOptions {
    * When set, `aiServicePreset` and `disableLlmMemoization` are ignored.
    */
   aiService?: Layer.Layer<AiService.AiService>;
-  model?: DXN.DXN;
+  model?: string;
   /** Provider the model resolves through; defaults to `ollama` for the ollama preset, else `edge`. */
-  provider?: DXN.DXN;
+  provider?: string;
   operationHandlers?: OperationHandlerSet.OperationHandlerSet | OperationHandlerSet.OperationHandlerSet[];
   toolkits?: OpaqueToolkit.OpaqueToolkit[];
   types?: Type.AnyEntity[];
@@ -107,15 +106,15 @@ export type AssistantTestServices =
 export const AssistantTestLayer = (
   options: TestLayerOptions = {},
 ): Layer.Layer<AssistantTestServices, never, TestContextService> => {
-  const resolvedModel: DXN.DXN =
+  const resolvedModel: string =
     options.model ??
     (options.aiServicePreset === 'ollama'
-      ? DXN.make('com.openai.model.gpt-oss-20b.default')
-      : DXN.make('com.anthropic.model.claude-opus-4-8.default'));
+      ? 'com.openai.model.gpt-oss-20b.default'
+      : 'com.anthropic.model.claude-opus-4-8.default');
 
   // The catalog's shared model ids need a provider to resolve; pair the resolved model with the
   // provider its preset registers a resolver for.
-  const resolvedProvider: DXN.DXN =
+  const resolvedProvider: string =
     options.provider ?? (options.aiServicePreset === 'ollama' ? Provider.ollama.id : Provider.edge.id);
 
   const agentOptions: AgentServiceRuntime.AgentServiceOptions = { ...options.agent };

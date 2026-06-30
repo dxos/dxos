@@ -20,7 +20,7 @@ import {
 } from '@dxos/compute/AgentService';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { DXN, EID } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
@@ -38,8 +38,8 @@ const isTerminalProcess = (state: Process.State): boolean =>
 export interface CreateSessionOptions {
   readonly skills?: Skill.Skill[];
   readonly context?: Ref.Ref<Obj.Unknown>[];
-  readonly model?: DXN.DXN;
-  readonly provider?: DXN.DXN;
+  readonly model?: string;
+  readonly provider?: string;
   readonly systemPrompt?: string;
 }
 
@@ -71,12 +71,12 @@ export interface AgentServiceOptions {
   /**
    * Default model used by sessions that don't specify one explicitly.
    */
-  model?: DXN.DXN;
+  model?: string;
 
   /**
    * Default provider used to resolve the model for sessions that don't specify one explicitly.
    */
-  provider?: DXN.DXN;
+  provider?: string;
 
   /**
    * Provider for space-level MCP server configs.
@@ -108,10 +108,10 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
       // the old process and spawns a fresh one (see below).
       const sessionCache = new Map<
         string,
-        { model: DXN.DXN | undefined; provider: DXN.DXN | undefined; handle: AgentHandle; session: Session }
+        { model: string | undefined; provider: string | undefined; handle: AgentHandle; session: Session }
       >();
 
-      const makeExecutable = (model?: DXN.DXN, provider?: DXN.DXN) =>
+      const makeExecutable = (model?: string, provider?: string) =>
         AgentProcess({
           systemPrompt: opts?.systemPrompt,
           model: model ?? opts?.model,

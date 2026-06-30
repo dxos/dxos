@@ -15,11 +15,8 @@ import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
 import { ExecutionGraphModule } from './ExecutionGraphModule';
 import { type ModuleProps } from './types';
 
-// Stories use default (edge) provider settings; provider selection lives in Assistant settings.
-const STORY_SETTINGS: Assistant.Settings = {};
-
 export const ChatModule = ({ space }: ModuleProps) => {
-  const { preset, ...chatProps } = usePresets(STORY_SETTINGS);
+  const { preset, ...chatProps } = usePresets({});
 
   const chats = useQuery(space.db, Filter.type(Assistant.Chat));
   const chat = chats.at(-1);

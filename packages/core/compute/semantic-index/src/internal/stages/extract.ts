@@ -8,7 +8,6 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { DXN } from '@dxos/echo';
 
 import { SemanticIndexError } from '../../errors';
 import { Factuality } from '../../types';
@@ -20,7 +19,7 @@ export type ExtractDocument = {
   readonly date?: string;
 };
 
-export const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-haiku-4-5.default');
+export const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
 /** Flat LLM payload (entities are surface strings; linking happens in the pipeline). */
 export const ExtractPayload = Schema.Struct({

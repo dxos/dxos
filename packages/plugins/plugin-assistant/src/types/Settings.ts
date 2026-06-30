@@ -8,13 +8,12 @@ import * as Schema from 'effect/Schema';
 
 import { Provider } from '@dxos/ai';
 import { SchemaEx } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
 
-// A provider id is an open DXN string (third-party providers define their own), so it is stored as a
+// A provider id is an open NSID name (third-party providers define their own), so it is stored as a
 // string rather than a closed literal union. The known providers come from the @dxos/ai registry.
 export const ModelProvider = Schema.String;
-export type ModelProvider = DXN.DXN;
-export const ModelProviders: readonly DXN.DXN[] = Provider.all.map((provider) => provider.id);
+export type ModelProvider = string;
+export const ModelProviders: readonly string[] = Provider.all.map((provider) => provider.id);
 
 export const ChatView = Schema.Union(
   Schema.Literal('normal').annotations({ title: 'Normal' }),

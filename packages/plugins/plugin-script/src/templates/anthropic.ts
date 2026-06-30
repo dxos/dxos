@@ -28,7 +28,7 @@ const Anthropic = Operation.make({
 export default Anthropic.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ message }) {
-      const model = (yield* AiService.AiService).model(DXN.make('com.anthropic.model.claude-sonnet-4-6.default'));
+      const model = (yield* AiService.AiService).model('com.anthropic.model.claude-sonnet-4-6.default');
 
       //
       // Basic example.

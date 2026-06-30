@@ -8,12 +8,11 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { type Database, Obj } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
 import { findReferences, insertReferences } from '../quotes';
 
-const EXTRACTION_MODEL = DXN.make('com.anthropic.model.claude-haiku-4-5.default');
+const EXTRACTION_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
 /**
  * Proper nouns extracted from transcript text.

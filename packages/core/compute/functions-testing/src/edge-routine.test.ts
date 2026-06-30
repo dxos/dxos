@@ -11,7 +11,6 @@ import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN } from '@dxos/keys';
 import { dbg, log } from '@dxos/log';
 import { ErrorCodec } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -85,7 +84,7 @@ describe('Edge instructions', { tags: ['functions-e2e'] }, () => {
         input: {
           instructions: Ref.make(instructions),
           input: {},
-          model: DXN.make('com.anthropic.model.claude-haiku-4-5.default'),
+          model: 'com.anthropic.model.claude-haiku-4-5.default',
         },
       }),
     );

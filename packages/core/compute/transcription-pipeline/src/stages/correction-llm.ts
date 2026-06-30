@@ -8,7 +8,6 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { DXN } from '@dxos/echo';
 import { type ContentBlock } from '@dxos/types';
 
 import { DEFAULT_STAGE_MODEL } from '../PipelineConfig';
@@ -26,7 +25,7 @@ const PROMPT = `You repair raw speech-to-text fragments. For each numbered fragm
  */
 export const correctWithLanguageModel = (
   blocks: readonly ContentBlock.Transcript[],
-  model: DXN.DXN = DEFAULT_STAGE_MODEL,
+  model: string = DEFAULT_STAGE_MODEL,
 ): Effect.Effect<ReadonlyArray<{ index: number; corrected: string }>, unknown, AiService.AiService> =>
   Effect.gen(function* () {
     const input = blocks.map((block, index) => `${index}: ${block.corrected ?? block.text}`).join('\n');

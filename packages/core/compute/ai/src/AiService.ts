@@ -20,7 +20,8 @@ export type ServiceMetadata = {
 
 /** Options for resolving a model: the provider to resolve through (defaults to edge) plus model options. */
 export type ResolveOptions = Model.Options & {
-  readonly provider?: DXN.DXN;
+  /** Provider NSID name to resolve through. */
+  readonly provider?: string;
 };
 
 export interface Service {
@@ -30,10 +31,10 @@ export interface Service {
   readonly metadata?: ServiceMetadata;
 
   /**
-   * Maps model name ont a LanguageModel layer.
+   * Maps a model NSID name onto a LanguageModel layer.
    */
   readonly model: (
-    model: DXN.DXN,
+    model: string,
     options?: ResolveOptions,
   ) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>;
 }
@@ -44,26 +45,22 @@ export interface Service {
 export class AiService extends Context.Tag('@dxos/ai/AiService')<AiService, Service>() {}
 
 /**
- * Resolves a model layer by id. Accepts a model DXN or a bare NSID name — validated at compile time
- * like {@link DXN.make} — so call sites can pass the literal id without wrapping it in `DXN.make`.
+ * Resolves a model layer by its NSID name — validated at compile time like {@link DXN.make}, so call
+ * sites pass the literal id directly.
  */
 export const model: {
   <Id extends string>(
-    model:
-      | DXN.DXN
-      | ([DXN.Name<Id>] extends [never] ? `Invalid NSID "${Id}": final segment must be camelCase (no hyphens)` : Id),
+    model: [DXN.Name<Id>] extends [never] ? `Invalid NSID "${Id}": final segment must be camelCase (no hyphens)` : Id,
     options?: ResolveOptions,
   ): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService>;
 } = (
-  model: DXN.DXN | string,
+  model: string,
   options?: ResolveOptions,
-): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService> => {
-  const dxn = DXN.isDXN(model) ? model : DXN.make(model);
-  return AiService.pipe(
-    Effect.map((_) => _.model(dxn, options)),
+): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService> =>
+  AiService.pipe(
+    Effect.map((_) => _.model(model, options)),
     Layer.unwrapEffect,
   );
-};
 
 export const notAvailable = Layer.succeed(AiService, {
   model: (model) => Layer.fail(new AiModelNotAvailableError(model)),

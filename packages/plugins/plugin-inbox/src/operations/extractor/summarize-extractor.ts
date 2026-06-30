@@ -16,7 +16,6 @@ import {
   type MatchResult,
   type ObjectExtractor,
 } from '@dxos/extractor';
-import { DXN } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { type ContentBlock, Message } from '@dxos/types';
 
@@ -36,7 +35,7 @@ import { InboxOperation } from '../../types';
  */
 export const SUMMARIZE_ID = 'org.dxos.plugin.inbox.extractor.summarize';
 
-const SUMMARIZE_MODEL = DXN.make('com.anthropic.model.claude-haiku-4-5.default');
+const SUMMARIZE_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
 const MIN_BODY_LENGTH = 200;
 
