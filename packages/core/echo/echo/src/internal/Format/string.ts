@@ -33,18 +33,6 @@ export const Formula = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Formul
 export const Hostname = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Hostname));
 
 /**
- *
- */
-// TODO(burdon): Implement.
-export const JSON = Schema.String.pipe(FormatAnnotation.set(TypeFormat.JSON));
-
-/**
- *
- */
-// TODO(burdon): Implement.
-export const Markdown = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Markdown));
-
-/**
  * Regex
  * https://json-schema.org/understanding-json-schema/reference/regular_expressions
  * https://ecma-international.org/publications-and-standards/standards/ecma-262

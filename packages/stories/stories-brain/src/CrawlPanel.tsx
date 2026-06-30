@@ -12,18 +12,13 @@ import { Format } from '@dxos/echo';
 import { IconButton, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
 
-// Default SPARQL: every fact. Parsed to a structured query and run over the store (no Comunica).
-export const DEFAULT_SPARQL = 'SELECT ?fact ?p ?o WHERE { ?fact ?p ?o }';
-
 export const CrawlOptions = Schema.Struct({
-  token: Schema.String.annotations({ title: 'Discord bot token' }),
+  token: Schema.String.annotations({ title: 'Discord bot token' }).pipe(
+    Format.FormatAnnotation.set(Format.TypeFormat.Password),
+  ),
   channel: Schema.String.annotations({ title: 'Channel' }),
   maxDays: Schema.Number.annotations({ title: 'Lookback (days)' }),
   descendThreads: Schema.Boolean.annotations({ title: 'Crawl threads' }),
-  query: Schema.String.pipe(
-    Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-    Schema.annotations({ title: 'SPARQL' }),
-  ),
 });
 export type CrawlOptions = Schema.Schema.Type<typeof CrawlOptions>;
 
@@ -36,7 +31,6 @@ export const initialOptions = (): CrawlOptions => ({
   channel: String(import.meta.env.VITE_DISCORD_CHANNEL ?? ''),
   maxDays: Number(import.meta.env.VITE_DISCORD_MAX_DAYS ?? 14),
   descendThreads: import.meta.env.VITE_DISCORD_THREADS !== '0',
-  query: DEFAULT_SPARQL,
 });
 
 export type CrawlPanelProps = ThemedClassName<{
@@ -48,7 +42,6 @@ export type CrawlPanelProps = ThemedClassName<{
   onValuesChanged: ComponentProps<typeof Form.Root>['onValuesChanged'];
   onListChannels: () => void;
   onCrawl: () => void;
-  onRunSparql: () => void;
   onReset: () => void;
 }>;
 
@@ -66,7 +59,6 @@ export const CrawlPanel = ({
   onValuesChanged,
   onListChannels,
   onCrawl,
-  onRunSparql,
   onReset,
   classNames,
 }: CrawlPanelProps) => {
@@ -86,21 +78,21 @@ export const CrawlPanel = ({
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <IconButton
-            icon='ph--list--regular'
+            icon='ph--arrow-clockwise--regular'
             label='List channels'
             disabled={!options.token || !!busy}
             onClick={onListChannels}
           />
           <IconButton
             icon='ph--bulldozer--regular'
+            iconOnly
             label='Crawl'
             variant='primary'
             disabled={!options.token || !options.channel || !!busy}
             onClick={onCrawl}
           />
-          <IconButton icon='ph--play--regular' label='Run' disabled={!!busy || !options.query} onClick={onRunSparql} />
           <Toolbar.Separator />
-          <IconButton icon='ph--trash--regular' label='Reset' disabled={!!busy} onClick={onReset} />
+          <IconButton icon='ph--trash--regular' iconOnly label='Reset' disabled={!!busy} onClick={onReset} />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='dx-container'>

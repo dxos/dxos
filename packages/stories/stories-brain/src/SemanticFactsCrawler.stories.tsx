@@ -29,6 +29,7 @@ import { SemanticStore, type Type, normalizeEntityId, parseSparqlToQuery } from 
 
 import { AgentList } from './AgentList';
 import { type CrawlAction, CrawlOptions, CrawlPanel, initialOptions } from './CrawlPanel';
+import { DEFAULT_SPARQL, QueryPanel } from './QueryPanel';
 import { SemanticFactsViewer } from './SemanticFactsViewer';
 
 const CRAWL_STAGES: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
@@ -65,6 +66,7 @@ type StoryArgs = {};
  */
 const DefaultStory = (_: StoryArgs) => {
   const [options, setOptions] = useState<CrawlOptions>(initialOptions);
+  const [query, setQuery] = useState(DEFAULT_SPARQL);
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
   const [facts, setFacts] = useState<Type.Fact[]>([]);
   const [agents, setAgents] = useState<Profile[]>([]);
@@ -193,29 +195,31 @@ const DefaultStory = (_: StoryArgs) => {
       setStatus('Cleared persisted facts.');
     });
 
-  // Parse the SPARQL (the form's `query` field) into a structured query and run it over the store.
+  // Parse the SPARQL (the query panel's field) into a structured query and run it over the store.
   const handleRunSparql = () =>
     void guard('sparql', async () => {
-      const query = parseSparqlToQuery(options.query);
-      const results = await getStore().runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.query(query))));
+      const parsed = parseSparqlToQuery(query);
+      const results = await getStore().runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.query(parsed))));
       setFacts(results);
       setStatus(`SPARQL → ${results.length} fact(s)`);
     });
 
   return (
     <div className='dx-container grid grid-cols-[1fr_2fr_1fr]'>
-      <CrawlPanel
-        options={options}
-        channels={channels}
-        busy={busy}
-        status={status}
-        error={error}
-        onValuesChanged={(next) => setOptions((prev) => ({ ...prev, ...next }))}
-        onListChannels={handleListChannels}
-        onCrawl={handleCrawl}
-        onRunSparql={handleRunSparql}
-        onReset={handleReset}
-      />
+      <div role='none' className='grid grid-rows-2 gap-2 min-h-0'>
+        <CrawlPanel
+          options={options}
+          channels={channels}
+          busy={busy}
+          status={status}
+          error={error}
+          onValuesChanged={(next) => setOptions((prev) => ({ ...prev, ...next }))}
+          onListChannels={handleListChannels}
+          onCrawl={handleCrawl}
+          onReset={handleReset}
+        />
+        <QueryPanel query={query} busy={!!busy} onQueryChange={setQuery} onRun={handleRunSparql} />
+      </div>
       <SemanticFactsViewer facts={visibleFacts} />
       <AgentList agents={agents} selected={selectedAgent} onSelect={setSelectedAgent} />
     </div>

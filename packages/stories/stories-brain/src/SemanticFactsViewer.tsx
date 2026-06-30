@@ -90,9 +90,9 @@ const FactRow = ({ fact, conflicting }: { fact: Type.Fact; conflicting: boolean 
       <div className='grid grid-cols-[1fr_5rem] items-center justify-between gap-2'>
         <div className='w-full grid grid-cols-[1fr_1rem_1fr_1rem_1fr] items-center flex-wrap'>
           <span className={mx(cellClassNames, 'text-right')}>{formatTerm(assertion.subject)}</span>
-          <span className='border-b border-subdued-separator'></span>
+          <span className='border border-subdued-separator'></span>
           <span className={mx(cellClassNames, 'text-center text-description')}>{assertion.predicate}</span>
-          <span className='border-b border-subdued-separator'></span>
+          <span className='border border-subdued-separator'></span>
           <span className={mx(cellClassNames)}>{formatTerm(assertion.object)}</span>
         </div>
 
