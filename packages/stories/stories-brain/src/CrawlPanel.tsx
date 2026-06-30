@@ -5,7 +5,7 @@
 /// <reference types="vite/client" />
 
 import * as Schema from 'effect/Schema';
-import React, { type ComponentProps, useMemo } from 'react';
+import React, { type ChangeEvent, type ComponentProps, useMemo, useRef } from 'react';
 
 import { type ChannelInfo } from '@dxos/crawler';
 import { Format } from '@dxos/echo';
@@ -22,7 +22,7 @@ export const CrawlOptions = Schema.Struct({
 });
 export type CrawlOptions = Schema.Schema.Type<typeof CrawlOptions>;
 
-export type CrawlAction = 'channels' | 'crawl' | 'reset' | 'sparql';
+export type CrawlAction = 'channels' | 'crawl' | 'file' | 'reset' | 'sparql';
 
 // Seed the form from Vite env (only `VITE_`-prefixed vars reach the browser). Set them when serving,
 // e.g. `VITE_DISCORD_TOKEN=… VITE_DISCORD_CHANNEL=id moon run storybook-react:serve`.
@@ -42,6 +42,7 @@ export type CrawlPanelProps = ThemedClassName<{
   onValuesChanged: ComponentProps<typeof Form.Root>['onValuesChanged'];
   onListChannels: () => void;
   onCrawl: () => void;
+  onLoadFile: (name: string, text: string) => void;
   onReset: () => void;
 }>;
 
@@ -59,6 +60,7 @@ export const CrawlPanel = ({
   onValuesChanged,
   onListChannels,
   onCrawl,
+  onLoadFile,
   onReset,
   classNames,
 }: CrawlPanelProps) => {
@@ -72,6 +74,16 @@ export const CrawlPanel = ({
     }),
     [channels],
   );
+
+  // Hidden file input opened by the toolbar button; read the picked .txt/.md as text and hand it up.
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = ''; // Allow re-picking the same file.
+    if (file) {
+      void file.text().then((text) => onLoadFile(file.name, text));
+    }
+  };
 
   return (
     <Panel.Root classNames={classNames}>
@@ -90,6 +102,20 @@ export const CrawlPanel = ({
             variant='primary'
             disabled={!options.token || !options.channel || !!busy}
             onClick={onCrawl}
+          />
+          <IconButton
+            icon='ph--file-arrow-up--regular'
+            iconOnly
+            label='Load file'
+            disabled={!!busy}
+            onClick={() => fileInputRef.current?.click()}
+          />
+          <input
+            ref={fileInputRef}
+            type='file'
+            accept='.txt,.md,text/plain,text/markdown'
+            className='sr-only'
+            onChange={handleFileChange}
           />
           <Toolbar.Separator />
           <IconButton icon='ph--trash--regular' iconOnly label='Reset' disabled={!!busy} onClick={onReset} />

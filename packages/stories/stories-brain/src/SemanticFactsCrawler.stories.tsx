@@ -25,7 +25,13 @@ import {
 import { EffectEx } from '@dxos/effect';
 import { discordSourceLayer } from '@dxos/plugin-discord';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { SemanticStore, type Type, normalizeEntityId, parseSparqlToQuery } from '@dxos/semantic-index';
+import {
+  SemanticPipeline,
+  SemanticStore,
+  type Type,
+  normalizeEntityId,
+  parseSparqlToQuery,
+} from '@dxos/semantic-index';
 
 import { AgentList } from './AgentList';
 import { type CrawlAction, CrawlOptions, CrawlPanel, initialOptions } from './CrawlPanel';
@@ -183,6 +189,27 @@ const DefaultStory = (_: StoryArgs) => {
     });
   };
 
+  // Process a loaded text/markdown file through the pipeline (no Discord, no agent resolution) and
+  // refresh the facts from the store. Uses a fresh edge-AI layer for extraction; the SemanticStore
+  // comes from the persistent runtime so file facts accumulate alongside crawled ones.
+  const handleLoadFile = (name: string, text: string) =>
+    void guard('file', async () => {
+      if (text.trim().length === 0) {
+        setStatus(`${name} is empty.`);
+        return;
+      }
+      const results = await getStore().runPromise(
+        Effect.gen(function* () {
+          yield* SemanticPipeline.run([{ text, source: `file:${name}` }]);
+          const store = yield* SemanticStore;
+          return yield* store.query({});
+        }).pipe(Effect.provide(Layer.fresh(AiServiceTestingPreset('edge-remote')))),
+      );
+      setFacts(results);
+      save(FACTS_STORAGE_KEY, results);
+      setStatus(`Processed ${name} · ${results.length} facts`);
+    });
+
   // Clear the persisted facts + agents (store + snapshots) and the current selection.
   const handleReset = () =>
     void guard('reset', async () => {
@@ -216,6 +243,7 @@ const DefaultStory = (_: StoryArgs) => {
           onValuesChanged={(next) => setOptions((prev) => ({ ...prev, ...next }))}
           onListChannels={handleListChannels}
           onCrawl={handleCrawl}
+          onLoadFile={handleLoadFile}
           onReset={handleReset}
         />
         <QueryPanel query={query} busy={!!busy} onQueryChange={setQuery} onRun={handleRunSparql} />
