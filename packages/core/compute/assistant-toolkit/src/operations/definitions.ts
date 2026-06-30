@@ -37,7 +37,7 @@ export const RunInstructions = Operation.make({
      * Model NSID name.
      * @default com.anthropic.model.claude-opus-4-8.default
      */
-    model: Schema.optional(Schema.String),
+    model: Schema.optional(DXN.NameSchema),
 
     systemInstructions: Schema.optional(Schema.String).annotations({
       description: 'Additional system instructions to add to the system prompt.',

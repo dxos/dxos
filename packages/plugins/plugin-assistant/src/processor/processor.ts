@@ -61,9 +61,10 @@ export type SpaceServices =
   | OpaqueToolkit.OpaqueToolkitProvider;
 
 export type AiChatProcessorOptions = {
-  model?: DXN.DXN;
-  // The selected provider, carried with the model so the agent process resolves the (provider, id)
-  // pair — the catalog's shared model ids are ambiguous without it.
+  // Model NSID name (forwarded to the agent process, which resolves it via AiService.model).
+  model?: string;
+  // The selected provider DXN, carried with the model so the agent process resolves the
+  // (provider, id) pair — the catalog's shared model ids are ambiguous without it.
   provider?: DXN.DXN;
   modelRegistry?: Model.Registry;
   registry?: Registry.Registry;

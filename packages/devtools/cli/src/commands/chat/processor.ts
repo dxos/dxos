@@ -18,7 +18,6 @@ import { type OperationHandlerSet, Skill } from '@dxos/compute';
 import { Database, Entity, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { FunctionImplementationResolver } from '@dxos/functions-runtime';
-import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
@@ -63,11 +62,11 @@ export class ChatProcessor {
 
   async execute(
     request: Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements>,
-    model: DXN.DXN,
+    model: string,
   ) {
     const fiber = request.pipe(
       Effect.provide(
-        Layer.mergeAll(AiService.model(DXN.getName(model)), ToolExecutionServices).pipe(
+        Layer.mergeAll(AiService.model(model), ToolExecutionServices).pipe(
           Layer.provideMerge(OpaqueToolkit.providerLayer(this._toolkit)),
           Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: this._functions })),
         ),
