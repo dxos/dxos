@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import { readFileSync } from 'node:fs';
 
 import { SemanticIndexError } from './errors';
-import { type ExtractDocument, SemanticPipeline, extractFacts } from './SemanticPipeline';
+import { type ExtractDocument, SemanticPipeline, extractFacts, normalizeEntityId } from './SemanticPipeline';
 import { SemanticStore } from './SemanticStore';
 import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing';
 
@@ -174,6 +174,33 @@ describe('SemanticPipeline', () => {
           }
           if (fact.attribution.source !== 'editor:input') {
             throw new Error('attribution source lost');
+          }
+          // The author is normalized into the entity id space so consumers can join against it.
+          if (fact.attribution.agent !== 'alice') {
+            throw new Error(`attribution agent not normalized: ${fact.attribution.agent}`);
+          }
+        });
+      },
+      Effect.provide(queuedAiService([LLM_OUTPUT])),
+    ),
+  );
+
+  it.effect(
+    'normalizes a non-slug-safe author token so it joins against attribution.agent',
+    Effect.fnUntraced(
+      function* () {
+        // A canonical agent token (e.g. `discord-user:<id>`) is normalized like any entity id; a
+        // consumer filtering by the raw token must apply the same normalization to match.
+        const author = 'discord-user:123456';
+        const [fact] = yield* extractFacts([
+          { text: "I think I'm probably going to Paris next week", source: 'discord:m1', author },
+        ]);
+        yield* Effect.sync(() => {
+          if (fact.attribution.agent !== normalizeEntityId(author)) {
+            throw new Error(`expected ${normalizeEntityId(author)}, got ${fact.attribution.agent}`);
+          }
+          if (fact.attribution.agent !== 'discord-user-123456') {
+            throw new Error(`unexpected normalization: ${fact.attribution.agent}`);
           }
         });
       },

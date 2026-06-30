@@ -18,11 +18,11 @@ import type * as Type from '../types';
 // --- Fixture shape (a lean subset of plugin-discord's DiscordChannelFixture) -----------------------
 
 export type FixtureMessage = {
-  readonly id?: string;
+  readonly 'id'?: string;
   readonly '@meta'?: { readonly keys?: ReadonlyArray<{ readonly source?: string; readonly id?: string }> };
-  readonly created?: string;
-  readonly sender?: { readonly name?: string };
-  readonly blocks?: ReadonlyArray<{ readonly _tag: string; readonly text?: string }>;
+  readonly 'created'?: string;
+  readonly 'sender'?: { readonly name?: string };
+  readonly 'blocks'?: ReadonlyArray<{ readonly _tag: string; readonly text?: string }>;
 };
 
 export type FixtureThread = {
@@ -289,15 +289,15 @@ export const THREADED_FIXTURE: Fixture = {
   messages: [
     {
       '@meta': { keys: [{ source: 'discord.com', id: '1000' }] },
-      created: '2026-06-01T10:00:00.000Z',
-      sender: { name: 'Alice' },
-      blocks: [{ _tag: 'text', text: 'Should Composer use OPFS for local storage?' }],
+      'created': '2026-06-01T10:00:00.000Z',
+      'sender': { name: 'Alice' },
+      'blocks': [{ _tag: 'text', text: 'Should Composer use OPFS for local storage?' }],
     },
     {
       '@meta': { keys: [{ source: 'discord.com', id: '1001' }] },
-      created: '2026-06-01T10:05:00.000Z',
-      sender: { name: 'Bob' },
-      blocks: [{ _tag: 'text', text: 'DXOS already supports replication across peers.' }],
+      'created': '2026-06-01T10:05:00.000Z',
+      'sender': { name: 'Bob' },
+      'blocks': [{ _tag: 'text', text: 'DXOS already supports replication across peers.' }],
     },
   ],
   threads: [
@@ -306,15 +306,15 @@ export const THREADED_FIXTURE: Fixture = {
       messages: [
         {
           '@meta': { keys: [{ source: 'discord.com', id: '2000' }] },
-          created: '2026-06-01T10:10:00.000Z',
-          sender: { name: 'Carol' },
-          blocks: [{ _tag: 'text', text: 'OPFS gives Composer durable browser storage.' }],
+          'created': '2026-06-01T10:10:00.000Z',
+          'sender': { name: 'Carol' },
+          'blocks': [{ _tag: 'text', text: 'OPFS gives Composer durable browser storage.' }],
         },
         {
           '@meta': { keys: [{ source: 'discord.com', id: '2001' }] },
-          created: '2026-06-01T10:12:00.000Z',
-          sender: { name: 'Alice' },
-          blocks: [{ _tag: 'text', text: 'Automerge compaction reduces OPFS growth.' }],
+          'created': '2026-06-01T10:12:00.000Z',
+          'sender': { name: 'Alice' },
+          'blocks': [{ _tag: 'text', text: 'Automerge compaction reduces OPFS growth.' }],
         },
       ],
     },

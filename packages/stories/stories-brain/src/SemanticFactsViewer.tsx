@@ -54,7 +54,7 @@ export const SemanticFactsViewer = ({ classNames, facts }: SemanticFactsViewerPr
 
 const SubjectGroup = ({ group }: { group: Group }) => (
   <div className='shrink-0 flex flex-col border border-separator rounded-sm overflow-hidden'>
-    <div className='flex p-3 items-center justify-between'>
+    <div className='flex px-3 py-1 items-center justify-between'>
       <h3>{humanize(group.subject)}</h3>
       {group.conflicted && (
         <Tag hue='warning'>
@@ -75,18 +75,25 @@ const SubjectGroup = ({ group }: { group: Group }) => (
   </div>
 );
 
+const cellClassNames =
+  'bg-card-surface border border-subdued-separator rounded-sm px-1 py-0.5 font-medium whitespace-nowrap truncate';
+
 const FactRow = ({ fact, conflicting }: { fact: Type.Fact; conflicting: boolean }) => {
   const { assertion, valence, attribution } = fact;
   return (
     <Listbox.Item
       id={fact.id}
-      classNames={mx('flex-col items-stretch gap-1 p-3', conflicting && 'border-is-2 border-warning-border')}
+      classNames={mx('flex flex-col items-stretch gap-2 px-3 py-1', conflicting && 'border-is-2 border-warning-border')}
     >
+      {assertion.quote && <div className='text-sm text-description italic'>"{assertion.quote}"</div>}
+
       <div className='flex items-center justify-between gap-2'>
-        <div className='flex items-center gap-1 flex-wrap'>
-          <span className='font-medium'>{formatTerm(assertion.subject)}</span>
-          <span className='text-subdued'>{assertion.predicate}</span>
-          <span className='font-medium'>{formatTerm(assertion.object)}</span>
+        <div className='w-full grid grid-cols-[1fr_1rem_1fr_1rem_1fr] items-center flex-wrap'>
+          <span className={mx(cellClassNames, 'text-right')}>{formatTerm(assertion.subject)}</span>
+          <span className='border-b border-subdued-separator'></span>
+          <span className={mx(cellClassNames, 'text-center text-description')}>{assertion.predicate}</span>
+          <span className='border-b border-subdued-separator'></span>
+          <span className={mx(cellClassNames)}>{formatTerm(assertion.object)}</span>
         </div>
         <div className='flex items-center gap-2 shrink-0'>
           {valence.confidence != null && (
@@ -96,11 +103,9 @@ const FactRow = ({ fact, conflicting }: { fact: Type.Fact; conflicting: boolean 
         </div>
       </div>
 
-      <div className='text-xs text-subdued'>
+      <div className='text-xs text-subdued text-right'>
         {[attribution.agent, attribution.source, formatDate(attribution.generatedAtTime)].filter(Boolean).join(' · ')}
       </div>
-
-      {assertion.quote && <div className='text-sm text-description italic'>"{assertion.quote}"</div>}
     </Listbox.Item>
   );
 };

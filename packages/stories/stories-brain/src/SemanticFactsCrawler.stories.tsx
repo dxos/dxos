@@ -25,7 +25,7 @@ import {
 import { EffectEx } from '@dxos/effect';
 import { discordSourceLayer } from '@dxos/plugin-discord';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { SemanticStore, type Type, parseSparqlToQuery } from '@dxos/semantic-index';
+import { SemanticStore, type Type, normalizeEntityId, parseSparqlToQuery } from '@dxos/semantic-index';
 
 import { AgentList } from './AgentList';
 import { type CrawlAction, CrawlOptions, CrawlPanel, initialOptions } from './CrawlPanel';
@@ -48,10 +48,12 @@ const save = (key: string, value: unknown) => {
   }
 };
 
-// Filter facts to a single agent's attributions (`attribution.agent` is the canonical token); an
-// undefined selection means "no filter".
+// Filter facts to a single agent's attributions; an undefined selection means "no filter". The
+// pipeline normalizes the author token into the entity id space (e.g. `discord-user:123` →
+// `discord-user-123`), so the agent's registry id must be normalized the same way to join against
+// the stored `attribution.agent`.
 const factsForAgent = (facts: Type.Fact[], agent?: string): Type.Fact[] =>
-  agent == null ? facts : facts.filter((fact) => fact.attribution.agent === agent);
+  agent == null ? facts : facts.filter((fact) => fact.attribution.agent === normalizeEntityId(agent));
 
 type StoryArgs = {};
 
@@ -201,7 +203,7 @@ const DefaultStory = (_: StoryArgs) => {
     });
 
   return (
-    <div className='dx-container grid grid-cols-3'>
+    <div className='dx-container grid grid-cols-[1fr_2fr_1fr]'>
       <CrawlPanel
         options={options}
         channels={channels}
@@ -220,19 +222,19 @@ const DefaultStory = (_: StoryArgs) => {
   );
 };
 
-// A small hand-authored corpus exercised by the in-memory variant: two agents (Alice, Bob) and the
-// facts attributed to each.
+// A small hand-authored corpus exercised by the in-memory variant:
+// two agents (Alice, Bob) and the facts attributed to each.
 const SAMPLE_AGENTS: Profile[] = [
   {
     id: 'alice',
     label: 'Alice',
-    identifiers: [{ namespace: 'sample', value: 'alice' }],
+    identifiers: [{ namespace: 'example.com', value: 'alice' }],
     messageCount: 2,
   },
   {
     id: 'bob',
     label: 'Bob',
-    identifiers: [{ namespace: 'sample', value: 'bob' }],
+    identifiers: [{ namespace: 'example.com', value: 'bob' }],
     messageCount: 2,
   },
 ];
@@ -255,9 +257,10 @@ const sampleFact = (
 });
 
 const SAMPLE_FACTS: Type.Fact[] = [
-  sampleFact('s1', 'alice', 'alice', 'works at', 'dxos', 0.95),
+  sampleFact('s1', 'alice', 'alice', 'works at', 'DXOS', 0.95),
   sampleFact('s2', 'alice', 'alice', 'met', 'bob', 0.8),
-  sampleFact('s3', 'bob', 'bob', 'leads', 'engineering', 0.9),
+  sampleFact('s3', 'bob', 'bob', 'works at', 'DXOS', 0.9),
+  sampleFact('s5', 'bob', 'bob', 'leads', 'engineering', 0.9),
   sampleFact('s4', 'bob', 'bob', 'attended', 'blueyard summit', 0.7),
 ];
 

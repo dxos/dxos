@@ -18,7 +18,12 @@ export type { ExtractDocument } from './internal/stages/extract';
 
 // PROVISIONAL v1 entity resolution: distinct surface forms that normalize identically will merge,
 // and there is no linking to real ECHO objects yet. Not the final identity scheme.
-const slug = (label: string) => {
+/**
+ * Normalize a surface form (subject/object label, or an author token) to its canonical entity id.
+ * Consumers that join against `attribution.agent` / entity ids MUST apply this — the stored value is
+ * the normalized form, not the raw label (e.g. `discord-user:123` → `discord-user-123`). Idempotent.
+ */
+export const normalizeEntityId = (label: string) => {
   const normalized = label.trim().toLowerCase();
   const value = normalized.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   return value || `entity-${hashText(normalized)}`;
@@ -45,9 +50,9 @@ export const extractDocFacts = (doc: ExtractDocument): Effect.Effect<Fact[], Sem
         const fact: Fact = {
           id: factId(doc.source, hash, index++),
           assertion: {
-            subject: { entity: slug(candidate.subject) },
+            subject: { entity: normalizeEntityId(candidate.subject) },
             predicate: candidate.predicate,
-            object: { entity: slug(candidate.object) },
+            object: { entity: normalizeEntityId(candidate.object) },
             ...(candidate.validFrom ? { validFrom: candidate.validFrom } : {}),
             ...(candidate.validTo ? { validTo: candidate.validTo } : {}),
             ...(candidate.quote ? { quote: candidate.quote } : {}),
@@ -59,7 +64,7 @@ export const extractDocFacts = (doc: ExtractDocument): Effect.Effect<Fact[], Sem
             ...(candidate.nature ? { nature: candidate.nature } : {}),
           },
           attribution: {
-            ...(doc.author ? { agent: slug(doc.author) } : {}),
+            ...(doc.author ? { agent: normalizeEntityId(doc.author) } : {}),
             source: doc.source,
             generatedAtTime: doc.date ?? recordedAt,
           },

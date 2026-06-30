@@ -41,7 +41,7 @@ export const AgentList = ({ agents, selected, onSelect, classNames }: AgentListP
         <Listbox.Root value={selected} onValueChange={onSelect}>
           <Listbox.Content aria-label='Agents'>
             {agents.map((agent) => (
-              <Listbox.Item key={agent.id} id={agent.id}>
+              <Listbox.Item classNames='gap-2' key={agent.id} id={agent.id}>
                 <Listbox.ItemLabel>{agent.label ?? agent.id}</Listbox.ItemLabel>
                 <span className='shrink-0 text-subdued tabular-nums'>{agent.messageCount}</span>
                 <Listbox.Indicator />
