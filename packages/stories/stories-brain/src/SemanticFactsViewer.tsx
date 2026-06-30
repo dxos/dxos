@@ -4,26 +4,30 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { Icon, Input, Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Icon, IconButton, Input, Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Tree } from '@dxos/react-ui-graph';
 import { Empty, Listbox } from '@dxos/react-ui-list';
-import { type Type } from '@dxos/semantic-index';
+import { type Type, buildFactGraph, factSourceFromFacts } from '@dxos/semantic-index';
 import { mx } from '@dxos/ui-theme';
 
-import { Group, factualityColor, formatDate, formatTerm, groupFacts, termKey } from './util';
+import { Group, factualityColor, formatDate, formatTerm, graphToTreeNode, groupFacts, termKey } from './util';
+
+type View = 'list' | 'graph';
 
 export type SemanticFactsViewerProps = ThemedClassName<{
   facts: Type.Fact[];
-  /** Context entity id; when set, scopes the view to facts where it is subject or object. */
+  /** Context entity id; scopes the list and roots the graph. */
   context?: string;
 }>;
 
 /**
- * Read-only viewer for extracted semantic facts. Facts are grouped by subject entity and
- * conflicts (same subject + predicate, different objects) are highlighted as the headline signal.
- * When a `context` entity is set, the view is scoped to facts involving it. Pure/presentational.
+ * Viewer for extracted semantic facts with two views: a grouped **list** (by subject entity, with
+ * conflicts highlighted) and a **graph** (tidy tree rooted at the context entity, exploring the fact
+ * graph). A `context` entity scopes the list and roots the graph. Pure/presentational.
  */
 export const SemanticFactsViewer = ({ classNames, facts, context }: SemanticFactsViewerProps) => {
   const [filter, setFilter] = useState('');
+  const [view, setView] = useState<View>('list');
   const scoped = useMemo(
     () =>
       context == null
@@ -34,6 +38,10 @@ export const SemanticFactsViewer = ({ classNames, facts, context }: SemanticFact
     [facts, context],
   );
   const groups = useMemo(() => groupFacts(scoped, filter), [scoped, filter]);
+  const graph = useMemo(
+    () => (context == null ? undefined : graphToTreeNode(buildFactGraph(context, factSourceFromFacts(facts)), context)),
+    [facts, context],
+  );
 
   return (
     <Panel.Root classNames={classNames}>
@@ -47,18 +55,43 @@ export const SemanticFactsViewer = ({ classNames, facts, context }: SemanticFact
               onChange={(event) => setFilter(event.target.value)}
             />
           </Input.Root>
+          <div role='none' className='grow' />
+          <IconButton
+            icon='ph--list--regular'
+            iconOnly
+            label='List view'
+            variant={view === 'list' ? 'primary' : 'default'}
+            onClick={() => setView('list')}
+          />
+          <IconButton
+            icon='ph--graph--regular'
+            iconOnly
+            label='Graph view'
+            variant={view === 'graph' ? 'primary' : 'default'}
+            onClick={() => setView('graph')}
+          />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content asChild>
-        <ScrollArea.Root padding>
-          <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
-            {groups.length === 0 && <Empty label='No facts.' />}
-            {groups.map((group) => (
-              <SubjectGroup key={group.subject} group={group} />
-            ))}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Content>
+      {view === 'list' ? (
+        <Panel.Content asChild>
+          <ScrollArea.Root padding>
+            <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
+              {groups.length === 0 && <Empty label='No facts.' />}
+              {groups.map((group) => (
+                <SubjectGroup key={group.subject} group={group} />
+              ))}
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Content>
+      ) : (
+        <Panel.Content classNames='overflow-hidden'>
+          {graph ? (
+            <Tree data={graph} variant='tidy' classNames='w-full h-full' />
+          ) : (
+            <Empty icon='ph--graph--regular' label='Select an entity to root the graph.' />
+          )}
+        </Panel.Content>
+      )}
     </Panel.Root>
   );
 };

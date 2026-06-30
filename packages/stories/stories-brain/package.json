@@ -35,6 +35,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-graph": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/semantic-index": "workspace:*",

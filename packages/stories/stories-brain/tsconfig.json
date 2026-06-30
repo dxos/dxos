@@ -92,6 +92,9 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-graph"
+    },
+    {
       "path": "../../ui/react-ui-list"
     },
     {

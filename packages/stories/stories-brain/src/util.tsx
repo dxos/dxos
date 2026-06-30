@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Type } from '@dxos/semantic-index';
+import { type TreeNode } from '@dxos/react-ui-graph';
+import { type FactGraph, type Type } from '@dxos/semantic-index';
 import { type ChromaticPalette, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
 
 export type Group = {
@@ -102,6 +103,42 @@ export const entitiesFromFacts = (facts: Type.Fact[]): EntityItem[] => {
     add(fact.assertion.object);
   }
   return [...byId.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+};
+
+/**
+ * Convert a {@link FactGraph} into a rooted {@link TreeNode} hierarchy for the tidy-tree renderer.
+ * A fact graph is a general (cyclic) graph; the tidy tree needs a hierarchy, so this takes the BFS
+ * spanning tree from `rootId` over the undirected edges (each node appears once). Returns `undefined`
+ * if the root isn't in the graph.
+ */
+export const graphToTreeNode = (graph: FactGraph, rootId: string): TreeNode | undefined => {
+  const nodeById = new Map(graph.nodes.map((node) => [node.id, node]));
+  if (!nodeById.has(rootId)) {
+    return undefined;
+  }
+  const adjacency = new Map<string, string[]>();
+  const link = (from: string, to: string) => {
+    const list = adjacency.get(from) ?? [];
+    list.push(to);
+    adjacency.set(from, list);
+  };
+  for (const edge of graph.edges) {
+    link(edge.source, edge.target);
+    link(edge.target, edge.source);
+  }
+
+  const visited = new Set<string>([rootId]);
+  const build = (id: string): TreeNode => {
+    const children: TreeNode[] = [];
+    for (const neighbour of adjacency.get(id) ?? []) {
+      if (!visited.has(neighbour)) {
+        visited.add(neighbour);
+        children.push(build(neighbour));
+      }
+    }
+    return { id, label: nodeById.get(id)?.label ?? id, ...(children.length > 0 ? { children } : {}) };
+  };
+  return build(rootId);
 };
 
 /** Render ids like `q3-board-meeting` as `Q3 Board Meeting`. */

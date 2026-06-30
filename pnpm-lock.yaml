@@ -18708,6 +18708,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-graph':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-graph
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
