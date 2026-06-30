@@ -6,7 +6,7 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { isBusy } from './busy-state';
+import { isBusy } from '../busy';
 import {
   appendPendingText,
   cancelPending,

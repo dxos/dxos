@@ -85,7 +85,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
       const space = getSpace(search);
       invariant(space, 'Search is not in a space.');
       const databaseLayer = Database.layer(space.db);
-      const existing = yield* Feed.runQuery(feed, Filter.type(Result.Result)).pipe(Effect.provide(databaseLayer));
+      const existing = yield* Feed.query(feed, Filter.type(Result.Result)).run.pipe(Effect.provide(databaseLayer));
       const seen = new Set(existing.map((result) => result.url));
 
       const now = new Date().toISOString();

@@ -14,8 +14,8 @@ import { createLinkedPorts, encodeMessage } from './testing';
 
 const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
   '@type': 'google.protobuf.Any',
-  type_url: 'dxos.test',
-  value: encodeMessage(value),
+  'type_url': 'dxos.test',
+  'value': encodeMessage(value),
 });
 
 // TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.

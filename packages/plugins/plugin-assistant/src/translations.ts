@@ -124,6 +124,10 @@ export const translations: Resource[] = [
         'summary.label': 'Summary',
         'thinking.label': 'Thinking',
 
+        'integration-prompt.title': 'Connect {{service}}',
+        'integration-prompt.description': 'This action needs access to {{service}}. Connect it to continue.',
+        'integration-prompt.unavailable': 'No connector is available for {{service}}.',
+
         'search.placeholder': 'Search...',
         'prompt.placeholder': 'Enter question or command...',
         'context-objects.button': 'Add to context',
@@ -194,10 +198,11 @@ export const translations: Resource[] = [
         'subscriptions.label': 'Subscriptions',
 
         // Per-space Home article: starter-prompt cards + the pinned assistant prompt.
-        'space-home.suggestions.heading': 'Things to try',
-        'space-home.suggestion-draft-doc.label': 'Draft a new document',
-        'space-home.suggestion-data-type.label': 'Create a new data type',
-        'space-home.suggestion-ideas.label': 'Suggest some ideas to work on',
+        'space-home.suggestions.heading': 'Get started',
+        'space-home.suggestion-magazine.label': 'Create feeds for tracking the latest AI news and build a magazine',
+        'space-home.suggestion-spreadsheet.label':
+          "Look up and create a spreadsheet of MLB's top starters by month for {{year}}",
+        'space-home.suggestion-kanban.label': 'Create a kanban view for tracking tasks',
         'space-home.prompt.placeholder': 'Ask the assistant anything…',
 
         'nav-tree-group-ai.label': 'Assistant',

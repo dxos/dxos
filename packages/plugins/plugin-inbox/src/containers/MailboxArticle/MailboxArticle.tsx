@@ -20,7 +20,7 @@ import { type EditorController } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 
-import { MessageStack, type MessageStackActionHandler } from '#components';
+import { MessageStack, type MessageStackActionHandler, useMailboxExtractorActions } from '#components';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
 import { InboxCapabilities, Mailbox, Starred } from '#types';
@@ -64,6 +64,8 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     }
   }, [db, invokePromise, subject]);
 
+  const mailboxExtractorActions = useMailboxExtractorActions(subject);
+
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
@@ -87,6 +89,24 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
           },
           () => setSettings((settings) => ({ ...settings, loadRemoteImages: !loadRemoteImages })),
         )
+        .subgraph((builder) => {
+          if (mailboxExtractorActions.length > 0) {
+            return builder.group(
+              'extract',
+              {
+                label: ['mailbox-toolbar-extract.menu', { ns: meta.profile.key }],
+                icon: 'ph--magic-wand--regular',
+                iconOnly: true,
+                variant: 'dropdownMenu',
+              },
+              (group) => {
+                for (const item of mailboxExtractorActions) {
+                  group.action(`extract-${item.id}`, { label: item.label }, item.onSelect);
+                }
+              },
+            );
+          }
+        })
         .action(
           'composeEmail',
           {
@@ -97,7 +117,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
           handleCompose,
         )
         .build(),
-    [sortDescending, loadRemoteImages, setSettings, handleCompose],
+    [sortDescending, loadRemoteImages, setSettings, handleCompose, mailboxExtractorActions],
   );
 
   const tagMap = useTags(db);

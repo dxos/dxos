@@ -5,10 +5,10 @@
 import { type ExtractDocument } from '@dxos/semantic-index';
 
 type FixtureMessage = {
-  id: string;
-  created?: string;
-  sender?: { name?: string };
-  blocks?: Array<{ _tag: string; text?: string }>;
+  'id': string;
+  'created'?: string;
+  'sender'?: { name?: string };
+  'blocks'?: Array<{ _tag: string; text?: string }>;
   '@meta'?: { keys?: Array<{ source?: string; id?: string }> };
 };
 

@@ -181,8 +181,8 @@ export const bootLoaderPlugin = ({ status, markSvg, include = ['index.html'] }: 
           tag: 'div',
           injectTo: 'body-prepend',
           attrs: {
-            id: rootId,
-            role: 'status',
+            'id': rootId,
+            'role': 'status',
             'aria-live': 'polite',
             'aria-label': 'Initializing',
           },
