@@ -90,7 +90,7 @@ describe('AssistantPlugin', () => {
         expect(text.toLocaleLowerCase()).toContain('paris');
       }).pipe(
         Effect.provide(
-          AiService.model(DXN.make('com.anthropic.model.claudeHaiku45')).pipe(
+          AiService.model('com.anthropic.model.claudeHaiku45').pipe(
             Layer.provideMerge(ServiceResolver.provide({ space: personalSpace.id }, AiService.AiService)),
           ),
         ),

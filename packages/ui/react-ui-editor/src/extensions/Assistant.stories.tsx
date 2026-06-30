@@ -11,7 +11,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { DXN } from '@dxos/keys';
 import { useThemeContext } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
@@ -28,7 +27,7 @@ const useTestGenerate = () => {
   useEffect(() => {
     let disposed = false;
     const rt = ManagedRuntime.make(
-      AiService.model(DXN.make('com.anthropic.model.claudeHaiku45')).pipe(
+      AiService.model('com.anthropic.model.claudeHaiku45').pipe(
         Layer.provide(AiServiceTestingPreset('edge-remote')),
         Layer.orDie,
       ),

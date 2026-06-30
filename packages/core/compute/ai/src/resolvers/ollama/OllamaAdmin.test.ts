@@ -49,7 +49,10 @@ describe('OllamaAdmin', () => {
 
     test('returns an empty list when no models are installed', async ({ expect }) => {
       const admin = OllamaAdmin.make({ endpoint: ENDPOINT });
-      const models = await run(admin.list, mockFetch(() => jsonResponse({ models: [] })));
+      const models = await run(
+        admin.list,
+        mockFetch(() => jsonResponse({ models: [] })),
+      );
       expect(models).toEqual([]);
     });
 
@@ -85,7 +88,10 @@ describe('OllamaAdmin', () => {
 
     test('returns an empty list when nothing is loaded', async ({ expect }) => {
       const admin = OllamaAdmin.make({ endpoint: ENDPOINT });
-      const models = await run(admin.ps, mockFetch(() => jsonResponse({ models: [] })));
+      const models = await run(
+        admin.ps,
+        mockFetch(() => jsonResponse({ models: [] })),
+      );
       expect(models).toEqual([]);
     });
   });
@@ -168,7 +174,10 @@ describe('OllamaAdmin', () => {
   describe('remove', () => {
     test('completes on 200', async ({ expect }) => {
       const admin = OllamaAdmin.make({ endpoint: ENDPOINT });
-      const result = await runExit(admin.remove('llama3.2:1b'), mockFetch(() => new Response('', { status: 200 })));
+      const result = await runExit(
+        admin.remove('llama3.2:1b'),
+        mockFetch(() => new Response('', { status: 200 })),
+      );
       expect(Either.isRight(result)).toBe(true);
     });
 

@@ -20,7 +20,6 @@ import { Operation, Trace } from '@dxos/compute';
 import { Database, Type } from '@dxos/echo';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Transcript } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -59,7 +58,7 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
   },
   Effect.provide(
     Layer.mergeAll(
-      AiService.model(DXN.make('com.anthropic.model.claudeHaiku45')),
+      AiService.model('com.anthropic.model.claudeHaiku45'),
       ToolResolverService.layerEmpty,
       ToolExecutionService.layerEmpty,
       Trace.writerLayerNoop,

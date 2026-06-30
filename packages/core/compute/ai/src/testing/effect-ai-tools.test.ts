@@ -8,7 +8,6 @@ import * as Layer from 'effect/Layer';
 
 import { Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { DXN } from '@dxos/keys';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -35,7 +34,7 @@ describe('effect AI tool calls', () => {
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model(DXN.make('com.anthropic.model.claudeSonnet46')).pipe(
+          AiService.model('com.anthropic.model.claudeSonnet46').pipe(
             Layer.provideMerge(AiServiceTestingPreset('direct')),
           ),
         ),
@@ -83,7 +82,7 @@ describe('effect AI tool calls', () => {
         expect(messages.length).toBeGreaterThan(1);
       },
       Effect.provide(
-        AiService.model(DXN.make('com.anthropic.model.claudeSonnet46')).pipe(
+        AiService.model('com.anthropic.model.claudeSonnet46').pipe(
           Layer.provideMerge(AiServiceTestingPreset('direct')),
         ),
       ),

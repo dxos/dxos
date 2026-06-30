@@ -11,7 +11,6 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { DXN } from '@dxos/keys';
 import { ContentBlock } from '@dxos/types';
 import { Message } from '@dxos/types';
 
@@ -67,9 +66,7 @@ class TestImageToolkit extends Toolkit.make(
 const TestLayer = Layer.mergeAll(
   TestPdfToolkit.layer,
   TestImageToolkit.layer,
-  AiService.model(DXN.make('com.anthropic.model.claudeOpus48')).pipe(
-    Layer.provideMerge(AiServiceTestingPreset('direct')),
-  ),
+  AiService.model('com.anthropic.model.claudeOpus48').pipe(Layer.provideMerge(AiServiceTestingPreset('direct'))),
 );
 
 describe('ContentBlockToolResult', { tags: ['llm'] }, () => {

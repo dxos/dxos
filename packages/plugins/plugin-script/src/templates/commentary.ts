@@ -213,7 +213,7 @@ export default Commentary.pipe(
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model(DXN.make('com.anthropic.model.claudeHaiku45')),
+          AiService.model('com.anthropic.model.claudeHaiku45'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,

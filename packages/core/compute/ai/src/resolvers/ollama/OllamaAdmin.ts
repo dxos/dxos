@@ -6,8 +6,10 @@
 
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
-import type * as HttpClientResponse from '@effect/platform/HttpClientResponse';
+import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
+import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { OllamaError } from '../../errors';
@@ -92,9 +94,8 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT }: Options = {}): Admi
         if (!isOk(response.status)) {
           return yield* Effect.fail(new OllamaError(`HTTP ${response.status}`));
         }
-        // `/api/tags` returns untyped JSON; treat it as the documented wire shape (boundary).
-        const data = (yield* response.json) as { models?: RawModel[] };
-        return (data?.models ?? []).map(
+        const data = yield* HttpClientResponse.schemaBodyJson(TagsResponse)(response);
+        return (data.models ?? []).map(
           (model): Model => ({
             name: model.name ?? '',
             size: model.size,
@@ -115,8 +116,8 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT }: Options = {}): Admi
         if (!isOk(response.status)) {
           return yield* Effect.fail(new OllamaError(`HTTP ${response.status}`));
         }
-        const data = (yield* response.json) as { models?: RawRunningModel[] };
-        return (data?.models ?? []).map(
+        const data = yield* HttpClientResponse.schemaBodyJson(PsResponse)(response);
+        return (data.models ?? []).map(
           (model): RunningModel => ({
             name: model.name ?? '',
             size: model.size,
@@ -185,25 +186,51 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT }: Options = {}): Admi
   return { endpoint, list, ps, load, unload, pull, remove };
 };
 
-/**
- * Snake_case wire shape of a model from `/api/tags`. JSON is untyped, so this documents the
- * fields read rather than enforcing them.
- */
-type RawModel = {
-  name?: string;
-  size?: number;
-  modified_at?: string;
-  digest?: string;
-  details?: Record<string, unknown>;
-};
+// Snake_case wire shapes decoded from the Ollama REST API. Every field is optional and excess
+// properties are ignored, so decoding documents the fields read without rejecting unknown ones.
 
-/** Snake_case wire shape of a running model from `/api/ps`. */
-type RawRunningModel = {
-  name?: string;
-  size?: number;
-  size_vram?: number;
-  expires_at?: string;
-};
+/** A model from `/api/tags`. */
+const TagsResponse = Schema.Struct({
+  models: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        name: Schema.optional(Schema.String),
+        size: Schema.optional(Schema.Number),
+        modified_at: Schema.optional(Schema.String),
+        digest: Schema.optional(Schema.String),
+        details: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+      }),
+    ),
+  ),
+});
+
+/** A running model from `/api/ps`. */
+const PsResponse = Schema.Struct({
+  models: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        name: Schema.optional(Schema.String),
+        size: Schema.optional(Schema.Number),
+        size_vram: Schema.optional(Schema.Number),
+        expires_at: Schema.optional(Schema.String),
+      }),
+    ),
+  ),
+});
+
+/** A single NDJSON frame from `/api/pull`; `error` marks a terminal failure. */
+const PullFrame = Schema.Struct({
+  status: Schema.optional(Schema.String),
+  digest: Schema.optional(Schema.String),
+  completed: Schema.optional(Schema.Number),
+  total: Schema.optional(Schema.Number),
+  error: Schema.optional(Schema.String),
+});
+const decodePullFrame = Schema.decodeUnknownEither(Schema.parseJson(PullFrame));
+
+/** Error body returned by Ollama on a non-OK response. */
+const ErrorBody = Schema.Struct({ error: Schema.optional(Schema.String) });
+const decodeErrorBody = Schema.decodeUnknownEither(Schema.parseJson(ErrorBody));
 
 const isOk = (status: number): boolean => status >= 200 && status < 300;
 
@@ -223,21 +250,16 @@ const pullFrame = (frame: string): Stream.Stream<PullProgress, OllamaError> => {
   if (line.length === 0) {
     return Stream.empty;
   }
-  let json: any;
-  try {
-    json = JSON.parse(line);
-  } catch {
+  const decoded = decodePullFrame(line);
+  if (Either.isLeft(decoded)) {
+    // Partial/garbage frame: skip rather than fail the whole pull.
     return Stream.empty;
   }
-  if (typeof json?.error === 'string') {
-    return Stream.fail(new OllamaError(json.error));
+  const { error, status, digest, completed, total } = decoded.right;
+  if (error !== undefined) {
+    return Stream.fail(new OllamaError(error));
   }
-  return Stream.succeed({
-    status: json?.status ?? '',
-    digest: json?.digest,
-    completed: json?.completed,
-    total: json?.total,
-  });
+  return Stream.succeed({ status: status ?? '', digest, completed, total });
 };
 
 /** Extract the most useful error message from a non-OK response (Ollama returns `{ error }`). */
@@ -245,12 +267,10 @@ const readErrorBody = (response: HttpClientResponse.HttpClientResponse): Effect.
   response.text.pipe(
     Effect.orElse(() => Effect.succeed('')),
     Effect.map((body) => {
-      try {
-        const json = JSON.parse(body);
-        if (typeof json?.error === 'string' && json.error.length > 0) {
-          return json.error;
-        }
-      } catch {}
+      const decoded = decodeErrorBody(body);
+      if (Either.isRight(decoded) && decoded.right.error !== undefined && decoded.right.error.length > 0) {
+        return decoded.right.error;
+      }
       return body.trim().length > 0 ? `HTTP ${response.status}: ${body.slice(0, 300)}` : `HTTP ${response.status}`;
     }),
   );

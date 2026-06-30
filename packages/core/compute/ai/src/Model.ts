@@ -12,6 +12,8 @@ import * as Provider from './Provider';
 export type Characteristics = {
   /** Maximum context window, in tokens. */
   readonly contextWindow?: number;
+  /** Maximum output tokens per response; when unset the provider's own default applies. */
+  readonly maxTokens?: number;
   /** Accepts image input. */
   readonly image?: boolean;
   /** Accepts file/document input. */
@@ -85,19 +87,19 @@ export const all: readonly Model[] = [
     provider: Provider.edge.id,
     backend: 'claude-opus-4-8',
     label: 'Claude Opus',
-    characteristics: { thinking: true, tools: true },
+    characteristics: { maxTokens: 16_384, thinking: true, tools: true },
   }),
   make('com.anthropic.model.claudeSonnet46', {
     provider: Provider.edge.id,
     backend: 'claude-sonnet-4-6',
     label: 'Claude Sonnet',
-    characteristics: { tools: true },
+    characteristics: { maxTokens: 16_384, tools: true },
   }),
   make('com.anthropic.model.claudeHaiku45', {
     provider: Provider.edge.id,
     backend: 'claude-haiku-4-5',
     label: 'Claude Haiku',
-    characteristics: { tools: true },
+    characteristics: { maxTokens: 16_384, tools: true },
   }),
 
   // Local models — the same catalog served by the bundled sidecar, an external Ollama server, and

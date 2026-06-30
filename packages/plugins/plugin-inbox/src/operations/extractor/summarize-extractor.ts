@@ -9,7 +9,6 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
 import { type Obj, Type } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
 import {
   ExtractError,
   type ExtractInput,
@@ -17,6 +16,7 @@ import {
   type MatchResult,
   type ObjectExtractor,
 } from '@dxos/extractor';
+import { DXN } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { type ContentBlock, Message } from '@dxos/types';
 

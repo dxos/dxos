@@ -52,7 +52,10 @@ export const usePresets = (settings: Assistant.Settings): UsePresets => {
     return base;
   }, [provider, ollamaManager, lmStudioReachable, localModels]);
 
-  const presetOptions = useMemo(() => presets.map(({ id, model, label }) => ({ id, label: label ?? model })), [presets]);
+  const presetOptions = useMemo(
+    () => presets.map(({ id, model, label }) => ({ id, label: label ?? model })),
+    [presets],
+  );
 
   // Default to the provider's configured model, else the first available preset.
   useEffect(() => {

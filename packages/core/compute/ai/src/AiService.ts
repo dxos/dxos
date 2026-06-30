@@ -11,8 +11,8 @@ import * as Layer from 'effect/Layer';
 
 import { DXN } from '@dxos/keys';
 
-import * as Model from './Model';
 import { AiModelNotAvailableError } from './errors';
+import * as Model from './Model';
 
 export type ServiceMetadata = {
   name: string;
@@ -43,14 +43,27 @@ export interface Service {
  */
 export class AiService extends Context.Tag('@dxos/ai/AiService')<AiService, Service>() {}
 
-export const model: (
-  model: DXN.DXN,
+/**
+ * Resolves a model layer by id. Accepts a model DXN or a bare NSID name — validated at compile time
+ * like {@link DXN.make} — so call sites can pass the literal id without wrapping it in `DXN.make`.
+ */
+export const model: {
+  <Id extends string>(
+    model:
+      | DXN.DXN
+      | ([DXN.Name<Id>] extends [never] ? `Invalid NSID "${Id}": final segment must be camelCase (no hyphens)` : Id),
+    options?: ResolveOptions,
+  ): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService>;
+} = (
+  model: DXN.DXN | string,
   options?: ResolveOptions,
-) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService> = (model, options) =>
-  AiService.pipe(
-    Effect.map((_) => _.model(model, options)),
+): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService> => {
+  const dxn = DXN.isDXN(model) ? model : DXN.make(model);
+  return AiService.pipe(
+    Effect.map((_) => _.model(dxn, options)),
     Layer.unwrapEffect,
   );
+};
 
 export const notAvailable = Layer.succeed(AiService, {
   model: (model) => Layer.fail(new AiModelNotAvailableError(model)),

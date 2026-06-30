@@ -10,9 +10,9 @@ import * as Layer from 'effect/Layer';
 import { DXN } from '@dxos/keys';
 
 import * as AiModelResolver from '../../AiModelResolver';
+import { AiModelNotAvailableError } from '../../errors';
 import * as Model from '../../Model';
 import * as Provider from '../../Provider';
-import { AiModelNotAvailableError } from '../../errors';
 import * as ChatCompletionsAdapter from '../ChatCompletionsAdapter';
 
 /**

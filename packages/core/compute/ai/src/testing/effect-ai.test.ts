@@ -24,7 +24,6 @@ import * as Stream from 'effect/Stream';
 
 import { AiParser } from '@dxos/ai';
 import { TestHelpers } from '@dxos/effect/testing';
-import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
@@ -328,7 +327,7 @@ describe('LanguageModel', () => {
 const TestLayer = Layer.mergeAll(
   testingLayer,
   CalculatorLayer,
-  AiService.model(DXN.make('com.anthropic.model.claudeSonnet46')),
+  AiService.model('com.anthropic.model.claudeSonnet46'),
 ).pipe(Layer.provideMerge(MemoizedAiService.layerTest()), Layer.provide(AiServiceTestingPreset('direct')));
 
 // TODO(wittjosiah): GeoPoint breaks Anthropic validation.

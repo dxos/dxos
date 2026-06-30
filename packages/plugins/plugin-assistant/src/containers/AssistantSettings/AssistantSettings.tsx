@@ -6,9 +6,9 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
 import { Provider } from '@dxos/ai';
-import { type DXN } from '@dxos/keys';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type DXN } from '@dxos/keys';
 import { useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
 

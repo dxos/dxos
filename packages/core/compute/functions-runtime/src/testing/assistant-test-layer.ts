@@ -31,9 +31,9 @@ import { ProcessManager } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Database, Feed, Registry, Tag, Type } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
-import { DXN } from '@dxos/keys';
 import { type TestContextService } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
+import { DXN } from '@dxos/keys';
 
 import { AgentService as AgentServiceRuntime } from '../agent-service';
 import * as FeedTraceSink from '../FeedTraceSink';

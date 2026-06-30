@@ -146,7 +146,11 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
             const provider = options?.provider ?? opts?.provider;
             const cached = sessionCache.get(feed.id);
             if (cached) {
-              if (cached.model === model && cached.provider === provider && !isTerminalProcess(cached.handle.status.state)) {
+              if (
+                cached.model === model &&
+                cached.provider === provider &&
+                !isTerminalProcess(cached.handle.status.state)
+              ) {
                 return cached.session;
               }
 

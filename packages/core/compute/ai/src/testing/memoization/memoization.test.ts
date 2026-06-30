@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { TestHelpers } from '@dxos/effect/testing';
-import { DXN, EntityId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
 
 import * as AiService from '../../AiService';
@@ -48,7 +48,7 @@ const layerTest = DateToolkit.toLayer({
   }),
 });
 
-const TestLayer = Layer.mergeAll(testingLayer, layerTest, AiService.model(DXN.make('com.anthropic.model.claudeSonnet46'))).pipe(
+const TestLayer = Layer.mergeAll(testingLayer, layerTest, AiService.model('com.anthropic.model.claudeSonnet46')).pipe(
   Layer.provideMerge(MemoizedAiService.layerTest()),
   Layer.provide(AiServiceTestingPreset('edge-remote')),
 );
@@ -266,7 +266,7 @@ describe('dynamic value matching', () => {
         }
       },
       Effect.provide(
-        Layer.mergeAll(TestObjectReadToolkit.layer, AiService.model(DXN.make('com.anthropic.model.claudeSonnet46'))).pipe(
+        Layer.mergeAll(TestObjectReadToolkit.layer, AiService.model('com.anthropic.model.claudeSonnet46')).pipe(
           Layer.provideMerge(
             MemoizedAiService.layerTest({
               dynamicValuePatterns: [MemoizedLanguageModel.ENTITY_ID_PATTERN],
