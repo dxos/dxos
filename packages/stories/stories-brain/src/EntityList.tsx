@@ -19,8 +19,11 @@ export type EntityListProps = ThemedClassName<{
 /**
  * Entity column: the distinct entities mentioned across the facts (subject/object), derived from the
  * facts rather than message authors — so loaded documents populate it too. Selecting an entity sets
- * the shared context (drives the list + graph views); clicking it again clears the context. `Listbox`
- * can't clear its own value from the UI, so the per-row `onClick` handles the toggle-off.
+ * the shared context (drives the list + graph views); clicking it again clears the context.
+ *
+ * The per-row `onClick` is authoritative for mouse selection: it sets the clicked entity (or clears
+ * it). This is required because `Listbox` selection follows focus + focus-on-entry, so the first
+ * click into the list otherwise only moves focus (needing a second click to actually select).
  */
 export const EntityList = ({ entities, selected, onSelect, classNames }: EntityListProps) => (
   <Panel.Root classNames={classNames}>
@@ -47,7 +50,7 @@ export const EntityList = ({ entities, selected, onSelect, classNames }: EntityL
                 classNames='gap-2'
                 key={entity.id}
                 id={entity.id}
-                onClick={() => selected === entity.id && onSelect(undefined)}
+                onClick={() => onSelect(selected === entity.id ? undefined : entity.id)}
               >
                 <Listbox.ItemLabel>{entity.label}</Listbox.ItemLabel>
                 <span className='shrink-0 text-subdued tabular-nums'>{entity.count}</span>

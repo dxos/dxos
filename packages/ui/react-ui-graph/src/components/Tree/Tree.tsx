@@ -18,6 +18,8 @@ export type TreeComponentProps = ThemedClassName<{
   variant?: LayoutVariant;
   label?: (node: TreeNode) => string;
   slots?: TreeLayoutSlots;
+  /** Margin in screen pixels reserved around the layout (forwarded to the `tidy` layout). */
+  margin?: number;
   initialCollapsed?: Iterable<string>;
   onNodeClick?: (node: TreeNode) => void;
   onNodeHover?: (node: TreeNode | null, event?: MouseEvent) => void;
@@ -36,6 +38,7 @@ export const Tree = ({
   variant = 'tidy',
   label,
   slots,
+  margin,
   initialCollapsed,
   onNodeClick,
   onNodeHover,
@@ -49,6 +52,7 @@ export const Tree = ({
             data={data}
             label={label}
             slots={slots}
+            margin={margin}
             initialCollapsed={initialCollapsed}
             onNodeClick={onNodeClick}
           />

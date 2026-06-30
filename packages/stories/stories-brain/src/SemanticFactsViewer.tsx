@@ -86,7 +86,7 @@ export const SemanticFactsViewer = ({ classNames, facts, context }: SemanticFact
       ) : (
         <Panel.Content classNames='overflow-hidden'>
           {graph ? (
-            <Tree data={graph} variant='tidy' classNames='w-full h-full' />
+            <Tree data={graph} variant='tidy' margin={80} classNames='w-full h-full' />
           ) : (
             <Empty icon='ph--graph--regular' label='Select an entity to root the graph.' />
           )}
