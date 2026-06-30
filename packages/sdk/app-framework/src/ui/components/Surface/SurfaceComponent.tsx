@@ -23,7 +23,7 @@ import { Position } from '@dxos/util';
 
 import { Capabilities } from '../../../common';
 import { type CapabilityManager } from '../../../core';
-import { usePluginManager } from '../PluginManager/PluginManagerProvider';
+import { usePluginManager } from '../PluginManager';
 import { SurfaceContext } from './context';
 import { DebugSurface, isSurfaceDebugEnabled } from './SurfaceDebug';
 import { nextDataChurn, surfaceMetrics } from './SurfaceMetrics';
@@ -364,7 +364,7 @@ export const useSurfaces = () => {
   const surfacesByModule = useAtomValue(manager.capabilities.atomByModule(Capabilities.ReactSurface));
   return useMemo(() => {
     const result: Definition[] = [];
-    for (const [, surfaces] of Object.entries(surfacesByModule)) {
+    for (const [_moduleId, surfaces] of Object.entries(surfacesByModule)) {
       for (const def of surfaces.flat()) {
         result.push(def);
       }
@@ -387,6 +387,7 @@ export function isSurfaceAvailable<TToken extends RoleToken<any>>(
   if (effectiveRole == null) {
     return false;
   }
+
   const surfaces = capabilityManager.getAll(Capabilities.ReactSurface);
   const index = indexByRole(surfaces.flat());
   const candidates = matchCandidates(index.get(effectiveRole), effectiveRole, args.data as Props['data']);

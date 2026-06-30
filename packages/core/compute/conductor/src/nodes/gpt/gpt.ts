@@ -125,7 +125,7 @@ export const gptNode = defineComputeNode({
       ? yield* Database.resolve(conversation, Feed.Feed).pipe(Effect.orDie)
       : undefined;
     const historyMessages = conversationFeed
-      ? yield* Feed.runQuery(conversationFeed, Filter.type(Message.Message))
+      ? yield* Feed.query(conversationFeed, Filter.type(Message.Message)).run
       : (history ?? []);
 
     log.info('generating', { systemPrompt, prompt, historyMessages, tools });

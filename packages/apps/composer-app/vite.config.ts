@@ -537,7 +537,10 @@ export default defineConfig((env) => ({
     }),
 
     IconsPlugin({
-      symbolPattern: '(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+      // The leading negative lookahead restricts the `dx` set to the `regular` weight only (custom
+      // brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
+      symbolPattern:
+        '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
       assetPath: (iconSet, name, variant) => {
         switch (iconSet) {
           case 'dx':

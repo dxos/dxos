@@ -145,7 +145,7 @@ export const SelectOptionField = ({
                       <OrderedList.DragHandle />
                       {/* TODO(ZaymonFC): Move spacer into Tag component. */}
                       <div className='flex grow items-center truncate px-2' onClick={() => handleClick(item.id)}>
-                        <Tag palette={item.color as ChromaticPalette}>{item.title || '\u200b'}</Tag>
+                        <Tag hue={item.color as ChromaticPalette}>{item.title || '\u200b'}</Tag>
                       </div>
                       <ToggleIconButton
                         iconOnly

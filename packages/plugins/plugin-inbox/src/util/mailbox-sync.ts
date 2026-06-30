@@ -122,7 +122,7 @@ export const runOnArrivalExtractors = (mailbox: Mailbox.Mailbox, messages: reado
       if (best) {
         yield* Operation.invoke(
           InboxOperation.ExtractMessage,
-          { db, source: message, extractorId: best.extractor.id },
+          { source: message, extractorId: best.extractor.id },
           { spaceId: db.spaceId },
         ).pipe(
           Effect.catchAll((err) => {

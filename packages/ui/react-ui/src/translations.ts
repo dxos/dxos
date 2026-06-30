@@ -14,6 +14,7 @@ export const translations = [
         'toolbar-drag-handle.label': 'Drag to rearrange',
         'toolbar-close.label': 'Close',
         'toolbar-delete.label': 'Delete',
+
         'system-button.star.label': 'Star',
         'system-button.unstar.label': 'Unstar',
         'system-button.bookmark.label': 'Bookmark',
@@ -24,18 +25,25 @@ export const translations = [
         'system-button.delete.label': 'Delete',
         'system-button.edit.label': 'Edit',
         'system-button.close.label': 'Close',
+        'system-button.upload.label': 'Upload',
+        'system-button.download.label': 'Download',
+        'system-button.clipboard.label': 'Copy',
+
         'carousel-viewport.label': 'Carousel',
         'carousel-prev.label': 'Previous slide',
         'carousel-next.label': 'Next slide',
         'carousel-indicators.label': 'Carousel slides',
         'carousel-go-to.label': 'Go to slide {{index}}',
+
         'date-picker.placeholder.single.label': 'Pick a date',
         'date-picker.placeholder.range.label': 'Pick a date range',
         'date-picker.placeholder.multiple.label': 'Pick dates',
         'date-picker.clear.label': 'Clear',
+
         'calendar.nav.previous.label': 'Previous month',
         'calendar.nav.next.label': 'Next month',
         'calendar.footer.today.label': 'Today',
+
         'trigger-button.label': 'Open',
       },
     },

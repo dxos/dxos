@@ -165,7 +165,7 @@ const meta = {
               // Re-read via the feed query so the event objects have their full echo URI set (via
               // hydrateObject → SelfURIId), allowing Ref.fromURI(Obj.getURI(event)) to produce a
               // space-qualified ref that findMeetingForEvent can match.
-              const synced = yield* Feed.runQuery(feed, Filter.type(Event.Event)).pipe(
+              const synced = yield* Feed.query(feed, Filter.type(Event.Event)).run.pipe(
                 Effect.provide(Database.layer(space.db)),
               );
               const event = synced[0];

@@ -55,7 +55,7 @@ describe('Discord channel sync', () => {
           messages.map((message) => Obj.make(Message.Message, message)),
         );
 
-        const stored = yield* Feed.runQuery(feed, Filter.type(Message.Message));
+        const stored = yield* Feed.query(feed, Filter.type(Message.Message)).run;
         expect(stored.length).toBe(messages.length);
 
         const first = stored[0];

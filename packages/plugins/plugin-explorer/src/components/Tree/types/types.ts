@@ -3,19 +3,9 @@
 //
 
 import { type Key } from '@dxos/echo';
+import { type TreeNode } from '@dxos/react-ui-graph';
 
 import { type TreeType } from './tree';
-
-/**
- * In-memory tree shape used by the d3 layouts.
- * `data` carries through to layout callbacks (e.g. hover/inspect) — typically an ECHO object on leaves.
- */
-export type TreeNode<TData = unknown> = {
-  id: string;
-  label?: string;
-  data?: TData;
-  children?: TreeNode<TData>[];
-};
 
 /**
  * Convert an ECHO `TreeType` (id-keyed node map) into a nested `TreeNode` hierarchy.

@@ -25,6 +25,12 @@
       "path": "../../../common/log"
     },
     {
+      "path": "../../../common/tracing"
+    },
+    {
+      "path": "../../../sdk/config"
+    },
+    {
       "path": "../../../sdk/types"
     },
     {
