@@ -11,10 +11,10 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
-import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
+import { AiService, Model, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Operation, Trace } from '@dxos/compute';
-import { Database, Feed, Filter, Ref, Registry, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Ref, Registry, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -46,9 +46,9 @@ export const GptInput = Schema.Struct({
   context: Schema.optional(Schema.Any),
 
   /**
-   * Model to use.
+   * Model to use (an NSID name).
    */
-  model: Schema.optional(Schema.String),
+  model: Schema.optional(DXN.NameSchema),
 
   /**
    * Conversation queue.
@@ -148,7 +148,7 @@ export const gptNode = defineComputeNode({
 
     // TODO(dmaretskyi): Use Effect.context() > Context.pick to pass context.
     const runDeps = Layer.mergeAll(
-      AiService.model(DEFAULT_EDGE_MODEL).pipe(
+      AiService.model(DXN.getName(Model.DEFAULT_EDGE)).pipe(
         Layer.provide(Layer.succeed(AiService.AiService, yield* AiService.AiService)),
       ),
       // TODO(dmaretskyi): Move them out.

@@ -57,7 +57,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.UpdateChatName> =
         });
         log.info('chat name updated', { chat, newName: chat.name });
       },
-      Effect.provide(AiService.model('ai.claude.model.claude-haiku-4-5')),
+      Effect.provide(AiService.model('com.anthropic.model.claude-haiku-4-5.default')),
     ),
   ),
 );
