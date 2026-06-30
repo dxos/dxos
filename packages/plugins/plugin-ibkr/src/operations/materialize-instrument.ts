@@ -33,12 +33,12 @@ const handler: Operation.WithHandler<typeof IbkrOperation.MaterializeInstrument>
   IbkrOperation.MaterializeInstrument.pipe(
     Operation.withHandler(
       Effect.fn(function* ({ key, name, symbol, exchange, assetClass, extraKeys }) {
-        const existing = yield* Database.query(Query.select(Filter.foreignKeys(Ibkr.Instrument, [key]))).run;
+        const keys = defaultForeignKeys({ key, symbol, exchange, extraKeys });
+        const existing = yield* Database.query(Query.select(Filter.foreignKeys(Ibkr.Instrument, keys))).run;
         if (existing.length > 0) {
           return { instrument: Ref.make(existing[0]), created: false };
         }
 
-        const keys = defaultForeignKeys({ key, symbol, exchange, extraKeys });
         const instrument = yield* Database.add(
           Ibkr.makeInstrument({
             keys,

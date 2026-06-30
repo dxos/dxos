@@ -9,7 +9,6 @@ import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
-import { TRADINGVIEW_SOURCE, tickerSource } from '../constants';
 import { Ibkr } from '../types';
 
 export default Capability.makeModule(
@@ -31,18 +30,7 @@ export default Capability.makeModule(
         id: Type.getTypename(Ibkr.Instrument),
         createObject: (_props, options) =>
           Effect.gen(function* () {
-            const symbol = 'AAPL';
-            const exchange = 'NASDAQ';
-            const object = Ibkr.makeInstrument({
-              name: 'Apple Inc.',
-              symbol,
-              exchange,
-              assetClass: 'stock',
-              keys: [
-                { source: tickerSource(exchange), id: symbol },
-                { source: TRADINGVIEW_SOURCE, id: `${exchange}:${symbol}` },
-              ],
-            });
+            const object = Ibkr.makeInstrument({ name: 'New Instrument', symbol: '' });
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
