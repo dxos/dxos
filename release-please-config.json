@@ -320,6 +320,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/crawler/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/extractor/package.json",
           "jsonpath": "$.version"
         },
@@ -355,7 +360,22 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/nlp/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/operation/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/semantic-index/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/transcription-pipeline/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1080,6 +1100,11 @@
         },
         {
           "type": "json",
+          "path": "packages/stories/stories-brain/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/stories/stories-inbox/package.json",
           "jsonpath": "$.version"
         },
@@ -1276,6 +1301,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-thread/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-transcription/package.json",
           "jsonpath": "$.version"
         },
         {

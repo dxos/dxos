@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { TestSchema } from '@dxos/client/testing';
-import { JsonSchema, Ref, DXN } from '@dxos/echo';
+import { DXN, JsonSchema, Ref } from '@dxos/echo';
 
 /**
  * Operations seeded into the local space in stories.

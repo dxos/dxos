@@ -226,6 +226,23 @@ describe('Reactive Object with ECHO database', () => {
     expect(returnObj === obj).to.be.true;
   });
 
+  test('object with nested reactive records can be added to the database', async () => {
+    const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
+
+    // A nested struct value is a reactive record whose target prototype carries the per-object
+    // instance state (not `Object.prototype`); ingestion must accept it rather than reject it as a
+    // class instance.
+    const obj = db.add(
+      Obj.make(TestSchema.Example, {
+        string: 'foo',
+        nested: { field: 'bar' },
+        nestedArray: [{ field: 'a' }, { field: 'b' }],
+      }),
+    );
+    expect(obj.nested?.field).to.eq('bar');
+    expect(obj.nestedArray?.map((item) => item.field)).to.deep.eq(['a', 'b']);
+  });
+
   test('existing proxy objects can be passed to create', async () => {
     const TestSchema = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
       Schema.Struct({
@@ -385,7 +402,7 @@ describe('Reactive Object with ECHO database', () => {
       const objData: any = (obj as any).toJSON();
       expect(objData).to.deep.contain({
         ...TEST_OBJECT,
-        id: obj.id,
+        'id': obj.id,
         '@type': 'dxn:com.example.type.example:0.1.0',
         '@meta': { keys: [] },
       });
@@ -806,11 +823,11 @@ describe('Reactive Object with ECHO database', () => {
 
       const employeeJson = JSON.parse(JSON.stringify(employee));
       expect(employeeJson).to.deep.eq({
-        id: employee.id,
+        'id': employee.id,
         '@meta': { keys: [] },
         '@type': 'dxn:com.example.type.expando:0.1.0',
-        name: 'John',
-        worksAt: EncodedReference.fromURI(EID.make({ entityId: org.id })),
+        'name': 'John',
+        'worksAt': EncodedReference.fromURI(EID.make({ entityId: org.id })),
       });
     });
 

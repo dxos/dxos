@@ -13,7 +13,7 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 
-import { ALL_NSIDS, AUTH_OPTION_DESCRIPTIONS, listRecords, resolveSession, type ListRecordsEntry } from './util';
+import { ALL_NSIDS, AUTH_OPTION_DESCRIPTIONS, type ListRecordsEntry, listRecords, resolveSession } from './util';
 
 /**
  * `dx registry records` — lists all `org.dxos.experimental.*` records on the

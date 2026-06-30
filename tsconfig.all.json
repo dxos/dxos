@@ -178,6 +178,9 @@
       "path": "packages/core/compute/conductor/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/crawler/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/extractor/tsconfig.json"
     },
     {
@@ -199,7 +202,16 @@
       "path": "packages/core/compute/mcp-client/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/nlp/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/operation/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/semantic-index/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/transcription-pipeline/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo/tsconfig.json"
@@ -631,6 +643,9 @@
       "path": "packages/stories/stories-assistant/tsconfig.json"
     },
     {
+      "path": "packages/stories/stories-brain/tsconfig.json"
+    },
+    {
       "path": "packages/stories/stories-inbox/tsconfig.json"
     },
     {
@@ -749,6 +764,9 @@
     },
     {
       "path": "packages/ui/react-ui-thread/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-transcription/tsconfig.json"
     },
     {
       "path": "packages/ui/solid-ui/tsconfig.json"

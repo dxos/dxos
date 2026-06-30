@@ -58,8 +58,7 @@ export const translations = [
         'event.label': 'Event',
         'inbox.label': 'Inbox',
 
-        'no-integrations.label': 'No integrations configured',
-        'manage-integrations-button.label': 'Manage Integrations',
+        'no-connections.label': 'No connections configured',
 
         'sync-mailbox.label': 'Sync mailbox',
         'sync-mailbox-error.title': 'Failed to sync mailbox',
@@ -127,6 +126,7 @@ export const translations = [
 
         'mailbox-toolbar.title': 'Mailbox toolbar',
         'mailbox-toolbar-sort.menu': 'Sort messages',
+        'mailbox-toolbar-extract.menu': 'Extract',
         'mailbox-toolbar-filter.menu': 'Filter messages',
         'mailbox-toolbar-save-button.label': 'Save',
         'mailbox-toolbar-clear-button.label': 'Clear',

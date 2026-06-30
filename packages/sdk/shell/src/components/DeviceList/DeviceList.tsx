@@ -5,7 +5,8 @@
 import React from 'react';
 
 import { type Device } from '@dxos/react-client/halo';
-import { Button, Icon, List, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
@@ -27,18 +28,20 @@ export const DeviceList = ({
     <div className='p-1'>
       <h2 className={mx('text-description', 'text-center mt-2')}>{t('devices.heading')}</h2>
       {devices.length > 0 && (
-        <List>
-          {devices.map((device: Device) => {
-            return (
-              <DeviceListItem
-                key={device.deviceKey.toHex()}
-                device={device}
-                onClickEdit={() => onClickEdit?.(device)}
-                {...{ onClickReset, onClickRecover, onClickJoinExisting, connectionState, onAgentDestroy }}
-              />
-            );
-          })}
-        </List>
+        <Listbox.Root>
+          <Listbox.Content aria-label={t('device-list.heading')}>
+            {devices.map((device: Device) => {
+              return (
+                <DeviceListItem
+                  key={device.deviceKey.toHex()}
+                  device={device}
+                  onClickEdit={() => onClickEdit?.(device)}
+                  {...{ onClickReset, onClickRecover, onClickJoinExisting, connectionState, onAgentDestroy }}
+                />
+              );
+            })}
+          </Listbox.Content>
+        </Listbox.Root>
       )}
       <Button
         variant='ghost'

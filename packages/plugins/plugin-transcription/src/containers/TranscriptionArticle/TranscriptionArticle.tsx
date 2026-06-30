@@ -9,13 +9,11 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import { useMembers, useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Transcription, renderByline, useFeedModelAdapter } from '@dxos/react-ui-transcription';
 import { Message, type Transcript } from '@dxos/types';
 
-import { Transcription } from '#components';
-import { useFeedModelAdapter, useTranscriptionRecording } from '#hooks';
+import { useTranscriptionRecording } from '#hooks';
 import { meta } from '#meta';
-
-import { renderByline } from '../../util';
 
 export type TranscriptionArticleProps = AppSurface.ObjectArticleProps<Transcript.Transcript>;
 
@@ -28,8 +26,9 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
   );
   const model = useFeedModelAdapter(renderByline(members), messages);
-  const { recording, toggleRecording } = useTranscriptionRecording(transcript);
 
+  // TODO(burdon): Remove if not mutable. E.g., finalized transcript.
+  const { recording, toggleRecording } = useTranscriptionRecording(transcript);
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()

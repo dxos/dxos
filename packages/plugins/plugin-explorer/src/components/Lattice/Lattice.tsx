@@ -6,11 +6,10 @@ import { select } from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { type TreeNode, useContainerSize } from '@dxos/react-ui-graph';
 import { type SpaceGraphNode } from '@dxos/schema';
 
 import { getNodeFillForObject } from '../../util/node-color';
-import { useContainerSize } from '../Tree/layout/useContainerSize';
-import { type TreeNode } from '../Tree/types';
 
 const TRANSITION_MS = 350;
 

@@ -29,9 +29,9 @@ random.seed(1);
 
 type MessageGenerator = Effect.Effect<void, never, Database.Service | Feed.ContextFeedService>;
 
-type DefaultStoryProps = { generator?: MessageGenerator[]; delay?: number; wait?: boolean } & ChatThreadProps;
+type StoryArgs = { generator?: MessageGenerator[]; delay?: number; wait?: boolean } & ChatThreadProps;
 
-const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStoryProps) => {
+const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryArgs) => {
   const [space] = useSpaces();
   const feed = useMemo<Feed.Feed | undefined>(
     () => (space ? space.db.add(Feed.make({ name: 'chat' })) : undefined),
@@ -91,7 +91,7 @@ const meta = {
         StorybookPlugin({}),
         PreviewPlugin(),
         ClientPlugin({
-          types: [Organization.Organization, Person.Person],
+          types: [Feed.Feed, Message.Message, Organization.Organization, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
@@ -104,11 +104,11 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<DefaultStoryProps>;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
-type Story = StoryObj<DefaultStoryProps>;
+type Story = StoryObj<StoryArgs>;
 
 export const Default: Story = {
   args: {

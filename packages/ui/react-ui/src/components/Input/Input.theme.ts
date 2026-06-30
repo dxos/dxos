@@ -3,7 +3,7 @@
 //
 
 import { densityDimensions, staticDisabled } from '@dxos/ui-theme';
-import { getSize, mx, snapSize, sizeValue, textValence } from '@dxos/ui-theme';
+import { getSize, mx, sizeValue, snapSize, textValence } from '@dxos/ui-theme';
 import {
   type ComponentFragment,
   type ComponentFunction,

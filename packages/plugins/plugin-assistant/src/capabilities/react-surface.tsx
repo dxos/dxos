@@ -8,7 +8,7 @@ import React, { type ComponentProps, useEffect } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Chat, Agent, Plan } from '@dxos/assistant-toolkit';
+import { Agent, Chat, Plan } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Instructions } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
@@ -20,12 +20,13 @@ import { Panel } from '@dxos/react-ui';
 import { Position } from '@dxos/util';
 
 import {
-  AssistantSettings,
-  ChatCompanion,
-  ChatArticle,
-  ChatDialog,
   AgentArticle,
   AgentProperties,
+  AssistantSettings,
+  ChatArticle,
+  ChatCompanion,
+  ChatDialog,
+  IntegrationPrompt,
   PlanArticle,
   SpaceHomePrompt,
   SpaceHomeSuggestions,
@@ -33,7 +34,7 @@ import {
   TriggerStatus,
 } from '#containers';
 import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
-import { type Assistant } from '#types';
+import { type Assistant, ChatSurface } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -148,6 +149,15 @@ export default Capability.makeModule(() =>
           }
 
           return <TracePanel space={space} />;
+        },
+      }),
+      Surface.create({
+        id: 'integrationPrompt',
+        filter: Surface.makeFilter(ChatSurface, (data) => data.role === 'integration-prompt'),
+        component: ({ data }) => {
+          // `data.data` is model-supplied JSON (untyped); narrow `service` before use.
+          const service = typeof data.data?.service === 'string' ? data.data.service : undefined;
+          return <IntegrationPrompt service={service} />;
         },
       }),
       Surface.create({

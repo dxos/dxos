@@ -7,17 +7,29 @@ import React, { useMemo } from 'react';
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import {
+  AnchorWidget,
   type Extension,
   type ThemeExtensionsOptions,
+  type XmlWidgetProps,
+  type XmlWidgetRegistry,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
-  preview,
+  xmlTags,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { inboxMarkdown } from '../../extensions';
+
+const inlinePreviewRegistry: XmlWidgetRegistry = {
+  'link-preview': {
+    block: false,
+    urlSchemes: ['dxn:', 'echo:'],
+    factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
+      typeof label === 'string' && typeof dxn === 'string' ? new AnchorWidget(label, dxn) : null,
+  },
+};
 
 export type MarkdownViewerProps = ThemedClassName<{
   content: string;
@@ -55,7 +67,12 @@ export const MarkdownViewer = ({
       [
         createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
         createThemeExtensions({ themeMode, slots }),
-        markdown && [createMarkdownExtensions(), preview(), inboxMarkdown({ loadRemoteImages })].filter(isTruthy),
+        markdown &&
+          [
+            createMarkdownExtensions(),
+            xmlTags({ registry: inlinePreviewRegistry }),
+            inboxMarkdown({ loadRemoteImages }),
+          ].filter(isTruthy),
         extensionsProp,
       ].filter(isTruthy),
     [themeMode, markdown, slots, loadRemoteImages, extensionsProp],

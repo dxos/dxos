@@ -13,7 +13,9 @@
   "author": "info@dxos.org",
   "type": "module",
   "dependencies": {
+    "@automerge/automerge": "catalog:",
     "@dxos/async": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
@@ -25,9 +27,9 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/test-utils": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
-  "devDependencies": {},
   "beast": {}
 }

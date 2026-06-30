@@ -60,4 +60,4 @@ export const OrderedList = {
   ExpandCaret: OrderedListExpandCaret,
 };
 
-export type { OrderedListRootProps, OrderedListItemProps, OrderedListDetailItemProps, OrderedListViewportProps };
+export type { OrderedListDetailItemProps, OrderedListItemProps, OrderedListRootProps, OrderedListViewportProps };

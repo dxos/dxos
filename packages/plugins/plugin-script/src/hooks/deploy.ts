@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { Script, Operation } from '@dxos/compute';
+import { Operation, Script } from '@dxos/compute';
 import { Obj, Query, Ref } from '@dxos/echo';
 import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';

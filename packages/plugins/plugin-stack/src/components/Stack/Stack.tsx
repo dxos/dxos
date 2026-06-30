@@ -316,4 +316,4 @@ export const Stack = {
   Section: StackSection,
 };
 
-export type { StackRootProps, StackContentProps, StackViewportProps, StackSectionProps };
+export type { StackContentProps, StackRootProps, StackSectionProps, StackViewportProps };

@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Query, Relation, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -17,17 +17,17 @@ import { Channel, ContentBlock, Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { DEFAULT_DAYS_OF_HISTORY, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants';
+import { DEFAULT_DAYS, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants';
 import { formatDiscordSyncFailure } from '../errors';
 import { makeDiscordLayer } from '../services';
 import { DiscordOperation } from '../types';
 
 /**
- * Hard cap on `daysOfHistory` to keep a misconfigured (or fat-fingered) value
+ * Hard cap on `maxDays` to keep a misconfigured (or fat-fingered) value
  * from kicking off a 10-year backfill that thrashes the rate limit. ~3 years
  * is enough for any realistic "I want context" scenario.
  */
-const MAX_DAYS_OF_HISTORY = 365 * 3;
+const MAX_DAYS = 365 * 3;
 
 const MESSAGE_PAGE_LIMIT = 100;
 
@@ -37,19 +37,19 @@ const MESSAGE_PAGE_LIMIT = 100;
  * - If we already have a `cursor` (newest message id from the previous sync),
  *   use it verbatim — every subsequent sync is incremental.
  * - On first sync, derive a snowflake from "now minus N days" where N comes
- *   from the user-provided `daysOfHistory` option (clamped to a sane range,
+ *   from the user-provided `maxDays` option (clamped to a sane range,
  *   default 30).
  *
  * The user can sync more history by re-creating the binding with a larger
- * `daysOfHistory` value, since the option is only consulted while `cursor`
+ * `maxDays` value, since the option is only consulted while `cursor`
  * is unset.
  */
 const computeInitialCursor = (cursor: string | undefined, options: Record<string, unknown> | undefined): string => {
   if (cursor) {
     return cursor;
   }
-  const raw = options?.daysOfHistory;
-  const days = typeof raw === 'number' && raw > 0 ? Math.min(raw, MAX_DAYS_OF_HISTORY) : DEFAULT_DAYS_OF_HISTORY;
+  const raw = options?.maxDays;
+  const days = typeof raw === 'number' && raw > 0 ? Math.min(raw, MAX_DAYS) : DEFAULT_DAYS;
   return snowflakeForTimestamp(Date.now() - days * 24 * 60 * 60 * 1000);
 };
 
@@ -132,7 +132,7 @@ export const findChannelForDiscordChannel: (
  *  1. Load the binding; its source is the {@link Connection}, its target the
  *     local `Channel`, and `binding.remoteId` is the Discord channel id.
  *  2. Ask Discord for messages with id greater than `binding.cursor` (or from
- *     "now minus daysOfHistory" on first sync).
+ *     "now minus maxDays" on first sync).
  *  3. Map each Discord message → `@dxos/types` Message and append the batch to
  *     the channel's feed.
  *  4. Advance `binding.cursor` to the largest id seen so the next sync is incremental.

@@ -45,17 +45,17 @@ export type UseListNavigationReturn = {
    * stable contract.
    */
   containerProps: TabsterDOMAttribute & {
-    role: ContainerRole;
+    'role': ContainerRole;
     'aria-orientation'?: 'vertical' | 'horizontal';
-    onFocus: (event: FocusEvent<HTMLElement>) => void;
+    'onFocus': (event: FocusEvent<HTMLElement>) => void;
   };
   /**
    * Apply to each item. Returns role, tabIndex, and aria-disabled. Disabled options remain
    * focusable so screen readers can announce them, per WAI-ARIA listbox guidance.
    */
   itemProps: (opts?: { disabled?: boolean }) => {
-    role: ItemRole;
-    tabIndex: number;
+    'role': ItemRole;
+    'tabIndex': number;
     'aria-disabled'?: true;
   };
 };
@@ -96,9 +96,11 @@ const findListboxEntryTarget = (container: HTMLElement): HTMLElement | null => {
  * and adds a focus-on-entry redirect (Tabster handles traversal once focus is on a
  * child; first-entry is the consumer's responsibility).
  *
- * Canonical for all list-shaped surfaces (List, OrderedList, RowList, Tree,
- * Combobox.List, Mosaic.Stack). Non-list focus zones — e.g. Composer's multi-pane
- * chrome — should keep their own Tabster wiring (Focus.Group).
+ * The canonical roving-tabindex keyboard aspect. Currently consumed by `Listbox` and
+ * `OrderedList`; `Tree` (Treegrid), `Picker`/`Combobox` (input-driven virtual focus), and
+ * `Mosaic.Stack` still ship bespoke navigation — see `react-ui-list/AUDIT.md` for the
+ * convergence analysis. Non-list focus zones — e.g. Composer's multi-pane chrome — keep
+ * their own Tabster wiring (`Focus.Group`).
  */
 export const useListNavigation = ({
   mode,

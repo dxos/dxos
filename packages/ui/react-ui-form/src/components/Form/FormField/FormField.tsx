@@ -16,17 +16,22 @@ import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 import { translationKey } from '#translations';
 import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
+import { AutofillAnnotation, OptionsLookupAnnotation } from '../../../annotations';
 import { useFormFieldState } from '../../../hooks';
 import { getRefProps } from '../../../util';
 import { FormFieldSet } from '../FormFieldSet';
 import {
   ArrayField,
+  AsyncSelectField,
+  AutofillField,
   BooleanField,
+  ComboboxField,
   DateField,
   GeoPointField,
   InlineRefField,
   MarkdownField,
   NumberField,
+  PasswordField,
   RefField,
   SelectField,
   TextAreaField,
@@ -157,6 +162,24 @@ export const FormField = (props: FormFieldProps) => {
     if (component) {
       return component;
     }
+  }
+
+  //
+  // Dynamic, value-driven fields (options/value/validation loaded via a self-contained Effect annotation).
+  //
+
+  const optionsLookup = Option.getOrUndefined(OptionsLookupAnnotation.getFromAst(type));
+  if (optionsLookup) {
+    return optionsLookup.combobox ? (
+      <ComboboxField {...fieldProps} lookup={optionsLookup} />
+    ) : (
+      <AsyncSelectField {...fieldProps} lookup={optionsLookup} />
+    );
+  }
+
+  const autofill = Option.getOrUndefined(AutofillAnnotation.getFromAst(type));
+  if (autofill) {
+    return <AutofillField {...fieldProps} autofill={autofill} />;
   }
 
   //
@@ -313,6 +336,7 @@ const getFormField = ({
     Match.when(Format.TypeFormat.DateTime, () => DateField),
     Match.when(Format.TypeFormat.GeoPoint, () => GeoPointField),
     Match.when(Format.TypeFormat.Markdown, () => MarkdownField),
+    Match.when(Format.TypeFormat.Password, () => PasswordField),
     Match.when(Format.TypeFormat.Text, () => TextAreaField),
     Match.when(Format.TypeFormat.Time, () => DateField),
     Match.orElse(() => undefined),
@@ -335,6 +359,8 @@ const getFormField = ({
     case 'BooleanKeyword':
       return BooleanField;
   }
+
+  return undefined;
 };
 
 const getSelectOptions = (ast: SchemaAST.AST): Format.Options[] | undefined => {

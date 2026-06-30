@@ -5,8 +5,8 @@
 import { EditorView } from '@codemirror/view';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, {
-  type ComponentPropsWithRef,
   type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   type ReactNode,
   forwardRef,
   useCallback,

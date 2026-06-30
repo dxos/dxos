@@ -188,4 +188,4 @@ export const Board = {
 
 export { useBoard, useBoardColumn };
 
-export type { BoardRootProps, BoardContentProps, BoardColumnProps, BoardItemProps };
+export type { BoardColumnProps, BoardContentProps, BoardItemProps, BoardRootProps };

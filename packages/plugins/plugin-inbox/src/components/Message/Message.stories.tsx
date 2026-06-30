@@ -27,11 +27,11 @@ import { InboxCapabilities, InboxOperation, Settings } from '#types';
 import EMAIL from '../../testing/data/flight.md?raw';
 import { Message } from './Message';
 
-type DefaultStoryProps = {
+type StoryArgs = {
   text?: string;
 };
 
-const DefaultStory = ({ text }: DefaultStoryProps) => {
+const DefaultStory = ({ text }: StoryArgs) => {
   const message = useMemo(
     () =>
       MessageType.make({

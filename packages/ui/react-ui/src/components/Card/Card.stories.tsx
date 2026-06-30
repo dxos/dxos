@@ -13,14 +13,14 @@ import { Card } from './Card';
 
 random.seed(0);
 
-type DefaultStoryProps = {
+type StoryArgs = {
   title: string;
   description?: string;
   image?: string;
   fullWidth?: boolean;
 };
 
-const DefaultStory = ({ title, description, image, fullWidth }: DefaultStoryProps) => {
+const DefaultStory = ({ title, description, image, fullWidth }: StoryArgs) => {
   const handleRef = useRef<HTMLButtonElement>(null);
   console.log(title);
   return (

@@ -31,12 +31,12 @@ import { Actor, AnchoredTo, Event, Transcript } from '@dxos/types';
 import { MeetingPlugin } from '../MeetingPlugin';
 import { Meeting } from '../types';
 
-type StoryProps = {
+type StoryArgs = {
   /** Seed a Meeting already linked to the event (toolbar shows "Open meeting"); otherwise "Create meeting". */
   withMeeting?: boolean;
 };
 
-const DefaultStory = (_: StoryProps) => {
+const DefaultStory = (_: StoryArgs) => {
   const [space] = useSpaces();
   const db = space?.db;
   const [calendar] = useQuery(db, Filter.type(Calendar.Calendar));
@@ -95,7 +95,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
-    withPluginManager<StoryProps>(({ args }) => ({
+    withPluginManager<StoryArgs>(({ args }) => ({
       setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
@@ -165,7 +165,7 @@ const meta = {
               // Re-read via the feed query so the event objects have their full echo URI set (via
               // hydrateObject → SelfURIId), allowing Ref.fromURI(Obj.getURI(event)) to produce a
               // space-qualified ref that findMeetingForEvent can match.
-              const synced = yield* Feed.runQuery(feed, Filter.type(Event.Event)).pipe(
+              const synced = yield* Feed.query(feed, Filter.type(Event.Event)).run.pipe(
                 Effect.provide(Database.layer(space.db)),
               );
               const event = synced[0];
