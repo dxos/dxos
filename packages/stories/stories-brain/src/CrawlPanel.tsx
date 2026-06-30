@@ -1,0 +1,126 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+/// <reference types="vite/client" />
+
+import * as Schema from 'effect/Schema';
+import React, { type ComponentProps, useMemo } from 'react';
+
+import { type ChannelInfo } from '@dxos/crawler';
+import { Format } from '@dxos/echo';
+import { IconButton, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
+
+// Default SPARQL: every fact. Parsed to a structured query and run over the store (no Comunica).
+export const DEFAULT_SPARQL = 'SELECT ?fact ?p ?o WHERE { ?fact ?p ?o }';
+
+export const CrawlOptions = Schema.Struct({
+  token: Schema.String.annotations({ title: 'Discord bot token' }),
+  channel: Schema.String.annotations({ title: 'Channel' }),
+  maxDays: Schema.Number.annotations({ title: 'Lookback (days)' }),
+  descendThreads: Schema.Boolean.annotations({ title: 'Crawl threads' }),
+  query: Schema.String.pipe(
+    Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
+    Schema.annotations({ title: 'SPARQL' }),
+  ),
+});
+export type CrawlOptions = Schema.Schema.Type<typeof CrawlOptions>;
+
+export type CrawlAction = 'channels' | 'crawl' | 'reset' | 'sparql';
+
+// Seed the form from Vite env (only `VITE_`-prefixed vars reach the browser). Set them when serving,
+// e.g. `VITE_DISCORD_TOKEN=… VITE_DISCORD_CHANNEL=id moon run storybook-react:serve`.
+export const initialOptions = (): CrawlOptions => ({
+  token: String(import.meta.env.VITE_DISCORD_TOKEN ?? ''),
+  channel: String(import.meta.env.VITE_DISCORD_CHANNEL ?? ''),
+  maxDays: Number(import.meta.env.VITE_DISCORD_MAX_DAYS ?? 14),
+  descendThreads: import.meta.env.VITE_DISCORD_THREADS !== '0',
+  query: DEFAULT_SPARQL,
+});
+
+export type CrawlPanelProps = ThemedClassName<{
+  options: CrawlOptions;
+  channels: ChannelInfo[];
+  busy: CrawlAction | null;
+  status?: string | null;
+  error?: string | null;
+  onValuesChanged: ComponentProps<typeof Form.Root>['onValuesChanged'];
+  onListChannels: () => void;
+  onCrawl: () => void;
+  onRunSparql: () => void;
+  onReset: () => void;
+}>;
+
+/**
+ * Crawl control column: the Discord token + options form (with the discovered channels bound to the
+ * `channel` select) and the toolbar actions. Pure/presentational — the parent owns the crawl state,
+ * the semantic store, and every handler.
+ */
+export const CrawlPanel = ({
+  options,
+  channels,
+  busy,
+  status,
+  error,
+  onValuesChanged,
+  onListChannels,
+  onCrawl,
+  onRunSparql,
+  onReset,
+  classNames,
+}: CrawlPanelProps) => {
+  // The `channel` field uses the form's built-in select, populated with the discovered channels.
+  const fieldMap = useMemo<FormFieldMap>(
+    () => ({
+      channel: createSelectField({
+        options: channels.map((channel) => ({ value: channel.id, label: channel.name ?? channel.id })),
+        defaultLabel: null,
+      }),
+    }),
+    [channels],
+  );
+
+  return (
+    <Panel.Root classNames={classNames}>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <IconButton
+            icon='ph--list--regular'
+            label='List channels'
+            disabled={!options.token || !!busy}
+            onClick={onListChannels}
+          />
+          <IconButton
+            icon='ph--bulldozer--regular'
+            label='Crawl'
+            variant='primary'
+            disabled={!options.token || !options.channel || !!busy}
+            onClick={onCrawl}
+          />
+          <IconButton icon='ph--play--regular' label='Run' disabled={!!busy || !options.query} onClick={onRunSparql} />
+          <Toolbar.Separator />
+          <IconButton icon='ph--trash--regular' label='Reset' disabled={!!busy} onClick={onReset} />
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content classNames='dx-container'>
+        <Form.Root schema={CrawlOptions} values={options} fieldMap={fieldMap} onValuesChanged={onValuesChanged}>
+          <Form.Viewport>
+            <Form.Content>
+              <Form.FieldSet />
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
+      </Panel.Content>
+      {(error || status) && (
+        <Panel.Statusbar asChild>
+          <Toolbar.Root>
+            <Toolbar.Text classNames={[error ? 'text-error-text' : 'text-subdued-text']}>
+              {error ?? status}
+            </Toolbar.Text>
+          </Toolbar.Root>
+        </Panel.Statusbar>
+      )}
+    </Panel.Root>
+  );
+};
