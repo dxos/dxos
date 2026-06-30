@@ -46,7 +46,7 @@ These are verified against the current code on this branch, not assumed:
 
 ## 3. Architecture
 
-```
+```text
 @dxos/crawler                 (new; pure Effect — no DOM, no Composer, no ECHO deps)
   ├─ crawl loop + frontier     depth-first thread descent, resumable via StateStore
   ├─ Stage interface + stages  extract-facts, user-profile, summarize-thread (v1)
@@ -136,16 +136,13 @@ ordering is awkward to express as a queue).
 interface Stage {
   readonly name: string;
   readonly handles: ReadonlyArray<CrawlEvent['_tag']>; // events this stage wants
-  apply(event: CrawlEvent, ctx: StageContext): Effect.Effect<void, StageError, StageDeps>;
+  readonly apply: (event: CrawlEvent) => Effect.Effect<void, StageError, Env>;
 }
-
-type StageContext = {
-  store: StateStore;
-  semantic: SemanticStore; // from @dxos/semantic-index
-  ai: AiService.AiService; // for LLM stages
-  config: SyncConfig;
-};
 ```
+
+Dependencies are provided via the Effect context (`Env`) rather than an explicit context argument:
+a stage requires whatever services it uses (`StateStore`, `SemanticStore` from `@dxos/semantic-index`,
+`AiService` for LLM stages, the `AgentRegistry`), and the runtime supplies them through layers.
 
 Stages run in configured order for each event. A stage error is isolated — it is a typed
 `StageError` (via `BaseError.extend`), recorded against the target's `lastError`, and the crawl
@@ -158,21 +155,22 @@ continues (matching the per-target isolation `plugin-discord` already uses). sem
 interface StateStore {
   // frontier
   pushTargets(targets: CrawlTarget[]): Effect.Effect<void, StateError>;
-  popTarget(): Effect.Effect<CrawlTarget | undefined, StateError>;
+  listTargets(): Effect.Effect<CrawlTarget[], StateError>;
+  nextActionable(): Effect.Effect<CrawlTarget | undefined, StateError>; // top pending/active, no pop
+  hasActionable(): Effect.Effect<boolean, StateError>;
   setCursor(targetId: string, cursor: string): Effect.Effect<void, StateError>;
-  setTargetStatus(targetId: string, status: CrawlTarget['status'], error?: string): Effect.Effect<void, StateError>;
-  // users
-  upsertUserProfile(delta: UserProfileDelta): Effect.Effect<void, StateError>;
-  // stage artifacts (summaries, tags, faq, …)
-  putArtifact(kind: string, key: string, value: unknown): Effect.Effect<void, StateError>;
-  // run control
-  setRunStatus(status: 'running' | 'paused' | 'done' | 'error'): Effect.Effect<void, StateError>;
-  getRunStatus(): Effect.Effect<'running' | 'paused' | 'done' | 'error', StateError>;
+  setStatus(targetId: string, status: CrawlTarget['status'], error?: string): Effect.Effect<void, StateError>;
+  // run control (RunStatus = 'idle' | 'running' | 'paused' | 'done' | 'error')
+  setRunStatus(status: RunStatus): Effect.Effect<void, StateError>;
+  getRunStatus(): Effect.Effect<RunStatus, StateError>;
 }
 ```
 
+Agent identity moved to a dedicated `AgentRegistry` service (canonical agents keyed by stable id,
+with `resolve`/`observe`/`merge`); stage artifacts (summaries, tags, FAQ) are deferred.
+
 - **EchoStateStore** (browser, in `plugin-discord`): frontier + cursors as `SyncBinding`-style
-  relations; user profiles and stage artifacts as ECHO objects so Composer can render them.
+  relations; agent profiles as ECHO objects so Composer can render them.
 - **SqliteStateStore** (worker, in `apps/crawler-worker`): tables in the DO's SQLite — the same
   store-swap pattern semantic-index uses (`layer` vs `layerMemory`). A memory impl backs tests.
 
@@ -312,7 +310,7 @@ discord:<id>`), `agent-profile` (counts, first/last seen). `summarize-thread` is
   registry, ranked topics, and a sample topic query. (Runs via vitest, since `@dxos/ai` has a `parsimmon`
   CJS/ESM interop that breaks under `tsx`.)
 
-**Not yet implemented (next):** `DiscordSource`; `entity-resolution` stage (Layer-2, on the shared
+**Not yet implemented (next):** `entity-resolution` stage (Layer-2, on the shared
 `@dxos/extractor` lookup, populating `Entity.ref`); `summarize-thread`; ECHO `StateStore`/agent backing;
 the `@dxos/edge` worker driver.
 

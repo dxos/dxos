@@ -109,15 +109,17 @@ export const discordSourceLayer = (token: string): Layer.Layer<Source> =>
           return raw;
         });
 
-      const fetchMessages: SourceApi['fetchMessages'] = ({ channelId, cursor, maxDays }) =>
+      const fetchMessages: SourceApi['fetchMessages'] = ({ channelId, threadId, cursor, maxDays }) =>
         Effect.gen(function* () {
-          const raw = yield* drain(channelId, initialCursor(cursor, maxDays));
+          // Drain the thread when descending into one; otherwise the parent channel.
+          const raw = yield* drain(threadId ?? channelId, initialCursor(cursor, maxDays));
           const messages = raw
             .map(mapDiscordMessage)
             .filter((message): message is Type.Message => message !== undefined);
           return {
             messages,
-            cursor: raw.length > 0 ? raw[raw.length - 1].id : cursor,
+            // Page.cursor is the newest id in this page, or undefined when nothing new was fetched.
+            cursor: raw.length > 0 ? raw[raw.length - 1].id : undefined,
             threads: threadRefsOf(raw),
           };
         }).pipe(Effect.mapError((cause) => new CrawlError({ message: 'Failed to fetch Discord messages', cause })));

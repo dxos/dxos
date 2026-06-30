@@ -57,7 +57,7 @@ export type Target = {
 export type Event =
   | { readonly _tag: 'ChannelStart'; readonly target: Target }
   | { readonly _tag: 'Message'; readonly target: Target; readonly message: Message }
-  | { readonly _tag: 'ThreadStart'; readonly target: Target; readonly parentMessageId: string }
+  | { readonly _tag: 'ThreadStart'; readonly target: Target; readonly parentMessageId?: string }
   | { readonly _tag: 'ThreadEnd'; readonly target: Target }
   | { readonly _tag: 'ChannelEnd'; readonly target: Target };
 

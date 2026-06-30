@@ -6,7 +6,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { type StateError } from './errors';
+import { StateError } from './errors';
 import type * as Type from './types';
 
 /** A single identifier for an agent, in some namespace (e.g. discord-user:1234567890). */
@@ -69,6 +69,7 @@ export const identifiersForUser = (user: Type.User): Identifier[] => [
   ...(user.username ? [{ namespace: `${user.source}-username`, value: user.username }] : []),
 ];
 
+/** Best display label for a source user: display name, else username, else the raw id. */
 export const labelForUser = (user: Type.User): string | undefined => user.displayName ?? user.username ?? user.id;
 
 const key = (identifier: Identifier) => `${identifier.namespace}:${identifier.value}`;
@@ -144,16 +145,25 @@ const makeMemory = (): AgentRegistryApi => {
   };
 
   return {
-    resolve: (identifiers, label) => Effect.sync(() => upsert(identifiers, label)),
-    observe: ({ identifiers, label, at }) => Effect.sync(() => upsert(identifiers, label, at, true)),
+    resolve: (identifiers, label) =>
+      identifiers.length === 0
+        ? Effect.fail(new StateError({ message: 'resolve requires at least one identifier' }))
+        : Effect.sync(() => upsert(identifiers, label)),
+    observe: ({ identifiers, label, at }) =>
+      identifiers.length === 0
+        ? Effect.fail(new StateError({ message: 'observe requires at least one identifier' }))
+        : Effect.sync(() => upsert(identifiers, label, at, true)),
     get: (id) => Effect.sync(() => agents.get(index.get(id) ?? id)),
     list: () => Effect.sync(() => [...agents.values()].sort((a, b) => b.messageCount - a.messageCount)),
     merge: (keepId, mergeId) =>
-      Effect.sync(() => {
+      Effect.gen(function* () {
         const keep = agents.get(keepId);
         const drop = agents.get(mergeId);
-        if (!keep || !drop || keepId === mergeId) {
-          return keep ?? drop!;
+        if (keepId === mergeId) {
+          return keep ?? (yield* Effect.fail(new StateError({ message: `merge: unknown agent ${keepId}` })));
+        }
+        if (!keep || !drop) {
+          return yield* Effect.fail(new StateError({ message: `merge: unknown agent ${!keep ? keepId : mergeId}` }));
         }
         const merged: Profile = {
           ...keep,

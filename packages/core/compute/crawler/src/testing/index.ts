@@ -38,7 +38,14 @@ export type Fixture = {
 
 // --- FixtureSource --------------------------------------------------------------------------------
 
-const messageId = (message: FixtureMessage): string => message['@meta']?.keys?.[0]?.id ?? message.id ?? '';
+// The id is the crawl cursor, so a fixture without one is a hard error rather than silently dropped.
+const messageId = (message: FixtureMessage): string => {
+  const id = message['@meta']?.keys?.[0]?.id ?? message.id;
+  if (!id) {
+    throw new Error('Fixture message has no stable id (@meta.keys[0].id or id).');
+  }
+  return id;
+};
 
 const messageText = (message: FixtureMessage): string =>
   (message.blocks ?? [])
@@ -71,11 +78,13 @@ const toMessage = (message: FixtureMessage): Type.Message => {
 const page = (messages: readonly FixtureMessage[], cursor: string | undefined, threads: readonly ThreadRef[]): Page => {
   const sorted = [...messages].sort((left, right) => (newerThan(messageId(left), messageId(right)) ? 1 : -1));
   const fresh = cursor ? sorted.filter((message) => newerThan(messageId(message), cursor)) : sorted;
-  const mapped = fresh.map(toMessage).filter((message) => message.id.length > 0);
+  const freshIds = new Set(fresh.map(messageId));
+  const mapped = fresh.map(toMessage);
   return {
     messages: mapped,
     cursor: mapped.length > 0 ? mapped[mapped.length - 1].id : undefined,
-    threads,
+    // Only threads whose parent message is in this page (a resumed crawl must not re-emit stale refs).
+    threads: threads.filter(({ parentMessageId }) => freshIds.has(parentMessageId)),
   };
 };
 
