@@ -9,13 +9,7 @@ import React, { type ChangeEvent, type ComponentProps, useCallback, useMemo } fr
 
 import { type ChannelInfo } from '@dxos/crawler';
 import { Format } from '@dxos/echo';
-import {
-  IconButton,
-  Panel,
-  SystemIconButton,
-  type ThemedClassName,
-  Toolbar,
-} from '@dxos/react-ui';
+import { IconButton, Panel, SystemIconButton, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
 
 export const CrawlOptions = Schema.Struct({

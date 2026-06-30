@@ -136,6 +136,7 @@ The literature on LLM × knowledge-graph construction converges on the same leve
 extraction introduces noise; schema-bounded extraction (typed entities + typed relations) and
 multi-step refinement reduce it** ([LLM-empowered KG construction survey](https://arxiv.org/abs/2510.20345),
 [GraphRAG](https://arxiv.org/abs/2404.16130), [KG construction for large-scale RAG](https://arxiv.org/abs/2507.03226)).
+
 Three levers, smallest-change first:
 
 1. **Typed entities (extract + filter by Term type).** Have the extractor classify each entity by a

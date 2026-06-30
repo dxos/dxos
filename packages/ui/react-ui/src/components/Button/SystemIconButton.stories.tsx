@@ -7,8 +7,8 @@ import React, { useState } from 'react';
 
 import { withTheme } from '../../testing';
 import { translations } from '../../translations';
-import { Tooltip } from '../Tooltip';
 import { Toolbar } from '../Toolbar';
+import { Tooltip } from '../Tooltip';
 import { SystemIconButton } from './SystemIconButton';
 
 const iconOnly = { iconOnly: true, variant: 'ghost' as const };

@@ -33,11 +33,17 @@ import {
   parseSparqlToQuery,
 } from '@dxos/semantic-index';
 
-import { type CrawlAction, CrawlOptions, CrawlPanel, initialOptions } from './CrawlPanel';
-import { EntityList } from './EntityList';
-import { DEFAULT_SPARQL, QueryPanel } from './QueryPanel';
-import { SemanticFactsViewer } from './SemanticFactsViewer';
-import { entitiesFromFacts } from './util';
+import {
+  type CrawlAction,
+  CrawlOptions,
+  CrawlPanel,
+  DEFAULT_SPARQL,
+  EntityList,
+  QueryPanel,
+  SemanticFactsViewer,
+  entitiesFromFacts,
+  initialOptions,
+} from './components';
 
 const CRAWL_STAGES: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
 

@@ -10,7 +10,7 @@ import { Empty, Listbox } from '@dxos/react-ui-list';
 import { type Type, buildFactGraph, factSourceFromFacts } from '@dxos/semantic-index';
 import { mx } from '@dxos/ui-theme';
 
-import { Group, factualityColor, formatDate, formatTerm, graphToTreeNode, groupFacts, termKey } from './util';
+import { Group, factualityColor, formatDate, formatTerm, graphToTreeNode, groupFacts, termKey } from '../util';
 
 type View = 'list' | 'graph';
 
