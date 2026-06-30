@@ -124,3 +124,58 @@ certainty and **surfaces conflicts**, e.g.:
 
 > - alice (dxn:…:m1, 2026-06-06): alice travelsTo paris [probable, PR+]
 > - bob (dxn:…:m2, 2026-06-07): alice travelsTo rome [certain, CT+]
+
+## Phase 2 — extraction accuracy & noise reduction
+
+Phase 1 extracts open propositions: any subject/predicate/object the model finds. This maximizes
+recall but admits noise — vague pronouns, non-entities, paraphrased predicates that don't join,
+trivial or off-topic assertions. Phase 2 raises **precision** by constraining _what_ becomes a fact
+and refining facts after extraction, while keeping the open path available.
+
+The literature on LLM × knowledge-graph construction converges on the same levers: **open-ended
+extraction introduces noise; schema-bounded extraction (typed entities + typed relations) and
+multi-step refinement reduce it** ([LLM-empowered KG construction survey](https://arxiv.org/abs/2510.20345),
+[GraphRAG](https://arxiv.org/abs/2404.16130), [KG construction for large-scale RAG](https://arxiv.org/abs/2507.03226)).
+Three levers, smallest-change first:
+
+1. **Typed entities (extract + filter by Term type).** Have the extractor classify each entity by a
+   small closed type set — `Person`, `Organization`, `Project`, `Event`, `Place`, `Concept`, … — and
+   keep (or surface) only typed entities, dropping junk like ids, dates-as-subjects, and filler.
+   Carry the type on the entity `Term` (alongside `entity`/`label`); the entity column + graph can
+   filter/colour by type. This is the single biggest noise reducer in the survey's findings, and it
+   composes with the existing entity-resolution layer (a resolved entity carries a type).
+2. **Typed predicates (relation schema / controlled vocabulary).** Constrain predicates to a curated
+   relation set per domain (`worksFor`, `partOf`, `locatedIn`, `attended`, `mentions`, …) and map free
+   verb phrases onto it (extends the Phase-1 predicate `relationKey`). Schema-guided generation —
+   giving the model the entity-type and relation-type vocabulary up front — is what frameworks like
+   KARMA use to "guarantee accurate entity normalization and relation classification within a fixed
+   ontological boundary." Off-vocabulary relations are dropped or quarantined for review.
+3. **Progressive multi-phase refinement.** Decompose extraction and add passes rather than asking one
+   call to do everything (mirrors KGGEN's "detect entities, then generate relations" to cut the
+   model's cognitive load): **extract → type → normalize → score/prune**. The normalize pass runs the
+   deferred entity-resolution + predicate-canonicalization corpus-wide (see [Normalization](#normalization));
+   the prune pass drops low-confidence / unsupported facts using the `valence.confidence` already on
+   each fact (probabilistic confidence is more robust than hard accept/reject —
+   [Noise Mitigation for Entity Typing & Relation Extraction](https://arxiv.org/abs/1612.07495)). An
+   optional LLM-as-judge verification step (refute-or-confirm against the source quote) gates the
+   highest-stakes facts.
+
+These are layers, not a rewrite: the open extractor stays the recall floor; typing + schema + pruning
+trade recall for precision and are individually toggleable per source/domain.
+
+### Proposed next milestone — "Typed extraction v1"
+
+Deliver lever (1) end-to-end plus the measurement harness, since type is the highest-leverage filter
+and unblocks the typed UI the story already wants (entity column / graph filtered by type):
+
+- **Schema:** add an optional `type` (closed enum) to the entity `Term`; extractor emits it; `unknown`
+  type is dropped (reuses the ground-the-subject/object guard).
+- **Extraction:** extend `DEFAULT_EXTRACTION_RULES` + the payload schema to classify entities; keep it
+  one call (type alongside subject/object) to avoid a second round-trip in v1.
+- **Query/UI:** `SemanticQuery` gains a `type?` filter; the entity column groups/filters by type.
+- **Measurement:** a labelled fixture (the Discord corpus + a hand-tagged gold set) with a
+  precision/recall/F1 harness, so lever (2) and (3) can be evaluated against a baseline rather than by
+  eyeball. Without this, "less noise" is unfalsifiable.
+
+Sequenced after v1: relation-vocabulary mapping (lever 2), then the corpus-wide normalize/prune pass
+(lever 3) gated on the F1 numbers.
