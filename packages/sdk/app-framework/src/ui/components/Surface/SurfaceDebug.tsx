@@ -312,5 +312,5 @@ export const DebugSurface = ({ info, children }: PropsWithChildren<{ info: Surfa
     };
   }, []);
 
-  return createElement(DX_SURFACE_TAG, { ref: elementRef, 'data-id': info.id, 'data-role': info.role }, children);
+  return createElement(DX_SURFACE_TAG, { 'ref': elementRef, 'data-id': info.id, 'data-role': info.role }, children);
 };
