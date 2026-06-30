@@ -26,7 +26,7 @@ import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { traceFeedPrettyPrintSubscription } from '@dxos/functions-runtime/testing';
-import { type SpaceId } from '@dxos/keys';
+import { DXN, type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
@@ -64,7 +64,7 @@ interface AgentTestOptions extends Pick<Instructions.MakeProps, 'name' | 'skills
 
   expect?: 'success' | 'failure';
 
-  model?: string;
+  model?: DXN.DXN;
 
   /**
    * @default 'direct'
@@ -179,7 +179,7 @@ const spaceServices = (spaceId: SpaceId) => ServiceResolver.provide({ space: spa
 const runInstructions = (
   harness: TestHarness,
   instructions: Instructions.Instructions,
-  model: string,
+  model: DXN.DXN,
   spaceId: SpaceId,
   sessionChat?: boolean,
 ) =>
@@ -227,8 +227,8 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
   const model =
     options.model ??
     (options.inferenceProvider === 'ollama'
-      ? 'com.openai.model.gpt-oss-20b.default'
-      : 'com.anthropic.model.claude-opus-4-8.default');
+      ? DXN.make('com.openai.model.gpt-oss-20b.default')
+      : DXN.make('com.anthropic.model.claude-opus-4-8.default'));
 
   const OutputSchema = Schema.Struct({
     completedCriteria: Schema.Struct({

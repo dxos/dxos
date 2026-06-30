@@ -18,6 +18,7 @@ import { type AiSession } from '@dxos/assistant';
 import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
 
@@ -50,8 +51,9 @@ export const chat = Command.make(
       Options.withDefault('edge'),
     ),
     model: Options.text('model').pipe(
-      Options.withDescription('Model to use (an NSID name).'),
+      Options.withDescription('Model to use.'),
       Options.withAlias('m'),
+      Options.withSchema(DXN.Schema),
       Options.optional,
     ),
     skills: Options.text('skill').pipe(

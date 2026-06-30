@@ -28,15 +28,15 @@ export type Characteristics = {
 export type Options = Pick<Characteristics, 'thinking'>;
 
 /**
- * A model as served by a single provider. The same model `id` — a developer reverse-DNS NSID name —
- * may be served by several providers, each with its own back-end name and characteristics; that
- * shared `id` is how equivalent models are recognised across providers. `(provider, id)` is the key.
+ * A model as served by a single provider. The same model `id` — a developer reverse-DNS DXN — may
+ * be served by several providers, each with its own back-end name and characteristics; that shared
+ * `id` is how equivalent models are recognised across providers. `(provider, id)` is the unique key.
  */
 export type Model = {
-  /** Canonical model identity: the developer's reverse-DNS NSID name. */
-  readonly id: string;
-  /** The provider serving this model (a provider NSID name). */
-  readonly provider: string;
+  /** Canonical model identity: the developer's reverse-DNS DXN. */
+  readonly id: DXN.DXN;
+  /** The provider serving this model (a provider DXN). */
+  readonly provider: DXN.DXN;
   /** Provider-specific name passed to the back-end (a pull tag or API model name). */
   readonly backend: string;
   /** Display label for pickers and presets. */
@@ -48,15 +48,15 @@ export type Model = {
 type MakeOptions = Omit<Model, 'id'>;
 
 /**
- * Constructs a model from its developer-reverse-DNS NSID name. The NSID is validated at compile time
- * — its final segment must be camelCase (no hyphens) — mirroring {@link DXN.make}.
+ * Constructs a model from its developer-reverse-DNS NSID. The NSID is validated at compile time (its
+ * final segment must be camelCase — no hyphens) and at runtime, mirroring {@link DXN.make}.
  */
 export const make: {
   <Id extends string>(
     nsid: [DXN.Name<Id>] extends [never] ? `Invalid NSID "${Id}": final segment must be camelCase (no hyphens)` : Id,
     options: MakeOptions,
   ): Model;
-} = (nsid: string, options: MakeOptions): Model => ({ id: nsid, ...options });
+} = (nsid: string, options: MakeOptions): Model => ({ id: DXN.make(nsid), ...options });
 
 // Local models offered identically by the bundled sidecar (`built-in`), an external `ollama` server,
 // and LM Studio — the same curated catalog, each provider serving it under its own back-end name
@@ -97,7 +97,7 @@ const LOCAL_MODELS = [
 ] as const;
 
 // Builds the local catalog for one provider, selecting that provider's back-end name per model.
-const localModelsFor = (provider: string, backend: (model: (typeof LOCAL_MODELS)[number]) => string): Model[] =>
+const localModelsFor = (provider: DXN.DXN, backend: (model: (typeof LOCAL_MODELS)[number]) => string): Model[] =>
   LOCAL_MODELS.map((model) => make(model.id, { provider, backend: backend(model), label: model.label }));
 
 /**
@@ -144,19 +144,19 @@ export const all: readonly Model[] = [
 ];
 
 /** Models served by a given provider. */
-export const forProvider = (provider: string): Model[] => all.filter((model) => model.provider === provider);
+export const forProvider = (provider: DXN.DXN): Model[] => all.filter((model) => model.provider === provider);
 
 /** Look up a catalog model by provider and id; `undefined` when the id is not curated for the provider. */
-export const get = (provider: string, id: string): Model | undefined =>
+export const get = (provider: DXN.DXN, id: DXN.DXN): Model | undefined =>
   all.find((model) => model.provider === provider && model.id === id);
 
 /** All catalog entries for a model id, across every provider that serves it. */
-export const byId = (id: string): Model[] => all.filter((model) => model.id === id);
+export const byId = (id: DXN.DXN): Model[] => all.filter((model) => model.id === id);
 
 // Default model per provider, used when no explicit selection is configured.
-export const DEFAULT_EDGE = 'com.anthropic.model.claude-sonnet-4-6.default';
-export const DEFAULT_OLLAMA = 'com.meta.model.llama-3-2-1b.instruct';
-export const DEFAULT_LMSTUDIO = 'com.meta.model.llama-3-2-3b.instruct';
+export const DEFAULT_EDGE: DXN.DXN = DXN.make('com.anthropic.model.claude-sonnet-4-6.default');
+export const DEFAULT_OLLAMA: DXN.DXN = DXN.make('com.meta.model.llama-3-2-1b.instruct');
+export const DEFAULT_LMSTUDIO: DXN.DXN = DXN.make('com.meta.model.llama-3-2-3b.instruct');
 
 /** Capability flags for a model. */
 export type Capabilities = {

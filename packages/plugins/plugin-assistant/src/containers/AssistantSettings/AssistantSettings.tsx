@@ -8,6 +8,7 @@ import React, { useMemo } from 'react';
 import { Provider } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type DXN } from '@dxos/keys';
 import { useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
 
@@ -21,7 +22,7 @@ export type AssistantSettingsProps = AppSurface.SettingsProps<Assistant.Settings
 
 // The per-provider model-default options must match the chat picker (usePresets): the catalog models
 // served by the provider, restricted to installed models when `installed` is supplied (local sidecar).
-const presetOptions = (provider: string, installed?: ReadonlySet<string>) =>
+const presetOptions = (provider: DXN.DXN, installed?: ReadonlySet<string>) =>
   presetsForProvider(provider)
     .filter((preset) => !installed || installed.has(preset.backend))
     .map((preset) => ({ value: preset.model, label: preset.label }));

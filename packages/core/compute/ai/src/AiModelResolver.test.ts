@@ -12,13 +12,15 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { DXN } from '@dxos/keys';
+
 import * as AiModelResolver from './AiModelResolver';
 import * as AiService from './AiService';
 import { AiModelNotAvailableError } from './errors';
 import * as LMStudioResolver from './resolvers/lmstudio/LMStudioResolver';
 
-const SONNET = 'com.anthropic.model.claude-sonnet-4-6.default';
-const GEMMA = 'com.google.model.gemma-3-27b.default';
+const SONNET = DXN.make('com.anthropic.model.claude-sonnet-4-6.default');
+const GEMMA = DXN.make('com.google.model.gemma-3-27b.default');
 
 const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
   Layer.provide(
@@ -28,7 +30,7 @@ const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
       },
       Effect.gen(function* () {
         const claudeSonnet = yield* AnthropicLanguageModel.model('claude-sonnet-4-6');
-        return (name: string) => (name === SONNET ? claudeSonnet : Layer.fail(new AiModelNotAvailableError(name)));
+        return (name: DXN.DXN) => (name === SONNET ? claudeSonnet : Layer.fail(new AiModelNotAvailableError(name)));
       }),
     ),
   ),
@@ -46,7 +48,7 @@ const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
           ),
         );
 
-        return (name: string) => (name === GEMMA ? gemma : Layer.fail(new AiModelNotAvailableError(name)));
+        return (name: DXN.DXN) => (name === GEMMA ? gemma : Layer.fail(new AiModelNotAvailableError(name)));
       }),
     ),
   ),
@@ -62,7 +64,7 @@ describe('AiModelResolver', () => {
         const model = yield* LanguageModel.LanguageModel;
         expect(model).toBeDefined();
       },
-      Effect.provide(AiService.model(SONNET).pipe(Layer.provide(TestRouter))),
+      Effect.provide(AiService.model(DXN.getName(SONNET)).pipe(Layer.provide(TestRouter))),
     ),
   );
 
@@ -73,7 +75,7 @@ describe('AiModelResolver', () => {
         const model = yield* LanguageModel.LanguageModel;
         expect(model).toBeDefined();
       },
-      Effect.provide(AiService.model(GEMMA).pipe(Layer.provide(TestRouter))),
+      Effect.provide(AiService.model(DXN.getName(GEMMA)).pipe(Layer.provide(TestRouter))),
     ),
   );
 });

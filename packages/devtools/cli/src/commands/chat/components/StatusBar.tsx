@@ -5,13 +5,14 @@
 import { type Accessor, For, createEffect, useContext } from 'solid-js';
 
 import { type AiService } from '@dxos/ai';
+import { DXN } from '@dxos/keys';
 
 import { AppContext } from '../../../components';
 import { theme } from '../../../theme';
 import { useSpinner } from '../hooks';
 
 export type StatusBarProps = {
-  model: string;
+  model: DXN.DXN;
   metadata?: AiService.ServiceMetadata;
   skills?: string[];
   processing?: Accessor<boolean>;

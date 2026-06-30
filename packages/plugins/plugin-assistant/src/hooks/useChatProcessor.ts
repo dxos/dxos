@@ -16,6 +16,7 @@ import { type Chat } from '@dxos/assistant-toolkit';
 import { AgentService, Credential, ServiceResolver } from '@dxos/compute';
 import { Database, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Space, useObject } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -38,7 +39,7 @@ export type UseChatProcessorProps = {
  * the catalog's shared model ids (e.g. `gptOss20b`) are served by several providers, so the provider
  * must accompany the request. A call that supplies its own provider is left untouched.
  */
-const withProvider = (service: AiService.Service, provider: string): AiService.Service => ({
+const withProvider = (service: AiService.Service, provider: DXN.DXN): AiService.Service => ({
   metadata: service.metadata,
   model: (id, options) => service.model(id, { ...options, provider: options?.provider ?? provider }),
 });

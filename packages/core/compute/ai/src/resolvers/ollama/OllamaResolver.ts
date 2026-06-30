@@ -7,6 +7,8 @@ import type * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { DXN } from '@dxos/keys';
+
 import * as AiModelResolver from '../../AiModelResolver';
 import { AiModelNotAvailableError } from '../../errors';
 import * as Model from '../../Model';
@@ -29,7 +31,7 @@ export const make = ({
   readonly endpoint?: string;
   readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
   /** The provider this resolver serves; `built-in` (the sidecar) passes its own id. */
-  readonly provider?: string;
+  readonly provider?: DXN.DXN;
   /** Models this resolver serves; defaults to the provider's curated catalog. Local providers pass a
    * list extended with installed tags so runtime-pulled models resolve too. */
   readonly models?: readonly Model.Model[];
@@ -51,7 +53,7 @@ export const make = ({
     {
       name: 'Ollama',
     },
-    Effect.succeed((model: string, options) => {
+    Effect.succeed((model: DXN.DXN, options) => {
       const backend = options?.provider === provider ? backendById.get(model) : undefined;
       return backend ? createModelLayer(backend) : Layer.fail(new AiModelNotAvailableError(model));
     }),

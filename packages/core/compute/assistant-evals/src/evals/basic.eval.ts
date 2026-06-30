@@ -6,6 +6,7 @@ import { Levenshtein } from 'autoevals';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import { type VariantConfig, createEvalRunner } from '../runner';
@@ -26,15 +27,15 @@ const task = createEvalRunner({
 evalite.each<VariantConfig>([
   {
     name: 'claude-haiku-4-5',
-    input: { model: 'com.anthropic.model.claude-haiku-4-5.default' },
+    input: { model: DXN.make('com.anthropic.model.claude-haiku-4-5.default') },
   },
   {
     name: 'claude-sonnet-4-5',
-    input: { model: 'com.anthropic.model.claude-sonnet-4-6.default' },
+    input: { model: DXN.make('com.anthropic.model.claude-sonnet-4-6.default') },
   },
   {
     name: 'claude-opus-4-6',
-    input: { model: 'com.anthropic.model.claude-opus-4-8.default' },
+    input: { model: DXN.make('com.anthropic.model.claude-opus-4-8.default') },
   },
 ])('Question answering', {
   data: [

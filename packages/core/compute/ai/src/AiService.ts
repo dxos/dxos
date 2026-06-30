@@ -20,8 +20,7 @@ export type ServiceMetadata = {
 
 /** Options for resolving a model: the provider to resolve through (defaults to edge) plus model options. */
 export type ResolveOptions = Model.Options & {
-  /** Provider NSID name to resolve through. */
-  readonly provider?: string;
+  readonly provider?: DXN.DXN;
 };
 
 export interface Service {
@@ -31,10 +30,10 @@ export interface Service {
   readonly metadata?: ServiceMetadata;
 
   /**
-   * Maps a model NSID name onto a LanguageModel layer.
+   * Maps model name ont a LanguageModel layer.
    */
   readonly model: (
-    model: string,
+    model: DXN.DXN,
     options?: ResolveOptions,
   ) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>;
 }
@@ -45,8 +44,9 @@ export interface Service {
 export class AiService extends Context.Tag('@dxos/ai/AiService')<AiService, Service>() {}
 
 /**
- * Resolves a model layer by its NSID name — validated at compile time like {@link DXN.make}, so call
- * sites pass the literal id directly.
+ * Resolves a model layer from a bare NSID name — validated at compile time like {@link DXN.make} and
+ * constructed to a model DXN internally. Call sites pass the literal id; a value already held as a
+ * `DXN.DXN` is resolved via the service's {@link Service.model} (or `DXN.getName` for the helper).
  */
 export const model: {
   <Id extends string>(
@@ -58,7 +58,7 @@ export const model: {
   options?: ResolveOptions,
 ): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService> =>
   AiService.pipe(
-    Effect.map((_) => _.model(model, options)),
+    Effect.map((_) => _.model(DXN.make(model), options)),
     Layer.unwrapEffect,
   );
 

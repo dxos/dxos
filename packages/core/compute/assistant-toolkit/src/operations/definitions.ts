@@ -34,10 +34,9 @@ export const RunInstructions = Operation.make({
     chat: Schema.optional(Ref.Ref(Chat.Chat)),
 
     /**
-     * Model NSID name.
-     * @default com.anthropic.model.claude-opus-4-8.default
+     * @default dxn:com.anthropic.model.claude-opus-4-8.default
      */
-    model: Schema.optional(Schema.String),
+    model: Schema.optional(DXN.Schema),
 
     systemInstructions: Schema.optional(Schema.String).annotations({
       description: 'Additional system instructions to add to the system prompt.',

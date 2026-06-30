@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { DXN, Obj, Type } from '@dxos/echo';
 
 /** Cheap, fast default for all stages; same model used by `update-chat-name` / `qualifier`. */
-export const DEFAULT_STAGE_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
+export const DEFAULT_STAGE_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-haiku-4-5.default');
 
 /** Per-stage configuration entry within a {@link PipelineConfig}. */
 export const StageConfig = Schema.Struct({

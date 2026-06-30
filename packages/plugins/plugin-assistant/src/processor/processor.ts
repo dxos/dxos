@@ -29,6 +29,7 @@ import { AgentService, type Credential, Operation, type ServiceNotAvailableError
 import { type Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -60,10 +61,10 @@ export type SpaceServices =
   | OpaqueToolkit.OpaqueToolkitProvider;
 
 export type AiChatProcessorOptions = {
-  model?: string;
+  model?: DXN.DXN;
   // The selected provider, carried with the model so the agent process resolves the (provider, id)
   // pair — the catalog's shared model ids are ambiguous without it.
-  provider?: string;
+  provider?: DXN.DXN;
   modelRegistry?: Model.Registry;
   registry?: Registry.Registry;
   observableRegistry?: AtomRegistry.Registry;

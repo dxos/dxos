@@ -10,6 +10,8 @@ import type * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { DXN } from '@dxos/keys';
+
 import * as AiModelResolver from '../../AiModelResolver';
 import { type AiModelNotAvailableError } from '../../errors';
 import * as Model from '../../Model';
@@ -44,7 +46,7 @@ export const make = ({
   const createModelLayer = (model: string) => ChatCompletionsAdapter.layer(model).pipe(Layer.provide(clientLayer));
 
   // Derive the id → model-layer map from the provider's catalog models (id → back-end name).
-  const modelMap: Partial<Record<string, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>> =
+  const modelMap: Partial<Record<DXN.DXN, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>> =
     {};
   for (const model of models) {
     modelMap[model.id] = createModelLayer(model.backend);

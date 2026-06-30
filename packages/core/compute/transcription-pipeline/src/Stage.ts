@@ -4,7 +4,7 @@
 
 import type * as Effect from 'effect/Effect';
 
-import { type Ref } from '@dxos/echo';
+import { DXN, type Ref } from '@dxos/echo';
 import { type ContentBlock } from '@dxos/types';
 
 import { type EntityLookup } from './lookup';
@@ -59,7 +59,7 @@ export type StageContext = {
   /** Resolves entity references for extraction. Backend-agnostic (full-text, vector, …). */
   readonly lookup?: EntityLookup;
   /** The model resolved for this stage by the runtime (config → stage → preset default). */
-  readonly model: string;
+  readonly model: DXN.DXN;
 };
 
 /**
@@ -78,7 +78,7 @@ export interface Stage<In = unknown, E = unknown> {
   readonly window?: { blocks: number };
   readonly concurrency: StageConcurrency;
   /** Default model for the stage; overridden by per-stage config in the runtime. */
-  readonly model?: string;
+  readonly model?: DXN.DXN;
   /** Build the stage input from the current window snapshot. Defaults to `{ window }`. */
   readonly select?: (window: ContentBlock.Transcript[]) => In;
   /** The discrete per-trigger computation. */

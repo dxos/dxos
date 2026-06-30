@@ -14,7 +14,7 @@ import * as Struct from 'effect/Struct';
 import { AiService, Model, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Operation, Trace } from '@dxos/compute';
-import { Database, Feed, Filter, Ref, Registry, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Ref, Registry, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -148,7 +148,7 @@ export const gptNode = defineComputeNode({
 
     // TODO(dmaretskyi): Use Effect.context() > Context.pick to pass context.
     const runDeps = Layer.mergeAll(
-      AiService.model(Model.DEFAULT_EDGE).pipe(
+      AiService.model(DXN.getName(Model.DEFAULT_EDGE)).pipe(
         Layer.provide(Layer.succeed(AiService.AiService, yield* AiService.AiService)),
       ),
       // TODO(dmaretskyi): Move them out.

@@ -3,6 +3,7 @@
 //
 
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
+import { DXN } from '@dxos/keys';
 
 export class PromptPreprocessingError extends BaseError.extend(
   'AiInputPreprocessorError',
@@ -10,7 +11,7 @@ export class PromptPreprocessingError extends BaseError.extend(
 ) {}
 
 export class AiModelNotAvailableError extends BaseError.extend('AiModelNotAvailableError') {
-  constructor(model: string, options?: Omit<BaseErrorOptions, 'context'>) {
+  constructor(model: DXN.DXN, options?: Omit<BaseErrorOptions, 'context'>) {
     super({ message: `AI Model not available: ${model}`, context: { model }, ...options });
   }
 }

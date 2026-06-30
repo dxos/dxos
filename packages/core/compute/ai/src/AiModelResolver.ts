@@ -10,6 +10,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
+import { DXN } from '@dxos/keys';
+
 import * as AiService from './AiService';
 import { AiModelNotAvailableError } from './errors';
 
@@ -29,7 +31,7 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiM
     metadata: AiService.ServiceMetadata,
     impl: Effect.Effect<
       (
-        model: string,
+        model: DXN.DXN,
         options?: AiService.ResolveOptions,
       ) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>,
       never,
@@ -59,9 +61,9 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiM
 
   static fromModelMap = <R>(
     metadata: AiService.ServiceMetadata,
-    provider: string,
+    provider: DXN.DXN,
     models: Effect.Effect<
-      Partial<Record<string, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>>,
+      Partial<Record<DXN.DXN, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>>,
       never,
       R
     >,
@@ -70,7 +72,7 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiM
       metadata,
       models.pipe(
         Effect.map(
-          (models) => (modelName: string, options?: AiService.ResolveOptions) =>
+          (models) => (modelName: DXN.DXN, options?: AiService.ResolveOptions) =>
             options?.provider === provider
               ? (models[modelName] ?? Layer.fail(new AiModelNotAvailableError(modelName)))
               : Layer.fail(new AiModelNotAvailableError(modelName)),
