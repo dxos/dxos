@@ -240,6 +240,8 @@ const DefaultStory = (_: StoryArgs) => {
       setStatus(`Reset · ${results.length} fact(s)`);
     });
 
+  // TODO(burdon): Generalize and factor out ModuleContainer system from stories-chat (using surfaces).
+  //  Use as opporutnity to move Surfaces into sub-module.
   return (
     <div className='dx-container grid grid-cols-[1fr_2fr_1fr]'>
       <div role='none' className='grid grid-rows-2 gap-2 min-h-0'>
