@@ -22,9 +22,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/av"
-    },
-    {
       "path": "../../common/context"
     },
     {
@@ -65,9 +62,6 @@
     },
     {
       "path": "../../core/compute/functions-runtime"
-    },
-    {
-      "path": "../../core/compute/nlp"
     },
     {
       "path": "../../core/compute/transcription-pipeline"
@@ -124,19 +118,22 @@
       "path": "../../ui/react-ui-graph"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
       "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
+      "path": "../../ui/react-ui-transcription"
+    },
+    {
       "path": "../../ui/ui-editor"
     },
     {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-client"

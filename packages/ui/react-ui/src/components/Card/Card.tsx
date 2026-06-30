@@ -552,11 +552,11 @@ export const Card = {
 };
 
 export type {
-  CardRootProps,
-  CardHeaderProps,
+  CardActionIconButtonProps,
   CardBlockProps,
   CardDragHandleProps,
-  CardActionIconButtonProps,
+  CardHeaderProps,
   CardMenuProps,
+  CardRootProps,
   CardSectionProps,
 };

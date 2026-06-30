@@ -9,7 +9,7 @@ import { Database, Obj } from '@dxos/echo';
 
 import { ScoreOperation } from '../types';
 import { parseLeadSheet } from '../util/lead-sheet';
-import { applyLeadSheetToScore, type MutableScore } from '../util/score-leadsheet';
+import { type MutableScore, applyLeadSheetToScore } from '../util/score-leadsheet';
 
 export default ScoreOperation.Write.pipe(
   Operation.withHandler(

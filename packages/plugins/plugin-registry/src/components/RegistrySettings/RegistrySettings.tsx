@@ -11,7 +11,7 @@ import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 
-import { type RegistrySettings as RegistrySettingsType, RegistrySettingsSchema } from '../../types';
+import { RegistrySettingsSchema, type RegistrySettings as RegistrySettingsType } from '../../types';
 
 export type RegistrySettingsProps = AppSurface.SettingsProps<
   RegistrySettingsType,

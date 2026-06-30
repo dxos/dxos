@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppSpace, Paths, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
+import { AppCapabilities, type AppCapabilities as AppCaps, AppSpace, Paths } from '@dxos/app-toolkit';
 import { Database, Entity, Key } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -22,7 +22,7 @@ export default Capability.makeModule(
     // TODO(wittjosiah): Remove cast once NavigationTargetResolver type includes Database.Service.
     const resolver: AppCaps.NavigationTargetResolver = ((query) =>
       Effect.gen(function* () {
-        if (!query?.dxn) {
+        if (!query?.uri) {
           return [
             {
               path: getPluginSettingsSectionPath(meta.profile.key),
@@ -32,13 +32,13 @@ export default Capability.makeModule(
           ];
         }
 
-        const dxn = EID.tryParse(query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn);
-        if (!dxn) {
+        const eid = EID.tryParse(query.uri);
+        if (!eid) {
           return [];
         }
 
         const { db } = yield* Database.Service;
-        const ref = db.makeRef(dxn);
+        const ref = db.makeRef(eid);
         const object = yield* Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
         if (!object) {
           return [];

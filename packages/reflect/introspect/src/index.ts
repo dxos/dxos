@@ -2,9 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-export { createIntrospector, type Introspector, type IntrospectorOptions } from './introspector';
+export { type Introspector, type IntrospectorOptions, createIntrospector } from './introspector';
 export { cacheFilePath, pluginsFilePath } from './indexer';
 export {
+  type CapabilityRefParts,
+  type OperationRefParts,
+  type PluginRefParts,
+  type RefParts,
+  type SchemaRefParts,
+  type SurfaceRefParts,
+  type SymbolRefParts,
   formatCapabilityRef,
   formatOperationRef,
   formatPluginRef,
@@ -13,13 +20,6 @@ export {
   formatSymbolRef,
   isSymbolRef,
   parseRef,
-  type CapabilityRefParts,
-  type OperationRefParts,
-  type PluginRefParts,
-  type RefParts,
-  type SchemaRefParts,
-  type SurfaceRefParts,
-  type SymbolRefParts,
 } from './refs';
 export type {
   Capability,

@@ -7,7 +7,7 @@
 import * as Option from 'effect/Option';
 
 import { type Node } from '@dxos/app-graph';
-import { isSpace, type Space } from '@dxos/client/echo';
+import { type Space, isSpace } from '@dxos/client/echo';
 
 /**
  * Canonical app-graph node type for `Space` data nodes. Mirrors

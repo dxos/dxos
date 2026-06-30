@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Filter as Filter$, Obj as Obj$, Order as Order$, Query as Query$, Ref, Type as Type$ } from '@dxos/echo';
+import type { Ref, Filter as Filter$, Obj as Obj$, Order as Order$, Query as Query$, Type as Type$ } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 // `DXN`/`EID` are type-only imports to keep the `query-lite` bundle free of
@@ -428,7 +428,7 @@ class FilterClass implements Filter$.Any {
   /** Create a predicate from a filter. */
   // Cast required: TypeScript cannot verify a plain overloaded function satisfies a type-predicate
   // overload signature without the cast; Effect's dual() has the same limitation here.
-  static toPredicate = ((entityOrFilter: any, filter?: any): any => {
+  static 'toPredicate' = ((entityOrFilter: any, filter?: any): any => {
     if (filter === undefined) {
       return (entity: any) => _filterMatchEntityLocal(entityOrFilter.ast, entity);
     }

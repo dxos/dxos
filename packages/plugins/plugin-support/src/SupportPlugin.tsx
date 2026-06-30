@@ -11,12 +11,12 @@ import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
 import {
   AppGraphBuilder,
-  SkillDefinition,
   CreateObject,
   HelpState,
   OperationHandler,
   ReactRoot,
   ReactSurface,
+  SkillDefinition,
   SupportSettings,
 } from '#capabilities';
 import { meta } from '#meta';

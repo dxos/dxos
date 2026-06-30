@@ -3,7 +3,7 @@
 //
 
 import { type Database, Obj, Ref, Tag } from '@dxos/echo';
-import { TagIndex, Tagging } from '@dxos/schema';
+import { Tagging, TagIndex } from '@dxos/schema';
 
 /**
  * Well-known "starred" tag. The stable foreign `key` lets {@link Tag.findOrCreate} dedupe by identity

@@ -266,4 +266,4 @@ export const Masonry = {
   Viewport: MasonryViewport,
 };
 
-export type { MasonryRootProps, MasonryContentProps, MasonryViewportProps };
+export type { MasonryContentProps, MasonryRootProps, MasonryViewportProps };

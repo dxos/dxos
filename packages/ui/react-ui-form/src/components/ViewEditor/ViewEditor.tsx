@@ -39,10 +39,10 @@ import {
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
-import { type FormFieldRenderer, type FormFieldRendererProps, type FormFieldMap } from '#types';
+import { type FormFieldMap, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
 import { FieldEditor } from '../FieldEditor';
-import { CompactIconButton, FormFieldHeader, Form, FormFieldLabel, type FormRootProps } from '../Form';
+import { CompactIconButton, Form, FormFieldHeader, FormFieldLabel, type FormRootProps } from '../Form';
 
 export type ViewEditorProps = ThemedClassName<
   {

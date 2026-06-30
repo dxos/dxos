@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Entity, Filter, Obj, Query as EchoQuery, Scope, Type } from '@dxos/echo';
+import { Database, Query as EchoQuery, Entity, Filter, Obj, Scope, Type } from '@dxos/echo';
 
 import { Query } from './definitions';
 

@@ -19,8 +19,8 @@ import { Text } from '@dxos/schema';
 
 import {
   MarkdownEditor,
-  MarkdownEditorProvider,
   type MarkdownEditorContentProps,
+  MarkdownEditorProvider,
   type MarkdownEditorProviderProps,
 } from '#components';
 import { useLinkQuery } from '#hooks';

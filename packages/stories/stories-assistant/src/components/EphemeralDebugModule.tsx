@@ -232,9 +232,9 @@ const ProcessEphemeralCard = ({ process, feed }: ProcessEphemeralCardProps) => {
       <Card.Header>
         <div className='flex flex-wrap items-center gap-2 min-w-0 w-full'>
           <Card.Title classNames='truncate'>{label}</Card.Title>
-          <Tag palette={subscribed ? 'success' : 'warning'}>{subscribed ? 'subscribed' : 'no attach'}</Tag>
-          <Tag palette='info'>{process.state}</Tag>
-          <Tag palette='neutral'>{count} events</Tag>
+          <Tag hue={subscribed ? 'success' : 'warning'}>{subscribed ? 'subscribed' : 'no attach'}</Tag>
+          <Tag hue='info'>{process.state}</Tag>
+          <Tag hue='neutral'>{count} events</Tag>
         </div>
       </Card.Header>
       <Card.Body classNames='w-full'>

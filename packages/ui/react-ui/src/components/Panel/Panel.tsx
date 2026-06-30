@@ -118,4 +118,4 @@ export const Panel = {
   Statusbar: PanelStatusbar,
 };
 
-export type { PanelRootProps, PanelToolbarProps, PanelContentProps, PanelStatusbarProps };
+export type { PanelContentProps, PanelRootProps, PanelStatusbarProps, PanelToolbarProps };

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Surface, usePluginManager, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { Connection, ConnectorAuth } from '@dxos/plugin-connector';
 import { useQuery } from '@dxos/react-client/echo';

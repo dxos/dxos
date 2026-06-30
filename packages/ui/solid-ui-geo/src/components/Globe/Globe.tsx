@@ -338,4 +338,4 @@ export const Globe = {
   Panel: GlobePanel,
 };
 
-export type { GlobeRootProps, GlobeCanvasProps };
+export type { GlobeCanvasProps, GlobeRootProps };

@@ -4,14 +4,14 @@
 
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef } from 'react';
 
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Event } from '@dxos/async';
 import { type Database } from '@dxos/echo';
-import { useVoiceInput } from '@dxos/plugin-transcription';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
+import { pendingText } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type Merge } from '@dxos/util';
 
@@ -26,6 +26,7 @@ import { ChatMcpErrors } from './ChatMcpErrors';
 import { ChatOptions } from './ChatOptions';
 import { ChatReferences } from './ChatReferences';
 import { ChatStatusIndicator } from './ChatStatusIndicator';
+import { useChatVoiceInput } from './useChatVoiceInput';
 
 export type ChatPromptProps = Merge<
   ThemedClassName<{
@@ -66,36 +67,21 @@ export const ChatPrompt = ({
   const activeRef = useDynamicRef(active);
 
   const editorRef = useRef<ChatEditorController>(null);
-  const [recordingState, setRecordingState] = useState(false);
   useEffect(() => {
     return event.on((ev) => {
-      switch (ev.type) {
-        case 'update-prompt':
-          if (!editorRef.current?.getText()?.length) {
-            editorRef.current?.setText(ev.text);
-            editorRef.current?.focus();
-          }
-          break;
-        case 'record-start':
-          setRecordingState(true);
-          break;
-        case 'record-stop':
-          setRecordingState(false);
-          break;
+      if (ev.type === 'update-prompt' && !editorRef.current?.getText()?.length) {
+        editorRef.current?.setText(ev.text);
+        editorRef.current?.focus();
       }
     });
   }, [event]);
 
-  // TODO(burdon): Configure capability in TranscriptionPlugin.
-  const { recording } = useVoiceInput({
-    active: recordingState,
-    onUpdate: (text) => {
-      editorRef.current?.setText(text);
-      editorRef.current?.focus();
-    },
-  });
+  const fallbackDocId = useId();
+  const docId = chat?.id ?? fallbackDocId;
+  useChatVoiceInput(docId, editorRef);
 
-  const extensions = useChatKeymapExtensions({ event });
+  const keymapExtensions = useChatKeymapExtensions({ event });
+  const extensions = useMemo(() => [keymapExtensions, pendingText()], [keymapExtensions]);
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
@@ -158,7 +144,7 @@ export const ChatPrompt = ({
           <ChatActions
             classNames='col-span-2'
             microphone={true}
-            recording={recording}
+            docId={docId}
             processing={streaming}
             onEvent={handleEvent}
           >

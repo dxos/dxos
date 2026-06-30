@@ -9,21 +9,15 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
-import { URI } from '@dxos/keys';
-import { useClient } from '@dxos/react-client';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { AttendableContainer } from '@dxos/react-ui-attention';
 import {
   type EditorRootProps,
   type EditorToolbarState,
   createEditorController,
   useEditorContext,
 } from '@dxos/react-ui-editor';
-import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
+import { type XmlWidgetState } from '@dxos/ui-editor';
 import { isNonNullable } from '@dxos/util';
 
 import {
@@ -50,7 +44,7 @@ import {
 type MarkdownEditorContextValue = {
   id: string;
   attendableId?: string;
-  previewBlocks: PreviewBlock[];
+  widgets: XmlWidgetState[];
 } & Pick<ExtensionsOptions, 'compact' | 'viewMode'> &
   Pick<NaturalMarkdownToolbarProps, 'onAction' | 'onFileUpload' | 'onViewModeChange'>;
 
@@ -95,20 +89,8 @@ export const MarkdownEditorProvider = ({
   onFileUpload,
   onViewModeChange,
 }: MarkdownEditorProviderProps) => {
-  // Preview blocks.
-  const [previewBlocks, setPreviewBlocks] = useState<PreviewBlock[]>([]);
-  const previewOptions = useMemo<PreviewOptions>(
-    () => ({
-      db: Obj.isObject(object) ? Obj.getDatabase(object) : undefined,
-      addBlockContainer: (block) => {
-        setPreviewBlocks((prev) => [...prev, block]);
-      },
-      removeBlockContainer: ({ link }) => {
-        setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.dxn !== link.dxn));
-      },
-    }),
-    [object],
-  );
+  // Widget portals driven by xmlTags.
+  const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
 
   // Context menu options (Editor.Root calls useEditorMenu with these props).
   const menuOptions = useEditorMenuOptions({ slashCommandGroups, onLinkQuery });
@@ -121,7 +103,7 @@ export const MarkdownEditorProvider = ({
     viewMode,
     viewState,
     editorStateStore,
-    previewOptions,
+    setWidgets,
     settings,
     onSelectObject,
   });
@@ -150,12 +132,12 @@ export const MarkdownEditorProvider = ({
       attendableId,
       compact,
       viewMode,
-      previewBlocks,
+      widgets,
       onAction,
       onFileUpload,
       onViewModeChange,
     }),
-    [id, attendableId, compact, viewMode, previewBlocks, onAction, onFileUpload, onViewModeChange],
+    [id, attendableId, compact, viewMode, widgets, onAction, onFileUpload, onViewModeChange],
   );
 
   return (
@@ -252,36 +234,18 @@ const MARKDOWN_EDITOR_BLOCKS_NAME = 'MarkdownEditor.Blocks';
 type MarkdownEditorBlocksProps = {};
 
 const MarkdownEditorBlocks = (_props: MarkdownEditorBlocksProps) => {
-  const { previewBlocks } = useMarkdownEditorContext(MARKDOWN_EDITOR_BLOCKS_NAME);
+  const { widgets } = useMarkdownEditorContext(MARKDOWN_EDITOR_BLOCKS_NAME);
 
   return (
     <>
-      {previewBlocks.map(({ link, el }) => (
-        <PreviewBlock key={link.dxn} link={link} el={el} />
+      {widgets.map(({ id, root, Component, props }) => (
+        <div key={id}>{createPortal(<Component {...props} />, root)}</div>
       ))}
     </>
   );
 };
 
 MarkdownEditorBlocks.displayName = MARKDOWN_EDITOR_BLOCKS_NAME;
-
-// Each embed is independently attendable, keyed by the linked object's URI. The section surface
-// contract requires `attendableId` (type-specific section surfaces like sketch guard on it, else they
-// fall back to the generic preview card); keying per-embed also lets a surface enter edit mode only
-// while focused (e.g. a sketch shows its controls/grid on focus and renders read-only otherwise).
-const PreviewBlock = ({ el, link }: PreviewBlock) => {
-  const client = useClient();
-  const dxn = URI.make(link.dxn);
-  const subject = client.graph.makeRef(dxn).target;
-  const data = useMemo(() => ({ subject, attendableId: link.dxn }), [subject, link.dxn]);
-
-  return createPortal(
-    <AttendableContainer id={link.dxn}>
-      <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
-    </AttendableContainer>,
-    el,
-  );
-};
 
 //
 // MarkdownEditor
@@ -294,7 +258,7 @@ export const MarkdownEditor = {
   Blocks: MarkdownEditorBlocks,
 };
 
-export type { MarkdownEditorContentProps, MarkdownEditorToolbarProps, MarkdownEditorBlocksProps };
+export type { MarkdownEditorBlocksProps, MarkdownEditorContentProps, MarkdownEditorToolbarProps };
 
 /** @deprecated Use `MarkdownEditorProviderProps`. */
 export type MarkdownEditorRootProps = MarkdownEditorProviderProps;

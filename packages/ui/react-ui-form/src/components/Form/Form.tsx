@@ -40,13 +40,13 @@ export const Form = {
 };
 
 export type {
-  FormRootProps,
-  FormViewportProps,
+  FormActionsProps,
   FormContentProps,
-  FormSectionProps,
   FormGroupProps,
   FormLayoutProps,
-  FormActionsProps,
-  FormSubmitProps,
+  FormRootProps,
   FormRowProps,
+  FormSectionProps,
+  FormSubmitProps,
+  FormViewportProps,
 };

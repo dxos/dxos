@@ -25,7 +25,7 @@ import { Message } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
-import { InboxResolver, GoogleCredentials } from '../../../services';
+import { GoogleCredentials, InboxResolver } from '../../../services';
 import { InboxOperation, Mailbox } from '../../../types';
 import { appendBatchToFeed, collectForeignIds, readBindingOptions } from '../../../util';
 import { mapMessage } from './mapper';
@@ -82,7 +82,7 @@ const syncSingleMailbox = (input: {
     );
     log('synced labels', { count: labelMap.size });
 
-    const objects = yield* Feed.runQuery(feed, Filter.type(Message.Message));
+    const objects = yield* Feed.query(feed, Filter.type(Message.Message)).run;
     const lastMessage = objects.at(-1);
     const existingGmailIds = collectForeignIds(objects, GMAIL_SOURCE, STREAMING_CONFIG.maxResults);
 

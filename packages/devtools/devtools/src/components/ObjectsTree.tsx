@@ -19,7 +19,7 @@ import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DropdownMenu, Icon, IconButton } from '@dxos/react-ui';
-import { TREEGRID_PARENT_OF_SEPARATOR, Treegrid, TreeItemToggle, paddingIndentation } from '@dxos/react-ui-list';
+import { Treegrid, TREEGRID_PARENT_OF_SEPARATOR, TreeItemToggle, paddingIndentation } from '@dxos/react-ui-list';
 import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 export interface ObjectsTreeProps {

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { mx, messageValence } from '@dxos/ui-theme';
+import { messageValence, mx } from '@dxos/ui-theme';
 import { type ComponentFunction, type Elevation, type MessageValence, type Theme } from '@dxos/ui-types';
 
 export type MessageStyleProps = {

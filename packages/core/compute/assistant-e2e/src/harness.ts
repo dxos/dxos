@@ -15,13 +15,13 @@ import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/a
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { RunInstructions, SkillManagerSkill, DatabaseSkill, Chat } from '@dxos/assistant-toolkit';
+import { Chat, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import { type ClientOptions } from '@dxos/client';
 // Skill is imported so TypeScript can name Skill.Skill in the emitted .d.ts for getDefaultSkills
 // (SkillManagerSkill.make() returns Skill.Skill, which propagates into the inferred return type).
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { Operation, Instructions, ServiceResolver, Skill } from '@dxos/compute';
-import { configPreset, type ConfigPresetOptions } from '@dxos/config';
+import { Instructions, Operation, ServiceResolver, Skill } from '@dxos/compute';
+import { type ConfigPresetOptions, configPreset } from '@dxos/config';
 import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';

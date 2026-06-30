@@ -7,20 +7,31 @@ import { userEvent, within } from 'storybook/test';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { RunInstructions, DelegationSkill, LinearSkill, PlanningSkill, WebSearchSkill } from '@dxos/assistant-toolkit';
-import { Skill, Instructions, Operation, Script, Template, Trigger } from '@dxos/compute';
+import {
+  ConnectorsSkill,
+  DatabaseSkill,
+  DelegationSkill,
+  LinearSkill,
+  PlanningSkill,
+  RunInstructions,
+  WebSearchSkill,
+} from '@dxos/assistant-toolkit';
+import { Instructions, Operation, Script, Skill, Template, Trigger } from '@dxos/compute';
 import { Reply } from '@dxos/compute/testing';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, Type, View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AssistantSkill } from '@dxos/plugin-assistant';
 import { translations } from '@dxos/plugin-assistant/translations';
-import { ChessSkill, ChessOperation } from '@dxos/plugin-chess';
+import { ChessOperation, ChessSkill } from '@dxos/plugin-chess';
 import { CommentSkill } from '@dxos/plugin-comments/skills';
+import { CrmSkill } from '@dxos/plugin-crm';
+import { ProfileOf } from '@dxos/plugin-crm/types';
 import { CalendarSkill, InboxSkill } from '@dxos/plugin-inbox';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { MapSkill } from '@dxos/plugin-map';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
+import { Routine } from '@dxos/plugin-routine';
 import { TranscriptionSkill } from '@dxos/plugin-transcription';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text, ViewModel } from '@dxos/schema';
@@ -40,24 +51,26 @@ import {
 import { trim } from '@dxos/util';
 
 import {
-  SkillModule,
   ChatModule,
   ChessModule,
   CommentsModule,
+  ContextModule,
+  DatabaseModule,
   ExecutionGraphModule,
   GraphModule,
   InboxModule,
   InvocationsModule,
   ProjectModule,
-  RoutineModule,
   ResearchInputModule,
   ResearchOutputModule,
+  RoutineCompanionModule,
+  RoutineModule,
   ScriptModule,
+  SkillModule,
   TasksModule,
   TokenManagerModule,
   TraceModule,
   TriggersModule,
-  ContextModule,
 } from '../components';
 import {
   ModuleContainer,
@@ -68,6 +81,7 @@ import {
   createTestMailbox,
   createTestTranscription,
   getDecorators,
+  loadMockInboxSnapshot,
   organizations,
   testTypes,
 } from '../testing';
@@ -459,6 +473,45 @@ export const WithGmail: Story = {
   },
 };
 
+/**
+ * Agent-facing connector prompt surface. The chat is seeded with an assistant turn that emits an
+ * `integration-prompt` surface (the `<surface role='integration-prompt' data='{"service":"gmail.com"}' />`
+ * content block) so the connector prompt renders inline — the model would emit this, instead of failing,
+ * when a request needs a service the user has not connected (see the Connectors skill).
+ */
+export const WithConnectorPrompt: Story = {
+  decorators: getDecorators({
+    lazyPlugins: async () => {
+      const [{ InboxPlugin }, { ConnectorPlugin }] = await Promise.all([
+        import('@dxos/plugin-inbox/plugin'),
+        import('@dxos/plugin-connector/plugin'),
+      ]);
+      return {
+        plugins: [InboxPlugin(), ConnectorPlugin()],
+      };
+    },
+    config: config.remote,
+    types: [Feed.Feed, Mailbox.Mailbox],
+    onChatCreated: async ({ space, chat }) => {
+      const feed = await chat.feed.load();
+      await space.db.appendToFeed(feed, [
+        Message.make({
+          sender: 'assistant',
+          blocks: [
+            { _tag: 'text', text: 'Gmail is not connected yet. Connect it to continue:' },
+            { _tag: 'surface', role: 'integration-prompt', data: { service: 'gmail.com' } },
+          ],
+        }),
+      ]);
+    },
+  }),
+  args: {
+    showContext: true,
+    modules: [[ChatModule]],
+    skills: [AssistantSkill.key, ConnectorsSkill.key],
+  },
+};
+
 // Test with prompt: Sync my calendar.
 export const WithCalendar: Story = {
   decorators: getDecorators({
@@ -681,6 +734,22 @@ export const WithSearch: Story = {
   }),
   args: {
     modules: [[ChatModule], [GraphModule]],
+  },
+};
+
+/**
+ * Database explorer panel: query bar with graph, object-tree, and cards views.
+ */
+export const WithDatabase: Story = {
+  decorators: getDecorators({
+    config: config.local,
+    types: testTypes,
+    onInit: async ({ space }) => {
+      await addTestData(space);
+    },
+  }),
+  args: {
+    modules: [[DatabaseModule]],
   },
 };
 
@@ -1027,6 +1096,59 @@ export const WithProject: Story = {
   args: {
     modules: [[ProjectModule], [TriggersModule, InvocationsModule]],
     skills: [],
+  },
+};
+
+/**
+ * CRM chat over a Gmail-synced mailbox seeded from `mock-inbox.dx.json`.
+ * Test with prompt: Research contacts from my recent emails.
+ */
+export const WithCRM: Story = {
+  decorators: getDecorators({
+    importSnapshot: loadMockInboxSnapshot,
+    lazyPlugins: async () => {
+      const [{ CrmPlugin }, { InboxPlugin }, { MarkdownPlugin }, { TablePlugin }] = await Promise.all([
+        import('@dxos/plugin-crm/plugin'),
+        import('@dxos/plugin-inbox/plugin'),
+        import('@dxos/plugin-markdown/plugin'),
+        import('@dxos/plugin-table/plugin'),
+      ]);
+      return {
+        plugins: [CrmPlugin(), InboxPlugin(), MarkdownPlugin(), TablePlugin()],
+      };
+    },
+    config: config.remote,
+    types: [
+      AccessToken.AccessToken,
+      Feed.Feed,
+      Instructions.Instructions,
+      Mailbox.Mailbox,
+      Message.Message,
+      Organization.Organization,
+      Person.Person,
+      ProfileOf.ProfileOf,
+      Routine.Routine,
+      Tag.Tag,
+      Trigger.Trigger,
+    ],
+    onChatCreated: async ({ space, binder }) => {
+      const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const mailbox = mailboxes[0];
+      if (mailbox) {
+        await binder.bind({ objects: [Ref.make(mailbox)] });
+      }
+    },
+  }),
+  args: {
+    modules: [[InboxModule], [RoutineCompanionModule, TraceModule], [DatabaseModule]],
+    skills: [
+      AssistantSkill.key,
+      CrmSkill.key,
+      DatabaseSkill.key,
+      InboxSkill.key,
+      MarkdownSkill.key,
+      WebSearchSkill.key,
+    ],
   },
 };
 

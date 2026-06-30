@@ -12,7 +12,7 @@ import { STORAGE_VERSION } from '@dxos/protocols';
 
 import { generateSnapshot } from '../generate-snapshot';
 import { type SnapshotDescription, SnapshotsRegistry } from '../snapshots-registry';
-import { EXPECTED_JSON_DATA, SNAPSHOTS_DIR, SNAPSHOT_DIR, getBaseDataDir } from '../util';
+import { EXPECTED_JSON_DATA, SNAPSHOT_DIR, SNAPSHOTS_DIR, getBaseDataDir } from '../util';
 
 /**
  * Generates a snapshot of encoded protocol buffers to check for backwards compatibility.
