@@ -320,6 +320,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/crawler/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/extractor/package.json",
           "jsonpath": "$.version"
         },

@@ -21,6 +21,23 @@ export type DxAnchorActivateProps = {
 };
 
 /**
+ * Input to an anchor-preview lookup: the dxn and display label from the clicked anchor.
+ */
+export type PreviewLinkRef = {
+  dxn: string;
+  label: string;
+  block?: boolean;
+};
+
+/**
+ * Result of an anchor-preview lookup.
+ */
+export type PreviewLinkTarget = {
+  label: string;
+  object?: any;
+};
+
+/**
  * Global event to trigger a popover.
  */
 export class DxAnchorActivate extends Event {

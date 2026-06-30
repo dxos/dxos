@@ -88,8 +88,8 @@ function formatTodosAsMarkdown(todos) {
 async function makeGitHubRequest(endpoint, method = 'GET', body = null) {
   const url = `https://api.github.com/repos/${GITHUB_REPOSITORY}${endpoint}`;
   const headers = {
-    Authorization: `token ${GITHUB_TOKEN}`,
-    Accept: 'application/vnd.github.v3+json',
+    'Authorization': `token ${GITHUB_TOKEN}`,
+    'Accept': 'application/vnd.github.v3+json',
     'User-Agent': 'DXOS-TODO-Tracker',
   };
 

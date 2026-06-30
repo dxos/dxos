@@ -366,11 +366,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) => {
       return target[symbolInternals].getDecoded([getNamespace(target), ...path]);
     });
-    if (propertySchema == null) {
-      return value;
-    }
 
     const _ = Schema.asserts(propertySchema)(value);
+    SchemaValidator.assertExactProperties(propertySchema, value, (path) => getDeep(value, path));
     return value;
   }
 

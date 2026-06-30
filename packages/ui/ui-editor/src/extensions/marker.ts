@@ -129,7 +129,7 @@ export const markerButtons = (buttons: MarkerButton[]): Domino<HTMLElement> =>
         Domino.of('button')
           .classNames('cm-marker-button', button.className)
           .attributes({
-            type: 'button',
+            'type': 'button',
             'aria-label': button.label,
             ...(button.testId ? { 'data-testid': button.testId } : {}),
           })

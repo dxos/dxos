@@ -70,6 +70,7 @@ catalog:
   '@dnd-kit/utilities': ^3.2.0
   '@dxos/client': ^0.8.3
   '@dxos/echo': ^0.8.3
+  '@dxos/ui-types': ^0.9.0
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.5.3
   '@effect-atom/atom-react': ^0.5.0
@@ -291,6 +292,7 @@ catalog:
   '@types/seedrandom': ^3.0.5
   '@types/semver': ^7.7.1
   '@types/sharedworker': ^0.0.111
+  '@types/sparqljs': ^3.1.12
   '@types/three': 0.165.0
   '@types/topojson-client': ^3.1.4
   '@types/topojson-simplify': ^3.0.3
@@ -607,6 +609,7 @@ catalog:
   solid-element: ^1.9.1
   solid-js: ^1.9.11
   sort-package-json: ^1.57.0
+  sparqljs: ^3.7.4
   stage-js: 1.0.0-alpha.17
   starlight-links-validator: ^0.24.0
   storybook: ^10.4.2

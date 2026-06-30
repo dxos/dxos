@@ -33,8 +33,8 @@ const METHOD_CHOICES = [
 ];
 
 const INPUT_PROMPT: Record<LoginMethod, string> = {
-  email: 'Email address',
-  atproto: 'atproto handle or DID (e.g. alice.bsky.social)',
+  'email': 'Email address',
+  'atproto': 'atproto handle or DID (e.g. alice.bsky.social)',
   'device-invitation': 'Invitation code or URL',
   'recovery-code': 'Recovery code (seed phrase)',
 };
