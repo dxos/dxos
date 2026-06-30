@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 
-import { EdgarFetchError, InstrumentMissingSymbolError } from '../errors';
+import { EdgarFetchError, EdgarTickerNotFoundError, InstrumentMissingSymbolError } from '../errors';
 import { fetchEdgarFundamentals } from '../services';
 import { Ibkr, IbkrOperation } from '../types';
 
@@ -23,7 +23,10 @@ const handler: Operation.WithHandler<typeof IbkrOperation.GetInstrumentFundament
 
         return yield* Effect.tryPromise({
           try: () => fetchEdgarFundamentals({ ticker: symbol }),
-          catch: (cause) => (cause instanceof EdgarFetchError ? cause : new EdgarFetchError(cause)),
+          catch: (cause) =>
+            cause instanceof EdgarFetchError || cause instanceof EdgarTickerNotFoundError
+              ? cause
+              : new EdgarFetchError(cause),
         });
       }),
     ),

@@ -24,6 +24,9 @@ const hasAdditionalFacts = (snapshot?: Ibkr.FundamentalsSnapshot): boolean =>
 const hasMetrics = (snapshot?: Ibkr.FundamentalsSnapshot): boolean =>
   snapshot != null &&
   ([
+    snapshot.valuation?.marketCap,
+    snapshot.valuation?.pe,
+    snapshot.valuation?.pb,
     snapshot.performance?.revenue,
     snapshot.performance?.netIncome,
     snapshot.performance?.eps,

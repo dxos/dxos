@@ -39,8 +39,14 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
       { instrument: Ref.make(subject) },
       { spaceId: Obj.getDatabase(subject)?.spaceId },
     )
-      .then(({ data }) => setFundamentals(data))
-      .catch((cause) => setError(cause instanceof Error ? cause.message : String(cause)))
+      .then(({ data, error }) => {
+        if (error) {
+          setFundamentals(undefined);
+          setError(error.message);
+          return;
+        }
+        setFundamentals(data);
+      })
       .finally(() => setLoading(false));
   }, [invokePromise, instrument.symbol, subject]);
 

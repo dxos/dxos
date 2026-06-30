@@ -47,7 +47,10 @@ const loadTickerMap = async (fetchImpl: FetchImpl): Promise<Map<string, number>>
         map.set(entry.ticker.toUpperCase(), entry.cik_str);
       }
       return map;
-    })();
+    })().catch((err) => {
+      tickerMapPromise = undefined;
+      throw err;
+    });
   }
   return tickerMapPromise;
 };
