@@ -53,7 +53,7 @@ export const SemanticFactsViewer = ({ classNames, facts }: SemanticFactsViewerPr
 };
 
 const SubjectGroup = ({ group }: { group: Group }) => (
-  <div className='shrink-0 flex flex-col border border-separator rounded-sm overflow-hidden'>
+  <div className='shrink-0 flex flex-col bg-card-surface border border-subdued-separator rounded-sm overflow-hidden'>
     <div className='flex px-3 py-1 items-center justify-between'>
       <h3>{humanize(group.subject)}</h3>
       {group.conflicted && (
@@ -76,7 +76,7 @@ const SubjectGroup = ({ group }: { group: Group }) => (
 );
 
 const cellClassNames =
-  'bg-card-surface border border-subdued-separator rounded-sm px-2 py-0.5 font-medium whitespace-nowrap truncate';
+  'bg-input-surface border border-subdued-separator rounded-sm px-2 py-0.5 font-medium whitespace-nowrap truncate';
 
 const FactRow = ({ fact, conflicting }: { fact: Type.Fact; conflicting: boolean }) => {
   const { assertion, valence, attribution } = fact;

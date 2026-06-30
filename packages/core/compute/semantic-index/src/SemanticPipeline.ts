@@ -31,6 +31,16 @@ export const normalizeEntityId = (label: string) => {
 const factId = (source: string, hash: string, index: number) => `${source}#${hash}#${index}`;
 
 /**
+ * Whether a subject/object label is groundable. The model emits the literal `unknown` (or an empty
+ * string) when it can't resolve a referent — typically an unbound pronoun ("we"/"it") — and a fact
+ * whose subject or object is unknown is noise, not a proposition.
+ */
+const isGrounded = (label: string) => {
+  const value = label.trim().toLowerCase();
+  return value.length > 0 && value !== 'unknown';
+};
+
+/**
  * Extract → link (slug) facts for a single document. Pure derivation: chunk → LLM extract → map to
  * {@link Fact}; touches neither the {@link SemanticStore} nor any cursor, so it can generate facts
  * from a raw document with only an {@link AiService} in context (e.g. a UI preview).
@@ -47,6 +57,10 @@ export const extractDocFacts = (doc: ExtractDocument): Effect.Effect<Fact[], Sem
     for (const chunkText of chunks) {
       const payload = yield* extractChunk({ ...doc, text: chunkText });
       for (const candidate of payload.facts) {
+        // Drop ungrounded propositions before they become facts.
+        if (!isGrounded(candidate.subject) || !isGrounded(candidate.object)) {
+          continue;
+        }
         const fact: Fact = {
           id: factId(doc.source, hash, index++),
           assertion: {

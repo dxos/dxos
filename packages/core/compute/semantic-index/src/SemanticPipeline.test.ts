@@ -186,6 +186,36 @@ describe('SemanticPipeline', () => {
   );
 
   it.effect(
+    'drops ungrounded propositions whose subject or object is unknown',
+    Effect.fnUntraced(
+      function* () {
+        const facts = yield* extractFacts([{ text: 'whatever', source: 'editor:input' }]);
+        yield* Effect.sync(() => {
+          if (facts.length !== 1) {
+            throw new Error(`expected 1 grounded fact, got ${facts.length}`);
+          }
+          const [fact] = facts;
+          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.entity !== 'alice') {
+            throw new Error('the grounded fact was dropped');
+          }
+        });
+      },
+      // One grounded fact plus two the model couldn't ground (unknown subject, empty object).
+      Effect.provide(
+        queuedAiService([
+          {
+            facts: [
+              { subject: 'Alice', predicate: 'leads', object: 'DXOS', factuality: 'CT+', polarity: '+' },
+              { subject: 'unknown', predicate: 'could get away', object: 'unknown', factuality: 'PS+', polarity: '+' },
+              { subject: 'Bob', predicate: 'mentions', object: '', factuality: 'CT+', polarity: '+' },
+            ],
+          },
+        ]),
+      ),
+    ),
+  );
+
+  it.effect(
     'normalizes a non-slug-safe author token so it joins against attribution.agent',
     Effect.fnUntraced(
       function* () {
