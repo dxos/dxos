@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { Filter } from '@dxos/echo';
@@ -17,6 +17,8 @@ import { type ModuleProps } from './types';
 
 export const ChatModule = ({ space }: ModuleProps) => {
   const { preset, ...chatProps } = usePresets({});
+  // Story-local online toggle (the app derives this from the configured provider instead).
+  const [online, setOnline] = useState(true);
 
   const chats = useQuery(space.db, Filter.type(Assistant.Chat));
   const chat = chats.at(-1);
@@ -57,7 +59,14 @@ export const ChatModule = ({ space }: ModuleProps) => {
           <Chat.Content>
             <Chat.Thread viewType={view} />
             <Chat.TaskList classNames='max-h-[120px] border-t border-separator rounded-sm text-description' />
-            <Chat.Prompt {...chatProps} classNames='border-none rounded-none' outline preset={preset?.id} />
+            <Chat.Prompt
+              {...chatProps}
+              classNames='border-none rounded-none'
+              outline
+              preset={preset?.id}
+              online={online}
+              onOnlineChange={setOnline}
+            />
           </Chat.Content>
         </Panel.Content>
       </Panel.Root>
