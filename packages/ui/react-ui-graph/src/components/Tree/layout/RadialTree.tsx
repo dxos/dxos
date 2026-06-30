@@ -6,11 +6,9 @@
 import { cluster as d3Cluster, tree as d3Tree, linkRadial, select } from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type Obj } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { getNodeFillForObject } from '../../../util';
 import { type TreeNode } from '../types';
 import { buildHierarchy, isCollapsed, isLeaf } from './hierarchy';
 import { type TreeLayoutSlots, defaultTreeLayoutSlots } from './slots';
@@ -224,7 +222,7 @@ const renderRadialTree = (svgElement: SVGSVGElement, root: any, options: RenderO
     .attr('r', r)
     // Color leaves by typename so cluster matches the force / bundle / lattice variants.
     // Branch nodes (groups, root) keep the default slot fill.
-    .style('fill', (d: any) => (isLeaf(d.data) ? getNodeFillForObject(d.data.data as Obj.Unknown | undefined) : null));
+    .style('fill', (d: any) => (isLeaf(d.data) ? (slots.nodeFill?.(d.data.data) ?? null) : null));
 
   nodeMerge
     .select<SVGTextElement>('text')
