@@ -17,8 +17,10 @@ export type AgentListProps = ThemedClassName<{
 
 /**
  * Agent column: the crawl's resolved agents as a single-select listbox. Selecting an agent filters
- * the facts view to that agent's attributions; the toolbar's clear button resets to "all".
- * Multi-select is a follow-up (the `useListSelection` aspect supports it; `Listbox` does not yet).
+ * the facts view to that agent's attributions; clicking the selected agent again (or the toolbar's
+ * clear button) resets to "all". `Listbox` can't clear its own value from the UI, so the per-row
+ * `onClick` handles the toggle-off. Multi-select is a follow-up (the `useListSelection` aspect
+ * supports it; `Listbox` does not yet).
  */
 export const AgentList = ({ agents, selected, onSelect, classNames }: AgentListProps) => (
   <Panel.Root classNames={classNames}>
@@ -41,7 +43,12 @@ export const AgentList = ({ agents, selected, onSelect, classNames }: AgentListP
         <Listbox.Root value={selected} onValueChange={onSelect}>
           <Listbox.Content aria-label='Agents'>
             {agents.map((agent) => (
-              <Listbox.Item classNames='gap-2' key={agent.id} id={agent.id}>
+              <Listbox.Item
+                classNames='gap-2'
+                key={agent.id}
+                id={agent.id}
+                onClick={() => selected === agent.id && onSelect(undefined)}
+              >
                 <Listbox.ItemLabel>{agent.label ?? agent.id}</Listbox.ItemLabel>
                 <span className='shrink-0 text-subdued tabular-nums'>{agent.messageCount}</span>
                 <Listbox.Indicator />
