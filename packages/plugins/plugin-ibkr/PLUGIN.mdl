@@ -476,18 +476,41 @@ op GetTrades
 ```
 
 ```mdl
+type FundamentalsValuation
+  desc: Valuation metrics (market data, price multiples).
+  fields:
+    marketCap?: number
+    pe?: number            # price-to-earnings
+    pb?: number            # price-to-book
+
+type FundamentalsPerformance
+  desc: Income-statement metrics from SEC EDGAR XBRL.
+  fields:
+    revenue?: number
+    netIncome?: number
+    eps?: number           # basic EPS
+
+type FundamentalsRatios
+  desc: Balance-sheet and profitability ratios.
+  fields:
+    roe?: number           # return on equity (decimal)
+    debtToEquity?: number  # plain ratio, not a percent
+
+type FundamentalsAdditional
+  desc: Remaining us-gaap concepts from SEC EDGAR, keyed by XBRL concept name.
+  fields:
+    additionalFacts?: Record<string, number>
+
 type FundamentalsSnapshot
   desc: |
     Transient output of op:GetInstrumentFundamentals. Parsed from SEC EDGAR
     XBRL company facts; not an ECHO type.
   fields:
-    asOf?: string                # SEC filing date
-    revenue?: number
-    netIncome?: number
-    eps?: number
-    roe?: number
-    debtToEquity?: number
-    additionalFacts?: Record<string, number>   # remaining us-gaap concepts, keyed by XBRL name
+    asOf?: string                  # SEC filing date
+    valuation?: FundamentalsValuation
+    performance?: FundamentalsPerformance
+    ratios?: FundamentalsRatios
+    additional?: FundamentalsAdditional
 ```
 
 ```mdl
