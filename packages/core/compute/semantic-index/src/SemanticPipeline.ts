@@ -9,12 +9,13 @@ import { type AiService } from '@dxos/ai';
 
 import { SemanticIndexError } from './errors';
 import { chunk } from './internal/stages/chunk';
-import { DEFAULT_MODEL, type ExtractDocument, extractChunk } from './internal/stages/extract';
+import { DEFAULT_MODEL, type ExtractDocument, type ExtractOptions, extractChunk } from './internal/stages/extract';
 import { hashText } from './internal/stages/reconcile';
 import { SemanticStore } from './SemanticStore';
 import { type Fact } from './types';
 
-export type { ExtractDocument } from './internal/stages/extract';
+export { DEFAULT_EXTRACTION_RULES, buildExtractionPrompt } from './internal/stages/extract';
+export type { ExtractDocument, ExtractOptions } from './internal/stages/extract';
 
 // PROVISIONAL v1 entity resolution: distinct surface forms that normalize identically will merge,
 // and there is no linking to real ECHO objects yet. Not the final identity scheme.
@@ -45,7 +46,10 @@ const isGrounded = (label: string) => {
  * {@link Fact}; touches neither the {@link SemanticStore} nor any cursor, so it can generate facts
  * from a raw document with only an {@link AiService} in context (e.g. a UI preview).
  */
-export const extractDocFacts = (doc: ExtractDocument): Effect.Effect<Fact[], SemanticIndexError, AiService.AiService> =>
+export const extractDocFacts = (
+  doc: ExtractDocument,
+  options?: ExtractOptions,
+): Effect.Effect<Fact[], SemanticIndexError, AiService.AiService> =>
   Effect.gen(function* () {
     // Transaction (ingest) time captured via the Effect Clock so the derivation stays referentially
     // transparent under TestClock.
@@ -55,7 +59,7 @@ export const extractDocFacts = (doc: ExtractDocument): Effect.Effect<Fact[], Sem
     let index = 0;
     const docFacts: Fact[] = [];
     for (const chunkText of chunks) {
-      const payload = yield* extractChunk({ ...doc, text: chunkText });
+      const payload = yield* extractChunk({ ...doc, text: chunkText }, options);
       for (const candidate of payload.facts) {
         // Drop ungrounded propositions before they become facts.
         if (!isGrounded(candidate.subject) || !isGrounded(candidate.object)) {
@@ -98,8 +102,9 @@ export const extractDocFacts = (doc: ExtractDocument): Effect.Effect<Fact[], Sem
  */
 export const extractFacts = (
   docs: readonly ExtractDocument[],
+  options?: ExtractOptions,
 ): Effect.Effect<Fact[], SemanticIndexError, AiService.AiService> =>
-  Effect.forEach(docs, extractDocFacts).pipe(Effect.map((arrays) => arrays.flat()));
+  Effect.forEach(docs, (doc) => extractDocFacts(doc, options)).pipe(Effect.map((arrays) => arrays.flat()));
 
 export const SemanticPipeline = {
   /** Extract → link (slug) → persist for each document. Incremental: documents whose content hash
@@ -110,6 +115,7 @@ export const SemanticPipeline = {
    */
   run: (
     docs: readonly ExtractDocument[],
+    options?: ExtractOptions,
   ): Effect.Effect<Fact[], SemanticIndexError, SemanticStore | AiService.AiService> =>
     Effect.gen(function* () {
       const store = yield* SemanticStore;
@@ -121,7 +127,7 @@ export const SemanticPipeline = {
           // Source is unchanged — skip extraction to avoid LLM work and duplicate facts.
           continue;
         }
-        const docFacts = yield* extractDocFacts(doc);
+        const docFacts = yield* extractDocFacts(doc, options);
         yield* store.putFacts(docFacts);
         yield* store.setCursor(doc.source, hash);
         allFacts.push(...docFacts);

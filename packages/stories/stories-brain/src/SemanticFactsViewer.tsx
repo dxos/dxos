@@ -87,7 +87,7 @@ const FactRow = ({ fact, conflicting }: { fact: Type.Fact; conflicting: boolean 
     >
       {assertion.quote && <div className='text-sm text-description italic'>"{assertion.quote}"</div>}
 
-      <div className='flex items-center justify-between gap-2'>
+      <div className='grid grid-cols-[1fr_5rem] items-center justify-between gap-2'>
         <div className='w-full grid grid-cols-[1fr_1rem_1fr_1rem_1fr] items-center flex-wrap'>
           <span className={mx(cellClassNames, 'text-right')}>{formatTerm(assertion.subject)}</span>
           <span className='border-b border-subdued-separator'></span>
@@ -95,7 +95,8 @@ const FactRow = ({ fact, conflicting }: { fact: Type.Fact; conflicting: boolean 
           <span className='border-b border-subdued-separator'></span>
           <span className={mx(cellClassNames)}>{formatTerm(assertion.object)}</span>
         </div>
-        <div className='flex items-center gap-2 shrink-0'>
+
+        <div className='flex items-center justify-end gap-2 shrink-0'>
           {valence.confidence != null && (
             <span className='text-xs text-subdued'>{Math.round(valence.confidence * 100)}%</span>
           )}

@@ -10,7 +10,14 @@ import * as Layer from 'effect/Layer';
 import { readFileSync } from 'node:fs';
 
 import { SemanticIndexError } from './errors';
-import { type ExtractDocument, SemanticPipeline, extractFacts, normalizeEntityId } from './SemanticPipeline';
+import {
+  DEFAULT_EXTRACTION_RULES,
+  type ExtractDocument,
+  SemanticPipeline,
+  buildExtractionPrompt,
+  extractFacts,
+  normalizeEntityId,
+} from './SemanticPipeline';
 import { SemanticStore } from './SemanticStore';
 import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing';
 
@@ -67,6 +74,18 @@ const FailingLayer = SemanticStore.layer.pipe(
 );
 
 describe('SemanticPipeline', () => {
+  it('composes extraction rules, appending caller rules after the defaults', ({ expect }) => {
+    const prompt = buildExtractionPrompt();
+    // The default set rejects questions (the immediate case driving this rule).
+    expect(prompt).toContain('Do not extract facts from questions');
+
+    const extended = buildExtractionPrompt({ rules: ['Treat @handles as people.'] });
+    expect(extended).toContain('Treat @handles as people.');
+    // Caller rules are numbered after the defaults, never replacing them.
+    expect(extended).toContain(`${DEFAULT_EXTRACTION_RULES.length + 1}. Treat @handles as people.`);
+    expect(extended).toContain(DEFAULT_EXTRACTION_RULES[0]);
+  });
+
   it.effect(
     'extracts the Alice fact and persists it',
     Effect.fnUntraced(function* () {

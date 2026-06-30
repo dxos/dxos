@@ -13,6 +13,8 @@ import { type Stage } from '../Stage';
 export type ExtractFactsOptions = {
   /** Source namespace used to build each message's fact `source` DXN (default 'discord'). */
   readonly sourceNamespace?: string;
+  /** Extra extraction rules appended to the pipeline defaults (domain-specific LLM guidance). */
+  readonly rules?: readonly string[];
 };
 
 /**
@@ -23,6 +25,7 @@ export type ExtractFactsOptions = {
  */
 export const makeExtractFactsStage = (options?: ExtractFactsOptions): Stage => {
   const namespace = options?.sourceNamespace ?? 'discord';
+  const extractOptions = options?.rules ? { rules: options.rules } : undefined;
   return {
     name: 'extract-facts',
     handles: ['Message'],
@@ -36,14 +39,17 @@ export const makeExtractFactsStage = (options?: ExtractFactsOptions): Stage => {
             }
             const registry = yield* AgentRegistry;
             const agent = yield* registry.resolve(identifiersForUser(message.author), labelForUser(message.author));
-            yield* SemanticPipeline.run([
-              {
-                text: message.text,
-                source: `${namespace}:${message.id}`,
-                author: agent.id,
-                date: message.createdAt,
-              },
-            ]);
+            yield* SemanticPipeline.run(
+              [
+                {
+                  text: message.text,
+                  source: `${namespace}:${message.id}`,
+                  author: agent.id,
+                  date: message.createdAt,
+                },
+              ],
+              extractOptions,
+            );
           }).pipe(Effect.mapError((cause) => new StageError({ message: 'Failed to extract facts', cause }))),
   };
 };
