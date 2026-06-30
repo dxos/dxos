@@ -64,7 +64,9 @@ export const anySubstitutions = {
         };
       }
       const codec = schema.tryGetCodecForType(value.type_url);
-      let data = codec.decode(value.value);
+      // proto3 omits empty bytes fields from the wire format, so an empty message (e.g. `Auth {}`) decodes
+      // to `undefined` here rather than a zero-length buffer; default it so the inner codec can decode.
+      let data = codec.decode(value.value ?? new Uint8Array(0));
 
       if (value.type_url === 'google.protobuf.Struct') {
         data = structSubstitutions['google.protobuf.Struct'].decode(data);

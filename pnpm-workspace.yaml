@@ -37,9 +37,9 @@ catalog:
   '@babylonjs/core': ^7.52.5
   '@babylonjs/loaders': ^7.54.3
   '@bryanguffey/astro-standard-site': ^1.0.3
-  '@bufbuild/buf': 1.65.0
-  '@bufbuild/protobuf': 2.11.0
-  '@bufbuild/protoc-gen-es': 2.11.0
+  '@bufbuild/buf': 1.70.0
+  '@bufbuild/protobuf': 2.12.0
+  '@bufbuild/protoc-gen-es': 2.12.0
   '@ch-ui/colors': 1.2.1
   '@ch-ui/icons': ^1.0.1
   '@ch-ui/tailwind-tokens': 2.8.1
@@ -546,7 +546,7 @@ catalog:
   posthog-js: ^1.353.0
   preact: ^10.26.10
   prettier: ^3.6.2
-  protobufjs: ^8.0.0
+  protobufjs: 8.5.0
   pwa-asset-generator: ^6.4.0
   quickjs-emscripten: 0.31.0
   race-as-promised: ^0.0.3
