@@ -30,11 +30,14 @@ Entities are slugs: lowercase the label and replace each run of non-alphanumeric
 Emit only the fields the question implies; omit the rest:
 - entity: an entity slug appearing as subject OR object (use this for "everything about X").
 - subjectEntity: an entity slug constrained to the subject position.
-- predicate: a verb phrase to match exactly.
+- predicate: a verb phrase. It is matched literally (no paraphrasing or stemming), so include it ONLY
+  when the exact phrase is likely to appear in the data. For broad "who/what relates to X" questions,
+  prefer entity alone — an over-specific predicate that doesn't match returns nothing.
 - minConfidence: a lower bound on confidence.
 
 Examples:
 - "show me everything about Blueyard" -> { "entity": "blueyard" }
+- "who works for DXOS?" -> { "entity": "dxos" }
 - "what did Blueyard receive?" -> { "subjectEntity": "blueyard", "predicate": "receive" }
 - "what is Tim uncertain about?" -> { "subjectEntity": "tim", "predicate": "be uncertain about" }`;
 

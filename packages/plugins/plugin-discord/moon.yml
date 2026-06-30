@@ -11,6 +11,22 @@ tasks:
       runInCI: false
       cache: false
 
+  # List the channels the bot can see. Requires DISCORD_TOKEN; prints `<id>  <#channel — guild>`.
+  channels:
+    command: 'pnpm exec vitest run src/services/discord-source.test.ts -t "lists channels"'
+    options:
+      runInCI: false
+      cache: false
+
+  # Live crawl into the fact graph. Requires DISCORD_TOKEN + DISCORD_CHANNEL_ID.
+  # Tunable via DISCORD_MAX_DAYS / DISCORD_THREADS / DISCORD_LIST_FACTS and DX_ANTHROPIC_API_KEY.
+  # `cache: false` so env changes (lookback, key) always take effect — the cached `test` task would not.
+  crawl:
+    command: 'pnpm exec vitest run src/services/discord-source.test.ts -t "crawls a real channel"'
+    options:
+      runInCI: false
+      cache: false
+
   compile:
     args:
       - '--entryPoint=src/index.ts'

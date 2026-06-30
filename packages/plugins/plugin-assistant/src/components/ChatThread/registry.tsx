@@ -40,7 +40,7 @@ export const componentRegistry: XmlWidgetRegistry = {
   // Block-only (no widget — see note above).
   //
 
-  prompt: {
+  'prompt': {
     block: true,
   },
 
@@ -54,7 +54,7 @@ export const componentRegistry: XmlWidgetRegistry = {
     factory: ({ label, dxn }) =>
       typeof label === 'string' && typeof dxn === 'string' ? new AnchorWidget(label, dxn) : null,
   },
-  synthetic: {
+  'synthetic': {
     block: true,
     factory: ({ children, range }) => {
       const text = getXmlTextChild(children);
@@ -64,7 +64,7 @@ export const componentRegistry: XmlWidgetRegistry = {
       return text ? new ReasoningWidget(text, range.from) : null;
     },
   },
-  reasoning: {
+  'reasoning': {
     block: true,
     streaming: true,
     factory: ({ children, range }) => {
@@ -72,14 +72,14 @@ export const componentRegistry: XmlWidgetRegistry = {
       return text ? new ReasoningWidget(text, range.from) : null;
     },
   },
-  reference: {
+  'reference': {
     block: false,
     factory: ({ children, ref }) => {
       const text = getXmlTextChild(children);
       return text && ref ? new ReferenceWidget(text, ref) : null;
     },
   },
-  select: {
+  'select': {
     block: true,
     factory: ({ children }) => {
       const options = children
@@ -88,21 +88,21 @@ export const componentRegistry: XmlWidgetRegistry = {
       return options?.length ? new SelectWidget(options) : null;
     },
   },
-  suggestion: {
+  'suggestion': {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new SuggestionWidget(text) : null;
     },
   },
-  stats: {
+  'stats': {
     block: true,
     factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new StatsWidget(text) : null;
     },
   },
-  status: {
+  'status': {
     block: true,
     streaming: true,
     factory: ({ children }) => {
@@ -115,15 +115,15 @@ export const componentRegistry: XmlWidgetRegistry = {
   // React Widgets (portaled outside of the editor)
   //
 
-  summary: {
+  'summary': {
     block: true,
     Component: SummaryWidget,
   },
-  surface: {
+  'surface': {
     block: true,
     Component: SurfaceWidget,
   },
-  toolCall: {
+  'toolCall': {
     block: true,
     Component: (props) => (
       <div className='py-2'>
@@ -131,11 +131,11 @@ export const componentRegistry: XmlWidgetRegistry = {
       </div>
     ),
   },
-  toolResult: {
+  'toolResult': {
     block: true,
     Component: FallbackWidget,
   },
-  toolkit: {
+  'toolkit': {
     block: true,
     Component: FallbackWidget,
   },
@@ -144,7 +144,7 @@ export const componentRegistry: XmlWidgetRegistry = {
   // Fallback
   //
 
-  json: {
+  'json': {
     block: true,
     Component: FallbackWidget,
   },

@@ -7,3 +7,4 @@ export * from './RadialTree';
 export * from './TidyTree';
 export * from './hierarchy';
 export * from './slots';
+export * from './useContainerSize';

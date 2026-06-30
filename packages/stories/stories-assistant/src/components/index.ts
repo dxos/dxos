@@ -22,6 +22,7 @@ export * from './RoutineCompanionModule';
 export * from './RoutineModule';
 export * from './ScriptModule';
 export * from './TasksModule';
+export * from './TestModule';
 export * from './TokenManagerModule';
 export * from './TraceModule';
 export * from './TriggersModule';
