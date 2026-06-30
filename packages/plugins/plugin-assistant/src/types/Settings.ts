@@ -10,9 +10,9 @@ import { Provider } from '@dxos/ai';
 import { SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-// A provider id is an open DXN string (third-party providers define their own), so it is stored as a
-// string rather than a closed literal union. The known providers come from the @dxos/ai registry.
-export const ModelProvider = Schema.String;
+// A provider id is an open DXN (third-party providers define their own), validated as a DXN rather
+// than restricted to a closed literal union. The known providers come from the @dxos/ai registry.
+export const ModelProvider = DXN.Schema;
 export type ModelProvider = DXN.DXN;
 export const ModelProviders: readonly DXN.DXN[] = Provider.all.map((provider) => provider.id);
 
