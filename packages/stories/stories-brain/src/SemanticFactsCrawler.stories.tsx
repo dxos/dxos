@@ -9,12 +9,13 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schema from 'effect/Schema';
-import React, { type ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AgentRegistry,
   type ChannelInfo,
+  type Profile,
   Source,
   type Stage,
   StateStore,
@@ -25,149 +26,24 @@ import {
 import { Format } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { discordSourceLayer } from '@dxos/plugin-discord';
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
-import { Editor, type EditorController } from '@dxos/react-ui-editor';
+import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
+import { useListSelection } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import {
-  SemanticPipeline,
-  SemanticStore,
-  type Type,
-  buildSparql,
-  generateQuery,
-  parseSparqlToQuery,
-} from '@dxos/semantic-index';
+import { SemanticStore, type Type, parseSparqlToQuery } from '@dxos/semantic-index';
 
 import { SemanticFactsViewer } from './SemanticFactsViewer';
-import { SAMPLE_FACTS_TEXT, parseDiscordFixture } from './testing';
 
-// One in-memory store (browser-friendly, no SQLite) + the edge LLM. Built lazily per story instance.
-const makeRuntime = () =>
-  ManagedRuntime.make(Layer.mergeAll(SemanticStore.layerMemory, AiServiceTestingPreset('edge-remote')));
+const CRAWL_STAGES: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
 
-type Action = 'parse' | 'fixture' | 'query';
-
-type StoryArgs = { initialText?: string };
-
-const DefaultStory = ({ initialText = SAMPLE_FACTS_TEXT }: StoryArgs) => {
-  const editorRef = useRef<EditorController | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [facts, setFacts] = useState<Type.Fact[]>([]);
-  const [sparql, setSparql] = useState<string | null>(null);
-  const [busy, setBusy] = useState<Action | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  // Lazily create the runtime and recreate it if disposed, so it survives React StrictMode's
-  // mount → unmount(dispose) → remount cycle (otherwise actions hit a disposed runtime).
-  const runtimeRef = useRef<ReturnType<typeof makeRuntime> | null>(null);
-  const getRuntime = () => (runtimeRef.current ??= makeRuntime());
-  useEffect(
-    () => () => {
-      void runtimeRef.current?.dispose();
-      runtimeRef.current = null;
-    },
-    [],
-  );
-
-  const run = async (action: Action, task: () => Promise<void>) => {
-    setBusy(action);
-    setError(null);
-    try {
-      await task();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  // Extract + persist facts from the editor text into the shared store.
-  const handleParse = () =>
-    run('parse', async () => {
-      const text = editorRef.current?.getText() ?? '';
-      const extracted = await getRuntime().runPromise(
-        SemanticPipeline.run([{ text, source: 'editor:input', date: new Date().toISOString() }]),
-      );
-      setFacts((prev) => [...prev, ...extracted]);
-    });
-
-  // Stream a picked discord fixture file (plugin-discord:generate-fixtures JSON) through the pipeline
-  // one message at a time, appending facts as each completes.
-  const handleFixtureFile = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = ''; // Allow re-picking the same file.
-    if (!file) {
-      return;
-    }
-    void run('fixture', async () => {
-      const docs = parseDiscordFixture(JSON.parse(await file.text()));
-      setFacts([]);
-      for (const doc of docs) {
-        const extracted = await getRuntime().runPromise(SemanticPipeline.run([doc]));
-        setFacts((prev) => [...prev, ...extracted]);
-      }
-    });
-  };
-
-  // Turn the editor text into a SPARQL query (LLM), execute it over the store, and show the results.
-  const handleQuery = () =>
-    run('query', async () => {
-      const question = editorRef.current?.getText() ?? '';
-      const query = await getRuntime().runPromise(generateQuery(question));
-      // Show the SPARQL equivalent; execution runs structurally over the in-memory store (no Comunica).
-      setSparql(buildSparql(query));
-      const results = await getRuntime().runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.query(query))));
-      setFacts(results);
-    });
-
-  return (
-    <div className='dx-container grid grid-cols-2 gap-2'>
-      <Panel.Root>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <Button variant='primary' disabled={!!busy} onClick={handleParse}>
-              {busy === 'parse' ? 'Parsing…' : 'Parse'}
-            </Button>
-            <Button disabled={!!busy} onClick={() => fileInputRef.current?.click()}>
-              {busy === 'fixture' ? 'Loading…' : 'Load fixture'}
-            </Button>
-            <input
-              ref={fileInputRef}
-              type='file'
-              accept='application/json,.json'
-              className='hidden'
-              onChange={handleFixtureFile}
-            />
-            <Button disabled={!!busy} onClick={handleQuery}>
-              {busy === 'query' ? 'Querying…' : 'Query'}
-            </Button>
-          </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content classNames='dx-container grid grid-row-2'>
-          <Editor.Root ref={editorRef}>
-            <Editor.View value={initialText} />
-          </Editor.Root>
-          <div className='dx-expander'>
-            {sparql && (
-              <pre className='text-xs whitespace-pre-wrap bg-base-surface p-2 rounded border border-separator overflow-auto'>
-                {sparql}
-              </pre>
-            )}
-          </div>
-        </Panel.Content>
-        {error && <Panel.Statusbar classNames='text-error truncate'>{error}</Panel.Statusbar>}
-      </Panel.Root>
-      <SemanticFactsViewer facts={facts} />
-    </div>
-  );
-};
+// Default SPARQL: every fact. Parsed to a structured query and run over the store (no Comunica).
+const DEFAULT_SPARQL = 'SELECT ?fact ?p ?o WHERE { ?fact ?p ?o }';
 
 const CrawlOptions = Schema.Struct({
   token: Schema.String.annotations({ title: 'Discord bot token' }),
   channel: Schema.String.annotations({ title: 'Channel' }),
   maxDays: Schema.Number.annotations({ title: 'Lookback (days)' }),
   descendThreads: Schema.Boolean.annotations({ title: 'Crawl threads' }),
-  // Markdown-annotated → the form renders a code editor (MarkdownField); executed via the toolbar.
   query: Schema.String.pipe(
     Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
     Schema.annotations({ title: 'SPARQL' }),
@@ -175,16 +51,17 @@ const CrawlOptions = Schema.Struct({
 });
 type CrawlOptions = Schema.Schema.Type<typeof CrawlOptions>;
 
-const CRAWL_STAGES: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
-
 // Browser persistence: the semantic store runs in-memory (OPFS SQLite is worker-only, so it can't run
 // on the storybook main thread), and the extracted facts are snapshotted to localStorage — rehydrated
 // on mount and re-saved after each crawl, so facts survive reloads. Reset clears both.
 const FACTS_STORAGE_KEY = 'dxos.crawler.facts';
+// The agent registry is in-memory too; snapshot the discovered agents so the third column survives
+// reloads alongside the facts (facts only carry the agent's id via `attribution.agent`, not its label).
+const AGENTS_STORAGE_KEY = 'dxos.crawler.agents';
 const makeStore = () => ManagedRuntime.make(SemanticStore.layerMemory);
-const saveFacts = (facts: readonly Type.Fact[]) => {
+const save = (key: string, value: unknown) => {
   try {
-    localStorage.setItem(FACTS_STORAGE_KEY, JSON.stringify(facts));
+    localStorage.setItem(key, JSON.stringify(value));
   } catch {
     // Over quota — skip the snapshot.
   }
@@ -192,18 +69,17 @@ const saveFacts = (facts: readonly Type.Fact[]) => {
 
 type CrawlAction = 'channels' | 'crawl' | 'reset' | 'sparql';
 
-// Default SPARQL: every fact. Parsed to a structured query and run over the store (no Comunica).
-const DEFAULT_SPARQL = 'SELECT ?fact ?p ?o WHERE { ?fact ?p ?o }';
-
 // Seed the form from Vite env (only `VITE_`-prefixed vars reach the browser). Set them when serving,
 // e.g. `VITE_DISCORD_TOKEN=… VITE_DISCORD_CHANNEL=id moon run storybook-react:serve`.
 const initialOptions = (): CrawlOptions => ({
   token: String(import.meta.env.VITE_DISCORD_TOKEN ?? ''),
   channel: String(import.meta.env.VITE_DISCORD_CHANNEL ?? ''),
-  maxDays: Number(import.meta.env.VITE_DISCORD_MAX_DAYS ?? 7),
+  maxDays: Number(import.meta.env.VITE_DISCORD_MAX_DAYS ?? 14),
   descendThreads: import.meta.env.VITE_DISCORD_THREADS !== '0',
   query: DEFAULT_SPARQL,
 });
+
+type StoryArgs = {};
 
 /**
  * Drive the crawler from the browser: enter a Discord bot token + options, list the channels the bot
@@ -211,13 +87,30 @@ const initialOptions = (): CrawlOptions => ({
  * discovered channels via `createSelectField`), crawl it through the pipeline (edge LLM extraction),
  * and view the facts.
  */
-const CrawlerStory = () => {
+const DefaultStory = (_: StoryArgs) => {
   const [options, setOptions] = useState<CrawlOptions>(initialOptions);
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
   const [facts, setFacts] = useState<Type.Fact[]>([]);
+  const [agents, setAgents] = useState<Profile[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState<CrawlAction | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Multi-select over the agent column. `Listbox` is single-select only, so selection is driven by
+  // the `useListSelection` aspect (multi mode) and reflected via the `dx-selected`/`aria-selected`
+  // grammar on each row. An empty set means "no filter" (show every fact).
+  const [selectedAgents, setSelectedAgents] = useState<ReadonlySet<string>>(new Set());
+  const selection = useListSelection({ mode: 'multi', value: selectedAgents, onValueChange: setSelectedAgents });
+
+  // Facts are attributed to an agent via `attribution.agent` (the canonical token); filter the viewer
+  // to the selected agents' facts (no selection = all facts).
+  const visibleFacts = useMemo(
+    () =>
+      selectedAgents.size === 0
+        ? facts
+        : facts.filter((fact) => fact.attribution.agent != null && selectedAgents.has(fact.attribution.agent)),
+    [facts, selectedAgents],
+  );
 
   // Stable in-memory store across crawls; recreated if disposed (StrictMode remount).
   const storeRef = useRef<ReturnType<typeof makeStore> | null>(null);
@@ -230,19 +123,26 @@ const CrawlerStory = () => {
     [],
   );
 
-  // Rehydrate persisted facts into the store + view on mount.
+  // Rehydrate persisted facts into the store + view on mount, plus the agent column snapshot.
   useEffect(() => {
-    const raw = localStorage.getItem(FACTS_STORAGE_KEY);
-    if (!raw) {
-      return;
+    const rawFacts = localStorage.getItem(FACTS_STORAGE_KEY);
+    if (rawFacts) {
+      try {
+        const saved: Type.Fact[] = JSON.parse(rawFacts);
+        void getStore()
+          .runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.putFacts(saved))))
+          .then(() => setFacts(saved));
+      } catch {
+        // Ignore a malformed snapshot.
+      }
     }
-    try {
-      const saved: Type.Fact[] = JSON.parse(raw);
-      void getStore()
-        .runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.putFacts(saved))))
-        .then(() => setFacts(saved));
-    } catch {
-      // Ignore a malformed snapshot.
+    const rawAgents = localStorage.getItem(AGENTS_STORAGE_KEY);
+    if (rawAgents) {
+      try {
+        setAgents(JSON.parse(rawAgents));
+      } catch {
+        // Ignore a malformed snapshot.
+      }
     }
   }, []);
 
@@ -288,6 +188,7 @@ const CrawlerStory = () => {
     if (!options.channel) {
       return;
     }
+
     void guard('crawl', async () => {
       // Per-crawl frontier + agents + edge LLM; the SemanticStore comes from the persistent runtime so
       // facts accumulate across crawls. `Layer.fresh` on the AI layer is REQUIRED: the Discord source
@@ -312,26 +213,31 @@ const CrawlerStory = () => {
           const extracted = yield* store.query({});
           // Every message is observed by the agent-profile stage, so the summed counts == messages seen.
           const messages = agents.reduce((total, agent) => total + agent.messageCount, 0);
-          return { summary, messages, agentCount: agents.length, facts: extracted };
+          return { summary, messages, agents, facts: extracted };
         }).pipe(Effect.provide(perCrawl)),
       );
       setFacts(result.facts);
-      saveFacts(result.facts);
+      setAgents(result.agents);
+      save(FACTS_STORAGE_KEY, result.facts);
+      save(AGENTS_STORAGE_KEY, result.agents);
       const skipped = result.summary.errored > 0 ? ` · ${result.summary.errored} skipped` : '';
       setStatus(
         result.messages === 0 && result.summary.errored === 0
           ? `No messages in the last ${options.maxDays}d — widen the lookback.`
-          : `Crawled ${result.messages} messages · ${result.agentCount} agents · ${result.facts.length} facts${skipped}`,
+          : `Crawled ${result.messages} messages · ${result.agents.length} agents · ${result.facts.length} facts${skipped}`,
       );
     });
   };
 
-  // Clear the persisted facts (store + snapshot).
+  // Clear the persisted facts + agents (store + snapshots) and the current selection.
   const handleReset = () =>
     void guard('reset', async () => {
       await getStore().runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.clear())));
       localStorage.removeItem(FACTS_STORAGE_KEY);
+      localStorage.removeItem(AGENTS_STORAGE_KEY);
       setFacts([]);
+      setAgents([]);
+      setSelectedAgents(new Set());
       setStatus('Cleared persisted facts.');
     });
 
@@ -346,22 +252,36 @@ const CrawlerStory = () => {
     });
 
   return (
-    <div className='dx-container grid grid-cols-2 gap-2'>
+    <div className='dx-container grid grid-cols-3 gap-2'>
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <Button disabled={!options.token || !!busy} onClick={handleListChannels}>
-              {busy === 'channels' ? 'Listing…' : 'List channels'}
-            </Button>
-            <Button variant='primary' disabled={!options.token || !options.channel || !!busy} onClick={handleCrawl}>
-              {busy === 'crawl' ? 'Crawling…' : 'Crawl'}
-            </Button>
-            <Button disabled={!!busy || !options.query} onClick={handleRunSparql}>
-              {busy === 'sparql' ? 'Running…' : 'Run SPARQL'}
-            </Button>
-            <Button disabled={!!busy || facts.length === 0} onClick={handleReset}>
-              {busy === 'reset' ? 'Resetting…' : 'Reset'}
-            </Button>
+            <IconButton
+              icon='ph--list--regular'
+              label='List channels'
+              disabled={!options.token || !!busy}
+              onClick={handleListChannels}
+            />
+            <IconButton
+              icon='ph--bulldozer--regular'
+              label='Crawl'
+              variant='primary'
+              disabled={!options.token || !options.channel || !!busy}
+              onClick={handleCrawl}
+            />
+            <IconButton
+              icon='ph--play--regular'
+              label='Run SPARQL'
+              disabled={!!busy || !options.query}
+              onClick={handleRunSparql}
+            />
+            <Toolbar.Separator />
+            <IconButton
+              icon='ph--trash--regular'
+              label='Reset'
+              disabled={!!busy || facts.length === 0}
+              onClick={handleReset}
+            />
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content classNames='dx-container'>
@@ -388,13 +308,50 @@ const CrawlerStory = () => {
           </Panel.Statusbar>
         )}
       </Panel.Root>
-      <SemanticFactsViewer facts={facts} />
+      <SemanticFactsViewer facts={visibleFacts} />
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Toolbar.Text classNames='grow'>Agents{agents.length > 0 ? ` (${agents.length})` : ''}</Toolbar.Text>
+            <IconButton
+              icon='ph--x--regular'
+              label='Clear selection'
+              disabled={selectedAgents.size === 0}
+              onClick={() => setSelectedAgents(new Set())}
+            />
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content classNames='overflow-auto'>
+          {agents.length === 0 ? (
+            <p className='p-2 text-sm text-subdued-text'>No agents yet — crawl a channel.</p>
+          ) : (
+            <ul role='listbox' aria-label='Agents' aria-multiselectable className='flex flex-col'>
+              {agents.map((agent) => {
+                const { rowProps } = selection.bind(agent.id);
+                return (
+                  <li key={agent.id}>
+                    <button
+                      type='button'
+                      role='option'
+                      {...rowProps}
+                      className='dx-hover dx-selected flex w-full items-center gap-2 px-3 py-2 text-start cursor-pointer outline-none'
+                    >
+                      <span className='grow truncate'>{agent.label ?? agent.id}</span>
+                      <span className='text-subdued-text tabular-nums'>{agent.messageCount}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Panel.Content>
+      </Panel.Root>
     </div>
   );
 };
 
 const meta = {
-  title: 'stories/stories-brain/SemanticFactsParser',
+  title: 'stories/stories-brain/SemanticFactsCrawler',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
 } satisfies Meta<typeof DefaultStory>;
@@ -403,12 +360,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    initialText: SAMPLE_FACTS_TEXT,
-  },
-};
-
-export const Crawler: Story = {
-  render: () => <CrawlerStory />,
-};
+export const Default: Story = {};
