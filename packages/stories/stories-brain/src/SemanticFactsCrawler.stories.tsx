@@ -201,7 +201,7 @@ const DefaultStory = (_: StoryArgs) => {
     });
 
   return (
-    <div className='dx-container grid grid-cols-3 gap-2'>
+    <div className='dx-container grid grid-cols-3'>
       <CrawlPanel
         options={options}
         channels={channels}
@@ -223,8 +223,18 @@ const DefaultStory = (_: StoryArgs) => {
 // A small hand-authored corpus exercised by the in-memory variant: two agents (Alice, Bob) and the
 // facts attributed to each.
 const SAMPLE_AGENTS: Profile[] = [
-  { id: 'alice', label: 'Alice', identifiers: [{ namespace: 'sample', value: 'alice' }], messageCount: 2 },
-  { id: 'bob', label: 'Bob', identifiers: [{ namespace: 'sample', value: 'bob' }], messageCount: 2 },
+  {
+    id: 'alice',
+    label: 'Alice',
+    identifiers: [{ namespace: 'sample', value: 'alice' }],
+    messageCount: 2,
+  },
+  {
+    id: 'bob',
+    label: 'Bob',
+    identifiers: [{ namespace: 'sample', value: 'bob' }],
+    messageCount: 2,
+  },
 ];
 
 const sampleFact = (
