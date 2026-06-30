@@ -129,6 +129,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
       object,
       projection,
       features,
+      db,
       rows: filteredObjects,
       rowActions,
       onInsertRow: addRow,

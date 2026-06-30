@@ -86,17 +86,35 @@ const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (
       return { id, label };
     });
 
-const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typename) =>
-  useQuery(
+const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typename) => {
+  // Resolve the referenced typename to a concrete registered type entity (static OR persisted) and
+  // query by it, rather than filtering on the bare typename DXN. Objects of a db-stored type (e.g. one
+  // created via a table) carry an `echo:/<id>` identity, not the typename DXN, so `Filter.type(DXN)`
+  // never matches them. Mirrors `resolveSchemaWithRegistry`: query all types across space + registry
+  // and match by typename key.
+  const types = useQuery(db, Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
+  const resolvedType = useMemo(
+    () =>
+      typename && typename !== ANY_OBJECT_TYPENAME
+        ? types.find((type) => Type.getTypename(type) === typename)
+        : undefined,
+    [types, typename],
+  );
+
+  return useQuery(
     db,
     !typename
       ? Query.select(Filter.nothing())
       : typename === ANY_OBJECT_TYPENAME
         ? // Untyped refs show space objects only; the registry is too broad for "any".
           Query.select(Filter.everything())
-        : // Include registry scope so keyed entities (skills, operations) appear as options.
-          Query.select(Filter.type(DXN.make(typename))).from(Scope.space(), Scope.registry()),
+        : resolvedType
+          ? // Include registry scope so keyed entities (skills, operations) appear as options.
+            Query.select(Filter.type(resolvedType)).from(Scope.space(), Scope.registry())
+          : // Type not yet resolved (query still loading or no matching type registered).
+            Query.select(Filter.nothing()),
   );
+};
 
 export type RefFieldProps = FormFieldRendererProps & RefFieldDataProps & CreateOptions;
 
