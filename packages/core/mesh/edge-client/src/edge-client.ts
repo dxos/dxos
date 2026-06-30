@@ -44,6 +44,8 @@ export interface EdgeConnection extends Required<Lifecycle> {
   statusChanged: Event<EdgeStatus>;
   get info(): any;
   get identityKey(): string;
+  /** Identity DID (`did:halo:…`) of the connected identity. */
+  get identityDid(): string;
   get peerKey(): string;
   get isOpen(): boolean;
   get status(): EdgeStatus;
@@ -110,6 +112,10 @@ export class EdgeClient extends Resource implements EdgeConnection {
 
   get identityKey() {
     return this._identity.identityKey;
+  }
+
+  get identityDid() {
+    return this._identity.identityDid;
   }
 
   get peerKey() {

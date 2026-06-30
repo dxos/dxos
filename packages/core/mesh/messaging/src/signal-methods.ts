@@ -18,6 +18,12 @@ export type { Message, SwarmEvent };
 export type PeerInfo = Peer;
 export const PeerInfoHash = ({ peerKey }: PeerInfo) => peerKey;
 
+/**
+ * Canonical identity DID for a peer (DX-1059). Reads the new `identityDid` field; the deprecated hex
+ * `identityKey` is left to callers that need a derived DID, since hex→DID is async.
+ */
+export const getPeerIdentityDid = (peer: PeerInfo): string | undefined => peer.identityDid ?? undefined;
+
 export type SignalStatus = {
   host: string;
   state: SignalState;
