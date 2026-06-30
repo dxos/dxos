@@ -477,7 +477,8 @@ export class TablePresentation<T extends TableRow = TableRow> {
  */
 const safeHttpUrl = (value: string): string | undefined => {
   try {
-    const url = new URL(value);
+    const normalized = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+    const url = new URL(normalized);
     return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : undefined;
   } catch {
     return undefined;
