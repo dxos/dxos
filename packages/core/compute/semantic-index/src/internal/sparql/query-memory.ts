@@ -7,6 +7,7 @@ import { DataFactory, type Store } from 'n3';
 import { type Fact } from '../../types';
 import { FACT, entityIri, prov, sx } from '../vocab';
 import { triplesToFacts } from './mapping';
+import { normalizePredicate } from './normalize-predicate';
 import { type SemanticQuery } from './query-builder';
 
 const { literal, namedNode } = DataFactory;
@@ -29,14 +30,14 @@ export const queryMemory = (store: Store, query: SemanticQuery): Fact[] => {
     restrict(subjectsMatching(sx('subject'), entityIri(query.subjectEntity)));
   }
   if (query.predicate) {
-    // Fuzzy predicate match: case-insensitive substring in either direction (e.g. "discussed" ~ "discussedIn",
-    // "going to" ~ "go to"), since the LLM rarely reproduces the stored verb phrase verbatim.
-    const needle = query.predicate.trim().toLowerCase();
+    // Match on the normalized relation key (case/inflection/auxiliary variants collapse), then keep a
+    // substring fallback in either direction, since the LLM rarely reproduces the verb phrase verbatim.
+    const needle = normalizePredicate(query.predicate);
     const matches = store
       .getQuads(null, sx('predicate'), null, null)
       .filter((quad) => {
-        const value = quad.object.value.trim().toLowerCase();
-        return value.includes(needle) || needle.includes(value);
+        const value = normalizePredicate(quad.object.value);
+        return value === needle || value.includes(needle) || needle.includes(value);
       })
       .map((quad) => quad.subject.value);
     restrict(new Set(matches));

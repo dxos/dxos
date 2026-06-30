@@ -11,6 +11,7 @@ import { type Fact } from '../../types';
 import { type Row, rowToQuad } from '../source/sqlite-source';
 import { FACT, entityIri, prov, sx } from '../vocab';
 import { triplesToFacts } from './mapping';
+import { normalizePredicate } from './normalize-predicate';
 import { type SemanticQuery } from './query-builder';
 
 /**
@@ -41,13 +42,13 @@ export const querySqlite = (
       );
     }
     if (query.predicate) {
-      // Fuzzy predicate match (case-insensitive substring, both directions), same as queryMemory —
-      // the LLM rarely reproduces the stored verb phrase verbatim.
-      const needle = query.predicate.trim().toLowerCase();
+      // Match on the normalized relation key (same as queryMemory), with a substring fallback — the
+      // LLM rarely reproduces the stored verb phrase verbatim.
+      const needle = normalizePredicate(query.predicate);
       const rows = yield* sql<{ s: string; o: string }>`SELECT s, o FROM triples WHERE p = ${sx('predicate').value}`;
       const matches = rows.filter((row) => {
-        const value = row.o.trim().toLowerCase();
-        return value.includes(needle) || needle.includes(value);
+        const value = normalizePredicate(row.o);
+        return value === needle || value.includes(needle) || needle.includes(value);
       });
       restrict(new Set(matches.map((row) => row.s)));
     }

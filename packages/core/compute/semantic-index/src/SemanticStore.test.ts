@@ -62,6 +62,26 @@ describe('SemanticStore', () => {
   );
 
   it.effect(
+    'matches a predicate by its normalized relation key (case/inflection)',
+    Effect.fnUntraced(function* () {
+      const store = yield* SemanticStore;
+      yield* store.putFacts([
+        mk({
+          id: 'f1',
+          assertion: { subject: { entity: 'bob' }, predicate: 'Works At', object: { entity: 'dxos' } },
+        }),
+      ]);
+      // Different case + tense than stored, but the same relation key.
+      const facts = yield* store.query({ predicate: 'is working at' });
+      yield* Effect.sync(() => {
+        if (facts.length !== 1) {
+          throw new Error(`expected 1 fact via normalized predicate, got ${facts.length}`);
+        }
+      });
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
     'query with no filters returns all facts',
     Effect.fnUntraced(function* () {
       const store = yield* SemanticStore;
