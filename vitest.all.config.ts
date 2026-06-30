@@ -44,6 +44,9 @@ export default defineConfig(async () => ({
     DxosLogPlugin({ logToFile: false }),
 
     // We don't care about react but we want the SWC transformers.
+    // TODO(wittjosiah): Migrate to the rolldown/oxc-based `@vitejs/plugin-react` (as in
+    //   storybook-react) so `@vitejs/plugin-react-swc` can be dropped from the workspace — this is
+    //   its last remaining consumer.
     react({
       tsDecorators: true,
     }),
