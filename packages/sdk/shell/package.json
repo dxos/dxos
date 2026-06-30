@@ -82,7 +82,7 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-client": "workspace:*",
+    "@dxos/react-client": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

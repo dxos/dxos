@@ -1,16 +1,37 @@
 name: Composer Tauri Release
+
+# Reusable: invoked by deploy-apps.yml for the labs/staging/production environments (runs alongside the
+# Composer web deploy), or manually via workflow_dispatch. The CrabNebula channel is derived from the
+# `environment` input — no branch triggers — and the desktop version comes from composer-app's package.json.
 on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Target environment (labs | staging | production).
+        type: string
+        required: true
+      ref:
+        description: Git ref to build (default the triggering commit).
+        type: string
+        default: ''
   workflow_dispatch:
-  push:
-    branches:
-      - labs
-      - production
-      - staging
-      - tauri
+    inputs:
+      environment:
+        description: Target environment.
+        type: choice
+        options: [labs, staging, production]
+        default: labs
+      ref:
+        description: Git ref to build (default the triggering commit).
+        type: string
+        default: ''
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ inputs.environment }}
   cancel-in-progress: true
+
+permissions:
+  contents: read # Builds + publishes to CrabNebula / App Store Connect via secrets; no git writes.
 
 env:
   CN_APPLICATION: dxos/composer
@@ -24,6 +45,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -51,10 +74,6 @@ jobs:
           # Verify installation
           cn --version
 
-      - name: Extract branch
-        id: extract_branch
-        uses: ./.github/actions/branch
-
       - name: Bump version in Tauri config
         # Latest Version is Prerelease?
         # ├─ Yes → Config Version is one behind Latest Core?
@@ -65,20 +84,19 @@ jobs:
         #        └─ No → Skip bump
         id: bump-version
         run: |
-          # TODO(wittjosiah): Switch to production.
-          # Determine channel argument: omit for labs, use branch name otherwise.
-          # Replace slashes with dashes to match the channel name used by cn-channel action.
-          BRANCH="${{ steps.extract_branch.outputs.branch }}"
-          CHANNEL=$(echo "$BRANCH" | sed 's|/|-|g')
-          if [ "$BRANCH" = "labs" ]; then
+          # Channel from the environment input: omit for labs (default channel), else --channel <env>.
+          ENVIRONMENT="${{ inputs.environment }}"
+          if [ "$ENVIRONMENT" = "labs" ]; then
             CHANNEL_ARG=""
           else
-            CHANNEL_ARG="--channel $CHANNEL"
+            CHANNEL_ARG="--channel $ENVIRONMENT"
           fi
 
           RELEASE_DATA=$(cn release list dxos/composer $CHANNEL_ARG --format json)
           LATEST_VERSION=$(echo "$RELEASE_DATA" | jq -r '.[0].version')
-          CONFIG_VERSION=$(jq -r '.version' packages/apps/composer-app/src-tauri/tauri.conf.json)
+          # composer-app's package.json is the source of truth for the base version (stamped by
+          # sync-versions during release); the prerelease suffix below makes each channel build unique.
+          CONFIG_VERSION=$(jq -r '.version' packages/apps/composer-app/package.json)
 
           # Strip prerelease parts for comparison using sed instead of semver -r
           LATEST_CORE_VERSION=$(echo "$LATEST_VERSION" | sed 's/-.*$//')
@@ -150,6 +168,7 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Install Linux dependencies
         if: matrix.os == 'depot-ubuntu-24.04-4'
@@ -242,7 +261,7 @@ jobs:
           fi
 
       - name: Set environment variables from secrets and env files
-        run: .github/workflows/scripts/populate-env.sh ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} >> $GITHUB_ENV
+        run: .github/workflows/scripts/populate-env.sh "${{ inputs.environment }}" >> $GITHUB_ENV
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -273,8 +292,8 @@ jobs:
           APPLE_CERTIFICATE: ${{ matrix.os == 'depot-macos-latest' && secrets.MACOS_CERTIFICATE || '' }}
           APPLE_CERTIFICATE_PASSWORD: ${{ matrix.os == 'depot-macos-latest' && secrets.MACOS_CERTIFICATE_PASSWORD || '' }}
           APPLE_SIGNING_IDENTITY: ${{ matrix.os == 'depot-macos-latest' && env.CERT_ID || '' }}
-          # Omit DEPOT_TOKEN if branch is 'production', otherwise include it.
-          DEPOT_TOKEN: ${{ github.ref == 'refs/heads/production' && '' || secrets.DEPOT_TOKEN }}
+          # Omit DEPOT_TOKEN for the production environment, otherwise include it.
+          DEPOT_TOKEN: ${{ inputs.environment == 'production' && '' || secrets.DEPOT_TOKEN }}
           NODE_ENV: production
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
@@ -301,6 +320,7 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+          ref: ${{ inputs.ref || github.sha }}
 
       - uses: tecolicom/actions-use-homebrew-tools@v1
         with:
@@ -352,7 +372,7 @@ jobs:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
 
       - name: Set environment variables from secrets and env files
-        run: .github/workflows/scripts/populate-env.sh ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} >> $GITHUB_ENV
+        run: .github/workflows/scripts/populate-env.sh "${{ inputs.environment }}" >> $GITHUB_ENV
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -383,8 +403,8 @@ jobs:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_TEAM_ID }}
-          # Omit DEPOT_TOKEN if branch is 'production', otherwise include it.
-          DEPOT_TOKEN: ${{ github.ref == 'refs/heads/production' && '' || secrets.DEPOT_TOKEN }}
+          # Omit DEPOT_TOKEN for the production environment, otherwise include it.
+          DEPOT_TOKEN: ${{ inputs.environment == 'production' && '' || secrets.DEPOT_TOKEN }}
           IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
           IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
           IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}
@@ -402,7 +422,7 @@ jobs:
       # https://tauri.app/distribute/app-store/#ios
       - name: Upload assets to App Store Connect
         # TODO(wittjosiah): Switch to staging? Need to figure out TestFlight -> App Store release process.
-        if: github.ref_name == 'labs'
+        if: inputs.environment == 'labs'
         run: |
           xcrun altool \
             --upload-app \
@@ -419,7 +439,7 @@ jobs:
         if: failure() || cancelled()
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
-          REF_NAME: ${{ github.ref_name }}
+          REF_NAME: ${{ inputs.environment }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           payload=$(jq -nc --arg ref "$REF_NAME" --arg url "$RUN_URL" \
@@ -438,6 +458,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Install Linux dependencies
         run: |

@@ -111,7 +111,7 @@
     "vite-plugin-wasm": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-theme": "workspace:^",
     "@effect/platform": "catalog:",
     "effect": "catalog:"
   },

@@ -1,0 +1,123 @@
+name: Deploy Apps
+
+# Deploys apps (Composer, docs, storybook, …) to Cloudflare Pages, per environment. FULLY decoupled from
+# npm publishing — never runs changeset publish. Apps + their environments are declared in
+# deploy-manifest.json (generic; not Composer-specific).
+#
+# Environments & triggers:
+#   main       — automatic on every push to main.
+#   labs       — manual (workflow_dispatch); ad-hoc test deploys.
+#   staging    — manual (workflow_dispatch); pre-release (DX_ENVIRONMENT=staging build hook).
+#   production — ONLY via the release pipeline (workflow_call from release.yml, on an actual publish).
+#                Not a manual option, so an arbitrary ref can never reach production.
+#
+# "What's deployed where" is tracked by the floating `env/<environment>` git tags pushed below (the
+# branch-pointer replacement). Human gating is upstream — production is reachable only via the release
+# pipeline, which a human triggers by merging the "Version Packages" PR. No GitHub Environments are used.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [labs, staging, main]
+        default: labs
+      app:
+        description: Manifest app key, or "all"
+        type: string
+        default: all
+      ref:
+        description: Git ref to deploy (default the triggering commit)
+        type: string
+        default: ''
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+      app:
+        type: string
+        default: all
+      ref:
+        type: string
+        default: ''
+
+concurrency:
+  # One in-flight deploy per environment.
+  group: deploy-${{ inputs.environment || 'main' }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write # Push the floating `env/<environment>` deploy pointer tag (labs/staging/production).
+
+jobs:
+  deploy:
+    if: github.repository == 'dxos/dxos'
+    runs-on: ubuntu-24.04-4
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 90
+    env:
+      DEPLOY_ENV: ${{ inputs.environment || 'main' }}
+      DEPLOY_APP: ${{ inputs.app || 'all' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Set environment variables (Cloudflare creds, PostHog, …)
+        run: .github/workflows/scripts/populate-env.sh ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} >> $GITHUB_ENV
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+          COMPOSER_APP_PROD_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+          COMPOSER_APP_PROD_POSTHOG_PROJECT_ID: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_PROJECT_ID }}
+          COMPOSER_APP_PROD_POSTHOG_FEEDBACK_SURVEY_ID: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_FEEDBACK_SURVEY_ID }}
+          COMPOSER_APP_TEST_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_API_KEY }}
+          COMPOSER_APP_TEST_POSTHOG_PROJECT_ID: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_PROJECT_ID }}
+          COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID }}
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Deploy
+        run: .github/workflows/scripts/deploy-env.sh "$DEPLOY_ENV" "$DEPLOY_APP"
+        env:
+          NODE_ENV: production
+
+      # Floating pointer to the SHA currently deployed to this environment — the branch-pointer
+      # replacement (diff `env/staging..env/production`, etc.). `main` is tracked via its GitHub
+      # Environment record instead, so it is skipped here. Force-updated on every deploy.
+      - name: Update environment deploy tag
+        if: env.DEPLOY_ENV != 'main'
+        run: |
+          tag="env/${DEPLOY_ENV}"
+          git tag -f "$tag" "${{ inputs.ref || github.sha }}"
+          git push -f origin "refs/tags/$tag"
+
+  # Desktop/mobile build runs in the same run as the Composer web deploy, for the named environments
+  # (not `main` — a signed build per main push is too costly). CrabNebula channel is derived from the
+  # environment inside the reusable workflow. iOS → App Store Connect happens on `labs` only (see it).
+  tauri:
+    if: >-
+      github.repository == 'dxos/dxos' &&
+      (inputs.app == 'all' || inputs.app == 'composer') &&
+      (inputs.environment == 'labs' || inputs.environment == 'staging' || inputs.environment == 'production')
+    uses: ./.github/workflows/publish-tauri.yaml
+    with:
+      environment: ${{ inputs.environment }}
+      ref: ${{ inputs.ref || '' }}
+    secrets: inherit

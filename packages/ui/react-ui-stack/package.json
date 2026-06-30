@@ -79,10 +79,10 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/client": "workspace:*",
-    "@dxos/random": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
+    "@dxos/client": "workspace:^",
+    "@dxos/random": "workspace:^",
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

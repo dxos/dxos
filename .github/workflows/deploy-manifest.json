@@ -1,0 +1,21 @@
+{
+  "//": "Deployable apps, consumed by scripts/deploy-env.sh + deploy-apps.yml. Generic: add an app by adding an entry. `environments` lists which of main|labs|staging|production this app deploys to. `project` is the Cloudflare Pages project name; `outDir` is its bundle output (repo-relative).",
+  "composer": {
+    "bundleTask": "composer-app:bundle",
+    "outDir": "packages/apps/composer-app/out/composer",
+    "project": "composer",
+    "environments": ["main", "labs", "staging", "production"]
+  },
+  "docs": {
+    "bundleTask": "docs:bundle",
+    "outDir": "docs/dist",
+    "project": "docs",
+    "environments": ["main", "production"]
+  },
+  "storybook": {
+    "bundleTask": "storybook-react:bundle",
+    "outDir": "tools/storybook-react/out/storybook-react",
+    "project": "storybook",
+    "environments": ["main", "labs"]
+  }
+}

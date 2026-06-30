@@ -232,6 +232,81 @@ export class Toolbox {
   }
 
   /**
+   * Generates `.changeset/config.json` with the two fixed lockstep PUBLISH groups derived from the
+   * workspace graph:
+   * - Group A — published core/SDK (plus the private storybook apps, which ride the line but never publish).
+   * - Group B — every `@dxos/plugin-*` and `@dxos/cli`.
+   *
+   * Apps are deliberately NOT in any publish group. Composer (composer-app/crx/dxos-org), docs, todomvc,
+   * and testbench are private: they DEPLOY (deploy-apps.yml), they never publish to npm. Deploy is fully
+   * decoupled from publish, so an app can ship without any npm release. composer-app/crx keep an
+   * independent version line — named directly in a changeset to cut a desktop/extension build — which
+   * bumps only that app (no plugin publish, so no risk of plugins pinning an unreleased core). This is why
+   * Composer is excluded from Group B even though it ships the plugins.
+   *
+   * Other private packages (deploy-only apps, internal tooling) are versioned only if a changeset names
+   * them, and are never tagged/published (`privatePackages.tag: false`). Membership is an enumerated list
+   * because Changesets `fixed` matches package names, which share no common prefix across core/SDK.
+   *
+   * Replaces `updateReleasePlease()` at the Phase 2 release-model cutover; both generators run during the
+   * overlap window so release-please keeps functioning until a real Changesets release proves the pipeline.
+   */
+  async updateChangesets(): Promise<void> {
+    console.log('Updating .changeset/config.json');
+
+    const storybookApps = ['@dxos/storybook-react', '@dxos/storybook-lit', '@dxos/storybook-solid'];
+
+    const groupA: string[] = [];
+    const groupB: string[] = [];
+    for (const project of this.graph.projects) {
+      const { name } = project;
+      if (name.startsWith('@dxos/plugin-') || name === '@dxos/cli') {
+        groupB.push(name);
+      } else if (storybookApps.includes(name) || !project.private) {
+        groupA.push(name);
+      }
+      // Private apps (Composer, docs, todomvc, testbench) and internal tooling are excluded from both
+      // publish groups — they deploy, never publish. See the method doc for why Composer is not in Group B.
+    }
+    groupA.sort();
+    groupB.sort();
+
+    const config = {
+      $schema: 'https://unpkg.com/@changesets/config@3.1.4/schema.json',
+      changelog: ['@changesets/changelog-github', { repo: 'dxos/dxos' }],
+      commit: false,
+      access: 'public',
+      baseBranch: 'main',
+      updateInternalDependencies: 'patch',
+      // Only workspace-protocol ranges drive dependent bumps; pnpm rewrites them at pack time. Regular and
+      // dev deps stay `workspace:*`; intra-repo peerDependencies use `workspace:^` (caret) so an in-range
+      // minor does not force a major on the dependent.
+      bumpVersionsWithWorkspaceProtocolOnly: true,
+      // Two lockstep groups: [A] core/SDK (+storybook), [B] plugins + cli + Composer.
+      fixed: [groupA, groupB],
+      linked: [],
+      ignore: [],
+      // Version private members of the fixed groups (storybook, Composer) without publishing them.
+      privatePackages: { version: true, tag: false },
+      // @next ships as snapshot releases (manual `changeset version --snapshot next`); calculated base
+      // version + commit suffix yields e.g. `0.10.0-next-<commit>`.
+      snapshot: { useCalculatedVersion: true, prereleaseTemplate: '{tag}-{commit}' },
+      // Only bump a peerDependent when the dependency actually leaves its range. The default (`false`)
+      // forces a *major* on the dependent for ANY non-patch change, which a fixed group then propagates to
+      // the whole group. Paired with the local `@changesets/assemble-release-plan` patch (a 0.x breaking
+      // peer change is a minor, not a major), this yields correct semver: 0.x minor → 0.(n+1), post-1.0
+      // minor → stays in place, breaking → major.
+      ___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH: {
+        onlyUpdatePeerDependentsWhenOutOfRange: true,
+      },
+    };
+
+    const changesetDir = join(this.rootDir, '.changeset');
+    fs.mkdirSync(changesetDir, { recursive: true });
+    await saveJson(join(changesetDir, 'config.json'), config, this.options.verbose);
+  }
+
+  /**
    * Update root package file.
    * - Sort
    */

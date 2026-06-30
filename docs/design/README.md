@@ -28,6 +28,12 @@ Additionally, the DXOS network incorporates other decentralized systems and tech
 
 ![KUBE](./diagrams/KUBE.svg)
 
-## 2. Reference
+## 2. Process
+
+| Topic                                                | Description                                                            |
+| ---------------------------------------------------- | --------------------------------------------------------------------- |
+| [Release & Change Management](./release-spec.md)     | Versioning, releases, branching, pre-releases, and cross-repo development. |
+
+## 3. Reference
 
 See this [guide](https://github.com/dxos/eng/wiki/Guides-~-Writing-Documentation) to writing documentation.

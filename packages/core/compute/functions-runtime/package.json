@@ -104,7 +104,7 @@
     "yaml": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/assistant": "workspace:*"
+    "@dxos/assistant": "workspace:^"
   },
   "publishConfig": {
     "access": "public"
