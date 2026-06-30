@@ -247,6 +247,18 @@ const createWidgetMap = (setWidgets?: (widgets: XmlWidgetState[]) => void): XmlW
       widgets.delete(id);
       setWidgets?.([...widgets.values()]);
     },
+    reconcile: (liveIds: Set<string>) => {
+      let changed = false;
+      for (const id of [...widgets.keys()]) {
+        if (!liveIds.has(id)) {
+          widgets.delete(id);
+          changed = true;
+        }
+      }
+      if (changed) {
+        setWidgets?.([...widgets.values()]);
+      }
+    },
   } satisfies XmlWidgetNotifier;
 
   return notifier;
@@ -357,6 +369,18 @@ const createWidgetUpdatePlugin = (
       update(update: ViewUpdate) {
         const widgetStateMap = update.state.field(widgetStateMapStateField);
         const { decorations } = update.state.field(widgetDecorationsField);
+
+        // Prune widgets orphaned by a rebuild (position-keyed ids change when an edit shifts a node).
+        if (update.docChanged) {
+          const liveIds = new Set<string>();
+          for (const range of decorationSetToArray(decorations)) {
+            const widget = range.value?.spec?.widget;
+            if (widget instanceof StubWidget) {
+              liveIds.add(widget.id);
+            }
+          }
+          notifier.reconcile(liveIds);
+        }
 
         // Check for widget update effects and re-render widgets.
         for (const effect of update.transactions.flatMap((tr) => tr.effects)) {
