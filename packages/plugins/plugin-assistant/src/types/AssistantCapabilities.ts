@@ -13,13 +13,11 @@ import { type Obj } from '@dxos/echo';
 import { meta } from '#meta';
 
 import * as Assistant from './Assistant';
+import * as Ollama from './Ollama';
 
 export const Settings = Capability.make<Atom.Writable<Assistant.Settings>>(`${meta.profile.key}.capability.settings`);
 
-// Inline import avoids an `Ollama` namespace alias colliding with capability constants.
-export const OllamaManager = Capability.make<import('./Ollama').Manager>(
-  `${meta.profile.key}.capability.ollama-manager`,
-);
+export const OllamaManager = Capability.make<Ollama.Manager>(`${meta.profile.key}.capability.ollama-manager`);
 
 export const StateSchema = Schema.mutable(
   Schema.Struct({

@@ -40,8 +40,7 @@ import { type DelegationStrategy } from './delegation-strategy';
 
 interface AgentProcessOptions {
   systemPrompt?: string;
-  // Model NSID name resolved via AiService.model.
-  model?: string;
+  model?: DXN.DXN;
   // The catalog's shared model ids are served by several providers, so resolution needs the provider
   // alongside the id; without it a local model id cannot be claimed by any resolver.
   provider?: DXN.DXN;
@@ -130,9 +129,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const strategy = Option.fromNullable(options.delegationStrategy);
         let delegations: Delegation[] = [...(yield* DelegationsCell.get)];
 
-        const requestModelLayer = AiService.model(options.model ?? 'com.anthropic.model.claude-opus-4-8.default', {
-          provider: options.provider,
-        });
+        const requestModelLayer = AiService.model(
+          options.model ? DXN.getName(options.model) : 'com.anthropic.model.claude-opus-4-8.default',
+          {
+            provider: options.provider,
+          },
+        );
 
         const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
 

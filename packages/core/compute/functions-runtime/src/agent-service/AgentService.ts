@@ -38,7 +38,7 @@ const isTerminalProcess = (state: Process.State): boolean =>
 export interface CreateSessionOptions {
   readonly skills?: Skill.Skill[];
   readonly context?: Ref.Ref<Obj.Unknown>[];
-  readonly model?: string;
+  readonly model?: DXN.DXN;
   readonly provider?: DXN.DXN;
   readonly systemPrompt?: string;
 }
@@ -71,7 +71,7 @@ export interface AgentServiceOptions {
   /**
    * Default model used by sessions that don't specify one explicitly.
    */
-  model?: string;
+  model?: DXN.DXN;
 
   /**
    * Default provider used to resolve the model for sessions that don't specify one explicitly.
@@ -108,10 +108,10 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
       // the old process and spawns a fresh one (see below).
       const sessionCache = new Map<
         string,
-        { model: string | undefined; provider: DXN.DXN | undefined; handle: AgentHandle; session: Session }
+        { model: DXN.DXN | undefined; provider: DXN.DXN | undefined; handle: AgentHandle; session: Session }
       >();
 
-      const makeExecutable = (model?: string, provider?: DXN.DXN) =>
+      const makeExecutable = (model?: DXN.DXN, provider?: DXN.DXN) =>
         AgentProcess({
           systemPrompt: opts?.systemPrompt,
           model: model ?? opts?.model,

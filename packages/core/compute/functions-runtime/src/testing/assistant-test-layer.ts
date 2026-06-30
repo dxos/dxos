@@ -48,8 +48,7 @@ interface TestLayerOptions {
    * When set, `aiServicePreset` and `disableLlmMemoization` are ignored.
    */
   aiService?: Layer.Layer<AiService.AiService>;
-  /** Model NSID name. */
-  model?: string;
+  model?: DXN.DXN;
   /** Provider the model resolves through; defaults to `ollama` for the ollama preset, else `edge`. */
   provider?: DXN.DXN;
   operationHandlers?: OperationHandlerSet.OperationHandlerSet | OperationHandlerSet.OperationHandlerSet[];
@@ -108,11 +107,11 @@ export type AssistantTestServices =
 export const AssistantTestLayer = (
   options: TestLayerOptions = {},
 ): Layer.Layer<AssistantTestServices, never, TestContextService> => {
-  const resolvedModel: string =
+  const resolvedModel: DXN.DXN =
     options.model ??
     (options.aiServicePreset === 'ollama'
-      ? 'com.openai.model.gpt-oss-20b.default'
-      : 'com.anthropic.model.claude-opus-4-8.default');
+      ? DXN.make('com.openai.model.gpt-oss-20b.default')
+      : DXN.make('com.anthropic.model.claude-opus-4-8.default'));
 
   // The catalog's shared model ids need a provider to resolve; pair the resolved model with the
   // provider its preset registers a resolver for.
@@ -140,7 +139,7 @@ export const AssistantTestLayer = (
     Layer.provideMerge(captureProcessManager(processManagerHolder)),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(AssistantTestServiceResolverLayer(options, processManagerHolder)),
-    Layer.provideMerge(AiService.model(resolvedModel, { provider: resolvedProvider })),
+    Layer.provideMerge(AiService.model(DXN.getName(resolvedModel), { provider: resolvedProvider })),
     Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),
     Layer.provideMerge(
       options.aiService ??

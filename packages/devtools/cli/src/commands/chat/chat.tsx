@@ -51,9 +51,9 @@ export const chat = Command.make(
       Options.withDefault('edge'),
     ),
     model: Options.text('model').pipe(
-      Options.withDescription('Model to use (an NSID name).'),
+      Options.withDescription('Model to use.'),
       Options.withAlias('m'),
-      Options.withSchema(DXN.NameSchema),
+      Options.withSchema(DXN.Schema),
       Options.optional,
     ),
     skills: Options.text('skill').pipe(

@@ -12,8 +12,7 @@ import { DXN } from '@dxos/keys';
 export type AiServicePreset = {
   id: string;
   provider: DXN.DXN;
-  /** Model NSID name (forwarded to AiService.model). */
-  model: string;
+  model: DXN.DXN;
   /** Provider-specific back-end name (e.g. an Ollama pull tag); used to match installed models. */
   backend: string;
   label: string;
@@ -24,8 +23,7 @@ export const presetsForProvider = (provider: DXN.DXN): AiServicePreset[] =>
   Model.forProvider(provider).map((model) => ({
     id: model.id,
     provider,
-    // The catalog id is a DXN; the preset carries the bare NSID name forwarded to AiService.model.
-    model: DXN.getName(model.id),
+    model: model.id,
     backend: model.backend,
     label: model.label,
   }));

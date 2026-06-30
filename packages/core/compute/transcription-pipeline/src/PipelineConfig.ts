@@ -7,15 +7,15 @@ import * as Schema from 'effect/Schema';
 import { DXN, Obj, Type } from '@dxos/echo';
 
 /** Cheap, fast default for all stages; same model used by `update-chat-name` / `qualifier`. */
-export const DEFAULT_STAGE_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
+export const DEFAULT_STAGE_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-haiku-4-5.default');
 
 /** Per-stage configuration entry within a {@link PipelineConfig}. */
 export const StageConfig = Schema.Struct({
   /** Stage id (matches a registered `Stage.id`). */
   id: Schema.String,
   enabled: Schema.Boolean,
-  /** Optional per-stage model override (a model DXN); resolved by the runtime. */
-  model: Schema.optional(Schema.String),
+  /** Optional per-stage model override (an NSID name); resolved by the runtime. */
+  model: Schema.optional(DXN.NameSchema),
   /** Optional sliding-window override in blocks. Positive integer; bad values fail validation. */
   window: Schema.optional(Schema.Struct({ blocks: Schema.Number.pipe(Schema.int(), Schema.positive()) })),
 });

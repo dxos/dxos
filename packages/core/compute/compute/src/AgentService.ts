@@ -82,8 +82,7 @@ export const getSession = Effect.serviceFunctionEffect(AgentService, (service) =
 export const hydrate = Effect.serviceFunctionEffect(AgentService, (service) => service.hydrate);
 
 export interface GetSessionOptions {
-  // Model NSID name resolved in the agent process via AiService.model.
-  readonly model?: string;
+  readonly model?: DXN.DXN;
   // The catalog's shared model ids are served by several providers, so the provider must accompany
   // the model into the agent process — the id alone does not identify a resolver.
   readonly provider?: DXN.DXN;
