@@ -29,6 +29,8 @@ import {
   SemanticPipeline,
   SemanticStore,
   type Type,
+  buildSparql,
+  generateQuery,
   normalizeEntityId,
   parseSparqlToQuery,
 } from '@dxos/semantic-index';
@@ -72,6 +74,7 @@ type StoryArgs = {};
  */
 const DefaultStory = (_: StoryArgs) => {
   const [options, setOptions] = useState<CrawlOptions>(initialOptions);
+  const [question, setQuestion] = useState('');
   const [query, setQuery] = useState(DEFAULT_SPARQL);
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
   const [facts, setFacts] = useState<Type.Fact[]>([]);
@@ -222,6 +225,17 @@ const DefaultStory = (_: StoryArgs) => {
       setStatus('Cleared persisted facts.');
     });
 
+  // Translate the natural-language question into a structured query (LLM) and write it back as SPARQL
+  // into the query field; the user can then Run it.
+  const handleGenerate = () =>
+    void guard('generate', async () => {
+      const structured = await getStore().runPromise(
+        generateQuery(question).pipe(Effect.provide(Layer.fresh(AiServiceTestingPreset('edge-remote')))),
+      );
+      setQuery(buildSparql(structured));
+      setStatus('Generated SPARQL from question.');
+    });
+
   // Parse the SPARQL (the query panel's field) into a structured query and run it over the store.
   const handleRunSparql = () =>
     void guard('sparql', async () => {
@@ -246,7 +260,15 @@ const DefaultStory = (_: StoryArgs) => {
           onLoadFile={handleLoadFile}
           onReset={handleReset}
         />
-        <QueryPanel query={query} busy={!!busy} onQueryChange={setQuery} onRun={handleRunSparql} />
+        <QueryPanel
+          question={question}
+          query={query}
+          busy={!!busy}
+          onQuestionChange={setQuestion}
+          onQueryChange={setQuery}
+          onGenerate={handleGenerate}
+          onRun={handleRunSparql}
+        />
       </div>
       <SemanticFactsViewer facts={visibleFacts} />
       <AgentList agents={agents} selected={selectedAgent} onSelect={setSelectedAgent} />

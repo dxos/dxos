@@ -22,7 +22,7 @@ export const CrawlOptions = Schema.Struct({
 });
 export type CrawlOptions = Schema.Schema.Type<typeof CrawlOptions>;
 
-export type CrawlAction = 'channels' | 'crawl' | 'file' | 'reset' | 'sparql';
+export type CrawlAction = 'channels' | 'crawl' | 'file' | 'generate' | 'reset' | 'sparql';
 
 // Seed the form from Vite env (only `VITE_`-prefixed vars reach the browser). Set them when serving,
 // e.g. `VITE_DISCORD_TOKEN=… VITE_DISCORD_CHANNEL=id moon run storybook-react:serve`.
@@ -132,7 +132,7 @@ export const CrawlPanel = ({
       </Panel.Content>
       {(error || status) && (
         <Panel.Statusbar asChild>
-          <Toolbar.Root>
+          <Toolbar.Root classNames='bg-transparent'>
             <Toolbar.Text classNames={[error ? 'text-error-text' : 'text-subdued-text']}>
               {error ?? status}
             </Toolbar.Text>
