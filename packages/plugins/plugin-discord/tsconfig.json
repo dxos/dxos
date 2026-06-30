@@ -37,7 +37,13 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/ai"
+    },
+    {
       "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/crawler"
     },
     {
       "path": "../../core/echo/echo"

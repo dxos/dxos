@@ -759,6 +759,9 @@ catalogs:
     '@types/sharedworker':
       specifier: ^0.0.111
       version: 0.0.111
+    '@types/sparqljs':
+      specifier: ^3.1.12
+      version: 3.1.12
     '@types/three':
       specifier: 0.165.0
       version: 0.165.0
@@ -1641,6 +1644,9 @@ catalogs:
     sort-package-json:
       specifier: ^1.57.0
       version: 1.57.0
+    sparqljs:
+      specifier: ^3.7.4
+      version: 3.7.4
     stage-js:
       specifier: 1.0.0-alpha.17
       version: 1.0.0-alpha.17
@@ -5241,6 +5247,37 @@ importers:
         specifier: 'catalog:'
         version: 10.4.0
 
+  packages/core/compute/crawler:
+    dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/semantic-index':
+        specifier: workspace:*
+        version: link:../semantic-index
+      '@effect/ai':
+        specifier: 'catalog:'
+        version: 0.36.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+    devDependencies:
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 0.29.0(effect@3.21.4)(vitest@4.1.8)
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
+      tsx:
+        specifier: 'catalog:'
+        version: 4.21.0
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.8(patch_hash=a7bf6a3d21c2bc782d60d0f0f916d76f304c0eb6fbf2827e8d981408c7b5120e)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.8)(@vitest/coverage-v8@4.1.8)(@vitest/ui@4.1.8)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@29.1.1(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
   packages/core/compute/extractor:
     dependencies:
       '@dxos/ai':
@@ -5704,6 +5741,9 @@ importers:
       n3:
         specifier: 'catalog:'
         version: 2.1.0
+      sparqljs:
+        specifier: 'catalog:'
+        version: 3.7.4
     devDependencies:
       '@dxos/echo-client':
         specifier: workspace:*
@@ -5717,6 +5757,9 @@ importers:
       '@types/n3':
         specifier: 'catalog:'
         version: 1.26.1
+      '@types/sparqljs':
+        specifier: 'catalog:'
+        version: 3.1.12
       effect:
         specifier: 3.21.4
         version: 3.21.4
@@ -10225,6 +10268,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
+      '@dxos/crawler':
+        specifier: workspace:*
+        version: link:../../core/compute/crawler
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -10271,6 +10317,9 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
     devDependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -18608,6 +18657,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/crawler':
+        specifier: workspace:*
+        version: link:../../core/compute/crawler
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -18623,6 +18675,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
+      '@dxos/plugin-discord':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-discord
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../../plugins/plugin-graph
@@ -18650,6 +18705,12 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
+      '@dxos/react-ui-graph':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-graph
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list

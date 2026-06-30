@@ -74,23 +74,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/**
- * The transcription document with live part-of-speech decoration: each word in the committed
- * markdown is coloured by its UPOS tag, and text confirmed from a recording is decorated as it
- * lands.
- */
 export const Default: Story = {};
-
-/**
- * Seeds finalized transcript text (no microphone). The greyed pending text is not yet committed, so
- * POS decoration applies to the surrounding committed document; confirming the pending block colours
- * the newly-inserted words.
- */
-export const Recording: Story = {
-  args: {
-    seed: {
-      final: 'The quick brown fox jumps over the lazy dog.',
-      interim: ' And the in-flight words still being transcribed',
-    },
-  },
-};
