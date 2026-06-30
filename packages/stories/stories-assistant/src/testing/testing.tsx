@@ -366,8 +366,11 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
           const binder = new AiContext.Binder({ feed, runtime, registry });
           yield* Effect.tryPromise(() => binder.open());
-          yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder }));
-          yield* Effect.tryPromise(() => binder.close());
+          // Ensure the binder is released even if the callback fails, so subscriptions/state do not
+          // leak into later story or test runs.
+          yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder })).pipe(
+            Effect.ensuring(Effect.promise(() => binder.close())),
+          );
         }
       } else {
         // Create the initial chat via the canonical CreateChat operation (which binds the default
@@ -381,8 +384,11 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           const runtime = yield* Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
           const binder = new AiContext.Binder({ feed, runtime, registry });
           yield* Effect.tryPromise(() => binder.open());
-          yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder }));
-          yield* Effect.tryPromise(() => binder.close());
+          // Ensure the binder is released even if the callback fails, so subscriptions/state do not
+          // leak into later story or test runs.
+          yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder })).pipe(
+            Effect.ensuring(Effect.promise(() => binder.close())),
+          );
         }
       }
     }),

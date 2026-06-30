@@ -51,7 +51,8 @@ export const ChatActions = ({
 
   const [devices, setDevices] = useState<AudioInputDevice[]>([]);
   useEffect(() => {
-    if (!navigator.mediaDevices?.enumerateDevices) {
+    // Only touch media APIs when the recording controls are actually shown.
+    if (!microphone || !transcriptionAvailable || !navigator.mediaDevices?.enumerateDevices) {
       return;
     }
     let cancelled = false;
@@ -76,7 +77,7 @@ export const ChatActions = ({
       cancelled = true;
       navigator.mediaDevices.removeEventListener('devicechange', refresh);
     };
-  }, []);
+  }, [microphone, transcriptionAvailable]);
 
   const handleToggle = useCallback(() => {
     if (!docId) {
