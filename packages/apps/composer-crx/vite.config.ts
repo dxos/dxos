@@ -40,11 +40,8 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       // https://crxjs.dev/vite-plugin/concepts/pages
-      input: {
-        // Everything mentioned in manifest.json will be bundled.
-        // We need to specify the 'panel' entry point here because it's not mentioned in manifest.json.
-        panel: path.resolve(dirname, 'panel.html'),
-      },
+      // The side panel (panel.html) is referenced by the manifest `side_panel`
+      // key below, so crxjs discovers and bundles it automatically.
       output: {
         sourcemap: true,
       },
@@ -117,12 +114,17 @@ export default defineConfig({
           '128': 'assets/img/icon-128.png',
         },
         // NOTE: Rename file to break cache.
+        // No `default_popup`: clicking the toolbar icon opens the side panel
+        // (see `openPanelOnActionClick` in background.ts). A popup and an
+        // action-click side panel are mutually exclusive.
         action: {
           default_icon: 'assets/img/icon-48.png',
           default_title: 'Composer',
-          default_popup: 'popup.html',
         },
-        permissions: ['contextMenus', 'activeTab', 'tabs', 'scripting', 'storage', 'notifications'],
+        side_panel: {
+          default_path: 'panel.html',
+        },
+        permissions: ['contextMenus', 'activeTab', 'tabs', 'scripting', 'storage', 'notifications', 'sidePanel'],
         // TODO(review): broad host permissions for arbitrary search providers — scope/curate before publishing.
         // Broad host access is required so the popup and background can fetch cross-origin
         // (chat-agent, image-service) without CORS — extensions bypass CORS for hosts they

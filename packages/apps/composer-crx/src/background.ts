@@ -51,6 +51,9 @@ const main = async () => {
     await focusOrOpenComposerTab();
   });
 
+  // Clicking the toolbar icon opens the side panel (there is no popup).
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((err) => log.catch(err));
+
   // Render-proxy: lets Composer pages request a JS-rendered URL via a
   // background tab.
   installSearchProxy();
@@ -111,9 +114,16 @@ const main = async () => {
   });
 
   // Handle right-click action.
-  browser.contextMenus.onClicked.addListener(async (info: any, _tab: any) => {
+  browser.contextMenus.onClicked.addListener(async (info: any, tab: any) => {
     switch (info.menuItemId) {
       case 'image-action': {
+        // Open the panel first, synchronously within the click gesture: the
+        // side panel API rejects `open()` once the user gesture is consumed by
+        // an intervening await (the thumbnail upload below). The result arrives
+        // in the panel via `storage.onChanged`.
+        if (typeof tab?.id === 'number') {
+          chrome.sidePanel.open({ tabId: tab.id }).catch((err) => log.catch(err));
+        }
         await createThumbnail(info.srcUrl);
         break;
       }
