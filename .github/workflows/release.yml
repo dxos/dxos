@@ -30,10 +30,6 @@ jobs:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 90
-    outputs:
-      # True only when this run actually published to npm (the Version PR was merged) — gates the
-      # automatic production app deploy below.
-      published: ${{ steps.changesets.outputs.published }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -81,14 +77,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.
 
-  # Production app deploy is automatic when (and only when) a release actually published. Reuses the
-  # deploy workflow with environment=production — the only path that can target production, so an
-  # arbitrary ref can never reach it. Deploys the released commit (deploy-apps.yml checks out github.sha).
-  deploy-production:
-    needs: release
-    if: needs.release.outputs.published == 'true'
-    uses: ./.github/workflows/deploy-apps.yml
-    with:
-      environment: production
-      app: all
-    secrets: inherit
+  # NOTE: no app deploy here. Apps deploy on their own cadence via deploy-apps.yml + the release-composer /
+  # release-app workflows, fully decoupled from npm publishing. See docs/design/app-release-spec.md.

@@ -49,49 +49,40 @@ unreleased changes — independent of the `@latest`/`@next` npm channels and not
 
 ## Deploy apps (no npm publish)
 
-App deploys are **decoupled from publishing** — deploying never releases a package. Deployable apps and
-the environments each targets are declared in [`.github/workflows/deploy-manifest.json`](../.github/workflows/deploy-manifest.json)
-(generic — add an app by adding an entry). All deploys run through **`deploy-apps.yml`**.
+App deploys are **fully decoupled from publishing** — apps build from workspace source, are **not in
+Changesets**, and never publish to npm. Deployable apps + their environments are declared in
+[`deploy-manifest.json`](../.github/workflows/deploy-manifest.json); all deploys run through
+**`deploy-apps.yml`**. Full model: [`docs/design/app-release-spec.md`](design/app-release-spec.md).
 
-Four environments. "What's on each env" is tracked by the floating **`env/<name>` git tags** (`env/labs`,
-`env/staging`, `env/production`) that each deploy force-updates — the replacement for the old per-environment
-branches (`main` itself tracks the `main` env). No GitHub Environments are used.
+"What's deployed where" is tracked by per-app floating git tags **`<app>/<env>`** (e.g. `composer/production`,
+`docs/production`), force-updated on each deploy — the branch-pointer replacement. `main` is the branch tip.
+No GitHub Environments.
 
 | Env | Trigger | How |
 | --- | --- | --- |
-| **main** | automatic | every push to `main` deploys the `main`-enabled apps |
-| **labs** | manual | Actions → **Deploy Apps** → Run workflow → environment **labs**, pick `app` + `ref` |
-| **staging** | manual | Run workflow → environment **staging** (build sees `DX_ENVIRONMENT=staging` for pre-release config) |
-| **production** | **automatic on release** | the release pipeline deploys production **only when a publish actually happened** (see below) |
+| **main** | automatic | every push to `main` deploys all `main`-enabled apps (rolling preview) |
+| **labs** / **staging** | manual | Actions → **Deploy Apps** → pick env + app (Composer here gets a prerelease Tauri build) |
+| **production** | manual, deliberate | via **Release Composer** (versioned) or **Release App** (docs/examples) — never on an npm publish |
 
-**Production is gated by the release** (no GitHub-Environment approval needed): it is *not* selectable in the
-manual Run-workflow, and the only path that targets it is `release.yml` calling the deploy with
-`environment=production` — which only happens when a human merges the "Version Packages" PR. So an arbitrary
-ref can never reach production; it always deploys the released commit. (See `env/production` for the current tip.)
-
-> **Composer-only production deploys.** Production fires on an npm publish (`release.yml` output
-> `published == true`). If you need to ship a Composer build to production *without* an npm release, that's
-> the one gap — either let it ride the next release, or add a `composer-app` release-tag trigger. Open item
-> in the parked-steps doc.
+**Composer** is versioned; **docs and the example apps** (`todomvc`, `tasks`, `testbench`, `storybook`) are
+not (they carry no `version` field). To ship Composer to production, run **Release Composer** (choose
+`patch`/`minor`/`major`): it bumps `composer-app`/`crx`, commits the bump to `main` + tags `composer-v<x>`,
+and deploys web + desktop + iOS. To ship docs or an example app, run **Release App**. Neither publishes npm.
 
 ## Desktop & mobile (Tauri / CrabNebula)
 
-Native builds run in **`publish-tauri.yaml`** (CrabNebula `cn`), a **reusable workflow** fully decoupled
-from npm. **Tauri publishes whenever Composer deploys to a named environment** — `deploy-apps.yml` invokes
-it (via `workflow_call`) in the *same run* as the Composer web deploy, for `labs`/`staging`/`production`
-(also runnable manually via `workflow_dispatch`, with an environment dropdown). The CrabNebula channel is
-derived from the **`environment` input** (`labs` = default channel). The version comes from
-`composer-app`'s `package.json` (stamped into `tauri.conf.json`), with a per-channel prerelease suffix for
-build uniqueness — separate from the core/plugin and `@next` npm version lines.
+Native builds run in **`publish-tauri.yaml`** (CrabNebula `cn`), a **reusable workflow** invoked by
+`deploy-apps.yml` in the same run as the Composer deploy, for `labs`/`staging`/`production` (also directly via
+`workflow_dispatch`). The version comes from `composer-app`'s `package.json`:
 
-- **the `main` environment is intentionally excluded** — it is the rolling web preview (every `main` push);
-  building/signing a desktop + iOS app per commit is prohibitively expensive. Desktop/mobile rides the named
-  environments.
-- **iOS → App Store Connect** uploads on the **`labs` environment only** (TestFlight) for now, until the
-  staging→App Store path is stabilized. Desktop (macOS) builds on every Tauri run.
+- **production** → the clean (release-composer-bumped) version on the **primary** CN channel — the primary
+  desktop release channel.
+- **labs / staging** → `<version>-<env>.<sha>`, a unique per-commit prerelease on that env's channel.
+- **iOS → App Store Connect (TestFlight)** on the **`labs`** run only, for now. Desktop (macOS) builds on every run.
+- **`main` is excluded** — a signed desktop/iOS build per commit is too costly; desktop/mobile rides the named envs.
 
-To cut a new desktop/extension version off the npm side, add a changeset naming `@dxos/composer-app` (or
-`@dxos/composer-crx`) — this bumps only that app (no plugin/core publish).
+To cut a new desktop/extension version, run **Release Composer** — it owns Composer's version (Composer is
+*not* a Changesets package).
 
 ## Parked (privileged / human-only)
 

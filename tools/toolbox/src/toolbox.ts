@@ -234,19 +234,17 @@ export class Toolbox {
   /**
    * Generates `.changeset/config.json` with the two fixed lockstep PUBLISH groups derived from the
    * workspace graph:
-   * - Group A — published core/SDK (plus the private storybook apps, which ride the line but never publish).
+   * - Group A — published core/SDK (+ the published storybook *libraries*).
    * - Group B — every `@dxos/plugin-*` and `@dxos/cli`.
    *
-   * Apps are deliberately NOT in any publish group. Composer (composer-app/crx/dxos-org), docs, todomvc,
-   * and testbench are private: they DEPLOY (deploy-apps.yml), they never publish to npm. Deploy is fully
-   * decoupled from publish, so an app can ship without any npm release. composer-app/crx keep an
-   * independent version line — named directly in a changeset to cut a desktop/extension build — which
-   * bumps only that app (no plugin publish, so no risk of plugins pinning an unreleased core). This is why
-   * Composer is excluded from Group B even though it ships the plugins.
+   * Apps are NOT in Changesets at all — they're in `ignore` (Composer app/crx/dxos-org, docs, todomvc,
+   * tasks, testbench-app, and the storybook *apps*). They deploy via their own workflows and never publish;
+   * Composer is versioned by its release workflow, the rest are unversioned. Keeping them out of Changesets
+   * means one authoring flow (only packages get changesets) and no version-skipping (app cadence never
+   * advances package versions). See docs/design/app-release-spec.md.
    *
-   * Other private packages (deploy-only apps, internal tooling) are versioned only if a changeset names
-   * them, and are never tagged/published (`privatePackages.tag: false`). Membership is an enumerated list
-   * because Changesets `fixed` matches package names, which share no common prefix across core/SDK.
+   * Membership is an enumerated list because Changesets `fixed` matches package names, which share no
+   * common prefix across core/SDK.
    *
    * Replaces `updateReleasePlease()` at the Phase 2 release-model cutover; both generators run during the
    * overlap window so release-please keeps functioning until a real Changesets release proves the pipeline.
