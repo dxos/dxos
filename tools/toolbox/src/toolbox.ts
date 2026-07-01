@@ -254,19 +254,36 @@ export class Toolbox {
   async updateChangesets(): Promise<void> {
     console.log('Updating .changeset/config.json');
 
-    const storybookApps = ['@dxos/storybook-react', '@dxos/storybook-lit', '@dxos/storybook-solid'];
+    // Apps are unversioned/deploy-only: excluded from the publish groups AND from Changesets entirely (see
+    // `ignore` below). They deploy via their own workflows and never publish to npm; Composer's version is
+    // bumped by its release workflow, not Changesets. (`tasks` is intentionally unscoped. The published
+    // storybook *libraries* — @dxos/storybook-addon-logger/-utils — are NOT apps and stay in Group A.)
+    const apps = [
+      '@dxos/composer-app',
+      '@dxos/composer-crx',
+      '@dxos/composer-dxos-org',
+      '@dxos/docs',
+      '@dxos/todomvc',
+      'tasks',
+      '@dxos/testbench-app',
+      '@dxos/storybook-react',
+      '@dxos/storybook-lit',
+      '@dxos/storybook-solid',
+    ];
 
     const groupA: string[] = [];
     const groupB: string[] = [];
     for (const project of this.graph.projects) {
       const { name } = project;
+      if (apps.includes(name)) {
+        continue; // Unversioned app — see `ignore`.
+      }
       if (name.startsWith('@dxos/plugin-') || name === '@dxos/cli') {
         groupB.push(name);
-      } else if (storybookApps.includes(name) || !project.private) {
+      } else if (!project.private) {
         groupA.push(name);
       }
-      // Private apps (Composer, docs, todomvc, testbench) and internal tooling are excluded from both
-      // publish groups — they deploy, never publish. See the method doc for why Composer is not in Group B.
+      // Remaining private packages are internal tooling — excluded from both publish groups.
     }
     groupA.sort();
     groupB.sort();
@@ -282,11 +299,13 @@ export class Toolbox {
       // dev deps stay `workspace:*`; intra-repo peerDependencies use `workspace:^` (caret) so an in-range
       // minor does not force a major on the dependent.
       bumpVersionsWithWorkspaceProtocolOnly: true,
-      // Two lockstep groups: [A] core/SDK (+storybook), [B] plugins + cli + Composer.
+      // Two lockstep publish groups: [A] core/SDK, [B] plugins + cli. Apps are unversioned (see `ignore`).
       fixed: [groupA, groupB],
       linked: [],
-      ignore: [],
-      // Version private members of the fixed groups (storybook, Composer) without publishing them.
+      // Apps are deploy-only — versioned by their own workflows (Composer) or not at all (docs/examples/
+      // storybook). Changesets neither versions nor ripple-bumps them.
+      ignore: apps,
+      // Version private members of the fixed groups (e.g. published-private libs) without publishing.
       privatePackages: { version: true, tag: false },
       // @next ships as snapshot releases (manual `changeset version --snapshot next`); calculated base
       // version + commit suffix yields e.g. `0.10.0-next-<commit>`.

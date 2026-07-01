@@ -142,9 +142,6 @@
       "@dxos/solid-ui-geo",
       "@dxos/sql-sqlite",
       "@dxos/storybook-addon-logger",
-      "@dxos/storybook-lit",
-      "@dxos/storybook-react",
-      "@dxos/storybook-solid",
       "@dxos/storybook-utils",
       "@dxos/teleport",
       "@dxos/teleport-extension-automerge-replicator",
@@ -260,7 +257,18 @@
     ]
   ],
   "linked": [],
-  "ignore": [],
+  "ignore": [
+    "@dxos/composer-app",
+    "@dxos/composer-crx",
+    "@dxos/composer-dxos-org",
+    "@dxos/docs",
+    "@dxos/todomvc",
+    "tasks",
+    "@dxos/testbench-app",
+    "@dxos/storybook-react",
+    "@dxos/storybook-lit",
+    "@dxos/storybook-solid"
+  ],
   "privatePackages": {
     "version": true,
     "tag": false
