@@ -80,6 +80,7 @@
     "date-fns": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-kanban": "workspace:*",
     "@dxos/plugin-map": "workspace:*",

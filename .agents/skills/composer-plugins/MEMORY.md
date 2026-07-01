@@ -4,6 +4,11 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-30 — storybook cwd + settings-container story pattern
+
+- Storybook globs `packages/plugins/*/src/**/*.stories.tsx` relative to the CWD's repo root (`tools/storybook-react/.storybook/main.ts` → `rootDir`). Run `moon run storybook-react:serve` from INSIDE the worktree dir, never `cd` into the main repo first — doing so globs main's packages and your new worktree story files silently never appear in `/index.json` (story shows "Couldn't find story matching …"). Verify inclusion via `curl -s localhost:PORT/index.json`.
+- Settings-container story pattern (mirror `plugin-debug/.../DebugSettings.stories.tsx`): `decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withClientProvider({ createIdentity: true })]`, `tags: ['settings']`, `parameters: { layout: 'fullscreen', translations }`. If the container calls `useClient()` you MUST include `withClientProvider`. For an interactive form, wrap in a `render` fn with `useState` and pass `onSettingsChange={(update) => setSettings((current) => update(current))}` (settings `onSettingsChange` takes an updater fn, not a value).
+
 ## 2026-06-30 — plugin-markdown PreviewComponent (vertical resize + persisted height)
 
 - Made transcluded block embeds vertically resizable with `@dxos/react-ui-dnd` `ResizeHandle`. Pattern (mirror `react-ui-mosaic/src/testing/CardContainer.tsx`): wrapper `div` is `relative grid overflow-hidden` + `style={sizeStyle(size, 'vertical')}` + `{...resizeAttributes}` (`data-dx-resize-subject`); the Surface is the SOLE grid child so it stretches to fill — this overrides the sketch section's `aspect-square` WITHOUT touching plugin-sketch (grid stretch wins over aspect-ratio). `<ResizeHandle side='block-end' fallbackSize minSize size onSizeChange>` is an absolute sibling. Needed to add `@dxos/react-ui-dnd` as a `workspace:*` dep + a manual tsconfig `references` entry (`../../ui/react-ui-dnd`) — the postinstall ref-sync is skipped, so add it by hand or build fails.

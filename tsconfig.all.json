@@ -466,6 +466,9 @@
       "path": "packages/plugins/plugin-outliner/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-payments/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-pipeline/tsconfig.json"
     },
     {

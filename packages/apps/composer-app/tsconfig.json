@@ -358,6 +358,9 @@
       "path": "../../plugins/plugin-outliner"
     },
     {
+      "path": "../../plugins/plugin-payments"
+    },
+    {
       "path": "../../plugins/plugin-pipeline"
     },
     {
