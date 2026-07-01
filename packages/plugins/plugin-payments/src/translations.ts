@@ -14,7 +14,7 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'Payments',
         'payments-url.label': 'Payments service URL',
-        'payments-url.placeholder': 'https://payments.example.com',
+        'payments-url.placeholder': 'https://payments.dxos.network',
         'buy-premium.label': 'Buy premium (x402)',
         'buy-credits.label': 'Buy 100 credits (Stripe)',
         'no-payments-url.message': 'Set the payments service URL in settings first.',

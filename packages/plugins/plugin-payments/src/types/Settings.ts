@@ -11,7 +11,7 @@ export const Settings = Schema.mutable(
     paymentsUrl: Schema.optional(
       Schema.String.annotations({
         title: 'Payments service URL',
-        description: 'Base URL of the payments-service (e.g. https://payments.example.com). No trailing slash.',
+        description: 'Base URL of the payments-service (No trailing slash).',
       }),
     ),
   }),

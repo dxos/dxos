@@ -12872,6 +12872,9 @@ importers:
         specifier: 'catalog:'
         version: 3.6.0
     devDependencies:
+      '@dxos/plugin-assistant':
+        specifier: workspace:*
+        version: link:../plugin-assistant
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
