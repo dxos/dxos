@@ -11,6 +11,7 @@ import { type SafeAreaPadding, useSafeArea } from '../../hooks';
 import { hasIosKeyboard } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
+import { IconRegistryProvider } from './IconRegistry';
 import { TranslationsProvider, type TranslationsProviderProps } from './TranslationsProvider';
 
 export type ThemeContextValue = {
@@ -62,17 +63,19 @@ export const ThemeProvider = ({
 
   return (
     <ThemeContext.Provider value={contextValue}>
-      <TranslationsProvider
-        {...{
-          fallback,
-          resourceExtensions,
-          appNs,
-        }}
-      >
-        <ElevationProvider elevation='base'>
-          <DensityProvider density={rootDensity}>{children}</DensityProvider>
-        </ElevationProvider>
-      </TranslationsProvider>
+      <IconRegistryProvider>
+        <TranslationsProvider
+          {...{
+            fallback,
+            resourceExtensions,
+            appNs,
+          }}
+        >
+          <ElevationProvider elevation='base'>
+            <DensityProvider density={rootDensity}>{children}</DensityProvider>
+          </ElevationProvider>
+        </TranslationsProvider>
+      </IconRegistryProvider>
     </ThemeContext.Provider>
   );
 };
