@@ -101,17 +101,32 @@ const createPaidFetch = async (client: Client, baseUrl: string): Promise<typeof 
   const signer = toClientEvmSigner(
     {
       address,
-      signTypedData: (message) =>
-        walletClient.signTypedData({
-          account: address,
-          domain: message.domain as any,
-          types: message.types as any,
-          primaryType: message.primaryType as any,
-          message: message.message as any,
-        }),
+      signTypedData: async (message) => {
+        try {
+          log.info('x402 signTypedData', { primaryType: (message as { primaryType?: string }).primaryType });
+          return await walletClient.signTypedData({
+            account: address,
+            domain: message.domain as any,
+            types: message.types as any,
+            primaryType: message.primaryType as any,
+            message: message.message as any,
+          });
+        } catch (err) {
+          // @x402/fetch swallows creation errors and retries unpaid; surface it here.
+          log.error('x402 signTypedData failed', { err });
+          throw err;
+        }
+      },
     },
     {
-      readContract: (args) => publicClient.readContract(args as any),
+      readContract: async (args) => {
+        try {
+          return await publicClient.readContract(args as any);
+        } catch (err) {
+          log.error('x402 readContract failed', { err });
+          throw err;
+        }
+      },
     },
   );
 
