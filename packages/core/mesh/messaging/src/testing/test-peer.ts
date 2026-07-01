@@ -4,8 +4,9 @@
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
+import { createDidFromIdentityKey } from '@dxos/credentials';
 import { PeerSchema } from '@dxos/edge-client';
-import { PublicKey } from '@dxos/keys';
+import { type IdentityDid, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 
@@ -21,12 +22,15 @@ export class TestPeer extends Resource {
   public messenger!: Messenger;
   public defaultReceived = new Event<Message>();
 
+  /** Set in `_open()`, mirroring the real derivation edge connections use (`createDeviceEdgeIdentity`). */
+  private _identityDid!: IdentityDid;
+
   constructor(private readonly testBuilder: TestBuilder) {
     super();
   }
 
   get peerInfo(): PeerInfo {
-    return buf.create(PeerSchema, { peerKey: this.peerId.toHex(), identityDid: `did:halo:${this.peerId.toHex()}` });
+    return buf.create(PeerSchema, { peerKey: this.peerId.toHex(), identityDid: this._identityDid });
   }
 
   async waitTillReceive(message: Message): Promise<Message> {
@@ -42,6 +46,7 @@ export class TestPeer extends Resource {
   }
 
   protected override async _open(): Promise<void> {
+    this._identityDid = await createDidFromIdentityKey(this.peerId);
     this.signalManager = await this.testBuilder.createSignalManager(this);
     this.messenger = new Messenger({ signalManager: this.signalManager, retryDelay: 300 });
 
