@@ -144,19 +144,6 @@ describe('EdgeClient', () => {
     expect(messageSourceLog.map((m) => m.peerKey)).toStrictEqual([oldIdentity.peerKey, newIdentity.peerKey]);
   });
 
-  test('send accepts a DID-only source (DX-1059)', async ({ expect }) => {
-    const { endpoint, cleanup } = await createTestEdgeWsServer(wsServerPort++);
-    onTestFinished(cleanup);
-
-    const { client, identity } = await openNewClient(endpoint);
-    // DX-1059: senders advertise the identity DID only (no hex identityKey); send() must not reject it.
-    const message = protocol.createMessage(TextMessageSchema, {
-      source: { peerKey: identity.peerKey, identityDid: identity.identityDid },
-      payload: { message: 'Hello world' },
-    });
-    await expect(client.send(Context.default(), message)).resolves.not.toThrow();
-  });
-
   test.skipIf(!process.env.EDGE_ENDPOINT)('connect to local edge server', async () => {
     // const identity = await createEphemeralEdgeIdentity();
 
@@ -171,7 +158,7 @@ describe('EdgeClient', () => {
 
   const textMessage = (message: string, source?: EdgeIdentity) =>
     protocol.createMessage(TextMessageSchema, {
-      source: source && { peerKey: source.peerKey, identityKey: source.identityKey },
+      source: source && { peerKey: source.peerKey, identityDid: source.identityDid },
       payload: { message },
     });
 

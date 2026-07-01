@@ -145,14 +145,10 @@ export class EdgeClient extends Resource implements EdgeConnection {
       throw new EdgeConnectionClosedError();
     }
 
-    // DX-1059: sources are DID-only; validate against identityDid, falling back to the legacy hex
-    // identityKey for pre-migration sources. A source carrying neither is guarded by peerKey alone.
+    // DX-1059: sources are DID-only; validate against identityDid.
     if (
       message.source &&
-      (message.source.peerKey !== this._identity.peerKey ||
-        (message.source.identityDid != null
-          ? message.source.identityDid !== this.identityDid
-          : message.source.identityKey != null && message.source.identityKey !== this.identityKey))
+      (message.source.peerKey !== this._identity.peerKey || message.source.identityDid !== this.identityDid)
     ) {
       throw new EdgeIdentityChangedError();
     }
