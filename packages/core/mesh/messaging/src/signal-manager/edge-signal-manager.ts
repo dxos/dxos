@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-// TODO(DX-1059 phase 8): the client is already DID-only; once telemetry shows no pre-DID readers of
-// swarm-response peers remain, edge can stop dual-writing and `identity_key` (proto field 2) can be removed.
+// TODO(DX-1059 phase 8): all senders are DID-only; once no pre-DID senders remain, the reader
+// fallback and the deprecated `identity_key` (proto field 2) can be removed.
 
 import { Event, scheduleMicroTask } from '@dxos/async';
 import { type Context, Resource, cancelWithContext } from '@dxos/context';
