@@ -15,8 +15,6 @@ type IconSize = 4 | 5 | 6 | 8;
 
 export type PluginFailureBadgeProps = {
   failure: PluginManager.PluginFailure;
-  /** Optional override for the trigger icon's tailwind classes. */
-  iconClassNames?: string;
   /** Visual size of the warning icon (passed through to react-ui `<Icon />`). */
   size?: IconSize;
 };
@@ -28,7 +26,7 @@ export type PluginFailureBadgeProps = {
  * message — enough for an operator to tell "remote host is offline" apart
  * from "the plugin crashed".
  */
-export const PluginFailureBadge = ({ failure, iconClassNames, size = 4 }: PluginFailureBadgeProps) => {
+export const PluginFailureBadge = ({ failure, size }: PluginFailureBadgeProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   return (
@@ -38,9 +36,8 @@ export const PluginFailureBadge = ({ failure, iconClassNames, size = 4 }: Plugin
           variant='destructive'
           icon='ph--warning--bold'
           iconOnly
-          size={size}
-          iconClassNames={iconClassNames}
           noTooltip
+          size={size}
           label={t('failure-badge.label')}
           data-testid={`pluginFailureBadge.${failure.id}`}
           onClick={(event) => event.stopPropagation()}
