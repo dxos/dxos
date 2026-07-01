@@ -91,6 +91,7 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@cloudflare/realtimekit": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
