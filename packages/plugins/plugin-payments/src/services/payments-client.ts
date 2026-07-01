@@ -36,9 +36,39 @@ const getInjectedProvider = (): Eip1193Provider | undefined =>
   (globalThis as any).ethereum as Eip1193Provider | undefined;
 
 /**
- * Connects the injected EVM wallet and returns a viem `WalletClient` plus the selected account address.
- * TODO(burdon): Surface a wallet picker / chain-switch prompt; this assumes the wallet is already on
- *   Base Sepolia and uses the first available account.
+ * Ensures the wallet's active chain is Base Sepolia. EIP-3009 signing requires the wallet's active
+ * chain to match the payment domain's chainId, so prompt the wallet to switch — and to add the network
+ * first if it isn't known (error 4902). Idempotent when already on the right chain.
+ */
+const ensureBaseSepolia = async (provider: Eip1193Provider): Promise<void> => {
+  const chainId = `0x${baseSepolia.id.toString(16)}`;
+  try {
+    await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] });
+  } catch (err) {
+    if ((err as { code?: number })?.code === 4902) {
+      await provider.request({
+        method: 'wallet_addEthereumChain',
+        params: [
+          {
+            chainId,
+            chainName: baseSepolia.name,
+            nativeCurrency: baseSepolia.nativeCurrency,
+            rpcUrls: [baseSepolia.rpcUrls.default.http[0]],
+            blockExplorerUrls: [baseSepolia.blockExplorers?.default.url].filter(Boolean),
+          },
+        ],
+      });
+      await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] });
+    } else {
+      throw err;
+    }
+  }
+};
+
+/**
+ * Connects the injected EVM wallet, ensures it is on Base Sepolia, and returns a viem `WalletClient`
+ * plus the selected account address. Uses the first available account.
+ * TODO(burdon): Surface a wallet/account picker rather than defaulting to the first account.
  */
 const connectWallet = async (): Promise<{ walletClient: WalletClient; address: `0x${string}` }> => {
   const provider = getInjectedProvider();
@@ -50,7 +80,7 @@ const connectWallet = async (): Promise<{ walletClient: WalletClient; address: `
   if (!address) {
     throw new Error('No account exposed by the injected wallet.');
   }
-
+  await ensureBaseSepolia(provider);
   const walletClient = createWalletClient({ account: address, chain: baseSepolia, transport: custom(provider) });
   return { walletClient, address };
 };
