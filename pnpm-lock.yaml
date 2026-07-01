@@ -54,9 +54,6 @@ catalogs:
     '@babel/core':
       specifier: ^7.18.13
       version: 7.28.0
-    '@babel/parser':
-      specifier: 7.28.5
-      version: 7.28.5
     '@babel/preset-typescript':
       specifier: ^7.27.1
       version: 7.27.1
@@ -23050,9 +23047,6 @@ importers:
 
   tools/storybook-react:
     devDependencies:
-      '@babel/parser':
-        specifier: 'catalog:'
-        version: 7.28.5
       '@dxos/log':
         specifier: workspace:*
         version: link:../../packages/common/log
@@ -23985,11 +23979,6 @@ packages:
   '@babel/helpers@7.27.6':
     resolution: {integrity: sha512-muE8Tt8M22638HU31A3CgfSUciwz1fhATfoVai05aPXGor//CdWDCbnlY1yvBPo07njuVOCNGCSp/GTt12lIug==}
     engines: {node: '>=6.9.0'}
-
-  '@babel/parser@7.28.5':
-    resolution: {integrity: sha512-KKBU1VGYR7ORr3At5HAtUQ+TV3SzRCXmA/8OdDZiLDBIZxVyzXuztPjfLd3BV1PRAQGCMWWSHYhL0F8d5uHBDQ==}
-    engines: {node: '>=6.0.0'}
-    hasBin: true
 
   '@babel/parser@7.29.0':
     resolution: {integrity: sha512-IyDgFV5GeDUVX4YdF/3CPULtVGSXXMLh1xVIgdCgxApktqnQV0r7/8Nqthg+8YLGaAtdyIlo2qIdZrbCv4+7ww==}
@@ -44589,10 +44578,6 @@ snapshots:
   '@babel/helpers@7.27.6':
     dependencies:
       '@babel/template': 7.27.2
-      '@babel/types': 7.29.0
-
-  '@babel/parser@7.28.5':
-    dependencies:
       '@babel/types': 7.29.0
 
   '@babel/parser@7.29.0':
