@@ -23,12 +23,7 @@ const DefaultStory = ({ state: initialState = WelcomeState.INIT, ...props }: Par
   return (
     <AlertDialog.Root defaultOpen>
       <AlertDialog.Overlay classNames={OVERLAY_CLASSES} style={OVERLAY_STYLE}>
-        <Welcome
-          identity={identity}
-          state={state}
-          onEmailLogin={() => setState(WelcomeState.LOGIN_SENT)}
-          {...props}
-        />
+        <Welcome identity={identity} state={state} onEmailLogin={() => setState(WelcomeState.LOGIN_SENT)} {...props} />
       </AlertDialog.Overlay>
     </AlertDialog.Root>
   );
