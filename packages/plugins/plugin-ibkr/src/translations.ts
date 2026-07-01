@@ -38,6 +38,7 @@ export const translations = [
         'syncing.label': 'Syncing…',
         'import.label': 'Import report XML',
         'importing.label': 'Importing…',
+        'import-error.label': 'Import failed',
         'daily-sync.label': 'Daily sync',
         'report.companion.label': 'Report detail',
         'reports.label': 'Reports',

@@ -5,6 +5,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { IconButton, useTranslation } from '@dxos/react-ui';
@@ -39,6 +40,14 @@ export const PortfolioImportAction = ({ subject }: PortfolioImportActionProps) =
         const { error } = await invokePromise(IbkrOperation.ImportPortfolioReport, { xml }, { spaceId: db?.spaceId });
         if (error) {
           log.warn('IBKR report import failed', { error });
+          // Surface the failure (e.g. invalid Flex XML): without it the spinner just stops and the
+          // import looks like a silent no-op.
+          await invokePromise(LayoutOperation.AddToast, {
+            id: 'org.dxos.plugin.ibkr.import-error',
+            icon: 'ph--warning--regular',
+            title: ['import-error.label', { ns: meta.profile.key }],
+            description: error.message,
+          });
         }
       } finally {
         setImporting(false);
@@ -61,7 +70,11 @@ export const PortfolioImportAction = ({ subject }: PortfolioImportActionProps) =
         ref={inputRef}
         type='file'
         accept='.xml,text/xml,application/xml'
+        // Programmatically triggered by the labeled IconButton; keep it out of the tab order and the
+        // accessibility tree so it is not an unlabeled focus stop for keyboard / screen-reader users.
         className='sr-only'
+        tabIndex={-1}
+        aria-hidden='true'
         onChange={(event) => {
           const file = event.target.files?.[0];
           if (file) {
