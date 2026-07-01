@@ -1,6 +1,6 @@
 name: Deploy Apps
 
-# Deploys apps (Composer, docs, storybook, …) to Cloudflare Pages, per environment. FULLY decoupled from
+# Deploys apps (Composer, docs, storybook, …) to Cloudflare Workers Static Assets, per environment. FULLY decoupled from
 # npm publishing — never runs changeset publish. Apps + their environments are declared in
 # deploy-manifest.json (generic; not Composer-specific).
 #

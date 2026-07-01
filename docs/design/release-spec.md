@@ -43,7 +43,7 @@ Two fixed/lockstep groups, plus deploy-only apps:
 
 **Independent version numbers, coupled release timing.** The two groups carry independent version *lines* (a Group B-only changeset bumps B alone), but they share **one** "Version Packages" PR — merging it drains *all* pending changesets, so whatever core + plugin bumps are queued publish in the same merge. Releasing one group while the other has pending changesets is **not** a goal pre-split: independent release *cadence* arrives with the Phase 4 repo split (plugins move to their own repo, with their own trunk + Version PR), **not** via per-group release branches.
 
-**Deploy ≠ publish (hard requirement).** Deploying any app must never publish a package. App deploys run in `deploy-apps.yml` (`wrangler pages deploy` / Tauri build), fully decoupled from the Changesets publish pipeline. This is *why Composer is not in a publish group*: if it were, cutting a Composer build would publish all 81 plugins, and those plugins would pin core versions that may not be released yet (the hazard). Composer therefore versions on its own private line and ships with no npm release.
+**Deploy ≠ publish (hard requirement).** Deploying any app must never publish a package. App deploys run in `deploy-apps.yml` (`wrangler deploy` to Workers Static Assets / Tauri build), fully decoupled from the Changesets publish pipeline. This is *why Composer is not in a publish group*: if it were, cutting a Composer build would publish all 81 plugins, and those plugins would pin core versions that may not be released yet (the hazard). Composer therefore versions on its own private line and ships with no npm release.
 
 **Group membership (generated).** Changesets `fixed` matches package **names**, not directory paths, and `@dxos/echo` / `@dxos/client` / … share no common prefix — so each group is an **enumerated list, auto-generated from the pnpm workspace/project graph** (not a filesystem scan, which would sweep in test fixtures such as `@fixture/pkg-b` under `src/__fixtures__/`). Membership is cross-checked against `scripts/check-publish-config.mjs`. Only `@dxos/plugin-*` is a clean glob (Group B). At the repo split, `ui/*` + `sdk/app-*` leave Group A and Group B (plugins + cli) moves wholesale to the new repo — a one-line change in the generator.
 
@@ -131,7 +131,7 @@ Per-commit unreleased code is served by pkg.pr.new (Section 7), **not** by publi
 
 ### App deploys — four environments 🔄
 
-The old four deploy environments are preserved, but **environment is a deploy parameter, not a git branch** (the long-lived `production`/`staging`/`labs`/`dev` branches are retired). Apps + the environments each targets are declared in `.github/workflows/deploy-manifest.json` (generic — Composer, docs, storybook, …); `deploy-apps.yml` + `scripts/deploy-env.sh` deploy any app to any environment via `wrangler pages deploy --branch <env>`. **Deploy never publishes to npm.**
+The old four deploy environments are preserved, but **environment is a deploy parameter, not a git branch** (the long-lived `production`/`staging`/`labs`/`dev` branches are retired). Apps + the environments each targets are declared in `.github/workflows/deploy-manifest.json` (generic — Composer, docs, storybook, …); `deploy-apps.yml` + `scripts/deploy-env.sh` deploy any app to any environment via `wrangler deploy` (Workers Static Assets), one Worker per environment (`production` = bare name, others = `<worker>-<env>`). **Deploy never publishes to npm.**
 
 | Env | Trigger | Notes |
 | --- | --- | --- |

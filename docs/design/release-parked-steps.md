@@ -79,22 +79,29 @@ The cross-repo tooling is written but can only be exercised with `edge` checked 
 ## 6. Deploy environments setup (Cloudflare)
 
 The four-environment deploy flow (`deploy-apps.yml`, `deploy-manifest.json`, `scripts/deploy-env.sh`) is
-implemented but needs platform configuration the agent can't do. No GitHub Environments are used —
-"what's deployed where" is tracked by the floating `env/<name>` git tags, and human gating is the
-"Version Packages" PR merge that triggers the release (and thus the production deploy).
+implemented on **Cloudflare Workers Static Assets** but needs platform configuration the agent can't do.
+No GitHub Environments are used — "what's deployed where" is tracked by the floating `<app>/<env>` git
+tags, and human gating is the deliberate release dispatch.
 
-1. **Cloudflare Pages projects** — confirm a project per app in the manifest (`composer`, `docs`,
-   `storybook`) and that `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_API_TOKEN` (already in CI) can deploy them.
-   `deploy-env.sh` passes `--project-name` + `--branch <env>`; ensure each project's **production branch**
-   is named `production` so `--branch production` lands on the production environment (others are previews).
+`deploy-env.sh` runs `wrangler deploy` against a generated `wrangler.deploy.json` per app, using one Worker
+per environment: `production` → the bare `worker` name from the manifest (e.g. `composer`), every other env
+→ `<worker>-<env>` (e.g. `composer-labs`). The API token (`CLOUDFLARE_API_TOKEN`) needs **Workers Scripts:
+Edit** on the account (Pages-only tokens won't deploy Workers).
+
+1. **Create the Workers + attach custom domains** — for each manifest app, the first `wrangler deploy`
+   auto-creates the Worker; then attach the real custom domain to the **production** Worker (e.g.
+   `composer.dxos.org` → `composer`) and any preview domains to the `-<env>` Workers. Deploy the Workers
+   **before** moving domains off the Pages projects so there's no gap (Pages and Workers can serve in
+   parallel during the switchover). Retire the Pages projects only once the domains have moved.
 2. **Migrate `docs` off Cloudflare-native deploy** — docs currently builds/deploys via Cloudflare's git
-   integration, not GitHub Actions. To bring it into this flow: disable the Cloudflare auto-build for the
-   docs project, and rely on `deploy-apps.yml` (docs is already in the manifest with a `docs:bundle` task →
-   `docs/dist`). Verify the first GH-Actions docs deploy before disabling the native one (overlap).
-3. **Composer-only production deploys** — decide whether Composer production deploys only ride npm releases
-   (current behavior) or get their own `composer-app` release-tag trigger. Until decided, a Composer change
-   reaches production on the next npm release or via a one-off (add `production` to the manual dispatch
-   temporarily).
+   integration, not GitHub Actions. To bring it into this flow: disable the Cloudflare auto-build for docs,
+   and rely on `deploy-apps.yml` (docs is in the manifest, `docs:bundle` → `docs/dist`,
+   `notFoundHandling: 404-page`). Verify the first GH-Actions docs deploy before disabling the native one.
+3. **Follow-up migrations (still on Pages):** `preview-deploy.yml` posts per-PR previews via Pages
+   branch-alias URLs (`pr-<n>.composer-app.pages.dev`) — migrating to Workers means preview URLs (versions)
+   or per-PR named Workers, a distinct URL contract (the sticky `composer-preview` comment references it).
+   The legacy `publish-all.yml` + `deploy-apps.sh` still `wrangler pages deploy`, but are slated for
+   deletion (§ the retire-legacy-workflows step) — migrate only if their deletion slips.
 
 ## Remaining smaller wiring (not blocking, no human gate)
 
