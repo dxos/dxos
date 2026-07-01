@@ -21,6 +21,10 @@ const __dirname = dirname(__filename);
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 
+// Browsers targeted for syntax transforms (also applied to `oxc` below so that dev-server
+// transforms downlevel syntax WebKit doesn't parse yet, e.g. `using`/`await using`).
+const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'];
+
 const baseDir = resolve(__dirname, '../');
 const rootDir = resolve(baseDir, '../../');
 const staticDir = resolve(baseDir, './static');
@@ -131,10 +135,16 @@ export const createConfig = ({
             '@dxos/client/opfs-worker': resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
           },
         },
+        // `build.target` only lowers syntax for `storybook build`; the e2e tests run against
+        // `storybook dev`, which otherwise serves source syntax untransformed straight to the
+        // browser. Setting `oxc.target` applies the same downleveling during dev.
+        oxc: {
+          target: browserTargets,
+        },
         build: {
           assetsInlineLimit: 0,
           // Target modern browsers that support top-level await natively.
-          target: ['chrome108', 'edge107', 'firefox104', 'safari16'],
+          target: browserTargets,
           rolldownOptions: {
             output: {
               assetFileNames: 'assets/[name].[hash][extname]', // Unique asset names
