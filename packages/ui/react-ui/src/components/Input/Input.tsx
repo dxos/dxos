@@ -400,7 +400,7 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
             'aria-invalid': 'true' as const,
             'aria-errormessage': errorMessageId,
           }),
-          className: tx('input.checkbox', { size }, 'shrink-0', classNames),
+          'className': tx('input.checkbox', { size }, 'shrink-0', classNames),
         }}
         ref={forwardedRef}
       >
@@ -525,19 +525,19 @@ export const Input = {
 export { useInputTrigger };
 
 export type {
-  InputVariant,
-  InputRootProps,
-  InputSharedProps,
-  PinInputProps,
-  TextInputProps,
-  TextAreaProps,
-  TimeProps,
+  CheckboxProps,
   DateInputProps,
   DateTimeInputProps,
-  CheckboxProps,
-  SwitchProps,
-  LabelProps,
-  DescriptionProps,
-  ValidationProps,
   DescriptionAndValidationProps,
+  DescriptionProps,
+  InputRootProps,
+  InputSharedProps,
+  InputVariant,
+  LabelProps,
+  PinInputProps,
+  SwitchProps,
+  TextAreaProps,
+  TextInputProps,
+  TimeProps,
+  ValidationProps,
 };

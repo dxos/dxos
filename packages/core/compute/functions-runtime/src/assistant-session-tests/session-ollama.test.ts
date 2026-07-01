@@ -10,6 +10,7 @@ import { OpaqueToolkit } from '@dxos/ai';
 import { CalculatorLayer, CalculatorToolkit } from '@dxos/ai/testing';
 import { AiRequest, ToolExecutionServices } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect/testing';
+import { DXN } from '@dxos/keys';
 import { dbg, log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';
 
@@ -33,7 +34,7 @@ const TestLayer = Layer.empty.pipe(
     AssistantTestLayer({
       tracing: 'pretty',
       aiServicePreset: 'ollama',
-      model: 'ai.ollama.model.gpt-oss:20b',
+      model: DXN.make('com.openai.model.gpt-oss-20b.default'),
       disableLlmMemoization: true,
     }),
   ),

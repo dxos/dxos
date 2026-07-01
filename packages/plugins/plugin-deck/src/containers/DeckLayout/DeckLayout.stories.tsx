@@ -30,11 +30,11 @@ import { translations } from '#translations';
 import {
   DeckCapabilities,
   type EphemeralDeckState,
+  PLANK_COMPANION_TYPE,
   type Settings,
   type StoredDeckState,
   defaultDeck,
   getMode,
-  PLANK_COMPANION_TYPE,
 } from '#types';
 
 import { DeckLayout } from './DeckLayout';

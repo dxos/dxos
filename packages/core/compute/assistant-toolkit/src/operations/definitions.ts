@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AiService, OpaqueToolkit, ModelName } from '@dxos/ai';
-import { Instructions, Trace, Operation } from '@dxos/compute';
+import { AiService, OpaqueToolkit } from '@dxos/ai';
+import { Instructions, Operation, Trace } from '@dxos/compute';
 import { Database, Feed, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Text } from '@dxos/schema';
@@ -34,9 +34,9 @@ export const RunInstructions = Operation.make({
     chat: Schema.optional(Ref.Ref(Chat.Chat)),
 
     /**
-     * @default ai.claude.model.claude-opus-4-8
+     * @default dxn:com.anthropic.model.claude-opus-4-8.default
      */
-    model: Schema.optional(ModelName),
+    model: Schema.optional(DXN.Schema),
 
     systemInstructions: Schema.optional(Schema.String).annotations({
       description: 'Additional system instructions to add to the system prompt.',

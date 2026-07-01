@@ -175,8 +175,8 @@ export const Chessboard = {
 };
 
 export type {
-  RootProps as ChessboardRootProps,
-  ContentProps as ChessboardContentProps,
   BoardProps as ChessboardBoardProps,
+  ContentProps as ChessboardContentProps,
   InfoProps as ChessboardInfoProps,
+  RootProps as ChessboardRootProps,
 };

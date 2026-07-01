@@ -124,8 +124,8 @@ function renderProgress() {
 // Get command line arguments (skip node and script path).
 const args = process.argv.slice(2);
 
-// Spawn moon process.
-const moon = spawn('moon', args, {
+// Spawn moon process (repo pins moon 2.x via @moonrepo/cli; avoid stale proto shims on PATH).
+const moon = spawn('pnpm', ['exec', 'moon', ...args], {
   stdio: ['inherit', 'pipe', 'pipe'],
   shell: false,
   env: {

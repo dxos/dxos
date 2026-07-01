@@ -12,7 +12,7 @@ import { useQuery } from '@dxos/react-client/echo';
 
 import { type Routine } from '#types';
 
-import { groupIntoRuns, type RoutineRun } from './runs';
+import { type RoutineRun, groupIntoRuns } from './runs';
 
 /**
  * Returns the execution runs for a routine.

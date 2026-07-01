@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Trace, Operation } from '@dxos/compute';
+import { Operation, Trace } from '@dxos/compute';
 import { Annotation, Collection, Database, DXN, Filter, Obj, Ref, Relation, URI } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { registryLayerNoop } from '@dxos/echo/testing';
@@ -213,7 +213,7 @@ export default Commentary.pipe(
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('ai.claude.model.claude-haiku-4-5'),
+          AiService.model('com.anthropic.model.claude-haiku-4-5.default'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,

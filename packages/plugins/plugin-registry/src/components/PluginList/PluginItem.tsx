@@ -137,7 +137,12 @@ export const PluginItem = ({
       id={id}
       data-testid={`pluginList.${id}`}
       aria-describedby={descriptionId}
-      classNames={mx(gridCols, 'h-[14rem] w-full gap-3 pe-2 bg-modal-surface rounded-md overflow-hidden')}
+      classNames={mx(
+        gridCols,
+        // Override `Listbox.Item`'s default row chrome (flex/items-center/padding/cursor) so the
+        // bespoke card grid stretches both columns to full height and controls its own padding.
+        'items-stretch p-0 pe-2 cursor-default h-[14rem] w-full gap-3 bg-modal-surface rounded-md overflow-hidden',
+      )}
     >
       <div className={mx(gridRows, 'rounded-l-md', styles.surface)}>
         <div className='flex justify-center row-start-2 cursor-pointer' onClick={handleClick}>
@@ -157,7 +162,7 @@ export const PluginItem = ({
 
         <div className='flex -ms-0.5 overflow-x-auto scrollbar-none'>
           {displayTags.map((tag: string) => (
-            <Tag key={tag} palette={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase'>
+            <Tag key={tag} hue={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase'>
               {tag}
             </Tag>
           ))}

@@ -10,4 +10,4 @@ const { getSectionPath: getChannelsPath, getObjectPath: getChannelPath } = Paths
   { groupId: Paths.GroupSegments.communications },
 );
 
-export { getChannelsPath, getChannelPath };
+export { getChannelPath, getChannelsPath };

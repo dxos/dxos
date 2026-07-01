@@ -26,8 +26,8 @@ import {
   type SubductionPeerBinding,
   type SubductionPeerId,
   type SubductionPolicy,
-  interpretAsDocumentId,
   initSubduction,
+  interpretAsDocumentId,
 } from '@automerge/automerge-repo';
 import { type MemorySigner, type SedimentreeId } from '@automerge/automerge-subduction';
 import * as SqlClient from '@effect/sql/SqlClient';

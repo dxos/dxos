@@ -6,12 +6,12 @@ import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   Children,
-  cloneElement,
-  isValidElement,
   type KeyboardEvent,
   type PropsWithChildren,
   type ReactNode,
   type TransitionEvent,
+  cloneElement,
+  isValidElement,
   useCallback,
   useEffect,
   useRef,
@@ -24,7 +24,7 @@ import { useTranslation } from '../../primitives';
 import { translationKey } from '../../translations';
 import { type ThemedClassName, composable, composableProps } from '../../util';
 import { IconButton } from '../Button';
-import { MediaPlayer, type MediaKind } from '../MediaPlayer';
+import { type MediaKind, MediaPlayer } from '../MediaPlayer';
 
 // TODO(burdon): Controller.
 

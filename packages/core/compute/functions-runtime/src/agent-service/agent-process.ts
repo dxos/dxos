@@ -14,11 +14,11 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { AiService, OpaqueToolkit, type ModelName } from '@dxos/ai';
+import { AiService, OpaqueToolkit } from '@dxos/ai';
 import {
-  AiSession,
   AgentRequestBegin,
   AgentRequestEnd,
+  AiSession,
   HarnessControl,
   SkillHooks,
   getOperationFromTool,
@@ -31,6 +31,7 @@ import { ProcessManager } from '@dxos/compute-runtime';
 import * as StorageService from '@dxos/compute/StorageService';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -39,7 +40,10 @@ import { type DelegationStrategy } from './delegation-strategy';
 
 interface AgentProcessOptions {
   systemPrompt?: string;
-  model?: ModelName;
+  model?: DXN.DXN;
+  // The catalog's shared model ids are served by several providers, so resolution needs the provider
+  // alongside the id; without it a local model id cannot be claimed by any resolver.
+  provider?: DXN.DXN;
 
   /**
    * Provider for space-level MCP server configs, called on each turn.
@@ -125,7 +129,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const strategy = Option.fromNullable(options.delegationStrategy);
         let delegations: Delegation[] = [...(yield* DelegationsCell.get)];
 
-        const requestModelLayer = AiService.model(options.model ?? 'ai.claude.model.claude-opus-4-8');
+        const requestModelLayer = AiService.model(
+          options.model ? DXN.getName(options.model) : 'com.anthropic.model.claude-opus-4-8.default',
+          {
+            provider: options.provider,
+          },
+        );
 
         const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
 

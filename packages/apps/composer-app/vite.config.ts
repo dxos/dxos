@@ -8,7 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type PluginOption } from 'vite';
+import { type ConfigEnv, type PluginOption, defineConfig, searchForWorkspaceRoot } from 'vite';
 // import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -537,7 +537,10 @@ export default defineConfig((env) => ({
     }),
 
     IconsPlugin({
-      symbolPattern: '(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+      // The leading negative lookahead restricts the `dx` set to the `regular` weight only (custom
+      // brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
+      symbolPattern:
+        '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
       assetPath: (iconSet, name, variant) => {
         switch (iconSet) {
           case 'dx':

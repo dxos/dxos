@@ -9,7 +9,7 @@ import { useObject } from '@dxos/echo-react';
 import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
-import { Message as MessageComponent, type ThreadComponents, Thread } from '@dxos/react-ui-thread';
+import { Message as MessageComponent, Thread, type ThreadComponents } from '@dxos/react-ui-thread';
 import { type AnchoredTo, type Message, Thread as ThreadType } from '@dxos/types';
 import { hoverableControlItem } from '@dxos/ui-theme';
 
@@ -118,7 +118,7 @@ export const CommentThread = ({
 
   const headerControls = (
     <div className='flex flex-row items-center gap-0.5 pe-2'>
-      {thread.status === 'staged' && <Tag palette='neutral'>{t('draft.button')}</Tag>}
+      {thread.status === 'staged' && <Tag hue='neutral'>{t('draft.button')}</Tag>}
       {onResolve && !(thread.status === 'staged') && (
         <IconButton
           data-testid='thread.resolve'

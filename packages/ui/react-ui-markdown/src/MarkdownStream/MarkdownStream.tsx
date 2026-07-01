@@ -9,51 +9,50 @@ import * as Fiber from 'effect/Fiber';
 import * as Queue from 'effect/Queue';
 import * as Stream from 'effect/Stream';
 import React, {
-  forwardRef,
   type ReactNode,
+  type RefObject,
+  forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
   useState,
-  type RefObject,
 } from 'react';
 import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
 import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, useThemeContext } from '@dxos/react-ui';
-import { useTextEditor, type UseTextEditor } from '@dxos/react-ui-editor';
+import { type UseTextEditor, useTextEditor } from '@dxos/react-ui-editor';
 import {
   type AutoScrollProps,
   type XmlTagsOptions,
   type XmlWidgetState,
   type XmlWidgetStateManager,
+  crawlerLineEffect,
   createBasicExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  documentSlots,
   extendedMarkdown,
+  fader,
+  lineSpacing,
   navigateNextEffect,
   navigatePreviousEffect,
-  preview,
   scroller,
-  crawlerLineEffect,
-  fader,
   typewriter,
   typewriterBypass,
+  xmlBlockDecoration,
+  xmlFormatting,
   xmlTagContextEffect,
   xmlTagResetEffect,
-  xmlTagUpdateEffect,
   xmlTags,
-  documentSlots,
-  xmlFormatting,
-  xmlBlockDecoration,
-  lineSpacing,
+  xmlTagUpdateEffect,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { setFooterVisibleEffect, footer } from './footer';
+import { footer, setFooterVisibleEffect } from './footer';
 import { type StreamerOptions, createStreamer } from './stream';
 export interface MarkdownStreamController extends XmlWidgetStateManager {
   get length(): number | undefined;
@@ -270,17 +269,15 @@ const useMarkdownStreamTextEditor = (
           [
             extendedMarkdown({ registry }),
             decorateMarkdown({
-              // `echo:`/`dxn:` links/images are reference widgets owned by `preview()` (PreviewInlineWidget /
-              // PreviewBlockWidget). Skipping them here avoids `decorateMarkdown` adding a
-              // non-functional `LinkButton` anchor on top of the same node — e.g. for
-              // `[DXOS](echo://BNPMIBEDJLRIILYUYZVM6GT64VWI6WPPZ/01KQ889PZBRNHAEECV0ANFAYX7)`.
+              // `echo:`/`dxn:` links/images are handled by the `link-preview` entry in the
+              // registry via `xmlTags` `urlSchemes`. Skipping them here avoids `decorateMarkdown`
+              // adding a non-functional `LinkButton` anchor on top of the same node.
               skip: (node) =>
                 (node.name === 'Link' || node.name === 'Image') &&
                 (node.url.startsWith('dxn:') || node.url.startsWith('echo:')),
             }),
             // TODO(burdon): Make optional; Removes need for '\n\n'.
             lineSpacing(),
-            preview(),
             // NOTE: An ancestor element must set `data-hue` so `.dx-panel` resolves to the user's
             // hue tokens (see `packages/ui/ui-theme/src/css/components/panel.css`). Tailwind picks
             // up these utility classes from this source file.

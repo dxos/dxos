@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Skill, Instructions, Operation } from '@dxos/compute';
+import { Instructions, Operation, Skill } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';

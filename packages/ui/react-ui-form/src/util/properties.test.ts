@@ -7,11 +7,11 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
-import { DXN, Annotation, JsonSchema, Type } from '@dxos/echo';
+import { Annotation, DXN, JsonSchema, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
 
-import { AutofillAnnotation, autofill, OptionsLookupAnnotation, optionsLookup } from '../annotations';
+import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '../annotations';
 import { omitId } from './omit';
 import { getFormProperties, getRootFormProperties } from './properties';
 

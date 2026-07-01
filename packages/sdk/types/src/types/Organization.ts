@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Format, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
@@ -63,8 +63,7 @@ const OrganizationSchema = Schema.Struct({
     GeneratorAnnotation.set('image.url'),
     Schema.optional,
   ),
-  // TODO(wittjosiah): Format.URL (currently breaks schema validation).
-  website: Schema.String.pipe(
+  website: Format.URL.pipe(
     Schema.annotations({ title: 'Website' }),
     GeneratorAnnotation.set('internet.url'),
     Schema.optional,

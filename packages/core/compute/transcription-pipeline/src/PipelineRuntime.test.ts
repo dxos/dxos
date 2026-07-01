@@ -10,7 +10,7 @@ import { EffectEx } from '@dxos/effect';
 
 import { captureCommit } from './dispatch';
 import { PipelineRuntime, type TelemetryEvent } from './PipelineRuntime';
-import { StageWrite, type Stage } from './Stage';
+import { type Stage, StageWrite } from './Stage';
 import { makeCorrectionStage, makeSummarizationStage } from './stages';
 import { SAMPLE_MEETING, scriptedSource } from './testing';
 import { TranscriptEvent } from './TranscriptEvent';

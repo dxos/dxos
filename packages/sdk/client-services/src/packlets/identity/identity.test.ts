@@ -8,9 +8,9 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createDidFromIdentityKey, verifyCredential } from '@dxos/credentials';
 import {
+  MetadataStore,
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,
-  MetadataStore,
   Space,
   SpaceProtocol,
   createIdFromSpaceKey,
@@ -56,7 +56,7 @@ describe('identity/identity', () => {
       subject: setup.identityKey,
       assertion: {
         '@type': 'dxos.halo.credentials.IdentityProfile',
-        profile: {
+        'profile': {
           displayName: 'Alice',
         },
       },
@@ -93,8 +93,8 @@ describe('identity/identity', () => {
             subject: secondDevice.deviceKey,
             assertion: {
               '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              identityKey: owner.identityKey,
-              deviceKey: secondDevice.deviceKey,
+              'identityKey': owner.identityKey,
+              'deviceKey': secondDevice.deviceKey,
             },
           }),
         },

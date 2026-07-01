@@ -7,7 +7,42 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 
 import { mx } from '@dxos/ui-theme';
 
-const paragraphBlockPlugin = ViewPlugin.fromClass(
+export const blocks = () => [
+  paragraphBlock,
+  EditorView.baseTheme({
+    '.cm-line.block-line': {
+      paddingLeft: '0.75rem',
+      paddingRight: '0.75rem',
+      borderLeft: '1px solid var(--color-subdued-separator)',
+      borderRight: '1px solid var(--color-subdued-separator)',
+    },
+    '.cm-line.block-single': {
+      border: '1px solid var(--color-subdued-separator)',
+      borderRadius: '6px',
+      paddingTop: '0.5rem',
+      paddingBottom: '0.5rem',
+      marginTop: '0.5rem',
+      marginBottom: '0.5rem',
+    },
+    '.cm-line.block-first': {
+      borderTop: '1px solid var(--color-subdued-separator)',
+      borderTopLeftRadius: '6px',
+      borderTopRightRadius: '6px',
+      paddingTop: '0.5rem',
+      marginTop: '0.5rem',
+    },
+    '.cm-line.block-middle': {},
+    '.cm-line.block-last': {
+      borderBottom: '1px solid var(--color-subdued-separator)',
+      borderBottomLeftRadius: '6px',
+      borderBottomRightRadius: '6px',
+      paddingBottom: '0.5rem',
+      marginBottom: '0.5rem',
+    },
+  }),
+];
+
+const paragraphBlock = ViewPlugin.fromClass(
   class {
     decorations: DecorationSet;
 
@@ -94,38 +129,3 @@ const paragraphBlockPlugin = ViewPlugin.fromClass(
     decorations: (v) => v.decorations,
   },
 );
-
-export const blocks = () => [
-  paragraphBlockPlugin,
-  EditorView.baseTheme({
-    '.cm-line.block-line': {
-      paddingLeft: '0.75rem',
-      paddingRight: '0.75rem',
-      borderLeft: '1px solid var(--color-subdued-separator)',
-      borderRight: '1px solid var(--color-subdued-separator)',
-    },
-    '.cm-line.block-single': {
-      border: '1px solid var(--color-subdued-separator)',
-      borderRadius: '6px',
-      paddingTop: '0.5rem',
-      paddingBottom: '0.5rem',
-      marginTop: '0.5rem',
-      marginBottom: '0.5rem',
-    },
-    '.cm-line.block-first': {
-      borderTop: '1px solid var(--color-subdued-separator)',
-      borderTopLeftRadius: '6px',
-      borderTopRightRadius: '6px',
-      paddingTop: '0.5rem',
-      marginTop: '0.5rem',
-    },
-    '.cm-line.block-middle': {},
-    '.cm-line.block-last': {
-      borderBottom: '1px solid var(--color-subdued-separator)',
-      borderBottomLeftRadius: '6px',
-      borderBottomRightRadius: '6px',
-      paddingBottom: '0.5rem',
-      marginBottom: '0.5rem',
-    },
-  }),
-];

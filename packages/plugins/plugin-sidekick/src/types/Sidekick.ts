@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Agent } from '@dxos/assistant-toolkit';
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Journal } from '@dxos/plugin-outliner';
 
 /**

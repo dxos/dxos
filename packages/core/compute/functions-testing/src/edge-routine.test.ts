@@ -4,13 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { RunInstructions, DatabaseSkill, Chat } from '@dxos/assistant-toolkit';
+import { Chat, DatabaseSkill, RunInstructions } from '@dxos/assistant-toolkit';
 import { Client } from '@dxos/client';
-import { Skill, Operation, Instructions, Trigger } from '@dxos/compute';
+import { Instructions, Operation, Skill, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { DXN } from '@dxos/keys';
 import { dbg, log } from '@dxos/log';
 import { ErrorCodec } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -84,7 +85,7 @@ describe('Edge instructions', { tags: ['functions-e2e'] }, () => {
         input: {
           instructions: Ref.make(instructions),
           input: {},
-          model: 'ai.claude.model.claude-haiku-4-5',
+          model: DXN.make('com.anthropic.model.claude-haiku-4-5.default'),
         },
       }),
     );

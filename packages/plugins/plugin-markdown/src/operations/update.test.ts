@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Skill, Operation } from '@dxos/compute';
+import { Operation, Skill } from '@dxos/compute';
 import { Collection, Database, Feed, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
@@ -247,10 +247,12 @@ describe('update', () => {
           context: [Ref.make(document)],
         });
 
+        // The agent process completes once its input queue drains (maybeComplete → succeed), so all
+        // prompts must be enqueued before awaiting completion; the agent then drains them in order,
+        // each turn building on the previous edit. Awaiting between submits would let the process
+        // succeed after the first turn, dropping the rest.
         yield* agent.submitPrompt('Add milk to the shopping list.');
-        yield* agent.waitForCompletion();
         yield* agent.submitPrompt('Add bread to the shopping list.');
-        yield* agent.waitForCompletion();
         yield* agent.submitPrompt('Add eggs to the shopping list.');
         yield* agent.waitForCompletion();
 

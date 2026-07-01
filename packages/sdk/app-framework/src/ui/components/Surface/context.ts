@@ -11,5 +11,4 @@ export type SurfaceContext = {
   data?: Record<string, any>;
 };
 
-// TODO(burdon): Use @radix-ui/react-context
 export const SurfaceContext: Context<SurfaceContext | undefined> = createContext<SurfaceContext | undefined>(undefined);

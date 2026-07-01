@@ -13,7 +13,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 import type * as Scope from 'effect/Scope';
 
-import { ServiceNotAvailableError, ServiceResolver, type LayerSpec } from '@dxos/compute';
+import { type LayerSpec, ServiceNotAvailableError, ServiceResolver } from '@dxos/compute';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

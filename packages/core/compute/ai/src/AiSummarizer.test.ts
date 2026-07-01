@@ -16,7 +16,9 @@ import { TestAiService, TestData } from './testing';
 
 EntityId.dangerouslyDisableRandomness();
 
-const TestLanguageModel = AiService.model('ai.claude.model.claude-sonnet-4-5').pipe(Layer.provide(TestAiService()));
+const TestLanguageModel = AiService.model('com.anthropic.model.claude-sonnet-4-6.default').pipe(
+  Layer.provide(TestAiService()),
+);
 
 describe('AiSummarizer', () => {
   it.effect(

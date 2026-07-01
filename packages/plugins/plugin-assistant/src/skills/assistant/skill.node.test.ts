@@ -5,7 +5,7 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { DatabaseSkill, DatabaseHandlers } from '@dxos/assistant-toolkit';
+import { DatabaseHandlers, DatabaseSkill } from '@dxos/assistant-toolkit';
 import { Skill } from '@dxos/compute';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
