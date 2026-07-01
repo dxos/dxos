@@ -46,7 +46,11 @@ export const createEdgeAuthedFetch = (client: Client, baseUrl: string): typeof g
   let authHeader: string | undefined;
   return (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     authHeader ??= await getEdgeAuthHeader(client, baseUrl);
-    const headers = new Headers(init?.headers);
+    // Merge headers from BOTH a Request-object input and init. @x402/fetch performs its 402 retry by
+    // passing a Request that carries the X-PAYMENT header; if we only read init.headers and pass fresh
+    // headers to fetch(request, …) they replace the Request's headers and X-PAYMENT is dropped.
+    const headers = new Headers(input instanceof Request ? input.headers : undefined);
+    new Headers(init?.headers).forEach((value, key) => headers.set(key, value));
     headers.set('Authorization', authHeader);
     return globalThis.fetch(input, { ...init, headers });
   }) as typeof globalThis.fetch;
