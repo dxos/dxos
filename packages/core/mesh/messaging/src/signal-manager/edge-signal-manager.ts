@@ -69,7 +69,6 @@ export class EdgeSignalManager extends Resource implements SignalManager {
         peer,
         expected: {
           peerKey: this._edgeConnection.peerKey,
-          identityKey: this._edgeConnection.identityKey,
           identityDid: this._edgeConnection.identityDid,
         },
       });
@@ -138,7 +137,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       // NOTE: Could only join swarm with the same peer info as the edge connection.
       log.warn('ignoring author on send request', {
         author: message.author,
-        expected: { peerKey: this._edgeConnection.peerKey, identityKey: this._edgeConnection.identityKey },
+        expected: { peerKey: this._edgeConnection.peerKey, identityDid: this._edgeConnection.identityDid },
       });
     }
 
