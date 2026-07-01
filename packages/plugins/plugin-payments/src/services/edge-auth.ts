@@ -5,6 +5,7 @@
 import { type Client } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { encodeAuthHeader, handleAuthChallenge } from '@dxos/edge-client';
+import { log } from '@dxos/log';
 
 //
 // VP-auth handshake against an arbitrary edge URL.
@@ -50,6 +51,16 @@ export const createEdgeAuthedFetch = (client: Client, baseUrl: string): typeof g
     // (set on the 402 retry). Forward just that + Authorization, and NOT the rest of the retry Request's
     // headers — @x402/fetch builds that Request from the 402 response, which drags response-only headers
     // (e.g. access-control-expose-headers) into the request and breaks the CORS preflight.
+    // DEBUG: reveal exactly where (if anywhere) @x402/fetch puts the payment header on the retry.
+    const initKeys = init?.headers ? [...new Headers(init.headers as HeadersInit).keys()] : [];
+    const inputKeys = input instanceof Request ? [...input.headers.keys()] : [];
+    log.info('edge base fetch', {
+      isRequest: input instanceof Request,
+      url: input instanceof Request ? input.url : String(input),
+      initKeys,
+      inputKeys,
+    });
+
     const xPayment =
       new Headers(init?.headers).get('x-payment') ?? (input instanceof Request ? input.headers.get('x-payment') : null);
     const headers = new Headers();
