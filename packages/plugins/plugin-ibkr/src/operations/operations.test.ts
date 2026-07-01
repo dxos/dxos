@@ -7,12 +7,12 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Database, Feed, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { configuredCredentialsLayer } from '@dxos/functions';
 
-import { IBKR_SOURCE, TRADINGVIEW_SOURCE, tickerSource } from '../constants';
+import { CUSIP_SOURCE, IBKR_SOURCE, TRADINGVIEW_SOURCE, tickerSource } from '../constants';
 import { Ibkr } from '../types';
 import GetInstrumentFundamentalsHandler from './get-instrument-fundamentals';
 import GetPortfolioHandler from './get-portfolio';
@@ -154,6 +154,26 @@ describe('IBKR operations', () => {
     expect(first.created).toBe(true);
     expect(second.created).toBe(false);
     expect(first.instrument.target?.id).toBe(second.instrument.target?.id);
+  });
+
+  test('MaterializeInstrument folds newly-learned foreign keys onto the existing instrument', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Ibkr.Instrument] });
+    const key = { source: tickerSource('NASDAQ'), id: 'AAPL' };
+    await run(MaterializeInstrumentHandler.handler({ key, symbol: 'AAPL', exchange: 'NASDAQ' }), db);
+    // Re-materialize the same instrument, this time also supplying a CUSIP alias.
+    const cusip = { source: CUSIP_SOURCE, id: '037833100' };
+    const second = await run(
+      MaterializeInstrumentHandler.handler({ key, symbol: 'AAPL', exchange: 'NASDAQ', extraKeys: [cusip] }),
+      db,
+    );
+    expect(second.created).toBe(false);
+
+    const instruments = await db.query(Filter.type(Ibkr.Instrument)).run();
+    expect(instruments).toHaveLength(1);
+    const keys = Obj.getMeta(instruments[0]).keys;
+    // The newly-learned CUSIP is folded on without dropping the ticker it was originally found by.
+    expect(keys.some((entry) => entry.source === CUSIP_SOURCE && entry.id === '037833100')).toBe(true);
+    expect(keys.some((entry) => entry.source === tickerSource('NASDAQ') && entry.id === 'AAPL')).toBe(true);
   });
 
   test('GetInstrumentFundamentals reads SEC EDGAR company facts', async ({ expect }) => {

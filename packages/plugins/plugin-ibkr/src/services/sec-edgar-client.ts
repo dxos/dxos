@@ -28,7 +28,7 @@ const defaultFetch: FetchImpl = async (url, init) => {
     headers: {
       ...init?.headers,
       'User-Agent': SEC_EDGAR_USER_AGENT,
-      Accept: 'application/json',
+      'Accept': 'application/json',
     },
   });
   return response;

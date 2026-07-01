@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Query, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 
 import { TRADINGVIEW_SOURCE } from '../constants';
-import { mergeForeignKeys } from '../services';
+import { foreignKeyEquals, mergeForeignKeys } from '../services';
 import { Ibkr, IbkrOperation } from '../types';
 
 const defaultForeignKeys = ({
@@ -36,7 +36,18 @@ const handler: Operation.WithHandler<typeof IbkrOperation.MaterializeInstrument>
         const keys = defaultForeignKeys({ key, symbol, exchange, extraKeys });
         const existing = yield* Database.query(Query.select(Filter.foreignKeys(Ibkr.Instrument, keys))).run;
         if (existing.length > 0) {
-          return { instrument: Ref.make(existing[0]), created: false };
+          const instrument = existing[0];
+          // Idempotent materialization via a different alias (e.g. conid/CUSIP) must not drop the keys
+          // it was found by: fold any newly-learned foreign keys onto the matched instrument.
+          const learned = keys.filter(
+            (foreignKey) => !Obj.getMeta(instrument).keys.some((entry) => foreignKeyEquals(entry, foreignKey)),
+          );
+          if (learned.length > 0) {
+            Obj.update(instrument, (instrument) => {
+              Obj.getMeta(instrument).keys.push(...learned);
+            });
+          }
+          return { instrument: Ref.make(instrument), created: false };
         }
 
         const instrument = yield* Database.add(
