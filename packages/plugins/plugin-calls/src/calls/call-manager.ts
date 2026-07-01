@@ -6,14 +6,19 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
 import { isNonNullable } from '@dxos/util';
 
 import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer';
-import { MediaManager, type MediaState, type MediaTransportFactory } from './media-manager';
+import { type RoomJoiner, createEdgeRoomJoiner } from './edge-room-joiner';
+import { MediaManager, type MediaState } from './media-manager';
+import {
+  type RealtimeKitMeetingFactory,
+  RealtimeKitTransport,
+  createRealtimeKitMeetingFactory,
+} from './realtime-kit-transport';
 import { type ActivityState, type EncodedTrackName, TrackNameCodec, type UserState } from './types';
 
 export type GlobalState = {
@@ -22,8 +27,8 @@ export type GlobalState = {
 };
 
 export type CallManagerOptions = {
-  /** Selects the media transport backend; defaults to the Cloudflare Calls SFU. */
-  transportFactory?: MediaTransportFactory;
+  /** Overrides the RealtimeKit meeting factory (tests/stories); defaults to the real SDK binding. */
+  createMeeting?: RealtimeKitMeetingFactory;
 };
 
 /**
@@ -75,6 +80,8 @@ export class CallManager extends Resource {
 
   private readonly _swarmSynchronizer: CallSwarmSynchronizer;
   private readonly _mediaManager: MediaManager;
+  private readonly _roomJoiner: RoomJoiner;
+  private readonly _createMeeting: RealtimeKitMeetingFactory;
 
   //
   // Derived atoms for reactive UI subscriptions.
@@ -215,7 +222,9 @@ export class CallManager extends Resource {
     const networkService = this._client.services.services.NetworkService;
     invariant(networkService, 'network service not found');
     this._swarmSynchronizer = new CallSwarmSynchronizer({ networkService });
-    this._mediaManager = new MediaManager({ transportFactory: options.transportFactory });
+    this._mediaManager = new MediaManager();
+    this._roomJoiner = createEdgeRoomJoiner(this._client);
+    this._createMeeting = options.createMeeting ?? createRealtimeKitMeetingFactory();
   }
 
   protected override async _open(): Promise<void> {
@@ -251,10 +260,13 @@ export class CallManager extends Resource {
   async join(): Promise<void> {
     this._swarmSynchronizer.setJoined(true);
     await this._swarmSynchronizer.join();
-    await this._mediaManager.join({
-      iceServers: this._client.config.get('runtime.services.ice'),
-      apiBase: `${getEdgeServiceEndpoint(this._client.config, EdgeServiceName.Calls)}/api/calls`,
-    });
+
+    const roomId = this._swarmSynchronizer._getState().roomId;
+    const deviceKey = this._client.halo.device?.deviceKey.toHex();
+    invariant(roomId && deviceKey, 'room id and device key are required to join a call');
+    await this._mediaManager.join(
+      new RealtimeKitTransport({ roomId, deviceKey, joiner: this._roomJoiner, createMeeting: this._createMeeting }),
+    );
   }
 
   @synchronized

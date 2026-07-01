@@ -2,73 +2,27 @@
 // Copyright 2024 DXOS.org
 //
 
-import { WebRTCStats, type WebRTCStatsEvent } from '@peermetrics/webrtc-stats';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { truncateKey } from '@dxos/debug';
-import { JsonView, Panel } from '@dxos/devtools';
-import { log } from '@dxos/log';
-import { IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Panel } from '@dxos/devtools';
+import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { CallsServicePeer, type EncodedTrackName, type GlobalState, type MediaTransport } from '../../calls';
+import { type EncodedTrackName, type GlobalState } from '../../calls';
 
 export type CallDebugPanelProps = ThemedClassName<{ state?: GlobalState }>;
-
-/**
- * SFU-specific diagnostics (peer connection, request history) are only available on the Cloudflare
- * transport; other transports expose no equivalent, so the debug panel degrades gracefully.
- */
-const asCloudflarePeer = (peer?: MediaTransport): CallsServicePeer | undefined =>
-  peer instanceof CallsServicePeer ? peer : undefined;
 
 export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   const [open, setOpen] = useState(false);
   const handleToggle = () => setOpen(!open);
-  const [showServiceHistory, setShowServiceHistory] = useState(false);
-  const handleToggleServiceHistory = () => setShowServiceHistory(!showServiceHistory);
 
   const handleCopyRaw = async () => {
-    await navigator.clipboard.writeText(JSON.stringify({ users: state?.call?.users, stats }, null, 2));
+    await navigator.clipboard.writeText(JSON.stringify({ users: state?.call?.users }, null, 2));
   };
-
-  const [showDetailedWebRTCStats, setShowDetailedWebRTCStats] = useState(false);
-  const handleShowDetailedWebRTCStats = () => setShowDetailedWebRTCStats(!showDetailedWebRTCStats);
-
-  const webrtcStats = useMemo(
-    () =>
-      new WebRTCStats({
-        getStatsInterval: 1000,
-      }),
-    [],
-  );
-  const [stats, setStats] = useState<WebRTCStatsEvent['data']>();
-
-  useEffect(() => {
-    const pc = asCloudflarePeer(state?.media.peer)?.session?.peerConnection;
-    const handleStats = (stats: WebRTCStatsEvent) => {
-      setStats(stats.data);
-    };
-    let added = false;
-    if (pc && showDetailedWebRTCStats) {
-      webrtcStats.addConnection({ pc, peerId: 1, connectionId: '1' });
-      webrtcStats.on('stats', handleStats as never);
-      added = true;
-    }
-    return () => {
-      try {
-        if (pc && added) {
-          webrtcStats.removeConnection({ pc });
-          webrtcStats.removeListener('stats', handleStats as never);
-        }
-      } catch (error) {
-        log.error('error removing webrtc stats', { error, pc, peerId: 1, connectionId: '1' });
-      }
-    };
-  }, [asCloudflarePeer(state?.media.peer)?.session?.peerConnection, showDetailedWebRTCStats]);
 
   const rows = useMemo(() => getCallStatusTable(state), [state?.call.users, state?.media.pulledAudioTracks]);
 
@@ -84,23 +38,9 @@ export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
     >
       <div className='flex flex-col w-full text-xs'>
         <div className='flex items-center gap-2 items-center'>
-          <Input.Root>
-            <Input.Switch checked={showDetailedWebRTCStats} onCheckedChange={handleShowDetailedWebRTCStats} />
-            <Input.Label>{t('show-webrtc-stats.title')}</Input.Label>
-          </Input.Root>
-        </div>
-        <div className='flex items-center gap-2 items-center'>
-          <Input.Root>
-            <Input.Switch checked={showServiceHistory} onCheckedChange={handleToggleServiceHistory} />
-            <Input.Label>{t('show-calls-history.title')}</Input.Label>
-          </Input.Root>
-        </div>
-        <div className='flex items-center gap-2 items-center'>
           <IconButton icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />
         </div>
         <Table rows={rows} />
-        {showDetailedWebRTCStats && <JsonView data={{ stats }} />}
-        {showServiceHistory && <JsonView data={{ history: asCloudflarePeer(state?.media.peer)?.history.get() }} />}
       </div>
     </Panel>
   );
@@ -152,7 +92,6 @@ const getCallStatusTable = (state?: GlobalState): TableProps['rows'] => {
       user.isOk.video ? 'VID ✅' : 'VID ❌',
       user.tracks?.screenshareEnabled ? (user.isOk.screenshare ? 'SCR ✅' : 'SCR ❌') : undefined,
     ]),
-    ['ICE', asCloudflarePeer(state.media.peer)?.session?.peerConnection.iceConnectionState ?? 'no connection'],
   ];
 };
 

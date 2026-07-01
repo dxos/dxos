@@ -11,16 +11,11 @@ import { log } from '@dxos/log';
 import { type MediaTransport } from './media-transport';
 import { type EncodedTrackName, TrackNameCodec, type TrackObject } from './types';
 import {
-  type CallsServiceConfig,
-  CallsServicePeer,
   createBlackCanvasStreamTrack,
   createInaudibleAudioStreamTrack,
   getScreenshare,
   getUserMediaTrack,
 } from './util';
-
-/** Constructs the media transport backend for a joined session. */
-export type MediaTransportFactory = (config: CallsServiceConfig) => MediaTransport;
 
 export type MediaState = {
   audioDeviceId?: string;
@@ -55,11 +50,6 @@ const MAX_WEB_CAM_FRAMERATE = 24;
 const MAX_WEB_CAM_BITRATE = 120_0000;
 const RETRY_INTERVAL = 100;
 
-export type MediaManagerOptions = {
-  /** Factory for the media transport backend; defaults to the Cloudflare Calls SFU peer. */
-  transportFactory?: MediaTransportFactory;
-};
-
 const USE_INAUDIBLE_AUDIO = true;
 
 export class MediaManager extends Resource {
@@ -70,19 +60,12 @@ export class MediaManager extends Resource {
     pulledAudioTracks: {},
   };
 
-  private readonly _transportFactory: MediaTransportFactory;
-
   private _speakingMonitor?: SpeakingMonitor = undefined;
   private _trackToReconcile: EncodedTrackName[] = [];
   private _blackCanvasStreamTrack?: MediaStreamTrack = undefined;
   private _inaudibleAudioStreamTrack?: MediaStreamTrack = undefined;
   private _pushTracksTask?: DeferredTask = undefined;
   private _pullTracksTask?: DeferredTask = undefined;
-
-  constructor(options: MediaManagerOptions = {}) {
-    super();
-    this._transportFactory = options.transportFactory ?? ((config) => new CallsServicePeer(config));
-  }
 
   get isSpeaking() {
     return this._speakingMonitor?.isSpeaking;
@@ -130,9 +113,9 @@ export class MediaManager extends Resource {
   }
 
   @synchronized
-  async join(serviceConfig: CallsServiceConfig): Promise<void> {
-    this._state.peer = this._transportFactory(serviceConfig);
-    await this._state.peer!.open();
+  async join(transport: MediaTransport): Promise<void> {
+    this._state.peer = transport;
+    await this._state.peer.open();
     this._pushTracksTask!.schedule();
   }
 

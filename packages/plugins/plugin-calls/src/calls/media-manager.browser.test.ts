@@ -12,10 +12,9 @@ import { MediaManager } from './media-manager';
 describe('MediaManager transport seam', () => {
   test('publishes local tracks through the injected transport', async ({ expect }) => {
     const fake = new FakeTransport();
-    const mediaManager = new MediaManager({ transportFactory: () => fake });
+    const mediaManager = new MediaManager();
     await mediaManager.open();
-    // Placeholder session config; the fake transport never dials it.
-    await mediaManager.join({ apiBase: 'https://unused.invalid/api/calls' });
+    await mediaManager.join(fake);
 
     // On open the manager holds an inaudible audio track and a black-canvas video track; join publishes both.
     await waitForCondition({
