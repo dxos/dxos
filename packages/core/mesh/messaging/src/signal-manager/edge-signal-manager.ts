@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-// TODO(DX-1059 phase 8): all senders are DID-only; once no pre-DID senders remain, the reader
-// fallback and the deprecated `identity_key` (proto field 2) can be removed.
+// DX-1059: this client is already DID-only — it never writes the deprecated `identity_key`
+// (proto field 2). The dual-read fallback that still gates removing that field lives on the
+// edge side (which relays peers from not-yet-migrated senders); nothing here needs it.
 
 import { Event, scheduleMicroTask } from '@dxos/async';
 import { type Context, Resource, cancelWithContext } from '@dxos/context';
