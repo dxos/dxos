@@ -8,6 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { SpaceOperation } from '../../operations';
 
@@ -23,15 +24,24 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* ({ invitationProp = 'spaceInvitationCode' }: NavigationHandlerOptions = {}) {
     const capabilities = yield* Capability.Service;
     const operationService = yield* Capability.get(Capabilities.OperationInvoker);
+    const client = yield* Capability.get(ClientCapabilities.Client);
 
     const handler: AppCapabilities.NavigationHandler = (url: URL) =>
       Effect.gen(function* () {
         const invitationCode = url.searchParams.get(invitationProp);
-        if (invitationCode) {
-          log('space invitation received via navigation');
-          removeQueryParam(invitationProp);
-          yield* Operation.invoke(SpaceOperation.Join, { invitationCode });
+        if (!invitationCode) {
+          return;
         }
+
+        // Ignore invitations that arrive before a local identity exists rather than forcing
+        // identity creation here, bypassing the normal onboarding flow.
+        if (!client.halo.identity.get()) {
+          return;
+        }
+
+        log('space invitation received via navigation');
+        removeQueryParam(invitationProp);
+        yield* Operation.invoke(SpaceOperation.Join, { invitationCode });
       }).pipe(
         Effect.provideService(Capability.Service, capabilities),
         Effect.provideService(Operation.Service, operationService),
