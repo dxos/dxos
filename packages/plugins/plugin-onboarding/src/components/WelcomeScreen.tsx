@@ -5,13 +5,15 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { Trigger } from '@dxos/async';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientOperation } from '@dxos/plugin-client';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
 import { ThemeProvider, defaultTx } from '@dxos/react-ui';
@@ -156,8 +158,25 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
 
     const handleDone = async (result: InvitationResult | null) => {
       await invokePromise(LayoutOperation.UpdateDialog, { state: false });
+
+      const spaceKey = result?.spaceKey;
+      let space = spaceKey ? client.spaces.get(spaceKey) : undefined;
+      if (spaceKey && !space) {
+        // TODO(wittjosiah): Add api to wait for a space.
+        const trigger = new Trigger<Space>();
+        client.spaces.subscribe(() => {
+          const found = client.spaces.get(spaceKey);
+          if (found) {
+            trigger.wake(found);
+          }
+        });
+        space = await trigger.wait();
+      }
+
+      // TODO(wittjosiah): `result.target` is ignored so acceptance navigates to the space home
+      // immediately; revisit how to incorporate the target once immediate navigation is settled.
       await invokePromise(LayoutOperation.SetLayoutMode, {
-        subject: result?.target ?? undefined,
+        subject: space ? Paths.getSpaceHomePath(space.id) : undefined,
         mode: 'solo',
       });
 
