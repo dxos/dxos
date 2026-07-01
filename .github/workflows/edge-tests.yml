@@ -90,7 +90,7 @@ jobs:
         run: pnpm install --frozen-lockfile
         shell: bash
 
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       - name: Link DXOS packages inside EDGE repo
         working-directory: ./edge
