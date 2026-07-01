@@ -51,7 +51,7 @@ export const Default: Story = {
 export const Configured: Story = {
   args: {
     settings: {
-      paymentsUrl: 'http://localhost:8787',
+      paymentsUrl: 'http://localhost:8788',
     },
   },
 };
