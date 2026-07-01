@@ -1,0 +1,47 @@
+{
+  "name": "@dxos/graph-engine",
+  "version": "0.8.3",
+  "private": true,
+  "description": "Framework-agnostic graph rendering engine (registry, projector, tween, backends).",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/graph": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "d3": "catalog:",
+    "d3-force": "catalog:"
+  },
+  "devDependencies": {
+    "@types/d3": "catalog:",
+    "@types/react": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
+  }
+}
