@@ -81,6 +81,20 @@ export type GetCronTriggersResponse = {
   cronIds: string[];
 };
 
+export type JoinCallRoomRequest = {
+  /** DXN of the object anchoring the call (e.g. a Meeting), used as the swarm room id. */
+  roomId: string;
+  /** HALO device key hex (== swarm `UserState.id`); bound to the RealtimeKit participant. */
+  deviceKey: string;
+  /** Existing meeting id coordinated via the swarm; omitted by the first joiner. */
+  meetingId?: string;
+};
+
+export type JoinCallRoomResponse = {
+  meetingId: string;
+  authToken: string;
+};
+
 export type EdgeHttpClientOptions = BaseHttpClientOptions;
 
 /**
@@ -425,6 +439,23 @@ export class EdgeHttpClient extends BaseHttpClient {
     args?: EdgeHttpCallArgs,
   ): Promise<ExportBundleResponse> {
     return this._call(ctx, new URL(`/spaces/${spaceId}/export`, this.baseUrl), { ...args, body, method: 'POST' });
+  }
+
+  //
+  // Calls (RealtimeKit).
+  //
+
+  /**
+   * Join a call room: resolves (or creates) the RealtimeKit meeting for the room and mints a participant
+   * auth token bound to the caller's verified identity. Authenticated (verifiable presentation), so
+   * `setIdentity` must have been called and the client constructed with the calls-service base URL.
+   */
+  public async joinCallRoom(
+    ctx: Context,
+    body: JoinCallRoomRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<JoinCallRoomResponse> {
+    return this._call(ctx, new URL('/api/rooms/join', this.baseUrl), { ...args, body, method: 'POST', auth: true });
   }
 
   //
