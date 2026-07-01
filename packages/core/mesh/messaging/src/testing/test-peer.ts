@@ -26,7 +26,7 @@ export class TestPeer extends Resource {
   }
 
   get peerInfo(): PeerInfo {
-    return buf.create(PeerSchema, { peerKey: this.peerId.toHex(), identityKey: this.peerId.toHex() });
+    return buf.create(PeerSchema, { peerKey: this.peerId.toHex(), identityDid: `did:halo:${this.peerId.toHex()}` });
   }
 
   async waitTillReceive(message: Message): Promise<Message> {
