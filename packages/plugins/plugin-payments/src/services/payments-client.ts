@@ -35,17 +35,20 @@ type Eip1193Provider = { request: (args: { method: string; params?: unknown[] })
 const getInjectedProvider = (): Eip1193Provider | undefined =>
   (globalThis as any).ethereum as Eip1193Provider | undefined;
 
+/** EIP-1193 error thrown by `wallet_switchEthereumChain` when the chain is not yet known to the wallet. */
+const UNRECOGNIZED_CHAIN_ERROR_CODE = 4902;
+
 /**
  * Ensures the wallet's active chain is Base Sepolia. EIP-3009 signing requires the wallet's active
  * chain to match the payment domain's chainId, so prompt the wallet to switch — and to add the network
- * first if it isn't known (error 4902). Idempotent when already on the right chain.
+ * first if it isn't known. Idempotent when already on the right chain.
  */
 const ensureBaseSepolia = async (provider: Eip1193Provider): Promise<void> => {
   const chainId = `0x${baseSepolia.id.toString(16)}`;
   try {
     await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] });
   } catch (err) {
-    if ((err as { code?: number })?.code === 4902) {
+    if ((err as { code?: number })?.code === UNRECOGNIZED_CHAIN_ERROR_CODE) {
       await provider.request({
         method: 'wallet_addEthereumChain',
         params: [
