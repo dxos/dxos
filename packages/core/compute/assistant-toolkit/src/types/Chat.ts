@@ -29,7 +29,13 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      * Created lazily when the first task is recorded.
      */
     plan: Schema.optional(Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false))),
-  }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--sparkle--regular', hue: 'amber' })),
+  }).pipe(
+    LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({
+      icon: 'ph--sparkle--regular',
+      hue: 'amber',
+    }),
+  ),
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof Chat>) => Obj.make(Chat, props);

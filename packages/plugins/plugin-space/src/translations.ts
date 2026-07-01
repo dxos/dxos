@@ -204,6 +204,7 @@ export const translations = [
         'sync-status.title': 'Sync status',
         'dismiss.label': 'Dismiss',
         'join-success.label': 'Successfully joined space',
+        'join-no-identity-toast.title': 'Log in to accept this invitation',
         'name.label': 'Name',
         'name.placeholder': 'Name',
         'object-properties.label': 'Properties',

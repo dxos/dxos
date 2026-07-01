@@ -13,9 +13,9 @@ import { EffectEx } from '@dxos/effect';
 
 const { namedNode, literal, quad, defaultGraph } = DataFactory;
 
-type Row = { s: string; p: string; o: string; oType: string; g: string };
+export type Row = { s: string; p: string; o: string; oType: string; g: string };
 
-const rowToQuad = (row: Row): Quad => {
+export const rowToQuad = (row: Row): Quad => {
   const object: RdfTerm = row.oType === 'iri' ? namedNode(row.o) : literal(row.o);
   const graph = row.g === '' ? defaultGraph() : namedNode(row.g);
   return quad(namedNode(row.s), namedNode(row.p), object, graph);

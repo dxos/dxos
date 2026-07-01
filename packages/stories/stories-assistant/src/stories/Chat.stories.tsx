@@ -9,6 +9,7 @@ import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import {
   ConnectorsSkill,
+  DatabaseSkill,
   DelegationSkill,
   LinearSkill,
   PlanningSkill,
@@ -23,11 +24,14 @@ import { AssistantSkill } from '@dxos/plugin-assistant';
 import { translations } from '@dxos/plugin-assistant/translations';
 import { ChessOperation, ChessSkill } from '@dxos/plugin-chess';
 import { CommentSkill } from '@dxos/plugin-comments/skills';
+import { CrmSkill } from '@dxos/plugin-crm';
+import { ProfileOf } from '@dxos/plugin-crm/types';
 import { CalendarSkill, InboxSkill } from '@dxos/plugin-inbox';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { MapSkill } from '@dxos/plugin-map';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
+import { Routine } from '@dxos/plugin-routine';
 import { TranscriptionSkill } from '@dxos/plugin-transcription';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text, ViewModel } from '@dxos/schema';
@@ -51,6 +55,7 @@ import {
   ChessModule,
   CommentsModule,
   ContextModule,
+  DatabaseModule,
   ExecutionGraphModule,
   GraphModule,
   InboxModule,
@@ -58,6 +63,7 @@ import {
   ProjectModule,
   ResearchInputModule,
   ResearchOutputModule,
+  RoutineCompanionModule,
   RoutineModule,
   ScriptModule,
   SkillModule,
@@ -75,6 +81,7 @@ import {
   createTestMailbox,
   createTestTranscription,
   getDecorators,
+  loadMockInboxSnapshot,
   organizations,
   testTypes,
 } from '../testing';
@@ -362,27 +369,29 @@ export const WithChess: Story = {
         import('@dxos/plugin-game'),
       ]);
       // TODO(burdon): Add player DID (for user and assistant).
-      const state = space.db.add(
-        Chess.make({
-          pgn: [
-            '1. e4 e5',
-            '2. Nf3 Nc6',
-            '3. Bc4 Bc5',
-            '4. c3 Nf6',
-            '5. d4 exd4',
-            '6. cxd4 Bb4+',
-            '7. Nc3 d5',
-            '8. exd5 Nxd5',
-            '9. O-O Be6',
-            '10. Qb3 Na5',
-            '11. Qa4+ c6',
-            '12. Bxd5 Bxc3',
-            '13. Bxe6 fxe6',
-            '*',
-          ].join(' '),
+      space.db.add(
+        makeGame({
+          name: 'The Game',
+          variant: Chess.make({
+            pgn: [
+              '1. e4 e5',
+              '2. Nf3 Nc6',
+              '3. Bc4 Bc5',
+              '4. c3 Nf6',
+              '5. d4 exd4',
+              '6. cxd4 Bb4+',
+              '7. Nc3 d5',
+              '8. exd5 Nxd5',
+              '9. O-O Be6',
+              '10. Qb3 Na5',
+              '11. Qa4+ c6',
+              '12. Bxd5 Bxc3',
+              '13. Bxe6 fxe6',
+              '*',
+            ].join(' '),
+          }),
         }),
       );
-      space.db.add(makeGame({ name: 'Challenge', variant: state }));
     },
     onChatCreated: async ({ space, binder }) => {
       const { Game } = await import('@dxos/plugin-game');
@@ -730,6 +739,22 @@ export const WithSearch: Story = {
   },
 };
 
+/**
+ * Database explorer panel: query bar with graph, object-tree, and cards views.
+ */
+export const WithDatabase: Story = {
+  decorators: getDecorators({
+    config: config.local,
+    types: testTypes,
+    onInit: async ({ space }) => {
+      await addTestData(space);
+    },
+  }),
+  args: {
+    modules: [[DatabaseModule]],
+  },
+};
+
 export const WithTranscription: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
@@ -1073,6 +1098,59 @@ export const WithProject: Story = {
   args: {
     modules: [[ProjectModule], [TriggersModule, InvocationsModule]],
     skills: [],
+  },
+};
+
+/**
+ * CRM chat over a Gmail-synced mailbox seeded from `mock-inbox.dx.json`.
+ * Test with prompt: Research contacts from my recent emails.
+ */
+export const WithCRM: Story = {
+  decorators: getDecorators({
+    importSnapshot: loadMockInboxSnapshot,
+    lazyPlugins: async () => {
+      const [{ CrmPlugin }, { InboxPlugin }, { MarkdownPlugin }, { TablePlugin }] = await Promise.all([
+        import('@dxos/plugin-crm/plugin'),
+        import('@dxos/plugin-inbox/plugin'),
+        import('@dxos/plugin-markdown/plugin'),
+        import('@dxos/plugin-table/plugin'),
+      ]);
+      return {
+        plugins: [CrmPlugin(), InboxPlugin(), MarkdownPlugin(), TablePlugin()],
+      };
+    },
+    config: config.remote,
+    types: [
+      AccessToken.AccessToken,
+      Feed.Feed,
+      Instructions.Instructions,
+      Mailbox.Mailbox,
+      Message.Message,
+      Organization.Organization,
+      Person.Person,
+      ProfileOf.ProfileOf,
+      Routine.Routine,
+      Tag.Tag,
+      Trigger.Trigger,
+    ],
+    onChatCreated: async ({ space, binder }) => {
+      const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const mailbox = mailboxes[0];
+      if (mailbox) {
+        await binder.bind({ objects: [Ref.make(mailbox)] });
+      }
+    },
+  }),
+  args: {
+    modules: [[InboxModule], [RoutineCompanionModule, TraceModule], [DatabaseModule]],
+    skills: [
+      AssistantSkill.key,
+      CrmSkill.key,
+      DatabaseSkill.key,
+      InboxSkill.key,
+      MarkdownSkill.key,
+      WebSearchSkill.key,
+    ],
   },
 };
 

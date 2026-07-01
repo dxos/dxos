@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
-import { MemoizedAiService } from '@dxos/ai/testing';
+import { MemoizedAiService, MemoizedLanguageModel } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Operation, OperationHandlerSet, Skill, Trigger } from '@dxos/compute';
@@ -55,6 +55,10 @@ const TestLayer = AssistantTestLayerWithTriggers({
     Collection.Collection,
   ],
   tracing: 'pretty',
+  // EntityIds are deterministic (via dangerouslyDisableRandomness) but their values shift when
+  // internal ECHO object creation changes. Canonicalize them so recordings match structurally
+  // regardless of which specific IDs the current code generates.
+  dynamicValuePatterns: [MemoizedLanguageModel.SPACE_ID_PATTERN, MemoizedLanguageModel.ENTITY_ID_PATTERN],
 });
 
 const SYSTEM = trim`

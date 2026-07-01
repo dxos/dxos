@@ -45,10 +45,12 @@ export const buildSparql = (query: SemanticQuery): string => {
   if (patterns.length === 0) {
     patterns.push(`?fact <${SX}subject> ?anySubject .`);
   }
-  return `
-    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-    SELECT ?fact ?p ?o WHERE {
-      { SELECT DISTINCT ?fact WHERE { ${patterns.join('\n')} ${confFilter} } }
-      ?fact ?p ?o .
-    }`;
+  const inner = [...patterns, confFilter].filter(Boolean).join(' ');
+  return [
+    'PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>',
+    'SELECT ?fact ?p ?o WHERE {',
+    `  { SELECT DISTINCT ?fact WHERE { ${inner} } }`,
+    '  ?fact ?p ?o .',
+    '}',
+  ].join('\n');
 };

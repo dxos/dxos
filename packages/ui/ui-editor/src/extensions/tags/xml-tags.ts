@@ -15,13 +15,12 @@ import {
 } from '@codemirror/view';
 import { type FunctionComponent } from 'react';
 
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Domino } from '@dxos/ui';
 
 import { type Range } from '../../types';
 import { decorationSetToArray } from '../../util';
 import { crawlerLineEffect } from '../scrolling';
+import { StubWidget, type XmlWidgetNotifier } from './stub';
 import { nodeToJson } from './xml-util';
 
 /**
@@ -98,6 +97,13 @@ export type XmlWidgetDef = {
    * Streaming tags use `cm-xml-<from>` so the same portal id is kept when the closing tag arrives.
    */
   Component?: FunctionComponent<XmlWidgetProps>;
+
+  /**
+   * URL scheme prefixes that trigger this widget on Link/Image markdown nodes.
+   * Example: `[‘dxn:’, ‘echo:’]` matches `[label](dxn:…)` and `![label](echo:…)`.
+   * Block widgets are created for Image nodes; inline widgets for Link nodes.
+   */
+  urlSchemes?: string[];
 };
 
 export type XmlWidgetRegistry = Record<string, XmlWidgetDef>;
@@ -145,10 +151,7 @@ export type XmlWidgetState = {
   Component: FunctionComponent<XmlWidgetProps>;
 };
 
-export interface XmlWidgetNotifier {
-  mounted(widget: XmlWidgetState): void;
-  unmounted(id: string): void;
-}
+export type { XmlWidgetNotifier };
 
 /**
  * Context state.
@@ -207,7 +210,7 @@ export type XmlTagsOptions = {
  * Basic mechanism:
  * - Decorations are created from XML tags that matched the provided Widget registry.
  * - Native widgets are rendered inline.
- * - React/Solid widgets are rendered in portals outside of the editor via the PlaceholderWidget.
+ * - React/Solid widgets are rendered in portals outside of the editor via the StubWidget.
  * - Widget state can be update via effects.
  *   - NOTE: Widget state may be updated BEFORE the widget is mounted.
  */
@@ -243,6 +246,18 @@ const createWidgetMap = (setWidgets?: (widgets: XmlWidgetState[]) => void): XmlW
       log('widget unmounted', { id, tag: state?.props._tag });
       widgets.delete(id);
       setWidgets?.([...widgets.values()]);
+    },
+    reconcile: (liveIds: Set<string>) => {
+      let changed = false;
+      for (const id of [...widgets.keys()]) {
+        if (!liveIds.has(id)) {
+          widgets.delete(id);
+          changed = true;
+        }
+      }
+      if (changed) {
+        setWidgets?.([...widgets.values()]);
+      }
     },
   } satisfies XmlWidgetNotifier;
 
@@ -355,6 +370,18 @@ const createWidgetUpdatePlugin = (
         const widgetStateMap = update.state.field(widgetStateMapStateField);
         const { decorations } = update.state.field(widgetDecorationsField);
 
+        // Prune widgets orphaned by a rebuild (position-keyed ids change when an edit shifts a node).
+        if (update.docChanged) {
+          const liveIds = new Set<string>();
+          for (const range of decorationSetToArray(decorations)) {
+            const widget = range.value?.spec?.widget;
+            if (widget instanceof StubWidget) {
+              liveIds.add(widget.id);
+            }
+          }
+          notifier.reconcile(liveIds);
+        }
+
         // Check for widget update effects and re-render widgets.
         for (const effect of update.transactions.flatMap((tr) => tr.effects)) {
           if (effect.is(xmlTagUpdateEffect)) {
@@ -366,7 +393,7 @@ const createWidgetUpdatePlugin = (
               const widget = deco?.spec?.widget;
 
               // NOTE: If the widget has not yet been mounted, then the root will be null.
-              if (widget && widget instanceof PlaceholderWidget && widget.id === effect.value.id && widget.root) {
+              if (widget && widget instanceof StubWidget && widget.id === effect.value.id && widget.root) {
                 const props = { ...widget.props, ...widgetState };
                 notifier.mounted({ id: widget.id, props, root: widget.root, Component: widget.Component });
               }
@@ -381,17 +408,30 @@ const createWidgetUpdatePlugin = (
  * Builds and maintains decorations for XML widgets.
  * Must be a StateField because block decorations cannot be provided via ViewPlugin.
  */
-const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier: XmlWidgetNotifier) =>
-  StateField.define<WidgetDecorationSet>({
+const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier: XmlWidgetNotifier) => {
+  // Multiple registry entries may claim the same URL scheme (e.g. one block, one inline).
+  const urlSchemeMap: Map<string, [string, XmlWidgetDef][]> = new Map();
+  for (const [tag, def] of Object.entries(registry)) {
+    for (const scheme of def.urlSchemes ?? []) {
+      const existing = urlSchemeMap.get(scheme);
+      if (existing) {
+        existing.push([tag, def]);
+      } else {
+        urlSchemeMap.set(scheme, [[tag, def]]);
+      }
+    }
+  }
+
+  return StateField.define<WidgetDecorationSet>({
     create: (state) => {
-      return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier);
+      return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier, urlSchemeMap);
     },
     update: ({ from, streamingFrom, decorations }, tr) => {
       // Check for reset effect.
       for (const effect of tr.effects) {
         if (effect.is(xmlTagResetEffect)) {
           if (tr.docChanged) {
-            return buildDecorations(tr.state, { from: 0, to: tr.state.doc.length }, registry, notifier);
+            return buildDecorations(tr.state, { from: 0, to: tr.state.doc.length }, registry, notifier, urlSchemeMap);
           }
           return { from: 0, decorations: Decoration.none };
         }
@@ -404,11 +444,17 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
         if (reset) {
           log('document reset', { from, to: state.doc.length });
           // Full rebuild from start.
-          return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier);
+          return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier, urlSchemeMap);
         } else {
           // Rebuild from the streaming tag start (if active) so the tree walk can detect completion.
           const rebuildFrom = streamingFrom ?? from;
-          const result = buildDecorations(state, { from: rebuildFrom, to: state.doc.length }, registry, notifier);
+          const result = buildDecorations(
+            state,
+            { from: rebuildFrom, to: state.doc.length },
+            registry,
+            notifier,
+            urlSchemeMap,
+          );
           return {
             from: result.from,
             streamingFrom: result.streamingFrom,
@@ -428,6 +474,7 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
       EditorView.atomicRanges.of((view) => view.state.field(field).decorations || Decoration.none),
     ],
   });
+};
 
 /**
  * Creates widget decorations for XML tags in the document using the syntax tree.
@@ -438,6 +485,7 @@ const buildDecorations = (
   range: Range,
   registry: XmlWidgetRegistry,
   notifier: XmlWidgetNotifier,
+  urlSchemeMap: Map<string, [string, XmlWidgetDef][]>,
 ): WidgetDecorationSet => {
   const context = state.field(widgetContextStateField, false);
   const widgetStateMap = state.field(widgetStateMapStateField, false) ?? {};
@@ -488,7 +536,7 @@ const buildDecorations = (
                 const widget: WidgetType | undefined = factory
                   ? (factory(props) ?? undefined)
                   : Component
-                    ? new PlaceholderWidget(widgetId, Component, props, notifier)
+                    ? new StubWidget(widgetId, Component, props, notifier, false, !!block)
                     : undefined;
 
                 // Add decoration.
@@ -515,6 +563,58 @@ const buildDecorations = (
           }
 
           // Don't descend into children.
+          return false;
+        }
+
+        case 'Image':
+        case 'Link': {
+          if (urlSchemeMap.size === 0) {
+            return false;
+          }
+          const urlNode = node.node.getChild('URL');
+          const markNodes = node.node.getChildren('LinkMark');
+          if (!urlNode || markNodes.length < 2) {
+            return false;
+          }
+          const dxn = state.sliceDoc(urlNode.from, urlNode.to);
+          const isBlock = node.type.name === 'Image';
+          const defs = [...urlSchemeMap.entries()].find(([scheme]) => dxn.startsWith(scheme))?.[1];
+          if (!defs) {
+            return false;
+          }
+          const matched = defs.find(([, d]: [string, XmlWidgetDef]) => !!d.block === isBlock);
+          if (!matched) {
+            return false;
+          }
+          const [tag, def] = matched;
+          const label = state.sliceDoc(markNodes[0].to, markNodes[1].from);
+          const nodeRange = { from: node.node.from, to: node.node.to };
+          const widgetId = `cm-url-${node.from}-${dxn}`;
+          const widgetState = widgetStateMap[widgetId];
+          const props: XmlWidgetProps = {
+            id: widgetId,
+            _tag: node.type.name === 'Image' ? 'image' : 'link',
+            range: nodeRange,
+            context,
+            label,
+            dxn,
+            block: isBlock,
+            suggest: isBlock,
+            ...widgetState,
+          };
+          const widget: WidgetType | undefined = def.factory
+            ? (def.factory(props) ?? undefined)
+            : def.Component
+              ? new StubWidget(widgetId, def.Component, props, notifier, false, isBlock)
+              : undefined;
+          if (widget) {
+            builder.add(
+              nodeRange.from,
+              nodeRange.to,
+              Decoration.replace({ widget, block: isBlock, atomic: true, inclusive: true, tag }),
+            );
+            last = nodeRange.to - 1;
+          }
           return false;
         }
       }
@@ -567,7 +667,7 @@ const buildDecorations = (
         const widget: WidgetType | undefined = def.factory
           ? (def.factory(mergedProps) ?? undefined)
           : def.Component
-            ? new PlaceholderWidget(widgetId, def.Component, mergedProps, notifier, true)
+            ? new StubWidget(widgetId, def.Component, mergedProps, notifier, true)
             : undefined;
 
         if (widget) {
@@ -598,61 +698,3 @@ const buildDecorations = (
 
   return { from: last, streamingFrom, decorations: builder.finish() };
 };
-
-/**
- * Placeholder for widgets.
- */
-class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
-  #root: HTMLElement | null = null;
-  #view: EditorView | undefined;
-
-  constructor(
-    readonly id: string,
-    readonly Component: FunctionComponent<TProps>,
-    readonly props: TProps,
-    readonly notifier: XmlWidgetNotifier,
-    readonly streaming?: boolean,
-  ) {
-    super();
-    invariant(id);
-  }
-
-  get root(): HTMLElement | null {
-    return this.#root;
-  }
-
-  override eq(other: this) {
-    // Streaming widgets always need updating (content changes on each tick).
-    if (this.streaming) {
-      return false;
-    }
-
-    return this.id === other.id;
-  }
-
-  override ignoreEvent() {
-    return true;
-  }
-
-  override toDOM(view: EditorView) {
-    this.#view = view;
-    // NOTE: Set min-height to avoid jumps while scrolling.
-    this.#root = Domino.of('div').classNames('min-h-[24px]').root;
-    const props = Object.assign({}, this.props, { view }) as TProps;
-    this.notifier.mounted({ id: this.id, root: this.#root, props, Component: this.Component });
-    return this.#root;
-  }
-
-  override updateDOM(dom: HTMLElement) {
-    this.#root = dom;
-    const props = Object.assign({}, this.props, { view: this.#view }) as TProps;
-    this.notifier.mounted({ id: this.id, root: this.#root, props, Component: this.Component });
-    return true;
-  }
-
-  override destroy(_dom: HTMLElement) {
-    this.notifier.unmounted(this.id);
-    this.#root = null;
-    this.#view = undefined;
-  }
-}

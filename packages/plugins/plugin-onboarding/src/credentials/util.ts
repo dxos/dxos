@@ -102,16 +102,18 @@ export const login = async ({
   email,
   identityDid,
   identityKey,
+  redirectUrl,
 }: {
   hubUrl: string;
   email: string;
   identityDid?: string;
   identityKey?: string;
+  redirectUrl?: string;
 }): Promise<{ token?: string; needsIdentity?: boolean; admitted?: boolean }> => {
   const response = await fetch(new URL('/account/login', hubUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, identityDid, identityKey }),
+    body: JSON.stringify({ email, identityDid, identityKey, redirectUrl }),
   });
   if (!response.ok) {
     throw new Error('login failed', { cause: response.statusText });

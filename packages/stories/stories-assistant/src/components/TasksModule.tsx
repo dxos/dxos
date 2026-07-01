@@ -34,7 +34,7 @@ export const TasksModule = ({ space }: ModuleProps) => {
           <Toolbar.Text>{Obj.getLabel(document)}</Toolbar.Text>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content asChild>
+      <Panel.Content>
         <Editor.Root>
           <Editor.View
             id={document.id}

@@ -169,6 +169,29 @@ export const translations: Resource[] = [
         'ai-service-error.label': 'AI service error',
         'view-usage.label': 'View usage',
 
+        // LLM provider labels.
+        'settings.provider.edge.label': 'Edge',
+        'settings.provider.built-in.label': 'Built-in',
+        'settings.provider.ollama.label': 'Ollama',
+        'settings.provider.lmstudio.label': 'LM Studio',
+
+        // Ollama local model management (desktop only).
+        'settings.ollama.title': 'Local models',
+        'settings.ollama.installed.label': 'Downloaded models',
+        'settings.ollama.empty.message': 'No models downloaded. Pull one below to get started.',
+        'settings.ollama.pull.label': 'Pull model',
+        'settings.ollama.pull.placeholder': 'Search or enter a model name (e.g. llama3.2:1b)',
+        'settings.ollama.pull-custom.label': 'Pull “{{name}}”',
+        'settings.ollama.pulling.label': 'Pulling…',
+        'settings.ollama.pulling.message': 'Downloading… {{percent}}%',
+        'settings.ollama.cancel.label': 'Cancel download',
+        'settings.ollama.loaded.label': 'Loaded',
+        'settings.ollama.loaded.vram': 'Loaded · {{size}}',
+        'settings.ollama.load.label': 'Load into memory',
+        'settings.ollama.unload.label': 'Unload from memory',
+        'settings.ollama.remove.label': 'Delete model',
+        'settings.ollama.failed.message': 'Could not reach the local model service: {{error}}',
+
         'debug.button': 'Debug',
         'online-switch.label': 'Online',
         'typename.label': 'Typename',

@@ -178,6 +178,9 @@
       "path": "packages/core/compute/conductor/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/crawler/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/extractor/tsconfig.json"
     },
     {
@@ -461,6 +464,9 @@
     },
     {
       "path": "packages/plugins/plugin-outliner/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-payments/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-pipeline/tsconfig.json"

@@ -32,21 +32,49 @@ A **Fact** is the unit of storage: one extracted proposition plus its metadata.
 
 An **Entity** is a mention (person/org/place/event/concept/thing) with a label, aliases, and
 an optional `ref` (DXN of a canonical ECHO object once linked). Predicates are open strings
-in v1; a controlled-vocabulary normalization pass is future work.
+in v1 (see [Normalization](#normalization)).
 
 The model is defined with Effect Schema and is JSON-serializable. Conflicting or
 time-varying facts are simply multiple Facts — never merged at write time.
 
+## Normalization
+
+Guiding rule: **normalize the join key, never the display.** Extraction stays cheap and
+local; normalization is an improvable layer on top. The per-message Extract stage emits
+surface forms plus a light slug; the deeper layers are corpus-aware passes that can improve
+independently without re-extracting. Three layers, by increasing cost and context required:
+
+1. **Entity lexical — done.** Subject/object surface forms are slugged to an entity id
+   (`normalizeEntityId`: trim, lowercase, runs of non-alphanumerics → `-`), so `DXOS` / `dxos`
+   collapse to one entity; the original surface is kept as `label` for display. Deterministic,
+   per-mention.
+2. **Predicate / relation — planned.** Predicates are stored verbatim today, so paraphrases
+   don't match (`works at` ≠ `works for` ≠ `employed by`; a query for one misses the others).
+   Mirror the entity split: keep the surface predicate for display **and** a normalized
+   _relation key_ for matching, then query on the key. Start with deterministic
+   lemmatize/stem, with a controlled-vocabulary mapping as a later refinement. The LLM must
+   **not** be asked to invent a canonical predicate per call — independent calls would be
+   inconsistent.
+3. **Entity resolution / coreference — deferred.** Canonicalize aliases (`dmaretskyi` = `Dima`
+   = a Person) and link to ECHO objects by DXN. This needs corpus-wide context, so it runs as
+   a separate resolution pass over the accumulated store — the pattern `AgentRegistry` already
+   uses for message authors, extended to subjects/objects.
+
 ## Storage & query engine
 
-One SPARQL path: **Comunica (`@comunica/query-sparql-rdfjs`)** runs over a custom RDF/JS
-`Source` whose `match()` reads **SQLite**. The backend is therefore swappable and durable:
+One SPARQL path: **Comunica (`@comunica/query-sparql-rdfjs`)** runs over a swappable RDF/JS
+`Source`. `SemanticStore.query` → `buildSparql` → Comunica → `Source.match()` in every
+configuration below; only the backend differs.
 
-- **Browser** — `@dxos/sql-sqlite` (wa-sqlite + OPFS).
-- **Cloudflare** — Durable-Object SQLite, or D1.
-- **Node / fixtures** — `@dxos/sql-sqlite` (better-sqlite3).
+| Config                 | Source                                              | Persistence | Platform          |
+| ---------------------- | --------------------------------------------------- | ----------- | ----------------- |
+| **N3**                 | N3 `Store` (in-memory)                              | memory only | browser or node   |
+| **SQLite (OPFS)**      | `makeSqliteSource` — wa-sqlite + OPFS (worker)      | persistent  | browser           |
+| **SQLite (file / DO)** | `makeSqliteSource` — better-sqlite3 / Cloudflare DO | persistent  | node / Cloudflare |
 
-Persistence is the database itself — no whole-graph snapshot, no in-memory size ceiling.
+For SQLite, persistence is the database itself — no whole-graph snapshot, no in-memory size
+ceiling. N3 is fast and dependency-light but ephemeral (optionally snapshotted to
+localStorage/IndexedDB).
 
 Why Comunica over an embeddable store (e.g. Oxigraph): Oxigraph's WASM build is in-memory
 with a fixed backend, so it cannot persist to or stream from storage we control. Comunica
@@ -97,60 +125,58 @@ certainty and **surfaces conflicts**, e.g.:
 > - alice (dxn:…:m1, 2026-06-06): alice travelsTo paris [probable, PR+]
 > - bob (dxn:…:m2, 2026-06-07): alice travelsTo rome [certain, CT+]
 
-### Example queries
+## Phase 2 — extraction accuracy & noise reduction
 
-All facts asserted about an entity (as subject or object):
+Phase 1 extracts open propositions: any subject/predicate/object the model finds. This maximizes
+recall but admits noise — vague pronouns, non-entities, paraphrased predicates that don't join,
+trivial or off-topic assertions. Phase 2 raises **precision** by constraining _what_ becomes a fact
+and refining facts after extraction, while keeping the open path available.
 
-```sparql
-PREFIX sx: <https://dxos.org/semantic#>
-SELECT ?fact ?p ?o WHERE {
-  { SELECT DISTINCT ?fact WHERE {
-      { ?fact sx:subject <https://dxos.org/semantic/entity/alice> }
-      UNION
-      { ?fact sx:object  <https://dxos.org/semantic/entity/alice> }
-  } }
-  ?fact ?p ?o .
-}
-```
+The literature on LLM × knowledge-graph construction converges on the same levers: **open-ended
+extraction introduces noise; schema-bounded extraction (typed entities + typed relations) and
+multi-step refinement reduce it** ([LLM-empowered KG construction survey](https://arxiv.org/abs/2510.20345),
+[GraphRAG](https://arxiv.org/abs/2404.16130), [KG construction for large-scale RAG](https://arxiv.org/abs/2507.03226)).
 
-What a specific source claims, above a confidence threshold (`according-to` + filter):
+Three levers, smallest-change first:
 
-```sparql
-PREFIX sx:   <https://dxos.org/semantic#>
-PREFIX prov: <http://www.w3.org/ns/prov#>
-PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
-SELECT ?fact ?subject ?predicate ?object ?factuality WHERE {
-  ?fact prov:wasDerivedFrom "dxn:queue:space:m1" ;
-        sx:subject   ?subject ;
-        sx:predicate ?predicate ;
-        sx:object    ?object ;
-        sx:factuality ?factuality ;
-        sx:confidence ?conf .
-  FILTER(xsd:decimal(?conf) >= 0.5)
-}
-```
+1. **Typed entities (extract + filter by Term type).** Have the extractor classify each entity by a
+   small closed type set — `Person`, `Organization`, `Project`, `Event`, `Place`, `Concept`, … — and
+   keep (or surface) only typed entities, dropping junk like ids, dates-as-subjects, and filler.
+   Carry the type on the entity `Term` (alongside `entity`/`label`); the entity column + graph can
+   filter/colour by type. This is the single biggest noise reducer in the survey's findings, and it
+   composes with the existing entity-resolution layer (a resolved entity carries a type).
+2. **Typed predicates (relation schema / controlled vocabulary).** Constrain predicates to a curated
+   relation set per domain (`worksFor`, `partOf`, `locatedIn`, `attended`, `mentions`, …) and map free
+   verb phrases onto it (extends the Phase-1 predicate `relationKey`). Schema-guided generation —
+   giving the model the entity-type and relation-type vocabulary up front — is what frameworks like
+   KARMA use to "guarantee accurate entity normalization and relation classification within a fixed
+   ontological boundary." Off-vocabulary relations are dropped or quarantined for review.
+3. **Progressive multi-phase refinement.** Decompose extraction and add passes rather than asking one
+   call to do everything (mirrors KGGEN's "detect entities, then generate relations" to cut the
+   model's cognitive load): **extract → type → normalize → score/prune**. The normalize pass runs the
+   deferred entity-resolution + predicate-canonicalization corpus-wide (see [Normalization](#normalization));
+   the prune pass drops low-confidence / unsupported facts using the `valence.confidence` already on
+   each fact (probabilistic confidence is more robust than hard accept/reject —
+   [Noise Mitigation for Entity Typing & Relation Extraction](https://arxiv.org/abs/1612.07495)). An
+   optional LLM-as-judge verification step (refute-or-confirm against the source quote) gates the
+   highest-stakes facts.
 
-Surface a conflict — everyone's claim about where Alice travels, with who said it and when
-(`as-of` / `according-to` resolution is applied by ordering/filtering these results):
+These are layers, not a rewrite: the open extractor stays the recall floor; typing + schema + pruning
+trade recall for precision and are individually toggleable per source/domain.
 
-```sparql
-PREFIX sx:   <https://dxos.org/semantic#>
-PREFIX prov: <http://www.w3.org/ns/prov#>
-SELECT ?object ?agent ?when ?factuality WHERE {
-  ?fact sx:subject   <https://dxos.org/semantic/entity/alice> ;
-        sx:predicate "travelsTo" ;
-        sx:object    ?object ;
-        sx:factuality ?factuality ;
-        prov:wasAttributedTo ?agent ;
-        prov:generatedAtTime ?when .
-}
-ORDER BY DESC(?when)
-```
+### Proposed next milestone — "Typed extraction v1"
 
-## Status & deferred
+Deliver lever (1) end-to-end plus the measurement harness, since type is the highest-leverage filter
+and unblocks the typed UI the story already wants (entity column / graph filtered by type):
 
-v1 covers the model, reified SQLite store + Comunica query path, extraction pipeline,
-fixtures-first harness, and the `semanticQuery` tool + comprehension eval. Deferred:
-browser OPFS / Cloudflare worker entrypoint + `wrangler dev` verification, live connector
-credentials, vector/embedding search (Workers AI + Vectorize / transformers.js) and a
-dedicated FTS index, and entity canonicalization to ECHO objects.
+- **Schema:** add an optional `type` (closed enum) to the entity `Term`; extractor emits it; `unknown`
+  type is dropped (reuses the ground-the-subject/object guard).
+- **Extraction:** extend `DEFAULT_EXTRACTION_RULES` + the payload schema to classify entities; keep it
+  one call (type alongside subject/object) to avoid a second round-trip in v1.
+- **Query/UI:** `SemanticQuery` gains a `type?` filter; the entity column groups/filters by type.
+- **Measurement:** a labelled fixture (the Discord corpus + a hand-tagged gold set) with a
+  precision/recall/F1 harness, so lever (2) and (3) can be evaluated against a baseline rather than by
+  eyeball. Without this, "less noise" is unfalsifiable.
+
+Sequenced after v1: relation-vocabulary mapping (lever 2), then the corpus-wide normalize/prune pass
+(lever 3) gated on the F1 numbers.

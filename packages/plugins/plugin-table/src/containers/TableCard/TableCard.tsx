@@ -47,6 +47,7 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
     object,
     projection,
     features,
+    db,
     rows: filteredObjects,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
   });
