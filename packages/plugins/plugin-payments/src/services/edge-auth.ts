@@ -51,8 +51,7 @@ export const createEdgeAuthedFetch = (client: Client, baseUrl: string): typeof g
     // headers — @x402/fetch builds that Request from the 402 response, which drags response-only headers
     // (e.g. access-control-expose-headers) into the request and breaks the CORS preflight.
     const xPayment =
-      new Headers(init?.headers).get('x-payment') ??
-      (input instanceof Request ? input.headers.get('x-payment') : null);
+      new Headers(init?.headers).get('x-payment') ?? (input instanceof Request ? input.headers.get('x-payment') : null);
     const headers = new Headers();
     if (xPayment) {
       headers.set('X-PAYMENT', xPayment);
