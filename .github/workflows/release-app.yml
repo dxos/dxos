@@ -1,0 +1,35 @@
+name: Release App
+
+# Deploy an unversioned app (docs / example apps) to PRODUCTION. These apps have no version — this just
+# deploys and moves the `<app>/production` pointer tag. main + labs/staging deploys go through
+# "Deploy Apps"; this is the deliberate production release. Composer has its own workflow (it's versioned).
+# See docs/design/app-release-spec.md.
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: App to release to production.
+        type: choice
+        options: [docs, todomvc, tasks, testbench, storybook]
+        default: docs
+      ref:
+        description: Git ref to deploy (default the triggering commit).
+        type: string
+        default: ''
+
+concurrency:
+  group: release-app-${{ inputs.app }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write # Push the `<app>/production` pointer tag (via deploy-apps).
+
+jobs:
+  release:
+    if: github.repository == 'dxos/dxos'
+    uses: ./.github/workflows/deploy-apps.yml
+    with:
+      environment: production
+      app: ${{ inputs.app }}
+      ref: ${{ inputs.ref }}
+    secrets: inherit

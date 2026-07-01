@@ -74,67 +74,21 @@ jobs:
           # Verify installation
           cn --version
 
-      - name: Bump version in Tauri config
-        # Latest Version is Prerelease?
-        # ├─ Yes → Config Version is one behind Latest Core?
-        # │        ├─ Yes → Bump Latest Version (prerelease)
-        # │        └─ No → Skip bump
-        # └─ No → Config Version matches Latest?
-        #        ├─ Yes → Bump to prerelease
-        #        └─ No → Skip bump
+      - name: Compute Tauri version
         id: bump-version
         run: |
-          # Channel from the environment input: omit for production (the default/primary CN channel),
-          # else --channel <env>. `production` is the primary desktop release channel.
-          ENVIRONMENT="${{ inputs.environment }}"
-          if [ "$ENVIRONMENT" = "production" ]; then
-            CHANNEL_ARG=""
+          # composer-app/package.json is the source of truth for the version: bumped by release-composer
+          # for a production release, current otherwise. Production ships the clean version to the primary
+          # CrabNebula channel; labs/staging get a unique per-commit prerelease tagged with the env name
+          # (which selects its channel).
+          BASE=$(jq -r '.version' packages/apps/composer-app/package.json)
+          if [ "${{ inputs.environment }}" = "production" ]; then
+            NEW_VERSION="$BASE"
           else
-            CHANNEL_ARG="--channel $ENVIRONMENT"
+            NEW_VERSION="${BASE}-${{ inputs.environment }}.${GITHUB_SHA::7}"
           fi
-
-          RELEASE_DATA=$(cn release list dxos/composer $CHANNEL_ARG --format json)
-          LATEST_VERSION=$(echo "$RELEASE_DATA" | jq -r '.[0].version')
-          # composer-app's package.json is the source of truth for the base version (stamped by
-          # sync-versions during release); the prerelease suffix below makes each channel build unique.
-          CONFIG_VERSION=$(jq -r '.version' packages/apps/composer-app/package.json)
-
-          # Strip prerelease parts for comparison using sed instead of semver -r
-          LATEST_CORE_VERSION=$(echo "$LATEST_VERSION" | sed 's/-.*$//')
-          CONFIG_CORE_VERSION=$(echo "$CONFIG_VERSION" | sed 's/-.*$//')
-
-          # Initialize NEW_VERSION with current config version
-          NEW_VERSION="$CONFIG_VERSION"
-
-          # If no prior releases exist in this channel, bump to prerelease.
-          if [ "$LATEST_VERSION" = "null" ] || [ -z "$LATEST_VERSION" ]; then
-            echo "No prior releases found in channel, bumping config version to prerelease"
-            NEW_VERSION=$(echo $CONFIG_VERSION | xargs semver -i prerelease)
-          # Check if latest version is a prerelease
-          elif [[ "$LATEST_VERSION" == *"-"* ]]; then
-            echo "Latest version is a prerelease: $LATEST_VERSION"
-
-            # Check if config version is one version behind the latest core version
-            CONFIG_PLUS_ONE=$(echo "$CONFIG_CORE_VERSION" | xargs semver -i patch)
-            if [ "$CONFIG_PLUS_ONE" = "$LATEST_CORE_VERSION" ]; then
-              echo "Config version ($CONFIG_CORE_VERSION) is one version behind latest core version ($LATEST_CORE_VERSION), bumping latest version"
-              NEW_VERSION=$(echo $LATEST_VERSION | xargs semver -i prerelease)
-            else
-              echo "Config version ($CONFIG_CORE_VERSION) is not one version behind latest core version ($LATEST_CORE_VERSION), skipping bump"
-            fi
-          elif [ "$CONFIG_CORE_VERSION" = "$LATEST_CORE_VERSION" ]; then
-            echo "Config version matches latest release, bumping to prerelease"
-            NEW_VERSION=$(echo $LATEST_VERSION | xargs semver -i prerelease)
-          else
-            echo "Config version ($CONFIG_CORE_VERSION) differs from latest release ($LATEST_CORE_VERSION), skipping bump"
-          fi
-
-          # Output the version for other jobs to use
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "Final version to be used: $NEW_VERSION"
-        env:
-          BRANCH: ${{ steps.extract_branch.outputs.branch }}
-          CN_API_KEY: ${{ secrets.CN_API_KEY }}
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Tauri version: $NEW_VERSION (env=${{ inputs.environment }})"
 
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config

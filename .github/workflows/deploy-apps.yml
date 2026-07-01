@@ -8,12 +8,11 @@ name: Deploy Apps
 #   main       — automatic on every push to main.
 #   labs       — manual (workflow_dispatch); ad-hoc test deploys.
 #   staging    — manual (workflow_dispatch); pre-release (DX_ENVIRONMENT=staging build hook).
-#   production — ONLY via the release pipeline (workflow_call from release.yml, on an actual publish).
-#                Not a manual option, so an arbitrary ref can never reach production.
+#   production — via the app release workflows (release-composer.yml / release-app.yml, workflow_call).
+#                Not a manual option here, so an arbitrary ref can't reach production casually.
 #
-# "What's deployed where" is tracked by the floating `env/<environment>` git tags pushed below (the
-# branch-pointer replacement). Human gating is upstream — production is reachable only via the release
-# pipeline, which a human triggers by merging the "Version Packages" PR. No GitHub Environments are used.
+# "What's deployed where" is tracked by per-app floating git tags `<app>/<environment>` pushed below (the
+# branch-pointer replacement). Human gating is the deliberate release dispatch. No GitHub Environments.
 
 on:
   push:
@@ -98,13 +97,13 @@ jobs:
         env:
           NODE_ENV: production
 
-      # Floating pointer to the SHA currently deployed to this environment — the branch-pointer
-      # replacement (diff `env/staging..env/production`, etc.). `main` is tracked via its GitHub
-      # Environment record instead, so it is skipped here. Force-updated on every deploy.
-      - name: Update environment deploy tag
-        if: env.DEPLOY_ENV != 'main'
+      # Per-app floating pointer to the SHA currently deployed for this app+environment — the
+      # branch-pointer replacement (e.g. `git diff composer/staging..composer/production`). `main` is the
+      # branch tip (auto-deployed on every push) so no tag there; also skipped for the `all` fan-out.
+      - name: Update deploy pointer tag
+        if: env.DEPLOY_ENV != 'main' && env.DEPLOY_APP != 'all'
         run: |
-          tag="env/${DEPLOY_ENV}"
+          tag="${DEPLOY_APP}/${DEPLOY_ENV}"
           git tag -f "$tag" "${{ inputs.ref || github.sha }}"
           git push -f origin "refs/tags/$tag"
 
