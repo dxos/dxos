@@ -144,7 +144,7 @@ describe('EdgeClient', () => {
     expect(messageSourceLog.map((m) => m.peerKey)).toStrictEqual([oldIdentity.peerKey, newIdentity.peerKey]);
   });
 
-  test('send accepts a DID-only source (DX-1059)', async () => {
+  test('send accepts a DID-only source (DX-1059)', async ({ expect }) => {
     const { endpoint, cleanup } = await createTestEdgeWsServer(wsServerPort++);
     onTestFinished(cleanup);
 
