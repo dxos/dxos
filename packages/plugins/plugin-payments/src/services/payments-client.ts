@@ -35,10 +35,43 @@ type Eip1193Provider = { request: (args: { method: string; params?: unknown[] })
 const getInjectedProvider = (): Eip1193Provider | undefined =>
   (globalThis as any).ethereum as Eip1193Provider | undefined;
 
+/** EIP-1193 error thrown by `wallet_switchEthereumChain` when the chain is not yet known to the wallet. */
+const UNRECOGNIZED_CHAIN_ERROR_CODE = 4902;
+
 /**
- * Connects the injected EVM wallet and returns a viem `WalletClient` plus the selected account address.
- * TODO(burdon): Surface a wallet picker / chain-switch prompt; this assumes the wallet is already on
- *   Base Sepolia and uses the first available account.
+ * Ensures the wallet's active chain is Base Sepolia. EIP-3009 signing requires the wallet's active
+ * chain to match the payment domain's chainId, so prompt the wallet to switch — and to add the network
+ * first if it isn't known. Idempotent when already on the right chain.
+ */
+const ensureBaseSepolia = async (provider: Eip1193Provider): Promise<void> => {
+  const chainId = `0x${baseSepolia.id.toString(16)}`;
+  try {
+    await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] });
+  } catch (err) {
+    if ((err as { code?: number })?.code === UNRECOGNIZED_CHAIN_ERROR_CODE) {
+      await provider.request({
+        method: 'wallet_addEthereumChain',
+        params: [
+          {
+            chainId,
+            chainName: baseSepolia.name,
+            nativeCurrency: baseSepolia.nativeCurrency,
+            rpcUrls: [baseSepolia.rpcUrls.default.http[0]],
+            blockExplorerUrls: [baseSepolia.blockExplorers?.default.url].filter(Boolean),
+          },
+        ],
+      });
+      await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] });
+    } else {
+      throw err;
+    }
+  }
+};
+
+/**
+ * Connects the injected EVM wallet, ensures it is on Base Sepolia, and returns a viem `WalletClient`
+ * plus the selected account address. Uses the first available account.
+ * TODO(burdon): Surface a wallet/account picker rather than defaulting to the first account.
  */
 const connectWallet = async (): Promise<{ walletClient: WalletClient; address: `0x${string}` }> => {
   const provider = getInjectedProvider();
@@ -50,6 +83,7 @@ const connectWallet = async (): Promise<{ walletClient: WalletClient; address: `
   if (!address) {
     throw new Error('No account exposed by the injected wallet.');
   }
+  await ensureBaseSepolia(provider);
   const walletClient = createWalletClient({ account: address, chain: baseSepolia, transport: custom(provider) });
   return { walletClient, address };
 };
@@ -67,17 +101,32 @@ const createPaidFetch = async (client: Client, baseUrl: string): Promise<typeof 
   const signer = toClientEvmSigner(
     {
       address,
-      signTypedData: (message) =>
-        walletClient.signTypedData({
-          account: address,
-          domain: message.domain as any,
-          types: message.types as any,
-          primaryType: message.primaryType as any,
-          message: message.message as any,
-        }),
+      signTypedData: async (message) => {
+        try {
+          log.info('x402 signTypedData', { primaryType: (message as { primaryType?: string }).primaryType });
+          return await walletClient.signTypedData({
+            account: address,
+            domain: message.domain as any,
+            types: message.types as any,
+            primaryType: message.primaryType as any,
+            message: message.message as any,
+          });
+        } catch (err) {
+          // @x402/fetch swallows creation errors and retries unpaid; surface it here.
+          log.error('x402 signTypedData failed', { err });
+          throw err;
+        }
+      },
     },
     {
-      readContract: (args) => publicClient.readContract(args as any),
+      readContract: async (args) => {
+        try {
+          return await publicClient.readContract(args as any);
+        } catch (err) {
+          log.error('x402 readContract failed', { err });
+          throw err;
+        }
+      },
     },
   );
 
@@ -125,5 +174,6 @@ export const createStripeCheckout = async (
     const text = await response.text().catch(() => '');
     throw new Error(`/stripe/checkout failed: ${response.status} ${text}`);
   }
+
   return (await response.json()) as { url: string };
 };

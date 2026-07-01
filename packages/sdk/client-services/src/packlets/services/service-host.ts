@@ -264,7 +264,7 @@ export class ClientServicesHost {
       signalManager,
       peerInfo: this._edgeConnection
         ? {
-            identityKey: this._edgeConnection.identityKey,
+            identityDid: this._edgeConnection.identityDid,
             peerKey: this._edgeConnection.peerKey,
           }
         : undefined,

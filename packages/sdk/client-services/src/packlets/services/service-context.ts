@@ -558,7 +558,7 @@ export class ServiceContext extends Resource {
     this._edgeConnection?.setIdentity(edgeIdentity);
     this._edgeHttpClient?.setIdentity(edgeIdentity);
     this.networkManager.setPeerInfo({
-      identityKey: edgeIdentity.identityKey,
+      identityDid: edgeIdentity.identityDid,
       peerKey: edgeIdentity.peerKey,
     });
     log('_setNetworkIdentity: done');

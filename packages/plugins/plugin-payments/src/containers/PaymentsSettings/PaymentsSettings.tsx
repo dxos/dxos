@@ -7,16 +7,19 @@ import React, { useCallback, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { Button, Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { buyPremium, createStripeCheckout } from '#services';
 import { Settings } from '#types';
 
-export type PaymentsSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
+type Status = {
+  kind: 'idle' | 'pending' | 'result' | 'error';
+  text?: string;
+};
 
-type Status = { kind: 'idle' | 'pending' | 'result' | 'error'; text?: string };
+export type PaymentsSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 
 export const PaymentsSettings = ({ settings, onSettingsChange }: PaymentsSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -62,8 +65,8 @@ export const PaymentsSettings = ({ settings, onSettingsChange }: PaymentsSetting
     <Form.Root
       variant='settings'
       schema={Settings.Settings}
-      values={settings}
       readonly={!onSettingsChange}
+      values={settings}
       onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
     >
       <Form.Viewport scroll>
@@ -81,9 +84,10 @@ export const PaymentsSettings = ({ settings, onSettingsChange }: PaymentsSetting
                 <pre className='text-xs whitespace-pre-wrap overflow-auto'>{status.text}</pre>
               )}
               {status.kind === 'error' && (
-                <p role='alert' className='text-xs text-error-500'>
-                  {t('error.label')}: {status.text}
-                </p>
+                <Message.Root valence='error'>
+                  <Message.Title>{t('error.label')}</Message.Title>
+                  <Message.Content>{status.text}</Message.Content>
+                </Message.Root>
               )}
             </div>
           </Form.Section>

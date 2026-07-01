@@ -46,7 +46,25 @@ export const createEdgeAuthedFetch = (client: Client, baseUrl: string): typeof g
   let authHeader: string | undefined;
   return (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     authHeader ??= await getEdgeAuthHeader(client, baseUrl);
-    const headers = new Headers(init?.headers);
+    // Carry x402's payment header from the retry (v2 uses `payment-signature`) plus Authorization.
+    // @x402/fetch builds the retry Request by copying headers off the 402 response, so skip the
+    // response-only CORS headers (access-control-*) it drags in — they aren't valid request headers
+    // and would break the browser preflight.
+    const headers = new Headers();
+    const carry = (source?: HeadersInit): void => {
+      if (!source) {
+        return;
+      }
+      new Headers(source).forEach((value, key) => {
+        if (!key.startsWith('access-control-')) {
+          headers.set(key, value);
+        }
+      });
+    };
+    if (input instanceof Request) {
+      carry(input.headers);
+    }
+    carry(init?.headers);
     headers.set('Authorization', authHeader);
     return globalThis.fetch(input, { ...init, headers });
   }) as typeof globalThis.fetch;
