@@ -30,8 +30,8 @@ export type SelectionItemBinding = {
   /** Spread onto the row element to bind click + focus + ARIA. */
   rowProps: {
     'aria-selected': boolean;
-    onClick: (event: MouseEvent) => void;
-    onFocus?: (event: FocusEvent) => void;
+    'onClick': (event: MouseEvent) => void;
+    'onFocus'?: (event: FocusEvent) => void;
   };
 };
 
@@ -46,7 +46,7 @@ const isMulti = (value: SingleValue | MultiValue): value is MultiValue => value 
  * controllable value semantics; emits `aria-selected` + click/focus handlers per row.
  *
  * `single` mode: at most one selected id, selection follows focus by default. Matches the
- * existing `RowList` behaviour and the WAI-ARIA listbox single-select pattern.
+ * `Listbox` behaviour and the WAI-ARIA listbox single-select pattern.
  *
  * `multi` mode: tracks a `Set<string>`. Selection does NOT follow focus by default — multi
  * select usually pairs with an explicit toggle affordance (checkbox or keyboard Space) rather
@@ -129,17 +129,27 @@ export const useListSelection: {
         },
         rowProps: {
           'aria-selected': selected,
-          onClick: () => {
+          'onClick': () => {
             if (disabled) {
               return;
             }
             setSelected(id, mode === 'multi' ? !selected : true);
           },
           ...(trackFocus && {
-            onFocus: () => {
-              if (!disabled && !selected) {
-                setSelected(id, true);
+            onFocus: (event: FocusEvent) => {
+              if (disabled || selected) {
+                return;
               }
+              // Selection follows focus only while navigating *between* options within the list.
+              // Focus entering the list from outside (e.g. a popover auto-focusing on open) must
+              // not change selection, or it would clobber the controlled value when entry focus
+              // lands on a non-selected option. Detect entry via `relatedTarget`: a synthetic event
+              // without DOM context (unit tests) falls through to the original follow-focus path.
+              const container = event.currentTarget?.closest?.('[role="listbox"],[role="list"],[role="grid"]');
+              if (container && !container.contains(event.relatedTarget)) {
+                return;
+              }
+              setSelected(id, true);
             },
           }),
         },

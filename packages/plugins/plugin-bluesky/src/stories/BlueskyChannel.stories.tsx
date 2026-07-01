@@ -10,6 +10,7 @@ import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Feed, Query } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -18,7 +19,7 @@ import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
 import { translations as threadTranslations } from '@dxos/plugin-thread/translations';
 import { Config } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 
 import { BlueskyPlugin } from '../BlueskyPlugin';
@@ -38,7 +39,7 @@ const DefaultStory = () => {
     return <Loading data={{ channel }} />;
   }
 
-  return <Surface.Surface role='article' data={{ subject: channel, attendableId: 'story' }} limit={1} />;
+  return <Surface.Surface type={AppSurface.Article} data={{ subject: channel, attendableId: 'story' }} limit={1} />;
 };
 
 const meta = {

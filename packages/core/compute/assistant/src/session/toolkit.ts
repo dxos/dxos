@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { type AiToolNotFoundError, OpaqueToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { type Blueprint } from '@dxos/compute';
+import { type Skill } from '@dxos/compute';
 import { isTruthy } from '@dxos/util';
 
 export type CreateToolkitProps = {
   toolkit?: OpaqueToolkit.Any;
-  blueprints?: readonly Blueprint.Blueprint[];
+  skills?: readonly Skill.Skill[];
   /**
    * Self-contained with handlers toolkits.
    */
@@ -20,11 +20,11 @@ export type CreateToolkitProps = {
 };
 
 /**
- * Build a combined toolkit from the blueprint tools and the provided toolkit.
+ * Build a combined toolkit from the skill tools and the provided toolkit.
  */
 export const createToolkit = ({
   toolkit: toolkitProp,
-  blueprints = [],
+  skills = [],
   opaqueToolkits = [],
 }: CreateToolkitProps): Effect.Effect<
   OpaqueToolkit.OpaqueToolkit,
@@ -32,14 +32,14 @@ export const createToolkit = ({
   ToolResolverService | ToolExecutionService
 > =>
   Effect.gen(function* () {
-    const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
-    const blueprintToolHandler = yield* blueprintToolkit.toContext(ToolExecutionService.handlersFor(blueprintToolkit));
+    const skillToolkit = yield* ToolResolverService.resolveToolkit(skills.flatMap(({ tools }) => tools));
+    const skillToolHandler = yield* skillToolkit.toContext(ToolExecutionService.handlersFor(skillToolkit));
     const opaqueToolkit = OpaqueToolkit.merge(...opaqueToolkits);
 
-    const toolkitDefs = [toolkitProp?.toolkit, blueprintToolkit, opaqueToolkit.toolkit].filter(isTruthy);
+    const toolkitDefs = [toolkitProp?.toolkit, skillToolkit, opaqueToolkit.toolkit].filter(isTruthy);
     const mergedToolkit = Toolkit.merge(...toolkitDefs);
     const combinedHandlerLayer = Layer.mergeAll(
-      Layer.succeedContext(blueprintToolHandler),
+      Layer.succeedContext(skillToolHandler),
       toolkitProp?.layer ?? OpaqueToolkit.empty.layer,
       opaqueToolkit.layer,
     );

@@ -8,8 +8,10 @@ import {
   FormContent,
   type FormContentProps,
   FormError,
-  FormFieldSet,
-  FormLayout,
+  FormFieldSetController,
+  FormGroup,
+  type FormGroupProps,
+  FormLayoutController,
   type FormLayoutProps,
   FormRoot,
   type FormRootProps,
@@ -20,27 +22,31 @@ import {
   FormViewport,
   type FormViewportProps,
 } from './FormControls';
-import { FormFieldLabel } from './FormField';
+import { FormFieldLabel, FormRow, type FormRowProps } from './FormField';
 
 export const Form = {
   Root: FormRoot,
   Viewport: FormViewport,
   Content: FormContent,
   Section: FormSection,
-  FieldSet: FormFieldSet,
-  Layout: FormLayout,
+  Group: FormGroup,
+  FieldSet: FormFieldSetController,
+  Layout: FormLayoutController,
   Label: FormFieldLabel,
+  Row: FormRow,
   Actions: FormActions,
   Submit: FormSubmit,
   Error: FormError,
 };
 
 export type {
-  FormRootProps,
-  FormViewportProps,
-  FormContentProps,
-  FormSectionProps,
-  FormLayoutProps,
   FormActionsProps,
+  FormContentProps,
+  FormGroupProps,
+  FormLayoutProps,
+  FormRootProps,
+  FormRowProps,
+  FormSectionProps,
   FormSubmitProps,
+  FormViewportProps,
 };

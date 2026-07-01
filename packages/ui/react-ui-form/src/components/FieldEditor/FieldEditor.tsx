@@ -58,7 +58,10 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
 
   const [referenceSchema, setReferenceSchema] = useState<Type.Type>();
   useEffect(() => {
-    setReferenceSchema(schemas.find((schema) => Type.getTypename(schema) === props?.referenceSchema));
+    // A React state setter invokes a function argument as an updater. A class-based `Type.Type` is
+    // itself a function, so it must be stored via an updater lambda — passing it directly makes React
+    // call it as `Organization(prev)`, throwing "Class constructor … cannot be invoked without 'new'".
+    setReferenceSchema(() => schemas.find((schema) => Type.getTypename(schema) === props?.referenceSchema));
   }, [schemas, props?.referenceSchema]);
 
   // TODO(burdon): Need to wrap otherwise throws error:
@@ -191,7 +194,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
       readonly={readonly}
       schema={fieldSchema}
       values={props}
-      exclude={propIsNotType}
+      filter={propIsNotType}
       sort={['property', 'format']}
       onValuesChanged={handleValuesChanged}
       onValidate={handleValidate}

@@ -7,11 +7,12 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 import { Resource } from '@dxos/context';
 import { type Database, Format, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
 import { type JsonSchema as JsonSchemaType, toEffectSchema } from '@dxos/echo/JsonSchema';
-import { getSnapshot, type Mutable } from '@dxos/echo/Obj';
+import { type Mutable, getSnapshot } from '@dxos/echo/Obj';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { type Label } from '@dxos/react-ui';
+import { type ViewStateManager } from '@dxos/react-ui-attention';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
@@ -25,16 +26,8 @@ import { type Table } from '../types';
 import { extractOrder } from '../util';
 import { compareValues } from '../util/sort';
 import { extractTagIds } from '../util/tag';
-
-/**
- * Field sort configuration.
- */
-export type FieldSortType = {
-  fieldId: string;
-  direction: QueryAST.OrderDirection;
-};
-
 import { type SelectionMode, SelectionModel } from './selection-model';
+import { type FieldSortType, tableSortAspect } from './table-view-state';
 
 /**
  * Callback type for wrapping mutations in Obj.update().
@@ -111,6 +104,12 @@ export type TableModelProps<T extends TableRow = TableRow> = {
   projection: ProjectionModel;
   db?: Database.Database;
   /**
+   * Per-context UI state manager (from `@dxos/react-ui-attention`). When provided, the column sort is
+   * stored in the `tableSortAspect` view state keyed by the table URI; otherwise it falls back to an
+   * ephemeral atom (e.g. isolated stories/tests with no `ViewStateProvider`).
+   */
+  viewState?: ViewStateManager;
+  /**
    * Callbacks to wrap mutations in Obj.update().
    * Use createEchoChangeCallback() for ECHO-backed objects or createDirectChangeCallback() for plain objects.
    */
@@ -148,7 +147,10 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   private readonly _rows: Atom.Writable<T[]>;
   private readonly _draftRows: Atom.Writable<DraftRow<T>[]>;
-  // In-memory sort state - changes are local until saved.
+  // Optional per-context UI state manager; when present the column sort is view-state-backed.
+  private readonly _viewState?: ViewStateManager;
+  // Per-user sort state - backed by the `tableSortAspect` view state (keyed by table URI) when a
+  // ViewStateManager is provided, else an ephemeral atom. Changes are local until saved to the view.
   private readonly _inMemorySort: Atom.Writable<FieldSortType | undefined>;
   // Derived atom for persisted sort from view.query.ast.
   private readonly _persistedSort: Atom.Atom<FieldSortType | undefined>;
@@ -170,6 +172,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     object,
     projection,
     db,
+    viewState,
     change,
     features = {},
     initialSelection = [],
@@ -185,6 +188,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     super();
     this._registry = registry;
     this._object = object;
+    this._viewState = viewState;
     this._projection = projection;
     this._projection.normalizeView();
     this._db = db;
@@ -205,7 +209,11 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     });
     this._rows = Atom.make<T[]>([]);
     this._draftRows = Atom.make<DraftRow<T>[]>([]);
-    this._inMemorySort = Atom.make<FieldSortType | undefined>(undefined);
+    // View-state-backed atom survives remount/reload (local backend, keyed by table URI); the
+    // ephemeral fallback preserves prior behaviour when no ViewStateManager is supplied.
+    this._inMemorySort = this._viewState
+      ? this._viewState.atom(tableSortAspect, this.id)
+      : Atom.make<FieldSortType | undefined>(undefined);
     this._cellUpdateCounter = Atom.make<number>(0);
 
     // Create derived atom for persisted sort from view.query.ast.
@@ -854,11 +862,19 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return;
     }
 
-    // Update in-memory sort (local changes).
-    this._registry.set(this._inMemorySort, {
-      fieldId,
-      direction,
-    });
+    this._writeSort({ fieldId, direction });
+  }
+
+  /**
+   * Writes the per-user sort, routing through the ViewStateManager (so the `local` backend persists)
+   * when one is configured, otherwise updating the ephemeral atom directly.
+   */
+  private _writeSort(value: FieldSortType | undefined): void {
+    if (this._viewState) {
+      this._viewState.set(tableSortAspect, this.id, value);
+    } else {
+      this._registry.set(this._inMemorySort, value);
+    }
   }
 
   /**
@@ -879,7 +895,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
    * Clears the in-memory sort order.
    */
   public clearSort(): void {
-    this._registry.set(this._inMemorySort, undefined);
+    this._writeSort(undefined);
   }
 
   /**
@@ -912,8 +928,8 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       });
     }
 
-    // Clear in-memory sort since it's now persisted.
-    this._registry.set(this._inMemorySort, undefined);
+    // Clear per-user sort since it's now persisted to the view.
+    this._writeSort(undefined);
   }
 
   /**

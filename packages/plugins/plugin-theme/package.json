@@ -54,12 +54,14 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/i18n": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/util": "workspace:*",

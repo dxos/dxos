@@ -7,9 +7,11 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DXN, Format, type Obj, Type } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { Position } from '@dxos/util';
 
 export const MapSchema = Schema.Struct({
   coordinates: Format.GeoPoint,
@@ -30,33 +32,13 @@ declare global {
   }
 }
 
-// TODO(dmaretskyi): Removed images from conductor GPT implementation.
-const isImage = (data: any): data is any => false;
-
 export const capabilities: Capability.Any[] = [
   Capability.contributes(
     Capabilities.ReactSurface,
     Surface.create({
-      id: 'pluginImage',
-      role: 'card--content',
-      filter: (data: any): data is any => isImage(data.value),
-      component: ({ data }) => (
-        <Card.Body>
-          <img
-            className='grow object-cover'
-            src={`data:image/jpeg;base64,${data.value.source.data}`}
-            alt={data.value.prompt ?? `Generated image [id=${data.value.id}]`}
-          />
-        </Card.Body>
-      ),
-    }),
-  ),
-  Capability.contributes(
-    Capabilities.ReactSurface,
-    Surface.create({
       id: 'pluginDefault',
-      role: 'card--content',
-      position: 'last',
+      filter: Surface.makeFilter(AppSurface.CardContent),
+      position: Position.last,
       component: ({ data }) => (
         <Card.Body>
           <Syntax.Root data={data}>

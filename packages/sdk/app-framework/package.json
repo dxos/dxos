@@ -17,7 +17,12 @@
       "source": "./src/index.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs",
+      "workerd": "./dist/lib/browser/index.mjs",
       "types": "./dist/types/src/index.d.ts"
+    },
+    "./workerd": {
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/browser/index.mjs"
     },
     "./ActivationEvent": {
       "source": "./src/core/activation-event.ts",
@@ -60,6 +65,11 @@
       "browser": "./dist/lib/browser/url-loader/index.mjs",
       "node": "./dist/lib/node-esm/url-loader/index.mjs",
       "types": "./dist/types/src/url-loader/index.d.ts"
+    },
+    "./config": {
+      "browser": "./dist/lib/browser/config/index.mjs",
+      "node": "./dist/lib/node-esm/config/index.mjs",
+      "types": "./dist/types/src/config/index.d.ts"
     },
     "./vite-plugin": {
       "import": "./dist/plugin/node-esm/index.mjs",
@@ -113,6 +123,7 @@
     "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",

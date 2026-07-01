@@ -4,11 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 import { Capabilities, Capability, type PluginManager } from '@dxos/app-framework';
 import { type LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { Process } from '@dxos/compute';
+import { Annotation } from '@dxos/echo';
 
 import { meta } from '#meta';
 import { DeckCapabilities } from '#types';
@@ -56,7 +58,7 @@ export default Capability.makeModule(
           continue;
         }
 
-        const notify = process.params.notify;
+        const notify = Option.getOrNull(Annotation.getDictionary(process.params.annotations, Process.NotifyAnnotation));
         if (!notify) {
           continue;
         }
@@ -105,12 +107,12 @@ export default Capability.makeModule(
       // Replace any stale plugin-failure toast so at most one is ever visible.
       const toast: LayoutOperation.Toast = {
         id: 'plugin-failure',
-        title: ['plugin-failure.title', { ns: meta.id }],
-        description: ['plugin-failure.description', { ns: meta.id }],
+        title: ['plugin-failure.title', { ns: meta.profile.key }],
+        description: ['plugin-failure.description', { ns: meta.profile.key }],
         icon: 'ph--warning--regular',
         duration: ERROR_TOAST_DURATION,
-        actionLabel: ['plugin-failure-action.label', { ns: meta.id }],
-        actionAlt: ['plugin-failure-action.alt', { ns: meta.id }],
+        actionLabel: ['plugin-failure-action.label', { ns: meta.profile.key }],
+        actionAlt: ['plugin-failure-action.alt', { ns: meta.profile.key }],
         onAction: () => void invoker.invokePromise(SettingsOperation.OpenPluginRegistry),
       };
       const state = registry.get(ephemeralAtom);
@@ -135,11 +137,11 @@ export default Capability.makeModule(
         : state.toasts;
       const toast: LayoutOperation.Toast = {
         id: undoId,
-        title: message ?? ['undo-available.label', { ns: meta.id }],
+        title: message ?? ['undo-available.label', { ns: meta.profile.key }],
         duration: UNDO_TOAST_DURATION,
-        actionLabel: ['undo-action.label', { ns: meta.id }],
-        actionAlt: ['undo-action.alt', { ns: meta.id }],
-        closeLabel: ['undo-close.label', { ns: meta.id }],
+        actionLabel: ['undo-action.label', { ns: meta.profile.key }],
+        actionAlt: ['undo-action.alt', { ns: meta.profile.key }],
+        closeLabel: ['undo-close.label', { ns: meta.profile.key }],
         onAction: onUndo,
       };
       registry.set(ephemeralAtom, { ...state, currentUndoId: undoId, toasts: [...toasts, toast] });

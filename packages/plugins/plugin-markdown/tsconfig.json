@@ -13,6 +13,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -64,6 +65,9 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-doc"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -89,6 +93,9 @@
     },
     {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-dnd"
     },
     {
       "path": "../../ui/react-ui-editor"
@@ -119,6 +126,9 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-sketch"
     },
     {
       "path": "../plugin-space"

@@ -137,6 +137,8 @@ const MosaicRoot = forwardRef<HTMLDivElement, MosaicRootProps>(({ children, asCh
     // Main controller.
     return combine(
       monitorForElements({
+        // Only monitor Mosaic tile drags; other pragmatic-dnd sources under this root are not ours to handle.
+        canMonitor: ({ source }) => source.data.type === 'tile',
         /**
          * Dragging started within any container.
          */
@@ -283,4 +285,4 @@ MosaicRoot.displayName = MOSAIC_ROOT_NAME;
 
 export { MosaicRoot, useMosaicRootContext };
 
-export type { MosaicRootProps, MosaicDraggingState };
+export type { MosaicDraggingState, MosaicRootProps };

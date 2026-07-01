@@ -33,7 +33,7 @@ type VariantMap = {
 
 type Variant = { [K in keyof VariantMap]: { type: K } & VariantMap[K] }[keyof VariantMap];
 
-type DefaultStoryProps = Partial<{
+type StoryArgs = Partial<{
   kind: keyof VariantMap;
   label: string;
   labelVisuallyHidden: boolean;
@@ -52,7 +52,7 @@ const DefaultStory = ({
   validationValence,
   validationMessage,
   ...props
-}: DefaultStoryProps) => {
+}: StoryArgs) => {
   return (
     <Input.Root {...{ validationValence }}>
       <Input.Label srOnly={labelVisuallyHidden}>{label}</Input.Label>
@@ -63,8 +63,16 @@ const DefaultStory = ({
       {kind === 'time' && <Input.Time {...props} />}
       {kind === 'date' && <Input.Date {...props} />}
       {kind === 'datetime' && <Input.DateTime {...props} />}
-      {kind === 'checkbox' && <Input.Checkbox {...props} />}
-      {kind === 'switch' && <Input.Switch {...props} />}
+      {kind === 'checkbox' && (
+        <Input.Block>
+          <Input.Checkbox {...props} />
+        </Input.Block>
+      )}
+      {kind === 'switch' && (
+        <Input.Block>
+          <Input.Switch {...props} />
+        </Input.Block>
+      )}
 
       <Input.DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
         {validationMessage && <Input.Validation classNames='block'>{validationMessage}</Input.Validation>}
@@ -83,7 +91,7 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<DefaultStoryProps & Variant>;
+type Story = StoryObj<StoryArgs & Variant>;
 
 export const Density: Story = {
   render: () => (

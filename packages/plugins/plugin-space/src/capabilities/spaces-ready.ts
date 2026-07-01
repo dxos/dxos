@@ -7,19 +7,12 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  LayoutOperation,
-  RootCollectionAnnotation,
-  getSpacePath,
-  resolvePersonalSpace,
-  setPersonalSpace,
-} from '@dxos/app-toolkit';
+import { AppAnnotation, AppCapabilities, AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Annotation, Collection, Filter, Obj, Type } from '@dxos/echo';
 import { SPACE_ID_LENGTH, parseId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
+import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
@@ -67,13 +60,13 @@ export default Capability.makeModule(
         yield* Effect.promise(() => personalSpace.waitUntilReady());
 
         if (fromCredential) {
-          setPersonalSpace(personalSpace);
+          AppSpace.setPersonalSpace(personalSpace);
         }
 
         // Check if deck state indicates we should switch to default space.
         const layout = registry.get(layoutAtom);
         if (layout.workspace === 'default') {
-          yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(personalSpace.id) });
+          yield* invoke(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(personalSpace.id) });
         }
 
         const queryResults = yield* Effect.promise(() =>
@@ -102,12 +95,12 @@ export default Capability.makeModule(
 
     // Try to find the personal space now, or subscribe to find it later.
     // Initialization is non-blocking so subscriptions wire immediately.
-    const resolved = resolvePersonalSpace(client);
+    const resolved = AppSpace.resolvePersonalSpace(client);
     if (resolved) {
       startPersonalSpaceInit(resolved.space, resolved);
     } else {
       const personalSpaceSub = client.spaces.subscribe(() => {
-        const resolved = resolvePersonalSpace(client);
+        const resolved = AppSpace.resolvePersonalSpace(client);
         if (resolved) {
           startPersonalSpaceInit(resolved.space, resolved);
         }
@@ -158,7 +151,7 @@ export default Capability.makeModule(
     // Cache space names.
     const spaceNamesSub = client.spaces.subscribe(async (spaces) => {
       // TODO(wittjosiah): Remove. This is a hack to be able to migrate the personal space properties.
-      const personalSpaceForMigration = resolvePersonalSpace(client);
+      const personalSpaceForMigration = AppSpace.resolvePersonalSpace(client);
       if (
         personalSpaceForMigration?.space &&
         personalSpaceForMigration.space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION
@@ -169,11 +162,11 @@ export default Capability.makeModule(
       spaces
         .filter((space) => space.state.get() === SpaceState.SPACE_READY)
         .forEach((space) => {
-          if (Option.isNone(Annotation.get(space.properties, RootCollectionAnnotation))) {
+          if (Option.isNone(Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation))) {
             const legacyRef = (space.properties as any)[Type.getTypename(Collection.Collection)];
             if (legacyRef) {
               Obj.update(space.properties, (properties) => {
-                Annotation.set(properties, RootCollectionAnnotation, legacyRef);
+                Annotation.set(properties, AppAnnotation.RootCollectionAnnotation, legacyRef);
               });
             }
           }

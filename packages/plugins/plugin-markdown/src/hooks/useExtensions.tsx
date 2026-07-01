@@ -5,24 +5,26 @@
 import { type ViewUpdate } from '@codemirror/view';
 import { useMemo } from 'react';
 
-import { fromUrlPath } from '@dxos/app-toolkit';
+import { Paths } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext } from '@dxos/react-ui';
-import { selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
+import { type ViewStateManager, selectionAspect } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
 import {
+  AnchorWidget,
   Cursor,
   type EditorStateStore,
   EditorView,
   type Extension,
   InputModeExtensions,
-  type PreviewOptions,
+  type XmlWidgetProps,
+  type XmlWidgetState,
   createDataExtensions,
   decorateMarkdown,
   documentId,
@@ -30,16 +32,17 @@ import {
   formattingKeymap,
   linkTooltip,
   listener,
-  preview,
   replacer,
   selectionState,
   snippets,
+  xmlTags,
 } from '@dxos/ui-editor';
 import { type EditorViewMode, type RenderCallback } from '@dxos/ui-editor/types';
 import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '#types';
 
+import { PreviewComponent } from '../components/PreviewComponent/PreviewComponent';
 import { setFallbackName } from '../util';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
@@ -53,7 +56,7 @@ export type ExtensionsOptions = {
   editable?: boolean;
   viewState?: ViewStateManager;
   editorStateStore?: EditorStateStore;
-  previewOptions?: PreviewOptions;
+  setWidgets?: (widgets: XmlWidgetState[]) => void;
   platform?: 'mobile' | 'desktop';
   /** Callback when an internal link is clicked. */
   onSelectObject?: (objectId: string) => void;
@@ -68,7 +71,7 @@ export const useExtensions = ({
   viewMode,
   viewState,
   editorStateStore,
-  previewOptions,
+  setWidgets,
   onSelectObject,
 }: ExtensionsOptions): Extension[] => {
   const { platform } = useThemeContext();
@@ -79,7 +82,7 @@ export const useExtensions = ({
   const contentRef = Obj.instanceOf(Markdown.Document, object) ? (object as Markdown.Document).content : undefined;
   // Use useObject to trigger re-render when the reference loads (returns snapshot for reactivity).
   useObject(contentRef);
-  // Get the actual live object target via .target (needed for createDocAccessor).
+  // Get the actual live object target via .target (needed for Doc.createAccessor).
   const target = contentRef?.target ?? (Obj.instanceOf(Text.Text, object) ? object : undefined);
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
@@ -96,7 +99,7 @@ export const useExtensions = ({
         compact,
         viewMode,
         viewState,
-        previewOptions,
+        setWidgets,
         platform,
         onSelectObject,
       }),
@@ -106,7 +109,7 @@ export const useExtensions = ({
       compact,
       viewMode,
       viewState,
-      previewOptions,
+      setWidgets,
       settings,
       settings?.debug,
       settings?.editorInputMode,
@@ -125,7 +128,7 @@ export const useExtensions = ({
         target &&
           createDataExtensions({
             id,
-            text: createDocAccessor(target, ['content']),
+            text: Doc.createAccessor(target, ['content']),
             messenger: space,
             identity,
           }),
@@ -156,7 +159,7 @@ const createBaseExtensions = ({
   compact,
   viewMode,
   viewState,
-  previewOptions,
+  setWidgets,
   platform,
 }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
@@ -177,9 +180,26 @@ const createBaseExtensions = ({
           numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
           // TODO(wittjosiah): For internal links render the label of the object.
           renderLinkButton: onSelectObject && createRenderLink(onSelectObject),
+          // xmlTags() handles dxn:/echo: links via url-scheme widgets; skip here to avoid double-processing.
+          skip: ({ url }) => url.startsWith('dxn:') || url.startsWith('echo:'),
         }),
         linkTooltip(renderLinkTooltip),
-        preview(previewOptions),
+        xmlTags({
+          registry: {
+            'dxn-preview': {
+              block: true,
+              urlSchemes: ['dxn:', 'echo:'],
+              Component: PreviewComponent,
+            },
+            'link-preview': {
+              block: false,
+              urlSchemes: ['dxn:', 'echo:'],
+              factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
+                label && dxn ? new AnchorWidget(label, dxn) : null,
+            },
+          },
+          setWidgets,
+        }),
         replacer(),
       ],
     );
@@ -228,7 +248,7 @@ const createRenderLink =
   (el, { url }) => {
     // TODO(burdon): Formalize/document internal link format.
     const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
-    const qualifiedId = isInternal ? fromUrlPath(new URL(url, window.location.origin).pathname) : undefined;
+    const qualifiedId = isInternal ? Paths.fromUrlPath(new URL(url, window.location.origin).pathname) : undefined;
     const icon = Domino.of('span')
       .classNames('dx-link ms-1 inline-block align-[-0.125em]')
       .append(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));

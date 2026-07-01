@@ -6,25 +6,33 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { AccessToken } from '@dxos/types';
 
-export const BLUEPRINT_KEY = 'org.dxos.blueprint.sandbox';
+export const SKILL_KEY = 'org.dxos.skill.sandbox';
 
 /**
  * ECHO object representing a persistent sandbox environment.
  * The object id is used as the sandbox id in the sandbox service.
  */
-export const Sandbox = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  baseImage: Schema.optional(Schema.String),
-  createdAt: Schema.optional(Schema.String),
-  expiresAt: Schema.optional(Schema.String),
-}).pipe(
-  Annotation.IconAnnotation.set({ icon: 'ph--terminal--regular', hue: 'green' }),
-  Type.makeObject(DXN.make('org.dxos.type.sandbox', '0.1.0')),
-);
-
-export type Sandbox = Type.InstanceType<typeof Sandbox>;
+export class Sandbox extends Type.makeObject<Sandbox>(DXN.make('org.dxos.type.sandbox', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    baseImage: Schema.optional(Schema.String),
+    createdAt: Schema.optional(Schema.String),
+    expiresAt: Schema.optional(Schema.String),
+    credentials: Schema.optional(
+      Schema.Array(
+        Schema.Struct({
+          env: Schema.String,
+          token: Ref.Ref(AccessToken.AccessToken),
+        }),
+      ),
+    ),
+  })
+    .pipe(Annotation.IconAnnotation.set({ icon: 'ph--terminal--regular', hue: 'green' }))
+    .pipe(Annotation.HiddenAnnotation.set(true)),
+) {}
 
 /**
  * Constructs a `Sandbox` ECHO object from the given props.

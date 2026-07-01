@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { Keyboard } from '@dxos/keyboard';
+import { Keyboard, nestKeyboardContext } from '@dxos/keyboard';
 
 import { useAttention } from './components';
 
@@ -74,9 +74,10 @@ export const useArticleKeyboardNavigation: {
       return;
     }
 
-    const context = Keyboard.singleton.getContext(articleId);
+    const contextPath = nestKeyboardContext(articleId);
+    const context = Keyboard.singleton.getContext(contextPath);
     const prevContext = Keyboard.singleton.getCurrentContext();
-    Keyboard.singleton.setCurrentContext(articleId);
+    Keyboard.singleton.setCurrentContext(contextPath);
 
     const nextBinding = {
       shortcut: 'j',
@@ -108,7 +109,7 @@ export const useArticleKeyboardNavigation: {
       context.unbind('j');
       context.unbind('k');
       // Restore the prior context if we were the ones who set it.
-      if (Keyboard.singleton.getCurrentContext() === articleId) {
+      if (Keyboard.singleton.getCurrentContext() === contextPath) {
         Keyboard.singleton.setCurrentContext(prevContext);
       }
     };

@@ -5,7 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { BlueprintDefinition, OperationHandler } from '#capabilities';
+import { OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { Chess } from '#types';
 
@@ -15,7 +15,7 @@ import { Chess } from '#types';
  */
 export const ChessPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Chess.State] }),
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.make,
 );

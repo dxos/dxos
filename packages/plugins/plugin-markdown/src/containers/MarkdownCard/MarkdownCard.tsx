@@ -20,7 +20,7 @@ import { snippet as snippetExtension } from './snippet';
 export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 
 export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   // NOTE: Newline is added so that Fade does not obscure the last line.
   const snippet = useMemo(() => getSnippet(subject) + '\n', [subject]);
   const extensions = useMemo(() => [snippetExtension({ height: 300, scale: 0.8 })], []);
@@ -29,7 +29,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   return (
     <Card.Body>
       {snippet && (
-        <Card.Section className='relative'>
+        <Card.Section className='aspect-square relative'>
           <Card.Row fullWidth>
             <MarkdownEditorProvider id={subject.id} viewMode='readonly' extensions={extensions}>
               {(editorRootProps) => (

@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
-import { useQuery, useType as defaultUseType } from '@dxos/echo-react';
+import { useType as defaultUseType, useQuery } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
 import { DXN, EID, URI } from '@dxos/keys';
@@ -19,7 +19,8 @@ import { type CreateOptions, type FormFieldRendererProps, type RefFieldDataProps
 
 import { omitHiddenFormFields, omitId } from '../../../../../util';
 import { ObjectPicker } from '../../../../ObjectPicker';
-import { FormFieldLabel } from '../../FormFieldWrapper';
+import { FormFieldLabel } from '../../FormRow';
+import { presentationFor } from '../../presentation';
 
 // TODO(burdon): Factor out.
 const isRefSnapshot = (val: any): val is { '/': string } => {
@@ -40,7 +41,14 @@ export const findRefOption = (value: unknown, options: RefOption[]): RefOption |
   if (!isRef && !isRefSnapshot(value)) {
     return undefined;
   }
-  const valueEid = EID.tryParse(isRef ? value.uri : value['/']);
+  const valueUri = isRef ? value.uri : value['/'];
+  // Keyed/registry entities (skills, operations) are referenced by a named DXN rather than an
+  // entity-id, so they carry no parseable EID; match those by direct URI equality against the option id.
+  const directMatch = options.find((option) => option.id === valueUri);
+  if (directMatch) {
+    return directMatch;
+  }
+  const valueEid = EID.tryParse(valueUri);
   if (!valueEid) {
     return undefined;
   }
@@ -86,7 +94,7 @@ const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typenam
       : typename === ANY_OBJECT_TYPENAME
         ? // Untyped refs show space objects only; the registry is too broad for "any".
           Query.select(Filter.everything())
-        : // Include registry scope so keyed entities (blueprints, operations) appear as options.
+        : // Include registry scope so keyed entities (skills, operations) appear as options.
           Query.select(Filter.type(DXN.make(typename))).from(Scope.space(), Scope.registry()),
   );
 
@@ -99,7 +107,8 @@ export const RefField = (props: RefFieldProps) => {
     label,
     jsonPath,
     placeholder,
-    layout,
+    presentation,
+    required,
     getStatus,
     getValue,
     createOptionLabel,
@@ -111,10 +120,12 @@ export const RefField = (props: RefFieldProps) => {
     useResults = defaultUseResults,
     getOptions = defaultGetOptions,
     onCreate,
+    resolveCreateEntry,
     onValueChange,
   } = props;
   const { t } = useTranslation(translationKey);
   const { status, error } = getStatus();
+  const resolved = presentationFor(presentation);
 
   const typename = useMemo(
     () => (type ? SchemaEx.findAnnotation<ReferenceAnnotationValue>(type, ReferenceAnnotationId)?.typename : undefined),
@@ -145,24 +156,31 @@ export const RefField = (props: RefFieldProps) => {
   const selectedIds = useMemo(() => (item ? [item.id] : []), [item]);
   const createSchema = useType(db, typename && typename !== ANY_OBJECT_TYPENAME ? DXN.make(typename) : undefined);
 
+  // Per-typename override supplied by the caller (e.g. SpaceCapabilities.CreateObjectEntry).
+  const createEntry = typename ? resolveCreateEntry?.(typename) : undefined;
+
   // Lift the popover open state so we can dismiss it after a successful create.
   const [open, setOpen] = useState(false);
 
   const handleCreate = useCallback(
     async (values: any) => {
-      if (!createSchema || !onCreate) {
-        return;
-      }
-      const newObject = await onCreate(createSchema, values);
-      if (newObject) {
-        // Wire the newly-created object into this slot's form value. ArrayField
-        // owns the array; this RefField represents a single slot, so writing a
-        // Ref via `onValueChange` populates that slot.
-        onValueChange(type, Ref.make(newObject));
+      // Wire the newly-created object into this slot's form value. ArrayField
+      // owns the array; this RefField represents a single slot, so writing a
+      // Ref via `onValueChange` populates that slot.
+      if (createEntry?.createObject && db) {
+        const newObject = await createEntry.createObject(values, db);
+        if (newObject) {
+          onValueChange(type, Ref.make(newObject));
+        }
+      } else if (createSchema && onCreate) {
+        const newObject = await onCreate(createSchema, values);
+        if (newObject) {
+          onValueChange(type, Ref.make(newObject));
+        }
       }
       setOpen(false);
     },
-    [createSchema, onCreate, type, onValueChange],
+    [createEntry, db, createSchema, onCreate, type, onValueChange],
   );
 
   const handleUpdate = useCallback(
@@ -185,13 +203,15 @@ export const RefField = (props: RefFieldProps) => {
     [item, handleUpdate],
   );
 
-  if (!typename || ((readonly || layout === 'static') && !item)) {
+  if (!typename || ((readonly || resolved.isStatic) && !item)) {
     return null;
   }
 
   return (
     <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
+      {resolved.showLabel && (
+        <FormFieldLabel error={error} readonly={readonly} required={required} label={label} path={jsonPath} />
+      )}
       <div>
         {readonly ? (
           !item ? (
@@ -226,22 +246,29 @@ export const RefField = (props: RefFieldProps) => {
                 classNames='dx-card-popover-width'
                 options={options}
                 selectedIds={selectedIds}
-                // Strip hidden (`FormInputAnnotation.set(false)`) fields so the
-                // form's validator doesn't reject required-but-hidden fields
-                // such as backing-object refs supplied by a `FactoryAnnotation`.
-                createSchema={createSchema && omitHiddenFormFields(omitId(Type.getSchema(createSchema)))}
+                // Prefer the plugin-registered inputSchema; fall back to stripping hidden fields
+                // (`FormInputAnnotation.set(false)`) from the raw ECHO type schema so the form's
+                // validator doesn't reject required-but-hidden fields such as backing-object refs
+                // supplied by a `FactoryAnnotation`.
+                createSchema={
+                  createEntry?.inputSchema ??
+                  (createSchema && omitHiddenFormFields(omitId(Type.getSchema(createSchema))))
+                }
                 createOptionLabel={createOptionLabel}
                 createOptionIcon={createOptionIcon}
                 createInitialValuePath={createInitialValuePath}
                 createFieldMap={createFieldMap}
-                onCreate={handleCreate}
+                // Offer inline create when the caller wired a handler OR a plugin-registered
+                // createObject override is available. A resolvable `createSchema` alone is not
+                // enough (e.g. operation refs, whose objects can't be created ad hoc).
+                onCreate={onCreate || createEntry?.createObject ? handleCreate : undefined}
                 onSelect={handleSelect}
               />
             </ObjectPicker.Portal>
           </ObjectPicker.Root>
         )}
       </div>
-      {layout === 'full' && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
+      {resolved.showError && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
 };

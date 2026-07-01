@@ -84,9 +84,10 @@ jobs:
         #        └─ No → Skip bump
         id: bump-version
         run: |
-          # Channel from the environment input: omit for labs (default channel), else --channel <env>.
+          # Channel from the environment input: omit for production (the default/primary CN channel),
+          # else --channel <env>. `production` is the primary desktop release channel.
           ENVIRONMENT="${{ inputs.environment }}"
-          if [ "$ENVIRONMENT" = "labs" ]; then
+          if [ "$ENVIRONMENT" = "production" ]; then
             CHANNEL_ARG=""
           else
             CHANNEL_ARG="--channel $ENVIRONMENT"
@@ -132,6 +133,7 @@ jobs:
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "Final version to be used: $NEW_VERSION"
         env:
+          BRANCH: ${{ steps.extract_branch.outputs.branch }}
           CN_API_KEY: ${{ secrets.CN_API_KEY }}
 
       - name: Update tauri.conf.json

@@ -6,15 +6,14 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration';
 
 import { GoogleCalendar } from '../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
 import { GoogleCredentials } from '../services/google-credentials';
-import { Calendar, InboxOperation, DraftEvent } from '../types';
-import { findIntegrationForRemote } from './google/find-integration';
+import { Calendar, DraftEvent, InboxOperation } from '../types';
+import { findBindingForTarget } from '../util';
 
 export default InboxOperation.DeleteEvent.pipe(
   Operation.withHandler(
@@ -37,12 +36,12 @@ export default InboxOperation.DeleteEvent.pipe(
       const googleEventId = Obj.getMeta(event).keys?.find((key) => key.source === GOOGLE_INTEGRATION_SOURCE)?.id;
       const googleCalendarId = Obj.getMeta(calendar).keys?.find((key) => key.source === GOOGLE_INTEGRATION_SOURCE)?.id;
       if (googleEventId && googleCalendarId) {
-        const integrations = yield* Effect.promise(() => db.query(Filter.type(Integration.Integration)).run());
-        const integration = findIntegrationForRemote(integrations, calendar.id, googleCalendarId);
-        if (integration) {
+        const binding = yield* findBindingForTarget(calendar).pipe(Effect.provide(Database.layer(db)));
+        if (binding) {
+          const connectionRef = Ref.make(Relation.getSource(binding));
           yield* GoogleCalendar.deleteEvent(googleCalendarId, googleEventId).pipe(
             Effect.provide(FetchHttpClient.layer),
-            Effect.provide(GoogleCredentials.fromIntegration(Ref.make(integration))),
+            Effect.provide(GoogleCredentials.fromConnection(connectionRef)),
             Effect.catchAll((error) => {
               log.catch(error);
               return Effect.void;

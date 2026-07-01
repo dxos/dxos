@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ComponentType, lazy } from 'react';
-
-export const DeckSettings: ComponentType<any> = lazy(() => import('./DeckSettings'));
-
+export { Companion, type CompanionProps } from './Companion';
 export { Matrix } from './Matrix';
+export { Pane, type PaneTab } from './Pane';
+export { Plank, type PlankProps } from './Plank';

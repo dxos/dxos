@@ -3,28 +3,26 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
-import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine, Trigger } from '@dxos/compute';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Instructions, Skill, Trigger } from '@dxos/compute';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Automation, type AutomationCapabilities } from '@dxos/plugin-automation';
 import { Mailbox } from '@dxos/plugin-inbox';
+import { Routine, type RoutineCapabilities } from '@dxos/plugin-routine/types';
 import { trim } from '@dxos/util';
 
 /**
- * Blueprint keys composed into the CRM routine. The CRM blueprint provides CRM-specific tools; the others
+ * Skill keys composed into the CRM instructions. The CRM skill provides CRM-specific tools; the others
  * supply the database, web-search, and document utilities the agent relies on.
  */
-const BLUEPRINT_KEYS = [
-  'org.dxos.blueprint.crm',
-  'org.dxos.blueprint.webSearch',
-  'org.dxos.blueprint.database',
-  'org.dxos.blueprint.markdown',
+const SKILL_KEYS = [
+  'org.dxos.skill.crm',
+  'org.dxos.skill.webSearch',
+  'org.dxos.skill.database',
+  'org.dxos.skill.markdown',
 ] as const;
 
-/** Default instructions seeded into the routine; the user edits these by opening the routine. */
+/** Default instructions seeded into the instructions; the user edits these by opening the instructions. */
 const DEFAULT_INSTRUCTIONS = trim`
   A new email message is provided in the <input> block below.
 
@@ -35,8 +33,8 @@ const DEFAULT_INSTRUCTIONS = trim`
 `;
 
 /** CRM automation template. Only applies to a Mailbox subject — the feed trigger needs `mailbox.feed`. */
-export const crm: AutomationCapabilities.Template = {
-  id: 'org.dxos.automation.crm',
+export const crm: RoutineCapabilities.Template = {
+  id: 'org.dxos.routine.crm',
   label: 'CRM',
   icon: 'ph--address-book--regular',
   appliesTo: (subject) => subject != null && Obj.instanceOf(Mailbox.Mailbox, subject),
@@ -47,52 +45,26 @@ export const crm: AutomationCapabilities.Template = {
         'CRM template requires a Mailbox subject.',
       );
       const mailbox = subject;
-      const routineName = `CRM — ${mailbox.name ?? 'Mailbox'}`;
+      const instructionsName = `CRM — ${mailbox.name ?? 'Mailbox'}`;
 
-      const blueprintRefs = BLUEPRINT_KEYS.map((key) => Ref.fromURI(Blueprint.registryURI(key)));
-      const routine = yield* Database.add(
-        Routine.make({
-          name: routineName,
-          instructions: DEFAULT_INSTRUCTIONS,
-          // The feed trigger forwards the raw event item (the new Message) as AgentPrompt's top-level input
-          // (`input: '{{event.item}}'`), so the routine input is the message itself, not a `{ message }` wrapper.
-          input: Schema.Unknown,
-          output: Schema.Void,
-          blueprints: blueprintRefs,
-          context: [],
-        }),
-      );
+      const skillRefs = SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key)));
 
-      // The trigger's `function` must reference an in-space PersistentOperation; reuse the space's
-      // AgentPrompt (key: org.dxos.function.prompt) or persist it on first use.
-      const existingFns = yield* Database.query(
-        Filter.and(Filter.type(Operation.PersistentOperation), Filter.key('org.dxos.function.prompt')),
-      ).run;
-      const agentPromptFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(AgentPrompt)));
-
+      // The feed spec requires the live feed object; Database.load is a read-only DB operation.
       const feed = yield* Database.load(mailbox.feed);
-      const trigger = yield* Database.add(
-        Obj.make(Trigger.Trigger, {
+      return Routine.make({
+        name: name ?? instructionsName,
+        instructions: Instructions.make({
+          name: instructionsName,
+          text: DEFAULT_INSTRUCTIONS,
+          skills: skillRefs,
+        }),
+        trigger: Trigger.make({
           enabled: false,
-          function: Ref.make(agentPromptFn),
           spec: Trigger.specFeed(feed),
-          input: {
-            prompt: Ref.make(routine),
-            input: '{{event.item}}',
-          },
+          // The raw trigger event item is passed as the agent's input.
+          input: { input: '{{event.item}}' },
           concurrency: 1,
         }),
-      );
-
-      const automation = Automation.make({
-        name: name ?? routineName,
-        runnable: Ref.make(agentPromptFn),
-        triggers: [Ref.make(trigger)],
       });
-      // The trigger is owned by the automation (reachable only via it) so it cascade-deletes with it; the
-      // routine stays independent, since it is edited separately and may be reused.
-      Obj.setParent(trigger, automation);
-
-      return automation;
     }),
 };

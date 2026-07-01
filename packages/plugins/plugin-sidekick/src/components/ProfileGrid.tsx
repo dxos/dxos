@@ -5,9 +5,10 @@
 import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
+
+import { Section } from './Section';
 
 export type ProfileCardData = {
   id: string;
@@ -22,10 +23,10 @@ export type ProfileGridProps = {
 };
 
 export const ProfileGrid = ({ profiles, onSelect }: ProfileGridProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
-    <Form.Section label={t('profiles.title')}>
+    <Section title={t('profiles.title')}>
       {profiles.length === 0 ? (
         <p className='text-sm text-description italic'>{t('no-profiles.label')}</p>
       ) : (
@@ -46,6 +47,6 @@ export const ProfileGrid = ({ profiles, onSelect }: ProfileGridProps) => {
           ))}
         </div>
       )}
-    </Form.Section>
+    </Section>
   );
 };

@@ -8,7 +8,7 @@ import { type Format, type Platform, type Plugin, build, formatMessages } from '
 import glsl from 'esbuild-plugin-glsl';
 import RawPlugin from 'esbuild-plugin-raw';
 import esbuildPluginYaml from 'esbuild-plugin-yaml';
-import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
@@ -57,6 +57,10 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
     throw new Error('Could not find package.json.');
   }
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
+
+  const packageDir = dirname(packagePath);
+
+  const entryPoints: (string | { in: string; out: string })[] = options.entryPoints;
 
   let tsConfig: any;
   try {
@@ -135,7 +139,7 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
 
       const start = Date.now();
       const result = await build({
-        entryPoints: options.entryPoints,
+        entryPoints,
         outdir,
         outExtension: { '.js': extension },
         format: 'esm', // Output is later transpiled to CJS via plugin.

@@ -5,11 +5,12 @@
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 
+import { Process } from '@dxos/compute';
 import { storageServiceLayer } from '@dxos/compute-runtime';
+import { ContentBlock } from '@dxos/types';
 
-import { AlarmManager, computeAlarmDelay, makeAlarmToolkit, resolveWakeAt } from './agent-process';
+import { AlarmManager, computeAlarmDelay, isAgentWorkPending } from './agent-process';
 
 const NOW = new Date('2026-06-04T12:00:00.000Z').getTime();
 
@@ -29,41 +30,6 @@ const makeManager = Effect.fnUntraced(function* (now: number = NOW) {
     now: () => now,
   });
   return { alarmManager, alarmCalls, storageService };
-});
-
-describe('resolveWakeAt', () => {
-  it('resolves an absolute "at" timestamp', ({ expect }) => {
-    const at = '2026-06-04T18:00:00.000Z';
-    const result = resolveWakeAt({ at }, NOW);
-    expect(Either.isRight(result)).toBe(true);
-    expect(Either.getOrThrow(result)).toBe(new Date(at).getTime());
-  });
-
-  it('resolves a relative "in" duration', ({ expect }) => {
-    const result = resolveWakeAt({ in: '5 minutes' }, NOW);
-    expect(Either.isRight(result)).toBe(true);
-    expect(Either.getOrThrow(result)).toBe(NOW + 5 * 60 * 1000);
-  });
-
-  it('rejects an invalid "at" timestamp', ({ expect }) => {
-    const result = resolveWakeAt({ at: 'not-a-date' }, NOW);
-    expect(Either.isLeft(result)).toBe(true);
-  });
-
-  it('rejects an invalid "in" duration', ({ expect }) => {
-    const result = resolveWakeAt({ in: 'whenever' }, NOW);
-    expect(Either.isLeft(result)).toBe(true);
-  });
-
-  it('rejects specifying both "in" and "at"', ({ expect }) => {
-    const result = resolveWakeAt({ in: '5 minutes', at: '2026-06-04T18:00:00.000Z' }, NOW);
-    expect(Either.isLeft(result)).toBe(true);
-  });
-
-  it('rejects specifying neither "in" nor "at"', ({ expect }) => {
-    const result = resolveWakeAt({}, NOW);
-    expect(Either.isLeft(result)).toBe(true);
-  });
 });
 
 describe('computeAlarmDelay', () => {
@@ -136,8 +102,8 @@ describe('AlarmManager', () => {
       const { alarmManager, storageService } = yield* makeManager();
       yield* alarmManager.setWakeAt(NOW - 1_000);
 
-      const firedAt = yield* alarmManager.takeFiredAlarm();
-      expect(firedAt).toBe(NOW - 1_000);
+      const fired = yield* alarmManager.takeFiredAlarm();
+      expect(fired).toEqual({ firedAt: NOW - 1_000, message: null });
       expect(alarmManager.wakeAt).toBe(null);
 
       const recovered = new AlarmManager({ storageService, setAlarm: () => {}, now: () => NOW });
@@ -152,63 +118,89 @@ describe('AlarmManager', () => {
       const { alarmManager } = yield* makeManager();
       yield* alarmManager.setWakeAt(NOW + 60_000);
 
-      const firedAt = yield* alarmManager.takeFiredAlarm();
-      expect(firedAt).toBe(null);
+      const fired = yield* alarmManager.takeFiredAlarm();
+      expect(fired).toBe(null);
       expect(alarmManager.wakeAt).toBe(NOW + 60_000);
+    }),
+  );
+
+  it.effect(
+    'persists and restores the reminder message alongside the self-wake',
+    Effect.fnUntraced(function* ({ expect }) {
+      const { alarmManager, storageService } = yield* makeManager();
+      yield* alarmManager.setWakeAt(NOW - 1_000, 'check the build');
+      expect(alarmManager.message).toBe('check the build');
+
+      // A new manager backed by the same storage recovers both the timestamp and the message.
+      const recovered = new AlarmManager({ storageService, setAlarm: () => {}, now: () => NOW });
+      yield* recovered.load();
+      expect(recovered.wakeAt).toBe(NOW - 1_000);
+      expect(recovered.message).toBe('check the build');
+
+      const fired = yield* recovered.takeFiredAlarm();
+      expect(fired).toEqual({ firedAt: NOW - 1_000, message: 'check the build' });
+      expect(recovered.message).toBe(null);
     }),
   );
 });
 
-describe('AlarmToolkit handlers', () => {
-  it.effect(
-    'get-current-date returns the current time',
-    Effect.fnUntraced(function* ({ expect }) {
-      const { alarmManager } = yield* makeManager();
-      const toolkit = makeAlarmToolkit(alarmManager);
-      const handler = yield* toolkit.handlers;
+// The completion decision (`maybeComplete` → `ctx.succeed()`) is exercised at two levels: the
+// `isAgentWorkPending` suite below covers the predicate the process consults (queue / alarm /
+// delegations / pending tool results), and `AgentService.test.ts` covers the process reaching a
+// terminal state and respawning for a follow-up turn end-to-end.
 
-      const { result } = yield* handler.handle('get-current-date', {} as never);
-      expect(result).toBe(new Date(NOW).toISOString());
-    }),
-  );
+describe('isAgentWorkPending', () => {
+  const makeSnapshot = (overrides: Partial<Parameters<typeof isAgentWorkPending>[0]> = {}) => {
+    const storageService = Effect.runSync(makeStorage);
+    const alarmManager = new AlarmManager({ storageService, setAlarm: () => {} });
+    return {
+      inputQueue: [],
+      alarmManager,
+      delegations: [],
+      toolCallManager: {
+        hasPendingToolResults: () => false,
+      },
+      ...overrides,
+    } satisfies Parameters<typeof isAgentWorkPending>[0];
+  };
 
-  it.effect(
-    'set-alarm with a relative duration records the self-wake',
-    Effect.fnUntraced(function* ({ expect }) {
-      const { alarmManager } = yield* makeManager();
-      const toolkit = makeAlarmToolkit(alarmManager);
-      const handler = yield* toolkit.handlers;
+  it('is idle when nothing is pending', ({ expect }) => {
+    expect(isAgentWorkPending(makeSnapshot())).toBe(false);
+  });
 
-      const { result } = yield* handler.handle('set-alarm', { in: '5 minutes' } as never);
-      const expectedWakeAt = NOW + 5 * 60 * 1000;
-      expect(alarmManager.wakeAt).toBe(expectedWakeAt);
-      expect(result).toContain(new Date(expectedWakeAt).toISOString());
-    }),
-  );
+  it('is pending when the input queue has work', ({ expect }) => {
+    expect(
+      isAgentWorkPending(
+        makeSnapshot({
+          inputQueue: [{ _tag: 'prompt', content: [ContentBlock.Text.make({ text: 'hello' })] }],
+        }),
+      ),
+    ).toBe(true);
+  });
 
-  it.effect(
-    'set-alarm with an absolute time records the self-wake',
-    Effect.fnUntraced(function* ({ expect }) {
-      const { alarmManager } = yield* makeManager();
-      const toolkit = makeAlarmToolkit(alarmManager);
-      const handler = yield* toolkit.handlers;
+  it('is pending when a self-wake alarm is scheduled', ({ expect }) => {
+    const snapshot = makeSnapshot();
+    Effect.runSync(snapshot.alarmManager.setWakeAt(NOW + 60_000));
+    expect(isAgentWorkPending(snapshot)).toBe(true);
+  });
 
-      const at = '2026-06-04T18:00:00.000Z';
-      yield* handler.handle('set-alarm', { at } as never);
-      expect(alarmManager.wakeAt).toBe(new Date(at).getTime());
-    }),
-  );
+  it('is pending when subprocess delegations are in flight', ({ expect }) => {
+    expect(
+      isAgentWorkPending(
+        makeSnapshot({
+          delegations: [{ pid: Process.ID.make('child-1'), id: 'task-1' }],
+        }),
+      ),
+    ).toBe(true);
+  });
 
-  it.effect(
-    'set-alarm with invalid input reports an error without scheduling',
-    Effect.fnUntraced(function* ({ expect }) {
-      const { alarmManager } = yield* makeManager();
-      const toolkit = makeAlarmToolkit(alarmManager);
-      const handler = yield* toolkit.handlers;
-
-      const { result } = yield* handler.handle('set-alarm', { in: 'whenever' } as never);
-      expect(result).toContain('Invalid');
-      expect(alarmManager.wakeAt).toBe(null);
-    }),
-  );
+  it('is pending when tool results have not been delivered', ({ expect }) => {
+    expect(
+      isAgentWorkPending(
+        makeSnapshot({
+          toolCallManager: { hasPendingToolResults: () => true },
+        }),
+      ),
+    ).toBe(true);
+  });
 });

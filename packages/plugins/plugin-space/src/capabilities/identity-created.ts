@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { PERSONAL_SPACE_TAG, RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation, AppSpace } from '@dxos/app-toolkit';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
-import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
+import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -17,14 +17,14 @@ export default Capability.makeModule(
     const client = yield* Capability.get(ClientCapabilities.Client);
 
     const personalSpace = yield* Effect.tryPromise(() =>
-      client.spaces.create({}, { tags: [PERSONAL_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
+      client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
     );
     yield* Effect.tryPromise(() => personalSpace.waitUntilReady());
 
     // Create root collection structure.
     yield* Effect.tryPromise(() => personalSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
     Obj.update(personalSpace.properties, (properties) => {
-      Annotation.set(properties, RootCollectionAnnotation, Ref.make(Collection.make()));
+      Annotation.set(properties, AppAnnotation.RootCollectionAnnotation, Ref.make(Collection.make()));
       if (Migrations.targetVersion) {
         Annotation.set(properties, MigrationVersionAnnotation, Migrations.targetVersion);
       }

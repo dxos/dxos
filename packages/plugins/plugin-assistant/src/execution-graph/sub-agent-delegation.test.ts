@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { Trace } from '@dxos/compute';
 import { renderTimelineAscii } from '@dxos/react-ui-components';
 
-import { buildExecutionGraph } from './execution-graph';
+import { buildExecutionGraph, collectProcessActivityLines, deriveInFlightActivityLine } from './execution-graph';
 import subAgentFixture from './testing/sub-agent-delegation.json';
 
 // Real trace captured from a live supervisor → sub-agent delegation via `dxosDumpTrace()`.
@@ -24,27 +24,42 @@ describe('sub-agent delegation fixture', () => {
     expect(`\n${renderTimelineAscii(commits, branches)}\n`).toMatchInlineSnapshot(`
       "
       ●        [atom] Agent processing request...
-      ├──●     [info] Get Agent Context - Success
-      │  ●     [user] create a sub-agent that creates a haiku in a new document
-      │  ●     [info] Get Agent Context - Success
-      │  ●     [check-square-offset] Update tasks - Success
-      │  ●     [info] Get Agent Context - Success
-      │  ●     [share-network] Delegate task - Success
-      │  ●     [info] Get Agent Context - Success
-      ◆──╯     [atom] Agent completed request
+      ├──●     [info] Get Agent Context
+      │  ●     [info] Get Agent Context
+      │  ●     [check-square-offset] Update tasks
+      │  ●     [info] Get Agent Context
+      │  ●     [share-network] Delegate task
+      │  ●     [info] Get Agent Context
       │  ├──●  [brain] Run Routine
-      │     ●  [info] Get Agent Context - Success
-      │     ●  [user] Complete the following task and report the result concisely.
-      │     ●  [info] Get Agent Context - Success
-      ●     │  [pencil] Update Chat Name - Success
-      │     ●  [file-text] Create - Success
-      │     ●  [info] Get Agent Context - Success
-      │     ●  [plus] Add artifact - Error
-      │     ●  [info] Get Agent Context - Success
-      │     ●  [wrench] completeJob - Success
-      │     ●  [info] Get Agent Context - Success
-      ◆─────╯  [brain] Run Routine - Success
+      │  │  ●  [info] Get Agent Context
+      │  │  ●  [info] Get Agent Context
+      │  │  ●  [file-text] Create
+      │  │  ●  [info] Get Agent Context
+      │  │  ●  [plus] Add artifact - Error
+      │  │  ●  [info] Get Agent Context
+      │  │  ●  [info] Get Agent Context
+      │  │  ●  [user] Complete the following task and report the result concisely.
+      │  │  ●  [wrench] completeJob
+      ◆──┼──╯  [brain] Run Routine
+      │  ●     [user] create a sub-agent that creates a haiku in a new document
+      ◆──╯     [atom] Agent completed request
+      ●        [pencil] Update Chat Name
       "
     `);
+  });
+
+  test('collects sub-agent activity lines for a delegated process pid', ({ expect }) => {
+    const subAgentPid = 'cf8f7243-5b1d-4902-b158-70d9107d5f43';
+    const lines = collectProcessActivityLines(messages, subAgentPid);
+    expect(lines.length).toBeGreaterThan(0);
+    expect(lines).toContain('Run Routine');
+    expect(lines[lines.length - 1]).toBe('Run Routine');
+  });
+
+  test('derives in-flight operation before completion', ({ expect }) => {
+    const subAgentPid = 'cf8f7243-5b1d-4902-b158-70d9107d5f43';
+    const partial = messages.slice(0, Math.floor(messages.length / 2));
+    const line = deriveInFlightActivityLine(partial, subAgentPid);
+    expect(line).toBeDefined();
   });
 });

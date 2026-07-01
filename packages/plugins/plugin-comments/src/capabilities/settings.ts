@@ -9,12 +9,12 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-import { Settings, CommentCapabilities } from '#types';
+import { CommentCapabilities, Settings } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = createKvsStore({
-      key: meta.id,
+      key: meta.profile.key,
       schema: Settings.Settings,
       defaultValue: () => ({}),
     });
@@ -24,7 +24,7 @@ export default Capability.makeModule(() =>
       Capability.contributes(CommentCapabilities.Settings, settingsAtom),
       // Contribute to common settings for UI discovery.
       Capability.contributes(AppCapabilities.Settings, {
-        prefix: meta.id,
+        prefix: meta.profile.key,
         schema: Settings.Settings,
         atom: settingsAtom,
       }),

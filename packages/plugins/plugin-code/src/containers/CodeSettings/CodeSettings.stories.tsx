@@ -25,7 +25,7 @@ const meta = {
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [AccessToken.AccessToken] }),
     withTheme(),
-    withLayout({ layout: 'column', classNames: 'w-[40rem]' }),
+    withLayout({ layout: 'fullscreen' }),
   ],
   parameters: {
     layout: 'fullscreen',

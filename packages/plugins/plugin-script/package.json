@@ -13,10 +13,10 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#blueprints": {
-      "source": "./src/blueprints/index.ts",
-      "types": "./dist/types/src/blueprints/index.d.ts",
-      "default": "./dist/lib/neutral/blueprints/index.mjs"
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/neutral/skills/index.mjs"
     },
     "#capabilities": {
       "source": {
@@ -82,10 +82,10 @@
       "default": "./dist/lib/neutral/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./blueprints": {
-      "source": "./src/blueprints/index.ts",
-      "types": "./dist/types/src/blueprints/index.d.ts",
-      "default": "./dist/lib/neutral/blueprints/index.mjs"
+    "./skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/neutral/skills/index.mjs"
     },
     "./containers": {
       "source": "./src/containers/index.ts",
@@ -116,6 +116,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src",
     "PLUGIN.mdl"
   ],
@@ -140,6 +141,7 @@
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-query": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions": "workspace:*",
@@ -149,12 +151,12 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
-    "@dxos/plugin-automation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-game": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -163,7 +165,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
@@ -188,8 +190,8 @@
   },
   "devDependencies": {
     "@dxos/config": "workspace:*",
-    "@dxos/plugin-automation": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
+    "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",

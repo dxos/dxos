@@ -7,11 +7,13 @@ import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Feed, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
 import {
-  batchEvents,
   type AnyProperties,
-  getStrongDependencies,
   type RefResolverRequest,
   type RefSource,
+  TypeSchema,
+  batchEvents,
+  getStrongDependencies,
+  isInstanceOf,
   setRefResolver,
 } from '@dxos/echo/internal';
 import { DXN, EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
@@ -20,7 +22,7 @@ import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
-import { type LoadBackend, type LoadResult, LoadOpTable } from './core-db/load-op';
+import { type LoadBackend, LoadOpTable, type LoadResult } from './core-db/load-op';
 import { RequestImpl } from './core-db/ref-resolver-request';
 import { type DatabaseImpl } from './proxy-db';
 import {
@@ -32,7 +34,6 @@ import {
   RegistryQuerySource,
   SpaceQuerySource,
 } from './query';
-import type { Queue, QueueFactory } from './queue';
 import { makeRegistry } from './registry';
 
 const TRACE_REF_RESOLUTION = false;
@@ -42,7 +43,6 @@ const TRACE_REF_RESOLUTION = false;
  */
 export class HypergraphImpl implements Hypergraph.Hypergraph {
   private readonly _databases = new Map<SpaceId, DatabaseImpl>();
-  private readonly _queueFactories = new Map<SpaceId, QueueFactory>();
 
   // TODO(burdon): Space dependency?
   private readonly _owningObjects = new Map<SpaceId, unknown>();
@@ -92,7 +92,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   ): void {
     this._databases.set(spaceId, database);
     this._owningObjects.set(spaceId, owningObject);
-    database.coreDatabase._updateEvent.on(this._onUpdate.bind(this));
+    database._updateEvent.on(this._onUpdate.bind(this));
 
     const map = this._resolveEvents.get(spaceId);
     if (map) {
@@ -119,20 +119,6 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     // TODO(dmaretskyi): Remove db from query contexts.
     this._databases.delete(spaceId);
     this.#queryResultCache = new QueryResultCache();
-  }
-
-  /**
-   * @internal
-   */
-  _registerQueueFactory(spaceId: SpaceId, factory: QueueFactory): void {
-    this._queueFactories.set(spaceId, factory);
-  }
-
-  /**
-   * @internal
-   */
-  _unregisterQueueFactory(spaceId: SpaceId): void {
-    this._queueFactories.delete(spaceId);
   }
 
   _getOwningObject(spaceId: SpaceId): unknown | undefined {
@@ -179,8 +165,18 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * @param middleware Called with the loaded object. The caller may change the object.
    * @returns Result of `onLoad`.
    */
-  createRefResolver({ context = {}, middleware = (obj) => obj }: Hypergraph.RefResolverOptions): Ref.Resolver {
+  createRefResolver({ context = {} }: Hypergraph.RefResolverOptions): Ref.Resolver {
     // TODO(dmaretskyi): Rewrite resolution algorithm with tracks for absolute and relative DXNs.
+
+    // A resolved reference that points at a persisted (db-backed) schema object surfaces as the
+    // registered `Type.Type` entity rather than the raw stored object, so consumers see a stable
+    // type entity. Other entities pass through unchanged.
+    const materializeStoredSchema = (obj: AnyProperties): AnyProperties => {
+      if (context.space != null && isInstanceOf(TypeSchema, obj) && Type.getDatabase(obj) != null) {
+        return this.getDatabase(context.space)?._getOrRegisterPersistentSchema(obj) ?? obj;
+      }
+      return obj;
+    };
 
     return {
       resolve: (uri: URI.URI, { source }: { source: RefSource }): RefResolverRequest => {
@@ -192,14 +188,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       resolveSync: (uri: URI.URI, load: boolean, onLoad?: () => void) => {
         if (EID.isEID(uri)) {
           const res = this._resolveSync(uri, context, onLoad);
-          return res ? middleware(res) : undefined;
+          return res ? materializeStoredSchema(res) : undefined;
         }
 
         // Registry refs (DXNs) resolve to the entity held in the registry — a type entity by
-        // typename DXN, or a keyed entity (operation, blueprint, etc.) by its key DXN.
+        // typename DXN, or a keyed entity (operation, skill, etc.) by its key DXN.
         if (DXN.isDXN(uri)) {
           const entity = this._registry.getByURI(uri.toString());
-          return entity ? middleware(entity) : undefined;
+          return entity ? materializeStoredSchema(entity) : undefined;
         }
 
         return undefined; // Unsupported URI kind.
@@ -207,11 +203,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
       resolveLegacy: async (uri) => {
         const obj = await this._resolveAsync(uri, context);
-        if (obj) {
-          return middleware(obj);
-        } else {
-          return undefined;
-        }
+        return obj ? materializeStoredSchema(obj) : undefined;
       },
 
       resolveSchema: async (uri) => {
@@ -324,7 +316,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     for (const candidateSpaceId of [spaceId]) {
       const db = this._databases.get(candidateSpaceId);
       if (db) {
-        const core = db.coreDatabase.getObjectCoreById(entityId, { load: false });
+        const core = db.getObjectCoreById(entityId, { load: false });
         if (core != null) {
           const obj = db.getObjectById(entityId, { deleted: true });
           if (obj != null) {
@@ -333,10 +325,9 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         }
       }
 
-      const queueFactory = this._queueFactories.get(candidateSpaceId);
-      if (queueFactory) {
-        for (const queue of queueFactory.knownQueues()) {
-          const item = queue.getCachedObjectById(entityId);
+      if (db) {
+        for (const handle of db._knownFeedHandles()) {
+          const item = handle.getCachedObjectById(entityId);
           if (item != null) {
             return { result: item as AnyProperties, strongDeps: getStrongDependencies(item) };
           }
@@ -400,7 +391,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       const db = this._databases.get(candidateSpaceId);
       if (db) {
         pendingDb++;
-        void db.coreDatabase
+        void db
           .loadObjectCoreById(entityId, { diskOnly, returnWithUnsatisfiedDeps: true })
           .then((core) => {
             pendingDb--;
@@ -419,41 +410,42 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           });
       }
 
-      const queueFactory = this._queueFactories.get(candidateSpaceId);
-      if (queueFactory) {
-        pendingQueue++;
-        void this.#searchQueues(candidateSpaceId, entityId, queueFactory)
-          .then((item) => {
-            pendingQueue--;
-            if (cancelled) {
-              return;
-            }
-            if (item != null) {
-              finishReady(item as AnyProperties, getStrongDependencies(item));
-              return;
-            }
-            // Poll known queues so replicated items surface without a fresh request.
-            const queues = [...queueFactory.knownQueues()];
-            if (queues.length > 0) {
-              queuePolling = true;
-              for (const queue of queues) {
-                cleanups.push(queue.beginPolling());
-                cleanups.push(
-                  queue.subscribe(() => {
-                    const cached = queue.getCachedObjectById(entityId);
-                    if (cached != null) {
-                      finishReady(cached as AnyProperties, getStrongDependencies(cached));
-                    }
-                  }),
-                );
+      if (db) {
+        const handles = [...db._knownFeedHandles()];
+        if (handles.length > 0) {
+          pendingQueue++;
+          void this.#searchFeedHandles(candidateSpaceId, entityId, handles)
+            .then((item) => {
+              pendingQueue--;
+              if (cancelled) {
+                return;
               }
-            }
-            maybeUnavailable();
-          })
-          .catch(() => {
-            pendingQueue--;
-            maybeUnavailable();
-          });
+              if (item != null) {
+                finishReady(item as AnyProperties, getStrongDependencies(item));
+                return;
+              }
+              // Poll known feed handles so replicated items surface without a fresh request.
+              if (handles.length > 0) {
+                queuePolling = true;
+                for (const handle of handles) {
+                  cleanups.push(handle.beginPolling());
+                  cleanups.push(
+                    handle.updated.on(() => {
+                      const cached = handle.getCachedObjectById(entityId);
+                      if (cached != null) {
+                        finishReady(cached as AnyProperties, getStrongDependencies(cached));
+                      }
+                    }),
+                  );
+                }
+              }
+              maybeUnavailable();
+            })
+            .catch(() => {
+              pendingQueue--;
+              maybeUnavailable();
+            });
+        }
       }
     }
 
@@ -465,24 +457,24 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     };
   }
 
-  async #searchQueues(
+  async #searchFeedHandles(
     spaceId: SpaceId,
     entityId: EntityId,
-    queueFactory: QueueFactory,
+    handles: ReturnType<DatabaseImpl['_knownFeedHandles']>,
   ): Promise<Entity.Unknown | undefined> {
-    for (const queue of queueFactory.knownQueues()) {
-      const cached = queue.getCachedObjectById(entityId);
+    for (const handle of handles) {
+      const cached = handle.getCachedObjectById(entityId);
       if (cached != null) {
         return cached;
       }
     }
-    for (const queue of queueFactory.knownQueues()) {
-      const [item] = await queue.getObjectsById([entityId]);
+    for (const handle of handles) {
+      const [item] = await handle.getObjectsById([entityId]);
       if (item != null) {
         return item;
       }
     }
-    return this._resolveObjectInSpaceFeeds(spaceId, entityId, queueFactory);
+    return this._resolveObjectInSpaceFeeds(spaceId, entityId);
   }
 
   /**
@@ -503,7 +495,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     uri: URI.URI,
     context: Hypergraph.RefResolutionContext,
     onResolve?: (obj: Entity.Any) => void,
-  ): Entity.Any | Queue | undefined {
+  ): Entity.Any | undefined {
     const parsedEchoUri = EID.tryParse(uri);
     if (!parsedEchoUri) {
       throw new Error('Unsupported URI kind');
@@ -517,21 +509,11 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
     const db = this._databases.get(spaceId);
     if (db) {
-      // Resolve remote reference.
+      // Resolve remote reference. Feeds are regular ECHO objects, so a feed URI resolves here.
       const obj = db.getObjectById(objectId);
       if (obj) {
         return obj;
       }
-    }
-
-    // Fallback: try to resolve as a queue (Feed object backed by queue service).
-    // Only resolve if a queue with this id has been explicitly created — otherwise
-    // QueueFactory.get would manufacture a phantom queue for every unknown ECHO ref.
-    const queueEchoUri = EID.make({ spaceId: spaceId, entityId: objectId });
-    const queueFactory = this._queueFactories.get(spaceId);
-    const queue = queueFactory?.tryGet(queueEchoUri);
-    if (queue) {
-      return queue;
     }
 
     // TODO(dmaretskyi): Consider throwing if space not found.
@@ -558,7 +540,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   private async _resolveAsync(
     uri: URI.URI,
     context: Hypergraph.RefResolutionContext,
-  ): Promise<Entity.Unknown | Queue | undefined> {
+  ): Promise<Entity.Unknown | undefined> {
     const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
     let status: string = '';
     try {
@@ -580,8 +562,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           const feedSpaceId = EID.getSpaceId(feedEchoId) ?? context.space;
           const queueId = EID.getEntityId(feedEchoId);
           if (feedSpaceId && queueId) {
-            const queueEchoUri = EID.make({ spaceId: feedSpaceId, entityId: queueId });
-            const obj = await this._resolveQueueObjectAsync(queueEchoUri, echoUri);
+            const feedEchoUri = EID.make({ spaceId: feedSpaceId, entityId: queueId });
+            const obj = await this._resolveFeedObjectAsync(feedEchoUri, echoUri);
             if (obj) {
               status = 'resolved';
               return obj;
@@ -602,25 +584,17 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         }
 
         // (2) Search known feeds in this space for an item with this id.
-        const feedObj = await this._resolveObjectInKnownQueues(context.space, echoUri);
+        const feedObj = await this._resolveObjectInKnownFeeds(context.space, echoUri);
         if (feedObj) {
           status = 'resolved';
           return feedObj;
-        }
-
-        // (3) Fallback: caller may be addressing a queue itself by URI.
-        const queueEchoUri = EID.make({ spaceId: context.space, entityId: echoUri });
-        const queue = this._resolveQueueSync(queueEchoUri);
-        if (queue) {
-          status = 'resolved';
-          return queue;
         }
 
         status = 'missing';
         return undefined;
       } else if (DXN.isDXN(uri)) {
         // Registry refs (DXNs) resolve to the entity held in the registry — a type entity by
-        // typename DXN, or a keyed entity (operation, blueprint, etc.) by its key DXN.
+        // typename DXN, or a keyed entity (operation, skill, etc.) by its key DXN.
         const entity = this._registry.getByURI(uri.toString());
         status = entity ? 'resolved' : 'missing';
         return entity ?? undefined;
@@ -640,34 +614,30 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   /**
-   * Search feed-backed queues in this space for an object with the given id.
-   * Queue items use ECHO URIs (`echo://spaceId/itemId`) without feed routing, so cross-db refs
+   * Search feed-backed handles in this space for an object with the given id.
+   * Feed items use ECHO URIs (`echo://spaceId/itemId`) without feed routing, so cross-db refs
    * must resolve without `context.feed`.
    */
-  private async _resolveObjectInKnownQueues(spaceId: SpaceId, objectId: EntityId): Promise<Entity.Unknown | undefined> {
-    const queueFactory = this._queueFactories.get(spaceId);
-    if (!queueFactory) {
+  private async _resolveObjectInKnownFeeds(spaceId: SpaceId, objectId: EntityId): Promise<Entity.Unknown | undefined> {
+    const db = this._databases.get(spaceId);
+    if (!db) {
       return undefined;
     }
 
-    for (const queue of queueFactory.knownQueues()) {
-      const [obj] = await queue.getObjectsById([objectId]);
+    for (const feed of db._knownFeedHandles()) {
+      const [obj] = await feed.getObjectsById([objectId]);
       if (obj) {
         return obj;
       }
     }
 
-    return this._resolveObjectInSpaceFeeds(spaceId, objectId, queueFactory);
+    return this._resolveObjectInSpaceFeeds(spaceId, objectId);
   }
 
   /**
-   * Fallback: scan persisted {@link Feed.Feed} queues when the SQL index has no entry yet.
+   * Fallback: scan persisted {@link Feed.Feed} objects when the SQL index has no entry yet.
    */
-  private async _resolveObjectInSpaceFeeds(
-    spaceId: SpaceId,
-    objectId: EntityId,
-    queueFactory: QueueFactory,
-  ): Promise<Entity.Unknown | undefined> {
+  private async _resolveObjectInSpaceFeeds(spaceId: SpaceId, objectId: EntityId): Promise<Entity.Unknown | undefined> {
     const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;
@@ -681,13 +651,13 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       }
 
       try {
-        const queue = queueFactory.get(feedDXN);
-        const [obj] = await queue.getObjectsById([objectId]);
+        const handle = db._getOrCreateFeedHandle(feedDXN, feed.namespace);
+        const [obj] = await handle.getObjectsById([objectId]);
         if (obj) {
           return obj;
         }
       } catch (error) {
-        log.warn('failed to resolve object from feed queue', { spaceId, objectId, feed: feedDXN.toString(), error });
+        log.warn('failed to resolve object from feed', { spaceId, objectId, feed: feedDXN.toString(), error });
       }
     }
 
@@ -725,39 +695,19 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return obj != null && Type.isType(obj) ? obj : undefined;
   }
 
-  private _resolveQueueSync(queueEchoUri: EID.EID): Queue | undefined {
-    const spaceId = EID.getSpaceId(queueEchoUri);
+  private async _resolveFeedObjectAsync(feedEchoUri: EID.EID, objectId: EntityId): Promise<Entity.Unknown | undefined> {
+    const spaceId = EID.getSpaceId(feedEchoUri);
     if (!spaceId) {
       return undefined;
     }
-    const queueFactory = this._queueFactories.get(spaceId);
-    if (!queueFactory) {
+    const db = this._databases.get(spaceId);
+    if (!db) {
       return undefined;
     }
-    // Use `tryGet` rather than `get` so we don't manufacture a phantom queue for a URI
-    // that just happens to share an ECHO object id — we only resolve to a queue when one
-    // has been explicitly created (e.g. by a prior Feed.append/query for that feed).
-    return queueFactory.tryGet(queueEchoUri);
-  }
-
-  private async _resolveQueueObjectAsync(
-    queueEchoUri: EID.EID,
-    objectId: EntityId,
-  ): Promise<Entity.Unknown | undefined> {
-    const spaceId = EID.getSpaceId(queueEchoUri);
-    if (!spaceId) {
-      return undefined;
-    }
-    const queueFactory = this._queueFactories.get(spaceId);
-    if (!queueFactory) {
-      return undefined;
-    }
-    const queue = queueFactory.get(queueEchoUri);
-    if (!queue) {
-      return undefined;
-    }
-
-    const [obj] = await queue.getObjectsById([objectId]);
+    const feedObjectId = EID.getEntityId(feedEchoUri);
+    const feed = feedObjectId ? db.getObjectById<Feed.Feed>(feedObjectId) : undefined;
+    const handle = db._getOrCreateFeedHandle(feedEchoUri, feed?.namespace);
+    const [obj] = await handle.getObjectsById([objectId]);
     return obj;
   }
 
@@ -781,6 +731,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   private _onUpdate(updateEvent: ItemsUpdatedEvent): void {
+    // Heal resolution requests that latched `requesting`/`unavailable` before the object was
+    // materialized locally: re-probe the working set for any cached load op now that the object is
+    // present, so its dependents (e.g. index-query hydration gated on the strong-dep closure)
+    // recompute to `ready` instead of polling/timing out.
+    for (const item of updateEvent.itemsUpdated) {
+      this.#loadOpTable.refreshFromWorkingSet(EID.make({ spaceId: updateEvent.spaceId, entityId: item.id }));
+    }
+
     const listenerMap = this._resolveEvents.get(updateEvent.spaceId);
     if (listenerMap) {
       batchEvents(() => {

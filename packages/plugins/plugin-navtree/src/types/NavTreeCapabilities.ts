@@ -18,4 +18,4 @@ export type NavTreeStateStore = {
   setItem: (path: string[], key: 'open' | 'current', next: boolean) => void;
 };
 
-export const State = Capability.make<NavTreeStateStore>(`${meta.id}.capability.state`);
+export const State = Capability.make<NavTreeStateStore>(`${meta.profile.key}.capability.state`);

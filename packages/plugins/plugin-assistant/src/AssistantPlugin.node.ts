@@ -6,7 +6,7 @@ import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine } from '@dxos/compute';
+import { Instructions, Skill } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
 import { Text } from '@dxos/schema';
@@ -18,11 +18,11 @@ import {
   AiContext as AiContextCapability,
   AiService,
   AppGraphBuilder,
-  BlueprintDefinition,
   CreateObject,
   EdgeModelResolver,
   LocalModelResolver,
   OperationHandler,
+  SkillDefinition,
   Toolkit,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -31,19 +31,19 @@ import { AssistantEvents, type AssistantPluginOptions } from '#types';
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(
     AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-    AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+    AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
     AppPlugin.addCreateObjectModule({ activate: CreateObject }),
     AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
     AppPlugin.addSchemaModule({
       schema: [
         Chat.Chat,
         Chat.CompanionTo,
-        Blueprint.Blueprint,
+        Skill.Skill,
         AiContext.Binding,
         Feed.Feed,
         HasSubject.HasSubject,
         Message.Message,
-        Routine.Routine,
+        Instructions.Instructions,
         Agent.Agent,
         McpServer.McpServer,
         Plan.Plan,

@@ -12,20 +12,19 @@ import { DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from './constants';
  * Config object for a read-only ATProto-backed channel. Referenced from
  * `Channel.backend.config`; identifies the public author feed to display.
  */
-export const BlueskyChannel = Schema.Struct({
-  /** ATProto handle or DID whose public author feed is shown (e.g. `bsky.app`). */
-  handle: Schema.String,
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.bluesky.channel', '0.1.0')));
-
-export interface BlueskyChannel extends Type.InstanceType<typeof BlueskyChannel> {}
+export class BlueskyChannel extends Type.makeObject<BlueskyChannel>(DXN.make('org.dxos.type.bluesky.channel', '0.1.0'))(
+  Schema.Struct({
+    /** ATProto handle or DID whose public author feed is shown (e.g. `bsky.app`). */
+    handle: Schema.String,
+  }),
+) {}
 
 /** Creates a Bluesky channel config object for the given public handle. */
 export const makeBlueskyChannel = (handle: string): BlueskyChannel => Obj.make(BlueskyChannel, { handle });
 
 /**
- * Per-target sync options exposed to the user via `provider.optionsSchema`
- * and edited from `IntegrationArticle`. Stored under
- * `IntegrationTarget.options` (free-form record).
+ * Per-target sync options exposed to the user via the connector's
+ * `optionsSchema`. Stored under `SyncBinding.options` (free-form record).
  */
 export const BlueskyTargetOptions = Schema.Struct({
   /**

@@ -9,10 +9,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
+import * as Schema from 'effect/Schema';
 import * as Schema$ from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
-import { DXN, Annotation, JsonSchema, Migration, Obj, Ref, Type, type Key } from '@dxos/echo';
+import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
 import type { URI } from '@dxos/keys';
 
 import type { NoHandlerError } from './errors';
@@ -299,46 +300,48 @@ export type InvokeRemote = <I, O, E>(
  * The registry `key` and `version` live in the object meta — access via
  * `Obj.getMeta(record).key` and `Obj.getMeta(record).version`.
  */
-export const PersistentOperation = Schema$.Struct({
-  name: Schema$.NonEmptyString,
+// TODO(dmaretskyi): Keep typename as 'org.dxos.type.function' (not 'operation') to maintain
+//  backward compatibility with existing data and avoid requiring data migration.
+export class PersistentOperation extends Type.makeObject<PersistentOperation>(
+  DXN.make('org.dxos.type.function', '0.2.0'),
+)(
+  Schema$.Struct({
+    name: Schema$.NonEmptyString,
 
-  description: Schema$.optional(Schema$.String),
+    description: Schema$.optional(Schema$.String),
 
-  /**
-   * ISO date string of the last deployment.
-   */
-  updated: Schema$.optional(Schema$.String),
+    /**
+     * ISO date string of the last deployment.
+     */
+    updated: Schema$.optional(Schema$.String),
 
-  // Reference to a source script if it exists within ECHO.
-  // TODO(burdon): Don't ref ScriptType directly (core).
-  source: Schema$.optional(Ref.Ref(Obj.Unknown)),
+    // Reference to a source script if it exists within ECHO.
+    // TODO(burdon): Don't ref ScriptType directly (core).
+    source: Schema$.optional(Ref.Ref(Obj.Unknown)),
 
-  inputSchema: Schema$.optional(JsonSchema.JsonSchema),
-  outputSchema: Schema$.optional(JsonSchema.JsonSchema),
+    inputSchema: Schema$.optional(JsonSchema.JsonSchema),
+    outputSchema: Schema$.optional(JsonSchema.JsonSchema),
 
-  /**
-   * List of required services.
-   * Match the Context.Tag keys of the FunctionServices variants.
-   */
-  services: Schema$.optional(Schema$.Array(Schema$.String)),
+    /**
+     * List of required services.
+     * Match the Context.Tag keys of the FunctionServices variants.
+     */
+    services: Schema$.optional(Schema$.Array(Schema$.String)),
 
-  // Local binding to a function name.
-  // TODO(dmaretskyi): Add this field to Operation.Definition.
-  binding: Schema$.optional(Schema$.String),
+    // Local binding to a function name.
+    // TODO(dmaretskyi): Add this field to Operation.Definition.
+    binding: Schema$.optional(Schema$.String),
 
-  /**
-   * Phosphor icon identifier in `ph--<name>--<variant>` format (e.g. `ph--file-text--regular`).
-   */
-  icon: Schema$.optional(Schema$.String),
-}).pipe(
-  Annotation.LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--function--regular', hue: 'blue' }),
-  Annotation.HiddenAnnotation.set(true),
-  // TODO(dmaretskyi): Keep typename as 'org.dxos.type.function' (not 'operation') to maintain
-  //  backward compatibility with existing data and avoid requiring data migration.
-  Type.makeObject(DXN.make('org.dxos.type.function', '0.2.0')),
-);
-export type PersistentOperation = Type.InstanceType<typeof PersistentOperation>;
+    /**
+     * Phosphor icon identifier in `ph--<name>--<variant>` format (e.g. `ph--file-text--regular`).
+     */
+    icon: Schema$.optional(Schema$.String),
+  }).pipe(
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--function--regular', hue: 'blue' }),
+    Annotation.HiddenAnnotation.set(true),
+  ),
+) {}
 
 const FUNCTION_META_KEY = 'org.dxos.service.function';
 
@@ -429,20 +432,46 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
  * Defined locally to avoid a core dependency on UI translation packages; structurally compatible with
  * the app-level `Label` type so values flow into UI toasts unchanged.
  */
-export type Label = string | [string, { ns: string | readonly string[]; count?: number; defaultValue?: string }];
+export const Label = Schema.Union(
+  Schema.String,
+  // `Schema.mutable` mirrors the app-level `Label` (whose tuple is mutable), so decoded values are
+  // assignable to UI toast `title`/`label` slots without a readonly-vs-mutable tuple mismatch.
+  Schema.mutable(
+    Schema.Tuple(
+      Schema.String,
+      Schema.mutable(
+        Schema.Struct({
+          ns: Schema.String,
+          count: Schema.optional(Schema.Number),
+          defaultValue: Schema.optional(Schema.String),
+        }),
+      ),
+    ),
+  ),
+);
+export type Label = Schema.Schema.Type<typeof Label>;
 
 /**
  * Per-phase user notification messages for an invocation.
  * A phase is notified to the user iff its message is provided; messages are translatable {@link Label}s.
  */
-export interface NotifyOptions {
+export const NotifyOptions = Schema.Struct({
   /** Shown when the invocation starts. */
-  start?: Label;
+  start: Schema.optional(Label),
   /** Shown when the invocation succeeds. */
-  success?: Label;
+  success: Schema.optional(Label),
   /** Shown when the invocation fails. */
-  error?: Label;
-}
+  error: Schema.optional(Label),
+});
+export type NotifyOptions = Schema.Schema.Type<typeof NotifyOptions>;
+
+/**
+ * Annotation that configures the process to notify the user at the given invocation phases.
+ */
+export const NotifyOptionsAnnotation = Annotation.make({
+  id: 'org.dxos.operation.notify-options',
+  schema: NotifyOptions,
+});
 
 /**
  * Options for operation invocation.
@@ -460,7 +489,7 @@ export interface InvokeOptions {
    * URI of the conversation feed (queue) — today always an EID, but typed as
    * `URI.URI` to accommodate future entity-kind extensions. Narrow with `EID.parse`
    * at the point of use.
-   * Passed to the process environment so nested operations can resolve AiContext.Service and related services.
+   * Passed to the process environment so nested operations can resolve HarnessService and related services.
    */
   conversation?: URI.URI;
   /**
@@ -486,6 +515,50 @@ export const isIdempotent = (op: Definition.Any): boolean =>
   op.meta.annotations
     ? Option.getOrElse(Annotation.getDictionary(op.meta.annotations, IdempotentAnnotation), () => false)
     : false;
+
+/**
+ * Attaches an annotation to an operation definition, returning a new definition.
+ * Combinators never mutate their input — operation definitions are module-level singletons
+ * shared across handler sets, skills, and the registry, so a fresh value keeps the
+ * annotated definition distinct from any other reference to the original.
+ *
+ * Type-preserving: an annotation does not change the operation's input/output/service types, so the
+ * returned definition keeps `Def` (preserving `withHandler` inference and downstream usage).
+ */
+export const annotate =
+  <T>(annotation: Annotation.Annotation<T>, value: T) =>
+  <Def extends Definition.Any>(op: Def): Def => {
+    const annotations = { ...(op.meta.annotations ?? {}) };
+    Annotation.setDictionary(annotations, annotation, value);
+    // The spread reconstructs the same shape with only `meta.annotations` changed; the checker can't
+    // track the branded variance symbol through the untyped dictionary mutation, so reassert `Def`.
+    return { ...op, meta: { ...op.meta, annotations } } as Def;
+  };
+
+/**
+ * Marks an operation as visible on user-facing operation surfaces (trigger/automation pickers,
+ * manual invocation). Absent ⇒ internal: invoked programmatically by plugins and hidden from pickers.
+ *
+ * Polarity is inverted from the schema-level `HiddenAnnotation` (default visible): operations are
+ * hidden by default, since most are internal plugin machinery and only a minority are user-facing.
+ */
+export const VisibleAnnotation = Annotation.make({
+  id: 'org.dxos.operation.visible',
+  schema: Schema$.Boolean,
+});
+
+/**
+ * Pipeable combinator that marks an operation visible. Apply at the definition site:
+ * `Operation.make({ ... }).pipe(Operation.visible)`.
+ */
+export const visible = annotate(VisibleAnnotation, true);
+
+/**
+ * Returns true when an operation is annotated as visible on user-facing surfaces (trigger/automation
+ * pickers, manual invocation). Reads from the persisted operation — the form every consumer holds.
+ */
+export const isVisible = (op: PersistentOperation): boolean =>
+  Option.getOrElse(Annotation.get(op, VisibleAnnotation), () => false);
 
 /**
  * Operation service interface - provides unified access to operation invocation and scheduling.
@@ -605,19 +678,22 @@ export const withInvocationOptions = (options: InvokeOptions): Layer.Layer<Servi
  * Persistent operation schema v0.1.0 — `key` and `version` are stored as data properties.
  * @deprecated Use {@link PersistentOperation} (v0.2.0) instead; the `key` and `version` now live in the object meta.
  */
-export const PersistentOperation_v0_1_0 = Schema$.Struct({
-  key: Schema$.optional(Schema$.String),
-  name: Schema$.NonEmptyString,
-  version: Schema$.String,
-  description: Schema$.optional(Schema$.String),
-  updated: Schema$.optional(Schema$.String),
-  source: Schema$.optional(Ref.Ref(Obj.Unknown)),
-  inputSchema: Schema$.optional(JsonSchema.JsonSchema),
-  outputSchema: Schema$.optional(JsonSchema.JsonSchema),
-  services: Schema$.optional(Schema$.Array(Schema$.String)),
-  binding: Schema$.optional(Schema$.String),
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.function', '0.1.0')));
-export type PersistentOperation_v0_1_0 = Type.InstanceType<typeof PersistentOperation_v0_1_0>;
+export class PersistentOperation_v0_1_0 extends Type.makeObject<PersistentOperation_v0_1_0>(
+  DXN.make('org.dxos.type.function', '0.1.0'),
+)(
+  Schema$.Struct({
+    key: Schema$.optional(Schema$.String),
+    name: Schema$.NonEmptyString,
+    version: Schema$.String,
+    description: Schema$.optional(Schema$.String),
+    updated: Schema$.optional(Schema$.String),
+    source: Schema$.optional(Ref.Ref(Obj.Unknown)),
+    inputSchema: Schema$.optional(JsonSchema.JsonSchema),
+    outputSchema: Schema$.optional(JsonSchema.JsonSchema),
+    services: Schema$.optional(Schema$.Array(Schema$.String)),
+    binding: Schema$.optional(Schema$.String),
+  }),
+) {}
 
 /**
  * Migration from {@link PersistentOperation_v0_1_0} (v0.1.0) to {@link PersistentOperation} (v0.2.0).

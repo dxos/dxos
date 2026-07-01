@@ -8,50 +8,53 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
 
 import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
 import { meta } from '#meta';
 import { CodeProject, Settings, Spec } from '#types';
 
-import { SpecView } from '../containers/SpecArticle/SpecArticle';
 import { isPluginSpecSubject } from '../plugin-spec';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
+        id: 'pluginSpec',
+        filter: AppSurface.subject(AppSurface.Article, isPluginSpecSubject),
+        component: ({ data: { subject }, role }) => <SpecArticle role={role} content={subject.content} />,
+      }),
+      Surface.create({
         id: 'specArticle',
-        role: ['article', 'section'],
-        filter: (data): data is { subject: Spec.Spec; attendableId?: string } =>
-          Obj.instanceOf(Spec.Spec, data.subject) &&
-          (data.attendableId === undefined || typeof data.attendableId === 'string'),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Spec.Spec),
+          AppSurface.object(AppSurface.Section, Spec.Spec),
+        ),
         component: ({ data: { subject, attendableId }, role }) => (
           <SpecArticle role={role} subject={subject} attendableId={attendableId} />
         ),
       }),
       Surface.create({
         id: 'codeArticle',
-        role: ['article', 'section'],
-        filter: (data): data is { subject: CodeProject.CodeProject; attendableId?: string } =>
-          Obj.instanceOf(CodeProject.CodeProject, data.subject) &&
-          (data.attendableId === undefined || typeof data.attendableId === 'string'),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, CodeProject.CodeProject),
+          AppSurface.object(AppSurface.Section, CodeProject.CodeProject),
+        ),
         component: ({ data: { subject, attendableId }, role }) => (
           <CodeArticle role={role} subject={subject} attendableId={attendableId} />
         ),
       }),
       Surface.create({
         id: 'codeSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          return <CodeSettings settings={settings} onSettingsChange={updateSettings} />;
+          return (
+            <CodeSettings
+              settings={settings}
+              onSettingsChange={(next: Settings.Settings) => updateSettings(() => next)}
+            />
+          );
         },
-      }),
-      Surface.create({
-        id: 'pluginSpec',
-        filter: AppSurface.subject(AppSurface.Article, isPluginSpecSubject),
-        component: ({ data: { subject }, role }) => <SpecView role={role} content={subject.content} readOnly />,
       }),
     ]),
   ),

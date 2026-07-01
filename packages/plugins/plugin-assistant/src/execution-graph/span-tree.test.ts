@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 import { AgentRequestBegin, AgentRequestEnd } from '@dxos/assistant';
 import { Trace } from '@dxos/compute';
 
-import { ROOT_SPAN_ID, buildSpanTree, flattenSpanTree } from './span-tree';
+import { ROOT_SPAN_ID, buildSpanTree, collectSpanTreeEventsCategorically, flattenSpanTree } from './span-tree';
 import { collectTraceEvents, withMeta } from './testing';
 
 const NoteEvent = Trace.EventType('note', {
@@ -245,5 +245,37 @@ describe('buildSpanTree', () => {
     expect(order[1].meta.pid).toBe('agent-1');
     expect(order[2].meta.pid).toBe('op-1');
     expect(order).toHaveLength(3);
+  });
+
+  test('collectSpanTreeEventsCategorically emits begin, child subtrees, then remaining events', ({ expect }) => {
+    const messages = collectTraceEvents(
+      Effect.gen(function* () {
+        yield* withMeta({ pid: 'parent-1' }, Trace.write(Trace.OperationStart, { key: 'parent', name: 'Parent' }));
+        yield* withMeta(
+          { pid: 'child-1', parentPid: 'parent-1' },
+          Effect.gen(function* () {
+            yield* Trace.write(Trace.OperationStart, { key: 'child', name: 'Child' });
+            yield* Trace.write(Trace.OperationEnd, { key: 'child', name: 'Child', outcome: 'success' });
+          }),
+        );
+        yield* withMeta(
+          { pid: 'parent-1' },
+          Trace.write(Trace.OperationEnd, { key: 'parent', name: 'Parent', outcome: 'success' }),
+        );
+      }),
+    );
+
+    const tree = buildSpanTree(messages);
+    const order = collectSpanTreeEventsCategorically(tree).map(({ span, event }) => ({
+      pid: span.meta.pid ?? ROOT_SPAN_ID,
+      type: event.type,
+    }));
+
+    expect(order).toEqual([
+      { pid: 'parent-1', type: Trace.OperationStart.key },
+      { pid: 'child-1', type: Trace.OperationStart.key },
+      { pid: 'child-1', type: Trace.OperationEnd.key },
+      { pid: 'parent-1', type: Trace.OperationEnd.key },
+    ]);
   });
 });

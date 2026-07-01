@@ -11,6 +11,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
+import { Empty } from '@dxos/react-ui-list';
 import { Message } from '@dxos/types';
 
 import { MessageStack, type MessageStackActionHandler } from '#components';
@@ -30,7 +31,7 @@ export type DraftsArticleProps = AppSurface.SpaceArticleProps<{
  */
 // TODO(wittjosiah): Reconcile implementation with MailboxArticle.
 export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const layout = useLayout();
   const id = attendableId ?? Obj.getURI(mailbox);
@@ -106,7 +107,7 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
       </Panel.Toolbar>
       <Panel.Content asChild>
         {drafts.length === 0 ? (
-          <div className='p-4 text-subdued'>{t('drafts.empty.message')}</div>
+          <Empty label={t('drafts.empty.message')} />
         ) : (
           <MessageStack id={id} messages={drafts} currentId={currentId} tags={{}} onAction={handleAction} />
         )}

@@ -4,7 +4,6 @@
 
 import { Capability } from '@dxos/app-framework';
 import type { OperationHandlerSet } from '@dxos/compute';
-import { AutomationCapabilities } from '@dxos/plugin-automation';
 
 import type { AssistantPluginOptions } from '#types';
 
@@ -15,18 +14,11 @@ export const AiService = Capability.lazy<AssistantPluginOptions | void, Capabili
   'AiService',
   () => import('./ai-service'),
 );
-export const IntegrationProvider = Capability.lazy(
-  'AnthropicIntegrationProvider',
-  () => import('./integration-provider'),
-);
+export const Connector = Capability.lazy('AnthropicConnector', () => import('./connector'));
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-// Explicit annotation: the contributed capability type references `Template` from @dxos/plugin-automation,
-// so the inferred lazy type needs annotating to stay portable (TS2883).
-export const AutomationTemplates: Capability.LazyCapability<
-  void,
-  Capability.Capability<typeof AutomationCapabilities.Template>[]
-> = Capability.lazy('AutomationTemplates', () => import('./automation-templates'));
-export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const NavigationResolver = Capability.lazy('NavigationResolver', () => import('./navigation-resolver'));
+export const AutomationTemplates = Capability.lazy('AutomationTemplates', () => import('./automation-templates'));
+export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
 export const CompanionChatProvisioner = Capability.lazy(
   'CompanionChatProvisioner',
   () => import('./companion-chat-provisioner'),

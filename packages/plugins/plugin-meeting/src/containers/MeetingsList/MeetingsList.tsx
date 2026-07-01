@@ -25,7 +25,7 @@ type MeetingItemProps = {
 };
 
 const MeetingItem = ({ meeting, getLabel }: MeetingItemProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   const handleSelectMeeting = useCallback(
@@ -48,7 +48,7 @@ const MeetingItem = ({ meeting, getLabel }: MeetingItemProps) => {
 export type MeetingsListProps = AppSurface.ArticleProps<undefined, {}, Obj.Unknown>;
 
 export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(channel);
   const meetings = useQuery(db, Query.type(Meeting.Meeting));
@@ -69,7 +69,6 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
     invariant(Obj.instanceOf(Meeting.Meeting, createResult.data?.object));
     const addResult = await invokePromise(SpaceOperation.AddObject, {
       target: db,
-      hidden: true,
       object: createResult.data?.object,
     });
     invariant(Obj.instanceOf(Meeting.Meeting, addResult.data?.object));

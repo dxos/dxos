@@ -58,7 +58,7 @@ export interface LoadBackend {
   load(uri: URI.URI, source: RefSource, set: (state: LoadOpState, result: LoadResult | undefined) => void): () => void;
 }
 
-const CEILING_RANK: Record<RefSource, number> = { 'working-set': 0, disk: 1, network: 2 };
+const CEILING_RANK: Record<RefSource, number> = { 'working-set': 0, 'disk': 1, 'network': 2 };
 
 const isHigherCeiling = (a: RefSource, b: RefSource): boolean => CEILING_RANK[a] > CEILING_RANK[b];
 
@@ -116,6 +116,27 @@ export class LoadOpTable {
 
     this.#startLoad(op, source);
     return op;
+  }
+
+  /**
+   * Re-probe the working set for the cached op at `uri` (if any) and promote it to `ready` when the
+   * entity is now materialized. Lets a local materialization (e.g. `db.add`) heal an op that latched
+   * `requesting`/`unavailable` while the entity was absent: the working-set tier is the cheapest and
+   * authoritative, so a hit settles the op regardless of any in-flight higher-ceiling load (whose IO
+   * is cancelled). No-op when no op is cached for the URI — nothing is waiting on it.
+   */
+  refreshFromWorkingSet(uri: URI.URI): void {
+    const op = this.#ops.get(uri);
+    if (op == null || op.state === 'ready') {
+      return;
+    }
+    const probed = this._routeBackend(uri)?.probe(uri);
+    if (probed == null) {
+      return;
+    }
+    op.cancel?.();
+    op.cancel = undefined;
+    this.#set(op, 'ready', probed);
   }
 
   /**

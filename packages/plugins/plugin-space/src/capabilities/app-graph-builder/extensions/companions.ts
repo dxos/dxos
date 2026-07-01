@@ -11,6 +11,7 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import type { EchoViewRefPath } from '@dxos/schema';
 import { ViewAnnotation } from '@dxos/schema';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
@@ -31,10 +32,10 @@ export const createCompanionExtensions: () => Effect.Effect<GraphBuilder.Builder
           Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('settings'),
-              label: ['object-properties.label', { ns: meta.id }],
+              label: ['object-properties.label', { ns: meta.profile.key }],
               icon: 'ph--sliders--regular',
               data: 'settings', // TODO(burdon): Change to 'object-properties'.
-              position: 'last',
+              position: Position.last,
             }),
           ]),
       }),
@@ -47,10 +48,10 @@ export const createCompanionExtensions: () => Effect.Effect<GraphBuilder.Builder
           Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('related'),
-              label: ['companion-related.label', { ns: meta.id }],
+              label: ['companion-related.label', { ns: meta.profile.key }],
               icon: 'ph--graph--regular',
               data: 'related',
-              position: 'last',
+              position: Position.last,
             }),
           ]),
       }),
@@ -79,7 +80,7 @@ export const createCompanionExtensions: () => Effect.Effect<GraphBuilder.Builder
           Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('selected-objects'),
-              label: ['companion-selected-objects.label', { ns: meta.id }],
+              label: ['companion-selected-objects.label', { ns: meta.profile.key }],
               icon: 'ph--tree-view--regular',
               data: 'selected-objects',
             }),

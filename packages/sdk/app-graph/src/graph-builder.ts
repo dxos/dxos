@@ -14,7 +14,7 @@ import * as Record from 'effect/Record';
 import { type CleanupFn, type Trigger } from '@dxos/async';
 import { type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { type MaybePromise, type Position, byPosition, getDebugName, isNonNullable } from '@dxos/util';
+import { type MaybePromise, Position, getDebugName, isNonNullable } from '@dxos/util';
 
 import { scheduleTask, yieldOrContinue } from '#scheduler';
 
@@ -63,7 +63,7 @@ export type ActionGroupsExtension = (
 
 export type BuilderExtension = Readonly<{
   id: string;
-  position?: Position;
+  position?: Position.Position;
   relation?: Node.RelationInput;
   resolver?: ResolverExtension;
   connector?: (node: Atom.Atom<Option.Option<Node.Node>>) => Atom.Atom<Node.NodeArg<any>[]>;
@@ -198,9 +198,7 @@ class GraphBuilderImpl implements GraphBuilder {
     );
     if (ids.length > 0) {
       const sortedIds = [...nodes]
-        .sort((a, b) =>
-          byPosition(a.properties ?? ({} as { position?: Position }), b.properties ?? ({} as { position?: Position })),
-        )
+        .sort((a, b) => Position.compare({ position: a.properties?.position }, { position: b.properties?.position }))
         .map((n) => n.id);
       Graph.sortEdges(this._graph, id, relation, sortedIds);
     }
@@ -233,7 +231,7 @@ class GraphBuilderImpl implements GraphBuilder {
       return Function.pipe(
         get(this._extensions),
         Record.values,
-        Array.sortBy(byPosition),
+        Array.sortBy(Position.compare),
         Array.map(({ resolver }) => resolver),
         Array.filter(isNonNullable),
         Array.map((resolver) => get(resolver(id))),
@@ -256,7 +254,7 @@ class GraphBuilderImpl implements GraphBuilder {
       const extensions = Function.pipe(
         get(this._extensions),
         Record.values,
-        Array.sortBy(byPosition),
+        Array.sortBy(Position.compare),
         Array.filter(
           (ext): ext is BuilderExtension & { connector: NonNullable<BuilderExtension['connector']> } =>
             Graph.relationKey(ext.relation ?? 'child') === Graph.relationKey(relation) && ext.connector != null,
@@ -558,7 +556,7 @@ export const flush = (builder: GraphBuilder): Promise<void> => {
 export type CreateExtensionRawOptions = {
   id: string;
   relation?: Node.RelationInput;
-  position?: Position;
+  position?: Position.Position;
   resolver?: ResolverExtension;
   connector?: ConnectorExtension;
   actions?: ActionsExtension;
@@ -684,28 +682,29 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
 /**
  * Options for creating a graph builder extension with simplified API.
  * All callbacks must return Effects for dependency injection.
- * Effects may fail - errors are caught, logged, and the extension returns empty results.
+ * Effects may defect — defects are caught, logged, and the extension returns empty results.
+ * Use Effect.orDie on any failable effects inside callbacks.
  */
 export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   id: string;
-  match: (node: Node.Node) => Option.Option<TMatched>;
+  match: (node: Node.Node, get: Atom.Context) => Option.Option<TMatched>;
   actions?: (
     matched: TMatched,
     get: Atom.Context,
-  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>, any>, 'type'>[], Error, R>;
-  connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], Error, R>;
-  resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, Error, R>;
+  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>, any>, 'type'>[], never, R>;
+  connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], never, R>;
+  resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, never, R>;
   relation?: Node.RelationInput;
-  position?: Position;
+  position?: Position.Position;
 };
 
 /**
  * Run an Effect synchronously with the provided context.
- * If the effect fails, logs the error and returns the fallback value.
+ * Defects are caught, logged, and the fallback value is returned.
  * @internal
  */
 const runEffectSyncWithFallback = <T, R>(
-  effect: Effect.Effect<T, Error, R>,
+  effect: Effect.Effect<T, never, R>,
   context: Context.Context<R>,
   extensionId: string,
   fallback: T,
@@ -713,8 +712,8 @@ const runEffectSyncWithFallback = <T, R>(
   return Effect.runSync(
     effect.pipe(
       Effect.provide(context),
-      Effect.catchAll((error) => {
-        log.warn('Extension failed', { extension: extensionId, error });
+      Effect.catchAllDefect((defect) => {
+        log.warn('Extension failed', { extension: extensionId, defect });
         return Effect.succeed(fallback);
       }),
     ),
@@ -738,7 +737,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
           Atom.make((get) =>
             Function.pipe(
               get(node),
-              Option.flatMap(match),
+              Option.flatMap((matchedNode) => match(matchedNode, get)),
               Option.map((matched) =>
                 runEffectSyncWithFallback(actions(matched, get), context, id, []).map((action) => ({
                   ...action,
@@ -771,14 +770,14 @@ export const createExtension = <TMatched = Node.Node, R = never>(
  * The factory's data type is inferred from the matcher's return type.
  */
 export const createConnector = <TData>(
-  matcher: (node: Node.Node) => Option.Option<TData>,
+  matcher: (node: Node.Node, get: Atom.Context) => Option.Option<TData>,
   factory: (data: TData, get: Atom.Context) => Node.NodeArg<any>[],
 ): ConnectorExtension => {
   return (node: Atom.Atom<Option.Option<Node.Node>>) =>
     Atom.make((get) =>
       Function.pipe(
         get(node),
-        Option.flatMap(matcher),
+        Option.flatMap((matchedNode) => matcher(matchedNode, get)),
         Option.map((data) => factory(data, get)),
         Option.getOrElse(() => []),
       ),
@@ -792,15 +791,15 @@ export const createConnector = <TData>(
  */
 const createConnectorWithRuntime = <TData, R>(
   extensionId: string,
-  matcher: (node: Node.Node) => Option.Option<TData>,
-  factory: (data: TData, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], Error, R>,
+  matcher: (node: Node.Node, get: Atom.Context) => Option.Option<TData>,
+  factory: (data: TData, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], never, R>,
   context: Context.Context<R>,
 ): ConnectorExtension => {
   return (node: Atom.Atom<Option.Option<Node.Node>>) =>
     Atom.make((get) =>
       Function.pipe(
         get(node),
-        Option.flatMap(matcher),
+        Option.flatMap((matchedNode) => matcher(matchedNode, get)),
         Option.map((data) => runEffectSyncWithFallback(factory(data, get), context, extensionId, [])),
         Option.getOrElse(() => []),
       ),
@@ -818,10 +817,10 @@ export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity
   actions?: (
     object: Type.InstanceType<T>,
     get: Atom.Context,
-  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], Error, R>;
-  connector?: (object: Type.InstanceType<T>, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], Error, R>;
+  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], never, R>;
+  connector?: (object: Type.InstanceType<T>, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], never, R>;
   relation?: Node.RelationInput;
-  position?: Position;
+  position?: Position.Position;
 };
 
 /**
@@ -862,6 +861,7 @@ const qualifyNodeArgs =
         ...node,
         id: qualified,
         nodes: node.nodes ? qualifyNodeArgs(qualified)(node.nodes) : undefined,
+        actions: node.actions ? qualifyNodeArgs(qualified)(node.actions) : undefined,
       };
     });
 
@@ -871,9 +871,12 @@ const qualifyNodeArgs =
  * already tracked via `_connectorPrevious`.
  */
 const collectAllInlineIds = (nodes: Node.NodeArg<any>[]): string[] =>
-  nodes.flatMap((node) =>
-    node.nodes ? [...node.nodes.map((child) => child.id), ...collectAllInlineIds(node.nodes)] : [],
-  );
+  nodes.flatMap((node) => {
+    const childNodes = node.nodes ?? [];
+    const actionNodes = node.actions ?? [];
+    const allInline = [...childNodes, ...actionNodes];
+    return allInline.length > 0 ? [...allInline.map((child) => child.id), ...collectAllInlineIds(allInline)] : [];
+  });
 
 const connectorKey = (id: string, relation: Node.RelationInput): string => primaryKey(id, Graph.relationKey(relation));
 

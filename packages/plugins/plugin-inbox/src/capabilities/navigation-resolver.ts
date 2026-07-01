@@ -6,22 +6,16 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  createTypeSectionPathResolver,
-  getSpaceIdFromPath,
-  getSpacePath,
-  type AppCapabilities as AppCaps,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, type AppCapabilities as AppCaps, Paths, TypeSection } from '@dxos/app-toolkit';
 import { Database, Key, Type } from '@dxos/echo';
-import { EID, URI } from '@dxos/keys';
-import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
+import { DXN, EID } from '@dxos/keys';
+import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
 import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { Calendar, Mailbox } from '#types';
 
-import { getMailboxAllMailPath, getMailboxesSectionId } from '../paths';
+import { getMailboxesSectionId, getMailboxPath } from '../paths';
 
 /**
  * Creates a path resolver for feed-object navigation paths of the form
@@ -35,7 +29,7 @@ const createFeedObjectPathResolver =
       return Effect.succeed(Option.none());
     }
     const segments = qualifiedPath.split('/');
-    const spaceId = getSpaceIdFromPath(qualifiedPath);
+    const spaceId = Paths.getSpaceIdFromPath(qualifiedPath);
     const parentIdx = segments.indexOf(parentSegmentName);
     const parentId = parentIdx >= 0 ? segments[parentIdx + 1] : undefined;
     if (!spaceId || !parentId || !Key.EntityId.isValid(parentId)) {
@@ -53,24 +47,23 @@ export default Capability.makeModule(
     // TODO(wittjosiah): Remove cast once NavigationTargetResolver type includes Database.Service.
     const resolver: AppCapabilities.NavigationTargetResolver = ((query) =>
       Effect.gen(function* () {
-        if (!query?.dxn) {
+        if (!query?.uri) {
           return [
             {
-              path: `${getSpacePath(SETTINGS_ID)}/${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
+              path: getPluginSettingsSectionPath(meta.profile.key),
               label: 'Inbox settings',
               type: 'settings',
             },
           ];
         }
 
-        const rawDxn = query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn;
-        const dxnRef = EID.tryParse(rawDxn) ?? (rawDxn.startsWith('dxn:') ? URI.make(rawDxn) : undefined);
-        if (!dxnRef) {
+        const targetUri = EID.tryParse(query.uri) ?? DXN.tryMake(query.uri);
+        if (!targetUri) {
           return [];
         }
 
         const { db } = yield* Database.Service;
-        const ref = db.makeRef(dxnRef);
+        const ref = db.makeRef(targetUri);
         const object = yield* Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
         if (!object || !Mailbox.instanceOf(object)) {
           return [];
@@ -78,7 +71,7 @@ export default Capability.makeModule(
 
         return [
           {
-            path: getMailboxAllMailPath(db.spaceId, object.id),
+            path: getMailboxPath(db.spaceId, object.id),
             label: (object as Mailbox.Mailbox).name ?? '',
             type: Type.getTypename(Mailbox.Mailbox),
           },
@@ -92,7 +85,7 @@ export default Capability.makeModule(
         return Effect.succeed(Option.none());
       }
       const segments = qualifiedPath.split('/');
-      const spaceId = getSpaceIdFromPath(qualifiedPath);
+      const spaceId = Paths.getSpaceIdFromPath(qualifiedPath);
       const mailboxesIdx = segments.indexOf(getMailboxesSectionId());
       const mailboxId = mailboxesIdx >= 0 ? segments[mailboxesIdx + 1] : undefined;
       if (!spaceId || !mailboxId || !Key.EntityId.isValid(mailboxId)) {
@@ -108,10 +101,13 @@ export default Capability.makeModule(
         AppCapabilities.NavigationPathResolver,
         createFeedObjectPathResolver(getMailboxesSectionId()),
       ),
-      Capability.contributes(AppCapabilities.NavigationPathResolver, createTypeSectionPathResolver(Calendar.Calendar)),
       Capability.contributes(
         AppCapabilities.NavigationPathResolver,
         createFeedObjectPathResolver(Type.getTypename(Calendar.Calendar)),
+      ),
+      Capability.contributes(
+        AppCapabilities.NavigationPathResolver,
+        TypeSection.createTypeSectionPathResolver(Calendar.Calendar, { groupId: Paths.GroupSegments.communications }),
       ),
     ];
   }),

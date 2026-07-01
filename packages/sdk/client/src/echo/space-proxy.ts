@@ -17,8 +17,8 @@ import {
 import {
   type ClientServicesProvider,
   type ExportSpaceOptions,
-  SPACE_TAG,
   type Space,
+  SPACE_TAG,
   type SpaceInternal,
   SpaceProperties,
 } from '@dxos/client-protocol';
@@ -26,21 +26,15 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, cancelWithContext } from '@dxos/context';
 import { type SpecificCredential, checkCredentialType } from '@dxos/credentials';
 import {
-  type CustomInspectFunction,
   type CustomInspectable,
+  type CustomInspectFunction,
   inspectCustom,
   loadashEqualityFn,
   todo,
   warnAfterTimeout,
 } from '@dxos/debug';
 import { Filter, Obj } from '@dxos/echo';
-import {
-  type EchoClient,
-  type EchoDatabase,
-  type DatabaseImpl,
-  type QueueFactory,
-  type SpaceSyncState,
-} from '@dxos/echo-client';
+import { type DatabaseImpl, type EchoClient, type EchoDatabase, type SpaceSyncState } from '@dxos/echo-client';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -61,8 +55,8 @@ import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import {
   type Credential,
   type Epoch,
-  MembershipPolicy,
   SpaceMember as HaloSpaceMember,
+  MembershipPolicy,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Timeframe } from '@dxos/timeframe';
@@ -78,7 +72,7 @@ const EPOCH_CREATION_TIMEOUT = 60_000;
  *
  * Use {@link Obj.getDatabase} when you only need DB/`spaceId` access; this
  * helper is retained only for callers that need {@link Space} proxy members
- * (`properties`, `queues`, `members`, `key`, `state`, `listen`, identity).
+ * (`properties`, `members`, `key`, `state`, `listen`, identity).
  */
 // TODO(burdon): Hypergraph.getSpace().
 export const getSpace = (object?: any): Space | undefined => {
@@ -150,8 +144,6 @@ export class SpaceProxy implements Space, CustomInspectable {
   private readonly _membersUpdate = new Event<SpaceMember[]>();
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
-  private readonly _queues!: QueueFactory;
-
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
   private _properties?: Obj.OfShape<SpaceProperties> = undefined;
@@ -184,7 +176,6 @@ export class SpaceProxy implements Space, CustomInspectable {
       spaceKey: this.key,
       owningObject: this,
     });
-    this._queues = echoClient.constructQueueFactory(this.id);
 
     const self = this;
     this._internal = {
@@ -240,10 +231,6 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   get db(): EchoDatabase {
     return this._db;
-  }
-
-  get queues(): QueueFactory {
-    return this._queues;
   }
 
   @trace.info()

@@ -2,18 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ModelName } from '@dxos/ai';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ChatProcessor } from './processor';
 
 /**
- * Object kinds we track in `--prompt --json` output. The agent's CRM blueprint
+ * Object kinds we track in `--prompt --json` output. The agent's CRM skill
  * creates Persons / Organizations / Documents / ProfileOf relations during
  * research; this is the minimal set scripts care about. Other types created
- * incidentally (Chats, Feeds, Blueprints) are deliberately filtered out so the
+ * incidentally (Chats, Feeds, Skills) are deliberately filtered out so the
  * JSON stays focused on the user-visible artefacts.
  */
 const TRACKED_TYPENAMES: ReadonlyArray<{ typename: string; kind: string }> = [
@@ -74,9 +74,9 @@ const diffSnapshots = (before: Map<string, SnapshotEntry>, after: Map<string, Sn
 export type RunNonInteractiveOptions = {
   space: Space;
   processor: ChatProcessor;
-  blueprints: string[];
+  skills: string[];
   prompt: string;
-  model: ModelName;
+  model: DXN.DXN;
   /** When true, emit a JSON array of `{kind, uri}`; otherwise emit the
    * agent's final assistant reply text. */
   json: boolean;
@@ -102,13 +102,13 @@ const renderText = async (space: Space, sessionFeedId: string): Promise<string> 
  * `dx chat --prompt …` for scripted research / smoke tests.
  */
 export const runNonInteractive = async (options: RunNonInteractiveOptions): Promise<void> => {
-  const { space, processor, blueprints, prompt, model, json } = options;
+  const { space, processor, skills, prompt, model, json } = options;
 
   log.info('non-interactive: snapshot before run');
   const before = await snapshotTrackedObjects(space);
 
-  log.info('non-interactive: creating session', { blueprints });
-  const session = await processor.createSession(space, blueprints);
+  log.info('non-interactive: creating session', { skills });
+  const session = await processor.createSession(space, skills);
 
   try {
     log.info('non-interactive: submitting prompt', { promptPreview: prompt.slice(0, 80) });

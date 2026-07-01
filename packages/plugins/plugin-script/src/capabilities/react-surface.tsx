@@ -15,8 +15,14 @@ import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
-import { ScriptPluginSettings } from '#components';
-import { DeploymentDialog, NotebookArticle, ScriptArticle, ScriptProperties, TestContainer } from '#containers';
+import {
+  DeploymentDialog,
+  NotebookArticle,
+  ScriptArticle,
+  ScriptProperties,
+  ScriptSettings,
+  TestContainer,
+} from '#containers';
 import { useCompiler } from '#hooks';
 import { meta } from '#meta';
 import { Notebook, ScriptCapabilities, type Settings } from '#types';
@@ -29,7 +35,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           const client = useClient();
@@ -39,11 +45,7 @@ export default Capability.makeModule(() =>
             await client.halo.writeCredentials([getAccessCredential(identityKey)]);
           };
           return (
-            <ScriptPluginSettings
-              settings={settings}
-              onSettingsChange={updateSettings}
-              onAuthenticate={handleAuthenticate}
-            />
+            <ScriptSettings settings={settings} onSettingsChange={updateSettings} onAuthenticate={handleAuthenticate} />
           );
         },
       }),

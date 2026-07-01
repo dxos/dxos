@@ -6,6 +6,7 @@ import { type Context } from '@dxos/context';
 import {
   type CheckEmailExistsResponse,
   type GetAccountResponse,
+  type GetProfileUsageResponse,
   type IssueInvitationResponse,
   type ListAccountInvitationsResponse,
   type LoginRequest,
@@ -17,6 +18,7 @@ import {
   type ResendVerificationEmailResponse,
   type ValidateInvitationCodeResponse,
 } from '@dxos/protocols';
+import { createUrl } from '@dxos/util';
 
 import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } from './base-http-client';
 
@@ -114,5 +116,23 @@ export class HubHttpClient extends BaseHttpClient {
     args?: EdgeHttpCallArgs,
   ): Promise<ResendVerificationEmailResponse> {
     return this._call(ctx, new URL('/account/email/resend-verification', this.baseUrl), { ...args, method: 'POST' });
+  }
+
+  /**
+   * Rolling-window usage and effective limits for the authenticated identity.
+   * Served from the per-user metering DO; optional `windowSeconds` defaults to the largest limit window.
+   */
+  public async getProfileUsage(
+    ctx: Context,
+    query?: { windowSeconds?: number },
+    args?: EdgeHttpCallArgs,
+  ): Promise<GetProfileUsageResponse> {
+    return this._call(
+      ctx,
+      createUrl(new URL('/api/metering/profile/usage', this.baseUrl), {
+        windowSeconds: query?.windowSeconds,
+      }),
+      { ...args, method: 'GET' },
+    );
   }
 }

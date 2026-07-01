@@ -4,8 +4,8 @@
 
 import { meta } from '#meta';
 
-/** Tool id strings for inbox operations (matches {@link Blueprint.toolDefinitions} output from operation defs). */
-const operation = (name: string): string => `${meta.id}.operation.${name}`;
+/** Tool id strings for inbox operations (matches {@link Skill.toolDefinitions} output from operation defs). */
+const operation = (name: string): string => `${meta.profile.key}.operation.${name}`;
 
 export const ToolIds = {
   ClassifyEmail: operation('classifyEmail'),
@@ -13,6 +13,7 @@ export const ToolIds = {
   ReadEmail: operation('readEmail'),
   GoogleMailSync: operation('googleMailSync'),
   ExtractMessage: operation('extractMessage'),
+  ExtractMailbox: operation('extractMailbox'),
   GoogleMailSend: operation('googleMailSend'),
   GoogleCalendarSync: operation('googleCalendarSync'),
 } as const;

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { HighlightStyle, LRLanguage, LanguageSupport, syntaxHighlighting, syntaxTree } from '@codemirror/language';
+import { HighlightStyle, LanguageSupport, LRLanguage, syntaxHighlighting, syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import { type SyntaxNodeRef } from '@lezer/common';
@@ -344,18 +344,18 @@ const styles = EditorView.theme({
 const queryHighlighting = styleTags({
   // Keywords
   'Not And Or': t.keyword,
-  TypeKeyword: t.attributeName,
+  'TypeKeyword': t.attributeName,
 
   // Literals
-  String: t.string,
-  Number: t.number,
-  Boolean: t.bool,
-  Null: t.null,
+  'String': t.string,
+  'Number': t.number,
+  'Boolean': t.bool,
+  'Null': t.null,
 
   // Identifiers
-  Identifier: t.variableName,
-  PropertyPath: t.propertyName,
-  Tagname: t.variableName,
+  'Identifier': t.variableName,
+  'PropertyPath': t.propertyName,
+  'Tagname': t.variableName,
 
   // Punctuation
   '{ }': t.brace,

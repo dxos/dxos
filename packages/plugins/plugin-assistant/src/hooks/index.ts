@@ -3,7 +3,7 @@
 //
 // TODO(wittjosiah): Factor hooks out of plugin-assistant into a standalone package.
 
-export * from './useBlueprintRegistry';
+export * from './useSkillRegistry';
 export * from './useChatKeymap';
 export * from './useChatProcessor';
 export * from './useChatServices';
@@ -13,8 +13,10 @@ export * from './useContextObjects';
 export { useDebug } from './useDebug';
 export * from './useFilteredTypes';
 export * from './useFlush';
-export * from './useOnline';
 export * from './usePresets';
 export * from './useReferencesProvider';
+export * from './useTraceMessages';
+export * from './useHomeSuggestions';
+export * from './useProcessEphemeralStatus';
 
 export { type AiChatProcessor } from '../processor';

@@ -10,25 +10,20 @@ import { Text } from '@dxos/schema';
 
 import {
   AnchorSort,
-  AppGraphBuilder,
-  NavigationResolver,
-  AppGraphSerializer,
-  BlueprintDefinition,
   CommentConfig,
   CreateObject,
   MarkdownSettings,
   MarkdownState,
   OperationHandler,
   ReactSurface,
+  SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Markdown, MarkdownEvents } from '#types';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
@@ -48,10 +43,6 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     // resolves AttentionCapabilities.ViewState to build the editor state store.
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupSettings, AttentionEvents.AttentionReady),
     activate: MarkdownState,
-  }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.AppGraphReady,
-    activate: AppGraphSerializer,
   }),
   Plugin.addModule({
     // TODO(wittjosiah): More relevant event?

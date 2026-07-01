@@ -32,7 +32,7 @@ export type MeetingArticleProps = AppSurface.ObjectArticleProps<Meeting.Meeting>
  * area that renders the selected component as an article surface.
  */
 export const MeetingArticle = ({ role, subject: meeting, attendableId }: MeetingArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const [tab, setTab] = useState<MeetingTab>('notes');
   // The Call tab is offered only when the calls plugin contributes a transport provider.
@@ -55,12 +55,12 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
-        .root({ label: ['meeting-toolbar.menu', { ns: meta.id }] })
+        .root({ label: ['meeting-toolbar.menu', { ns: meta.profile.key }] })
         .subgraph((builder) =>
           builder.group(
             'tab',
             {
-              label: ['meeting-tabs.menu', { ns: meta.id }],
+              label: ['meeting-tabs.menu', { ns: meta.profile.key }],
               iconOnly: true,
               variant: 'toggleGroup',
               selectCardinality: 'single',
@@ -71,7 +71,7 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
                 group.action(
                   key,
                   {
-                    label: [`${key}.label`, { ns: meta.id }],
+                    label: [`${key}.label`, { ns: meta.profile.key }],
                     icon: TAB_ICONS[key],
                     checked: tab === key,
                   },
@@ -86,7 +86,7 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
           group.action(
             'generate-summary',
             {
-              label: [hasSummary ? 'regenerate-summary.label' : 'generate-summary.label', { ns: meta.id }],
+              label: [hasSummary ? 'regenerate-summary.label' : 'generate-summary.label', { ns: meta.profile.key }],
               icon: 'ph--book-open-text--regular',
             },
             handleGenerateSummary,
@@ -123,7 +123,7 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
       </Menu.Root>
       {tab === 'call' && callData && (
         <Panel.Content>
-          <Surface.Surface role='article' data={callData} limit={1} />
+          <Surface.Surface type={AppSurface.Article} data={callData} limit={1} />
         </Panel.Content>
       )}
       {tab !== 'call' && articleData && (

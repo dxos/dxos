@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Button, ButtonGroup, IconButton, Input, useTranslation } from '@dxos/react-ui';
@@ -18,7 +18,7 @@ import { Calendar } from '#types';
 export type CalendarPropertiesProps = AppSurface.ObjectPropertiesProps<Calendar.Calendar>;
 
 export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
 
@@ -33,8 +33,8 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
       return;
     }
     void invokePromise(LayoutOperation.Open, {
-      subject: [`${getSpacePath(db.spaceId)}/settings/org.dxos.plugin.automation.automations`],
-      workspace: getSpacePath(db.spaceId),
+      subject: [Paths.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.routine.routines')],
+      workspace: Paths.getSpacePath(db.spaceId),
     });
   }, [invokePromise, db]);
 

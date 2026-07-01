@@ -6,22 +6,21 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { meta } from '../meta';
 
-export const Spec = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
-}).pipe(
-  Annotation.IconAnnotation.set({ icon: meta.icon!, hue: meta.iconHue }),
-  Type.makeObject(DXN.make('org.dxos.type.spec', '0.1.0')),
-);
-
-export type Spec = Type.InstanceType<typeof Spec>;
+export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.spec', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: meta.profile.icon?.key ?? 'ph--code--regular', hue: meta.profile.icon?.hue }),
+  ),
+) {}
 
 export const isSpec = (object: unknown): object is Spec =>
   Schema.is(Type.getSchema(Spec) as Schema.Schema<Spec>)(object);

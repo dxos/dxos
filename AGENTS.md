@@ -3,6 +3,7 @@
 ## IMPORTANT
 
 - When you start, the first thing you should do is tell the user if you understand these instructions and list the config files you are aware of.
+- You must disclose your current worktree as soon as it is created.
 - If you are unsure about the best way to implement something, ask the user for clarification.
 - When asking the user a question; either make it yes/no, or provide numbered options.
 - DO NOT EVER ASK a-or-b questions without numbering them.
@@ -49,7 +50,7 @@
 - Prefer functional programming and arrow functions.
 - Import order: builtin → external → @dxos → internal → parent → sibling (with blank lines between groups).
 - **Internal module imports** (e.g. `@dxos/echo` entrypoints importing `src/internal/<Module>/`): import the capitalized internal barrel as a lowercase `*Internal` namespace — `import * as objInternal from './internal/Obj'`, `import * as queryInternal from './internal/Query'`. Do not deep-import submodules (`./internal/Obj/atoms`, `./internal/Ref/ref`, etc.); re-export needed symbols from the module's `index.ts` instead. The top-level `./internal` barrel is for cross-cutting re-exports only — prefer the per-module barrel when a single entrypoint owns the dependency. Atom factories inside internal modules use the `makeAtom` name (not `make`) to avoid clashing with public `make` APIs.
-- Error handling: use Effect-TS patterns.
+- Error handling: use Effect-TS patterns. Never put untyped `Error` in an Effect's error type parameter — define domain errors with `BaseError.extend` (from `@dxos/errors`) or `Data.TaggedClass` so callers can recover with `Effect.catchTag`.
 - JSDoc comments for public functions, all comments end with period.
 - Comments state _why the code is necessary_ (the invariant or constraint it satisfies), concise and self-contained. Never narrate the fix, reference this conversation, or use before/after framing ("rather than X we now do Y", "this used to…"). State the constraint that makes the code correct; drop the history.
 - React: arrow function components, TailwindCSS for styles, proper event handler types.
@@ -142,6 +143,7 @@ export const func: {
   - If there are unstaged changes, stash these and move them into the worktree; tell the user.
   - Before working on code, tell the user the worktree.
   - IMPORTANT: Do not change the branch or worktree name after you have started unless you are instructed to directly by the user.
+  - **IMPORTANT**: Do NOT create new git branches unless the user explicitly asks. Work on the current branch only.
   - **IMPORTANT**: Always work in the worktree directory the harness assigned to you — do NOT `cd` into other worktrees or create parallel worktrees on the side. The harness UI tracks progress by watching that directory; working elsewhere makes changes invisible to the user. If the user asks you to continue a different branch, check out that branch in the assigned worktree (clean up the old branch first if needed); do not switch to another worktree path.
 - Check `moon.yml` for available package tasks
 - Run linter at natural stopping points

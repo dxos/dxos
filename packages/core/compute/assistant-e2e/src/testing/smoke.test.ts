@@ -9,13 +9,14 @@ import { trim } from '@dxos/util';
 
 import { agentTest, agentTestTimeout } from '../harness';
 
+// Must stay at module scope: primes the test PRNG; agentTest pins a per-test seed from the test name.
 Obj.ID.dangerouslyDisableRandomness();
 
 describe('Smoke', () => {
   it.effect(
     'succeeds',
     agentTest({
-      blueprints: [],
+      skills: [],
       instructions: trim`
         Do nothing and succeed.
       `,
@@ -26,7 +27,7 @@ describe('Smoke', () => {
   it.effect(
     'fails',
     agentTest({
-      blueprints: [],
+      skills: [],
       expect: 'failure',
       instructions: trim`
         Do nothing and fail.

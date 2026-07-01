@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 
-import { compileEntry, executeScript, type LoadedFile } from '../compiler';
+import { type LoadedFile, compileEntry, executeScript } from '../compiler';
 import { CodeOperation } from '../types';
 
 /**

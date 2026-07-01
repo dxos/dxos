@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -16,7 +17,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { Thread as ThreadComponent } from '@dxos/react-ui-thread';
-import { withLayout, Loading } from '@dxos/react-ui/testing';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Thread } from '@dxos/types';
 
 import { translations } from '#translations';
@@ -62,7 +63,7 @@ const meta = {
           Capabilities.ReactSurface,
           Surface.create({
             id: 'test',
-            role: 'card',
+            filter: Surface.makeFilter(AppSurface.CardContent),
             component: ({ role }) => <span>{JSON.stringify({ role })}</span>,
           }),
         ),

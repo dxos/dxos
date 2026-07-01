@@ -2,11 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { DropdownMenu, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Obj } from '@dxos/echo';
+import { DropdownMenu, IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Stack, StackItem, type StackProps } from '@dxos/react-ui-stack';
+import { Mosaic, type MosaicEventHandler, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { mx } from '@dxos/ui-theme';
+import { arrayMove } from '@dxos/util';
 
 import { meta } from '#meta';
 import { type Notebook } from '#types';
@@ -17,55 +20,122 @@ import { NotebookMenu } from './NotebookMenu';
 
 const minSectionHeight = 'min-h-[16rem]';
 
+const getCellId = (cell: Notebook.Cell) => cell.id;
+
 export type NotebookStackProps = ThemedClassName<
   {
     notebook?: Notebook.Notebook;
-    onRearrange?: StackProps['onRearrange'];
   } & (Pick<NotebookSectionProps, 'db' | 'graph' | 'promptResults' | 'onCellInsert' | 'onCellDelete'> &
     Pick<TypescriptEditorProps, 'env'>)
 >;
 
-// TODO(burdon): Option for narrow rail (with compact buttons that align with first button in toolbar).
 export const NotebookStack = composable<HTMLDivElement, NotebookStackProps>(
-  ({ notebook, onRearrange, db, graph, promptResults, onCellInsert, onCellDelete, env, ...props }, forwardedRef) => {
-    const sectionProps = { db, graph, promptResults, onCellInsert, onCellDelete, env };
+  ({ notebook, db, graph, promptResults, onCellInsert, onCellDelete, env, ...props }, forwardedRef) => {
+    const [viewport, setViewport] = useState<HTMLElement | null>(null);
+
+    // Stable Tile identity: an inline component is a new type each render, so Mosaic would unmount and
+    // remount every cell (losing editor state) whenever this component re-renders.
+    const Tile = useCallback(
+      (tileProps: MosaicTileProps<Notebook.Cell>) => (
+        <NotebookSection
+          {...tileProps}
+          db={db}
+          graph={graph}
+          promptResults={promptResults}
+          onCellInsert={onCellInsert}
+          onCellDelete={onCellDelete}
+          env={env}
+        />
+      ),
+      [db, graph, promptResults, onCellInsert, onCellDelete, env],
+    );
+
+    // Reorder cells in place; placeholder/tile locations are 1-based with half-step placeholders between
+    // tiles, so the floor of the drop location is the destination array index (see Mosaic.Stack).
+    const eventHandler = useMemo<MosaicEventHandler<Notebook.Cell>>(
+      () => ({
+        id: notebook?.id ?? 'notebook',
+        // Only the notebook's own cells are droppable; onDrop only reorders within this notebook.
+        canDrop: ({ source }) => !!notebook && notebook.cells.some((cell) => cell.id === source.id),
+        onDrop: ({ source, target }) => {
+          if (!notebook || !target) {
+            return;
+          }
+
+          const to =
+            target.type === 'tile' || target.type === 'placeholder'
+              ? target.location
+              : target.type === 'container'
+                ? notebook.cells.length
+                : -1;
+          const insertIndex = typeof to === 'number' && to >= 0 ? Math.floor(to) : -1;
+          if (insertIndex < 0) {
+            return;
+          }
+
+          Obj.update(notebook, (notebook) => {
+            const from = notebook.cells.findIndex((cell) => cell.id === source.id);
+            if (from !== -1) {
+              arrayMove(notebook.cells, from, insertIndex);
+            }
+          });
+        },
+      }),
+      [notebook],
+    );
+
     return (
-      <Stack
-        {...composableProps(props)}
-        orientation='vertical'
-        size='contain'
-        rail
-        onRearrange={onRearrange}
-        ref={forwardedRef}
-      >
-        {notebook?.cells.map((cell, i) => (
-          <NotebookSection key={i} cell={cell} {...sectionProps} />
-        ))}
-      </Stack>
+      <Mosaic.Root ref={forwardedRef}>
+        <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
+          <ScrollArea.Root orientation='vertical' padding {...composableProps(props)}>
+            <ScrollArea.Viewport ref={setViewport}>
+              <Mosaic.Stack orientation='vertical' items={notebook?.cells ?? []} getId={getCellId} Tile={Tile} />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Mosaic.Container>
+      </Mosaic.Root>
     );
   },
 );
 
-type NotebookSectionProps = NotebookCellProps;
+type NotebookSectionProps = MosaicTileProps<Notebook.Cell> &
+  Pick<NotebookCellProps, 'db' | 'graph' | 'promptResults' | 'onCellInsert' | 'onCellDelete' | 'env'>;
 
+// TODO(burdon): Option for narrow rail (with compact buttons that align with first button in toolbar).
+// TODO(burdon): Reinstate a Mosaic-native resize affordance for query cells (currently a fixed min-height).
 const NotebookSection = ({
-  cell,
+  data: cell,
   db,
   env,
+  graph,
   promptResults,
   onCellInsert,
   onCellDelete,
-  ...props
+  ...tileProps
 }: NotebookSectionProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const resizable = cell.type === 'query';
+  const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
 
   return (
-    <StackItem.Root role='section' item={cell} draggable classNames={resizable && minSectionHeight}>
-      <StackItem.Heading classNames='h-full p-1 justify-between dx-attention-surface'>
-        <StackItem.DragHandle asChild>
-          <IconButton variant='ghost' icon='ph--dots-six-vertical--regular' iconOnly label='Drag handle' />
-        </StackItem.DragHandle>
+    <Mosaic.Tile
+      {...tileProps}
+      data={cell}
+      dragHandle={dragHandle}
+      classNames={mx(
+        'grid grid-cols-[min-content_1fr] overflow-visible border border-subdued-separator',
+        resizable && minSectionHeight,
+      )}
+    >
+      {/* Side rail */}
+      <div className='flex flex-col p-1 border-e border-subdued-separator dx-attention-surface'>
+        <IconButton
+          ref={setDragHandle}
+          variant='ghost'
+          icon='ph--dots-six-vertical--regular'
+          iconOnly
+          label='Drag handle'
+        />
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <IconButton
@@ -77,21 +147,9 @@ const NotebookSection = ({
           </DropdownMenu.Trigger>
           <NotebookMenu cell={cell} onCellInsert={onCellInsert} onCellDelete={onCellDelete} />
         </DropdownMenu.Root>
-        {resizable && <StackItem.ResizeHandle />}
-      </StackItem.Heading>
+      </div>
 
-      {/* TODO(burdon): Move drag preview to outer stack (uniformly). */}
-      <StackItem.DragPreview>
-        {({ item: cell }) => (
-          <StackItem.Content classNames='overflow-visible bg-group-surface border border-subdued-separator'>
-            <NotebookCell db={db} cell={cell} env={env} dragging />
-          </StackItem.Content>
-        )}
-      </StackItem.DragPreview>
-
-      <StackItem.Content classNames='overflow-visible'>
-        <NotebookCell db={db} cell={cell} env={env} promptResults={promptResults} {...props} />
-      </StackItem.Content>
-    </StackItem.Root>
+      <NotebookCell db={db} cell={cell} env={env} graph={graph} promptResults={promptResults} />
+    </Mosaic.Tile>
   );
 };

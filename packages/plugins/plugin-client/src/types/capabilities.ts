@@ -12,12 +12,14 @@ import { type HubHttpClient } from '@dxos/edge-client';
 
 import { meta } from '#meta';
 
-import { type AccountCache as AccountCacheType } from '../state/account-cache';
+import { type AccountCache as AccountCacheType } from './account-cache';
 
 export namespace ClientCapabilities {
-  export const Client = Capability.make<Client>(`${meta.id}.capability.client`);
-  export const Schema = Capability.make<Type.AnyEntity[]>(`${meta.id}.capability.schema`);
-  export const Migration = Capability.make<ObjectMigration[]>(`${meta.id}.capability.migration`);
-  export const AccountCache = Capability.make<Atom.Writable<AccountCacheType>>(`${meta.id}.capability.accountCache`);
-  export const HubHttpClient = Capability.make<HubHttpClient>(`${meta.id}.capability.hubHttpClient`);
+  export const Client = Capability.make<Client>(`${meta.profile.key}.capability.client`);
+  export const Schema = Capability.make<Type.AnyEntity[]>(`${meta.profile.key}.capability.schema`);
+  export const Migration = Capability.make<ObjectMigration[]>(`${meta.profile.key}.capability.migration`);
+  export const AccountCache = Capability.make<Atom.Writable<AccountCacheType>>(
+    `${meta.profile.key}.capability.accountCache`,
+  );
+  export const HubHttpClient = Capability.make<HubHttpClient>(`${meta.profile.key}.capability.hubHttpClient`);
 }

@@ -135,9 +135,12 @@ export const ResizeHandle = ({
       className={mx(
         'group absolute flex focus-visible:outline-hidden',
         surfaceZIndex({ elevation, level: 'tooltip' }),
+        // Both the grab button (w-4/h-4) and its hover line are centered on the underlying edge: the
+        // button is offset by half its size (-2) so it straddles the edge, and the line is centered
+        // within the button (start-1/2 / top-1/2) so it sits on the edge too.
         orientation === 'horizontal'
-          ? 'cursor-col-resize w-4 inset-y-0 data-[side=inline-end]:end-0 data-[side=inline-end]:before:end-0 data-[side=inline-start]:start-0 data-[side=inline-start]:before:start-0 border-b-0! before:inset-y-0 before:w-1'
-          : 'cursor-row-resize h-4 inset-x-0 data-[side=block-end]:bottom-0 data-[side=block-end]:before:bottom-0 data-[side=block-start]:top-0 data-[side=block-start]:before:top-0 border-x-0! before:inset-x-0 before:h-1',
+          ? 'cursor-col-resize w-4 inset-y-0 data-[side=inline-end]:-end-2 data-[side=inline-start]:-start-2 border-b-0! before:inset-y-0 before:w-1 before:start-1/2 before:-translate-x-1/2'
+          : 'cursor-row-resize h-4 inset-x-0 data-[side=block-end]:-bottom-2 data-[side=block-start]:-top-2 border-x-0! before:inset-x-0 before:h-1 before:top-1/2 before:-translate-y-1/2',
         orientation === 'horizontal'
           ? iconPosition === 'end'
             ? 'align-end'

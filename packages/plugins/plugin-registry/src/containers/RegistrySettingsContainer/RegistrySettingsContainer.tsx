@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { useSettingsState, usePluginManager } from '@dxos/app-framework/ui';
+import { usePluginManager, useSettingsState } from '@dxos/app-framework/ui';
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { EffectEx } from '@dxos/effect';
 
@@ -33,7 +33,7 @@ export const RegistrySettingsContainer = ({ subject }: RegistrySettingsContainer
       await EffectEx.runAndForwardErrors(
         Effect.gen(function* () {
           const plugin = yield* manager.add(url);
-          yield* manager.enable(plugin.meta.id);
+          yield* manager.enable(plugin.meta.profile.key);
         }),
       );
     },

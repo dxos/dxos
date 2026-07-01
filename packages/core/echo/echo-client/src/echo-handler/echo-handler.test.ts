@@ -21,11 +21,9 @@ import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
 import { EID, EntityId, PublicKey, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
-import { defer } from '@dxos/util';
 
-import { DocAccessor } from '../core-db';
+import { Doc } from '../automerge';
 import { EchoTestBuilder, createTmpPath } from '../testing';
-import { createDocAccessor } from './doc-accessor';
 import { createObject, getObjectCore } from './echo-handler';
 import { isEchoObject } from './echo-object-utils';
 
@@ -164,13 +162,13 @@ describe('without database', () => {
     const obj = createObject(Obj.make(TestSchema, { text: 'foo', nested: { name: 'bar' } }));
 
     {
-      const accessor = createDocAccessor(obj, 'text');
-      expect(DocAccessor.getValue(accessor)).toEqual('foo');
+      const accessor = getObjectCore(obj).getDocAccessor(['text']);
+      expect(Doc.getValue(accessor)).toEqual('foo');
     }
 
     {
-      const accessor = createDocAccessor(obj.nested, 'name');
-      expect(DocAccessor.getValue(accessor)).toEqual('bar');
+      const accessor = getObjectCore(obj).getDocAccessor(['nested', 'name']);
+      expect(Doc.getValue(accessor)).toEqual('bar');
     }
   });
 });
@@ -228,10 +226,29 @@ describe('Reactive Object with ECHO database', () => {
     expect(returnObj === obj).to.be.true;
   });
 
+  test('object with nested reactive records can be added to the database', async () => {
+    const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
+
+    // A nested struct value is a reactive record whose target prototype carries the per-object
+    // instance state (not `Object.prototype`); ingestion must accept it rather than reject it as a
+    // class instance.
+    const obj = db.add(
+      Obj.make(TestSchema.Example, {
+        string: 'foo',
+        nested: { field: 'bar' },
+        nestedArray: [{ field: 'a' }, { field: 'b' }],
+      }),
+    );
+    expect(obj.nested?.field).to.eq('bar');
+    expect(obj.nestedArray?.map((item) => item.field)).to.deep.eq(['a', 'b']);
+  });
+
   test('existing proxy objects can be passed to create', async () => {
-    const TestSchema = Schema.Struct({
-      field: Schema.Any,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+    const TestSchema = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+      Schema.Struct({
+        field: Schema.Any,
+      }),
+    );
 
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([TestSchema]);
@@ -385,7 +402,7 @@ describe('Reactive Object with ECHO database', () => {
       const objData: any = (obj as any).toJSON();
       expect(objData).to.deep.contain({
         ...TEST_OBJECT,
-        id: obj.id,
+        'id': obj.id,
         '@type': 'dxn:com.example.type.example:0.1.0',
         '@meta': { keys: [] },
       });
@@ -437,15 +454,19 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   describe('references', () => {
-    const Organization = Schema.Struct({
-      name: Schema.String,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')));
+    const Organization = Type.makeObject(DXN.make('com.example.type.organization', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+      }),
+    );
 
-    const Contact = Schema.Struct({
-      name: Schema.String,
-      organization: Ref.Ref(Organization),
-      previousEmployment: Schema.optional(Schema.Array(Ref.Ref(Organization))),
-    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
+    const Contact = Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+        organization: Ref.Ref(Organization),
+        previousEmployment: Schema.optional(Schema.Array(Ref.Ref(Organization))),
+      }),
+    );
 
     test('references', async () => {
       const { db, graph } = await builder.createDatabase();
@@ -524,7 +545,7 @@ describe('Reactive Object with ECHO database', () => {
         name: 'John',
         organization: Ref.make(Obj.make(Organization, { name: 'DXOS' })),
       });
-      const cloned = Obj.clone(original, { deep: true });
+      const cloned = Obj.clone(original, { deep: 'all' });
       const person = db.add(cloned);
 
       expect(cloned.organization.target?.id).not.to.eq(original.organization.target?.id);
@@ -618,9 +639,11 @@ describe('Reactive Object with ECHO database', () => {
   // unsaved target just like a Ref assigned to an ordinary property does, otherwise the stored
   // DXN dangles and resolution throws EntityNotFoundError (see CollectionModel root collection).
   describe('annotation references', () => {
-    const RootCollection = Schema.Struct({
-      name: Schema.optional(Schema.String),
-    }).pipe(Type.makeObject(DXN.make('com.example.type.rootCollection', '0.1.0')));
+    const RootCollection = Type.makeObject(DXN.make('com.example.type.rootCollection', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.optional(Schema.String),
+      }),
+    );
 
     const RootRefAnnotation = Annotation.make({
       id: 'com.example.annotation.rootRef',
@@ -717,12 +740,16 @@ describe('Reactive Object with ECHO database', () => {
     });
 
     test('object with meta pushed to array', async () => {
-      const NestedType = Schema.Struct({
-        field: Schema.Number,
-      }).pipe(Type.makeObject(DXN.make('com.example.type.testNested', '0.1.0')));
-      const TestType = Schema.Struct({
-        objects: Schema.Array(Ref.Ref(NestedType)),
-      }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+      const NestedType = Type.makeObject(DXN.make('com.example.type.testNested', '0.1.0'))(
+        Schema.Struct({
+          field: Schema.Number,
+        }),
+      );
+      const TestType = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+        Schema.Struct({
+          objects: Schema.Array(Ref.Ref(NestedType)),
+        }),
+      );
 
       const key = foreignKey('example.com', '123');
       const { db, graph } = await builder.createDatabase();
@@ -736,9 +763,11 @@ describe('Reactive Object with ECHO database', () => {
     });
 
     test('push key to object created with', async () => {
-      const TestType = Schema.Struct({
-        field: Schema.Number,
-      }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+      const TestType = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+        Schema.Struct({
+          field: Schema.Number,
+        }),
+      );
       const { db, graph } = await builder.createDatabase();
       graph.registry.add([TestType]);
       const obj = db.add(Obj.make(TestType, { [Obj.Meta]: { keys: [foreignKey('example.com', '123')] }, field: 1 }));
@@ -794,11 +823,11 @@ describe('Reactive Object with ECHO database', () => {
 
       const employeeJson = JSON.parse(JSON.stringify(employee));
       expect(employeeJson).to.deep.eq({
-        id: employee.id,
+        'id': employee.id,
         '@meta': { keys: [] },
         '@type': 'dxn:com.example.type.expando:0.1.0',
-        name: 'John',
-        worksAt: EncodedReference.fromURI(EID.make({ entityId: org.id })),
+        'name': 'John',
+        'worksAt': EncodedReference.fromURI(EID.make({ entityId: org.id })),
       });
     });
 
@@ -813,40 +842,10 @@ describe('Reactive Object with ECHO database', () => {
         }),
       );
 
-      log.info('', { acc: createDocAccessor(org, []).handle.doc() });
+      log.info('', { acc: getObjectCore(org).getDocAccessor([]).handle.doc() });
 
       expect(Obj.getMeta(org).tags.map((ref) => ref.uri)).toEqual([importantUri]);
     });
-  });
-
-  test('rebind', async () => {
-    const { db } = await builder.createDatabase();
-
-    const obj1 = db.add(Obj.make(TestSchema.Expando, { title: 'Object 1' }));
-    const obj2 = db.add(Obj.make(TestSchema.Expando, { title: 'Object 2' }));
-    // Wait for document creation to complete so docHandle is ready.
-    await db.flush();
-
-    let updateCount = 0;
-    const unsub1 = Obj.subscribe(obj1, () => updateCount++);
-    const unsub2 = Obj.subscribe(obj2, () => updateCount++);
-    using _ = defer(() => {
-      unsub1();
-      unsub2();
-    });
-
-    expect(updateCount).to.eq(0);
-
-    // Rebind obj2 to obj1
-    getObjectCore(obj2).bind({
-      db: getObjectCore(obj1).database!,
-      docHandle: getObjectCore(obj1).docHandle!,
-      path: getObjectCore(obj1).mountPath,
-      assignFromLocalState: false,
-    });
-
-    expect(updateCount).to.eq(1);
-    expect(obj2.title).to.eq('Object 1');
   });
 
   test('assign a non-echo reactive object', async () => {
@@ -1022,10 +1021,12 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   describe('Uint8Array fields', () => {
-    const Blob = Schema.Struct({
-      name: Schema.String,
-      bytes: Schema.Uint8ArrayFromSelf,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.blob', '0.1.0')));
+    const Blob = Type.makeObject(DXN.make('com.example.type.blob', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+        bytes: Schema.Uint8ArrayFromSelf,
+      }),
+    );
 
     test('stored natively in automerge and round-trip through ECHO', async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [Blob] });

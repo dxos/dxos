@@ -7,12 +7,12 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 import {
   AppGraphBuilder,
-  BlueprintDefinition,
   BuildRunState,
   CreateObject,
   OperationHandler,
   ReactSurface,
   Settings as SettingsCapability,
+  SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -23,7 +23,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const CodePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Spec.Spec, CodeProject.CodeProject, SourceFile.SourceFile] }),
@@ -35,7 +35,7 @@ export const CodePlugin = Plugin.define(meta).pipe(
     activate: BuildRunState,
   }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

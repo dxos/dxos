@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FEEDBACK_LOGS_MAX_SIZE } from '../constants';
+// Import from the focused constants module rather than the `../util` barrel: the barrel re-exports
+// modules (config/halo/storage) that pull Automerge's wasm into this Cloudflare Worker bundle, which
+// esbuild cannot load. The Worker only needs this one constant.
+import { FEEDBACK_LOGS_MAX_SIZE } from '../util/constants';
 
 type Env = {
   ASSETS: Fetcher;
@@ -26,7 +29,7 @@ const corsHeaders = (origin: string | null): Record<string, string> => ({
   'Access-Control-Allow-Origin': origin && ALLOWED_ORIGINS.has(origin) ? origin : '',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Content-Encoding',
-  Vary: 'Origin',
+  'Vary': 'Origin',
 });
 
 /** Handle /api/feedback-logs — upload NDJSON debug logs to R2. */

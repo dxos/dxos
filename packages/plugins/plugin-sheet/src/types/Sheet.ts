@@ -6,11 +6,15 @@
 
 import * as Schema from 'effect/Schema';
 
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula';
-import { DXN, Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
+import { CollectionItemAnnotation } from '@dxos/schema';
 
 import { addressToIndex, initialize, mapFormulaRefsToIndices } from './util';
+
+export const SKILL_KEY = 'org.dxos.skill.sheet';
 
 export type SheetSize = {
   rows: number;
@@ -42,32 +46,33 @@ export const RowColumnMeta = Schema.Struct({
 
 // TODO(burdon): Reconcile col/column (across packages).
 // TODO(burdon): Index to all updates when rows/columns are inserted/deleted.
-export const Sheet = Schema.Struct({
-  name: Schema.optional(Schema.String),
+export class Sheet extends Type.makeObject<Sheet>(DXN.make('org.dxos.type.sheet', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
 
-  // Sparse map of cells referenced by index.
-  cells: Schema.Record({ key: Schema.String, value: CellValue }).pipe(FormInputAnnotation.set(false)),
+    // Sparse map of cells referenced by index.
+    cells: Schema.Record({ key: Schema.String, value: CellValue }).pipe(FormInputAnnotation.set(false)),
 
-  // Ordered row indices.
-  rows: Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false)),
+    // Ordered row indices.
+    rows: Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false)),
 
-  // Ordered column indices.
-  columns: Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false)),
+    // Ordered column indices.
+    columns: Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false)),
 
-  // Row metadata referenced by index.
-  rowMeta: Schema.Record({ key: Schema.String, value: RowColumnMeta }).pipe(FormInputAnnotation.set(false)),
+    // Row metadata referenced by index.
+    rowMeta: Schema.Record({ key: Schema.String, value: RowColumnMeta }).pipe(FormInputAnnotation.set(false)),
 
-  // Column metadata referenced by index.
-  columnMeta: Schema.Record({ key: Schema.String, value: RowColumnMeta }).pipe(FormInputAnnotation.set(false)),
+    // Column metadata referenced by index.
+    columnMeta: Schema.Record({ key: Schema.String, value: RowColumnMeta }).pipe(FormInputAnnotation.set(false)),
 
-  // Cell formatting referenced by indexed range.
-  ranges: Schema.Array(Range).pipe(FormInputAnnotation.set(false)),
-}).pipe(
-  Annotation.IconAnnotation.set({ icon: 'ph--grid-nine--regular', hue: 'indigo' }),
-  Type.makeObject(DXN.make('org.dxos.type.sheet', '0.1.0')),
-);
-
-export type Sheet = Type.InstanceType<typeof Sheet>;
+    // Cell formatting referenced by indexed range.
+    ranges: Schema.Array(Range).pipe(FormInputAnnotation.set(false)),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--grid-nine--regular', hue: 'indigo' }),
+    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+    CollectionItemAnnotation.set(true),
+  ),
+) {}
 
 export type SheetProps = {
   name?: string;

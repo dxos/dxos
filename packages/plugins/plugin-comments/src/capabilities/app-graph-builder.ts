@@ -12,8 +12,9 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { linkedSegment, selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
+import { type ViewStateManager, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { Channel } from '@dxos/types';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
@@ -61,8 +62,8 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'commentsCompanion',
-        match: (node) => {
-          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
+        match: (node, get) => {
+          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {
             return Option.none();
           }
           const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
@@ -72,17 +73,17 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('comments'),
-              label: ['comments.label', { ns: meta.id }],
+              label: ['comments.label', { ns: meta.profile.key }],
               icon: 'ph--chat-text--regular',
               data: 'comments',
-              position: 'first',
+              position: Position.first,
             }),
           ]),
       }),
       GraphBuilder.createExtension({
         id: 'commentToolbar',
-        match: (node) => {
-          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
+        match: (node, get) => {
+          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {
             return Option.none();
           }
           const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
@@ -120,7 +121,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['add-comment.label', { ns: meta.id }],
+                label: ['add-comment.label', { ns: meta.profile.key }],
                 icon: 'ph--chat-text--regular',
                 disposition: 'toolbar',
                 disabled,

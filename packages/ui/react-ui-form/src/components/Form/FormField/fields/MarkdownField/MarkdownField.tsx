@@ -5,9 +5,9 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database, Obj, Ref } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
-import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
+import { type Database, Ref } from '@dxos/echo';
+import { Doc } from '@dxos/echo-doc';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 import { createDataExtensions } from '@dxos/ui-editor';
@@ -15,10 +15,17 @@ import { createDataExtensions } from '@dxos/ui-editor';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { FormFieldLabel } from '../../FormFieldWrapper';
+import { FormRow } from '../../FormRow';
 
-const editorClassNames =
-  'transition-colors bg-input-surface focus-within:bg-focus-surface border border-separator rounded-xs p-1 px-2';
+// Mirror the focus treatment of `Input` (default variant): a `focus-ring-subtle` ring of `dx-focus-line`
+// width rather than a recolored 1px border, and suppress the editor wrapper's `accent-bg` border so a
+// second click never turns the outline blue. Keyed on `focus-within` because focus lands on the inner
+// CodeMirror contenteditable, not this wrapper.
+const editorClassNames = [
+  'min-h-[6lh] transition-colors rounded-xs p-1 px-2 bg-input-surface border border-input-separator',
+  'focus:border-separator focus-within:border-separator focus-within:bg-focus-surface',
+  'focus-within:ring-2 focus-within:ring-offset-0 focus-within:ring-focus-ring-subtle focus-within:z-[1]',
+];
 
 /**
  * Form field that edits a markdown value in a CodeMirror editor.
@@ -30,28 +37,30 @@ const editorClassNames =
 export const MarkdownField = ({
   type,
   readonly,
-  label,
-  jsonPath,
   placeholder,
-  layout,
   db,
-  getStatus,
   getValue,
   onValueChange,
+  ...props
 }: FormFieldRendererProps) => {
-  const { status, error } = getStatus();
   const isRef = Ref.isRefType(type);
-  const value = getValue();
 
-  if ((readonly || layout === 'static') && value == null) {
-    return null;
-  }
+  // The field value is a runtime union the form's value type can't express: a `Ref<Text>` when the
+  // property is a markdown ref, or a plain string when it is annotated markdown text. `isRef`
+  // selects the branch, so the casts below narrow the opaque value accordingly.
+  const renderStatic = (value: unknown) => {
+    if (isRef) {
+      const reference = value as Ref.Ref<any> | undefined;
+      return reference ? <RefStaticText reference={reference} /> : null;
+    }
+    return <p className='whitespace-pre-wrap'>{(value as string | undefined) ?? ''}</p>;
+  };
 
-  const renderEditor = () => {
+  const renderEditor = (value: unknown) => {
     if (isRef) {
       const reference = value as Ref.Ref<any> | undefined;
       if (reference) {
-        return <RefMarkdownEditor reference={reference} placeholder={placeholder} />;
+        return <RefMarkdownEditor reference={reference} placeholder={placeholder} readonly={!!readonly} />;
       }
 
       if (readonly) {
@@ -71,20 +80,10 @@ export const MarkdownField = ({
     );
   };
 
-  const renderStatic = () => {
-    if (isRef) {
-      const reference = value as Ref.Ref<any> | undefined;
-      return reference ? <RefStaticText reference={reference} /> : null;
-    }
-    return <p className='whitespace-pre-wrap'>{(value as string | undefined) ?? ''}</p>;
-  };
-
   return (
-    <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
-      {layout === 'static' ? renderStatic() : renderEditor()}
-      {layout === 'full' && <Input.Validation>{error}</Input.Validation>}
-    </Input.Root>
+    <FormRow readonly={readonly} getValue={getValue} renderStatic={renderStatic} {...props}>
+      {({ value }) => renderEditor(value)}
+    </FormRow>
   );
 };
 
@@ -94,21 +93,23 @@ const RefStaticText = ({ reference }: { reference: Ref.Ref<any> }) => {
   if (!text?.content) {
     return null;
   }
+
   return <p className='whitespace-pre-wrap'>{text.content}</p>;
 };
 
 type RefMarkdownEditorProps = {
   reference: Ref.Ref<any>;
   placeholder?: string;
+  readonly?: boolean;
 };
 
-const RefMarkdownEditor = ({ reference, placeholder }: RefMarkdownEditorProps) => {
+const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEditorProps) => {
   const text = useAtomValue(useMemo(() => reference.atom, [reference]));
   const dataExtensions = useMemo(
-    () => (text ? [createDataExtensions({ id: reference.uri, text: createDocAccessor(text, ['content']) })] : []),
+    () => (text ? [createDataExtensions({ id: reference.uri, text: Doc.createAccessor(text, ['content']) })] : []),
     [text, reference],
   );
-  const extensions = useBasicMarkdownExtensions({ placeholder, extensions: dataExtensions });
+  const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: dataExtensions });
   if (!text) {
     return null;
   }
@@ -128,7 +129,7 @@ type StringMarkdownEditorProps = {
 };
 
 const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: StringMarkdownEditorProps) => {
-  const extensions = useBasicMarkdownExtensions({ placeholder });
+  const extensions = useBasicMarkdownExtensions({ placeholder, readonly });
   const handleChange = useCallback((next: string) => onChange(next), [onChange]);
 
   return (
@@ -151,18 +152,16 @@ type CreateTextButtonProps = {
 
 const CreateTextButton = ({ db, disabled, onCreate }: CreateTextButtonProps) => {
   const { t } = useTranslation(translationKey);
+
   const handleClick = useCallback(() => {
     if (!db) {
       return;
     }
-    const text = db.add(Obj.make(Text.Text, { content: '' }));
-    onCreate(Ref.make(text));
+
+    onCreate(Ref.make(db.add(Text.make())));
   }, [db, onCreate]);
 
   return (
-    <Button onClick={handleClick} disabled={disabled}>
-      <Icon icon='ph--plus--regular' size={4} />
-      <span>{t('create-text.label')}</span>
-    </Button>
+    <IconButton icon='ph--plus--regular' label={t('create-text.label')} onClick={handleClick} disabled={disabled} />
   );
 };

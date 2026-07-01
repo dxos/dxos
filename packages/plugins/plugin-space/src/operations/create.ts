@@ -3,17 +3,17 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
-import { RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
-import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
+import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { iconValues } from '@dxos/react-ui-pickers/icons';
 import { hues } from '@dxos/ui-theme';
 
-import { SpaceEvents, SpaceCapabilities } from '../types';
+import { SpaceCapabilities, SpaceEvents } from '../types';
 import { SpaceOperation } from './definitions';
 import { SpaceOperationConfig } from './helpers';
 
@@ -37,7 +37,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
 
       const collection = Obj.make(Collection.Collection, { objects: [] });
       Obj.update(space.properties, (properties) => {
-        Annotation.set(properties, RootCollectionAnnotation, Ref.make(collection));
+        Annotation.set(properties, AppAnnotation.RootCollectionAnnotation, Ref.make(collection));
         if (Migrations.targetVersion) {
           Annotation.set(properties, MigrationVersionAnnotation, Migrations.targetVersion);
         }

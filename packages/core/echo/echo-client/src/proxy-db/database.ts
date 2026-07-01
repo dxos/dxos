@@ -9,13 +9,26 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { Database, Entity, Filter, JsonSchema, Obj, Query, QueryAST, Ref, type Registry, Type } from '@dxos/echo';
+import {
+  Database,
+  Entity,
+  Feed,
+  Filter,
+  JsonSchema,
+  Obj,
+  Query,
+  QueryAST,
+  QueryResult,
+  Ref,
+  type Registry,
+  Type,
+} from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   EntityKind,
-  MetaId,
   type EntityMeta,
+  MetaId,
   TypeSchema as PersistentSchema,
   type TypeAnnotation,
   TypeAnnotationId,
@@ -27,16 +40,17 @@ import {
   setRefResolver,
 } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
-import { assertArgument, invariant } from '@dxos/invariant';
+import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type FeedProtocol } from '@dxos/protocols';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
-import { CoreDatabase, type LoadObjectOptions, type ObjectCore } from '../core-db';
+import { EntityManager } from '../core-db';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -45,10 +59,11 @@ import {
   initEchoReactiveObjectRootProxy,
   isEchoObject,
 } from '../echo-handler';
+import { FeedHandle } from '../feed/feed-handle';
 import { type HypergraphImpl } from '../hypergraph';
+import { isSimpleSelectionQuery } from '../query';
 import { type ObjectMigration } from './object-migration';
 
-// TODO(burdon): Remove and progressively push methods to Database.Database.
 export interface EchoDatabase extends Database.Database {
   /**
    * Get notification about the data being saved to disk.
@@ -128,12 +143,33 @@ export interface EchoDatabase extends Database.Database {
    * @deprecated Directly mutate the object.
    */
   update(filter: Filter.Any, operation: unknown): Promise<void>;
+
+  /**
+   * Removes feed entities by id.
+   */
+  removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void>;
+
+  /**
+   * Syncs a feed with the server.
+   */
+  syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void>;
+
+  /**
+   * Returns the replication backlog for a feed's namespace.
+   */
+  getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
+
+  /**
+   * Queries items in a feed associated with this database.
+   */
+  queryFeed(feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<any>;
 }
 
 export type EchoDatabaseProps = {
   graph: HypergraphImpl;
   dataService: DataService;
   queryService: QueryService;
+  queueService?: FeedProtocol.QueueService;
   spaceId: SpaceId;
 
   /**
@@ -154,7 +190,8 @@ export type EchoDatabaseProps = {
 
 /**
  * User-facing API for the space database.
- * Implements EchoDatabase interface.
+ * Implements EchoDatabase interface; delegates all document and core-object
+ * operations to EntityManager.
  */
 export class DatabaseImpl extends Resource implements EchoDatabase {
   readonly [Database.TypeId]: typeof Database.TypeId = Database.TypeId;
@@ -162,27 +199,35 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @internal
    */
-  readonly _coreDatabase: CoreDatabase;
-
-  /**
-   * Mapping `object core` -> `root proxy` (User facing proxies).
-   * @internal
-   */
-  readonly _rootProxies = new Map<ObjectCore, Entity.Unknown>();
+  readonly _entityManager: EntityManager;
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
+  private readonly _hypergraph: HypergraphImpl;
   private _rootUrl: string | undefined = undefined;
   private readonly _reactiveSchemaQuery: boolean;
   private readonly _preloadSchemaOnOpen: boolean;
+
+  /**
+   * Backend for feed operations. Set on construction and refreshed on reconnect.
+   */
+  #queueService: FeedProtocol.QueueService | undefined;
+
+  /**
+   * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
+   * EDGE queue addressed by the feed object's URI; this map caches the per-feed client handle.
+   */
+  readonly #feeds = new Map<EID.EID, FeedHandle>();
 
   constructor(params: EchoDatabaseProps) {
     super();
 
     this._reactiveSchemaQuery = params.reactiveSchemaQuery ?? true;
     this._preloadSchemaOnOpen = params.preloadSchemaOnOpen ?? true;
+    this._hypergraph = params.graph;
+    this.#queueService = params.queueService;
 
-    this._coreDatabase = new CoreDatabase({
+    this._entityManager = new EntityManager({
       graph: params.graph,
       dataService: params.dataService,
       queryService: params.queryService,
@@ -190,7 +235,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       spaceKey: params.spaceKey,
     });
 
-    this.saveStateChanged = this._coreDatabase.saveStateChanged;
+    this.saveStateChanged = this._entityManager.saveStateChanged;
   }
 
   [inspect.custom]() {
@@ -198,18 +243,19 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   toJSON() {
-    return this._coreDatabase.toJSON();
+    return {
+      id: this._entityManager.spaceId,
+      objects: this._entityManager.allObjectCores().length,
+    };
   }
 
   get spaceId(): SpaceId {
-    return this._coreDatabase.spaceId;
+    return this._entityManager.spaceId;
   }
 
-  /**
-   * @deprecated Use `spaceId`.
-   */
+  /** @deprecated Use spaceId. */
   get spaceKey(): PublicKey {
-    return this._coreDatabase.spaceKey;
+    return this._entityManager.spaceKey;
   }
 
   get rootUrl(): string | undefined {
@@ -217,34 +263,40 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   get graph(): HypergraphImpl {
-    return this._coreDatabase.graph;
+    return this._hypergraph;
   }
 
-  // `db.registry` is literally the shared hypergraph registry — queries with a
-  // registry target pull from it directly. Getter (not eager field) so it resolves
-  // lazily after graph initialisation.
   get registry(): Registry.Registry {
     return this.graph.registry;
   }
 
+  get _updateEvent() {
+    return this._entityManager._updateEvent;
+  }
+
+  get opened() {
+    return this._entityManager.opened;
+  }
+
+  get rootChanged() {
+    return this._entityManager.rootChanged;
+  }
+
+  // ── Resource lifecycle ──────────────────────────────────────────────────
+
   @synchronized
   protected override async _open(): Promise<void> {
+    await this._entityManager.open(this._ctx);
+
     if (this._rootUrl !== undefined) {
-      await this._coreDatabase.open(this._ctx, { rootUrl: this._rootUrl });
+      await this._entityManager.openWithSpaceState(this._ctx, { rootUrl: this._rootUrl });
     }
 
     if (this._preloadSchemaOnOpen) {
-      // Eager-load persisted schema cores so synchronous schema resolution
-      // (echo-handler getSchema/getTypeEntity → getObjectById) succeeds for objects
-      // loaded at open. Persisted schemas live in the db only; they are never added to
-      // the shared graph registry (which holds runtime/static type entities) to avoid
-      // leaking types across spaces.
       await this.query(Filter.type(PersistentSchema)).run();
     }
 
     if (this._reactiveSchemaQuery) {
-      // Keep persisted schema cores loaded as they are added or replicated after open,
-      // so synchronous schema resolution continues to succeed.
       const unsubscribe = this.query(Filter.type(PersistentSchema)).subscribe(() => {});
       this._ctx.onDispose(unsubscribe);
     }
@@ -252,20 +304,34 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   @synchronized
   protected override async _close(): Promise<void> {
-    await this._coreDatabase.close();
+    await Promise.allSettled([...this.#feeds.values()].map((feed) => feed.dispose()));
+    this.#feeds.clear();
+    await this._entityManager.close();
   }
+
+  // ── Space state ─────────────────────────────────────────────────────────
+
+  @synchronized
+  async setSpaceRoot(rootUrl: string): Promise<void> {
+    log('setSpaceRoot', { rootUrl });
+    const firstTime = this._rootUrl === undefined;
+    this._rootUrl = rootUrl;
+    if (this._lifecycleState === LifecycleState.OPEN) {
+      if (firstTime) {
+        await this._entityManager.openWithSpaceState(this._ctx, { rootUrl });
+      } else {
+        await this._entityManager.updateSpaceState(this._ctx, { rootUrl });
+      }
+    }
+  }
+
+  // ── User-facing Database API ─────────────────────────────────────────────
 
   /**
    * @internal
    * Called by echo-handler when a PersistentSchema object is encountered during deserialization.
-   * A persisted schema materializes directly as its `Type.AnyEntity` (kind=type), so the
-   * object is returned as-is. Persisted schemas live in the db only and are never added to
-   * the shared graph registry, which would leak types across spaces.
    */
   _getOrRegisterPersistentSchema(schema: PersistentSchema): Type.AnyEntity {
-    // A persisted object matching `Filter.type(TypeSchema)` by its `@type` but materializing
-    // as kind=object (e.g. data in a pre-Type-entity format) must fail loudly here rather than
-    // deep inside a consumer that assumes `Type.getSchema()` is safe.
     invariant(
       Type.isType(schema),
       'persisted schema must materialize as a Type entity (kind=type); data may be in a legacy format',
@@ -279,9 +345,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     if (Type.isType(schemaInput)) {
       const entity = schemaInput;
       schema = Type.getSchema(entity).annotations({ [TypeIdentifierAnnotationId]: undefined });
-      // Prefer the annotation embedded in the schema; fall back to the entity's
-      // EntityMeta-derived accessors for entities built via `makeObjectFromJsonSchema`
-      // (whose `jsonSchema` carries no `TypeAnnotation`).
       meta =
         getTypeAnnotation(schema) ??
         ({
@@ -294,9 +357,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       meta = getTypeAnnotation(schema);
     }
     invariant(meta, 'use Schema.Struct({}).pipe(Type.Obj()) or class syntax to create a valid schema');
-    // Create a TypeSchema entity using the internal createObject utility.
-    // We pass typename/version via EntityMeta (MetaId) since TypeSchema no longer
-    // has them as own data fields.
     const schemaToStore = createPersistentObject(PersistentSchema, {
       [MetaId]: { keys: [], key: meta.typename, version: meta.version },
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
@@ -322,29 +382,15 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return persistentSchema;
   }
 
-  @synchronized
-  async setSpaceRoot(rootUrl: string): Promise<void> {
-    log('setSpaceRoot', { rootUrl });
-    const firstTime = this._rootUrl === undefined;
-    this._rootUrl = rootUrl;
-    if (this._lifecycleState === LifecycleState.OPEN) {
-      if (firstTime) {
-        await this._coreDatabase.open(this._ctx, { rootUrl });
-      } else {
-        await this._coreDatabase.updateSpaceState(this._ctx, { rootUrl });
-      }
-    }
-  }
-
   // TODO(burdon): Type check.
   /** @deprecated Use `db.query(Filter.id(id)).runSync()[0]` for a working-set lookup, or resolve via a {@link Ref}. */
   getObjectById<T extends Entity.Unknown = Entity.Any>(id: string, { deleted = false } = {}): T | undefined {
-    const core = this._coreDatabase.getObjectCoreById(id);
+    const core = this._entityManager.getObjectCoreById(id);
     if (!core || (core.isDeleted() && !deleted)) {
       return undefined;
     }
 
-    return defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this)) as T;
+    return (core.rootProxy ?? initEchoReactiveObjectRootProxy(core, this)) as T;
   }
 
   makeRef<T extends AnyProperties = any>(uri: URI.URI): Ref.Ref<T> {
@@ -362,41 +408,35 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   private _query(query: Query.Any | Filter.Any) {
     query = Filter.is(query) ? Query.select(query) : query;
 
+    // Feed-scoped queries the client can evaluate against fetched queue items run on the feed
+    // handle (immediately reflecting appends). Index-only queries (e.g. full-text search) fall
+    // through to the host indexer, which is also where unindexed feed items become visible.
+    const feedUri = getFeedScopeUri(query.ast);
+    if (feedUri && isClientEvaluableFeedQuery(query.ast)) {
+      return this._queryFeed(feedUri, query);
+    }
+
     if (!isQueryScoped(query.ast)) {
-      // Default to the owning space only. The in-process registry is opt-in:
-      // callers add `Scope.registry()` (e.g. `.from(Scope.space(), Scope.registry())`)
-      // when they want to fan a query into code-shipped types/objects too.
       query = query.from(this);
     } else {
-      // An explicit `Scope.space()` with no spaceId targets the owning space. Bind it to
-      // this database's spaceId here (the only place the owning space is known) so it does
-      // not fan across every space in the hypergraph — e.g. `.from(Scope.space(), Scope.registry())`.
       query = Query.fromAst(bindOwningSpaceScopes(query.ast, this.spaceId));
     }
 
-    return this._coreDatabase.graph.query(query);
+    return this._hypergraph.query(query);
   }
 
-  /**
-   * Update objects.
-   * @deprecated Mutate the object directly
-   */
+  /** @deprecated Mutate the object directly. */
   async update(_filter: Filter.Any, _operation: unknown): Promise<void> {
     throw new Error('Not implemented');
   }
 
-  /**
-   * @deprecated Use `db.add`.
-   */
+  /** @deprecated Use `db.add`. */
   async insert(_data: unknown): Promise<never> {
     throw new Error('Not implemented');
   }
 
   /**
    * Add a reactive object or relation.
-   *
-   * Type definitions are not accepted here — use {@link addType}, which clones the entity and
-   * checks for an existing type with the same typename/version before persisting.
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     invariant(!Type.isType(obj), 'use db.addType() to persist Type entities');
@@ -405,20 +445,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   /**
    * Persist a Type definition (clones/forks the entity) so it replicates to other peers.
-   *
-   * Queries the space first: if a type with the same typename + version is already persisted,
-   * the existing entity is returned and no duplicate is created (idempotent). This is the only
-   * supported way to add Type entities — {@link add} rejects them.
    */
   async addType<T extends Type.AnyEntity>(type: T): Promise<T> {
     invariant(Type.isType(type), 'addType expects a Type entity');
     const typename = Type.getTypename(type);
-    // Compare the canonical (head-free) EntityMeta version on both sides — `Type.getVersion`
-    // appends automerge heads for db-attached entities and would never match a fresh draft.
     const version = Type.getMeta(type).version ?? Type.getVersion(type);
 
-    // Space-scoped by default (the in-process registry is opt-in via `Scope.registry()`), so this
-    // sees only types persisted in this space — exactly what `_open()` reloads.
     const existing = await this.query(Filter.type(Type.Type)).run();
     const match = existing.find(
       (candidate) =>
@@ -436,9 +468,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     if (!isEchoObject(obj)) {
       const typeEntity = Entity.getType(obj);
       if (typeEntity != null) {
-        // A persisted (database-attached) type is valid by virtue of living in a database;
-        // its schema resolves through the db rather than the shared registry. A static/runtime
-        // type must be present in the shared registry.
         const isPersisted = Type.getDatabase(typeEntity) != null;
         if (!isPersisted) {
           const typename = Type.getTypename(typeEntity);
@@ -456,9 +485,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     }
     assertObjectModel(obj);
 
-    // TODO(burdon): Check if already added to db?
     invariant(isEchoObject(obj));
-    this._rootProxies.set(getObjectCore(obj), obj);
+    getObjectCore(obj).rootProxy = obj;
 
     const target = getProxyTarget(obj) as ProxyTarget & Entity.Unknown;
     EchoReactiveHandler.instance.setDatabase(target, this);
@@ -466,36 +494,128 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     // endpoints become absolute, same-space relative, and unpersisted endpoints are added here.
     EchoReactiveHandler.instance.rebindRelationEndpoints(target);
     EchoReactiveHandler.instance.saveRefs(target);
-    this._coreDatabase.addCore(getObjectCore(obj), opts);
+    this._entityManager.addCore(getObjectCore(obj), opts);
     return obj;
   }
 
-  /**
-   * Remove reactive object.
-   */
   remove<T extends Entity.Unknown = Entity.Unknown>(obj: T): void {
     assertArgument(isEchoObject(obj), 'obj');
-    return this._coreDatabase.removeCore(getObjectCore(obj));
+    return this._entityManager.removeCore(getObjectCore(obj));
+  }
+
+  //
+  // Feeds.
+  //
+
+  async appendToFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void> {
+    await this.#getFeedHandle(feed).append(entities);
+  }
+
+  async deleteFromFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void> {
+    await this.removeFeedItemsByIds(
+      feed,
+      entities.map((entity) => entity.id),
+    );
+  }
+
+  async removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void> {
+    await this.#getFeedHandle(feed).delete(ids);
+  }
+
+  async syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void> {
+    await this.#getFeedHandle(feed).sync(options);
+  }
+
+  async getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState> {
+    return this.#getFeedHandle(feed).getSyncState();
+  }
+
+  queryFeed(feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<any> {
+    const feedUri = Feed.getQueueUri(feed);
+    if (!feedUri) {
+      throw new Error('Unable to query feed: make sure feed is stored in the database');
+    }
+    const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
+    return this._queryFeed(feedUri, query);
+  }
+
+  /**
+   * @internal
+   * Sets or refreshes the feed backend service (e.g. after reconnection).
+   */
+  _setQueueService(service: FeedProtocol.QueueService | undefined): void {
+    this.#queueService = service;
+  }
+
+  /**
+   * @internal
+   * Returns the feed handle for a URI, creating it if a backend service is available.
+   * Returns `undefined` only when no service is connected.
+   */
+  _getOrCreateFeedHandle(feedUri: EID.EID, namespace?: string): FeedHandle {
+    assertState(this.#queueService, 'Queue service not connected');
+    const existing = this.#feeds.get(feedUri);
+    if (existing) {
+      return existing;
+    }
+    const handle = new FeedHandle(
+      this.#queueService,
+      this.graph.createRefResolver({ context: { space: this.spaceId, feed: feedUri } }),
+      feedUri,
+      this,
+      namespace,
+    );
+    this.#feeds.set(feedUri, handle);
+    return handle;
+  }
+
+  /**
+   * @internal
+   * Returns an already-instantiated feed handle for a URI, without creating one.
+   */
+  _tryGetFeedHandle(feedUri: EID.EID): FeedHandle | undefined {
+    return this.#feeds.get(feedUri);
+  }
+
+  /**
+   * @internal
+   * Iterates feed handles already instantiated in this database.
+   */
+  _knownFeedHandles(): Iterable<FeedHandle> {
+    return this.#feeds.values();
+  }
+
+  #getFeedHandle(feed: Feed.Feed): FeedHandle {
+    const feedUri = Feed.getQueueUri(feed);
+    invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
+    const handle = this._getOrCreateFeedHandle(feedUri, feed.namespace);
+    handle.setParentEntity(feed as Obj.Unknown);
+    return handle;
+  }
+
+  private _queryFeed(feedUri: EID.EID, query: Query.Any) {
+    const feedObjectId = EID.getEntityId(feedUri);
+    const feed = feedObjectId ? this.getObjectById<Feed.Feed>(feedObjectId) : undefined;
+    const handle = this._getOrCreateFeedHandle(feedUri, feed?.namespace);
+    if (feed) {
+      handle.setParentEntity(feed as Obj.Unknown);
+    }
+    return handle.query(query);
   }
 
   async flush(opts?: Database.FlushOptions): Promise<void> {
-    await this._coreDatabase.flush(opts);
+    await this._entityManager.flush(opts);
   }
 
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {
     for (const migration of migrations) {
-      const objects = await this._coreDatabase.graph
-        .query(Query.select(Filter.type(migration.fromType)).from(this))
-        .run();
+      const objects = await this._hypergraph.query(Query.select(Filter.type(migration.fromType)).from(this)).run();
       log.verbose('migrate', {
         from: migration.fromType,
         to: migration.toType,
         objects: objects.length,
       });
       for (const object of objects) {
-        // Snapshot the pre-migration state so optional `onMigration` callbacks can read legacy fields.
-        // After `atomicReplaceObject` the `object` proxy reflects the new shape, so this snapshot
-        // is the only way for callers to access the original `From` data.
         const before = JSON.parse(JSON.stringify(object));
 
         const output = (await migration.transform(object, { db: this })) as any;
@@ -504,10 +624,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
           delete output[MetaId];
         }
 
-        // TODO(dmaretskyi): Output validation.
         delete (output as any).id;
 
-        await this._coreDatabase.atomicReplaceObject(object.id, {
+        await this._entityManager.atomicReplaceObject(object.id, {
           data: output,
           type: migration.toType,
           meta: metaPatch as any,
@@ -520,96 +639,150 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         }
       }
     }
-    await this.flush();
+    await this._entityManager.flush();
   }
 
   getSyncState(): Promise<SpaceSyncState> {
-    return this._coreDatabase.getSyncState();
+    return this._entityManager.getSyncState();
   }
 
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
-    return this._coreDatabase.subscribeToSyncState(ctx, callback);
+    return this._entityManager.subscribeToSyncState(ctx, callback);
   }
 
   getAllObjectIds(): string[] {
-    return this._coreDatabase.getAllObjectIds();
+    return this._entityManager.getAllObjectIds();
   }
 
   getNumberOfInlineObjects(): number {
-    return this._coreDatabase.getNumberOfInlineObjects();
+    return this._entityManager.getNumberOfInlineObjects();
   }
 
-  get rootChanged(): ReadOnlyEvent<void> {
-    return this._coreDatabase.rootChanged;
+  getNumberOfLinkedObjects(): number {
+    return this._entityManager.getNumberOfLinkedObjects();
+  }
+
+  getTotalNumberOfObjects(): number {
+    return this._entityManager.getTotalNumberOfObjects();
   }
 
   getLoadedDocumentHandles(): DocHandleProxy<any>[] {
-    return this._coreDatabase.getLoadedDocumentHandles();
+    return this._entityManager.getLoadedDocumentHandles();
   }
 
   get _repo(): RepoProxy {
-    return this._coreDatabase._repo;
+    return this._entityManager._repoProxy;
   }
 
   _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory> {
-    return this._coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    return this._entityManager.getSpaceRootDocHandle();
+  }
+
+  getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory> {
+    return this._entityManager.getSpaceRootDocHandle();
+  }
+
+  getLinkedDocHandles(): DocHandleProxy<DatabaseDirectory>[] {
+    return this._entityManager.getLinkedDocHandles();
+  }
+
+  getObjectDocumentId(objectId: string): string | undefined {
+    return this._entityManager.getObjectDocumentId(objectId);
+  }
+
+  getObjectCoreById(id: string, opts?: Parameters<EntityManager['getObjectCoreById']>[1]) {
+    return this._entityManager.getObjectCoreById(id, opts);
+  }
+
+  loadObjectCoreById(objectId: string, options?: Parameters<EntityManager['loadObjectCoreById']>[1]) {
+    return this._entityManager.loadObjectCoreById(objectId, options);
+  }
+
+  batchLoadObjectCores(objectIds: string[], options?: Parameters<EntityManager['batchLoadObjectCores']>[1]) {
+    return this._entityManager.batchLoadObjectCores(objectIds, options);
+  }
+
+  atomicReplaceObject(id: string, params: Parameters<EntityManager['atomicReplaceObject']>[1]) {
+    return this._entityManager.atomicReplaceObject(id, params);
+  }
+
+  allObjectCores() {
+    return this._entityManager.allObjectCores();
+  }
+
+  areStrongDepsSatisfied(core: Parameters<EntityManager['areStrongDepsSatisfied']>[0]) {
+    return this._entityManager.areStrongDepsSatisfied(core);
+  }
+
+  getDocumentHeads() {
+    return this._entityManager.getDocumentHeads();
+  }
+
+  waitUntilHeadsReplicated(heads: Parameters<EntityManager['waitUntilHeadsReplicated']>[0]) {
+    return this._entityManager.waitUntilHeadsReplicated(heads);
+  }
+
+  reIndexHeads() {
+    return this._entityManager.reIndexHeads();
+  }
+
+  /** @deprecated Use `flush()`. */
+  async updateIndexes(): Promise<void> {
+    await this._entityManager.updateIndexes();
   }
 
   /**
    * Update service references after reconnection.
    */
-  _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
-    this._coreDatabase._updateServices({ dataService, queryService });
+  _updateServices({
+    dataService,
+    queryService,
+    queueService,
+  }: {
+    dataService: DataService;
+    queryService: QueryService;
+    queueService?: FeedProtocol.QueueService;
+  }): void {
+    this._entityManager._updateServices({ dataService, queryService });
+    if (queueService !== undefined) {
+      this.#queueService = queueService;
+    }
   }
 
-  /**
-   * Handle reconnection to re-establish RPC streams.
-   */
   async _onReconnect(): Promise<void> {
-    await this._coreDatabase._onReconnect();
+    await this._entityManager._onReconnect();
   }
 
   /**
    * @internal
    */
-  async _loadObjectById(objectId: string, options: LoadObjectOptions = {}): Promise<Entity.Unknown | undefined> {
-    const core = await this._coreDatabase.loadObjectCoreById(objectId, options);
+  async _loadObjectById(objectId: string, options: any = {}): Promise<Entity.Unknown | undefined> {
+    const core = await this._entityManager.loadObjectCoreById(objectId, options);
     if (!core || (core?.isDeleted() && !options.allowDeleted)) {
       return undefined;
     }
 
-    const obj = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
+    const obj = defaultMap(
+      this._rootProxies,
+      core,
+      () => core.rootProxy ?? initEchoReactiveObjectRootProxy(core, this),
+    );
     invariant(isProxy(obj));
     return obj;
   }
 
-  //
-  // Deprecated API.
-  //
+  // ── Deprecated API ───────────────────────────────────────────────────────
 
-  /**
-   * @deprecated
-   */
+  /** @deprecated */
   readonly pendingBatch = new Event<unknown>();
 
-  /**
-   * @deprecated
-   * Direct access to the core database layer. Only valid within @dxos/echo-client; external consumers
-   * must use the named API methods (getAllObjectIds, getNumberOfInlineObjects, rootChanged, etc.).
-   */
-  get coreDatabase(): CoreDatabase {
-    return this._coreDatabase;
-  }
+  /** @internal */
+  private readonly _rootProxies = new Map<any, Entity.Unknown>();
 }
 
 // TODO(burdon): Create APIError class.
 const createSchemaNotRegisteredError = (schema?: any) => {
   const message = 'Schema not registered';
-  // `typename` on a persisted `Type.Type` entity is no longer a direct field —
-  // it lives in `EntityMeta.key`. Read it through the helper so this error
-  // path keeps surfacing a typename for both schema flavours (static
-  // `Type.Obj` constants, where `.typename` is a real field, and persisted
-  // entities, where it isn't).
   if (schema != null) {
     try {
       const typename = Type.getTypename(schema);
@@ -632,9 +805,50 @@ const isQueryScoped = (query: QueryAST.Query): boolean => {
 };
 
 /**
+ * Whether a feed-scoped query can be evaluated client-side against fetched queue items.
+ * Index-only queries (e.g. full-text search) must instead run through the host indexer.
+ */
+const isClientEvaluableFeedQuery = (query: QueryAST.Query): boolean => {
+  const simple = isSimpleSelectionQuery(query);
+  return simple != null && !filterContainsTextSearch(simple.filter);
+};
+
+const filterContainsTextSearch = (filter: QueryAST.Filter): boolean => {
+  if (filter.type === 'text-search') {
+    return true;
+  }
+  if (filter.type === 'and' || filter.type === 'or') {
+    return filter.filters.some(filterContainsTextSearch);
+  }
+  if (filter.type === 'not') {
+    return filterContainsTextSearch(filter.filter);
+  }
+  return false;
+};
+
+/**
+ * Extracts the feed URI from a query's feed scope (`Scope.feed(...)`), if present.
+ * Feed-scoped queries are dispatched to the feed handle rather than the space query sources.
+ */
+const getFeedScopeUri = (query: QueryAST.Query): EID.EID | undefined => {
+  let feedUri: EID.EID | undefined;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'from' && node.from._tag === 'scope') {
+      for (const scope of node.from.scopes) {
+        if (scope._tag === 'feed') {
+          const parsed = EID.tryParse(scope.feedUri);
+          if (parsed) {
+            feedUri = parsed;
+          }
+        }
+      }
+    }
+  });
+  return feedUri;
+};
+
+/**
  * Binds every space scope without an explicit `spaceId` to the owning database's space.
- * `Scope.space()` means "the owning space"; without binding it here it would fan across
- * every space source in the hypergraph query context.
  */
 const bindOwningSpaceScopes = (ast: QueryAST.Query, spaceId: SpaceId): QueryAST.Query => {
   const transform = (value: unknown): unknown => {

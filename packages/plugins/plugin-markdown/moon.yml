@@ -14,7 +14,7 @@ tasks:
       - '--entryPoint=src/MarkdownPlugin.tsx'
       - '--entryPoint=src/MarkdownPlugin.node.ts'
       - '--entryPoint=src/MarkdownPlugin.workerd.ts'
-      - '--entryPoint=src/blueprints/index.ts'
+      - '--entryPoint=src/skills/index.ts'
       - '--entryPoint=src/capabilities/index.ts'
       - '--entryPoint=src/capabilities/node.ts'
       - '--entryPoint=src/components/index.ts'
@@ -23,16 +23,17 @@ tasks:
       - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/operations/index.ts'
       - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/plugin.workerd.ts'
       - '--entryPoint=src/testing.ts'
       - '--entryPoint=src/translations.ts'
       - '--entryPoint=src/types/index.ts'
       - '--platform=neutral'
   check-module-structure:
-    # Fail when the operations entrypoint pulls in `@dxos/react-ui`. The operations
-    # module must remain UI-free so it can be loaded in non-DOM environments.
+    # Fail when the ./plugin export pulls in `@dxos/react-ui`. The plugin entry must
+    # remain UI-free under workerd so it can load in non-DOM environments.
     command: >-
       pnpm exec dx-trace-imports
-      --from src/operations/index.ts
+      --export ./plugin
       --to "@dxos/react-ui"
       --conditions source,workerd,worker,node
       --fail-on present

@@ -10,7 +10,7 @@ import { DXN, EID } from '@dxos/keys';
 import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
 import * as Type from '../../Type';
-import { getTypeURI, getTypename } from '../Annotation';
+import { getTypename, getTypeURI } from '../Annotation';
 import { getMetaChecked } from '../common/api';
 import { ATTR_TYPE, EntityKind, KindId, TypeId, getSchema } from '../common/types';
 import { MetaId } from '../common/types/model-symbols';
@@ -160,10 +160,12 @@ describe('Object JSON serializer', () => {
   });
 
   describe('Uint8Array', () => {
-    const Blob = Schema.Struct({
-      name: Schema.String,
-      bytes: Schema.Uint8ArrayFromSelf,
-    }).pipe(Type.makeObject(DXN.make('com.example.type.blob', '0.1.0')));
+    const Blob = Type.makeObject(DXN.make('com.example.type.blob', '0.1.0'))(
+      Schema.Struct({
+        name: Schema.String,
+        bytes: Schema.Uint8ArrayFromSelf,
+      }),
+    );
     type Blob = Type.InstanceType<typeof Blob>;
 
     test('round-trips Uint8Array field through JSON with schema', async ({ expect }) => {

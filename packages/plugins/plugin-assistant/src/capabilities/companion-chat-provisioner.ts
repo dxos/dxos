@@ -12,9 +12,16 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { DeckCapabilities, PLANK_COMPANION_TYPE, type StoredDeckState } from '@dxos/plugin-deck';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
+import {
+  COMPANION_VIEW_STATE_CONTEXT,
+  DeckCapabilities,
+  PLANK_COMPANION_TYPE,
+  type StoredDeckState,
+  companionVariantAspect,
+} from '@dxos/plugin-deck';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
-import { byPosition } from '@dxos/util';
+import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
@@ -31,6 +38,10 @@ export default Capability.makeModule(
     const deckStateAtom = yield* Capability.get(DeckCapabilities.State);
     const cacheAtom = yield* Capability.get(AssistantCapabilities.CompanionChatCache);
     const stateAtom = yield* Capability.get(AssistantCapabilities.State);
+    // The selected companion variant moved off deck state into a global view-state aspect; read and
+    // observe it directly so a tab switch (which no longer touches deck state) still re-provisions.
+    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    const variantAtom = viewState.atom(companionVariantAspect, COMPANION_VIEW_STATE_CONTEXT);
 
     const plankSubs = new Map<string, () => void>();
 
@@ -91,6 +102,7 @@ export default Capability.makeModule(
         return;
       }
 
+      const companionVariant = registry.get(variantAtom).variant;
       const plankIds = new Set(deck.solo ? [deck.solo] : deck.active);
 
       // Remove subscriptions for planks that are no longer active.
@@ -101,18 +113,20 @@ export default Capability.makeModule(
       }
 
       for (const plankId of plankIds) {
-        const resolved = provisionForPlank(plankId, deck.companionVariant);
+        const resolved = provisionForPlank(plankId, companionVariant);
 
         if (resolved) {
           // Already provisioned — no need to watch connections.
           unsubPlank(plankId);
         } else if (!plankSubs.has(plankId)) {
           // Not yet resolved — subscribe to child connections so we re-try
-          // when graph builder extensions add companion nodes (after expand).
+          // when graph builder extensions add companion nodes (after expand). This subscription
+          // outlives the current `provision()` run, so re-read the latest variant at callback time
+          // rather than closing over the one captured here.
           plankSubs.set(
             plankId,
             registry.subscribe(graph.connections(plankId, 'child'), () => {
-              if (provisionForPlank(plankId, deck.companionVariant)) {
+              if (provisionForPlank(plankId, registry.get(variantAtom).variant)) {
                 unsubPlank(plankId);
               }
             }),
@@ -125,11 +139,13 @@ export default Capability.makeModule(
 
     const unsub1 = registry.subscribe(deckStateAtom, provision);
     const unsub2 = registry.subscribe(stateAtom, provision);
+    const unsub3 = registry.subscribe(variantAtom, provision);
 
     return Capability.contributes(Capabilities.Null, null, () =>
       Effect.sync(() => {
         unsub1();
         unsub2();
+        unsub3();
         unsubAllPlanks();
       }),
     );
@@ -147,7 +163,7 @@ const resolveEffectiveVariant = (
 ): string | undefined => {
   const companions = Graph.getConnections(graph, plankId, 'child')
     .filter((node) => node.type === PLANK_COMPANION_TYPE)
-    .toSorted((a, b) => byPosition(a.properties, b.properties));
+    .toSorted((a, b) => Position.compare(a.properties, b.properties));
 
   if (companions.length === 0) {
     return undefined;

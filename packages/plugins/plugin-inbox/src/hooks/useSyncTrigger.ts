@@ -5,7 +5,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { type Client } from '@dxos/client';
-import { Trigger, Operation } from '@dxos/compute';
+import { Operation, Trigger } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
@@ -104,7 +104,7 @@ export const useSyncTrigger = ({
       const trigger = Trigger.make({
         enabled: true,
         spec: Trigger.specTimer('*/5 * * * *'),
-        function: Ref.make(fn),
+        runnable: Ref.make(fn),
         input: { [inputKey]: db.makeRef(Obj.getURI(subject)), ...extraInput },
       });
 

@@ -30,7 +30,7 @@ export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj
 /**
  * Plank companion panel showing help for any open ECHO article. Resolves the
  * article's typename to the plugin that registered its schema and renders that
- * plugin's `meta.description` (Markdown) and `meta.screenshots` (Carousel).
+ * plugin's `meta.profile.description` (Markdown) and `meta.profile.screenshots` (Carousel).
  */
 export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
   const manager = usePluginManager();
@@ -56,8 +56,10 @@ export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
       .getPlugins()
       .find((plugin) => plugin.modules.some((module) => module.id === owningModuleId));
     return {
-      content: owningPlugin?.meta.description ?? '',
-      screenshots: owningPlugin?.meta.screenshots ?? [],
+      content: owningPlugin?.meta.profile.description ?? '',
+      screenshots: (owningPlugin?.meta.profile.screenshots ?? [])
+        .map((s) => (typeof s === 'string' ? s : (s.light ?? s.dark ?? '')))
+        .filter(Boolean),
     };
   }, [companionTo, manager, schemasByModule]);
 
@@ -70,7 +72,7 @@ export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 flex flex-col items-center gap-4'>
             {screenshots.length > 0 && (
-              <Carousel.Root count={screenshots.length}>
+              <Carousel.Root count={screenshots.length} transition='slide'>
                 <Carousel.Content classNames='w-full'>
                   <Carousel.Previous />
                   <Carousel.Viewport>

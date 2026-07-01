@@ -13,7 +13,7 @@ tasks:
       - '--entryPoint=src/TablePlugin.tsx'
       - '--entryPoint=src/TablePlugin.node.ts'
       - '--entryPoint=src/TablePlugin.workerd.ts'
-      - '--entryPoint=src/blueprints/index.ts'
+      - '--entryPoint=src/skills/index.ts'
       - '--entryPoint=src/capabilities/index.ts'
       - '--entryPoint=src/containers/index.ts'
       - '--entryPoint=src/meta.ts'

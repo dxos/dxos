@@ -14,7 +14,7 @@ import { hues, osTranslations } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { FormFieldLabel } from '../../FormFieldWrapper';
+import { FormFieldLabel } from '../../FormRow';
 
 export const SelectOptionField = ({
   type,
@@ -145,7 +145,7 @@ export const SelectOptionField = ({
                       <OrderedList.DragHandle />
                       {/* TODO(ZaymonFC): Move spacer into Tag component. */}
                       <div className='flex grow items-center truncate px-2' onClick={() => handleClick(item.id)}>
-                        <Tag palette={item.color as ChromaticPalette}>{item.title || '\u200b'}</Tag>
+                        <Tag hue={item.color as ChromaticPalette}>{item.title || '\u200b'}</Tag>
                       </div>
                       <ToggleIconButton
                         iconOnly
@@ -183,12 +183,12 @@ export const SelectOptionField = ({
                   </OrderedList.Item>
                 ))}
                 <IconButton
+                  classNames='w-full'
                   variant='ghost'
                   icon='ph--plus--regular'
                   label={t('select-option-add.button')}
                   onClick={handleAdd}
                   disabled={!!readonly}
-                  classNames='w-full'
                 />
               </OrderedList.Content>
             )}

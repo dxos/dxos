@@ -14,7 +14,7 @@ import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { getStyles, mx } from '@dxos/ui-theme';
 
-import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useFilteredTypes } from '#hooks';
+import { useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers, useSkills } from '#hooks';
 import { meta } from '#meta';
 import { Assistant, type ChatPresetProps } from '#types';
 
@@ -34,7 +34,7 @@ export type ChatOptionsProps = ChatPresetProps & {
  * Manages the runtime context for the chat.
  */
 export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPresetChange }: ChatOptionsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <div className='flex'>
@@ -65,12 +65,12 @@ export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPr
           <Popover.Content side='top' classNames={styles.panel}>
             <Popover.Viewport>
               <Tabs.Root asChild orientation='horizontal' defaultValue='view' defaultActivePart='list' tabIndex={-1}>
-                <Tabs.Viewport classNames={mx('flex grid grid-rows-[1fr_40px] w-full')}>
+                <Tabs.Viewport classNames={mx('grid grid-rows-[1fr_40px] w-full')}>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
                     <ViewPanel chat={chat} />
                   </Tabs.Panel>
-                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='blueprints'>
-                    <BlueprintsPanel registry={registry} db={db} context={context} />
+                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='skills'>
+                    <SkillsPanel registry={registry} db={db} context={context} />
                   </Tabs.Panel>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
                     <McpServersPanel db={db} />
@@ -80,11 +80,7 @@ export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPr
                   </Tabs.Panel>
                   <Tabs.Tablist classNames={[styles.toolbar]}>
                     <Tabs.IconTab value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
-                    <Tabs.IconTab
-                      value='blueprints'
-                      icon='ph--blueprint--regular'
-                      label={t('options.blueprints.title')}
-                    />
+                    <Tabs.IconTab value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
                     <Tabs.IconTab
                       value='mcp-servers'
                       icon='ph--plugs-connected--regular'
@@ -103,32 +99,32 @@ export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPr
   );
 };
 
-const BlueprintsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry' | 'db' | 'context'>) => {
-  const { t } = useTranslation(meta.id);
+const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry' | 'db' | 'context'>) => {
+  const { t } = useTranslation(meta.profile.key);
 
-  const blueprints = useBlueprints({ registry, db });
-  const activeBlueprints = useActiveBlueprints({ context });
-  const { onUpdateBlueprint } = useBlueprintHandlers({ db, context, registry });
+  const skills = useSkills({ registry, db });
+  const activeSkills = useActiveSkills({ context });
+  const { onUpdateSkill } = useSkillHandlers({ db, context, registry });
   const { results, handleSearch } = useSearchListResults({
-    items: blueprints,
-    extract: (blueprint) => blueprint.name,
+    items: skills,
+    extract: (skill) => skill.name,
   });
 
   return (
     <SearchList.Root onSearch={handleSearch}>
       <SearchList.Content classNames='flex flex-col'>
         <SearchList.Viewport>
-          {results.map((blueprint) => {
-            const blueprintKey = Obj.getMeta(blueprint).key ?? blueprint.id;
-            const isActive = activeBlueprints.has(blueprintKey);
+          {results.map((skill) => {
+            const skillKey = Obj.getMeta(skill).key ?? skill.id;
+            const isActive = activeSkills.has(skillKey);
             return (
               <SearchList.Item
                 classNames='flex items-center overflow-hidden'
-                key={blueprintKey}
-                value={blueprintKey}
-                label={blueprint.name}
+                key={skillKey}
+                value={skillKey}
+                label={skill.name}
                 checked={isActive}
-                onSelect={() => onUpdateBlueprint?.(blueprintKey, !isActive)}
+                onSelect={() => onUpdateSkill?.(skillKey, !isActive)}
               />
             );
           })}
@@ -140,8 +136,8 @@ const BlueprintsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'regi
 };
 
 const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
-  const { t } = useTranslation(meta.id);
-  const [view, setView] = useObject(chat, 'view');
+  const { t } = useTranslation(meta.profile.key);
+  const [view, setView] = useObject(chat, 'viewType');
   const value = (view as Assistant.ChatView | undefined) ?? 'normal';
 
   return (
@@ -163,7 +159,7 @@ const ModelsPanel = ({
   preset,
   onPresetChange,
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
       <Listbox.Content aria-label={t('options.chat-model.title')}>
@@ -183,7 +179,7 @@ type McpServersPanelProps = {
 };
 
 const McpServersPanel = ({ db }: McpServersPanelProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const servers = useQuery(db, Filter.type(McpServer.McpServer));
   const [adding, setAdding] = useState(false);
 
@@ -234,7 +230,7 @@ type McpServerRowProps = {
  * switch in sync with mutations made through the returned setter.
  */
 const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [enabled, setEnabled] = useObject(server, 'enabled');
 
   return (
@@ -262,7 +258,7 @@ type McpServerFormProps = {
 };
 
 const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
   const [protocol, setProtocol] = useState<'sse' | 'http'>('sse');
@@ -333,7 +329,7 @@ const ANY = '__any__' as const;
 
 /** @private */
 export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>): JSX.Element => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   // Item types sorted by label.
   const types = useFilteredTypes(db);

@@ -11,6 +11,7 @@ import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { getSpace, useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
+import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -27,7 +28,7 @@ export type SearchArticleProps = AppSurface.ObjectArticleProps<Search.Search>;
  * companion (see {@link SearchProperties}).
  */
 export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   // Use the live `subject` for reads/writes (the tag helpers mutate it); subscribe via useObject so
   // the view re-renders when results/tags change.
@@ -113,19 +114,21 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
         .group(
           'view',
           {
-            label: ['view-filter.label', { ns: meta.id }],
+            label: ['view-filter.label', { ns: meta.profile.key }],
             variant: 'toggleGroup',
             selectCardinality: 'single',
             value: view,
           },
           (group) => {
-            group.action('all', { label: ['view-all.label', { ns: meta.id }], icon: 'ph--list--regular' }, () =>
-              setView('all'),
+            group.action(
+              'all',
+              { label: ['view-all.label', { ns: meta.profile.key }], icon: 'ph--list--regular' },
+              () => setView('all'),
             );
             group.action(
               'starred',
               {
-                label: ['view-starred.label', { ns: meta.id }],
+                label: ['view-starred.label', { ns: meta.profile.key }],
                 icon: view === 'starred' ? 'ph--star--fill' : 'ph--star--regular',
               },
               () => setView('starred'),
@@ -153,9 +156,10 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
           />
         )) ||
           (visibleResults.length === 0 ? (
-            <div className='flex items-center justify-center h-full text-subdued text-sm'>
-              {view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
-            </div>
+            <Empty
+              classNames='bs-full'
+              label={view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
+            />
           ) : (
             <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
               <Masonry.Content thin centered padding>

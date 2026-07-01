@@ -14,7 +14,7 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Calendar, getCalendarRangeSelectionId } from '@dxos/plugin-inbox';
-import { linkedSegment, selectionAspect, type ViewStateManager } from '@dxos/react-ui-attention';
+import { type ViewStateManager, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { Event } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -69,7 +69,7 @@ export default Capability.makeModule(
         return Effect.succeed([
           AppNode.makeCompanion({
             id: linkedSegment('segment'),
-            label: ['segment.companion.label', { ns: meta.id }],
+            label: ['segment.companion.label', { ns: meta.profile.key }],
             icon: 'ph--ticket--regular',
             data: segment ?? 'segment',
           }),
@@ -87,7 +87,7 @@ export default Capability.makeModule(
             id: `${trip.id}-${TripOperation.MergeTrip.meta.key}`,
             data: () => Operation.invoke(TripOperation.MergeTrip, { trip }),
             properties: {
-              label: ['trip.merge.label', { ns: meta.id }],
+              label: ['trip.merge.label', { ns: meta.profile.key }],
               icon: 'ph--arrows-merge--regular',
               disposition: 'list-item',
             },
@@ -97,7 +97,7 @@ export default Capability.makeModule(
 
     // Context-menu action written into the calendar's menu: create a trip + itinerary from the events
     // in the calendar's currently-selected date range (or the next N days from today when nothing is
-    // selected). The Trip is created and opened immediately while the planning blueprint runs.
+    // selected). The Trip is created and opened immediately while the planning skill runs.
     const planTripExtension = yield* GraphBuilder.createExtension({
       id: 'calendarPlanTrip',
       match: (node) =>
@@ -141,14 +141,14 @@ export default Capability.makeModule(
                   {
                     spaceId: db.spaceId,
                     notify: {
-                      success: ['trip.plan-from-calendar-success.title', { ns: meta.id }],
-                      error: ['trip.plan-from-calendar-error.title', { ns: meta.id }],
+                      success: ['trip.plan-from-calendar-success.title', { ns: meta.profile.key }],
+                      error: ['trip.plan-from-calendar-error.title', { ns: meta.profile.key }],
                     },
                   },
                 );
               }),
             properties: {
-              label: ['trip.plan-from-calendar.label', { ns: meta.id }],
+              label: ['trip.plan-from-calendar.label', { ns: meta.profile.key }],
               icon: 'ph--airplane-takeoff--regular',
               disposition: 'list-item',
             },

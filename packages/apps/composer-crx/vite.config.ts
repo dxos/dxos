@@ -27,6 +27,7 @@ const { prepareCanonicalDist } = await import(pathToFileURL(path.join(dirname, '
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
+const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
 const outDir = prepareCanonicalDist(dirname);
 
 /**
@@ -70,13 +71,23 @@ export default defineConfig({
     }),
     ThemePlugin({}),
     IconsPlugin({
-      symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
-      assetPath: (name, variant) =>
-        `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+      // The leading negative lookahead restricts the `dx` set to the `regular` weight only (custom
+      // brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
+      symbolPattern:
+        '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+      assetPath: (iconSet, name, variant) => {
+        switch (iconSet) {
+          case 'dx':
+            return `${dxosIcons}/${name}.svg`;
+          default:
+            return `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
+        }
+      },
       spriteFile: 'icons.svg',
       contentPaths: [
         path.join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
         path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
+        path.join(rootDir, '/{packages,tools}/**/dx.config.{ts,tsx,js,jsx}'),
       ],
       // Page-action descriptor icons are contributed by Composer plugins at
       // runtime; those sources are never imported by the extension bundle, so

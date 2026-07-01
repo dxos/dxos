@@ -18,7 +18,6 @@ export * from './Icon';
 export * from './Image';
 export * from './Input';
 export * from './Link';
-export * from './List';
 export * from './Main';
 export * from './MediaPlayer';
 export * from './Menu';

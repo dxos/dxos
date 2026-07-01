@@ -15,6 +15,5 @@ export const MasonryProps = Schema.Struct({
       location: ['database', 'runtime'],
       kind: ['user'],
     }),
-    Schema.optional,
   ),
 });

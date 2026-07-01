@@ -2,13 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-// Presentational component that displays a list of related SampleItems.
-// Uses React UI `List`/`ListItem`/`Icon` for consistent design system rendering.
-// Navigation is handled via callback to keep framework dependencies out of components.
-
 import React from 'react';
 
-import { Icon, List, ListItem } from '@dxos/react-ui';
+import { Icon } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 
 export type RelatedItemsListProps = {
   items: ReadonlyArray<{ id: string; name?: string; status?: string }>;
@@ -20,21 +17,25 @@ export const RelatedItemsList = ({ items, onNavigate }: RelatedItemsListProps) =
     return <p className='text-sm text-description p-2'>No other sample items in this space.</p>;
   }
 
+  // Navigate-only: the row hosts a focusable button (keyboard-accessible) rather than a
+  // row-level click, since plain `Listbox.Item`s are `role=listitem` (not focusable options).
   return (
-    <List>
-      {items.map((item) => (
-        <ListItem.Root key={item.id} onClick={() => onNavigate?.(item.id)} classNames='cursor-pointer'>
-          <ListItem.Endcap>
-            <Icon icon='ph--book-open--regular' size={4} />
-          </ListItem.Endcap>
-          <ListItem.Heading>
-            <span className='truncate'>{item.name ?? 'Untitled'}</span>
-          </ListItem.Heading>
-          <ListItem.Endcap>
-            <Icon icon='ph--caret-right--regular' size={4} />
-          </ListItem.Endcap>
-        </ListItem.Root>
-      ))}
-    </List>
+    <Listbox.Root>
+      <Listbox.Content classNames='gap-1'>
+        {items.map((item) => (
+          <Listbox.Item key={item.id} id={item.id} classNames='p-0'>
+            <button
+              type='button'
+              onClick={() => onNavigate?.(item.id)}
+              className='flex w-full items-center gap-2 px-3 py-2 text-start dx-focus-ring'
+            >
+              <Icon icon='ph--book-open--regular' size={4} />
+              <Listbox.ItemLabel>{item.name ?? 'Untitled'}</Listbox.ItemLabel>
+              <Icon icon='ph--caret-right--regular' size={4} />
+            </button>
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
+    </Listbox.Root>
   );
 };

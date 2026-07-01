@@ -9,12 +9,14 @@ import {
   type MosaicScrollController,
   useMosaicContainerContext,
 } from './Container';
+import { MosaicDragHandle, type MosaicDragHandleProps } from './DragHandle';
 import {
   MosaicDropIndicator,
   type MosaicDropIndicatorProps,
   MosaicPlaceholder,
   type MosaicPlaceholderProps,
 } from './Placeholder';
+import { MosaicResizeHandle, type MosaicResizeHandleProps } from './ResizeHandle';
 import { MosaicRoot, type MosaicRootProps, useMosaicRootContext } from './Root';
 import { MosaicStack, type MosaicStackProps, type MosaicStackTileComponent, MosaicVirtualStack } from './Stack';
 import { MosaicTile, type MosaicTileProps, type MosaicTileState, useMosaicTileContext } from './Tile';
@@ -27,6 +29,8 @@ export const Mosaic = {
   Root: MosaicRoot,
   Container: MosaicContainer,
   Tile: MosaicTile,
+  DragHandle: MosaicDragHandle,
+  ResizeHandle: MosaicResizeHandle,
   Placeholder: MosaicPlaceholder,
   DropIndicator: MosaicDropIndicator,
   Stack: MosaicStack,
@@ -34,16 +38,18 @@ export const Mosaic = {
 };
 
 export type {
-  MosaicRootProps,
   MosaicContainerProps,
   MosaicContainerState,
-  MosaicScrollController,
-  MosaicTileProps,
-  MosaicTileState,
-  MosaicPlaceholderProps,
+  MosaicDragHandleProps,
   MosaicDropIndicatorProps,
+  MosaicPlaceholderProps,
+  MosaicResizeHandleProps,
+  MosaicRootProps,
+  MosaicScrollController,
   MosaicStackProps,
   MosaicStackTileComponent,
+  MosaicTileProps,
+  MosaicTileState,
 };
 
 export {

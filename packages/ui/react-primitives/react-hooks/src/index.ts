@@ -3,7 +3,7 @@
 //
 
 export { useComposedRefs } from '@radix-ui/react-compose-refs';
-export { useSize, useScroller } from 'mini-virtual-list';
+export { useScroller, useSize } from 'mini-virtual-list';
 
 export * from './useAsyncEffect';
 export * from './useAtomState';

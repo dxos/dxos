@@ -3,15 +3,17 @@
 //
 
 export {
+  type Cell,
+  type CellWithDefault,
+  type Service,
   StorageService,
+  cell,
   clear,
   deleteKey,
   get,
-  key,
   list,
   set,
   withDefault,
-  type Service,
 } from '@dxos/compute/StorageService';
 
 export { layer } from './storage-service-layer';

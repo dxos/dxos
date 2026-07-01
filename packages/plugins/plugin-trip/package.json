@@ -92,6 +92,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src",
     "PLUGIN.mdl"
   ],
@@ -114,12 +115,14 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
+    "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-calendar": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-geo": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/types": "workspace:*",

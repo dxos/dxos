@@ -9,8 +9,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
+
+import * as Trigger from './Trigger';
 
 /**
  * Writes ephemeral or persistent events to the trace.
@@ -110,14 +112,14 @@ export const Meta = Schema.Struct({
   space: Schema.optional(Schema.String),
 
   /**
-   * ID of the conversation feed object if present.
+   * Ref to the conversation feed object if present.
    */
-  conversationId: Schema.optional(Obj.ID),
+  conversation: Ref.Ref(Obj.Unknown).pipe(Schema.optional),
 
   /**
-   * ID of the trigger object if invocation resulted from a trigger.
+   * Ref to the trigger object if invocation resulted from a trigger.
    */
-  triggerId: Schema.optional(Obj.ID),
+  trigger: Ref.Ref(Trigger.Trigger).pipe(Schema.optional),
 
   /**
    * ID of the tool call that created the current process.
@@ -148,12 +150,12 @@ export const MessageData = Schema.Struct({
   events: Schema.Array(Event),
 });
 export type MessageData = Schema.Schema.Type<typeof MessageData>;
-export const Message = MessageData.pipe(
-  Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
-  Annotation.HiddenAnnotation.set(true),
-  Type.makeObject(DXN.make('org.dxos.type.traceMessage', '0.1.0')),
-);
-export type Message = Type.InstanceType<typeof Message>;
+export class Message extends Type.makeObject<Message>(DXN.make('org.dxos.type.traceMessage', '0.1.0'))(
+  MessageData.pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
+    Annotation.HiddenAnnotation.set(true),
+  ),
+) {}
 /**
  * Flattened representation of a signle event in a trace message.
  * Events are stored in batched messages for efficiency, but flat representation is more convenient for consumption.

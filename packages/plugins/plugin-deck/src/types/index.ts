@@ -3,6 +3,7 @@
 //
 
 export * from './schema';
+export * from './surface';
 
 export * as DeckCapabilities from './DeckCapabilities';
 export * as DeckEvents from './DeckEvents';

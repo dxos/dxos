@@ -16,7 +16,7 @@ import { type Journal } from '#types';
 export type JournalArticleProps = AppSurface.ObjectArticleProps<Journal.Journal>;
 
 export const JournalArticle = ({ role, attendableId: _attendableId, subject: journal }: JournalArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [showCalendar, setShowCalendar] = useState(false);
   const controllerRef = useRef<CalendarController>(null);
 

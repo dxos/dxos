@@ -10,6 +10,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { Message, Select, Separator, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import { Empty } from '@dxos/react-ui-list';
 import { trim } from '@dxos/util';
 
 import { OfferStack } from '#components';
@@ -49,7 +50,7 @@ export type BookingSearchProps = {
 };
 
 export const BookingSearch = ({ segment }: BookingSearchProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const kind = Segment.getKind(segment);
 
@@ -238,7 +239,7 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
         <>
           <Separator />
           {flightOffers.length === 0 ? (
-            <div className='p-form-gap text-description'>{t('booking.no-offers.message')}</div>
+            <Empty label={t('booking.no-offers.message')} />
           ) : (
             <OfferStack offers={flightOffers} onSelect={handleSelectOffer} />
           )}

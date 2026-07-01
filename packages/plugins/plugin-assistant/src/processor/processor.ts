@@ -12,26 +12,30 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { type AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry, type OpaqueToolkit } from '@dxos/ai';
+import { type AiService, Model, type OpaqueToolkit } from '@dxos/ai';
 import { Capabilities } from '@dxos/app-framework';
 import {
   AiContext,
   AiSession,
-  createSystemPrompt,
-  formatSystemPrompt,
+  Harness,
   McpServerError,
   PartialBlock,
   ToolExecutionServices,
+  createSystemPrompt,
+  formatSystemPrompt,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import { type Credential, Operation, type ServiceNotAvailableError, Trace } from '@dxos/compute';
+import { AgentService, type Credential, Operation, type ServiceNotAvailableError, Trace } from '@dxos/compute';
 import { type Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
+import { UsageQuotaExceededError } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
-import { AgentService } from '@dxos/functions-runtime';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
 import { AssistantOperation } from '#types';
+
+import { findInCause } from '../util/error-cause';
 
 /**
  * @deprecated Services type for the old direct-conversation processor path.
@@ -50,7 +54,6 @@ export type AiChatServices =
  */
 export type SpaceServices =
   | Database.Service
-  | Feed.FeedService
   | Credential.CredentialsService
   | AiService.AiService
   | AgentService.AgentService
@@ -58,8 +61,11 @@ export type SpaceServices =
   | OpaqueToolkit.OpaqueToolkitProvider;
 
 export type AiChatProcessorOptions = {
-  model?: ModelName;
-  modelRegistry?: ModelRegistry;
+  model?: DXN.DXN;
+  // The selected provider, carried with the model so the agent process resolves the (provider, id)
+  // pair — the catalog's shared model ids are ambiguous without it.
+  provider?: DXN.DXN;
+  modelRegistry?: Model.Registry;
   registry?: Registry.Registry;
   observableRegistry?: AtomRegistry.Registry;
   /**
@@ -70,7 +76,7 @@ export type AiChatProcessorOptions = {
 };
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
-  model: DEFAULT_EDGE_MODEL,
+  model: Model.DEFAULT_EDGE,
 };
 
 export type ProcessorRequestOptions = {};
@@ -80,14 +86,57 @@ export type ProcessorRequest = {
   options?: ProcessorRequestOptions;
 };
 
+/** User-facing message shown when an AI request is rejected for exceeding the account usage quota (HTTP 429). */
+const QUOTA_EXCEEDED_MESSAGE = 'You have reached your AI usage limit for this period.';
+
+/** An actionable next-step a chat error surfaces in its toast; the label key is resolved by the chat UI. */
+export type ChatErrorAction = { readonly labelKey: string };
+
+/**
+ * Display error for an over-quota (HTTP 429) rejection. Declares an {@link action} so the chat toast can
+ * offer a usage-dashboard link declaratively — the UI renders whatever action an error declares rather
+ * than branching on the error type.
+ */
+export class AiUsageQuotaError extends Error {
+  readonly action: ChatErrorAction = { labelKey: 'view-usage.label' };
+}
+
+/**
+ * Matches an over-quota rejection (EDGE responds 429) in error text. The typed
+ * {@link UsageQuotaExceededError} is wrapped deep in the cause chain and does not survive the
+ * agent-process boundary — the failure is rendered to a string via `Cause.pretty`, which drops
+ * nested causes — so detection also relies on the HTTP 429 that `@effect/ai`'s
+ * {@link AiError.HttpResponseError} embeds in its message (e.g. "... (429 POST ...").
+ */
+const QUOTA_PATTERN = /\b429\b|rate.?limit|too many requests|usage quota|quota exceeded/i;
+
+/** Whether an error denotes an over-quota (HTTP 429) rejection, detected by typed status or message text. */
+const isQuotaError = (err: unknown): boolean => {
+  if (AiError.isAiError(err)) {
+    if (err._tag === 'HttpResponseError' && err.response.status === 429) {
+      return true;
+    }
+    return QUOTA_PATTERN.test(err.description ?? err.message);
+  }
+  return typeof err === 'string' && QUOTA_PATTERN.test(err);
+};
+
 /**
  * Maps a failure from the agent fiber to an error suitable for display.
- * {@link AiError}s originate from the AI service and are actionable by the user
+ * An over-quota (HTTP 429) rejection is surfaced as an actionable usage-limit message; the typed
+ * {@link UsageQuotaExceededError} only survives on the direct path, so {@link isQuotaError} also
+ * recognizes the stringified 429 the chat receives across the agent-process boundary.
+ * Other {@link AiError}s originate from the AI service and are actionable by the user
  * (e.g., "model 'x' not found", "Connection refused"), so their detail is propagated.
  * Any other failure is treated as an internal/unexpected error and reported generically
  * to avoid leaking implementation detail.
  */
-const parseError = (err: unknown): Error => {
+export const parseError = (err: unknown): Error => {
+  const quotaError = findInCause(err, UsageQuotaExceededError.is);
+  if (quotaError || isQuotaError(err)) {
+    return new AiUsageQuotaError(quotaError?.message?.trim() || QUOTA_EXCEEDED_MESSAGE, { cause: err });
+  }
+
   let message: string | undefined;
   if (AiError.isAiError(err)) {
     message = err.description?.trim() || err.message;
@@ -170,7 +219,7 @@ export class AiChatProcessor {
     }
   }
 
-  get context() {
+  get context(): AiContext.Binder {
     return this._conversation.context;
   }
 
@@ -195,14 +244,18 @@ export class AiChatProcessor {
   async getSystemPrompt(): Promise<string> {
     return this._runtime.runPromise(
       Effect.gen(this, function* () {
-        const blueprints = this.context.getBlueprints();
+        const skills = this.context.getSkills();
         const objects = this.context.getObjects();
-        return yield* formatSystemPrompt({ system: this._options.system, blueprints, objects });
-      }).pipe(
-        Effect.provideService(AiContext.Service, { binder: this.context }),
-        Effect.provide(this._spaceLayer),
-        Effect.orDie,
-      ),
+        // Tier A only: system-prompt formatting runs operations that read the conversation context;
+        // the live-host Tier B control surface is not reachable from this fiber.
+        const runtime = yield* Effect.runtime<Database.Service>();
+        return yield* formatSystemPrompt({ system: this._options.system, skills, objects }).pipe(
+          Effect.provideService(
+            Harness.HarnessService,
+            Harness.fromBinder({ feed: this._feed, runtime, binder: this.context }),
+          ),
+        );
+      }).pipe(Effect.provide(this._spaceLayer), Effect.orDie),
     );
   }
 
@@ -222,8 +275,15 @@ export class AiChatProcessor {
 
       const effect = Effect.gen(this, function* () {
         // NOTE: Gets or creates a session for the feed.
-        log.info('init agent session', { feed: Obj.getURI(this._feed), model: this._options.model });
-        const session = yield* AgentService.getSession(this._feed, { model: this._options.model });
+        log.info('init agent session', {
+          feed: Obj.getURI(this._feed),
+          model: this._options.model,
+          provider: this._options.provider,
+        });
+        const session = yield* AgentService.getSession(this._feed, {
+          model: this._options.model,
+          provider: this._options.provider,
+        });
         const ephemeralStream = session.subscribeEphemeral();
         yield* ephemeralStream.pipe(
           Stream.runForEach((message) =>
@@ -263,6 +323,7 @@ export class AiChatProcessor {
       const exit = await this._runtime.runPromise(Fiber.await(this.#requestFiber));
       if (Exit.isFailure(exit)) {
         if (Cause.isInterruptedOnly(exit.cause)) {
+          this.#discardStreaming();
           return;
         }
 
@@ -300,6 +361,7 @@ export class AiChatProcessor {
     );
 
     this.#requestFiber = undefined;
+    this.#discardStreaming();
     this.#registry.set(this.active, false);
   }
 
@@ -388,6 +450,14 @@ export class AiChatProcessor {
       }
       return [...errors, event];
     });
+  }
+
+  /**
+   * Drop in-flight streaming messages (cancel/interrupt — partial blocks are discarded).
+   */
+  #discardStreaming() {
+    this.#registry.set(this.#streaming, []);
+    this.#finalizedIds.clear();
   }
 
   /**

@@ -4,7 +4,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation, AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Entity, Obj } from '@dxos/echo';
@@ -25,7 +25,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
       );
 
       const parentCollection =
-        input.target ?? Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target;
+        input.target ??
+        Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target;
       invariant(parentCollection, 'No parent collection found for space — cannot remove objects.');
 
       // Type entities (persisted schemas) live outside collections — `findIndex` will

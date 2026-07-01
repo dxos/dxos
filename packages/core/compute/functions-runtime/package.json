@@ -82,6 +82,7 @@
     "@effect-atom/atom": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/platform": "catalog:",
+    "@effect/rpc": "catalog:",
     "effect": "catalog:",
     "esbuild": "catalog:",
     "esbuild-wasm": "catalog:",

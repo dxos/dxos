@@ -42,13 +42,13 @@ Reach for these first when answering questions like "how many plugins", "which p
 
 ### Search idioms before implementing
 
-**Required.** Before writing or refactoring any container, capability, operation, blueprint, or schema, call `mcp__dxos-introspect__list_idioms` and scan for a slug that matches what you're about to build. An idiom is a JSDoc-tagged pinning of the canonical way to do one thing — when one exists, it is the answer, and you should `get_symbol` on the host artifact and follow the pattern rather than reinventing it.
+**Required.** Before writing or refactoring any container, capability, operation, skill, or schema, call `mcp__dxos-introspect__list_idioms` and scan for a slug that matches what you're about to build. An idiom is a JSDoc-tagged pinning of the canonical way to do one thing — when one exists, it is the answer, and you should `get_symbol` on the host artifact and follow the pattern rather than reinventing it.
 
 Typical triggers:
 
 - Building a toolbar → look for `org.dxos.react-ui-menu.*` idioms.
 - Wiring `useObject` / mutating ECHO subjects → look for ECHO idioms.
-- Writing a surface filter, operation handler, blueprint, or container scaffold → search by the feature word first.
+- Writing a surface filter, operation handler, skill, or container scaffold → search by the feature word first.
 
 If no idiom matches, proceed using the exemplar (`plugin-chess`); if you find yourself writing something that other plugins will copy, consider adding a new `@idiom` tag (see [`packages/reflect/deus/docs/IDIOMS.md`](../../../packages/reflect/deus/docs/IDIOMS.md) for the format and slug rules).
 
@@ -84,20 +84,21 @@ When asked to create a new plugin, start with a minimal skeleton before adding f
 
 1. `PLUGIN.mdl` — specification starter with initial feature/requirement blocks.
 2. `README.md` — brief description of the plugin's purpose.
-3. `package.json` — with `"private": true`, `#imports` aliases, and minimal dependencies.
-4. `moon.yml` — with `compile` entry points.
+3. `package.json` — with `"private": true`, `#plugin` import alias, `./plugin` export subpath, and minimal dependencies.
+4. `moon.yml` — with `compile` entry points for both `src/index.ts` and `src/plugin.ts`.
 5. `src/meta.ts` — plugin metadata (id, name, description, icon, iconHue).
 6. `src/translations.ts` — initial translation resources.
-7. `src/FooPlugin.tsx` — minimal `Plugin.define(meta).pipe()` with surface and translations modules.
-8. `src/index.ts` — exports only meta and plugin.
-9. `src/types/` — one schema type with `make()` factory.
-10. `src/capabilities/index.ts` — single `Capability.lazy()` for ReactSurface.
-11. `src/capabilities/react-surface.tsx` — one surface for the `article` role.
-12. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
-13. `src/components/` — empty barrel, ready for primitives.
+7. `src/FooPlugin.tsx` — minimal `Plugin.define(meta).pipe()` with surface and translations modules, plus `export default FooPlugin`.
+8. `src/plugin.ts` — lazy wrapper: `export const FooPlugin = Plugin.lazy(meta, () => import('#plugin'))`. Re-export any `OperationHandlerSet` here too.
+9. `src/index.ts` — exports only `meta` and types/operations. **Never exports the plugin instance.**
+10. `src/types/` — one schema type with `make()` factory.
+11. `src/capabilities/index.ts` — single `Capability.lazy()` for ReactSurface.
+12. `src/capabilities/react-surface.tsx` — one surface for the `article` role.
+13. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
+14. `src/components/` — empty barrel, ready for primitives.
 
 Build and lint the skeleton before adding features.
-Add capabilities incrementally as needed (operations, blueprints, settings, etc.).
+Add capabilities incrementally as needed (operations, skills, settings, etc.).
 Register the plugin with `composer-app`.
 
 ## Directory Structure
@@ -108,17 +109,18 @@ plugin-foo/
   moon.yml
   PLUGIN.mdl
   src/
-    index.ts                # Root entrypoint; exports only the plugin and meta.
+    index.ts                # Root entrypoint; exports only meta and types/operations — never the plugin instance.
+    plugin.ts               # Plugin.lazy() wrapper; consumed via @dxos/plugin-foo/plugin.
     meta.ts                 # Plugin.Meta (id, name, description, icon, iconHue).
     translations.ts         # i18n resources keyed by typename and meta.id.
     FooPlugin.tsx           # Plugin definition via Plugin.define(meta).pipe().
-    blueprints/             # AI blueprint definitions.
+    skills/             # AI skill definitions.
       index.ts
     capabilities/           # Lazy capability modules (one file each).
       index.ts              # Barrel of Capability.lazy() exports.
       react-surface.tsx
       operation-handler.ts
-      blueprint-definition.ts
+      skill-definition.ts
     components/             # Primitive UI components (no app-framework deps).
       index.ts
       MyComponent/
@@ -275,7 +277,7 @@ Conventions:
 
 - **Declare each spec at module level**, not inside the `Capability.makeModule(Effect.fnUntraced(...))` activation body. Keep the activation block to just the `Capability.contributes(...)` list (+ any conditional contributions that depend on runtime config).
 - **Use PascalCase names ending in `LayerSpec`** (`ClientLayerSpec`, `DatabaseLayerSpec`, `RemoteFunctionExecutionSpec`, …). This makes the module-level intent obvious at the callsite.
-- **Declare runtime dependencies via `requires`, not via outer-scope closures.** If a spec needs the `Client`, require `ClientService` (or `Capability.Service` + `Capability.get(ClientCapabilities.Client)` inside a `Layer.unwrapEffect(Effect.gen(...))`). If a spec needs contributed capabilities (e.g. operation handlers, blueprint definitions), require `Capability.Service` and resolve them with `Capability.get` / `Capability.getAll` — this keeps the spec portable and the dependency graph explicit.
+- **Declare runtime dependencies via `requires`, not via outer-scope closures.** If a spec needs the `Client`, require `ClientService` (or `Capability.Service` + `Capability.get(ClientCapabilities.Client)` inside a `Layer.unwrapEffect(Effect.gen(...))`). If a spec needs contributed capabilities (e.g. operation handlers, skill definitions), require `Capability.Service` and resolve them with `Capability.get` / `Capability.getAll` — this keeps the spec portable and the dependency graph explicit.
 - **Hard-fail with `invariant` on missing space context or missing space records.** Space-affinity specs that receive a `context` argument should `invariant(context.space, …)` and `invariant(space, …)` on the client lookup — returning a `notAvailable` fallback hides configuration bugs in the layer graph.
 - **Activation-conditional specs stay inside the `makeModule` body.** Specs that only apply when a runtime config flag is set (e.g. `runtime.client.edgeFeatures.agents`) can still read that config from the `Client` and conditionally append themselves to the contributions list.
 
@@ -350,21 +352,21 @@ See: `plugin-chess/src/operations/`
 
 The main plugin file wires everything together using `Plugin.define(meta).pipe()` with `AppPlugin` helper methods:
 
-| Method                         | Purpose                        | Activation Event          |
-| ------------------------------ | ------------------------------ | ------------------------- |
-| `addSurfaceModule`             | React surface components       | `SetupReactSurface`       |
-| `addMetadataModule`            | Type metadata (icon, creation) | `SetupMetadata`           |
-| `addSchemaModule`              | ECHO type registration         | `SetupSchema`             |
-| `addCommentConfigModule`       | Comment config (per typename)  | `SetupSchema`             |
-| `addOperationHandlerModule`    | Operation handlers             | `SetupOperationHandler`   |
-| `addTranslationsModule`        | i18n resources                 | `SetupTranslations`       |
-| `addBlueprintDefinitionModule` | AI blueprints                  | `SetupArtifactDefinition` |
-| `addSettingsModule`            | Plugin settings                | `SetupSettings`           |
-| `addAppGraphModule`            | Graph builder extensions       | `SetupAppGraph`           |
-| `addCommandModule`             | CLI commands                   | `Startup`                 |
-| `addReactContextModule`        | React context provider         | `Startup`                 |
-| `addNavigationResolverModule`  | Navigation resolvers           | `OperationInvokerReady`   |
-| `addNavigationHandlerModule`   | Navigation handlers            | `OperationInvokerReady`   |
+| Method                        | Purpose                        | Activation Event          |
+| ----------------------------- | ------------------------------ | ------------------------- |
+| `addSurfaceModule`            | React surface components       | `SetupReactSurface`       |
+| `addMetadataModule`           | Type metadata (icon, creation) | `SetupMetadata`           |
+| `addSchemaModule`             | ECHO type registration         | `SetupSchema`             |
+| `addCommentConfigModule`      | Comment config (per typename)  | `SetupSchema`             |
+| `addOperationHandlerModule`   | Operation handlers             | `SetupOperationHandler`   |
+| `addTranslationsModule`       | i18n resources                 | `SetupTranslations`       |
+| `addSkillDefinitionModule`    | AI skills                      | `SetupArtifactDefinition` |
+| `addSettingsModule`           | Plugin settings                | `SetupSettings`           |
+| `addAppGraphModule`           | Graph builder extensions       | `SetupAppGraph`           |
+| `addCommandModule`            | CLI commands                   | `Startup`                 |
+| `addReactContextModule`       | React context provider         | `Startup`                 |
+| `addNavigationResolverModule` | Navigation resolvers           | `OperationInvokerReady`   |
+| `addNavigationHandlerModule`  | Navigation handlers            | `OperationInvokerReady`   |
 
 See: `plugin-chess/src/ChessPlugin.tsx`
 
@@ -376,11 +378,11 @@ Common filters: `AppSurface.object(AppSurface.Article, Type)`, `AppSurface.objec
 
 See: `plugin-chess/src/capabilities/react-surface.tsx`
 
-## Blueprint Definition
+## Skill Definition
 
-Blueprints provide AI agents with tools and instructions for a domain. Define a blueprint key, gather operations, and use `Blueprint.make()` with `Blueprint.toolDefinitions()`.
+Skills provide AI agents with tools and instructions for a domain. Define a skill key, gather operations, and use `Skill.make()` with `Skill.toolDefinitions()`.
 
-See: `plugin-chess/src/blueprints/chess-blueprint.ts`
+See: `plugin-chess/src/skills/chess-skill.ts`
 
 ## Translations
 
@@ -425,7 +427,8 @@ moon run plugin-foo:test-storybook
 ## General Rules
 
 - `src/components/` and `src/containers/` should contain only index files and subdirectories.
-- `src/index.ts` exports only the plugin and meta. Keep it minimal.
+- **Two-entrypoint rule**: `src/index.ts` exports only `meta` and types/operations — never the plugin instance. `src/plugin.ts` holds the `Plugin.lazy()` wrapper and is the `./plugin` subpath. Consumers import from `@dxos/plugin-foo/plugin`; the root entry is for types/operations only.
+- `src/FooPlugin.ts` (the `Plugin.define().pipe()` implementation) must have `export default FooPlugin` so `Plugin.lazy(() => import('#plugin'))` can resolve it.
 - If another plugin needs internals, expose dedicated public entrypoints (`types`, `operations`) instead of re-exporting from root.
 - Plugins should not depend on another plugin's root entrypoint for broad barrels.
 - The `Surface` component provides top-level `<Suspense>` for lazy containers; individual containers only need their own Suspense if they use `React.use()` or render lazy sub-components.

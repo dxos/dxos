@@ -3,10 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { List, ListItem, Panel, Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ColorStyles, getHashStyles, mx } from '@dxos/ui-theme';
 
@@ -14,23 +15,22 @@ import { Capabilities } from '../../../common';
 import { withPluginManager } from '../../../testing';
 import { usePluginManager } from '../PluginManager';
 import { SurfaceComponent, useSurfaces } from './SurfaceComponent';
-import { create } from './types';
+import { create, makeFilter, makeType } from './types';
+
+const ItemRole = makeType<{ id: string }>('org.dxos.test.role.item');
 
 type TestComponentProps = {
   id: string;
   styles: ColorStyles;
 };
 
-const TestComponent = forwardRef<HTMLDivElement, TestComponentProps>(({ styles, id }, forwardedRef) => {
+const TestComponent = ({ styles, id }: TestComponentProps) => {
   return (
-    <div
-      className={mx('flex justify-center items-center border rounded-sm', styles.surface, styles.border)}
-      ref={forwardedRef}
-    >
+    <div className={mx('flex justify-center items-center border rounded-sm', styles.surface, styles.border)}>
       <span className={mx('dx-tag font-mono text-lg', styles.text)}>{id}</span>
     </div>
   );
-});
+};
 
 const DefaultStory = () => {
   const manager = usePluginManager();
@@ -46,9 +46,8 @@ const DefaultStory = () => {
       interface: Capabilities.ReactSurface,
       implementation: create({
         id,
-        role: 'item',
-        filter: (data): data is any => (data as any)?.id === id,
-        component: ({ ref }) => <TestComponent id={id} styles={styles} ref={ref} />,
+        filter: makeFilter(ItemRole, (data) => data.id === id),
+        component: () => <TestComponent id={id} styles={styles} />,
       }),
     });
 
@@ -65,8 +64,7 @@ const DefaultStory = () => {
       interface: Capabilities.ReactSurface,
       implementation: create({
         id: 'error',
-        role: 'item',
-        filter: (data): data is any => (data as any)?.id === 'error',
+        filter: makeFilter(ItemRole, (data) => data.id === 'error'),
         component: () => {
           const [count, setCount] = useState(3);
           useEffect(() => {
@@ -113,15 +111,17 @@ const DefaultStory = () => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content className='grid grid-cols-2 h-full gap-4 overflow-hidden'>
-        <SurfaceComponent role='item' data={selected ? { id: selected } : undefined} limit={1} ref={ref} />
+        <SurfaceComponent type={ItemRole} data={selected ? { id: selected } : undefined} limit={1} ref={ref} />
         <div className='overflow-y-auto h-full'>
-          <List>
-            {surfaces.map((surface) => (
-              <ListItem.Root key={surface.id} id={surface.id}>
-                <ListItem.Heading classNames='flex items-center'>{surface.id}</ListItem.Heading>
-              </ListItem.Root>
-            ))}
-          </List>
+          <Listbox.Root>
+            <Listbox.Content aria-label='Surfaces'>
+              {surfaces.map((surface) => (
+                <Listbox.Item key={surface.id} id={surface.id}>
+                  <Listbox.ItemLabel classNames='flex items-center'>{surface.id}</Listbox.ItemLabel>
+                </Listbox.Item>
+              ))}
+            </Listbox.Content>
+          </Listbox.Root>
         </div>
       </Panel.Content>
     </Panel.Root>

@@ -11,28 +11,27 @@ import React, { useMemo } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
-import { IconBlock, IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
+import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
-import {
-  type CreateOptions,
-  type FormFieldOptions,
-  type FormFieldRenderer,
-  type FormFieldRendererProps,
-  type RefFieldDataProps,
-} from '#types';
+import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
+import { AutofillAnnotation, OptionsLookupAnnotation } from '../../../annotations';
 import { useFormFieldState } from '../../../hooks';
 import { getRefProps } from '../../../util';
 import { FormFieldSet } from '../FormFieldSet';
 import {
   ArrayField,
+  AsyncSelectField,
+  AutofillField,
   BooleanField,
+  ComboboxField,
   DateField,
   GeoPointField,
   InlineRefField,
   MarkdownField,
   NumberField,
+  PasswordField,
   RefField,
   SelectField,
   TextAreaField,
@@ -56,19 +55,34 @@ export type FormFieldProps = {
   name: string | null;
 
   /**
+   * Explicit label, overriding the `title ?? capitalize(name)` derivation. Used by `ArrayField` to
+   * give scalar/ref items the array's resolved title (e.g. `Tags`) rather than re-capitalizing the
+   * raw array property name (e.g. `_tags`), since the element type carries no title of its own.
+   */
+  label?: string;
+
+  /**
    * Path to the current object from the root. Used with nested forms.
    */
   path?: (string | number)[];
   autoFocus?: boolean;
-} & FormFieldOptions &
-  Pick<RefFieldDataProps, 'getOptions' | 'onCreate' | 'useType'> &
-  CreateOptions;
+  /** Whether the field is required (non-optional in the schema). Drives the label asterisk. */
+  required?: boolean;
+  /**
+   * Force a `Ref` field to render its target inline (a nested form) instead of the picker.
+   * Set by `ArrayField` for owned-ref arrays (`FormCreateAnnotation`); equivalent to
+   * `FormInlineAnnotation` but driven by the parent array rather than the element's own AST.
+   */
+  refInline?: boolean;
+} & FieldContext;
 
 export const FormField = (props: FormFieldProps) => {
   const {
     type,
     name,
+    label: labelProp,
     path,
+    required,
     projection,
     fieldMap,
     fieldProvider,
@@ -85,21 +99,26 @@ export const FormField = (props: FormFieldProps) => {
     useType,
     getOptions,
     onCreate,
+    resolveCreateEntry,
+    refInline,
   } = props;
   const { t } = useTranslation(translationKey);
   const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
   const description = SchemaEx.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
   const examples = SchemaEx.getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
 
-  // `name === null` means "no header" -- collapse to an empty string so
-  // downstream consumers keep their `label: string` types, and the falsy
-  // value lets `FormFieldSet`'s `label && <FormFieldLabel ...>` guard skip
-  // the header.
-  const label = useMemo(() => title ?? (name == null ? '' : String.capitalize(name)), [title, name]);
+  const label = useMemo(
+    () => labelProp ?? title ?? (name == null ? '' : String.capitalize(name)),
+    [labelProp, title, name],
+  );
   const placeholder = useMemo(
     () => (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : (description ?? label)),
-    [examples, description, label],
+    [examples, description, label, t],
   );
+
+  // Build the schema for `fieldProvider` only when one is registered, memoized by `type` (the AST) so
+  // we don't reconstruct it on every render.
+  const providerSchema = useMemo(() => (fieldProvider ? Schema.make(type) : undefined), [fieldProvider, type]);
 
   const fieldState = useFormFieldState(FormField.displayName, path);
   const jsonPath = SchemaEx.createJsonPath(path ?? []);
@@ -108,16 +127,18 @@ export const FormField = (props: FormFieldProps) => {
     format: Format.FormatAnnotation.getFromAst(type).pipe((annotation) => Option.getOrUndefined(annotation)),
     readonly,
     label,
+    description,
     jsonPath,
     placeholder,
-    layout,
+    presentation: layout,
+    required,
     db,
     ...fieldState,
   };
 
   // Omit empty fields entirely in read-only mode -- an empty value has nothing
   // to display, so a labelled row with a blank input is just noise. This
-  // mirrors what `FormFieldWrapper` already does for `layout === 'static'`, but
+  // mirrors what `FormRow` already does for `presentation === 'static'`, but
   // covers every field type (including those that bypass the wrapper:
   // RefField, SelectField, MarkdownField, ...). Container fields
   // (`ArrayField`, nested-struct -> `FormFieldSet`) keep their own
@@ -136,10 +157,29 @@ export const FormField = (props: FormFieldProps) => {
     return <CustomField {...fieldProps} />;
   }
 
-  // TODO(burdon): Expensive to create schema each time; pass AST?
-  const component = fieldProvider?.({ schema: Schema.make(type), prop: name ?? '', fieldProps });
-  if (component) {
-    return component;
+  if (fieldProvider && providerSchema) {
+    const component = fieldProvider({ schema: providerSchema, prop: name ?? '', fieldProps });
+    if (component) {
+      return component;
+    }
+  }
+
+  //
+  // Dynamic, value-driven fields (options/value/validation loaded via a self-contained Effect annotation).
+  //
+
+  const optionsLookup = Option.getOrUndefined(OptionsLookupAnnotation.getFromAst(type));
+  if (optionsLookup) {
+    return optionsLookup.combobox ? (
+      <ComboboxField {...fieldProps} lookup={optionsLookup} />
+    ) : (
+      <AsyncSelectField {...fieldProps} lookup={optionsLookup} />
+    );
+  }
+
+  const autofill = Option.getOrUndefined(AutofillAnnotation.getFromAst(type));
+  if (autofill) {
+    return <AutofillField {...fieldProps} autofill={autofill} />;
   }
 
   //
@@ -190,10 +230,21 @@ export const FormField = (props: FormFieldProps) => {
 
   const refProps = getRefProps(type);
   if (refProps) {
-    // Inline a single referenced object's own fields (nested form) instead of a picker.
-    const inline = Annotation.FormInlineAnnotation.getFromAst(refProps.ast).pipe(Option.getOrElse(() => false));
+    // Inline a single referenced object's own fields (nested form) instead of a picker. `refInline` lets a
+    // parent (e.g. an owned-ref `ArrayField`) force this for elements whose own AST carries no annotation.
+    const inline =
+      refInline || Annotation.FormInlineAnnotation.getFromAst(refProps.ast).pipe(Option.getOrElse(() => false));
     if (inline && !refProps.isArray) {
-      return <InlineRefField {...fieldProps} {...refProps} db={db} useType={useType} onCreate={onCreate} />;
+      return (
+        <InlineRefField
+          {...fieldProps}
+          {...refProps}
+          db={db}
+          useType={useType}
+          onCreate={onCreate}
+          resolveCreateEntry={resolveCreateEntry}
+        />
+      );
     }
 
     const isCreateTarget = !createTypename || refProps.typename === createTypename;
@@ -209,6 +260,7 @@ export const FormField = (props: FormFieldProps) => {
         useType={useType}
         getOptions={getOptions}
         onCreate={onCreate}
+        resolveCreateEntry={resolveCreateEntry}
       />
     );
   }
@@ -243,6 +295,7 @@ export const FormField = (props: FormFieldProps) => {
           useType={useType}
           getOptions={getOptions}
           onCreate={onCreate}
+          resolveCreateEntry={resolveCreateEntry}
         />
       );
     }
@@ -258,12 +311,7 @@ FormField.displayName = 'Form.FormField';
 //
 
 export const CompactIconButton = (props: IconButtonProps) => {
-  return (
-    // IconBlock defaults to aria-hidden (decorative slot); the button is interactive, so un-hide it.
-    <IconBlock aria-hidden={false} classNames='my-[1px]'>
-      <IconButton variant='ghost' density='xs' square iconOnly {...props} />
-    </IconBlock>
-  );
+  return <IconButton variant='ghost' iconOnly {...props} />;
 };
 
 /**
@@ -288,6 +336,7 @@ const getFormField = ({
     Match.when(Format.TypeFormat.DateTime, () => DateField),
     Match.when(Format.TypeFormat.GeoPoint, () => GeoPointField),
     Match.when(Format.TypeFormat.Markdown, () => MarkdownField),
+    Match.when(Format.TypeFormat.Password, () => PasswordField),
     Match.when(Format.TypeFormat.Text, () => TextAreaField),
     Match.when(Format.TypeFormat.Time, () => DateField),
     Match.orElse(() => undefined),
@@ -310,6 +359,8 @@ const getFormField = ({
     case 'BooleanKeyword':
       return BooleanField;
   }
+
+  return undefined;
 };
 
 const getSelectOptions = (ast: SchemaAST.AST): Format.Options[] | undefined => {

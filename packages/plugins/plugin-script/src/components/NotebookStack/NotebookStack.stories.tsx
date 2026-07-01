@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AutomationPlugin } from '@dxos/plugin-automation/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 
@@ -27,7 +27,7 @@ const meta = {
   title: 'plugins/plugin-script/components/NotebookStack',
   component: NotebookStackStory,
   decorators: [
-    withLayout({ layout: 'column', classNames: 'w-document-max-width' }),
+    withLayout({ layout: 'column', classNames: 'dx-document' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),
@@ -37,7 +37,7 @@ const meta = {
               yield* initializeIdentity(client);
             }),
         }),
-        AutomationPlugin(),
+        RoutinePlugin(),
       ],
     }),
   ],

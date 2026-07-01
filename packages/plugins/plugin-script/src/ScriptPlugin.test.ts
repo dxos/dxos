@@ -12,7 +12,7 @@ import { ScriptPlugin } from '#plugin';
 
 import { meta } from './meta';
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('ScriptPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
@@ -26,6 +26,6 @@ describe('ScriptPlugin', () => {
     );
 
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('BlueprintDefinition'));
+    expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
   });
 });

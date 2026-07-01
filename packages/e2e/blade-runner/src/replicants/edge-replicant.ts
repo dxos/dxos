@@ -23,11 +23,11 @@ import { trace } from '@dxos/tracing';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
 
-export const Text = Schema.Struct({
-  content: Schema.String,
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.bladeRunner.text', '0.1.0')));
-
-export type Text = Type.InstanceType<typeof Text>;
+export class Text extends Type.makeObject<Text>(DXN.make('org.dxos.type.bladeRunner.text', '0.1.0'))(
+  Schema.Struct({
+    content: Schema.String,
+  }),
+) {}
 
 @trace.resource()
 export class EdgeReplicant {
@@ -135,7 +135,7 @@ export class EdgeReplicant {
     const result = await asyncTimeout(
       uploadWorkerFunction(Context.default(), {
         client: this._client!,
-        ownerPublicKey: this._identity!.identityKey,
+        ownerUri: this._identity!.did,
         version: '0.0.1',
         name: 'test',
         source: buildResult.bundle,

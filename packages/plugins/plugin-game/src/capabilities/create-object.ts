@@ -13,7 +13,7 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { CreateGamePanel } from '#components';
 
-import { GameCapabilities, make as makeGame, Game } from '../types';
+import { Game, GameCapabilities, make as makeGame } from '../types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 
@@ -41,7 +41,6 @@ export default Capability.makeModule(
           yield* Operation.invoke(SpaceOperation.AddObject, {
             object: stateObject,
             target: options.target,
-            hidden: true,
             targetNodeId: options.targetNodeId,
           });
 

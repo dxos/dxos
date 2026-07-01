@@ -30,7 +30,7 @@ export type FlattenedActions = {
 type SharedProperties = {
   testId?: string;
   disabled?: boolean;
-  position?: Position;
+  position?: Position.Position;
   label: Label;
   className?: string;
   headingClassName?: string;
@@ -62,7 +62,7 @@ export type ActionProperties = SharedProperties & {
  */
 export type KeyBinding = {
   // NOTE: Keys come from `getHostPlatform` in `@dxos/util`.
-  // TODO(thure): Dedupe (similar in react-ui-stack/next)
+  // TODO(thure): Dedupe with the other platform key-binding definitions.
   windows?: string;
   macos?: string;
   ios?: string;

@@ -19,7 +19,7 @@ export type RangeListProps = {
 };
 
 export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [sheet, updateSheet] = useObject(sheetProp);
   // TODO(thure): Implement similar to comments, #8121
   const handleSelectRange = (range: Sheet.Range) => {};
@@ -37,7 +37,7 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
       <Input.Root>
         <Input.Label>{t('range-list.heading')}</Input.Label>
       </Input.Root>
-      {sheet.ranges.length < 1 ? (
+      {sheet.ranges.length === 0 ? (
         <Message.Root>
           <Message.Title>{t('no-ranges.message')}</Message.Title>
         </Message.Root>

@@ -8,7 +8,6 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 
 import {
-  BlueprintDefinition,
   CreateObject,
   FileUploader,
   InlineBackend,
@@ -16,6 +15,7 @@ import {
   OperationHandler,
   ReactSurface,
   Settings,
+  SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -25,7 +25,7 @@ import { File } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const FilePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [File.File] }),
@@ -48,7 +48,7 @@ export const FilePlugin = Plugin.define(meta).pipe(
     activate: Markdown,
   }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

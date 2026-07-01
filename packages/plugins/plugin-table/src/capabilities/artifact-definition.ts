@@ -224,7 +224,6 @@ export default Capability.makeModule(() =>
               const { error } = await extensions.invoke(SpaceOperation.AddObject, {
                 target: space.db,
                 object,
-                hidden: true,
               });
               if (error) {
                 return ToolResult.Error(error?.message ?? 'Failed to add rows to table');

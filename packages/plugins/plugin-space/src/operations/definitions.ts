@@ -8,7 +8,7 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
 import { Operation } from '@dxos/compute';
-import { Collection, Database, Entity, Obj, QueryAST, Type, View, DXN } from '@dxos/echo';
+import { Collection, Database, DXN, Entity, Obj, QueryAST, Type, View } from '@dxos/echo';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 import { meta } from '#meta';
@@ -30,7 +30,7 @@ export namespace CollectionOperation {
   });
 }
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Operations for the Space plugin.
@@ -168,7 +168,6 @@ export namespace SpaceOperation {
       target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)).annotations({
         description: 'The database or collection to add to.',
       }),
-      hidden: Schema.optional(Schema.Boolean),
       targetNodeId: Schema.optional(
         Schema.String.annotations({ description: 'Qualified graph node ID of the target collection.' }),
       ),

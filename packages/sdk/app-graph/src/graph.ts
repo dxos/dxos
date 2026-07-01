@@ -861,6 +861,7 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
   // Extract known NodeArg fields, preserve any extra fields (like _actionContext) in rest.
   const {
     nodes,
+    actions,
     edges,
     id,
     type,
@@ -917,6 +918,25 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
     addNodesImpl(graph, nodes);
     const _edges = nodes.map((node) => ({ source: id, target: node.id, relation: 'child' as const }));
     addEdgesImpl(graph, _edges);
+    sortEdgesImpl(
+      graph,
+      id,
+      'child',
+      nodes.map((n) => n.id),
+    );
+  }
+
+  if (actions) {
+    addNodesImpl(graph, actions);
+    const actionRelation = Node.actionRelation();
+    const _edges = actions.map((node) => ({ source: id, target: node.id, relation: actionRelation }));
+    addEdgesImpl(graph, _edges);
+    sortEdgesImpl(
+      graph,
+      id,
+      actionRelation,
+      actions.map((node) => node.id),
+    );
   }
 
   if (edges) {

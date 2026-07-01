@@ -3,19 +3,20 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, createTypeSectionExtension } from '@dxos/app-toolkit';
-import { isSpace } from '@dxos/client/echo';
+import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj, Type } from '@dxos/echo';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Channel } from '@dxos/types';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
+
+import { getChannelsPath } from '../paths';
 
 const channelTypename = Type.getTypename(Channel.Channel);
 
@@ -24,7 +25,15 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     const extensions = yield* Effect.all([
-      createTypeSectionExtension(Channel.Channel),
+      TypeSection.createTypeSectionExtension(Channel.Channel, {
+        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.communications),
+        createObject: (space) =>
+          Operation.invoke(SpaceOperation.OpenCreateObject, {
+            target: space.db,
+            typename: channelTypename,
+            targetNodeId: getChannelsPath(space.db.spaceId),
+          }),
+      }),
 
       GraphBuilder.createTypeExtension({
         id: 'channelChatCompanion',
@@ -43,37 +52,13 @@ export default Capability.makeModule(
           return Effect.succeed([
             AppNode.makeCompanion({
               id: 'chat',
-              label: ['channel-companion.label', { ns: meta.id }],
+              label: ['channel-companion.label', { ns: meta.profile.key }],
               icon: 'ph--hash--regular',
               data: 'chat',
-              position: 'first',
+              position: Position.first,
             }),
           ]);
         },
-      }),
-
-      GraphBuilder.createExtension({
-        id: 'channelsSectionActions',
-        match: (node) => {
-          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-          return node.type === channelTypename && space ? Option.some(space) : Option.none();
-        },
-        actions: (space) =>
-          Effect.succeed([
-            Node.makeAction({
-              id: 'create-channel',
-              data: () =>
-                Operation.invoke(SpaceOperation.OpenCreateObject, {
-                  target: space.db,
-                  typename: channelTypename,
-                }),
-              properties: {
-                label: ['add-object.label', { ns: channelTypename }],
-                icon: 'ph--plus--regular',
-                disposition: 'list-item-primary',
-              },
-            }),
-          ]),
       }),
     ]);
 

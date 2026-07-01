@@ -77,17 +77,21 @@ export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'sc
   /** Initial values (which may not pass validation). */
   values: Partial<T>;
 
-  /** Map of changed fields. */
+  /** Fields whose value has been edited (set by `onValueChange`). Gates autosave-on-blur. */
   changed: Record<SchemaEx.JsonPath, boolean>;
-  // TODO(burdon): How is this different from above?
+  /** Fields the user has interacted with (set by `onBlur`). Gates error *visibility* — errors only surface once touched. */
   touched: Record<SchemaEx.JsonPath, boolean>;
 
   /** Map of error strings. */
   errors: Record<SchemaEx.JsonPath, string>;
 
-  /** Whether the form can be saved (i.e., data is valid). */
+  /** Whether the values pass validation (no errors at all). */
   isValid: boolean;
-  // TODO(burdon): Why is this needed separately from isValid?
+  /**
+   * Whether the submit affordance should be enabled. Stricter than `isValid`: it also requires no save
+   * in flight (`saving`) and only blocks on errors for *touched* fields, so a pristine form with
+   * not-yet-touched required fields can still show an enabled control.
+   */
   canSave: boolean;
 
   onSave: () => void;
@@ -325,6 +329,7 @@ export const useFormHandler = <T extends AnyProperties>({
     }),
     [
       schema,
+      autoSave,
       values,
       errors,
       touched,
@@ -335,8 +340,8 @@ export const useFormHandler = <T extends AnyProperties>({
       getValue,
       onBlur,
       onValueChange,
-      onSave,
-      onCancel,
+      handleSave,
+      handleCancel,
     ],
   );
 };

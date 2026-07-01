@@ -15,7 +15,7 @@ import { meta } from '#meta';
 
 import * as Outline from './Outline';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const CreateOutline = Operation.make({
   meta: {
@@ -38,4 +38,4 @@ export const QuickJournalEntry = Operation.make({
     text: Schema.String,
   }),
   output: Schema.Void,
-});
+}).pipe(Operation.visible);

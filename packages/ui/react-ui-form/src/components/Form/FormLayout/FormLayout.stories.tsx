@@ -125,12 +125,12 @@ const JOURNEY_LAYOUT = trim`
   </grid>
 `;
 
-type StoryProps = {
+type StoryArgs = {
   schema: Schema.Schema<any>;
   template?: string;
 };
 
-const DefaultStory = ({ schema, template }: StoryProps) => {
+const DefaultStory = ({ schema, template }: StoryArgs) => {
   const [values, setValues] = useState<Partial<FlightValues>>(flight);
 
   const handleSave = useCallback<NonNullable<FormRootProps<any>['onSave']>>((next) => {
@@ -164,11 +164,11 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<StoryProps>;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<StoryArgs>;
 
 /** Baseline: no annotation, no override — `Form.FieldSet` renders linearly (one field per row). */
 export const Linear: Story = {
@@ -383,7 +383,9 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
                   onChange={setTemplate}
                 />
               </Editor.Root>
-              {error && <div className='border-t border-separator p-2 text-sm text-error-text font-mono'>{error}</div>}
+              {error && (
+                <div className='border-t border-input-separator p-2 text-sm text-error-text font-mono'>{error}</div>
+              )}
             </div>
           </TestPanel>
           <TestPanel>

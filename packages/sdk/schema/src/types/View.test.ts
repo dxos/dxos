@@ -146,10 +146,12 @@ describe('Projection', () => {
     const { db } = await builder.createDatabase();
 
     const typename = 'com.example.type.dbtask';
-    const staticSchema = Schema.Struct({
-      title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
-      status: Schema.optional(Schema.String).annotations({ title: 'Status' }),
-    }).pipe(Type.makeObject(DXN.make(typename, '0.1.0')));
+    const staticSchema = Type.makeObject(DXN.make(typename, '0.1.0'))(
+      Schema.Struct({
+        title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
+        status: Schema.optional(Schema.String).annotations({ title: 'Status' }),
+      }),
+    );
 
     await db.addType(staticSchema);
 
@@ -157,6 +159,26 @@ describe('Projection', () => {
     const fieldPaths = view.projection.fields.map((f) => f.path);
     expect(fieldPaths).toContain('title');
     expect(fieldPaths).toContain('status');
+    expect(jsonSchema.typename).toBe(typename);
+  });
+
+  // Type-picker forms (TypeOptions) supply the versioned type URI as the field value, not the bare
+  // typename, so makeFromDatabase must resolve a type by its URI as well.
+  test('makeFromDatabase resolves a type by its URI', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+
+    const typename = 'com.example.type.dburi';
+    const staticSchema = Type.makeObject(DXN.make(typename, '0.1.0'))(
+      Schema.Struct({
+        title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
+      }),
+    );
+
+    const addedType = await db.addType(staticSchema);
+
+    const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db, typename: Type.getURI(addedType) });
+    const fieldPaths = view.projection.fields.map((f) => f.path);
+    expect(fieldPaths).toContain('title');
     expect(jsonSchema.typename).toBe(typename);
   });
 

@@ -44,6 +44,7 @@
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/i18n": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",

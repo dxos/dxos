@@ -11,7 +11,7 @@ export const translations = [
   ...searchTranslations,
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Search',
         'search-action.label': 'Search spaces',
         'search.placeholder': 'Search…',

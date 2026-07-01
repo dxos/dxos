@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, JsonSchema, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, JsonSchema, Obj, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 
 import { Script } from './Script';
@@ -21,7 +21,7 @@ export const Function = Schema.Struct({
   // TODO(dmaretskyi): Consider making it part of ECHO meta.
   // TODO(dmaretskyi): Make required.
   key: Schema.optional(Schema.String).annotations({
-    description: 'Unique registration key for the blueprint',
+    description: 'Unique registration key for the skill',
   }),
 
   name: Schema.NonEmptyString,

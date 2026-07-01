@@ -7,11 +7,11 @@ import React, { useMemo } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Script } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel } from '@dxos/react-ui';
-import { createDataExtensions, listener, editorClassNames } from '@dxos/ui-editor';
+import { createDataExtensions, editorClassNames, listener } from '@dxos/ui-editor';
 
 import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '#components';
 import { useDeployState, useToolbarState } from '#hooks';
@@ -44,7 +44,7 @@ export const ScriptArticle = ({
     return [
       createDataExtensions({
         id: script.id,
-        text: createDocAccessor(script.source.target, ['content']),
+        text: Doc.createAccessor(script.source.target, ['content']),
         messenger: space,
         identity,
       }),

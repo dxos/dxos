@@ -6,15 +6,16 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration';
 
-import { GoogleMail } from '../apis';
-import { GMAIL_SOURCE, GOOGLE_INTEGRATION_SOURCE } from '../constants';
-import { GoogleCredentials } from '../services/google-credentials';
+import { GoogleMail, Jmap, JmapMail } from '../apis';
+import { GMAIL_SOURCE, JMAP_MESSAGE_SOURCE } from '../constants';
+import { GoogleCredentials, JmapCredentials } from '../services';
 import { DraftMessage, InboxOperation, Mailbox } from '../types';
-import { findIntegrationForRemote } from './google/find-integration';
+import { findBindingForTarget } from '../util';
+
+const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
 export default InboxOperation.DeleteEmail.pipe(
   Operation.withHandler(
@@ -33,21 +34,34 @@ export default InboxOperation.DeleteEmail.pipe(
         return { deleted: true };
       }
 
-      // Synced message: trash it on Gmail (best-effort) by its foreign key, then drop the feed copy.
-      const gmailId = Obj.getMeta(message).keys?.find((key) => key.source === GMAIL_SOURCE)?.id;
-      if (gmailId) {
-        const mailboxRemoteId = Obj.getMeta(mailbox).keys?.find((key) => key.source === GOOGLE_INTEGRATION_SOURCE)?.id;
-        const integrations = yield* Effect.promise(() => db.query(Filter.type(Integration.Integration)).run());
-        const integration = findIntegrationForRemote(integrations, mailbox.id, mailboxRemoteId ?? mailbox.id);
-        if (integration) {
-          yield* GoogleMail.trashMessage('me', gmailId).pipe(
-            Effect.provide(FetchHttpClient.layer),
-            Effect.provide(GoogleCredentials.fromIntegration(Ref.make(integration))),
-            Effect.catchAll((error) => {
-              log.catch(error);
-              return Effect.void;
-            }),
-          );
+      // Synced message: move it to the remote trash (best-effort) by its foreign key, then drop the
+      // feed copy. The provider is determined by which foreign-key source the message carries.
+      const keys = Obj.getMeta(message).keys;
+      const gmailId = keys?.find((key) => key.source === GMAIL_SOURCE)?.id;
+      const jmapId = keys?.find((key) => key.source === JMAP_MESSAGE_SOURCE)?.id;
+      if (gmailId || jmapId) {
+        const binding = yield* findBindingForTarget(mailbox).pipe(Effect.provide(Database.layer(db)));
+        if (binding) {
+          const connectionRef = Ref.make(Relation.getSource(binding));
+          if (gmailId) {
+            yield* GoogleMail.trashMessage('me', gmailId).pipe(
+              Effect.provide(FetchHttpClient.layer),
+              Effect.provide(GoogleCredentials.fromConnection(connectionRef)),
+              Effect.catchAll((error) => {
+                log.catch(error);
+                return Effect.void;
+              }),
+            );
+          } else if (jmapId) {
+            yield* trashJmapMessage(jmapId).pipe(
+              Effect.provide(FetchHttpClient.layer),
+              Effect.provide(JmapCredentials.fromConnection(connectionRef)),
+              Effect.catchAll((error) => {
+                log.catch(error);
+                return Effect.void;
+              }),
+            );
+          }
         }
       }
 
@@ -60,3 +74,20 @@ export default InboxOperation.DeleteEmail.pipe(
   ),
   Operation.opaqueHandler,
 );
+
+// Moves a JMAP email to the Trash folder by replacing its `mailboxIds` (idempotent).
+const trashJmapMessage = (emailId: string) =>
+  Effect.gen(function* () {
+    const session = yield* Jmap.getSession;
+    const accountId = session.primaryAccounts[MAIL_ACCOUNT_CAPABILITY];
+    if (!accountId) {
+      return;
+    }
+    const target: JmapMail.Target = { apiUrl: session.apiUrl, accountId };
+    const { list: folders } = yield* JmapMail.mailboxGet(target);
+    const trash = folders.find((folder) => folder.role === 'trash');
+    if (!trash) {
+      return;
+    }
+    yield* JmapMail.emailSetUpdate(target, emailId, { mailboxIds: { [trash.id]: true } });
+  });

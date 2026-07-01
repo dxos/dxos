@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin, AppActivationEvents } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
 import { GameVariant, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
@@ -23,7 +23,7 @@ export const TicTacToePlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [TicTacToe.State] }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
@@ -13,17 +14,17 @@ import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 
+import type * as Entity from './Entity';
 import * as internal from './internal';
 import type * as Obj from './Obj';
 import * as Ref from './Ref';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Type$ from './Type';
-
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Filter': { value: Types.Covariant<T> };
 
-  ast: QueryAST.Filter;
+  'ast': QueryAST.Filter;
 }
 
 export type Props<T> = {
@@ -38,7 +39,7 @@ export type Type<F extends Any> = F extends Filter<infer T> ? T : never;
 class FilterClass implements Any {
   private static 'variance': Any['~Filter'] = {} as Any['~Filter'];
 
-  constructor(public readonly ast: QueryAST.Filter) {}
+  'constructor'(public readonly ast: QueryAST.Filter) {}
 
   '~Filter' = FilterClass.variance;
 }
@@ -482,3 +483,16 @@ const processPredicate = (predicate: any): QueryAST.Filter => {
  * Returns a human-readable string representation of a Filter AST.
  */
 export const pretty = (filter: Any): string => internal.prettyFilter(filter.ast);
+
+/**
+ * Create a predicate from a filter.
+ */
+export const toPredicate: {
+  <T extends Entity.Unknown>(filter: Filter<T>): (entity: Entity.Unknown) => entity is T;
+  <T extends Entity.Unknown>(entity: Entity.Unknown, filter: Filter<T>): entity is T;
+} = Function.dual<
+  <T extends Entity.Unknown>(filter: Filter<T>) => (entity: Entity.Unknown) => entity is T,
+  <T extends Entity.Unknown>(entity: Entity.Unknown, filter: Filter<T>) => entity is T
+>(2, <T extends Entity.Unknown>(entity: Entity.Unknown, filter: Filter<T>): entity is T =>
+  internal.filterMatchEntity(filter.ast, entity),
+);

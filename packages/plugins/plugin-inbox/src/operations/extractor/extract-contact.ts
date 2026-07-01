@@ -20,7 +20,6 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractContact> = Inb
       yield* Operation.invoke(SpaceOperation.AddObject, {
         object: contact,
         target: db,
-        hidden: true,
       });
     }),
   ),

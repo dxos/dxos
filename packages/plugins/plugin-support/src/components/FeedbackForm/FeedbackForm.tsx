@@ -6,7 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { IconButton, useTranslation } from '@dxos/react-ui';
-import { type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta, Form } from '@dxos/react-ui-form';
+import { Form, type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta } from '@dxos/react-ui-form';
 
 import { type DiscordPresence } from '#hooks';
 import { meta } from '#meta';
@@ -119,7 +119,7 @@ export type FeedbackFormDownloadLogsProps = {
 };
 
 const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   if (!onDownloadLogs) {
     return null;
@@ -170,7 +170,7 @@ export type FeedbackFormSubmitPosthogProps = {
 };
 
 const FeedbackFormSubmitPosthog = ({ onSubmit, disabled }: FeedbackFormSubmitPosthogProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { submitHandlerRef } = useFeedbackFormContext(`${FEEDBACK_FORM}.SubmitPosthog`);
 
   // Primary action: default a keyboard (Enter) submit to PostHog until another button is clicked —
@@ -208,7 +208,7 @@ export type FeedbackFormSubmitGitHubProps = {
 };
 
 const FeedbackFormSubmitGitHub = ({ onSubmit, disabled }: FeedbackFormSubmitGitHubProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   if (!onSubmit) {
     return null;
@@ -237,7 +237,7 @@ export type FeedbackFormSubmitDiscordProps = {
 };
 
 const FeedbackFormSubmitDiscord = ({ onSubmit, disabled }: FeedbackFormSubmitDiscordProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   if (!onSubmit) {
     return null;
@@ -261,7 +261,7 @@ export type FeedbackFormDiscordPresenceProps = {
 };
 
 const FeedbackFormDiscordPresence = ({ discordPresence }: FeedbackFormDiscordPresenceProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   if (!discordPresence) {
     return null;

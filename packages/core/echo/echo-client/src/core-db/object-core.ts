@@ -2,12 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@automerge/automerge';
+import {
+  next as A,
+  type Doc as AutomergeDoc,
+  type ChangeFn,
+  type ChangeOptions,
+  type Heads,
+} from '@automerge/automerge';
 import { type DocHandleChangePayload } from '@automerge/automerge-repo';
+import * as Schema from 'effect/Schema';
 import type { InspectOptionsStylized, inspect } from 'util';
 
-import { Event } from '@dxos/async';
+import { type CleanupFn, Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
+import { type Entity, type Type } from '@dxos/echo';
 import {
   type DatabaseDirectory,
   EncodedReference,
@@ -17,14 +25,25 @@ import {
 import { EntityKind, type EntityMeta, getStrongDependencyUris } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EID, EntityId, URI } from '@dxos/keys';
+import { EID, EntityId, type SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
+import { ComplexMap, defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
 import { type DocHandleProxy } from '../automerge';
-import { type CoreDatabase } from './core-database';
+import * as Doc from '../automerge/Doc';
 import { docChangeSemaphore } from './doc-semaphore';
-import { type DecodedAutomergePrimaryValue, type DocAccessor, type KeyPath, isValidKeyPath } from './types';
+import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, TargetKey } from './types';
+
+/**
+ * Minimal interface that ObjectCore requires from the containing database.
+ * Kept in this file (rather than types.ts) to avoid a circular import:
+ * types.ts must not reference ObjectCore.
+ * @internal
+ */
+export interface IDatabaseBinding {
+  readonly spaceId: SpaceId;
+  getObjectCoreById(id: string, opts?: GetObjectCoreByIdOptions): ObjectCore | undefined;
+}
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.
@@ -53,17 +72,17 @@ export class ObjectCore {
   public id = EntityId.random();
 
   /**
-   * Set if when the object is bound to a database.
+   * Set when the object is bound to a database.
    */
-  public database?: CoreDatabase | undefined;
+  public entityManager?: IDatabaseBinding | undefined;
 
   /**
-   * Set if when the object is not bound to a database.
+   * Set when the object is not bound to a database.
    */
-  public doc?: Doc<EntityStructure> | undefined;
+  public doc?: AutomergeDoc<EntityStructure> | undefined;
 
   /**
-   * Set if when the object is bound to a database.
+   * Set when the object is bound to a database.
    */
   public docHandle?: DocHandleProxy<DatabaseDirectory> = undefined;
 
@@ -71,12 +90,58 @@ export class ObjectCore {
    * Key path at where we are mounted in the `doc` or `docHandle`.
    * The value at path must be of type `EntityStructure`.
    */
-  public mountPath: KeyPath = [];
+  public mountPath: Doc.KeyPath = [];
 
   /**
    * Handles link resolution as well as manual changes.
    */
   public readonly updates = new Event();
+
+  // -------------------------------------------------------------------------
+  // Fields merged from ObjectInternals (formerly echo-proxy-target.ts).
+  // The EchoDatabase reference is typed `unknown` here to avoid a circular dep
+  // between core-db ← proxy-db; echo-handler casts it at the usage sites.
+  // -------------------------------------------------------------------------
+
+  /**
+   * EchoDatabase reference. Set by echo-handler on db.add(); typed narrowly
+   * at usage sites in echo-handler to avoid a circular dep with proxy-db.
+   */
+  public database: unknown = undefined;
+
+  /**
+   * Caching proxy targets by key path (record | array subtargets).
+   * Value typed as `object` to avoid importing ProxyTarget from echo-handler.
+   */
+  public targetsMap = new ComplexMap<TargetKey, object>(TargetKey.hash);
+
+  /**
+   * Until an object is persisted in the database, linked object references
+   * are held in this cache. Cleared on db.add().
+   */
+  public linkCache: Map<string, Entity.Unknown> | undefined = new Map<string, Entity.Unknown>();
+
+  /** Cleanup functions registered by the proxy layer. */
+  public subscriptions: CleanupFn[] = [];
+
+  /**
+   * `Type.AnyEntity` of the root object. Populated when a Type entity is
+   * available (e.g. created via `Obj.make(SomeType, ...)`); undefined for
+   * objects created without a typed schema.
+   */
+  public rootSchema?: Type.AnyEntity = undefined;
+
+  /**
+   * Memoized rebuilt Effect Schema for persisted `Type.Type` entities.
+   * Lazily populated; invalidated when the entity's `jsonSchema` changes.
+   */
+  public cachedStaticSlot?: Schema.Schema.AnyNoContext = undefined;
+
+  /**
+   * The single root proxy for this core. Replaces the `DatabaseImpl._rootProxies`
+   * Map; set on first proxy construction and on db.add().
+   */
+  public rootProxy?: Entity.Unknown = undefined;
 
   toString(): string {
     return `ObjectCore { id: ${this.id} }`;
@@ -110,7 +175,7 @@ export class ObjectCore {
     // When loading existing documents, wait for the document to be ready.
     // When creating new documents (assignFromLocalState), the local doc is immediately usable.
     invariant(options.assignFromLocalState || options.docHandle.isReady());
-    this.database = options.db;
+    this.entityManager = options.db;
     this.docHandle = options.docHandle;
     this.mountPath = options.path;
 
@@ -131,7 +196,7 @@ export class ObjectCore {
     this.notifyUpdate();
   }
 
-  getDoc(): Doc<unknown> {
+  getDoc(): AutomergeDoc<unknown> {
     if (this.doc) {
       return this.doc;
     }
@@ -200,8 +265,8 @@ export class ObjectCore {
     return result;
   }
 
-  getDocAccessor(path: KeyPath = []): DocAccessor {
-    assertArgument(isValidKeyPath(path), 'path');
+  getDocAccessor(path: Doc.KeyPath = []): Doc.Accessor {
+    assertArgument(Doc.isKeyPath(path), 'path');
     const self = this;
     return {
       handle: {
@@ -323,7 +388,7 @@ export class ObjectCore {
     return value;
   }
 
-  arrayPush(path: KeyPath, items: DecodedAutomergePrimaryValue[]): number {
+  arrayPush(path: Doc.KeyPath, items: DecodedAutomergePrimaryValue[]): number {
     const itemsEncoded = items.map((item) => this.encode(item));
 
     let newLength: number = -1;
@@ -337,7 +402,7 @@ export class ObjectCore {
     return newLength;
   }
 
-  private _getRaw(path: KeyPath): Doc<EntityStructure> | Doc<DatabaseDirectory> {
+  private _getRaw(path: Doc.KeyPath): AutomergeDoc<EntityStructure> | AutomergeDoc<DatabaseDirectory> {
     const fullPath = [...this.mountPath, ...path];
 
     let value = this.getDoc();
@@ -348,7 +413,7 @@ export class ObjectCore {
     return value;
   }
 
-  private _setRaw(path: KeyPath, value: any): void {
+  private _setRaw(path: Doc.KeyPath, value: any): void {
     const fullPath = [...this.mountPath, ...path];
 
     this.change((doc) => {
@@ -357,20 +422,20 @@ export class ObjectCore {
   }
 
   // TODO(dmaretskyi): Rename to `get`.
-  getDecoded(path: KeyPath): DecodedAutomergePrimaryValue {
+  getDecoded(path: Doc.KeyPath): DecodedAutomergePrimaryValue {
     const decoded = this.decode(this._getRaw(path));
     return upgradeMeta(path, decoded) as DecodedAutomergePrimaryValue;
   }
 
   // TODO(dmaretskyi): Rename to `set`.
-  setDecoded(path: KeyPath, value: DecodedAutomergePrimaryValue): void {
+  setDecoded(path: Doc.KeyPath, value: DecodedAutomergePrimaryValue): void {
     this._setRaw(path, this.encode(value));
   }
 
   /**
    * Deletes key at path.
    */
-  delete(path: KeyPath): void {
+  delete(path: Doc.KeyPath): void {
     const fullPath = [...this.mountPath, ...path];
 
     this.change((doc) => {
@@ -443,6 +508,18 @@ export class ObjectCore {
   }
 
   /**
+   * Resolve a linked object held in the local link cache, keyed by entity id. Used to dereference
+   * endpoint/parent references before the object is bound to a database.
+   */
+  lookupInLinkCache(ref: EncodedReference): Entity.Unknown | undefined {
+    invariant(this.linkCache);
+    const echoUri = EID.tryParse(EncodedReference.toURI(ref));
+    const entityId = echoUri ? EID.getEntityId(echoUri) : undefined;
+    invariant(entityId, 'Invalid DXN');
+    return this.linkCache.get(entityId);
+  }
+
+  /**
    * Returns the Unix ms timestamp stored in system.createdAt, or undefined for objects
    * created before this field was introduced.
    */
@@ -491,26 +568,43 @@ export class ObjectCore {
       return true;
     }
 
-    if (this.database && remainingDepth > 0) {
-      const parentRef = this.getParent();
-      if (parentRef) {
-        // Checks if the reference is pointing to an object in the same space.
-        const parentDXN = EncodedReference.toURI(parentRef);
-        const parentEchoUri = EID.tryParse(parentDXN);
-        const spaceId = parentEchoUri ? EID.getSpaceId(parentEchoUri) : undefined;
-        const parentId = parentEchoUri ? EID.getEntityId(parentEchoUri) : undefined;
-        if (parentId && (spaceId === undefined || spaceId === this.database.spaceId)) {
-          // NOTE: We can't use `loadObjectCoreById` here because it might be async and we need a sync check.
-          // If the parent is not loaded, we assume it's not deleted for now, or should we assume deleted?
-          // Given strong dependencies, the parent SHOULD be loaded if the child is loaded.
-          const parent = this.database.getObjectCoreById(parentId);
-          if (parent && parent.isDeleted(remainingDepth - 1)) {
-            return true;
-          }
+    if (this.entityManager && remainingDepth > 0) {
+      // An entity is transitively deleted when one of its strong dependencies is deleted: a child
+      // when its parent is removed, or a relation when either endpoint is removed — a dangling
+      // relation has no valid graph edge, so it is treated as deleted and excluded from queries.
+      if (this._isReferencedCoreDeleted(this.getParent(), remainingDepth)) {
+        return true;
+      }
+      if (this.getKind() === EntityKind.Relation) {
+        if (
+          this._isReferencedCoreDeleted(this.getSource(), remainingDepth) ||
+          this._isReferencedCoreDeleted(this.getTarget(), remainingDepth)
+        ) {
+          return true;
         }
       }
     }
     return false;
+  }
+
+  /**
+   * Whether the same-space entity referenced by `ref` is (transitively) deleted. Cross-space and
+   * unresolved references are treated as not-deleted. Strong dependencies guarantee parent/relation
+   * endpoints load alongside the dependent entity, so this stays a synchronous core lookup —
+   * `loadObjectCoreById` is avoided because it may be async.
+   */
+  private _isReferencedCoreDeleted(ref: EncodedReference | undefined, remainingDepth: number): boolean {
+    if (!ref || !this.entityManager) {
+      return false;
+    }
+    const echoUri = EID.tryParse(EncodedReference.toURI(ref));
+    const spaceId = echoUri ? EID.getSpaceId(echoUri) : undefined;
+    const entityId = echoUri ? EID.getEntityId(echoUri) : undefined;
+    if (!entityId || (spaceId !== undefined && spaceId !== this.entityManager.spaceId)) {
+      return false;
+    }
+    const core = this.entityManager.getObjectCoreById(entityId);
+    return core != null && core.isDeleted(remainingDepth - 1);
   }
 
   setDeleted(value: boolean): void {
@@ -536,19 +630,16 @@ export class ObjectCore {
         target: targetRef ? EncodedReference.toURI(targetRef) : undefined,
         parent: parentRef ? EncodedReference.toURI(parentRef) : undefined,
       },
-      this.database?.spaceId,
+      this.entityManager?.spaceId,
     );
   }
 }
 
 export type BindOptions = {
-  db: CoreDatabase;
+  db: IDatabaseBinding;
   docHandle: DocHandleProxy<DatabaseDirectory>;
-  path: KeyPath;
-
-  /**
-   * Assign the state from the local doc into the shared structure for the database.
-   */
+  path: Doc.KeyPath;
+  /** Assign the state from the local doc into the shared structure for the database. */
   assignFromLocalState?: boolean;
 };
 
@@ -567,7 +658,7 @@ export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<Dat
  * without an eager migration. Scoped strictly to the `meta` namespace so unrelated values in `data` are
  * untouched.
  */
-const upgradeMeta = (path: KeyPath, value: unknown): unknown => {
+const upgradeMeta = (path: Doc.KeyPath, value: unknown): unknown => {
   if (path[0] !== META_NAMESPACE) {
     return value;
   }

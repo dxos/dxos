@@ -1,7 +1,6 @@
 {
   "name": "@dxos/react-ui-introspect",
   "version": "0.9.0",
-  "private": true,
   "description": "React UI for browsing and invoking the introspect-mcp tool surface.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -59,5 +58,8 @@
     "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -14,7 +14,7 @@ export type RecoveryCodeDialogProps = {
 
 // TODO(burdon): Should have cancel button.
 export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [confirmation, setConfirmation] = useState(false);
 
   const handleConfirmation = useCallback((checked: boolean) => setConfirmation(checked), []);

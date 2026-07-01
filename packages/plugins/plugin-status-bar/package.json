@@ -69,6 +69,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src"
   ],
   "dependencies": {
@@ -78,6 +79,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/operation": "workspace:*",
+    "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",

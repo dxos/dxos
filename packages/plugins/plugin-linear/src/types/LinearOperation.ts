@@ -7,28 +7,54 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Obj, Ref, DXN } from '@dxos/echo';
-import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/plugin-integration';
+import { DXN, Ref } from '@dxos/echo';
+import {
+  // eslint-disable-next-line unused-imports/no-unused-imports
+  type Connection,
+  GetSyncTargetsInput,
+  GetSyncTargetsOutput,
+  MaterializeTargetInput,
+  MaterializeTargetOutput,
+  SyncBinding,
+} from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
- * Discovery only — list Linear teams reachable from the integration's token.
+ * Discovery only — list Linear teams reachable from the connection's token.
  * Returns one descriptor per team across the user's workspace. Read-only:
- * NEVER materializes local objects. Materialization happens lazily in
- * `SyncLinearTeams` on first sync of a target.
+ * NEVER materializes local objects. Materialization happens through
+ * `materializeTarget` when a binding is created.
  */
 export const GetLinearTeams = Operation.make({
   meta: {
     key: makeKey('getLinearTeams'),
     name: 'Get Linear Teams',
-    description: 'List Linear teams reachable from an integration without materializing local objects.',
+    description: 'List Linear teams reachable from a connection without materializing local objects.',
     icon: 'ph--users--regular',
   },
   input: GetSyncTargetsInput,
   output: GetSyncTargetsOutput,
+});
+
+/**
+ * Find-or-create the empty local root Project for a Linear team so a
+ * {@link SyncBinding} relation can be created eagerly. Idempotent: keyed by the
+ * team's `LINEAR_SOURCE` foreign id (`remoteTarget.id`), it returns the existing
+ * Project when one already carries that key. The team's projects and issues are
+ * pulled under it on sync; here we only stamp the foreign key + a display name.
+ */
+export const MaterializeLinearTarget = Operation.make({
+  meta: {
+    key: makeKey('materializeLinearTarget'),
+    name: 'Materialize Linear Target',
+    description: 'Create the empty local root Project bound to a selected Linear team.',
+    icon: 'ph--users--regular',
+  },
+  input: MaterializeTargetInput,
+  output: MaterializeTargetOutput,
 });
 
 /**
@@ -45,24 +71,25 @@ export const SyncOptions = Schema.Struct({
 export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
 
 /**
- * Reconcile Linear data for currently-selected team targets in an Integration.
+ * Reconcile Linear data for one {@link SyncBinding}'s team target.
  *
- * Pull-only. For each selected team: upsert the team's projects as Project
- * objects, upsert issues as Tasks (respecting `maxDaysBack` if set), update
- * per-target `lastSyncAt`/`lastError`. Does not modify `integration.targets`
- * membership. Comments are intentionally skipped in v1 (see sync.ts).
+ * The binding's source is the {@link Connection} that authenticates the sync;
+ * its target is the team's local root Project; its `remoteId` is the Linear
+ * team UUID. Bidirectional (pull-then-push): upsert the team's projects as
+ * Project objects, upsert issues as Tasks (respecting `maxDaysBack` if set),
+ * push diverged local edits back, then record `lastSyncAt`/`lastError` and
+ * per-id snapshots on the binding. Comments are intentionally skipped in v1
+ * (see sync.ts).
  */
 export const SyncLinearTeams = Operation.make({
   meta: {
     key: makeKey('syncLinearTeams'),
     name: 'Sync Linear Teams',
-    description: 'Reconcile selected Linear teams — projects and issues.',
+    description: 'Reconcile one Linear team binding — projects and issues.',
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
-    /** Optional: narrow to a single target Project (the local root for a Linear team). */
-    team: Ref.Ref(Obj.Unknown).pipe(Schema.optional),
+    binding: Ref.Ref(SyncBinding.SyncBinding),
   }),
   output: Schema.Struct({
     pulled: Schema.Struct({
@@ -71,4 +98,4 @@ export const SyncLinearTeams = Operation.make({
       tasks: Schema.Number,
     }),
   }),
-});
+}).pipe(Operation.visible);

@@ -23,7 +23,7 @@ export type BuildOutputProps = {
  * recent run's stdout / stderr lines.
  */
 export const BuildOutput = ({ state }: BuildOutputProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const build = state?.lastBuild;
   const run = state?.lastRun;
 
@@ -52,10 +52,11 @@ type BuildStatusProps = {
 };
 
 const BuildStatus = ({ build, run }: BuildStatusProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   if (!build) {
     return null;
   }
+
   const buildLabel = build.ok ? t('build.clean.label') : t('build.failed.label');
   const runLabel = run ? (run.ok ? null : t('run.failed.label')) : null;
   return (
@@ -71,7 +72,7 @@ type DiagnosticsListProps = {
 };
 
 const DiagnosticsList = ({ diagnostics }: DiagnosticsListProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <div className='dx-container flex flex-col overflow-auto'>
       <SectionHeader label={t('diagnostics.section.label')} count={diagnostics.length} />
@@ -110,7 +111,7 @@ type ConsoleViewProps = {
 };
 
 const ConsoleView = ({ stdout, stderr }: ConsoleViewProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const total = stdout.length + stderr.length;
   return (
     <div className='dx-container flex flex-col overflow-auto'>

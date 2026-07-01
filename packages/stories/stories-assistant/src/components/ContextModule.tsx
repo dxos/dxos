@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
-import { type Ref, Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, type Ref } from '@dxos/echo';
 import { Assistant } from '@dxos/plugin-assistant';
 import { useContextBinder } from '@dxos/plugin-assistant/hooks';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -67,7 +67,7 @@ export const ContextModule = ({ space }: ModuleProps) => {
       </Panel.Toolbar>
       <Masonry.Root Tile={Tile}>
         <Panel.Content asChild>
-          <Masonry.Content padding thin classNames='p-1'>
+          <Masonry.Content centered padding thin classNames='p-1'>
             <Masonry.Viewport items={items} getId={(item) => item.id} />
           </Masonry.Content>
         </Panel.Content>
@@ -119,7 +119,7 @@ const Tile = ({ data }: { data: ContextItem }) => {
   // Render via a card Surface (PreviewPlugin provides the generic `card--content` fallback).
   return (
     <Card.Root>
-      <Surface.Surface type={AppSurface.Card} limit={1} data={{ subject }} />
+      <Surface.Surface type={AppSurface.CardContent} limit={1} data={{ subject }} />
     </Card.Root>
   );
 };

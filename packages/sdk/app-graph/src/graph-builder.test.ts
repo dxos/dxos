@@ -609,6 +609,123 @@ describe('GraphBuilder', () => {
 
         expect(Graph.getNode(graph, 'root/parent-node/child/grandchild').pipe(Option.getOrNull)?.data).to.equal('v2');
       });
+
+      describe('NodeArg.actions', () => {
+        const withInlineAction = (actionId = 'delete'): Node.NodeArg<any> => ({
+          id: 'parent-node',
+          type: EXAMPLE_TYPE,
+          data: null,
+          actions: [Node.makeAction({ id: actionId, data: () => Effect.void, properties: { label: 'Delete' } })],
+        });
+
+        test('inline actions appear on connector-produced nodes', async ({ expect }) => {
+          const { registry, builder, graph, nodesAtom } = makeGraph();
+          registry.set(nodesAtom, [withInlineAction()]);
+          await GraphBuilder.flush(builder);
+
+          const actions = registry.get(graph.actions('root/parent-node'));
+          expect(actions).to.have.length(1);
+          expect(actions[0].id).to.equal('root/parent-node/delete');
+        });
+
+        test('inline actions reactively update when connector re-runs', async ({ expect }) => {
+          const { registry, builder, graph, nodesAtom } = makeGraph();
+          registry.set(nodesAtom, [withInlineAction('delete')]);
+          await GraphBuilder.flush(builder);
+
+          expect(registry.get(graph.actions('root/parent-node'))).to.have.length(1);
+
+          registry.set(nodesAtom, [{ ...withInlineAction('delete'), actions: [] }]);
+          await GraphBuilder.flush(builder);
+
+          expect(registry.get(graph.actions('root/parent-node'))).to.have.length(0);
+        });
+
+        test('inline actions appear on inline child nodes (filter pattern)', async ({ expect }) => {
+          const { registry, builder, graph, nodesAtom } = makeGraph();
+
+          const withFilterChild = (): Node.NodeArg<any> => ({
+            id: 'parent-node',
+            type: EXAMPLE_TYPE,
+            data: null,
+            nodes: [
+              {
+                id: 'filter',
+                type: EXAMPLE_TYPE,
+                data: null,
+                actions: [Node.makeAction({ id: 'delete', data: () => Effect.void, properties: { label: 'Delete' } })],
+              },
+            ],
+          });
+
+          registry.set(nodesAtom, [withFilterChild()]);
+          await GraphBuilder.flush(builder);
+
+          const filterNodeId = 'root/parent-node/filter';
+          expect(Graph.getNode(graph, filterNodeId).pipe(Option.getOrNull)).to.not.be.null;
+
+          const actions = registry.get(graph.actions(filterNodeId));
+          expect(actions).to.have.length(1);
+          expect(actions[0].id).to.equal(`${filterNodeId}/delete`);
+        });
+
+        test('inline actions on child nodes are removed when child is removed', async ({ expect }) => {
+          const { registry, builder, graph, nodesAtom } = makeGraph();
+
+          const filterChild: Node.NodeArg<any> = {
+            id: 'filter',
+            type: EXAMPLE_TYPE,
+            data: null,
+            actions: [Node.makeAction({ id: 'delete', data: () => Effect.void, properties: { label: 'Delete' } })],
+          };
+
+          registry.set(nodesAtom, [{ id: 'parent-node', type: EXAMPLE_TYPE, data: null, nodes: [filterChild] }]);
+          await GraphBuilder.flush(builder);
+
+          expect(Graph.getNode(graph, 'root/parent-node/filter/delete').pipe(Option.getOrNull)).to.not.be.null;
+
+          // Remove the filter child entirely.
+          registry.set(nodesAtom, [{ id: 'parent-node', type: EXAMPLE_TYPE, data: null, nodes: [] }]);
+          await GraphBuilder.flush(builder);
+
+          expect(Graph.getNode(graph, 'root/parent-node/filter').pipe(Option.getOrNull)).to.be.null;
+          expect(Graph.getNode(graph, 'root/parent-node/filter/delete').pipe(Option.getOrNull)).to.be.null;
+        });
+      });
+
+      test('are reordered when connector re-runs with different child order', async ({ expect }) => {
+        const makeMultiParent = (childIds: string[]): Node.NodeArg<any> => ({
+          id: 'parent-node',
+          type: EXAMPLE_TYPE,
+          data: null,
+          nodes: childIds.map((cid) => ({ id: cid, type: EXAMPLE_TYPE, data: cid })),
+        });
+
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [makeMultiParent(['c1', 'c2', 'c3'])]);
+        await GraphBuilder.flush(builder);
+
+        {
+          const children = registry.get(graph.connections('root/parent-node', 'child'));
+          expect(children.map((n) => n.id)).to.deep.equal([
+            'root/parent-node/c1',
+            'root/parent-node/c2',
+            'root/parent-node/c3',
+          ]);
+        }
+
+        registry.set(nodesAtom, [makeMultiParent(['c3', 'c1', 'c2'])]);
+        await GraphBuilder.flush(builder);
+
+        {
+          const children = registry.get(graph.connections('root/parent-node', 'child'));
+          expect(children.map((n) => n.id)).to.deep.equal([
+            'root/parent-node/c3',
+            'root/parent-node/c1',
+            'root/parent-node/c2',
+          ]);
+        }
+      });
     });
 
     test('sort edges', async () => {
@@ -1208,7 +1325,7 @@ describe('GraphBuilder', () => {
           GraphBuilder.createExtension({
             id: 'failingExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-            connector: (node, get) => Effect.fail(new Error('Connector failed intentionally')),
+            connector: (node, get) => Effect.die('Connector failed intentionally'),
           }),
         );
 
@@ -1235,7 +1352,7 @@ describe('GraphBuilder', () => {
           GraphBuilder.createExtension({
             id: 'failingActionsExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-            actions: (node, get) => Effect.fail(new Error('Actions failed intentionally')),
+            actions: (node, get) => Effect.die('Actions failed intentionally'),
           }),
         );
 
@@ -1262,7 +1379,7 @@ describe('GraphBuilder', () => {
           GraphBuilder.createExtension({
             id: 'failingResolverExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-            resolver: (id, get) => Effect.fail(new Error('Resolver failed intentionally')),
+            resolver: (id, get) => Effect.die('Resolver failed intentionally'),
           }),
         );
 
@@ -1286,7 +1403,7 @@ describe('GraphBuilder', () => {
           GraphBuilder.createExtension({
             id: 'failingExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-            connector: (node, get) => Effect.fail(new Error('This one fails')),
+            connector: (node, get) => Effect.die('This one fails'),
           }),
         );
 

@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -21,7 +21,7 @@ export type RelatedToContactProps = AppSurface.ObjectArticleProps<Person.Person>
 export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) => {
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(contact);
-  const workspace = db ? getSpacePath(db.spaceId) : undefined;
+  const workspace = db ? Paths.getSpacePath(db.spaceId) : undefined;
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
   const calendars = useQuery(db, Filter.type(Calendar.Calendar));
 
@@ -76,7 +76,7 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
         return;
       }
 
-      const mailboxPath = getObjectPathFromObject(mailbox);
+      const mailboxPath = Paths.getObjectPathFromObject(mailbox);
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
       await invokePromise(LayoutOperation.Open, { subject: [mailboxPath], workspace });
       await invokePromise(LayoutOperation.Select, {
@@ -93,7 +93,7 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
         return;
       }
 
-      const calendarPath = getObjectPathFromObject(calendar);
+      const calendarPath = Paths.getObjectPathFromObject(calendar);
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
       await invokePromise(LayoutOperation.Open, { subject: [calendarPath], workspace });
       await invokePromise(LayoutOperation.Select, {

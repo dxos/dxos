@@ -12,14 +12,14 @@ import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
-import { Calendar as NaturalCalendar, type CalendarController, type DateMarker } from '@dxos/react-ui-calendar';
+import { type CalendarController, type DateMarker, Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type MosaicScrollController } from '@dxos/react-ui-mosaic';
 import { Event } from '@dxos/types';
 
-import { EventStack, type EventStackActionHandler, useTargetIntegration } from '#components';
+import { EventStack, type EventStackActionHandler, useTargetConnection } from '#components';
 import { meta } from '#meta';
-import { Calendar, InboxOperation, DraftEvent, Starred } from '#types';
+import { Calendar, DraftEvent, InboxOperation, Starred } from '#types';
 
 import { getCalendarEventPath, getCalendarRangeSelectionId } from '../../paths';
 import { InitializeCalendar, InitializeCalendarAction } from './InitializeCalendar';
@@ -32,7 +32,7 @@ const byDate =
 export type CalendarArticleProps = AppSurface.ObjectArticleProps<Calendar.Calendar>;
 
 export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const showItem = useShowItem();
   // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
@@ -43,8 +43,8 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const [selectedDate, setSelectedDate] = useState<Date>();
   const calendarRef = useRef<CalendarController>(null);
   const eventStackRef = useRef<MosaicScrollController>(null);
-  // Syncing drafts to Google Calendar requires an integration targeting this calendar.
-  const { integration } = useTargetIntegration(subject);
+  // Syncing drafts to Google Calendar requires a connection bound to this calendar.
+  const { connection } = useTargetConnection(subject);
 
   const feed = calendar.feed?.target;
   // Synced events live in the calendar feed (read-only); draft events are local db objects parented
@@ -177,26 +177,26 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
 
   const menuActions = useMenuBuilder(() => {
     let builder = MenuBuilder.make()
-      .root({ label: ['calendar-toolbar.menu', { ns: meta.id }] })
+      .root({ label: ['calendar-toolbar.menu', { ns: meta.profile.key }] })
       .action(
         'create-event',
-        { label: ['calendar-toolbar-create-event.menu', { ns: meta.id }], icon: 'ph--pen--regular' },
+        { label: ['calendar-toolbar-create-event.menu', { ns: meta.profile.key }], icon: 'ph--pen--regular' },
         handleCreate,
       );
     if (draftEvents.length > 0) {
       builder = builder.action(
         'sync-draft',
         {
-          label: ['calendar-toolbar-sync.menu', { ns: meta.id }],
+          label: ['calendar-toolbar-sync.menu', { ns: meta.profile.key }],
           icon: 'ph--cloud-arrow-up--regular',
-          // Pushing drafts to Google Calendar requires an integration targeting this calendar.
-          disabled: !integration,
+          // Pushing drafts to Google Calendar requires a connection bound to this calendar.
+          disabled: !connection,
         },
         handleSyncDraft,
       );
     }
     return builder.build();
-  }, [handleCreate, handleSyncDraft, draftEvents.length, integration]);
+  }, [handleCreate, handleSyncDraft, draftEvents.length, connection]);
 
   useArticleKeyboardNavigation({ articleId: id, items: events, currentId, onSelect: handleNavigate });
 

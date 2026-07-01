@@ -4,7 +4,7 @@
 
 import { type AiService } from '@dxos/ai';
 import { type Credential, type Operation, type Trace } from '@dxos/compute';
-import { type Database, type Feed } from '@dxos/echo';
+import { type Database } from '@dxos/echo';
 
 import { type FunctionInvocationService } from './services';
 
@@ -21,7 +21,6 @@ export type FunctionServices =
   | AiService.AiService
   | Credential.CredentialsService
   | Database.Service
-  | Feed.FeedService
   | Trace.TraceService
   // TODO(dmaretskyi): `FunctionInvocationService` is being phased out in favour of `Operation.Service`;
   // it's kept in the union until `functions-runtime/local-function-execution.ts` migrates.

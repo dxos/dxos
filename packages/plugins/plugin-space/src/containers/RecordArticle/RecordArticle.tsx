@@ -14,9 +14,10 @@ import { mx } from '@dxos/ui-theme';
 
 import { useRelatedObjects } from '#hooks';
 import { meta } from '#meta';
+import { Prompts } from '#types';
 
 export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
   // fall back to typename query which matches TypeSchema.typename.
   const db = Obj.getDatabase(subject);
@@ -53,7 +54,7 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
                 <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
               </Card.Header>
               <Card.Body>
-                <Surface.Surface type={AppSurface.Card} data={{ subject }} limit={1} />
+                <Surface.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
               </Card.Body>
             </Card.Root>
 
@@ -62,7 +63,7 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
               <Input.Root>
                 <Input.Label>{t('related-actions.label')}</Input.Label>
               </Input.Root>
-              <Surface.Surface role='prompts' data={{ subject }} limit={1} />
+              <Surface.Surface type={Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
             </div>
 
             {related.length > 0 && (
@@ -87,7 +88,7 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
 };
 
 const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; classNames?: string }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const data = useMemo(() => ({ subject }), [subject]);
   const icon = Entity.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular';
   const menuItems = useObjectMenuItems(subject);
@@ -113,7 +114,7 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
           </Card.Block>
         </Card.Header>
         <Card.Body>
-          <Surface.Surface type={AppSurface.Card} data={data} limit={1} />
+          <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
         </Card.Body>
       </Card.Root>
     </Menu.Root>

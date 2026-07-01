@@ -10,7 +10,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
-import { isTauri, getHostPlatform } from '@dxos/util';
+import { getHostPlatform, isTauri } from '@dxos/util';
 
 import { SearchResultStack } from '#components';
 import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '#hooks';

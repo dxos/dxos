@@ -523,7 +523,7 @@ const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
 Update `DefaultStory` to include 4 items with the last being a companion:
 
 ```typescript
-const DefaultStory = ({ Tile }: DefaultStoryProps) => {
+const DefaultStory = ({ Tile }: StoryArgs) => {
   const items = useMemo(
     () => [
       Organization.make({ name: faker.company.name() }),
@@ -551,7 +551,7 @@ import { Obj } from '@dxos/echo';
 Create a surface-enabled story:
 
 ```typescript
-const SurfaceStory = ({ Tile }: DefaultStoryProps) => {
+const SurfaceStory = ({ Tile }: StoryArgs) => {
   const items = useMemo(
     () => [
       Organization.make({ name: faker.company.name() }),

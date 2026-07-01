@@ -12,7 +12,8 @@
     "vite.config.ts"
   ],
   "include": [
-    "src"
+    "src",
+    "src/**/*.json"
   ],
   "references": [
     {
@@ -61,6 +62,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/compute-runtime"
+    },
+    {
       "path": "../../core/compute/conductor"
     },
     {
@@ -74,6 +78,9 @@
     },
     {
       "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-doc"
     },
     {
       "path": "../../core/echo/echo-protocol"
@@ -97,9 +104,6 @@
       "path": "../../plugins/plugin-attention"
     },
     {
-      "path": "../../plugins/plugin-automation"
-    },
-    {
       "path": "../../plugins/plugin-board"
     },
     {
@@ -110,6 +114,12 @@
     },
     {
       "path": "../../plugins/plugin-comments"
+    },
+    {
+      "path": "../../plugins/plugin-connector"
+    },
+    {
+      "path": "../../plugins/plugin-crm"
     },
     {
       "path": "../../plugins/plugin-deck"
@@ -127,9 +137,6 @@
       "path": "../../plugins/plugin-inbox"
     },
     {
-      "path": "../../plugins/plugin-integration"
-    },
-    {
       "path": "../../plugins/plugin-map"
     },
     {
@@ -142,6 +149,9 @@
       "path": "../../plugins/plugin-preview"
     },
     {
+      "path": "../../plugins/plugin-routine"
+    },
+    {
       "path": "../../plugins/plugin-script"
     },
     {
@@ -149,9 +159,6 @@
     },
     {
       "path": "../../plugins/plugin-space"
-    },
-    {
-      "path": "../../plugins/plugin-stack"
     },
     {
       "path": "../../plugins/plugin-table"
@@ -239,9 +246,6 @@
     },
     {
       "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"

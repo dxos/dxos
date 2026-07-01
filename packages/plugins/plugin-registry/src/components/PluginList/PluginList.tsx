@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type Plugin, type PluginManager } from '@dxos/app-framework';
-import { List } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 
 import { PluginItem, type PluginItemProps } from './PluginItem';
 
@@ -36,17 +36,22 @@ export const PluginList = ({
   ...props
 }: PluginListProps) => {
   return (
-    <List classNames='grid grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] auto-rows-[max-content] gap-4 p-4'>
-      {plugins.map((plugin) => (
-        <PluginItem
-          key={plugin.meta.id}
-          plugin={plugin}
-          extraTags={extraTagsById?.[plugin.meta.id]}
-          hasUpdate={updateAvailableIds?.has(plugin.meta.id)}
-          failure={failuresById?.[plugin.meta.id]}
-          {...props}
-        />
-      ))}
-    </List>
+    <Listbox.Root>
+      <Listbox.Content
+        aria-label='plugins'
+        classNames='grid grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] auto-rows-[max-content] gap-4 p-4'
+      >
+        {plugins.map((plugin) => (
+          <PluginItem
+            key={plugin.meta.profile.key}
+            plugin={plugin}
+            extraTags={extraTagsById?.[plugin.meta.profile.key]}
+            hasUpdate={updateAvailableIds?.has(plugin.meta.profile.key)}
+            failure={failuresById?.[plugin.meta.profile.key]}
+            {...props}
+          />
+        ))}
+      </Listbox.Content>
+    </Listbox.Root>
   );
 };

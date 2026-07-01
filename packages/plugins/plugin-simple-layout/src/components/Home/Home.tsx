@@ -13,7 +13,7 @@ import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
 import { mx } from '@dxos/ui-theme';
-import { byPosition, getHostPlatform, isTauri } from '@dxos/util';
+import { Position, getHostPlatform, isTauri } from '@dxos/util';
 
 import { meta } from '#meta';
 
@@ -25,7 +25,7 @@ export type HomeProps = {};
  * Home screen.
  */
 export const Home = (_: HomeProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const userAccountItem = useItemsByDisposition('user-account')[0];
   const pinnedItems = useItemsByDisposition('pin-end', true);
   const workspaceItems = useItemsByDisposition('workspace');
@@ -64,7 +64,7 @@ export const Home = (_: HomeProps) => {
 
 const WorkspaceTile: MosaicStackTileComponent<Node.Node> = (props) => {
   const data = props.data;
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
   const name = toLocalizedString(data.properties.label, t);
@@ -133,6 +133,6 @@ const useItemsByDisposition = (disposition: string, sort = false) => {
   const connections = useConnections(graph, Node.RootId, 'child');
   return useMemo(() => {
     const filtered = connections.filter((node) => filterItems(node, disposition));
-    return sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;
+    return sort ? filtered.toSorted((a, b) => Position.compare(a.properties, b.properties)) : filtered;
   }, [connections, disposition, sort]);
 };

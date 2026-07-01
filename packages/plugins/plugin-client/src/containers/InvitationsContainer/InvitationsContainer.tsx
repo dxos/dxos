@@ -7,44 +7,45 @@ import React, { useCallback, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { Context } from '@dxos/context';
-import { Clipboard, Icon, IconButton, List, ListItem, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
+import { Clipboard, Icon, IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
+import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
-import { ClientCapabilities } from '#types';
+import { type AccountCacheInvitation, ClientCapabilities } from '#types';
 
-import { type AccountCacheInvitation } from '../../state/account-cache';
-import { useHubHttpClient } from '../../state/use-hub-http';
+import { useHubHttpClient } from '../../hooks';
 
 export const InvitationsContainer = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const accountCacheAtom = useCapability(ClientCapabilities.AccountCache);
   const [cache] = useAtom(accountCacheAtom);
   const setCache = useAtomSet(accountCacheAtom);
   const [pending, setPending] = useState(false);
 
   // Account/invitation routes live on hub-service, not the edge worker.
-  const hubHttp = useHubHttpClient();
+  const hubClient = useHubHttpClient();
 
   useAsyncEffect(async () => {
-    if (!hubHttp) {
+    if (!hubClient) {
       return;
     }
+
     try {
-      const result = await hubHttp.listAccountInvitations(new Context());
+      const result = await hubClient.listAccountInvitations(new Context());
       setCache((prev) => ({ ...prev, invitations: result.invitations, fetchedAt: Date.now() }));
     } catch {
       // Offline: keep cache.
     }
-  }, [hubHttp, setCache]);
+  }, [hubClient, setCache]);
 
   const handleIssue = useCallback(async () => {
-    if (!hubHttp) {
+    if (!hubClient) {
       return;
     }
     setPending(true);
     try {
-      const result = await hubHttp.issueAccountInvitation(new Context());
+      const result = await hubClient.issueAccountInvitation(new Context());
       // Optimistically push the new code and decrement the remaining quota; the
       // server consumes one slot at issue time. Next refresh reconciles.
       setCache((prev) => ({
@@ -57,7 +58,7 @@ export const InvitationsContainer = () => {
     } finally {
       setPending(false);
     }
-  }, [hubHttp, setCache]);
+  }, [hubClient, setCache]);
 
   const remaining = cache.account?.invitationsRemaining ?? 0;
   const list = cache.invitations ?? [];
@@ -66,72 +67,74 @@ export const InvitationsContainer = () => {
 
   return (
     <Clipboard.Provider>
-      <Settings.Viewport>
-        <Settings.Section title={t('invitations-section.title')} description={t('invitations-section.description')}>
-          <Settings.Item
-            title={t('generate-invitation.label')}
-            description={t('generate-invitation.description', { count: remaining })}
-          >
-            <IconButton
-              icon='ph--plus--regular'
-              label={t('generate-invitation.label')}
-              variant='primary'
-              onClick={handleIssue}
-              disabled={pending || remaining <= 0}
-            />
-          </Settings.Item>
-        </Settings.Section>
+      <Form.Root variant='settings'>
+        <Form.Viewport scroll>
+          <Form.Content>
+            <Form.Section title={t('invitations-section.title')} description={t('invitations-section.description')}>
+              <Form.Row
+                label={t('generate-invitation.label')}
+                description={t('generate-invitation.description', { count: remaining })}
+              >
+                <IconButton
+                  icon='ph--plus--regular'
+                  label={t('generate-invitation.label')}
+                  variant='primary'
+                  onClick={handleIssue}
+                  disabled={pending || remaining <= 0}
+                />
+              </Form.Row>
+            </Form.Section>
 
-        {available.length > 0 ? (
-          <Settings.Section title={t('available-invitations.title')}>
-            <List>
-              {available.map((row) => (
-                <AvailableInvitationItem key={row.code} row={row} />
-              ))}
-            </List>
-          </Settings.Section>
-        ) : null}
+            {available.length > 0 ? (
+              <Form.Section title={t('available-invitations.title')}>
+                <Listbox.Root>
+                  <Listbox.Content classNames='gap-1'>
+                    {available.map((row) => (
+                      <AvailableInvitationItem key={row.code} row={row} />
+                    ))}
+                  </Listbox.Content>
+                </Listbox.Root>
+              </Form.Section>
+            ) : null}
 
-        {redeemed.length > 0 ? (
-          <Settings.Section title={t('redeemed-invitations.title')}>
-            <List>
-              {redeemed.map((row) => (
-                <RedeemedInvitationItem key={row.code} row={row} />
-              ))}
-            </List>
-          </Settings.Section>
-        ) : null}
-      </Settings.Viewport>
+            {redeemed.length > 0 ? (
+              <Form.Section title={t('redeemed-invitations.title')}>
+                <Listbox.Root>
+                  <Listbox.Content classNames='gap-1'>
+                    {redeemed.map((row) => (
+                      <RedeemedInvitationItem key={row.code} row={row} />
+                    ))}
+                  </Listbox.Content>
+                </Listbox.Root>
+              </Form.Section>
+            ) : null}
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
     </Clipboard.Provider>
   );
 };
 
 const AvailableInvitationItem = ({ row }: { row: AccountCacheInvitation }) => (
-  <ListItem.Root classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-2'>
-    <ListItem.Endcap>
-      <Icon icon='ph--paper-plane-tilt--duotone' size={5} classNames='text-description' />
-    </ListItem.Endcap>
+  <Listbox.Item id={row.code} classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-2'>
+    <Icon icon='ph--paper-plane-tilt--duotone' size={5} classNames='text-description' />
     <div className='flex flex-col min-w-0'>
-      <ListItem.Heading classNames='font-mono truncate'>{row.code}</ListItem.Heading>
+      <div className='font-mono truncate'>{row.code}</div>
       <p className='text-description text-xs'>{new Date(row.createdAt).toLocaleString()}</p>
     </div>
-    <ListItem.Endcap>
-      <Clipboard.IconButton value={row.code} />
-    </ListItem.Endcap>
-  </ListItem.Root>
+    <Clipboard.IconButton value={row.code} />
+  </Listbox.Item>
 );
 
 const RedeemedInvitationItem = ({ row }: { row: AccountCacheInvitation }) => {
   const date = row.redeemedAt ?? row.createdAt;
   return (
-    <ListItem.Root classNames='grid grid-cols-[min-content_1fr] items-center gap-2'>
-      <ListItem.Endcap>
-        <Icon icon='ph--check-circle--duotone' size={5} classNames='text-success-text' />
-      </ListItem.Endcap>
+    <Listbox.Item id={row.code} classNames='grid grid-cols-[min-content_1fr] items-center gap-2'>
+      <Icon icon='ph--check-circle--duotone' size={5} classNames='text-success-text' />
       <div className='flex flex-col min-w-0'>
-        <ListItem.Heading classNames='font-mono truncate'>{row.code}</ListItem.Heading>
+        <div className='font-mono truncate'>{row.code}</div>
         <p className='text-description text-xs'>{new Date(date).toLocaleString()}</p>
       </div>
-    </ListItem.Root>
+    </Listbox.Item>
   );
 };

@@ -7,13 +7,13 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, Ref, DXN } from '@dxos/echo';
+import { Database, DXN, Ref } from '@dxos/echo';
 
 import { meta } from '#meta';
 
 import * as Gallery from './Gallery';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const DescribeImage = Operation.make({
   meta: {

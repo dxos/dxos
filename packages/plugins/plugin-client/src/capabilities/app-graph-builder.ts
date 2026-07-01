@@ -25,7 +25,7 @@ export default Capability.makeModule(
             id: 'openUserAccount',
             data: () => Operation.invoke(ClientOperation.ShareIdentity),
             properties: {
-              label: ['open-user-account.label', { ns: meta.id }],
+              label: ['open-user-account.label', { ns: meta.profile.key }],
               icon: 'ph--user--regular',
               disposition: 'menu',
               keyBinding: {
@@ -37,77 +37,87 @@ export default Capability.makeModule(
             },
           },
         ]),
-      connector: Effect.fnUntraced(function* (node, get) {
-        const client = yield* Capability.get(ClientCapabilities.Client);
-        const identity = get(CreateAtom.fromObservable(client.halo.identity));
-        const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
+      connector: (node, get) =>
+        Effect.gen(function* () {
+          const client = yield* Capability.get(ClientCapabilities.Client);
+          const identity = get(CreateAtom.fromObservable(client.halo.identity));
+          const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
 
-        return [
-          Node.make({
-            id: Account.id,
-            type: meta.id,
-            properties: {
-              label: ['account.label', { ns: meta.id }],
-              icon: 'ph--user--regular',
-              disposition: 'user-account',
-              testId: 'clientPlugin.account',
-              // NOTE: This currently needs to be the identity key because the fallback is generated from hex.
-              userId: identity?.identityKey.toHex(),
-              hue: identity?.profile?.data?.hue,
-              emoji: identity?.profile?.data?.emoji,
-              status: status.swarm === ConnectionState.OFFLINE ? 'error' : 'active',
-            },
-            nodes: [
-              Node.make({
-                id: Account.Profile,
-                data: Account.Profile,
-                type: meta.id,
-                properties: {
-                  label: ['profile.label', { ns: meta.id }],
-                  icon: 'ph--user--regular',
-                },
-              }),
-              Node.make({
-                id: Account.Account,
-                data: Account.Account,
-                type: meta.id,
-                properties: {
-                  label: ['account-panel.label', { ns: meta.id }],
-                  icon: 'ph--identification-card--regular',
-                },
-              }),
-              Node.make({
-                id: Account.Devices,
-                data: Account.Devices,
-                type: meta.id,
-                properties: {
-                  label: ['devices.label', { ns: meta.id }],
-                  icon: 'ph--devices--regular',
-                  testId: 'clientPlugin.devices',
-                },
-              }),
-              Node.make({
-                id: Account.Security,
-                data: Account.Security,
-                type: meta.id,
-                properties: {
-                  label: ['security.label', { ns: meta.id }],
-                  icon: 'ph--key--regular',
-                },
-              }),
-              Node.make({
-                id: Account.Invitations,
-                data: Account.Invitations,
-                type: meta.id,
-                properties: {
-                  label: ['invitations-panel.label', { ns: meta.id }],
-                  icon: 'ph--ticket--regular',
-                },
-              }),
-            ],
-          }),
-        ];
-      }),
+          return [
+            Node.make({
+              id: Account.id,
+              type: meta.profile.key,
+              properties: {
+                label: ['account.label', { ns: meta.profile.key }],
+                icon: 'ph--user--regular',
+                disposition: 'user-account',
+                testId: 'clientPlugin.account',
+                // NOTE: This currently needs to be the identity key because the fallback is generated from hex.
+                userId: identity?.identityKey.toHex(),
+                hue: identity?.profile?.data?.hue,
+                emoji: identity?.profile?.data?.emoji,
+                status: status.swarm === ConnectionState.OFFLINE ? 'error' : 'active',
+              },
+              nodes: [
+                Node.make({
+                  id: Account.Profile,
+                  data: Account.Profile,
+                  type: meta.profile.key,
+                  properties: {
+                    label: ['profile.label', { ns: meta.profile.key }],
+                    icon: 'ph--user--regular',
+                  },
+                }),
+                Node.make({
+                  id: Account.Account,
+                  data: Account.Account,
+                  type: meta.profile.key,
+                  properties: {
+                    label: ['account-panel.label', { ns: meta.profile.key }],
+                    icon: 'ph--identification-card--regular',
+                  },
+                }),
+                Node.make({
+                  id: Account.Devices,
+                  data: Account.Devices,
+                  type: meta.profile.key,
+                  properties: {
+                    label: ['devices.label', { ns: meta.profile.key }],
+                    icon: 'ph--devices--regular',
+                    testId: 'clientPlugin.devices',
+                  },
+                }),
+                Node.make({
+                  id: Account.Security,
+                  data: Account.Security,
+                  type: meta.profile.key,
+                  properties: {
+                    label: ['security.label', { ns: meta.profile.key }],
+                    icon: 'ph--key--regular',
+                  },
+                }),
+                Node.make({
+                  id: Account.Invitations,
+                  data: Account.Invitations,
+                  type: meta.profile.key,
+                  properties: {
+                    label: ['invitations-panel.label', { ns: meta.profile.key }],
+                    icon: 'ph--ticket--regular',
+                  },
+                }),
+                Node.make({
+                  id: Account.Usage,
+                  data: Account.Usage,
+                  type: meta.profile.key,
+                  properties: {
+                    label: ['usage-panel.label', { ns: meta.profile.key }],
+                    icon: 'ph--chart-bar--regular',
+                  },
+                }),
+              ],
+            }),
+          ];
+        }).pipe(Effect.orDie),
     });
 
     return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);

@@ -82,7 +82,7 @@ AppSurface.object(AppSurface.Article, MySchema);
 AppSurface.object(AppSurface.Section, MySchema);
 
 // Array of schemas narrows subject to their union.
-AppSurface.object(AppSurface.Card, [SchemaA, SchemaB]);
+AppSurface.object(AppSurface.CardContent, [SchemaA, SchemaB]);
 
 // Object-properties panel.
 AppSurface.object(AppSurface.ObjectProperties, MySchema);
@@ -157,7 +157,7 @@ now accepts typed `SurfaceFilter`s only — the two-predicate form is gone.
 | `objectProperties(S)`     | `AppSurface.object(AppSurface.ObjectProperties, S)`           |
 | `objectArticle(S)`        | `AppSurface.object(AppSurface.Article, S)`                    |
 | `objectSection(S)`        | `AppSurface.object(AppSurface.Section, S)`                    |
-| `objectCard(S)`           | `AppSurface.object(AppSurface.Card, S)`                       |
+| `objectCard(S)`           | `AppSurface.object(AppSurface.CardContent, S)`                |
 | `componentDialog(id)`     | `AppSurface.component(AppSurface.Dialog, id)`                 |
 | `settingsArticle(prefix)` | `AppSurface.settings(AppSurface.Article, prefix)`             |
 

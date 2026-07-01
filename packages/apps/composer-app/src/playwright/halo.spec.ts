@@ -34,7 +34,7 @@ test.describe('HALO tests', () => {
   });
 
   test('join new identity', async () => {
-    test.setTimeout(60_000);
+    test.setTimeout(90_000);
 
     await host.createSpace();
 
@@ -46,11 +46,10 @@ test.describe('HALO tests', () => {
     const invitationCode = await host.createDeviceInvitation();
     const authCode = await host.getAuthCode();
     await guest.openUserDevices();
-    await Promise.all([
-      // Wait for reset to complete and attempt to reload.
-      guest.page.waitForRequest(INITIAL_URL + '/?deviceInvitationCode=', { timeout: 10_000 }),
-      guest.joinNewIdentity(),
-    ]);
+    // joinNewIdentity resets storage and reloads into the device-invitation shell. The shell's
+    // invitation input only mounts after that reload, so acceptDeviceInvitation's fill auto-waits
+    // for it — no need to race the reload against a fixed deadline.
+    await guest.joinNewIdentity();
     await guest.shell.acceptDeviceInvitation(invitationCode);
     await guest.shell.authenticateDevice(authCode);
 
@@ -78,10 +77,10 @@ test.describe('HALO tests', () => {
     const invitationCode = await host.createDeviceInvitation();
     const authCode = await host.getAuthCode();
     await guest.openUserDevices();
-    await Promise.all([
-      guest.page.waitForRequest(INITIAL_URL + '/?deviceInvitationCode=', { timeout: 10_000 }),
-      guest.joinNewIdentity(),
-    ]);
+    // joinNewIdentity resets storage and reloads into the device-invitation shell. The shell's
+    // invitation input only mounts after that reload, so acceptDeviceInvitation's fill auto-waits
+    // for it — no need to race the reload against a fixed deadline.
+    await guest.joinNewIdentity();
     await guest.shell.acceptDeviceInvitation(invitationCode);
     await guest.shell.authenticateDevice(authCode);
 

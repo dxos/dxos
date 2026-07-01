@@ -67,7 +67,8 @@ export const nodeArgsUnchanged = (prev: Node.NodeArg<any>[], next: Node.NodeArg<
       prevNode.type === nextNode.type &&
       shallowEqual(prevNode.data, nextNode.data) &&
       shallowEqual(prevNode.properties, nextNode.properties) &&
-      nodeArgsUnchanged(prevNode.nodes ?? [], nextNode.nodes ?? [])
+      nodeArgsUnchanged(prevNode.nodes ?? [], nextNode.nodes ?? []) &&
+      nodeArgsUnchanged(prevNode.actions ?? [], nextNode.actions ?? [])
     );
   });
 };

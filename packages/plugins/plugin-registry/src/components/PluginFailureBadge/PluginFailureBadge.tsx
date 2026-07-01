@@ -15,8 +15,6 @@ type IconSize = 4 | 5 | 6 | 8;
 
 export type PluginFailureBadgeProps = {
   failure: PluginManager.PluginFailure;
-  /** Optional override for the trigger icon's tailwind classes. */
-  iconClassNames?: string;
   /** Visual size of the warning icon (passed through to react-ui `<Icon />`). */
   size?: IconSize;
 };
@@ -28,41 +26,40 @@ export type PluginFailureBadgeProps = {
  * message — enough for an operator to tell "remote host is offline" apart
  * from "the plugin crashed".
  */
-export const PluginFailureBadge = ({ failure, iconClassNames, size = 4 }: PluginFailureBadgeProps) => {
-  const { t } = useTranslation(meta.id);
-
-  const phaseLabel = failure.phase === 'load' ? t('failure-phase-load.label') : t('failure-phase-activation.label');
-  const reasonLabel =
-    failure.reason === 'timeout' ? t('failure-reason-timeout.label') : t('failure-reason-error.label');
+export const PluginFailureBadge = ({ failure, size }: PluginFailureBadgeProps) => {
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
         <IconButton
-          variant='ghost'
+          variant='destructive'
+          icon='ph--warning--bold'
           iconOnly
           noTooltip
-          icon='ph--warning--bold'
           size={size}
-          iconClassNames={iconClassNames}
           label={t('failure-badge.label')}
           data-testid={`pluginFailureBadge.${failure.id}`}
-          // Don't bubble up to row click handlers (e.g. the card's `onClick`
-          // that opens the details pane). The popover is the action here.
           onClick={(event) => event.stopPropagation()}
         />
       </Popover.Trigger>
-      <Popover.Content>
-        <Popover.Viewport>
-          <div className='px-3 py-2 min-w-[18rem] max-w-[28rem] flex flex-col gap-1'>
-            <p className='font-medium text-sm'>
-              {t('failure-title.label', { phase: phaseLabel, reason: reasonLabel })}
-            </p>
-            <p className='text-description text-sm break-words'>{failure.error.message}</p>
-          </div>
-        </Popover.Viewport>
-        <Popover.Arrow />
-      </Popover.Content>
+      <Popover.Portal>
+        <Popover.Content>
+          <Popover.Viewport>
+            <div className='px-3 py-2 min-w-[18rem] max-w-[28rem] flex flex-col gap-1'>
+              <p className='font-medium text-sm'>
+                {t('failure-title.label', {
+                  phase: failure.phase === 'load' ? t('failure-phase-load.label') : t('failure-phase-activation.label'),
+                  reason:
+                    failure.reason === 'timeout' ? t('failure-reason-timeout.label') : t('failure-reason-error.label'),
+                })}
+              </p>
+              <p className='text-description text-sm break-words'>{failure.error.message}</p>
+            </div>
+          </Popover.Viewport>
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
     </Popover.Root>
   );
 };

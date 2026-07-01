@@ -9,7 +9,7 @@ import { createObject } from '@dxos/echo-client';
 import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { data } from '#testing';
+import { SketchBuilder, data } from '#testing';
 import { Sketch } from '#types';
 
 import { migrateCanvas } from '../../migrations';
@@ -70,3 +70,34 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+const BuilderStory = () => {
+  const [sketch] = useState(() =>
+    createObject(
+      Sketch.make({
+        canvas: {
+          content: new SketchBuilder()
+            .rectangle({ id: 'a', x: 0, y: 0, text: 'DXOS', color: 'blue', fill: 'solid' })
+            .ellipse({ id: 'b', x: 360, y: 0, text: 'ECHO', color: 'green' })
+            .geo('star', { id: 'c', x: 180, y: 280, text: 'EDGE', color: 'yellow' })
+            .text({ x: 0, y: 480, text: 'Built with SketchBuilder', font: 'mono' })
+            .arrow({ from: 'a', to: 'b', text: 'syncs' })
+            .arrow({ from: 'b', to: 'c' })
+            .build(),
+        },
+      }),
+    ),
+  );
+
+  return (
+    <Panel.Root>
+      <Panel.Content asChild>
+        <SketchComponent classNames='dx-attention-surface' sketch={sketch} assetsBaseUrl={null} autoZoom />
+      </Panel.Content>
+    </Panel.Root>
+  );
+};
+
+export const Builder: Story = {
+  render: BuilderStory,
+};

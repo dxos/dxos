@@ -63,7 +63,7 @@ const handler: Operation.WithHandler<typeof BookmarkOperation.Summarize> = Bookm
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('ai.claude.model.claude-sonnet-4-0'),
+          AiService.model('com.anthropic.model.claude-sonnet-4-6.default'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,

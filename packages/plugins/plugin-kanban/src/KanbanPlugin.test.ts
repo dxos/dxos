@@ -11,7 +11,7 @@ import { KanbanPlugin } from '#plugin';
 
 import { meta } from './meta';
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('KanbanPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
@@ -24,8 +24,8 @@ describe('KanbanPlugin', () => {
       expect.arrayContaining([moduleId('OperationHandler'), moduleId('UndoMappings')]),
     );
 
-    // BlueprintDefinition fires when AssistantPlugin loads blueprint definitions.
+    // SkillDefinition fires when AssistantPlugin loads skill definitions.
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('BlueprintDefinition'));
+    expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
   });
 });

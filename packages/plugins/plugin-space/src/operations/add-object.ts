@@ -3,16 +3,9 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import {
-  CollectionModel,
-  getCollectionsPath,
-  getObjectPath,
-  getTypePath,
-  getTypeSlug,
-  getTypeSlugFromUri,
-} from '@dxos/app-toolkit';
+import { AppNode, CollectionModel, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Collection, Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
@@ -30,7 +23,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       yield* CollectionModel.add({
         object,
         target: Database.isDatabase(target) ? undefined : target,
-        hidden: input.hidden,
       }).pipe(Effect.provide(Database.layer(db)));
 
       const typename = Obj.getTypename(object)!;
@@ -62,14 +54,15 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       // Graph type nodes are keyed by a slash-free slug (entity id for stored types, typename for
       // static); resolve the object's own type slug rather than filing it under its (human) typename.
       const objectType = Obj.getType(object);
-      const typeSlug = objectType ? getTypeSlug(objectType) : typename;
+      const typeSlug = objectType ? Paths.getTypeSlug(objectType) : typename;
       const subject = getSubjectPathForNewObject({
         spaceId: db.spaceId,
         objectId: object.id,
         nodeId: input.targetNodeId,
+        object,
         typename,
         typeSlug,
-        viewTargetSlug: viewTargetUri ? getTypeSlugFromUri(viewTargetUri) : undefined,
+        viewTargetSlug: viewTargetUri ? Paths.getTypeSlugFromUri(viewTargetUri) : undefined,
       });
 
       return {
@@ -86,21 +79,22 @@ const getSubjectPathForNewObject = (props: {
   spaceId: string;
   objectId: string;
   nodeId?: string;
+  object: Obj.Unknown;
   typename: string;
   /** Slug of the object's own type ({@link getTypeSlug}) — keys the `types/<slug>` node it files under. */
   typeSlug: string;
   /** Slug of the view holder's target type, when the object is a view holder. */
   viewTargetSlug?: string;
 }): string => {
-  const { nodeId, typename, typeSlug, viewTargetSlug, spaceId, objectId } = props;
+  const { nodeId, object, typeSlug, viewTargetSlug, spaceId, objectId } = props;
   if (typeof nodeId === 'string') {
-    return `${nodeId}/${objectId}`;
+    return Paths.getCollectionObjectPath(nodeId, objectId);
   }
-  if (typename === Type.getTypename(Collection.Collection)) {
-    return getCollectionsPath(spaceId, objectId);
+  if (AppNode.isCollectionItem(object)) {
+    return Paths.getCollectionsPath(spaceId, objectId);
   }
   if (viewTargetSlug) {
-    return getTypePath(spaceId, viewTargetSlug, objectId);
+    return Paths.getTypePath(spaceId, viewTargetSlug, objectId);
   }
-  return getObjectPath(spaceId, typeSlug, objectId);
+  return Paths.getObjectPath(spaceId, typeSlug, objectId);
 };

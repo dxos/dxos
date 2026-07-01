@@ -19,8 +19,8 @@ import { Text } from '@dxos/schema';
 
 import {
   MarkdownEditor,
-  MarkdownEditorProvider,
   type MarkdownEditorContentProps,
+  MarkdownEditorProvider,
   type MarkdownEditorProviderProps,
 } from '#components';
 import { useLinkQuery } from '#hooks';
@@ -90,7 +90,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     }, [db, upload]);
 
     // Query for @ refs.
-    const handleLinkQuery = useLinkQuery(db);
+    const handleLinkQuery = useLinkQuery(db, Obj.isObject(object) ? object : undefined);
 
     // Open linked objects.
     const { invokePromise } = useOperationInvoker();
@@ -115,7 +115,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
         id={id}
         attendableId={attendableId}
         object={object}
-        compact={role !== 'article'}
+        compact={role !== AppSurface.Article.role}
         extensions={extensions}
         settings={settings}
         viewMode={viewMode}
@@ -129,7 +129,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
           <Editor.Root {...editorRootProps}>
             <Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
-                <Panel.Toolbar classNames='bg-toolbar-surface'>
+                <Panel.Toolbar>
                   <MarkdownEditor.Toolbar classNames='dx-document' customActions={customActions} />
                 </Panel.Toolbar>
               )}

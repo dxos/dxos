@@ -256,11 +256,11 @@ feat F-6: ECHO Persistence and Collaboration
 ```
 
 ```mdl
-feat F-7: AI Blueprint
+feat F-7: AI Skill
 
-  req F-7.1: Plugin contributes a Kanban blueprint that lets an AI agent create and update kanban boards.
+  req F-7.1: Plugin contributes a Kanban skill that lets an AI agent create and update kanban boards.
   req F-7.2:
-    when: an AI agent calls the blueprint
+    when: an AI agent calls the skill
     then: agent can create boards, place cards in columns, and update card fields
 ```
 

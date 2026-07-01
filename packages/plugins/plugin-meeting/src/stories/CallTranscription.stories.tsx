@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
@@ -18,10 +18,10 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useTranscriptionRecording } from '@dxos/plugin-transcription/hooks';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
+import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
 import { Config } from '@dxos/react-client';
-import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { getSpace, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -30,9 +30,9 @@ import { Transcript } from '@dxos/types';
 import { MeetingPlugin } from '../MeetingPlugin';
 import { Meeting } from '../types';
 
-type StoryProps = {};
+type StoryArgs = {};
 
-const DefaultStory = (_: StoryProps) => {
+const DefaultStory = (_: StoryArgs) => {
   const spaces = useSpaces();
   const db = useDatabase(spaces[0]?.id);
   const [meeting] = useQuery(db, Filter.type(Meeting.Meeting));
@@ -56,9 +56,56 @@ type CallTranscriptionViewProps = {
  */
 const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewProps) => {
   const callManager = useCapabilities(CallsCapabilities.Manager)[0];
+  const transcriptionManagerProvider = useCapabilities(TranscriptionCapabilities.TranscriptionManagerProvider)[0];
   const roomId = Obj.getURI(meeting);
 
-  const { recording, toggleRecording } = useTranscriptionRecording(transcript);
+  const space = getSpace(transcript);
+  const feed = transcript.feed.target;
+
+  // Create the same TranscriptionManager service that plugin-meeting uses in production (via the
+  // call-extension) and bind it to the transcript's feed; the story drives it directly.
+  const managerRef = useRef<TranscriptionCapabilities.TranscriptionManager | undefined>(undefined);
+  useEffect(() => {
+    if (!transcriptionManagerProvider || !space || !feed) {
+      return;
+    }
+    const manager = transcriptionManagerProvider({});
+    manager.setFeed(space, feed);
+    void manager.open();
+    managerRef.current = manager;
+    return () => {
+      void manager.close();
+      managerRef.current = undefined;
+    };
+  }, [transcriptionManagerProvider, space, feed]);
+
+  // Toggle mic capture into the manager (production sources the track from the call instead).
+  const [recording, setRecording] = useState(false);
+  const trackRef = useRef<MediaStreamTrack | undefined>(undefined);
+  const toggleRecording = useCallback(async () => {
+    const manager = managerRef.current;
+    if (!manager) {
+      return;
+    }
+    if (recording) {
+      manager.setRecording(false);
+      await manager.setAudioTrack(undefined);
+      trackRef.current?.stop();
+      trackRef.current = undefined;
+      setRecording(false);
+    } else {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true }).catch((err) => log.catch(err));
+      const track = stream?.getAudioTracks()[0];
+      if (!track) {
+        return;
+      }
+      trackRef.current = track;
+      await manager.setEnabled(true);
+      await manager.setAudioTrack(track);
+      manager.setRecording(true);
+      setRecording(true);
+    }
+  }, [recording]);
 
   const handleStartCall = useCallback(async () => {
     if (!callManager) {
@@ -77,6 +124,7 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
           disabled={!callManager}
           onClick={handleStartCall}
         />
+        {/* TODO(burdon): Replace with MicButton. */}
         <IconButton
           icon={recording ? 'ph--stop--regular' : 'ph--microphone--regular'}
           label={recording ? 'Stop transcription' : 'Start transcription'}
@@ -85,7 +133,7 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
       </Toolbar.Root>
       <div className='grid grid-cols-2 gap-2 grow min-bs-0'>
         <div className='dx-expander'>
-          <Surface.Surface role='article' data={{ subject: { roomId }, attendableId: roomId }} limit={1} />
+          <Surface.Surface type={AppSurface.Article} data={{ subject: { roomId }, attendableId: roomId }} limit={1} />
         </div>
         <div className='dx-expander'>
           <Surface.Surface
@@ -104,7 +152,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
-    withPluginManager<StoryProps>(() => ({
+    withPluginManager<StoryArgs>(() => ({
       setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),

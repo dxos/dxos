@@ -5,32 +5,32 @@
 import { isAfter, isBefore, isEqual } from 'date-fns';
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { updateText } from '@dxos/echo-client';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
-import { Text } from '@dxos/schema';
+import { CollectionItemAnnotation, Text } from '@dxos/schema';
 
 import { getDateString, parseDateString } from './util';
 
-export const JournalEntry = Schema.Struct({
-  id: Schema.String,
-  date: Schema.String,
-  content: Ref.Ref(Text.Text),
-}).pipe(HiddenAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.journalEntry', '0.1.0')));
+export class JournalEntry extends Type.makeObject<JournalEntry>(DXN.make('org.dxos.type.journalEntry', '0.1.0'))(
+  Schema.Struct({
+    id: Schema.String,
+    date: Schema.String,
+    content: Ref.Ref(Text.Text),
+  }).pipe(HiddenAnnotation.set(true)),
+) {}
 
-export type JournalEntry = Type.InstanceType<typeof JournalEntry>;
-
-export const Journal = Schema.Struct({
-  id: Schema.String,
-  name: Schema.optional(Schema.String),
-  // TODO(burdon): Convert map of references indexed by sortable ISO date.
-  entries: Schema.Record({ key: Schema.String, value: Ref.Ref(JournalEntry) }),
-}).pipe(
-  Annotation.IconAnnotation.set({ icon: 'ph--calendar-check--regular', hue: 'indigo' }),
-  Type.makeObject(DXN.make('org.dxos.type.journal', '0.1.0')),
-);
-
-export type Journal = Type.InstanceType<typeof Journal>;
+export class Journal extends Type.makeObject<Journal>(DXN.make('org.dxos.type.journal', '0.1.0'))(
+  Schema.Struct({
+    id: Schema.String,
+    name: Schema.optional(Schema.String),
+    // TODO(burdon): Convert map of references indexed by sortable ISO date.
+    entries: Schema.Record({ key: Schema.String, value: Ref.Ref(JournalEntry) }),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--calendar-check--regular', hue: 'indigo' }),
+    CollectionItemAnnotation.set(true),
+  ),
+) {}
 
 export const make = ({ name, entries }: Partial<Obj.MakeProps<typeof Journal>> = {}): Journal => {
   const today = getDateString(new Date());

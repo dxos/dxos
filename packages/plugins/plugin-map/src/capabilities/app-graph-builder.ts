@@ -20,7 +20,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* GraphBuilder.createExtension({
       id: MapOperation.Toggle.meta.key,
-      match: (node) => Option.map(NodeMatcher.whenEchoType(View.View)(node), (view) => ({ view, node })),
+      match: (node, get) => Option.map(NodeMatcher.whenEchoType(View.View)(node, get), (view) => ({ view, node })),
       actions: ({ view, node }, get) => {
         const presentationRef = (node.properties as any).presentation;
         const target = presentationRef ? get(Obj.atom(presentationRef)) : undefined;
@@ -32,7 +32,7 @@ export default Capability.makeModule(
             id: `${view.id}.toggle-map`,
             data: () => Operation.invoke(MapOperation.Toggle, undefined),
             properties: {
-              label: ['toggle-type.label', { ns: meta.id }],
+              label: ['toggle-type.label', { ns: meta.profile.key }],
               icon: 'ph--compass--regular',
             },
           }),
@@ -61,7 +61,7 @@ export default Capability.makeModule(
           return [
             AppNode.makeCompanion({
               id: linkedSegment('map'),
-              label: ['map.companion.label', { ns: meta.id }],
+              label: ['map.companion.label', { ns: meta.profile.key }],
               icon: 'ph--map-trifold--regular',
               data: 'map',
             }),

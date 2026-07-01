@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Client, fromHost, type LocalClientServices } from '@dxos/client';
+import { Client, type LocalClientServices, fromHost } from '@dxos/client';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { Config, defs } from '@dxos/config';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
-import { setupConfig } from '../config';
+import { setupConfig } from '../util';
 
 let bootedClient: Client | undefined;
 

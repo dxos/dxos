@@ -73,11 +73,9 @@ interface BaseTypeEntity<A> {
  *
  * @example
  * ```ts
- * const Person = Schema.Struct({
- *   name: Schema.String,
- * }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
- *
- * type Person = Type.InstanceType<typeof Person>;
+ * class Person extends Type.makeObject<Person>(DXN.make('com.example.type.person', '0.1.0'))(
+ *   Schema.Struct({ name: Schema.String }),
+ * ) {}
  * ```
  */
 export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fields> extends BaseTypeEntity<
@@ -94,6 +92,15 @@ export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fiel
    * Allows accessing field definitions for introspection.
    */
   readonly fields: Fields;
+}
+
+/**
+ * Return type for {@link makeObject}.
+ *
+ * Not to be used directly, but must be exported for typescript to infer the type.
+ */
+export interface ObjClass<Self, T, Fields extends Schema.Struct.Fields> extends Obj<Self, Fields> {
+  new (_: never): T & EntityModule.OfKind<typeof EntityModule.Kind.Object>;
 }
 
 /**
@@ -115,19 +122,26 @@ export type AnyObj = Obj<unknown>;
  * scope. Pass `{ id }` to override (e.g. with `EntityId.random()` from a
  * request handler).
  *
+ * Giving the type a nominal class name keeps its inferred type portable for
+ * declaration emit: structural expansion (which can pull in unnameable union
+ * members from referenced schemas) is replaced by a reference to the class.
+ *
  * @example
  * ```ts
- * const Person = Schema.Struct({
+ * export class Person extends Type.makeObject<Person>(DXN.make('com.example.type.myType', '0.1.0'))(Schema.Struct({
  *   name: Schema.String,
- * }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
+ * })) {}
  * ```
  */
+// TODO(burdon): Require { typename, version } in options.
 export const makeObject: {
-  (
+  <Self>(
     dxn: DXN.DXN,
     options?: { id?: EntityId },
-  ): <Self extends Schema.Schema.Any>(self: Self) => Obj<Schema.Schema.Type<Self>>;
-} = internal.EchoObjectSchema as any;
+  ): <_Schema extends Schema.Schema.Any>(schema: _Schema) => ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
+  // Boundary cast: overload implementation bodies cannot access outer generic params (`Self`),
+  // so TypeScript cannot verify that makeObjectType's return matches the declared ObjClass<Self,…>.
+} = (dxn, options) => (schema) => internal.makeObjectType(dxn, schema, options) as any;
 
 //
 // Type — the ECHO entity that holds a schema and metadata.
@@ -256,6 +270,20 @@ export interface Relation<
 }
 
 /**
+ * Return type for {@link makeRelation}.
+ *
+ * Not to be used directly, but must be exported for typescript to infer the type.
+ */
+export interface RelationClass<Self, T, Source, Target, Fields extends Schema.Struct.Fields> extends Relation<
+  Self,
+  Source,
+  Target,
+  Fields
+> {
+  new (_: never): RelationModule.Endpoints<Source, Target> & T & EntityModule.OfKind<typeof EntityModule.Kind.Relation>;
+}
+
+/**
  * Type that represents any ECHO relation type — a `Type.Type` entity branded
  * with the relation entity kind, i.e. what `Type.makeRelation(...)` produces.
  */
@@ -267,18 +295,13 @@ export type AnyRelation = Relation<unknown, unknown, unknown>;
  *
  * @example
  * ```ts
- * const WorksFor = Schema.Struct({
- *   role: Schema.String,
- * }).pipe(Type.makeRelation({
- *   dxn: DXN.make('com.example.type.worksFor', '0.1.0'),
- *   source: Person,
- *   target: Company,
- * }));
+ * class WorksFor extends Type.makeRelation<WorksFor>(DXN.make('com.example.type.worksFor', '0.1.0'))(
+ *   { source: Person, target: Company },
+ * )(Schema.Struct({ role: Schema.String })) {}
  * ```
  */
 export const makeRelation: {
-  <SourceInstance, TargetInstance>(opts: {
-    dxn: DXN.DXN;
+  <Self>(dxn: DXN.DXN): <SourceInstance, TargetInstance>(opts: {
     source: Obj<SourceInstance, any> | internal.UnknownTypeSchema<SourceInstance, typeof EntityModule.Kind.Object>;
     target: Obj<TargetInstance, any> | internal.UnknownTypeSchema<TargetInstance, typeof EntityModule.Kind.Object>;
     /**
@@ -286,14 +309,25 @@ export const makeRelation: {
      * see `Type.makeObject` for the workerd motivation.
      */
     id?: EntityId;
-  }): <Self extends Schema.Schema.Any>(
-    self: Self,
-  ) => Relation<
-    Schema.Schema.Type<Self>,
+  }) => <_Schema extends Schema.Schema.Any>(
+    schema: _Schema,
+  ) => RelationClass<
+    Self,
+    Schema.Schema.Type<_Schema>,
     SourceInstance & EntityModule.OfKind<typeof EntityModule.Kind.Object>,
-    TargetInstance & EntityModule.OfKind<typeof EntityModule.Kind.Object>
+    TargetInstance & EntityModule.OfKind<typeof EntityModule.Kind.Object>,
+    {}
   >;
-} = internal.EchoRelationSchema as any;
+} = (dxn) => (opts) => (schema) =>
+  // Boundary cast: makeRelationType erases generic params since the constructor/prototype
+  // wiring cannot thread them through the type system.
+  internal.makeRelationType({
+    dxn,
+    source: opts.source,
+    target: opts.target,
+    schema,
+    id: opts.id,
+  }) as any;
 
 /**
  * Type that represents any ECHO type-kind entity — a `Type.Type` meta-schema
@@ -375,17 +409,31 @@ export type AnyRef = Schema.Schema<internal.Ref<any>, EncodedReference>;
  * - Persisted `Type.Type` instance (has `id`) → local `EID` (`echo:/<objectId>`).
  * - In-memory `Type.Type` draft (has `id`, no typename) → local `EID`.
  *
+ * When `options.prefer === 'named'` the result is forced to a DXN — for
+ * persisted type entities the typename + version from meta are used to
+ * construct the DXN; static types already return a DXN by default.
+ *
  * Only accepts `Type.AnyEntity` entities. Raw `Schema.Schema` values and the
  * branded `Obj.Unknown` / `Relation.Unknown` schemas are intentionally not
  * supported — use `internal.getSchemaURI` or the schema's typename annotation
  * directly when working at the schema level.
  */
-export const getURI = (input: AnyEntity): URI.URI => {
+export const getURI = (input: AnyEntity, options?: internal.GetURIOptions): URI.URI => {
   // For Type entities, route through `getTypeURIFromSpecifier` (id → EID,
   // typename/version → DXN). For Obj/Relation entities, unwrap to the source
   // Effect Schema first and read its annotations.
   if (isType(input)) {
-    return internal.getTypeURIFromSpecifier(input);
+    const uri = internal.getTypeURIFromSpecifier(input);
+    if (options?.prefer === 'named' && !DXN.isDXN(uri)) {
+      // Persisted type — the auto-detected URI is an EID, but caller wants a
+      // DXN. Construct from typename + version (both live in EntityMeta).
+      const typename = getTypename(input);
+      const version = getMeta(input).version;
+      if (typename && version) {
+        return DXN.make(typename, version);
+      }
+    }
+    return uri;
   }
   return internal.getSchemaURI(getSchema(input)) ?? raise(new TypeError('Type entity has no URI'));
 };
@@ -597,13 +645,17 @@ export interface Type<A = unknown> extends BaseTypeEntity<A & EntityModule.OfKin
  *  - `Type<A>`               → `A & OfKind<Type>`
  */
 export type InstanceType<T extends AnyEntity> =
-  T extends Relation<infer Props, infer Source, infer Target, any>
+  T extends RelationClass<any, infer Props, infer Source, infer Target, any>
     ? RelationModule.Endpoints<Source, Target> & Props & EntityModule.OfKind<typeof EntityModule.Kind.Relation>
-    : T extends Obj<infer A, any>
-      ? A & EntityModule.OfKind<typeof EntityModule.Kind.Object>
-      : T extends Type<infer A>
-        ? A & EntityModule.OfKind<typeof EntityModule.Kind.Type>
-        : never;
+    : T extends Relation<infer Props, infer Source, infer Target, any>
+      ? RelationModule.Endpoints<Source, Target> & Props & EntityModule.OfKind<typeof EntityModule.Kind.Relation>
+      : T extends ObjClass<any, infer A, any>
+        ? A & EntityModule.OfKind<typeof EntityModule.Kind.Object>
+        : T extends Obj<infer A, any>
+          ? A & EntityModule.OfKind<typeof EntityModule.Kind.Object>
+          : T extends Type<infer A>
+            ? A & EntityModule.OfKind<typeof EntityModule.Kind.Type>
+            : never;
 
 /**
  * Returns the Effect Schema for a type entity.

@@ -22,10 +22,9 @@ export const translations = [
         'delete-object.label': 'Delete table',
         'object-deleted.label': 'Table deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Tables',
         'table-name.placeholder': 'Table name',
-        'settings.title': 'Table settings',
         'table-schema.label': 'Type',
         'companion-schema.label': 'Type',
         'continue.label': 'Continue',

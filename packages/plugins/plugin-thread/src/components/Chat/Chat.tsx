@@ -9,7 +9,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import { composable, Card, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Card, type ThemedClassName, composable, useTranslation } from '@dxos/react-ui';
 import { type ObjectTileComponent, Thread } from '@dxos/react-ui-thread';
 import { type Message } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
@@ -55,7 +55,7 @@ export type ChatProps = ThemedClassName<{
  */
 export const Chat = composable<HTMLDivElement, ChatProps>(
   ({ id, identity, members, messages, activity, onSend, autoFocus, current, readOnly, classNames }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
 
     const components = useMemo(() => ({ Object: ObjectTile }), []);
 
@@ -109,7 +109,7 @@ const ObjectTile: ObjectTileComponent = ({ subject }) => {
   return (
     <Card.Root className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
       <Surface.Surface
-        type={AppSurface.Card}
+        type={AppSurface.CardContent}
         limit={1}
         data={{ subject } satisfies AppSurface.ObjectCardData}
         fallback={Fallback}

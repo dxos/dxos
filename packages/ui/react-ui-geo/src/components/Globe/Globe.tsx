@@ -30,8 +30,8 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
 import {
-  type ThemeMode,
   type ThemedClassName,
+  type ThemeMode,
   useComposedRefs,
   useControlledState,
   useDynamicRef,
@@ -111,8 +111,8 @@ const defaultStyles: Record<ThemeMode, StyleSet> = {
 export type ProjectionType = 'orthographic' | 'mercator' | 'transverse-mercator';
 
 const projectionMap: Record<ProjectionType, () => GeoProjection> = {
-  orthographic: geoOrthographic,
-  mercator: geoMercator,
+  'orthographic': geoOrthographic,
+  'mercator': geoMercator,
   'transverse-mercator': geoTransverseMercator,
 };
 
@@ -460,4 +460,4 @@ export const Globe = {
   Panel: GlobePanel,
 };
 
-export type { GlobeRootProps, GlobeViewportProps, GlobeCanvasProps };
+export type { GlobeCanvasProps, GlobeRootProps, GlobeViewportProps };

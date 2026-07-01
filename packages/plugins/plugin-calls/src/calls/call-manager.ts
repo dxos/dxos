@@ -6,6 +6,7 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
+import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
@@ -13,7 +14,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer';
 import { MediaManager, type MediaState } from './media-manager';
-import { type ActivityState, CALLS_URL, type EncodedTrackName, TrackNameCodec, type UserState } from './types';
+import { type ActivityState, type EncodedTrackName, TrackNameCodec, type UserState } from './types';
 
 export type GlobalState = {
   call: CallState;
@@ -46,7 +47,12 @@ export class CallManager extends Resource {
   private readonly _selfAtom = Atom.make((get) => get(this._stateAtom).call.self ?? {});
   private readonly _tracksAtom = Atom.make((get) => get(this._stateAtom).call.tracks ?? {});
   private readonly _usersAtom = Atom.make((get) => get(this._stateAtom).call.users ?? []);
-  private readonly _mediaAtom = Atom.make((get) => get(this._stateAtom).media);
+  private readonly _audioEnabledAtom = Atom.make((get) => get(this._stateAtom).media.audioEnabled ?? false);
+  private readonly _videoEnabledAtom = Atom.make((get) => get(this._stateAtom).media.videoEnabled ?? false);
+  private readonly _screensharingAtom = Atom.make((get) => get(this._stateAtom).media.screenshareTrack !== undefined);
+  private readonly _localVideoStreamAtom = Atom.make((get) => get(this._stateAtom).media.videoStream);
+  private readonly _screenshareVideoStreamAtom = Atom.make((get) => get(this._stateAtom).media.screenshareVideoStream);
+  private readonly _noStreamAtom = Atom.make<MediaStream | undefined>(() => undefined);
   private readonly _audioTracksToPlayAtom = Atom.make((get) => {
     const state = get(this._stateAtom);
     return (state.call.users ?? [])
@@ -109,9 +115,29 @@ export class CallManager extends Resource {
     return this._usersAtom;
   }
 
-  /** Derived atom for media. */
-  get mediaAtom(): Atom.Atom<MediaState> {
-    return this._mediaAtom;
+  /** Derived atom for whether the microphone is enabled. */
+  get audioEnabledAtom(): Atom.Atom<boolean> {
+    return this._audioEnabledAtom;
+  }
+
+  /** Derived atom for whether the camera is enabled. */
+  get videoEnabledAtom(): Atom.Atom<boolean> {
+    return this._videoEnabledAtom;
+  }
+
+  /** Derived atom for whether screen sharing is active. */
+  get screensharingAtom(): Atom.Atom<boolean> {
+    return this._screensharingAtom;
+  }
+
+  /** Derived atom for the local camera video stream. */
+  get localVideoStreamAtom(): Atom.Atom<MediaStream | undefined> {
+    return this._localVideoStreamAtom;
+  }
+
+  /** Derived atom for the local screenshare video stream. */
+  get screenshareVideoStreamAtom(): Atom.Atom<MediaStream | undefined> {
+    return this._screenshareVideoStreamAtom;
   }
 
   /** Derived atom for audioTracksToPlay. */
@@ -124,9 +150,9 @@ export class CallManager extends Resource {
     return this._stateAtom;
   }
 
-  /** Returns a derived atom for a video stream by name. */
-  videoStreamAtom(name: EncodedTrackName): Atom.Atom<MediaStream | undefined> {
-    return this._videoStreamAtomFamily(name);
+  /** Returns a derived atom for a pulled video stream by name; returns a no-op atom when name is undefined. */
+  videoStreamAtom(name: EncodedTrackName | undefined): Atom.Atom<MediaStream | undefined> {
+    return name !== undefined ? this._videoStreamAtomFamily(name) : this._noStreamAtom;
   }
 
   /** Returns a derived atom for an activity by key. */
@@ -222,7 +248,7 @@ export class CallManager extends Resource {
     await this._swarmSynchronizer.join();
     await this._mediaManager.join({
       iceServers: this._client.config.get('runtime.services.ice'),
-      apiBase: `${CALLS_URL}/api/calls`,
+      apiBase: `${getEdgeServiceEndpoint(this._client.config, EdgeServiceName.Calls)}/api/calls`,
     });
   }
 

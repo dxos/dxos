@@ -3,15 +3,15 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { type AppCapabilities } from '@dxos/app-toolkit';
 import type { OperationHandlerSet } from '@dxos/compute';
 
-// The contributed capability type references Blueprint types from @dxos/compute, so the lazy
-// wrapper needs an explicit annotation to keep the inferred type portable (TS2883).
-export const BlueprintDefinition: Capability.LazyCapability<
-  void,
-  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
-> = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+export const EntityLookup = Capability.lazy('EntityLookup', () => import('./entity-lookup'));
+export const MarkdownExtension = Capability.lazy('MarkdownExtension', () => import('./markdown-extension'));
+export const PipelineStatus = Capability.lazy('PipelineStatus', () => import('./pipeline-status'));
+export const RecordingSession = Capability.lazy('RecordingSession', () => import('./recording-session'));
+export const TranscriptionDriver = Capability.lazy('TranscriptionDriver', () => import('./transcription-driver'));
+export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
 export const TextContent = Capability.lazy('TextContent', () => import('./text-content'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
@@ -19,3 +19,4 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 export const Transcriber = Capability.lazy('Transcriber', () => import('./transcriber'));
+export const TranscriptionSettings = Capability.lazy('TranscriptionSettings', () => import('./settings'));

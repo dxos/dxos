@@ -27,7 +27,7 @@ describe('AiSession.Session.getHistory', () => {
       const message = makeMessage('hello');
       yield* Feed.append(feed, [message]);
 
-      const runtime = yield* Effect.runtime<Feed.FeedService>();
+      const runtime = yield* Effect.runtime<Database.Service>();
       const session = new AiSession.Session({ feed, runtime });
 
       const result = yield* Effect.promise(() => session.getHistory());
@@ -51,7 +51,7 @@ describe('AiSession.Session.getHistory', () => {
         forkMsg,
       ]);
 
-      const runtime = yield* Effect.runtime<Feed.FeedService>();
+      const runtime = yield* Effect.runtime<Database.Service>();
       const session = new AiSession.Session({ feed: forkFeed, runtime });
 
       const result = yield* Effect.promise(() => session.getHistory());
@@ -76,7 +76,7 @@ describe('AiSession.Session.getHistory', () => {
         Obj.make(SessionLink.SessionLink, { feedRef: Ref.make(sourceFeed), messageId: msg2.id }),
       ]);
 
-      const runtime = yield* Effect.runtime<Feed.FeedService>();
+      const runtime = yield* Effect.runtime<Database.Service>();
       const session = new AiSession.Session({ feed: forkFeed, runtime });
 
       const result = yield* Effect.promise(() => session.getHistory());
@@ -100,7 +100,7 @@ describe('AiSession.Session.getHistory', () => {
         forkMsg,
       ]);
 
-      const runtime = yield* Effect.runtime<Feed.FeedService>();
+      const runtime = yield* Effect.runtime<Database.Service>();
       const session = new AiSession.Session({ feed: forkFeed, runtime });
 
       const result = yield* Effect.promise(() => session.getHistory());

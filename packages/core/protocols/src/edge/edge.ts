@@ -238,7 +238,8 @@ export type RecoverIdentityResponseBody = {
 };
 
 export type CreateAgentRequestBody = {
-  identityKey: string;
+  /** Owner identity DID (`did:halo:…`). */
+  identityDid: string;
   haloSpaceId: SpaceId;
   haloSpaceKey: string;
 };
@@ -258,7 +259,8 @@ export type GetAgentStatusResponseBody = {
 export type UploadFunctionRequest = {
   name?: string;
   version: string;
-  ownerPublicKey: string;
+  /** Owner identity DID (`did:halo:…`). The Edge requires it to equal the authenticated presenter DID. */
+  ownerUri: string;
   entryPoint: string;
   assets: Record<string, Uint8Array>;
   /**
@@ -338,6 +340,9 @@ export enum OAuthProvider {
   SLACK = 'slack',
   TRELLO = 'trello',
 }
+
+/** atproto OAuth scopes for the Atmosphere integration and account-recovery flows. */
+export const ATPROTO_OAUTH_SCOPES = ['atproto', 'transition:generic', 'transition:email'] as const;
 
 export const InitiateOAuthFlowRequestSchema = Schema.Struct({
   provider: Schema.Enums(OAuthProvider),
@@ -561,7 +566,7 @@ export type ListSpacesResponse = {
 export type ListActiveIdentitiesRequest = { cursor?: string; limit?: number };
 export type ListActiveIdentitiesResponse = {
   identities: {
-    identityKey: string;
+    identityDid: string;
     haloSpaceId: string | null;
     createdAt: string | null;
     agentKey: string | null;
@@ -575,10 +580,10 @@ export type ListActiveIdentitiesResponse = {
 export type InspectSpaceRequest = { spaceId: string };
 export type InspectSpaceResponse = {
   spaceId: string;
-  metadata: { createdAt: string; identityKey?: string; status?: 'active' | 'deleting' } | null;
+  metadata: { createdAt: string; identityDid?: string; status?: 'active' | 'deleting' } | null;
   members: {
     count: number;
-    list: { identityKey: string; role?: string; agentKey?: string }[];
+    list: { identityDid: string; role?: string; agentKey?: string }[];
   };
   controlFeeds: {
     replicationProgress: { [feedKey: string]: { replicated: number; processed: number } };
@@ -609,9 +614,9 @@ export type InspectSpaceResponse = {
   durableObjects: { type: string; doId: string }[];
 };
 
-export type InspectIdentityRequest = { identityKey: string };
+export type InspectIdentityRequest = { identityDid: string };
 export type InspectIdentityResponse = {
-  identityKey: string;
+  identityDid: string;
   agentKey: string | null;
   haloSpaceId: string | null;
   hasRecovery: boolean;
@@ -633,7 +638,7 @@ export type SpaceActivityEntry = {
   spaceId: string;
   lastActivity: string;
   totalEvents: number;
-  metadata: { createdAt: string; identityKey?: string; status?: 'active' | 'deleting' } | null;
+  metadata: { createdAt: string; identityDid?: string; status?: 'active' | 'deleting' } | null;
 };
 
 export type SpaceExportResult = {
@@ -650,8 +655,8 @@ export type ExportSpaceRequest = { spaceId: string; origin: string };
 export type DeleteSpaceRequest = { spaceId: string };
 export type DeleteSpaceResponse = { status: string; spaceId: string };
 
-export type DeleteIdentityRequest = { identityKey: string };
-export type DeleteIdentityResponse = { status: string; identityKey: string };
+export type DeleteIdentityRequest = { identityDid: string };
+export type DeleteIdentityResponse = { status: string; identityDid: string };
 
 //
 // Account / Invitation
@@ -760,6 +765,65 @@ export const RequestAccessRequestSchema = Schema.Struct({
 });
 export type RequestAccessRequest = Schema.Schema.Type<typeof RequestAccessRequestSchema>;
 export type RequestAccessResponse = { received: boolean };
+
+//
+// Metering (VP auth)
+//
+
+/** Structured usage key aligned with {@link MeteringLimitSchema} (without cap/window fields). */
+export const MeteringUsageKeySchema = Schema.Struct({
+  /** Event type (e.g. `ai`). */
+  eventType: Schema.String,
+  /** Value key being metered (e.g. `outputTokens`). */
+  valueKey: Schema.String,
+  /**
+   * Positional match against the event's subtype segments (e.g. model); `*` matches any
+   * segment, and positions beyond the pattern are unconstrained.
+   */
+  subtypePattern: Schema.Array(Schema.String),
+});
+export type MeteringUsageKey = Schema.Schema.Type<typeof MeteringUsageKeySchema>;
+
+/** Rolling-window usage total for a structured key. */
+export const MeteringUsageItemSchema = Schema.Struct({
+  ...MeteringUsageKeySchema.fields,
+  amount: Schema.Number,
+});
+export type MeteringUsageItem = Schema.Schema.Type<typeof MeteringUsageItemSchema>;
+
+/** A single raw usage bucket (1h resolution) for a structured key. */
+export const MeteringUsageBucketSchema = Schema.Struct({
+  ...MeteringUsageKeySchema.fields,
+  /** Bucket start timestamp (epoch ms, floored to the hour). */
+  bucketStart: Schema.Number,
+  amount: Schema.Number,
+});
+export type MeteringUsageBucket = Schema.Schema.Type<typeof MeteringUsageBucketSchema>;
+
+export const MeteringLimitSchema = Schema.Struct({
+  /** Event type the limit applies to (e.g. `ai`). */
+  eventType: Schema.String,
+  /** Value key being limited (e.g. `outputTokens`). */
+  valueKey: Schema.String,
+  /**
+   * Positional match against the event's subtype segments (e.g. model); `*` matches any
+   * segment, and positions beyond the pattern are unconstrained.
+   */
+  subtypePattern: Schema.Array(Schema.String),
+  /** Rolling-window cap; `null` means unlimited. */
+  limit: Schema.NullOr(Schema.Number),
+  /** Window duration in seconds. */
+  windowDuration: Schema.Number,
+});
+export type MeteringLimit = Schema.Schema.Type<typeof MeteringLimitSchema>;
+
+export const GetProfileUsageResponseSchema = Schema.Struct({
+  profileId: Schema.String,
+  usage: Schema.Array(MeteringUsageItemSchema),
+  limits: Schema.Array(MeteringLimitSchema),
+  buckets: Schema.Array(MeteringUsageBucketSchema),
+});
+export type GetProfileUsageResponse = Schema.Schema.Type<typeof GetProfileUsageResponseSchema>;
 
 //
 // Admin (X-API-KEY)

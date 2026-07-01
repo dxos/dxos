@@ -6,15 +6,15 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Provider } from '@dxos/ai';
 import { SchemaEx } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 
-export const ModelProvider = Schema.Union(
-  Schema.Literal('edge').annotations({ title: 'DXOS' }),
-  Schema.Literal('ollama').annotations({ title: 'Ollama' }),
-  Schema.Literal('lmstudio').annotations({ title: 'LM Studio' }),
-);
-export type ModelProvider = Schema.Schema.Type<typeof ModelProvider>;
-export const ModelProviders = SchemaEx.getLiteralValues(ModelProvider);
+// A provider id is an open DXN (third-party providers define their own), validated as a DXN rather
+// than restricted to a closed literal union. The known providers come from the @dxos/ai registry.
+export const ModelProvider = DXN.Schema;
+export type ModelProvider = DXN.DXN;
+export const ModelProviders: readonly DXN.DXN[] = Provider.all.map((provider) => provider.id);
 
 export const ChatView = Schema.Union(
   Schema.Literal('normal').annotations({ title: 'Normal' }),
@@ -33,10 +33,12 @@ export const ModelDefaults = Schema.mutable(
         description: 'Choose the remote language model used for AI requests.',
       }),
     ),
+    // `built-in` (bundled sidecar) and `ollama` (external) share the `ollama` model source, so they
+    // share this single default key.
     ollama: Schema.optional(
       Schema.String.annotations({
-        title: 'Ollama language model',
-        description: 'Choose the locally hosted Ollama model for AI requests.',
+        title: 'Local language model',
+        description: 'Choose the locally hosted model used for AI requests.',
       }),
     ),
     lmstudio: Schema.optional(
@@ -70,7 +72,7 @@ export const Settings = Schema.mutable(
         description: 'Select which language model service to use for AI responses.',
       }),
     ),
-    modelDefaults: Schema.optional(ModelDefaults),
+    modelDefaults: Schema.optional(ModelDefaults.annotations({ title: 'Model defaults' })),
     tracePanelDebug: Schema.optional(
       Schema.Boolean.annotations({
         title: 'Trace panel debug',

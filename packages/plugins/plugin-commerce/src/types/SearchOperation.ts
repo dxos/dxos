@@ -16,7 +16,7 @@ import { meta } from '#meta';
 import { Provider, RequestMapping, ResultMapping } from './Provider';
 import { Search } from './Search';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Fetches a page's HTML, rendering via the composer-crx extension when available. Hosted by the
@@ -82,12 +82,12 @@ export const AnalyzeProvider = Operation.make({
   services: [Database.Service],
 });
 
-/** Runs the provider blueprint agent to analyze the site and populate the search template. */
+/** Runs the provider skill agent to analyze the site and populate the search template. */
 export const GenerateProviderTemplate = Operation.make({
   meta: {
     key: makeKey('generateProviderTemplate'),
     name: 'Generate Provider Template',
-    description: 'Runs the provider blueprint agent to analyze the site and populate the search template.',
+    description: 'Runs the provider skill agent to analyze the site and populate the search template.',
     icon: 'ph--sparkle--regular',
   },
   input: Schema.Struct({ provider: Ref.Ref(Provider) }),

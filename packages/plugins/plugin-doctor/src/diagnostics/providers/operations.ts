@@ -3,9 +3,9 @@
 //
 
 import { AiService } from '@dxos/ai';
-import { AiContext, AiSession } from '@dxos/assistant';
+import { Harness } from '@dxos/assistant';
 import { Credential, Operation, StorageService, Trace } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
+import { Database, Filter, Obj, Registry } from '@dxos/echo';
 import { FunctionInvocationService } from '@dxos/functions';
 
 import { meta } from '#meta';
@@ -21,13 +21,11 @@ import { type DiagnosticIssue, type DiagnosticProvider } from '../types';
  */
 export const KNOWN_SERVICES: ReadonlySet<string> = new Set(
   [
-    AiContext.Service,
+    Harness.HarnessService,
     AiService.AiService,
-    AiSession.Service,
     Registry.Service,
     Credential.CredentialsService,
     Database.Service,
-    Feed.FeedService,
     FunctionInvocationService,
     Operation.Service,
     StorageService.StorageService,
@@ -40,8 +38,8 @@ export const KNOWN_SERVICES: ReadonlySet<string> = new Set(
  */
 export const operationsServicesDiagnostic: DiagnosticProvider = {
   id: 'operations-services',
-  label: ['diagnostic.operations-services.label', { ns: meta.id }],
-  description: ['diagnostic.operations-services.description', { ns: meta.id }],
+  label: ['diagnostic.operations-services.label', { ns: meta.profile.key }],
+  description: ['diagnostic.operations-services.description', { ns: meta.profile.key }],
   run: async ({ client, reportProgress, signal }) => {
     const issues: DiagnosticIssue[] = [];
     const spaces = getReadySpaces(client);

@@ -28,7 +28,7 @@ export const useEditorMenuOptions = ({
   slashCommandGroups,
   onLinkQuery,
 }: UseEditorMenuOptionsProps): UseEditorMenuProps => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
     ({ text, trigger }) => {
@@ -39,7 +39,7 @@ export const useEditorMenuOptions = ({
 
         case '/':
         default: {
-          return filterMenuGroups([formattingCommands, linkSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
+          return filterMenuGroups([linkSlashCommands, formattingCommands, ...(slashCommandGroups ?? [])], (item) =>
             text ? toLocalizedString(item.label, t).toLowerCase().includes(text.toLowerCase()) : true,
           );
         }

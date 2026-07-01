@@ -12,11 +12,11 @@ import { deleteItem, hashtag, join, listItemToString, outliner, treeFacet } from
 import { type EditorController, type EditorMenuGroup, EditorMenuProvider } from '../components';
 import { EditorStory } from './components';
 
-type DefaultStoryProps = {
+type StoryArgs = {
   text?: string;
 };
 
-const DefaultStory = ({ text }: DefaultStoryProps) => {
+const DefaultStory = ({ text }: StoryArgs) => {
   const [controller, setController] = useState<EditorController | null>(null);
 
   const extensions = useMemo(() => [outliner(), hashtag()], []);

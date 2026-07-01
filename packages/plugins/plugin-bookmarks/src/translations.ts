@@ -21,7 +21,7 @@ export const translations = [
         'rename-object.label': 'Rename bookmark',
         'delete-object.label': 'Delete bookmark',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Bookmarks',
         'open-source.label': 'Open page',
         'summarize.label': 'Summarize page',

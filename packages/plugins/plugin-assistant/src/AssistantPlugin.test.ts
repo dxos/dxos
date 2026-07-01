@@ -6,38 +6,32 @@ import * as LanguageModel from '@effect/ai/LanguageModel';
 import { type TestContext } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import {
-  AgentPrompt,
-  AgentWizardBlueprint,
-  BlueprintManagerBlueprint,
-  DatabaseBlueprint,
-} from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
-import { Database, Feed, Ref, Registry } from '@dxos/echo';
+import { AgentWizardSkill, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
+import { AgentService, Instructions, Operation, ServiceResolver, Skill } from '@dxos/compute';
+import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
-import { AgentService } from '@dxos/functions-runtime';
-import { EntityId } from '@dxos/keys';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
+import { AgentService as AgentServiceRuntime } from '@dxos/functions-runtime';
+import { DXN, EntityId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { AssistantPlugin } from '#plugin';
 
-import { AssistantBlueprint } from './blueprints/assistant';
 import { meta } from './meta';
+import { AssistantSkill } from './skills/assistant';
 
 EntityId.dangerouslyDisableRandomness();
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('AssistantPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
@@ -50,9 +44,9 @@ describe('AssistantPlugin', () => {
       expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('CreateObject'), moduleId('schema')]),
     );
 
-    // AssistantPlugin fires SetupArtifactDefinition itself, so it can test its own blueprint.
+    // AssistantPlugin fires SetupArtifactDefinition itself, so it can test its own skill.
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('BlueprintDefinition'));
+    expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
 
     // OperationHandler auto-cascades from ProcessManagerPlugin.
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
@@ -96,7 +90,7 @@ describe('AssistantPlugin', () => {
         expect(text.toLocaleLowerCase()).toContain('paris');
       }).pipe(
         Effect.provide(
-          AiService.model('ai.claude.model.claude-haiku-4-5').pipe(
+          AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
             Layer.provideMerge(ServiceResolver.provide({ space: personalSpace.id }, AiService.AiService)),
           ),
         ),
@@ -104,7 +98,7 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test('can run memoized routine', { timeout: 120_000 }, async (ctx) => {
+  test('can run memoized instructions', { timeout: 120_000 }, async (ctx) => {
     const { expect } = ctx;
     await using harness = await createComposerTestApp({
       plugins: [
@@ -112,7 +106,7 @@ describe('AssistantPlugin', () => {
         AssistantPlugin({
           aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
         }),
-        AutomationPlugin(),
+        RoutinePlugin(),
       ],
     });
 
@@ -124,38 +118,31 @@ describe('AssistantPlugin', () => {
 
     await harness.runPromise(
       Effect.gen(function* () {
-        const routine = yield* Database.add(
-          Routine.make({
+        const instructions = yield* Database.add(
+          Instructions.make({
             name: 'capital-test',
-            instructions:
-              'Call completeJob with success set to a JSON object { "capital": "<lowercase country capital>" } for the country in input.',
-            input: Schema.Struct({
-              country: Schema.String,
-            }),
-            output: Schema.Struct({
-              capital: Schema.String,
-            }),
+            text: 'Call completeJob with success set to a JSON object { "capital": "<lowercase country capital>" } for the country in input.',
           }),
         );
         yield* Database.flush();
 
         const result = yield* Operation.invoke(
-          AgentPrompt,
+          RunInstructions,
           {
-            prompt: Ref.make(routine),
+            instructions: Ref.make(instructions),
             input: {
               country: 'France',
             },
-            model: 'ai.claude.model.claude-haiku-4-5',
+            model: DXN.make('com.anthropic.model.claude-haiku-4-5.default'),
           },
           { spaceId: personalSpace.id },
         );
         expect(result).toEqual({ capital: 'paris' });
-      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service, Feed.FeedService))),
+      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service))),
     );
   });
 
-  test('smoke test for agent service with standard blueprints', { timeout: 120_000 }, async (ctx) => {
+  test('smoke test for agent service with standard skills', { timeout: 120_000 }, async (ctx) => {
     const { expect } = ctx;
     await using harness = await createComposerTestApp({
       plugins: [
@@ -163,7 +150,7 @@ describe('AssistantPlugin', () => {
         AssistantPlugin({
           aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
         }),
-        AutomationPlugin(),
+        RoutinePlugin(),
       ],
     });
 
@@ -175,13 +162,13 @@ describe('AssistantPlugin', () => {
 
     await harness.runPromise(
       Effect.gen(function* () {
-        const blueprints = yield* Effect.forEach(
-          [DatabaseBlueprint, AssistantBlueprint, BlueprintManagerBlueprint, AgentWizardBlueprint],
-          (_) => Blueprint.resolve(_.key),
+        const skills = yield* Effect.forEach(
+          [DatabaseSkill, AssistantSkill, SkillManagerSkill, AgentWizardSkill],
+          (_) => Skill.resolve(_.key),
         );
 
-        const agent = yield* AgentService.createSession({
-          blueprints,
+        const agent = yield* AgentServiceRuntime.createSession({
+          skills,
         });
         yield* agent.submitPrompt('Hello');
         yield* agent.waitForCompletion();
@@ -190,7 +177,6 @@ describe('AssistantPlugin', () => {
           ServiceResolver.provide(
             { space: personalSpace.id },
             Database.Service,
-            Feed.FeedService,
             AgentService.AgentService,
             Registry.Service,
           ),

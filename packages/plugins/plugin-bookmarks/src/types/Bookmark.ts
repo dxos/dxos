@@ -14,23 +14,23 @@ import { Text } from '@dxos/schema';
 const EXCERPT_LENGTH = 280;
 
 /** A saved web page. */
-export const Bookmark = Schema.Struct({
-  title: Schema.String.pipe(Schema.annotations({ title: 'Title' })),
-  url: Schema.String.pipe(Schema.annotations({ title: 'URL' })),
-  favicon: Schema.optional(Schema.String),
-  image: Schema.optional(Schema.String),
-  excerpt: Schema.optional(Schema.String),
-  summary: Ref.Ref(Text.Text).pipe(
-    Schema.annotations({ description: 'Generated summary.' }),
-    FormInputAnnotation.set(false),
-    Schema.optional,
+export class Bookmark extends Type.makeObject<Bookmark>(DXN.make('org.dxos.type.bookmark', '0.1.0'))(
+  Schema.Struct({
+    title: Schema.String.pipe(Schema.annotations({ title: 'Title' })),
+    url: Schema.String.pipe(Schema.annotations({ title: 'URL' })),
+    favicon: Schema.optional(Schema.String),
+    image: Schema.optional(Schema.String),
+    excerpt: Schema.optional(Schema.String),
+    summary: Ref.Ref(Text.Text).pipe(
+      Schema.annotations({ description: 'Generated summary.' }),
+      FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
+  }).pipe(
+    LabelAnnotation.set(['title']),
+    Annotation.IconAnnotation.set({ icon: 'ph--bookmark-simple--regular', hue: 'amber' }),
   ),
-}).pipe(
-  LabelAnnotation.set(['title']),
-  Annotation.IconAnnotation.set({ icon: 'ph--bookmark-simple--regular', hue: 'amber' }),
-  Type.makeObject(DXN.make('org.dxos.type.bookmark', '0.1.0')),
-);
-export type Bookmark = Type.InstanceType<typeof Bookmark>;
+) {}
 
 /** Creates a Bookmark object. */
 export const make = (props: Obj.MakeProps<typeof Bookmark>): Bookmark => Obj.make(Bookmark, props);

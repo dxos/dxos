@@ -12,19 +12,13 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { Position } from '@dxos/util';
 
 import { SampleStatusIndicator } from '#components';
-import {
-  SampleArticle,
-  SampleCompanionPanel,
-  SampleDeckCompanion,
-  SampleProperties,
-  SampleSettings,
-} from '#containers';
-import { meta } from '#meta';
-import { SampleCapabilities, SampleItem, type Settings } from '#types';
+import { SampleArticle, SampleCompanionPanel, SampleDeckCompanion, SampleProperties } from '#containers';
+import { SampleCapabilities, SampleItem } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -50,33 +44,19 @@ export default Capability.makeModule(() =>
       // `AppSurface.object(AppSurface.ObjectProperties, Schema)` matches when viewing properties for this type.
       Surface.create({
         id: 'objectProperties',
-        position: 'first',
+        position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, SampleItem.SampleItem),
         component: ({ data }) => <SampleProperties subject={data.subject} />,
       }),
 
-      // --- Plugin settings surface ---
-      // Renders the plugin's settings page in the global settings panel.
-      // `useSettingsState` is called here (in the surface component) to destructure
-      // the atom into typed `settings` and `updateSettings`. The settings component
-      // receives these as props via `SettingsArticleProps<T>` and never touches the atom.
-      Surface.create({
-        id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
-        component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          return <SampleSettings settings={settings} onSettingsChange={updateSettings} />;
-        },
-      }),
-
       // --- Status indicator surface ---
-      // `role: 'status-indicator'` renders in the application status bar.
+      // `AppSurface.StatusIndicator` renders in the application status bar.
       // `useAtomCapability` subscribes to the settings atom reactively so the
       // indicator hides/shows when the setting is toggled. This must be in the
       // component (not the filter) so the atom subscription triggers re-renders.
       Surface.create({
         id: 'sampleStatus',
-        role: 'status-indicator',
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
         component: () => {
           const settings = useAtomCapability(SampleCapabilities.Settings);
           return settings.showStatusIndicator !== false ? <SampleStatusIndicator /> : null;
@@ -99,20 +79,23 @@ export default Capability.makeModule(() =>
 
       // --- Deck companion surface ---
       // Renders the workspace-wide companion panel.
-      // The role follows the convention: `deck-companion--{id}` where `{id}` matches
-      // the `data` field from `AppNode.makeDeckCompanion` in the graph builder.
+      // The variant id ('samplePanel') must match what AppNode.makeDeckCompanion passes
+      // and what the deck consumer uses via AppSurface.deckCompanion('samplePanel').
       Surface.create({
         id: 'deckCompanion',
-        filter: AppSurface.literal(
-          Surface.makeType<{ subject: string }>('deck-companion--sample-panel'),
-          'sample-panel',
-        ),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('samplePanel')),
         component: () => {
           const space = useActiveSpace();
           if (!space) {
             return null;
           }
-          return <SampleDeckCompanion role='deck-companion--sample-panel' space={space} attendableId={space.id} />;
+          return (
+            <SampleDeckCompanion
+              role={AppSurface.deckCompanion('samplePanel').role}
+              space={space}
+              attendableId={space.id}
+            />
+          );
         },
       }),
     ]),

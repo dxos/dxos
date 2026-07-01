@@ -13,6 +13,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src",
     "src/**/*.json"
   ],
@@ -42,9 +43,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute-runtime"
-    },
-    {
       "path": "../../core/compute/ai"
     },
     {
@@ -55,6 +53,9 @@
     },
     {
       "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/compute-runtime"
     },
     {
       "path": "../../core/compute/conductor"
@@ -97,6 +98,9 @@
     },
     {
       "path": "../../ui/lit-ui"
+    },
+    {
+      "path": "../../ui/react-primitives/react-list"
     },
     {
       "path": "../../ui/react-ui"
@@ -147,6 +151,9 @@
       "path": "../../ui/react-ui-tabs"
     },
     {
+      "path": "../../ui/react-ui-transcription"
+    },
+    {
       "path": "../../ui/ui"
     },
     {
@@ -156,7 +163,7 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-automation"
+      "path": "../plugin-attention"
     },
     {
       "path": "../plugin-chess"
@@ -165,13 +172,13 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-connector"
+    },
+    {
       "path": "../plugin-deck"
     },
     {
       "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-integration"
     },
     {
       "path": "../plugin-map"
@@ -181,6 +188,9 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-routine"
     },
     {
       "path": "../plugin-space"

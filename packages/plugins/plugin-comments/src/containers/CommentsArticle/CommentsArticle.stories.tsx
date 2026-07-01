@@ -9,18 +9,12 @@ import React, { useEffect, useMemo } from 'react';
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useCapability } from '@dxos/app-framework/ui';
-import {
-  AppActivationEvents,
-  AppCapabilities,
-  AppPlugin,
-  LayoutOperation,
-  createObjectNode,
-  getPersonalSpace,
-} from '@dxos/app-toolkit';
+import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
-import { createDocAccessor, toCursorRange } from '@dxos/echo-client';
+import { toCursorRange } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -71,7 +65,7 @@ const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];
  * highlighted ranges and the companion lists the threads (with snippets).
  */
 const seedComments = (space: Space, doc: Markdown.Document, text: Text.Text) => {
-  const accessor = createDocAccessor(text, ['content']);
+  const accessor = Doc.createAccessor(text, ['content']);
   const content = text.content;
   for (const phrase of SEED_PHRASES) {
     const start = content.indexOf(phrase);
@@ -150,13 +144,13 @@ const StoryGraphPlugin = Plugin.define(
         connector: (_, get) =>
           Effect.gen(function* () {
             const client = capabilities.get(ClientCapabilities.Client);
-            const space = getPersonalSpace(client);
+            const space = AppSpace.getPersonalSpace(client);
             if (!space) {
               return [];
             }
             const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
             return docs
-              .map((object) => createObjectNode({ get, db: space.db, object, droppable: false }))
+              .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
               .filter(isNonNullable);
           }),
       });

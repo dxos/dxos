@@ -2,42 +2,35 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, {
-  Fragment,
-  memo,
-  type PropsWithChildren,
-  type UIEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { useNode } from '@dxos/plugin-graph';
-import { IconButton, Main, type MainContentProps, useOnTransition, useTranslation } from '@dxos/react-ui';
-import { mainPaddingTransitions } from '@dxos/react-ui';
-import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
+import { IconButton, Main, type MainContentProps, ScrollArea, useOnTransition, useTranslation } from '@dxos/react-ui';
+import { mainIntrinsicSize, mainPaddingTransitions } from '@dxos/react-ui';
+import { Mosaic, type MosaicStackTileComponent, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion } from '#hooks';
+import { useBreakpoints, useDeckState } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation } from '#types';
-import { getMode } from '#types';
+import { DeckOperation, Keyshortcuts, getMode } from '#types';
 
 import { layoutAppliesTopbar } from '../../util';
-import { Plank, PlankRootProps, type PlankComponentProps } from '../Plank';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
   ToggleSidebarButton as NaturalToggleSidebarButton,
 } from '../Sidebar';
+import { DeckPlank } from './DeckPlank';
 import { useDeckContext } from './DeckRoot';
 
 const DECK_VIEWPORT_NAME = 'DeckViewport';
+
+// Multi-mode plank extents (rem); each plank persists its own width via `plankSizing`.
+const DEFAULT_PLANK_SIZE = 50;
+const MIN_PLANK_SIZE = 20;
+const MAX_PLANK_SIZE = 120;
 
 //
 // DeckViewport
@@ -46,11 +39,10 @@ const DECK_VIEWPORT_NAME = 'DeckViewport';
 export type DeckViewportProps = PropsWithChildren;
 
 /**
- * Deck viewport that renders the main content area and sets CSS variables for plank sizing.
+ * Deck viewport that renders the main content area and sets CSS variables for sidebar widths.
  */
 export const DeckViewport = ({ children }: DeckViewportProps) => {
   const {
-    deck: { active, plankSizing },
     state: { sidebarState, complementarySidebarState },
     settings,
     layoutMode,
@@ -82,8 +74,6 @@ export const DeckViewport = ({ children }: DeckViewportProps) => {
               : complementarySidebarState === 'collapsed'
                 ? 'var(--dx-rail-size)'
                 : '0',
-          '--main-content-first-width': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
-          '--main-content-last-width': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
         } as MainContentProps['style']
       }
     >
@@ -105,7 +95,7 @@ export const DeckContentEmpty = () => {
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   return (
     <div className='grid place-items-center p-8 relative bg-deck-surface' data-testid='layoutPlugin.firstRunMessage'>
-      <Surface.Surface role='keyshortcuts' />
+      <Surface.Surface type={Keyshortcuts} />
       {!topbar && <ToggleSidebarButton />}
     </div>
   );
@@ -120,8 +110,7 @@ export const DeckContentEmpty = () => {
  */
 export const DeckSoloMode = () => {
   const { deck, settings, layoutMode, onLayoutChange } = useDeckContext('DeckSoloMode');
-  const { companionOpen, companionVariant, fullscreen, solo } = deck;
-  const effectiveCompanionVariant = fullscreen ? undefined : companionOpen ? companionVariant : undefined;
+  const { companionOpen, fullscreen, solo } = deck;
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   invariant(solo);
@@ -147,21 +136,14 @@ export const DeckSoloMode = () => {
     <div className='relative overflow-hidden bg-deck-surface'>
       <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
       {fullscreen && <ExitFullscreenButton onExit={() => onLayoutChange({ mode: 'solo--fullscreen' })} />}
-      <StackContext.Provider
-        value={{
-          orientation: 'horizontal',
-          size: 'contain',
-          rail: true,
-        }}
-      >
-        <PlankContainer
-          id={solo}
-          part='solo'
-          layoutMode={layoutMode}
-          companionVariant={effectiveCompanionVariant}
-          settings={settings}
-        />
-      </StackContext.Provider>
+      <DeckPlank
+        id={solo}
+        part='solo'
+        layoutMode={layoutMode}
+        companionShown={!fullscreen && companionOpen}
+        settings={settings}
+        classNames={mx('absolute inset-0', mainIntrinsicSize)}
+      />
     </div>
   );
 };
@@ -170,25 +152,65 @@ export const DeckSoloMode = () => {
 // DeckMultiMode
 //
 
+const getPlankId = (id: string) => id;
+
 /**
- * Multi-plank horizontal scrolling layout.
+ * Tile wrapping a {@link DeckPlank} in a resizable {@link Mosaic.Tile}; the committed width persists via
+ * `plankSizing`. Reads the deck context directly since the Mosaic stack renders tiles by id.
+ */
+const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
+  const id = props.data;
+  const { deck, settings, layoutMode } = useDeckContext('DeckPlankTile');
+  const { invokePromise } = useOperationInvoker();
+
+  const handleSizeChange = useCallback<NonNullable<MosaicTileProps['onSizeChange']>>(
+    (size) => {
+      if (typeof size === 'number') {
+        void invokePromise(DeckOperation.UpdatePlankSize, { id, size: Math.round(size) });
+      }
+    },
+    [invokePromise, id],
+  );
+
+  return (
+    <Mosaic.Tile
+      {...props}
+      classNames='relative h-full'
+      size={deck.plankSizing[id] ?? DEFAULT_PLANK_SIZE}
+      minSize={MIN_PLANK_SIZE}
+      maxSize={MAX_PLANK_SIZE}
+      onSizeChange={handleSizeChange}
+    >
+      <DeckPlank
+        id={id}
+        part='multi'
+        layoutMode={layoutMode}
+        active={deck.active}
+        companionShown={deck.companionOpen}
+        settings={settings}
+        classNames='size-full'
+      />
+      <Mosaic.ResizeHandle />
+    </Mosaic.Tile>
+  );
+};
+
+/**
+ * Multi-plank horizontal scrolling layout. Planks are resizable {@link Mosaic.Tile}s in a horizontal
+ * {@link Mosaic.Stack}; the scroll position is preserved across solo↔multi transitions and the
+ * just-navigated plank is scrolled into view.
  */
 export const DeckMultiMode = () => {
-  const {
-    deck: { active, companionVariant, fullscreen },
-    settings,
-    layoutMode,
-  } = useDeckContext('DeckMultiMode');
-  /** In multi mode the companion column is always shown when the last plank has companions (not gated by `companionOpen`). */
-  const effectiveCompanionVariant = companionVariant;
-  const lastPlankId = active[active.length - 1];
-  const lastPlankCompanions = useCompanions(lastPlankId);
+  const { deck, layoutMode } = useDeckContext('DeckMultiMode');
+  const { active, fullscreen } = deck;
+  const { state } = useDeckState();
+  const { invokePromise } = useOperationInvoker();
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
-  const deckRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
 
-  /** Clear scroll restoration state if the window is resized. */
-  const scrollLeftRef = useRef<number>(null);
+  // Preserve horizontal scroll position across solo↔multi transitions; a window resize invalidates it.
+  const scrollLeftRef = useRef<number | null>(null);
   useEffect(
     () =>
       addEventListener(window, 'resize', () => {
@@ -196,67 +218,58 @@ export const DeckMultiMode = () => {
       }),
     [],
   );
-
   const restoreScroll = useCallback(() => {
-    if (deckRef.current && scrollLeftRef.current != null) {
-      deckRef.current.scrollLeft = scrollLeftRef.current;
+    if (viewportRef.current && scrollLeftRef.current != null) {
+      viewportRef.current.scrollLeft = scrollLeftRef.current;
     }
   }, []);
-
   useOnTransition(layoutMode, (mode) => mode !== 'multi', 'multi', restoreScroll);
-
-  /** Save scroll position as the user scrolls. */
-  const handleScroll = useCallback((event: UIEvent) => {
-    if (event.currentTarget === event.target) {
-      scrollLeftRef.current = (event.target as HTMLDivElement).scrollLeft;
+  // Save scroll position as the user scrolls (ScrollArea.Viewport does not forward `onScroll`).
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) {
+      return;
     }
+    return addEventListener(viewport, 'scroll', () => {
+      scrollLeftRef.current = viewport.scrollLeft;
+    });
   }, []);
 
-  // Create order map.
-  // In multi mode only the last plank hosts the companion pane, so only that plank adds the extra column.
-  const { order, itemsCount } = useMemo(() => {
-    const lastHasCompanions = lastPlankCompanions.length > 0;
-    return active.reduce(
-      (acc: { order: Record<string, number>; itemsCount: number }, entryId, index) => {
-        const isLastPlank = index === active.length - 1;
-        acc.order[entryId] = acc.itemsCount + 1;
-        acc.itemsCount += lastHasCompanions && isLastPlank ? 3 : 2;
-        return acc;
-      },
-      { order: {}, itemsCount: 0 },
-    );
-  }, [active, lastPlankCompanions.length]);
+  // Scroll the just-navigated plank into view, then clear the one-shot flag.
+  useEffect(() => {
+    const id = state.scrollIntoView;
+    const viewport = viewportRef.current;
+    if (!id || !viewport) {
+      return;
+    }
+
+    const tile = viewport.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(id)}"]`);
+    if (tile) {
+      const offset = tile.getBoundingClientRect().left - viewport.getBoundingClientRect().left + viewport.scrollLeft;
+      viewport.scrollTo({ left: offset, behavior: 'smooth' });
+    }
+    void invokePromise(LayoutOperation.ScrollIntoView, { subject: undefined });
+  }, [state.scrollIntoView, invokePromise]);
 
   return (
     <div className='relative bg-deck-surface overflow-hidden'>
       <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
-      <Stack
-        classNames={[
-          'absolute h-[calc(100%-2*var(--main-spacing))] w-full inset-y-(--main-spacing) -inset-w-px',
-          mainPaddingTransitions,
-        ]}
-        orientation='horizontal'
-        size='contain'
-        itemsCount={itemsCount - 1}
-        onScroll={handleScroll}
-        ref={deckRef}
-      >
-        {active.map((entryId) => (
-          <Fragment key={entryId}>
-            {/* TODO(burdon): Setting for separator. */}
-            <PlankSeparator hidden order={order[entryId] - 1} encapsulate={!!settings?.encapsulatedPlanks} />
-            <PlankContainer
-              id={entryId}
-              part='multi'
-              active={active}
-              order={order[entryId]}
-              layoutMode={layoutMode}
-              companionVariant={effectiveCompanionVariant}
-              settings={settings}
-            />
-          </Fragment>
-        ))}
-      </Stack>
+      <Mosaic.Root>
+        <Mosaic.Container orientation='horizontal' classNames={['absolute inset-0', mainPaddingTransitions]}>
+          <ScrollArea.Root orientation='horizontal' classNames='size-full'>
+            <ScrollArea.Viewport ref={viewportRef}>
+              <Mosaic.Stack
+                orientation='horizontal'
+                classNames='h-full gap-(--main-spacing) px-(--main-spacing)'
+                getId={getPlankId}
+                items={active}
+                Tile={DeckPlankTile}
+                draggable={false}
+              />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Mosaic.Container>
+      </Mosaic.Root>
     </div>
   );
 };
@@ -273,7 +286,7 @@ const ToggleComplementarySidebarButton = () => (
 );
 
 const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <div
       className={mx(
@@ -307,144 +320,3 @@ const DeckSidebarToggles = ({ topbar, fullscreen }: { topbar: boolean; fullscree
     </>
   );
 };
-
-//
-// PlankSeparator
-//
-
-const PlankSeparator = ({ order, hidden, encapsulate }: { order: number; hidden?: boolean; encapsulate?: boolean }) =>
-  order > 0 && (
-    <span
-      role='separator'
-      className={mx('row-span-2 bg-deck-surface', hidden && 'hidden', encapsulate ? 'w-0' : 'w-4')}
-      style={{ gridColumn: order }}
-    />
-  );
-
-//
-// PlankContainer
-//
-
-type PlankContainerProps = Pick<PlankRootProps, 'layoutMode' | 'part' | 'settings'> &
-  Pick<PlankComponentProps, 'id'> &
-  Partial<Pick<PlankComponentProps, 'path' | 'order' | 'active'>> & {
-    companionVariant?: string;
-  };
-
-/**
- * Connected Plank that calls hooks and renders the radix-style Plank tree.
- * This is the bridge between DeckViewport (which knows about framework hooks) and
- * the pure Plank components (which receive everything via context).
- */
-const PlankContainer = memo(
-  ({ id, layoutMode, part, order, settings, companionVariant, active, ...props }: PlankContainerProps) => {
-    const { graph } = useAppGraph();
-    const { invokePromise } = useOperationInvoker();
-    const { state, deck } = useDeckState();
-    const node = useNode(graph, id);
-    const companions = useCompanions(id);
-    const isLastPlankInMulti =
-      layoutMode === 'multi' && active && active.length > 0 && active[active.length - 1] === id;
-    const variantForThisPlank =
-      layoutMode === 'multi' ? (isLastPlankInMulti ? companionVariant : undefined) : companionVariant;
-    const { companionId } = useSelectedCompanion(companions, variantForThisPlank);
-    const resolvedCompanionId =
-      layoutMode === 'multi' && isLastPlankInMulti && companions.length > 0
-        ? companionId
-        : variantForThisPlank
-          ? companionId
-          : undefined;
-    const currentCompanion = companions.find(({ id }) => id === resolvedCompanionId);
-    const hasCompanion = !!(resolvedCompanionId && currentCompanion);
-
-    const handleAdjust = useCallback(
-      (plankId: string, type: DeckOperation.PartAdjustment) => {
-        if (type === 'close') {
-          if (part === 'complementary') {
-            return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
-          } else if (active) {
-            // Close the plank and everything to the right (stack pop).
-            const index = active.indexOf(plankId);
-            const toClose = index !== -1 ? active.slice(index) : [plankId];
-            return invokePromise(LayoutOperation.Close, { subject: toClose });
-          } else {
-            return invokePromise(LayoutOperation.Close, { subject: [plankId] });
-          }
-        } else {
-          return invokePromise(DeckOperation.Adjust, { type, id: plankId });
-        }
-      },
-      [invokePromise, part, active],
-    );
-
-    const handleResize = useCallback(
-      (plankId: string, size: number) => invokePromise(DeckOperation.UpdatePlankSize, { id: plankId, size }),
-      [invokePromise],
-    );
-
-    const handleScrollIntoView = useCallback(
-      (subject?: string) => invokePromise(LayoutOperation.ScrollIntoView, { subject }),
-      [invokePromise],
-    );
-
-    const handleUpdateCompanion = useCallback(
-      (companion: string | null) => invokePromise(LayoutOperation.UpdateCompanion, { subject: companion }),
-      [invokePromise],
-    );
-
-    return (
-      <Plank.Root
-        graph={graph}
-        layoutMode={layoutMode}
-        part={part}
-        settings={settings}
-        popoverAnchorId={state.popoverAnchorId}
-        scrollIntoView={state.scrollIntoView}
-        plankSizing={deck.plankSizing}
-        onAdjust={handleAdjust}
-        onResize={handleResize}
-        onScrollIntoView={handleScrollIntoView}
-        onUpdateCompanion={handleUpdateCompanion}
-      >
-        <Plank.Content solo={part === 'solo'} companion={hasCompanion} encapsulate={!!settings?.encapsulatedPlanks}>
-          <Plank.Component
-            {...props}
-            active={active}
-            id={id}
-            node={node}
-            companioned={hasCompanion ? 'primary' : undefined}
-            companions={hasCompanion ? [] : companions}
-            order={order}
-            {...(part === 'solo'
-              ? {
-                  part: 'solo-primary',
-                }
-              : {
-                  part,
-                })}
-          />
-          {hasCompanion && (
-            <Plank.Component
-              {...props}
-              active={active}
-              id={resolvedCompanionId}
-              node={currentCompanion}
-              companions={companions}
-              companioned='companion'
-              primary={node}
-              {...(part === 'solo'
-                ? {
-                    order,
-                    part: 'solo-companion',
-                  }
-                : {
-                    order: (order ?? 0) + 1,
-                    part,
-                  })}
-            />
-          )}
-        </Plank.Content>
-      </Plank.Root>
-    );
-  },
-);

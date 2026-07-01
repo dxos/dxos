@@ -38,6 +38,9 @@
       "path": "../../common/keyboard"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -57,6 +60,9 @@
     },
     {
       "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-doc"
     },
     {
       "path": "../../core/protocols"

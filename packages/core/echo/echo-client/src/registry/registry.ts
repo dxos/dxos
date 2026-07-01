@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
-import { type Database, Entity, Query, type Filter, type QueryResult, Registry, Type } from '@dxos/echo';
+import { type Database, Entity, type Filter, Query, type QueryResult, Registry, Type } from '@dxos/echo';
 import { filterMatchEntity } from '@dxos/echo-host/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -22,7 +22,7 @@ import { QueryResultCache } from '../query';
  * `#entitiesById` map keyed by their (bare) entity id. They are additionally indexed in the
  * secondary `#entitiesByUri` map under every URI that addresses them — a type entity by its
  * typename DXN (or, when persisted, its identifier EID), and a keyed entity (one carrying a
- * `key` in its meta — e.g. operations, blueprints) by its `dxn:<key>[:<version>]`. Types and
+ * `key` in its meta — e.g. operations, skills) by its `dxn:<key>[:<version>]`. Types and
  * non-type entities are indexed uniformly, so {@link Registry.Registry.getByURI} resolves by URI
  * in O(1) without separate per-kind indexes.
  */
@@ -197,7 +197,7 @@ const getTypeDXN = (type: Type.AnyEntity): DXN.DXN => {
 
 /**
  * Returns the key DXN(s) under which a keyed (non-type) entity is indexed.
- * A keyed entity carries a `key` in its meta (e.g. operations, blueprints); it is reachable
+ * A keyed entity carries a `key` in its meta (e.g. operations, skills); it is reachable
  * under both its versioned (`dxn:<key>:<version>`) and unversioned (`dxn:<key>`) DXN. Returns
  * an empty array for entities without a meta key (which are reachable by id only).
  */

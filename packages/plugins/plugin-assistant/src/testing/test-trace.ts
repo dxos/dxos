@@ -5,13 +5,14 @@
 import * as Option from 'effect/Option';
 
 import { Process } from '@dxos/compute';
+import { Annotation } from '@dxos/echo';
 
 export const makeProcess = (
   overrides: Partial<Process.Info> & Pick<Process.Info, 'pid' | 'state'> & { name: string },
 ): Process.Info => ({
   parentPid: null,
   key: `test.process.${overrides.name}`,
-  params: { name: overrides.name, target: null },
+  params: { name: overrides.name, annotations: Annotation.buildDictionary(() => {}) },
   error: null,
   startedAt: Date.now() - 10_000,
   completedAt: Option.none(),

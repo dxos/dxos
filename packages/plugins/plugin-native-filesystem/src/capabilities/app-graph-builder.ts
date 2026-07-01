@@ -6,34 +6,34 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SHARED } from '@dxos/plugin-space';
 import { Expando, Text } from '@dxos/schema';
-import { isNonNullable } from '@dxos/util';
+import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 import { NativeFilesystemOperation } from '#types';
 import {
-  NativeFilesystemCapabilities,
-  isFilesystemDirectory,
-  isFilesystemWorkspace,
   type FilesystemEntry,
   type FilesystemFile,
   type FilesystemWorkspace,
+  NativeFilesystemCapabilities,
   type NativeFilesystemState,
+  isFilesystemDirectory,
+  isFilesystemWorkspace,
 } from '#types';
 
 import { findDirectoryById } from '../util';
 import type { FilesystemManager } from './state';
 
-const FILESYSTEM_TYPE = `${meta.id}.workspace`;
-const GENERAL_TYPE = `${meta.id}.general`;
-const DIRECTORY_TYPE = `${meta.id}.directory`;
-const MARKDOWN_PENDING_TYPE = `${meta.id}.markdown-pending`;
+const FILESYSTEM_TYPE = `${meta.profile.key}.workspace`;
+const GENERAL_TYPE = `${meta.profile.key}.general`;
+const DIRECTORY_TYPE = `${meta.profile.key}.directory`;
+const MARKDOWN_PENDING_TYPE = `${meta.profile.key}.markdown-pending`;
 
 const workspaceRearrangeCache = new Map<string, (nextOrder: (FilesystemWorkspace | unknown)[]) => void>();
 
@@ -103,7 +103,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'primaryActions',
-        position: 'first',
+        position: Position.first,
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
@@ -116,7 +116,7 @@ export default Capability.makeModule(
                 }
               }),
               properties: {
-                label: ['open-directory.label', { ns: meta.id }],
+                label: ['open-directory.label', { ns: meta.profile.key }],
                 icon: 'ph--folder-open--regular',
                 testId: 'nativeFilesystem.openDirectory',
                 disposition: 'menu',
@@ -136,7 +136,7 @@ export default Capability.makeModule(
 
           const state: NativeFilesystemState = get(stateAtom);
           const client = capabilities.get(ClientCapabilities.Client);
-          const personalSpace = getPersonalSpace(client);
+          const personalSpace = AppSpace.getPersonalSpace(client);
 
           if (!state.workspaces.length || !personalSpace) {
             return Effect.succeed([]);
@@ -216,9 +216,9 @@ export default Capability.makeModule(
               type: GENERAL_TYPE,
               data: GENERAL_TYPE,
               properties: {
-                label: ['settings.general.label', { ns: meta.id }],
+                label: ['settings.general.label', { ns: meta.profile.key }],
                 icon: 'ph--sliders--regular',
-                position: 'first',
+                position: Position.first,
               },
             }),
           ]),

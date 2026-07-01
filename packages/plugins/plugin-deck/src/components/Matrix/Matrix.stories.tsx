@@ -8,16 +8,16 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { Graph } from '@dxos/app-graph';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { type Node } from '@dxos/plugin-graph';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Focus, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { type MosaicTileProps, Mosaic } from '@dxos/react-ui-mosaic';
-import { StackContext } from '@dxos/react-ui-stack';
+import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -27,7 +27,7 @@ import { DeckState, OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 
-import { Plank } from '../../containers/Plank';
+import { Plank } from '../Plank';
 import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
 
 random.seed(123);
@@ -74,29 +74,17 @@ const StoryTile = (props: MosaicTileProps<Obj.Any>) => {
 };
 
 /**
- * Tile that wraps a Plank for content rendering.
+ * Tile that renders a node-bound Plank (sigil/title + content Surface).
  */
 const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
-  const graph = useMemo(() => Graph.make(), []);
+  const node = useMemo<Node.Node>(
+    () => ({ id: props.data.id, type: 'test', data: props.data, properties: { label: Obj.getLabel(props.data) } }),
+    [props.data],
+  );
   return (
-    <StackContext.Provider value={{ orientation: 'horizontal', size: 'contain', rail: true }}>
-      <Plank.Root layoutMode='multi' part='multi' graph={graph}>
-        <Mosaic.Tile {...props} asChild>
-          <Plank.Content solo={false} companion={false} encapsulate={false}>
-            <Plank.Component
-              id={props.data.id}
-              part='multi'
-              node={{
-                id: props.data.id,
-                data: props.data,
-                type: 'test',
-                properties: {},
-              }}
-            />
-          </Plank.Content>
-        </Mosaic.Tile>
-      </Plank.Root>
-    </StackContext.Provider>
+    <Mosaic.Tile {...props} classNames='w-full md:w-[50rem] shrink-0'>
+      <Plank node={node} />
+    </Mosaic.Tile>
   );
 };
 
@@ -104,7 +92,7 @@ const TestExtension = Capability.contributes(
   Capabilities.ReactSurface,
   Surface.create({
     id: 'storyArticle',
-    role: 'article',
+    filter: Surface.makeFilter(AppSurface.Article),
     component: ({ data: { subject } }) => {
       if (!subject) {
         return <Loading />;
@@ -123,9 +111,9 @@ const TestExtension = Capability.contributes(
   }),
 );
 
-type DefaultStoryProps = Pick<MatrixRootProps, 'Tile'>;
+type StoryArgs = Pick<MatrixRootProps, 'Tile'>;
 
-const DefaultStory = ({ Tile }: DefaultStoryProps) => {
+const DefaultStory = ({ Tile }: StoryArgs) => {
   const items = useMemo(
     () => [
       Organization.make({ name: random.company.name() }),

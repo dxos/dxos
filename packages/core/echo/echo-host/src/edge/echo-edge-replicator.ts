@@ -423,7 +423,7 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
         buf.create(RouterMessageSchema, {
           serviceId: this._targetServiceId,
           source: {
-            identityKey: this._edgeConnection.identityKey,
+            identityDid: this._edgeConnection.identityDid,
             peerKey: this._edgeConnection.peerKey,
           },
           payload: { value: bufferToArray(encoded) },

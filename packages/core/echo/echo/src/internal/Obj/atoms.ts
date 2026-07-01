@@ -15,10 +15,12 @@ import type * as Obj from '../../Obj';
 import type * as Ref from '../../Ref';
 import type * as Relation from '../../Relation';
 import { getLabel } from '../Annotation';
+import { snapshotForComparison } from '../common/atom-snapshot';
 import { subscribe } from '../common/proxy/reactive';
-import { isEntity, getDatabase } from '../Entity';
+import { getDatabase, isEntity } from '../Entity';
 import { RefTypeId } from '../Ref/ref';
 import { loadRefTarget } from '../Ref/utils';
+import { isDeleted } from './deleted';
 import { getSnapshot } from './snapshot';
 
 const isRef = (obj: unknown): obj is Ref.Ref<any> =>
@@ -63,8 +65,9 @@ const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Ato
     const setupTargetSubscription = (target: T): Obj.Snapshot<T> => {
       unsubscribeTarget?.();
       unsubscribeTarget = subscribe(target, () => {
+        // Deleted objects resolve to undefined so callers don't need to inspect isDeleted.
         // getSnapshot adds SnapshotKindId brand at runtime; cast bridges static types.
-        get.setSelf(getSnapshot(target) as unknown as Obj.Snapshot<T>);
+        get.setSelf(isDeleted(target) ? undefined : (getSnapshot(target) as unknown as Obj.Snapshot<T>));
       });
       return getSnapshot(target) as unknown as Obj.Snapshot<T>;
     };
@@ -76,19 +79,6 @@ const refFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>): Atom.Ato
     return loadRefTarget(ref, get, setupTargetSubscription);
   }).pipe(Atom.keepAlive);
 });
-
-/**
- * Snapshot a value to create a new reference for comparison and React dependency tracking.
- */
-const snapshotForComparison = <V>(value: V): V => {
-  if (Array.isArray(value)) {
-    return [...value] as V;
-  }
-  if (value !== null && typeof value === 'object') {
-    return { ...value } as V;
-  }
-  return value;
-};
 
 /**
  * Atom family for ECHO object properties.
@@ -151,6 +141,20 @@ const refWithReactiveFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T
 });
 
 /**
+ * Atom family for a property of a ref's target object.
+ * Resolves the ref (reactively) then projects the property atom, so it fires when the ref resolves or when
+ * that property changes. Yields `undefined` while the target is unresolved.
+ */
+const refPropertyFamily = Atom.family(<T extends Obj.Unknown>(ref: Ref.Ref<T>) =>
+  Atom.family(<K extends keyof T>(key: K): Atom.Atom<T[K] | undefined> => {
+    return Atom.make<T[K] | undefined>((get) => {
+      const target = get(refWithReactiveFamily(ref));
+      return target ? get(propertyFamily(target)(key)) : undefined;
+    }).pipe(Atom.keepAlive);
+  }),
+);
+
+/**
  * Atom family for any ECHO entity (obj or relation) — returns a snapshot.
  */
 const entityFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.Atom<Entity.Snapshot> => {
@@ -201,10 +205,19 @@ export const makeAtom: {
 };
 
 /**
- * Create a read-only atom for a specific property of a reactive object.
- * Only fires updates when the property value actually changes.
+ * Create a read-only atom for a specific property of a reactive object, or of a ref's target.
+ * Only fires updates when the property value actually changes. Given a ref, the atom resolves the target
+ * first and yields `undefined` until it loads.
  */
-export const makeProperty = <T extends Obj.Unknown, K extends keyof T>(obj: T, key: K): Atom.Atom<T[K]> => {
+export const makeProperty: {
+  <T extends Obj.Unknown, K extends keyof T>(obj: T, key: K): Atom.Atom<T[K]>;
+  <T extends Obj.Unknown, K extends keyof T>(ref: Ref.Ref<T>, key: K): Atom.Atom<T[K] | undefined>;
+} = (objOrRef: Obj.Unknown | Ref.Ref<any>, key: any): Atom.Atom<any> => {
+  if (isRef(objOrRef)) {
+    return refPropertyFamily(objOrRef as Ref.Ref<any>)(key);
+  }
+
+  const obj = objOrRef as Obj.Unknown;
   assertArgument(isEntity(obj), 'obj', 'Object must be a reactive object');
   return propertyFamily(obj)(key);
 };

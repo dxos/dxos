@@ -25,9 +25,9 @@ const generator = random as any as ValueGenerator;
 
 random.seed(7);
 
-type DefaultStoryProps = { variant: ExplorerArticleVariant };
+type StoryArgs = { variant: ExplorerArticleVariant };
 
-const DefaultStory = ({ variant }: DefaultStoryProps) => {
+const DefaultStory = ({ variant }: StoryArgs) => {
   const [space] = useSpaces();
   const [graph] = useQuery(space?.db, Filter.type(Graph.Graph));
   if (!space || !graph) {
@@ -37,7 +37,7 @@ const DefaultStory = ({ variant }: DefaultStoryProps) => {
   return <ExplorerArticle role='article' subject={graph as any} attendableId={graph.id} variant={variant} />;
 };
 
-const meta: Meta<DefaultStoryProps> = {
+const meta: Meta<StoryArgs> = {
   title: 'plugins/plugin-explorer/containers/ExplorerArticle',
   render: DefaultStory,
   decorators: [

@@ -15,7 +15,7 @@ import { continueKeymap } from '@valtown/codemirror-continue';
 import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts';
 import React from 'react';
 
-import { type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, type ThemeMode, useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
 import { Domino } from '@dxos/ui';
@@ -66,19 +66,19 @@ export const TypescriptEditor = composable<HTMLDivElement, TypescriptEditorProps
         scrollTo,
         extensions: [
           extensions,
+          createThemeExtensions({
+            monospace: true,
+            themeMode,
+            syntaxHighlighting: true,
+          }),
           createBasicExtensions({
             highlightActiveLine: true,
             indentWithTab: true,
             lineNumbers: true,
             lineWrapping: false,
-            scrollPastEnd: role !== 'section',
+            scrollPastEnd: role === 'article',
             search: true,
             ...options,
-          }),
-          createThemeExtensions({
-            monospace: true,
-            themeMode,
-            syntaxHighlighting: true,
           }),
 
           InputModeExtensions[inputMode],

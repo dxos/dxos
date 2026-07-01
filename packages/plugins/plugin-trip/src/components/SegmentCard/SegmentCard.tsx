@@ -60,7 +60,7 @@ type SegmentTileProps = Pick<MosaicTileProps<SegmentTileData>, 'data' | 'locatio
 export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data, location, current }, forwardedRef) => {
   const { segment, onAction } = data;
   const { setCurrentId, setSelected } = useMosaicContainer('SegmentTile');
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const handleCurrentChange = useCallback(() => {
     setCurrentId(segment.id);
@@ -98,7 +98,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
         <Card.Root fullWidth border={false} ref={forwardedRef}>
           <Card.Header>
             <Card.Block>
-              <Icon icon={icon} classNames={iconStyles?.fg} />
+              <Icon icon={icon} classNames={iconStyles?.text} />
             </Card.Block>
             <Card.Title>{title}</Card.Title>
             <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />

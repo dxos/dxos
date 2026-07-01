@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Table } from '@dxos/react-ui-table/types';
 
-import { TableCard, TableArticle } from '#containers';
+import { TableArticle, TableCard } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -29,7 +29,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'tableCard',
-        filter: AppSurface.object(AppSurface.Card, Table.Table),
+        filter: AppSurface.object(AppSurface.CardContent, Table.Table),
         component: ({ data, role }) => <TableCard subject={data.subject} role={role} />,
       }),
     ]),

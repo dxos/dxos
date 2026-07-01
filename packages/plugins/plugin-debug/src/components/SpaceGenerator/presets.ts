@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AgentPrompt, WebSearchBlueprint } from '@dxos/assistant-toolkit';
-import { Routine, Trigger, Operation } from '@dxos/compute';
+import { RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
+import { Instructions, Operation, Trigger } from '@dxos/compute';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Scope, Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -135,7 +135,7 @@ export const generator = () => ({
             Trigger.make({
               enabled: true,
               spec: Trigger.specTimer('* * * * *'), // Every minute.
-              function: Ref.make(Operation.serialize(InboxOperation.GoogleMailSync)),
+              runnable: Ref.make(Operation.serialize(InboxOperation.GoogleMailSync)),
               input: {
                 mailbox: Ref.make(mailbox),
               },
@@ -143,22 +143,18 @@ export const generator = () => ({
           );
 
           const researchPrompt = space.db.add(
-            Routine.make({
+            Instructions.make({
               name: 'Research',
               description: 'Research organization',
-              input: Schema.Struct({
-                org: Schema.Any,
-              }),
-              output: Schema.Any,
 
               // TODO(dmaretskyi): This mocks research (returns pre-baked result), the actual research might take compute minutes.
               // Remove the mock prompt to do the actual research.
-              instructions: trim`
+              text: trim`
                 Research the organization provided as input.
                 Create a research note for it at the end.
                 NOTE: Do mocked reseach (set mockSearch to true).
               `,
-              blueprints: [Ref.make(WebSearchBlueprint.make())],
+              skills: [Ref.make(WebSearchSkill.make())],
             }),
           );
 
@@ -166,9 +162,9 @@ export const generator = () => ({
             Trigger.make({
               enabled: true,
               spec: Trigger.specSubscription(organizationsQuery),
-              function: Ref.make(Operation.serialize(AgentPrompt)),
+              runnable: Ref.make(Operation.serialize(RunInstructions)),
               input: {
-                prompt: Ref.make(researchPrompt),
+                instructions: Ref.make(researchPrompt),
                 input: '{{event.subject}}',
               },
             }),
@@ -790,7 +786,8 @@ const attachTrigger = (functionTrigger: Trigger.Trigger | undefined, computeMode
   invariant(functionTrigger);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
   Obj.update(functionTrigger, (functionTrigger) => {
-    functionTrigger.function = Ref.make(computeModel.root);
+    // TODO(wittjosiah): Widen Runnable union to include ComputeGraph and remove cast.
+    functionTrigger.runnable = Ref.make(computeModel.root) as any;
     functionTrigger.inputNodeId = inputNode.id;
   });
 };

@@ -2,24 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Agent, Plan } from '@dxos/assistant-toolkit';
+import { Plan } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
-import { type Database, type Feed, Filter, Obj, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/client/echo';
+import { type Database, Filter, Obj, Query } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { Button, Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 
-import { useChatKeymapExtensions, useChatToolbarActions, useDebug } from '#hooks';
+import { useChatKeymapExtensions, useChatToolbarActions, useDebug, useTraceMessages } from '#hooks';
 import { meta } from '#meta';
 
+import { AiUsageQuotaError } from '../../processor';
 import {
   ChatStatus,
   ChatPrompt as NaturalChatPrompt,
@@ -36,7 +39,6 @@ import { type ChatEvent } from './events';
 
 type ChatRootProps = PropsWithChildren<
   Pick<ChatContextValue, 'chat' | 'processor'> & {
-    feed?: Feed.Feed;
     /** Fallback database when the chat is transient (not yet persisted). */
     db?: Database.Database;
     onEvent?: (event: ChatEvent) => void;
@@ -48,7 +50,7 @@ type ChatRootProps = PropsWithChildren<
   }
 >;
 
-const ChatRoot = ({ children, chat, feed, processor, db: dbFallback, onEvent, onSubmit, ...props }: ChatRootProps) => {
+const ChatRoot = ({ children, chat, processor, db: dbFallback, onEvent, onSubmit, ...props }: ChatRootProps) => {
   const [debug, setDebug] = useState(false);
   const streaming = useAtomValue(processor.streaming);
   const active = useAtomValue(processor.active);
@@ -57,6 +59,10 @@ const ChatRoot = ({ children, chat, feed, processor, db: dbFallback, onEvent, on
   // Transient chats have no database of their own; fall back to the supplied space db so
   // the message query and context controls operate before the chat is persisted.
   const db = (chat && Obj.getDatabase(chat)) || dbFallback;
+
+  // Reactive subscription — re-renders when the feed ref resolves. Direct `.target` reads are not reactive.
+  const [feedSnapshot] = useObject(chat?.feed);
+  const feed = Obj.getReactiveOrUndefined(feedSnapshot);
 
   // Event sink.
   const event = useMemo(() => new Event<ChatEvent>(), []);
@@ -212,15 +218,20 @@ ChatContent.displayName = CHAT_CONTENT_NAME;
 
 const CHAT_THREAD_NAME = 'Chat.Thread';
 
-type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
+type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'> & {
+  /** Invoked from the over-quota error toast to open the usage dashboard. */
+  onViewUsage?: () => void;
+};
 
-const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) => {
-  const { t } = useTranslation(meta.id);
+const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatThreadProps) => {
+  const { t } = useTranslation(meta.profile.key);
   const { debug, event, messages, processor } = useChatContext(CHAT_THREAD_NAME);
   const extensions = useChatKeymapExtensions({ event });
   const identity = useIdentity();
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const [toastError, setToastError] = useState<Error | undefined>(undefined);
+  // The toast renders whatever action the error declares (data-driven) rather than branching on type.
+  const toastAction = toastError instanceof AiUsageQuotaError ? toastError.action : undefined;
   const debugView = viewType === 'debug';
 
   const controllerRef = useRef<MarkdownStreamController | null>(null);
@@ -279,6 +290,20 @@ const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) =
           {t('ai-service-error.label')}
         </Toast.Title>
         <Toast.Description>{toastError?.message}</Toast.Description>
+        {toastAction && onViewUsage && (
+          <Toast.Actions>
+            <Toast.Action altText={t(toastAction.labelKey)} asChild>
+              <Button
+                onClick={() => {
+                  setToastError(undefined);
+                  onViewUsage();
+                }}
+              >
+                {t(toastAction.labelKey)}
+              </Button>
+            </Toast.Action>
+          </Toast.Actions>
+        )}
       </Toast.Root>
     </>
   );
@@ -313,14 +338,40 @@ type ChatTaskListProps = {
 
 const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(({ plan: planProp, ...props }, forwardedRef) => {
   const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
-  const parent = chat ? Obj.getParent(chat) : undefined;
-  const agent = parent && Obj.instanceOf(Agent.Agent, parent) ? parent : undefined;
-  const plan = planProp ?? agent?.plan.target;
-  if (!plan) {
+
+  const plan = useAtomValue(
+    useMemo(
+      () =>
+        Atom.make(
+          (get) =>
+            planProp ??
+            Option.fromNullable(chat).pipe(
+              Option.map((_) => get(Obj.atom(_))),
+              Option.flatMapNullable((_) => _?.plan?.atom),
+              Option.map(get),
+              Option.getOrUndefined,
+            ),
+        ),
+      [chat, planProp],
+    ),
+  );
+  const space = chat ? getSpace(chat) : undefined;
+  const traceMessages = useTraceMessages(space);
+  const conversationId = chat?.feed?.target?.id;
+  if (!plan || !(plan.tasks?.length ?? 0)) {
     return null;
   }
 
-  return <TaskList {...props} plan={plan} ref={forwardedRef} />;
+  return (
+    <TaskList
+      {...props}
+      plan={plan}
+      space={space}
+      traceMessages={traceMessages}
+      conversationId={conversationId}
+      ref={forwardedRef}
+    />
+  );
 });
 
 ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
@@ -339,4 +390,4 @@ export const Chat = {
   TaskList: ChatTaskList,
 };
 
-export type { ChatRootProps, ChatToolbarProps, ChatContentProps, ChatPromptProps, ChatThreadProps, ChatEvent };
+export type { ChatContentProps, ChatEvent, ChatPromptProps, ChatRootProps, ChatThreadProps, ChatToolbarProps };

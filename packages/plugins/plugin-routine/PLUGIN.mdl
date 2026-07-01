@@ -1,0 +1,475 @@
+---
+id: org.dxos.plugin.automation
+name: AutomationPlugin
+version: 0.1.0
+---
+
+A workflow automation engine plugin for DXOS Composer that enables event-driven
+pipelines connecting ECHO objects to persistent compute functions.
+
+Triggers listen for ECHO mutations, timer schedules, incoming feeds (email, webhook),
+or data subscriptions and invoke `PersistentOperation` handlers when their conditions
+fire. Each trigger carries optional structured input and is dispatched by a
+per-space `TriggerDispatcher` that runs locally in the browser or is delegated to
+the DXOS edge when the space `computeEnvironment` is `edge`.
+
+The plugin integrates with the `@dxos/compute` operation registry and the
+`@dxos/functions-runtime` execution layer. Skill, operation-handler, and
+toolkit contributions from other plugins are gathered at application scope and
+merged before being offered to space-level operation registries, so any plugin
+that contributes a `Capabilities.OperationHandler` automatically becomes
+invocable from an automation trigger.
+
+Users interact with automations through the `AutomationPanel` settings surface,
+which lists active triggers for a space (or for a specific ECHO object) and
+opens the `TriggerEditor` form to create, configure, and enable/disable
+individual triggers.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                           |
+|-------------|-------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`      |
+| `feat`      | `org.dxos.mdl.feat@1.0`      |
+| `test`      | `org.dxos.mdl.test@1.0`      |
+| `component` | `org.dxos.mdl.component@1.0` |
+| `op`        | `org.dxos.mdl.op@1.0`        |
+
+## Types
+
+Existing types used by this plugin (defined in `@dxos/compute` and `@dxos/functions-runtime`):
+
+| Type                 | Source                    | Role in AutomationPlugin                                           |
+|----------------------|---------------------------|--------------------------------------------------------------------|
+| `Trigger`            | `@dxos/compute`           | Persistent trigger configuration (spec, function ref, input, enabled) |
+| `PersistentOperation`| `@dxos/compute`           | Registered compute function callable from a trigger               |
+| `Trace.Message`      | `@dxos/compute`           | Execution trace record appended after each trigger run            |
+| `Script`             | `@dxos/compute`           | Source script that produces one or more `PersistentOperation`s    |
+| `Feed`               | `@dxos/echo`              | Feed object that a `feed`-spec trigger listens to                 |
+| `ComputeGraph`       | `@dxos/conductor`         | Visual workflow graph selectable as a trigger function            |
+
+New types defined by this plugin:
+
+```mdl
+type TriggerTemplate
+  desc: |
+    Lightweight description of a trigger's spec used when creating a trigger
+    from a pre-defined template (e.g. from a Skill action).
+  literals: timer | feed
+  fields:
+    type: timer | feed
+    cron?: string          # required when type === timer; cron expression
+    feed?: Feed            # required when type === feed; the feed to subscribe to
+```
+
+## Components
+
+```mdl
+component AutomationPanel
+  desc: |
+    Settings surface that lists all triggers for a space (or filtered to a
+    specific ECHO object) and provides inline create / edit / delete via the
+    TriggerEditor form. Displayed inside Settings.Panel at the path
+    `<spacePath>/settings/org.dxos.plugin.automation.automations`.
+  props:
+    space: Space
+    object?: Obj.Unknown   # when set, only triggers matching this object are shown
+    initialTrigger?: Trigger  # pre-populate TriggerEditor for a new trigger
+    onDone?: () => void
+  state:
+    trigger?: Trigger      # trigger currently open in TriggerEditor (undefined = list view)
+    selected?: Trigger     # the existing trigger being edited (undefined = new)
+  slots:
+    (none)
+  actions:
+    handleAdd()            # open TriggerEditor with a blank Trigger
+    handleSelect(t: Trigger)   # open TriggerEditor for an existing trigger
+    handleDelete(t: Trigger)   # remove trigger from space.db
+    handleSave(t: Trigger)     # persist new or update selected trigger
+    handleCancel()
+    handleForceRunTrigger(t: Trigger)   # invoke timer trigger immediately
+    handleResetCursor(t: Trigger)       # clear feed cursor on a feed trigger
+  layout: |
+    ┌──────────────────────────────────┐
+    │ [list view — triggers exist]     │
+    │  ┌────────────────────────────┐  │
+    │  │ ○  fn-name     [▶] [✕]    │  │
+    │  │ ●  fn-name     [↺] [✕]    │  │
+    │  └────────────────────────────┘  │
+    │  ─────────────────────────────   │
+    │  [+ New Trigger]                 │
+    ├──────────────────────────────────┤
+    │ [editor view — trigger selected] │
+    │  Settings.Item                   │
+    │  └── TriggerEditor               │
+    └──────────────────────────────────┘
+```
+
+```mdl
+component TriggerEditor
+  desc: |
+    Form-driven editor for a single Trigger. Renders a Form.Root backed by the
+    Trigger schema with custom field overrides for function/workflow selection,
+    spec kind selector, feed selector, subscription query builder, and
+    structured input editor.
+  props:
+    db: Database
+    trigger: Trigger
+    types: TypeOption[]      # available ECHO types for query builder
+    tags: Tag[]              # available tags for query builder
+    readonlySpec?: boolean   # lock spec.kind and spec.query (e.g. editing from an object context)
+    onSave: (t: Partial<Trigger>) => void
+    onCancel: () => void
+  state:
+    (managed by Form.Root)
+  slots:
+    (none)
+```
+
+```mdl
+component FunctionsPanel
+  desc: |
+    Settings surface listing all PersistentOperation objects in a space.
+    Each row shows the function name, optional source script name, a
+    "go to script" icon button, and a delete button.
+  props:
+    space: Space
+  state:
+    functions: PersistentOperation[]
+    scripts: Script[]
+  slots:
+    (none)
+  actions:
+    handleGoToScript(fn: PersistentOperation)  # navigate to source Script
+    handleDelete(fn: PersistentOperation)      # remove function via SpaceOperation
+```
+
+```mdl
+component TemplateEditor
+  desc: |
+    Markdown + Handlebars source editor backed by a Ref<Text>. Decorates
+    Handlebars tags, DXN/URL tokens, and XML nodes. Reused by Routine and
+    Skill article surfaces and by downstream plugins (plugin-script,
+    plugin-magazine) via the `@dxos/plugin-routine/components` export.
+  props:
+    id: string
+    source?: Ref<Text>
+    lineNumbers?: boolean
+```
+
+```mdl
+component RoutineProperties
+  desc: Object-properties form for a Routine, rendered via ObjectProperties.
+  props:
+    routine: Routine
+```
+
+## Surfaces
+
+```mdl
+surface skill     -> SkillArticle    # article for Skill objects
+surface prompt        -> RoutineArticle      # article for Routine objects (template editor + run)
+surface prompts       -> RoutineList         # space-home prompt list; dispatches RunPromptInNewChat
+```
+
+## Operations
+
+```mdl
+op CreateTriggerFromTemplate
+  desc: |
+    Creates a new Trigger from a lightweight template, optionally wiring it to
+    a named Script's PersistentOperation, and navigates to the automations
+    settings panel for the target space.
+  input:
+    db: Database
+    template: TriggerTemplate
+    enabled?: boolean        # default false
+    scriptName?: string      # if provided, looks up Script by name and wires function ref
+    input?: Record<string, any>   # optional structured input forwarded to the trigger
+  output: void
+  effects: [echo:write, layout:navigate]
+  requires: [SpaceOperation.AddObject, LayoutOperation.Open]
+  note: |
+    Resolves the named Script, finds its linked PersistentOperation, and sets
+    trigger.function = Ref.make(fn). Template type determines spec:
+      timer → Trigger.specTimer(cron)
+      feed  → Trigger.specFeed(feed)
+    Trigger is added as a hidden object so it does not appear in the main graph.
+```
+
+```mdl
+op RunPromptInNewChat
+  desc: Creates a new chat, binds context objects and skills, then runs a prompt.
+  input:
+    db: Database
+    objects?: Obj[]
+    skills?: string[]
+    prompt: string | RoutineRef
+    background?: boolean
+  output: Chat
+  effects: [echo:write, ai:infer]
+  note: |
+    Defined here so Routine UI (RoutineList, RoutineArticle) and downstream
+    plugins can dispatch it without depending on plugin-assistant. The handler
+    is contributed by plugin-assistant (chat creation + AiContext binding).
+    When background is true, the prompt runs via the compute runtime without
+    opening the chat UI. The returned Chat can be used to track progress.
+```
+
+## Features
+
+```mdl
+feat F-1: Trigger Management
+
+  req F-1.1: User can create a Trigger in any space via AutomationPanel.
+  req F-1.2: User can edit an existing Trigger's function, spec, and input.
+  req F-1.3: User can delete a Trigger; it is removed from space.db.
+  req F-1.4: User can enable or disable a Trigger via an inline toggle.
+  req F-1.5:
+    when: object context provided to AutomationPanel
+    then: only triggers matching that object's type or query are shown
+```
+
+```mdl
+feat F-2: Trigger Dispatch
+
+  req F-2.1:
+    when: space.properties.computeEnvironment === "local"
+    then: TriggerDispatcher starts for that space
+
+  req F-2.2:
+    when: space.properties.computeEnvironment === "edge" or "disabled"
+    then: TriggerDispatcher stops for that space
+
+  req F-2.3:
+    when: computeEnvironment changes
+    then: any in-flight dispatcher transition is cancelled before the new one starts
+
+  req F-2.4:
+    when: trigger spec.kind === "timer" and enabled === true
+    then: TriggerDispatcher fires trigger according to cron expression
+
+  req F-2.5:
+    when: trigger spec.kind === "feed"
+    then: TriggerDispatcher processes new messages from the linked Feed
+
+  req F-2.6:
+    when: trigger spec.kind === "subscription"
+    then: TriggerDispatcher invokes trigger on matching ECHO object mutations
+```
+
+```mdl
+feat F-3: Force Run and Cursor Reset
+
+  req F-3.1:
+    when: timer trigger is enabled and computeEnvironment !== "disabled"
+    then: user can force-run the trigger immediately from AutomationPanel
+
+  req F-3.2:
+    when: computeEnvironment === "local"
+    then: force-run invokes TriggerDispatcher.invokeTrigger directly in-process
+
+  req F-3.3:
+    when: computeEnvironment === "edge"
+    then: force-run calls FunctionsServiceClient.forceRunCronTrigger via HTTP
+
+  req F-3.4:
+    when: trigger spec.kind === "feed" and a cursor is stored
+    then: user can reset the cursor to reprocess the feed from the beginning
+```
+
+```mdl
+feat F-4: Operation Registry
+
+  req F-4.1:
+    when: plugin activates
+    then: all Capabilities.OperationHandler contributions are merged into a single OperationHandlerProvider
+
+  req F-4.2: OperationRegistry per space resolves operations from the merged OperationHandlerProvider.
+  req F-4.3: Skill registry is populated from AppCapabilities.SkillDefinition contributions.
+  req F-4.4: OpaqueToolkit aggregates AppCapabilities.Toolkit contributions for agent invocation.
+```
+
+```mdl
+feat F-5: Trace Sink
+
+  req F-5.1:
+    when: a trigger executes
+    then: execution trace messages are written to the space Feed via FeedTraceSink
+
+  req F-5.2: FeedTraceSink is contributed to Capabilities.TraceSink and routed via makeRoutingSink.
+```
+
+```mdl
+feat F-6: Create Trigger From Template
+
+  req F-6.1:
+    when: op:CreateTriggerFromTemplate is invoked
+    then: a Trigger is created and added as a hidden ECHO object in the target space
+
+  req F-6.2:
+    when: scriptName is provided
+    then: the Trigger.function is wired to the PersistentOperation linked to that Script
+
+  req F-6.3:
+    when: template.type === "timer"
+    then: Trigger.spec is set via Trigger.specTimer(template.cron)
+
+  req F-6.4:
+    when: template.type === "feed"
+    then: Trigger.spec is set via Trigger.specFeed(template.feed)
+
+  req F-6.5:
+    when: trigger is created
+    then: layout navigates to the automations settings panel for the space
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create trigger via AutomationPanel
+  given: AutomationPanel rendered for a space with no triggers
+  when: user clicks "New Trigger"
+  then:
+    - TriggerEditor shown with a blank Trigger
+    - selected state is undefined (new trigger mode)
+```
+
+```mdl
+test T-2: Save new trigger
+  given: TriggerEditor open with blank Trigger
+  when: user fills in a function and spec, then saves
+  then:
+    - space.db.add called with a new Trigger
+    - list view restored
+    - onDone called
+```
+
+```mdl
+test T-3: Edit existing trigger
+  given: AutomationPanel listing one trigger
+  when: user clicks the trigger row
+  then:
+    - TriggerEditor opens pre-populated with that trigger's values
+    - selected state holds the original trigger
+    - saving calls Obj.update on the original trigger
+```
+
+```mdl
+test T-4: Enable/disable toggle
+  given: AutomationPanel showing trigger with enabled = false
+  when: user flips the toggle
+  then:
+    - Obj.update sets trigger.enabled = true
+    - toggle reflects new state immediately
+```
+
+```mdl
+test T-5: Force run timer trigger (local)
+  given: timer trigger enabled, computeEnvironment = "local"
+  when: user clicks the force-run button
+  then:
+    - TriggerDispatcher.invokeTrigger called with a TimerEvent
+    - no error surfaced to user
+```
+
+```mdl
+test T-6: Dispatcher lifecycle on environment change
+  given: space computeEnvironment = "local", dispatcher running
+  when: space.properties.computeEnvironment changes to "edge"
+  then:
+    - in-flight transition fiber interrupted
+    - TriggerDispatcher.stop() called for that space
+```
+
+```mdl
+test T-7: CreateTriggerFromTemplate with timer
+  given: db contains Script "daily-summary", computeEnvironment = "local"
+  when: op:CreateTriggerFromTemplate invoked with template={type:"timer",cron:"0 8 * * *"}, scriptName="daily-summary"
+  then:
+    - Trigger created with spec.kind === "timer", spec.cron === "0 8 * * *"
+    - Trigger.function wired to PersistentOperation linked to "daily-summary" script
+    - Trigger added as hidden ECHO object
+    - layout navigates to automations settings panel
+```
+
+```mdl
+test T-8: CreateTriggerFromTemplate with feed
+  given: db contains a Feed object "email-feed"
+  when: op:CreateTriggerFromTemplate invoked with template={type:"feed",feed:<email-feed>}
+  then:
+    - Trigger created with spec.kind === "feed", spec.feed === Ref to email-feed
+    - Trigger added as hidden ECHO object
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```

@@ -9,8 +9,8 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
-  type ComponentPropsWithRef,
   type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   type Dispatch,
   type KeyboardEvent,
   type PropsWithChildren,
@@ -428,6 +428,6 @@ export const Main = {
   ComplementarySidebar: MainComplementarySidebar,
 };
 
-export { useMainContext, useSidebars, useLandmarkMover };
+export { useLandmarkMover, useMainContext, useSidebars };
 
-export type { MainRootProps, MainOverlayProps, MainContentProps, MainNavigationSidebarProps, SidebarState };
+export type { MainContentProps, MainNavigationSidebarProps, MainOverlayProps, MainRootProps, SidebarState };

@@ -10,23 +10,22 @@ import { pipe } from 'effect/Function';
 import React, { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import { useCapability, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Process, Trace } from '@dxos/compute';
-import { Filter, Query } from '@dxos/echo';
-import { FeedTraceSink } from '@dxos/functions-runtime';
+import { Process } from '@dxos/compute';
 import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { ScrollContainer } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { Timeline, type Commit } from '@dxos/react-ui-components';
+import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { ProcessTree, ProcessTreeProps } from '#components';
-import { buildExecutionGraph, type ExecutionGraph } from '#execution-graph';
+import { type ExecutionGraph, buildExecutionGraph } from '#execution-graph';
+import { getTraceMessagesAtom, useTraceMessages } from '#hooks';
 import { AssistantCapabilities } from '#types';
 
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
@@ -160,52 +159,29 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
 const atomEmpty = Atom.make(() => [] as const);
 
 type UseExecutionGraphOptions = {
+  collapseCompletedSpans?: boolean;
   eventLimit?: number;
 };
 
-const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOptions = {}): ExecutionGraph => {
+const useExecutionGraph = (
+  space: Space,
+  { collapseCompletedSpans, eventLimit }: UseExecutionGraphOptions = {},
+): ExecutionGraph => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
   const processesAtom = monitor?.processTreeAtom ?? atomEmpty;
 
   const atom = useMemo(
-    () => getExecutionGraph(space, processesAtom, { eventLimit }),
-    [space, processesAtom, eventLimit],
+    () => getExecutionGraph(space, processesAtom, { collapseCompletedSpans, eventLimit }),
+    [space, processesAtom, collapseCompletedSpans, eventLimit],
   );
 
-  return useAtomValue(atom);
-};
-
-/**
- * Atom of the raw trace messages for a space — the exact `Trace.Message[]` fed into
- * `buildExecutionGraph`. Shared by the execution graph and the debug trace export.
- */
-const getTraceMessagesAtom = (space: Space): Atom.Atom<readonly Trace.Message[]> =>
-  pipe(
-    space.db.query(FeedTraceSink.query).atom,
-    Atom.map(
-      (feeds) =>
-        // TODO(dmaretskyi): This should be possible in a single query with properly working limit(1) and feed > feed contents traversal.
-        space.db.query(
-          feeds.length > 0
-            ? Query.type(Trace.Message).from(feeds[0])
-            : (Query.select(Filter.nothing()) as Query.Query<never>),
-        ).atom,
-    ),
-    (atom) => Atom.make((get) => get(get(atom))),
-  );
-
-/**
- * Returns the raw trace messages for a space (used by the debug trace export).
- */
-const useTraceMessages = (space: Space): readonly Trace.Message[] => {
-  const atom = useMemo(() => getTraceMessagesAtom(space), [space]);
   return useAtomValue(atom);
 };
 
 const getExecutionGraph = (
   space: Space,
   processesAtom: Atom.Atom<readonly Process.Info[]>,
-  { eventLimit = 100 }: UseExecutionGraphOptions = {},
+  { collapseCompletedSpans = true, eventLimit = 100 }: UseExecutionGraphOptions = {},
 ): Atom.Atom<ExecutionGraph> => {
   const traceMessages = getTraceMessagesAtom(space);
 
@@ -226,6 +202,7 @@ const getExecutionGraph = (
     buildExecutionGraph({
       traceMessages: get(traceMessages),
       activeProcesses: get(activeProcesses),
+      collapseCompletedSpans,
       eventLimit,
     }),
   );
@@ -250,6 +227,7 @@ const ProcessTreeContainer = ({
   return (
     <ProcessTree
       processes={processesDeferred}
+      depth={3}
       onProcessSelect={onProcessSelect}
       onProcessTerminate={onProcessTerminate}
     />

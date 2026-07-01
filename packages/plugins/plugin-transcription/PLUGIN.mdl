@@ -8,7 +8,7 @@ A real-time voice-to-text transcription plugin for DXOS Composer.
 Captures spoken audio from a microphone, converts it to timestamped text segments via the
 Whisper speech-recognition service, and stores the results in an ECHO `Transcript` object
 backed by a `Feed`.
-The plugin also exposes blueprint-compatible operations that let AI assistants open and
+The plugin also exposes skill-compatible operations that let AI assistants open and
 summarize transcripts inside agent workflows.
 
 ## Extensions
@@ -69,6 +69,12 @@ type WhisperSegment
     words: WhisperWord[]
 ```
 
+```mdl
+type Settings
+  fields:
+    entityExtraction: boolean    # default: true — annotate transcript with references to known objects
+```
+
 ## Components
 
 ```mdl
@@ -76,7 +82,7 @@ component Transcription
   desc: Read-only CodeMirror editor that renders transcript messages as Markdown with byline headings.
   props:
     transcript?: Transcript
-    model: SerializationModel<Message>
+    model: TranscriptModel<Message>
   slots:
     (none — self-contained editor viewport)
   layout: |
@@ -170,6 +176,20 @@ op summarizeTranscript
 ```
 
 ```mdl
+op enrichMessage
+  desc: Extracts proper nouns from each transcript block of a Message using a small LLM, full-text-searches the space for matching objects, and rewrites the text with inline `[noun](dxn)` reference links.
+  input:
+    message: Message
+  output:
+    message: Message
+  effects: [echo:read, ai:inference]
+  requires: [AiService, Database]
+  note: |
+    Uses Claude Haiku. Falls back to the raw message if extraction fails (e.g. the AI
+    service is unavailable). Gated by the entityExtraction setting.
+```
+
+```mdl
 op normalizeSentences
   desc: Post-processes an array of raw transcript messages, merging word-level tokens into grammatically complete sentences.
   input:
@@ -234,7 +254,7 @@ feat F-4: Transcript Display
 
   req F-4.2:
     when: new messages arrive during live recording
-    then: the SerializationModel is updated and the editor scrolls to show the latest content
+    then: the TranscriptModel is updated and the editor scrolls to show the latest content
 ```
 
 ```mdl
@@ -254,9 +274,9 @@ feat F-5: AI Summary
 ```
 
 ```mdl
-feat F-6: Blueprint Integration
+feat F-6: Skill Integration
 
-  req F-6.1: Blueprint exposes op:openTranscript and op:summarizeTranscript as AI tools.
+  req F-6.1: Skill exposes op:openTranscript and op:summarizeTranscript as AI tools.
   req F-6.2: An AI assistant can open a transcript by Ref and return formatted text to the user.
   req F-6.3: An AI assistant can invoke the summary operation and present the result as a message.
 ```

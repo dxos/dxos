@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
-import { DXN, Database, Ref } from '@dxos/echo';
+import { Database, DXN, Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -31,7 +31,7 @@ function makeKey<const Head extends readonly string[], const Last extends string
  */
 export const Transcribe = Operation.make({
   meta: {
-    key: makeKey(meta.id, 'operation', 'transcribe'),
+    key: makeKey(meta.profile.key, 'operation', 'transcribe'),
     name: 'Transcribe Video',
     description: 'Transcribes a video via the EDGE transcription service and links the transcript.',
     icon: 'ph--subtitles--regular',
@@ -54,7 +54,7 @@ export const Transcribe = Operation.make({
  */
 export const Summarize = Operation.make({
   meta: {
-    key: makeKey(meta.id, 'operation', 'summarize'),
+    key: makeKey(meta.profile.key, 'operation', 'summarize'),
     name: 'Summarize Video',
     description: "Summarizes the video's transcript and links the summary.",
     icon: 'ph--text-align-left--regular',
@@ -77,7 +77,7 @@ export const Summarize = Operation.make({
  */
 export const FetchTranscript = Operation.make({
   meta: {
-    key: makeKey(meta.id, 'operation', 'fetchTranscript'),
+    key: makeKey(meta.profile.key, 'operation', 'fetchTranscript'),
     name: 'Fetch Video Transcript',
     description: "Loads a video's published caption tracks and links the transcript.",
     icon: 'ph--closed-captioning--regular',
@@ -101,7 +101,7 @@ export const FetchTranscript = Operation.make({
  */
 export const FetchDescription = Operation.make({
   meta: {
-    key: makeKey(meta.id, 'operation', 'fetchDescription'),
+    key: makeKey(meta.profile.key, 'operation', 'fetchDescription'),
     name: 'Fetch Video Description',
     description: "Loads a video's watch page via the CRX proxy and extracts the full description.",
     icon: 'ph--text-align-left--regular',

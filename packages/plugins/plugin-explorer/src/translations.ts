@@ -23,9 +23,12 @@ export const translations = [
         'delete-object.label': 'Delete explorer',
         'object-deleted.label': 'Explorer deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Explorer',
         'object-title.label': 'Title',
+        'neighborhood-companion.label': 'Graph',
+        'depth.label_one': '{{count}} hop',
+        'depth.label_other': '{{count}} hops',
       },
     },
   },

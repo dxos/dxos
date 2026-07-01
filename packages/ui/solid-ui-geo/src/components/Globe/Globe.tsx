@@ -100,8 +100,8 @@ export type GlobeController = {
 export type ProjectionType = 'orthographic' | 'mercator' | 'transverse-mercator';
 
 const projectionMap: Record<ProjectionType, () => GeoProjection> = {
-  orthographic: geoOrthographic,
-  mercator: geoMercator,
+  'orthographic': geoOrthographic,
+  'mercator': geoMercator,
   'transverse-mercator': geoTransverseMercator,
 };
 
@@ -338,4 +338,4 @@ export const Globe = {
   Panel: GlobePanel,
 };
 
-export type { GlobeRootProps, GlobeCanvasProps };
+export type { GlobeCanvasProps, GlobeRootProps };

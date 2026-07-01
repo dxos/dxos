@@ -13,15 +13,19 @@ import * as Tagging from './Tagging';
 import * as TagIndex from './TagIndex';
 
 /** A minimal immutable feed item. */
-const Item = Schema.Struct({
-  text: Schema.String,
-}).pipe(Type.makeObject(DXN.make('org.dxos.test.tagging.Item', '0.1.0')));
+const Item = Type.makeObject(DXN.make('org.dxos.test.tagging.Item', '0.1.0'))(
+  Schema.Struct({
+    text: Schema.String,
+  }),
+);
 
 /** A host pairing an immutable feed of items with a tag index over them. */
-const Host = Schema.Struct({
-  feed: Ref.Ref(Feed.Feed),
-  tags: Ref.Ref(TagIndex.TagIndex),
-}).pipe(Type.makeObject(DXN.make('org.dxos.test.tagging.Host', '0.1.0')));
+const Host = Type.makeObject(DXN.make('org.dxos.test.tagging.Host', '0.1.0'))(
+  Schema.Struct({
+    feed: Ref.Ref(Feed.Feed),
+    tags: Ref.Ref(TagIndex.TagIndex),
+  }),
+);
 
 describe('Tagging', () => {
   let builder: EchoTestBuilder;
@@ -51,7 +55,7 @@ describe('Tagging', () => {
   });
 
   test('tags an immutable feed object via a referenced TagIndex', async ({ expect }) => {
-    const { db, queues } = await builder.createDatabase({
+    const { db } = await builder.createDatabase({
       types: [Feed.Feed, Tag.Tag, Item, Host, TagIndex.TagIndex],
     });
     const feed = Feed.make();
@@ -64,9 +68,8 @@ describe('Tagging', () => {
     await db.flush();
     const tagId = Obj.getURI(tag);
 
-    const queueDxn = Feed.getQueueUri(feed)!;
     const message = Obj.make(Item, { text: 'hello' });
-    await queues.get(queueDxn).append([message]);
+    await db.appendToFeed(feed, [message]);
 
     Tagging.set(message, tagId, { index: tagIndex });
     expect(Tagging.get(message, { index: tagIndex })).toEqual([tagId]);

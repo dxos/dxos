@@ -70,6 +70,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src",
     "PLUGIN.mdl"
   ],
@@ -90,7 +91,6 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-board": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
