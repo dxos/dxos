@@ -73,3 +73,5 @@ export namespace Surface {
 
 export type { SurfaceProfilerEntry, SurfaceProfilerStats } from './SurfaceProfilerContext';
 export type { SurfaceMetric } from './SurfaceMetrics';
+export { SurfaceManager } from './SurfaceManager';
+export { SurfaceManagerProvider, useSurfaceManager } from './SurfaceManagerContext';

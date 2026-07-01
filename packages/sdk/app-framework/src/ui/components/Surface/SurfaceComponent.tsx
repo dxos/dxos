@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import * as Data from 'effect/Data';
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, {
   type FC,
   Fragment,
@@ -19,13 +18,14 @@ import React, {
 import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useDefaultValue } from '@dxos/react-hooks';
-import { Position } from '@dxos/util';
 
 import { Capabilities } from '../../../common';
 import { type CapabilityManager } from '../../../core';
 import { usePluginManager } from '../PluginManager';
 import { SurfaceContext } from './context';
 import { DebugSurface, isSurfaceDebugEnabled } from './SurfaceDebug';
+import { indexByRole } from './SurfaceManager';
+import { useSurfaceManager } from './SurfaceManagerContext';
 import { nextDataChurn, surfaceMetrics } from './SurfaceMetrics';
 import { useSurfaceProfilerCallback } from './SurfaceProfilerContext';
 import {
@@ -194,15 +194,11 @@ export const SurfaceComponent = memo(
     ...rest
   }: TypedProps<RoleToken<any>>) => {
     const data = useDefaultValue(dataProp, () => ({}));
-    const manager = usePluginManager();
+    const surfaceManager = useSurfaceManager();
     // Subscribe only to this role's contributions: contributing/removing a surface for a
     // different role keeps this bucket referentially stable, so the atom does not re-render us.
     const effectiveRole = type?.role ?? '';
-    const candidatesAtom = useMemo(
-      () => getCandidatesAtom(manager.capabilities, effectiveRole),
-      [manager, effectiveRole],
-    );
-    const roleCandidates = useAtomValue(candidatesAtom);
+    const roleCandidates = useAtomValue(surfaceManager.candidatesAtom(effectiveRole));
 
     // NOTE: The data guard runs per render so the surface re-dispatches on reactive data changes.
     const definitions = matchCandidates(roleCandidates, effectiveRole, data);
@@ -273,29 +269,6 @@ const ErrorFallback = ({ error }: { error: Error }) => {
 };
 
 /**
- * Groups definitions by role with each bucket pre-sorted by {@link Position},
- * so dispatch avoids a full scan and re-sort on every render.
- */
-const indexByRole = (definitions: Definition[]): Map<string, Definition[]> => {
-  const index = new Map<string, Definition[]>();
-  for (const definition of definitions) {
-    const roles = Array.isArray(definition.role) ? definition.role : [definition.role];
-    for (const role of roles) {
-      let bucket = index.get(role);
-      if (!bucket) {
-        bucket = [];
-        index.set(role, bucket);
-      }
-      bucket.push(definition);
-    }
-  }
-  for (const bucket of index.values()) {
-    bucket.sort(Position.compare);
-  }
-  return index;
-};
-
-/**
  * Filters the pre-indexed candidates for a role through their data guards.
  */
 const matchCandidates = (
@@ -307,53 +280,6 @@ const matchCandidates = (
     return [];
   }
   return definitions.filter(({ filter }) => (filter ? filter(data ?? {}, role) : true));
-};
-
-const EMPTY_CANDIDATES: ReadonlyArray<Definition> = Data.array<Definition[]>([]);
-
-// Per-manager atoms are cached so every Surface shares one index computation and one subscription.
-const indexAtomCache = new WeakMap<object, Atom.Atom<Map<string, Definition[]>>>();
-const candidatesAtomCache = new WeakMap<object, Map<string, Atom.Atom<ReadonlyArray<Definition>>>>();
-
-/**
- * Derived atom producing the role index (each bucket sorted by {@link Position}).
- * Built once per capability change and shared by all per-role atoms.
- */
-const getIndexAtom = (capabilities: CapabilityManager.CapabilityManager): Atom.Atom<Map<string, Definition[]>> => {
-  let atom = indexAtomCache.get(capabilities);
-  if (!atom) {
-    const base = capabilities.atom(Capabilities.ReactSurface);
-    atom = Atom.make((get) => indexByRole(get(base).flat()));
-    indexAtomCache.set(capabilities, atom);
-  }
-  return atom;
-};
-
-/**
- * Derived atom yielding the (position-sorted) candidates for a single role. Reads
- * the shared index and wraps the role's bucket with {@link Data.array}, so the atom
- * registry compares results structurally: a contribution to a different role
- * recomputes to an equal value and is dropped, leaving this role's subscribers untouched.
- */
-const getCandidatesAtom = (
-  capabilities: CapabilityManager.CapabilityManager,
-  role: string,
-): Atom.Atom<ReadonlyArray<Definition>> => {
-  let byRole = candidatesAtomCache.get(capabilities);
-  if (!byRole) {
-    byRole = new Map();
-    candidatesAtomCache.set(capabilities, byRole);
-  }
-  let atom = byRole.get(role);
-  if (!atom) {
-    const indexAtom = getIndexAtom(capabilities);
-    atom = Atom.make((get) => {
-      const bucket = get(indexAtom).get(role);
-      return bucket ? Data.array(bucket) : EMPTY_CANDIDATES;
-    });
-    byRole.set(role, atom);
-  }
-  return atom;
 };
 
 /**
