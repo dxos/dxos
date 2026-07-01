@@ -5,7 +5,8 @@ version: 0.1.0
 ---
 
 An Interactive Brokers plugin for `DXOS` Composer: a once-a-day background sync
-captures a Flex Web Service report into a per-space feed, the assistant
+captures a Flex Web Service report into a per-space feed (or the user imports a
+Flex XML file manually from the toolbar), the assistant
 answers portfolio, cash, and trade questions from the latest stored snapshot,
 and `Instrument` objects provide navigable, deduplicated references to
 tradable securities with static identity metadata plus research surfaces
@@ -197,15 +198,16 @@ component PortfolioArticle
   desc: |
     Article view for a Portfolio: lists the stored daily PortfolioReport
     snapshots (newest first) from the Portfolio's backing feed. The toolbar
-    carries the connect/sync action; clicking a report opens it in the
-    complementary plank.
+    carries the connect/sync action and a manual "import report XML" action
+    (uploads a Flex XML file, appended via op:ImportPortfolioReport); clicking a
+    report opens it in the complementary plank.
   props:
     subject: Portfolio
   state:
     reports: PortfolioReport[]   # snapshots from the Portfolio's feed, newest first
     selected?: PortfolioReport
   slots:
-    toolbar?: ReactNode          # hosts PortfolioSyncAction
+    toolbar?: ReactNode          # hosts PortfolioSyncAction and PortfolioImportAction
   actions:
     selectReport(report: PortfolioReport)
   emits:
@@ -441,6 +443,30 @@ op SyncPortfolioReport
 ```
 
 ```mdl
+op ImportPortfolioReport
+  desc: |
+    Appends a manually supplied raw Flex report XML to the Portfolio feed as a
+    PortfolioReport. Invoked from the toolbar's import action (file upload).
+    Never calls IBKR, so it works without a connection — useful for backfilling
+    reports downloaded from the Flex web UI.
+  input:
+    xml: string                 # raw <FlexQueryResponse> document
+  output:
+    fetchedAt: string
+    positions: number           # count in the imported report
+    trades: number
+    cash: number
+  errors:
+    InvalidReport: the uploaded file is not a recognizable <FlexQueryResponse> document
+  effects: [echo:read, echo:write]
+  requires: [Database]
+  note: |
+    Validates the payload contains a <FlexQueryResponse> root before persisting,
+    then finds-or-creates the per-space feed (keyed by IBKR_FEED_KIND) and
+    appends one PortfolioReport stamped with the import time.
+```
+
+```mdl
 op GetPortfolio
   desc: |
     Reads the open positions and cash balances from the most recent stored
@@ -606,6 +632,20 @@ feat F-2: Daily Sync
       The local timer fires only while the app is open; gaps are covered by the
       manual Sync action and by the assistant invoking SyncPortfolioReport.
     tags: [limitation]
+
+  req F-2.6:
+    when: the daily timer trigger is created on first enable
+    then: |
+      the trigger and its serialized SyncPortfolioReport operation are parented
+      to the owning Portfolio (Obj.setParent), so they cascade-delete with it
+      and stay grouped under the visible object rather than at space root
+
+  req F-2.7:
+    when: the user uploads a Flex XML file via the toolbar's import action
+    then: |
+      op:ImportPortfolioReport validates and appends it to the per-space feed as
+      a PortfolioReport without calling IBKR; the report list updates. Gaps in
+      the daily timer (feat:F-2.5) can also be backfilled this way.
 ```
 
 ```mdl

@@ -17,6 +17,7 @@ import { Ibkr } from '../types';
 import GetInstrumentFundamentalsHandler from './get-instrument-fundamentals';
 import GetPortfolioHandler from './get-portfolio';
 import GetTradesHandler from './get-trades';
+import ImportPortfolioReportHandler from './import-portfolio';
 import MaterializeInstrumentHandler from './materialize-instrument';
 import SyncPortfolioReportHandler from './sync-portfolio';
 
@@ -114,6 +115,26 @@ describe('IBKR operations', () => {
     expect(portfolio.positions).toHaveLength(0);
     expect(portfolio.cash).toHaveLength(0);
     expect(portfolio.fetchedAt).toBeUndefined();
+  });
+
+  test('ImportPortfolioReport appends raw XML the read operations can serve', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Feed.Feed, Ibkr.Report] });
+
+    const imported = await run(ImportPortfolioReportHandler.handler({ xml }), db);
+    expect(imported.positions).toBe(2);
+    expect(imported.cash).toBe(2);
+    expect(typeof imported.fetchedAt).toBe('string');
+
+    const portfolio = await run(GetPortfolioHandler.handler({}), db);
+    expect(portfolio.positions).toHaveLength(2);
+    expect(portfolio.fetchedAt).toBe(imported.fetchedAt);
+  });
+
+  test('ImportPortfolioReport rejects a file that is not a Flex report', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Feed.Feed, Ibkr.Report] });
+    await expect(run(ImportPortfolioReportHandler.handler({ xml: '<html>not a report</html>' }), db)).rejects.toThrow(
+      /not a valid Interactive Brokers Flex report/,
+    );
   });
 
   test('SyncPortfolioReport fails clearly when the credential is missing', ({ expect }) =>

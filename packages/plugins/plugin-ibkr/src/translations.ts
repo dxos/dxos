@@ -36,6 +36,8 @@ export const translations = [
         'plugin.name': 'Interactive Brokers',
         'sync.label': 'Sync',
         'syncing.label': 'Syncing…',
+        'import.label': 'Import report XML',
+        'importing.label': 'Importing…',
         'daily-sync.label': 'Daily sync',
         'report.companion.label': 'Report detail',
         'reports.label': 'Reports',

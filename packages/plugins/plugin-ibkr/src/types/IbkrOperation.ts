@@ -36,6 +36,27 @@ export const SyncPortfolioReport = Operation.make({
   services: [Credential.CredentialsService, Database.Service],
 });
 
+/** Appends a manually supplied raw Flex report XML to the feed, bypassing the rate-limited IBKR fetch. */
+export const ImportPortfolioReport = Operation.make({
+  meta: {
+    key: makeKey('importPortfolioReport'),
+    name: 'Import IBKR report',
+    description: 'Store a raw Interactive Brokers Flex report XML for offline reads, without calling IBKR.',
+    icon: 'ph--upload-simple--regular',
+  },
+  input: Schema.Struct({
+    /** Raw Flex Web Service `<FlexQueryResponse>` document. */
+    xml: Schema.String,
+  }),
+  output: Schema.Struct({
+    fetchedAt: Schema.String,
+    positions: Schema.Number,
+    trades: Schema.Number,
+    cash: Schema.Number,
+  }),
+  services: [Database.Service],
+});
+
 /** Returns the open positions and cash balances from the most recent stored report. */
 export const GetPortfolio = Operation.make({
   meta: {

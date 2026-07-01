@@ -15,6 +15,8 @@ const EDGAR_TICKER_MESSAGE = 'Ticker was not found in the SEC EDGAR company dire
 
 const INSTRUMENT_SYMBOL_MESSAGE = 'Instrument is missing a primary symbol.' as const;
 
+const IMPORT_MESSAGE = 'The imported file is not a valid Interactive Brokers Flex report.' as const;
+
 /** The IBKR credential is absent or missing its Flex token / query id. */
 export class IbkrConnectionError extends BaseError.extend('IbkrConnectionError', CONNECTION_MESSAGE) {}
 
@@ -47,3 +49,6 @@ export class InstrumentMissingSymbolError extends BaseError.extend(
   'InstrumentMissingSymbolError',
   INSTRUMENT_SYMBOL_MESSAGE,
 ) {}
+
+/** An imported file is not a recognizable Flex Web Service report document. */
+export class IbkrImportError extends BaseError.extend('IbkrImportError', IMPORT_MESSAGE) {}
