@@ -27,7 +27,6 @@ const DefaultStory = ({ state: initialState = WelcomeState.INIT, ...props }: Par
           identity={identity}
           state={state}
           onEmailLogin={() => setState(WelcomeState.LOGIN_SENT)}
-          onGoToLogin={() => setState(WelcomeState.INIT)}
           {...props}
         />
       </AlertDialog.Overlay>
@@ -71,15 +70,4 @@ export const EmailPrimary: Story = {
 export const WithIdentity: Story = {
   decorators: [withClientProvider({ createIdentity: true })],
   args: {},
-};
-
-export const SpaceInvitation: Story = {
-  decorators: [withClientProvider()],
-  args: {
-    state: WelcomeState.SPACE_INVITATION,
-    onPasskey: () => console.log('passkey'),
-    onJoinIdentity: () => console.log('join identity'),
-    onRecoverIdentity: () => console.log('recover identity'),
-    onSpaceInvitation: () => console.log('space invitation'),
-  },
 };
