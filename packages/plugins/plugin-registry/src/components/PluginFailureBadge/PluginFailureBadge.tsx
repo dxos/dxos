@@ -31,24 +31,18 @@ export type PluginFailureBadgeProps = {
 export const PluginFailureBadge = ({ failure, iconClassNames, size = 4 }: PluginFailureBadgeProps) => {
   const { t } = useTranslation(meta.profile.key);
 
-  const phaseLabel = failure.phase === 'load' ? t('failure-phase-load.label') : t('failure-phase-activation.label');
-  const reasonLabel =
-    failure.reason === 'timeout' ? t('failure-reason-timeout.label') : t('failure-reason-error.label');
-
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
         <IconButton
-          variant='ghost'
-          iconOnly
-          noTooltip
+          variant='destructive'
           icon='ph--warning--bold'
+          iconOnly
           size={size}
           iconClassNames={iconClassNames}
+          noTooltip
           label={t('failure-badge.label')}
           data-testid={`pluginFailureBadge.${failure.id}`}
-          // Don't bubble up to row click handlers (e.g. the card's `onClick`
-          // that opens the details pane). The popover is the action here.
           onClick={(event) => event.stopPropagation()}
         />
       </Popover.Trigger>
@@ -57,7 +51,11 @@ export const PluginFailureBadge = ({ failure, iconClassNames, size = 4 }: Plugin
           <Popover.Viewport>
             <div className='px-3 py-2 min-w-[18rem] max-w-[28rem] flex flex-col gap-1'>
               <p className='font-medium text-sm'>
-                {t('failure-title.label', { phase: phaseLabel, reason: reasonLabel })}
+                {t('failure-title.label', {
+                  phase: failure.phase === 'load' ? t('failure-phase-load.label') : t('failure-phase-activation.label'),
+                  reason:
+                    failure.reason === 'timeout' ? t('failure-reason-timeout.label') : t('failure-reason-error.label'),
+                })}
               </p>
               <p className='text-description text-sm break-words'>{failure.error.message}</p>
             </div>
