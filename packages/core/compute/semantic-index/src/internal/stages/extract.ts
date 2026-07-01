@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { AiService, ModelName } from '@dxos/ai';
+import { AiService } from '@dxos/ai';
 
 import { SemanticIndexError } from '../../errors';
 import { Factuality } from '../../types';
@@ -19,7 +19,7 @@ export type ExtractDocument = {
   readonly date?: string;
 };
 
-export const DEFAULT_MODEL: ModelName = 'ai.claude.model.claude-haiku-4-5';
+export const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
 /** Flat LLM payload (entities are surface strings; linking happens in the pipeline). */
 export const ExtractPayload = Schema.Struct({

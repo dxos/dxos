@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useRef } from 'react';
 
 import { IconButton, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Empty, Listbox } from '@dxos/react-ui-list';
@@ -21,45 +21,64 @@ export type EntityListProps = ThemedClassName<{
  * facts rather than message authors — so loaded documents populate it too. Selecting an entity sets
  * the shared context (drives the list + graph views); clicking it again clears the context.
  *
- * The per-row `onClick` is authoritative for mouse selection: it sets the clicked entity (or clears
- * it). This is required because `Listbox` selection follows focus + focus-on-entry, so the first
- * click into the list otherwise only moves focus (needing a second click to actually select).
+ * Click-to-toggle: clicking the selected entity again clears the context. `Listbox` selects on a
+ * row click but also selects-on-focus, and `focus` fires before `click` in a mouse gesture (with a
+ * render committed in between), so by click time the row already reads as selected and a naive
+ * toggle would always clear it. The pre-gesture selection is captured at pointer-down (before focus)
+ * and the click toggles against that, so a single click selects and a re-click deselects — while the
+ * listbox's selection-follows-focus keeps keyboard navigation working.
  */
-export const EntityList = ({ entities, selected, onSelect, classNames }: EntityListProps) => (
-  <Panel.Root classNames={classNames}>
-    <Panel.Toolbar asChild>
-      <Toolbar.Root>
-        <Toolbar.Text classNames='grow'>Entities{entities.length > 0 ? ` (${entities.length})` : ''}</Toolbar.Text>
-        <IconButton
-          icon='ph--x--regular'
-          iconOnly
-          label='Clear'
-          disabled={!selected}
-          onClick={() => onSelect(undefined)}
-        />
-      </Toolbar.Root>
-    </Panel.Toolbar>
-    <Panel.Content classNames='overflow-auto'>
-      {entities.length === 0 ? (
-        <Empty label='No entities.' />
-      ) : (
-        <Listbox.Root value={selected} onValueChange={onSelect}>
-          <Listbox.Content aria-label='Entities'>
-            {entities.map((entity) => (
-              <Listbox.Item
-                classNames='gap-2'
-                key={entity.id}
-                id={entity.id}
-                onClick={() => onSelect(selected === entity.id ? undefined : entity.id)}
-              >
-                <Listbox.ItemLabel>{entity.label}</Listbox.ItemLabel>
-                <span className='shrink-0 text-subdued tabular-nums'>{entity.count}</span>
-                <Listbox.Indicator />
-              </Listbox.Item>
-            ))}
-          </Listbox.Content>
-        </Listbox.Root>
-      )}
-    </Panel.Content>
-  </Panel.Root>
-);
+export const EntityList = ({ entities, selected, onSelect, classNames }: EntityListProps) => {
+  const pointerSelectionRef = useRef<{ itemId: string; selected: string | undefined } | undefined>(undefined);
+  return (
+    <Panel.Root classNames={classNames}>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.Text classNames='grow'>Entities{entities.length > 0 ? ` (${entities.length})` : ''}</Toolbar.Text>
+          <IconButton
+            icon='ph--x--regular'
+            iconOnly
+            label='Clear'
+            disabled={!selected}
+            onClick={() => onSelect(undefined)}
+          />
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content classNames='overflow-auto'>
+        {entities.length === 0 ? (
+          <Empty label='No entities.' />
+        ) : (
+          <Listbox.Root value={selected} onValueChange={onSelect}>
+            <Listbox.Content aria-label='Entities'>
+              {entities.map((entity) => (
+                <Listbox.Item
+                  classNames='gap-2'
+                  key={entity.id}
+                  id={entity.id}
+                  onMouseDown={() => {
+                    pointerSelectionRef.current = { itemId: entity.id, selected };
+                  }}
+                  onClick={() => {
+                    // Consume the pre-gesture selection captured on mouse-down (cleared each gesture so a
+                    // later click without a fresh mouse-down can't toggle against stale state).
+                    const pointerSelection = pointerSelectionRef.current;
+                    pointerSelectionRef.current = undefined;
+                    if (pointerSelection?.itemId === entity.id) {
+                      onSelect(pointerSelection.selected === entity.id ? undefined : entity.id);
+                    } else {
+                      onSelect(entity.id);
+                    }
+                  }}
+                >
+                  <Listbox.ItemLabel>{entity.label}</Listbox.ItemLabel>
+                  <span className='shrink-0 text-subdued tabular-nums'>{entity.count}</span>
+                  <Listbox.Indicator />
+                </Listbox.Item>
+              ))}
+            </Listbox.Content>
+          </Listbox.Root>
+        )}
+      </Panel.Content>
+    </Panel.Root>
+  );
+};

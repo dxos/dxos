@@ -98,6 +98,7 @@
     "@dxos/plugin-onboarding": "workspace:*",
     "@dxos/plugin-osrm": "workspace:*",
     "@dxos/plugin-outliner": "workspace:*",
+    "@dxos/plugin-payments": "workspace:*",
     "@dxos/plugin-pipeline": "workspace:*",
     "@dxos/plugin-presenter": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",

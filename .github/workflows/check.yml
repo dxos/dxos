@@ -106,18 +106,6 @@ jobs:
       - name: Check for peer dependency issues
         run: pnpm install --resolution-only --no-frozen-lockfile
 
-      - name: Upload moon run report
-        uses: actions/upload-artifact@v7
-        if: >-
-          (success() || failure()) &&
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
-        with:
-          name: moon-check-report
-          path: .moon/cache/runReport.json
-          retention-days: 1
-          if-no-files-found: ignore
-
   test:
     strategy:
       matrix:
@@ -201,18 +189,6 @@ jobs:
           name: vitest-report-${{ matrix.node-version }}
           path: test-results
           retention-days: 7
-
-      - name: Upload moon run report
-        uses: actions/upload-artifact@v7
-        if: >-
-          (success() || failure()) &&
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
-        with:
-          name: moon-test-report-${{ matrix.node-version }}
-          path: .moon/cache/runReport.json
-          retention-days: 1
-          if-no-files-found: ignore
 
       - uses: codecov/codecov-action@v5
         if: ${{ matrix.node-version == '24.11.1' && env.VITEST_COVERAGE == 'true' }}
@@ -310,18 +286,6 @@ jobs:
           name: vitest-report-storybook-${{ matrix.node-version }}
           path: test-results
           retention-days: 7
-
-      - name: Upload moon run report
-        uses: actions/upload-artifact@v7
-        if: >-
-          (success() || failure()) &&
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
-        with:
-          name: moon-storybook-report-${{ matrix.node-version }}
-          path: .moon/cache/runReport.json
-          retention-days: 1
-          if-no-files-found: ignore
 
       - uses: codecov/codecov-action@v5
         if: ${{ matrix.node-version == '24.11.1' && env.VITEST_COVERAGE == 'true' }}
@@ -438,58 +402,6 @@ jobs:
         with:
           name: ${{ github.job }}
           result: ${{ job.status }}
-
-  check-report:
-    needs: [check, test, storybook]
-    # Only post on same-repo PRs — fork PRs get read-only tokens regardless of
-    # declared permissions, and non-PR runs have no PR to comment on.
-    if: >-
-      always() &&
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Download check moon report
-        id: download-check-report
-        continue-on-error: true
-        uses: actions/download-artifact@v5
-        with:
-          name: moon-check-report
-          path: .moon/cache
-
-      - uses: 'moonrepo/run-report-action@v1'
-        if: steps.download-check-report.outcome == 'success'
-        with:
-          access-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Download test moon report
-        id: download-test-report
-        continue-on-error: true
-        uses: actions/download-artifact@v5
-        with:
-          name: moon-test-report-24.11.1
-          path: .moon/cache
-
-      - uses: 'moonrepo/run-report-action@v1'
-        if: steps.download-test-report.outcome == 'success'
-        with:
-          access-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Download storybook moon report
-        id: download-storybook-report
-        continue-on-error: true
-        uses: actions/download-artifact@v5
-        with:
-          name: moon-storybook-report-24.11.1
-          path: .moon/cache
-
-      - uses: 'moonrepo/run-report-action@v1'
-        if: steps.download-storybook-report.outcome == 'success'
-        with:
-          access-token: ${{ secrets.GITHUB_TOKEN }}
 
   report:
     needs: [test, storybook]

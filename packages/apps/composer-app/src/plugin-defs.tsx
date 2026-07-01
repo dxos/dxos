@@ -55,6 +55,7 @@ import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
 import { OnboardingPlugin } from '@dxos/plugin-onboarding/plugin';
 import { OsrmPlugin } from '@dxos/plugin-osrm/plugin';
 import { OutlinerPlugin } from '@dxos/plugin-outliner/plugin';
+import { PaymentsPlugin } from '@dxos/plugin-payments/plugin';
 import { PipelinePlugin } from '@dxos/plugin-pipeline/plugin';
 import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
@@ -149,6 +150,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       IrohBeaconPlugin.meta.profile.key,
       OsrmPlugin.meta.profile.key,
       OutlinerPlugin.meta.profile.key,
+      PaymentsPlugin.meta.profile.key,
       PipelinePlugin.meta.profile.key,
       CommercePlugin.meta.profile.key,
       CrmPlugin.meta.profile.key,
@@ -235,6 +237,7 @@ export const getPlugins = ({
     }),
     OsrmPlugin(),
     OutlinerPlugin(),
+    PaymentsPlugin(),
     PipelinePlugin(),
     PresenterPlugin(),
     PreviewPlugin(),

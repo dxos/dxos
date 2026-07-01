@@ -86,7 +86,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
-    "@dxos/ui-types": "catalog:",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
