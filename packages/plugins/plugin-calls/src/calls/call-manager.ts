@@ -13,12 +13,17 @@ import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
 import { isNonNullable } from '@dxos/util';
 
 import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer';
-import { MediaManager, type MediaState } from './media-manager';
+import { MediaManager, type MediaState, type MediaTransportFactory } from './media-manager';
 import { type ActivityState, type EncodedTrackName, TrackNameCodec, type UserState } from './types';
 
 export type GlobalState = {
   call: CallState;
   media: MediaState;
+};
+
+export type CallManagerOptions = {
+  /** Selects the media transport backend; defaults to the Cloudflare Calls SFU. */
+  transportFactory?: MediaTransportFactory;
 };
 
 /**
@@ -200,17 +205,17 @@ export class CallManager extends Resource {
     return this._mediaManager.turnScreenshareOff();
   }
 
-  // TODO(burdon): Can this be mocked?
   constructor(
     private readonly _client: Client,
     private readonly _registry: Registry.Registry,
+    options: CallManagerOptions = {},
   ) {
     super();
     this._client.config.getOrThrow('runtime.services.edge.url');
     const networkService = this._client.services.services.NetworkService;
     invariant(networkService, 'network service not found');
     this._swarmSynchronizer = new CallSwarmSynchronizer({ networkService });
-    this._mediaManager = new MediaManager();
+    this._mediaManager = new MediaManager({ transportFactory: options.transportFactory });
   }
 
   protected override async _open(): Promise<void> {

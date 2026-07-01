@@ -12,9 +12,16 @@ import { IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/r
 
 import { meta } from '#meta';
 
-import { type EncodedTrackName, type GlobalState } from '../../calls';
+import { CallsServicePeer, type EncodedTrackName, type GlobalState, type MediaTransport } from '../../calls';
 
 export type CallDebugPanelProps = ThemedClassName<{ state?: GlobalState }>;
+
+/**
+ * SFU-specific diagnostics (peer connection, request history) are only available on the Cloudflare
+ * transport; other transports expose no equivalent, so the debug panel degrades gracefully.
+ */
+const asCloudflarePeer = (peer?: MediaTransport): CallsServicePeer | undefined =>
+  peer instanceof CallsServicePeer ? peer : undefined;
 
 export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -41,7 +48,7 @@ export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
   const [stats, setStats] = useState<WebRTCStatsEvent['data']>();
 
   useEffect(() => {
-    const pc = state?.media.peer?.session?.peerConnection;
+    const pc = asCloudflarePeer(state?.media.peer)?.session?.peerConnection;
     const handleStats = (stats: WebRTCStatsEvent) => {
       setStats(stats.data);
     };
@@ -61,7 +68,7 @@ export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
         log.error('error removing webrtc stats', { error, pc, peerId: 1, connectionId: '1' });
       }
     };
-  }, [state?.media.peer?.session?.peerConnection, showDetailedWebRTCStats]);
+  }, [asCloudflarePeer(state?.media.peer)?.session?.peerConnection, showDetailedWebRTCStats]);
 
   const rows = useMemo(() => getCallStatusTable(state), [state?.call.users, state?.media.pulledAudioTracks]);
 
@@ -93,7 +100,7 @@ export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
         </div>
         <Table rows={rows} />
         {showDetailedWebRTCStats && <JsonView data={{ stats }} />}
-        {showServiceHistory && <JsonView data={{ history: state?.media.peer?.history.get() }} />}
+        {showServiceHistory && <JsonView data={{ history: asCloudflarePeer(state?.media.peer)?.history.get() }} />}
       </div>
     </Panel>
   );
@@ -145,7 +152,7 @@ const getCallStatusTable = (state?: GlobalState): TableProps['rows'] => {
       user.isOk.video ? 'VID ✅' : 'VID ❌',
       user.tracks?.screenshareEnabled ? (user.isOk.screenshare ? 'SCR ✅' : 'SCR ❌') : undefined,
     ]),
-    ['ICE', state.media.peer?.session?.peerConnection.iceConnectionState ?? 'no connection'],
+    ['ICE', asCloudflarePeer(state.media.peer)?.session?.peerConnection.iceConnectionState ?? 'no connection'],
   ];
 };
 

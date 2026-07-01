@@ -7,6 +7,7 @@ import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { type MediaTransport } from '../media-transport';
 import {
   type ErrorResponse,
   type RenegotiationResponse,
@@ -53,7 +54,7 @@ export type HistoryRecord =
  * Inspired by client from https://github.com/threepointone/partyserver/tree/main/packages/partytracks
  */
 // TODO(mykola): Expose session errors.
-export class CallsServicePeer extends Resource {
+export class CallsServicePeer extends Resource implements MediaTransport {
   public readonly history = new HistoryCache<HistoryRecord>(100);
 
   private readonly _persistentLifecycle = new PersistentLifecycle<Session>({
