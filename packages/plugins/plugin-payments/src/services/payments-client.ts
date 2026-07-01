@@ -32,7 +32,8 @@ export type PremiumResponse = {
 /** Minimal shape of an injected EVM provider (e.g. `window.ethereum`). */
 type Eip1193Provider = { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> };
 
-const getInjectedProvider = (): Eip1193Provider | undefined => (globalThis as any).ethereum as Eip1193Provider | undefined;
+const getInjectedProvider = (): Eip1193Provider | undefined =>
+  (globalThis as any).ethereum as Eip1193Provider | undefined;
 
 /**
  * Connects the injected EVM wallet and returns a viem `WalletClient` plus the selected account address.
@@ -117,7 +118,7 @@ export const createStripeCheckout = async (
   const authHeader = await getEdgeAuthHeader(client, baseUrl);
   const response = await globalThis.fetch(new URL('/stripe/checkout', baseUrl), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: authHeader },
+    headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
     body: JSON.stringify({ credits }),
   });
   if (!response.ok) {
