@@ -805,6 +805,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-payments/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-pipeline/package.json",
           "jsonpath": "$.version"
         },

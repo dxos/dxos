@@ -127,21 +127,21 @@ catalog:
   '@octokit/core': ^7.0.6
   '@octokit/rest': ^22.0.1
   '@opentelemetry/api': ^1.9.1
-  '@opentelemetry/api-logs': ^0.218.0
-  '@opentelemetry/auto-instrumentations-node': ^0.76.0
-  '@opentelemetry/auto-instrumentations-web': ^0.63.0
-  '@opentelemetry/core': ^2.7.1
-  '@opentelemetry/exporter-logs-otlp-http': ^0.218.0
-  '@opentelemetry/exporter-metrics-otlp-http': ^0.218.0
-  '@opentelemetry/exporter-trace-otlp-http': ^0.218.0
-  '@opentelemetry/instrumentation': ^0.218.0
-  '@opentelemetry/resources': ^2.7.1
-  '@opentelemetry/sdk-logs': ^0.218.0
-  '@opentelemetry/sdk-metrics': ^2.7.1
-  '@opentelemetry/sdk-node': ^0.218.0
-  '@opentelemetry/sdk-trace-base': ^2.7.1
-  '@opentelemetry/sdk-trace-node': ^2.7.1
-  '@opentelemetry/sdk-trace-web': ^2.7.1
+  '@opentelemetry/api-logs': ^0.219.0
+  '@opentelemetry/auto-instrumentations-node': ^0.77.0
+  '@opentelemetry/auto-instrumentations-web': ^0.64.0
+  '@opentelemetry/core': ^2.8.0
+  '@opentelemetry/exporter-logs-otlp-http': ^0.219.0
+  '@opentelemetry/exporter-metrics-otlp-http': ^0.219.0
+  '@opentelemetry/exporter-trace-otlp-http': ^0.219.0
+  '@opentelemetry/instrumentation': ^0.219.0
+  '@opentelemetry/resources': ^2.8.0
+  '@opentelemetry/sdk-logs': ^0.219.0
+  '@opentelemetry/sdk-metrics': ^2.8.0
+  '@opentelemetry/sdk-node': ^0.219.0
+  '@opentelemetry/sdk-trace-base': ^2.8.0
+  '@opentelemetry/sdk-trace-node': ^2.8.0
+  '@opentelemetry/sdk-trace-web': ^2.8.0
   '@opentelemetry/semantic-conventions': ^1.41.1
   '@opentui/core': 0.1.61
   '@opentui/core-darwin-arm64': 0.1.61
@@ -325,6 +325,9 @@ catalog:
   '@vitest/ui': ^4.1.8
   '@vitest/utils': ^4.1.8
   '@vscode/vsce': ^3.7.1
+  '@x402/core': ^2.17.0
+  '@x402/evm': ^2.17.0
+  '@x402/fetch': ^2.17.0
   '@xenova/transformers': ^2.17.2
   '@xstate/react': ^3.2.1
   '@xyflow/react': ^12.8.1
@@ -655,6 +658,7 @@ catalog:
   uuid: ^9.0.0
   varint: 6.0.0
   versor: ^0.2.0
+  viem: ^2.21.26
   vite: ^8.0.16
   vite-node: ^6.0.0
   vite-plugin-devtools-json: ^1.0.0

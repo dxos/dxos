@@ -22,8 +22,6 @@ export const SelectField = ({ type, readonly, placeholder, options, onValueChang
     [type, onValueChange],
   );
 
-  console.log('!!!', options?.length);
-
   return (
     <FormRow<string>
       readonly={readonly}

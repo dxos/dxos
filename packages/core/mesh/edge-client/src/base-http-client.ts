@@ -71,7 +71,7 @@ export abstract class BaseHttpClient {
   }
 
   setIdentity(identity: EdgeIdentity): void {
-    if (this._edgeIdentity?.identityKey !== identity.identityKey || this._edgeIdentity?.peerKey !== identity.peerKey) {
+    if (this._edgeIdentity?.identityDid !== identity.identityDid || this._edgeIdentity?.peerKey !== identity.peerKey) {
       this._edgeIdentity = identity;
       this._authHeader = undefined;
     }

@@ -17,7 +17,7 @@ import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
 import { AgentService as AgentServiceRuntime } from '@dxos/functions-runtime';
-import { EntityId } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
@@ -90,7 +90,7 @@ describe('AssistantPlugin', () => {
         expect(text.toLocaleLowerCase()).toContain('paris');
       }).pipe(
         Effect.provide(
-          AiService.model('ai.claude.model.claude-haiku-4-5').pipe(
+          AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
             Layer.provideMerge(ServiceResolver.provide({ space: personalSpace.id }, AiService.AiService)),
           ),
         ),
@@ -133,7 +133,7 @@ describe('AssistantPlugin', () => {
             input: {
               country: 'France',
             },
-            model: 'ai.claude.model.claude-haiku-4-5',
+            model: DXN.make('com.anthropic.model.claude-haiku-4-5.default'),
           },
           { spaceId: personalSpace.id },
         );

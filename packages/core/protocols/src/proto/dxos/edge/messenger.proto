@@ -36,7 +36,10 @@ message Peer {
   
   // TODO(burdon): Rename topic?
   optional string swarm_key = 1;
-  optional string identity_key = 2;
+  // TODO(DX-1059): Remove once no pre-DID senders remain (phase 8, gated on telemetry).
+  // @deprecated Hex identity key; use `identity_did` (field 8). Senders no longer write this; readers
+  // still fall back to it for pre-DX-1059 peers. Retained for binary compatibility.
+  optional string identity_key = 2 [deprecated = true];
   string peer_key = 3;
 
   /**
@@ -54,6 +57,12 @@ message Peer {
    * @example 1715142000000
    */
   optional double disconnected = 7;
+
+  /**
+   * Owner identity DID (`did:halo:…`) — the peer's identity for point-to-point routing (DX-1059).
+   * Supersedes the deprecated hex `identity_key` (field 2); it is the only identity field senders write.
+   */
+  optional string identity_did = 8;
 
   /**
    * Optional opeage data that represents peer state is updated on `join` request and all peers in swarm are notified.

@@ -20,6 +20,10 @@ const __dirname = dirname(__filename);
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 
+// Browsers targeted for syntax transforms (also applied to `oxc` below so that dev-server
+// transforms downlevel syntax WebKit doesn't parse yet, e.g. `using`/`await using`).
+const browserTargets = ['chrome132', 'edge132', 'firefox134', 'safari18'];
+
 const baseDir = resolve(__dirname, '../');
 const rootDir = resolve(baseDir, '../../');
 const staticDir = resolve(baseDir, './static');
@@ -141,7 +145,7 @@ export const createConfig = ({
     }
 
     // NOTE: Dynamic imports seem to help avoid conflicts with storybook's internal esbuild-register usage & Vite 7.
-    const { default: react } = await import('@vitejs/plugin-react-swc');
+    const { default: react } = await import('@vitejs/plugin-react');
     const { mergeConfig } = await import('vite');
     const { default: inspect } = await import('vite-plugin-inspect');
     const { DxosLogPlugin } = await import('@dxos/vite-plugin-log');
@@ -149,10 +153,10 @@ export const createConfig = ({
     const finalConfig = mergeConfig(
       {
         ...config,
-        // Prevent duplicate react-swc plugin.
+        // Prevent duplicate react plugin.
         plugins: config.plugins?.filter((plugin) =>
           Array.isArray(plugin)
-            ? plugin.findIndex((p) => p && 'name' in p && p?.name === 'vite:react-swc') === -1
+            ? plugin.findIndex((p) => p && 'name' in p && p?.name === 'vite:react-babel') === -1
             : true,
         ),
       },
@@ -170,11 +174,17 @@ export const createConfig = ({
             '@dxos/client/opfs-worker': resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
           },
         },
+        // `build.target` only lowers syntax for `storybook build`; the e2e tests run against
+        // `storybook dev`, which otherwise serves source syntax untransformed straight to the
+        // browser. Setting `oxc.target` applies the same downleveling during dev.
+        oxc: {
+          target: browserTargets,
+        },
         build: {
           assetsInlineLimit: 0,
           // Target browsers with native `using` (TC39 Explicit Resource Management) support.
           // Chrome 132 (Jan 2025), Edge 132, Firefox 134 (Jan 2025), Safari 18.2 (Dec 2024).
-          target: ['chrome132', 'edge132', 'firefox134', 'safari18'],
+          target: browserTargets,
           rolldownOptions: {
             output: {
               assetFileNames: 'assets/[name].[hash][extname]', // Unique asset names
@@ -327,8 +337,11 @@ export const createConfig = ({
           // https://www.npmjs.com/package/vite-plugin-wasm
           wasm(),
 
-          // https://www.npmjs.com/package/@vitejs/plugin-react-swc
-          react({ tsDecorators: true }),
+          // https://www.npmjs.com/package/@vitejs/plugin-react
+          // The oxc-based plugin (not SWC) keeps the React/JSX transform within rolldown's
+          // pipeline, aligning with composer-app and composer-crx; this drops storybook-react as a
+          // consumer of `@vitejs/plugin-react-swc`.
+          react(),
 
           // https://www.npmjs.com/package/vite-plugin-turbosnap
           turbosnap({

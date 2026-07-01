@@ -26,6 +26,7 @@
     "@dxos/ai": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@effect/ai": "catalog:",
     "@modelcontextprotocol/sdk": "catalog:",

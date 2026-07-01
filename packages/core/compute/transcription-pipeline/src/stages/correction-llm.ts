@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { AiService, type ModelName } from '@dxos/ai';
+import { AiService } from '@dxos/ai';
+import { DXN } from '@dxos/echo';
 import { type ContentBlock } from '@dxos/types';
 
 import { DEFAULT_STAGE_MODEL } from '../PipelineConfig';
@@ -25,7 +26,7 @@ const PROMPT = `You repair raw speech-to-text fragments. For each numbered fragm
  */
 export const correctWithLanguageModel = (
   blocks: readonly ContentBlock.Transcript[],
-  model: ModelName = DEFAULT_STAGE_MODEL,
+  model: DXN.DXN = DEFAULT_STAGE_MODEL,
 ): Effect.Effect<ReadonlyArray<{ index: number; corrected: string }>, unknown, AiService.AiService> =>
   Effect.gen(function* () {
     const input = blocks.map((block, index) => `${index}: ${block.corrected ?? block.text}`).join('\n');
@@ -36,4 +37,4 @@ export const correctWithLanguageModel = (
     return response.value.blocks.map((block) => ({ index: block.index, corrected: block.corrected }));
     // Model-layer construction failure is a fatal wiring fault (defect); transient LLM failures stay
     // recoverable so callers can retry.
-  }).pipe(Effect.provide(AiService.model(model).pipe(Layer.orDie)));
+  }).pipe(Effect.provide(AiService.model(DXN.getName(model)).pipe(Layer.orDie)));
