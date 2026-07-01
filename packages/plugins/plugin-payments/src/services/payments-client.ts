@@ -50,6 +50,7 @@ const connectWallet = async (): Promise<{ walletClient: WalletClient; address: `
   if (!address) {
     throw new Error('No account exposed by the injected wallet.');
   }
+
   const walletClient = createWalletClient({ account: address, chain: baseSepolia, transport: custom(provider) });
   return { walletClient, address };
 };
@@ -125,5 +126,6 @@ export const createStripeCheckout = async (
     const text = await response.text().catch(() => '');
     throw new Error(`/stripe/checkout failed: ${response.status} ${text}`);
   }
+
   return (await response.json()) as { url: string };
 };
