@@ -52,17 +52,19 @@ export const PluginFailureBadge = ({ failure, iconClassNames, size = 4 }: Plugin
           onClick={(event) => event.stopPropagation()}
         />
       </Popover.Trigger>
-      <Popover.Content>
-        <Popover.Viewport>
-          <div className='px-3 py-2 min-w-[18rem] max-w-[28rem] flex flex-col gap-1'>
-            <p className='font-medium text-sm'>
-              {t('failure-title.label', { phase: phaseLabel, reason: reasonLabel })}
-            </p>
-            <p className='text-description text-sm break-words'>{failure.error.message}</p>
-          </div>
-        </Popover.Viewport>
-        <Popover.Arrow />
-      </Popover.Content>
+      <Popover.Portal>
+        <Popover.Content>
+          <Popover.Viewport>
+            <div className='px-3 py-2 min-w-[18rem] max-w-[28rem] flex flex-col gap-1'>
+              <p className='font-medium text-sm'>
+                {t('failure-title.label', { phase: phaseLabel, reason: reasonLabel })}
+              </p>
+              <p className='text-description text-sm break-words'>{failure.error.message}</p>
+            </div>
+          </Popover.Viewport>
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
     </Popover.Root>
   );
 };
