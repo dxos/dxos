@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type CallState, type MediaState } from '@dxos/plugin-calls';
+import { type CallState, type TranscriptEvent } from '@dxos/plugin-calls';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
@@ -56,10 +56,18 @@ export default Capability.makeModule(
         const payload: MeetingPayload = activity.payload;
         await invokePromise(MeetingOperation.HandlePayload, payload);
       },
-      onMediaStateUpdated: async ([mediaState, isSpeaking]: [MediaState, boolean]) => {
+      onTranscript: async (event: TranscriptEvent) => {
+        // Native RealtimeKit transcription: CallManager forwards only this client's own segments,
+        // so each is written to the shared feed exactly once (no central writer election needed).
         const { transcriptionManager } = store.state;
-        void transcriptionManager?.setAudioTrack(mediaState.audioTrack);
-        void transcriptionManager?.setRecording(isSpeaking);
+        await transcriptionManager?.addTranscript([
+          {
+            _tag: 'transcript',
+            started: event.started ?? new Date().toISOString(),
+            text: event.text,
+            pending: event.pending,
+          },
+        ]);
       },
     });
   }),

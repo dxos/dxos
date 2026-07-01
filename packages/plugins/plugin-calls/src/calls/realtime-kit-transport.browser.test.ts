@@ -6,9 +6,11 @@ import { describe, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 
+import { type TranscriptEvent } from './media-transport';
 import {
   type RealtimeKitMeeting,
   type RealtimeKitRemoteParticipant,
+  type RealtimeKitTranscript,
   RealtimeKitTransport,
 } from './realtime-kit-transport';
 
@@ -44,6 +46,19 @@ class FakeMeeting implements RealtimeKitMeeting {
 
   onParticipantsChanged(): () => void {
     return () => {};
+  }
+
+  #transcriptCallback?: (transcript: RealtimeKitTranscript) => void;
+
+  onTranscript(callback: (transcript: RealtimeKitTranscript) => void): () => void {
+    this.#transcriptCallback = callback;
+    return () => {
+      this.#transcriptCallback = undefined;
+    };
+  }
+
+  emitTranscript(transcript: RealtimeKitTranscript): void {
+    this.#transcriptCallback?.(transcript);
   }
 
   async leave(): Promise<void> {
@@ -112,6 +127,27 @@ describe('RealtimeKitTransport', () => {
       trackData: { sessionId: 'absent-device', trackName: 'audio', mid: 'audio', location: 'remote' },
     });
     expect(resolved).toBeUndefined();
+
+    await transport.close();
+  });
+
+  test('subscribeTranscripts maps native transcript events to the normalized shape', async ({ expect }) => {
+    const meeting = new FakeMeeting();
+    const transport = makeTransport(meeting);
+    await transport.open();
+
+    const received: TranscriptEvent[] = [];
+    transport.subscribeTranscripts((event) => received.push(event));
+    meeting.emitTranscript({
+      customParticipantId: 'peer-device',
+      transcript: 'hello',
+      isPartialTranscript: true,
+      id: 'seg-1',
+    });
+
+    expect(received).toEqual([
+      { deviceKey: 'peer-device', text: 'hello', started: undefined, pending: true, id: 'seg-1' },
+    ]);
 
     await transport.close();
   });

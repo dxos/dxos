@@ -6,6 +6,19 @@ import { type Context } from '@dxos/context';
 
 import { type TrackObject } from './types';
 
+/** A transcription segment produced natively by the transport (e.g. RealtimeKit's on-network ASR). */
+export type TranscriptEvent = {
+  /** Speaker's participant id (== DXOS device key / swarm `UserState.id`). */
+  deviceKey?: string;
+  text: string;
+  /** ISO timestamp of the segment. */
+  started?: string;
+  /** True while the segment is still being revised (interim result). */
+  pending?: boolean;
+  /** Stable id for deduplication across revisions. */
+  id?: string;
+};
+
 /**
  * Media transport backend for a call: publishes local tracks and resolves remote tracks.
  * Abstracts the concrete signaling/SFU implementation (Cloudflare Calls today, RealtimeKit next) so
@@ -34,4 +47,10 @@ export interface MediaTransport {
 
   /** Resolve a remote track referenced by `trackData` into a playable `MediaStreamTrack`. */
   pullTrack(options: { ctx: Context; trackData: TrackObject }): Promise<MediaStreamTrack | undefined>;
+
+  /**
+   * Subscribe to native transcription events, if the transport provides them. Returns an unsubscribe.
+   * Transports without on-network transcription omit this.
+   */
+  subscribeTranscripts?(callback: (event: TranscriptEvent) => void): () => void;
 }

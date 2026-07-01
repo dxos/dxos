@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type MediaTransport } from '../calls/media-transport';
+import { type MediaTransport, type TranscriptEvent } from '../calls/media-transport';
 import { type TrackObject } from '../calls/types';
 
 export type FakePublishedTrack = { kind: string; track: MediaStreamTrack | null; descriptor: TrackObject };
@@ -16,6 +16,7 @@ export class FakeTransport implements MediaTransport {
 
   #open = false;
   #counter = 0;
+  readonly #transcriptListeners = new Set<(event: TranscriptEvent) => void>();
 
   /** @param resolveRemote Supplies the `MediaStreamTrack` returned by {@link pullTrack} (default: none). */
   constructor(
@@ -50,5 +51,15 @@ export class FakeTransport implements MediaTransport {
 
   async pullTrack(options: { trackData: TrackObject }): Promise<MediaStreamTrack | undefined> {
     return this._resolveRemote(options.trackData);
+  }
+
+  subscribeTranscripts(callback: (event: TranscriptEvent) => void): () => void {
+    this.#transcriptListeners.add(callback);
+    return () => this.#transcriptListeners.delete(callback);
+  }
+
+  /** Test helper: emit a scripted native transcript event to subscribers. */
+  emitTranscript(event: TranscriptEvent): void {
+    this.#transcriptListeners.forEach((listener) => listener(event));
   }
 }

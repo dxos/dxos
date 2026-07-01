@@ -10,7 +10,7 @@ import { Capability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { type Feed } from '@dxos/echo';
 import { type EntityLookup as EntityLookupFn } from '@dxos/transcription-pipeline';
-import { type Message } from '@dxos/types';
+import { type ContentBlock, type Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -32,6 +32,11 @@ export interface TranscriptionManager {
   setAudioTrack(track?: MediaStreamTrack): Promise<void>;
   setRecording(recording?: boolean): void;
   setEnabled(enabled: boolean): Promise<void>;
+  /**
+   * Append externally-produced transcript segments (e.g. RealtimeKit native transcription) directly to
+   * the feed, bypassing local audio capture. No-op unless enabled and a feed is set.
+   */
+  addTranscript(segments: ContentBlock.Transcript[]): Promise<void>;
   open(): Promise<this>;
   close(): Promise<this>;
 }

@@ -6,7 +6,7 @@ import { type Context, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 
 import { type RoomJoiner } from './edge-room-joiner';
-import { type MediaTransport } from './media-transport';
+import { type MediaTransport, type TranscriptEvent } from './media-transport';
 import { type TrackObject } from './types';
 
 //
@@ -29,12 +29,23 @@ export interface RealtimeKitRemoteParticipant {
   videoTrack?: MediaStreamTrack;
 }
 
+/** Native transcription segment as delivered by RealtimeKit's `meeting.ai`. */
+export interface RealtimeKitTranscript {
+  customParticipantId?: string;
+  transcript: string;
+  isPartialTranscript?: boolean;
+  id?: string;
+  date?: Date;
+}
+
 export interface RealtimeKitMeeting {
   readonly self: RealtimeKitSelf;
   /** Currently-joined remote participants. */
   getRemoteParticipants(): RealtimeKitRemoteParticipant[];
   /** Subscribe to roster changes; returns an unsubscribe. */
   onParticipantsChanged(callback: () => void): () => void;
+  /** Subscribe to native transcription events; returns an unsubscribe. */
+  onTranscript(callback: (transcript: RealtimeKitTranscript) => void): () => void;
   leave(): Promise<void>;
 }
 
@@ -138,6 +149,22 @@ export class RealtimeKitTransport extends Resource implements MediaTransport {
 
     return kind === 'video' || kind === 'screenshare' ? participant.videoTrack : participant.audioTrack;
   }
+
+  subscribeTranscripts(callback: (event: TranscriptEvent) => void): () => void {
+    const meeting = this.#meeting;
+    if (!meeting) {
+      return () => {};
+    }
+    return meeting.onTranscript((transcript) =>
+      callback({
+        deviceKey: transcript.customParticipantId,
+        text: transcript.transcript,
+        started: transcript.date?.toISOString(),
+        pending: transcript.isPartialTranscript,
+        id: transcript.id,
+      }),
+    );
+  }
 }
 
 /**
@@ -157,6 +184,10 @@ export const createRealtimeKitMeetingFactory =
         // Roster changes (join/leave) are emitted by the `joined` map, not the `participants` container.
         meeting.participants.joined.on('participantsUpdate', callback);
         return () => meeting.participants.joined.off('participantsUpdate', callback);
+      },
+      onTranscript: (callback) => {
+        meeting.ai.on('transcript', callback);
+        return () => meeting.ai.off('transcript', callback);
       },
       leave: () => meeting.leave(),
     };

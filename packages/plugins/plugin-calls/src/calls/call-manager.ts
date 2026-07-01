@@ -14,6 +14,7 @@ import { isNonNullable } from '@dxos/util';
 import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer';
 import { type RoomJoiner, createEdgeRoomJoiner } from './edge-room-joiner';
 import { MediaManager, type MediaState } from './media-manager';
+import { type TranscriptEvent } from './media-transport';
 import {
   type RealtimeKitMeetingFactory,
   RealtimeKitTransport,
@@ -38,7 +39,10 @@ export class CallManager extends Resource {
   public readonly callStateUpdated = new Event<CallState>();
   // TODO(wittjosiah): Consolidate isSpeaking into the MediaState type.
   public readonly mediaStateUpdated = new Event<[MediaState, boolean]>();
+  public readonly roomJoined = new Event<{ roomId?: string }>();
   public readonly left = new Event<string>();
+  /** Native transcription segments produced by the transport (this client's own speech only). */
+  public readonly transcript = new Event<TranscriptEvent>();
 
   /**
    * Atom-based state. Updated via `_updateState()`.
@@ -77,6 +81,8 @@ export class CallManager extends Resource {
   private readonly _activityAtomFamily = Atom.family<string, Atom.Atom<ActivityState | undefined>>((key) =>
     Atom.make((get) => get(this._stateAtom).call.activities?.[key]),
   );
+
+  #transcriptUnsubscribe?: () => void;
 
   private readonly _swarmSynchronizer: CallSwarmSynchronizer;
   private readonly _mediaManager: MediaManager;
@@ -264,13 +270,28 @@ export class CallManager extends Resource {
     const roomId = this._swarmSynchronizer._getState().roomId;
     const deviceKey = this._client.halo.device?.deviceKey.toHex();
     invariant(roomId && deviceKey, 'room id and device key are required to join a call');
-    await this._mediaManager.join(
-      new RealtimeKitTransport({ roomId, deviceKey, joiner: this._roomJoiner, createMeeting: this._createMeeting }),
-    );
+    const transport = new RealtimeKitTransport({
+      roomId,
+      deviceKey,
+      joiner: this._roomJoiner,
+      createMeeting: this._createMeeting,
+    });
+    await this._mediaManager.join(transport);
+
+    // Native transcription broadcasts every participant; persist only our own so each segment is written once.
+    this.#transcriptUnsubscribe = transport.subscribeTranscripts?.((event) => {
+      if (event.deviceKey === deviceKey) {
+        this.transcript.emit(event);
+      }
+    });
+
+    this.roomJoined.emit({ roomId });
   }
 
   @synchronized
   async leave(): Promise<void> {
+    this.#transcriptUnsubscribe?.();
+    this.#transcriptUnsubscribe = undefined;
     this._swarmSynchronizer.setJoined(false);
     await this._swarmSynchronizer.leave();
     await this._mediaManager.leave();

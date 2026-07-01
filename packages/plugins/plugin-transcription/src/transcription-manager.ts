@@ -115,6 +115,13 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
     }
   }
 
+  async addTranscript(segments: ContentBlock.Transcript[]): Promise<void> {
+    if (!this.getEnabled()) {
+      return;
+    }
+    await this._onSegments(segments);
+  }
+
   @synchronized
   async setAudioTrack(track?: MediaStreamTrack): Promise<void> {
     if (this._audioStreamTrack === track) {
