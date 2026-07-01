@@ -74,6 +74,9 @@ DashboardRoot.displayName = 'Dashboard.Root';
 
 type DashboardContentProps = SlottableProps;
 
+/**
+ * Grid layout container for dashboard sections.
+ */
 const DashboardContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const Comp = asChild ? Slot : Primitive.div;
   return (
@@ -91,6 +94,9 @@ DashboardContent.displayName = 'Dashboard.Content';
 
 type DashboardStatsProps = SlottableProps;
 
+/**
+ * Auto-fit grid of stat cards.
+ */
 const DashboardStats = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const Comp = asChild ? Slot : Primitive.div;
   return (
@@ -111,6 +117,9 @@ DashboardStats.displayName = 'Dashboard.Stats';
 
 type DashboardStatProps = SlottableProps;
 
+/**
+ * Single stat card; composes StatLabel and StatValue.
+ */
 const DashboardStat = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const Comp = asChild ? Slot : Primitive.div;
   return (
@@ -131,6 +140,9 @@ DashboardStat.displayName = 'Dashboard.Stat';
 
 type DashboardStatLabelProps = ComposableProps;
 
+/**
+ * Muted caption of a stat card.
+ */
 const DashboardStatLabel = composable<HTMLSpanElement>(({ children, ...props }, forwardedRef) => (
   <span {...composableProps(props, { classNames: 'truncate text-sm text-description' })} ref={forwardedRef}>
     {children}
@@ -151,6 +163,9 @@ type DashboardStatValueCustomProps = {
 
 type DashboardStatValueProps = ComposableProps<DashboardStatValueCustomProps>;
 
+/**
+ * Stat card value; formats numbers via the optional unit, falling back to locale formatting.
+ */
 const DashboardStatValue = composable<HTMLSpanElement, DashboardStatValueCustomProps>(
   ({ children, value, unit, ...props }, forwardedRef) => {
     const content = typeof value === 'number' ? (unit ? unit(value).toString() : value.toLocaleString()) : value;
@@ -170,6 +185,9 @@ DashboardStatValue.displayName = 'Dashboard.StatValue';
 
 type DashboardRangesProps = ThemedClassName<PropsWithChildren<{}>>;
 
+/**
+ * Single-select range tabs bound to the Root range state.
+ */
 const DashboardRanges = forwardRef<HTMLDivElement, DashboardRangesProps>(
   ({ children, classNames, ...props }, forwardedRef) => {
     const { range, setRange } = useDashboardContext('Dashboard.Ranges');
@@ -205,6 +223,9 @@ DashboardRanges.displayName = 'Dashboard.Ranges';
 
 type DashboardRangeProps = ToggleGroupItemProps;
 
+/**
+ * Individual range tab.
+ */
 const DashboardRange = forwardRef<HTMLButtonElement, DashboardRangeProps>(
   ({ variant = 'ghost', density = 'sm', ...props }, forwardedRef) => (
     <ToggleGroupItem {...props} variant={variant} density={density} ref={forwardedRef} />
