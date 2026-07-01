@@ -58,8 +58,6 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         space = await trigger.wait();
       }
 
-      await invokePromise(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(space.id) });
-
       // TODO(wittjosiah): `result.target` is ignored so acceptance navigates to the space home
       // immediately; revisit how to incorporate the target once immediate navigation is settled.
       await invokePromise(LayoutOperation.Open, {
