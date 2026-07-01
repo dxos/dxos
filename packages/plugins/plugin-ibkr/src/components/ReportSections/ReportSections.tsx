@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Fragment } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { Grid, Separator, Tag, useTranslation } from '@dxos/react-ui';
+import { Format } from '@dxos/echo/Format';
+import { Select, useTranslation } from '@dxos/react-ui';
+import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { meta } from '../../meta';
 import { type Ibkr } from '../../types';
@@ -17,9 +19,175 @@ export type ReportSectionsProps = {
   closedLots: readonly Ibkr.Lot[];
 };
 
-const SECTION = 'gap-x-5 gap-y-1.5 px-4 pb-2';
-const HEADING = 'px-4 pt-3 pb-1 text-sm font-medium text-description';
-const HEADER_CELL = 'text-xs text-subdued';
+type Section = {
+  id: string;
+  label: string;
+  properties: TablePropertyDefinition[];
+  rows: any[];
+};
+
+/**
+ * Read view of a parsed Interactive Brokers Flex report. dx-grid is a single full-height virtualized
+ * grid, so the heterogeneous sections (positions, lots, trades, realized, cash) are surfaced through a
+ * section Select driving one {@link DynamicTable} rather than stacked as separate grids. Numeric
+ * columns are formatted by the table's number format; dates and P&L are normalized into the row data.
+ */
+export const ReportSections = ({ positions, trades, cash, openLots, closedLots }: ReportSectionsProps) => {
+  const { t } = useTranslation(meta.profile.key);
+
+  const sections = useMemo<Section[]>(() => {
+    const all: (Section | false)[] = [
+      {
+        id: 'positions',
+        label: t('positions.heading', { count: positions.length }),
+        properties: [
+          { name: 'symbol', format: Format.TypeFormat.String, title: t('position.symbol.label') },
+          { name: 'quantity', format: Format.TypeFormat.Number, title: t('position.quantity.label') },
+          { name: 'markPrice', format: Format.TypeFormat.Number, title: t('position.mark-price.label') },
+          { name: 'costBasis', format: Format.TypeFormat.Number, title: t('position.cost-basis.label') },
+          { name: 'value', format: Format.TypeFormat.Number, title: t('position.value.label') },
+          { name: 'pnl', format: Format.TypeFormat.Number, title: t('position.pnl.label') },
+          { name: 'currency', format: Format.TypeFormat.String, title: t('position.currency.label'), size: 80 },
+        ],
+        rows: positions.map((position, index) => ({
+          id: String(index),
+          symbol: position.symbol,
+          quantity: position.quantity,
+          markPrice: position.markPrice,
+          costBasis: position.costBasis,
+          value: position.positionValue,
+          pnl: position.unrealizedPnl,
+          currency: position.currency,
+        })),
+      },
+      openLots.length > 0 && {
+        id: 'openLots',
+        label: t('open-lots.heading', { count: openLots.length }),
+        properties: [
+          { name: 'symbol', format: Format.TypeFormat.String, title: t('lot.symbol.label') },
+          { name: 'acquired', format: Format.TypeFormat.String, title: t('lot.acquired.label') },
+          { name: 'quantity', format: Format.TypeFormat.Number, title: t('lot.quantity.label') },
+          { name: 'costBasis', format: Format.TypeFormat.Number, title: t('lot.cost-basis.label') },
+          { name: 'value', format: Format.TypeFormat.Number, title: t('lot.value.label') },
+          { name: 'pnl', format: Format.TypeFormat.Number, title: t('lot.pnl.label') },
+          { name: 'currency', format: Format.TypeFormat.String, title: t('lot.currency.label'), size: 80 },
+        ],
+        rows: openLots.map((lot, index) => ({
+          id: String(index),
+          symbol: lot.symbol,
+          acquired: formatDate(lot.acquired),
+          quantity: lot.quantity,
+          costBasis: lot.costBasis,
+          value: lot.value,
+          pnl: lot.unrealizedPnl,
+          currency: lot.currency,
+        })),
+      },
+      {
+        id: 'trades',
+        label: t('trades.heading', { count: trades.length }),
+        properties: [
+          { name: 'date', format: Format.TypeFormat.String, title: t('trade.date.label') },
+          { name: 'symbol', format: Format.TypeFormat.String, title: t('trade.symbol.label') },
+          { name: 'side', format: Format.TypeFormat.String, title: t('trade.side.label'), size: 80 },
+          { name: 'quantity', format: Format.TypeFormat.Number, title: t('trade.quantity.label') },
+          { name: 'price', format: Format.TypeFormat.Number, title: t('trade.price.label') },
+        ],
+        rows: trades.map((trade, index) => ({
+          id: String(index),
+          date: formatDate(trade.date),
+          symbol: trade.symbol,
+          side: trade.side,
+          quantity: Math.abs(trade.quantity),
+          price: trade.price,
+        })),
+      },
+      closedLots.length > 0 && {
+        id: 'closedLots',
+        label: t('realized.heading', { count: closedLots.length }),
+        properties: [
+          { name: 'symbol', format: Format.TypeFormat.String, title: t('realized.symbol.label') },
+          { name: 'acquired', format: Format.TypeFormat.String, title: t('realized.acquired.label') },
+          { name: 'sold', format: Format.TypeFormat.String, title: t('realized.sold.label') },
+          { name: 'quantity', format: Format.TypeFormat.Number, title: t('realized.quantity.label') },
+          { name: 'proceeds', format: Format.TypeFormat.Number, title: t('realized.proceeds.label') },
+          { name: 'costBasis', format: Format.TypeFormat.Number, title: t('realized.cost-basis.label') },
+          { name: 'pnl', format: Format.TypeFormat.Number, title: t('realized.gain.label') },
+          { name: 'term', format: Format.TypeFormat.String, title: t('realized.term.label'), size: 80 },
+          { name: 'currency', format: Format.TypeFormat.String, title: t('realized.currency.label'), size: 80 },
+        ],
+        rows: closedLots.map((lot, index) => {
+          const term = holdingTerm(lot.acquired, lot.sold);
+          return {
+            id: String(index),
+            symbol: lot.symbol,
+            acquired: formatDate(lot.acquired),
+            sold: formatDate(lot.sold),
+            quantity: Math.abs(lot.quantity),
+            proceeds: lot.proceeds,
+            costBasis: lot.costBasis,
+            pnl: lot.realizedPnl,
+            term: term ? t(`term.${term}.label`) : '—',
+            currency: lot.currency,
+          };
+        }),
+      },
+      {
+        id: 'cash',
+        label: t('cash.heading'),
+        properties: [
+          { name: 'currency', format: Format.TypeFormat.String, title: t('cash.currency.label') },
+          { name: 'endingCash', format: Format.TypeFormat.Number, title: t('cash.ending-cash.label') },
+        ],
+        rows: cash.map((entry, index) => ({
+          id: String(index),
+          currency: entry.currency,
+          endingCash: entry.endingCash,
+        })),
+      },
+    ];
+    return all.filter((section): section is Section => section !== false);
+  }, [t, positions, trades, cash, openLots, closedLots]);
+
+  const [selected, setSelected] = useState(sections[0]?.id);
+  // Keep the selection valid as available sections change (e.g. lots appear/disappear between reports).
+  useEffect(() => {
+    if (!sections.some((section) => section.id === selected)) {
+      setSelected(sections[0]?.id);
+    }
+  }, [sections, selected]);
+
+  const active = sections.find((section) => section.id === selected) ?? sections[0];
+
+  return (
+    <div className='grid grid-rows-[min-content_1fr] min-bs-0 bs-full'>
+      <div className='p-2'>
+        <Select.Root value={active?.id} onValueChange={setSelected}>
+          <Select.TriggerButton />
+          <Select.Portal>
+            <Select.Content>
+              <Select.Viewport>
+                {sections.map((section) => (
+                  <Select.Option key={section.id} value={section.id}>
+                    {section.label}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
+      </div>
+      {active && (
+        // Distinct typename per section so the ephemeral table schemas do not collide in the registry.
+        <DynamicTable
+          name={`org.dxos.plugin.ibkr.report.${active.id}`}
+          properties={active.properties}
+          rows={active.rows}
+        />
+      )}
+    </div>
+  );
+};
 
 /** Converts IBKR's "YYYYMMDD" or "YYYYMMDD;HH:MM:SS" trade date to "YYYY-MM-DD". */
 const formatDate = (raw: string | undefined): string => {
@@ -28,17 +196,6 @@ const formatDate = (raw: string | undefined): string => {
   }
   const date = raw.split(';')[0];
   return date.length === 8 ? `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}` : date;
-};
-
-const formatNumber = (value: number | undefined): string =>
-  value === undefined ? '—' : value.toLocaleString(undefined, { maximumFractionDigits: 2 });
-
-const formatPnl = (value: number | undefined): string => {
-  if (value === undefined) {
-    return '—';
-  }
-  const formatted = formatNumber(value);
-  return value >= 0 ? `+${formatted}` : formatted;
 };
 
 /**
@@ -54,138 +211,4 @@ const holdingTerm = (acquired: string | undefined, sold: string | undefined): 'l
   }
   const anniversary = `${Number(acquiredYmd.slice(0, 4)) + 1}${acquiredYmd.slice(4, 8)}`;
   return soldYmd > anniversary ? 'long' : 'short';
-};
-
-/**
- * Presentational tables for the parsed sections of an Interactive Brokers Flex report: aggregated open
- * positions, recent trades, and cash balances, plus — when the query emits lot detail — the per-lot
- * breakdown (the tax-relevant unit) and realized closed lots for tax reporting. Numeric columns are
- * right-aligned.
- */
-export const ReportSections = ({ positions, trades, cash, openLots, closedLots }: ReportSectionsProps) => {
-  const { t } = useTranslation(meta.profile.key);
-
-  // TODO(dmaretskyi): Use react-ui-table.
-  return (
-    <>
-      <h2 className={HEADING}>{t('positions.heading', { count: positions.length })}</h2>
-      <Grid cols={7} grow={false} classNames={SECTION}>
-        <span className={HEADER_CELL}>{t('position.symbol.label')}</span>
-        <span className={`${HEADER_CELL} text-right`}>{t('position.quantity.label')}</span>
-        <span className={`${HEADER_CELL} text-right`}>{t('position.mark-price.label')}</span>
-        <span className={`${HEADER_CELL} text-right`}>{t('position.cost-basis.label')}</span>
-        <span className={`${HEADER_CELL} text-right`}>{t('position.value.label')}</span>
-        <span className={`${HEADER_CELL} text-right`}>{t('position.pnl.label')}</span>
-        <span className={HEADER_CELL}>{t('position.currency.label')}</span>
-        {positions.map((position, index) => (
-          <Fragment key={index}>
-            <span>{position.symbol}</span>
-            <span className='text-right'>{formatNumber(position.quantity)}</span>
-            <span className='text-right'>{formatNumber(position.markPrice)}</span>
-            <span className='text-right'>{formatNumber(position.costBasis)}</span>
-            <span className='text-right'>{formatNumber(position.positionValue)}</span>
-            <span className='text-right'>{formatPnl(position.unrealizedPnl)}</span>
-            <span>{position.currency}</span>
-          </Fragment>
-        ))}
-      </Grid>
-
-      {openLots.length > 0 && (
-        <>
-          <Separator />
-          <h2 className={HEADING}>{t('open-lots.heading', { count: openLots.length })}</h2>
-          <Grid cols={7} grow={false} classNames={SECTION}>
-            <span className={HEADER_CELL}>{t('lot.symbol.label')}</span>
-            <span className={HEADER_CELL}>{t('lot.acquired.label')}</span>
-            <span className={`${HEADER_CELL} text-right`}>{t('lot.quantity.label')}</span>
-            <span className={`${HEADER_CELL} text-right`}>{t('lot.cost-basis.label')}</span>
-            <span className={`${HEADER_CELL} text-right`}>{t('lot.value.label')}</span>
-            <span className={`${HEADER_CELL} text-right`}>{t('lot.pnl.label')}</span>
-            <span className={HEADER_CELL}>{t('lot.currency.label')}</span>
-            {openLots.map((lot, index) => (
-              <Fragment key={index}>
-                <span>{lot.symbol}</span>
-                <span>{formatDate(lot.acquired)}</span>
-                <span className='text-right'>{formatNumber(lot.quantity)}</span>
-                <span className='text-right'>{formatNumber(lot.costBasis)}</span>
-                <span className='text-right'>{formatNumber(lot.value)}</span>
-                <span className='text-right'>{formatPnl(lot.unrealizedPnl)}</span>
-                <span>{lot.currency}</span>
-              </Fragment>
-            ))}
-          </Grid>
-        </>
-      )}
-
-      <Separator />
-
-      <h2 className={HEADING}>{t('trades.heading', { count: trades.length })}</h2>
-      <Grid cols={5} grow={false} classNames={SECTION}>
-        <span className={HEADER_CELL}>{t('trade.date.label')}</span>
-        <span className={HEADER_CELL}>{t('trade.symbol.label')}</span>
-        <span className={HEADER_CELL}>{t('trade.side.label')}</span>
-        <span className={`${HEADER_CELL} text-right`}>{t('trade.quantity.label')}</span>
-        <span className={`${HEADER_CELL} text-right`}>{t('trade.price.label')}</span>
-        {trades.map((trade, index) => (
-          <Fragment key={index}>
-            <span>{formatDate(trade.date)}</span>
-            <span>{trade.symbol}</span>
-            <span>
-              <Tag hue={trade.side === 'BUY' ? 'green' : 'red'}>{trade.side}</Tag>
-            </span>
-            <span className='text-right'>{formatNumber(Math.abs(trade.quantity))}</span>
-            <span className='text-right'>{formatNumber(trade.price)}</span>
-          </Fragment>
-        ))}
-      </Grid>
-
-      {closedLots.length > 0 && (
-        <>
-          <Separator />
-          <h2 className={HEADING}>{t('realized.heading', { count: closedLots.length })}</h2>
-          <Grid cols={9} grow={false} classNames={SECTION}>
-            <span className={HEADER_CELL}>{t('realized.symbol.label')}</span>
-            <span className={HEADER_CELL}>{t('realized.acquired.label')}</span>
-            <span className={HEADER_CELL}>{t('realized.sold.label')}</span>
-            <span className={`${HEADER_CELL} text-right`}>{t('realized.quantity.label')}</span>
-            <span className={`${HEADER_CELL} text-right`}>{t('realized.proceeds.label')}</span>
-            <span className={`${HEADER_CELL} text-right`}>{t('realized.cost-basis.label')}</span>
-            <span className={`${HEADER_CELL} text-right`}>{t('realized.gain.label')}</span>
-            <span className={HEADER_CELL}>{t('realized.term.label')}</span>
-            <span className={HEADER_CELL}>{t('realized.currency.label')}</span>
-            {closedLots.map((lot, index) => {
-              const term = holdingTerm(lot.acquired, lot.sold);
-              return (
-                <Fragment key={index}>
-                  <span>{lot.symbol}</span>
-                  <span>{formatDate(lot.acquired)}</span>
-                  <span>{formatDate(lot.sold)}</span>
-                  <span className='text-right'>{formatNumber(Math.abs(lot.quantity))}</span>
-                  <span className='text-right'>{formatNumber(lot.proceeds)}</span>
-                  <span className='text-right'>{formatNumber(lot.costBasis)}</span>
-                  <span className='text-right'>{formatPnl(lot.realizedPnl)}</span>
-                  <span>{term ? t(`term.${term}.label`) : '—'}</span>
-                  <span>{lot.currency}</span>
-                </Fragment>
-              );
-            })}
-          </Grid>
-        </>
-      )}
-
-      <Separator />
-
-      <h2 className={HEADING}>{t('cash.heading')}</h2>
-      <Grid cols={2} grow={false} classNames={SECTION}>
-        <span className={HEADER_CELL}>{t('cash.currency.label')}</span>
-        <span className={`${HEADER_CELL} text-right`}>{t('cash.ending-cash.label')}</span>
-        {cash.map((entry, index) => (
-          <Fragment key={index}>
-            <span>{entry.currency}</span>
-            <span className='text-right'>{formatNumber(entry.endingCash)}</span>
-          </Fragment>
-        ))}
-      </Grid>
-    </>
-  );
 };
