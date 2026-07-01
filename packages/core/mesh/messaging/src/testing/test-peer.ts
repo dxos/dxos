@@ -46,8 +46,10 @@ export class TestPeer extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    this._identityDid = await createDidFromIdentityKey(this.peerId);
+    // `createSignalManager` (e.g. edge's factory) may reassign `peerId` to match its own signer,
+    // so the DID must be derived AFTER it resolves — not from the constructor-time random key.
     this.signalManager = await this.testBuilder.createSignalManager(this);
+    this._identityDid = await createDidFromIdentityKey(this.peerId);
     this.messenger = new Messenger({ signalManager: this.signalManager, retryDelay: 300 });
 
     await this.signalManager.open();
