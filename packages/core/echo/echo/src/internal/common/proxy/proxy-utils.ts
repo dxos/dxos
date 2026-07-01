@@ -9,9 +9,28 @@ import { type ReactiveHandler } from './proxy-types';
 export const symbolIsProxy = Symbol.for('@dxos/schema/Proxy');
 
 /**
+ * Marker placed on a reactive-object behaviour prototype (e.g. the typed handler's
+ * `TypedObject` prototype). A record target whose prototype chain carries this marker
+ * is a reactive data record — equivalent, for the purposes of the "plain object" gates
+ * below, to one rooted directly at `Object.prototype`. This lets a handler move its
+ * per-object metadata onto an intermediate prototype without those gates mistaking the
+ * record for a foreign class instance.
+ */
+export const symbolReactivePrototype = Symbol.for('@dxos/echo/ReactivePrototype');
+
+/**
  * Internal api.
  */
 export const isProxy = (value: unknown) => !!(value as any)?.[symbolIsProxy];
+
+/**
+ * True if `value` is a plain data record — either rooted at `Object.prototype` or carrying
+ * a reactive behaviour prototype (see {@link symbolReactivePrototype}).
+ */
+export const isReactiveRecord = (value: any): boolean => {
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || (proto != null && !!proto[symbolReactivePrototype]);
+};
 
 export const isValidProxyTarget = (value: any): value is object => {
   if (value == null || value[symbolIsProxy]) {
@@ -21,7 +40,7 @@ export const isValidProxyTarget = (value: any): value is object => {
     return true;
   }
 
-  return typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype;
+  return typeof value === 'object' && isReactiveRecord(value);
 };
 
 /**

@@ -13,6 +13,7 @@ export const ToolIds = {
   ReadEmail: operation('readEmail'),
   GoogleMailSync: operation('googleMailSync'),
   ExtractMessage: operation('extractMessage'),
+  ExtractMailbox: operation('extractMailbox'),
   GoogleMailSend: operation('googleMailSend'),
   GoogleCalendarSync: operation('googleCalendarSync'),
 } as const;

@@ -19,7 +19,6 @@ import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
 import { FUNCTIONS_META_KEY } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
-import { PublicKey } from '@dxos/keys';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
 import { bundle } from './bundle';
@@ -75,13 +74,13 @@ export const deploy = Command.make(
       return;
     }
 
-    const { space, ownerPublicKey, functionId, existingObject, name, version } = yield* parseOptions(options);
+    const { space, functionId, existingObject, name, version } = yield* parseOptions(options);
 
     const functionsServiceClient = FunctionsServiceClient.fromClient(client);
     const func = yield* Effect.tryPromise(() =>
       functionsServiceClient.deploy(Context.default(), {
         functionId,
-        ownerPublicKey: PublicKey.fromHex(ownerPublicKey),
+        ownerUri: identity.did,
         name,
         version,
         entryPoint: artifact.entryPoint,

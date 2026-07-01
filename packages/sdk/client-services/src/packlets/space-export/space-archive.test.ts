@@ -367,7 +367,7 @@ describe('SpaceArchive', () => {
           id,
           '@type': 'dxn:example.Thing',
           '@meta': { keys: [] },
-          title: 'hello',
+          'title': 'hello',
         },
       ];
       const directory = buildDatabaseDirectoryFromObjects(objects as any);
@@ -413,8 +413,8 @@ describe('SpaceArchive', () => {
     test('orderObjJsonFields reorders feed queue messages with id/@type/@meta first', () => {
       const id = EntityId.random();
       const message = {
-        payload: { value: 'x' },
-        timestamp: 1000,
+        'payload': { value: 'x' },
+        'timestamp': 1000,
         id,
         '@meta': { keys: [] },
         '@type': 'dxn:example.Message',
@@ -428,7 +428,7 @@ describe('SpaceArchive', () => {
     test('orderObjJsonFields preserves unknown @-prefixed fields between system and data', () => {
       const id = EntityId.random();
       const obj = {
-        data: 1,
+        'data': 1,
         '@custom': 'extension',
         '@type': 'dxn:example.Thing',
         id,
@@ -465,10 +465,10 @@ describe('SpaceArchive', () => {
           id,
           '@type': 'dxn:org.dxos.type.schema:0.1.0',
           '@meta': { keys: [] },
-          name: 'Custom Type',
-          typename: 'example.type.custom',
-          version: '0.1.0',
-          jsonSchema: { $id: `echo:/${id}`, type: 'object', properties: {} },
+          'name': 'Custom Type',
+          'typename': 'example.type.custom',
+          'version': '0.1.0',
+          'jsonSchema': { $id: `echo:/${id}`, type: 'object', properties: {} },
         },
       ];
       const directory = buildDatabaseDirectoryFromObjects(objects as any);

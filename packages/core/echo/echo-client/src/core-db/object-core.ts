@@ -508,6 +508,18 @@ export class ObjectCore {
   }
 
   /**
+   * Resolve a linked object held in the local link cache, keyed by entity id. Used to dereference
+   * endpoint/parent references before the object is bound to a database.
+   */
+  lookupInLinkCache(ref: EncodedReference): Entity.Unknown | undefined {
+    invariant(this.linkCache);
+    const echoUri = EID.tryParse(EncodedReference.toURI(ref));
+    const entityId = echoUri ? EID.getEntityId(echoUri) : undefined;
+    invariant(entityId, 'Invalid DXN');
+    return this.linkCache.get(entityId);
+  }
+
+  /**
    * Returns the Unix ms timestamp stored in system.createdAt, or undefined for objects
    * created before this field was introduced.
    */
@@ -557,25 +569,42 @@ export class ObjectCore {
     }
 
     if (this.entityManager && remainingDepth > 0) {
-      const parentRef = this.getParent();
-      if (parentRef) {
-        // Checks if the reference is pointing to an object in the same space.
-        const parentDXN = EncodedReference.toURI(parentRef);
-        const parentEchoUri = EID.tryParse(parentDXN);
-        const spaceId = parentEchoUri ? EID.getSpaceId(parentEchoUri) : undefined;
-        const parentId = parentEchoUri ? EID.getEntityId(parentEchoUri) : undefined;
-        if (parentId && (spaceId === undefined || spaceId === this.entityManager.spaceId)) {
-          // NOTE: We can't use `loadObjectCoreById` here because it might be async and we need a sync check.
-          // If the parent is not loaded, we assume it's not deleted for now, or should we assume deleted?
-          // Given strong dependencies, the parent SHOULD be loaded if the child is loaded.
-          const parent = this.entityManager.getObjectCoreById(parentId);
-          if (parent && parent.isDeleted(remainingDepth - 1)) {
-            return true;
-          }
+      // An entity is transitively deleted when one of its strong dependencies is deleted: a child
+      // when its parent is removed, or a relation when either endpoint is removed — a dangling
+      // relation has no valid graph edge, so it is treated as deleted and excluded from queries.
+      if (this._isReferencedCoreDeleted(this.getParent(), remainingDepth)) {
+        return true;
+      }
+      if (this.getKind() === EntityKind.Relation) {
+        if (
+          this._isReferencedCoreDeleted(this.getSource(), remainingDepth) ||
+          this._isReferencedCoreDeleted(this.getTarget(), remainingDepth)
+        ) {
+          return true;
         }
       }
     }
     return false;
+  }
+
+  /**
+   * Whether the same-space entity referenced by `ref` is (transitively) deleted. Cross-space and
+   * unresolved references are treated as not-deleted. Strong dependencies guarantee parent/relation
+   * endpoints load alongside the dependent entity, so this stays a synchronous core lookup —
+   * `loadObjectCoreById` is avoided because it may be async.
+   */
+  private _isReferencedCoreDeleted(ref: EncodedReference | undefined, remainingDepth: number): boolean {
+    if (!ref || !this.entityManager) {
+      return false;
+    }
+    const echoUri = EID.tryParse(EncodedReference.toURI(ref));
+    const spaceId = echoUri ? EID.getSpaceId(echoUri) : undefined;
+    const entityId = echoUri ? EID.getEntityId(echoUri) : undefined;
+    if (!entityId || (spaceId !== undefined && spaceId !== this.entityManager.spaceId)) {
+      return false;
+    }
+    const core = this.entityManager.getObjectCoreById(entityId);
+    return core != null && core.isDeleted(remainingDepth - 1);
   }
 
   setDeleted(value: boolean): void {

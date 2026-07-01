@@ -124,6 +124,10 @@ export const translations: Resource[] = [
         'summary.label': 'Summary',
         'thinking.label': 'Thinking',
 
+        'integration-prompt.title': 'Connect {{service}}',
+        'integration-prompt.description': 'This action needs access to {{service}}. Connect it to continue.',
+        'integration-prompt.unavailable': 'No connector is available for {{service}}.',
+
         'search.placeholder': 'Search...',
         'prompt.placeholder': 'Enter question or command...',
         'context-objects.button': 'Add to context',
@@ -165,6 +169,29 @@ export const translations: Resource[] = [
         'ai-service-error.label': 'AI service error',
         'view-usage.label': 'View usage',
 
+        // LLM provider labels.
+        'settings.provider.edge.label': 'Edge',
+        'settings.provider.built-in.label': 'Built-in',
+        'settings.provider.ollama.label': 'Ollama',
+        'settings.provider.lmstudio.label': 'LM Studio',
+
+        // Ollama local model management (desktop only).
+        'settings.ollama.title': 'Local models',
+        'settings.ollama.installed.label': 'Downloaded models',
+        'settings.ollama.empty.message': 'No models downloaded. Pull one below to get started.',
+        'settings.ollama.pull.label': 'Pull model',
+        'settings.ollama.pull.placeholder': 'Search or enter a model name (e.g. llama3.2:1b)',
+        'settings.ollama.pull-custom.label': 'Pull “{{name}}”',
+        'settings.ollama.pulling.label': 'Pulling…',
+        'settings.ollama.pulling.message': 'Downloading… {{percent}}%',
+        'settings.ollama.cancel.label': 'Cancel download',
+        'settings.ollama.loaded.label': 'Loaded',
+        'settings.ollama.loaded.vram': 'Loaded · {{size}}',
+        'settings.ollama.load.label': 'Load into memory',
+        'settings.ollama.unload.label': 'Unload from memory',
+        'settings.ollama.remove.label': 'Delete model',
+        'settings.ollama.failed.message': 'Could not reach the local model service: {{error}}',
+
         'debug.button': 'Debug',
         'online-switch.label': 'Online',
         'typename.label': 'Typename',
@@ -194,10 +221,11 @@ export const translations: Resource[] = [
         'subscriptions.label': 'Subscriptions',
 
         // Per-space Home article: starter-prompt cards + the pinned assistant prompt.
-        'space-home.suggestions.heading': 'Things to try',
-        'space-home.suggestion-draft-doc.label': 'Draft a new document',
-        'space-home.suggestion-data-type.label': 'Create a new data type',
-        'space-home.suggestion-ideas.label': 'Suggest some ideas to work on',
+        'space-home.suggestions.heading': 'Get started',
+        'space-home.suggestion-magazine.label': 'Create feeds for tracking the latest AI news and build a magazine',
+        'space-home.suggestion-spreadsheet.label':
+          "Look up and create a spreadsheet of MLB's top starters by month for {{year}}",
+        'space-home.suggestion-kanban.label': 'Create a kanban view for tracking tasks',
         'space-home.prompt.placeholder': 'Ask the assistant anything…',
 
         'nav-tree-group-ai.label': 'Assistant',

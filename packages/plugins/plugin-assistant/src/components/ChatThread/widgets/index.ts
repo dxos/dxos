@@ -9,5 +9,6 @@ export * from './SelectWidget';
 export * from './StatsWidget';
 export * from './StatusWidget';
 export * from './SummaryWidget';
+export * from './SurfaceWidget';
 export * from './SuggestionWidget';
 export * from './ToolWidget';

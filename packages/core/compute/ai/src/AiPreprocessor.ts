@@ -488,6 +488,16 @@ const convertAssistantMessagePart: (
         return Prompt.makePart('text', {
           text: '<toolkit/>',
         });
+      case 'surface':
+        // Round-trip the surface request so the model sees in history that it rendered a surface.
+        // `role` and `data` are model-supplied; escape them so special characters cannot produce
+        // malformed XML in the prompt history.
+        return Prompt.makePart('text', {
+          text:
+            block.data !== undefined
+              ? `<surface role="${escapeXmlAttribute(block.role)}">${escapeXmlText(JSON.stringify(block.data))}</surface>`
+              : `<surface role="${escapeXmlAttribute(block.role)}" />`,
+        });
       case 'json':
         return Prompt.makePart('text', {
           text: block.data,
@@ -505,6 +515,12 @@ const convertAssistantMessagePart: (
     }
   },
 );
+
+/** Escape text embedded in XML element content so `&`, `<`, `>` are not treated as markup. */
+const escapeXmlText = (raw: string): string => raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/** Escape a value embedded in a double-quoted XML attribute. */
+const escapeXmlAttribute = (raw: string): string => escapeXmlText(raw).replace(/"/g, '&quot;');
 
 const mergeMessages = (messages: Message.Message[]): Message.Message => ({
   ...messages[0],

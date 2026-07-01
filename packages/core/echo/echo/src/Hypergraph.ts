@@ -6,7 +6,6 @@ import { type URI } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';
-import type * as internal from './internal';
 import type * as Key from './Key';
 import type * as Ref from './Ref';
 import type * as Registry from './Registry';
@@ -34,12 +33,6 @@ export interface RefResolverOptions {
    * Affects how non-absolute DXNs are resolved.
    */
   context?: RefResolutionContext;
-
-  /**
-   * Middleware to change the resolved object before returning it.
-   * @deprecated On track to be removed.
-   */
-  middleware?: (obj: internal.AnyProperties) => internal.AnyProperties;
 }
 
 /**
@@ -69,11 +62,9 @@ export interface Hypergraph extends Database.Queryable {
   makeRef<T extends Entity.Unknown = Entity.Unknown>(uri: URI.URI): Ref.Ref<T>;
 
   /**
-   * @param hostDb Host database for reference resolution.
-   * @param middleware Called with the loaded object. The caller may change the object.
-   * @returns Result of `onLoad`.
+   * Create a resolver that dereferences `Ref`s against this graph. Persisted schema objects are
+   * surfaced as their registered `Type.Type` entity.
    */
-  // TODO(dmaretskyi): Restructure API: Remove middleware.
   createRefResolver(options: RefResolverOptions): Ref.Resolver;
 
   /**

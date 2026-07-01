@@ -20,7 +20,7 @@ const content: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) => 
 };
 
 const triggerButton: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
-  mx('grid grid-cols-[1fr_auto] [&>span]:text-left', ...etc);
+  mx('bg-input-surface grid grid-cols-[1fr_auto] [&>span]:text-left', ...etc);
 
 const viewport: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(...etc);
 

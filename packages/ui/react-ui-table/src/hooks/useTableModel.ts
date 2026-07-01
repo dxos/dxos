@@ -6,7 +6,7 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import { useContext, useEffect, useMemo, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
-import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
+import { useSelection, useSelectionActions, useViewStateManagerOptional } from '@dxos/react-ui-attention';
 import { type ProjectionModel } from '@dxos/schema';
 
 import {
@@ -43,6 +43,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
   ...props
 }: UseTableModelProps<T>): TableModel<T> | undefined => {
   const registry = useContext(RegistryContext);
+  const viewState = useViewStateManagerOptional();
   const selected = useSelection(object && Obj.getURI(object), 'multi');
   const initialSelection = useMemo(() => selected, [object]);
 
@@ -59,6 +60,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
         object,
         projection,
         db,
+        viewState,
         change: createEchoChangeCallback<T>(object),
         features,
         rowActions,
@@ -75,7 +77,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
       void model?.close();
     };
     // TODO(burdon): Trigger if callbacks change?
-  }, [registry, object, projection, features, rowActions, initialSelection]);
+  }, [registry, viewState, object, projection, features, rowActions, initialSelection]);
 
   // Update data when rows change.
   useEffect(() => {

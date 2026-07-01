@@ -67,7 +67,7 @@ export const ContextModule = ({ space }: ModuleProps) => {
       </Panel.Toolbar>
       <Masonry.Root Tile={Tile}>
         <Panel.Content asChild>
-          <Masonry.Content padding thin classNames='p-1'>
+          <Masonry.Content centered padding thin classNames='p-1'>
             <Masonry.Viewport items={items} getId={(item) => item.id} />
           </Masonry.Content>
         </Panel.Content>

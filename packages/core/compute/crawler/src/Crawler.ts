@@ -1,0 +1,180 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Cause from 'effect/Cause';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+
+import { type CrawlError, type StateError } from './errors';
+import { Source } from './Source';
+import { type Env, type Stage } from './Stage';
+import { StateStore } from './StateStore';
+import type * as Type from './types';
+
+/** Result of one {@link advance} step. */
+export type StepResult = { readonly _tag: 'more' } | { readonly _tag: 'done' };
+
+/** Outcome of a {@link run} (or a bounded slice of one). */
+export type RunSummary = {
+  readonly steps: number;
+  /** True if the frontier is fully drained; false if stopped at the step bound. */
+  readonly done: boolean;
+  /** Targets skipped because the source fetch failed (e.g. a 403 on an inaccessible channel). */
+  readonly errored: number;
+};
+
+/** Dispatch one event to every stage that handles it; isolate per-stage failures on the target. */
+const runStages = (stages: readonly Stage[], event: Type.Event): Effect.Effect<void, StateError, Env> =>
+  Effect.forEach(
+    stages.filter((stage) => stage.handles.includes(event._tag)),
+    (stage) =>
+      stage.apply(event).pipe(
+        Effect.catchAll((error) =>
+          Effect.flatMap(StateStore, (store) =>
+            // A stage fault is recorded on the target but does not abort the crawl.
+            store.setStatus(event.target.id, event.target.status, `${stage.name}: ${error.message}`),
+          ),
+        ),
+      ),
+    { discard: true },
+  );
+
+/**
+ * Advance the crawl by one bounded unit: fetch the next page for the top frontier target, run its
+ * events through the stages, persist the cursor/frontier, and report whether work remains. All
+ * progress lives in the {@link StateStore}, so a caller may stop between steps and resume later.
+ */
+export const advance = (
+  config: Type.Config,
+  stages: readonly Stage[],
+): Effect.Effect<StepResult, CrawlError | StateError, Source | StateStore | Env> =>
+  Effect.gen(function* () {
+    const store = yield* StateStore;
+    const source = yield* Source;
+
+    const target = yield* store.nextActionable();
+    if (!target) {
+      return { _tag: 'done' as const };
+    }
+
+    // After first touch the target is active; reuse that state for every event emitted this step so a
+    // stage failure can't write the stale 'pending' status back and re-emit Start on the next advance.
+    const currentTarget: Type.Target = target.status === 'pending' ? { ...target, status: 'active' } : target;
+
+    // First touch: open the channel/thread before reading its messages.
+    if (target.status === 'pending') {
+      yield* store.setStatus(target.id, 'active');
+      yield* runStages(
+        stages,
+        target.threadId
+          ? { _tag: 'ThreadStart', target: currentTarget, parentMessageId: target.parentMessageId }
+          : { _tag: 'ChannelStart', target: currentTarget },
+      );
+    }
+
+    // A source fetch can fail (typed error) OR die (defect — e.g. dfx/proxy surfacing a 403 as a
+    // throw). Either way it is isolated to this target: mark it errored and continue with the rest
+    // of the frontier rather than aborting the whole crawl. `Effect.exit` captures both outcomes.
+    const fetched = yield* Effect.exit(
+      source.fetchMessages({
+        channelId: target.channelId,
+        threadId: target.threadId,
+        cursor: target.cursor,
+        maxDays: config.seed?.maxDays,
+      }),
+    );
+    if (Exit.isFailure(fetched)) {
+      const error = Cause.squash(fetched.cause);
+      const reason = error instanceof Error ? error.message : String(error);
+      yield* Effect.logWarning(`crawl: skipping ${target.id} — ${reason}`);
+      yield* store.setStatus(target.id, 'error', reason);
+      const remaining = yield* store.hasActionable();
+      return remaining ? { _tag: 'more' as const } : { _tag: 'done' as const };
+    }
+    const page = fetched.value;
+
+    for (const message of page.messages) {
+      yield* runStages(stages, { _tag: 'Message', target: currentTarget, message });
+    }
+
+    // Push discovered threads on top of the frontier ⇒ they are drained before this target resumes.
+    if (config.descendThreads && target.depth < (config.maxDepth ?? Number.POSITIVE_INFINITY)) {
+      const children: Type.Target[] = page.threads.map((thread) => ({
+        id: thread.threadId,
+        channelId: thread.threadId,
+        threadId: thread.threadId,
+        parentMessageId: thread.parentMessageId,
+        depth: target.depth + 1,
+        status: 'pending',
+      }));
+      yield* store.pushTargets(children);
+    }
+
+    const drained = page.messages.length === 0;
+    if (!drained && page.cursor) {
+      yield* store.setCursor(target.id, page.cursor);
+    }
+    if (drained) {
+      yield* store.setStatus(target.id, 'done');
+      const closed: Type.Target = { ...currentTarget, status: 'done' };
+      yield* runStages(
+        stages,
+        target.threadId ? { _tag: 'ThreadEnd', target: closed } : { _tag: 'ChannelEnd', target: closed },
+      );
+    }
+
+    const more = yield* store.hasActionable();
+    return more ? { _tag: 'more' as const } : { _tag: 'done' as const };
+  });
+
+/** Seed the frontier with the configured top-level channels (idempotent — only when empty). */
+const seedFrontier = (config: Type.Config): Effect.Effect<void, StateError, StateStore> =>
+  Effect.gen(function* () {
+    const store = yield* StateStore;
+    const existing = yield* store.listTargets();
+    if (existing.length > 0) {
+      return;
+    }
+    yield* store.pushTargets(
+      config.channels.map((channelId) => ({ id: channelId, channelId, depth: 0, status: 'pending' as const })),
+    );
+  });
+
+/**
+ * Run the crawl to completion (or to `options.maxSteps`, leaving the run `paused` so a later call
+ * resumes from the persisted frontier). Re-invoking over the same {@link StateStore} resumes.
+ */
+export const run = (
+  config: Type.Config,
+  stages: readonly Stage[],
+  options?: { readonly maxSteps?: number },
+): Effect.Effect<RunSummary, CrawlError | StateError, Source | StateStore | Env> =>
+  Effect.gen(function* () {
+    const store = yield* StateStore;
+
+    const crawl = Effect.gen(function* () {
+      yield* seedFrontier(config);
+      yield* store.setRunStatus('running');
+
+      const erroredCount = () =>
+        store.listTargets().pipe(Effect.map((targets) => targets.filter((target) => target.status === 'error').length));
+
+      const maxSteps = options?.maxSteps ?? Number.POSITIVE_INFINITY;
+      let steps = 0;
+      while (steps < maxSteps) {
+        const result = yield* advance(config, stages);
+        steps++;
+        if (result._tag === 'done') {
+          yield* store.setRunStatus('done');
+          return { steps, done: true, errored: yield* erroredCount() };
+        }
+      }
+      yield* store.setRunStatus('paused');
+      return { steps, done: false, errored: yield* erroredCount() };
+    });
+
+    // Record a failed terminal state on an unexpected abort so a crashed crawl is distinguishable
+    // from a live one (the normal done/paused returns are successes and don't trip this).
+    return yield* crawl.pipe(Effect.tapError(() => store.setRunStatus('error').pipe(Effect.ignore)));
+  });

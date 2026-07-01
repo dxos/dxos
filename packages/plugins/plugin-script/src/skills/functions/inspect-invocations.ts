@@ -24,8 +24,8 @@ export default InspectInvocations.pipe(
       }
 
       const feed = yield* Database.load(properties.invocationTraceFeed);
-      const startEvents = yield* Feed.runQuery(feed, Filter.type(InvocationTraceStartEvent));
-      const endEvents = yield* Feed.runQuery(feed, Filter.type(InvocationTraceEndEvent));
+      const startEvents = yield* Feed.query(feed, Filter.type(InvocationTraceStartEvent)).run;
+      const endEvents = yield* Feed.query(feed, Filter.type(InvocationTraceEndEvent)).run;
       const allSpans = createInvocationSpans([...startEvents, ...endEvents]);
 
       const functionId = getUserFunctionIdInMetadata(Obj.getMeta(loaded));

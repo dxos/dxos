@@ -10,6 +10,7 @@ export const AssistantSettings: ComponentType<any> = lazy(() => import('./Assist
 export const ChatCompanion: ComponentType<any> = lazy(() => import('./ChatCompanion'));
 export const ChatArticle: ComponentType<any> = lazy(() => import('./ChatArticle'));
 export const ChatDialog: ComponentType<any> = lazy(() => import('./ChatDialog'));
+export const IntegrationPrompt: ComponentType<any> = lazy(() => import('./IntegrationPrompt'));
 export const PlanArticle: ComponentType<any> = lazy(() => import('./PlanArticle'));
 export const SpaceHomePrompt: ComponentType<any> = lazy(() => import('./SpaceHomePrompt'));
 export const SpaceHomeSuggestions: ComponentType<any> = lazy(() => import('./SpaceHomeSuggestions'));

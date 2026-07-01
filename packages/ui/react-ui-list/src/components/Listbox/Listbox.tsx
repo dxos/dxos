@@ -245,10 +245,17 @@ type ItemProps = PropsWithChildren<{
   onClick?: (event: MouseEvent<HTMLLIElement>) => void;
   /** Optional focus handler in addition to selection-follows-focus. */
   onFocus?: (event: FocusEvent<HTMLLIElement>) => void;
+  /**
+   * Optional pointer-down handler. Fires before focus (and therefore before selection-follows-focus
+   * mutates the value), so consumers can observe the pre-gesture selection — e.g. to implement
+   * click-to-toggle without the focus-then-click double count.
+   */
+  onMouseDown?: (event: MouseEvent<HTMLLIElement>) => void;
 }>;
 
 const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
-  const { id, disabled, onClick, onFocus, children, ...rest } = props as ItemProps & Record<string, unknown>;
+  const { id, disabled, onClick, onFocus, onMouseDown, children, ...rest } = props as ItemProps &
+    Record<string, unknown>;
   const { selectable, selection } = useListboxContext(LISTBOX_ITEM_NAME);
   const binding: SelectionItemBinding = selection.bind(id, { disabled });
   const selected = selectable && binding.selected;
@@ -301,6 +308,7 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
         aria-disabled={disabled || undefined}
         onClick={handleClick}
         onFocus={handleFocus}
+        onMouseDown={onMouseDown}
         ref={forwardedRef}
       >
         {children}

@@ -87,7 +87,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           expect(typeof output.text).toBe('string');
           expect(output.text.length).toBeGreaterThan(10);
 
-          const conversationMessages = yield* Feed.runQuery(conversation, Filter.type(Message.Message)).pipe(
+          const conversationMessages = yield* Feed.query(conversation, Filter.type(Message.Message)).run.pipe(
             Effect.provide(services.createLayer()),
           );
           log.info('conversationMessages', { conversationMessages });

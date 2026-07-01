@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
-import { useAtomCapabilityState } from '@dxos/app-framework/ui';
+import { useOptionalAtomCapabilityState, useOptionalCapabilities } from '@dxos/app-framework/ui';
 import { type Settings, TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { DropdownMenu, Icon, IconButton, MicButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -38,8 +38,11 @@ export const ChatActions = ({
   onEvent,
 }: ChatActionsProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const [session, setSession] = useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
-  const [settings, setSettings] = useAtomCapabilityState(TranscriptionCapabilities.Settings);
+  // Voice input is optional: the transcription plugin contributes these capabilities. Tolerate its
+  // absence so the chat prompt still renders (e.g. in stories that do not load the plugin).
+  const transcriptionAvailable = useOptionalCapabilities(TranscriptionCapabilities.RecordingSession).length > 0;
+  const [session, setSession] = useOptionalAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
+  const [settings, setSettings] = useOptionalAtomCapabilityState(TranscriptionCapabilities.Settings);
 
   const recording = !!session?.recording && session.id === docId;
   const recordMode: Settings.RecordMode = settings?.recordMode ?? 'toggle';
@@ -48,7 +51,8 @@ export const ChatActions = ({
 
   const [devices, setDevices] = useState<AudioInputDevice[]>([]);
   useEffect(() => {
-    if (!navigator.mediaDevices?.enumerateDevices) {
+    // Only touch media APIs when the recording controls are actually shown.
+    if (!microphone || !transcriptionAvailable || !navigator.mediaDevices?.enumerateDevices) {
       return;
     }
     let cancelled = false;
@@ -73,7 +77,7 @@ export const ChatActions = ({
       cancelled = true;
       navigator.mediaDevices.removeEventListener('devicechange', refresh);
     };
-  }, []);
+  }, [microphone, transcriptionAvailable]);
 
   const handleToggle = useCallback(() => {
     if (!docId) {
@@ -118,7 +122,7 @@ export const ChatActions = ({
     <div className={mx('flex items-center', classNames)}>
       {children}
 
-      {microphone && docId && (
+      {microphone && docId && transcriptionAvailable && (
         <>
           <MicButton
             iconOnly

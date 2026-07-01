@@ -91,7 +91,7 @@ const meta = {
         StorybookPlugin({}),
         PreviewPlugin(),
         ClientPlugin({
-          types: [Organization.Organization, Person.Person],
+          types: [Feed.Feed, Message.Message, Organization.Organization, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);

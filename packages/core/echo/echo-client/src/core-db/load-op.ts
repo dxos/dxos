@@ -58,7 +58,7 @@ export interface LoadBackend {
   load(uri: URI.URI, source: RefSource, set: (state: LoadOpState, result: LoadResult | undefined) => void): () => void;
 }
 
-const CEILING_RANK: Record<RefSource, number> = { 'working-set': 0, disk: 1, network: 2 };
+const CEILING_RANK: Record<RefSource, number> = { 'working-set': 0, 'disk': 1, 'network': 2 };
 
 const isHigherCeiling = (a: RefSource, b: RefSource): boolean => CEILING_RANK[a] > CEILING_RANK[b];
 

@@ -269,9 +269,9 @@ export const translations = [
         'hue.description': 'Color used to represent the space in the app.',
         'edge-replication.description':
           "Only change this if you know what you're doing. Disabling this will prevent the space from replicating through Composer's EDGE services, and relies solely on peer-to-peer sync.",
-        'space-key.title': 'Space Key',
-        'space-key.description': 'The unique identifier for this space. Use this to connect external services.',
-        'copy-space-key.label': 'Copy space key',
+        'space-id.title': 'Space ID',
+        'space-id.description': 'The unique identifier for this space. Use this to connect external services.',
+        'copy-space-id.label': 'Copy space ID',
 
         'space-controls.title': 'Space Controls',
         'space-controls.description': 'Advanced controls for this space.',

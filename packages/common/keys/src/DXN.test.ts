@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import * as DXN from './DXN';
@@ -118,5 +119,21 @@ describe('DXN.getVersion', () => {
 
   test('returns undefined for unversioned DXN', ({ expect }) => {
     expect(DXN.getVersion(DXN.make('org.dxos.type.calendar'))).toBeUndefined();
+  });
+});
+
+describe('DXN.NameSchema', () => {
+  const isName = Schema.is(DXN.NameSchema);
+
+  test('accepts a well-formed NSID name (no dxn: prefix)', ({ expect }) => {
+    expect(isName('com.anthropic.model.claude-sonnet-4-6.default')).toBe(true);
+    expect(isName('org.dxos.provider.edge')).toBe(true);
+    expect(isName('com.meta.model.llama-3-2-1b.instruct')).toBe(true);
+  });
+
+  test('rejects malformed names', ({ expect }) => {
+    expect(isName('single')).toBe(false); // not multi-segment
+    expect(isName('com.example.model.has-hyphen')).toBe(false); // final segment has a hyphen
+    expect(isName('dxn:com.example.type.thing')).toBe(false); // already a full DXN, not a bare name
   });
 });

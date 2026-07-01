@@ -5,3 +5,4 @@
 export * from './Graph';
 export * from './Mesh';
 export * from './SVG';
+export * from './Tree';

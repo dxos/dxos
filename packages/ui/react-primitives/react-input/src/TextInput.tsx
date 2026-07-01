@@ -22,7 +22,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
             'aria-invalid': 'true' as const,
             'aria-errormessage': errorMessageId,
           }),
-          ref: forwardedRef,
+          'ref': forwardedRef,
         }}
       />
     );

@@ -42,13 +42,15 @@
     "@effect/ai": "catalog:",
     "@effect/sql": "catalog:",
     "asynciterator": "catalog:",
-    "n3": "catalog:"
+    "n3": "catalog:",
+    "sparqljs": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
     "@effect/sql-sqlite-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/n3": "catalog:",
+    "@types/sparqljs": "catalog:",
     "effect": "catalog:",
     "vitest": "catalog:"
   },

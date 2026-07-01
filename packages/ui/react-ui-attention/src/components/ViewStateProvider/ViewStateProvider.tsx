@@ -48,6 +48,12 @@ export const useViewStateManager = (): ViewStateManager => {
   return manager;
 };
 
+/** Access the ViewStateManager if a provider is present; `undefined` otherwise (e.g. isolated stories/tests). */
+export const useViewStateManagerOptional = (): ViewStateManager | undefined => {
+  const { manager } = useViewStateContext(VIEW_STATE_NAME);
+  return manager;
+};
+
 /** Reactive read of an aspect value for a context; yields the aspect default when unset or unprovided. */
 export const useViewState = <T,>(aspect: AspectDef<T>, contextId?: string): T => {
   const { manager } = useViewStateContext(VIEW_STATE_NAME);

@@ -11,6 +11,7 @@ import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
 
 export type InitializeIdentityResult = {
   identity: Identity;
+  // TODO(burdon): Rename to space.
   personalSpace: Space;
 };
 

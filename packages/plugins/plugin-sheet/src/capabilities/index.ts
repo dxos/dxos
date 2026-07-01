@@ -16,4 +16,5 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 export const SheetState = Capability.lazy('SheetState', () => import('./state'));
+export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
 export const UndoMappings = Capability.lazy('UndoMappings', () => import('./undo-mappings'));

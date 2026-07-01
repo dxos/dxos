@@ -16,6 +16,7 @@ import {
   AlarmSkill,
   AutomationSkill,
   BrowserSkill,
+  ConnectorsSkill,
   DatabaseHandlers,
   DatabaseSkill,
   DelegationHandlers,
@@ -39,6 +40,7 @@ const skillDefinition = () =>
   Effect.succeed([
     Capability.contributes(AppCapabilities.SkillDefinition, AssistantSkill),
     Capability.contributes(AppCapabilities.SkillDefinition, BrowserSkill),
+    Capability.contributes(AppCapabilities.SkillDefinition, ConnectorsSkill),
     Capability.contributes(AppCapabilities.SkillDefinition, DatabaseSkill),
     Capability.contributes(AppCapabilities.SkillDefinition, WebSearchSkill),
     Capability.contributes(AppCapabilities.SkillDefinition, DiscordSkill),

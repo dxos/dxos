@@ -155,7 +155,7 @@ export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, o
           slots: {
             editor: {
               className: mx(
-                'min-w-full! w-min! !max-w-(--dx-grid-cell-editor-max-w-size) min-h-full! !max-h-(--dx-grid-cell-editor-max-h-size)',
+                'min-w-full! w-min! !max-w-(--dx-grid-cell-editor-max-inline-size) min-h-full! !max-h-(--dx-grid-cell-editor-max-block-size)',
                 slots?.editor?.className,
               ),
             },

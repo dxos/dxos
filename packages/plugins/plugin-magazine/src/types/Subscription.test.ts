@@ -40,7 +40,7 @@ describe('per-Post state keyed by entity id', () => {
     });
     await EffectEx.runAndForwardErrors(Feed.append(postFeed, [post]).pipe(Effect.provide(Database.layer(db))));
     const [queuePost] = await EffectEx.runAndForwardErrors(
-      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(Database.layer(db))),
+      Feed.query(postFeed, Filter.type(Subscription.Post)).run.pipe(Effect.provide(Database.layer(db))),
     );
     expect(queuePost).toBeDefined();
     return { db, subscription, queuePost: queuePost! };
@@ -102,7 +102,7 @@ describe('PostContent reverse-ref lookup', () => {
     });
     await EffectEx.runAndForwardErrors(Feed.append(postFeed, [post]).pipe(Effect.provide(Database.layer(db))));
     const [queuePost] = await EffectEx.runAndForwardErrors(
-      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(Database.layer(db))),
+      Feed.query(postFeed, Filter.type(Subscription.Post)).run.pipe(Effect.provide(Database.layer(db))),
     );
     expect(queuePost).toBeDefined();
 
@@ -143,7 +143,7 @@ describe('PostContent reverse-ref lookup', () => {
     });
     await EffectEx.runAndForwardErrors(Feed.append(postFeed, [post]).pipe(Effect.provide(Database.layer(db))));
     const [queuePost] = await EffectEx.runAndForwardErrors(
-      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(Effect.provide(Database.layer(db))),
+      Feed.query(postFeed, Filter.type(Subscription.Post)).run.pipe(Effect.provide(Database.layer(db))),
     );
     expect(queuePost).toBeDefined();
 

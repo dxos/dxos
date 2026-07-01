@@ -30,8 +30,8 @@ export type SelectionItemBinding = {
   /** Spread onto the row element to bind click + focus + ARIA. */
   rowProps: {
     'aria-selected': boolean;
-    onClick: (event: MouseEvent) => void;
-    onFocus?: (event: FocusEvent) => void;
+    'onClick': (event: MouseEvent) => void;
+    'onFocus'?: (event: FocusEvent) => void;
   };
 };
 
@@ -129,7 +129,7 @@ export const useListSelection: {
         },
         rowProps: {
           'aria-selected': selected,
-          onClick: () => {
+          'onClick': () => {
             if (disabled) {
               return;
             }

@@ -255,6 +255,11 @@ export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = 
   variant?: string;
   path?: string[];
   popoverAnchorId?: string;
+  /**
+   * Set when the surface is sized by its container (e.g. a user-resized embed) rather than its
+   * intrinsic content, so the surface can fit its content to the box instead of sizing to it.
+   */
+  extrinsic?: boolean;
 } & (unknown extends CompanionTo ? { companionTo?: CompanionTo } : { companionTo: CompanionTo }) &
   Props;
 
@@ -376,6 +381,11 @@ export const Related: Surface.RoleToken<{ attendableId?: string; subject: any }>
 export type SectionData<Subject = unknown, Props extends {} = {}> = {
   attendableId: string;
   subject: Subject;
+  /**
+   * Set when the section is sized by its container (e.g. a user-resized embed) rather than its
+   * intrinsic content, so the surface can fit its content to the box instead of sizing to it.
+   */
+  extrinsic?: boolean;
 } & Props;
 
 /** Component props for section role. */

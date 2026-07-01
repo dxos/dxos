@@ -407,6 +407,7 @@
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "typescript.tsdk": "node_modules/typescript/lib",
   "vitest.disableWorkspaceWarning": true,
+  "vitest.nodeExecutable": "${userHome}/.proto/shims/node",
   "vitest.rootConfig": "vitest.all.config.ts",
   "typescript.native-preview.tsdk": "node_modules/@typescript/native-preview"
 }

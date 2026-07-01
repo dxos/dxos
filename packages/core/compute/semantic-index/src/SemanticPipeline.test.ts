@@ -10,16 +10,23 @@ import * as Layer from 'effect/Layer';
 import { readFileSync } from 'node:fs';
 
 import { SemanticIndexError } from './errors';
-import { type ExtractDocument, SemanticPipeline, extractFacts } from './SemanticPipeline';
+import {
+  DEFAULT_EXTRACTION_RULES,
+  type ExtractDocument,
+  SemanticPipeline,
+  buildExtractionPrompt,
+  extractFacts,
+  normalizeEntityId,
+} from './SemanticPipeline';
 import { SemanticStore } from './SemanticStore';
 import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing';
 
 // Discord channel fixture (snapshot of `plugin-discord:generate-fixtures`) as extraction documents.
 type FixtureMessage = {
-  id: string;
-  created?: string;
-  sender?: { name?: string };
-  blocks?: Array<{ _tag: string; text?: string }>;
+  'id': string;
+  'created'?: string;
+  'sender'?: { name?: string };
+  'blocks'?: Array<{ _tag: string; text?: string }>;
   '@meta'?: { keys?: Array<{ id?: string }> };
 };
 
@@ -67,6 +74,18 @@ const FailingLayer = SemanticStore.layer.pipe(
 );
 
 describe('SemanticPipeline', () => {
+  it('composes extraction rules, appending caller rules after the defaults', ({ expect }) => {
+    const prompt = buildExtractionPrompt();
+    // The default set rejects questions (the immediate case driving this rule).
+    expect(prompt).toContain('Do not extract facts from questions');
+
+    const extended = buildExtractionPrompt({ rules: ['Treat @handles as people.'] });
+    expect(extended).toContain('Treat @handles as people.');
+    // Caller rules are numbered after the defaults, never replacing them.
+    expect(extended).toContain(`${DEFAULT_EXTRACTION_RULES.length + 1}. Treat @handles as people.`);
+    expect(extended).toContain(DEFAULT_EXTRACTION_RULES[0]);
+  });
+
   it.effect(
     'extracts the Alice fact and persists it',
     Effect.fnUntraced(function* () {
@@ -166,6 +185,10 @@ describe('SemanticPipeline', () => {
           if (!('entity' in fact.assertion.subject) || fact.assertion.subject.entity !== 'alice') {
             throw new Error('subject not linked');
           }
+          // The original surface form is preserved as the display label (the entity id is the slug).
+          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.label !== 'Alice') {
+            throw new Error(`subject label not preserved: ${JSON.stringify(fact.assertion.subject)}`);
+          }
           if (fact.assertion.predicate !== 'travelsTo') {
             throw new Error('predicate not extracted');
           }
@@ -174,6 +197,63 @@ describe('SemanticPipeline', () => {
           }
           if (fact.attribution.source !== 'editor:input') {
             throw new Error('attribution source lost');
+          }
+          // The author is normalized into the entity id space so consumers can join against it.
+          if (fact.attribution.agent !== 'alice') {
+            throw new Error(`attribution agent not normalized: ${fact.attribution.agent}`);
+          }
+        });
+      },
+      Effect.provide(queuedAiService([LLM_OUTPUT])),
+    ),
+  );
+
+  it.effect(
+    'drops ungrounded propositions whose subject or object is unknown',
+    Effect.fnUntraced(
+      function* () {
+        const facts = yield* extractFacts([{ text: 'whatever', source: 'editor:input' }]);
+        yield* Effect.sync(() => {
+          if (facts.length !== 1) {
+            throw new Error(`expected 1 grounded fact, got ${facts.length}`);
+          }
+          const [fact] = facts;
+          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.entity !== 'alice') {
+            throw new Error('the grounded fact was dropped');
+          }
+        });
+      },
+      // One grounded fact plus two the model couldn't ground (unknown subject, empty object).
+      Effect.provide(
+        queuedAiService([
+          {
+            facts: [
+              { subject: 'Alice', predicate: 'leads', object: 'DXOS', factuality: 'CT+', polarity: '+' },
+              { subject: 'unknown', predicate: 'could get away', object: 'unknown', factuality: 'PS+', polarity: '+' },
+              { subject: 'Bob', predicate: 'mentions', object: '', factuality: 'CT+', polarity: '+' },
+            ],
+          },
+        ]),
+      ),
+    ),
+  );
+
+  it.effect(
+    'normalizes a non-slug-safe author token so it joins against attribution.agent',
+    Effect.fnUntraced(
+      function* () {
+        // A canonical agent token (e.g. `discord-user:<id>`) is normalized like any entity id; a
+        // consumer filtering by the raw token must apply the same normalization to match.
+        const author = 'discord-user:123456';
+        const [fact] = yield* extractFacts([
+          { text: "I think I'm probably going to Paris next week", source: 'discord:m1', author },
+        ]);
+        yield* Effect.sync(() => {
+          if (fact.attribution.agent !== normalizeEntityId(author)) {
+            throw new Error(`expected ${normalizeEntityId(author)}, got ${fact.attribution.agent}`);
+          }
+          if (fact.attribution.agent !== 'discord-user-123456') {
+            throw new Error(`unexpected normalization: ${fact.attribution.agent}`);
           }
         });
       },

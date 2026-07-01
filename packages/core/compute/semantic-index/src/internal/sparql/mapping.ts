@@ -15,11 +15,11 @@ const decodeFact = Schema.decodeUnknownSync(Fact);
 const localName = (iri: string) => iri.replace(/^.*[#/]/, '');
 const termToObject = (term: Term): NamedNode | Literal =>
   'entity' in term ? entityIri(term.entity) : str(term.literal);
-const objectToTerm = (term: RdfTerm | undefined): Term | undefined =>
+const objectToTerm = (term: RdfTerm | undefined, label?: string): Term | undefined =>
   term === undefined
     ? undefined
     : term.termType === 'NamedNode' && term.value.startsWith(ENTITY)
-      ? { entity: entityIdFromIri(term.value) }
+      ? { entity: entityIdFromIri(term.value), ...(label !== undefined ? { label } : {}) }
       : { literal: term.value };
 
 /**
@@ -68,6 +68,13 @@ export const factToTriples = (fact: Fact): Quad[] => {
   if (fact.assertion.quote) {
     triples.push(quad(node, sx('quote'), str(fact.assertion.quote), g));
   }
+  // Preserve the original surface form for display (entity ids are lowercased slugs).
+  if ('entity' in fact.assertion.subject && fact.assertion.subject.label) {
+    triples.push(quad(node, sx('subjectLabel'), str(fact.assertion.subject.label), g));
+  }
+  if ('entity' in fact.assertion.object && fact.assertion.object.label) {
+    triples.push(quad(node, sx('objectLabel'), str(fact.assertion.object.label), g));
+  }
   if (fact.attribution.wasDerivedFrom) {
     for (const derived of fact.attribution.wasDerivedFrom) {
       triples.push(quad(node, sx('derivedFrom'), str(derived), g));
@@ -112,9 +119,9 @@ export const triplesToFacts = (quads: Quad[]): Fact[] => {
     const candidate = {
       id,
       assertion: {
-        subject: objectToTerm(oneTerm('subject')),
+        subject: objectToTerm(oneTerm('subject'), one('subjectLabel')),
         predicate: one('predicate'),
-        object: objectToTerm(oneTerm('object')),
+        object: objectToTerm(oneTerm('object'), one('objectLabel')),
         ...(one('validFrom') !== undefined ? { validFrom: one('validFrom') } : {}),
         ...(one('validTo') !== undefined ? { validTo: one('validTo') } : {}),
         ...(one('quote') !== undefined ? { quote: one('quote') } : {}),

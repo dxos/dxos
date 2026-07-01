@@ -16,6 +16,7 @@ export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./draft-email'),
   () => import('./extractor/contact-extractor'),
   () => import('./extractor/extract-contact'),
+  () => import('./extractor/extract-mailbox'),
   () => import('./extractor/extract-message'),
   () => import('./extractor/summarize-extractor'),
   () => import('./google/calendar/create'),

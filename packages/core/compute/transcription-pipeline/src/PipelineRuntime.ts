@@ -8,7 +8,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
 
-import { type ModelName } from '@dxos/ai';
+import { DXN } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/types';
 
@@ -31,7 +31,7 @@ export type StageOutcome = 'committed' | 'interrupted' | 'skipped' | 'error';
 
 export type TelemetryEvent = {
   readonly stageId: string;
-  readonly model: ModelName;
+  readonly model: DXN.DXN;
   readonly trigger: TranscriptEvent['kind'];
   readonly durationMs: number;
   readonly outcome: StageOutcome;
@@ -49,7 +49,7 @@ export type RunOptions = {
   /** Per-stage configuration (enabled / model / window). Absent → stage runs with its defaults. */
   readonly configs?: readonly StageConfig[];
   /** Default model when neither config nor stage specifies one. */
-  readonly presetDefault?: ModelName;
+  readonly presetDefault?: DXN.DXN;
   /** Optional telemetry sink (drives the testbench). */
   readonly onTelemetry?: (event: TelemetryEvent) => void;
 };

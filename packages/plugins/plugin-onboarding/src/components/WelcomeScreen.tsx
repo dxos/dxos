@@ -54,7 +54,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
 
       try {
         pendingRef.current = true;
-        let result = await login({ hubUrl, email });
+        let result = await login({ hubUrl, email, redirectUrl: window.location.origin });
 
         // Server signaled that this email needs a local identity to bind a
         // fresh Account (test-email carve-out): create one and retry.

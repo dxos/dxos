@@ -57,7 +57,7 @@ describe('dxn-extractor', () => {
     test('extracts @uri key reference { "@uri": "echo:..." }', ({ expect }) => {
       const result = extractDxnsFromObject({
         '@uri': 'echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
-        name: 'Test',
+        'name': 'Test',
       });
       expect(result).toHaveLength(1);
       expect(result[0].toString()).toBe('echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4');

@@ -60,6 +60,20 @@ export const Companion = ({
     [companions, t],
   );
 
+  // Stable per-companion data objects so companion article surfaces don't receive a new prop reference on
+  // every parent re-render (the same pattern as the inline data fix in Plank).
+  const companionDataList = useMemo(
+    () =>
+      companions.map((node) => ({
+        attendableId,
+        subject: node.data,
+        companionTo,
+        variant: getLinkedVariant(node.id),
+        properties: node.properties,
+      })),
+    [companions, attendableId, companionTo],
+  );
+
   return (
     <Pane.Root classNames={classNames}>
       <Pane.Toolbar>
@@ -67,19 +81,9 @@ export const Companion = ({
         {controls}
       </Pane.Toolbar>
       {/* Panels stay mounted; the inactive ones are hidden so switching companions preserves their state. */}
-      {companions.map((node) => (
+      {companions.map((node, index) => (
         <Pane.Content key={node.id} classNames={mx(node.id !== selected && 'hidden')}>
-          <Surface.Surface
-            type={AppSurface.Article}
-            data={{
-              attendableId,
-              subject: node.data,
-              companionTo,
-              variant: getLinkedVariant(node.id),
-              properties: node.properties,
-            }}
-            limit={1}
-          />
+          <Surface.Surface type={AppSurface.Article} data={companionDataList[index]} limit={1} />
         </Pane.Content>
       ))}
     </Pane.Root>

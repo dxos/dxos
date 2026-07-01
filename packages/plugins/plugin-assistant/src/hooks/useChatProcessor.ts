@@ -94,6 +94,7 @@ export const useChatProcessor = ({
       observableRegistry,
       registry,
       model: preset?.model,
+      provider: preset?.provider,
     });
   }, [runtime, session, registry, preset, chat, feed, space?.id]);
 

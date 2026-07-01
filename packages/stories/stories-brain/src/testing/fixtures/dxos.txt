@@ -1,0 +1,6 @@
+DXOS is an open source project
+Rich works for DXOS
+Josiah works for DXOS
+Dmytro works for DXOS
+Mykola works for DXOS
+Rich is a product manager

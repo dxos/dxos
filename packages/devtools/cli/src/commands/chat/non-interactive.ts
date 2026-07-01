@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ModelName } from '@dxos/ai';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ChatProcessor } from './processor';
@@ -76,7 +76,7 @@ export type RunNonInteractiveOptions = {
   processor: ChatProcessor;
   skills: string[];
   prompt: string;
-  model: ModelName;
+  model: DXN.DXN;
   /** When true, emit a JSON array of `{kind, uri}`; otherwise emit the
    * agent's final assistant reply text. */
   json: boolean;

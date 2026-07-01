@@ -43,6 +43,11 @@ export const deployScript = async ({
     return { success: false, error: validationError };
   }
 
+  const identity = client.halo.identity.get();
+  if (!identity) {
+    return { success: false, error: new Error('Identity not available.') };
+  }
+
   try {
     const buildResult = await bundleFunction({
       source: script.source!.target!.content,
@@ -53,8 +58,7 @@ export const deployScript = async ({
 
     const functionsServiceClient = FunctionsServiceClient.fromClient(client);
     const newFunction = await functionsServiceClient.deploy(Context.default(), {
-      // TODO(dmaretskyi): Space key or identity key.
-      ownerPublicKey: space.key,
+      ownerUri: identity.did,
       version: fn ? incrementSemverPatch(Obj.getMeta(fn).version ?? '0.0.0') : '0.0.1',
       functionId: existingFunctionId,
       entryPoint: buildResult.entryPoint,

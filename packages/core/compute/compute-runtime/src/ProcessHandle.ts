@@ -118,6 +118,11 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   // a `TestClock` under tests and use real time in production. `null` when no alarm is pending or
   // once the sleep has elapsed and the handler is running.
   #alarmFiber: Fiber.RuntimeFiber<void> | null = null;
+  // True from the moment a fired alarm clears #alarmFiber until its handler starts running. A 0ms
+  // alarm fires on the next microtask, which can precede the completion of the handler that
+  // scheduled it; without this flag #handlerCompleted would see no pending alarm and settle to IDLE,
+  // letting runUntilSettled resolve during the persistence→dispatch hand-off before the turn runs.
+  #alarmDispatching = false;
   #services: Context.Context<R | Process.BaseServices>;
   #alarmSemaphore = Effect.runSync(Effect.makeSemaphore(1));
   readonly #callbacks: Process.Callbacks<I, O, R, any>;
@@ -391,13 +396,18 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
           switch (state.state) {
             case Process.State.SUCCEEDED:
             case Process.State.TERMINATED:
-            case Process.State.IDLE:
               return Effect.runSync(Deferred.succeed(deferred, undefined));
+            case Process.State.IDLE:
+              // A fired alarm clears #alarmFiber before its handler runs; do not treat the transient
+              // IDLE during that hand-off as settled, or we resolve before the turn has started.
+              return this.#alarmDispatching ? Effect.void : Effect.runSync(Deferred.succeed(deferred, undefined));
             // The foreground turn is done once no handler is active and no further turn work is
-            // queued (no pending alarm); remaining hybernation is only background children, which we
-            // intentionally do not wait for.
+            // queued (no pending alarm, none mid-dispatch); remaining hybernation is only background
+            // children, which we intentionally do not wait for.
             case Process.State.HYBERNATING:
-              return this.#alarmFiber === null ? Effect.runSync(Deferred.succeed(deferred, undefined)) : Effect.void;
+              return this.#alarmFiber === null && !this.#alarmDispatching
+                ? Effect.runSync(Deferred.succeed(deferred, undefined))
+                : Effect.void;
             case Process.State.FAILED: {
               const error = state.exit.pipe(
                 Option.flatMap(Exit.causeOption),
@@ -512,17 +522,30 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       } else {
         yield* Effect.yieldNow();
       }
+      // The alarm has fired and is committed to dispatching its handler. Mark the process busy
+      // before clearing #alarmFiber so it is not reported settled across the persistence writes and
+      // handler hand-off below (#dispatchAlarm clears the flag once the handler is RUNNING).
+      this.#alarmDispatching = true;
       this.#alarmFiber = null;
       this.#alarmDueAt = null;
       yield* this.#persistence.setAlarm(null);
       if (!this.#finished) {
         yield* this.#persistence.appendEvent({ _tag: 'alarm' }).pipe(Effect.flatMap((seq) => this.#dispatchAlarm(seq)));
+      } else {
+        this.#alarmDispatching = false;
       }
     });
   }
 
   #dispatchAlarm(seq: number): Effect.Effect<void> {
     return this.#runHandler('alarm', () => this.#callbacks.onAlarm(), seq).pipe(
+      // The handler has set its status (RUNNING) by the time #runHandler yields the fiber; the
+      // dispatch hand-off window is over, so the pending-alarm flag can be released.
+      Effect.tap(() =>
+        Effect.sync(() => {
+          this.#alarmDispatching = false;
+        }),
+      ),
       Effect.flatMap(Fiber.join),
       this.#alarmSemaphore.withPermits(1),
     );
@@ -641,7 +664,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
           Effect.tap(() => this.#onFinished?.(Process.State.SUCCEEDED) ?? Effect.void),
         );
       } else if (this.#activeHandlers === 0) {
-        const hybernating = this.#alarmFiber !== null || this.#hasRunningChildren();
+        const hybernating = this.#alarmFiber !== null || this.#alarmDispatching || this.#hasRunningChildren();
         this.#setStatus(hybernating ? Process.State.HYBERNATING : Process.State.IDLE);
       }
     });

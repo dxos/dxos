@@ -58,6 +58,17 @@ export type Name<T extends string> = [string] extends [T]
     : never;
 
 /**
+ * Effect Schema validating an NSID name — the `dxn:`-less portion — at runtime, mirroring the rules
+ * the {@link Name} type checks at compile time (multi-segment; camelCase final segment). Pairs with
+ * the {@link Name} type for schema fields that hold a bare NSID (e.g. a model id passed to a creator
+ * helper). Named `NameSchema` because a value cannot share the generic `Name` type's name.
+ */
+export const NameSchema: Schema.Schema<string, string> = Schema.String.pipe(
+  Schema.filter((value) => DXN_SPEC_REGEXP.test(`dxn:${value}`), { message: () => 'Invalid NSID name' }),
+  Schema.annotations({ title: 'DXN.Name', description: 'NSID name (the dxn: prefix omitted)' }),
+);
+
+/**
  * Cheap prefix check — does not validate the full DXN grammar.
  * Sufficient for narrowing a URI to a DXN.
  */

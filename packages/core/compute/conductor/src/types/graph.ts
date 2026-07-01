@@ -79,14 +79,23 @@ export const ComputeEdge = Schema.extend(
   }),
 );
 
-export type ComputeEdge = Schema.Schema.Type<typeof ComputeEdge>;
+export interface ComputeEdge extends Schema.Schema.Type<typeof ComputeEdge> {}
+
+/**
+ * Typed graph schema using ComputeNode and ComputeEdge so the validator accepts their extra properties.
+ */
+export const ComputeGraphSpec = Schema.Struct({
+  id: Schema.optional(Schema.String),
+  nodes: Schema.mutable(Schema.Array(ComputeNode)),
+  edges: Schema.mutable(Schema.Array(ComputeEdge)),
+});
 
 /**
  * Persistent graph.
  */
 export class ComputeGraph extends Type.makeObject<ComputeGraph>(DXN.make('org.dxos.type.computeGraph', '0.1.0'))(
   Schema.Struct({
-    graph: Graph.Graph,
+    graph: ComputeGraphSpec,
 
     // Reference nodes.
     input: Schema.optional(ComputeNode),

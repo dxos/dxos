@@ -11,6 +11,7 @@ export * from './DateField';
 export * from './GeoPointField';
 export * from './MarkdownField';
 export * from './NumberField';
+export * from './PasswordField';
 export * from './RefField';
 export * from './SelectField';
 export * from './SelectOptionField';

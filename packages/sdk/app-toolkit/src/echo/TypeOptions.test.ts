@@ -45,4 +45,12 @@ describe('filterTypeOptions', () => {
     const result = TypeOptions.filterTypeOptions([UserType, UserType], { location: ['runtime'], kind: ['user'] });
     expect(result.map((o) => o.typename)).toEqual([Type.getTypename(UserType)]);
   });
+
+  test('runtime types carry no data label so the consumer falls back to the typename translation', ({ expect }) => {
+    // Static types are JS class constructors with no user-set `name` field. The label must be
+    // `undefined` (not the constructor's intrinsic `.name`, which production minifiers mangle) so
+    // `useTypeOptions` resolves the proper label via `t('typename.label', { ns: typename })`.
+    const [option] = TypeOptions.filterTypeOptions([UserType], { location: ['runtime'], kind: ['user'] });
+    expect(option.label).toBeUndefined();
+  });
 });

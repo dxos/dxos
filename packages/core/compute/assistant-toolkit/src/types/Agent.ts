@@ -119,9 +119,10 @@ export const makeInitialized = (
   skill: Skill.Skill,
 ): Effect.Effect<Agent, never, Database.Service> =>
   Effect.gen(function* () {
+    const { skills: propsSkills, contextObjects, ...agentProps } = props;
     const agent = yield* Database.add(
       Obj.make(Agent, {
-        ...props,
+        ...agentProps,
         instructions: Ref.make(Text.make({ content: props.instructions })),
         artifacts: props.artifacts ?? [],
         subscriptions: props.subscriptions ?? [],
@@ -135,6 +136,17 @@ export const makeInitialized = (
     // TODO(dmaretskyi): Skill registry.
     const agentSkill = yield* Database.add(Obj.clone(skill, { deep: 'all' }));
 
+    // Persist any inline (transient) skills so their refs are resolvable from feed bindings later.
+    // Refs created with Ref.make(obj) carry an inline target, but when stored in ECHO and read back
+    // by a new AiSession, the target is lost and must be found in the DB via tryLoad().
+    const persistedPropsSkills = yield* Effect.all(
+      (propsSkills ?? []).map((ref) =>
+        ref.target !== undefined
+          ? Database.add(ref.target).pipe(Effect.map((persisted) => Ref.make(persisted)))
+          : Effect.succeed(ref),
+      ),
+    );
+
     const chat = yield* Database.add(
       Chat.make({
         [Obj.Parent]: agent,
@@ -144,8 +156,8 @@ export const makeInitialized = (
     Obj.setParent(feed, chat);
     yield* Effect.promise(() =>
       contextBinder.bind({
-        skills: [Ref.make(agentSkill), ...(props.skills ?? [])],
-        objects: [Ref.make(agent), Ref.make(chat), ...(props.contextObjects ?? [])],
+        skills: [Ref.make(agentSkill), ...persistedPropsSkills],
+        objects: [Ref.make(agent), Ref.make(chat), ...(contextObjects ?? [])],
       }),
     );
     yield* Database.add(

@@ -8,22 +8,23 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { CommandConfig } from '@dxos/cli-util';
-import { type InspectIdentityResponse } from '@dxos/protocols';
+import { type InspectIdentityResponse, type LegacyInspectIdentityResponse } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError } from '../util';
+import { adminRequest, formatAdminError, readIdentityDid } from '../util';
 
 export const inspect = Command.make(
   'inspect',
   { identityKey: Args.text({ name: 'identityKey' }) },
   Effect.fn(function* ({ identityKey }) {
-    const result = yield* adminRequest<InspectIdentityResponse>('GET', `/admin/identities/${identityKey}`).pipe(
-      Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
-    );
+    const result = yield* adminRequest<InspectIdentityResponse | LegacyInspectIdentityResponse>(
+      'GET',
+      `/admin/identities/${identityKey}`,
+    ).pipe(Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))));
 
     if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(result, null, 2));
     } else {
-      yield* Console.log(`Identity: ${result.identityKey}`);
+      yield* Console.log(`Identity: ${readIdentityDid(result)}`);
       yield* Console.log(`  Recovery:   ${result.hasRecovery ? 'yes' : 'no'}`);
       yield* Console.log(`  Halo space: ${result.haloSpaceId ?? 'n/a'}`);
       yield* Console.log(`  Agent key:  ${result.agentKey ?? 'n/a'}`);

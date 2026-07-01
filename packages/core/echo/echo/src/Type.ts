@@ -133,6 +133,7 @@ export type AnyObj = Obj<unknown>;
  * })) {}
  * ```
  */
+// TODO(burdon): Require { typename, version } in options.
 export const makeObject: {
   <Self>(
     dxn: DXN.DXN,

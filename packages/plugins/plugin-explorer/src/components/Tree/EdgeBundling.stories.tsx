@@ -7,18 +7,18 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Query } from '@dxos/echo';
+import { type Obj, Query } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
+import { Tree, type TreeComponentProps, type TreeNode } from '@dxos/react-ui-graph';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ValueGenerator } from '@dxos/schema/testing';
 import { HasConnection, Organization, Person } from '@dxos/types';
 
 import { buildOrgHierarchy, connectionsToEdges, generateConnectedOrgs } from '../../testing';
-import { Tree, type TreeComponentProps } from './Tree';
-import { type TreeNode } from './types';
+import { getNodeFillForObject } from '../../util';
 
 const generator = random as any as ValueGenerator;
 
@@ -61,6 +61,8 @@ const DefaultStory = ({ variant = 'edge', tension }: { variant?: TreeComponentPr
       node: 'fill-neutral-700 dark:fill-neutral-300',
       path: 'stroke-orange-400/40 dark:stroke-orange-500/40',
       text: 'fill-neutral-700 dark:fill-neutral-200 text-xs',
+      // Boundary cast: the generic node `data` is an ECHO object here (carried opaquely by the renderer).
+      nodeFill: (data: unknown) => getNodeFillForObject(data as Obj.Unknown | undefined),
     }),
     [],
   );

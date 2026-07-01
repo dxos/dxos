@@ -6,9 +6,10 @@ import React, { useCallback, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { DxAnchorActivate, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { type TreeNode } from '@dxos/react-ui-graph';
 import '@dxos/react-ui-graph/styles/graph.css';
 
-import { type TreeNode, Visualization } from '#components';
+import { Visualization } from '#components';
 import { DEFAULT_NEIGHBORHOOD_DEPTH, useNeighborhoodModel } from '#hooks';
 import { meta } from '#meta';
 

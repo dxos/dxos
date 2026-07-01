@@ -7,22 +7,27 @@ import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import type * as Layer from 'effect/Layer';
 
+import { DXN } from '@dxos/keys';
+
 import * as AiModelResolver from '../../AiModelResolver';
-import { type ModelName } from '../../defs';
 import { type AiModelNotAvailableError } from '../../errors';
+import * as Model from '../../Model';
+import * as Provider from '../../Provider';
 
 export const make = () =>
   AiModelResolver.AiModelResolver.fromModelMap(
     {
       name: 'OpenAI',
     },
+    Provider.openai.id,
     Effect.gen(function* () {
-      return {
-        'ai.openai.model.gpt-4o': yield* OpenAiLanguageModel.model('gpt-4o'),
-        'ai.openai.model.gpt-4o-mini': yield* OpenAiLanguageModel.model('gpt-4o-mini'),
-        'ai.openai.model.o1': yield* OpenAiLanguageModel.model('o1'),
-        'ai.openai.model.o3': yield* OpenAiLanguageModel.model('o3'),
-        'ai.openai.model.o3-mini': yield* OpenAiLanguageModel.model('o3-mini'),
-      } satisfies Partial<Record<ModelName, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>>;
+      // Derive the id → model-layer map from the OpenAI provider's catalog models (id → back-end name).
+      const modelMap: Partial<
+        Record<DXN.DXN, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>
+      > = {};
+      for (const model of Model.forProvider(Provider.openai.id)) {
+        modelMap[model.id] = yield* OpenAiLanguageModel.model(model.backend);
+      }
+      return modelMap;
     }),
   );

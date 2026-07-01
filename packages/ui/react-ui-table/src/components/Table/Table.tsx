@@ -72,5 +72,6 @@ export const Table = {
 };
 
 export type { TableController, TableRootProps };
+export type { TableExportFormat } from './TableToolbar';
 
 export { useTableContext };

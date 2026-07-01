@@ -7,7 +7,7 @@ import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, 
 
 import { addEventListener } from '@dxos/async';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate, Popover } from '@dxos/react-ui';
-import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-editor';
+import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
 type EditorPreviewPopoverValue = Partial<{
   link: PreviewLinkRef;
@@ -22,9 +22,10 @@ export type EditorPreviewProviderProps = PropsWithChildren<{
 }>;
 
 /**
- * NOTE: In Composer, the DeckPlugin provides the Popover.Root as part of the DeckLayout.
+ * Standalone anchor-preview popover for use outside Composer (storybook, tests).
+ * In Composer, PreviewPlugin listens on window for DX_ANCHOR_ACTIVATE events and
+ * dispatches LayoutOperation.UpdatePopover instead; this provider is not needed there.
  */
-// TOOD(burdon): Reconcile with PreviewPlugin.
 export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProviderProps) => {
   const triggerRef = useRef<HTMLElement | null>(null);
   const [value, setValue] = useState<EditorPreviewPopoverValue>({});

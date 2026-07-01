@@ -30,6 +30,12 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../sdk/types"
+    },
+    {
+      "path": "../../compute/compute"
+    },
+    {
       "path": "../../mesh/teleport"
     },
     {

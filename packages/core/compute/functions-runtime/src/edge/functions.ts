@@ -20,12 +20,14 @@ import { log } from '@dxos/log';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { safeParseJson } from '@dxos/util';
 
+/** @deprecated Use {@link FunctionsServiceClient} instead. */
 export type UploadWorkerArgs = {
   client: Client;
   version: string;
   name?: string;
   functionId?: string;
-  ownerPublicKey: PublicKey;
+  /** Owner identity DID (`did:halo:…`). */
+  ownerUri: string;
   entryPoint: string;
   assets: Record<string, Uint8Array>;
 };
@@ -45,14 +47,14 @@ export const createEdgeClient = (client: Client): EdgeHttpClient => {
  */
 export const uploadWorkerFunction = async (
   ctx: Context,
-  { client, version, name, functionId, ownerPublicKey, entryPoint, assets }: UploadWorkerArgs,
+  { client, version, name, functionId, ownerUri, entryPoint, assets }: UploadWorkerArgs,
 ): Promise<UploadFunctionResponseBody> => {
-  log('uploading function', { functionId, name, version, ownerPublicKey });
+  log('uploading function', { functionId, name, version, ownerUri });
   const edgeClient = createEdgeClient(client);
   const response = await edgeClient.uploadFunction(
     ctx,
     { functionId },
-    { name, version, ownerPublicKey: ownerPublicKey.toHex(), entryPoint, assets },
+    { name, version, ownerUri, entryPoint, assets },
   );
 
   // TODO(burdon): Edge service log.

@@ -247,10 +247,12 @@ describe('update', () => {
           context: [Ref.make(document)],
         });
 
+        // The agent process completes once its input queue drains (maybeComplete → succeed), so all
+        // prompts must be enqueued before awaiting completion; the agent then drains them in order,
+        // each turn building on the previous edit. Awaiting between submits would let the process
+        // succeed after the first turn, dropping the rest.
         yield* agent.submitPrompt('Add milk to the shopping list.');
-        yield* agent.waitForCompletion();
         yield* agent.submitPrompt('Add bread to the shopping list.');
-        yield* agent.waitForCompletion();
         yield* agent.submitPrompt('Add eggs to the shopping list.');
         yield* agent.waitForCompletion();
 

@@ -83,7 +83,10 @@ export const filterTypeOptions = (types: readonly Type.AnyEntity[], annotation: 
     seen.add(typeUri);
 
     const typename = Type.getTypename(type);
-    result.push({ typeUri, typename, label: Type.getLabel(type) });
+    // Only database (user-defined) types carry a user-set `name`; surface it as the label. Static
+    // (runtime) types have no data label — leave it undefined so the consumer resolves the proper,
+    // localized label from translations keyed by typename (`t('typename.label', { ns: typename })`).
+    result.push({ typeUri, typename, label: isDatabase ? Type.getLabel(type) : undefined });
   }
 
   return result.sort((a, b) => a.typename.localeCompare(b.typename));

@@ -3,7 +3,7 @@
 //
 
 import { useFocusFinders } from '@fluentui/react-tabster';
-import React, { type KeyboardEvent, memo, useCallback, useEffect, useRef } from 'react';
+import React, { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -16,6 +16,8 @@ import { type LayoutMode, type ResolvedPart, type Settings } from '#types';
 import { PlankCompanionControls, PlankControls } from './PlankControls';
 import { PlankErrorFallback, PlankLoading } from './PlankFallback';
 import { useDeckPlank } from './useDeckPlank';
+
+const PLANK_LOADING = <PlankLoading />;
 
 export type DeckPlankProps = ThemedClassName<{
   id: string;
@@ -83,8 +85,25 @@ export const DeckPlank = memo(
       [findFirstFocusable],
     );
 
+    // Stable reference so Plank's useMemo on articleData doesn't bust every render.
+    const articleData = useMemo(() => ({ path }), [path]);
+
+    // Keep the companion panel mounted for 250ms after hasCompanion goes false so the Splitter's
+    // CSS transition can complete before the subtree is removed from the DOM.
+    const [companionMounted, setCompanionMounted] = useState(hasCompanion);
+    useEffect(() => {
+      if (hasCompanion) {
+        setCompanionMounted(true);
+        return;
+      }
+      const timer = setTimeout(() => setCompanionMounted(false), 250);
+      return () => clearTimeout(timer);
+    }, [hasCompanion]);
+
+    const companionControls = useMemo(() => <PlankCompanionControls primary={id} />, [id]);
+
     if (!node) {
-      return <PlankLoading />;
+      return PLANK_LOADING;
     }
 
     const controls = (
@@ -108,55 +127,58 @@ export const DeckPlank = memo(
     // In fullscreen the toolbar is hidden so the content fills the viewport.
     const headless = layoutMode === 'solo--fullscreen';
 
-    // Apply positioning `classNames` to whichever element is outermost (the Splitter when a companion is
-    // shown, otherwise the Plank itself).
-    const renderPlank = (plankClassNames?: DeckPlankProps['classNames']) => (
-      <Plank
-        ref={rootRef}
-        node={node}
-        attendableId={id}
-        related={part === 'complementary'}
-        actions={sigilActions}
-        onAction={onAction}
-        popoverAnchorId={popoverAnchorId}
-        articleData={{ path }}
-        controls={controls}
-        navbarEnd={navbarEnd}
-        sigilFooter={sigilFooter}
-        fallback={PlankErrorFallback}
-        placeholder={<PlankLoading />}
-        headless={headless}
-        onKeyDown={handleKeyDown}
-        classNames={plankClassNames}
-      />
-    );
-
-    if (!hasCompanion) {
-      return renderPlank(classNames);
-    }
-
+    // Splitter.Root is always the outer element so <Plank> stays at the same tree position regardless of
+    // whether the companion is open. A root-element-type change (Plank ↔ Splitter.Root) would force React
+    // to unmount and remount the entire subtree on every companion toggle, resetting article state.
+    //
+    // `mode` drives the animated open/close: switching between 'split' and 'start' triggers the Splitter's
+    // built-in 250ms CSS transition. `companionMounted` trails `hasCompanion` by 250ms on close so the
+    // panel stays in the DOM long enough for the collapse animation to finish before being unmounted.
     return (
       <Splitter.Root
         orientation={companionOrientation}
         anchor='end'
-        resizable
+        mode={hasCompanion ? 'split' : 'start'}
+        resizable={hasCompanion}
         size={companionSize}
         minSize={20}
         onSizeChange={onCompanionSizeChange}
         classNames={classNames}
       >
-        <Splitter.Panel position='start'>{renderPlank()}</Splitter.Panel>
-        <Splitter.Handle />
-        <Splitter.Panel position='end'>
-          <Companion
-            companions={companions}
-            value={resolvedCompanionId}
-            onValueChange={onUpdateCompanion}
+        <Splitter.Panel position='start'>
+          <Plank
+            ref={rootRef}
+            node={node}
             attendableId={id}
-            companionTo={node.data}
-            controls={<PlankCompanionControls primary={id} />}
+            related={part === 'complementary'}
+            actions={sigilActions}
+            onAction={onAction}
+            popoverAnchorId={popoverAnchorId}
+            articleData={articleData}
+            controls={controls}
+            navbarEnd={navbarEnd}
+            sigilFooter={sigilFooter}
+            fallback={PlankErrorFallback}
+            placeholder={PLANK_LOADING}
+            headless={headless}
+            onKeyDown={handleKeyDown}
           />
         </Splitter.Panel>
+        {companionMounted && (
+          <>
+            <Splitter.Handle />
+            <Splitter.Panel position='end'>
+              <Companion
+                companions={companions}
+                value={resolvedCompanionId}
+                onValueChange={onUpdateCompanion}
+                attendableId={id}
+                companionTo={node.data}
+                controls={companionControls}
+              />
+            </Splitter.Panel>
+          </>
+        )}
       </Splitter.Root>
     );
   },

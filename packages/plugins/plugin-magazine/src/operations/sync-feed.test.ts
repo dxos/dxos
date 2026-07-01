@@ -87,7 +87,7 @@ describe('SyncFeed', () => {
         yield* Operation.invoke(FeedOperation.SyncFeed, { feed: Ref.make(subscriptionFeed) });
         yield* Operation.invoke(FeedOperation.SyncFeed, { feed: Ref.make(subscriptionFeed) });
 
-        const items = yield* Feed.runQuery(echoFeed, Filter.type(Subscription.Post));
+        const items = yield* Feed.query(echoFeed, Filter.type(Subscription.Post)).run;
         expect(items).toHaveLength(2);
         const guids = items.map((post) => post.guid).sort();
         expect(guids).toEqual(['post-a', 'post-b']);
@@ -135,7 +135,7 @@ describe('SyncFeed', () => {
         // Second sync also exercises the persisted-post dedup path for link-keyed items.
         yield* Operation.invoke(FeedOperation.SyncFeed, { feed: Ref.make(subscriptionFeed) });
 
-        const items = yield* Feed.runQuery(echoFeed, Filter.type(Subscription.Post));
+        const items = yield* Feed.query(echoFeed, Filter.type(Subscription.Post)).run;
         expect(items).toHaveLength(1);
         expect(items[0].link).toBe('https://example.com/shared');
       },

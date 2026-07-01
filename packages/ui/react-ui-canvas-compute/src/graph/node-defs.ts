@@ -40,42 +40,42 @@ const nodeFactory: Record<NodeType | 'trigger', (shape: ComputeShape) => Compute
 
   // Extensions.
   'text-to-image': () => createNode('text-to-image'), // TODO(burdon): Rename ai-impage-tool
-  and: () => createNode('and'),
-  append: () => createNode('append'),
-  audio: () => createNode('audio'),
-  beacon: () => createNode('beacon'),
-  chat: () => createNode('chat'),
-  constant: (shape) =>
+  'and': () => createNode('and'),
+  'append': () => createNode('append'),
+  'audio': () => createNode('audio'),
+  'beacon': () => createNode('beacon'),
+  'chat': () => createNode('chat'),
+  'constant': (shape) =>
     createNode('constant', {
       value: (shape as ConstantShape).value,
     }),
   'make-queue': () => createNode('make-queue'),
-  database: () => createNode('database'),
-  gpt: () => createNode('gpt'),
+  'database': () => createNode('database'),
+  'gpt': () => createNode('gpt'),
   'gpt-realtime': () => createNode('gpt-realtime'),
-  if: () => createNode('if'),
+  'if': () => createNode('if'),
   'if-else': () => createNode('if-else'),
-  function: () => createNode('function'),
-  json: () => createNode('json'),
+  'function': () => createNode('function'),
+  'json': () => createNode('json'),
   'json-transform': () => createNode('json-transform'),
-  not: () => createNode('not'),
-  or: () => createNode('or'),
-  queue: () => createNode('queue'),
-  rng: () => createNode('rng'),
-  reducer: () => createNode('reducer'),
-  scope: () => createNode('scope'),
-  surface: () => createNode('surface'),
-  switch: () => createNode('switch'),
-  template: (shape) => {
+  'not': () => createNode('not'),
+  'or': () => createNode('or'),
+  'queue': () => createNode('queue'),
+  'rng': () => createNode('rng'),
+  'reducer': () => createNode('reducer'),
+  'scope': () => createNode('scope'),
+  'surface': () => createNode('surface'),
+  'switch': () => createNode('switch'),
+  'template': (shape) => {
     const node = createNode('template', { valueType: (shape as TemplateShape).valueType, value: shape.text });
     // `toJsonSchema` reuses cached fragments (e.g. the `Schema.Any` JSON form) across calls; deep-copy so each
     // ECHO node owns its own schema record rather than reassigning ownership of a shared one.
     node.inputSchema = structuredClone(JsonSchema.toJsonSchema(getTemplateInputSchema(node)));
     return node;
   },
-  text: () => createNode('text'),
-  thread: () => createNode('thread'),
-  trigger: () => createNode(NODE_INPUT),
+  'text': () => createNode('text'),
+  'thread': () => createNode('thread'),
+  'trigger': () => createNode(NODE_INPUT),
 };
 
 const createNode = (type: string, props?: Partial<ComputeNode>): ComputeNode => ({

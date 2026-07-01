@@ -69,8 +69,8 @@ export class Presence extends Resource {
       async () => {
         const peerState: WithTypeUrl<PeerState> = {
           '@type': 'dxos.mesh.presence.PeerState',
-          identityKey: this._params.identityKey,
-          connections: this._params.gossip.getConnections(),
+          'identityKey': this._params.identityKey,
+          'connections': this._params.gossip.getConnections(),
         };
         this._params.gossip.postMessage(PRESENCE_CHANNEL_ID, peerState);
       },

@@ -567,6 +567,7 @@ const LoginTab = ({
     key: string;
     icon: string;
     label: string;
+    classNames?: string;
     description: string;
     onClick: () => void;
   };
@@ -577,6 +578,7 @@ const LoginTab = ({
       key: 'passkey',
       icon: 'ph--key--regular',
       label: t('login-passkey.label'),
+      classNames: 'text-pink-500',
       description: t('login-passkey.description'),
       onClick: () => setPrimary('passkey'),
     });
@@ -587,6 +589,7 @@ const LoginTab = ({
       key: 'email',
       icon: 'ph--envelope-simple--regular',
       label: t('login-email.label'),
+      classNames: 'text-rose-500',
       description: t('login-email.description'),
       onClick: () => {
         pendingPrimaryFocus.current = 'email';
@@ -598,8 +601,9 @@ const LoginTab = ({
   if (primary !== 'atproto' && onRecoverWithOAuth) {
     moreOptions.push({
       key: 'atproto',
-      icon: 'ph--cloud--regular',
+      icon: 'ph--butterfly--regular',
       label: t('login-atmosphere.label'),
+      classNames: 'text-blue-500',
       description: t('login-atmosphere.description'),
       onClick: () => {
         pendingPrimaryFocus.current = 'atproto';
@@ -618,6 +622,7 @@ const LoginTab = ({
       key: 'device',
       icon: 'ph--qr-code--regular',
       label: t('login-device.label'),
+      classNames: 'text-neutral-500',
       description: t('login-device.description'),
       onClick: () => onJoinIdentity(),
     });
@@ -626,6 +631,7 @@ const LoginTab = ({
     moreOptions.push({
       key: 'recovery',
       icon: 'ph--receipt--regular',
+      classNames: 'text-green-500',
       label: t('login-recovery.label'),
       description: t('login-recovery.description'),
       onClick: () => onRecoverIdentity(),
@@ -705,7 +711,7 @@ const LoginTab = ({
               <DropdownMenu.Viewport>
                 {moreOptions.map((opt) => (
                   <DropdownMenu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>
-                    <Icon icon={opt.icon} size={4} classNames='shrink-0' />
+                    <Icon icon={opt.icon} size={6} classNames={mx('shrink-0', opt.classNames)} />
                     <div className='flex flex-col gap-0.5'>
                       <span>{opt.label}</span>
                       <span className='text-xs text-description font-normal'>{opt.description}</span>

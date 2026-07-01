@@ -57,7 +57,7 @@ const ColumnRoot = slottable<HTMLDivElement, ColumnRootProps>(
             ...rest.style,
             '--gutter': gutterSize,
             '--dx-col': '2 / span 1',
-            gridTemplateColumns: [gutterSize, 'minmax(0,1fr)', gutterSize].join(' '),
+            'gridTemplateColumns': [gutterSize, 'minmax(0,1fr)', gutterSize].join(' '),
           } as CSSProperties
         }
         className={tx('column.root', { gutter }, className)}

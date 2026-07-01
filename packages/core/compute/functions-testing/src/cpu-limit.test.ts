@@ -8,6 +8,7 @@ import { Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
 import { deployFunction, observeInvocations, setup, sync } from './testing';
@@ -20,11 +21,14 @@ describe('CPU limit', { tags: ['functions-e2e'] }, () => {
 
   test('invoke directly', { timeout: 120_000 }, async ({ expect }) => {
     const { client, space, functionsServiceClient } = await setup(config);
+    const identity = client.halo.identity.get();
+    invariant(identity, 'Identity must exist after createIdentity.');
     const func = await deployFunction(
       space,
       functionsServiceClient,
       FIB_FUNCTION_PATH,
       FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
+      identity.did,
     );
     const result = await functionsServiceClient.invoke(
       Context.default(),
@@ -41,11 +45,14 @@ describe('CPU limit', { tags: ['functions-e2e'] }, () => {
 
   test('force-trigger', { timeout: 120_000 }, async ({ expect }) => {
     const { client, space, functionsServiceClient } = await setup(config);
+    const identity = client.halo.identity.get();
+    invariant(identity, 'Identity must exist after createIdentity.');
     const func = await deployFunction(
       space,
       functionsServiceClient,
       FIB_FUNCTION_PATH,
       FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
+      identity.did,
     );
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
@@ -62,11 +69,14 @@ describe('CPU limit', { tags: ['functions-e2e'] }, () => {
 
   test('break CPU limit', { timeout: 120_000 }, async ({ expect }) => {
     const { client, space, functionsServiceClient } = await setup(config);
+    const identity = client.halo.identity.get();
+    invariant(identity, 'Identity must exist after createIdentity.');
     const func = await deployFunction(
       space,
       functionsServiceClient,
       FIB_FUNCTION_PATH,
       FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
+      identity.did,
     );
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
@@ -99,11 +109,14 @@ describe('CPU limit', { tags: ['functions-e2e'] }, () => {
 
   test('observe invocations', { timeout: 520_000 }, async ({ expect }) => {
     const { client, space, functionsServiceClient } = await setup(config);
+    const identity = client.halo.identity.get();
+    invariant(identity, 'Identity must exist after createIdentity.');
     const func = await deployFunction(
       space,
       functionsServiceClient,
       FIB_FUNCTION_PATH,
       FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
+      identity.did,
     );
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
@@ -119,11 +132,14 @@ describe('CPU limit', { tags: ['functions-e2e'] }, () => {
 
   test('break CPU limit through natural exection', { timeout: 520_000 }, async ({ expect }) => {
     const { client, space, functionsServiceClient } = await setup(config);
+    const identity = client.halo.identity.get();
+    invariant(identity, 'Identity must exist after createIdentity.');
     const func = await deployFunction(
       space,
       functionsServiceClient,
       FIB_FUNCTION_PATH,
       FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
+      identity.did,
     );
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {

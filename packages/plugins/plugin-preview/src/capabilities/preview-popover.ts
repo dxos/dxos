@@ -7,25 +7,27 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { addEventListener } from '@dxos/async';
-import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui';
-import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-editor';
+import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
 const customEventOptions = { capture: true, passive: false };
 
-const handlePreviewLookup = async (
-  client: Client,
-  defaultSpace: Space,
-  { dxn, label }: PreviewLinkRef,
-): Promise<PreviewLinkTarget | null> => {
+// TODO(burdon): Factor out?
+const handlePreviewLookup = async (space: Space, { dxn, label }: PreviewLinkRef): Promise<PreviewLinkTarget | null> => {
+  const eid = EID.tryParse(dxn);
+  if (!eid) {
+    // dxn: type URIs and other non-EID refs cannot be resolved to an object.
+    return null;
+  }
   try {
-    const object = await defaultSpace.db.makeRef(EID.parse(dxn)).load();
-    return { label, object };
+    const object = await space.db.makeRef(eid).load();
+    const resolvedLabel = Obj.getLabel(object as any, { fallback: 'typename' });
+    return { label: resolvedLabel ?? label, object };
   } catch {
     return null;
   }
@@ -79,7 +81,7 @@ export default Capability.makeModule(
       if (!space) {
         return;
       }
-      const result = await handlePreviewLookup(client, space, { dxn, label });
+      const result = await handlePreviewLookup(space, { dxn, label });
       if (!result) {
         return;
       }

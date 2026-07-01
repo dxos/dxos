@@ -195,7 +195,7 @@ interface MakeServiceOptions {
 const makeService = ({ feed, runtime, binder, owningHost }: MakeServiceOptions): Service => ({
   binder: Effect.succeed(binder),
   history: Effect.gen(function* () {
-    const messages = yield* Feed.runQuery(feed, Filter.type(Message.Message));
+    const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
     return yield* new SessionLoader().reifyHistory(feed, messages);
   }).pipe(Effect.provide(runtime)),
   queryContext: <T extends Obj.Unknown>(filter: Filter.Filter<T>) =>

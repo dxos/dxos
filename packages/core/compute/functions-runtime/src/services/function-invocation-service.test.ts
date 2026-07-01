@@ -16,7 +16,7 @@ import { DXN } from '@dxos/keys';
 import { FunctionInvocationServiceLayer } from './function-invocation-service';
 import { FunctionImplementationResolver } from './local-function-execution';
 
-const TestLayer = Layer.mergeAll(AiService.model('ai.claude.model.claude-opus-4-0')).pipe(
+const TestLayer = Layer.mergeAll(AiService.model('com.anthropic.model.claude-opus-4-8.default')).pipe(
   Layer.provideMerge(
     Layer.mergeAll(
       TestDatabaseLayer({

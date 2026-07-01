@@ -12,7 +12,7 @@ import { assembleDocument } from './align';
 import { type Document, Upos } from './Document';
 import { stubParse } from './stub';
 
-const PARSE_MODEL = 'ai.claude.model.claude-haiku-4-5';
+const PARSE_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
 /** LLM output schema: sentences → tokens, no offsets (alignment computes those). */
 const TaggedSentences = Schema.Struct({

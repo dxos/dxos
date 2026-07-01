@@ -44,8 +44,12 @@ describe.skip('Functions deployment', { tags: ['functions-e2e'] }, () => {
     }
     const functionsServiceClient = FunctionsServiceClient.fromClient(client);
 
+    const identity = client.halo.identity.get();
+    if (!identity) {
+      throw new Error('Identity not available.');
+    }
     const func = await functionsServiceClient.deploy(Context.default(), {
-      ownerPublicKey: space.key,
+      ownerUri: identity.did,
       version: '0.0.1',
       entryPoint: buildResult.entryPoint,
       assets: buildResult.assets,
