@@ -63,6 +63,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
       await invokePromise(LayoutOperation.Open, {
         subject: [Paths.getSpaceHomePath(space.id)],
         workspace: Paths.getSpacePath(space.id),
+        navigation: 'immediate',
       });
 
       onDone?.(result);
