@@ -32,20 +32,25 @@
 packages/core/compute/pipeline/
   package.json          # @dxos/pipeline, private, effect peer/dev dep only
   moon.yml              # library; entrypoints src/index.ts + src/testing/index.ts
-  tsconfig.json         # extends base, references: []
+  tsconfig.json         # extends base, references: [common/effect]
   vitest.config.ts      # createConfig({ node: true })
   LICENSE               # FSL-1.1-Apache-2.0 (copy from sibling)
   README.md             # one-paragraph description
   src/
-    Sink.ts             # Sink type (plain export)
     Stage.ts            # @import-as-namespace: Stage, Overflow, DEFAULT_BUFFER_SIZE, map/window/filter
-    Pipeline.ts         # @import-as-namespace: run, RunOptions
-    index.ts            # export type { Sink }; export * as Stage; export * as Pipeline
+    Pipeline.ts         # @import-as-namespace: run, RunOptions, Sink
+    index.ts            # barrel: export * as Stage; export * as Pipeline
     Stage.test.ts
     Pipeline.test.ts
     testing/
-      index.ts          # captureSink, scriptedSource
+      index.ts          # captureSink, scriptedSource (imports Pipeline.Sink)
 ```
+
+> **Amendment (post-Task 4):** `Sink` was originally a standalone `src/Sink.ts` re-exported from
+> the barrel (Tasks 1 & 4 as written below still reference it). Per review feedback it now lives in
+> `Pipeline.ts` (used only by `Pipeline.run`), surfaced as `Pipeline.Sink`, and `index.ts` is a pure
+> namespace barrel. `src/Sink.ts` is deleted. This is applied as a dedicated refactor commit after
+> Task 4; the historical Task 1/4 steps are left as-authored for the record.
 
 ---
 

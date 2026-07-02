@@ -168,14 +168,16 @@ packages/core/compute/pipeline/
   moon.yml            // library; entrypoints: src/index.ts, src/testing/index.ts
   src/
     Stage.ts          // Stage interface + map/window/filter constructors  (@import-as-namespace)
-    Pipeline.ts       // Pipeline.run + RunOptions                          (@import-as-namespace)
-    Sink.ts           // Sink type + captureSink() test helper
-    index.ts          // export * as Stage / Pipeline; export Sink
+    Pipeline.ts       // Pipeline.run + RunOptions + Sink type             (@import-as-namespace)
+    index.ts          // barrel: export * as Stage / Pipeline
     testing/
-      index.ts        // captureSink re-export + scripted source helper
+      index.ts        // captureSink + scripted source helper (imports Pipeline.Sink)
     Pipeline.test.ts
     Stage.test.ts
 ```
+
+`Sink` lives in `Pipeline.ts` (used only by `Pipeline.run`), surfaced as the `Pipeline.Sink` type;
+`index.ts` is a pure namespace barrel (`export * as Stage` / `export * as Pipeline`).
 
 Namespace-export convention per repo guidelines (`export * as Stage`, `export * as Pipeline`).
 
