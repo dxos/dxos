@@ -56,3 +56,51 @@ describe('Pipeline.run', () => {
     expect(items).toEqual([2, 4]);
   });
 });
+
+describe('Pipeline.run overflow', () => {
+  test('suspend (default) delivers every item to a slow sink — no loss', async ({ expect }) => {
+    const items: number[] = [];
+    // A sink that yields between commits; back pressure must still deliver all items.
+    const sink = (out: number) => Effect.sync(() => items.push(out)).pipe(Effect.zipLeft(Effect.yieldNow()));
+    await EffectEx.runPromise(
+      Pipeline.run({
+        source: scriptedSource(Array.from({ length: 50 }, (_unused, index) => index)),
+        stages: [Stage.map<number, number, {}>('id', (n) => Effect.succeed(n))],
+        sink,
+        context: {},
+        overflow: 'suspend',
+        bufferSize: 4,
+      }),
+    );
+    expect(items).toEqual(Array.from({ length: 50 }, (_unused, index) => index));
+  });
+
+  test('sliding pipeline runs to completion and delivers the final item', async ({ expect }) => {
+    const { sink, items } = captureSink<number>();
+    await EffectEx.runPromise(
+      Pipeline.run({
+        source: scriptedSource([1, 2, 3, 4, 5]),
+        stages: [Stage.map<number, number, {}>('id', (n) => Effect.succeed(n))],
+        sink,
+        context: {},
+        overflow: 'sliding',
+        bufferSize: 2,
+      }),
+    );
+    expect(items.length).toBeGreaterThan(0);
+    expect(items[items.length - 1]).toBe(5);
+  });
+
+  test('per-stage overflow override runs to completion', async ({ expect }) => {
+    const { sink, items } = captureSink<number>();
+    await EffectEx.runPromise(
+      Pipeline.run({
+        source: scriptedSource([1, 2, 3]),
+        stages: [Stage.map<number, number, {}>('id', (n) => Effect.succeed(n), { overflow: 'sliding', bufferSize: 1 })],
+        sink,
+        context: {},
+      }),
+    );
+    expect(items[items.length - 1]).toBe(3);
+  });
+});
