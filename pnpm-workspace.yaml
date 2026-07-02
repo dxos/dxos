@@ -489,7 +489,7 @@ catalog:
   level-transcoder: ^1.0.1
   lib0: ^0.2.65
   linkedom: ^0.18.5
-  lit: ^3.3.1
+  lit: ^3.3.3
   localforage: ^1.10.0
   lodash.debounce: ^4.0.8
   lodash.defaultsdeep: ^4.6.1
