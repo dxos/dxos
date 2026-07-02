@@ -50,4 +50,10 @@ describe('Stage.window', () => {
     const out = await collect(stage.transform(Stream.fromIterable([1, 2, 3]), { base: 100 }));
     expect(out).toEqual([101, 103, 105]);
   });
+
+  test('rejects a non-positive window size', ({ expect }) => {
+    expect(() => Stage.window<number, number, {}>('bad', 0, (window) => Effect.succeed(window.length))).toThrow(
+      RangeError,
+    );
+  });
 });

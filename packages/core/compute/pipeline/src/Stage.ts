@@ -23,6 +23,7 @@ export const DEFAULT_BUFFER_SIZE = 16;
  * build stages with {@link map} / {@link window} / {@link filter}; `transform` is the escape hatch.
  */
 export interface Stage<in In, out Out, in Ctx, out E = never> {
+  /** Identifies the stage for diagnostics/observability; not yet read by `run`. */
   readonly id: string;
   transform(input: Stream.Stream<In, E>, ctx: Ctx): Stream.Stream<Out, E>;
 }
@@ -75,18 +76,26 @@ export const window = <In, Out, Ctx, E = never>(
   size: number,
   fn: (window: readonly In[], ctx: Ctx) => Effect.Effect<Out, E>,
   options: WindowOptions = {},
-): Stage<In, Out, Ctx, E> => ({
-  id,
-  transform: (input, ctx) =>
-    input.pipe(
-      Stream.mapAccum([] as readonly In[], (buffer, item) => {
-        const next = [...buffer, item].slice(-size);
-        return [next, next];
-      }),
-      Stream.mapEffect((buffer) => fn(buffer, ctx), { concurrency: 1 }),
-      withBuffer(options),
-    ),
-});
+): Stage<In, Out, Ctx, E> => {
+  // A window must retain at least one item; a non-positive size makes `.slice(-size)` degenerate
+  // (`slice(-0)` returns the whole array, growing unbounded).
+  if (!Number.isInteger(size) || size < 1) {
+    throw new RangeError(`Stage.window size must be a positive integer: ${size}`);
+  }
+
+  return {
+    id,
+    transform: (input, ctx) =>
+      input.pipe(
+        Stream.mapAccum([] as readonly In[], (buffer, item) => {
+          const next = [...buffer, item].slice(-size);
+          return [next, next];
+        }),
+        Stream.mapEffect((buffer) => fn(buffer, ctx), { concurrency: 1 }),
+        withBuffer(options),
+      ),
+  };
+};
 
 /** Drop items that do not match `pred`. */
 export const filter = <In, Ctx, E = never>(id: string, pred: (item: In) => boolean): Stage<In, In, Ctx, E> => ({

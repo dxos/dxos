@@ -4,3 +4,18 @@ Generic, back-pressured streaming pipeline. A pipeline runs an Effect `Stream` s
 ordered chain of stages — each a `Stream → Stream` transform sharing one injected context — and
 drains the result to a sink. Back pressure is the default (pull-based `Stream`) and configurable
 per pipeline or per stage (`suspend` / `sliding` / `dropping`).
+
+## Usage
+
+```ts
+import { Pipeline, Stage } from '@dxos/pipeline';
+
+await EffectEx.runPromise(
+  Pipeline.run({
+    source: Stream.fromIterable([1, 2, 3]),
+    stages: [Stage.map('double', (n: number) => Effect.succeed(n * 2))],
+    sink: (out) => Effect.sync(() => console.log(out)),
+    context: {},
+  }),
+);
+```

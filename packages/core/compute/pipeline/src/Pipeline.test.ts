@@ -55,6 +55,24 @@ describe('Pipeline.run', () => {
     );
     expect(items).toEqual([2, 4]);
   });
+
+  test('drops undefined between stages so a mid-chain stage can no-op', async ({ expect }) => {
+    const { sink, items } = captureSink<number>();
+    await EffectEx.runPromise(
+      Pipeline.run({
+        source: scriptedSource([1, 2, 3, 4]),
+        stages: [
+          // First stage no-ops on odds; the undefined must NOT reach the second stage.
+          Stage.map<number, number | undefined, {}>('evens', (n) => Effect.succeed(n % 2 === 0 ? n : undefined)),
+          // Second stage would produce NaN if it ever received `undefined`.
+          Stage.map<number, number, {}>('inc', (n) => Effect.succeed(n + 1)),
+        ],
+        sink,
+        context: {},
+      }),
+    );
+    expect(items).toEqual([3, 5]);
+  });
 });
 
 describe('Pipeline.run overflow', () => {

@@ -35,18 +35,28 @@ export type RunOptions<In, Out, Ctx, E = never> = {
  * Run a pipeline: fold the stages over the source, apply the overflow buffer, and drain to the
  * sink. Cancellation is structural — interrupting the returned effect interrupts the stream and
  * all in-flight stage work; there are no daemon fibers to leak.
+ *
+ * `undefined` emitted by any stage means "no output for that item" and is dropped between stages
+ * and before the sink, so a pipeline can never deliver `undefined` as a meaningful value. The
+ * source, all stages, and the sink share one error type `E`; mixing stages with distinct error
+ * types requires widening to their union at the call site.
  */
 export const run = <In, Out, Ctx, E = never>(options: RunOptions<In, Out, Ctx, E>): Effect.Effect<void, E> => {
   const { source, stages, sink, context, overflow = 'suspend', bufferSize = Stage.DEFAULT_BUFFER_SIZE } = options;
 
-  // Heterogeneous chain: each stage's output type feeds the next stage's input. This is a genuine
-  // type-system boundary (a typed list of transforms of differing types); the `unknown`/`any` are
-  // confined to this fold and never surface in stage-author or caller signatures.
-  const chained = stages.reduce<Stream.Stream<unknown, E>>((stream, stage) => stage.transform(stream, context), source);
+  // Fold stages left-to-right; each stage's Out is the next stage's In. A stage may emit
+  // `undefined` to no-op for an item; that value is dropped before it reaches the next stage
+  // (and before the sink), so no-op is well-defined at every position in the chain, not only
+  // the terminal stage. The `unknown`/`any` here are the heterogeneous-chain type-system
+  // boundary — confined to this fold, never surfacing in stage-author or caller signatures.
+  const chained = stages.reduce<Stream.Stream<unknown, E>>(
+    (stream, stage) => stage.transform(stream, context).pipe(Stream.filter((item) => item !== undefined)),
+    source,
+  );
 
   return chained.pipe(
     Stream.buffer({ capacity: bufferSize, strategy: overflow }),
-    // Stages may emit `undefined` to no-op; drop before the sink.
+    // Narrow the chain's final output to `Out` for the sink (upstream already dropped `undefined`).
     Stream.filter((out): out is Out => out !== undefined),
     Stream.runForEach((out) => sink(out, context)),
   );
