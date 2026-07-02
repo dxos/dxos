@@ -872,6 +872,8 @@ test T-11: MaterializeInstrument is idempotent
     - the existing Instrument is returned
     - created === false
     - no second Instrument exists in the space
+    - a later materialization via a different alias folds the new key onto the same Instrument
+  covered_by: operations.test.ts (idempotency + newly-learned-key fold)
 ```
 
 ```mdl
@@ -882,6 +884,12 @@ test T-12: InstrumentArticle loads chart and fundamentals
     - the TradingView embed receives symbol NASDAQ:AAPL (derived locally)
     - op:GetInstrumentFundamentals is invoked via OperationInvoker, not service:SecEdgar from UI
     - the Instrument object is unchanged after render
+  covered_by: |
+    instrument.test.ts pins the local symbol derivation (resolveTradingViewSymbol); the
+    InstrumentArticle story renders the surface. The "via OperationInvoker, not service" and
+    "object unchanged" invariants are structural — the container imports no service:SecEdgar and
+    only calls invokePromise (no writes). Asserted at render + logic level; no RTL harness exists
+    for plugin components (behavior is covered by stories + test-storybook).
 ```
 
 ```mdl
@@ -892,6 +900,10 @@ test T-13: InstrumentCard shows static identity only
     - symbol, name, exchange, and assetClass are visible
     - no SEC EDGAR call is made
     - no fields are written to the Instrument
+  covered_by: |
+    InstrumentCard story renders the surface. "No SEC call / no writes" is structural — the card
+    imports no service and invokes no operation (chart only, from static fields). Render-level
+    coverage via test-storybook.
 ```
 
 ---
