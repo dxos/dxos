@@ -7,6 +7,9 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
+// Import specific `core/` submodules rather than the top-level barrel: this is the content
+// script injected into every page, so it deliberately avoids pulling in background-only weight
+// (e.g. `bridge/sender`'s tab APIs, the `image` edge-client action) via a barrel.
 import { DEVELOPER_MODE_PROP, getProp } from './config';
 import {
   PAGE_ACTION_DELIVER_MESSAGE_TYPE,
