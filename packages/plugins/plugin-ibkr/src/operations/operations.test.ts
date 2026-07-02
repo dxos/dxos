@@ -7,18 +7,29 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Database, Feed } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { configuredCredentialsLayer } from '@dxos/functions';
 
-import { IBKR_SOURCE } from '../constants';
+import { CUSIP_SOURCE, IBKR_SOURCE, TRADINGVIEW_SOURCE, tickerSource } from '../constants';
 import { Ibkr } from '../types';
+import GetInstrumentFundamentalsHandler from './get-instrument-fundamentals';
 import GetPortfolioHandler from './get-portfolio';
 import GetTradesHandler from './get-trades';
+import ImportPortfolioReportHandler from './import-portfolio';
+import MaterializeInstrumentHandler from './materialize-instrument';
 import SyncPortfolioReportHandler from './sync-portfolio';
 
 const xml = readFileSync(fileURLToPath(new URL('../services/__fixtures__/flex-report.xml', import.meta.url)), 'utf8');
+const tickersFixture = readFileSync(
+  fileURLToPath(new URL('../services/__fixtures__/sec-company-tickers.json', import.meta.url)),
+  'utf8',
+);
+const factsFixture = readFileSync(
+  fileURLToPath(new URL('../services/__fixtures__/sec-companyfacts-aapl.json', import.meta.url)),
+  'utf8',
+);
 const credentials = [{ service: IBKR_SOURCE, apiKey: 'test-token', account: 'TEST-QID' }];
 const originalFetch = globalThis.fetch;
 
@@ -106,6 +117,26 @@ describe('IBKR operations', () => {
     expect(portfolio.fetchedAt).toBeUndefined();
   });
 
+  test('ImportPortfolioReport appends raw XML the read operations can serve', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Feed.Feed, Ibkr.Report] });
+
+    const imported = await run(ImportPortfolioReportHandler.handler({ xml }), db);
+    expect(imported.positions).toBe(2);
+    expect(imported.cash).toBe(2);
+    expect(typeof imported.fetchedAt).toBe('string');
+
+    const portfolio = await run(GetPortfolioHandler.handler({}), db);
+    expect(portfolio.positions).toHaveLength(2);
+    expect(portfolio.fetchedAt).toBe(imported.fetchedAt);
+  });
+
+  test('ImportPortfolioReport rejects a file that is not a Flex report', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Feed.Feed, Ibkr.Report] });
+    await expect(run(ImportPortfolioReportHandler.handler({ xml: '<html>not a report</html>' }), db)).rejects.toThrow(
+      /not a valid Interactive Brokers Flex report/,
+    );
+  });
+
   test('SyncPortfolioReport fails clearly when the credential is missing', ({ expect }) =>
     builder
       .createDatabase({ types: [Feed.Feed, Ibkr.Report] })
@@ -114,6 +145,66 @@ describe('IBKR operations', () => {
           /Credential not found|missing the Flex/,
         ),
       ));
+
+  test('MaterializeInstrument is idempotent by foreign key', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Ibkr.Instrument] });
+    const key = { source: tickerSource('NASDAQ'), id: 'AAPL' };
+    const first = await run(MaterializeInstrumentHandler.handler({ key, symbol: 'AAPL', exchange: 'NASDAQ' }), db);
+    const second = await run(MaterializeInstrumentHandler.handler({ key, symbol: 'AAPL', exchange: 'NASDAQ' }), db);
+    expect(first.created).toBe(true);
+    expect(second.created).toBe(false);
+    expect(first.instrument.target?.id).toBe(second.instrument.target?.id);
+  });
+
+  test('MaterializeInstrument folds newly-learned foreign keys onto the existing instrument', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Ibkr.Instrument] });
+    const key = { source: tickerSource('NASDAQ'), id: 'AAPL' };
+    await run(MaterializeInstrumentHandler.handler({ key, symbol: 'AAPL', exchange: 'NASDAQ' }), db);
+    // Re-materialize the same instrument, this time also supplying a CUSIP alias.
+    const cusip = { source: CUSIP_SOURCE, id: '037833100' };
+    const second = await run(
+      MaterializeInstrumentHandler.handler({ key, symbol: 'AAPL', exchange: 'NASDAQ', extraKeys: [cusip] }),
+      db,
+    );
+    expect(second.created).toBe(false);
+
+    const instruments = await db.query(Filter.type(Ibkr.Instrument)).run();
+    expect(instruments).toHaveLength(1);
+    const keys = Obj.getMeta(instruments[0]).keys;
+    // The newly-learned CUSIP is folded on without dropping the ticker it was originally found by.
+    expect(keys.some((entry) => entry.source === CUSIP_SOURCE && entry.id === '037833100')).toBe(true);
+    expect(keys.some((entry) => entry.source === tickerSource('NASDAQ') && entry.id === 'AAPL')).toBe(true);
+  });
+
+  test('GetInstrumentFundamentals reads SEC EDGAR company facts', async ({ expect }) => {
+    const savedFetch = globalThis.fetch;
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : String(input);
+      if (url.includes('company_tickers.json')) {
+        return new Response(tickersFixture);
+      }
+      if (url.includes('companyfacts/CIK0000320193')) {
+        return new Response(factsFixture);
+      }
+      return new Response('', { status: 404 });
+    }) as typeof fetch;
+
+    try {
+      const { db } = await builder.createDatabase({ types: [Ibkr.Instrument] });
+      const instrument = Ibkr.makeInstrument({
+        name: 'Apple Inc.',
+        symbol: 'AAPL',
+        exchange: 'NASDAQ',
+        keys: [{ source: TRADINGVIEW_SOURCE, id: 'NASDAQ:AAPL' }],
+      });
+      db.add(instrument);
+      const result = await run(GetInstrumentFundamentalsHandler.handler({ instrument: Ref.make(instrument) }), db);
+      expect(result.performance?.revenue).toBe(391_035_000_000);
+      expect(result.performance?.netIncome).toBe(93_736_000_000);
+    } finally {
+      globalThis.fetch = savedFetch;
+    }
+  });
 });
 
 /**

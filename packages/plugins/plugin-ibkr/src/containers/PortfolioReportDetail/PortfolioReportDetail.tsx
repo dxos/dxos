@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { IconButton, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { ReportSections } from '../../components';
 import { meta } from '../../meta';
@@ -50,18 +50,8 @@ export const PortfolioReportDetail = ({ role, subject }: PortfolioReportDetailPr
           />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>
-            <ReportSections
-              positions={positions}
-              trades={trades}
-              cash={cash}
-              openLots={openLots}
-              closedLots={closedLots}
-            />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+      <Panel.Content classNames='grid grid-rows-1 min-bs-0'>
+        <ReportSections positions={positions} trades={trades} cash={cash} openLots={openLots} closedLots={closedLots} />
       </Panel.Content>
     </Panel.Root>
   );

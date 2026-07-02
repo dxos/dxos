@@ -71,7 +71,8 @@ export const createThumbnail = async (imageUrl: string) => {
       blob = new Blob([blob], { type: contentType });
     }
 
-    // Post blob to the image service and store the hosted URL for the popup.
+    // Post blob to the image service and store the hosted URL; the side panel
+    // picks it up via `storage.onChanged`.
     const config = await getConfig();
     const client = new EdgeServiceClient({ baseUrl: config.imageServiceUrl });
     const { url: resultUrl } = await EffectEx.runPromise(
@@ -84,19 +85,6 @@ export const createThumbnail = async (imageUrl: string) => {
     log.error('thumbnail creation failed', { err });
     await browser.action.setBadgeText({ text: '!' });
     await browser.action.setBadgeBackgroundColor({ color: '#cc0000' });
-    setTimeout(() => {
-      void browser.action.setBadgeText({ text: '' });
-    }, 3_000);
-    return;
-  }
-
-  // Open extension popup (only works in response to user action like context menu).
-  try {
-    await browser.action.openPopup();
-  } catch {
-    // If openPopup fails (e.g., popup already open), set badge to indicate result.
-    await browser.action.setBadgeText({ text: '✓' });
-    await browser.action.setBadgeBackgroundColor({ color: '#ff5500' });
     setTimeout(() => {
       void browser.action.setBadgeText({ text: '' });
     }, 3_000);

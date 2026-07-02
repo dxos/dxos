@@ -22,3 +22,18 @@ export const IBKR_FEED_KIND = 'org.dxos.plugin.ibkr';
 
 /** Cron for the daily sync: 06:00 UTC, after IBKR end-of-day processing. */
 export const IBKR_SYNC_CRON = '0 6 * * *';
+
+/** SEC EDGAR endpoints and fair-access User-Agent (no API key required). */
+export const SEC_COMPANY_TICKERS_URL = 'https://www.sec.gov/files/company_tickers.json';
+export const SEC_COMPANY_FACTS_URL = (cik: string): string =>
+  `https://data.sec.gov/api/xbrl/companyfacts/CIK${cik}.json`;
+export const SEC_EDGAR_USER_AGENT = 'DXOS Composer (contact@dxos.org)';
+
+/** Foreign-key `Obj.Meta.keys[].source` values for {@link Ibkr.Instrument}. */
+export const ISIN_SOURCE = 'isin';
+export const CUSIP_SOURCE = 'cusip';
+export const IBKR_CONID_SOURCE = 'ibkr.com';
+export const TRADINGVIEW_SOURCE = 'tradingview.com';
+
+/** Exchange-qualified ticker foreign-key source, e.g. `ticker/NASDAQ`. */
+export const tickerSource = (exchange: string): string => `ticker/${exchange.toUpperCase()}`;

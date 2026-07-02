@@ -49,6 +49,12 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 - `useTableModel` gets the manager from context via NEW `useViewStateManagerOptional()` (added beside `useViewStateManager` in `ViewStateProvider.tsx`; returns `undefined` instead of throwing) so isolated stories/tests with no `ViewStateProvider` fall back to the ephemeral atom. App wraps tables under `AttentionPlugin`'s `ViewStateProvider`, so the manager is present in-app.
 - effect-atom GC gotcha for testing `local`-backed view state in node: a Writable atom with NO active subscriber is reset to its INITIAL value when unmounted, so `registry.set(atom, v)` then a later `registry.get(atom)` (across async/microtasks) reads the initial, not `v`. In the browser this is invisible because the table stays mounted (subscription chain keeps the atom alive) AND the `local` backend re-seeds the atom's INITIAL value from localStorage on a fresh mount. Node has no `localStorage` (`safeLocalStorage()`→undefined) so `local` degrades to ephemeral and the value is lost. To test persistence, inject a fake `Storage` (`new LocalBackend({ registry, storage })`, fakeStorage map mirrors `react-ui-attention/src/view-state/backends.test.ts`) and simulate reload with a FRESH registry+manager+model over the same storage+table object — the fresh atom seeds its initial from storage and survives GC. Same-manager cross-instance reads still GC-fail; don't test that way.
 
+## 2026-06-29 — plugin-ibkr (Instrument research)
+
+- External I/O (IBKR Flex, SEC EDGAR): containers invoke ops via `OperationInvoker`; operation handlers call `service:*` / SEC client — never import HTTP clients from `src/containers/` or `src/components/`.
+- TradingView chart embeds are presentation-only third-party widgets; plugin UI derives `tradingViewSymbol` locally from Instrument static fields / `Obj.Meta.keys`.
+- SEC EDGAR fundamentals: sole UI entry is `op:GetInstrumentFundamentals`; no API key; User-Agent set in `SEC_EDGAR_USER_AGENT`.
+
 ## 2026-06-27 — plugin-space TypeCollectionArticle (card-content annotation)
 
 - `AppAnnotation.CardAnnotation` (`@dxos/app-toolkit`, boolean, `org.dxos.annotation.card-content`) marks a schema type whose collection tile renders a preview body. Set it in the type's `.pipe(...)` (alongside Icon/Label). Applied to `Markdown.Document`, `Game.Game`, `Sketch.Sketch`.
