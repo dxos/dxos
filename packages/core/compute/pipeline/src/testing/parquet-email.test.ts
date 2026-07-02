@@ -65,7 +65,12 @@ describe('email parquet → Message', () => {
   // Runs only when ROOT_DIR points at the local dataset; skipped in CI so the suite stays green.
   describe.skipIf(!ROOT_DIR)('local dataset', () => {
     test('reads shards and converts the first rows to Messages', async ({ expect }) => {
-      const dataDir = join(ROOT_DIR!, 'data');
+      // Unreachable when unset (guarded by describe.skipIf); narrows to string without a cast.
+      const rootDir = ROOT_DIR;
+      if (!rootDir) {
+        return;
+      }
+      const dataDir = join(rootDir, 'data');
       const files = (await readdir(dataDir))
         .filter((name) => /^train-.*\.parquet$/.test(name))
         .sort()
