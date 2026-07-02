@@ -14,14 +14,14 @@ import { type Credential, type Operation, Trace } from '@dxos/compute';
 import {
   ComputeBeginEvent,
   ComputeCustomEvent,
-  ComputeEndEvent,
-  ComputeInputEvent,
-  ComputeNodeContext,
-  ComputeOutputEvent,
   type ComputeEdge,
+  ComputeEndEvent,
   type ComputeGraphModel,
+  ComputeInputEvent,
   type ComputeNode,
+  ComputeNodeContext,
   type ComputeNodeMeta,
+  ComputeOutputEvent,
   type GptInput,
   type GptOutput,
   type GraphDiagnostic,
@@ -30,7 +30,7 @@ import {
   isNotExecuted,
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
-import type { Database, Feed, Registry } from '@dxos/echo';
+import type { Database, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
@@ -93,7 +93,6 @@ export type ComputeEvent =
 export type ComputeServices =
   | AiService.AiService
   | Database.Service
-  | Feed.FeedService
   | Credential.CredentialsService
   | Operation.Service
   | Registry.Service;

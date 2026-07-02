@@ -14,7 +14,7 @@ import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { getStyles, mx } from '@dxos/ui-theme';
 
-import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useFilteredTypes } from '#hooks';
+import { useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers, useSkills } from '#hooks';
 import { meta } from '#meta';
 import { Assistant, type ChatPresetProps } from '#types';
 
@@ -34,7 +34,7 @@ export type ChatOptionsProps = ChatPresetProps & {
  * Manages the runtime context for the chat.
  */
 export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPresetChange }: ChatOptionsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <div className='flex'>
@@ -64,19 +64,13 @@ export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPr
         <Popover.Portal>
           <Popover.Content side='top' classNames={styles.panel}>
             <Popover.Viewport>
-              <Tabs.Root
-                classNames='flex'
-                orientation='horizontal'
-                defaultValue='view'
-                defaultActivePart='list'
-                tabIndex={-1}
-              >
+              <Tabs.Root asChild orientation='horizontal' defaultValue='view' defaultActivePart='list' tabIndex={-1}>
                 <Tabs.Viewport classNames={mx('grid grid-rows-[1fr_40px] w-full')}>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
                     <ViewPanel chat={chat} />
                   </Tabs.Panel>
-                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='blueprints'>
-                    <BlueprintsPanel registry={registry} db={db} context={context} />
+                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='skills'>
+                    <SkillsPanel registry={registry} db={db} context={context} />
                   </Tabs.Panel>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
                     <McpServersPanel db={db} />
@@ -86,11 +80,7 @@ export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPr
                   </Tabs.Panel>
                   <Tabs.Tablist classNames={[styles.toolbar]}>
                     <Tabs.IconTab value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
-                    <Tabs.IconTab
-                      value='blueprints'
-                      icon='ph--blueprint--regular'
-                      label={t('options.blueprints.title')}
-                    />
+                    <Tabs.IconTab value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
                     <Tabs.IconTab
                       value='mcp-servers'
                       icon='ph--plugs-connected--regular'
@@ -109,32 +99,32 @@ export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPr
   );
 };
 
-const BlueprintsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry' | 'db' | 'context'>) => {
-  const { t } = useTranslation(meta.id);
+const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry' | 'db' | 'context'>) => {
+  const { t } = useTranslation(meta.profile.key);
 
-  const blueprints = useBlueprints({ registry, db });
-  const activeBlueprints = useActiveBlueprints({ context });
-  const { onUpdateBlueprint } = useBlueprintHandlers({ db, context, registry });
+  const skills = useSkills({ registry, db });
+  const activeSkills = useActiveSkills({ context });
+  const { onUpdateSkill } = useSkillHandlers({ db, context, registry });
   const { results, handleSearch } = useSearchListResults({
-    items: blueprints,
-    extract: (blueprint) => blueprint.name,
+    items: skills,
+    extract: (skill) => skill.name,
   });
 
   return (
     <SearchList.Root onSearch={handleSearch}>
       <SearchList.Content classNames='flex flex-col'>
         <SearchList.Viewport>
-          {results.map((blueprint) => {
-            const blueprintKey = Obj.getMeta(blueprint).key ?? blueprint.id;
-            const isActive = activeBlueprints.has(blueprintKey);
+          {results.map((skill) => {
+            const skillKey = Obj.getMeta(skill).key ?? skill.id;
+            const isActive = activeSkills.has(skillKey);
             return (
               <SearchList.Item
                 classNames='flex items-center overflow-hidden'
-                key={blueprintKey}
-                value={blueprintKey}
-                label={blueprint.name}
+                key={skillKey}
+                value={skillKey}
+                label={skill.name}
                 checked={isActive}
-                onSelect={() => onUpdateBlueprint?.(blueprintKey, !isActive)}
+                onSelect={() => onUpdateSkill?.(skillKey, !isActive)}
               />
             );
           })}
@@ -146,18 +136,20 @@ const BlueprintsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'regi
 };
 
 const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
-  const { t } = useTranslation(meta.id);
-  const [view, setView] = useObject(chat, 'view');
+  const { t } = useTranslation(meta.profile.key);
+  const [view, setView] = useObject(chat, 'viewType');
   const value = (view as Assistant.ChatView | undefined) ?? 'normal';
 
   return (
     <Listbox.Root value={value} onValueChange={setView} autoFocus>
-      {Assistant.ChatViews.map((view) => (
-        <Listbox.Option key={view} value={view}>
-          <Listbox.OptionLabel>{t(`chat-view.${view}.label`, { defaultValue: view })}</Listbox.OptionLabel>
-          <Listbox.OptionIndicator />
-        </Listbox.Option>
-      ))}
+      <Listbox.Content aria-label={t('chat-view.title')}>
+        {Assistant.ChatViews.map((view) => (
+          <Listbox.Item key={view} id={view} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
+            <Listbox.ItemLabel>{t(`chat-view.${view}.label`, { defaultValue: view })}</Listbox.ItemLabel>
+            <Listbox.Indicator />
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
     </Listbox.Root>
   );
 };
@@ -167,16 +159,17 @@ const ModelsPanel = ({
   preset,
   onPresetChange,
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
+  const { t } = useTranslation(meta.profile.key);
   return (
     <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
-      {presets?.map(({ id, label }) => {
-        return (
-          <Listbox.Option key={id} value={id}>
-            <Listbox.OptionLabel>{label}</Listbox.OptionLabel>
-            <Listbox.OptionIndicator />
-          </Listbox.Option>
-        );
-      })}
+      <Listbox.Content aria-label={t('options.chat-model.title')}>
+        {presets?.map(({ id, label }) => (
+          <Listbox.Item key={id} id={id} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
+            <Listbox.ItemLabel>{label}</Listbox.ItemLabel>
+            <Listbox.Indicator />
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
     </Listbox.Root>
   );
 };
@@ -186,7 +179,7 @@ type McpServersPanelProps = {
 };
 
 const McpServersPanel = ({ db }: McpServersPanelProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const servers = useQuery(db, Filter.type(McpServer.McpServer));
   const [adding, setAdding] = useState(false);
 
@@ -237,7 +230,7 @@ type McpServerRowProps = {
  * switch in sync with mutations made through the returned setter.
  */
 const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [enabled, setEnabled] = useObject(server, 'enabled');
 
   return (
@@ -265,7 +258,7 @@ type McpServerFormProps = {
 };
 
 const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
   const [protocol, setProtocol] = useState<'sse' | 'http'>('sse');
@@ -336,7 +329,7 @@ const ANY = '__any__' as const;
 
 /** @private */
 export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>): JSX.Element => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   // Item types sorted by label.
   const types = useFilteredTypes(db);

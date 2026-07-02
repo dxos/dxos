@@ -14,8 +14,10 @@ import React, {
   type CSSProperties,
   type PropsWithChildren,
   type ReactNode,
+  type Ref,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
@@ -80,12 +82,19 @@ const MOSAIC_CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
 
 let counter = 0;
 
+/** Imperative handle for scrolling a stack to an item without changing the current/selected item. */
+export type MosaicScrollController = {
+  scrollToItem: (id: string) => void;
+};
+
 type MosaicContainerProps = PropsWithChildren<
   Partial<Pick<MosaicContainerContextValue, 'eventHandler' | 'orientation'>> & {
     asChild?: boolean;
     /** Support autoscrolling container when dragging. */
     autoScroll?: HTMLElement | null;
     withFocus?: boolean;
+    /** Imperative handle to scroll the stack to an item (decoupled from selection). */
+    controllerRef?: Ref<MosaicScrollController>;
     /** Controlled current-item ID. */
     currentId?: string;
     /** Called when a tile requests to become current. */
@@ -98,6 +107,9 @@ type MosaicContainerProps = PropsWithChildren<
   }
 >;
 
+/**
+ * Container for a Mosaic layout.
+ */
 // TODO(burdon): Make generic.
 const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
   (
@@ -108,6 +120,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
       asChild,
       autoScroll: autoscrollElement,
       withFocus,
+      controllerRef,
       currentId,
       onCurrentChange,
       selectedIds,
@@ -146,6 +159,9 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
     const registerScrollTo = useCallback((fn: ((id: string) => void) | undefined) => {
       scrollToRef.current = fn;
     }, []);
+
+    // Imperative scroll-to-item, decoupled from selection (e.g. a calendar scrolling the stack to a day).
+    useImperativeHandle(controllerRef, () => ({ scrollToItem: (id: string) => scrollToRef.current?.(id) }), []);
 
     // When currentId changes, scroll the matching item into view.
     useEffect(() => {
@@ -219,10 +235,8 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
               return (data && eventHandler.canDrop?.({ source: data })) || false;
             },
 
-            // TODO(burdon): Provide semantic intent to onDrop.
-            // getDropEffect: () => {
-            //   return 'move';
-            // },
+            // Reorder is a move, not a copy — otherwise the browser shows the green "+" copy cursor.
+            getDropEffect: () => 'move',
 
             /**
              * Dragging started in this container.
@@ -263,9 +277,9 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
           autoscrollElement && [
             autoScrollForElements({
               element: autoscrollElement,
-              // canScroll: ({ element: _ }) => {
-              //   return true;
-              // },
+              // Only autoscroll for tile (reorder) drags. Resize-handle drags carry no tile data, so
+              // resizing a tile near a viewport edge must not scroll the container.
+              canScroll: ({ source }) => getSourceData(source) != null,
               getAllowedAxis: () => orientation,
               getConfiguration: () => ({
                 maxScrollSpeed: 'fast',

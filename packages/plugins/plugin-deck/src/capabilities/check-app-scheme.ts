@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { APP_SCHEME, AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, NativePasskey } from '@dxos/app-toolkit';
 import { EffectEx } from '@dxos/effect';
 import { isTauri } from '@dxos/util';
 
@@ -24,7 +24,7 @@ const isSafari = (): boolean => {
 /** Check if the current page URL can be converted to a valid custom scheme URL. */
 const canRedirectToScheme = (): boolean => {
   try {
-    const schemeUrl = APP_SCHEME + window.location.pathname.replace(/^\/+/, '') + window.location.search;
+    const schemeUrl = NativePasskey.APP_SCHEME + window.location.pathname.replace(/^\/+/, '') + window.location.search;
     new URL(schemeUrl);
     return true;
   } catch {
@@ -63,7 +63,7 @@ const tryOpenNativeApp = (): Promise<boolean> => {
     document.addEventListener('visibilitychange', onVisibilityChange);
 
     // Try the scheme via hidden iframe.
-    const schemeUrl = APP_SCHEME + window.location.pathname.replace(/^\/+/, '') + window.location.search;
+    const schemeUrl = NativePasskey.APP_SCHEME + window.location.pathname.replace(/^\/+/, '') + window.location.search;
     const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
     iframe.src = schemeUrl;

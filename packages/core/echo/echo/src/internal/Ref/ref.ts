@@ -81,7 +81,8 @@ export const getReferenceAst = (ast: SchemaAST.AST): RefereneAST | undefined => 
   };
 };
 
-export const RefTypeId: unique symbol = Symbol('@dxos/echo/internal/Ref');
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const RefTypeId: unique symbol = Symbol.for('@dxos/echo/internal/Ref') as any;
 
 /**
  * Reference Schema.
@@ -188,7 +189,14 @@ export interface Ref<T> extends Pipeable.Pipeable {
   /**
    * @returns Promise that will resolves with the target object.
    * Will load the object from disk if it is not present in the working set.
+   * Short-circuits immediately when the target is already loaded.
    * @throws If the object is not available locally.
+   *
+   * @idiom org.dxos.echo.refLoad
+   *   applies: Resolving a ref inside an async function or Effect handler — guarantees the object is available before proceeding
+   *   instead-of: `ref.target` — not guaranteed to be defined in async contexts; use `await ref.load()` (or `yield* Database.load(ref)` in Effect) to ensure the target is present
+   *   uses: {@link load}
+   *   related: org.dxos.echo-react.useObjectReactive
    */
   load(): Promise<T>;
 
@@ -253,7 +261,7 @@ export declare namespace Ref {
 }
 
 Ref.isRef = (obj: any): obj is Ref<any> => {
-  return obj && typeof obj === 'object' && RefTypeId in obj;
+  return obj != null && typeof obj === 'object' && RefTypeId in obj;
 };
 
 Ref.hasEntityId = (id: EntityId) => (ref: Ref<any>) => {
@@ -278,7 +286,8 @@ Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
   const id = obj.id;
   invariant(EntityId.isValid(id), 'Invalid object ID');
   const uri = EID.make({ entityId: id });
-  return new RefImpl(uri, obj);
+  const ref = new RefImpl(uri, obj);
+  return ref;
 };
 
 Ref.fromURI = (uri: URI.URI): Ref<any> => {
@@ -380,22 +389,79 @@ const getSchemaExpectedName = (ast: SchemaAST.Annotated): string | undefined => 
   );
 };
 
+/**
+ * Load-source ceiling for a resolution request. Cheaper tiers are always probed first; the
+ * ceiling caps how far a request is allowed to reach:
+ * - `working-set`: synchronous, in-memory only. A miss settles `unavailable` immediately.
+ * - `disk`: probe the working set, then local storage; never the network.
+ * - `network`: probe the working set, disk, then fetch from peers.
+ *
+ * `unavailable` is always relative to the requested ceiling (disk-unavailable ≠ network-unavailable).
+ */
+export type RefSource = 'working-set' | 'disk' | 'network';
+
+/**
+ * A stateful, closure-aware handle to an in-flight (or settled) reference resolution.
+ *
+ * `ready` means the entity is FULLY USABLE: its own body and its strong-dependency closure are all
+ * materialized. The body-vs-closure split is internal; `requesting` transparently covers "a
+ * dependency is still loading".
+ */
+export interface RefResolverRequest {
+  /**
+   * `pending` is a one-way entry state (never re-entered). `requesting` means the body and/or
+   * closure is still loading. `ready` means fully usable. `unavailable` means unreachable at the
+   * requested ceiling.
+   */
+  readonly state: 'pending' | 'requesting' | 'ready' | 'unavailable';
+
+  /**
+   * Fires (deferred to a microtask) whenever {@link state} changes.
+   */
+  readonly stateChanged: Event<void>;
+
+  /**
+   * Synchronous snapshot of the resolved entity; defined iff `state === 'ready'`.
+   */
+  getResult(): AnyProperties | undefined;
+
+  /**
+   * Settles when `state ∈ {ready, unavailable}`.
+   */
+  wait(): Promise<AnyProperties | undefined>;
+
+  /**
+   * Decrements the refcount on the shared load op(s); cancels the underlying IO at zero.
+   */
+  abort(): void;
+}
+
 export interface RefResolver {
+  /**
+   * Resolve a reference, returning a stateful handle. `source` is a required ceiling; cheaper
+   * tiers are always probed first.
+   */
+  resolve(uri: URI.URI, options: { source: RefSource }): RefResolverRequest;
+
   /**
    * Resolve ref synchronously from the objects in the working set.
    *
    * @param uri
    * @param load If true the resolver should attempt to load the object from disk.
    * @param onLoad Callback to call when the object is loaded.
+   * @deprecated Use {@link resolve} with `{ source: 'working-set' }`. Removed in Task 11.
    */
   resolveSync(uri: URI.URI, load: boolean, onLoad?: () => void): AnyProperties | undefined;
 
   /**
    * Resolver ref asynchronously.
+   * @deprecated Use {@link resolve} with `{ source: 'network' }`. Removed in Task 11.
    */
-  resolve(uri: URI.URI): Promise<AnyProperties | undefined>;
+  resolveLegacy(uri: URI.URI): Promise<AnyProperties | undefined>;
 
-  // TODO(dmaretskyi): Combine with `resolve`.
+  /**
+   * @deprecated Use {@link resolve} + `Type.getSchema`. Removed in Task 11.
+   */
   resolveSchema(uri: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined>;
 
   /**
@@ -404,20 +470,39 @@ export interface RefResolver {
    * via `Obj.getType` / `Entity.getType`. Optional — resolvers that only
    * carry raw schemas may leave this unimplemented; the deserializer falls
    * back to leaving the type entity unset.
+   * @deprecated Use {@link resolve}. Removed in Task 11.
    */
   resolveType?(uri: URI.URI): Promise<unknown | undefined>;
 }
 
+/**
+ * A settled {@link RefResolverRequest} with a fixed `state` and `result`, used by resolvers
+ * whose backends are fully synchronous (e.g. {@link StaticRefResolver}).
+ */
+export const makeSettledRequest = (
+  state: RefResolverRequest['state'],
+  result: AnyProperties | undefined,
+): RefResolverRequest => ({
+  state,
+  stateChanged: new Event<void>(),
+  getResult: () => (state === 'ready' ? result : undefined),
+  wait: async () => (state === 'ready' ? result : undefined),
+  abort: () => {},
+});
+
 export class RefImpl<T> implements Ref<T> {
+  [RefTypeId] = refVariance;
+
   #uri: URI.URI;
-  #resolver?: RefResolver = undefined;
-  #resolved = new Event<void>();
 
   /**
    * Target is set when the reference is created from a specific object.
    * In this case, the target might not be in the database.
    */
   #target: T | undefined = undefined;
+
+  #resolver?: RefResolver = undefined;
+  #resolved = new Event<void>();
 
   /**
    * Callback to issue a reactive notification when object is resolved.
@@ -441,13 +526,6 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * @inheritdoc
    */
-  get isAvailable(): boolean {
-    return this.#target !== undefined || this.#resolver !== undefined;
-  }
-
-  /**
-   * @inheritdoc
-   */
   get target(): T | undefined {
     if (this.#target) {
       return this.#target;
@@ -460,12 +538,23 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * @inheritdoc
    */
+  get isAvailable(): boolean {
+    return this.#target !== undefined || this.#resolver !== undefined;
+  }
+
+  get atom(): Atom.Atom<T | undefined> {
+    return RefAtoms.refSimpleFamily(this);
+  }
+
+  /**
+   * @inheritdoc
+   */
   async load(): Promise<T> {
     if (this.#target) {
       return this.#target;
     }
     invariant(this.#resolver, 'Resolver is not set');
-    const obj = await this.#resolver.resolve(this.#uri);
+    const obj = await this.#resolver.resolveLegacy(this.#uri);
     if (obj == null) {
       throw new Error('Object not found');
     }
@@ -480,7 +569,7 @@ export class RefImpl<T> implements Ref<T> {
       return this.#target;
     }
     invariant(this.#resolver, 'Resolver is not set');
-    return (await this.#resolver.resolve(this.#uri)) as T | undefined;
+    return (await this.#resolver.resolveLegacy(this.#uri)) as T | undefined;
   }
 
   /**
@@ -530,8 +619,6 @@ export class RefImpl<T> implements Ref<T> {
     return this.toString();
   };
 
-  [RefTypeId] = refVariance;
-
   /**
    * Effect Hash trait. Required for MutableHashMap-based caches (e.g., Atom.family)
    * to deduplicate Ref instances that point to the same object.
@@ -547,13 +634,12 @@ export class RefImpl<T> implements Ref<T> {
     return that instanceof RefImpl && this.#uri === that.uri;
   }
 
-  get atom(): Atom.Atom<T | undefined> {
-    return RefAtoms.refSimpleFamily(this);
+  pipe() {
+    // eslint-disable-next-line prefer-rest-params
+    return Pipeable.pipeArguments(this, arguments);
   }
 
   /**
-   * Internal method to set the resolver.
-   *
    * @internal
    */
   _setResolver(resolver: RefResolver): void {
@@ -565,11 +651,6 @@ export class RefImpl<T> implements Ref<T> {
    */
   _getSavedTarget(): T | undefined {
     return this.#target;
-  }
-
-  pipe() {
-    // eslint-disable-next-line prefer-rest-params
-    return Pipeable.pipeArguments(this, arguments);
   }
 }
 
@@ -624,27 +705,29 @@ export class StaticRefResolver implements RefResolver {
     return this;
   }
 
-  resolveSync(uri: URI.URI, _load: boolean, _onLoad?: () => void): AnyProperties | undefined {
-    const echoUri = EID.tryParse(uri);
-    const id = echoUri ? EID.getEntityId(echoUri) : undefined;
-    if (id == null) {
-      return undefined;
-    }
-
-    return this.objects.get(id);
+  resolve(uri: URI.URI, _options: { source: RefSource }): RefResolverRequest {
+    const obj = this.#lookup(uri);
+    return makeSettledRequest(obj ? 'ready' : 'unavailable', obj);
   }
 
-  async resolve(uri: URI.URI): Promise<AnyProperties | undefined> {
-    const echoUri = EID.tryParse(uri);
-    const id = echoUri ? EID.getEntityId(echoUri) : undefined;
-    if (id == null) {
-      return undefined;
-    }
+  resolveSync(uri: URI.URI, _load: boolean, _onLoad?: () => void): AnyProperties | undefined {
+    return this.#lookup(uri);
+  }
 
-    return this.objects.get(id);
+  async resolveLegacy(uri: URI.URI): Promise<AnyProperties | undefined> {
+    return this.#lookup(uri);
   }
 
   async resolveSchema(uri: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined> {
     return this.schemas.get(uri);
+  }
+
+  #lookup(uri: URI.URI): AnyProperties | undefined {
+    const echoUri = EID.tryParse(uri);
+    const id = echoUri ? EID.getEntityId(echoUri) : undefined;
+    if (id == null) {
+      return undefined;
+    }
+    return this.objects.get(id);
   }
 }

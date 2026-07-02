@@ -14,12 +14,12 @@ import { meta } from '#meta';
 import { FileAction, MAX_FILE_SIZE } from '#types';
 
 export type FileInputProps = {
-  schema: Schema.Schema.Any;
+  schema: Schema.Schema.AnyNoContext;
   onChange: (file: File) => void;
 };
 
 export const FileInput = ({ schema, onChange }: FileInputProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const accept = SchemaEx.findAnnotation<Record<string, string[]>>(schema.ast, FileAction.UploadAnnotationId);
 
   const onDropAccepted = useCallback((files: File[]) => onChange?.(files[0]), [onChange]);

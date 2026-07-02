@@ -6,6 +6,7 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { useConfig } from '@dxos/react-client';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -14,7 +15,6 @@ import { useDiscordPresence } from '#hooks';
 import { meta } from '#meta';
 import { SupportOperation } from '#types';
 
-import { DISCORD_SERVICE_URL as DEFAULT_DISCORD_SERVICE_URL } from '../../constants';
 import { formatRequestMessage } from './request';
 
 /** Build a direct PostHog event permalink (±15s search window via timestamp). */
@@ -36,7 +36,8 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
 
   const posthogProjectId = config.values.runtime?.app?.env?.DX_POSTHOG_PROJECT_ID as string | undefined;
   const discordServiceUrl =
-    (config.values.runtime?.app?.env?.DX_DISCORD_SERVICE_URL as string | undefined) ?? DEFAULT_DISCORD_SERVICE_URL;
+    (config.values.runtime?.app?.env?.DX_DISCORD_SERVICE_URL as string | undefined) ??
+    getEdgeServiceEndpoint(config, EdgeServiceName.Discord);
 
   const discordPresence = useDiscordPresence(discordServiceUrl);
 
@@ -85,22 +86,22 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
 
         await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
         await invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.id}.discord-feedback-success`,
+          id: `${meta.profile.key}.discord-feedback-success`,
           icon: 'ph--discord-logo--regular',
           duration: 5000,
-          title: ['discord-feedback-toast.label', { ns: meta.id }],
-          description: ['discord-feedback-toast.description', { ns: meta.id }],
+          title: ['discord-feedback-toast.label', { ns: meta.profile.key }],
+          description: ['discord-feedback-toast.description', { ns: meta.profile.key }],
           closeLabel: ['close.label', { ns: osTranslations }],
         });
       } catch {
         popup?.close();
         await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
         await invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.id}.feedback-success`,
+          id: `${meta.profile.key}.feedback-success`,
           icon: 'ph--paper-plane-tilt--regular',
           duration: 3000,
-          title: ['feedback-toast.label', { ns: meta.id }],
-          description: ['feedback-toast.description', { ns: meta.id }],
+          title: ['feedback-toast.label', { ns: meta.profile.key }],
+          description: ['feedback-toast.description', { ns: meta.profile.key }],
           closeLabel: ['close.label', { ns: osTranslations }],
         });
       }

@@ -5,27 +5,28 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { createFeedServiceLayer, type Space, getSpace } from '@dxos/client/echo';
+import { type Space, getSpace } from '@dxos/client/echo';
 import { Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
-import { Feed, Obj, Ref } from '@dxos/echo';
-import { type Queue } from '@dxos/echo-client';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { InvocationOutcome } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
-import { EID, type EntityId } from '@dxos/keys';
+import { type EntityId } from '@dxos/keys';
 
 export class QueueLogger implements SequenceLogger {
   private _space: Space;
   private _invocationTraceFeed: Feed.Feed;
-  private _feedServiceLayer: Layer.Layer<Feed.FeedService>;
+  private _feedServiceLayer: Layer.Layer<Database.Service>;
+  /** Per-invocation trace feeds, keyed by invocationId. Created on `begin` and looked up for subsequent events. */
+  private _invocationFeeds = new Map<EntityId, Feed.Feed>();
 
   constructor(private readonly sequence: Sequence.Sequence) {
     const space = getSpace(sequence);
     invariant(space, 'Space not found');
     this._space = space;
-    this._feedServiceLayer = createFeedServiceLayer(space.queues);
+    this._feedServiceLayer = Database.layer(space.db);
 
     const existingFeedRef = this._space.properties.invocationTraceFeed;
 
@@ -47,18 +48,22 @@ export class QueueLogger implements SequenceLogger {
 
   log(event: SequenceEvent) {
     switch (event.type) {
-      case 'begin':
+      case 'begin': {
+        // Create a per-invocation trace feed and store it so subsequent events can append to it.
+        const invocationFeed = this._space.db.add(Feed.make({ namespace: 'trace' }));
+        this._invocationFeeds.set(event.invocationId, invocationFeed);
         void this._appendToTraceFeed([
           Obj.make(InvocationTraceStartEvent, {
             type: InvocationTraceEventType.START,
             invocationId: event.invocationId,
             timestamp: Date.now(),
             input: {},
-            invocationTraceFeed: Ref.fromURI(this._getTraceQueueEchoId(event.invocationId)),
+            invocationTraceFeed: Ref.make(invocationFeed),
             invocationTarget: Ref.make(this.sequence),
           }),
         ]);
         break;
+      }
       case 'end':
         void this._appendToTraceFeed([
           Obj.make(InvocationTraceEndEvent, {
@@ -68,10 +73,12 @@ export class QueueLogger implements SequenceLogger {
             outcome: InvocationOutcome.SUCCESS,
           }),
         ]);
+        // Clean up the per-invocation feed reference once the invocation is complete.
+        this._invocationFeeds.delete(event.invocationId);
         break;
       case 'step-start':
       case 'step-complete':
-        void this._getTraceEventQueue(event.invocationId).append([
+        void this._appendToInvocationFeed(event.invocationId, [
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
@@ -89,7 +96,7 @@ export class QueueLogger implements SequenceLogger {
         ]);
         break;
       case 'message':
-        void this._getTraceEventQueue(event.invocationId).append([
+        void this._appendToInvocationFeed(event.invocationId, [
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
@@ -107,7 +114,7 @@ export class QueueLogger implements SequenceLogger {
         ]);
         break;
       case 'block':
-        void this._getTraceEventQueue(event.invocationId).append([
+        void this._appendToInvocationFeed(event.invocationId, [
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
@@ -127,10 +134,6 @@ export class QueueLogger implements SequenceLogger {
     }
   }
 
-  private _getTraceQueueEchoId(invocationId: EntityId): EID.EID {
-    return EID.make({ spaceId: this._space.id, entityId: invocationId });
-  }
-
   private _appendToTraceFeed(items: any[]): Promise<void> {
     return Feed.append(this._invocationTraceFeed, items).pipe(
       Effect.provide(this._feedServiceLayer),
@@ -138,12 +141,11 @@ export class QueueLogger implements SequenceLogger {
     );
   }
 
-  // TODO(burdon): The per-invocation trace event queues address feeds by raw queue DXN
-  // (no backing Feed.Feed object). Migration to Feed.append is blocked on either
-  // (a) materializing a Feed object per invocation, or (b) a lower-level
-  // FeedService.appendByDxn primitive. Tracked as Phase 6 work in echo/AUDIT.md.
-  private _getTraceEventQueue(invocationId: EntityId): Queue<TraceEvent> {
-    const echoUri = this._getTraceQueueEchoId(invocationId);
-    return this._space.queues.get(echoUri);
+  private _appendToInvocationFeed(invocationId: EntityId, items: any[]): Promise<void> {
+    const invocationFeed = this._invocationFeeds.get(invocationId);
+    if (!invocationFeed) {
+      return Promise.resolve();
+    }
+    return this._space.db.appendToFeed(invocationFeed, items);
   }
 }

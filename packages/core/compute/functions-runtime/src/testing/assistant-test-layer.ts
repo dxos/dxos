@@ -11,18 +11,19 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 
-import { AiService, ConsolePrinter, OpaqueToolkit, type ModelName } from '@dxos/ai';
+import { AiService, OpaqueToolkit, Provider } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { AiContext, AiSession, CompleteBlock } from '@dxos/assistant';
+import { Harness } from '@dxos/assistant';
 import {
-  Blueprint,
+  AgentService,
   Credential,
+  Instructions,
   Operation,
   OperationHandlerSet,
   Process,
-  Routine,
   ServiceNotAvailableError,
   ServiceResolver,
+  Skill,
   Trace,
   Trigger,
 } from '@dxos/compute';
@@ -30,13 +31,14 @@ import { ProcessManager } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Database, Feed, Registry, Tag, Type } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
-import { EffectEx } from '@dxos/effect';
 import { type TestContextService } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
+import { DXN } from '@dxos/keys';
 
-import { AgentService } from '../agent-service';
+import { AgentService as AgentServiceRuntime } from '../agent-service';
 import * as FeedTraceSink from '../FeedTraceSink';
 import { TriggerDispatcher, TriggerStateStore } from '../triggers';
+import { traceSinkPrettyLayer } from './trace-pretty-print';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
@@ -46,11 +48,13 @@ interface TestLayerOptions {
    * When set, `aiServicePreset` and `disableLlmMemoization` are ignored.
    */
   aiService?: Layer.Layer<AiService.AiService>;
-  model?: ModelName;
+  model?: DXN.DXN;
+  /** Provider the model resolves through; defaults to `ollama` for the ollama preset, else `edge`. */
+  provider?: DXN.DXN;
   operationHandlers?: OperationHandlerSet.OperationHandlerSet | OperationHandlerSet.OperationHandlerSet[];
   toolkits?: OpaqueToolkit.OpaqueToolkit[];
   types?: Type.AnyEntity[];
-  blueprints?: Blueprint.Blueprint[];
+  skills?: Skill.Skill[];
   credentials?: Credential.ServiceCredential[];
 
   /**
@@ -63,10 +67,16 @@ interface TestLayerOptions {
   disableLlmMemoization?: boolean;
 
   /**
+   * Patterns matching run-specific values (e.g. timestamps derived from TestClock) that should be
+   * canonicalized for memoized-conversation matching. Forwarded to `TestAiService`. Opt-in.
+   */
+  dynamicValuePatterns?: readonly RegExp[];
+
+  /**
    * Options for the agent process (system prompt, tool backgrounding, delegation strategy, etc.).
    * The model defaults to the resolved test-layer model when not set here.
    */
-  agent?: AgentService.AgentServiceOptions;
+  agent?: AgentServiceRuntime.AgentServiceOptions;
 
   /**
    * Extra services to make available in the service resolver.
@@ -77,7 +87,6 @@ interface TestLayerOptions {
 
 export type AssistantTestServices =
   | LanguageModel.LanguageModel
-  | Feed.FeedService
   | Credential.CredentialsService
   | AgentService.AgentService
   | AiService.AiService
@@ -98,85 +107,102 @@ export type AssistantTestServices =
 export const AssistantTestLayer = (
   options: TestLayerOptions = {},
 ): Layer.Layer<AssistantTestServices, never, TestContextService> => {
-  const resolvedModel: ModelName =
+  const resolvedModel: DXN.DXN =
     options.model ??
-    (options.aiServicePreset === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
+    (options.aiServicePreset === 'ollama'
+      ? DXN.make('com.openai.model.gpt-oss-20b.default')
+      : DXN.make('com.anthropic.model.claude-opus-4-8.default'));
 
-  const agentOptions: AgentService.AgentServiceOptions = { ...options.agent };
+  // The catalog's shared model ids need a provider to resolve; pair the resolved model with the
+  // provider its preset registers a resolver for.
+  const resolvedProvider: DXN.DXN =
+    options.provider ?? (options.aiServicePreset === 'ollama' ? Provider.ollama.id : Provider.edge.id);
+
+  const agentOptions: AgentServiceRuntime.AgentServiceOptions = { ...options.agent };
   agentOptions.model ??= resolvedModel;
+  agentOptions.provider ??= resolvedProvider;
+
+  // The resolver materialises `HarnessService` (Tier B needs `ProcessManager.Service`), but
+  // `ProcessManager.layer` requires the `ServiceResolver` — a construction cycle. Resolve it by
+  // sharing a late-bound holder: the resolver reads the manager lazily (only at resolution time,
+  // when the manager exists), and a downstream layer fills the holder once it is built.
+  const processManagerHolder: ProcessManagerHolder = {};
 
   return Layer.empty.pipe(
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
-    Layer.provideMerge(AgentService.layer(agentOptions)),
-    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+    Layer.provideMerge(AgentServiceRuntime.layer(agentOptions)),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
-    Layer.provideMerge(AssistantTestServiceResolverLayer(options)),
-    Layer.provideMerge(AiService.model(resolvedModel)),
+    // Order matters: in a `provideMerge` chain each layer's *requirements* are satisfied only by
+    // layers added later (whose outputs feed it). `captureProcessManager` needs the manager, the
+    // manager needs the `ServiceResolver`, and the resolver needs nothing (it reads the manager via
+    // the holder), so they must appear in exactly this order.
+    Layer.provideMerge(captureProcessManager(processManagerHolder)),
+    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+    Layer.provideMerge(AssistantTestServiceResolverLayer(options, processManagerHolder)),
+    Layer.provideMerge(AiService.model(DXN.getName(resolvedModel), { provider: resolvedProvider })),
     Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),
     Layer.provideMerge(
       options.aiService ??
-        TestAiService({ preset: options.aiServicePreset, disableMemoization: options.disableLlmMemoization }),
+        TestAiService({
+          preset: options.aiServicePreset,
+          disableMemoization: options.disableLlmMemoization,
+          dynamicValuePatterns: options.dynamicValuePatterns,
+        }),
     ),
     Layer.provideMerge(AssistantTestBaseLayer(options)),
     Layer.orDie,
   );
 };
 
+/** Late-bound reference to the {@link ProcessManager.Service}, filled once the manager is built. */
+interface ProcessManagerHolder {
+  current?: Context.Tag.Service<ProcessManager.Service>;
+}
+
+/** Fills the {@link ProcessManagerHolder} once the manager is available, breaking the build cycle. */
+const captureProcessManager = (holder: ProcessManagerHolder): Layer.Layer<never, never, ProcessManager.Service> =>
+  Layer.effectDiscard(
+    Effect.gen(function* () {
+      holder.current = yield* ProcessManager.Service;
+    }),
+  );
+
 /**
  * Service resolver for testing.
  */
-export const AssistantTestServiceResolverLayer = ({
-  extraServices = Layer.empty,
-}: Pick<TestLayerOptions, 'extraServices'>) =>
+export const AssistantTestServiceResolverLayer = (
+  { extraServices = Layer.empty }: Pick<TestLayerOptions, 'extraServices'>,
+  processManagerHolder: ProcessManagerHolder,
+) =>
   Layer.scoped(
     ServiceResolver.ServiceResolver,
     Effect.gen(function* () {
-      const services = yield* Effect.context<Database.Service | Feed.FeedService>().pipe(
-        Effect.map(Context.pick(Database.Service, Feed.FeedService)),
+      const services = yield* Effect.context<Database.Service>().pipe(
+        Effect.map(Context.pick(Database.Service)),
         Effect.map(Layer.succeedContext),
       );
 
       const extraServicesRt = yield* Layer.toRuntime(extraServices);
 
       return ServiceResolver.compose(
-        ServiceResolver.succeed(AiContext.Service, (context) =>
+        ServiceResolver.succeed(Harness.HarnessService, (context) =>
           Effect.gen(function* () {
             if (!context.conversation) {
-              return yield* Effect.fail(new ServiceNotAvailableError(AiContext.Service.key));
+              return yield* Effect.fail(new ServiceNotAvailableError(Harness.HarnessService.key));
             }
-            const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
-            const runtime = yield* Effect.runtime<Feed.FeedService>();
-            const binder = yield* EffectEx.acquireReleaseResource(
-              () =>
-                new AiContext.Binder({
-                  feed,
-                  runtime,
-                }),
-            );
-            return { binder };
-          }).pipe(Effect.provide(services)),
-        ),
-        ServiceResolver.succeed(AiSession.Service, (context) =>
-          Effect.gen(function* () {
-            if (!context.conversation) {
-              return yield* Effect.fail(new ServiceNotAvailableError(AiSession.Service.key));
+            // Read the manager lazily: the resolver is invoked at spawn time, by which point the
+            // holder has been filled (see the construction-cycle note in `AssistantTestLayer`).
+            const processManager = processManagerHolder.current;
+            if (!processManager) {
+              return yield* Effect.fail(new ServiceNotAvailableError(ProcessManager.Service.key));
             }
-            const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
-            const runtime = yield* Effect.runtime<Feed.FeedService>();
-            const session = yield* EffectEx.acquireReleaseResource(
-              () =>
-                new AiSession.Session({
-                  feed,
-                  runtime,
-                }),
-            );
-            return session;
+            const runtime = yield* Effect.runtime<Database.Service>();
+            return yield* Harness.make({ conversation: context.conversation, processManager, runtime });
           }).pipe(Effect.provide(services)),
         ),
         yield* ServiceResolver.fromRequirements(
           Database.Service,
           OpaqueToolkit.OpaqueToolkitProvider,
-          Feed.FeedService,
           AiService.AiService,
           Registry.Service,
           Credential.CredentialsService,
@@ -194,13 +220,20 @@ export const AssistantTestBaseLayer = ({
   toolkits = [],
   types = [],
   credentials = [],
-  blueprints = [],
-}: Pick<TestLayerOptions, 'operationHandlers' | 'toolkits' | 'types' | 'blueprints' | 'tracing' | 'credentials'>) => {
+  skills = [],
+}: Pick<TestLayerOptions, 'operationHandlers' | 'toolkits' | 'types' | 'skills' | 'tracing' | 'credentials'>) => {
   const toolkit = OpaqueToolkit.merge(...toolkits);
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)
     : operationHandlers;
-  types.push(Blueprint.Blueprint, Routine.Routine, Operation.PersistentOperation, Feed.Feed, Trigger.Trigger, Tag.Tag);
+  types.push(
+    Skill.Skill,
+    Instructions.Instructions,
+    Operation.PersistentOperation,
+    Feed.Feed,
+    Trigger.Trigger,
+    Tag.Tag,
+  );
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(
@@ -223,7 +256,7 @@ export const AssistantTestBaseLayer = ({
         }),
       ),
     ),
-    Layer.provideMerge(registryLayer({ initial: blueprints })),
+    Layer.provideMerge(registryLayer({ initial: skills })),
     Layer.provideMerge(OpaqueToolkit.providerLayer(toolkit)),
     Layer.provideMerge(OperationHandlerSet.provide(operationHandlersSet)),
     Layer.provideMerge(KeyValueStore.layerMemory),
@@ -234,11 +267,11 @@ export const AssistantTestBaseLayer = ({
 
 const AssistantTestTracingLayer = (
   mode: 'noop' | 'console' | 'pretty' | 'feed',
-): Layer.Layer<FeedTraceSink.FeedTraceSink | Trace.TraceSink, never, Database.Service | Feed.FeedService> =>
+): Layer.Layer<FeedTraceSink.FeedTraceSink | Trace.TraceSink, never, Database.Service> =>
   Match.value(mode).pipe(
     Match.when('noop', () => Layer.mergeAll(Trace.layerNoop, FeedTraceSink.layerNoop)),
     Match.when('console', () => Layer.mergeAll(Trace.layerConsole, FeedTraceSink.layerNoop)),
-    Match.when('pretty', () => Layer.mergeAll(TraceSinkPretty(), FeedTraceSink.layerNoop)),
+    Match.when('pretty', () => Layer.mergeAll(traceSinkPrettyLayer(), FeedTraceSink.layerNoop)),
     Match.when('feed', () => FeedTraceSink.layerLiveWithDirectSink),
     Match.exhaustive,
   );
@@ -257,20 +290,3 @@ export const AssistantTestLayerWithTriggers = (
     ),
     TriggerStateStore.layerMemory,
   ) as any;
-
-const TraceSinkPretty = () =>
-  Layer.succeed(Trace.TraceSink, {
-    write: (message) => {
-      for (const event of message.events) {
-        if (Trace.isOfType(CompleteBlock, event)) {
-          const tag = message.meta.processName ?? `[${message.meta.pid ?? 'unknown'}]`;
-          console.log(`[${tag}] ${event.data.role.toUpperCase()}`);
-          new ConsolePrinter({ tag }).printContentBlock(event.data.block);
-        } else if (Trace.isOfType(Process.SpawnedEvent, event)) {
-          console.log(`[${message.meta.pid}] Process spawned: ${message.meta.processName}`);
-        } else if (Trace.isOfType(Process.ExitedEvent, event)) {
-          console.log(`[${message.meta.pid}] Process exited: ${event.data.outcome}`);
-        }
-      }
-    },
-  });

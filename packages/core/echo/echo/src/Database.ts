@@ -6,9 +6,7 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Effectable from 'effect/Effectable';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { EffectEx } from '@dxos/effect';
@@ -17,12 +15,14 @@ import { type SpaceId, type URI } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import * as Err from './Err';
+import type * as Feed from './Feed';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
 import { type AnyProperties, EntityKind, KindId } from './internal/common/types';
 // Deep import (not the `./internal/Entity` barrel) to avoid a cycle:
 // Database → internal/Entity → entity → JsonSchema → Ref → Database.
 import { isInstanceOf } from './internal/Entity/type-uri';
+import * as queryInternal from './internal/Query';
 import type { Ref } from './internal/Ref/ref';
 import type * as Obj from './Obj';
 import type * as Query from './Query';
@@ -167,10 +167,43 @@ export interface Database extends Queryable {
   remove(obj: Entity.Unknown): void;
 
   /**
+   * Appends entities to a feed.
+   *
+   * The feed must already be stored in the database (added via {@link add}); its underlying
+   * queue is addressed by the feed object's URI.
+   */
+  appendToFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void>;
+
+  /**
+   * Removes entities from a feed.
+   */
+  deleteFromFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void>;
+
+  /**
    * Wait for all pending changes to be saved to disk.
    * Optionaly waits for changes to be propagated to indexes and event handlers.
    */
   flush(opts?: FlushOptions): Promise<void>;
+
+  /**
+   * Removes feed items by ID.
+   */
+  removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void>;
+
+  /**
+   * Queries items in a feed associated with this database.
+   */
+  queryFeed(feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<any>;
+
+  /**
+   * Syncs a feed with the server.
+   */
+  syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void>;
+
+  /**
+   * Returns queue replication backlog for the feed's namespace.
+   */
+  getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
 }
 
 export const isDatabase = (obj: unknown): obj is Database => {
@@ -250,7 +283,7 @@ export const resolve: {
             space: db.spaceId,
           },
         })
-        .resolve(dxn),
+        .resolveLegacy(dxn),
     );
 
     if (!object) {
@@ -306,6 +339,24 @@ export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, ne
   Service.pipe(Effect.map(({ db }) => db.remove(obj))).pipe(Effect.withSpan('Database.remove'));
 
 /**
+ * Appends entities to a feed.
+ * @see {@link Database.appendToFeed}
+ */
+export const appendToFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
+  Service.pipe(
+    Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.appendToFeed(feed, entities))),
+  ).pipe(Effect.withSpan('Database.appendToFeed'));
+
+/**
+ * Removes entities from a feed.
+ * @see {@link Database.deleteFromFeed}
+ */
+export const deleteFromFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
+  Service.pipe(
+    Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.deleteFromFeed(feed, entities))),
+  ).pipe(Effect.withSpan('Database.deleteFromFeed'));
+
+/**
  * Flushes pending changes to disk.
  * @see {@link Database.flush}
  */
@@ -324,22 +375,5 @@ export const query: {
   Service.pipe(
     Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<any>),
     Effect.withSpan('Database.query'),
-    makeQueryResultEffect,
+    queryInternal.makeQueryResultEffect,
   );
-
-const makeQueryResultEffect = <T>(
-  eff: Effect.Effect<QueryResult.QueryResult<T>, never, Service>,
-): QueryResult.QueryResultEffect<T, never, Service> => {
-  return {
-    run: Effect.flatMap(eff, (result) => EffectEx.promiseWithCauseCapture(() => result.run())),
-    first: Effect.flatMap(eff, (result) =>
-      EffectEx.promiseWithCauseCapture(async () => Option.fromNullable(await result.firstOrUndefined())),
-    ),
-
-    // Effect internals
-    ...Effectable.CommitPrototype,
-    commit() {
-      return eff;
-    },
-  } as any;
-};

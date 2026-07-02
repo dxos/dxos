@@ -17,10 +17,9 @@ import { composableProps, slottable } from '../../util';
 
 const COLUMN_ROOT_NAME = 'Column.Root';
 
-type GutterSize = 'xs' | 'sm' | 'md' | 'lg';
+type GutterSize = 'sm' | 'md' | 'lg';
 
 const gutterSizes: Record<GutterSize, string> = {
-  xs: 'var(--dx-gutter-xs)',
   sm: 'var(--dx-gutter-sm)',
   md: 'var(--dx-gutter-md)',
   lg: 'var(--dx-gutter-lg)',
@@ -42,11 +41,9 @@ type ColumnRootProps = { gutter?: GutterSize };
  * - **Column.Row** — 3-col subgrid row (icons in gutters, content in center).
  *
  * Use `withColumn.center()` / `withColumn.bleed()` helpers to apply placement on slotted elements.
- *
- * Gutter sizes: `'sm'` for compact layouts (Dialog); `'md'` (default); `'lg'` for wider spacing.
  */
 const ColumnRoot = slottable<HTMLDivElement, ColumnRootProps>(
-  ({ children, asChild, role, gutter = 'md', ...props }, forwardedRef) => {
+  ({ children, asChild, role, gutter = 'lg', ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
@@ -60,7 +57,7 @@ const ColumnRoot = slottable<HTMLDivElement, ColumnRootProps>(
             ...rest.style,
             '--gutter': gutterSize,
             '--dx-col': '2 / span 1',
-            gridTemplateColumns: [gutterSize, 'minmax(0,1fr)', gutterSize].join(' '),
+            'gridTemplateColumns': [gutterSize, 'minmax(0,1fr)', gutterSize].join(' '),
           } as CSSProperties
         }
         className={tx('column.root', { gutter }, className)}
@@ -153,14 +150,49 @@ const ColumnCenter = slottable<HTMLDivElement>(({ children, asChild, ...props },
 ColumnCenter.displayName = COLUMN_CENTER_NAME;
 
 //
+// Block
+//
+
+const COLUMN_BLOCK_NAME = 'Column.Block';
+
+type ColumnBlockProps = SlottableProps<{ end?: boolean; compact?: boolean; square?: boolean }>;
+
+/**
+ * A gutter slot inside a Column.Row. Sized to `--dx-rail-item` and centers its child so a passive
+ * `<Icon>` and an interactive `IconButton` align to the pixel. `end` opts into the trailing gutter
+ * (column 3); default is the leading gutter (column 1). Placement is via `data-slot`, so it is
+ * robust to conditional rendering and source order.
+ */
+const ColumnBlock = slottable<HTMLDivElement, ColumnBlockProps>(
+  ({ children, asChild, end, compact, square, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
+    return (
+      <Comp
+        {...rest}
+        data-slot={end ? 'end' : 'start'}
+        className={tx('column.block', { end, compact, square }, className)}
+        ref={forwardedRef}
+      >
+        {children}
+      </Comp>
+    );
+  },
+);
+
+ColumnBlock.displayName = COLUMN_BLOCK_NAME;
+
+//
 // Column
 //
 
 export const Column = {
   Root: ColumnRoot,
   Row: ColumnRow,
+  Block: ColumnBlock,
   Bleed: ColumnBleed,
   Center: ColumnCenter,
 };
 
-export type { ColumnRootProps, ColumnRowProps, ColumnBleedProps, ColumnCenterProps };
+export type { ColumnBleedProps, ColumnBlockProps, ColumnCenterProps, ColumnRootProps, ColumnRowProps };

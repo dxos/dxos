@@ -46,7 +46,7 @@ export const translations = [
         'delete-object.label': 'Delete calendar',
         'object-deleted.label': 'Calendar deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Inbox',
 
         'no-message.message': 'Select a message to view it',
@@ -58,8 +58,7 @@ export const translations = [
         'event.label': 'Event',
         'inbox.label': 'Inbox',
 
-        'no-integrations.label': 'No integrations configured',
-        'manage-integrations-button.label': 'Manage Integrations',
+        'no-connections.label': 'No connections configured',
 
         'sync-mailbox.label': 'Sync mailbox',
         'sync-mailbox-error.title': 'Failed to sync mailbox',
@@ -103,9 +102,11 @@ export const translations = [
         'event-duration.placeholder': 'Duration',
         'event-duration-custom.label': 'Custom end…',
         'event-toolbar.menu': 'Actions',
-        'event-toolbar-create-note.menu': 'Create note',
         'event-toolbar-open.menu': 'Open',
         'event-toolbar-save.menu': 'Save to calendar',
+        'event-toolbar-more.menu': 'More',
+        'star-event.label': 'Star event',
+        'unstar-event.label': 'Unstar event',
         'event-toolbar-delete.menu': 'Delete event',
 
         'calendar-toolbar.menu': 'Calendar toolbar',
@@ -125,12 +126,14 @@ export const translations = [
 
         'mailbox-toolbar.title': 'Mailbox toolbar',
         'mailbox-toolbar-sort.menu': 'Sort messages',
+        'mailbox-toolbar-extract.menu': 'Extract',
         'mailbox-toolbar-filter.menu': 'Filter messages',
         'mailbox-toolbar-save-button.label': 'Save',
         'mailbox-toolbar-clear-button.label': 'Clear',
 
         'save-filter.placeholder': 'Filter name',
         'save-filter.button': 'Save',
+        'rename-filter.label': 'Rename filter',
         'delete-filter.label': 'Delete filter',
 
         'mailboxes-section.label': 'Mailboxes',
@@ -161,8 +164,6 @@ export const translations = [
         'open-calendar.button': 'Open calendar',
         'open-profile.button': 'Open profile',
         'saved-filter-name.label': 'Filter name',
-
-        'settings.title': 'Inbox settings',
       },
     },
   },

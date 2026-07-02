@@ -18,9 +18,15 @@
       color: var(--dx-valence-text, inherit);
       background: var(--dx-valence-bg, var(--color-input-bg));
     }
+    /* Toggle / tab group: the selected item reads as standard text on a surface-relative fill (selected-surface
+     * tracks the enclosing --surface-bg, so it stays visible on any surface); unselected items recede to subdued. */
     &[aria-pressed='true'],
     &[aria-checked='true'] {
-      @apply text-accent-text bg-attention-surface;
+      @apply text-base-fg bg-selected-surface;
+    }
+    &[aria-pressed='false'],
+    &[aria-checked='false'] {
+      @apply text-description;
     }
 
     /* Disabled styles */
@@ -32,14 +38,9 @@
     &[data-variant='ghost'] {
       @apply bg-transparent;
       &:hover {
-        /* Tint relative to the host surface (--surface-bg, set by the enclosing dx-*-surface zone)
-         * so the hover reads correctly on any background: darker in light mode, lighter in dark.
-         * Falls back to base-surface when no surface zone is in scope. */
-        background: light-dark(
-          oklch(from var(--surface-bg, var(--color-base-surface)) calc(l - 0.05) c h),
-          oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + 0.05) c h)
-        );
-        @apply text-inherit;
+        /* Shares the surface-derived control hover (--color-hover-surface tracks the enclosing
+         * --surface-bg) so every variant tints consistently on any background. */
+        @apply bg-hover-surface text-inherit;
       }
       &[data-state='open'] {
         @apply bg-input-bg;

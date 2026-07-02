@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { Markdown } from '@dxos/plugin-markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useThemeContext } from '@dxos/react-ui';
@@ -34,14 +34,14 @@ export const TasksModule = ({ space }: ModuleProps) => {
           <Toolbar.Text>{Obj.getLabel(document)}</Toolbar.Text>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content asChild>
+      <Panel.Content>
         <Editor.Root>
           <Editor.View
             id={document.id}
             classNames='h-full p-2 overflow-hidden'
             extensions={[
               createThemeExtensions({ themeMode }),
-              createDataExtensions({ id: document.id, text: createDocAccessor(document.content.target, ['content']) }),
+              createDataExtensions({ id: document.id, text: Doc.createAccessor(document.content.target, ['content']) }),
               createBasicExtensions({ readOnly: false }),
               createMarkdownExtensions(),
               outliner(),

@@ -10,7 +10,7 @@ import { Type, View } from '@dxos/echo';
 import { instanceOf as isInstanceOf } from '@dxos/echo/Obj';
 import { ProjectionModel } from '@dxos/schema';
 
-import { VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
+import { VIEW_EDITOR_DEBUG_SYMBOL } from '../../testing';
 import * as stories from './ViewEditor.stories';
 import { type ViewEditorDebugObjects } from './ViewEditor.stories';
 
@@ -138,10 +138,16 @@ describe('ViewEditor', () => {
     expect(addedPropertyProjection!.props.property).toBe('added_property');
   });
 
-  // TODO(mykola): Fix flaky test.
-  test('delete property', { retry: 2 }, async () => {
+  test('delete property', async () => {
     await Default.run();
     await waitForViewEditor();
+
+    // Wait for the field list to render — useObject(view) inside ViewEditor resolves
+    // asynchronously after the outer story's type/view state is set, so the debug
+    // element can appear before the list items are in the DOM.
+    await waitFor(() => {
+      expect(screen.getByText('name')).toBeInTheDocument();
+    });
 
     // Find the delete button for the 'name' property.
     const nameProperty = screen.getByText('name');

@@ -8,8 +8,7 @@ import * as Layer from 'effect/Layer';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientService } from '@dxos/client';
 import { Credential, LayerSpec } from '@dxos/compute';
-import { Database, Feed } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
+import { Database } from '@dxos/echo';
 import { credentialsLayerFromDatabase } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
@@ -20,8 +19,7 @@ import { ClientCapabilities } from '#types';
 //
 // Contributes the core client/space service layer specs:
 //   - {@link ClientService} (application affinity).
-//   - {@link Database.Service}, {@link Feed.FeedService},
-//     {@link Credential.CredentialsService} (space affinity).
+//   - {@link Database.Service}, {@link Credential.CredentialsService} (space affinity).
 //
 // Specs are declared at module level and resolve the underlying
 // {@link ClientCapabilities.Client} through the Effect layer graph (via
@@ -59,7 +57,7 @@ const DatabaseLayerSpec = LayerSpec.make(
   {
     affinity: 'space',
     requires: [ClientService],
-    provides: [Database.Service, Feed.FeedService],
+    provides: [Database.Service],
   },
   (context) =>
     Layer.unwrapEffect(
@@ -69,7 +67,7 @@ const DatabaseLayerSpec = LayerSpec.make(
         const space = client.spaces.get(context.space);
         invariant(space, `space not found on client: ${context.space}`);
         yield* Effect.promise(() => space.waitUntilReady());
-        return Layer.mergeAll(Database.layer(space.db), createFeedServiceLayer(space.queues));
+        return Database.layer(space.db);
       }),
     ),
 );

@@ -60,7 +60,7 @@ export class EdgeWsConnection extends Resource {
   public get info() {
     return {
       open: this.isOpen,
-      identity: this._identity.identityKey,
+      identity: this._identity.identityDid,
       device: this._identity.peerKey,
     };
   }

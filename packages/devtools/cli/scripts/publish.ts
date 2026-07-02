@@ -5,7 +5,7 @@
 //
 
 import { spawnSync } from 'child_process';
-import { readdirSync, existsSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
 import { join } from 'path';
 
 // Parse command line arguments.

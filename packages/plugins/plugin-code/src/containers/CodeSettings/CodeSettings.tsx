@@ -2,95 +2,90 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ChangeEvent, useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { Button, Icon, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Input, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '#meta';
-import { type Settings } from '#types';
+import { Settings as SettingsType } from '#types';
 
 const SERVICE = 'anthropic.com';
 
 export type CodeSettingsProps = {
-  settings: Settings.Settings;
-  onSettingsChange: (settings: Settings.Settings) => void;
+  settings: SettingsType.Settings;
+  onSettingsChange: (settings: SettingsType.Settings) => void;
 };
 
+/**
+ * Settings panel for the Code plugin: manages the Anthropic API key (stored as
+ * an ECHO `AccessToken`) and the schema-driven build-service `endpoint`.
+ */
 export const CodeSettings = ({ settings, onSettingsChange }: CodeSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const spaces = useSpaces();
   const space = spaces[0];
   const tokens = useQuery(space?.db, Filter.type(AccessToken.AccessToken, { source: SERVICE }));
   const existing = tokens[0];
   const [draft, setDraft] = useState('');
+  const touchedRef = useRef(false);
 
-  const handleSave = useCallback(() => {
-    const value = draft.trim();
-    if (!value || !space) {
+  // The token is write-only (never rendered back), so the input rests empty.
+  // Persist on blur, but only when the field was actually edited — an untouched
+  // blur must not be read as "clear" and wipe an existing token. A trimmed-empty
+  // value after editing removes the token.
+  const handleCommit = useCallback(() => {
+    if (!touchedRef.current || !space) {
       return;
     }
-    if (existing) {
-      Obj.update(existing, (existing) => {
-        (existing as Obj.Mutable<typeof existing>).token = value;
-      });
-    } else {
-      space.db.add(Obj.make(AccessToken.AccessToken, { source: SERVICE, token: value }));
+    touchedRef.current = false;
+    const value = draft.trim();
+    if (value) {
+      if (existing) {
+        Obj.update(existing, (existing) => {
+          (existing as Obj.Mutable<typeof existing>).token = value;
+        });
+      } else {
+        space.db.add(Obj.make(AccessToken.AccessToken, { source: SERVICE, token: value }));
+      }
+    } else if (existing) {
+      space.db.remove(existing);
     }
     setDraft('');
   }, [draft, existing, space]);
 
-  const handleClear = useCallback(() => {
-    if (existing && space) {
-      space.db.remove(existing);
-    }
-  }, [existing, space]);
-
-  const handleEndpointChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      onSettingsChange({ ...settings, endpoint: event.target.value || undefined });
-    },
-    [onSettingsChange, settings],
-  );
-
   return (
-    <Panel.Root>
-      <Panel.Content asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='p-4 space-y-4'>
-            <Input.Root>
-              <Input.Label>{t('api-key.label')}</Input.Label>
-              <Input.TextInput
-                type='password'
-                placeholder={existing ? t('api-key.set.placeholder') : t('api-key.empty.placeholder')}
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-              />
-            </Input.Root>
-            <div className='flex gap-2'>
-              <Button onClick={handleSave} disabled={!draft.trim() || !space}>
-                <Icon icon='ph--floppy-disk--regular' size={4} />
-                {t('api-key.save.label')}
-              </Button>
-              <Button onClick={handleClear} disabled={!existing} variant='ghost'>
-                <Icon icon='ph--trash--regular' size={4} />
-                {t('api-key.clear.label')}
-              </Button>
-            </div>
-            <Input.Root>
-              <Input.Label>{t('endpoint.label')}</Input.Label>
-              <Input.TextInput
-                value={settings.endpoint ?? ''}
-                placeholder={t('endpoint.placeholder')}
-                onChange={handleEndpointChange}
-              />
-            </Input.Root>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Content>
-    </Panel.Root>
+    <Form.Root
+      schema={SettingsType.Settings}
+      values={settings}
+      variant='settings'
+      onValuesChanged={(values) => onSettingsChange({ ...settings, ...values })}
+    >
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.Section title={meta.profile.name ?? meta.profile.key}>
+            <Form.Row label={t('api-key.label')}>
+              <Input.Root>
+                <Input.TextInput
+                  type='password'
+                  placeholder={existing ? t('api-key.set.placeholder') : t('api-key.empty.placeholder')}
+                  value={draft}
+                  onChange={(event) => {
+                    touchedRef.current = true;
+                    setDraft(event.target.value);
+                  }}
+                  onBlur={handleCommit}
+                />
+              </Input.Root>
+            </Form.Row>
+            <Form.FieldSet />
+          </Form.Section>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 

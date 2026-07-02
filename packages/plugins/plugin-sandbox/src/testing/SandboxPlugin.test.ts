@@ -5,26 +5,26 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Blueprint, Operation } from '@dxos/compute';
+import { Operation, Skill } from '@dxos/compute';
 import { Collection, Database, Feed, Ref } from '@dxos/echo';
 import { TestContextService } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
 import { File } from '@dxos/types';
 
-import { SandboxHandlers, CreateSandbox, Exec, UploadFile, DownloadFile } from '../blueprints/functions';
-import SandboxBlueprint from '../blueprints/sandbox-blueprint';
+import { CreateSandbox, DownloadFile, Exec, SandboxHandlers, UploadFile } from '../skills/functions';
+import SandboxSkill from '../skills/sandbox-skill';
 import * as Sandbox from '../types/Sandbox';
 
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: SandboxHandlers,
-  types: [Sandbox.Sandbox, File.File, Collection.Collection, Blueprint.Blueprint, Feed.Feed],
-  blueprints: [SandboxBlueprint.make()],
+  types: [Sandbox.Sandbox, File.File, Collection.Collection, Skill.Skill, Feed.Feed],
+  skills: [SandboxSkill.make()],
 });
 
-// Requires a running sandbox service and real edge URL. Disabled by default.
+// Requires a running sandbox-service worker (`runtime.services.sandbox.url`). Disabled by default.
 describe.skip('SandboxPlugin', () => {
   it.effect(
     'create sandbox',

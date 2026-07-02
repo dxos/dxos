@@ -2,14 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom, useAtomValue } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
+import { useAtomValue } from '@effect-atom/atom-react';
 import { useCallback } from 'react';
 
 import { invariant } from '@dxos/invariant';
 
 import { Capabilities } from '../../common';
 import { type Capability } from '../../core';
-import { usePluginManager } from '../components';
+import { useOptionalPluginManager, usePluginManager } from '../components';
+
+/** Stable empty result for capability lookups made outside a plugin manager. */
+const emptyCapabilities = Atom.make(() => [] as const);
+
+/** Stable atom yielding `undefined`, used as the fallback for optional atom-capability lookups. */
+const emptyAtomValue = Atom.make(() => undefined);
 
 /**
  * Hook to request capabilities from the plugin context.
@@ -31,6 +38,24 @@ export const useCapability = <T>(interfaceDef: Capability.InterfaceDef<T>) => {
   invariant(capabilities.length > 0, `No capability found for ${interfaceDef.identifier}`);
   return capabilities[0];
 };
+
+/**
+ * Hook to request capabilities without requiring a plugin manager.
+ * @returns An array of capabilities, or an empty array when rendered outside a {@link PluginManagerProvider}.
+ */
+export const useOptionalCapabilities = <T>(interfaceDef: Capability.InterfaceDef<T>): readonly T[] => {
+  const manager = useOptionalPluginManager();
+  return useAtomValue(
+    manager ? manager.capabilities.atom(interfaceDef) : (emptyCapabilities as Atom.Atom<readonly T[]>),
+  );
+};
+
+/**
+ * Hook to request a single capability without requiring a plugin manager.
+ * @returns The first matching capability, or `undefined` when none is registered (or there is no plugin manager).
+ */
+export const useOptionalCapability = <T>(interfaceDef: Capability.InterfaceDef<T>): T | undefined =>
+  useOptionalCapabilities(interfaceDef)[0];
 
 /**
  * Hook to get the current value of an atom capability.
@@ -56,6 +81,28 @@ export const useAtomCapabilityState = <T>(
   const update = useCallback(
     (fn: (current: T) => T) => {
       registry.set(atom, fn(registry.get(atom)));
+    },
+    [registry, atom],
+  );
+  return [value, update];
+};
+
+/**
+ * Tolerant variant of {@link useAtomCapabilityState}: returns `[undefined, noop]` when the atom
+ * capability is not registered (e.g. the contributing plugin is not installed) rather than
+ * throwing. The updater is a no-op while the capability is absent.
+ */
+export const useOptionalAtomCapabilityState = <T>(
+  atomCapability: Capability.InterfaceDef<Atom.Writable<T>>,
+): [T | undefined, (fn: (current: T) => T) => void] => {
+  const registry = useOptionalCapability(Capabilities.AtomRegistry);
+  const atom = useOptionalCapability(atomCapability);
+  const value = useAtomValue(atom ?? emptyAtomValue);
+  const update = useCallback(
+    (fn: (current: T) => T) => {
+      if (registry && atom) {
+        registry.set(atom, fn(registry.get(atom)));
+      }
     },
     [registry, atom],
   );

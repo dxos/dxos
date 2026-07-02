@@ -2,32 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AttentionEvents } from '@dxos/plugin-attention';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { Text } from '@dxos/schema';
 
 import {
   AnchorSort,
-  AppGraphBuilder,
-  NavigationResolver,
-  AppGraphSerializer,
-  BlueprintDefinition,
   CommentConfig,
   CreateObject,
   MarkdownSettings,
   MarkdownState,
   OperationHandler,
   ReactSurface,
+  SkillDefinition,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Markdown, MarkdownEvents } from '#types';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
@@ -43,15 +39,10 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'state',
-    // TODO(wittjosiah): Does not integrate with settings store.
-    //   Should this be a different event?
-    //   Should settings store be renamed to be more generic?
-    activatesOn: AppActivationEvents.SetupSettings,
+    // Wait for AttentionEvents.AttentionReady so ViewStateManager is available when the module
+    // resolves AttentionCapabilities.ViewState to build the editor state store.
+    activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupSettings, AttentionEvents.AttentionReady),
     activate: MarkdownState,
-  }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.AppGraphReady,
-    activate: AppGraphSerializer,
   }),
   Plugin.addModule({
     // TODO(wittjosiah): More relevant event?

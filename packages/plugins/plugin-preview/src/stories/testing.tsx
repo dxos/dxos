@@ -14,10 +14,13 @@ import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/te
 import { Expando } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
-export type DefaultStoryProps<T extends Obj.Any, P extends {} = {}> = {
+import { JsonCard } from '../cards';
+
+export type StoryArgs<T extends Obj.Any, P extends {} = {}> = {
   Component: FC<AppSurface.ObjectCardProps<T> & P>;
   createObject: () => T;
   image?: boolean;
+  json?: boolean;
   componentProps?: P;
 };
 
@@ -25,8 +28,9 @@ export const DefaultStory = <T extends Obj.Any, P extends {} = {}>({
   Component,
   createObject,
   image,
+  json,
   componentProps,
-}: DefaultStoryProps<T, P>) => {
+}: StoryArgs<T, P>) => {
   const object = useMemo(() => createObject(), [createObject]);
   const roles: CardContainerProps['role'][] = ['intrinsic', 'popover'];
 
@@ -48,6 +52,7 @@ export const DefaultStory = <T extends Obj.Any, P extends {} = {}>({
                   subject={image ? object : omitImage(object)}
                   {...(componentProps ?? ({} as P))}
                 />
+                {json && <JsonCard data={object} />}
               </Card.Root>
             </CardContainer>
           </div>

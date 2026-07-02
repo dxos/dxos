@@ -13,95 +13,180 @@
    * Elevation ladder — strictly monotonic, z-order low → high.
    * Dark: darker = lower. Light: lighter = higher (inverted toward white).
    *
-   * Level  Name    Roles
-   *   0    void    window gaps, scrim base
-   *   1    rail    L0 icon rail
-   *   2    chrome  L1/R sidebars, header
-   *   3    canvas  base, deck
-   *   4    raised  card, group, input
-   *   5    bar     toolbar (sticky, drop-shadowed)
-   *   6    modal   dialog, modal, popover
-   *   7    float   menu, toast, tooltip
+   * Level  Name     Roles
+   *   0    void     deck, scrim base
+   *   1    base     base content, L0 icon rail
+   *   2    chrome   L1/R sidebars, header
+   *   3    card     card
+   *   4    raised   group, input, focus/attention
+   *   5    bar      dialog/modal, toolbar (sticky, drop-shadowed)
+   *   6    modal    popover, menu, toast, tooltip
+   *   7    float    
    *
    * These are private (--dx-*) knobs — use named surface tokens in components, not these directly.
    */
   --dx-elevation-0: light-dark(var(--color-neutral-300), var(--color-neutral-950));
-  --dx-elevation-1: light-dark(var(--color-neutral-200), var(--color-neutral-900));
-  --dx-elevation-2: light-dark(var(--color-neutral-125), var(--color-neutral-875));
-  --dx-elevation-3: light-dark(var(--color-neutral-125), var(--color-neutral-850));
-  --dx-elevation-4: light-dark(var(--color-neutral-100), var(--color-neutral-825));
-  --dx-elevation-5: light-dark(var(--color-neutral-75), var(--color-neutral-800));
-  --dx-elevation-6: light-dark(var(--color-neutral-50), var(--color-neutral-775));
-  --dx-elevation-7: light-dark(white, var(--color-neutral-750));
+  --dx-elevation-1: light-dark(var(--color-neutral-300), var(--color-neutral-925));
+  --dx-elevation-2: light-dark(var(--color-neutral-200), var(--color-neutral-900));
+  --dx-elevation-3: light-dark(var(--color-neutral-125), var(--color-neutral-875));
+  --dx-elevation-4: light-dark(var(--color-neutral-125), var(--color-neutral-850));
+  --dx-elevation-5: light-dark(var(--color-neutral-100), var(--color-neutral-825));
+  --dx-elevation-6: light-dark(var(--color-neutral-75), var(--color-neutral-800));
+  --dx-elevation-7: light-dark(var(--color-neutral-50), var(--color-neutral-775));
+  --dx-elevation-8: light-dark(white, var(--color-neutral-750));
 
-  /* Surfaces — each maps to exactly one elevation level */
-  --color-sidebar-surface: var(--dx-elevation-2);
-  --color-header-surface: var(--dx-elevation-2);
-  --color-deck-surface: var(--dx-elevation-3);
-  --color-base-surface: var(--dx-elevation-3);
-  --color-card-surface: var(--dx-elevation-3);
-  --color-group-surface: var(--dx-elevation-4);
-  /* Subtle alternate of group-surface for zebra striping (e.g. calendar months) — offset off
-   * elevation-4 via relative oklch so it tracks the ramp: darker in light mode, lighter in dark. */
-  --color-group-alt-surface: light-dark(
-    oklch(from var(--dx-elevation-4) calc(l - 0.03) c h),
-    oklch(from var(--dx-elevation-4) calc(l + 0.03) c h)
-  );
-  --color-input-surface: var(--dx-elevation-4);
-  --color-toolbar-surface: var(--dx-elevation-5);
-  --color-modal-surface: var(--dx-elevation-6);
-  --color-popover-surface: var(--dx-elevation-6);
+  /** 
+   * Elevation 0
+   */
 
-  /* Sidebar / panel layout levels */
-  --color-l0-surface: var(--dx-elevation-1);
-  --color-l1-surface: var(--dx-elevation-2);
-  --color-r0-surface: var(--dx-elevation-2);
-  --color-r1-surface: var(--dx-elevation-2);
+  --color-deck-surface: var(--dx-elevation-0);
 
+  /* Translucent dimming layer; tracks the lowest elevation (void) rather than a raw neutral. */
   --color-scrim-surface: light-dark(
-    oklch(from var(--color-neutral-50) l c h / 0.5),
-    oklch(from var(--color-neutral-950) l c h / 0.25)
+    oklch(from var(--dx-elevation-0) l c h / 0.5),
+    oklch(from var(--dx-elevation-0) l c h / 0.25)
   );
 
-  --color-inverse-surface: light-dark(var(--color-neutral-800), var(--color-neutral-200));
-  --color-inverse-fg: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  /** 
+   * Elevation 1
+   */
 
+  --color-card-surface: var(--dx-elevation-1);
+
+  /** 
+   * Elevation 2
+   */
+
+  --color-base-surface: var(--dx-elevation-2);
   --color-base-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
+  /* Map attention to focus-surface logic so that elements acting as active attention zones highlight correctly on focus. */
+  --color-attention-surface: var(--dx-elevation-2);
+  --color-attention-contains: oklch(from var(--color-accent-bg) l c h / 0.3);
+
+  /**
+   * Elevation 3
+   */
+
+  --color-header-surface: var(--dx-elevation-3);
+
+  --color-sidebar-surface: var(--dx-elevation-3);
   /* Sidebar body text. Default sits one ramp stop below the current/selected emphasis. */
   --color-sidebar-fg: light-dark(var(--color-neutral-700), var(--color-neutral-250));
   --color-sidebar-current-fg: light-dark(var(--color-neutral-950), var(--color-neutral-75));
 
-  /* Focus */
-  --color-focus-surface: light-dark(var(--color-neutral-50), var(--color-neutral-850));
+  /* Sidebar / panel layout levels */
+  --color-l0-surface: var(--dx-elevation-2);
+  --color-l1-surface: var(--dx-elevation-3);
+  --color-r0-surface: var(--dx-elevation-3);
+  --color-r1-surface: var(--dx-elevation-3);
+
+  /** 
+   * Elevation 4
+   */
+
+  --color-toolbar-surface: var(--dx-elevation-4);
+
+  /** 
+   * Elevation 5
+   */
+
+  /* Focus — a raised content surface (one level above card) so an attended pane reads as lifted. */
+  --color-focus-surface: var(--dx-elevation-5);
   --color-focus-ring: light-dark(var(--color-blue-400), var(--color-blue-600));
   --color-focus-ring-subtle: light-dark(var(--color-neutral-300), var(--color-neutral-600));
 
-  /* Map attention to focus-surface logic so that elements acting as active attention zones highlight correctly on focus. */
-  --color-attention-surface: var(--color-focus-surface);
-  --color-attention-contains: oklch(from var(--color-accent-bg) l c h / 0.3);
+  --color-group-surface: var(--dx-elevation-5);
+  /* Subtle alternate of group-surface for zebra striping (e.g. calendar months) — offset off
+   * elevation-4 via relative oklch so it tracks the ramp: darker in light mode, lighter in dark. */
+  --color-group-alt-surface: light-dark(
+    oklch(from var(--dx-elevation-5) calc(l - 0.03) c h),
+    oklch(from var(--dx-elevation-5) calc(l + 0.03) c h)
+  );
 
-  /* input */
-  --color-input-bg: light-dark(var(--color-neutral-250), var(--color-neutral-700));
-  --color-input-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
+  --color-input-surface: var(--dx-elevation-5);
 
-  /* 
-   * hover (:hover, data-highlighted)
-   * `*-base` primitives are the un-offset values; 
-   * surface contexts (e.g. .dx-main-sidebar in state.css) re-derive the public token off the base via relative oklch. 
+  /**
+   * Elevation 6
    */
-  --dx-hover-surface-base: light-dark(var(--color-neutral-200), var(--color-neutral-850));
-  --color-hover-surface: var(--dx-hover-surface-base);
+
+  --color-modal-surface: var(--dx-elevation-6);
+
+  /**
+   * Elevation 7
+   */
+
+  --color-popover-surface: var(--dx-elevation-7);
+
+  /**
+   * Elevation 8
+   */
+
+  /**
+   * Misc
+   */
+
+  --color-inverse-surface: light-dark(var(--color-neutral-800), var(--color-neutral-200));
+  --color-inverse-fg: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+
+  /*
+   * Text emphasis — foregrounds at decreasing emphasis, anchored on --color-base-fg (strongest):
+   *   base-fg → description → subdued → placeholder (weakest).
+   * Tuned for legibility against the surfaces rather than mapped to the elevation ladder (which
+   * governs backgrounds, not text contrast), so these stay explicit neutrals.
+   */
+  --color-description: light-dark(var(--color-neutral-600), var(--color-neutral-400));
+  --color-subdued: light-dark(var(--color-neutral-500), var(--color-neutral-600));
+  --color-placeholder: light-dark(var(--color-neutral-400), var(--color-neutral-600));
+
+  /*
+   * Controls — the input/control fill is a deliberate off-ladder token (cf. the grid "paper"
+   * surfaces). It backs text inputs and the default/ghost button (bg-input-bg) and must contrast
+   * whatever surface it sits on: a subtle inset well in light mode, a raised fill in dark mode that
+   * reads lighter than the topmost surface. Do not map it to an elevation level.
+   */
+  --color-input-bg: light-dark(var(--color-neutral-250), var(--color-neutral-700));
+  --color-input-fg: var(--color-base-fg);
+
+  /*
+   * State surfaces (hover, current, selected) are derived from the host surface (--surface-bg) via
+   * relative oklch — darker in light mode, lighter in dark — so a highlight stays visible at any
+   * elevation. The values here resolve against the root --surface-bg (= base-surface, set in
+   * base.css), giving the correct default for content outside any surface zone. Surface zones
+   * publish their own --surface-bg and re-derive these tokens in surface.css, which is where the
+   * substitution re-runs for that subtree.
+   *
+   * Offset magnitudes (lightness): hover ∓0.08, subtle ∓0.02, current ∓0.10, current-hover ∓0.12.
+   * Keep these in sync with the per-zone re-derivation in components/surface.css.
+   */
+  --color-hover-surface: light-dark(
+    oklch(from var(--surface-bg, var(--color-base-surface)) calc(l - 0.08) c h),
+    oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + 0.08) c h)
+  );
   --color-hover-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
+  /*
+   * Subtle region hover for large highlight targets (list rows, tiles) where the full
+   * control-strength hover reads as too heavy. Consumed by `.dx-hover` / `.dx-hover-row`;
+   * controls (buttons) keep --color-hover-surface.
+   */
+  --color-hover-surface-subtle: light-dark(
+    oklch(from var(--surface-bg, var(--color-base-surface)) calc(l - 0.02) c h),
+    oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + 0.02) c h)
+  );
+
   /* current (aria-current) */
-  --dx-current-surface-base: light-dark(var(--color-neutral-150), var(--color-neutral-800));
-  --dx-current-surface-hover-base: light-dark(var(--color-neutral-150), var(--color-neutral-600));
-  --color-current-surface: var(--dx-current-surface-base);
-  --color-current-surface-hover: var(--dx-current-surface-hover-base);
+  --color-current-surface: light-dark(
+    oklch(from var(--surface-bg, var(--color-base-surface)) calc(l - 0.1) c h),
+    oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + 0.1) c h)
+  );
+  --color-current-surface-hover: light-dark(
+    oklch(from var(--surface-bg, var(--color-base-surface)) calc(l - 0.12) c h),
+    oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + 0.12) c h)
+  );
   --color-current-fg: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
-  /* selected (aria-selected) */
+  /* selected (aria-selected) tracks current */
   --color-selected-surface: var(--color-current-surface);
   --color-selected-surface-hover: var(--color-current-surface-hover);
   --color-selected-fg: var(--color-current-fg);
@@ -113,13 +198,15 @@
   --color-accent-text: light-dark(var(--color-blue-600), var(--color-blue-400));
   --color-accent-text-hover: light-dark(var(--color-blue-500), var(--color-blue-500));
 
+  /* Unaccented */
   --color-un-accent: var(--color-neutral-400);
   --color-un-accent-hover: var(--color-neutral-500);
 
   /* Separator */
-  --color-primary-separator: light-dark(var(--color-neutral-300), var(--color-neutral-700));
+  --color-primary-separator: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-700));
-  --color-subdued-separator: light-dark(var(--color-neutral-250), var(--color-neutral-750));
+  --color-input-separator: light-dark(var(--color-neutral-250), var(--color-neutral-750));
+  --color-subdued-separator: light-dark(var(--color-neutral-250), var(--color-neutral-775));
   --color-active-separator: light-dark(var(--color-blue-500), var(--color-blue-500));
 
   /* Scrollbar */
@@ -128,16 +215,21 @@
   --color-scrollbar-thumb-active: light-dark(var(--color-neutral-200), var(--color-neutral-600));
   --color-scrollbar-thumb-hover: light-dark(var(--color-neutral-200), var(--color-neutral-600));
 
-  /* Sheet */
+  /*
+   * Sheet / Grid — intentionally OFF the elevation ladder.
+   * NOTE: Update main.css when changing grid tokens (and restart dev server).
+   *
+   * These are "paper" surfaces for the data grid: maximum-contrast canvases (near-white in light,
+   * near-black in dark) plus saturated selection/comment accents. The elevation ladder is
+   * monotonic (light: lighter = higher), so it cannot express a surface that is simultaneously the
+   * lightest in light mode and the darkest in dark mode. Keep these as explicit neutrals/accents;
+   * do not fold them into --dx-elevation-*.
+   */
+  --color-axis-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
+  --color-axis-text: light-dark(var(--color-neutral-700), var(--color-neutral-300));
   --color-axis-selected-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
   --color-axis-selected-text: light-dark(var(--color-neutral-100), var(--color-neutral-900));
-  --color-axis-surface: light-dark(var(--color-neutral-50), var(--color-neutral-800));
-  --color-axis-text: light-dark(var(--color-neutral-800), var(--color-neutral-200));
 
-  /*
-   * Grid
-   * NOTE: Update main.css when changing grid tokens (and restart dev server).
-   */
   --color-grid-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-grid-fg: light-dark(var(--color-neutral-950), var(--color-neutral-50));
   --color-grid-line: light-dark(var(--color-neutral-200), var(--color-neutral-800));
@@ -149,9 +241,4 @@
     oklch(from var(--color-green-400) l c h / 0.5),
     oklch(from var(--color-green-600) l c h / 0.5)
   );
-
-  /* Text */
-  --color-placeholder: light-dark(var(--color-neutral-400), var(--color-neutral-600));
-  --color-subdued: light-dark(var(--color-neutral-500), var(--color-neutral-600));
-  --color-description: light-dark(var(--color-neutral-600), var(--color-neutral-400));
 }

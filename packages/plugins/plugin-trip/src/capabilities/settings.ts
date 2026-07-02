@@ -26,7 +26,7 @@ import { Settings } from '../types/Settings';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const settingsAtom = createKvsStore({
-      key: meta.id,
+      key: meta.profile.key,
       schema: Settings,
       defaultValue: (): Settings => ({}),
     });
@@ -41,7 +41,11 @@ export default Capability.makeModule(
     const unsubscribe = registry.subscribe(settingsAtom, sync);
 
     return [
-      Capability.contributes(AppCapabilities.Settings, { prefix: meta.id, schema: Settings, atom: settingsAtom }),
+      Capability.contributes(AppCapabilities.Settings, {
+        prefix: meta.profile.key,
+        schema: Settings,
+        atom: settingsAtom,
+      }),
       Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => unsubscribe())),
     ];
   }),

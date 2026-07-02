@@ -7,7 +7,7 @@ import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 import { createPortal } from 'react-dom';
 import { useDropzone } from 'react-dropzone';
 
-import { type FileInfo } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { addLink } from '@dxos/ui-editor';
 
 export const IMAGE_FILES = ['.jpg', '.jpeg', '.png', '.gif'];
@@ -19,7 +19,7 @@ export type FileUploadProps = {
   // that React 19.2's dev render-logger would walk into a cross-origin frame. See
   // `react-ui-editor/.../controller.ts` for the full rationale.
   getView?: () => EditorView | null;
-  onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
+  onFileUpload?: (file: File) => Promise<AppCapabilities.FileInfo | undefined>;
 };
 
 // TODO(burdon): Factor out.

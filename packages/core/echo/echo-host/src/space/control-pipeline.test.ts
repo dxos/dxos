@@ -98,7 +98,7 @@ describe('space/control-pipeline', () => {
               spaceKey,
               identityKey,
               deviceKey,
-              designation: AdmittedFeed.Designation.CONTROL,
+              'designation': AdmittedFeed.Designation.CONTROL,
             },
           }),
         },
@@ -122,7 +122,7 @@ describe('space/control-pipeline', () => {
               spaceKey,
               identityKey,
               deviceKey,
-              designation: AdmittedFeed.Designation.DATA,
+              'designation': AdmittedFeed.Designation.DATA,
             },
           }),
         },
@@ -139,8 +139,8 @@ describe('space/control-pipeline', () => {
       await dataFeed1.append({
         payload: {
           '@type': 'dxos.echo.feed.FeedMessage',
-          timeframe: controlPipeline.pipeline.state.timeframe,
-          credential: {
+          'timeframe': controlPipeline.pipeline.state.timeframe,
+          'credential': {
             credential: await createCredential({
               signer: keyring,
               issuer: identityKey,
@@ -150,7 +150,7 @@ describe('space/control-pipeline', () => {
                 spaceKey,
                 identityKey,
                 deviceKey,
-                designation: AdmittedFeed.Designation.DATA,
+                'designation': AdmittedFeed.Designation.DATA,
               },
             }),
           },

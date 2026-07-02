@@ -13,7 +13,7 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
@@ -40,7 +40,7 @@ export const SampleCompanionPanel = ({ companionTo }: SampleCompanionPanelProps)
     (id: string) => {
       const item = allItems.find((item) => item.id === id);
       if (item) {
-        void invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(item)] });
+        void invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(item)] });
       }
     },
     [allItems, invokePromise],

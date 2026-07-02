@@ -17,7 +17,7 @@ export default Capability.makeModule(() =>
     // NOTE: This needs to be a chat object rather than a string id to avoid a query race.
     // TODO(wittjosiah): Handle serialization and hydration for this so it can be cached.
     const stateAtom = createKvsStore({
-      key: meta.id,
+      key: meta.profile.key,
       schema: AssistantCapabilities.StateSchema,
       defaultValue: () => ({
         currentChat: {},
@@ -27,9 +27,16 @@ export default Capability.makeModule(() =>
 
     const companionChatCacheAtom = Atom.make<Record<string, Obj.Unknown | undefined>>({}).pipe(Atom.keepAlive);
 
+    const homeSuggestionsCacheAtom = createKvsStore({
+      key: `${meta.profile.key}.home-suggestions`,
+      schema: AssistantCapabilities.HomeSuggestionsCacheSchema,
+      defaultValue: () => ({}),
+    });
+
     return [
       Capability.contributes(AssistantCapabilities.State, stateAtom),
       Capability.contributes(AssistantCapabilities.CompanionChatCache, companionChatCacheAtom),
+      Capability.contributes(AssistantCapabilities.HomeSuggestionsCache, homeSuggestionsCacheAtom),
     ];
   }),
 );

@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Collection, Obj } from '@dxos/echo';
-import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
 import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -19,9 +19,9 @@ import { PresenterOperation } from '#types';
 import { PresenterCapabilities } from '#types';
 
 /** Match nodes that can be presented (Collection or Document). */
-const whenPresentable = (node: Node.Node) =>
-  Option.orElse(NodeMatcher.whenEchoType(Collection.Collection)(node), () =>
-    NodeMatcher.whenEchoType(Markdown.Document)(node),
+const whenPresentable = (node: Node.Node, get: Atom.Context) =>
+  Option.orElse(NodeMatcher.whenEchoType(Collection.Collection)(node, get), () =>
+    NodeMatcher.whenEchoType(Markdown.Document)(node, get),
   );
 
 export default Capability.makeModule(
@@ -47,7 +47,7 @@ export default Capability.makeModule(
             id: linkedSegment('presenter'),
             label: 'Presenter',
             icon: 'ph--presentation--regular',
-            data: { type: meta.id, object },
+            data: { type: meta.profile.key, object },
           }),
         ]);
       },
@@ -61,30 +61,15 @@ export default Capability.makeModule(
         if (!isPresentable || !db) {
           return Effect.succeed([]);
         }
-        const objectPath = getObjectPathFromObject(object);
 
         return Effect.succeed([
           {
             id: PresenterOperation.TogglePresentation.meta.key,
-            // TODO(burdon): Allow function so can generate state when activated.
-            //  So can set explicit fullscreen state coordinated with current presenter state.
             data: Effect.fnUntraced(function* () {
-              const deckState = yield* Capabilities.getAtomValue(DeckCapabilities.State);
-              const deck = deckState.decks[deckState.activeDeck];
-              const presenterId = `${objectPath}/${linkedSegment('presenter')}`;
-              if (!deck?.fullscreen) {
-                yield* Operation.invoke(DeckOperation.Adjust, {
-                  type: 'solo--fullscreen' as const,
-                  id: presenterId,
-                });
-              }
-              yield* Operation.invoke(LayoutOperation.Open, {
-                subject: [presenterId],
-                workspace: getSpacePath(db.spaceId),
-              });
+              yield* Operation.invoke(PresenterOperation.TogglePresentation, { object });
             }),
             properties: {
-              label: ['toggle-presentation.label', { ns: meta.id }],
+              label: ['toggle-presentation.label', { ns: meta.profile.key }],
               icon: 'ph--presentation--regular',
               disposition: 'list-item',
               keyBinding: {

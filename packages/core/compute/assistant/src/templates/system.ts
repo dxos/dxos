@@ -4,8 +4,12 @@
 
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { type ModelCapabilities } from '@dxos/ai';
+import { Model } from '@dxos/ai';
 import { Template } from '@dxos/compute';
+// Text is referenced in the inferred type of 'templates' (via Template.make → Template.Template.source → Ref.Ref(Text.Text));
+// the import lets TypeScript name it in the emitted .d.ts.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type Text } from '@dxos/schema';
 
 import FORMAT from './instructions/format.tpl?raw';
 import SYSTEM from './instructions/system.tpl?raw';
@@ -13,7 +17,7 @@ import SYSTEM from './instructions/system.tpl?raw';
 /**
  * System template variables.
  */
-export type SystemPromptOptions = ModelCapabilities & {
+export type SystemPromptOptions = Model.Capabilities & {
   DATETIME: string;
 };
 

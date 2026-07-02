@@ -3,18 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type Collection, Database, Obj, Type } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
-import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
+import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
+import { Position } from '@dxos/util';
 
-import { KanbanArticle, KanbanSettings } from '#containers';
+import { KanbanArticle, KanbanProperties } from '#containers';
 import { Kanban, PivotColumnAnnotationId } from '#types';
 
 export default Capability.makeModule(() =>
@@ -31,35 +30,22 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'objectProperties',
-        position: 'first',
+        position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, Kanban.Kanban),
-        component: ({ data }) => <KanbanSettings subject={data.subject} />,
+        component: ({ data }) => <KanbanProperties subject={data.subject} />,
       }),
       Surface.create({
         id: 'createInitialSchemaForm',
-        role: 'form-input',
-        filter: (
-          data,
-        ): data is {
-          prop: string;
-          schema: Schema.Schema<any>;
-          target: Database.Database | Collection.Collection | undefined;
-          fieldPropertyAst?: SchemaAST.AST;
-        } => {
-          const annotation = SchemaEx.findAnnotation<boolean>(
-            (data.schema as Schema.Schema.All).ast,
-            PivotColumnAnnotationId,
-          );
-          return !!annotation;
-        },
-        component: ({ data: { target, fieldPropertyAst }, ...inputProps }) => {
-          const ast = fieldPropertyAst;
+        filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, PivotColumnAnnotationId)),
+        component: ({ data, ...inputProps }) => {
+          const ast = data.fieldPropertyAst;
           if (!ast) {
             return null;
           }
 
-          const props = { ...inputProps, type: ast } as any as FormFieldComponentProps;
-          const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
+          const props = { ...inputProps, type: ast } as any as FormFieldRendererProps;
+          const target = data.target;
+          const db = Database.isDatabase(target) ? target : Obj.isObject(target) ? Obj.getDatabase(target) : undefined;
           if (!db) {
             return null;
           }
@@ -84,7 +70,11 @@ export default Capability.makeModule(() =>
             }
 
             const columns = Object.entries(properties).reduce<string[]>((acc, [key, value]) => {
-              if (typeof value === 'object' && value?.format === 'single-select') {
+              if (
+                typeof value === 'object' &&
+                value !== null &&
+                (value as { format?: string }).format === 'single-select'
+              ) {
                 acc.push(key);
               }
               return acc;

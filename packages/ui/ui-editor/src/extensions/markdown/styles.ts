@@ -82,7 +82,8 @@ export const formattingStyles = EditorView.theme({
   },
   '& .cm-codeblock-line': {
     background: 'var(--color-cm-codeblock)',
-    paddingInline: '1rem !important',
+    paddingLeft: '1rem !important',
+    paddingRight: '1.5rem !important',
   },
   '& .cm-codeblock-start': {
     borderTopLeftRadius: '.25rem',
@@ -155,11 +156,11 @@ export const formattingStyles = EditorView.theme({
   },
   '.cm-image-wrapper': {
     'grid-template-columns': '1fr',
-    display: 'grid',
-    margin: '0.5rem 0',
-    overflow: 'hidden',
-    transitionDuration: '350ms',
-    transitionProperty: 'height',
+    'display': 'grid',
+    'margin': '0.5rem 0',
+    'overflow': 'hidden',
+    'transitionDuration': '350ms',
+    'transitionProperty': 'height',
     '& > *': {
       'grid-row-start': 1,
       'grid-column-start': 1,

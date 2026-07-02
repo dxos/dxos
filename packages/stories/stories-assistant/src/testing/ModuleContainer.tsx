@@ -7,11 +7,11 @@ import React, { type FC, useCallback, useEffect, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
-import { AppCapabilities, getActiveSpaceId, getSpacePath } from '@dxos/app-toolkit';
+import { AppCapabilities, AppSpace, Paths } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
-import { Blueprint } from '@dxos/compute';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer, makeRegistry } from '@dxos/echo-client';
+import { Skill } from '@dxos/compute';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { makeRegistry } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant';
@@ -21,19 +21,19 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { Loading } from '@dxos/react-ui/testing';
 import { isNonNullable } from '@dxos/util';
 
-import { type ModuleProps, ContextModule } from '../components';
+import { ContextModule, type ModuleProps } from '../components';
 
 const moduleClassNames = 'bg-base-surface rounded-xs border border-separator overflow-hidden min-h-0';
 
 export type ModuleContainerProps = {
   modules: FC<ModuleProps>[][];
-  blueprints?: string[];
+  skills?: string[];
   showContext?: boolean;
 };
 
-export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showContext }: ModuleContainerProps) => {
+export const ModuleContainer = ({ modules: modulesProp, skills = [], showContext }: ModuleContainerProps) => {
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
-  const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
+  const skillsDefinitions = useCapabilities(AppCapabilities.SkillDefinition);
   const layoutState = useCapability(StorybookCapabilities.LayoutState);
   const [space] = useSpaces();
 
@@ -41,8 +41,8 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
   // deck-companion surface) resolve to this space. Done here, from the React tree, because the
   // plugin-module activation context resolves a different AtomRegistry than the one the UI reads.
   useEffect(() => {
-    if (space && getActiveSpaceId(atomRegistry.get(layoutState).workspace) !== space.id) {
-      atomRegistry.set(layoutState, { ...atomRegistry.get(layoutState), workspace: getSpacePath(space.id) });
+    if (space && AppSpace.getActiveSpaceId(atomRegistry.get(layoutState).workspace) !== space.id) {
+      atomRegistry.set(layoutState, { ...atomRegistry.get(layoutState), workspace: Paths.getSpacePath(space.id) });
     }
   }, [space, layoutState, atomRegistry]);
 
@@ -57,28 +57,27 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
       return;
     }
 
-    // Add blueprints to context.
-    const registry = makeRegistry({ initial: blueprintsDefinitions.map((def) => def.make()) });
-    const blueprintObjects = blueprints
+    // Add skills to context.
+    const registry = makeRegistry({ initial: skillsDefinitions.map((def) => def.make()) });
+    const skillObjects = skills
       .map((key) => {
-        const blueprint = registry
-          .query(Filter.type(Blueprint.Blueprint))
+        const skill = registry
+          .query(Filter.type(Skill.Skill))
           .runSync()
           .find((b) => Obj.getMeta(b).key === key);
-        if (blueprint) {
-          return space.db.add(Obj.clone(blueprint));
+        if (skill) {
+          return space.db.add(Obj.clone(skill));
         }
       })
       .filter(isNonNullable);
 
     const feedTarget = await chat.feed.load();
-    const feedServiceLayer = createFeedServiceLayer(space.queues);
     const runtime = await EffectEx.runAndForwardErrors(
-      Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
+      Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
     );
     const binder = new AiContext.Binder({ feed: feedTarget, runtime, registry: atomRegistry });
-    await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
-  }, [space, blueprints, blueprintsDefinitions]);
+    await binder.use((binder) => binder.bind({ skills: skillObjects.map((skill) => Ref.make(skill)) }));
+  }, [space, skills, skillsDefinitions]);
 
   const handleEvent = useCallback<NonNullable<ModuleProps['onEvent']>>((event) => {
     log.info('event', { event });

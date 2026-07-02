@@ -17,7 +17,7 @@ export type RelatedEventsProps = {
 };
 
 export const RelatedEvents = ({ recent, upcoming, onEventClick }: RelatedEventsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <>

@@ -2,12 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { Locator, Page } from '@playwright/test';
+import { type Locator, type Page, expect } from '@playwright/test';
 
 // TODO(wittjosiah): If others find this useful, factor out the thread plugin.
 export const Thread = {
   createComment: async (page: Page, plankLocator: Locator, comment: string) => {
-    await plankLocator.getByTestId('comments.comment.add').click();
+    const addButton = plankLocator.getByTestId('comments.comment.add');
+    // The button's disabled state is driven by selectionAspect, which updates via a
+    // debounce after a CodeMirror selection dispatch. Wait until it is enabled.
+    await expect(addButton).toBeEnabled();
+    await addButton.click();
     const currentThread = Thread.getCurrentThread(page);
     // Wait for the newly-created draft thread to appear with aria-current="location".
     // After the click, there is a brief window where React has not yet re-rendered

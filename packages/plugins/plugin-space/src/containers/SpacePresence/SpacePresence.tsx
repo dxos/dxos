@@ -14,8 +14,6 @@ import {
   Avatar,
   type AvatarContentProps,
   type DxAvatar,
-  List,
-  ListItem,
   Popover,
   type Size,
   type ThemedClassName,
@@ -24,6 +22,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
+import { Listbox } from '@dxos/react-ui-list';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -151,24 +150,27 @@ export const FullPresence = (props: MemberPresenceProps) => {
             <Popover.Content side='bottom'>
               <Popover.Arrow />
               <Popover.Viewport classNames='max-h-56'>
-                <List>
-                  {members.map((member) => (
-                    <ListItem.Root
-                      key={member.identity.identityKey.toHex()}
-                      classNames='flex gap-2 items-center cursor-pointer mb-2'
-                      onClick={() => onMemberClick?.(member)}
-                      data-testid='identity-list-item'
-                    >
-                      {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
-                      <PresenceAvatar
-                        identity={member.identity}
-                        size={size}
-                        showName
-                        match={member.currentlyAttended}
-                      />
-                    </ListItem.Root>
-                  ))}
-                </List>
+                <Listbox.Root>
+                  <Listbox.Content aria-label='members'>
+                    {members.map((member) => (
+                      <Listbox.Item
+                        key={member.identity.identityKey.toHex()}
+                        id={member.identity.identityKey.toHex()}
+                        classNames='flex gap-2 items-center cursor-pointer mb-2'
+                        onClick={() => onMemberClick?.(member)}
+                        data-testid='identity-list-item'
+                      >
+                        {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
+                        <PresenceAvatar
+                          identity={member.identity}
+                          size={size}
+                          showName
+                          match={member.currentlyAttended}
+                        />
+                      </Listbox.Item>
+                    ))}
+                  </Listbox.Content>
+                </Listbox.Root>
               </Popover.Viewport>
             </Popover.Content>
           </Popover.Portal>
@@ -246,7 +248,7 @@ export type SmallPresenceProps = {
 } & Pick<AttentionGlyphProps, 'attended' | 'containsAttended'>;
 
 export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPresenceProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <Tooltip.Trigger asChild content={t('presence.label', { count })} side='bottom'>

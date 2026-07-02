@@ -12,6 +12,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -57,10 +58,10 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../plugin-graph"
+      "path": "../plugin-connector"
     },
     {
-      "path": "../plugin-integration"
+      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-kanban"

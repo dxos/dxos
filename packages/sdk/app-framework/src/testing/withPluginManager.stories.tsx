@@ -12,12 +12,14 @@ import { Capability } from '../core';
 import { Surface } from '../ui';
 import { withPluginManager } from './withPluginManager';
 
+const MainRole = Surface.makeType<Record<string, never>>('org.dxos.test.role.main');
+
 const DefaultStory = () => {
   console.log('Render');
   return (
     <div>
       <div>Hello</div>
-      <Surface.Surface role='main' />
+      <Surface.Surface type={MainRole} />
     </div>
   );
 };
@@ -33,7 +35,7 @@ const meta = {
           Capabilities.ReactSurface,
           Surface.create({
             id: 'test',
-            role: 'main',
+            filter: Surface.makeFilter(MainRole),
             component: ({ role }) => <span>{JSON.stringify({ role })}</span>,
           }),
         ),

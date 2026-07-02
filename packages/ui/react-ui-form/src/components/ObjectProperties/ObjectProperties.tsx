@@ -15,14 +15,17 @@ import { HuePicker } from '@dxos/react-ui-pickers';
 import { FactoryAnnotation } from '@dxos/schema';
 
 import { translationKey } from '#translations';
+import { type FormFieldMap, type RefFieldDataProps } from '#types';
 
-import { Form, type FormFieldMap, META_TAGS_KEY, withMetaTags } from '../Form';
+import { Form, META_TAGS_KEY, withMetaTags } from '../Form';
 
-export type ObjectPropertiesProps = PropsWithChildren<{ object: Obj.Unknown }>;
+export type ObjectPropertiesProps = PropsWithChildren<
+  { object: Obj.Unknown } & Pick<RefFieldDataProps, 'getCreateDefaults' | 'resolveCreateEntry'>
+>;
 
 // TODO(wittjosiah): Reconcile w/ ObjectForm.
 export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps>(
-  ({ children, object, ...props }, forwardedRef) => {
+  ({ children, object, getCreateDefaults, resolveCreateEntry, ...props }, forwardedRef) => {
     const db = Obj.getDatabase(object);
     const meta = Obj.getMeta(object);
     // `meta.tags` already holds `Ref<Tag>`s (materialized by the database handler).
@@ -110,6 +113,7 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
 
     return (
       <Form.Root
+        db={db}
         schema={formSchema}
         defaultValues={values as any}
         createTypename={Type.getTypename(Tag.Tag)}
@@ -117,14 +121,15 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
         createOptionLabel={['add-tag.label', { ns: translationKey }]}
         createInitialValuePath='label'
         createFieldMap={createFieldMap}
-        db={db}
         onValuesChanged={handleChange}
         onCreate={handleCreate}
+        getCreateDefaults={getCreateDefaults}
+        resolveCreateEntry={resolveCreateEntry}
       >
-        <Form.Viewport {...composableProps(props)} ref={forwardedRef}>
+        <Form.Viewport {...composableProps(props)} scroll ref={forwardedRef}>
           <Form.Content>
             <Form.FieldSet />
-            {children}
+            <Form.Section>{children}</Form.Section>
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
@@ -133,12 +138,12 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
 );
 
 const createFieldMap: FormFieldMap = {
-  hue: ({ type, label, layout, getValue, onValueChange }) => {
+  hue: ({ type, label, presentation, getValue, onValueChange }) => {
     const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
     const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
     return (
       <>
-        {layout !== 'inline' && <Form.Label label={label} />}
+        {presentation !== 'inline' && <Form.Label label={label} />}
         <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
       </>
     );

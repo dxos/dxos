@@ -20,7 +20,7 @@ const WAIT_FOR_OBJECT_TIMEOUT = 3 * 60 * 1_000;
 const TOAST_TIMEOUT = 4 * 60 * 1_000;
 
 export const AwaitingObject = ({ id }: { id: string }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const [open, setOpen] = useState(true);
   const [waiting, setWaiting] = useState(true);

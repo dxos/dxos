@@ -13,7 +13,7 @@ import { meta } from '#meta';
 import { type Mailbox } from '#types';
 
 export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbox; filter: string }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState('');
   const { invokePromise } = useOperationInvoker();

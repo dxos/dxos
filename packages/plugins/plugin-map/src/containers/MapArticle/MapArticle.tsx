@@ -4,10 +4,10 @@
 
 import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Flex, type FlexProps, Panel, useControlledState } from '@dxos/react-ui';
-import { useSelected } from '@dxos/react-ui-attention';
+import { useSelection } from '@dxos/react-ui-attention';
 import { type LatLngLiteral, type MapRootProps } from '@dxos/react-ui-geo';
 
 import { type GeoControlProps, GlobeControl, MapControl } from '#components';
@@ -57,7 +57,7 @@ export type MapArticleProps = AppSurface.ObjectArticleProps<
  * surface and passed in, keeping this container free of plugin-context hooks.
  */
 export const MapArticle = ({ role, subject, provider, ...props }: MapArticleProps) => {
-  const Root = role === 'section' ? Container : Fragment;
+  const Root = role === AppSurface.Section.role ? Container : Fragment;
   return (
     <Root>
       <Panel.Root>
@@ -111,7 +111,7 @@ const MapArticleInner = ({
   // highlights multiple rows by typename); default to single-select against the article.
   const contextId = selection?.contextId ?? attendableId ?? Obj.getURI(subject);
   const mode = selection?.mode ?? 'single';
-  const selectedRaw = useSelected(contextId, mode);
+  const selectedRaw = useSelection(contextId, mode);
   const selected = useMemo(
     () => (Array.isArray(selectedRaw) ? selectedRaw : selectedRaw ? [selectedRaw] : []),
     [selectedRaw],

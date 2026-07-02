@@ -6,13 +6,13 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { BLUESKY_TARGET } from '../constants';
-import { IntegrationDatabaseMissingError } from '../errors';
 import { BlueskyApi } from '../services';
 import { GetBlueskyTargets } from './definitions';
 
@@ -29,11 +29,11 @@ const SELF_TARGETS = [
 
 const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTargets.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ integration: integrationRef }) {
+    Effect.fnUntraced(function* ({ connection: connectionRef }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
-      const integration = yield* Database.load(integrationRef);
-      if (!Obj.getDatabase(integration)) {
-        return yield* Effect.fail(new IntegrationDatabaseMissingError());
+      const connection = yield* Database.load(connectionRef);
+      if (!Obj.getDatabase(connection)) {
+        return yield* Effect.fail(new SyncDatabaseMissingError());
       }
 
       // Saved feeds are best-effort. Credentials construction (PDS resolve,
@@ -41,7 +41,7 @@ const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTarge
       // fall back to self-targets so the user always has something to pick
       // from.
       const savedFeeds = yield* BlueskyApi.getSavedFeeds().pipe(
-        Effect.provide(BlueskyApi.Credentials.fromIntegration(integrationRef, client)),
+        Effect.provide(BlueskyApi.Credentials.fromConnection(connectionRef, client)),
         Effect.provide(FetchHttpClient.layer),
         Effect.catchAll((error) =>
           Effect.sync(() => {

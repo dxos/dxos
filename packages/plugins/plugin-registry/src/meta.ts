@@ -3,11 +3,12 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { pinnedWorkspaceId } from '@dxos/app-toolkit';
+import { Paths } from '@dxos/app-toolkit';
 import { DXN } from '@dxos/keys';
-import { trim } from '@dxos/util';
 
-export const REGISTRY_ID = pinnedWorkspaceId('dxos:plugin-registry');
+import config from '../dx.config';
+
+export const REGISTRY_ID = Paths.pinnedWorkspaceId('dxos:plugin-registry');
 export const REGISTRY_KEY = 'plugin-registry';
 
 // TODO(wittjosiah): Should this be a special separator or use the standard path separator?
@@ -31,17 +32,7 @@ export const getPluginPath = (pluginId: string): string => `root/${REGISTRY_ID}/
  */
 export const getPluginSpecPath = (pluginId: string): string => `${getPluginPath(pluginId)}/spec`;
 
-export const meta = Plugin.makeMeta({
-  key: DXN.make('org.dxos.plugin.registry'),
-  name: 'Plugins',
-  author: 'DXOS',
-  description: trim`
-    Plugin management system for discovering, installing, and configuring workspace extensions.
-    Browse available plugins and customize your workspace capabilities.
-  `,
-  icon: 'ph--squares-four--regular',
-  tags: ['system'],
-});
+export const meta = Plugin.getMetaFromConfig(config);
 
 /** Cascade-disable confirmation dialog surface id. */
-export const DISABLE_DEPENDENTS_DIALOG = DXN.make(`${meta.id}.disableDependentsDialog`);
+export const DISABLE_DEPENDENTS_DIALOG = DXN.make(`${meta.profile.key}.disableDependentsDialog`);

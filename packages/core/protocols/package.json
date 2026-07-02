@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocols",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Protobuf definitions for DXOS protocols.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -37,7 +37,8 @@
     "./buf/*": {
       "browser": "./dist/src/buf/proto/gen/*.js",
       "import": "./dist/src/buf/proto/gen/*.js"
-    }
+    },
+    "./lexicons/*": "./src/lexicons/*"
   },
   "types": "dist/src/index.d.ts",
   "files": [

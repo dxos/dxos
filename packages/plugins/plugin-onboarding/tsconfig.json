@@ -1,0 +1,141 @@
+{
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "outDir": "dist/types",
+    "types": [
+      "node",
+      "vite/client"
+    ]
+  },
+  "exclude": [
+    "vitest.config.ts"
+  ],
+  "include": [
+    "scripts",
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
+    },
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/migrations"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/brand"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../../ui/react-ui-tabs"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-assistant"
+    },
+    {
+      "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-connector"
+    },
+    {
+      "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-inbox"
+    },
+    {
+      "path": "../plugin-kanban"
+    },
+    {
+      "path": "../plugin-map"
+    },
+    {
+      "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-masonry"
+    },
+    {
+      "path": "../plugin-sheet"
+    },
+    {
+      "path": "../plugin-sketch"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-support"
+    },
+    {
+      "path": "../plugin-testing"
+    }
+  ]
+}

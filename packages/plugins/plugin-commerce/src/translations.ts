@@ -33,7 +33,7 @@ export const translations = [
         'typename.label': 'Result',
         'typename.label_other': 'Results',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Commerce',
         'run-search.label': 'Run search',
         'analyze-provider.label': 'Analyze provider',
@@ -50,6 +50,7 @@ export const translations = [
         'regenerate.toast.error.description': 'Could not analyze the provider. See the console for details.',
         'search-fields.label': 'Search fields',
         'search-fields.message': 'Not generated yet — click Regenerate.',
+        'view-filter.label': 'Filter results',
         'view-all.title': 'All',
         'view-all.label': 'All results',
         'view-starred.title': 'Starred',

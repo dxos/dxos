@@ -214,6 +214,15 @@ export class TablePresentation<T extends TableRow = TableRow> {
       }
     }
 
+    // URLs.
+    if (props.format === Format.TypeFormat.URL) {
+      const value = SchemaEx.getValue(obj, field.path);
+      const href = typeof value === 'string' ? safeHttpUrl(value) : undefined;
+      if (href) {
+        cell.accessoryHtml = `<div role="none" class="absolute end-0 inset-y-0 p-(--dx-grid-cell-content-padding-block)"><a href="${escapeHtmlAttribute(href)}" target="_blank" rel="noopener noreferrer" class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--arrow-square-out--regular"/></a></div>`;
+      }
+    }
+
     // Booleans.
     if (props.format === Format.TypeFormat.Boolean) {
       const value = SchemaEx.getValue(obj, field.path);
@@ -339,7 +348,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           ${direction !== undefined ? tableButtons.sort.render({ fieldId: field.id, direction }) : ''}
           ${tableButtons.columnSettings.render({ fieldId: field.id })}
         `,
-        className: '!bg-toolbar-surface text-description! [&>div]:flex [&>div]:items-stretch',
+        className: 'bg-axis-surface! text-axis-text! [&>div]:flex [&>div]:items-stretch',
       };
     }
 
@@ -382,7 +391,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     if (!this.model.features.selection.enabled || this.model.selection.selectionMode === 'single') {
       return {
         [toPlaneCellIndex({ col: 0, row: 0 })]: {
-          className: '!bg-toolbar-surface',
+          className: 'bg-axis-surface!',
           readonly: true,
           value: '',
         },
@@ -396,7 +405,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           header: true,
           checked: this.model.selection.allRowsSelected,
         }),
-        className: '!bg-toolbar-surface',
+        className: 'bg-axis-surface!',
         readonly: true,
         value: '',
       },
@@ -411,7 +420,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
               disabled: (this.model.projection?.getFields()?.length ?? 0) >= VIEW_FIELD_LIMIT,
             })
           : undefined,
-        className: '!bg-toolbar-surface',
+        className: 'bg-axis-surface!',
         readonly: true,
         value: '',
       },
@@ -461,6 +470,27 @@ export class TablePresentation<T extends TableRow = TableRow> {
     return cells;
   }
 }
+
+/**
+ * Parses a cell value as an HTTP(S) URL, returning the normalized href or `undefined`.
+ * Restricting to http/https keeps `javascript:`/`data:` URLs out of the rendered anchor.
+ */
+const safeHttpUrl = (value: string): string | undefined => {
+  try {
+    const normalized = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+    const url = new URL(normalized);
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * Escapes a string for safe interpolation into a double-quoted HTML attribute, since
+ * `accessoryHtml` is injected into the grid via `unsafeStatic`.
+ */
+const escapeHtmlAttribute = (value: string): string =>
+  value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 export const cellClassesForRowSelection = (selected: boolean, selectionMode: SelectionMode) => {
   if (!selected) {

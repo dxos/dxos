@@ -9,9 +9,11 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { getSpace, useObject, useQuery } from '@dxos/react-client/echo';
-import { Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { useSelected } from '@dxos/react-ui-attention';
+import { Panel, useTranslation } from '@dxos/react-ui';
+import { useSelection } from '@dxos/react-ui-attention';
+import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
+import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '../../meta';
 import { Result, Search } from '../../types';
@@ -26,7 +28,7 @@ export type SearchArticleProps = AppSurface.ObjectArticleProps<Search.Search>;
  * companion (see {@link SearchProperties}).
  */
 export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   // Use the live `subject` for reads/writes (the tag helpers mutate it); subscribe via useObject so
   // the view re-renders when results/tags change.
@@ -34,7 +36,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
   useObject(subject);
 
   const id = attendableId ?? Obj.getURI(search);
-  const currentId = useSelected(id, 'single');
+  const currentId = useSelection(id, 'single');
 
   // Result filter: all vs starred-only (ephemeral view state).
   const [view, setView] = useState<'all' | 'starred'>('all');
@@ -64,7 +66,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
     [search, db, starredUri],
   );
 
-  // Select a result by URI — updates attention context so useSelected returns the new id.
+  // Select a result by URI — updates attention context so useSelection returns the new id.
   const handleSelect = useCallback(
     (resultId: string) => {
       void invokePromise(LayoutOperation.Select, {
@@ -104,28 +106,46 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
     [results, currentId],
   );
 
+  // Reactive toolbar built from the menu action-graph idiom; the builder reads `view` so the active
+  // toggle and the starred icon track the current filter.
+  const menuActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .group(
+          'view',
+          {
+            label: ['view-filter.label', { ns: meta.profile.key }],
+            variant: 'toggleGroup',
+            selectCardinality: 'single',
+            value: view,
+          },
+          (group) => {
+            group.action(
+              'all',
+              { label: ['view-all.label', { ns: meta.profile.key }], icon: 'ph--list--regular' },
+              () => setView('all'),
+            );
+            group.action(
+              'starred',
+              {
+                label: ['view-starred.label', { ns: meta.profile.key }],
+                icon: view === 'starred' ? 'ph--star--fill' : 'ph--star--regular',
+              },
+              () => setView('starred'),
+            );
+          },
+        )
+        .build(),
+    [view],
+  );
+
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
-        <Toolbar.Root>
-          <Toolbar.ToggleGroup
-            type='single'
-            value={view}
-            onValueChange={(value) => setView(value === 'starred' ? 'starred' : 'all')}
-          >
-            <Toolbar.ToggleGroupItem value='all' aria-label={t('view-all.label')} title={t('view-all.title')}>
-              <Icon icon='ph--list--regular' size={4} />
-            </Toolbar.ToggleGroupItem>
-            <Toolbar.ToggleGroupItem
-              value='starred'
-              aria-label={t('view-starred.label')}
-              title={t('view-starred.title')}
-            >
-              <Icon icon={view === 'starred' ? 'ph--star--fill' : 'ph--star--regular'} size={4} />
-            </Toolbar.ToggleGroupItem>
-          </Toolbar.ToggleGroup>
-        </Toolbar.Root>
-      </Panel.Toolbar>
+      <Menu.Root {...menuActions} attendableId={id}>
+        <Panel.Toolbar asChild>
+          <Menu.Toolbar />
+        </Panel.Toolbar>
+      </Menu.Root>
       <Panel.Content>
         {(selectedResult && (
           <ResultDetail
@@ -136,9 +156,10 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
           />
         )) ||
           (visibleResults.length === 0 ? (
-            <div className='flex items-center justify-center h-full text-subdued text-sm'>
-              {view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
-            </div>
+            <Empty
+              classNames='bs-full'
+              label={view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
+            />
           ) : (
             <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
               <Masonry.Content thin centered padding>

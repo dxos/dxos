@@ -7,8 +7,8 @@ import { type EditorView } from '@codemirror/view';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import React, {
-  type RefObject,
   type PropsWithChildren,
+  type RefObject,
   forwardRef,
   useCallback,
   useImperativeHandle,
@@ -16,7 +16,7 @@ import React, {
   useRef,
 } from 'react';
 
-import { createDocAccessor } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
@@ -117,7 +117,7 @@ type OutlineContentProps = {};
 
 const OutlineContent = composable<HTMLDivElement, OutlineContentProps>(({ children, ...props }, forwardedRef) => {
   const { id, text, scrollable, showSelected, autoFocus, viewRef } = useOutlineContext(OUTLINE_CONTENT_NAME);
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { themeMode } = useThemeContext();
 
   const { parentRef, focusAttributes, view } = useTextEditor(
@@ -127,7 +127,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>(({ childr
       selection: EditorSelection.cursor(text.content.length),
       initialValue: text.content,
       extensions: [
-        createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
+        createDataExtensions({ id, text: Doc.createAccessor(text, ['content']) }),
         createBasicExtensions({ readOnly: false, search: true }),
         createMarkdownExtensions(),
         createThemeExtensions({
@@ -196,4 +196,4 @@ export const Outline = {
   Content: OutlineContent,
 };
 
-export type { OutlineController, OutlineRootProps, OutlineContentProps };
+export type { OutlineContentProps, OutlineController, OutlineRootProps };

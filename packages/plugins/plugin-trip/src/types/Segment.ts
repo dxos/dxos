@@ -7,7 +7,10 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
-import { Provider } from '@dxos/types';
+// Organization is referenced in the inferred type of multiple types here (via Provider.Provider → Ref.Ref(Organization));
+// the import lets TypeScript name it in the emitted .d.ts.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type Organization, Provider } from '@dxos/types';
 
 import * as Booking from './Booking';
 import { Place } from './Place';
@@ -135,17 +138,16 @@ export type Details = Schema.Schema.Type<typeof Details>;
  * Segments are referenced from a Trip via `Ref<Segment>[]` and declared as children via `Obj.setParent(segment, trip)`.
  * NOTE: Multiple segments may reference the same Booking.
  */
-export const Segment = Schema.Struct({
-  booking: Schema.optional(Ref.Ref(Booking.Booking)),
-  notes: Schema.optional(Schema.String),
-  details: Details,
-}).pipe(
-  Annotation.IconAnnotation.set({ icon: 'ph--ticket--regular', hue: 'sky' }),
-  Annotation.HiddenAnnotation.set(true),
-  Type.makeObject(DXN.make('org.dxos.type.trip.segment', '0.1.0')),
-);
-
-export interface Segment extends Type.InstanceType<typeof Segment> {}
+export class Segment extends Type.makeObject<Segment>(DXN.make('org.dxos.type.trip.segment', '0.1.0'))(
+  Schema.Struct({
+    booking: Schema.optional(Ref.Ref(Booking.Booking)),
+    notes: Schema.optional(Schema.String),
+    details: Details,
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--ticket--regular', hue: 'sky' }),
+    Annotation.HiddenAnnotation.set(true),
+  ),
+) {}
 
 /** Type guard for Segment ECHO objects. */
 export const instanceOf = (value: unknown): value is Segment => Obj.instanceOf(Segment, value);

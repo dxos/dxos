@@ -31,6 +31,44 @@ const DXN_SPEC_REGEXP =
 export type DXN = URI.URI & { readonly __DXN: unique symbol };
 
 /**
+ * Compile-time validation for NSID strings (the `dxn:` prefix is absent here).
+ *
+ * Checks two rules expressible with template literal types:
+ * - Must contain at least one dot (multi-segment).
+ * - Final segment (after the last dot) must not contain a hyphen.
+ *
+ * TypeScript template literal inference is non-greedy: `${string}.${infer Rest}`
+ * always splits at the first dot. The type recurses until `Rest` has no more dots,
+ * at which point it is the true final segment and is checked for hyphens.
+ *
+ * Broad `string` passes through unchanged so that template-literal call sites
+ * whose prefix segment is `string` are not rejected — those are validated at
+ * runtime by the regex inside `parse`.
+ */
+export type Name<T extends string> = [string] extends [T]
+  ? string
+  : T extends `${string}.${infer Rest}`
+    ? Rest extends `${string}.${string}`
+      ? [Name<Rest>] extends [never]
+        ? never
+        : T
+      : Rest extends `${string}-${string}`
+        ? never
+        : T
+    : never;
+
+/**
+ * Effect Schema validating an NSID name — the `dxn:`-less portion — at runtime, mirroring the rules
+ * the {@link Name} type checks at compile time (multi-segment; camelCase final segment). Pairs with
+ * the {@link Name} type for schema fields that hold a bare NSID (e.g. a model id passed to a creator
+ * helper). Named `NameSchema` because a value cannot share the generic `Name` type's name.
+ */
+export const NameSchema: Schema.Schema<string, string> = Schema.String.pipe(
+  Schema.filter((value) => DXN_SPEC_REGEXP.test(`dxn:${value}`), { message: () => 'Invalid NSID name' }),
+  Schema.annotations({ title: 'DXN.Name', description: 'NSID name (the dxn: prefix omitted)' }),
+);
+
+/**
  * Cheap prefix check — does not validate the full DXN grammar.
  * Sufficient for narrowing a URI to a DXN.
  */
@@ -40,11 +78,19 @@ export const isDXN = (value: unknown): value is DXN => typeof value === 'string'
  * Constructs a DXN from an NSID (and optional version). Throws if the result
  * is not a valid DXN. Use `tryMake` for non-throwing string parsing.
  *
+ * Static NSID strings are validated at compile time via {@link Name}:
+ * the final segment must be camelCase (no hyphens). Template-literal strings
+ * with a runtime prefix are accepted here but still validated at runtime.
+ *
  * @example make('org.dxos.type.calendar') → 'dxn:org.dxos.type.calendar'
  * @example make('org.dxos.type.calendar', '1.0.0') → 'dxn:org.dxos.type.calendar:1.0.0'
  */
-export const make = (nsid: string, version?: string): DXN =>
-  parse(version != null ? `dxn:${nsid}:${version}` : `dxn:${nsid}`);
+export const make: {
+  <T extends string>(
+    nsid: [Name<T>] extends [never] ? `Invalid NSID "${T}": final segment must be camelCase (no hyphens)` : T,
+    version?: string,
+  ): DXN;
+} = (nsid: string, version?: string): DXN => parse(version != null ? `dxn:${nsid}:${version}` : `dxn:${nsid}`);
 
 /**
  * Parses a full DXN string. Returns undefined on failure.

@@ -207,7 +207,7 @@ feat F-1: OAuth Integration
 
   req F-1.1:
     when: user connects a GitHub integration
-    then: plugin-integration OAuth flow redirects to GitHub for authorization
+    then: plugin-connector OAuth flow redirects to GitHub for authorization
 
   req F-1.2:
     when: OAuth callback completes

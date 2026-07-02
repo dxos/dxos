@@ -12,17 +12,16 @@ import { type Mutable } from '@dxos/echo/Obj';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ProjectionModel, ViewModel, getTypeURIFromQuery } from '@dxos/schema';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { TestLayout, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
+import { TestLayout, VIEW_EDITOR_DEBUG_SYMBOL } from '../../testing';
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 
 const types = [
-  // TODO(burdon): Get label from annotation.
   { value: Type.getURI(Organization.Organization), label: 'Organization' },
   { value: Type.getURI(Person.Person), label: 'Person' },
   { value: Type.getURI(Pipeline.Pipeline), label: 'Project' },
@@ -36,9 +35,9 @@ export type ViewEditorDebugObjects = {
   projection: ProjectionModel;
 };
 
-type DefaultStoryProps = Pick<ViewEditorProps, 'readonly' | 'mode'>;
+type StoryArgs = Pick<ViewEditorProps, 'readonly' | 'mode'>;
 
-const DefaultStory = (props: DefaultStoryProps) => {
+const DefaultStory = (props: StoryArgs) => {
   const { space } = useClientStory();
   const [type, setType] = useState<Type.AnyEntity>();
   const [view, setView] = useState<View.View>();
@@ -126,14 +125,14 @@ const DefaultStory = (props: DefaultStoryProps) => {
     }
   }, [type, view]);
 
-  // NOTE(ZaymonFC): This looks awkward but it resolves an infinite parsing issue with sb.
+  // NOTE(ZaymonFC): Avoids infinite parsing issue with storybook args.
   const json = useMemo(
     () => JSON.parse(JSON.stringify({ schema: type, view, projection: projectionRef.current })),
     [JSON.stringify(type), JSON.stringify(view)],
   );
 
   if (!type || !view) {
-    return <div />;
+    return <Loading />;
   }
 
   return (

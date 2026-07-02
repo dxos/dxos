@@ -25,31 +25,29 @@ import { ArtifactDiffResolver } from './artifact-diff';
 // TODO(burdon): Move to AiPreprocessor.
 export const formatSystemPrompt = ({
   system,
-  blueprints = [],
+  skills = [],
   objects = [],
-}: Pick<AiRequest.RunProps, 'system' | 'blueprints' | 'objects'>): Effect.Effect<
+}: Pick<AiRequest.RunProps, 'system' | 'skills' | 'objects'>): Effect.Effect<
   string,
   FunctionNotFoundError | EntityNotFoundError,
   Database.Service | Registry.Service | Operation.Service
 > =>
   Effect.gen(function* () {
-    const blueprintDefs = yield* Function.pipe(
-      blueprints,
-      Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
+    const skillDefs = yield* Function.pipe(
+      skills,
+      Effect.forEach((skill) => Effect.succeed(skill.instructions)),
       Effect.flatMap(
         Effect.forEach((template) =>
           Effect.gen(function* () {
             return trim`
-            <blueprint>
+            <skill>
               ${yield* Template.processTemplate(template)}
-            </blueprint>
+            </skill>
           `;
           }),
         ),
       ),
-      Effect.map((blueprints) =>
-        blueprints.length > 0 ? ['## Blueprints Definitions', ...blueprints].join('\n\n') : undefined,
-      ),
+      Effect.map((skills) => (skills.length > 0 ? ['## Skills Definitions', ...skills].join('\n\n') : undefined)),
     );
 
     const objectDefs = yield* Function.pipe(
@@ -66,7 +64,7 @@ export const formatSystemPrompt = ({
     );
 
     return yield* Function.pipe(
-      Effect.succeed([system, blueprintDefs, objectDefs].filter((def): def is string => def !== undefined)),
+      Effect.succeed([system, skillDefs, objectDefs].filter((def): def is string => def !== undefined)),
       Effect.map((parts) => parts.join('\n\n')),
     );
   }).pipe(Effect.withSpan('formatSystemPrompt'));

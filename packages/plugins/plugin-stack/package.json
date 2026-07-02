@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-stack",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "DXOS Surface plugin for Stack entities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -70,6 +70,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src",
     "PLUGIN.mdl"
   ],
@@ -86,7 +87,8 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@radix-ui/react-collapsible": "catalog:",
@@ -94,7 +96,11 @@
   },
   "devDependencies": {
     "@babel/core": "catalog:",
+    "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

@@ -11,9 +11,9 @@
 
   .dx-tag--anchor {
     /* NOTE: Margin offsets padding so that border is flush with text. This should only apply to anchor tags inside of Codemirror. */
-    @apply inline cursor-pointer px-[4px] py-0.5;
+    @apply inline-block cursor-pointer px-[4px] py-0.5;
     /** TODO(burdon): Configure secondary color. */
-    @apply bg-input-surface ring ring-neutral-border rounded-sm;
+    @apply bg-input-surface ring-inset ring ring-neutral-border rounded-sm;
     &:hover {
       @apply bg-hover-surface;
     }

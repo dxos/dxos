@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type CSSProperties, type ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, type CSSProperties, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useId } from '@dxos/react-hooks';
@@ -141,15 +141,15 @@ const MessageTitle = forwardRef<HTMLDivElement, MessageTitleProps>(
     return (
       <Column.Row classNames={tx('message.header', {}, classNames)} ref={forwardedRef}>
         {icon && (
-          <div className={tx('message.icon', { valence })}>
+          <Column.Block>
             <Icon icon={icon} />
-          </div>
+          </Column.Block>
         )}
         <h2 className={tx('message.title', {}, classNames)} id={titleId}>
           {children}
         </h2>
         {onClose && (
-          <div className={tx('message.close', {})}>
+          <Column.Block end>
             <IconButton
               variant='ghost'
               icon='ph--x--regular'
@@ -158,7 +158,7 @@ const MessageTitle = forwardRef<HTMLDivElement, MessageTitleProps>(
               label={t('toolbar-close.label')}
               onClick={onClose}
             />
-          </div>
+          </Column.Block>
         )}
       </Column.Row>
     );
@@ -204,6 +204,6 @@ export const Message = {
 
 export const Callout = Message;
 
-export type { MessageRootProps, MessageTitleProps, MessageContentProps };
+export type { MessageContentProps, MessageRootProps, MessageTitleProps };
 
 export { messageIcons };

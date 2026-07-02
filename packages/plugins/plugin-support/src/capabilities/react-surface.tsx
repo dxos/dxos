@@ -8,13 +8,15 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { LayoutOperation, getPersonalSpace, getSpaceHomePath, getSpacePath } from '@dxos/app-toolkit';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
+import { Hints, Keyshortcuts } from '@dxos/plugin-deck';
+import { SpaceHomeContent } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { useObject } from '@dxos/react-client/echo';
+import { Position } from '@dxos/util';
 
-import { SupportSettings } from '#components';
 import {
   DiscordPanel,
   FeedbackPanel,
@@ -22,15 +24,16 @@ import {
   ShortcutsDialogContent,
   ShortcutsHints,
   ShortcutsList,
-  SpaceHomeArticle,
+  SpaceHomeWelcome,
   SupportArticle,
   SupportCompanion,
+  SupportSettings,
 } from '#containers';
 import { meta } from '#meta';
-import { Support, type Settings } from '#types';
+import { type Settings, Support } from '#types';
 
 import { WelcomeDismissedAnnotation } from '../annotations';
-import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_TYPE } from '../constants';
+import { SHORTCUTS_DIALOG } from '../constants';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -46,27 +49,25 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'spaceHome',
-        filter: AppSurface.literal(AppSurface.Article, SPACE_HOME_NODE_TYPE),
-        component: ({ data, role }) => {
-          const space = useActiveSpace();
-          return <SpaceHomeArticle role={role} attendableId={data.attendableId} space={space} />;
-        },
+        id: 'spaceHomeWelcome',
+        filter: Surface.makeFilter(SpaceHomeContent),
+        position: Position.first,
+        component: ({ data }) => <SpaceHomeWelcome space={data.space} />,
       }),
       Surface.create({
         id: 'feedback',
-        role: 'deck-companion--help',
+        filter: Surface.makeFilter(AppSurface.deckCompanion('help')),
         component: () => <FeedbackPanel />,
       }),
       Surface.create({
         id: 'discord',
-        role: 'deck-companion--discord',
+        filter: Surface.makeFilter(AppSurface.deckCompanion('discord')),
         component: () => <DiscordPanel />,
       }),
       Surface.create({
         id: 'helpMenu',
-        role: 'status-indicator',
-        position: 'last',
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
+        position: Position.last,
         component: () => <HelpMenu />,
       }),
       // Generic plank companion: shows the description from the plugin that
@@ -83,12 +84,12 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'hints',
-        role: 'hints',
+        filter: Surface.makeFilter(Hints),
         component: () => <ShortcutsHints />,
       }),
       Surface.create({
         id: 'keyshortcuts',
-        role: 'keyshortcuts',
+        filter: Surface.makeFilter(Keyshortcuts),
         component: () => <ShortcutsList />,
       }),
       Surface.create({
@@ -98,11 +99,11 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'settings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
           const client = useClient();
           const { invokePromise } = useOperationInvoker();
-          const personal = getPersonalSpace(client);
+          const personal = AppSpace.getPersonalSpace(client);
           const [properties, updateProperties] = useObject(personal?.properties);
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           const welcomeDismissed = properties
@@ -113,8 +114,8 @@ export default Capability.makeModule(() =>
               return;
             }
             updateProperties((props) => Annotation.set(props, WelcomeDismissedAnnotation, false));
-            const workspace = getSpacePath(personal.id);
-            void invokePromise(LayoutOperation.Open, { subject: [getSpaceHomePath(personal.id)], workspace });
+            const workspace = Paths.getSpacePath(personal.id);
+            void invokePromise(LayoutOperation.Open, { subject: [Paths.getSpaceHomePath(personal.id)], workspace });
           };
           return (
             <SupportSettings

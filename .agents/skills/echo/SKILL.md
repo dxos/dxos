@@ -90,6 +90,77 @@ Prefer importing subpaths when you need one module only, e.g. `@dxos/echo/Filter
 - **Effect `Database.*`**: operation handlers, assistant/toolkit flows, any `Effect` program that should declare `Database.Service` and compose with other layers (see [Effect skill](../effect/SKILL.md)).
 - **React hooks**: read-mostly UI and local subscriptions.
 
+## Defining ECHO types — class-based syntax
+
+ECHO type declarations use a **class-based syntax** that unifies the runtime schema entity and the TypeScript type into a single declaration. There are two styles.
+
+### Class style (module-level, reusable types)
+
+Use this for every named, exported type declaration. The class simultaneously serves as the schema entity (accessible via static members) and the TypeScript instance type.
+
+```ts
+// Object type
+export class Person extends Type.makeObject<Person>(DXN.make('com.example.type.person', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.String,
+  }),
+) {}
+
+// With additional pipe annotations
+export class Collection extends Type.makeObject<Collection>(DXN.make('org.dxos.type.collection', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.String.pipe(Schema.optional),
+    objects: Schema.Array(Ref.Ref(Obj.Unknown)),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--folder--regular', hue: 'indigo' })),
+) {}
+
+// Relation type
+export class HasManager extends Type.makeRelation<HasManager>(DXN.make('com.example.type.hasManager', '0.1.0'))({
+  source: Person,
+  target: Person,
+})(Schema.Struct({})) {}
+```
+
+**No separate `type X = ...` or `interface X extends ...` is needed.** The class name itself is the TypeScript type for instances.
+
+**`makeObject` signature**: `Type.makeObject<Self>(dxn, options?)(schema)` — the DXN comes first, the schema is the argument to the returned function. The `<Self>` type parameter is the class being declared (forward reference).
+
+**`makeRelation` signature**: `Type.makeRelation<Self>(dxn)({ source, target, id? })(schema)` — three curried calls.
+
+### Pipe style (local / inline, no reuse)
+
+For anonymous, local-only types where you will not refer to the type by name:
+
+```ts
+const schema = Type.makeObject(DXN.make('com.example.type.taggedperson', '0.1.0'))(
+  Schema.Struct({ name: Schema.String }).pipe(ColorAnnotation.set('schema-teal')),
+);
+```
+
+Note the argument order: the schema is wrapped _inside_ `makeObject(dxn)(schema)`, not piped into it. The old `.pipe(Type.makeObject(dxn))` form is **deprecated**.
+
+### Migration guide — old to new
+
+| Old pattern                                                                     | New pattern                                                                       |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `const X = Schema.Struct({…}).pipe(Type.makeObject(dxn));`                      | `Type.makeObject(dxn)(Schema.Struct({…}))` (inline)                               |
+| `export const X = …; export type X = Type.InstanceType<typeof X>;`              | `export class X extends Type.makeObject<X>(dxn)(schema) {}`                       |
+| `export const X = …; export interface X extends Type.InstanceType<typeof X> {}` | same class pattern                                                                |
+| `class X extends Type.declareObj<X>()(schema.pipe(Type.makeObject(dxn)))`       | `class X extends Type.makeObject<X>(dxn)(schema)`                                 |
+| `export const X = …; export type X = Type.InstanceType<typeof X>;` (relation)   | `export class X extends Type.makeRelation<X>(dxn)({ source, target })(schema) {}` |
+
+### `Type.InstanceType` — when to use it
+
+After migrating to class syntax, `X` (the class name) IS the TypeScript instance type. You can use `X` directly in function signatures and generic bounds. `Type.InstanceType<typeof X>` is equivalent and acceptable, but the class name alone is preferred for brevity.
+
+```ts
+// preferred
+export const make = (props: Obj.MakeProps<typeof Person>): Person => Obj.make(Person, props);
+
+// also acceptable
+export const make = (props: Obj.MakeProps<typeof Person>): Type.InstanceType<typeof Person> => Obj.make(Person, props);
+```
+
 ## Related docs in-repo
 
 - Effect runtime patterns: [.cursor/skills/effect/SKILL.md](../effect/SKILL.md).

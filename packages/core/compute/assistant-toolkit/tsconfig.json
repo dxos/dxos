@@ -36,6 +36,9 @@
       "path": "../../../sdk/app-framework"
     },
     {
+      "path": "../../../sdk/app-toolkit"
+    },
+    {
       "path": "../../../sdk/client-protocol"
     },
     {
@@ -54,9 +57,6 @@
       "path": "../../../ui/ui-theme"
     },
     {
-      "path": "../../compute-runtime"
-    },
-    {
       "path": "../../echo/echo"
     },
     {
@@ -73,6 +73,9 @@
     },
     {
       "path": "../compute"
+    },
+    {
+      "path": "../compute-runtime"
     },
     {
       "path": "../functions"

@@ -71,22 +71,23 @@ const ToastTitle = forwardRef<HTMLHeadingElement, ToastTitleProps>(
     return (
       <Column.Row classNames={tx('toast.header', {})}>
         {icon && (
-          <div className={tx('toast.icon', {})}>
+          <Column.Block>
             <Icon icon={icon} size={5} />
-          </div>
+          </Column.Block>
         )}
         <ToastPrimitive.Title {...props} className={tx('toast.title', {}, classNames)} ref={forwardedRef}>
           {children}
         </ToastPrimitive.Title>
         {onClose && (
-          <IconButton
-            variant='ghost'
-            icon='ph--x--regular'
-            iconOnly
-            label={t('toolbar-close.label')}
-            classNames={tx('toast.close', {})}
-            onClick={onClose}
-          />
+          <Column.Block end>
+            <IconButton
+              variant='ghost'
+              icon='ph--x--regular'
+              iconOnly
+              label={t('toolbar-close.label')}
+              onClick={onClose}
+            />
+          </Column.Block>
         )}
       </Column.Row>
     );
@@ -161,12 +162,12 @@ export const Toast = {
 };
 
 export type {
+  ToastActionProps,
+  ToastActionsProps,
+  ToastCloseProps,
+  ToastDescriptionProps,
   ToastProviderProps,
-  ToastViewportProps,
   ToastRootProps,
   ToastTitleProps,
-  ToastDescriptionProps,
-  ToastActionsProps,
-  ToastActionProps,
-  ToastCloseProps,
+  ToastViewportProps,
 };

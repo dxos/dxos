@@ -3,72 +3,37 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
-import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine, Trigger } from '@dxos/compute';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
-import { Automation } from '@dxos/plugin-automation';
-
-/** Registry key of the persisted AgentPrompt ("Run Routine") operation a routine trigger dispatches. */
-const AGENT_PROMPT_KEY = 'org.dxos.function.prompt';
+import { Instructions, Skill, Trigger } from '@dxos/compute';
+import { Ref } from '@dxos/echo';
+import { Routine } from '@dxos/plugin-routine/types';
 
 export type ScheduledRoutineOptions = {
   name: string;
-  instructions: string;
-  blueprintKeys: readonly string[];
+  text: string;
+  skillKeys: readonly string[];
   cron: string;
 };
 
 /**
- * Scaffold a timer-driven automation: a Routine (instructions + blueprints) run by the shared AgentPrompt
- * operation on a cron schedule. The trigger starts disabled so the user can review the schedule and
- * instructions before activating, and is owned by the automation (cascade-deletes with it); the routine
- * stays independent, since it is edited separately and may be reused.
+ * Scaffold a timer-driven routine as an in-memory {@link Routine.Routine} draft graph. The caller's save
+ * flow (the companion's Save button) persists it; nothing is added to the database here, so the function is
+ * always safe to call without DB access.
+ *
+ * The trigger starts disabled so the user can review the schedule and instructions before activating.
  */
-export const makeScheduledRoutineAutomation = ({
+export const makeScheduledRoutine = ({
   name,
-  instructions,
-  blueprintKeys,
+  text,
+  skillKeys,
   cron,
-}: ScheduledRoutineOptions): Effect.Effect<Automation.Automation, Error, Database.Service> =>
-  Effect.gen(function* () {
-    const blueprints = blueprintKeys.map((key) => Ref.fromURI(Blueprint.registryURI(key)));
-    const routine = yield* Database.add(
-      Routine.make({
-        name,
-        instructions,
-        // No per-run input; the task lives in the instructions. Unknown (not Void) so the empty trigger
-        // input still validates.
-        input: Schema.Unknown,
-        output: Schema.Void,
-        blueprints,
-        context: [],
-      }),
-    );
-
-    // The trigger's `function` must reference an in-space PersistentOperation; reuse the space's AgentPrompt
-    // or persist it on first use.
-    const existingFns = yield* Database.query(
-      Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(AGENT_PROMPT_KEY)),
-    ).run;
-    const agentPromptFn = existingFns[0] ?? (yield* Database.add(Operation.serialize(AgentPrompt)));
-
-    const trigger = yield* Database.add(
-      Obj.make(Trigger.Trigger, {
-        enabled: false,
-        function: Ref.make(agentPromptFn),
-        spec: Trigger.specTimer(cron),
-        input: { prompt: Ref.make(routine), input: {} },
-        concurrency: 1,
-      }),
-    );
-
-    const automation = Automation.make({
+}: ScheduledRoutineOptions): Effect.Effect<Routine.Routine, never, never> => {
+  const skills = skillKeys.map((key) => Ref.fromURI(Skill.registryURI(key)));
+  return Effect.succeed(
+    Routine.make({
       name,
-      runnable: Ref.make(agentPromptFn),
-      triggers: [Ref.make(trigger)],
-    });
-    Obj.setParent(trigger, automation);
-    return automation;
-  });
+      instructions: Instructions.make({ name, text, skills }),
+      trigger: Trigger.make({ spec: Trigger.specTimer(cron), enabled: false }),
+    }),
+  );
+};

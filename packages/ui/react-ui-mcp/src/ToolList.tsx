@@ -2,28 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-// Composable list view over MCP tool definitions. Built on
-// `@dxos/react-ui-list`'s `List.Root` / `List.Item` primitives, with each
-// part exposed as its own component so consumers can either drop in
-// `<ToolList ... />` for the default layout or assemble exactly the surface
-// they need (just titles, custom row, header chips, etc.).
+// Composable list view over MCP tool definitions. Built on `@dxos/react-ui-list`'s
+// `Listbox` + `Listbox.Item` selectable-listbox primitives, with each part exposed as its own
+// component so consumers can either drop in `<ToolList ... />` for the default layout or
+// assemble exactly the surface they need (just titles, custom row, header chips, etc.).
 //
-// Each subcomponent accepts `classNames` via `@dxos/react-ui`'s
-// `ThemedClassName` so consumers can layer Tailwind classes on top of the
-// theme defaults without forking the component.
+// Each subcomponent accepts `classNames` via `@dxos/react-ui`'s `ThemedClassName` so
+// consumers can layer Tailwind classes on top of the theme defaults without forking the
+// component.
 
-import React, {
-  type ComponentProps,
-  Fragment,
-  type PropsWithChildren,
-  type ReactNode,
-  createContext,
-  useContext,
-  useMemo,
-} from 'react';
+import React, { type ComponentProps, Fragment, type PropsWithChildren, type ReactNode } from 'react';
 
 import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
-import { List as NaturalList } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
 /**
@@ -42,29 +33,9 @@ export type Tool = {
 };
 
 //
-// Context — lets nested `<ToolList.Item>` rows pull selection state from the
-// parent `<ToolList.Root>` without prop drilling. Keeps the composable shape
-// flat from a consumer's perspective.
-//
-
-type ToolListContextValue = {
-  selectedId: string | null;
-  onSelect?: (id: string) => void;
-};
-
-const ToolListContext = createContext<ToolListContextValue | null>(null);
-
-const useToolListContext = (): ToolListContextValue => {
-  const ctx = useContext(ToolListContext);
-  if (!ctx) {
-    throw new Error('ToolList.Item must be rendered inside a <ToolList.Root>');
-  }
-  return ctx;
-};
-
-//
-// Root — headless; provides selection context only. Render a `ToolList.Content`
-// (or a custom listbox) inside it.
+// Root — wraps `Listbox.Root` so descendant `ToolList.Item` rows participate in
+// the listbox's single-select model. `Listbox` itself supplies the selection context
+// (`useListboxSelection` reads back the active id), so `ToolList` doesn't ship its own.
 //
 
 export type ToolListRootProps = PropsWithChildren<{
@@ -74,12 +45,11 @@ export type ToolListRootProps = PropsWithChildren<{
   onSelect?: (id: string) => void;
 }>;
 
-const ToolListRoot = ({ selectedId = null, onSelect, children }: ToolListRootProps): ReactNode => {
-  // Stable context value across renders that don't change selection so memoized
-  // children don't re-render unnecessarily.
-  const value = useMemo<ToolListContextValue>(() => ({ selectedId, onSelect }), [selectedId, onSelect]);
-  return <ToolListContext.Provider value={value}>{children}</ToolListContext.Provider>;
-};
+const ToolListRoot = ({ selectedId, onSelect, children }: ToolListRootProps): ReactNode => (
+  <Listbox.Root value={selectedId ?? undefined} onValueChange={onSelect}>
+    {children}
+  </Listbox.Root>
+);
 ToolListRoot.displayName = 'ToolList.Root';
 
 //
@@ -98,22 +68,19 @@ export type ToolListContentProps = ThemedClassName<{
   renderItem?: (tool: Tool) => ReactNode;
 }>;
 
-// `composable` so a parent `<… asChild>` (Slot) is respected — the injected className/ref land on the listbox.
-const ToolListContent = composable<HTMLDivElement, ToolListContentProps>(
+// `composable` so a parent `<… asChild>` (Slot) is respected — the injected className/ref
+// land on the listbox's `<ul>` (which `Listbox.Content` renders via `@dxos/react-list`).
+const ToolListContent = composable<HTMLUListElement, ToolListContentProps>(
   ({ tools, renderItem, ...props }, forwardedRef) => (
-    <NaturalList.Root<Tool> items={tools as Tool[]} getId={(t) => t.id}>
-      {({ items }) => (
-        <div {...composableProps(props, { role: 'listbox', classNames: 'flex flex-col gap-px' })} ref={forwardedRef}>
-          {items?.map((tool) =>
-            renderItem ? (
-              <Fragment key={tool.id}>{renderItem(tool)}</Fragment>
-            ) : (
-              <ToolListItem key={tool.id} tool={tool} />
-            ),
-          )}
-        </div>
+    <Listbox.Content
+      {...composableProps<HTMLUListElement>(props, { classNames: 'flex flex-col gap-px' })}
+      aria-label='Tools'
+      ref={forwardedRef}
+    >
+      {tools.map((tool) =>
+        renderItem ? <Fragment key={tool.id}>{renderItem(tool)}</Fragment> : <ToolListItem key={tool.id} tool={tool} />,
       )}
-    </NaturalList.Root>
+    </Listbox.Content>
   ),
 );
 ToolListContent.displayName = 'ToolList.Content';
@@ -125,39 +92,28 @@ ToolListContent.displayName = 'ToolList.Content';
 export type ToolListItemProps = ThemedClassName<
   PropsWithChildren<{
     tool: Tool;
-    /** Forces selected styling regardless of context state. */
-    selected?: boolean;
   }>
 >;
 
-const ToolListItem = ({ classNames, tool, selected: selectedProp, children }: ToolListItemProps): ReactNode => {
-  const { selectedId, onSelect } = useToolListContext();
-  const selected = selectedProp ?? selectedId === tool.id;
+const ToolListItem = ({ classNames, tool, children }: ToolListItemProps): ReactNode => {
   return (
-    <NaturalList.Item<Tool>
-      item={tool}
-      selected={selected}
+    <Listbox.Item
+      id={tool.id}
       classNames={mx(
-        // Tailwind tokens follow the conventions used in `react-ui-list`:
-        // `dx-hover` and `dx-selected` are theme states that adapt to dark
-        // mode. We layer the consumer's `classNames` last so they win on conflict.
-        'cursor-pointer rounded px-2 py-1',
+        // Tailwind tokens follow the conventions used in `react-ui-list`: `dx-hover`
+        // and `dx-selected` are theme states that adapt to dark mode (already applied
+        // by `Listbox.Item`). We layer the consumer's `classNames` last so they win on conflict.
+        'flex flex-col gap-0.5 rounded',
         classNames,
       )}
     >
-      <button
-        type='button'
-        className='flex w-full flex-col gap-0.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-accentSurface'
-        onClick={() => onSelect?.(tool.id)}
-      >
-        {children ?? (
-          <>
-            <ToolListItemTitle>{tool.title}</ToolListItemTitle>
-            {tool.description ? <ToolListItemDescription>{tool.description}</ToolListItemDescription> : null}
-          </>
-        )}
-      </button>
-    </NaturalList.Item>
+      {children ?? (
+        <>
+          <ToolListItemTitle>{tool.title}</ToolListItemTitle>
+          {tool.description ? <ToolListItemDescription>{tool.description}</ToolListItemDescription> : null}
+        </>
+      )}
+    </Listbox.Item>
   );
 };
 ToolListItem.displayName = 'ToolList.Item';
@@ -225,4 +181,4 @@ export const ToolList = {
 };
 
 // Direct exports too for callers that prefer them over the namespace.
-export { ToolListRoot, ToolListContent, ToolListItem, ToolListItemTitle, ToolListItemDescription };
+export { ToolListContent, ToolListItem, ToolListItemDescription, ToolListItemTitle, ToolListRoot };

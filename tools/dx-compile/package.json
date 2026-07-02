@@ -1,6 +1,6 @@
 {
   "name": "@dxos/dx-compile",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,6 +19,7 @@
     "@babel/core": "catalog:",
     "@babel/preset-typescript": "catalog:",
     "babel-preset-solid": "catalog:",
+    "yaml": "catalog:",
     "yargs": "catalog:"
   },
   "devDependencies": {

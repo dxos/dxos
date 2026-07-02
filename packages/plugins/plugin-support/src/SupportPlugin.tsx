@@ -11,12 +11,12 @@ import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
 import {
   AppGraphBuilder,
-  BlueprintDefinition,
   CreateObject,
   HelpState,
   OperationHandler,
   ReactRoot,
   ReactSurface,
+  SkillDefinition,
   SupportSettings,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -30,7 +30,7 @@ export type SupportPluginOptions = { helpSteps?: Tour.Step[] };
 
 export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Support.Ticket] }),
@@ -61,7 +61,7 @@ export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
     activate: SupportSettings,
   }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

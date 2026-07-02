@@ -7,13 +7,13 @@
 import { next as A, type Heads } from '@automerge/automerge';
 import { type EditorState, type StateField, type Text, type Transaction } from '@codemirror/state';
 
-import { type IDocHandle } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 
 import { type State } from './defs';
 
 export const updateAutomerge = (
   field: StateField<State>,
-  handle: IDocHandle,
+  handle: Doc.Handle,
   transactions: Transaction[],
   state: EditorState, // TODO(burdon): Just pass in the state field value?
 ): Heads | undefined => {

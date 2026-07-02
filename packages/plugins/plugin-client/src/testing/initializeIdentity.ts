@@ -4,13 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { PERSONAL_SPACE_TAG } from '@dxos/app-toolkit';
+import { AppSpace } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
 
 export type InitializeIdentityResult = {
   identity: Identity;
+  // TODO(burdon): Rename to space.
   personalSpace: Space;
 };
 
@@ -21,7 +22,9 @@ export type InitializeIdentityResult = {
 export const initializeIdentity = (client: Client): Effect.Effect<InitializeIdentityResult, never, never> =>
   Effect.gen(function* () {
     const identity = yield* Effect.promise(() => client.halo.createIdentity());
-    const personalSpace = yield* Effect.promise(() => client.spaces.create({}, { tags: [PERSONAL_SPACE_TAG] }));
+    const personalSpace = yield* Effect.promise(() =>
+      client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG] }),
+    );
     yield* Effect.promise(() => personalSpace.waitUntilReady());
     return {
       identity,

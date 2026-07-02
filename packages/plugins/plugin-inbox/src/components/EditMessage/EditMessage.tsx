@@ -11,7 +11,7 @@ import { composable, composableProps } from '@dxos/react-ui';
 import { Editor, EditorViewProps } from '@dxos/react-ui-editor';
 import { Form, FormRootProps } from '@dxos/react-ui-form';
 import { type Message as MessageType } from '@dxos/types';
-import { compactSlots, createBasicExtensions, createThemeExtensions, Extension } from '@dxos/ui-editor';
+import { Extension, compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -33,7 +33,7 @@ export type EditMessageProps = {
 
 export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
   ({ message, extensions, onSend, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const { themeMode } = useThemeContext();
     const [error, setError] = useState<string | null>(null);
 

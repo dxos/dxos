@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-preview",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Preview plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -65,6 +65,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src"
   ],
   "dependencies": {
@@ -85,6 +86,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {

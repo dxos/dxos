@@ -20,10 +20,19 @@ const __dirname = dirname(__filename);
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 
+// Browsers targeted for syntax transforms (also applied to `oxc` below so that dev-server
+// transforms downlevel syntax WebKit doesn't parse yet, e.g. `using`/`await using`).
+const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'];
+
 const baseDir = resolve(__dirname, '../');
 const rootDir = resolve(baseDir, '../../');
 const staticDir = resolve(baseDir, './static');
 const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
+const dxosIconsDir = resolve(rootDir, 'packages/ui/brand/assets/icons');
+// tldraw self-hosts its fonts/icons; plugin-sketch points tldraw at `/assets/plugin-sketch` and the
+// app serves them via a copy step (see composer-app `copy:assets`). Mirror that here so sketch
+// surfaces render (tldraw blocks the editor behind an asset preload).
+const sketchAssetsDir = resolve(rootDir, 'packages/plugins/plugin-sketch/dist/assets');
 
 export const packages = resolve(rootDir, 'packages');
 export const storyFiles = '*.{mdx,stories.tsx}';
@@ -42,7 +51,10 @@ export const modules = [
 
 // NOTE: Storybook test depends on relative paths.
 export const stories = modules.map((dir) => join('../../../packages', dir, storyFiles));
-export const content = modules.map((dir) => join(packages, dir, contentFiles));
+export const content = [
+  ...modules.map((dir) => join(packages, dir, contentFiles)),
+  join(packages, '**/dx.config.{ts,tsx,js,jsx}'),
+];
 
 if (isTrue(process.env.DX_DEBUG)) {
   console.log(JSON.stringify({ stories, content }, null, 2));
@@ -75,7 +87,7 @@ export const createConfig = ({
     '@storybook/addon-themes',
     '@storybook/addon-vitest',
   ],
-  staticDirs: [staticDir],
+  staticDirs: [staticDir, { from: sketchAssetsDir, to: '/assets/plugin-sketch' }],
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
     reactDocgen: false,
@@ -93,7 +105,7 @@ export const createConfig = ({
     }
 
     // NOTE: Dynamic imports seem to help avoid conflicts with storybook's internal esbuild-register usage & Vite 7.
-    const { default: react } = await import('@vitejs/plugin-react-swc');
+    const { default: react } = await import('@vitejs/plugin-react');
     const { mergeConfig } = await import('vite');
     const { default: inspect } = await import('vite-plugin-inspect');
     const { DxosLogPlugin } = await import('@dxos/vite-plugin-log');
@@ -101,10 +113,10 @@ export const createConfig = ({
     const finalConfig = mergeConfig(
       {
         ...config,
-        // Prevent duplicate react-swc plugin.
+        // Prevent duplicate react plugin.
         plugins: config.plugins?.filter((plugin) =>
           Array.isArray(plugin)
-            ? plugin.findIndex((p) => p && 'name' in p && p?.name === 'vite:react-swc') === -1
+            ? plugin.findIndex((p) => p && 'name' in p && p?.name === 'vite:react-babel') === -1
             : true,
         ),
       },
@@ -115,17 +127,23 @@ export const createConfig = ({
             'node-fetch': 'isomorphic-fetch',
             'tiktoken/lite': resolve(__dirname, './stub.mjs'),
             'node:util': '@dxos/node-std/util',
-            util: '@dxos/node-std/util',
+            'util': '@dxos/node-std/util',
             'node:crypto': '@dxos/node-std/crypto',
-            crypto: '@dxos/node-std/crypto',
+            'crypto': '@dxos/node-std/crypto',
             // Storybook builds from source; ensure worker entrypoints resolve without `dist/` artifacts.
             '@dxos/client/opfs-worker': resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
           },
         },
+        // `build.target` only lowers syntax for `storybook build`; the e2e tests run against
+        // `storybook dev`, which otherwise serves source syntax untransformed straight to the
+        // browser. Setting `oxc.target` applies the same downleveling during dev.
+        oxc: {
+          target: browserTargets,
+        },
         build: {
           assetsInlineLimit: 0,
           // Target modern browsers that support top-level await natively.
-          target: ['chrome108', 'edge107', 'firefox104', 'safari16'],
+          target: browserTargets,
           rolldownOptions: {
             output: {
               assetFileNames: 'assets/[name].[hash][extname]', // Unique asset names
@@ -278,8 +296,11 @@ export const createConfig = ({
           // https://www.npmjs.com/package/vite-plugin-wasm
           wasm(),
 
-          // https://www.npmjs.com/package/@vitejs/plugin-react-swc
-          react({ tsDecorators: true }),
+          // https://www.npmjs.com/package/@vitejs/plugin-react
+          // The oxc-based plugin (not SWC) keeps the React/JSX transform within rolldown's
+          // pipeline, aligning with composer-app and composer-crx; this drops storybook-react as a
+          // consumer of `@vitejs/plugin-react-swc`.
+          react(),
 
           // https://www.npmjs.com/package/vite-plugin-turbosnap
           turbosnap({
@@ -297,11 +318,20 @@ export const createConfig = ({
           DxosLogPlugin(),
 
           IconsPlugin({
-            assetPath: (name, variant) =>
-              `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+            // The leading negative lookahead restricts the `dx` set to the `regular` weight only
+            // (custom brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
+            symbolPattern:
+              '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+            assetPath: (iconSet, name, variant) => {
+              switch (iconSet) {
+                case 'dx':
+                  return `${dxosIconsDir}/${name}.svg`;
+                default:
+                  return `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
+              }
+            },
             contentPaths: content,
             spriteFile: 'icons.svg',
-            symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
           }),
 
           ThemePlugin({}),

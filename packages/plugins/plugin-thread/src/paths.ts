@@ -2,9 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createTypeSectionPaths } from '@dxos/app-toolkit';
+import { Paths } from '@dxos/app-toolkit';
 import { Channel } from '@dxos/types';
 
-const { getSectionPath: getChannelsPath, getObjectPath: getChannelPath } = createTypeSectionPaths(Channel.Channel);
+const { getSectionPath: getChannelsPath, getObjectPath: getChannelPath } = Paths.createTypeSectionPaths(
+  Channel.Channel,
+  { groupId: Paths.GroupSegments.communications },
+);
 
-export { getChannelsPath, getChannelPath };
+export { getChannelPath, getChannelsPath };

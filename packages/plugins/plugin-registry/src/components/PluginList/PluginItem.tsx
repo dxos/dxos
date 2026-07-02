@@ -12,11 +12,11 @@ import {
   IconButton,
   Input,
   Link,
-  ListItem,
   type NeutralPalette,
   Tag,
   useTranslation,
 } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 import { getStyles } from '@dxos/ui-theme';
 
@@ -78,8 +78,10 @@ export const PluginItem = ({
   onSettings,
   failure,
 }: PluginItemProps) => {
-  const { t } = useTranslation(meta.id);
-  const { id, name, description, tags, icon = 'ph--circle--regular', iconHue = 'neutral' } = plugin.meta;
+  const { t } = useTranslation(meta.profile.key);
+  const { key: id, name, description, tags, icon: rawIcon } = plugin.meta.profile;
+  const icon = rawIcon?.key ?? 'ph--circle--regular';
+  const iconHue = rawIcon?.hue ?? 'neutral';
   const displayTags = useMemo(() => {
     if (!extraTags || extraTags.length === 0) {
       return tags ?? [];
@@ -97,7 +99,6 @@ export const PluginItem = ({
   const showInstallButton = !!onInstall && !isInstalled;
   const showUpdateButton = !!onUpdate && isInstalled && !!hasUpdate;
   const inputId = `${id}-input`;
-  const labelId = `${id}-label`;
   const descriptionId = `${id}-description`;
   const handleClick = useCallback(() => onClick?.(id), [id, onClick]);
 
@@ -132,12 +133,16 @@ export const PluginItem = ({
   const gridRows = 'grid grid-cols-1 grid-rows-[40px_1fr_min-content_40px]';
 
   return (
-    <ListItem.Root
-      key={id}
-      labelId={labelId}
+    <Listbox.Item
+      id={id}
       data-testid={`pluginList.${id}`}
       aria-describedby={descriptionId}
-      classNames={mx(gridCols, 'h-[14rem] w-full gap-3 pe-2 bg-modal-surface rounded-md overflow-hidden')}
+      classNames={mx(
+        gridCols,
+        // Override `Listbox.Item`'s default row chrome (flex/items-center/padding/cursor) so the
+        // bespoke card grid stretches both columns to full height and controls its own padding.
+        'items-stretch p-0 pe-2 cursor-default h-[14rem] w-full gap-3 bg-modal-surface rounded-md overflow-hidden',
+      )}
     >
       <div className={mx(gridRows, 'rounded-l-md', styles.surface)}>
         <div className='flex justify-center row-start-2 cursor-pointer' onClick={handleClick}>
@@ -156,8 +161,8 @@ export const PluginItem = ({
         </div>
 
         <div className='flex -ms-0.5 overflow-x-auto scrollbar-none'>
-          {displayTags.map((tag) => (
-            <Tag key={tag} palette={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase'>
+          {displayTags.map((tag: string) => (
+            <Tag key={tag} hue={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase'>
               {tag}
             </Tag>
           ))}
@@ -207,7 +212,7 @@ export const PluginItem = ({
           </div>
         </div>
       </div>
-    </ListItem.Root>
+    </Listbox.Item>
   );
 };
 

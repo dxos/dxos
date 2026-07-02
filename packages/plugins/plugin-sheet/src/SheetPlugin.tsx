@@ -9,16 +9,15 @@ import { MarkdownEvents } from '@dxos/plugin-markdown';
 
 import {
   AnchorSort,
-  AppGraphBuilder,
-  NavigationResolver,
   CommentConfig,
   ComputeGraphRegistry,
   CreateObject,
   Markdown,
   OperationHandler,
-  UndoMappings,
   ReactSurface,
   SheetState,
+  SkillDefinition,
+  UndoMappings,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -28,8 +27,7 @@ import { Sheet } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
@@ -55,7 +53,7 @@ export const SheetPlugin = Plugin.define(meta).pipe(
     activate: AnchorSort,
   }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

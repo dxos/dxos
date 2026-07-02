@@ -23,7 +23,7 @@ export type VideoPlayerProps = {
  */
 export const VideoPlayer = composable<HTMLDivElement, VideoPlayerProps>(
   ({ url, startTime, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const embedUrl = url ? toEmbedUrl(url, startTime) : undefined;
 
     if (!embedUrl) {

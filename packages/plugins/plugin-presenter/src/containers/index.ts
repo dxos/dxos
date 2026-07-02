@@ -4,6 +4,6 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const CollectionPresenterArticle: ComponentType<any> = lazy(() => import('./CollectionPresenterArticle'));
-export const DocumentPresenterContainer: ComponentType<any> = lazy(() => import('./DocumentPresenterContainer'));
-export const MarkdownSlide: ComponentType<any> = lazy(() => import('./MarkdownSlide'));
+export const CollectionArticle: ComponentType<any> = lazy(() => import('./CollectionArticle'));
+export const DocumentArticle: ComponentType<any> = lazy(() => import('./DocumentArticle'));
+export const SlideArticle: ComponentType<any> = lazy(() => import('./SlideArticle'));

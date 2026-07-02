@@ -39,3 +39,26 @@ MarkdownStream (packages/ui/react-ui-markdown/src/MarkdownStream/MarkdownStream.
 │ treats XML atomic ranges as indivisible units)
 ▼
 Rendered DOM (markdown + portaled widgets for tool calls / reasoning / etc.)
+
+---
+
+# Ephemeral status subscriptions (TaskList / debug panel)
+
+ProcessHandle.pushEphemeral → subscribeEphemeral(): Stream<Trace.Message>
+│
+│ UI hooks fork a collector fiber from the stream inside useEffect
+▼
+useProcessEphemeralStatus (TaskList delegated rows)
+EphemeralDebugModule (storybook debug panel)
+│
+│ **Must use Effect.forkDaemon**, not Effect.fork, when the parent is
+│ `runtime.runPromise(Effect.forEach(subscribe))` — forEach returns as soon as
+│ each subscribe forks, closing the scope and interrupting scoped forks before
+│ live events arrive. forkDaemon survives until explicit Fiber.interrupt on dispose.
+│
+│ Same pattern as ProcessOperationInvoker.fiberFromProcess (output collector).
+▼
+resolveEphemeralStatusUpdate → TaskList activity line
+
+**Contrast:** processor.ts uses Effect.fork because its parent Effect.gen continues
+through submitPrompt + waitForCompletion, keeping the scope open for the whole turn.

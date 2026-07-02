@@ -10,6 +10,8 @@ import * as Layer from 'effect/Layer';
 
 import * as AiModelResolver from '../../AiModelResolver';
 import { AiModelNotAvailableError } from '../../errors';
+import * as Model from '../../Model';
+import * as Provider from '../../Provider';
 
 export const make = () =>
   AiModelResolver.AiModelResolver.resolver(
@@ -20,61 +22,25 @@ export const make = () =>
     Effect.gen(function* () {
       const clientLayer = Layer.succeed(AnthropicClient.AnthropicClient, yield* AnthropicClient.AnthropicClient);
       return (model, options): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never> => {
-        const thinkingEnabled = options?.thinking ?? true;
-        const thinking = thinkingEnabled
-          ? ({
-              type: 'adaptive' as any,
-            } as const)
-          : undefined;
-        const max_tokens = 16_384;
-        switch (model) {
-          case 'ai.claude.model.claude-opus-4-8':
-            return AnthropicLanguageModel.layer({ model: 'claude-opus-4-8', config: { thinking, max_tokens } }).pipe(
-              Layer.provide(clientLayer),
-            );
-          case 'ai.claude.model.claude-sonnet-4-6':
-            return AnthropicLanguageModel.layer({ model: 'claude-sonnet-4-6', config: { max_tokens } }).pipe(
-              Layer.provide(clientLayer),
-            );
-          case 'ai.claude.model.claude-haiku-4-5':
-            return AnthropicLanguageModel.layer({ model: 'claude-haiku-4-5', config: { max_tokens } }).pipe(
-              Layer.provide(clientLayer),
-            );
-          case 'ai.claude.model.claude-3-5-haiku-latest':
-            return AnthropicLanguageModel.layer({ model: 'claude-3-5-haiku-latest', config: { max_tokens } }).pipe(
-              Layer.provide(clientLayer),
-            );
-          case 'ai.claude.model.claude-3-5-haiku-20241022':
-            return AnthropicLanguageModel.layer({ model: 'claude-3-5-haiku-20241022', config: { max_tokens } }).pipe(
-              Layer.provide(clientLayer),
-            );
-          case 'ai.claude.model.claude-3-5-sonnet-20241022':
-            return AnthropicLanguageModel.layer({ model: 'claude-3-5-sonnet-20241022', config: { max_tokens } }).pipe(
-              Layer.provide(clientLayer),
-            );
-          case 'ai.claude.model.claude-opus-4-0':
-            return AnthropicLanguageModel.layer({ model: 'claude-opus-4-0', config: { thinking, max_tokens } }).pipe(
-              Layer.provide(clientLayer),
-            );
-          case 'ai.claude.model.claude-opus-4-5':
-            return AnthropicLanguageModel.layer({ model: 'claude-opus-4-5', config: { thinking, max_tokens } }).pipe(
-              Layer.provide(clientLayer),
-            );
-          case 'ai.claude.model.claude-opus-4-6':
-            return AnthropicLanguageModel.layer({ model: 'claude-opus-4-6', config: { thinking, max_tokens } }).pipe(
-              Layer.provide(clientLayer),
-            );
-          case 'ai.claude.model.claude-sonnet-4-0':
-            return AnthropicLanguageModel.layer({ model: 'claude-sonnet-4-0', config: { max_tokens } }).pipe(
-              Layer.provide(clientLayer),
-            );
-          case 'ai.claude.model.claude-sonnet-4-5':
-            return AnthropicLanguageModel.layer({ model: 'claude-sonnet-4-5', config: { max_tokens } }).pipe(
-              Layer.provide(clientLayer),
-            );
-          default:
-            return Layer.fail(new AiModelNotAvailableError(model));
+        // Resolve only when the request targets the edge provider (or leaves it unset).
+        if (options?.provider !== undefined && options.provider !== Provider.edge.id) {
+          return Layer.fail(new AiModelNotAvailableError(model));
         }
+        // Edge models are served by Anthropic; the catalog supplies the back-end name, the output-token
+        // ceiling, and which models use adaptive thinking (Opus).
+        const info = Model.get(Provider.edge.id, model);
+        if (!info) {
+          return Layer.fail(new AiModelNotAvailableError(model));
+        }
+        const max_tokens = info.characteristics?.maxTokens;
+        const thinking =
+          info.characteristics?.thinking && (options?.thinking ?? true)
+            ? // The Effect-AI Anthropic binding's `thinking.type` union predates Anthropic's `adaptive` mode.
+              ({ type: 'adaptive' as any } as const)
+            : undefined;
+        return AnthropicLanguageModel.layer({ model: info.backend, config: { thinking, max_tokens } }).pipe(
+          Layer.provide(clientLayer),
+        );
       };
     }),
   );

@@ -5,7 +5,7 @@
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { ChannelBackend, IntegrationProvider, OperationHandler } from '#capabilities';
+import { ChannelBackend, Connector, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 
 // eslint-disable-next-line import/no-relative-packages
@@ -18,8 +18,8 @@ export const BlueskyPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addSchemaModule({ schema: [BlueskyChannel] }),
   Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupIntegrationProviders,
-    activate: IntegrationProvider,
+    activatesOn: AppActivationEvents.SetupConnectors,
+    activate: Connector,
   }),
   // Read-only ATProto channel backend (contributes ThreadCapabilities.ChannelBackend).
   Plugin.addModule({
@@ -28,7 +28,7 @@ export const BlueskyPlugin = Plugin.define(meta).pipe(
     activate: ChannelBackend,
   }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

@@ -120,7 +120,7 @@ export type FunctionInvokeOptions = {
   /**
    * URI of the conversation feed (queue).
    * Forwarded into the function context so nested operations can resolve
-   * `AiContext.Service` and related conversation-scoped services.
+   * the conversation-scoped `HarnessService` and related services.
    */
   conversation?: URI.URI;
   cpuTimeLimit?: number;

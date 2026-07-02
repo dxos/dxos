@@ -4,9 +4,11 @@
 
 import { type Context, createContext } from 'react';
 
-import { type Props } from './types';
+export type SurfaceContext = {
+  id?: string;
+  /** The resolved role NSID (e.g. `org.dxos.role.article`). */
+  role: string;
+  data?: Record<string, any>;
+};
 
-export type SurfaceContext = Pick<Props, 'id' | 'role' | 'data'>;
-
-// TODO(burdon): Use @radix-ui/react-context
 export const SurfaceContext: Context<SurfaceContext | undefined> = createContext<SurfaceContext | undefined>(undefined);

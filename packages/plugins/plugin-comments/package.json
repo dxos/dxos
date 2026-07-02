@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-comments",
-  "version": "0.9.0",
-  "private": true,
+  "version": "0.10.0",
   "description": "DXOS Comments plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -14,10 +13,10 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#blueprints": {
-      "source": "./src/blueprints/index.ts",
-      "types": "./dist/types/src/blueprints/index.d.ts",
-      "default": "./dist/lib/neutral/blueprints/index.mjs"
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/neutral/skills/index.mjs"
     },
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
@@ -78,10 +77,10 @@
       "default": "./dist/lib/neutral/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./blueprints": {
-      "source": "./src/blueprints/index.ts",
-      "types": "./dist/types/src/blueprints/index.d.ts",
-      "default": "./dist/lib/neutral/blueprints/index.mjs"
+    "./skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/neutral/skills/index.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",
@@ -102,6 +101,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src",
     "PLUGIN.mdl"
   ],
@@ -117,6 +117,7 @@
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",

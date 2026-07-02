@@ -74,7 +74,8 @@ export const FeedItem = ({ classNames, item }: ThemedClassName<{ item: any }>) =
 };
 
 export const feedShape: ShapeDef<FeedShape> = {
-  type: 'feed',
+  // Must match the shape's `type` literal ('queue') so the registry resolves it; the registry is keyed by this.
+  type: 'queue',
   name: 'Feed',
   icon: 'ph--queue--regular',
   component: FeedComponent,

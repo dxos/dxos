@@ -9,12 +9,11 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'update-ready.label': 'Ready to update',
         'update-ready.description': 'A new version of Composer is available.',
         'update.label': 'Update',
         'update.alt': 'Relaunch the app to update',
-        'settings.title': 'App',
         'settings.updates.label': 'Updates',
         'settings.updates.check.label': 'Check for updates',
         'settings.updates.checking.label': 'Checking…',

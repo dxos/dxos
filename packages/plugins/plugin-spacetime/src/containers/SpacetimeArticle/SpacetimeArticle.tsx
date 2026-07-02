@@ -4,15 +4,27 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Panel } from '@dxos/react-ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Flex, Panel } from '@dxos/react-ui';
 
 import { SpacetimeEditor } from '#components';
 import { type Scene } from '#types';
 
 export type SpacetimeArticleProps = AppSurface.ObjectArticleProps<Scene.Scene>;
 
-export const SpacetimeArticle = ({ subject, attendableId }: SpacetimeArticleProps) => {
+export const SpacetimeArticle = ({ subject, attendableId, role }: SpacetimeArticleProps) => {
+  // Section embeds (e.g. transcluded in a markdown document) render the scene inline in a constrained
+  // box rather than filling the plank; the canvas needs an explicit height to lay out.
+  if (role === AppSurface.Section.role) {
+    return (
+      <SpacetimeEditor.Root scene={subject}>
+        <Flex classNames='aspect-square'>
+          <SpacetimeEditor.Canvas />
+        </Flex>
+      </SpacetimeEditor.Root>
+    );
+  }
+
   return (
     <SpacetimeEditor.Root scene={subject}>
       <Panel.Root>

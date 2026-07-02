@@ -12,6 +12,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -61,6 +62,9 @@
     },
     {
       "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-doc"
     },
     {
       "path": "../../core/echo/echo-react"

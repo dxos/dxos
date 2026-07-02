@@ -3,7 +3,7 @@
 //
 
 import { useAtomSet } from '@effect-atom/atom-react';
-import React, { type Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type Ref, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -14,16 +14,16 @@ import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
+import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 
-import { type MessageStackActionHandler, MessageStack } from '#components';
+import { MessageStack, type MessageStackActionHandler, useMailboxExtractorActions } from '#components';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
-import { InboxCapabilities, Mailbox } from '#types';
+import { InboxCapabilities, Mailbox, Starred } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { getMailboxMessagePath } from '../../paths';
@@ -44,7 +44,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
   const [mailbox] = useObject(subject);
   const id = attendableId ?? Obj.getURI(mailbox);
-  const currentId = useSelected(id, 'single');
+  const currentId = useSelection(id, 'single');
   const db = Obj.getDatabase(mailbox);
   const showItem = useShowItem();
 
@@ -64,16 +64,18 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     }
   }, [db, invokePromise, subject]);
 
+  const mailboxExtractorActions = useMailboxExtractorActions(subject);
+
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
-        .root({ label: ['mailbox-toolbar.title', { ns: meta.id }] })
+        .root({ label: ['mailbox-toolbar.title', { ns: meta.profile.key }] })
         .action(
           'sortAscending',
           {
             type: 'sortDescending',
             icon: sortDescending.value ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
-            label: ['mailbox-toolbar-sort.menu', { ns: meta.id }],
+            label: ['mailbox-toolbar-sort.menu', { ns: meta.profile.key }],
           },
           () => sortDescending.set((value) => !value),
         )
@@ -82,22 +84,40 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
           {
             type: 'loadImages',
             icon: loadRemoteImages ? 'ph--image--regular' : 'ph--image-broken--regular',
-            label: ['message-toolbar-load-images.menu', { ns: meta.id }],
+            label: ['message-toolbar-load-images.menu', { ns: meta.profile.key }],
             checked: loadRemoteImages,
           },
           () => setSettings((settings) => ({ ...settings, loadRemoteImages: !loadRemoteImages })),
         )
+        .subgraph((builder) => {
+          if (mailboxExtractorActions.length > 0) {
+            return builder.group(
+              'extract',
+              {
+                label: ['mailbox-toolbar-extract.menu', { ns: meta.profile.key }],
+                icon: 'ph--magic-wand--regular',
+                iconOnly: true,
+                variant: 'dropdownMenu',
+              },
+              (group) => {
+                for (const item of mailboxExtractorActions) {
+                  group.action(`extract-${item.id}`, { label: item.label }, item.onSelect);
+                }
+              },
+            );
+          }
+        })
         .action(
           'composeEmail',
           {
             type: 'composeEmail',
             icon: 'ph--pen--regular',
-            label: ['compose-email.label', { ns: meta.id }],
+            label: ['compose-email.label', { ns: meta.profile.key }],
           },
           handleCompose,
         )
         .build(),
-    [sortDescending, loadRemoteImages, setSettings, handleCompose],
+    [sortDescending, loadRemoteImages, setSettings, handleCompose, mailboxExtractorActions],
   );
 
   const tagMap = useTags(db);
@@ -116,6 +136,15 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
       return tag ? [{ id: uri, label: tag.label, hue: tag.hue }] : [];
     });
   }
+
+  // Starred messages drive the per-tile star toggle. Tagging mutates the child `TagIndex` in place,
+  // which `useQuery` doesn't observe, so subscribe to that index directly and re-derive on change.
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
+  const starredUri = starredTag && Obj.getURI(starredTag).toString();
+  const tagIndex = mailbox.tags?.target;
+  const [, bumpStarred] = useReducer((tick: number) => tick + 1, 0);
+  useEffect(() => (tagIndex ? Obj.subscribe(tagIndex, bumpStarred) : undefined), [tagIndex]);
+  const starredIds = Starred.getStarredIds(mailbox, starredUri);
 
   // Filter.
   const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
@@ -191,9 +220,9 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     (action) => {
       switch (action.type) {
         // 'current' fires when a specific message is clicked;
-        // 'current-thread' fires when the enclosing thread is clicked (with its latest message).
+        // 'current-conversation' fires when the enclosing conversation is clicked (with its latest message).
         case 'current':
-        case 'current-thread': {
+        case 'current-conversation': {
           const message = sortedMessages.find((message) => message.id === action.messageId);
           invariant(message);
           invariant(db);
@@ -203,6 +232,14 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
             companion: linkedSegment('message'),
             path: getMailboxMessagePath(db.spaceId, mailbox.id, message.id),
           });
+          break;
+        }
+
+        case 'star': {
+          const message = sortedMessages.find((message) => message.id === action.messageId);
+          if (message && db) {
+            void Starred.toggleStarred(subject, message, db);
+          }
           break;
         }
 
@@ -275,7 +312,8 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
             messages={sortedMessages}
             currentId={currentId}
             tags={messageTagsMap}
-            threads={settings.threads}
+            starredIds={starredIds}
+            conversations={settings.conversations}
             onAction={handleAction}
           />
         )}
@@ -309,7 +347,7 @@ const MailboxFilter = ({
   editorRef,
   saveButtonRef,
 }: MailboxFilterProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <>
       <QueryEditor

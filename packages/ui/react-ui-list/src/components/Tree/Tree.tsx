@@ -1,11 +1,11 @@
 //
 // Copyright 2024 DXOS.org
+//
 
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
-import { Treegrid, type TreegridRootProps } from '@dxos/react-ui';
-
+import { Treegrid, type TreegridRootProps } from '../Treegrid';
 import { type TreeModel, TreeProvider } from './TreeContext';
 import { TreeItemById, type TreeItemByIdProps, type TreeItemProps } from './TreeItem';
 
@@ -27,6 +27,16 @@ export type TreeProps<T extends { id: string } = any> = {
     | 'onItemHover'
     | 'levelOffset'
   >;
+
+/** Renders a single root-level child. */
+const TreeChild = <T extends { id: string } = any>({
+  id,
+  path: parentPath,
+  last,
+  ...childProps
+}: TreeItemByIdProps & { last: boolean }) => {
+  return <TreeItemById id={id} path={parentPath} last={last} {...childProps} />;
+};
 
 export const Tree = <T extends { id: string } = any>({
   classNames,
@@ -65,7 +75,7 @@ export const Tree = <T extends { id: string } = any>({
     <Treegrid.Root gridTemplateColumns={gridTemplateColumns} classNames={classNames}>
       <TreeProvider value={model}>
         {childIds.map((childId, index) => (
-          <TreeItemById key={childId} id={childId} last={index === childIds.length - 1} {...childProps} />
+          <TreeChild key={childId} id={childId} last={index === childIds.length - 1} {...childProps} />
         ))}
       </TreeProvider>
     </Treegrid.Root>

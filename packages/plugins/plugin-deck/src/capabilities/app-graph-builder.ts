@@ -9,6 +9,7 @@ import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { DeckCapabilities } from '#types';
@@ -57,7 +58,7 @@ export default Capability.makeModule(
                 }
               }),
               properties: {
-                label: ['close-current.label', { ns: meta.id }],
+                label: ['close-current.label', { ns: meta.profile.key }],
                 icon: 'ph--x--regular',
               },
             };
@@ -72,7 +73,7 @@ export default Capability.makeModule(
                 yield* Operation.invoke(LayoutOperation.Close, { subject: ids });
               }),
               properties: {
-                label: ['close-others.label', { ns: meta.id }],
+                label: ['close-others.label', { ns: meta.profile.key }],
                 icon: 'ph--x-square--regular',
               },
             };
@@ -84,7 +85,7 @@ export default Capability.makeModule(
                 yield* Operation.invoke(LayoutOperation.Close, { subject: deck.active });
               }),
               properties: {
-                label: ['close-all.label', { ns: meta.id }],
+                label: ['close-all.label', { ns: meta.profile.key }],
                 icon: 'ph--x-circle--regular',
               },
             };
@@ -105,20 +106,20 @@ export default Capability.makeModule(
                   state.sidebarState === 'expanded'
                     ? 'collapse-navigation-sidebar.label'
                     : 'open-navigation-sidebar.label',
-                  { ns: meta.id },
+                  { ns: meta.profile.key },
                 ],
                 icon: 'ph--sidebar--regular',
                 keyBinding: {
                   macos: "meta+'",
                 },
                 disposition: 'pin-end',
-                position: 'last',
+                position: Position.last,
                 l0Breakpoint: 'lg',
               },
             };
 
             return !deck?.solo ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar];
-          }),
+          }).pipe(Effect.orDie),
       }),
     ]);
 

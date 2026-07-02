@@ -91,10 +91,9 @@ const meta = {
               const createObjects = createObjectFactory(personalSpace.db, generator);
               yield* Effect.promise(() => createObjects([{ type: Organization.Organization, count: 10 }]));
 
-              const queue = personalSpace.queues.create();
-              const kai = Obj.make(Person.Person, { fullName: 'Kai' });
-              const dxos = Obj.make(Organization.Organization, { name: 'DXOS' });
-              yield* Effect.promise(() => queue.append([kai, dxos]));
+              const kai = personalSpace.db.add(Obj.make(Person.Person, { fullName: 'Kai' }));
+              const dxos = personalSpace.db.add(Obj.make(Organization.Organization, { name: 'DXOS' }));
+              yield* Effect.promise(() => personalSpace.db.flush());
 
               personalSpace.db.add(
                 Markdown.make({

@@ -10,20 +10,20 @@ import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
 
-import { AiService, type ModelName, OpaqueToolkit } from '@dxos/ai';
+import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
-import { type OperationHandlerSet, Blueprint } from '@dxos/compute';
-import { Entity, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
+import { type OperationHandlerSet, Skill } from '@dxos/compute';
+import { Database, Entity, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { FunctionImplementationResolver } from '@dxos/functions-runtime';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
 
-import { type AiChatServices, blueprintRegistry } from '../../util';
+import { type AiChatServices, skillRegistry } from '../../util';
 
 export type ChatProcessorOptions = {
   runtime: Runtime.Runtime<AiChatServices>;
@@ -63,11 +63,11 @@ export class ChatProcessor {
 
   async execute(
     request: Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements>,
-    model: ModelName,
+    model: DXN.DXN,
   ) {
     const fiber = request.pipe(
       Effect.provide(
-        Layer.mergeAll(AiService.model(model), ToolExecutionServices).pipe(
+        Layer.mergeAll(AiService.model(DXN.getName(model)), ToolExecutionServices).pipe(
           Layer.provideMerge(OpaqueToolkit.providerLayer(this._toolkit)),
           Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: this._functions })),
         ),
@@ -84,29 +84,29 @@ export class ChatProcessor {
     }
   }
 
-  async createSession(space: Space, blueprintIds: string[]) {
-    const spaceBlueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
+  async createSession(space: Space, skillIds: string[]) {
+    const spaceSkills = await space.db.query(Filter.type(Skill.Skill)).run();
 
-    // Add blueprints to space.
-    const blueprints = blueprintIds
+    // Add skills to space.
+    const skills = skillIds
       .map((key) => {
-        const existing = spaceBlueprints.find((blueprint) => Obj.getMeta(blueprint).key === key);
+        const existing = spaceSkills.find((skill) => Obj.getMeta(skill).key === key);
         if (existing) {
           // TODO(wittjosiah): Stop doing this.
-          //   Currently doing this to ensure blueprints are always up-to-date from the registry.
+          //   Currently doing this to ensure skills are always up-to-date from the registry.
           space.db.remove(existing);
           // continue;
         }
 
-        const candidate = blueprintRegistry.list().find((e) => Entity.getMeta(e)?.key === key);
-        const blueprint = candidate != null && Obj.instanceOf(Blueprint.Blueprint, candidate) ? candidate : undefined;
-        if (!blueprint) {
-          log.warn('blueprint not found', { key });
+        const candidate = skillRegistry.list().find((e) => Entity.getMeta(e)?.key === key);
+        const skill = candidate != null && Obj.instanceOf(Skill.Skill, candidate) ? candidate : undefined;
+        if (!skill) {
+          log.warn('skill not found', { key });
           return;
         }
 
-        log.info('adding blueprint', { key });
-        return space.db.add(Obj.clone(blueprint));
+        log.info('adding skill', { key });
+        return space.db.add(Obj.clone(skill));
       })
       .filter(isTruthy);
 
@@ -115,16 +115,15 @@ export class ChatProcessor {
     Obj.setParent(feed, chat);
     space.db.add(chat);
 
-    const feedServiceLayer = createFeedServiceLayer(space.queues);
     const runtime = await EffectEx.runAndForwardErrors(
-      Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
+      Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
     );
     const session = new AiSession.Session({ feed, runtime, registry: this._registry });
     await session.open();
 
-    // Bind blueprints.
+    // Bind skills.
     await session.context.bind({
-      blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
+      skills: skills.map((skill) => Ref.make(skill)),
     });
 
     return session;

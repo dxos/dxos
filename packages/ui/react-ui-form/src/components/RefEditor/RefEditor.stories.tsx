@@ -69,11 +69,11 @@ const PeopleGrid = ({ db }: { db?: Database.Database }) => {
   );
 };
 
-type StoryProps = Partial<Pick<RefEditorProps, 'value' | 'mode' | 'activateOnTyping' | 'autoFocus'>>;
+type StoryArgs = Partial<Pick<RefEditorProps, 'value' | 'mode' | 'activateOnTyping' | 'autoFocus'>>;
 
 // NOTE: The Person config (type/match/getValues) is supplied in render, not args — Storybook's
 // arg traversal attempts to mutate the proxied ECHO schema and crashes.
-const DefaultStory = ({ value: initialValue, ...args }: StoryProps) => {
+const DefaultStory = ({ value: initialValue, ...args }: StoryArgs) => {
   const { space } = useClientStory();
   const [value, setValue] = useState(initialValue ?? '');
 
@@ -88,7 +88,6 @@ const DefaultStory = ({ value: initialValue, ...args }: StoryProps) => {
         icon='ph--user--regular'
         db={space?.db}
         onChange={setValue}
-        classNames='border'
       />
       <JsonHighlighter data={{ value }} classNames='text-xs' />
       <PeopleGrid db={space?.db} />

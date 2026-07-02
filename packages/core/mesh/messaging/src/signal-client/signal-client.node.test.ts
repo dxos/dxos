@@ -18,8 +18,8 @@ import { SignalClient } from './signal-client';
 
 const PAYLOAD: TaggedType<TYPES, 'google.protobuf.Any'> = {
   '@type': 'google.protobuf.Any',
-  type_url: 'google.protobuf.Any',
-  value: Buffer.from('1'),
+  'type_url': 'google.protobuf.Any',
+  'value': Buffer.from('1'),
 };
 
 describe('SignalClient', () => {

@@ -5,7 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { BlueprintDefinition, CreateObject, OperationHandler, UndoMappings, ReactSurface } from '#capabilities';
+import { CreateObject, OperationHandler, ReactSurface, SkillDefinition, UndoMappings } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Kanban } from '#types';
@@ -14,7 +14,7 @@ import { Kanban } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const KanbanPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
@@ -22,7 +22,7 @@ export const KanbanPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

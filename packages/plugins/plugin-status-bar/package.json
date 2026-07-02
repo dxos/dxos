@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-status-bar",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Status bar plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -69,6 +69,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src"
   ],
   "dependencies": {
@@ -78,6 +79,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/operation": "workspace:*",
+    "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",

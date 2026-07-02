@@ -13,6 +13,23 @@ import { translations } from '#translations';
 
 import { PluginDetail } from './PluginDetail';
 
+const plugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('com.example.plugin.test'),
+    name: 'Test Plugin',
+    author: 'DXOS',
+    description: random.lorem.paragraphs(2),
+    icon: { key: 'ph--bug--regular', hue: 'sky' },
+    homePage: 'https://example.com',
+    source: 'https://github.com/example/test-plugin',
+    screenshots: [
+      {
+        light: 'https://placehold.co/1728x990',
+      },
+    ],
+  }),
+);
+
 const meta = {
   title: 'plugins/plugin-registry/components/PluginDetail',
   component: PluginDetail,
@@ -29,20 +46,19 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    plugin: Plugin.define(
-      Plugin.makeMeta({
-        key: DXN.make('com.example.plugin.test'),
-        name: 'Test Plugin',
-        author: 'DXOS',
-        description: random.lorem.paragraphs(2),
-        icon: 'ph--bug--regular',
-        iconHue: 'sky',
-        homePage: 'https://example.com',
-        source: 'https://github.com/example/test-plugin',
-        screenshots: [
-          'https://media.gcflearnfree.org/content/55e073de7dd48174331f51b3_01_17_2014/getting_started_interactive2.png',
-        ],
-      }),
-    ).pipe(Plugin.make)(),
+    plugin: plugin.pipe(Plugin.make)(),
+  },
+};
+
+export const Failure: Story = {
+  args: {
+    plugin: plugin.pipe(Plugin.make)(),
+    failure: {
+      id: 'com.example.plugin.test',
+      phase: 'activation',
+      reason: 'error',
+      error: new Error(random.lorem.paragraph(2)),
+      timestamp: Date.now(),
+    },
   },
 };

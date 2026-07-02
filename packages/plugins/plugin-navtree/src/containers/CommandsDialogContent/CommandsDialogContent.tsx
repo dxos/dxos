@@ -24,7 +24,7 @@ export type CommandsDialogContentProps = {
 // TODO(wittjosiah): This probably deserves its own plugin but for now it lives here w/ other navigation UI.
 export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogContentProps>(
   ({ selected: initial }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const { invokePromise } = useOperationInvoker();
     const runAction = useActionRunner();
     const { graph } = useAppGraph();
@@ -70,7 +70,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
 
     return (
       <Dialog.Content ref={forwardedRef}>
-        <Dialog.Title srOnly>{t('commands-dialog.title', { ns: meta.id })}</Dialog.Title>
+        <Dialog.Title srOnly>{t('commands-dialog.title', { ns: meta.profile.key })}</Dialog.Title>
         <SearchList.Root onSearch={handleSearch}>
           <SearchList.Input placeholder={t('command-list-input.placeholder')} />
           <SearchList.Viewport>

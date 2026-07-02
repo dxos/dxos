@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Card, Icon, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { File } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -19,7 +19,7 @@ export type GalleryImageProps = {
 };
 
 export const GalleryImage = ({ file, classNames, onDelete }: GalleryImageProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const url = useImageUrl(file);
   const alt = file?.name ?? '';
 
@@ -34,17 +34,21 @@ export const GalleryImage = ({ file, classNames, onDelete }: GalleryImageProps) 
         )}
       </div>
       <Card.Header>
-        <Icon icon='ph--image--regular' size={5} />
-        <Card.Title>{file?.name ?? ''}</Card.Title>
+        <Card.Block>
+          <Icon icon='ph--image--regular' size={5} />
+        </Card.Block>
+        <Card.Title className='text-description'>{file?.name ?? ''}</Card.Title>
         {onDelete && (
-          <Toolbar.IconButton
-            icon='ph--trash--regular'
-            iconOnly
-            variant='ghost'
-            label={t('delete-image.label')}
-            classNames='opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity'
-            onClick={onDelete}
-          />
+          <Card.Block end>
+            <IconButton
+              icon='ph--trash--regular'
+              iconOnly
+              variant='ghost'
+              label={t('delete-image.label')}
+              classNames='opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity'
+              onClick={onDelete}
+            />
+          </Card.Block>
         )}
       </Card.Header>
     </Card.Root>

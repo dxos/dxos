@@ -5,7 +5,7 @@
 import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { createContext, type MouseEvent, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
+import React, { type MouseEvent, type PropsWithChildren, createContext, useCallback, useContext, useMemo } from 'react';
 
 import { log } from '@dxos/log';
 import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
@@ -14,8 +14,8 @@ import {
   type AddMenuItemsProps,
   type MenuAction,
   type MenuContextValue,
+  type MenuGroupContext,
   type MenuItem,
-  type MenuItemGroup,
   type MenuItems,
   type MenuItemsAccessor,
   type MenuItemsMap,
@@ -70,12 +70,7 @@ const MenuDropdownContext = createContext<MenuDropdownContextValue>({
 const DEFAULT_PRIORITY = 100;
 
 const sortMenuItems = (items: MenuItems[]) =>
-  [...items].sort((a, b) => {
-    if (a.priority !== b.priority) {
-      return a.priority - b.priority;
-    }
-    return a.id.localeCompare(b.id);
-  });
+  [...items].sort((a, b) => (a.priority !== b.priority ? a.priority - b.priority : a.id.localeCompare(b.id)));
 
 type MenuProviderProps = PropsWithChildren<Partial<MenuContextValue>>;
 
@@ -135,7 +130,7 @@ const MenuProvider = ({
 
 const resolveItems = (
   baseItems: MenuItem[] | null,
-  group: MenuItemGroup | undefined,
+  group: MenuGroupContext | undefined,
   entries: ReadonlyMap<string, MenuItems>,
 ): MenuItem[] | null => {
   const applicable = [...entries.values()].filter((entry) => !entry.groupFilter || entry.groupFilter(group));
@@ -171,7 +166,7 @@ const resolveItems = (
 //
 
 const useMenuItems = (
-  group?: MenuItemGroup,
+  group?: MenuGroupContext,
   propsItems?: MenuItem[],
   consumerName: string = 'useMenuItemConsumer',
   __menuScope?: Scope,
@@ -238,7 +233,7 @@ const MenuRoot = ({ children, open, defaultOpen, onOpenChange, caller, ...props 
 //
 
 type MenuContentProps = {
-  group?: MenuItemGroup;
+  group?: MenuGroupContext;
   items?: MenuItem[];
   caller?: string;
 };
@@ -339,10 +334,10 @@ export { Menu, menuContextDefaults, useMenu, useMenuItems, useMenuScoped };
 export type { MenuContentProps, MenuRootProps, MenuScopedProps };
 
 export type {
-  ToolbarMenuProps,
   ToolbarMenuActionGroupProperties,
   ToolbarMenuActionGroupProps,
   ToolbarMenuActionProps,
   ToolbarMenuDropdownMenuActionGroup,
+  ToolbarMenuProps,
   ToolbarMenuToggleGroupActionGroup,
 } from './ToolbarMenu';

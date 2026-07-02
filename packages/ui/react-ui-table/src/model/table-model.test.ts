@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { DXN, Filter, JsonSchema, Query, Type } from '@dxos/echo';
 import { createEchoSchema } from '@dxos/echo/testing';
+import { LocalBackend, MemoryBackend, ViewStateManager } from '@dxos/react-ui-attention';
 import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
 import { Table } from '../types';
@@ -115,12 +116,94 @@ describe('TableModel', () => {
   });
 });
 
-const Test = Schema.Struct({
-  title: Schema.String,
-  completed: Schema.Boolean,
-}).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+describe('TableModel sort view state', () => {
+  // Share `storage` (and the table object) across instances; a fresh registry/manager/model
+  // simulates a reload, proving the sort is externalized to the `local` view state keyed by the
+  // table URI rather than held per-model.
+  const disposables: LocalBackend[] = [];
+  afterEach(() => {
+    disposables.splice(0).forEach((backend) => backend.dispose());
+  });
 
-const createTableModel = (registry: Registry.Registry, props: Partial<TableModelProps> = {}): TableModel => {
+  test('column sort persists to the local view state and is restored after reload', async () => {
+    const storage = fakeStorage();
+    const schema = createEchoSchema(Type.getSchema(Test));
+    const view = ViewModel.make({ query: Query.select(Filter.type(schema)), jsonSchema: schema.jsonSchema });
+    const object = Table.make({ view });
+
+    // Each reopen builds a fresh registry/manager/projection over the SAME table object (and its view),
+    // so it exercises a real reload rather than reusing projection state across instances.
+    const reopen = async (): Promise<TableModel> => {
+      const registry = Registry.make();
+      const local = new LocalBackend({ registry, storage });
+      disposables.push(local);
+      const viewState = new ViewStateManager({ registry, backends: { memory: new MemoryBackend(), local } });
+      const projection = new ProjectionModel({
+        registry,
+        view,
+        baseSchema: schema.jsonSchema,
+        change: createDirectChangeCallback(view.projection, JsonSchema.toJsonSchema(Type.getSchema(schema))),
+      });
+      projection.normalizeView();
+      const model = new TableModel({
+        registry,
+        object,
+        projection,
+        viewState,
+        change: createTableDirectChangeCallback(object),
+      });
+      await model.open();
+      return model;
+    };
+
+    const first = await reopen();
+    const titleFieldId = first.projection.getFields().find((field) => field.path === 'title')!.id;
+    first.setSort(titleFieldId, 'asc');
+    expect(first.getSorting()).toEqual({ fieldId: titleFieldId, direction: 'asc' });
+    expect(JSON.parse(storage.getItem(`dxos:view-state:table-sort:${first.id}`)!)).toEqual({
+      fieldId: titleFieldId,
+      direction: 'asc',
+    });
+    await first.close();
+
+    // Reload: fresh registry/manager/projection over the same storage + table object.
+    const second = await reopen();
+    expect(second.getSorting()).toEqual({ fieldId: titleFieldId, direction: 'asc' });
+
+    second.clearSort();
+    expect(second.getSorting()).toBeUndefined();
+    await second.close();
+
+    // The cleared sort is also persisted: a further reload reads no sort.
+    const third = await reopen();
+    expect(third.getSorting()).toBeUndefined();
+    await third.close();
+  });
+});
+
+// Minimal in-memory Storage stand-in (no real localStorage in the test runner).
+const fakeStorage = (): Storage => {
+  const map = new Map<string, string>();
+  return {
+    get length() {
+      return map.size;
+    },
+    clear: () => map.clear(),
+    getItem: (key) => (map.has(key) ? map.get(key)! : null),
+    key: (index) => [...map.keys()][index] ?? null,
+    removeItem: (key) => void map.delete(key),
+    setItem: (key, value) => void map.set(key, value),
+  };
+};
+
+const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
+  Schema.Struct({
+    title: Schema.String,
+    completed: Schema.Boolean,
+  }),
+);
+
+const createTableInputs = (registry: Registry.Registry): { object: Table.Table; projection: ProjectionModel } => {
   const schema = createEchoSchema(Type.getSchema(Test));
   const view = ViewModel.make({
     query: Query.select(Filter.type(schema)),
@@ -134,6 +217,11 @@ const createTableModel = (registry: Registry.Registry, props: Partial<TableModel
     change: createDirectChangeCallback(view.projection, JsonSchema.toJsonSchema(Type.getSchema(schema))),
   });
   projection.normalizeView();
+  return { object, projection };
+};
+
+const createTableModel = (registry: Registry.Registry, props: Partial<TableModelProps> = {}): TableModel => {
+  const { object, projection } = createTableInputs(registry);
   return new TableModel({
     registry,
     object,

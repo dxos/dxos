@@ -11,7 +11,7 @@ import * as Function from 'effect/Function';
 import { type Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   type CompleteOAuthRegistrationRequest,
@@ -28,7 +28,6 @@ import {
   type FeedProtocol,
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
-  type GetPluginVersionsResponseBody,
   type GetPluginsResponseBody,
   type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
@@ -61,6 +60,12 @@ export type EdgeQueryQueueResponse = {
   objects?: unknown[];
   nextCursor?: string;
   prevCursor?: string;
+};
+
+export type UploadPluginBundleRequest = {
+  slug: string;
+  version: string;
+  files: { path: string; content: string }[];
 };
 
 export type TriggersDispatcherStatus = {
@@ -112,10 +117,10 @@ export class EdgeHttpClient extends BaseHttpClient {
 
   public getAgentStatus(
     ctx: Context,
-    request: { ownerIdentityKey: PublicKey },
+    request: { ownerIdentityDid: string },
     args?: EdgeHttpCallArgs,
   ): Promise<GetAgentStatusResponseBody> {
-    return this._call(ctx, new URL(`/users/${request.ownerIdentityKey.toHex()}/agent/status`, this.baseUrl), {
+    return this._call(ctx, new URL(`/users/${request.ownerIdentityDid}/agent/status`, this.baseUrl), {
       ...args,
       method: 'GET',
     });
@@ -266,7 +271,10 @@ export class EdgeHttpClient extends BaseHttpClient {
     const formData = new FormData();
     formData.append('name', body.name ?? '');
     formData.append('version', body.version);
-    formData.append('ownerPublicKey', body.ownerPublicKey);
+    // The function owner is the authenticated identity (edge requires ownerUri === presenter DID).
+    // Prefer the connected identity's DID; otherwise use the DID supplied on the request body.
+    const ownerUri = this._edgeIdentity?.identityDid ?? body.ownerUri;
+    formData.append('ownerUri', ownerUri);
     formData.append('entryPoint', body.entryPoint);
     body.runtime && formData.append('runtime', body.runtime);
     for (const [filename, content] of Object.entries(body.assets)) {
@@ -379,14 +387,21 @@ export class EdgeHttpClient extends BaseHttpClient {
     return this._call(ctx, new URL('/registry/plugins', this.baseUrl), { ...args, method: 'GET' });
   }
 
-  public async getRegistryPluginVersions(
+  /**
+   * Uploads a built plugin bundle to the registry's R2-backed hosting. Authenticated
+   * with the caller's hub identity (verifiable presentation) — `setIdentity` must
+   * have been called. Returns the canonical `moduleUrl` (the hosted `manifest.json`).
+   */
+  public async uploadPluginBundle(
     ctx: Context,
-    repo: string,
+    request: UploadPluginBundleRequest,
     args?: EdgeHttpCallArgs,
-  ): Promise<GetPluginVersionsResponseBody> {
-    return this._call(ctx, new URL(`/registry/plugins/${encodeURIComponent(repo)}/versions`, this.baseUrl), {
+  ): Promise<{ moduleUrl: string }> {
+    return this._call(ctx, new URL('/registry/upload', this.baseUrl), {
+      body: request,
+      method: 'POST',
+      auth: true,
       ...args,
-      method: 'GET',
     });
   }
 

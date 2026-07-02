@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Input, Select, type SelectRootProps } from '@dxos/react-ui';
-import { type FormFieldComponentProps, FormFieldLabel } from '@dxos/react-ui-form';
+import { FormFieldLabel, type FormFieldRendererProps } from '@dxos/react-ui-form';
 
 import type { FeedbackPluginOption } from './types';
 
@@ -18,7 +18,7 @@ import type { FeedbackPluginOption } from './types';
  * the plugin id so the form payload stays a simple `string`. A "(none)" sentinel clears the
  * selection because Radix Select cannot bind to `undefined`.
  */
-export type AreaSelectFieldProps = FormFieldComponentProps<string | undefined> & {
+export type AreaSelectFieldProps = FormFieldRendererProps<string | undefined> & {
   plugins: ReadonlyArray<FeedbackPluginOption>;
 };
 
@@ -31,7 +31,7 @@ export const AreaSelectField = ({
   readonly,
   label,
   jsonPath,
-  layout,
+  presentation,
   placeholder,
   getStatus,
   getValue,
@@ -45,8 +45,8 @@ export const AreaSelectField = ({
     [type, onValueChange],
   );
 
-  // Static (read-only) layout: render the resolved name + id, or nothing.
-  if ((readonly || layout === 'static') && value == null) {
+  // Static (read-only) presentation: render the resolved name + id, or nothing.
+  if ((readonly || presentation === 'static') && value == null) {
     return null;
   }
 
@@ -54,8 +54,8 @@ export const AreaSelectField = ({
 
   return (
     <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
-      {layout === 'static' ? (
+      {presentation !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
+      {presentation === 'static' ? (
         <p>{resolved ? `${resolved.name} (${resolved.id})` : String(value)}</p>
       ) : (
         <Select.Root value={value ?? CLEAR_VALUE} onValueChange={handleValueChange}>
@@ -80,7 +80,7 @@ export const AreaSelectField = ({
           </Select.Portal>
         </Select.Root>
       )}
-      {layout === 'full' && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
+      {presentation === 'full' && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
 };

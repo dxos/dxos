@@ -45,12 +45,16 @@ const createItemPropsFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =
       const droppable =
         node.properties.droppable === false || parentNode?.properties.childrenDroppable === false ? false : undefined;
 
+      const disposition = node.properties.disposition as string | undefined;
+      const isGroup = disposition === 'group';
+
       return {
         id: node.id,
-        parentOf,
-        disabled: node.properties.disabled,
-        draggable: node.properties.draggable,
-        droppable,
+        parentOf: isGroup ? undefined : parentOf,
+        disposition,
+        disabled: isGroup || node.properties.disabled,
+        draggable: isGroup ? false : node.properties.draggable,
+        droppable: isGroup ? false : droppable,
         label: node.properties.label ?? node.id,
         className: mx(node.properties.className, node.properties.modified && 'italic'),
         headingClassName: node.properties.headingClassName,

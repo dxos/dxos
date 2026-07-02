@@ -3,16 +3,14 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
-import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
 
 import { meta } from '#meta';
 
 export const translations = [
   {
     'en-US': {
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Stacks',
-        'settings.title': 'Stack settings',
         'settings.separation.label': 'Separate sections',
         'settings.separation.description': 'Add visual dividers between sections in stacks.',
         'add-section-beforeAll-dialog.title': 'Add a section to the start',
@@ -26,14 +24,16 @@ export const translations = [
         'remove-section.label': 'Delete',
         'navigate-to-section.label': 'Navigate to object',
         'untitled-section.title': 'Untitled section',
-        'add-section-before.label': 'Add before',
-        'add-section-after.label': 'Add after',
+        'move-up.label': 'Move up',
+        'move-down.label': 'Move down',
         'expand.label': 'Expand',
         'collapse.label': 'Collapse',
+        'collapse-all.label': 'Collapse all',
+        'expand-all.label': 'Expand all',
+        'options.label': 'Options',
         'open-chat-thread.label': 'Open chat thread',
         'drag-handle.label': 'Press space or enter to begin dragging this object.',
       },
     },
   },
-  ...stackTranslations,
 ] as const satisfies Resource[];

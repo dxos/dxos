@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import React, { useEffect } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { DXN, Annotation, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { Annotation, DXN, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -18,7 +18,7 @@ import { Pipeline } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../testing';
+import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../../testing';
 import { ObjectProperties } from './ObjectProperties';
 
 //

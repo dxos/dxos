@@ -7,18 +7,18 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Plan, Agent } from '@dxos/assistant-toolkit';
-import { Filter, Obj, Ref } from '@dxos/echo';
-import { AutomationPlugin } from '@dxos/plugin-automation/testing';
+import { Agent, Plan } from '@dxos/assistant-toolkit';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
+import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { createObjectFactory, TypeSpec } from '@dxos/schema/testing';
+import { TypeSpec, createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { createMessage } from '#testing';
@@ -29,7 +29,7 @@ import { AgentArticle } from './AgentArticle';
 
 random.seed(1);
 
-type DefaultStoryProps = {
+type StoryArgs = {
   inputs?: boolean;
 };
 
@@ -42,7 +42,7 @@ const defaultSpec: TypeSpec[] = [
   { type: Person.Person, count: 10 },
 ];
 
-const DefaultStory = (_: DefaultStoryProps) => {
+const DefaultStory = (_: StoryArgs) => {
   const [space] = useSpaces();
   const [agent] = useQuery(space?.db, Filter.type(Agent.Agent));
   if (!agent) {
@@ -57,7 +57,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withPluginManager<DefaultStoryProps>(({ args: { inputs } }) => ({
+    withPluginManager<StoryArgs>(({ args: { inputs } }) => ({
       plugins: [
         ...corePlugins(),
         ClientPlugin({
@@ -71,10 +71,10 @@ const meta = {
               const factory = createObjectFactory(space.db, random as any);
               const artifacts = yield* Effect.promise(() => factory(defaultSpec));
 
-              const inputQueue = space.queues.create();
+              const inputFeed = space.db.add(Feed.make({}));
               if (inputs) {
                 yield* Effect.promise(() =>
-                  inputQueue.append([
+                  space.db.appendToFeed(inputFeed, [
                     createMessage('user', [{ _tag: 'text', text: 'Summarize the current artifacts.' }]),
                     createMessage('assistant', [
                       { _tag: 'text', text: 'Here is a quick overview of the organizations and contacts in context.' },
@@ -87,18 +87,17 @@ const meta = {
               space.db.add(
                 Obj.make(Agent.Agent, {
                   instructions: Ref.make(Text.make()),
-                  plan: Ref.make(Plan.makePlan({ tasks: [] })),
                   artifacts: artifacts.map((obj) => ({
                     name: Obj.getLabel(obj) ?? 'Artifact',
                     data: Ref.make(obj),
                   })),
-                  feed: Ref.fromURI(inputQueue.uri),
+                  feed: Ref.make(inputFeed),
                   subscriptions: [],
                 }),
               );
             }),
         }),
-        AutomationPlugin(),
+        RoutinePlugin(),
         AssistantPlugin(),
         PreviewPlugin(),
         StorybookPlugin({}),
@@ -109,7 +108,7 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<DefaultStoryProps>;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 

@@ -40,12 +40,13 @@ LobbyRoot.displayName = 'LobbyRoot';
 type LobbyPreviewProps = {};
 
 const LobbyPreview = (_props: LobbyPreviewProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const call = useCapability(CallsCapabilities.Manager);
-  const media = useAtomValue(call.mediaAtom);
+  const videoEnabled = useAtomValue(call.videoEnabledAtom);
+  const videoStream = useAtomValue(call.localVideoStreamAtom);
   const [classNames, setClassNames] = useState('');
   useEffect(() => {
-    if (!media.videoEnabled) {
+    if (!videoEnabled) {
       setClassNames('');
       return;
     }
@@ -56,14 +57,14 @@ const LobbyPreview = (_props: LobbyPreviewProps) => {
     }, 500);
 
     return () => clearTimeout(timeout);
-  }, [media.videoEnabled]);
+  }, [videoEnabled]);
 
   return (
     <div className='grid grow p-4'>
       <ResponsivePanel>
-        {(media.videoEnabled && (
+        {(videoEnabled && (
           <VideoObject
-            videoStream={media.videoStream}
+            videoStream={videoStream}
             flip
             muted
             classNames={mx(

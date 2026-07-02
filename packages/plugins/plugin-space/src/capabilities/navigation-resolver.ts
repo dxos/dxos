@@ -6,18 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  getActiveSpace,
-  getObjectPath,
-  getSpaceIdFromPath,
-  getSpacePath,
-  type AppCapabilities as AppCaps,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, type AppCapabilities as AppCaps, AppSpace, Paths } from '@dxos/app-toolkit';
 import { Database, Entity, Key } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
+import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
 
 import { meta } from '#meta';
 
@@ -29,23 +22,23 @@ export default Capability.makeModule(
     // TODO(wittjosiah): Remove cast once NavigationTargetResolver type includes Database.Service.
     const resolver: AppCaps.NavigationTargetResolver = ((query) =>
       Effect.gen(function* () {
-        if (!query?.dxn) {
+        if (!query?.uri) {
           return [
             {
-              path: `${getSpacePath(SETTINGS_ID)}/${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
+              path: getPluginSettingsSectionPath(meta.profile.key),
               label: 'Spaces settings',
               type: 'settings',
             },
           ];
         }
 
-        const dxn = EID.tryParse(query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn);
-        if (!dxn) {
+        const eid = EID.tryParse(query.uri);
+        if (!eid) {
           return [];
         }
 
         const { db } = yield* Database.Service;
-        const ref = db.makeRef(dxn);
+        const ref = db.makeRef(eid);
         const object = yield* Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
         if (!object) {
           return [];
@@ -58,7 +51,7 @@ export default Capability.makeModule(
 
         return [
           {
-            path: getObjectPath(db.spaceId, typename, object.id),
+            path: Paths.getObjectPath(db.spaceId, typename, object.id),
             label: Entity.getLabel(object) ?? '',
             type: typename,
           },
@@ -66,12 +59,12 @@ export default Capability.makeModule(
       })) as AppCaps.NavigationTargetResolver;
 
     // Parse object paths into EIDs (structure only; existence is checked by the caller).
-    // Handles canonical type paths (root/<spaceId>/types/<typename>/all/<objectId>)
-    // and collection paths (root/<spaceId>/collections/<collectionId>/<objectId>): the space id
-    // is the first segment and the object id the last.
+    // Handles canonical database paths (root/<spaceId>/system/database/<typeSlug>/<objectId>)
+    // and collection paths (root/<spaceId>/content/collections/<collectionId>/<objectId>): the space
+    // id is the first segment and the object id the last, regardless of intervening group segments.
     const pathResolver: AppCaps.NavigationPathResolver = (qualifiedPath) => {
       const segments = qualifiedPath.split('/');
-      const spaceId = getSpaceIdFromPath(qualifiedPath);
+      const spaceId = Paths.getSpaceIdFromPath(qualifiedPath);
       const objectId = segments[segments.length - 1];
       if (!spaceId || !objectId || !Key.EntityId.isValid(objectId)) {
         return Effect.succeed(Option.none());
@@ -85,7 +78,7 @@ export default Capability.makeModule(
       if (path.includes('/') || !Key.EntityId.isValid(path)) {
         return Effect.succeed(Option.none());
       }
-      const space = getActiveSpace(client, capabilities);
+      const space = AppSpace.getActiveSpace(client, capabilities);
       if (!space) {
         return Effect.succeed(Option.none());
       }

@@ -5,7 +5,7 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { useObject } from '@dxos/react-client/echo';
-import { Card, IconButton, composable, useTranslation } from '@dxos/react-ui';
+import { Card, SystemIconButton, composable, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 import { type Result } from '../../types/Result';
@@ -29,7 +29,7 @@ export type ResultCardProps = {
  */
 export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
   ({ subject, current, starred = false, onToggleStar, classNames, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     // Subscribe so the card re-renders when the result (or its image) loads.
     const [result] = useObject(subject);
     const imageUrl = result.images?.[0];
@@ -61,22 +61,14 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
           />
         )}
         <Card.Header>
-          <Card.IconBlock>
-            <IconButton
-              variant='ghost'
-              iconOnly
-              square
-              size={4}
-              label={starred ? t('unstar.label') : t('star.label')}
-              icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
-              onClick={handleToggleStar}
-            />
-          </Card.IconBlock>
+          <Card.Block>
+            <SystemIconButton.Star variant='ghost' iconOnly square active={starred} onClick={handleToggleStar} />
+          </Card.Block>
           <div className='flex flex-col gap-0.5 min-w-0 py-2'>
             <Card.Title classNames='line-clamp-2'>{result.title}</Card.Title>
             {price && <span className='text-sm text-description'>{price}</span>}
           </div>
-          <Card.IconBlock />
+          <Card.Block end />
         </Card.Header>
       </Card.Root>
     );

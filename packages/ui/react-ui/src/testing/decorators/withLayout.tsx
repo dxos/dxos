@@ -54,13 +54,13 @@ const layouts: Record<ContainerType, FC<ContainerProps>> = {
   ),
 
   centered: ({ classNames, children }: ContainerProps) => (
-    <div className={mx('fixed inset-0 grid overflow-hidden place-items-center bg-black')}>
+    <div className={mx('fixed inset-0 grid overflow-hidden place-items-center bg-trim-surface')}>
       <div className={mx('flex flex-col bg-base-surface', classNames)}>{children}</div>
     </div>
   ),
 
   column: ({ classNames, children }: ContainerProps) => (
-    <div className='fixed inset-0 flex overflow-hidden justify-center bg-black'>
+    <div className='fixed inset-0 flex overflow-hidden justify-center bg-trim-surface'>
       <div className={mx('flex flex-col w-[40rem] bg-base-surface', classNames)}>{children}</div>
     </div>
   ),

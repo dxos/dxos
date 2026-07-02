@@ -6,19 +6,20 @@ import { isSameDay } from 'date-fns';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { MapInline } from '@dxos/plugin-map';
 import { MapCapabilities } from '@dxos/plugin-map/types';
 import { getSpace, useObject, useObjects } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
+import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
-import { SegmentStack, type SegmentCardAction } from '#components';
+import { type SegmentCardAction, SegmentStack } from '#components';
 import { meta } from '#meta';
 import { Routing, RoutingOperation, Segment, Trip } from '#types';
 
@@ -38,7 +39,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
   const [segmentRefs] = useObject(reactiveSubject, 'segments');
 
   const id = attendableId ?? Obj.getURI(subject);
-  const currentId = useSelected(id, 'single');
+  const currentId = useSelection(id, 'single');
 
   // Reactively load + subscribe to the segment ref targets. Without this the refs are read
   // synchronously via `.target` and render empty on first mount (only appearing after a later
@@ -97,7 +98,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
             contextId: id,
             selectionId: action.segmentId,
             companion: linkedSegment('segment'),
-            path: getObjectPathFromObject(subject),
+            path: Paths.getObjectPathFromObject(subject),
           });
           break;
         case 'delete':
@@ -131,7 +132,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         contextId: id,
         selectionId: segmentId,
         companion: linkedSegment('segment'),
-        path: getObjectPathFromObject(subject),
+        path: Paths.getObjectPathFromObject(subject),
       });
     },
     [id, showItem, subject],
@@ -186,9 +187,9 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
       const friendly =
         err instanceof Routing.GeocodeError || err instanceof Routing.RouteError ? err.message : undefined;
       await invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.id}/plan-route-error`,
-        title: ['route.error.label', { ns: meta.id }],
-        description: friendly ?? ['route.error.message', { ns: meta.id }],
+        id: `${meta.profile.key}/plan-route-error`,
+        title: ['route.error.label', { ns: meta.profile.key }],
+        description: friendly ?? ['route.error.message', { ns: meta.profile.key }],
         icon: 'ph--warning--regular',
       });
     } finally {
@@ -203,7 +204,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
     const builder = MenuBuilder.make().group(
       'add',
       {
-        label: ['segment.add.label', { ns: meta.id }],
+        label: ['segment.add.label', { ns: meta.profile.key }],
         icon: 'ph--plus--regular',
         variant: 'dropdownMenu',
       },
@@ -211,7 +212,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         for (const kind of SEGMENT_KINDS) {
           group.action(
             `add-${kind}`,
-            { label: [`segment.${kind}.label`, { ns: meta.id }], icon: Segment.kindIcon(kind) },
+            { label: [`segment.${kind}.label`, { ns: meta.profile.key }], icon: Segment.kindIcon(kind) },
             () => handleAddSegment(kind),
           );
         }
@@ -229,7 +230,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
       builder.action(
         'plan-route',
         {
-          label: [planning ? 'route.planning.label' : 'route.plan.label', { ns: meta.id }],
+          label: [planning ? 'route.planning.label' : 'route.plan.label', { ns: meta.profile.key }],
           icon: 'ph--path--regular',
           iconOnly: true,
           disabled: planning,
@@ -243,7 +244,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
       builder.action(
         'toggle-globe',
         {
-          label: ['globe.toggle.label', { ns: meta.id }],
+          label: ['globe.toggle.label', { ns: meta.profile.key }],
           icon: 'ph--globe-hemisphere-west--regular',
           iconOnly: true,
           checked: showGlobe,
@@ -272,7 +273,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
               </Panel.Toolbar>
               <Panel.Content asChild>
                 <NaturalCalendar.Grid
-                  dates={calendarDates}
+                  dates={calendarDates.map((startDate) => ({ startDate }))}
                   onSelect={handleDateSelect}
                   onSelectRange={handleDateRangeSelect}
                 />
@@ -293,11 +294,11 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         </div>
 
         {/* Row 2: generic map surface (plugin-map), toggled via the toolbar. It resolves the trip's
-            markers via the contributed MarkerProvider and reads the current selection via useSelected. */}
+            markers via the contributed MarkerProvider and reads the current selection via useSelection. */}
         {showGlobe && mapAvailable && (
           <Panel.Root classNames='border-t border-separator'>
             <Panel.Content>
-              <Surface.Surface role='map' data={{ subject, attendableId: id }} limit={1} />
+              <Surface.Surface type={MapInline} data={{ subject, attendableId: id }} limit={1} />
             </Panel.Content>
           </Panel.Root>
         )}

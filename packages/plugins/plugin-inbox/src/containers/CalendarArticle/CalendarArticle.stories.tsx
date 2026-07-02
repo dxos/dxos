@@ -8,8 +8,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { Feed, Filter } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
+import { Database, Feed, Filter } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -23,11 +22,11 @@ import { Calendar } from '#types';
 import { InboxPlugin } from '../../InboxPlugin';
 import { CalendarArticle } from './CalendarArticle';
 
-type DefaultStoryProps = {
+type StoryArgs = {
   count?: number;
 };
 
-const DefaultStory = (_: DefaultStoryProps) => {
+const DefaultStory = (_: StoryArgs) => {
   const spaces = useSpaces();
   const db = useDatabase(spaces[0].id);
   const calendars = useQuery(db, Filter.type(Calendar.Calendar));
@@ -44,7 +43,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
-    withPluginManager<DefaultStoryProps>(({ args: { count = 0 } }) => ({
+    withPluginManager<StoryArgs>(({ args: { count = 0 } }) => ({
       setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
@@ -62,7 +61,7 @@ const meta = {
               const feed = yield* Effect.tryPromise(() => calendar.feed!.tryLoad());
               if (feed) {
                 const { events } = new Builder().createEvents(count).build();
-                yield* Feed.append(feed, events).pipe(Effect.provide(createFeedServiceLayer(personalSpace.queues)));
+                yield* Feed.append(feed, events).pipe(Effect.provide(Database.layer(personalSpace.db)));
               }
 
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));

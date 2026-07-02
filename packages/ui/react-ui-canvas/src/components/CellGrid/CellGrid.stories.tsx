@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext, Registry } from '@effect-atom/atom-react';
+import { Registry, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -79,7 +79,7 @@ const makeLcg = (seed: number) => {
 
 type Variant = 'sequencer' | 'data-viz';
 
-type StoryProps = Pick<CellGridProps, 'headers'> & {
+type StoryArgs = Pick<CellGridProps, 'headers'> & {
   variant: Variant;
   tool: Tool;
   numCols: number;
@@ -89,7 +89,7 @@ type StoryProps = Pick<CellGridProps, 'headers'> & {
   playback: boolean;
 };
 
-const DefaultStory = ({ variant, tool, numCols, numRows, cellWidth, cellHeight, playback, headers }: StoryProps) => {
+const DefaultStory = ({ variant, tool, numCols, numRows, cellWidth, cellHeight, playback, headers }: StoryArgs) => {
   const registry = useContext(RegistryContext);
 
   const atoms = useMemo(

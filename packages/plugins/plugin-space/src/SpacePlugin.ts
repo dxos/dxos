@@ -26,20 +26,19 @@ import {
 } from '@dxos/types';
 
 import {
-  AppGraphSerializer,
+  AppGraphBuilder,
   CreateObject,
   IdentityCreated,
   NavigationHandler,
   NavigationResolver,
   OperationHandler,
-  UndoMappings,
   ReactRoot,
   ReactSurface,
   Repair,
   SpaceSettings,
-  SpaceState,
   SpacesReady,
-  AppGraphBuilder,
+  SpaceState,
+  UndoMappings,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -134,11 +133,6 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       };
     },
   ),
-  // TODO(wittjosiah): This could probably be deferred.
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.AppGraphReady,
-    activate: AppGraphSerializer,
-  }),
   Plugin.addModule({
     activatesOn: ClientEvents.IdentityCreated,
     firesAfterActivation: [SpaceEvents.PersonalSpaceReady],
@@ -160,7 +154,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     activate: Repair,
   }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

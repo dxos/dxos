@@ -21,17 +21,19 @@ export default Capability.makeModule(
       createObject: (props, options) =>
         Effect.gen(function* () {
           const object = yield* Effect.promise(async () => {
-            const { view } = await ViewModel.makeFromDatabase({
-              db: options.db,
-              typename: props.typename,
-              pivotFieldName: props.initialPivotColumn,
-            });
-            return Kanban.make({ name: props.name, view });
+            if (props.typename) {
+              const { view } = await ViewModel.makeFromDatabase({
+                db: options.db,
+                typename: props.typename,
+                pivotFieldName: props.initialPivotColumn,
+              });
+              return Kanban.make({ name: props.name, view });
+            }
+            return Kanban.makeItems({ name: props.name, pivotField: props.initialPivotColumn ?? '' });
           });
           return yield* Operation.invoke(SpaceOperation.AddObject, {
             object,
             target: options.target,
-            hidden: true,
             targetNodeId: options.targetNodeId,
           });
         }),

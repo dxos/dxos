@@ -53,6 +53,9 @@
       "path": "../../echo/echo-client"
     },
     {
+      "path": "../../echo/echo-doc"
+    },
+    {
       "path": "../../echo/echo-protocol"
     },
     {
@@ -60,6 +63,9 @@
     },
     {
       "path": "../compute"
+    },
+    {
+      "path": "../compute-runtime"
     },
     {
       "path": "../functions"

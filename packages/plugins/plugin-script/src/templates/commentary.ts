@@ -12,11 +12,11 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Trace, Operation } from '@dxos/compute';
+import { Operation, Trace } from '@dxos/compute';
 import { Annotation, Collection, Database, DXN, Filter, Obj, Ref, Relation, URI } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { Chess } from '@dxos/plugin-chess';
@@ -159,7 +159,9 @@ export default Commentary.pipe(
         if (docs.length === 0) {
           // TODO(wittjosiah): Deploy fails if `SpaceProperties` schema is imported because its from `client-protocol`.
           const [properties] = yield* Database.query(Filter.type(DXN.make('org.dxos.type.spaceProperties'))).run;
-          const rootCollectionRef = Annotation.get(properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
+          const rootCollectionRef = Annotation.get(properties, AppAnnotation.RootCollectionAnnotation).pipe(
+            Option.getOrUndefined,
+          );
           const rootCollection = rootCollectionRef
             ? yield* Database.load<Collection.Collection>(rootCollectionRef)
             : undefined;
@@ -187,7 +189,6 @@ export default Commentary.pipe(
             Relation.make(HasSubject.HasSubject, {
               [Relation.Source]: document,
               [Relation.Target]: chessGame,
-              completedAt: new Date().toISOString(),
             }),
           );
         } else {
@@ -195,7 +196,7 @@ export default Commentary.pipe(
 
           // Load the text content and append the commentary
           const text = yield* Database.load(document.content);
-          const accessor = createDocAccessor(text, ['content']);
+          const accessor = Doc.createAccessor(text, ['content']);
           accessor.handle.change((doc: A.Doc<Text.Text>) => {
             A.splice(doc, accessor.path.slice(), text.content.length, 0, commentary);
           });
@@ -212,7 +213,7 @@ export default Commentary.pipe(
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('ai.claude.model.claude-haiku-4-5'),
+          AiService.model('com.anthropic.model.claude-haiku-4-5.default'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,

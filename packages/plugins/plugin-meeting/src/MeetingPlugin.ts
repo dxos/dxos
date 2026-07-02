@@ -4,6 +4,7 @@
 
 import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AnchoredTo } from '@dxos/types';
 
 import {
   AppGraphBuilder,
@@ -20,13 +21,13 @@ import { Meeting, MeetingCapabilities } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
-const StateReady = AppActivationEvents.createStateEvent(meta.id);
+const StateReady = AppActivationEvents.createStateEvent(meta.profile.key);
 const SettingsReady = AppActivationEvents.createSettingsEvent(MeetingCapabilities.Settings.identifier);
 
 export const MeetingPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Meeting.Meeting] }),
+  AppPlugin.addSchemaModule({ schema: [Meeting.Meeting, AnchoredTo.AnchoredTo] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
@@ -47,7 +48,7 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
     activate: CallExtension,
   }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

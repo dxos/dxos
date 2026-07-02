@@ -11,10 +11,10 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
-import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
+import { AiService, Model, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Operation, Trace } from '@dxos/compute';
-import { Database, Feed, Filter, Ref, Registry, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Ref, Registry, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -46,9 +46,9 @@ export const GptInput = Schema.Struct({
   context: Schema.optional(Schema.Any),
 
   /**
-   * Model to use.
+   * Model to use (an NSID name).
    */
-  model: Schema.optional(Schema.String),
+  model: Schema.optional(DXN.NameSchema),
 
   /**
    * Conversation queue.
@@ -125,7 +125,7 @@ export const gptNode = defineComputeNode({
       ? yield* Database.resolve(conversation, Feed.Feed).pipe(Effect.orDie)
       : undefined;
     const historyMessages = conversationFeed
-      ? yield* Feed.runQuery(conversationFeed, Filter.type(Message.Message))
+      ? yield* Feed.query(conversationFeed, Filter.type(Message.Message)).run
       : (history ?? []);
 
     log.info('generating', { systemPrompt, prompt, historyMessages, tools });
@@ -148,7 +148,7 @@ export const gptNode = defineComputeNode({
 
     // TODO(dmaretskyi): Use Effect.context() > Context.pick to pass context.
     const runDeps = Layer.mergeAll(
-      AiService.model(DEFAULT_EDGE_MODEL).pipe(
+      AiService.model(DXN.getName(Model.DEFAULT_EDGE)).pipe(
         Layer.provide(Layer.succeed(AiService.AiService, yield* AiService.AiService)),
       ),
       // TODO(dmaretskyi): Move them out.
@@ -156,7 +156,6 @@ export const gptNode = defineComputeNode({
       ToolExecutionService.layerEmpty,
       Layer.succeed(Trace.TraceService, trace),
       Layer.succeed(Database.Service, yield* Database.Service),
-      Layer.succeed(Feed.FeedService, yield* Feed.FeedService),
       Layer.succeed(Operation.Service, yield* Operation.Service),
       Layer.succeed(Registry.Service, yield* Registry.Service),
     );
@@ -170,7 +169,13 @@ export const gptNode = defineComputeNode({
           prompt: fullPrompt,
           history: [...historyMessages],
         })
-        .pipe(Effect.provide(runDeps));
+        .pipe(
+          Effect.provide(runDeps),
+          // The observer publishes tokens to `tokenPubSub` during the run; once it completes no more
+          // tokens are produced, so shut the pubsub down to terminate `tokenStream` (a `Stream.fromPubSub`
+          // otherwise never ends, hanging any consumer that drains it).
+          Effect.ensuring(PubSub.shutdown(tokenPubSub)),
+        );
       log.info('messages', { messages });
 
       if (conversationFeed) {

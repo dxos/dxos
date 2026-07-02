@@ -42,8 +42,8 @@ test.describe('Basic tests', () => {
   test('create document', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
+    // Documents are collection items; the new object is revealed under the Collections section.
     await expect(host.getObjectLinks()).toHaveCount(1);
-    await expect(host.currentWorkspace.getByTestId('org.dxos.type.document.section')).toBeAttached();
 
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
@@ -79,14 +79,14 @@ test.describe('Basic tests', () => {
     }
 
     await host.openPluginRegistry();
-    await host.getPluginToggle(StackPlugin.meta.id).click();
-    await expect(host.getPluginToggle(StackPlugin.meta.id)).toBeChecked();
+    await host.getPluginToggle(StackPlugin.meta.profile.key).click();
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
 
     await host.page.goto(INITIAL_URL + '?throw');
     await host.reset();
 
     await host.openPluginRegistry();
-    await expect(host.getPluginToggle(StackPlugin.meta.id)).not.toBeChecked();
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
   });
 
   test('reset device', async ({ browserName }) => {

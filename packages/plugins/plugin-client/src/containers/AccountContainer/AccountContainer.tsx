@@ -11,18 +11,18 @@ import { Context } from '@dxos/context';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Icon, IconButton, Input, Message, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { ClientCapabilities } from '#types';
 
 import { RESET_DIALOG } from '../../constants';
-import { useHubHttpClient } from '../../state/use-hub-http';
+import { useHubHttpClient } from '../../hooks';
 
 type AccountState = 'loading' | 'present' | 'missing' | 'error';
 
 export const AccountContainer = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const identity = useIdentity();
   const { invokePromise } = useOperationInvoker();
   const accountCacheAtom = useCapability(ClientCapabilities.AccountCache);
@@ -114,66 +114,70 @@ export const AccountContainer = () => {
   const account = cache.account;
 
   return (
-    <Settings.Viewport>
-      <Settings.Section title={t('account-section.title')} description={t('account-section.description')}>
-        {accountState === 'loading' ? null : accountState === 'missing' ? (
-          <>
-            <Message.Root valence='warning'>
-              <Message.Title icon='ph--warning--duotone'>{t('no-edge-access.title')}</Message.Title>
-              <Message.Content>{t('no-edge-access.description')}</Message.Content>
-            </Message.Root>
-            <Settings.Item title={t('request-access.label')} description={t('request-access.description')}>
-              {requestSubmitted ? (
-                <span className='text-sm text-description'>{t('access-request-submitted.message')}</span>
-              ) : (
-                <form onSubmit={handleRequestAccess} className='flex gap-2 items-center justify-end'>
-                  <Input.Root>
-                    <Input.TextInput
-                      type='email'
-                      required
-                      placeholder={t('access-request-email.placeholder')}
-                      value={requestEmail}
-                      onChange={(event) => setRequestEmail(event.target.value)}
-                      classNames='min-w-64'
-                    />
-                  </Input.Root>
-                  <Button type='submit' density='sm'>
-                    {t('request-access.label')}
+    <Form.Root variant='settings'>
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.Section title={t('account-section.title')} description={t('account-section.description')}>
+            {accountState === 'loading' ? null : accountState === 'missing' ? (
+              <>
+                <Message.Root valence='warning'>
+                  <Message.Title icon='ph--warning--duotone'>{t('no-edge-access.title')}</Message.Title>
+                  <Message.Content>{t('no-edge-access.description')}</Message.Content>
+                </Message.Root>
+                <Form.Row label={t('request-access.label')} description={t('request-access.description')}>
+                  {requestSubmitted ? (
+                    <span className='text-sm text-description'>{t('access-request-submitted.message')}</span>
+                  ) : (
+                    <form onSubmit={handleRequestAccess} className='flex gap-2 items-center justify-end'>
+                      <Input.Root>
+                        <Input.TextInput
+                          type='email'
+                          required
+                          placeholder={t('access-request-email.placeholder')}
+                          value={requestEmail}
+                          onChange={(event) => setRequestEmail(event.target.value)}
+                          classNames='min-w-64'
+                        />
+                      </Input.Root>
+                      <Button type='submit' density='sm'>
+                        {t('request-access.label')}
+                      </Button>
+                    </form>
+                  )}
+                </Form.Row>
+              </>
+            ) : accountState === 'error' && !account ? (
+              <Message.Root valence='error'>
+                <Message.Title icon='ph--cloud-x--duotone'>{t('account-offline.title')}</Message.Title>
+                <Message.Content>{t('account-offline.description')}</Message.Content>
+              </Message.Root>
+            ) : account ? (
+              <>
+                <Form.Row label={t('email.label')} description={account.email}>
+                  {account.emailVerified ? (
+                    <Icon icon='ph--check-circle--duotone' size={5} classNames='text-success-text justify-self-end' />
+                  ) : (
+                    <div className='flex flex-col gap-1 items-end'>
+                      <IconButton
+                        icon='ph--paper-plane-tilt--regular'
+                        label={t('resend-verification.label')}
+                        onClick={handleResend}
+                        density='sm'
+                      />
+                      {resendStatus ? <span className='text-xs text-description'>{resendStatus}</span> : null}
+                    </div>
+                  )}
+                </Form.Row>
+                <Form.Row label={t('delete-account.label')} description={t('delete-account.description')}>
+                  <Button variant='destructive' density='sm' onClick={handleDeleteAccount}>
+                    {t('delete-account.label')}
                   </Button>
-                </form>
-              )}
-            </Settings.Item>
-          </>
-        ) : accountState === 'error' && !account ? (
-          <Message.Root valence='error'>
-            <Message.Title icon='ph--cloud-x--duotone'>{t('account-offline.title')}</Message.Title>
-            <Message.Content>{t('account-offline.description')}</Message.Content>
-          </Message.Root>
-        ) : account ? (
-          <>
-            <Settings.Item title={t('email.label')} description={account.email}>
-              {account.emailVerified ? (
-                <Icon icon='ph--check-circle--duotone' size={5} classNames='text-success-text justify-self-end' />
-              ) : (
-                <div className='flex flex-col gap-1 items-end'>
-                  <IconButton
-                    icon='ph--paper-plane-tilt--regular'
-                    label={t('resend-verification.label')}
-                    onClick={handleResend}
-                    density='sm'
-                  />
-                  {resendStatus ? <span className='text-xs text-description'>{resendStatus}</span> : null}
-                </div>
-              )}
-            </Settings.Item>
-            <Settings.Item title={t('delete-account.label')} description={t('delete-account.description')}>
-              <Button variant='destructive' density='sm' onClick={handleDeleteAccount}>
-                {t('delete-account.label')}
-              </Button>
-            </Settings.Item>
-          </>
-        ) : null}
-      </Settings.Section>
-    </Settings.Viewport>
+                </Form.Row>
+              </>
+            ) : null}
+          </Form.Section>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };

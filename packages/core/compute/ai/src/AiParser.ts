@@ -48,6 +48,11 @@ enum ModelTags {
   PROPOSAL = 'proposal',
   SELECT = 'select',
   TOOLKIT = 'toolkit',
+
+  /**
+   * Request to render a registered UI surface inline (e.g. a connector prompt).
+   */
+  SURFACE = 'surface',
 }
 
 export interface ParseResponseCallbacks<Tools extends Record<string, Tool.Any> = any> {
@@ -371,6 +376,7 @@ export const parseResponse =
               const { inputTokens, outputTokens, totalTokens } = part.usage;
               stats.duration = Date.now() - start;
               stats.message = 'OK'; // part.reason;
+              stats.finishReason = part.reason;
               stats.toolCalls = toolCalls;
               stats.usage = {
                 inputTokens,
@@ -539,6 +545,10 @@ const makeContentBlock = (
             _tag: 'toolkit',
           } satisfies ContentBlock.Toolkit;
         }
+
+        case ModelTags.SURFACE: {
+          return parseSurfaceBlock(block);
+        }
       }
 
       // Unknown tag — preserve the original literal text so it survives downstream as part
@@ -577,6 +587,42 @@ const serializeStreamBlock = (block: StreamBlock): string => {
       return block.closed ? `<${block.tag}${attrs}>${inner}</${block.tag}>` : `<${block.tag}${attrs}>${inner}`;
     }
   }
+};
+
+/**
+ * Parse a `<surface>` tag into a {@link ContentBlock.Surface}. The `role` attribute selects
+ * the surface to render; the optional `data` carries its payload, accepted either as a JSON
+ * attribute (`data='{"service":"gmail.com"}'`) or as the tag's JSON text content. A missing or
+ * unparseable `data` yields a surface with no payload rather than dropping the block.
+ */
+const parseSurfaceBlock = (block: StreamBlock): ContentBlock.Surface | undefined => {
+  if (block.type !== 'tag' || typeof block.attributes?.role !== 'string') {
+    return undefined;
+  }
+
+  const dataSource =
+    typeof block.attributes.data === 'string'
+      ? block.attributes.data
+      : block.content.length === 1 && block.content[0].type === 'text'
+        ? block.content[0].content
+        : undefined;
+
+  let data: Record<string, unknown> | undefined;
+  if (dataSource) {
+    try {
+      const parsed: unknown = JSON.parse(dataSource);
+      if (parsed != null && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        // Model-supplied JSON: narrowed to a non-array object above; no typed schema exists at this boundary.
+        data = parsed as Record<string, unknown>;
+      }
+    } catch {}
+  }
+
+  return {
+    _tag: 'surface',
+    role: block.attributes.role,
+    ...(data ? { data } : {}),
+  };
 };
 
 const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefined => {

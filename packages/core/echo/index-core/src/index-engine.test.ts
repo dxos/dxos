@@ -16,7 +16,7 @@ import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type DataSourceCursor, type IndexDataSource, IndexEngine, type IndexingResult } from './index-engine';
 import { type IndexCursor, IndexTracker } from './index-tracker';
-import { FtsIndex, type IndexerObject, EntityMetaIndex, ReverseRefIndex } from './indexes';
+import { EntityMetaIndex, FtsIndex, type IndexerObject, ReverseRefIndex } from './indexes';
 
 const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
 const TYPE_A = DXN.make('com.example.type.TypeA', '0.1.0');
@@ -376,7 +376,7 @@ describe('IndexEngine', () => {
         createdAt: null,
         updatedAt: Date.now(),
         data: {
-          id: EntityId.random(),
+          'id': EntityId.random(),
           [ATTR_TYPE]: TYPE_DEFAULT,
           '@deleted': true,
         },

@@ -30,7 +30,6 @@ import { useActionRunner } from '@dxos/plugin-graph';
 import {
   Icon,
   IconButton,
-  ListItem,
   ScrollArea,
   type ThemedClassName,
   Tooltip,
@@ -38,8 +37,8 @@ import {
   useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
+import { DropIndicator } from '@dxos/react-ui-list';
 import { Menu, type MenuItem } from '@dxos/react-ui-menu';
-import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
@@ -59,6 +58,14 @@ type L0ItemData = {
   id: L0ItemProps['item']['id'];
   type: 'l0Item';
 };
+
+// Local rearrange-handler callback shape; drag-and-drop is wired directly via pragmatic-dnd in `L0Item`,
+// so only the callback signature is needed here.
+type StackItemRearrangeHandler<Data extends { id: string } = { id: string }> = (
+  source: Data,
+  target: Data,
+  closestEdge: Edge | null,
+) => void;
 
 type L0ItemRootProps = {
   item: Node.Node;
@@ -106,7 +113,7 @@ const l0Breakpoints: Record<string, string> = {
 const L0ItemRoot = memo(
   forwardRef<HTMLButtonElement, PropsWithChildren<L0ItemRootProps>>(
     ({ item, parent, path, onMouseEnter, children }, forwardedRef) => {
-      const { t } = useTranslation(meta.id);
+      const { t } = useTranslation(meta.profile.key);
       const { model } = useNavTreeContext();
       const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
       const { id, testId } = useAtomValue(model.itemProps(itemPath));
@@ -151,7 +158,7 @@ export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) =>
 
 // TODO(burdon): Factor out pinned (non-draggable) items.
 const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L0ItemProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const itemElement = useRef<HTMLButtonElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
   const localizedString = toLocalizedString(item.properties.label, t);
@@ -232,13 +239,13 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
       </span>
-      {closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
+      {closestEdge && <DropIndicator edge={closestEdge} />}
     </L0ItemRoot>
   );
 });
 
 const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   // Actions.
   if (item.properties.icon) {
@@ -280,7 +287,7 @@ export const L0Menu = ({
   path,
   onItemHover,
 }: L0MenuProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const runAction = useActionRunner();
   const handleAction = useCallback(
     (action: Node.Action, params: Node.InvokeProps) => {

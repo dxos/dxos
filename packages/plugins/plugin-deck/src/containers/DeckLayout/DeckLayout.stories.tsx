@@ -17,10 +17,12 @@ import { GraphBuilder, Node, NodeMatcher, useConnections } from '@dxos/plugin-gr
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Icon, List, ListItem, Panel } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
+import { Listbox } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { Position } from '@dxos/util';
 
 import { OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
@@ -28,11 +30,11 @@ import { translations } from '#translations';
 import {
   DeckCapabilities,
   type EphemeralDeckState,
+  PLANK_COMPANION_TYPE,
   type Settings,
   type StoredDeckState,
   defaultDeck,
   getMode,
-  PLANK_COMPANION_TYPE,
 } from '#types';
 
 import { DeckLayout } from './DeckLayout';
@@ -167,15 +169,14 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create({
             id: 'storyNavigation',
-            role: 'navigation',
-            filter: (data): data is { current: string } => typeof (data as any).current === 'string',
-            component: ({ data, ref }) => <NavContainer current={data.current} ref={ref} />,
+            filter: Surface.makeFilter(AppSurface.Navigation),
+            component: ({ data, ref }) => (
+              <NavContainer current={data.current} ref={ref as React.Ref<HTMLDivElement>} />
+            ),
           }),
           Surface.create({
             id: 'storyArticle',
-            role: 'article',
-            filter: (data): data is Record<string, unknown> =>
-              typeof data === 'object' && data !== null && (data as { companionTo?: unknown }).companionTo == null,
+            filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo == null),
             component: ({ data }) => {
               const subject = (data as any)?.subject;
               const attendableId = (data as any)?.attendableId as string | undefined;
@@ -202,9 +203,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           }),
           Surface.create({
             id: 'storyArticleCompanion',
-            role: 'article',
-            filter: (data): data is AppSurface.ArticleData<unknown, {}, unknown> =>
-              typeof data === 'object' && data !== null && (data as { companionTo?: unknown }).companionTo != null,
+            filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
             component: ({ data: { subject, companionTo, properties, variant } }) => {
               if (companionTo == null) {
                 return <Loading />;
@@ -248,7 +247,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                 label: 'Companion Alpha',
                 icon: 'ph--sidebar--regular',
                 data: { variant: 'alpha', parentId: node.id },
-                position: 'first',
+                position: Position.first,
               }),
               AppNode.makeCompanion({
                 id: linkedSegment('beta'),
@@ -279,24 +278,23 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forw
 
   return (
     <div className='dx-container overflow-y-auto p-2' ref={forwardedRef}>
-      <List>
-        {items.map((node) => (
-          <ListItem.Root
-            key={node.id}
-            classNames={activeSet.has(node.id) ? 'bg-current-surface' : undefined}
-            onClick={() => void invokePromise(LayoutOperation.Set, { subject: [node.id] })}
-          >
-            {node.properties.icon && (
-              <ListItem.Endcap>
-                <Icon icon={node.properties.icon} />
-              </ListItem.Endcap>
-            )}
-            <ListItem.Heading classNames='cursor-pointer'>
-              {typeof node.properties.label === 'string' ? node.properties.label : node.id}
-            </ListItem.Heading>
-          </ListItem.Root>
-        ))}
-      </List>
+      <Listbox.Root>
+        <Listbox.Content aria-label='Navigation'>
+          {items.map((node) => (
+            <Listbox.Item
+              key={node.id}
+              id={node.id}
+              classNames={activeSet.has(node.id) ? 'bg-current-surface' : undefined}
+              onClick={() => void invokePromise(LayoutOperation.Set, { subject: [node.id] })}
+            >
+              <Listbox.ItemContent
+                icon={node.properties.icon}
+                title={typeof node.properties.label === 'string' ? node.properties.label : node.id}
+              />
+            </Listbox.Item>
+          ))}
+        </Listbox.Content>
+      </Listbox.Root>
     </div>
   );
 });
@@ -315,36 +313,22 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
   );
 
   return (
-    <List>
-      {items.map((node) => {
-        const open = () =>
-          void invokePromise(LayoutOperation.Open, { subject: [node.id], pivotId: id, navigation: 'immediate' });
-        return (
-          <ListItem.Root
-            key={node.id}
-            classNames='dx-hover cursor-pointer'
-            role='button'
-            tabIndex={0}
-            onClick={open}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                open();
-              }
-            }}
-          >
-            {node.properties.icon && (
-              <ListItem.Endcap>
-                <Icon icon={node.properties.icon} size={4} />
-              </ListItem.Endcap>
-            )}
-            <ListItem.Heading classNames='truncate'>
-              {typeof node.properties.label === 'string' ? node.properties.label : node.id}
-            </ListItem.Heading>
-          </ListItem.Root>
-        );
-      })}
-    </List>
+    <Listbox.Root>
+      <Listbox.Content aria-label='Items'>
+        {items.map((node) => {
+          const open = () =>
+            void invokePromise(LayoutOperation.Open, { subject: [node.id], pivotId: id, navigation: 'immediate' });
+          return (
+            <Listbox.Item key={node.id} id={node.id} classNames='dx-hover cursor-pointer' onClick={open}>
+              <Listbox.ItemContent
+                icon={node.properties.icon}
+                title={typeof node.properties.label === 'string' ? node.properties.label : node.id}
+              />
+            </Listbox.Item>
+          );
+        })}
+      </Listbox.Content>
+    </Listbox.Root>
   );
 };
 

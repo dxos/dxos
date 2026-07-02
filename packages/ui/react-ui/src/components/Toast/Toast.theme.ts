@@ -9,8 +9,9 @@ export type ToastStyleProps = {};
 
 const viewport: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
-    // TODO(burdon): block-end should take into account status bar.
-    'z-40 fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] inset-start-[calc(env(safe-area-inset-left)+1rem)] inset-end-[calc(env(safe-area-inset-right)+1rem)] w-auto md:end-[calc(env(safe-area-inset-right)+1rem)] md:left-auto md:w-full md:max-w-sm',
+    'z-40 fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)]',
+    'inset-start-[calc(env(safe-area-inset-left)+1rem)] inset-end-[calc(env(safe-area-inset-right)+1rem)]',
+    'w-auto md:end-[calc(env(safe-area-inset-right)+4rem)] md:left-auto md:w-full md:max-w-sm',
     'rounded-md flex flex-col gap-2',
     ...etc,
   );
@@ -32,11 +33,7 @@ const grid: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('gap-y-1
 
 const header: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('items-center', ...etc);
 
-const icon: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-1 grid place-items-center', ...etc);
-
 const title: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-2 truncate font-medium', ...etc);
-
-const close: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-3', ...etc);
 
 const description: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx('col-start-2 overflow-hidden text-description', ...etc);
@@ -48,9 +45,7 @@ export const toastTheme: Theme<ToastStyleProps> = {
   root,
   grid,
   header,
-  icon,
   title,
-  close,
   description,
   actions,
 };

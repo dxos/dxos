@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-deck",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "DXOS Surface plugin for the main application layout.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -86,6 +86,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src",
     "PLUGIN.mdl"
   ],
@@ -109,17 +110,18 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
-    "@dxos/react-ui-text-tooltip": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@fluentui/react-tabster": "catalog:",
     "@radix-ui/react-context": "catalog:",
+    "@radix-ui/react-slot": "catalog:",
     "@tauri-apps/plugin-deep-link": "catalog:",
     "immer": "catalog:"
   },

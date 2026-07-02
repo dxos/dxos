@@ -22,7 +22,7 @@ const modifier = isMac ? 'Meta' : 'Control';
 export const INITIAL_URL = 'http://localhost:4173';
 
 // Only the personal space is seeded on every new identity. The exemplar space is skipped on
-// localhost (see WelcomePlugin `generateExemplarSpace`), which is where e2e tests run.
+// localhost (see OnboardingPlugin `generateExemplarSpace`), which is where e2e tests run.
 export const INITIAL_SPACE_COUNT = 1;
 
 export class AppManager {
@@ -302,18 +302,28 @@ export class AppManager {
 
   async renameObject(newName: string, nth = 0): Promise<void> {
     await this.getObjectLinks().nth(nth).hover();
-    await this.getObjectLinks().nth(nth).getByTestId('navtree.treeItem.actionsLevel2').first().click();
+    // Match any tree depth: the navtree's section-group nesting varies an object's level, and the
+    // actions button testid encodes that level (`actionsLevel${level}`).
+    await this.getObjectLinks()
+      .nth(nth)
+      .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
+      .first()
+      .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');
     await this.page.getByTestId('spacePlugin.renameObject').last().focus();
     await this.page.keyboard.press('Enter');
-    await this.page.getByTestId('spacePlugin.renameObject.input').fill(newName);
-    await this.page.getByTestId('spacePlugin.renameObject.input').press('Enter');
+    await this.page.getByTestId('spacePlugin.rename.input').fill(newName);
+    await this.page.getByTestId('spacePlugin.rename.input').press('Enter');
     await this.page.mouse.move(0, 0, { steps: 4 });
   }
 
   async deleteObject(nth = 0): Promise<void> {
-    await this.getObjectLinks().nth(nth).getByTestId('navtree.treeItem.actionsLevel2').first().click();
+    await this.getObjectLinks()
+      .nth(nth)
+      .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
+      .first()
+      .click();
     // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
     await this.page.keyboard.press('ArrowDown');
     await this.page.getByTestId('spacePlugin.deleteObject').last().focus();

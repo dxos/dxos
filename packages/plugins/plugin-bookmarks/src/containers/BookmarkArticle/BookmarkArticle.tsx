@@ -13,7 +13,7 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { Summary } from '#components';
 import { meta } from '#meta';
-import { BookmarkOperation, type Bookmark } from '#types';
+import { type Bookmark, BookmarkOperation } from '#types';
 
 import { useImageLoads } from '../useImageLoads';
 
@@ -44,7 +44,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
       { bookmark: Ref.make(subject) },
       {
         spaceId: Obj.getDatabase(subject)?.spaceId,
-        notify: { error: ['summarize-error.message', { ns: meta.id }] },
+        notify: { error: ['summarize-error.message', { ns: meta.profile.key }] },
       },
     ).finally(() => setSummarizing(false));
   }, [invokePromise, subject]);
@@ -55,7 +55,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
         .action(
           'summarize',
           {
-            label: ['summarize.label', { ns: meta.id }],
+            label: ['summarize.label', { ns: meta.profile.key }],
             icon: 'ph--sparkle--regular',
             disabled: summarizing || !isExternalHttpUrl(bookmark.url),
             disposition: 'toolbar',
@@ -67,7 +67,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
         .action(
           'openSource',
           {
-            label: ['open-source.label', { ns: meta.id }],
+            label: ['open-source.label', { ns: meta.profile.key }],
             icon: 'ph--arrow-square-out--regular',
             disabled: !isExternalHttpUrl(bookmark.url),
             disposition: 'toolbar',
@@ -82,27 +82,33 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
+        <Panel.Toolbar classNames='dx-container' asChild>
           <Menu.Toolbar />
         </Panel.Toolbar>
         <Panel.Content classNames='dx-container flex flex-col'>
-          <Card.Root fullWidth border={false}>
-            <Card.Header>
-              <Card.IconBlock>
-                <img src={bookmark.favicon} alt={bookmark.title} />
-              </Card.IconBlock>
-              <Card.Title>{bookmark.title}</Card.Title>
-            </Card.Header>
-            <Card.Body>
-              <Card.Section>
-                <Card.Text onClick={handleOpenSource} classNames='dx-link font-mono text-sm'>
-                  {bookmark.url}
-                </Card.Text>
-                <Card.Text>{bookmark.excerpt}</Card.Text>
-                {bookmark.image && imageLoads && <Image classNames='my-2' alt={bookmark.title} src={bookmark.image} />}
-              </Card.Section>
-            </Card.Body>
-          </Card.Root>
+          <div className='flex justify-center'>
+            <div className='dx-document py-3'>
+              <Card.Root fullWidth border={false}>
+                <Card.Header>
+                  <Card.Block>
+                    <img src={bookmark.favicon} alt={bookmark.title} />
+                  </Card.Block>
+                  <Card.Title>{bookmark.title}</Card.Title>
+                </Card.Header>
+                <Card.Body>
+                  <Card.Section>
+                    <Card.Text onClick={handleOpenSource} classNames='dx-link font-mono text-sm'>
+                      {bookmark.url}
+                    </Card.Text>
+                    <Card.Text>{bookmark.excerpt}</Card.Text>
+                    {bookmark.image && imageLoads && (
+                      <Image classNames='my-2' alt={bookmark.title} src={bookmark.image} />
+                    )}
+                  </Card.Section>
+                </Card.Body>
+              </Card.Root>
+            </div>
+          </div>
           {summary && <Summary id={`${Obj.getURI(subject)}/summary`} source={subject.summary} />}
         </Panel.Content>
       </Panel.Root>

@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Trace, Operation } from '@dxos/compute';
+import { Operation, Trace } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { EID } from '@dxos/keys';
@@ -107,7 +107,6 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
             ...message,
             id: message.id,
           }),
-          completedAt: new Date().toISOString(),
         });
 
         yield* Feed.append(feed, [relation]);
@@ -120,12 +119,11 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('ai.claude.model.claude-haiku-4-5'),
+          AiService.model('com.anthropic.model.claude-haiku-4-5.default'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,
           Database.notAvailable,
-          Feed.notAvailable,
           Layer.succeed(Operation.Service, {
             invoke: () => Effect.die('Not available.'),
             schedule: () => Effect.die('Not available.'),

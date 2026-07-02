@@ -26,9 +26,9 @@ import {
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { IconButton, Input, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Input, Message, type ThemedClassName, ToggleIconButton, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
-import { List } from '@dxos/react-ui-list';
+import { OrderedList } from '@dxos/react-ui-list';
 import {
   ParentLabelAnnotation,
   ProjectionModel,
@@ -36,19 +36,13 @@ import {
   createEchoChangeCallback,
   getTypeURIFromQuery,
 } from '@dxos/schema';
-import { mx, osTranslations } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
+import { type FormFieldMap, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
 import { FieldEditor } from '../FieldEditor';
-import {
-  Form,
-  type FormFieldComponent,
-  type FormFieldComponentProps,
-  FormFieldLabel,
-  type FormFieldMap,
-  type FormRootProps,
-} from '../Form';
+import { CompactIconButton, Form, FormFieldHeader, FormFieldLabel, type FormRootProps } from '../Form';
 
 export type ViewEditorProps = ThemedClassName<
   {
@@ -64,7 +58,7 @@ export type ViewEditorProps = ThemedClassName<
 >;
 
 /**
- * Schema-based object form.
+ * View editor form.
  */
 export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
   (
@@ -92,6 +86,7 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
       if (!type) {
         return null;
       }
+
       const jsonSchema = type.jsonSchema;
 
       // Always use createEchoChangeCallback since the view is ECHO-backed.
@@ -117,6 +112,7 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
         if (from._tag !== 'scope') {
           return undefined;
         }
+
         const feedScope = from.scopes.find((s) => s._tag === 'feed');
         return Option.fromNullable(feedScope).pipe(
           Option.map((s) => s.feedUri),
@@ -216,42 +212,54 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
 
     return (
       <div className={mx(classNames)}>
-        {/* If readonly is set, then the callout is not needed. */}
-        {schemaReadonly && !readonly && (
-          <Message.Root valence='info' classNames='my-form-padding'>
-            <Message.Title>{t('system-schema.description')}</Message.Title>
-          </Message.Root>
-        )}
-
         {/* TODO(burdon): Is the form read-only or just the schema? */}
         <Form.Root schema={viewSchema} values={viewValues} fieldMap={fieldMap} db={db} onValuesChanged={handleUpdate}>
-          <Form.FieldSet />
-
-          {type && (
-            <>
-              <FormFieldLabel label={t('fields.label')} asChild />
-              <FieldList
-                type={type}
-                view={view}
-                registry={registry}
-                readonly={readonly}
-                showHeading={showHeading}
-                onDelete={handleDelete}
-              />
-            </>
-          )}
+          <Form.Viewport>
+            <Form.Content>
+              {/* If readonly is set, then the callout is not needed. */}
+              {schemaReadonly && !readonly && (
+                <Message.Root valence='info' classNames='my-form-padding'>
+                  <Message.Title>{t('system-schema.description')}</Message.Title>
+                </Message.Root>
+              )}
+              <Form.FieldSet />
+              {type && (
+                <FieldList
+                  type={type}
+                  view={view}
+                  registry={registry}
+                  readonly={readonly}
+                  showHeading={showHeading}
+                  onDelete={handleDelete}
+                />
+              )}
+            </Form.Content>
+          </Form.Viewport>
         </Form.Root>
       </div>
     );
   },
 );
 
-type FieldListProps = Omit<
-  Pick<ViewEditorProps, 'type' | 'view' | 'registry' | 'readonly' | 'showHeading' | 'onDelete'>,
-  'type'
-> & {
+const customFields = ({ types, tags }: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, FormFieldRenderer> => ({
+  query: ({ type, readonly, label, getValue, onValueChange }: FormFieldRendererProps) => {
+    const handleChange = useCallback<NonNullable<QueryFormProps['onChange']>>(
+      (query) => onValueChange(type, query.ast),
+      [onValueChange],
+    );
+
+    return (
+      <Input.Root>
+        <FormFieldLabel readonly={readonly} label={label} />
+        <QueryForm initialQuery={getValue()} types={types} tags={tags} onChange={handleChange} />
+      </Input.Root>
+    );
+  },
+});
+
+type FieldListProps = {
   type: Type.AnyEntity;
-};
+} & Pick<ViewEditorProps, 'view' | 'registry' | 'readonly' | 'showHeading' | 'onDelete'>;
 
 const FieldList = ({ type, view, registry, readonly, showHeading = false, onDelete }: FieldListProps) => {
   const atomRegistry = useContext(RegistryContext);
@@ -268,14 +276,12 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
     // Pass type only when mutable to allow schema mutations.
     const change = createEchoChangeCallback(view, Type.getDatabase(type) != null ? type : undefined);
 
-    const model = new ProjectionModel({
+    return new ProjectionModel({
       registry: atomRegistry,
       view,
       baseSchema: jsonSchema,
       change,
     });
-
-    return model;
   }, [atomRegistry, type, view]);
 
   const [expandedField, setExpandedField] = useState<View.FieldType['id']>();
@@ -285,13 +291,6 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
     const field = projectionModel.createFieldProjection();
     setExpandedField(field.id);
   }, [projectionModel, readonly]);
-
-  const handleToggleField = useCallback(
-    (field: View.FieldType) => {
-      setExpandedField((prevExpandedFieldId) => (prevExpandedFieldId === field.id ? undefined : field.id));
-    },
-    [readonly],
-  );
 
   const handleDelete = useCallback(
     (fieldId: string) => {
@@ -342,106 +341,77 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
   }
 
   return (
-    <List.Root<View.FieldType>
+    <OrderedList.Root<View.FieldType>
       items={viewSnapshot.projection.fields as View.FieldType[]}
       isItem={Schema.is(View.FieldSchema)}
       getId={(field) => field.id}
       onMove={readonly ? undefined : handleMove}
       readonly={readonly}
+      expandedId={expandedField}
+      onExpandedChange={setExpandedField}
     >
       {({ items: fields }) => (
         <>
-          {showHeading && <h3 className='text-sm'>{t('field-path.label')}</h3>}
-          <div role='list' className='grid grid-cols-[min-content_1fr_min-content_min-content_min-content]'>
-            {fields?.map((field) => {
+          <FormFieldHeader
+            label={t('fields.label')}
+            readonly={readonly}
+            add={{
+              label: t('add-property-button.label'),
+              disabled: viewSnapshot.projection.fields.length >= VIEW_FIELD_LIMIT,
+              onClick: handleAdd,
+            }}
+          />
+          {showHeading && <FormFieldLabel standalone classNames='py-1' label={t('field-path.label')} />}
+          <OrderedList.Content>
+            {fields.map((field) => {
               const hidden = field.visible === false;
               return (
-                <List.Item<View.FieldType>
+                <OrderedList.DetailItem<View.FieldType>
                   key={field.id}
+                  id={field.id}
                   item={field}
-                  classNames={'grid grid-cols-subgrid col-span-5'}
-                  aria-expanded={expandedField === field.id}
-                >
-                  <div className='grid grid-cols-subgrid col-span-5 rounded-xs cursor-pointer min-h-10 dx-hover'>
-                    <List.ItemDragHandle disabled={readonly || schemaReadonly} />
-                    <List.ItemTitle classNames={hidden && 'text-subdued'} onClick={() => handleToggleField(field)}>
-                      {field.path}
-                    </List.ItemTitle>
-                    <List.ItemIconButton
+                  canDrag={!readonly && !schemaReadonly}
+                  expandable={!readonly}
+                  title={field.path}
+                  titleClassNames={hidden ? 'text-subdued' : undefined}
+                  actions={
+                    <ToggleIconButton
+                      iconOnly
+                      variant='ghost'
+                      active={hidden}
+                      icon='ph--eye--regular'
+                      activeIcon='ph--eye-closed--regular'
                       label={t(hidden ? 'show-field.label' : 'hide-field.label')}
                       data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
-                      icon={hidden ? 'ph--eye-closed--regular' : 'ph--eye--regular'}
-                      autoHide={false}
                       disabled={readonly || (!hidden && projectionModel.getFields().length <= 1)}
                       onClick={() => (hidden ? handleShow(field.path) : handleHide(field.id))}
                     />
-                    {!readonly && (
-                      <>
-                        <List.ItemDeleteButton
-                          label={t('delete-field.label')}
-                          autoHide={false}
-                          disabled={readonly || schemaReadonly || viewSnapshot.projection.fields.length <= 1}
-                          onClick={() => handleDelete(field.id)}
-                          data-testid='field.delete'
-                        />
-                        <List.ItemIconButton
-                          iconOnly
-                          variant='ghost'
-                          label={t('toggle-expand.label', { ns: osTranslations })}
-                          icon={expandedField === field.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
-                          onClick={() => handleToggleField(field)}
-                          data-testid='field.toggle'
-                        />
-                      </>
-                    )}
-                  </div>
-                  {expandedField === field.id && !readonly && (
-                    <div className='col-span-full mt-1 mb-1 border border-separator rounded-md'>
-                      <FieldEditor
-                        readonly={readonly || schemaReadonly}
-                        registry={registry}
-                        projection={projectionModel}
-                        field={field}
-                        onSave={handleClose}
+                  }
+                  trailing={
+                    !readonly && (
+                      <CompactIconButton
+                        icon='ph--x--regular'
+                        label={t('delete-field.label')}
+                        disabled={schemaReadonly || viewSnapshot.projection.fields.length <= 1}
+                        onClick={() => handleDelete(field.id)}
+                        data-testid='field.delete'
                       />
-                    </div>
-                  )}
-                </List.Item>
+                    )
+                  }
+                >
+                  <FieldEditor
+                    readonly={readonly || schemaReadonly}
+                    registry={registry}
+                    projection={projectionModel}
+                    field={field}
+                    onSave={handleClose}
+                  />
+                </OrderedList.DetailItem>
               );
             })}
-          </div>
-          {!readonly && !expandedField && (
-            <div className='my-form-padding'>
-              <IconButton
-                icon='ph--plus--regular'
-                label={t('add-property-button.label')}
-                onClick={handleAdd}
-                disabled={viewSnapshot.projection.fields.length >= VIEW_FIELD_LIMIT}
-                classNames='w-full'
-              />
-            </div>
-          )}
+          </OrderedList.Content>
         </>
       )}
-    </List.Root>
+    </OrderedList.Root>
   );
 };
-
-const customFields = ({
-  types,
-  tags,
-}: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, FormFieldComponent> => ({
-  query: ({ type, readonly, label, getValue, onValueChange }: FormFieldComponentProps) => {
-    const handleChange = useCallback<NonNullable<QueryFormProps['onChange']>>(
-      (query) => onValueChange(type, query.ast),
-      [onValueChange],
-    );
-
-    return (
-      <Input.Root>
-        <FormFieldLabel readonly={readonly} label={label} />
-        <QueryForm initialQuery={getValue()} types={types} tags={tags} onChange={handleChange} />
-      </Input.Root>
-    );
-  },
-});

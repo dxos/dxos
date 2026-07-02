@@ -14,7 +14,7 @@ export const createEdgeIdentity = (client: Client): EdgeIdentity => {
     throw new Error('Identity not available');
   }
   return {
-    identityKey: identity.identityKey.toHex(),
+    identityDid: identity.did,
     peerKey: device.deviceKey.toHex(),
     presentCredentials: async ({ challenge }) => {
       const identityService = client.services.services.IdentityService!;

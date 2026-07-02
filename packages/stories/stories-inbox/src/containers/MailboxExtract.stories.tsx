@@ -17,7 +17,7 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { LayerSpec } from '@dxos/compute';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
-import { DXN, EID } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { ExtractedFrom, InboxOperation, Mailbox } from '@dxos/plugin-inbox';
@@ -136,8 +136,8 @@ const seedFeed = async (space: Space) => {
   const mailbox = space.db.add(Mailbox.make());
   await space.db.flush();
   const feed = await mailbox.feed.load();
-  const queue = space.queues.get(EID.make({ spaceId: space.id, entityId: feed.id }));
-  await queue.append(
+  await space.db.appendToFeed(
+    feed,
     FEED_MESSAGES.map((message) =>
       Obj.make(Message.Message, {
         created: new Date('2026-05-25T00:00:00.000Z').toISOString(),
@@ -182,7 +182,7 @@ const FeedExtractHarness = () => {
     }
     for (const message of messages) {
       await invoker
-        .invokePromise(InboxOperation.ExtractMessage, { db, source: message })
+        .invokePromise(InboxOperation.ExtractMessage, { source: message }, { spaceId: db.spaceId })
         .catch((err) => log.warn('extract failed', { err, messageId: message.id }));
     }
     setRuns((count) => count + 1);

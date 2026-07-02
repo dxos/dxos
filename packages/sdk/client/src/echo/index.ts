@@ -4,14 +4,13 @@
 
 // TODO(burdon): See AUDIT.md
 
-export { isSpace, type Space, SpaceSchema, SpaceProperties } from '@dxos/client-protocol';
+export { type Space, SpaceProperties, SpaceSchema, isSpace } from '@dxos/client-protocol';
 export {
-  createFeedServiceLayer,
-  createObject,
-  createSubscription,
   type ObjectMigration,
   type Selection,
   type SubscriptionHandle,
+  createObject,
+  createSubscription,
 } from '@dxos/echo-client';
 
 export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
@@ -19,6 +18,6 @@ export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/servi
 export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
-export { importSpace, type ImportSpaceOptions } from './import';
-export { getSyncSummary, type PeerSyncState, type SpaceSyncStateMap } from './util';
+export { type ImportSpaceOptions, importSpace } from './import';
+export { type PeerSyncState, type SpaceSyncStateMap, getSyncSummary } from './util';
 export { getSpace } from './space-proxy';

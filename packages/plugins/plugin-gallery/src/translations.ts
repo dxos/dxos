@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete gallery',
         'object-deleted.label': 'Gallery deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Gallery',
         'add-image.label': 'Add image',
         'show.label': 'Show',

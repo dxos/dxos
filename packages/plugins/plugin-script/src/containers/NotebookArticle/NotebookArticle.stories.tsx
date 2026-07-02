@@ -8,16 +8,17 @@ import React from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AgentPrompt } from '@dxos/assistant-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { RunInstructions } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { AssistantPlugin } from '@dxos/plugin-assistant/testing';
-import { AutomationPlugin } from '@dxos/plugin-automation/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/testing';
 import { Markdown } from '@dxos/plugin-markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
+import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config, useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
@@ -58,11 +59,11 @@ const meta: Meta<typeof NotebookArticle> = {
 
               personalSpace.db.add(createNotebook());
               personalSpace.db.add(Markdown.make({ content: '# Hello World' }));
-              personalSpace.db.add(Operation.serialize(AgentPrompt));
+              personalSpace.db.add(Operation.serialize(RunInstructions));
             }),
         }),
         AssistantPlugin(),
-        AutomationPlugin(),
+        RoutinePlugin(),
         ExplorerPlugin(),
         MarkdownPlugin(),
       ],
@@ -79,7 +80,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    role: 'article',
+    role: AppSurface.Article.role,
     subject: undefined as any,
   },
 };

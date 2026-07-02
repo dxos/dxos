@@ -12,7 +12,16 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
+      "path": "../../common/i18n"
+    },
+    {
       "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keyboard"
     },
     {
       "path": "../../common/keys"

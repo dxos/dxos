@@ -6,18 +6,18 @@ import { useKeyboard } from '@opentui/solid';
 import * as Effect from 'effect/Effect';
 import { For, Match, Switch, createEffect, createMemo, createSignal, useContext } from 'solid-js';
 
-import { type ModelName } from '@dxos/ai';
 import { type AiSession, GenerationObserver } from '@dxos/assistant';
-import { Blueprint } from '@dxos/compute';
+import { Skill } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useAtomValue } from '@dxos/effect-atom-solid';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { isTruthy } from '@dxos/util';
 
 import { AppContext } from '../../../components';
 import { theme } from '../../../theme';
-import { blueprintRegistry } from '../../../util';
+import { skillRegistry } from '../../../util';
 import { DXOS_VERSION } from '../../../version';
 import { useChatMessages } from '../hooks';
 import { type ChatProcessor } from '../processor';
@@ -33,34 +33,34 @@ export type ChatProps = {
   db: Database.Database;
   processor: ChatProcessor;
   conversation: AiSession.Session;
-  model: ModelName;
+  model: DXN.DXN;
   verbose?: boolean;
   onChatSelect?: (chat: Assistant.Chat) => void;
-  onChatCreate?: ({ blueprints }: { blueprints: string[] }) => void;
+  onChatCreate?: ({ skills }: { skills: string[] }) => void;
 };
 
 export const Chat = (props: ChatProps) => {
   const appContext = useContext(AppContext);
   const [inputValue, setInputValue] = createSignal('');
-  const [popup, setPopup] = createSignal<'logo' | 'blueprints' | 'chats' | undefined>('logo');
+  const [popup, setPopup] = createSignal<'logo' | 'skills' | 'chats' | undefined>('logo');
 
   // Conversation state.
   const chatMessages = useChatMessages();
   const infoMessages = useChatMessages();
 
   // Subscribe to context atoms.
-  const contextBlueprints = useAtomValue(() => props.conversation.context.blueprints);
+  const contextSkills = useAtomValue(() => props.conversation.context.skills);
   const objects = useAtomValue(() => props.conversation.context.objects);
 
-  // All blueprint entities in the registry, typed. Memoized so the query runs once per registry change.
-  const allRegistryBlueprints = createMemo(() => blueprintRegistry.query(Filter.type(Blueprint.Blueprint)).runSync());
+  // All skill entities in the registry, typed. Memoized so the query runs once per registry change.
+  const allRegistrySkills = createMemo(() => skillRegistry.query(Filter.type(Skill.Skill)).runSync());
 
-  // Transform blueprints to full blueprint definitions from registry.
-  const blueprints = createMemo(() =>
-    contextBlueprints()
-      .map((blueprint) => {
-        const key = Obj.getMeta(blueprint).key;
-        return key !== undefined ? allRegistryBlueprints().find((b) => Obj.getMeta(b).key === key) : undefined;
+  // Transform skills to full skill definitions from registry.
+  const skills = createMemo(() =>
+    contextSkills()
+      .map((skill) => {
+        const key = Obj.getMeta(skill).key;
+        return key !== undefined ? allRegistrySkills().find((b) => Obj.getMeta(b).key === key) : undefined;
       })
       .filter(isTruthy),
   );
@@ -78,7 +78,7 @@ export const Chat = (props: ChatProps) => {
   // TODO(burdon): Factor out key handling, hints, and dialogs.
   useKeyboard(async (key) => {
     if (key.name === 'b' && key.ctrl) {
-      setPopup(popup() === 'blueprints' ? undefined : 'blueprints');
+      setPopup(popup() === 'skills' ? undefined : 'skills');
     }
 
     if (key.name === 'f' && key.ctrl) {
@@ -169,14 +169,14 @@ export const Chat = (props: ChatProps) => {
               onCancel={() => setPopup(undefined)}
             />
           </Match>
-          <Match when={popup() === 'blueprints'}>
-            <BlueprintPicker
+          <Match when={popup() === 'skills'}>
+            <SkillPicker
               selected={props.conversation.context
-                .getBlueprints()
-                .map((blueprint) => Obj.getMeta(blueprint).key)
+                .getSkills()
+                .map((skill) => Obj.getMeta(skill).key)
                 .filter((key): key is string => key !== undefined)}
-              onSave={(blueprints) => {
-                props.onChatCreate?.({ blueprints });
+              onSave={(skills) => {
+                props.onChatCreate?.({ skills });
                 setPopup(undefined);
               }}
               onCancel={() => setPopup(undefined)}
@@ -188,7 +188,7 @@ export const Chat = (props: ChatProps) => {
                 <ChatMessages messages={chatMessages.messages.data} />
               </box>
               <box flexDirection='column' width={40} paddingLeft={2}>
-                <Blueprints blueprints={blueprints()} />
+                <Skills skills={skills()} />
                 <Artifacts objects={objects()} />
                 {props.verbose && (
                   <box flexDirection='column' flexGrow={1}>
@@ -210,18 +210,18 @@ export const Chat = (props: ChatProps) => {
         processing={appContext?.processing}
         model={props.model}
         metadata={props.processor.metadata}
-        blueprints={blueprints().map((blueprint) => blueprint.name)}
+        skills={skills().map((skill) => skill.name)}
       />
     </box>
   );
 };
 
-const Blueprints = (props: { blueprints: Blueprint.Blueprint[] }) => {
+const Skills = (props: { skills: Skill.Skill[] }) => {
   return (
     <box flexDirection='column' flexShrink={0}>
-      {props.blueprints.length > 0 && <text style={{ fg: theme.text.primary }}>Blueprints</text>}
+      {props.skills.length > 0 && <text style={{ fg: theme.text.primary }}>Skills</text>}
       <box flexDirection='column' marginTop={1} marginBottom={1}>
-        <For each={props.blueprints}>{(blueprint) => <text>- {blueprint.name}</text>}</For>
+        <For each={props.skills}>{(skill) => <text>- {skill.name}</text>}</For>
       </box>
     </box>
   );
@@ -250,14 +250,14 @@ const Artifacts = (props: { objects: Obj.Unknown[] }) => {
   );
 };
 
-const BlueprintPicker = (props: Pick<PickerProps, 'selected' | 'onSave' | 'onCancel'>) => {
+const SkillPicker = (props: Pick<PickerProps, 'selected' | 'onSave' | 'onCancel'>) => {
   const items = createMemo(() =>
-    blueprintRegistry
-      .query(Filter.type(Blueprint.Blueprint))
+    skillRegistry
+      .query(Filter.type(Skill.Skill))
       .runSync()
-      .map((blueprint) => {
-        const key = Obj.getMeta(blueprint).key;
-        return key !== undefined ? { id: key, label: blueprint.name } : undefined;
+      .map((skill) => {
+        const key = Obj.getMeta(skill).key;
+        return key !== undefined ? { id: key, label: skill.name } : undefined;
       })
       .filter((item): item is { id: string; label: string } => item !== undefined),
   );
@@ -265,7 +265,7 @@ const BlueprintPicker = (props: Pick<PickerProps, 'selected' | 'onSave' | 'onCan
   return (
     <Picker
       multi
-      title='Select Blueprints'
+      title='Select Skills'
       items={items()}
       selected={props.selected}
       onSave={(ids) => props.onSave?.(ids)}

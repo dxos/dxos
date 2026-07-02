@@ -11,12 +11,15 @@ import { type Density, type Elevation } from '@dxos/ui-types';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import { Icon } from '../Icon';
 
 type ButtonProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.button>> & {
   variant?: 'default' | 'primary' | 'outline' | 'ghost' | 'destructive' | 'valence';
   density?: Density;
   elevation?: Elevation;
   asChild?: boolean;
+  /** Render a trailing caret indicating the button opens a menu. */
+  caretDown?: boolean;
 };
 
 type ButtonGroupContextValue = { inGroup?: boolean };
@@ -31,7 +34,16 @@ const [ButtonGroupProvider, useButtonGroupContext] = createContext<ButtonGroupCo
 const Button = memo(
   forwardRef<HTMLButtonElement, ButtonProps>(
     (
-      { classNames, children, density: densityProp, elevation: elevationProp, variant = 'default', asChild, ...props },
+      {
+        classNames,
+        children,
+        density: densityProp,
+        elevation: elevationProp,
+        variant = 'default',
+        asChild,
+        caretDown,
+        ...props
+      },
       ref,
     ) => {
       const { inGroup } = useButtonGroupContext(BUTTON_NAME);
@@ -59,7 +71,16 @@ const Button = memo(
           )}
           {...(props.disabled && { disabled: true })}
         >
-          {children}
+          {/* `asChild` forwards a single child via Slot (React.Children.only); only add the caret in
+              the non-`asChild` case so Slot still receives exactly one child. */}
+          {caretDown && !asChild ? (
+            <>
+              {children}
+              <Icon size={3} icon='ph--caret-down--bold' />
+            </>
+          ) : (
+            children
+          )}
         </Comp>
       );
     },
@@ -88,6 +109,6 @@ const ButtonGroup = forwardRef<HTMLDivElement, ButtonGroupProps>(
 
 ButtonGroup.displayName = BUTTON_GROUP_NAME;
 
-export { Button, ButtonGroup, BUTTON_GROUP_NAME, useButtonGroupContext };
+export { Button, BUTTON_GROUP_NAME, ButtonGroup, useButtonGroupContext };
 
-export type { ButtonProps, ButtonGroupProps };
+export type { ButtonGroupProps, ButtonProps };

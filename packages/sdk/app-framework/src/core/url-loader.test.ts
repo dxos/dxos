@@ -129,8 +129,8 @@ describe('UrlLoader', () => {
       Effect.gen(function* () {
         const testPlugin = Plugin.make(Plugin.define(testMeta))();
         const loader = UrlLoader.make([testPlugin]);
-        const result = yield* loader(testMeta.id);
-        assert.strictEqual(result.plugin.meta.id, testMeta.id);
+        const result = yield* loader(testMeta.profile.key);
+        assert.strictEqual(result.plugin.meta.profile.key, testMeta.profile.key);
         // Builtins are not dev plugins.
         assert.notOk(result.dev);
       }),

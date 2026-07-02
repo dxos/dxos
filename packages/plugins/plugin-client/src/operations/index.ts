@@ -12,6 +12,7 @@ export const ClientOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./create-passkey'),
   () => import('./create-recovery-code'),
   () => import('./join-identity'),
+  () => import('./open-usage'),
   () => import('./recover-identity'),
   () => import('./redeem-passkey'),
   () => import('./redeem-token'),

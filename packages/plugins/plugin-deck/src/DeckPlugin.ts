@@ -6,7 +6,6 @@ import { setAutoFreeze } from 'immer';
 
 import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
 
 import {
   AppGraphBuilder,
@@ -35,7 +34,7 @@ export const DeckPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({ translations: [...translations, ...stackTranslations] }),
+  AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupSettings,
     firesAfterActivation: [DeckEvents.SettingsReady],
@@ -70,7 +69,7 @@ export const DeckPlugin = Plugin.define(meta).pipe(
     activate: NotificationTracker,
   }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

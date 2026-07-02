@@ -7,22 +7,24 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { Filter, Obj, Tag as EchoTag } from '@dxos/echo';
+import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Filter, Obj, Tag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Card, type ThemedClassName } from '@dxos/react-ui';
+import { Card, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
+import { TagIndex } from '@dxos/schema';
 import { type Actor, type Message as MessageType } from '@dxos/types';
-import { decorateMarkdown, preview } from '@dxos/ui-editor';
 
-import { InboxCapabilities, Mailbox } from '#types';
+import { InboxCapabilities, Mailbox, Starred } from '#types';
 
-import { hideRemoteImages } from '../../extensions';
-import { useExtractedObjects } from '../../hooks';
+import { useExtractedObjects, useMessageTags } from '../../hooks';
 import { formatDateTime } from '../../util';
 import { Header } from '../Header';
 import { MarkdownViewer } from '../MarkdownViewer';
+import { Row } from '../Row';
 import { type ViewMode } from '../ViewMode';
 import { useMessageActions } from './useToolbar';
 
@@ -36,6 +38,8 @@ type MessageContextValue = {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
   message: MessageType.Message;
+  /** Owning mailbox; enables starring (the message's tag association lives in the mailbox's tag index). */
+  mailbox?: Mailbox.Mailbox;
   sender: EID.EID | undefined;
   onOpen?: () => void;
   onReply?: () => void;
@@ -50,6 +54,9 @@ const [MessageContextProvider, useMessageContext] = createContext<MessageContext
 // (e.g., in standalone storybook contexts). Keeps Message renderable without the plugin manager
 // providing settings.
 const FALLBACK_SETTINGS_ATOM = Atom.make({ loadRemoteImages: false });
+
+// Stable fallback so `useAtomValue` always receives an atom when the message isn't starrable.
+const NOT_STARRED = Atom.make(false);
 
 //
 // Root
@@ -112,11 +119,15 @@ const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
     [setSettings],
   );
 
+  // Optional: the graph capability isn't present in standalone (no-graph-plugin) stories.
+  const graph = useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
   const menuActions = useMessageActions({
+    graph,
+    nodeId: attendableId,
     message,
+    loadRemoteImages,
     viewMode,
     setViewMode,
-    loadRemoteImages,
     onToggleLoadImages,
     onOpen,
     onReply,
@@ -150,7 +161,7 @@ const MessageViewport = composable<HTMLDivElement, MessageViewportProps>(
           role: 'none',
           classNames: [
             'overflow-hidden grid',
-            role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
+            role === AppSurface.Section.role ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
           ],
         })}
         ref={forwardedRef}
@@ -174,7 +185,7 @@ type MessageHeaderProps = ThemedClassName<{
 }>;
 
 const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
-  const { message } = useMessageContext(MESSAGE_HEADER_NAME);
+  const { message, mailbox } = useMessageContext(MESSAGE_HEADER_NAME);
   const space = getSpace(message);
   const db = space?.db;
   const relationObjects = useExtractedObjects(db, message);
@@ -189,13 +200,24 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   }, [mailboxes]);
 
   // Resolve the message's tag uris (from the Mailbox tag index) to Tag objects for label/hue.
-  const tagObjects = useQuery(db, Filter.type(EchoTag.Tag));
-  const tagByUri = new Map(tagObjects.map((tag) => [Obj.getURI(tag).toString(), tag]));
-  const tagUris = mailboxes.flatMap((mailbox) => Mailbox.getTagsForMessage(mailbox, message));
-  const tags = [...new Set(tagUris)].flatMap((uri) => {
-    const tag = tagByUri.get(uri);
-    return tag ? [{ id: uri, label: tag.label, hue: tag.hue }] : [];
-  });
+  const tagObjects = useQuery(db, Filter.type(Tag.Tag));
+  const messageTags = useMessageTags(mailboxes, message, tagObjects);
+
+  // Starring uses the owning mailbox's tag index (messages are feed objects). Subscribe to the index
+  // via `TagIndex.atom` so the star reflects toggles immediately (membership-scoped reactivity).
+  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
+  const starredUri = starredTag && Obj.getURI(starredTag).toString();
+  const tagIndex = mailbox?.tags?.target;
+  const starredAtom = useMemo(
+    () => (tagIndex && starredUri ? TagIndex.atom(tagIndex, message.id, starredUri) : NOT_STARRED),
+    [tagIndex, message.id, starredUri],
+  );
+  const starred = useAtomValue(starredAtom);
+  const handleToggleStar = useCallback(() => {
+    if (mailbox && db) {
+      void Starred.toggleStarred(mailbox, message, db);
+    }
+  }, [mailbox, message, db]);
 
   // Merge objects from `ExtractedFrom` relations (live space-db sources) with those recorded on
   // the Mailbox keyed by message id (feed-stored sources, which can't be relation endpoints),
@@ -214,33 +236,38 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   }, [relationObjects, mailboxes, message.id, db]);
 
   return (
-    <Card.Root border={false} fullWidth classNames='p-1 border-b border-subdued-separator' data-testid='message-header'>
-      <Card.Body>
-        {/* Subject row. */}
-        <Card.Row icon='ph--envelope-open--regular'>
-          <div className='flex flex-col gap-1 overflow-hidden'>
-            <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
-            {message.created && (
-              <div className='whitespace-nowrap text-sm text-description'>
-                {formatDateTime(new Date(message.created), new Date())}
-              </div>
-            )}
-          </div>
-        </Card.Row>
+    <Header.Root data-testid='message-header'>
+      {/* Subject row. */}
+      <Card.Row>
+        <Card.Block>
+          {mailbox ? (
+            <Row.Star starred={starred} onToggle={handleToggleStar} />
+          ) : (
+            <Icon icon='ph--envelope-open--regular' />
+          )}
+        </Card.Block>
+        <div className='flex flex-col gap-1 overflow-hidden'>
+          <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
+          {message.created && (
+            <div className='whitespace-nowrap text-sm text-description'>
+              {formatDateTime(new Date(message.created), new Date())}
+            </div>
+          )}
+        </div>
+      </Card.Row>
 
-        {/* Sender row. */}
-        {/* TODO(burdon): List other To/CC/BCC. */}
-        <Header.PersonRow actor={message.sender} db={db} onContactCreate={onContactCreate} />
+      {/* Sender row. */}
+      {/* TODO(burdon): List other To/CC/BCC (Message schema only models `sender` today). */}
+      <Row.Person actor={message.sender} role='from' db={db} onContactCreate={onContactCreate} />
 
-        {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
-        {objects.map((object) => (
-          <Header.ObjectRow key={Obj.getURI(object).toString()} object={object} />
-        ))}
+      {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
+      {objects.map((object) => (
+        <Row.Ref key={Obj.getURI(object).toString()} object={object} />
+      ))}
 
-        {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
-        <Header.TagsRow tags={tags} />
-      </Card.Body>
-    </Card.Root>
+      {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
+      <Row.Tags tags={messageTags} />
+    </Header.Root>
   );
 };
 
@@ -269,43 +296,13 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
     return (viewMode === 'enriched' ? textBlocks[1]?.text : textBlocks[0]?.text) || '';
   }, [message.blocks, viewMode]);
 
-  const markdown = viewMode !== 'plain';
-
-  // Message-specific decorations layered on the shared MarkdownViewer core (which already provides
-  // read-only / markdown / theme / open-links). Only meaningful in markdown/enriched views.
-  const extensions = useMemo(
-    () =>
-      markdown
-        ? [
-            decorateMarkdown({
-              skip: (node) => {
-                // Skip dxn: links and images entirely (handled by preview()).
-                if ((node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:')) {
-                  return true;
-                }
-                // When remote-image loading is disabled, suppress http(s) image rendering;
-                // `hideRemoteImages` below also omits the raw markdown source entirely.
-                if (node.name === 'Image' && /^https?:\/\//.test(node.url) && !loadRemoteImages) {
-                  return true;
-                }
-                return false;
-              },
-            }),
-            preview(),
-            // When remote images are disabled, completely omit the image markdown (no visible link).
-            ...(loadRemoteImages ? [] : [hideRemoteImages()]),
-          ]
-        : [],
-    [markdown, loadRemoteImages],
-  );
-
   return (
     <MarkdownViewer
-      content={content}
-      markdown={markdown}
-      slots={{ content: { className: 'mx-4!' } }}
-      extensions={extensions}
       classNames={classNames}
+      content={content}
+      markdown={viewMode !== 'plain'}
+      loadRemoteImages={loadRemoteImages}
+      slots={{ content: { className: 'mx-4!' } }}
     />
   );
 };
@@ -325,4 +322,4 @@ export const Message = {
   Body: MessageBody,
 };
 
-export type { MessageRootProps, MessageViewportProps, MessageHeaderProps, MessageBodyProps };
+export type { MessageBodyProps, MessageHeaderProps, MessageRootProps, MessageViewportProps };

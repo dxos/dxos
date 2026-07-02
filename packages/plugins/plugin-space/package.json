@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-space",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "DXOS Surface plugin for DXOS ECHO Spaces",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -86,6 +86,16 @@
       "types": "./dist/types/src/plugin.d.ts",
       "default": "./dist/lib/neutral/plugin.mjs"
     },
+    "./components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/neutral/components/index.mjs"
+    },
+    "./constants": {
+      "source": "./src/constants.ts",
+      "types": "./dist/types/src/constants.d.ts",
+      "default": "./dist/lib/neutral/constants.mjs"
+    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
@@ -105,6 +115,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src",
     "PLUGIN.mdl"
   ],
@@ -121,6 +132,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",

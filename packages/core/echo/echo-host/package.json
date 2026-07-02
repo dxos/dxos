@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-host",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -27,6 +27,11 @@
       "source": "./src/filter/index.ts",
       "types": "./dist/types/src/filter/index.d.ts",
       "default": "./dist/lib/neutral/filter/index.mjs"
+    },
+    "./query": {
+      "source": "./src/query/planner.ts",
+      "types": "./dist/types/src/query/planner.d.ts",
+      "default": "./dist/lib/neutral/query/planner.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

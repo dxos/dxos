@@ -9,7 +9,7 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 're
 import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Ref } from '@dxos/echo';
-import { createDocAccessor } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -65,7 +65,7 @@ const languageForPath = (path: string) => {
 // introspect explorer so the visual rhythm matches across panels.
 export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
   ({ role, subject: project, attendableId }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
     const invoker = useOperationInvoker();
     const [buildRunState, updateBuildRun] = useAtomCapabilityState(CodeCapabilities.BuildRun);
     const projectId = project.id;
@@ -275,7 +275,7 @@ const FileEditor = ({ file, role }: FileEditorProps) => {
         target &&
           createDataExtensions({
             id: file.id,
-            text: createDocAccessor(target, ['content']),
+            text: Doc.createAccessor(target, ['content']),
             messenger: space,
             identity,
           }),

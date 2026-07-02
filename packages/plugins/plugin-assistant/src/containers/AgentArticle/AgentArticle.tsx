@@ -12,7 +12,7 @@ import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, IconButton, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
@@ -26,7 +26,7 @@ type Tab = 'artifacts' | 'inputs';
 export type AgentArticleProps = AppSurface.ObjectArticleProps<Agent.Agent>;
 
 export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [tab, setTab] = useState<Tab>('artifacts');
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
@@ -34,7 +34,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   // TODO(burdon): Clear input feed also.
   const resetHistory = useSpaceCallback(
     spaceId,
-    [Feed.FeedService, Database.Service] as const,
+    [Database.Service] as const,
     Effect.fnUntraced(function* () {
       yield* Agent.resetChatHistory(agent);
       if (!agent.feed) {
@@ -146,21 +146,21 @@ const ArtifactTileCard = composable<HTMLDivElement, { data: Obj.Unknown }>(({ da
   return (
     <Card.Root {...props} ref={forwardedRef} data-testid='board-item' fullWidth>
       <Card.Header>
-        <Card.IconBlock>
-          <Card.Icon icon={icon} />
-        </Card.IconBlock>
+        <Card.Block>
+          <Icon icon={icon} />
+        </Card.Block>
         <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
         {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-        <Card.IconBlock>
+        <Card.Block end>
           <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
-            <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+            <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
           </Menu.Trigger>
           <Menu.Content items={objectMenuItems} />
-        </Card.IconBlock>
+        </Card.Block>
       </Card.Header>
       <Card.Body>
         <Surface.Surface
-          type={AppSurface.Card}
+          type={AppSurface.CardContent}
           limit={1}
           data={{ subject: data } satisfies AppSurface.ObjectCardData}
         />

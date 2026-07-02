@@ -18,6 +18,7 @@ import {
   RecoveryCodeDialog,
   RecoveryCredentialsContainer,
   ResetDialog,
+  UsageContainer,
 } from '#containers';
 import { Account, type ClientPluginOptions } from '#types';
 
@@ -56,6 +57,11 @@ export default Capability.makeModule(
         id: Account.Invitations,
         filter: AppSurface.literal(AppSurface.Article, Account.Invitations),
         component: () => <InvitationsContainer />,
+      }),
+      Surface.create({
+        id: Account.Usage,
+        filter: AppSurface.literal(AppSurface.Article, Account.Usage),
+        component: () => <UsageContainer />,
       }),
       Surface.create({
         id: JOIN_DIALOG,

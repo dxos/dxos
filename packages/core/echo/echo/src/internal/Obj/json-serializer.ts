@@ -15,9 +15,9 @@ import type * as Obj from '../../Obj';
 import { getTypeAnnotation, getTypeURI, setTypename } from '../Annotation';
 import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
 import {
+  type AnyEntity,
   ATTR_PARENT,
   ATTR_TYPE,
-  type AnyEntity,
   EntityKind,
   KindId,
   ParentId,
@@ -129,8 +129,8 @@ export const objectFromJSON = async (
     const sourceDxn = jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source'));
     const targetDxn = jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target'));
 
-    const source = (await refResolver?.resolve(sourceDxn)) as AnyEntity | undefined;
-    const target = (await refResolver?.resolve(targetDxn)) as AnyEntity | undefined;
+    const source = (await refResolver?.resolveLegacy(sourceDxn)) as AnyEntity | undefined;
+    const target = (await refResolver?.resolveLegacy(targetDxn)) as AnyEntity | undefined;
 
     defineHiddenProperty(obj, KindId, EntityKind.Relation);
     defineHiddenProperty(obj, RelationSourceDXNId, sourceDxn);
@@ -161,7 +161,7 @@ export const objectFromJSON = async (
 
   if (jsonData[ATTR_PARENT]) {
     const parentDxn = jsonData[ATTR_PARENT];
-    const resolvedParent = (await refResolver?.resolve(parentDxn)) as Obj.Unknown | undefined;
+    const resolvedParent = (await refResolver?.resolveLegacy(parentDxn)) as Obj.Unknown | undefined;
     defineHiddenProperty(obj, ParentId, resolvedParent);
   } else if (parent) {
     defineHiddenProperty(obj, ParentId, parent);

@@ -4,11 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { BlueprintsAnnotation } from '@dxos/app-toolkit';
+import { AppAnnotation } from '@dxos/app-toolkit';
 import { Annotation, DXN, JsonSchema, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-export const BLUEPRINT_KEY = 'org.dxos.plugin.commerce/blueprint/provider';
+export const SKILL_KEY = 'org.dxos.plugin.commerce/skill/provider';
 
 /** Binds a request parameter to a search-schema field, with an optional transform hint. */
 export const FieldBinding = Schema.Struct({
@@ -49,24 +49,24 @@ export const ResultMapping = Schema.Struct({
 export type ResultMapping = Schema.Schema.Type<typeof ResultMapping>;
 
 /** A configured search provider (API or scrape target). */
-export const Provider = Schema.Struct({
-  name: Schema.String.pipe(Schema.annotations({ title: 'Name' })),
-  url: Schema.String.pipe(Schema.annotations({ title: 'URL' })),
-  description: Schema.optional(Schema.String),
-  kind: Schema.Literal('api', 'scrape').pipe(Schema.annotations({ title: 'Kind' })),
-  // Raw JSONSchema of the typed search fields; authored by the blueprint and hidden from forms
-  // (it is converted to an Effect Schema to drive the Search criteria form).
-  searchSchema: JsonSchema.JsonSchema.pipe(FormInputAnnotation.set(false), Schema.optional),
-  // Mapping structs are Effect Schemas and render as nested form fields in the Provider editor.
-  request: Schema.optional(RequestMapping),
-  result: Schema.optional(ResultMapping),
-}).pipe(
-  LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--package--regular', hue: 'cyan' }),
-  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
-  Type.makeObject(DXN.make('org.dxos.type.commerce.Provider', '0.1.0')),
-);
-export type Provider = Type.InstanceType<typeof Provider>;
+export class Provider extends Type.makeObject<Provider>(DXN.make('org.dxos.type.commerce.Provider', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.String.pipe(Schema.annotations({ title: 'Name' })),
+    url: Schema.String.pipe(Schema.annotations({ title: 'URL' })),
+    description: Schema.optional(Schema.String),
+    kind: Schema.Literal('api', 'scrape').pipe(Schema.annotations({ title: 'Kind' })),
+    // Raw JSONSchema of the typed search fields; authored by the skill and hidden from forms
+    // (it is converted to an Effect Schema to drive the Search criteria form).
+    searchSchema: JsonSchema.JsonSchema.pipe(FormInputAnnotation.set(false), Schema.optional),
+    // Mapping structs are Effect Schemas and render as nested form fields in the Provider editor.
+    request: Schema.optional(RequestMapping),
+    result: Schema.optional(ResultMapping),
+  }).pipe(
+    LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--package--regular', hue: 'cyan' }),
+    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+  ),
+) {}
 
 /** Checks if a value is a Provider object. */
 export const instanceOf = (value: unknown): value is Provider => Obj.instanceOf(Provider, value);

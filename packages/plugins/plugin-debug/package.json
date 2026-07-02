@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-debug",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "DXOS Surface plugin for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -76,6 +76,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src",
     "PLUGIN.mdl"
   ],

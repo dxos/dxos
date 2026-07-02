@@ -4,12 +4,10 @@
 
 import { next as A } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-client';
 import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { EntityId } from '@dxos/keys';
@@ -17,15 +15,19 @@ import { EntityId } from '@dxos/keys';
 import * as TagIndex from './TagIndex';
 
 /** A minimal item standing in for an immutable feed object. */
-const Item = Schema.Struct({
-  text: Schema.String,
-}).pipe(Type.makeObject(DXN.make('org.dxos.test.tagindex.Item', '0.1.0')));
+const Item = Type.makeObject(DXN.make('org.dxos.test.tagindex.Item', '0.1.0'))(
+  Schema.Struct({
+    text: Schema.String,
+  }),
+);
 
 /** A host pairing an immutable feed of items with a referenced tag index over them. */
-const Host = Schema.Struct({
-  feed: Ref.Ref(Feed.Feed),
-  tags: Ref.Ref(TagIndex.TagIndex),
-}).pipe(Type.makeObject(DXN.make('org.dxos.test.tagindex.Host', '0.1.0')));
+const Host = Type.makeObject(DXN.make('org.dxos.test.tagindex.Host', '0.1.0'))(
+  Schema.Struct({
+    feed: Ref.Ref(Feed.Feed),
+    tags: Ref.Ref(TagIndex.TagIndex),
+  }),
+);
 
 describe('TagIndex', () => {
   test('sets, unsets, and inverts feed-object tags', () => {
@@ -136,8 +138,7 @@ describe('TagIndex (feed integration)', () => {
   test('tags immutable feed objects and filters the feed by tag', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, Item, Host, TagIndex.TagIndex] });
     const db = await peer.createDatabase();
-    const queues = peer.client.constructQueueFactory(db.spaceId);
-    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+    const testLayer = Database.layer(db);
 
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());
@@ -162,7 +163,7 @@ describe('TagIndex (feed integration)', () => {
       expect(tags.tags(hello.id)).toEqual([urgent]);
 
       // Filter the feed by tag.
-      const items = yield* Feed.runQuery(feed, Filter.type(Item));
+      const items = yield* Feed.query(feed, Filter.type(Item)).run;
       const tagged = new Set(tags.objects(urgent));
       expect(items.filter((item) => tagged.has(item.id)).map((item) => item.text)).toEqual(['hello']);
 

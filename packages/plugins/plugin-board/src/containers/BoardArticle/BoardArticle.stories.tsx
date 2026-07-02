@@ -14,7 +14,6 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
@@ -111,7 +110,7 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations: [...translations, ...stackTranslations],
+    translations,
   },
 };
 

@@ -7,14 +7,14 @@ import React, { useCallback, useRef } from 'react';
 
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Card, IconBlock, Input, Select, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, IconBlock, Input, Select, useTranslation } from '@dxos/react-ui';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { EMAIL_REGEX, REF_REGEX, RefEditor } from '@dxos/react-ui-form';
 import { type Actor, type Event as EventType, Person } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { Header } from '../Header';
+import { Row } from '../Row';
 
 export type EventEditorProps = {
   event: EventType.Event;
@@ -28,7 +28,7 @@ export type EventEditorProps = {
  * controlled inputs; mutations go through its update callback.
  */
 export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const [data, update] = useObject(event);
 
   const allDay = !!data.allDay;
@@ -191,13 +191,12 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
       </Card.Row>
 
       <Input.Root>
-        <Card.Row
-          icon={
+        <Card.Row>
+          <Card.Block>
             <IconBlock>
               <Input.TriggerIcon icon='ph--calendar--regular' />
             </IconBlock>
-          }
-        >
+          </Card.Block>
           <div className={gridClasses}>
             {allDay ? (
               <Input.Date value={toDateInput(data.startDate)} onValueChange={handleStartDateChange} />
@@ -216,13 +215,12 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
 
       {!allDay && (
         <Input.Root>
-          <Card.Row
-            icon={
+          <Card.Row>
+            <Card.Block>
               <IconBlock>
                 <Input.TriggerIcon icon='ph--calendar--regular' />
               </IconBlock>
-            }
-          >
+            </Card.Block>
             <div className={gridClasses}>
               <Input.DateTime value={toDateTimeInput(data.endDate)} onValueChange={handleEndDateTimeChange} />
               <SelectDuration value={presetValue} onValueChange={handleDurationChange} />
@@ -232,9 +230,10 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
       )}
 
       {data.attendees.map((attendee, index) => (
-        <Header.PersonRow
+        <Row.Person
           key={attendee.email ?? index}
           actor={attendee}
+          role='attendee'
           db={db}
           onContactCreate={onContactCreate}
           onRemove={() => handleAttendeeRemove(index)}
@@ -242,7 +241,10 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
       ))}
 
       {/* Always-blank row for adding the next attendee. */}
-      <Card.Row icon='ph--user-plus--regular' classNames='items-center'>
+      <Card.Row classNames='items-center'>
+        <Card.Block>
+          <Icon icon='ph--user-plus--regular' />
+        </Card.Block>
         <RefEditor
           db={db}
           type={Person.Person}
@@ -267,7 +269,7 @@ type SelectDurationProps = {
 
 /** Duration preset picker. Empty string keeps the control controlled so it clears to the placeholder. */
 const SelectDuration = ({ value, onValueChange }: SelectDurationProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   return (
     <Select.Root value={value ?? ''} onValueChange={onValueChange}>
       <Select.TriggerButton placeholder={t('event-duration.placeholder')} />

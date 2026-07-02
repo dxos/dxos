@@ -5,7 +5,15 @@
 import { format } from 'date-fns';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import { Card, ScrollArea, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import {
+  Card,
+  Icon,
+  ScrollArea,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
@@ -29,7 +37,7 @@ type OfferTileProps = Pick<MosaicTileProps<OfferTileData>, 'data' | 'location' |
 const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, current }, forwardedRef) => {
   const { offer, onSelect } = data;
   const { setCurrentId } = useMosaicContainer('OfferTile');
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const handleCurrentChange = useCallback(() => {
     setCurrentId(offer.id);
@@ -51,7 +59,9 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} ref={forwardedRef}>
           <Card.Header>
-            <Card.Icon icon='ph--airplane--regular' />
+            <Card.Block>
+              <Icon icon='ph--airplane--regular' />
+            </Card.Block>
             <div className='flex items-baseline justify-between gap-2 min-w-0'>
               <Card.Title classNames='truncate'>{offer.operator.name}</Card.Title>
               <Card.Text classNames='font-mono shrink-0'>
@@ -68,7 +78,10 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
               </Card.Row>
             )}
             {departAt && (
-              <Card.Row icon='ph--calendar--regular'>
+              <Card.Row>
+                <Card.Block>
+                  <Icon icon='ph--calendar--regular' />
+                </Card.Block>
                 <Card.Text variant='description'>{format(new Date(departAt), 'PPp')}</Card.Text>
               </Card.Row>
             )}

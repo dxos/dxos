@@ -16,7 +16,7 @@ When writing code:
 - Include type definitions.
 - Add JSDoc comments for public functions.
 - Keep components pure and composable.
-- Use proper error handling with Effect.
+- Use proper error handling with Effect; never put untyped `Error` in an Effect's error type parameter — use `BaseError.extend` or `Data.TaggedClass`.
 - Include proper event handler types for React components.
 - All comments should be in English and end with a period.
 

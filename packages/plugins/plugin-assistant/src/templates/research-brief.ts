@@ -2,16 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type AutomationCapabilities } from '@dxos/plugin-automation';
+import { type RoutineCapabilities } from '@dxos/plugin-routine';
 
-import { makeScheduledRoutineAutomation } from './scaffold';
+import { makeScheduledRoutine } from './scaffold';
 
-/** The research blueprint drives the brief; web-search, markdown, and database tools support it. */
-const BLUEPRINT_KEYS = [
-  'org.dxos.blueprint.research',
-  'org.dxos.blueprint.webSearch',
-  'org.dxos.blueprint.markdown',
-  'org.dxos.blueprint.database',
+/** The research skill drives the brief; web-search, markdown, and database tools support it. */
+const SKILL_KEYS = [
+  'org.dxos.skill.research',
+  'org.dxos.skill.webSearch',
+  'org.dxos.skill.markdown',
+  'org.dxos.skill.database',
 ] as const;
 
 /** Runs weekly by default; the user edits the schedule and the topic by opening the trigger and routine. */
@@ -26,15 +26,17 @@ Gather current information with the web-search and research tools. Summarize the
 sources you used, and create a markdown document titled with the topic and the current date.
 `;
 
-export const researchBrief: AutomationCapabilities.Template = {
-  id: 'org.dxos.automation.researchBrief',
+export const researchBrief: RoutineCapabilities.Template = {
+  id: 'org.dxos.routine.researchBrief',
   label: 'Research Brief',
   icon: 'ph--newspaper--regular',
+  // Scheduled space-level research — not meaningful for a specific object companion.
+  appliesTo: (subject) => subject == null,
   scaffold: ({ name }) =>
-    makeScheduledRoutineAutomation({
+    makeScheduledRoutine({
       name: name ?? 'Research Brief',
-      instructions: DEFAULT_INSTRUCTIONS,
-      blueprintKeys: BLUEPRINT_KEYS,
+      text: DEFAULT_INSTRUCTIONS,
+      skillKeys: SKILL_KEYS,
       cron: DEFAULT_CRON,
     }),
 };

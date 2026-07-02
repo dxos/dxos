@@ -16,7 +16,7 @@ const SAMPLE = readFileSync(
   'utf8',
 );
 
-// A result mapping of the shape the LLM blueprint is expected to author for AutoTrader (selectors
+// A result mapping of the shape the LLM skill is expected to author for AutoTrader (selectors
 // over the real `data-testid`s). This test proves the ENGINE's extraction primitive can pull
 // structured listings from genuine AutoTrader markup — not that we hand-maintain this template.
 const RESULT_MAPPING: Provider.ResultMapping = {

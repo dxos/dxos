@@ -7,26 +7,25 @@
 // tool; click to select. Selection is controlled — the parent owns the
 // currently-selected tool name and renders the form / results panel for it.
 //
-// Built on `RowList` from `@dxos/react-ui-list`, which provides the
-// `aria-selected` / `dx-selected` pairing (via `selectedId` /
-// `onSelectChange`), tabster arrow-key navigation, and the
-// `ScrollArea`-backed Viewport for free.
+// Built on `Listbox` from `@dxos/react-ui-list`, which provides the
+// `aria-selected` / `dx-selected` pairing (via `value` / `onValueChange`),
+// tabster arrow-key navigation, and the `ScrollArea`-backed Viewport for free.
 
 import React, { useCallback, useMemo } from 'react';
 
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Row, RowList } from '@dxos/react-ui-list';
+import { Listbox } from '@dxos/react-ui-list';
 
 import { translationKey } from '#translations';
 
 import type { ToolEntry } from '../types';
 
 // Not `composable()` — ToolList's outermost rendered element is
-// `<RowList.Root>`, which is headless. Slot-merging className/ref onto
+// `<Listbox.Root>`, which is headless. Slot-merging className/ref onto
 // a headless component is a no-op, so an `asChild` surface here would
 // be misleading. Consumers needing slot semantics should reach for
-// `RowList` directly. `classNames` flows through to the visible
-// scroll surface (`RowList.Viewport`).
+// `Listbox` directly. `classNames` flows through to the visible
+// scroll surface (`Listbox.Viewport`).
 export type ToolListProps = ThemedClassName<{
   /**
    * Tool definitions keyed by their MCP tool name (`list_packages`,
@@ -55,20 +54,22 @@ export const ToolList = ({ tools, selected, onSelect, classNames }: ToolListProp
   );
 
   return (
-    <RowList.Root selectedId={selected ?? undefined} onSelectChange={handleCurrentChange}>
-      <RowList.Viewport classNames={classNames} thin>
-        <RowList.Content aria-label={t('tools.label')}>
+    <Listbox.Root value={selected ?? undefined} onValueChange={handleCurrentChange}>
+      <Listbox.Viewport classNames={classNames} thin>
+        <Listbox.Content aria-label={t('tools.label')}>
           {entries.map(([name, tool]) => (
-            <Row key={name} id={name}>
-              <div className='font-mono text-xs text-info-text'>{name}</div>
-              <div className='font-medium'>{tool.title}</div>
-              {tool.description && (
-                <div className='text-sm text-description line-clamp-2 mt-1'>{tool.description.trim()}</div>
-              )}
-            </Row>
+            <Listbox.Item key={name} id={name}>
+              <div className='flex flex-col grow overflow-hidden'>
+                <div className='font-mono text-xs text-info-text'>{name}</div>
+                <div className='font-medium'>{tool.title}</div>
+                {tool.description && (
+                  <div className='text-sm text-description line-clamp-2 mt-1'>{tool.description.trim()}</div>
+                )}
+              </div>
+            </Listbox.Item>
           ))}
-        </RowList.Content>
-      </RowList.Viewport>
-    </RowList.Root>
+        </Listbox.Content>
+      </Listbox.Viewport>
+    </Listbox.Root>
   );
 };

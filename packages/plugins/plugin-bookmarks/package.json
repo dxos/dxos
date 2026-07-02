@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-bookmarks",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "Bookmarks for clipped web pages.",
   "homepage": "https://dxos.org",
@@ -81,6 +81,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src",
     "PLUGIN.mdl"
   ],
@@ -91,7 +92,7 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

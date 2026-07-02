@@ -2,14 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation, RootCollectionAnnotation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import { AppAnnotation, AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import {
   AutomergePanel,
   ConfigPanel,
@@ -37,19 +39,22 @@ import {
   TestingPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
-import { Annotation, Collection, Feed, Obj } from '@dxos/echo';
+import { Annotation, Collection, Entity, Feed, Filter, Obj, Type } from '@dxos/echo';
+import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Graph } from '@dxos/plugin-graph';
 import { ScriptOperation } from '@dxos/plugin-script';
-import { SpaceOperation } from '@dxos/plugin-space';
+import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
+import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 import { ToolsExplorer } from '@dxos/react-ui-introspect';
+import { Position } from '@dxos/util';
 
-import { DebugSettings } from '#components';
 import {
   DebugGraph,
   DebugObjectPanel,
+  DebugSettings,
   DebugSpaceObjectsPanel,
   DebugStatus,
   DevtoolsOverviewContainer,
@@ -58,10 +63,9 @@ import {
   Wireframe,
 } from '#containers';
 import { meta } from '#meta';
-import { DebugCapabilities, type Settings, Devtools } from '#types';
+import { DebugCapabilities, Devtools, type Settings } from '#types';
 
-// TODO(burdon): Move to config.
-const MCP_SERVER_URL = 'https://introspect-service-labs.dxos.workers.dev/mcp';
+const MCP_SERVER_URL = EDGE_SERVICE_DEFAULTS[EdgeServiceName.Introspect];
 
 type SpaceDebug = {
   type: string;
@@ -73,12 +77,53 @@ type GraphDebug = {
   root: string;
 };
 
-const isSpaceDebug = (data: any): data is SpaceDebug => data?.type === `${meta.id}.space` && isSpace(data.space);
+const isSpaceDebug = (data: any): data is SpaceDebug =>
+  data?.type === `${meta.profile.key}.space` && isSpace(data.space);
 const isGraphDebug = (data: any): data is GraphDebug => {
   const graph = data?.graph;
   return (
     graph != null && typeof graph === 'object' && typeof graph.json === 'function' && typeof data?.root === 'string'
   );
+};
+
+/** Returns `onOpen` and `canOpen` for the ObjectsTree "Open" action. */
+const useObjectOpenAction = (invokePromise: ReturnType<typeof useOperationInvoker>['invokePromise']) => {
+  const client = useClient();
+  const spaceSettings = useAtomCapability(SpaceCapabilities.Settings);
+  const showHidden = spaceSettings?.showHidden ?? false;
+
+  const allTypes = useAtomValue(useMemo(() => client.graph.registry.query(Filter.type(Type.Type)).atom, [client]));
+
+  const hiddenTypenames = useMemo(() => {
+    const result = new Set<string>();
+    for (const typeEntity of allTypes) {
+      const schema = Type.getSchema(typeEntity);
+      if (HiddenAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
+        result.add(Type.getTypename(typeEntity));
+      }
+    }
+    return result;
+  }, [allTypes]);
+
+  const onOpen = useCallback(
+    (object: Obj.Unknown) => {
+      void invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(object)] });
+    },
+    [invokePromise],
+  );
+
+  const canOpen = useCallback(
+    (entity: Entity.Snapshot) => {
+      if (showHidden) {
+        return true;
+      }
+      const typename = Entity.getTypename(entity);
+      return !hiddenTypenames.has(typename ?? '');
+    },
+    [showHidden, hiddenTypenames],
+  );
+
+  return { onOpen, canOpen };
 };
 
 type ReactSurfaceOptions = {
@@ -95,7 +140,7 @@ export default Capability.makeModule(
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return (
@@ -110,8 +155,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'space',
-        role: 'article',
-        filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
+        filter: AppSurface.subject(AppSurface.Article, isSpaceDebug),
         component: ({ role, data }) => {
           const { invokePromise } = useOperationInvoker();
 
@@ -123,8 +167,9 @@ export default Capability.makeModule(
 
               const collection =
                 data.subject.space.state.get() === SpaceState.SPACE_READY &&
-                Annotation.get(data.subject.space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)
-                  ?.target;
+                Annotation.get(data.subject.space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
+                  Option.getOrUndefined,
+                )?.target;
               if (!Obj.instanceOf(Collection.Collection, collection)) {
                 return;
               }
@@ -144,8 +189,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'appGraph',
-        role: 'article',
-        filter: (data): data is { subject: GraphDebug } => isGraphDebug(data.subject),
+        filter: AppSurface.subject(AppSurface.Article, isGraphDebug),
         component: ({ data }) => <DebugGraph graph={data.subject.graph} root={data.subject.root} />,
       }),
       Surface.create({
@@ -161,12 +205,17 @@ export default Capability.makeModule(
       Surface.create({
         id: 'wireframe',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
-        role: ['article', 'section'],
-        position: 'first',
-        filter: (data): data is { subject: Obj.Unknown } => {
-          const settings = registry.get(settingsAtom);
-          return Obj.isObject(data.subject) && !!settings.wireframe;
-        },
+        filter: AppSurface.oneOf(
+          AppSurface.subject(AppSurface.Article, (value): value is Obj.Unknown => {
+            const settings = registry.get(settingsAtom);
+            return Obj.isObject(value) && !!settings.wireframe;
+          }),
+          AppSurface.subject(AppSurface.Section, (value): value is Obj.Unknown => {
+            const settings = registry.get(settingsAtom);
+            return Obj.isObject(value) && !!settings.wireframe;
+          }),
+        ),
+        position: Position.first,
         component: ({ data, role, name }) => (
           <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
         ),
@@ -177,33 +226,36 @@ export default Capability.makeModule(
           AppSurface.literal(AppSurface.Article, 'debug'),
           AppSurface.companion(AppSurface.Article),
         ),
-        component: ({ role, data }) => <DebugObjectPanel role={role} companionTo={data.companionTo} />,
+        component: ({ role, data }) => {
+          const { invokePromise } = useOperationInvoker();
+          const { onOpen, canOpen } = useObjectOpenAction(invokePromise);
+          return <DebugObjectPanel role={role} companionTo={data.companionTo} onOpen={onOpen} canOpen={canOpen} />;
+        },
       }),
       Surface.create({
         id: 'devtoolsOverview',
-        filter: AppSurface.literal(Surface.makeType<{ subject: string }>('deck-companion--devtools'), 'devtools'),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('devtools')),
         component: () => <DevtoolsOverviewContainer />,
       }),
       Surface.create({
         id: 'spaceObjects',
-        filter: AppSurface.literal(
-          Surface.makeType<{ subject: string }>('deck-companion--space-objects'),
-          'space-objects',
-        ),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('spaceObjects')),
         component: () => {
           const space = useActiveSpace();
+          const { invokePromise } = useOperationInvoker();
+          const { onOpen, canOpen } = useObjectOpenAction(invokePromise);
           if (!space) {
             return null;
           }
 
-          return <DebugSpaceObjectsPanel space={space} />;
+          return <DebugSpaceObjectsPanel space={space} onOpen={onOpen} canOpen={canOpen} />;
         },
       }),
 
       Surface.create({
         id: 'debugStatus',
-        role: 'status-indicator',
-        position: 'first',
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
+        position: Position.first,
         component: () => <DebugStatus />,
       }),
 
@@ -438,7 +490,7 @@ export default Capability.makeModule(
               log.info('script created', { result: createResult });
               if (createResult.data?.object) {
                 await invokePromise(LayoutOperation.Open, {
-                  subject: [getObjectPathFromObject(createResult.data.object)],
+                  subject: [Paths.getObjectPathFromObject(createResult.data.object)],
                 });
               }
             },

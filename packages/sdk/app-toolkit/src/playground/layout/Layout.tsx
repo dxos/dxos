@@ -8,18 +8,20 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 
+import { PlaygroundRoles } from '../roles';
+
 export const Layout = () => {
   return (
     <div className='flex flex-col gap-2'>
       <div className='flex gap-2'>
-        <Surface.Surface role='toolbar' />
+        <Surface.Surface type={PlaygroundRoles.Toolbar} />
       </div>
       <div className='flex gap-2'>
         <div className='flex-1'>
-          <Surface.Surface role='primary' limit={1} />
+          <Surface.Surface type={PlaygroundRoles.Primary} limit={1} />
         </div>
         <div className='flex-1'>
-          <Surface.Surface role='secondary' limit={1} />
+          <Surface.Surface type={PlaygroundRoles.Secondary} limit={1} />
         </div>
       </div>
     </div>

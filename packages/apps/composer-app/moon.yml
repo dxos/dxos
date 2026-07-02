@@ -36,23 +36,13 @@ tasks:
     deps:
       - prebuild
       - ^:build
+  e2e-welcome-focus:
+    command: pnpm exec playwright test --config=src/playwright/playwright-welcome-focus.config.ts
+    deps:
+      - prebuild
+      - ^:build
   test:
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
       - vite.config.ts
-  # Regenerate the Bramble Coffee Roasters exemplar space snapshot at
-  # src/plugins/welcome/content/exemplar-space.dx.json. Developer-on-demand; the
-  # snapshot is committed and not part of the default build pipeline.
-  build-exemplar:
-    script: pnpm run --silent build-exemplar
-    env:
-      BUILD_EXEMPLAR: '1'
-    deps:
-      - ^:compile
-    inputs:
-      - test/build-exemplar-space.node.test.ts
-      - src/plugins/welcome/content/welcome.md
-      - src/plugins/welcome/content/about-bramble.md
-    outputs:
-      - src/plugins/welcome/content/exemplar-space.dx.json

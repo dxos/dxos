@@ -6,7 +6,7 @@ import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, IconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { getHashStyles } from '@dxos/ui-theme';
 
@@ -78,24 +78,32 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
                 <Card.DragHandle ref={setDragHandle} testId='mosaicBoard.cardDragHandle' />
                 <Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                <Menu.Trigger asChild disabled={!items?.length}>
-                  <Toolbar.IconButton
-                    iconOnly
-                    variant='ghost'
-                    icon='ph--dots-three-vertical--regular'
-                    label={t('action-menu.label')}
-                  />
-                </Menu.Trigger>
+                <Card.Block end>
+                  <Menu.Trigger asChild disabled={!items?.length}>
+                    <IconButton
+                      iconOnly
+                      variant='ghost'
+                      icon='ph--dots-three-vertical--regular'
+                      label={t('action-menu.label')}
+                    />
+                  </Menu.Trigger>
+                </Card.Block>
                 <Menu.Content items={items} />
               </Card.Header>
               {/* TODO(burdon): Replace with surface. */}
-              <Card.Row icon='ph--note--regular' classNames='text-description'>
+              <Card.Row classNames='text-description'>
+                <Card.Block>
+                  <Icon icon='ph--note--regular' />
+                </Card.Block>
                 <Card.Text>{description}</Card.Text>
               </Card.Row>
-              <Card.Row icon='ph--tag--regular'>
+              <Card.Row>
+                <Card.Block>
+                  <Icon icon='ph--tag--regular' />
+                </Card.Block>
                 {label && (
                   <div className='shrink-0 flex gap-1 items-center text-xs'>
-                    <Tag palette={getHashStyles(label).hue}>{label}</Tag>
+                    <Tag hue={getHashStyles(label).hue}>{label}</Tag>
                   </div>
                 )}
               </Card.Row>

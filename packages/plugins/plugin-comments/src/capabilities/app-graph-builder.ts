@@ -12,9 +12,9 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { linkedSegment } from '@dxos/react-ui-attention';
-import { type SelectionManager, type SelectionMode, defaultSelection } from '@dxos/react-ui-attention';
+import { type ViewStateManager, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
 import { Channel } from '@dxos/types';
+import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { CommentOperation } from '#types';
@@ -24,30 +24,26 @@ import { getAnchor } from '../util';
 
 type CommentDisabledParams = {
   stateAtom: Atom.Atom<Atom.Writable<CommentState>[]>;
-  selectionManager: SelectionManager;
+  viewState: ViewStateManager;
   objectId: string;
   commentsType: string;
-  selectionMode: SelectionMode | undefined;
 };
 
 /**
  * Atom family to derive whether the comment button should be disabled.
  * Uses a composite key to ensure proper caching.
  */
-const commentDisabledFamily = Atom.family(
-  ({ stateAtom, selectionManager, objectId, commentsType, selectionMode }: CommentDisabledParams) =>
-    Atom.make((get) => {
-      const stateAtoms = get(stateAtom);
-      const state = stateAtoms[0] ? get(stateAtoms[0]) : undefined;
-      const toolbar = state?.toolbar ?? {};
-      const selectionState = get(selectionManager.state);
-      const selection =
-        selectionState.selections[objectId] ?? (selectionMode ? defaultSelection(selectionMode) : undefined);
-      const anchor = getAnchor(selection);
-      const invalidSelection = !anchor;
-      const overlappingComment = toolbar[objectId];
-      return (commentsType === 'anchored' && invalidSelection) || overlappingComment;
-    }),
+const commentDisabledFamily = Atom.family(({ stateAtom, viewState, objectId, commentsType }: CommentDisabledParams) =>
+  Atom.make((get) => {
+    const stateAtoms = get(stateAtom);
+    const state = stateAtoms[0] ? get(stateAtoms[0]) : undefined;
+    const toolbar = state?.toolbar ?? {};
+    const selection = get(viewState.atom(selectionAspect, objectId));
+    const anchor = getAnchor(selection);
+    const invalidSelection = !anchor;
+    const overlappingComment = toolbar[objectId];
+    return (commentsType === 'anchored' && invalidSelection) || overlappingComment;
+  }),
 );
 
 /** Match ECHO objects that are NOT Channels (i.e. objects that can have comments). */
@@ -66,8 +62,8 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'commentsCompanion',
-        match: (node) => {
-          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
+        match: (node, get) => {
+          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {
             return Option.none();
           }
           const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
@@ -77,17 +73,17 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('comments'),
-              label: ['comments.label', { ns: meta.id }],
+              label: ['comments.label', { ns: meta.profile.key }],
               icon: 'ph--chat-text--regular',
               data: 'comments',
-              position: 'first',
+              position: Position.first,
             }),
           ]),
       }),
       GraphBuilder.createExtension({
         id: 'commentToolbar',
-        match: (node) => {
-          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
+        match: (node, get) => {
+          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node, get))) {
             return Option.none();
           }
           const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
@@ -97,16 +93,15 @@ export default Capability.makeModule(
           const object = matched.data;
           const objectUri = Obj.getURI(object);
           const stateAtom = capabilities.atom(CommentCapabilities.State);
-          const selectionManager = capabilities.get(AttentionCapabilities.Selection);
+          const viewState = capabilities.get(AttentionCapabilities.ViewState);
           const commentConfig = getCommentConfig(Obj.getTypename(object)!)!;
 
           const disabled = get(
             commentDisabledFamily({
               stateAtom,
-              selectionManager,
+              viewState,
               objectId: objectUri,
               commentsType: commentConfig.comments,
-              selectionMode: commentConfig.selectionMode as SelectionMode | undefined,
             }),
           );
 
@@ -115,7 +110,7 @@ export default Capability.makeModule(
               id: 'comment',
               data: Effect.fnUntraced(function* () {
                 const config = getCommentConfig(Obj.getTypename(object)!)!;
-                const selection = selectionManager.getSelection(objectUri);
+                const selection = viewState.get(selectionAspect, objectUri);
                 const anchor =
                   (config.comments === 'anchored' ? getAnchor(selection) : undefined) ?? Date.now().toString();
                 const name = config.getAnchorLabel?.(object, anchor);
@@ -126,7 +121,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['add-comment.label', { ns: meta.id }],
+                label: ['add-comment.label', { ns: meta.profile.key }],
                 icon: 'ph--chat-text--regular',
                 disposition: 'toolbar',
                 disabled,

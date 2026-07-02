@@ -11,12 +11,7 @@ import { Type } from '@dxos/echo';
 import { SheetOperation } from '#types';
 import { Sheet } from '#types';
 
-// NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).
-const activate: () => Effect.Effect<
-  Capability.Capability<typeof AppCapabilities.CommentConfig>,
-  never,
-  Capability.Service
-> = Effect.fnUntraced(function* () {
+const activate = Effect.fnUntraced(function* () {
   const config: AppCapabilities.CommentConfig = {
     id: Type.getTypename(Sheet.Sheet),
     comments: 'anchored',

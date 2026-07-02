@@ -24,7 +24,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'bookmarkCard',
-        filter: AppSurface.object(AppSurface.Card, Bookmark.Bookmark),
+        filter: AppSurface.object(AppSurface.CardContent, Bookmark.Bookmark),
         component: ({ data, role }) => <BookmarkCard role={role} subject={data.subject} />,
       }),
     ]),

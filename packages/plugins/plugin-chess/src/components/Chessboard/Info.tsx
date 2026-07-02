@@ -24,7 +24,7 @@ export type InfoProps = ThemedClassName<
 >;
 
 export const Info = ({ classNames, orientation = 'white', onOrientationChange, onClose, ...props }: InfoProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { model } = useGameboardContext<ExtendedChessModel>(INFO_NAME);
 
   return (
@@ -87,7 +87,7 @@ type HistoryProps = ThemedClassName<{
 }>;
 
 const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const moveIndex = useAtomValue(model.moveIndex);
   const label = model.game.isGameOver()
     ? model.game.isCheckmate()
@@ -131,7 +131,9 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
   return (
     <div
       ref={scrollerRef}
-      className={mx('overflow-y-auto', classNames)}
+      tabIndex={0}
+      data-chessboard-arrow-navigation
+      className={mx('overflow-y-auto outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500', classNames)}
       style={{
         minHeight: min === undefined ? 'auto' : `${min * 24}px`,
         maxHeight: max === undefined ? 'auto' : `${max * 24}px`,

@@ -35,12 +35,12 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
 
       const builder = MenuBuilder.make()
         .root({
-          label: ['chat-toolbar.title', { ns: meta.id }],
+          label: ['chat-toolbar.title', { ns: meta.profile.key }],
         })
         .action(
           'new',
           {
-            label: ['new-thread.button', { ns: meta.id }],
+            label: ['new-thread.button', { ns: meta.profile.key }],
             icon: 'ph--plus--regular',
             type: 'new',
             disabled: !companionTo,
@@ -56,7 +56,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
         .action(
           'rename',
           {
-            label: ['rename-thread.button', { ns: meta.id }],
+            label: ['rename-thread.button', { ns: meta.profile.key }],
             icon: 'ph--magic-wand--regular',
             type: 'rename',
             disabled: !chat,
@@ -70,7 +70,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
         .action(
           'branch',
           {
-            label: ['branch-thread.menu', { ns: meta.id }],
+            label: ['branch-thread.menu', { ns: meta.profile.key }],
             icon: 'ph--git-branch--regular',
             type: 'branch',
             disabled: !chat || !db,
@@ -86,7 +86,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
         builder.group(
           'chats',
           {
-            label: ['chat-history.label', { ns: meta.id }],
+            label: ['chat-history.label', { ns: meta.profile.key }],
             icon: 'ph--clock-counter-clockwise--regular',
             selectCardinality: 'single',
             variant: 'dropdownMenu',

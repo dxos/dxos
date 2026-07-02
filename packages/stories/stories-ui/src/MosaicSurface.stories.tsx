@@ -27,7 +27,7 @@ const generator = random as any as ValueGenerator;
 
 random.seed(999);
 
-type DefaultStoryProps = {
+type StoryArgs = {
   columns?: number;
   debug?: boolean;
 };
@@ -50,7 +50,7 @@ const createColumns = (count: number, db: Database.Database) =>
     return col;
   });
 
-const DefaultStory = ({ columns: columnsProp = 1, debug = false }: DefaultStoryProps) => {
+const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryArgs) => {
   const [space] = useSpaces();
   const db = space.db;
   const registry = useContext(RegistryContext);

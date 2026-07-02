@@ -12,9 +12,13 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src"
   ],
   "references": [
+    {
+      "path": "../../common/effect"
+    },
     {
       "path": "../../common/invariant"
     },
@@ -44,6 +48,9 @@
     },
     {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../sdk/app-framework"

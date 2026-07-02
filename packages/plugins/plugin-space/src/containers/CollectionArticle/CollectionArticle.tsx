@@ -5,11 +5,11 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getCollectionObjectPath, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj } from '@dxos/echo';
 import { ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card, Toolbar } from '@dxos/react-ui';
+import { Card, Icon } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
 import { getStyles } from '@dxos/ui-theme';
@@ -20,7 +20,7 @@ import { meta } from '#meta';
  * Article view for collections.
  */
 export const CollectionArticle = ({ subject, attendableId }: AppSurface.ObjectArticleProps<Collection.Collection>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { items, handleSearch } = useCollectionItems(subject, attendableId);
 
   return (
@@ -51,7 +51,7 @@ type ObjectItem = {
 };
 
 const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   const typename = Obj.getTypename(item.object) ?? '';
@@ -68,7 +68,9 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   return (
     <Card.Root fullWidth role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
-        <Toolbar.IconButton variant='ghost' label={label} icon={item.icon} iconOnly iconClassNames={styles?.fg} />
+        <Card.Block>
+          <Icon icon={item.icon} classNames={styles?.fg} />
+        </Card.Block>
         <Card.Title>{label}</Card.Title>
         <Card.Menu />
       </Card.Header>
@@ -89,7 +91,9 @@ const useCollectionItems = (collection: Collection.Collection, attendableId?: st
     () =>
       objects.map((obj) => {
         const iconAnnotation = Obj.getIcon(obj);
-        const targetPath = attendableId ? getCollectionObjectPath(attendableId, obj.id) : getObjectPathFromObject(obj);
+        const targetPath = attendableId
+          ? Paths.getCollectionObjectPath(attendableId, obj.id)
+          : Paths.getObjectPathFromObject(obj);
 
         return {
           id: Obj.getURI(obj),

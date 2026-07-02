@@ -1,16 +1,5 @@
 version: 1
 
-package:
-  modules:
-    - name: composer
-      type: dxos:type/app
-      displayName: Composer
-      description: Composer is an open-source, extensible environment for bringing together knowledge from all systems.
-      tags:
-        - showcase
-      build:
-        command: moon run composer-app:bundle
-
 runtime:
   client:
     storage:
@@ -28,6 +17,17 @@ runtime:
       - urls: https://edge-production.dxos.workers.dev/ice
     ai:
       server: https://ai-service.dxos.workers.dev
+    sandbox:
+      url: https://sandbox-service.dxos.workers.dev
     ipfs:
       server: https://api.ipfs.dxos.network/api/v0
       gateway: https://gateway.ipfs.dxos.network/ipfs
+    edgeServices:
+      - name: calls
+        endpoint: https://calls-service.dxos.workers.dev
+      - name: transcription
+        endpoint: https://calls-service.dxos.workers.dev
+      - name: image
+        endpoint: https://image-service-main.dxos.workers.dev
+      - name: discord
+        endpoint: https://discord-service.dxos.workers.dev

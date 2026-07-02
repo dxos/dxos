@@ -5,18 +5,27 @@
 // @import-as-namespace
 
 export {
+  DEFAULT_LAYOUT_NAME,
   DescriptionAnnotation,
   FieldLookupAnnotationId,
-  FormInputAnnotation,
+  FormCreateAnnotation,
+  FormCreateAnnotationId,
   FormInlineAnnotation,
+  FormInputAnnotation,
+  FormLayoutAnnotation,
+  FormLayoutAnnotationId,
+  type FormLayoutMap,
+  FormOrderedAnnotation,
   GeneratorAnnotation,
   GeneratorAnnotationId,
   type GeneratorAnnotationValue,
+  HiddenAnnotation,
+  IconAnnotation,
+  IconFromRefAnnotation,
   LabelAnnotation,
   ReferenceAnnotation,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
-  HiddenAnnotation,
   TypeAnnotation,
   getDescriptionWithSchema,
   getLabelWithSchema,
@@ -24,8 +33,6 @@ export {
   getTypeIdentifierAnnotation,
   setDescriptionWithSchema,
   setLabelWithSchema,
-  IconAnnotation,
-  IconFromRefAnnotation,
 } from './internal/Annotation';
 
 import * as Function from 'effect/Function';
@@ -36,6 +43,7 @@ import * as Types from 'effect/Types';
 
 import * as Entity from './Entity';
 import * as internalAnnotations from './internal/Annotation';
+import * as annotationAtoms from './internal/Annotation/atoms';
 
 export const TypeId = '~@dxos/echo/Annotation' as const;
 export type TypeId = typeof TypeId;
@@ -116,6 +124,11 @@ export const make: <T>(props: MakeProps<T>) => Annotation<T> = internalAnnotatio
  * Get the value of an annotation from an entity instance or snapshot.
  * For schema-level reads use the annotation instance method (e.g. `ColorAnnotation.get(schema)`).
  * For getting an annotation value from a dictionary, use `getDictionary`.
+ *
+ * The value is read-only (schema types are readonly by default): to mutate an annotation (including
+ * in-place array splices) use `Annotation.update` or `Annotation.set`, which open a change transaction.
+ * A read-only return is sound regardless of context — the reactive proxy rejects mutation outside an
+ * `Obj.update`.
  */
 export const get: {
   <T>(annotation: Annotation<T>): (target: Entity.Unknown | Entity.Snapshot) => Option.Option<T>;
@@ -142,6 +155,18 @@ export const set: {
   return internalAnnotations.set(target, annotation, value);
 });
 
+/**
+ * Mutate an existing annotation value in place via a callback, wrapping the mutation in a change
+ * transaction (like `Obj.update`). The result is validated against the annotation's schema. Use when
+ * only an annotation needs to change; to mutate it alongside other changes (unvalidated), call
+ * `Annotation.get` inside an existing `Obj.update` instead. No-op when absent.
+ */
+export const update = <T>(
+  target: Entity.Unknown,
+  annotation: Annotation<T>,
+  mutator: (value: Entity.Mutable<T>) => void,
+): void => internalAnnotations.update(target, annotation, mutator);
+
 export const getFromAst: {
   <T>(annotation: Annotation<T>): (ast: SchemaAST.AST) => Option.Option<T>;
   <T>(ast: SchemaAST.AST, annotation: Annotation<T>): Option.Option<T>;
@@ -151,6 +176,18 @@ export const getFromAst: {
 >(2, (ast, annotation) => {
   return internalAnnotations.getFromAst(ast, annotation);
 });
+
+/**
+ * Reactive atom for an annotation value on an entity instance.
+ * Fires only when the annotation value changes (mirrors `Obj.atom`, scoped to one annotation).
+ */
+export const atom = annotationAtoms.makeAtom;
+
+/**
+ * Reactive atom for a single key of a record-valued annotation on an entity instance.
+ * Reactivity is scoped to that key, and the value type is preserved (mirrors `Obj.atomProperty`).
+ */
+export const atomProperty = annotationAtoms.makeProperty;
 
 /**
  * Set of annotation values.
@@ -200,3 +237,20 @@ export const setDictionary: {
 >(3, (values, annotation, value) => {
   return internalAnnotations.setDictionary(values, annotation, value);
 });
+
+/**
+ * Build a dictionary by mutating it in a callback.
+ *
+ * @example
+ * ```ts
+ * const dictionary = Annotation.buildDictionary((dictionary) => {
+ *   Annotation.setDictionary(dictionary, ColorAnnotation, 'red');
+ *   Annotation.setDictionary(dictionary, SizeAnnotation, '10px');
+ * });
+ * ```
+ */
+export const buildDictionary = (build: (dictionary: Types.Mutable<Dictionary>) => void): Dictionary => {
+  const dictionary = Schema.encodeSync(Dictionary)({});
+  build(dictionary);
+  return dictionary;
+};

@@ -156,10 +156,12 @@ message Runtime {
 
     // TODO(burdon): Structure snapshot/epoch related props.
 
-    optional bool enable_snapshots = 3;
+    /** Deprecated: no runtime readers (test/story stubs only). */
+    optional bool enable_snapshots = 3 [ deprecated = true ];
 
     /// Milliseconds
-    optional int32 snapshot_interval = 4;
+    /** Deprecated: no runtime readers (test/story stubs only). */
+    optional int32 snapshot_interval = 4 [ deprecated = true ];
 
     /// Milliseconds
     optional int32 invitation_expiration = 5;
@@ -463,28 +465,57 @@ message Runtime {
 
     message Hub { optional string url = 1; }
 
-    /** Deprecated */
-    optional Kube kube = 1;
-    optional AppServer app = 2;
-    optional Dxns dxns = 3;
+    /// Canonical descriptor for an EDGE (Cloudflare Worker) service.
+    /// Entries in `Services.edge_services` consolidate the per-service URL
+    /// constants previously hard-coded in consuming plugins.
+    /// NOTE: Modeled as a keyed list rather than a proto `map` because the
+    /// effect-proto schema layer does not support map fields.
+    message EdgeService {
+      /// Canonical service name (e.g. "calls", "image", "transcription"). Unique within `edge_services`.
+      optional string name = 1;
+      /// Service endpoint (http(s)/ws(s) URL).
+      optional string endpoint = 2;
+      /// Optional service-specific properties (e.g. provider path, auth scheme, region).
+      optional google.protobuf.Struct props = 3;
+    }
+
+    /** Standalone sandbox-service worker origin (API mounted at /api/sandbox). */
+    message Sandbox { optional string url = 1; }
+
+    /** Deprecated: legacy KUBE deployment descriptor; no runtime readers. */
+    optional Kube kube = 1 [ deprecated = true ];
+    /** Deprecated: no runtime readers. */
+    optional AppServer app = 2 [ deprecated = true ];
+    /** Deprecated: DXNS removed; no runtime readers. */
+    optional Dxns dxns = 3 [ deprecated = true ];
     optional Ipfs ipfs = 4;
     repeated Signal signaling = 5;
     repeated Ice ice = 6;
     repeated IceProvider ice_providers = 14;
-    optional Machine machine = 7;
-    optional BotHost bot = 8;
-    optional Publisher publisher = 9;
+    /** Deprecated: no runtime readers. */
+    optional Machine machine = 7 [ deprecated = true ];
+    /** Deprecated: no runtime readers. */
+    optional BotHost bot = 8 [ deprecated = true ];
+    /** Deprecated: no runtime readers. */
+    optional Publisher publisher = 9 [ deprecated = true ];
     /** Deprecated */
-    optional Supervisor supervisor = 10;
+    optional Supervisor supervisor = 10 [ deprecated = true ];
     /** Deprecated */
-    optional Tunneling tunneling = 11;
+    optional Tunneling tunneling = 11 [ deprecated = true ];
     /** Deprecated */
-    optional Faasd faasd = 12;
-    /** Deprecated */
+    optional Faasd faasd = 12 [ deprecated = true ];
+    /// Still read by AgentHostingProvider; retained despite legacy status.
     optional AgentHosting agent_hosting = 13;
     optional Edge edge = 15;
     optional Ai ai = 16;
     optional Hub hub = 17;
+    optional Sandbox sandbox = 18;
+
+    /// EDGE service configurations keyed by `EdgeService.name`. The canonical set
+    /// of valid names is the `EdgeServiceName` enum in
+    /// packages/sdk/config/src/edge-services.ts (e.g. "calls", "image", "discord").
+    /// Supersedes per-service URL constants; see packages/sdk/config/AUDIT.md.
+    repeated EdgeService edge_services = 19;
   }
 
   message Keys {

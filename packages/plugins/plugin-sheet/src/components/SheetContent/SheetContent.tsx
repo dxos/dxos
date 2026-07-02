@@ -75,7 +75,7 @@ const sheetRowDefault = {
 export type SheetContentProps = {};
 
 export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props, forwardedRef) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const {
     id,
     attendableId,

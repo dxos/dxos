@@ -14,6 +14,8 @@ import { trim } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
+import { Shimmer } from '../Shimmer';
+
 export type TimelineOptions = {
   lineHeight: number;
   columnWidth: number;
@@ -50,6 +52,10 @@ export type Commit = {
   /** DXN link for navigation to referenced objects. */
   link?: string;
 };
+
+const SHIMMER_EFFECT_TAG = 'effect:shimmer';
+
+const hasShimmerEffect = (commit: Commit): boolean => commit.tags?.includes(SHIMMER_EFFECT_TAG) ?? false;
 
 const empty = Object.freeze([]);
 
@@ -327,6 +333,8 @@ export const Timeline = memo(
                 onSelect?.(commit);
               };
 
+              const message = debug ? JSON.stringify({ id: commit.id, parents: commit.parents }) : commit.message;
+
               return (
                 <div
                   key={commit.id}
@@ -359,7 +367,7 @@ export const Timeline = memo(
                       hasLink && 'underline decoration-dotted underline-offset-2',
                     )}
                   >
-                    {debug ? JSON.stringify({ id: commit.id, parents: commit.parents }) : commit.message}
+                    {hasShimmerEffect(commit) ? <Shimmer>{message}</Shimmer> : message}
                   </div>
                 </div>
               );

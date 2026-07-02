@@ -45,7 +45,7 @@ export const ResponsiveGridItem = <T extends object = any>({
   speaking,
   onClick,
 }: ResponsiveGridItemProps<T>) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const iconProps: Record<string, { icon: string; label: string; classNames?: string }> = {
     wave: {
       icon: 'ph--hand-waving--duotone',

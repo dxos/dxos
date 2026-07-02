@@ -54,13 +54,7 @@
       "path": "../react-ui-mosaic"
     },
     {
-      "path": "../react-ui-stack"
-    },
-    {
       "path": "../react-ui-syntax-highlighter"
-    },
-    {
-      "path": "../react-ui-text-tooltip"
     },
     {
       "path": "../ui-theme"

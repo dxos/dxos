@@ -7,7 +7,6 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
-import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -22,9 +21,9 @@ type TestItem = {
   description: string;
 };
 
-type DefaultStoryProps = BoardRootProps & BoardContentProps & { items: TestItem[] };
+type StoryArgs = BoardRootProps & BoardContentProps & { items: TestItem[] };
 
-const DefaultStory = ({ layout: _layout, items: _items, grid, ...props }: DefaultStoryProps) => {
+const DefaultStory = ({ layout: _layout, items: _items, grid, ...props }: StoryArgs) => {
   const [items, setItems] = useState(_items ?? []);
   const [layout, setLayout] = useState<BoardLayout>(_layout ?? { size: { width: 4, height: 4 }, cells: {} });
 
@@ -100,7 +99,7 @@ const meta = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
-    translations: [...translations, ...stackTranslations],
+    translations,
   },
 } satisfies Meta<typeof DefaultStory>;
 

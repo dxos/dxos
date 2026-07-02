@@ -68,5 +68,5 @@ const useSpaceMachine = (options?: Parameters<typeof useMachine<SpaceMachine>>[1
   return useMachine(spaceMachine, { ...options, context: { ...options?.context } });
 };
 
-export type { SpaceMachine, SpaceEvent, SpaceMachineContext, SpaceState, SpaceSend };
+export type { SpaceEvent, SpaceMachine, SpaceMachineContext, SpaceSend, SpaceState };
 export { spaceMachine, useSpaceMachine };

@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Format, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
@@ -63,15 +63,14 @@ const OrganizationSchema = Schema.Struct({
     GeneratorAnnotation.set('image.url'),
     Schema.optional,
   ),
-  // TODO(wittjosiah): Format.URL (currently breaks schema validation).
-  website: Schema.String.pipe(
+  website: Format.URL.pipe(
     Schema.annotations({ title: 'Website' }),
     GeneratorAnnotation.set('internet.url'),
     Schema.optional,
   ),
 });
 
-export const Organization = OrganizationSchema.pipe(
+const _OrganizationSchema = OrganizationSchema.pipe(
   Schema.extend(
     Schema.Struct({
       location: Format.GeoPoint.pipe(Schema.annotations({ title: 'Location' }), Schema.optional),
@@ -80,17 +79,22 @@ export const Organization = OrganizationSchema.pipe(
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--building-office--regular', hue: 'neutral' }),
-  Type.makeObject(DXN.make('org.dxos.type.organization', '0.1.0')),
 );
 
-export type Organization = Type.InstanceType<typeof Organization>;
+export class Organization extends Type.makeObject<Organization>(DXN.make('org.dxos.type.organization', '0.1.0'))(
+  _OrganizationSchema,
+) {}
+
 export const make = (props: Partial<Obj.MakeProps<typeof Organization>> = {}) => Obj.make(Organization, props);
 
-// TODO(wittjosiah): Remove to move location into base schema.
-//   GeoPoint format currently breaks Anthropic schema validation.
-export const LegacyOrganization = OrganizationSchema.pipe(
+const _LegacyOrganizationSchema = OrganizationSchema.pipe(
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--building-office--regular', hue: 'neutral' }),
-  Type.makeObject(DXN.make('org.dxos.type.organization', '0.1.0')),
+);
+
+// TODO(wittjosiah): Remove to move location into base schema.
+//   GeoPoint format currently breaks Anthropic schema validation.
+export const LegacyOrganization = Type.makeObject(DXN.make('org.dxos.type.organization', '0.1.0'))(
+  _LegacyOrganizationSchema,
 );

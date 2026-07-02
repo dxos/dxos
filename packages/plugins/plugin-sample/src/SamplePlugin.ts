@@ -11,7 +11,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, CreateObject, SampleSettings, OperationHandler, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, SampleSettings } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { SampleItem } from '#types';
@@ -46,7 +46,7 @@ export const SamplePlugin = Plugin.define(meta).pipe(
 
   // Finalizes the plugin. Must be the last call in the chain.
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

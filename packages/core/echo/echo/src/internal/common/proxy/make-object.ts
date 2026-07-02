@@ -13,7 +13,7 @@ import { MetaId } from '../types/model-symbols';
 import { defineHiddenProperty } from './define-hidden-property';
 import { attachTypedJsonSerializer } from './json-serializer';
 import { createProxy, getProxyTarget, isValidProxyTarget } from './proxy-utils';
-import { TypeSource, TypedReactiveHandler, prepareTypedTarget, setMetaOwner } from './typed-handler';
+import { TypedReactiveHandler, TypeSource, prepareTypedTarget, setMetaOwner } from './typed-handler';
 
 /**
  *

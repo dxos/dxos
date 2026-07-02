@@ -7,17 +7,19 @@
 import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
-import { type TranscriptionManager } from '@dxos/plugin-transcription';
+import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
 
 import { meta } from '#meta';
 
 import { Meeting, type Settings as SettingsType } from './index';
 
-export const Settings = Capability.make<Atom.Writable<SettingsType.Settings>>(`${meta.id}.capability.settings`);
+export const Settings = Capability.make<Atom.Writable<SettingsType.Settings>>(
+  `${meta.profile.key}.capability.settings`,
+);
 
 export type MeetingState = {
   activeMeeting?: Meeting.Meeting;
-  transcriptionManager?: TranscriptionManager;
+  transcriptionManager?: TranscriptionCapabilities.TranscriptionManager;
 };
 
 export type MeetingStateStore = {
@@ -26,4 +28,4 @@ export type MeetingStateStore = {
   updateState: (updater: (current: MeetingState) => MeetingState) => void;
 };
 
-export const State = Capability.make<MeetingStateStore>(`${meta.id}.capability.state`);
+export const State = Capability.make<MeetingStateStore>(`${meta.profile.key}.capability.state`);

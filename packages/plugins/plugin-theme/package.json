@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-theme",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "DXOS Surface plugin for providing the application theme.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -54,12 +54,14 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/i18n": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/util": "workspace:*",

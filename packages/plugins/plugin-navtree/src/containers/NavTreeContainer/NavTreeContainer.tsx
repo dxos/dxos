@@ -4,11 +4,12 @@
 
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, isTreeData } from '@dxos/react-ui-list';
@@ -27,7 +28,7 @@ export const NODE_TYPE = 'dxos/app-graph/node';
 // TODO(wittjosiah): Avoid using Surface within the navtree, prefer declarative data flow.
 const NavTreeItemEnd = ({ node, open }: { node: Node.Node; open: boolean }) => {
   const data = useMemo(() => ({ id: node.id, subject: node.data, open }), [node.id, node.data, open]);
-  return <Surface.Surface role='navtree-item-end' data={data} limit={1} />;
+  return <Surface.Surface type={AppSurface.NavtreeItemEnd} data={data} limit={1} />;
 };
 
 const getItems = (graph: Graph.ReadableGraph, node?: Node.Node, disposition?: string) => {
@@ -48,7 +49,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const { getItem, setItem } = useNavTreeState();
     const layout = useLayout();
     const model = useNavTreeModel(Node.RootId);
-    const { navigationSidebarState } = useSidebars(meta.id);
+    const { navigationSidebarState } = useSidebars(meta.profile.key);
     const latestRef = useRef({
       tab,
       activeItems: layout.active,
@@ -229,6 +230,19 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         },
       });
     }, [graph]);
+
+    // Group nodes are always expanded and have no toggle, so they never trigger Graph.expand through
+    // user interaction. Watch the workspace's children reactively and mark any group nodes as open
+    // so the state machinery treats them consistently with regular open nodes (including on next load).
+    const workspaceChildren = useAtomValue(graph.connections(tab, 'child'));
+    useEffect(() => {
+      for (const child of workspaceChildren) {
+        if (child.properties.disposition === 'group') {
+          setItem([Node.RootId, tab, child.id], 'open', true);
+          Graph.expand(graph, child.id, 'child');
+        }
+      }
+    }, [workspaceChildren, tab, setItem, graph]);
 
     const onItemHover = useCallback(({ item }: { item: Node.Node }) => Graph.expand(graph, item.id, 'child'), [graph]);
 

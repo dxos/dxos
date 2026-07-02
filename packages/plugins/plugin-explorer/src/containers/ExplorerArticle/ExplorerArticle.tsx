@@ -4,21 +4,19 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Filter, Obj, type View } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useObject } from '@dxos/react-client/echo';
 import { DxAnchorActivate, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
+import { type TreeNode } from '@dxos/react-ui-graph';
 import '@dxos/react-ui-graph/styles/graph.css';
 
-import { type TreeNode } from '#components';
+import { type ExplorerArticleVariant, VARIANTS, Visualization, isVariant } from '#components';
 import { useGraphModel } from '#hooks';
 
-import { type ExplorerArticleVariant, VARIANTS, isVariant } from './variants';
-import { Visualization } from './Visualization';
-
-export type { ExplorerArticleVariant } from './variants';
+export type { ExplorerArticleVariant } from '#components';
 
 export type ExplorerArticleProps = AppSurface.ObjectArticleProps<View.View>;
 
@@ -84,7 +82,7 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
     );
   }, []);
 
-  const showToolbar = role === 'article';
+  const showToolbar = role === AppSurface.Article.role;
 
   if (!db || !model) {
     return null;
@@ -107,13 +105,14 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
         </Panel.Toolbar>
       )}
       <Panel.Content>
-        <Visualization
+        <Visualization.Root
           classNames='bg-base-surface'
           variant={selected}
           model={model}
-          onNodeHover={handleHover}
           onSurfaceClick={handleDismiss}
-        />
+        >
+          <Visualization.Graph onNodeHover={handleHover} />
+        </Visualization.Root>
       </Panel.Content>
     </Panel.Root>
   );

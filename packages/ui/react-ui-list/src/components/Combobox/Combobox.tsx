@@ -40,7 +40,10 @@ import {
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { listTheme } from '../List.theme';
 import { Picker, type PickerInputProps, type PickerItemProps } from '../Picker';
+
+const styles = listTheme.styles();
 
 const COMBOBOX_NAME = 'Combobox';
 const COMBOBOX_CONTENT_NAME = 'ComboboxContent';
@@ -125,19 +128,24 @@ const ComboboxRoot = ({
 // Filtering is caller-driven: pass already-matching <Combobox.Item> children.
 //
 
-type ComboboxContentProps = PopoverContentProps;
+type ComboboxContentProps = PopoverContentProps & {
+  /** Snap the highlight to the first item whenever the list changes (type-to-filter lists). */
+  resetSelectionOnChange?: boolean;
+};
 
-const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(({ children, ...props }, forwardedRef) => {
-  const { modalId } = useComboboxContext(COMBOBOX_CONTENT_NAME);
+const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(
+  ({ children, resetSelectionOnChange, ...props }, forwardedRef) => {
+    const { modalId } = useComboboxContext(COMBOBOX_CONTENT_NAME);
 
-  return (
-    <Popover.Content {...composableProps(props, { id: modalId })} ref={forwardedRef}>
-      <Popover.Viewport classNames='w-(--radix-popover-trigger-width)'>
-        <Picker.Root>{children}</Picker.Root>
-      </Popover.Viewport>
-    </Popover.Content>
-  );
-});
+    return (
+      <Popover.Content {...composableProps(props, { id: modalId })} ref={forwardedRef}>
+        <Popover.Viewport classNames='w-(--radix-popover-trigger-width)'>
+          <Picker.Root resetSelectionOnChange={resetSelectionOnChange}>{children}</Picker.Root>
+        </Popover.Viewport>
+      </Popover.Content>
+    );
+  },
+);
 
 ComboboxContent.displayName = COMBOBOX_CONTENT_NAME;
 
@@ -171,7 +179,7 @@ const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
         >
           {children ?? (
             <>
-              <span className={mx('font-normal text-start flex-1 min-w-0 truncate me-2', !value && 'text-subdued')}>
+              <span className={styles.comboboxTriggerText({ class: !value && 'text-subdued' })}>
                 {value || placeholder}
               </span>
               <Icon icon='ph--caret-down--bold' size={3} />
@@ -202,13 +210,7 @@ type ComboboxInputProps = ThemedClassName<
 >;
 
 const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classNames, ...props }, forwardedRef) => {
-  return (
-    <Picker.Input
-      {...props}
-      classNames={['m-form-chrome mb-0 w-[calc(100%-2*var(--spacing-form-chrome))]', classNames]}
-      ref={forwardedRef}
-    />
-  );
+  return <Picker.Input {...props} classNames={styles.comboboxInput({ class: classNames })} ref={forwardedRef} />;
 });
 
 ComboboxInput.displayName = 'Combobox.Input';
@@ -223,7 +225,7 @@ const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     return (
       <ScrollArea.Root
-        {...composableProps(props, { classNames: ['py-form-chrome', classNames] })}
+        {...composableProps(props, { classNames: styles.comboboxList({ class: classNames }) })}
         role='listbox'
         centered
         padding
@@ -248,6 +250,8 @@ type ComboboxItemProps = ThemedClassName<
     value: string;
     /** Display label (used when `children` are not provided). */
     label?: string;
+    /** Optional secondary line shown beneath the label (muted, smaller). */
+    description?: string;
     /** Optional icon id (Phosphor) shown before the label. */
     icon?: string;
     /** Additional class names for the icon. */
@@ -272,6 +276,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
       onSelect,
       value,
       label,
+      description,
       icon,
       iconClassNames,
       checked,
@@ -299,21 +304,24 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
         disabled={disabled}
         onSelect={handleSelect}
         ref={forwardedRef}
-        classNames={[
-          // Full width inside the viewport (no horizontal margin).
-          // `px-3 py-1`, `cursor-pointer`, `select-none` and the
-          // `dx-hover` / `dx-selected` pairing come from `Picker.Item`'s
-          // defaults; we only add the row-shape (flex / icons + label)
-          // and the disabled overrides on top.
-          'flex w-full gap-2 items-center',
-          disabled && 'hover:bg-transparent data-[selected=true]:bg-transparent',
-          classNames,
-        ]}
+        classNames={styles.comboboxItem({
+          // `px-3 py-1`, `cursor-pointer`, `select-none` and the `dx-hover` / `dx-selected`
+          // pairing come from `Picker.Item`'s defaults; the slot only adds row-shape (flex /
+          // icons + label). Disabled overrides are layered on per-instance.
+          class: mx(disabled && 'hover:bg-transparent data-[selected=true]:bg-transparent', classNames),
+        })}
       >
         {children ?? (
           <>
             {icon && <Icon icon={icon} classNames={iconClassNames} />}
-            <span className='w-0 grow truncate'>{label}</span>
+            {description ? (
+              <span className='w-0 grow flex flex-col'>
+                <span className='truncate'>{label}</span>
+                <span className={styles.comboboxItemDescription()}>{description}</span>
+              </span>
+            ) : (
+              <span className='w-0 grow truncate'>{label}</span>
+            )}
             {suffix && <span className='shrink-0 text-description'>{suffix}</span>}
             {checked && <Icon icon='ph--check--regular' />}
           </>
@@ -375,14 +383,14 @@ export const Combobox = {
 };
 
 export type {
-  ComboboxRootProps,
-  ComboboxPortalProps,
+  ComboboxArrowProps,
   ComboboxContentProps,
+  ComboboxEmptyProps,
+  ComboboxInputProps,
+  ComboboxItemProps,
+  ComboboxListProps,
+  ComboboxPortalProps,
+  ComboboxRootProps,
   ComboboxTriggerProps,
   ComboboxVirtualTriggerProps,
-  ComboboxInputProps,
-  ComboboxListProps,
-  ComboboxItemProps,
-  ComboboxArrowProps,
-  ComboboxEmptyProps,
 };

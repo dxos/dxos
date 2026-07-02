@@ -6,7 +6,7 @@ import { format as formatDate } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Input, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Segment } from '#types';
@@ -46,7 +46,7 @@ type FlightEditableCardProps = {
  */
 export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardProps>(
   ({ segment, onAction }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
+    const { t } = useTranslation(meta.profile.key);
 
     const handleDepartChange = useCallback(
       (next: string) => {
@@ -76,7 +76,9 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
     return (
       <Card.Root fullWidth ref={forwardedRef}>
         <Card.Header>
-          <Card.Icon icon={icon} />
+          <Card.Block>
+            <Icon icon={icon} />
+          </Card.Block>
           <Card.Title>{title}</Card.Title>
           <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />
         </Card.Header>
@@ -86,7 +88,10 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
               <Card.Text variant='description'>{route}</Card.Text>
             </Card.Row>
           )}
-          <Card.Row icon='ph--calendar--regular'>
+          <Card.Row>
+            <Card.Block>
+              <Icon icon='ph--calendar--regular' />
+            </Card.Block>
             <Input.Root>
               <Input.DateTime
                 aria-label={t('segment.depart.placeholder')}

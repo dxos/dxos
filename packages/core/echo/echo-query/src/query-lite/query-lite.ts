@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Filter as Filter$, Obj as Obj$, Order as Order$, Query as Query$, Ref, Type as Type$ } from '@dxos/echo';
+import type { Ref, Filter as Filter$, Obj as Obj$, Order as Order$, Query as Query$, Type as Type$ } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 // `DXN`/`EID` are type-only imports to keep the `query-lite` bundle free of
@@ -20,11 +20,11 @@ import type { DXN, EID, EntityId, URI } from '@dxos/keys';
 class OrderClass implements Order$.Any {
   private static 'variance': Order$.Any['~Order'] = {} as Order$.Any['~Order'];
 
-  static is(value: unknown): value is Order$.Any {
+  static 'is'(value: unknown): value is Order$.Any {
     return typeof value === 'object' && value !== null && '~Order' in value;
   }
 
-  constructor(public readonly ast: QueryAST.Order) {}
+  'constructor'(public readonly ast: QueryAST.Order) {}
 
   '~Order' = OrderClass.variance;
 }
@@ -59,18 +59,103 @@ namespace Order1 {
 const Order2: typeof Order$ = Order1;
 export { Order2 as Order };
 
+// Local filter-match helpers used by FilterClass.toPredicate.
+// Written without a runtime @dxos/echo import so the QuickJS sandbox bundle stays clean.
+const _filterMatchValueLocal = (filter: QueryAST.Filter, value: unknown): boolean => {
+  switch (filter.type) {
+    case 'compare': {
+      switch (filter.operator) {
+        case 'eq':
+          return value === filter.value;
+        case 'neq':
+          return value !== filter.value;
+        case 'gt':
+          return (value as any) > (filter.value as any);
+        case 'gte':
+          return (value as any) >= (filter.value as any);
+        case 'lt':
+          return (value as any) < (filter.value as any);
+        case 'lte':
+          return (value as any) <= (filter.value as any);
+        default:
+          return false;
+      }
+    }
+    case 'object': {
+      if (typeof value !== 'object' || value === null) {
+        return false;
+      }
+      if (filter.props) {
+        for (const [key, vf] of Object.entries(filter.props)) {
+          if (!_filterMatchValueLocal(vf, (value as any)[key])) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+    case 'in':
+      return filter.values.includes(value);
+    case 'range':
+      return (value as any) >= filter.from && (value as any) <= filter.to;
+    case 'not':
+      return !_filterMatchValueLocal(filter.filter, value);
+    case 'and':
+      return filter.filters.every((f) => _filterMatchValueLocal(f, value));
+    case 'or':
+      return filter.filters.some((f) => _filterMatchValueLocal(f, value));
+    default:
+      return false;
+  }
+};
+
+const _filterMatchEntityLocal = (filter: QueryAST.Filter, entity: any): boolean => {
+  switch (filter.type) {
+    case 'object': {
+      if (filter.typename !== null) {
+        const typeURI: string | undefined = entity?.['@type'] ?? entity?.system?.type;
+        if (!typeURI || typeURI !== filter.typename) {
+          return false;
+        }
+      }
+      if (filter.id && filter.id.length > 0 && !filter.id.includes(entity?.id)) {
+        return false;
+      }
+      if (filter.props) {
+        for (const [key, vf] of Object.entries(filter.props)) {
+          if (key.startsWith('@')) {
+            continue;
+          }
+          if (!_filterMatchValueLocal(vf, entity?.[key])) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+    case 'not':
+      return !_filterMatchEntityLocal(filter.filter, entity);
+    case 'and':
+      return filter.filters.every((f) => _filterMatchEntityLocal(f, entity));
+    case 'or':
+      return filter.filters.some((f) => _filterMatchEntityLocal(f, entity));
+    default:
+      throw new Error(`Filter type '${(filter as any).type}' is not supported in toPredicate.`);
+  }
+};
+
 class FilterClass implements Filter$.Any {
   private static 'variance': Filter$.Any['~Filter'] = {} as Filter$.Any['~Filter'];
 
-  static is(value: unknown): value is Filter$.Any {
+  static 'is'(value: unknown): value is Filter$.Any {
     return typeof value === 'object' && value !== null && '~Filter' in value;
   }
 
-  static fromAst(ast: QueryAST.Filter): Filter$.Any {
+  static 'fromAst'(ast: QueryAST.Filter): Filter$.Any {
     return new FilterClass(ast);
   }
 
-  static everything(): FilterClass {
+  static 'everything'(): FilterClass {
     return new FilterClass({
       type: 'object',
       typename: null,
@@ -78,7 +163,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static nothing(): FilterClass {
+  static 'nothing'(): FilterClass {
     return new FilterClass({
       type: 'not',
       filter: {
@@ -89,7 +174,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static relation() {
+  static 'relation'() {
     return new FilterClass({
       type: 'object',
       typename: null,
@@ -97,7 +182,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static id(...ids: EntityId[]): Filter$.Any {
+  static 'id'(...ids: EntityId[]): Filter$.Any {
     // assertArgument(
     //   ids.every((id) => EntityId.isValid(id)),
     //   'ids',
@@ -116,12 +201,12 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static type<T extends Type$.AnyEntity>(
+  static 'type'<T extends Type$.AnyEntity>(
     type: T,
     props?: Filter$.Props<Type$.InstanceType<T>>,
   ): Filter$.Filter<Type$.InstanceType<T>>;
-  static type(schema: string, props?: Filter$.Props<unknown>): Filter$.Filter<any>;
-  static type(schema: Type$.AnyEntity | string, props?: Filter$.Props<unknown>): Filter$.Filter<unknown> {
+  static 'type'(schema: string, props?: Filter$.Props<unknown>): Filter$.Filter<any>;
+  static 'type'(schema: Type$.AnyEntity | string, props?: Filter$.Props<unknown>): Filter$.Filter<unknown> {
     if (typeof schema !== 'string') {
       throw new TypeError('expected typename as the first paramter');
     }
@@ -132,7 +217,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static typename(typename: string): Filter$.Any {
+  static 'typename'(typename: string): Filter$.Any {
     return new FilterClass({
       type: 'object',
       typename: makeTypeDxn(typename),
@@ -140,7 +225,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static typeURI(uri: URI.URI): Filter$.Any {
+  static 'typeURI'(uri: URI.URI): Filter$.Any {
     return new FilterClass({
       type: 'object',
       typename: uri,
@@ -148,14 +233,14 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static tag(tag: string): Filter$.Any {
+  static 'tag'(tag: string): Filter$.Any {
     return new FilterClass({
       type: 'tag',
       tag,
     });
   }
 
-  static key(key: string, options?: Filter$.KeyFilterOptions): Filter$.Any {
+  static 'key'(key: string, options?: Filter$.KeyFilterOptions): Filter$.Any {
     return new FilterClass({
       type: 'object',
       typename: null,
@@ -165,7 +250,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static props<T>(props: Filter$.Props<T>): Filter$.Filter<T> {
+  static 'props'<T>(props: Filter$.Props<T>): Filter$.Filter<T> {
     return new FilterClass({
       type: 'object',
       typename: null,
@@ -173,7 +258,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static text(text: string, options?: Filter$.TextSearchOptions): Filter$.Any {
+  static 'text'(text: string, options?: Filter$.TextSearchOptions): Filter$.Any {
     return new FilterClass({
       type: 'text-search',
       text,
@@ -181,7 +266,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static foreignKeys<S extends Type$.AnyEntity | string>(
+  static 'foreignKeys'<S extends Type$.AnyEntity | string>(
     schema: S,
     keys: ForeignKey[],
   ): Filter$.Filter<S extends Type$.AnyEntity ? Type$.InstanceType<S> : unknown> {
@@ -195,7 +280,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static eq<T>(value: T): Filter$.Filter<T | undefined> {
+  static 'eq'<T>(value: T): Filter$.Filter<T | undefined> {
     if (!isRef(value) && typeof value === 'object' && value !== null) {
       throw new TypeError('Cannot use object as a value for eq filter');
     }
@@ -207,7 +292,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static neq<T>(value: T): Filter$.Filter<T | undefined> {
+  static 'neq'<T>(value: T): Filter$.Filter<T | undefined> {
     return new FilterClass({
       type: 'compare',
       operator: 'neq',
@@ -215,7 +300,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static gt<T>(value: T): Filter$.Filter<T | undefined> {
+  static 'gt'<T>(value: T): Filter$.Filter<T | undefined> {
     return new FilterClass({
       type: 'compare',
       operator: 'gt',
@@ -223,7 +308,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static gte<T>(value: T): Filter$.Filter<T | undefined> {
+  static 'gte'<T>(value: T): Filter$.Filter<T | undefined> {
     return new FilterClass({
       type: 'compare',
       operator: 'gte',
@@ -231,7 +316,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static lt<T>(value: T): Filter$.Filter<T | undefined> {
+  static 'lt'<T>(value: T): Filter$.Filter<T | undefined> {
     return new FilterClass({
       type: 'compare',
       operator: 'lt',
@@ -239,7 +324,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static lte<T>(value: T): Filter$.Filter<T | undefined> {
+  static 'lte'<T>(value: T): Filter$.Filter<T | undefined> {
     return new FilterClass({
       type: 'compare',
       operator: 'lte',
@@ -247,21 +332,21 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static in<T>(...values: T[]): Filter$.Filter<T> {
+  static 'in'<T>(...values: T[]): Filter$.Filter<T> {
     return new FilterClass({
       type: 'in',
       values,
     });
   }
 
-  static contains<T>(value: T): Filter$.Filter<readonly T[] | undefined> {
+  static 'contains'<T>(value: T): Filter$.Filter<readonly T[] | undefined> {
     return new FilterClass({
       type: 'contains',
       value,
     });
   }
 
-  static between<T>(from: T, to: T): Filter$.Filter<T> {
+  static 'between'<T>(from: T, to: T): Filter$.Filter<T> {
     return new FilterClass({
       type: 'range',
       from,
@@ -269,15 +354,15 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static updated(range: { after?: Date | number; before?: Date | number }): Filter$.Any {
+  static 'updated'(range: { after?: Date | number; before?: Date | number }): Filter$.Any {
     return FilterClass._timeRangeFilter('updatedAt', range);
   }
 
-  static created(range: { after?: Date | number; before?: Date | number }): Filter$.Any {
+  static 'created'(range: { after?: Date | number; before?: Date | number }): Filter$.Any {
     return FilterClass._timeRangeFilter('createdAt', range);
   }
 
-  static childOf(parents: unknown | unknown[], options?: { transitive?: boolean }): Filter$.Any {
+  static 'childOf'(parents: unknown | unknown[], options?: { transitive?: boolean }): Filter$.Any {
     const items = Array.isArray(parents) ? parents : [parents];
     const dxns = items.map((item) => {
       if (isEchoUriLike(item)) {
@@ -292,7 +377,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  private static _timeRangeFilter(
+  private static '_timeRangeFilter'(
     field: 'updatedAt' | 'createdAt',
     range: { after?: Date | number; before?: Date | number },
   ): Filter$.Any {
@@ -310,14 +395,14 @@ class FilterClass implements Filter$.Any {
     return filters.length === 1 ? filters[0] : FilterClass.and(...filters);
   }
 
-  static not<F extends Filter$.Any>(filter: F): Filter$.Filter<Filter$.Type<F>> {
+  static 'not'<F extends Filter$.Any>(filter: F): Filter$.Filter<Filter$.Type<F>> {
     return new FilterClass({
       type: 'not',
       filter: filter.ast,
     });
   }
 
-  static and<Filters extends readonly Filter$.Any[]>(
+  static 'and'<Filters extends readonly Filter$.Any[]>(
     ...filters: Filters
   ): Filter$.Filter<Filter$.Type<Filters[number]>> {
     return new FilterClass({
@@ -326,7 +411,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static or<Filters extends readonly Filter$.Any[]>(
+  static 'or'<Filters extends readonly Filter$.Any[]>(
     ...filters: Filters
   ): Filter$.Filter<Filter$.Type<Filters[number]>> {
     return new FilterClass({
@@ -336,11 +421,21 @@ class FilterClass implements Filter$.Any {
   }
 
   /** Returns a human-readable string representation of a Filter AST. */
-  static pretty(filter: Filter$.Any): string {
+  static 'pretty'(filter: Filter$.Any): string {
     return prettyFilter(filter.ast);
   }
 
-  private constructor(public readonly ast: QueryAST.Filter) {}
+  /** Create a predicate from a filter. */
+  // Cast required: TypeScript cannot verify a plain overloaded function satisfies a type-predicate
+  // overload signature without the cast; Effect's dual() has the same limitation here.
+  static 'toPredicate' = ((entityOrFilter: any, filter?: any): any => {
+    if (filter === undefined) {
+      return (entity: any) => _filterMatchEntityLocal(entityOrFilter.ast, entity);
+    }
+    return _filterMatchEntityLocal(filter.ast, entityOrFilter);
+  }) as typeof Filter$.toPredicate;
+
+  private 'constructor'(public readonly ast: QueryAST.Filter) {}
 
   '~Filter' = FilterClass.variance;
 }
@@ -402,22 +497,22 @@ const processPredicate = (predicate: any): QueryAST.Filter => {
 class QueryClass implements Query$.Any {
   private static 'variance': Query$.Any['~Query'] = {} as Query$.Any['~Query'];
 
-  static is(value: unknown): value is Query$.Any {
+  static 'is'(value: unknown): value is Query$.Any {
     return typeof value === 'object' && value !== null && '~Query' in value;
   }
 
-  static fromAst(ast: QueryAST.Query): Query$.Any {
+  static 'fromAst'(ast: QueryAST.Query): Query$.Any {
     return new QueryClass(ast);
   }
 
-  static select<F extends Filter$.Any>(filter: F): Query$.Query<Filter$.Type<F>> {
+  static 'select'<F extends Filter$.Any>(filter: F): Query$.Query<Filter$.Type<F>> {
     return new QueryClass({
       type: 'select',
       filter: filter.ast,
     });
   }
 
-  select(filter: Filter$.Any | Filter$.Props<any>): Query$.Any {
+  'select'(filter: Filter$.Any | Filter$.Props<any>): Query$.Any {
     if (FilterClass.is(filter)) {
       return new QueryClass({
         type: 'filter',
@@ -433,13 +528,13 @@ class QueryClass implements Query$.Any {
     }
   }
 
-  static type<S extends Schema.Schema.All>(
+  static 'type'<S extends Schema.Schema.All>(
     schema: S,
     predicates?: Filter$.Props<Schema.Schema.Type<S>>,
   ): Query$.Query<Schema.Schema.Type<S>>;
-  static type(type: Type$.Type, predicates?: Filter$.Props<Obj$.Unknown>): Query$.Query<Obj$.Unknown>;
-  static type(schema: string, predicates?: Filter$.Props<unknown>): Query$.Query<any>;
-  static type(schema: Schema.Schema.All | Type$.Type | string, predicates?: Filter$.Props<unknown>): Query$.Any {
+  static 'type'(type: Type$.Type, predicates?: Filter$.Props<Obj$.Unknown>): Query$.Query<Obj$.Unknown>;
+  static 'type'(schema: string, predicates?: Filter$.Props<unknown>): Query$.Query<any>;
+  static 'type'(schema: Schema.Schema.All | Type$.Type | string, predicates?: Filter$.Props<unknown>): Query$.Any {
     if (typeof schema !== 'string') {
       throw new TypeError('expected typename as the first paramter');
     }
@@ -449,7 +544,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  static all(...queries: Query$.Any[]): Query$.Any {
+  static 'all'(...queries: Query$.Any[]): Query$.Any {
     if (queries.length === 0) {
       throw new TypeError(
         'Query.all combines results of multiple queries, to query all objects use Query.select(Filter.everything())',
@@ -461,7 +556,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  static without<T>(source: Query$.Query<T>, exclude: Query$.Query<T>): Query$.Query<T> {
+  static 'without'<T>(source: Query$.Query<T>, exclude: Query$.Query<T>): Query$.Query<T> {
     return new QueryClass({
       type: 'set-difference',
       source: source.ast,
@@ -469,7 +564,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  static from(...args: any[]): Query$.Any {
+  static 'from'(...args: any[]): Query$.Any {
     const baseQuery: QueryAST.Query = {
       type: 'select',
       filter: FilterClass.everything().ast,
@@ -478,7 +573,7 @@ class QueryClass implements Query$.Any {
     return (wrapper.from as (...args: any[]) => Query$.Any)(...args);
   }
 
-  from(...args: any[]): Query$.Any {
+  'from'(...args: any[]): Query$.Any {
     // Variadic raw scopes: `.from(Scope.space(), Scope.registry())`.
     if (args.length > 1 && args.every((arg) => _isScopeLike(arg))) {
       return new QueryClass({
@@ -509,15 +604,15 @@ class QueryClass implements Query$.Any {
   }
 
   /** Returns a human-readable string representation of a Query AST. */
-  static pretty(query: Query$.Any): string {
+  static 'pretty'(query: Query$.Any): string {
     return prettyQuery(query.ast);
   }
 
-  constructor(public readonly ast: QueryAST.Query) {}
+  'constructor'(public readonly ast: QueryAST.Query) {}
 
   '~Query' = QueryClass.variance;
 
-  reference(key: string): Query$.Any {
+  'reference'(key: string): Query$.Any {
     return new QueryClass({
       type: 'reference-traversal',
       anchor: this.ast,
@@ -525,7 +620,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  referencedBy(target?: Type$.AnyEntity | string, key?: string): Query$.Any {
+  'referencedBy'(target?: Type$.AnyEntity | string, key?: string): Query$.Any {
     if (target !== undefined && typeof target !== 'string') {
       throw new TypeError('referencedBy requires a typename string in query-lite');
     }
@@ -538,7 +633,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  sourceOf(
+  'sourceOf'(
     relation?: Type$.Relation<any, any, any, any> | string,
     predicates?: Filter$.Props<unknown> | undefined,
   ): Query$.Any {
@@ -555,7 +650,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  targetOf(
+  'targetOf'(
     relation?: Type$.Relation<any, any, any, any> | string,
     predicates?: Filter$.Props<unknown> | undefined,
   ): Query$.Any {
@@ -572,7 +667,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  source(): Query$.Any {
+  'source'(): Query$.Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -580,7 +675,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  target(): Query$.Any {
+  'target'(): Query$.Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -588,7 +683,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  parent(): Query$.Any {
+  'parent'(): Query$.Any {
     return new QueryClass({
       type: 'hierarchy-traversal',
       anchor: this.ast,
@@ -596,7 +691,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  children(): Query$.Any {
+  'children'(): Query$.Any {
     return new QueryClass({
       type: 'hierarchy-traversal',
       anchor: this.ast,
@@ -604,7 +699,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  orderBy(...order: Order$.Any[]): Query$.Any {
+  'orderBy'(...order: Order$.Any[]): Query$.Any {
     return new QueryClass({
       type: 'order',
       query: this.ast,
@@ -612,7 +707,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  limit(limit: number): Query$.Any {
+  'limit'(limit: number): Query$.Any {
     return new QueryClass({
       type: 'limit',
       query: this.ast,
@@ -620,7 +715,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  options(options: QueryAST.QueryOptions): Query$.Any {
+  'options'(options: QueryAST.QueryOptions): Query$.Any {
     return new QueryClass({
       type: 'options',
       query: this.ast,
@@ -628,7 +723,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  debugLabel(label: string): Query$.Any {
+  'debugLabel'(label: string): Query$.Any {
     if (this.ast.type === 'options') {
       return new QueryClass({
         type: 'options',

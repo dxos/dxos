@@ -7,14 +7,14 @@ import * as Effect from 'effect/Effect';
 
 import {
   AgentHandlers,
-  AgentPrompt,
-  DatabaseBlueprint,
   DatabaseHandlers,
-  WebSearchBlueprint,
+  DatabaseSkill,
+  RunInstructions,
   WebSearchHandlers,
+  WebSearchSkill,
   WebSearchToolkitOpaque,
 } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine, Trace, Trigger, Operation } from '@dxos/compute';
+import { Instructions, Operation, Skill, Trace, Trigger } from '@dxos/compute';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -39,7 +39,7 @@ const queryTraceMessages = Effect.gen(function* () {
 
 const TestLayer = AssistantTestLayerWithTriggers({
   types: [Organization.Organization, Person.Person],
-  blueprints: [DatabaseBlueprint.make(), WebSearchBlueprint.make()],
+  skills: [DatabaseSkill.make(), WebSearchSkill.make()],
   operationHandlers: [DatabaseHandlers, AgentHandlers, WebSearchHandlers, ExampleHandlers],
   toolkits: [WebSearchToolkitOpaque],
   tracing: 'feed',
@@ -54,7 +54,7 @@ describe.skip('Trace timeline', () => {
       Effect.fnUntraced(
         function* ({ expect }) {
           const agent = yield* AgentService.createSession({
-            blueprints: [DatabaseBlueprint.make()],
+            skills: [DatabaseSkill.make()],
           });
           yield* agent.submitPrompt('Create an organization called "Cyberdyne Systems".');
           yield* agent.waitForCompletion();
@@ -92,7 +92,7 @@ describe.skip('Trace timeline', () => {
       Effect.fnUntraced(
         function* ({ expect }) {
           const agent = yield* AgentService.createSession({
-            blueprints: [DatabaseBlueprint.make()],
+            skills: [DatabaseSkill.make()],
           });
           yield* Database.add(Obj.make(Organization.Organization, { name: 'Acme Corp' }));
           yield* Database.add(Obj.make(Organization.Organization, { name: 'Globex Industries' }));
@@ -124,7 +124,7 @@ describe.skip('Trace timeline', () => {
       Effect.fnUntraced(
         function* ({ expect }) {
           const agent = yield* AgentService.createSession({
-            blueprints: [DatabaseBlueprint.make()],
+            skills: [DatabaseSkill.make()],
           });
           yield* agent.submitPrompt('List all available schemas. Tell me what typenames are available.');
           yield* agent.waitForCompletion();
@@ -165,20 +165,20 @@ describe.skip('Trace timeline', () => {
               name: 'DXOS',
             }),
           ]);
-          const prompt = yield* Database.add(
-            Routine.make({
+          const instructions = yield* Database.add(
+            Instructions.make({
               name: 'Research',
-              instructions: 'Research the given topic, or object.',
-              blueprints: [Ref.make(yield* Blueprint.upsert(WebSearchBlueprint.key))],
+              text: 'Research the given topic, or object.',
+              skills: [Ref.make(yield* Skill.upsert(WebSearchSkill.key))],
             }),
           );
           yield* Database.add(
             Trigger.make({
-              function: Ref.make(Operation.serialize(AgentPrompt)),
+              runnable: Ref.make(Operation.serialize(RunInstructions)),
               enabled: true,
               spec: Trigger.specFeed(feed),
               input: {
-                prompt: Ref.make(prompt),
+                instructions: Ref.make(instructions),
                 input: '{{event.item}}',
               },
             }),

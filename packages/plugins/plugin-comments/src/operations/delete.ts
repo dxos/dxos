@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { sleep } from '@dxos/async';
 import { Operation } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
+import { batchEvents } from '@dxos/echo/internal';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { Thread } from '@dxos/types';
 
@@ -42,10 +42,12 @@ const handler: Operation.WithHandler<typeof CommentOperation.Delete> = CommentOp
         return {};
       }
 
-      // TODO(wittjosiah): Without sleep, rendering crashes at `Relation.setSource(anchor)`.
-      db.remove(anchor);
-      yield* Effect.promise(() => sleep(100));
-      db.remove(thread);
+      // Batch both removals so a single reactive notification fires — prevents an intermediate
+      // render where anchor is removed but thread still exists (mirrors the batchEvents pattern in restore.ts).
+      batchEvents(() => {
+        db.remove(anchor);
+        db.remove(thread);
+      });
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
         name: 'comments.delete',

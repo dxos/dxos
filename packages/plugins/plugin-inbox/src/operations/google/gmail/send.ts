@@ -9,6 +9,12 @@ import * as Effect from 'effect/Effect';
 import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
+// Connection and Message are referenced in the inferred type of this module's default export via
+// InboxOperation.GmailSend's schema; the imports let TypeScript name them in .d.ts.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type Connection } from '@dxos/plugin-connector';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type Message } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
 import { GmailSendMessageInvalidError } from '../../../errors';
@@ -16,9 +22,9 @@ import { GoogleCredentials } from '../../../services/google-credentials';
 import { InboxOperation } from '../../../types';
 
 export default InboxOperation.GmailSend.pipe(
-  Operation.withHandler(({ userId = 'me', message, integration: integrationRef }) =>
+  Operation.withHandler(({ userId = 'me', message, connection: connectionRef }) =>
     Effect.gen(function* () {
-      log('sending email', { userId, integration: integrationRef.uri });
+      log('sending email', { userId, connection: connectionRef.uri });
 
       const to = message.properties?.to;
       const subject = message.properties?.subject;
@@ -55,6 +61,6 @@ export default InboxOperation.GmailSend.pipe(
         id: response.id,
         threadId: response.threadId,
       };
-    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(GoogleCredentials.fromIntegration(integrationRef))),
+    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(GoogleCredentials.fromConnection(connectionRef))),
   ),
 );

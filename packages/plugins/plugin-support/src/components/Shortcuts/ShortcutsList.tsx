@@ -4,14 +4,14 @@
 
 import React, { Fragment } from 'react';
 
-import { keySymbols, Keyboard } from '@dxos/keyboard';
+import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
 export const ShortcutsList = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const bindings = Keyboard.singleton.getBindings();
 
   // TODO(burdon): Get shortcuts from TextEditor.

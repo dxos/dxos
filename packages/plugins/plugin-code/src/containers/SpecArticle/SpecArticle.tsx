@@ -6,7 +6,7 @@ import React, { forwardRef, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
-import { createDocAccessor } from '@dxos/echo-client';
+import { Doc } from '@dxos/echo-doc';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, useThemeContext } from '@dxos/react-ui';
@@ -24,25 +24,29 @@ import { isTruthy } from '@dxos/util';
 
 import { Spec } from '#types';
 
-export type SpecArticleProps = AppSurface.ObjectArticleProps<Spec.Spec> & {
-  /** Render the editor in read-only mode (no toolbar, no edits). */
+export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 'subject'> & {
+  /** ECHO Spec to live-edit; omit to render a static `content` string (e.g. a bundled plugin spec). */
+  subject?: Spec.Spec;
+  /** Static MDL content, rendered read-only when no `subject` is provided. */
+  content?: string;
+  /** Force read-only mode. Defaults to read-only for static content and editable when editing a Spec. */
   readOnly?: boolean;
 };
 
 /**
- * Renders a Spec ECHO object using react-ui-editor's compound primitives with
- * the .mdl CodeMirror extensions. Live-edits the bound `spec.content`. Used
- * directly when a bare Spec is opened.
+ * Renders MDL with react-ui-editor's compound primitives and the .mdl CodeMirror extensions.
+ * With a `subject` it live-edits the bound ECHO `spec.content` (collaborative); without one it
+ * renders the static `content` string read-only (e.g. a bundled plugin spec, no ECHO binding).
  */
 export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
-  ({ role, subject: spec, attendableId, readOnly = false }, forwardedRef) => {
+  ({ role, subject: spec, content, attendableId, readOnly = spec == null }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const identity = useIdentity();
-    const space = getSpace(spec);
+    const space = spec ? getSpace(spec) : undefined;
 
-    // Trigger re-render when the content ref resolves.
-    useObject(spec.content);
-    const target = spec.content.target;
+    // Trigger re-render when the bound content ref resolves (no-op when there is no spec).
+    useObject(spec?.content);
+    const target = spec?.content.target;
 
     const extensions = useMemo(
       () =>
@@ -52,28 +56,29 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           createThemeExtensions({ themeMode, slots: documentSlots }),
           decorateMarkdown(),
           mdl(),
-          target &&
+          // Live two-way binding only when editing an ECHO Spec; static content is rendered via `value`.
+          spec &&
+            target &&
             createDataExtensions({
               id: spec.id,
-              text: createDocAccessor(target, ['content']),
+              text: Doc.createAccessor(target, ['content']),
               messenger: space,
               identity,
             }),
         ].filter(isTruthy),
-      [identity, space, spec.id, target, themeMode, readOnly],
+      [identity, space, spec?.id, target, themeMode, readOnly],
     );
 
     return (
       <Editor.Root extensions={extensions}>
         <Panel.Root role={role} ref={forwardedRef}>
           {!readOnly && (
-            <Panel.Toolbar classNames='bg-toolbar-surface'>
-              {/* TODO(burdon): Custom toolbar. */}
+            <Panel.Toolbar>
               <Editor.Toolbar role={role} attendableId={attendableId} />
             </Panel.Toolbar>
           )}
           <Panel.Content>
-            <Editor.View classNames={editorClassNames(role)} />
+            <Editor.View classNames={editorClassNames(role)} value={spec ? undefined : content} />
           </Panel.Content>
         </Panel.Root>
       </Editor.Root>
@@ -82,53 +87,3 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
 );
 
 SpecArticle.displayName = 'SpecArticle';
-
-export type SpecViewProps = {
-  /** Raw MDL content to render. */
-  content: string;
-  /** Render the editor in read-only mode (no toolbar, no edits). Defaults to true. */
-  readOnly?: boolean;
-  /** Surface role forwarded to Panel/Editor. */
-  role?: string;
-  /** Attendable id forwarded to the editor toolbar. */
-  attendableId?: string;
-};
-
-/**
- * Renders MDL content from a plain string — no ECHO binding required. Used by
- * surfaces that want to preview a bundled spec (e.g. plugin-registry's plugin
- * detail view) without materializing it as an ECHO `Spec` object first.
- */
-export const SpecView = forwardRef<HTMLDivElement, SpecViewProps>(
-  ({ content, readOnly = true, role, attendableId }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
-
-    const extensions = useMemo(
-      () => [
-        createBasicExtensions({ lineNumbers: true, readOnly }),
-        createMarkdownExtensions({ codeLanguages: [mdlBlockDescription] }),
-        createThemeExtensions({ themeMode, slots: documentSlots }),
-        decorateMarkdown(),
-        mdl(),
-      ],
-      [readOnly, themeMode],
-    );
-
-    return (
-      <Editor.Root extensions={extensions}>
-        <Panel.Root role={role} ref={forwardedRef}>
-          {!readOnly && (
-            <Panel.Toolbar classNames='bg-toolbar-surface'>
-              <Editor.Toolbar role={role} attendableId={attendableId} />
-            </Panel.Toolbar>
-          )}
-          <Panel.Content>
-            <Editor.View classNames={editorClassNames(role)} value={content} />
-          </Panel.Content>
-        </Panel.Root>
-      </Editor.Root>
-    );
-  },
-);
-
-SpecView.displayName = 'SpecView';

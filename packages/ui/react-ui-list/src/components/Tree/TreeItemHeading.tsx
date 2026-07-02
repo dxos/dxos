@@ -4,8 +4,7 @@
 
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, memo, useCallback } from 'react';
 
-import { Button, Icon, type Label, Tag, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { TextTooltip } from '@dxos/react-ui-text-tooltip';
+import { Button, Icon, type Label, Tag, TextTooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getStyles } from '@dxos/ui-theme';
 
 // TODO(wittjosiah): Consider whether there should be a separate disabled prop which was visually distinct
@@ -89,7 +88,7 @@ export const TreeItemHeading = memo(
 const CountBadge = ({ count, modifiedCount }: Pick<TreeItemHeadingProps, 'count' | 'modifiedCount'>) => {
   if (typeof modifiedCount === 'number' && modifiedCount > 0) {
     return (
-      <Tag palette='rose' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
+      <Tag hue='rose' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
         {modifiedCount}
       </Tag>
     );
@@ -97,7 +96,7 @@ const CountBadge = ({ count, modifiedCount }: Pick<TreeItemHeadingProps, 'count'
 
   if (typeof count === 'number') {
     return (
-      <Tag palette='neutral' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
+      <Tag hue='neutral' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
         {count}
       </Tag>
     );

@@ -2,14 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import { type Day, addDays, format, startOfDay, startOfWeek } from 'date-fns';
+import { addDays, format, startOfDay } from 'date-fns';
 import React, {
-  type Dispatch,
+  type PropsWithChildren,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
-  type PropsWithChildren,
-  type SetStateAction,
   forwardRef,
   useCallback,
   useEffect,
@@ -28,10 +25,20 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { getDate, getRowIndex, isSameDay } from './util';
+import {
+  CalendarContextProvider,
+  type CalendarContextValue,
+  type CalendarController,
+  type CalendarScrollEvent,
+  type Range,
+  useCalendarContext,
+} from './context';
+import { getDate, getRowIndex, gridEpoch, isSameDay } from './util';
+import { type CalendarEvent, CalendarWeek, type CalendarWeekProps } from './Week';
+import { Weekdays } from './Weekdays';
 
 const maxRows = 50 * 100;
-const start = new Date('1970-01-01');
+const start = gridEpoch;
 const size = 40;
 const defaultWidth = 7 * size;
 
@@ -39,18 +46,16 @@ const defaultWidth = 7 * size;
 const EDGE_SCROLL_ZONE = 32; // px
 const EDGE_SCROLL_MAX_SPEED = 12; // px per frame
 
+const DATE_CLASS_NAMES = {
+  current: 'ring-2 ring-primary-500',
+  today: 'border-2 border-amber-500 bg-amber-500/50 text-inverse-fg',
+  busy: 'border border-green-700',
+  starred: 'border-2 border-dashed border-amber-500',
+};
+
 //
 // Range
 //
-
-/**
- * Inclusive date range. `from <= to`. Both endpoints are anchored at the
- * start of their day; callers should not rely on time-of-day precision.
- */
-export type Range = {
-  from: Date;
-  to: Date;
-};
 
 /** Normalize an ordered pair of dates into a Range (start-of-day, from <= to). */
 const makeRange = (a: Date, b: Date): Range => {
@@ -82,40 +87,6 @@ const cellDate = (el: Element | null): Date | undefined => {
 };
 
 //
-// Context
-//
-
-type CalendarEvent = {
-  type: 'scroll';
-  date: Date;
-};
-
-type CalendarContextValue = {
-  weekStartsOn: Day;
-  event: Event<CalendarEvent>;
-  index: number | undefined;
-  setIndex: Dispatch<SetStateAction<number | undefined>>;
-  selected: Date | undefined;
-  setSelected: Dispatch<SetStateAction<Date | undefined>>;
-  /** Committed date range, set by the most recent drag or shift+arrow selection. */
-  range: Range | undefined;
-  setRange: Dispatch<SetStateAction<Range | undefined>>;
-  /** Live drag preview; non-undefined only while the user is dragging. */
-  pendingRange: Range | undefined;
-  setPendingRange: Dispatch<SetStateAction<Range | undefined>>;
-};
-
-const [CalendarContextProvider, useCalendarContext] = createContext<CalendarContextValue>('Calendar');
-
-//
-// Controller
-//
-
-type CalendarController = {
-  scrollTo: (date: Date) => void;
-};
-
-//
 // Root
 //
 
@@ -123,7 +94,7 @@ type CalendarRootProps = PropsWithChildren<Partial<Pick<CalendarContextValue, 'w
 
 const CalendarRoot = forwardRef<CalendarController, CalendarRootProps>(
   ({ children, weekStartsOn = 1 }, forwardedRef) => {
-    const event = useMemo(() => new Event<CalendarEvent>(), []);
+    const event = useMemo(() => new Event<CalendarScrollEvent>(), []);
     const [selected, setSelected] = useState<Date | undefined>();
     const [index, setIndex] = useState<number | undefined>();
     const [range, setRange] = useState<Range | undefined>();
@@ -134,6 +105,9 @@ const CalendarRoot = forwardRef<CalendarController, CalendarRootProps>(
       () => ({
         scrollTo: (date: Date) => {
           event.emit({ type: 'scroll', date });
+        },
+        select: (date: Date) => {
+          event.emit({ type: 'select', date });
         },
       }),
       [event],
@@ -183,7 +157,6 @@ const CalendarToolbar = composable<HTMLDivElement, CalendarToolbarProps>(({ clas
         classNames: ['shrink-0 grid! grid-cols-3 items-center bg-toolbar-surface', classNames],
       })}
       ref={forwardedRef}
-      style={{ width: defaultWidth }}
     >
       <div className='flex justify-start'>
         <IconButton
@@ -209,16 +182,30 @@ CalendarToolbar.displayName = CALENDAR_TOOLBAR_NAME;
 
 const CALENDAR_GRID_NAME = 'CalendarGrid';
 
+/** Semantic kind of a {@link DateMarker}; the grid maps each kind to its own border treatment. */
+export type DateMarkerTag = 'busy' | 'star';
+
+/**
+ * A date (or inclusive date range) to mark on the grid. */
+export type DateMarker = { startDate: Date; endDate?: Date; tag?: DateMarkerTag };
+
 type CalendarGridProps = {
   rows?: number;
-  /** Dates to highlight on the grid. Each date that appears in this array receives a border indicator. */
-  dates?: Date[];
+  /**
+   * Dates to mark on the grid; each marked day gets a border keyed off its `tag` kind (defaults to `busy`).
+   */
+  dates?: DateMarker[];
   /**
    * Date the grid scrolls into view on mount, and whenever this value changes.
    * Defaults to today. Pass a stable (memoized) Date so the grid does not
    * re-scroll on every render.
    */
   initialDate?: Date;
+  /**
+   * Weeks of context kept above a date when scrolling it into view (on mount and via the controller's
+   * `scrollTo`), so the date sits below the top edge rather than pinned to it. Defaults to 2.
+   */
+  scrollMargin?: number;
   /** Fired when a user selects a single date (click or arrow key). */
   onSelect?: (event: { date: Date }) => void;
   /**
@@ -230,7 +217,10 @@ type CalendarGridProps = {
 };
 
 const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
-  ({ classNames, rows, dates = [], initialDate, onSelect, onSelectRange, ...props }, forwardedRef) => {
+  (
+    { classNames, rows, dates = [], initialDate, scrollMargin = 2, onSelect, onSelectRange, ...props },
+    forwardedRef,
+  ) => {
     const { weekStartsOn, event, setIndex, selected, setSelected, range, setRange, pendingRange, setPendingRange } =
       useCalendarContext(CALENDAR_GRID_NAME);
     const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
@@ -239,36 +229,50 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
     const gridRef = useRef<HTMLDivElement>(null);
     const today = useMemo(() => new Date(), []);
 
-    // Build a set of ISO date strings (YYYY-MM-DD) for O(1) per-cell lookup.
-    const dateSet = useMemo(() => new Set(dates.map((date) => startOfDay(date).toISOString())), [dates]);
+    // Map each marked ISO day to its tag kind, expanding ranges. `star` wins over `busy` on the same
+    // day so a starred event keeps its highlighted border.
+    const dateMarkers = useMemo(() => {
+      const markers = new Map<string, DateMarkerTag>();
+      for (const { startDate, endDate, tag = 'busy' } of dates) {
+        const end = endDate ? startOfDay(endDate) : startOfDay(startDate);
+        for (let date = startOfDay(startDate); date <= end; date = addDays(date, 1)) {
+          const iso = date.toISOString();
+          if (markers.get(iso) !== 'star') {
+            markers.set(iso, tag);
+          }
+        }
+      }
 
-    const hasDate = useCallback((date: Date) => dateSet.has(startOfDay(date).toISOString()), [dateSet]);
+      return markers;
+    }, [dates]);
+
+    const getMarker = useCallback(
+      (date: Date): { tag: DateMarkerTag } | undefined => {
+        const iso = startOfDay(date).toISOString();
+        const tag = dateMarkers.get(iso);
+        return tag ? { tag } : undefined;
+      },
+      [dateMarkers],
+    );
 
     const [initialized, setInitialized] = useState(false);
     useEffect(() => {
       const index = getRowIndex(start, initialDate ?? today, weekStartsOn);
-      listRef.current?.scrollToRow(index);
-    }, [initialized, start, today, initialDate, weekStartsOn]);
+      // Keep `scrollMargin` weeks of context above the target row.
+      listRef.current?.scrollToRow(Math.max(0, index - scrollMargin));
+    }, [initialized, start, today, initialDate, weekStartsOn, scrollMargin]);
 
     useEffect(() => {
       return event.on((event) => {
-        switch (event.type) {
-          case 'scroll': {
-            const index = getRowIndex(start, event.date, weekStartsOn);
-            listRef.current?.scrollToRow(index);
-            break;
-          }
+        // `select` also sets the grid's selection (e.g. when the active event changes); the grid still
+        // owns selection — a user click sets it locally and isn't overwritten until the next `select`.
+        if (event.type === 'select') {
+          setSelected(event.date);
         }
+        const index = getRowIndex(start, event.date, weekStartsOn);
+        listRef.current?.scrollToRow(Math.max(0, index - scrollMargin));
       });
-    }, [event]);
-
-    const days = useMemo(() => {
-      const weekStart = startOfWeek(new Date(), { weekStartsOn });
-      return Array.from({ length: 7 }, (_, i) => {
-        const day = addDays(weekStart, i);
-        return format(day, 'EEE'); // Short day name (Mon, Tue, etc.)
-      });
-    }, []);
+    }, [event, start, weekStartsOn, scrollMargin, setSelected]);
 
     //
     // Selection refs.
@@ -575,33 +579,45 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
             <div className='grid grid-cols-7 bg-input-surface' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
               {Array.from({ length: 7 }).map((_, i) => {
                 const date = getDate(start, index, i, weekStartsOn);
-                const inRange = isInRange(date, activeRange);
-                const border = isSameDay(date, selected)
-                  ? 'border-primary-500'
-                  : isSameDay(date, today)
-                    ? 'border-amber-500'
-                    : hasDate(date)
-                      ? 'border-neutral-700 border-dashed'
+                const marker = getMarker(date);
+                const isToday = isSameDay(date, today);
+                const isCurrent = isSameDay(date, selected);
+                const dateClassNames = isToday
+                  ? DATE_CLASS_NAMES.today
+                  : marker?.tag === 'star'
+                    ? DATE_CLASS_NAMES.starred
+                    : marker
+                      ? DATE_CLASS_NAMES.busy
                       : undefined;
+
+                const inRange = isInRange(date, activeRange);
 
                 return (
                   <div
                     key={i}
                     data-date={startOfDay(date).toISOString()}
-                    className={mx(
-                      'relative flex justify-center items-center cursor-pointer select-none',
-                      getBgColor(date),
-                    )}
+                    className={mx('relative flex justify-center cursor-pointer select-none', getBgColor(date))}
                     onPointerDown={(ev) => handleDayPointerDown(date, ev)}
                     onPointerEnter={() => handleDayPointerEnter(date)}
                     onPointerUp={() => handleDayPointerUp(date)}
                   >
+                    {/* Selection range */}
                     {inRange && <div className='absolute inset-0 bg-primary-500/20' />}
-                    <span className='relative text-description text-sm'>{date.getDate()}</span>
-                    {!border && date.getDate() === 1 && (
+                    {/* Month */}
+                    {!dateClassNames && date.getDate() === 1 && (
                       <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
                     )}
-                    {border && <div className={mx('absolute inset-1 border-2 rounded-full', border)} />}
+                    {/* Day + Marker */}
+                    <div
+                      className={mx(
+                        'absolute inset-1 rounded-full flex justify-center items-center text-sm text-description',
+                        dateClassNames,
+                      )}
+                    >
+                      {date.getDate()}
+                    </div>
+                    {/* Current */}
+                    {isCurrent && <div className={mx('absolute inset-0.5 rounded-full', DATE_CLASS_NAMES.current)} />}
                   </div>
                 );
               })}
@@ -609,7 +625,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
           </div>
         );
       },
-      [activeRange, handleDayPointerDown, handleDayPointerEnter, handleDayPointerUp, hasDate, selected, weekStartsOn],
+      [activeRange, handleDayPointerDown, handleDayPointerEnter, handleDayPointerUp, getMarker, selected, weekStartsOn],
     );
 
     return (
@@ -630,12 +646,8 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         onKeyDown={handleKeyDown}
       >
         {/* Day of week labels */}
-        <div className='grid w-full grid-cols-7' style={{ width: defaultWidth }}>
-          {days.map((date, i) => (
-            <div key={i} className='flex justify-center p-2 text-sm font-thin'>
-              {date}
-            </div>
-          ))}
+        <div style={{ width: defaultWidth }}>
+          <Weekdays weekStartsOn={weekStartsOn} columnWidth={size} />
         </div>
 
         {/* Grid */}
@@ -669,6 +681,15 @@ export const Calendar = {
   Root: CalendarRoot,
   Toolbar: CalendarToolbar,
   Grid: CalendarGrid,
+  Week: CalendarWeek,
 };
 
-export type { CalendarController, CalendarRootProps, CalendarToolbarProps, CalendarGridProps };
+export type {
+  CalendarController,
+  CalendarEvent,
+  CalendarGridProps,
+  CalendarRootProps,
+  CalendarToolbarProps,
+  CalendarWeekProps,
+  Range,
+};

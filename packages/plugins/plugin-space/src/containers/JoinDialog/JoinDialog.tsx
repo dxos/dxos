@@ -5,10 +5,8 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Trigger } from '@dxos/async';
-import { Graph } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -19,7 +17,7 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-export const JOIN_DIALOG = `${meta.id}.JoinDialog`;
+export const JOIN_DIALOG = `${meta.profile.key}.JoinDialog`;
 
 export type JoinDialogProps = JoinPanelProps & {
   navigableCollections?: boolean;
@@ -28,8 +26,7 @@ export type JoinDialogProps = JoinPanelProps & {
 export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialogProps) => {
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
-  const { graph } = useAppGraph();
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   const handleDone = useCallback(
     async (result: InvitationResult | null) => {
@@ -40,10 +37,10 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
 
       await Promise.all([
         invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.id}.join-success`,
+          id: `${meta.profile.key}.join-success`,
           duration: 5_000,
-          title: ['join-success.label', { ns: meta.id }],
-          closeLabel: ['dismiss.label', { ns: meta.id }],
+          title: ['join-success.label', { ns: meta.profile.key }],
+          closeLabel: ['dismiss.label', { ns: meta.profile.key }],
         }),
         invokePromise(LayoutOperation.UpdateDialog, { state: false }),
       ]);
@@ -61,21 +58,13 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         space = await trigger.wait();
       }
 
-      await invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
-
-      // TODO(wittjosiah): If navigableCollections is false and there's no target,
-      //   should try to navigate to the first object of the space replicates.
-      //   Potentially this could also be done on the inviters side to ensure there's always a target.
-      const target = result?.target || (navigableCollections ? space?.id : undefined);
-      if (target) {
-        // Wait before navigating to the target node.
-        // If the target has not yet replicated, this will trigger a loading toast.
-        await Graph.waitForPath(graph, { target }).catch(() => {});
-        await Promise.all([
-          invokePromise(LayoutOperation.Open, { subject: [target] }),
-          invokePromise(LayoutOperation.Expose, { subject: target }),
-        ]);
-      }
+      // TODO(wittjosiah): `result.target` is ignored so acceptance navigates to the space home
+      // immediately; revisit how to incorporate the target once immediate navigation is settled.
+      await invokePromise(LayoutOperation.Open, {
+        subject: [Paths.getSpaceHomePath(space.id)],
+        workspace: Paths.getSpacePath(space.id),
+        navigation: 'immediate',
+      });
 
       onDone?.(result);
 
@@ -88,7 +77,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         });
       }
     },
-    [invokePromise, client, graph, navigableCollections, onDone],
+    [invokePromise, client, navigableCollections, onDone],
   );
 
   // TODO(burdon): Move JoinHeading into Dialog.Heading.

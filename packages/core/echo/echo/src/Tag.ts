@@ -14,30 +14,26 @@ import * as internal from './internal';
 import * as Obj from './Obj';
 import * as Type from './Type';
 
-export const Tag = Schema.Struct({
-  label: Schema.String,
-  hue: Schema.optional(Schema.String), // TODO(burdon): Color name?
-}).pipe(
-  internal.LabelAnnotation.set(['label']),
-  internal.HiddenAnnotation.set(true),
-  // Shared DXN so `meta.tags` (the `Ref<Tag>` schema) and this type stay in sync.
-  Type.makeObject(internal.TagTypeDXN),
-);
-
-export type Tag = Type.InstanceType<typeof Tag>;
+export class Tag extends Type.makeObject<Tag>(internal.TagTypeDXN)(
+  Schema.Struct({
+    label: Schema.String,
+    hue: Schema.optional(Schema.String), // TODO(burdon): Color name?
+  }).pipe(internal.LabelAnnotation.set(['label']), internal.HiddenAnnotation.set(true)),
+) {}
 
 export const make = (props: Obj.MakeProps<typeof Tag>) => Obj.make(Tag, props);
 
-export type Map = Record<string, Tag>;
+export type Map = Record<string, Type.InstanceType<typeof Tag>>;
 
-export const sortTags = ({ label: a }: Tag, { label: b }: Tag) => a.localeCompare(b);
+export const sortTags = ({ label: a }: Type.InstanceType<typeof Tag>, { label: b }: Type.InstanceType<typeof Tag>) =>
+  a.localeCompare(b);
 
-export const createTagList = (tags: Map): Tag[] =>
+export const createTagList = (tags: Map): Type.InstanceType<typeof Tag>[] =>
   Object.entries(tags)
     .map(([id, tag]) => ({ ...tag, id }))
     .sort(sortTags);
 
-export const findTagByLabel = (tags: Map | undefined, name: string): Tag | undefined => {
+export const findTagByLabel = (tags: Map | undefined, name: string): Type.InstanceType<typeof Tag> | undefined => {
   const entry = Object.entries(tags ?? {}).find(([_, tag]) => tag.label.toLowerCase() === name.toLowerCase());
   return entry ? { ...entry[1], id: entry[0] } : undefined;
 };
@@ -54,7 +50,7 @@ export const findTagByLabel = (tags: Map | undefined, name: string): Tag | undef
 export const findOrCreate = async (
   db: Pick<Database.Database, 'query' | 'add'>,
   options: { label: string; hue?: string; key?: ForeignKey },
-): Promise<Tag> => {
+): Promise<Type.InstanceType<typeof Tag>> => {
   const { label, hue, key } = options;
   const withHue = hue ? { hue } : {};
   if (key) {
@@ -72,6 +68,7 @@ export const findOrCreate = async (
       }
       return existing;
     }
+
     return db.add(Obj.make(Tag, { [Obj.Meta]: { keys: [key] }, label, ...withHue }));
   }
 

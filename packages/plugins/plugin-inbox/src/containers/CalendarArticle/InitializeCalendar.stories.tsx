@@ -14,6 +14,7 @@ import { Feed, Filter, Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { ConnectorAuth } from '@dxos/plugin-connector';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -25,9 +26,9 @@ import { Calendar } from '#types';
 import { InboxPlugin } from '../../InboxPlugin';
 import { InitializeCalendar } from './InitializeCalendar';
 
-// Contributes a stub `integration--auth` surface so stories can exercise the
+// Contributes a stub `ConnectorAuth` surface so stories can exercise the
 // empty-state path that delegates to an installed integration plugin without
-// pulling in `@dxos/plugin-integration`.
+// pulling in `@dxos/plugin-connector`.
 const MockAuthSurfacePlugin = Plugin.define(
   Plugin.makeMeta({
     key: DXN.make('org.dxos.plugin.inbox.story.mockAuthSurface'),
@@ -39,11 +40,12 @@ const MockAuthSurfacePlugin = Plugin.define(
       Effect.succeed(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create({
-            id: 'mockIntegrationAuth',
-            role: 'integration--auth',
+            id: 'mockConnectorAuth',
+            filter: Surface.makeFilter(ConnectorAuth),
             component: ({ data }) => (
               <div className='text-description'>
-                Mock auth surface for <code>{(data as { providerId?: string }).providerId}</code>
+                Mock auth surface for{' '}
+                <code>{(data as { connectorIds?: readonly string[] }).connectorIds?.join(', ')}</code>
               </div>
             ),
           }),
@@ -53,12 +55,12 @@ const MockAuthSurfacePlugin = Plugin.define(
   Plugin.make,
 );
 
-type DefaultStoryProps = {
+type StoryArgs = {
   withToken?: boolean;
   withAuthSurface?: boolean;
 };
 
-const DefaultStory = (_: DefaultStoryProps) => {
+const DefaultStory = (_: StoryArgs) => {
   const spaces = useSpaces();
   const db = useDatabase(spaces[0]?.id);
   const [calendar] = useQuery(db, Filter.type(Calendar.Calendar));
@@ -74,7 +76,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
-    withPluginManager<DefaultStoryProps>(({ args: { withToken = false, withAuthSurface = false } }) => ({
+    withPluginManager<StoryArgs>(({ args: { withToken = false, withAuthSurface = false } }) => ({
       setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),

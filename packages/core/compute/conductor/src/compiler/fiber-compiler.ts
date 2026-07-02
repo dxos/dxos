@@ -10,7 +10,7 @@ import * as Scope from 'effect/Scope';
 import { AiService } from '@dxos/ai';
 import { Credential, Operation, Trace } from '@dxos/compute';
 import { raise } from '@dxos/debug';
-import { Database, Feed, Registry } from '@dxos/echo';
+import { Database, Registry } from '@dxos/echo';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
@@ -18,12 +18,12 @@ import { ComputeNodeError, InvalidValueError } from '../errors';
 import {
   ComputeBeginEvent,
   ComputeEndEvent,
-  ComputeInputEvent,
-  ComputeNodeContext,
-  ComputeOutputEvent,
   type ComputeGraphModel,
+  ComputeInputEvent,
   type ComputeNode,
+  ComputeNodeContext,
   type ComputeNodeMeta,
+  ComputeOutputEvent,
   type ComputeRequirements,
   type ComputeResult,
   type Executable,
@@ -357,7 +357,6 @@ export class GraphExecutor {
         Layer.succeed(Scope.Scope, yield* Scope.Scope),
         Layer.succeed(Credential.CredentialsService, yield* Credential.CredentialsService),
         Layer.succeed(Database.Service, yield* Database.Service),
-        Layer.succeed(Feed.FeedService, yield* Feed.FeedService),
         Layer.succeed(Operation.Service, yield* Operation.Service),
         Layer.succeed(Registry.Service, yield* Registry.Service),
         Layer.succeed(Trace.TraceService, yield* Trace.TraceService),
@@ -437,8 +436,14 @@ export class GraphExecutor {
           Effect.fn('validateOutput')(function* (valueEffect, key) {
             const value = yield* valueEffect;
 
+            // `node.outputs` is derived from edges, so an output port with no outgoing edge has no topology
+            // entry. Such a value is unconsumed (e.g. a node used as a sink), so there is nothing to validate.
+            const outputTopology = node.outputs.find((o) => o.name === key);
+            if (outputTopology == null) {
+              return value;
+            }
+
             // Assert that the value matches the schema.
-            const outputTopology = node.outputs.find((o) => o.name === key) ?? failedInvariant();
             yield* Schema.decode(outputTopology.schema)(value).pipe(
               Effect.mapError(
                 (error) =>

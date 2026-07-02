@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, isPinnedWorkspace, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
 import { Graph, Node } from '@dxos/plugin-graph';
@@ -21,7 +21,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
         // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
         //   Ideally this should be worked into the data model in a generic way.
-        const shouldUpdatePrevious = !isPinnedWorkspace(state.activeDeck);
+        const shouldUpdatePrevious = !Paths.isPinnedWorkspace(state.activeDeck);
 
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => {
           const newDecks = state.decks[input.subject]

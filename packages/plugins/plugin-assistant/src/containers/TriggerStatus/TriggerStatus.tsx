@@ -6,9 +6,10 @@ import React, { useMemo } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type InvocationsState } from '@dxos/functions-runtime';
-import { useTriggerRuntimeControls } from '@dxos/plugin-automation/hooks';
+import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { useObject } from '@dxos/react-client/echo';
+import { useMulticastObservable } from '@dxos/react-client';
+import { SpaceState, useObject } from '@dxos/react-client/echo';
 import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -44,11 +45,14 @@ const getIconClassNames = (state: TriggerStatusState): string | undefined => {
 export type SpaceStatusProps = AppSurface.SpaceArticleProps;
 
 export const SpaceStatus = ({ space }: SpaceStatusProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { state } = useTriggerRuntimeControls(space.db);
   const isEnabled = state?.enabled ?? false;
-  const [properties] = useObject(space.properties);
-  const computeEnvironment = properties.computeEnvironment ?? 'local';
+  // `space.properties` throws until the space finishes initializing (e.g. right after joining);
+  // gate on `space.state` so this component doesn't crash for a freshly-joined space.
+  const spaceState = useMulticastObservable(space.state);
+  const [properties] = useObject(spaceState === SpaceState.SPACE_READY ? space.properties : undefined);
+  const computeEnvironment = properties?.computeEnvironment ?? 'local';
 
   // Determine the current trigger status state.
   const triggerState: TriggerStatusState = useMemo(() => {
@@ -115,7 +119,7 @@ const TriggerStatusPopover = ({
   currentFunctionName,
   lastInvocation, // TODO(burdon): Show.
 }: TriggerStatusPopoverProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
 
   return (
     <div className='flex flex-col gap-2 p-2 w-[240px]'>

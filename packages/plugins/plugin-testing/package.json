@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-testing",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Plugin testing utils",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -64,6 +64,7 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src"
   ],
   "dependencies": {

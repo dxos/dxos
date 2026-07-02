@@ -4,8 +4,9 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { AccessToken } from '@dxos/types';
 
-import { BlueprintDefinition, OperationHandler } from '#capabilities';
+import { OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { Sandbox } from '#types';
 
@@ -13,11 +14,11 @@ import { Sandbox } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SandboxPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Sandbox.Sandbox] }),
+  AppPlugin.addSchemaModule({ schema: [Sandbox.Sandbox, AccessToken.AccessToken] }),
   AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

@@ -26,8 +26,8 @@ import {
   type SubductionPeerBinding,
   type SubductionPeerId,
   type SubductionPolicy,
-  interpretAsDocumentId,
   initSubduction,
+  interpretAsDocumentId,
 } from '@automerge/automerge-repo';
 import { type MemorySigner, type SedimentreeId } from '@automerge/automerge-subduction';
 import * as SqlClient from '@effect/sql/SqlClient';
@@ -302,7 +302,7 @@ export class AutomergeHost extends Resource {
       });
 
       // Capture the subduction ↔ repo PeerId binding (websocket arm has no repoPeerId; unused).
-      Event.wrap<SubductionPeerBinding>(this._repo as any, 'subduction-peer-bound').on(this._ctx, (binding) => {
+      Event.wrap<SubductionPeerBinding>(this._repo, 'subduction-peer-bound').on(this._ctx, (binding) => {
         if ('repoPeerId' in binding) {
           this._subductionPeerIdHexToRepoPeerId.set(binding.subductionPeerId.toString(), binding.repoPeerId);
         }

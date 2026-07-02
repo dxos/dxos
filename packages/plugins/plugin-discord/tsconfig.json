@@ -12,6 +12,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -36,7 +37,13 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/ai"
+    },
+    {
       "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/crawler"
     },
     {
       "path": "../../core/echo/echo"
@@ -63,7 +70,7 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-integration"
+      "path": "../plugin-connector"
     },
     {
       "path": "../plugin-testing"

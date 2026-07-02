@@ -12,6 +12,7 @@
     "vite.config.ts"
   ],
   "include": [
+    "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -63,7 +64,13 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../sdk/client-protocol"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/observability"
@@ -103,6 +110,9 @@
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-deck"
     },
     {
       "path": "../plugin-observability"

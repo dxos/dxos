@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Operation } from '@dxos/compute';
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
-import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
+import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import { type Node } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 import type { EchoViewRefPath } from '@dxos/schema';
@@ -17,42 +17,25 @@ import { type Label } from '@dxos/ui-types/translations';
 
 import { meta } from '#meta';
 
-export {
-  ACCEPT_ECHO_CLASS,
-  CACHEABLE_PROPS,
-  CAN_DROP_OBJECT,
-  blockInstructionCache,
-  buildCollectionPartials,
-  collectionPartialsCache,
-  createFactory,
-  createObjectNode,
-  getAcceptPersistenceKey,
-  getCollectionGraphNodePartials,
-  getDynamicLabel,
-  rearrangeCache,
-} from '@dxos/app-toolkit';
-
 //
 // Virtual Node Types
 //
 
-export const TYPES_SECTION_TYPE = `${meta.id}.types`;
-export const COLLECTIONS_SECTION_TYPE = `${meta.id}.collections`;
-export const TYPE_COLLECTION_TYPE = `${meta.id}.type-collection`;
-export const STATIC_SCHEMA_TYPE = `${meta.id}.static-schema`;
+export const DATABASE_SECTION_TYPE = `${meta.profile.key}.database`;
+export const COLLECTIONS_SECTION_TYPE = `${meta.profile.key}.collections`;
+export const STATIC_SCHEMA_TYPE = `${meta.profile.key}.static-schema`;
 
 //
 // Constants
 //
 
 /** Shared translation namespace descriptor. */
-export const META_NS: { ns: string } = { ns: meta.id };
+export const META_NS: { ns: string } = { ns: meta.profile.key };
 
 //
 // Stable Callbacks
 //
 
-export const BLOCK_REORDER_ABOVE = (_source: TreeData, instruction: any) => instruction.type === 'reorder-above';
 export const CAN_DROP_SPACE = (source: TreeData) => Obj.isObject(source.item.data) || isSpace(source.item.data);
 
 //
@@ -81,7 +64,6 @@ export const CREATE_OBJECT_IN_SPACE_LABEL: Label = ['create-object-in-space.labe
 export const EXPOSE_OBJECT_LABEL: Label = ['expose-object.label', META_NS];
 export const MIGRATE_SPACE_LABEL: Label = ['migrate-space.label', META_NS];
 export const NEW_TYPE_LABEL: Label = ['new-type.label', META_NS];
-export const REMOVE_FROM_COLLECTION_LABEL: Label = ['remove-from-collection.label', META_NS];
 export const RENAME_SPACE_LABEL: Label = ['rename-space.label', META_NS];
 export const SETTINGS_PANEL_LABEL: Label = ['settings-panel.label', META_NS];
 export const SNAPSHOT_BY_SCHEMA_LABEL: Label = ['snapshot-by-schema.label', META_NS];

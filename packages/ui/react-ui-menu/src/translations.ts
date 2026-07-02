@@ -9,7 +9,9 @@ export const translationKey = '@dxos/react-ui-menu';
 export const translations = [
   {
     'en-US': {
-      [translationKey]: {},
+      [translationKey]: {
+        'toolbar-overflow.menu': 'More',
+      },
     },
   },
 ] as const satisfies Resource[];

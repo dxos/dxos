@@ -10,7 +10,7 @@ import { DXN, IdentityDid, SpaceId } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 const IdentitySchema = Schema.Struct({
   identityDid: IdentityDid,
@@ -51,6 +51,17 @@ export const ShareIdentity = Operation.make({
     key: makeKey('shareIdentity'),
     name: 'Share Identity',
     icon: 'ph--share-network--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Void,
+  output: Schema.Void,
+});
+
+export const OpenUsage = Operation.make({
+  meta: {
+    key: makeKey('openUsage'),
+    name: 'Open Usage',
+    icon: 'ph--chart-bar--regular',
   },
   services: [Capability.Service],
   input: Schema.Void,

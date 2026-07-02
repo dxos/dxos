@@ -111,7 +111,7 @@ export const translations = [
         'delete-object.label': 'Delete task',
         'object-deleted.label': 'Task deleted',
       },
-      [meta.id]: {
+      [meta.profile.key]: {
         'plugin.name': 'Spaces',
         'add-object.label': 'Add object',
         'first-run.message': 'Nothing selected.',
@@ -148,7 +148,7 @@ export const translations = [
         'object.placeholder': 'Type a title here…',
         'personal-space.label': 'Personal Space',
         'spaces.label': 'Spaces',
-        'space-settings.label': 'Spaces',
+        'space-settings.label': 'Your spaces',
         'space-settings.description':
           'Per-space settings for properties, membership, integrations, and other space-specific objects.',
         'save-files-to-directory.label': 'Save files to disk',
@@ -156,6 +156,7 @@ export const translations = [
         'snapshot-by-schema.label': 'Snapshot of objects',
         'rename-collection.label': 'Rename collection',
         'rename-object.label': 'Rename object',
+        'delete-object.label': 'Delete object',
         'duplicate-object.label': 'Duplicate object',
         'object-deleted.label': 'Object deleted',
         'objects-deleted.label': 'Objects deleted',
@@ -203,6 +204,7 @@ export const translations = [
         'sync-status.title': 'Sync status',
         'dismiss.label': 'Dismiss',
         'join-success.label': 'Successfully joined space',
+        'join-no-identity-toast.title': 'Log in to accept this invitation',
         'name.label': 'Name',
         'name.placeholder': 'Name',
         'object-properties.label': 'Properties',
@@ -227,7 +229,11 @@ export const translations = [
         'expose-object.label': 'Expose in navtree',
         'add-tag.label': 'Add tag',
         'advanced-settings.label': 'Advanced',
+        'settings.show-hidden.label': 'Show hidden types',
+        'settings.show-hidden.description':
+          'Include types annotated as hidden (e.g. Tag, View, Feed) in the database section.',
         'settings.space-list.label': 'Spaces',
+        'settings.space-list.description': 'Settings for each space you belong to.',
         'settings.open-settings.label': 'Open settings',
         'settings-panel.label': 'Open settings',
         'related-actions.label': 'Related Actions',
@@ -264,9 +270,9 @@ export const translations = [
         'hue.description': 'Color used to represent the space in the app.',
         'edge-replication.description':
           "Only change this if you know what you're doing. Disabling this will prevent the space from replicating through Composer's EDGE services, and relies solely on peer-to-peer sync.",
-        'space-key.title': 'Space Key',
-        'space-key.description': 'The unique identifier for this space. Use this to connect external services.',
-        'copy-space-key.label': 'Copy space key',
+        'space-id.title': 'Space ID',
+        'space-id.description': 'The unique identifier for this space. Use this to connect external services.',
+        'copy-space-id.label': 'Copy space ID',
 
         'space-controls.title': 'Space Controls',
         'space-controls.description': 'Advanced controls for this space.',
@@ -299,9 +305,12 @@ export const translations = [
         'sync-upload.label': 'Upload',
         'sync-download.label': 'Download',
 
-        'types-section.label': 'Database',
+        'nav-tree-group-content.label': 'Content',
+        'nav-tree-group-comm.label': 'Communications',
+        'nav-tree-group-system.label': 'System',
+        'database-section.label': 'Database',
         'collections-section.label': 'Collections',
-        'type-collection-all.label': 'All',
+        'type-collection-empty.message': 'No objects of this type yet.',
 
         'search.placeholder': 'Search…',
         'auth-code.message': 'Authorization code',
@@ -318,6 +327,8 @@ export const translations = [
         'qr.label': 'QR Code',
         'typename.label': 'Object',
         'unnamed-collection.label': 'Unnamed',
+        'space-home-node.label': 'Home',
+        'space-home.recent.heading': 'Recent',
       },
     },
   },

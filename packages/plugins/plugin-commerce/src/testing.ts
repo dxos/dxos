@@ -38,9 +38,9 @@ export const makeSampleProvider = (): Provider.Provider =>
       method: 'GET',
       urlTemplate: 'https://www.autotrader.co.uk/car-search',
       query: {
-        make: { field: 'make' },
-        model: { field: 'model' },
-        postcode: { field: 'postcode' },
+        'make': { field: 'make' },
+        'model': { field: 'model' },
+        'postcode': { field: 'postcode' },
         'price-from': { field: 'priceFrom' },
         'price-to': { field: 'priceTo' },
         'year-from': { field: 'yearFrom' },

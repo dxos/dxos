@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { McpServer as McpServerSpec } from '@dxos/compute';
-import { DXN, Annotation, Type } from '@dxos/echo';
+import { Annotation, DXN, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 /**
@@ -19,13 +19,12 @@ import { LabelAnnotation } from '@dxos/echo/Annotation';
  * NOTE: `apiKey` is stored in plaintext and replicated to all peers with access to the space.
  * A future iteration should move secrets to per-device credential storage or use envelope encryption.
  */
-export const McpServer = Schema.Struct({
-  ...McpServerSpec.McpServer.fields,
-  enabled: Schema.optional(Schema.Boolean),
-}).pipe(
-  LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--plugs-connected--regular', hue: 'sky' }),
-  Type.makeObject(DXN.make('org.dxos.type.assistant.mcpServer', '0.1.0')),
-);
-
-export type McpServer = Type.InstanceType<typeof McpServer>;
+export class McpServer extends Type.makeObject<McpServer>(DXN.make('org.dxos.type.assistant.mcpServer', '0.1.0'))(
+  Schema.Struct({
+    ...McpServerSpec.McpServer.fields,
+    enabled: Schema.optional(Schema.Boolean),
+  }).pipe(
+    LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--plugs-connected--regular', hue: 'sky' }),
+  ),
+) {}

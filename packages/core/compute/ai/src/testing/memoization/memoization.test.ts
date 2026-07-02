@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import * as Chat from '@effect/ai/Chat';
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Prompt from '@effect/ai/Prompt';
@@ -24,6 +23,18 @@ import { TestingToolkit, testingLayer } from '../toolkit';
 import * as MemoizedAiService from './MemoizedAiService';
 import * as MemoizedLanguageModel from './MemoizedLanguageModel';
 
+// Workaround: @effect/ai-anthropic v0.26.0 declares AnthropicWebSearch with
+// parameters: EmptyParams, but the API now sends { query: "..." } in tool_use.input,
+// causing a schema decode failure. This local definition uses the correct schema.
+const AnthropicWebSearch = Tool.providerDefined({
+  id: 'anthropic.web_search_20250305' as `${string}.${string}`,
+  toolkitName: 'AnthropicWebSearch',
+  providerName: 'web_search',
+  args: {},
+  parameters: { query: Schema.optional(Schema.String) },
+  success: Schema.Unknown,
+})({});
+
 const DateToolkit = Toolkit.make(
   Tool.make('get-date', {
     description: 'Get the current date',
@@ -37,10 +48,11 @@ const layerTest = DateToolkit.toLayer({
   }),
 });
 
-const TestLayer = Layer.mergeAll(testingLayer, layerTest, AiService.model('ai.claude.model.claude-sonnet-4-0')).pipe(
-  Layer.provideMerge(MemoizedAiService.layerTest()),
-  Layer.provide(AiServiceTestingPreset('edge-remote')),
-);
+const TestLayer = Layer.mergeAll(
+  testingLayer,
+  layerTest,
+  AiService.model('com.anthropic.model.claude-sonnet-4-6.default'),
+).pipe(Layer.provideMerge(MemoizedAiService.layerTest()), Layer.provide(AiServiceTestingPreset('edge-remote')));
 
 class TestObjectReadToolkit extends Toolkit.make(
   Tool.make('read-object', {
@@ -144,7 +156,7 @@ describe('memoization', () => {
         while (true) {
           const response = yield* chat.generateText({
             prompt: Prompt.empty,
-            toolkit: yield* Toolkit.make(AnthropicTool.WebSearch_20250305({})),
+            toolkit: yield* Toolkit.make(AnthropicWebSearch),
           });
           if (response.finishReason === 'tool-calls') {
             continue;
@@ -255,7 +267,10 @@ describe('dynamic value matching', () => {
         }
       },
       Effect.provide(
-        Layer.mergeAll(TestObjectReadToolkit.layer, AiService.model('ai.claude.model.claude-sonnet-4-0')).pipe(
+        Layer.mergeAll(
+          TestObjectReadToolkit.layer,
+          AiService.model('com.anthropic.model.claude-sonnet-4-6.default'),
+        ).pipe(
           Layer.provideMerge(
             MemoizedAiService.layerTest({
               dynamicValuePatterns: [MemoizedLanguageModel.ENTITY_ID_PATTERN],

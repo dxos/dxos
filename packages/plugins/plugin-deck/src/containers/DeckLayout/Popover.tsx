@@ -10,10 +10,12 @@ import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import {
   Card,
+  Icon,
+  IconButton,
   Popover,
   type PopoverContentInteractOutsideEvent,
   toLocalizedString,
-  Toolbar,
+  useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
@@ -54,9 +56,12 @@ export const PopoverRoot = ({ children }: PopoverRootProps) => {
     }
   }, [state.popoverOpen, state.popoverAnchorId, state.popoverAnchor, state.popoverContent]);
 
+  // The rename popover is modal so other navtree item menus are inert while it is open.
+  const modal = state.popoverKind === 'rename';
+
   return (
     <DeckPopoverProvider setOpen={setOpen}>
-      <Popover.Root modal={false} open={open}>
+      <Popover.Root modal={modal} open={open}>
         {state.popoverAnchor && <Popover.VirtualTrigger key={virtualIter} virtualRef={virtualRef} />}
         {children}
       </Popover.Root>
@@ -65,7 +70,7 @@ export const PopoverRoot = ({ children }: PopoverRootProps) => {
 };
 
 export const PopoverContent = () => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.profile.key);
   const { state, updateEphemeral } = useDeckState();
   const { setOpen } = useDeckPopoverContext('PopoverContent');
   const popoverSubject =
@@ -75,8 +80,14 @@ export const PopoverContent = () => {
   const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
   const icon = isObjectPopover ? (Obj.getIcon(popoverSubject)?.icon ?? 'ph--circle-dashed--regular') : undefined;
   const content = state.popoverContent;
-  // A base popover renders a plugin-provided component; everything else falls through to the card.
-  const isBasePopover = state.popoverKind === 'base' && !!content && 'component' in content;
+  // Base and rename popovers render a plugin-provided component; everything else falls through to the card.
+  const isComponentPopover =
+    (state.popoverKind === 'base' || state.popoverKind === 'rename') && !!content && 'component' in content;
+  const isRename = state.popoverKind === 'rename';
+
+  // Anchor to the right of the row on wide displays; drop centered below on narrow ones.
+  const [isLg] = useMediaQuery('lg', { fallback: [true] });
+  const side = isRename ? (isLg ? 'right' : 'bottom') : state.popoverSide;
 
   const handleClose = useCallback(() => {
     setOpen(false);
@@ -91,15 +102,14 @@ export const PopoverContent = () => {
 
   const handleInteractOutside = useCallback(
     (event: KeyboardEvent | PopoverContentInteractOutsideEvent) => {
-      if (
-        // TODO(thure): CodeMirror should not focus itself when it updates.
-        event.type === 'dismissableLayer.focusOutside' &&
-        (event.currentTarget as HTMLElement | undefined)?.classList.contains('cm-content')
-      ) {
+      // Focus leaving the popover (clicking into the card surfaces a portaled menu, or CodeMirror
+      // re-focusing itself) must not dismiss it — only a pointer-down genuinely outside the card, or
+      // Escape, closes. (Clicks inside the card never reach here; Radix scopes them to the content.)
+      if (event.type === 'dismissableLayer.focusOutside') {
         event.preventDefault();
-      } else {
-        handleClose();
+        return;
       }
+      handleClose();
     },
     [handleClose],
   );
@@ -107,15 +117,22 @@ export const PopoverContent = () => {
   return (
     <Popover.Portal>
       <Popover.Content
-        side={state.popoverSide}
+        side={side}
         sticky='always'
         hideWhenDetached
-        onOpenAutoFocus={(event) => event.preventDefault()}
+        // Rename focuses its input; other popovers keep focus where it was.
+        onOpenAutoFocus={isRename ? undefined : (event) => event.preventDefault()}
         onInteractOutside={handleInteractOutside}
         onEscapeKeyDown={handleInteractOutside}
+        // Reuse the dialog's enter/exit motion so the rename popover does not flicker on open.
+        classNames={
+          isRename
+            ? ['data-[state=open]:animate-slide-up-and-fade', 'data-[state=closed]:animate-slide-down-and-fade']
+            : undefined
+        }
       >
         <Popover.Viewport>
-          {isBasePopover && content && 'component' in content ? (
+          {isComponentPopover && content && 'component' in content ? (
             /* Base popover: a plugin-provided component (e.g. editor link preview). */
             <Surface.Surface type={AppSurface.Popover} data={content} limit={1} />
           ) : (
@@ -129,12 +146,12 @@ export const PopoverContent = () => {
             <Menu.Root>
               <Card.Root border={false} classNames='dx-card-popover'>
                 <Card.Header>
-                  <Card.IconBlock>{icon && <Card.Icon icon={icon} />}</Card.IconBlock>
+                  <Card.Block>{icon && <Icon icon={icon} />}</Card.Block>
                   <Card.Title>{title}</Card.Title>
                   {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                  <Card.IconBlock>
+                  <Card.Block end>
                     <Menu.Trigger asChild disabled={!objectMenuItems.length}>
-                      <Toolbar.IconButton
+                      <IconButton
                         variant='ghost'
                         density='sm'
                         icon='ph--dots-three-vertical--regular'
@@ -143,11 +160,11 @@ export const PopoverContent = () => {
                       />
                     </Menu.Trigger>
                     <Menu.Content items={objectMenuItems} />
-                  </Card.IconBlock>
+                  </Card.Block>
                 </Card.Header>
 
                 {content && 'subject' in content ? (
-                  <Surface.Surface type={AppSurface.Card} data={content} limit={1} />
+                  <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} />
                 ) : (
                   <Card.Body classNames='min-bs-8'>
                     <Card.Row>

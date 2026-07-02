@@ -17,21 +17,22 @@ import {
 } from '@dxos/schema';
 
 import { translationKey } from '#translations';
+import { type FormFieldMap } from '#types';
 
 import { getFormProperties } from '../../util';
-import { Form, type FormFieldMap, type FormRootProps, SelectField, SelectOptionField } from '../Form';
+import { Form, type FormRootProps, SelectField, SelectOptionField } from '../Form';
 
-export type FieldEditorProps = {
+export type FieldEditorProps = Pick<FormRootProps<any>, 'readonly'> & {
   projection: ProjectionModel;
   field: View.FieldType;
   registry?: Registry.Registry;
   view?: Obj.Unknown;
   onSave: () => void;
   onCancel?: () => void;
-} & Pick<FormRootProps<any>, 'readonly'>;
+};
 
 /**
- * Displays a Form representing the metadata for a given `Field` and `View`.
+ * Displays a Form representing the metadata for a `Field` within a given `View`.
  */
 export const FieldEditor = ({ readonly, projection, field, registry, view, onSave, onCancel }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
@@ -57,7 +58,10 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
 
   const [referenceSchema, setReferenceSchema] = useState<Type.Type>();
   useEffect(() => {
-    setReferenceSchema(schemas.find((schema) => Type.getTypename(schema) === props?.referenceSchema));
+    // A React state setter invokes a function argument as an updater. A class-based `Type.Type` is
+    // itself a function, so it must be stored via an updater lambda — passing it directly makes React
+    // call it as `Organization(prev)`, throwing "Class constructor … cannot be invoked without 'new'".
+    setReferenceSchema(() => schemas.find((schema) => Type.getTypename(schema) === props?.referenceSchema));
   }, [schemas, props?.referenceSchema]);
 
   // TODO(burdon): Need to wrap otherwise throws error:
@@ -190,7 +194,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
       readonly={readonly}
       schema={fieldSchema}
       values={props}
-      exclude={propIsNotType}
+      filter={propIsNotType}
       sort={['property', 'format']}
       onValuesChanged={handleValuesChanged}
       onValidate={handleValidate}

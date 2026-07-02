@@ -1,6 +1,6 @@
 {
   "name": "@dxos/assistant",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Natural language interface to DXOS",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -37,10 +37,12 @@
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -59,6 +61,7 @@
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",
+    "@effect/rpc": "catalog:",
     "@xenova/transformers": "catalog:",
     "lodash.defaultsdeep": "catalog:"
   },

@@ -45,9 +45,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute-runtime"
-    },
-    {
       "path": "../../core/compute/ai"
     },
     {
@@ -58,6 +55,9 @@
     },
     {
       "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/compute-runtime"
     },
     {
       "path": "../../core/compute/conductor"
@@ -118,9 +118,6 @@
     },
     {
       "path": "../react-ui-mosaic"
-    },
-    {
-      "path": "../react-ui-stack"
     },
     {
       "path": "../react-ui-syntax-highlighter"

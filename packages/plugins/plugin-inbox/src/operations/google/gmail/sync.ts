@@ -12,21 +12,22 @@ import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 
-import { Capability } from '@dxos/app-framework';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
 import { Operation, Trace } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { EID } from '@dxos/keys';
+import { Database, Feed, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration';
-import { Tagging } from '@dxos/schema';
+// Connection is referenced in the inferred type of this module's default export via
+// InboxOperation.GoogleMailSync's schema; the import lets TypeScript name it in .d.ts.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type Connection, SyncBinding } from '@dxos/plugin-connector';
 import { Message } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
-import { InboxResolver, GoogleCredentials } from '../../../services';
-import { InboxCapabilities, InboxOperation, Mailbox } from '../../../types';
-import { isAiServiceUnavailable } from '../../extractor';
+import { GMAIL_SOURCE } from '../../../constants';
+import { GoogleCredentials, InboxResolver } from '../../../services';
+import { InboxOperation, Mailbox } from '../../../types';
+import { appendBatchToFeed, collectForeignIds, readBindingOptions } from '../../../util';
 import { mapMessage } from './mapper';
 
 type DateChunk = {
@@ -49,55 +50,19 @@ const STREAMING_CONFIG = {
   restrictedMax: 20,
 } as const;
 
-const readMailboxTargetOptions = (integration: Integration.Integration, mailbox: Mailbox.Mailbox) => {
-  const match = (integration.targets ?? []).find(
-    (target) => target.object && EID.getEntityId(EID.tryParse(target.object.uri)!) === mailbox.id,
-  );
-  const raw = match?.options;
-  if (!raw || typeof raw !== 'object') {
-    return { syncBackDays: undefined as undefined | number, filter: undefined as undefined | string };
-  }
-  const record = raw as Record<string, unknown>;
-  return {
-    syncBackDays: typeof record.syncBackDays === 'number' ? record.syncBackDays : undefined,
-    filter: typeof record.filter === 'string' ? record.filter : undefined,
-  };
-};
-
-const collectMailboxRefsFromIntegration = (
-  integration: Integration.Integration,
-): Effect.Effect<Array<Ref.Ref<Mailbox.Mailbox>>> =>
-  Effect.gen(function* () {
-    const refs: Array<Ref.Ref<Mailbox.Mailbox>> = [];
-    for (const target of integration.targets ?? []) {
-      if (!target.object) {
-        continue;
-      }
-      const loaded = yield* Database.load(target.object).pipe(
-        Effect.map(Option.some),
-        Effect.catchTag('EntityNotFoundError', () => Effect.succeed(Option.none())),
-      );
-      if (Option.isSome(loaded) && Mailbox.instanceOf(loaded.value)) {
-        refs.push(Ref.make(loaded.value));
-      }
-    }
-    return refs;
-  });
-
 const syncSingleMailbox = (input: {
-  integration: Integration.Integration;
-  mailboxRef: Ref.Ref<Mailbox.Mailbox>;
+  binding: SyncBinding.SyncBinding;
+  mailbox: Mailbox.Mailbox;
   userId: string;
   defaultLabel: string;
   defaultAfter: string;
   restrictedMode: boolean;
 }) =>
   Effect.gen(function* () {
-    const { integration, mailboxRef, userId, defaultLabel, defaultAfter, restrictedMode } = input;
+    const { binding, mailbox, userId, defaultLabel, defaultAfter, restrictedMode } = input;
 
-    log('syncing gmail', { mailbox: mailboxRef.uri, userId, after: defaultAfter, restrictedMode });
-    const mailbox = yield* Database.load(mailboxRef);
-    const targetOptions = readMailboxTargetOptions(integration, mailbox);
+    log('syncing gmail', { mailbox: Obj.getURI(mailbox), userId, after: defaultAfter, restrictedMode });
+    const targetOptions = readBindingOptions(binding);
     const after =
       targetOptions.syncBackDays !== undefined
         ? format(subDays(new Date(), targetOptions.syncBackDays), 'yyyy-MM-dd')
@@ -117,15 +82,9 @@ const syncSingleMailbox = (input: {
     );
     log('synced labels', { count: labelMap.size });
 
-    const objects = yield* Feed.runQuery(feed, Filter.type(Message.Message));
+    const objects = yield* Feed.query(feed, Filter.type(Message.Message)).run;
     const lastMessage = objects.at(-1);
-    const recentMessages = objects.slice(-STREAMING_CONFIG.maxResults);
-    const existingGmailIds = new Set(
-      recentMessages.flatMap((msg) => {
-        const meta = Obj.getMeta(msg);
-        return meta.keys.filter((key) => key.source === 'gmail.com').map((key) => key.id);
-      }),
-    );
+    const existingGmailIds = collectForeignIds(objects, GMAIL_SOURCE, STREAMING_CONFIG.maxResults);
 
     const startDate = lastMessage ? new Date(lastMessage.created) : new Date(after);
     log('starting sync', {
@@ -153,40 +112,55 @@ const syncSingleMailbox = (input: {
 export default InboxOperation.GoogleMailSync.pipe(
   Operation.withHandler(
     ({
-      integration: integrationRef,
-      mailbox: mailboxRefOptional,
+      binding: bindingRef,
       userId = 'me',
       label = 'inbox',
       after = format(subDays(new Date(), 30), 'yyyy-MM-dd'),
       restrictedMode = false,
     }) =>
       Effect.gen(function* () {
-        const normalizedAfter = typeof after === 'number' ? format(new Date(after), 'yyyy-MM-dd') : after;
-        const integration = yield* Database.load(integrationRef);
-        const mailboxRefs =
-          mailboxRefOptional !== undefined
-            ? [mailboxRefOptional]
-            : yield* collectMailboxRefsFromIntegration(integration);
+        const bindingObj = bindingRef.target;
+        const db = bindingObj ? Obj.getDatabase(bindingObj) : undefined;
+        if (!bindingObj || !db) {
+          return { newMessages: 0 };
+        }
 
-        let total = 0;
-        for (const mailboxRef of mailboxRefs) {
-          total += yield* syncSingleMailbox({
-            integration,
-            mailboxRef,
+        const connectionRef = Ref.make(Relation.getSource(bindingObj));
+        const normalizedAfter = typeof after === 'number' ? format(new Date(after), 'yyyy-MM-dd') : after;
+
+        return yield* Effect.gen(function* () {
+          const binding = yield* Database.load(bindingRef);
+          const mailbox = Relation.getTarget(binding);
+          if (!Mailbox.instanceOf(mailbox)) {
+            // The integration mechanism only ever binds Mailboxes for Gmail.
+            return { newMessages: 0 };
+          }
+
+          const total = yield* syncSingleMailbox({
+            binding,
+            mailbox,
             userId,
             defaultLabel: label,
             defaultAfter: normalizedAfter,
             restrictedMode,
           });
-        }
 
-        return { newMessages: total };
-      }).pipe(
-        Effect.provide(
-          Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromIntegration(integrationRef)),
-        ),
-      ),
+          Relation.update(binding, (binding) => {
+            binding.lastSyncAt = new Date().toISOString();
+            binding.lastError = undefined;
+          });
+
+          return { newMessages: total };
+        }).pipe(
+          Effect.provide(
+            Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromConnection(connectionRef)),
+          ),
+        );
+      }),
   ),
+  // Erase the inferred handler type (which transitively references Capability.Service via
+  // appendBatchToFeed) so the default export is portably nameable in the emitted .d.ts (TS2883).
+  Operation.opaqueHandler,
 );
 
 // Syncs the Gmail label dictionary to `Tag` objects (one per label, carrying the Gmail label-id as
@@ -315,76 +289,16 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
       Effect.gen(function* () {
         const mapped = Chunk.toArray(batch);
         const messages = mapped.map((m) => m.message);
-        log('appending batch to feed', {
-          count: messages.length,
+        log('appending batch to feed', { count: messages.length });
+        yield* appendBatchToFeed(feed, mailbox, messages, (message) => {
+          const entry = mapped.find((m) => m.message === message);
+          return (
+            entry?.labelIds.flatMap((labelId) => {
+              const uri = labelMap.get(labelId);
+              return uri ? [uri] : [];
+            }) ?? []
+          );
         });
-        yield* Feed.append(feed, messages);
-
-        // Apply provider-label tags: index each just-appended message under the Tag uri for every
-        // Gmail label assigned to it (`syncLabels` created/updated those Tag objects).
-        for (const { message, labelIds } of mapped) {
-          for (const labelId of labelIds) {
-            const uri = labelMap.get(labelId);
-            if (uri) {
-              Tagging.set(message, uri, { index: mailbox.tags.target });
-            }
-          }
-        }
-
-        const extractorsConfig = mailbox.extractors;
-        if (extractorsConfig && extractorsConfig.enabled.length > 0) {
-          const extractors = yield* Capability.getAll(InboxCapabilities.ObjectExtractor);
-          const db = Obj.getDatabase(mailbox);
-          if (db) {
-            for (const message of messages) {
-              let best: { extractor: (typeof extractors)[number]; confidence: number } | undefined;
-              for (const extractor of extractors) {
-                if (!extractorsConfig.enabled.includes(extractor.id)) {
-                  continue;
-                }
-                let result;
-                try {
-                  result = extractor.match(message);
-                } catch (err) {
-                  log.warn('auto-on-arrival match failed', {
-                    err,
-                    extractorId: extractor.id,
-                    messageId: message.id,
-                  });
-                  continue;
-                }
-                if (!result.matched) {
-                  continue;
-                }
-                const confidence = result.confidence ?? 0;
-                if (confidence >= extractorsConfig.threshold && (!best || confidence > best.confidence)) {
-                  best = { extractor, confidence };
-                }
-              }
-              if (best) {
-                yield* Operation.invoke(InboxOperation.ExtractMessage, {
-                  db,
-                  source: message,
-                  extractorId: best.extractor.id,
-                }).pipe(
-                  Effect.catchAll((err) => {
-                    // The AI service can be momentarily absent from the process-manager LayerStack
-                    // during startup (the assistant plugin's `AiService` LayerSpec races the
-                    // runtime build). Treat that as a deferrable skip — a later sync (or app load,
-                    // once the stack carries the spec) re-attempts — rather than a hard failure.
-                    if (isAiServiceUnavailable(err)) {
-                      log.info('auto-on-arrival extract skipped: AI service not ready', { messageId: message.id });
-                    } else {
-                      log.warn('auto-on-arrival extract failed', { err, messageId: message.id });
-                    }
-                    return Effect.void;
-                  }),
-                );
-              }
-            }
-          }
-        }
-
         return messages.length;
       }),
     ),

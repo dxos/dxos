@@ -60,6 +60,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/av/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/codec-protobuf/package.json",
           "jsonpath": "$.version"
         },
@@ -131,6 +136,11 @@
         {
           "type": "json",
           "path": "packages/common/hypercore/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/i18n/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -265,11 +275,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/compute-runtime/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/compute/ai/package.json",
           "jsonpath": "$.version"
         },
@@ -305,7 +310,17 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/compute-runtime/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/conductor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/crawler/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -345,7 +360,22 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/nlp/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/operation/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/semantic-index/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/transcription-pipeline/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -356,6 +386,16 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo-client-e2e/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo-doc/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -441,6 +481,11 @@
         {
           "type": "json",
           "path": "packages/core/mesh/teleport/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/mesh/teleport-e2e/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -540,11 +585,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-automation/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-bluesky/package.json",
           "jsonpath": "$.version"
         },
@@ -595,6 +635,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-connector/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-crm/package.json",
           "jsonpath": "$.version"
         },
@@ -635,11 +680,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-feed/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-file/package.json",
           "jsonpath": "$.version"
         },
@@ -670,12 +710,12 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-inbox/package.json",
+          "path": "packages/plugins/plugin-ibkr/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-integration/package.json",
+          "path": "packages/plugins/plugin-inbox/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -691,6 +731,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-linear/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-magazine/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -745,12 +790,22 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-onboarding/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-osrm/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/plugins/plugin-outliner/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-payments/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -776,6 +831,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-registry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-routine/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -980,6 +1040,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/client-e2e/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/client-protocol/package.json",
           "jsonpath": "$.version"
         },
@@ -1036,6 +1101,11 @@
         {
           "type": "json",
           "path": "packages/stories/stories-assistant/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/stories/stories-brain/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1220,11 +1290,6 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-stack/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/ui/react-ui-syntax-highlighter/package.json",
           "jsonpath": "$.version"
         },
@@ -1240,12 +1305,12 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-text-tooltip/package.json",
+          "path": "packages/ui/react-ui-thread/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-thread/package.json",
+          "path": "packages/ui/react-ui-transcription/package.json",
           "jsonpath": "$.version"
         },
         {

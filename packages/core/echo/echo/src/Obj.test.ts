@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expectTypeOf, test, expect } from 'vitest';
+import { describe, expect, expectTypeOf, test } from 'vitest';
 
 import { EID } from '@dxos/keys';
 
@@ -12,6 +12,7 @@ import * as Obj from './Obj';
 import * as Ref from './Ref';
 import * as Relation from './Relation';
 import { TestSchema } from './testing';
+import type * as Type from './Type';
 
 describe('Obj', () => {
   describe('make', () => {
@@ -137,11 +138,11 @@ describe('Obj', () => {
 
     test("prefer: 'named' returns dxn: URI when meta.key is set", ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, {
-        [Obj.Meta]: { key: 'org.dxos.blueprint.webSearch' },
+        [Obj.Meta]: { key: 'org.dxos.skill.webSearch' },
         name: 'Alice',
       });
       const uri = Obj.getURI(obj, { prefer: 'named' });
-      expect(uri).toBe('dxn:org.dxos.blueprint.webSearch');
+      expect(uri).toBe('dxn:org.dxos.skill.webSearch');
     });
 
     test("prefer: 'named' falls back to EID when meta.key is absent", ({ expect }) => {
@@ -152,12 +153,12 @@ describe('Obj', () => {
 
     test("prefer: 'named' handles key with hyphens (falls back to raw key URI)", ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, {
-        [Obj.Meta]: { key: 'org.dxos.blueprint.web-search' },
+        [Obj.Meta]: { key: 'org.dxos.skill.web-search' },
         name: 'Alice',
       });
       // Hyphens in the final DXN segment are invalid; falls back to the raw key as URI.
       const uri = Obj.getURI(obj, { prefer: 'named' });
-      expect(uri).toBe('org.dxos.blueprint.web-search');
+      expect(uri).toBe('org.dxos.skill.web-search');
     });
 
     test("prefer: 'absolute' falls back to current EID when object has no database", ({ expect }) => {
@@ -328,7 +329,7 @@ describe('Obj', () => {
         employer: Ref.make(employer),
       });
 
-      const cloned = Obj.clone(person, { deep: true });
+      const cloned = Obj.clone(person, { deep: 'all' });
 
       expect(cloned.employer).not.toBe(person.employer);
       expect(cloned.employer?.target).not.toBe(employer);
@@ -363,7 +364,7 @@ describe('Obj', () => {
         tasks: [Ref.make(task1), Ref.make(task2)],
       });
 
-      const cloned = Obj.clone(person, { deep: true });
+      const cloned = Obj.clone(person, { deep: 'all' });
 
       expect(cloned.tasks).not.toBe(person.tasks);
       expect(cloned.tasks?.length).toBe(2);
@@ -393,7 +394,7 @@ describe('Obj', () => {
         employer: Ref.make(employer),
       });
 
-      const cloned = Obj.clone(person, { deep: true });
+      const cloned = Obj.clone(person, { deep: 'all' });
 
       expect(cloned.employer).toBeDefined();
       expect(cloned.employer?.target).toBeDefined();
@@ -406,7 +407,7 @@ describe('Obj', () => {
         username: 'bob',
       });
 
-      const clonedWithoutEmployer = Obj.clone(personWithoutEmployer, { deep: true });
+      const clonedWithoutEmployer = Obj.clone(personWithoutEmployer, { deep: 'all' });
       expect(clonedWithoutEmployer.employer).toBeUndefined();
     });
 
@@ -426,7 +427,7 @@ describe('Obj', () => {
         },
       });
 
-      const cloned = Obj.clone(person, { deep: true });
+      const cloned = Obj.clone(person, { deep: 'all' });
 
       expect(cloned.address?.city).toBe('San Francisco');
       expect(cloned.address?.state).toBe('CA');
@@ -455,7 +456,7 @@ describe('Obj', () => {
         tasks: [Ref.make(task1), Ref.make(task2), Ref.make(task3)],
       });
 
-      const cloned = Obj.clone(person, { deep: true });
+      const cloned = Obj.clone(person, { deep: 'all' });
 
       expect(cloned.tasks?.length).toBe(3);
       expect(cloned.tasks?.[0]?.target?.title).toBe('Task 1');
@@ -488,7 +489,7 @@ describe('Obj', () => {
         employer: Ref.make(employer),
       });
 
-      const cloned = Obj.clone(person, { deep: true, retainId: true });
+      const cloned = Obj.clone(person, { deep: 'all', retainId: true });
 
       expect(cloned.id).toBe(person.id);
       expect(cloned.employer?.target).not.toBe(employer);
@@ -508,6 +509,48 @@ describe('Obj', () => {
 
       expect(Obj.instanceOf(TestSchema.Person, cloned)).toBe(true);
       expect(Obj.getType(cloned)).toBe(Obj.getType(person));
+    });
+
+    test("deep: 'parent' clones owned children but shares unowned refs", ({ expect }) => {
+      // An owned task (parented to the person) is cloned; a shared task (no parent link) is referenced as-is.
+      const ownedTask = Obj.make(TestSchema.Task, { title: 'Owned' });
+      const sharedTask = Obj.make(TestSchema.Task, { title: 'Shared' });
+      const person = Obj.make(TestSchema.Person, {
+        name: 'Alice',
+        email: 'alice@example.com',
+        username: 'alice',
+        tasks: [Ref.make(ownedTask), Ref.make(sharedTask)],
+      });
+      Obj.setParent(ownedTask, person);
+
+      const cloned = Obj.clone(person, { deep: 'parent' });
+
+      // Owned child is a fresh copy.
+      expect(cloned.tasks?.[0]?.target).not.toBe(ownedTask);
+      expect(cloned.tasks?.[0]?.target?.id).not.toBe(ownedTask.id);
+      expect(cloned.tasks?.[0]?.target?.title).toBe('Owned');
+      // Unowned (shared) ref points at the original object.
+      expect(cloned.tasks?.[1]?.target).toBe(sharedTask);
+    });
+
+    test("deep: 'parent' follows transitive ownership", ({ expect }) => {
+      // grandchild ← child ← root: both are cloned because their parent chain reaches the clone root.
+      const grandchild = Obj.make(TestSchema.Task, { title: 'Grandchild' });
+      const child = Obj.make(TestSchema.Task, { title: 'Child', previous: Ref.make(grandchild) });
+      const person = Obj.make(TestSchema.Person, {
+        name: 'Alice',
+        email: 'alice@example.com',
+        username: 'alice',
+        tasks: [Ref.make(child)],
+      });
+      Obj.setParent(child, person);
+      Obj.setParent(grandchild, child);
+
+      const cloned = Obj.clone(person, { deep: 'parent' });
+
+      expect(cloned.tasks?.[0]?.target).not.toBe(child);
+      expect(cloned.tasks?.[0]?.target?.previous?.target).not.toBe(grandchild);
+      expect(cloned.tasks?.[0]?.target?.previous?.target?.title).toBe('Grandchild');
     });
   });
 
@@ -636,6 +679,43 @@ describe('Obj', () => {
       });
       expect(target.name).toBe('Old');
       expect(target.properties).toEqual({ x: '2' });
+    });
+  });
+
+  describe('exemplars', () => {
+    test('factory', ({ expect }) => {
+      const factory = <S extends Type.AnyObj>(schema: S) => {
+        return (props: Obj.MakeProps<S>) => Obj.make(schema, props);
+      };
+
+      const makePerson = factory(TestSchema.Person);
+      const person = makePerson({ name: 'John Doe' });
+      expect(person.name).toBe('John Doe');
+    });
+  });
+
+  describe('Hierarchy', () => {
+    test('setParent and getParent', async () => {
+      const parent = Obj.make(TestSchema.Organization, { name: 'parent' });
+      const child = Obj.make(TestSchema.Person, { name: 'child' });
+      expect(Obj.getParent(child)).toBeUndefined();
+
+      Obj.setParent(child, parent);
+      expect(Obj.getParent(child)).toBe(parent);
+
+      Obj.setParent(child, undefined);
+      expect(Obj.getParent(child)).toBeUndefined();
+    });
+
+    test('create object with Obj.Parent in props', () => {
+      const parent = Obj.make(TestSchema.Organization, { name: 'DXOS' });
+      const child = Obj.make(TestSchema.Person, {
+        [Obj.Parent]: parent,
+        name: 'John',
+      });
+
+      expect(child.name).toBe('John');
+      expect(Obj.getParent(child)).toBe(parent);
     });
   });
 });

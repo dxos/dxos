@@ -11,8 +11,8 @@ import { useTranslation } from '@dxos/react-ui';
 import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu';
 import { osTranslations } from '@dxos/ui-theme';
 
+import { Paths } from '../../app';
 import { LayoutOperation } from '../../operations';
-import { getObjectPathFromObject } from '../../paths';
 
 const OPEN_ICON = 'ph--arrow-square-out--regular';
 
@@ -42,7 +42,7 @@ export const useObjectNavigate = (subject: unknown): (() => void) | undefined =>
       return;
     }
 
-    const subjectPath = getObjectPathFromObject(subject);
+    const subjectPath = Paths.getObjectPathFromObject(subject);
     return () => {
       void invokePromise(LayoutOperation.Open, { subject: [subjectPath] });
     };
@@ -63,7 +63,7 @@ export const useObjectMenuItems = (subject: unknown): MenuItem[] => {
       return [];
     }
 
-    const subjectPath = getObjectPathFromObject(subject);
+    const subjectPath = Paths.getObjectPathFromObject(subject);
     return [
       createMenuAction(
         'navigate',
