@@ -4,4 +4,5 @@
 
 export type { Sink } from './Sink';
 
+export * as Pipeline from './Pipeline';
 export * as Stage from './Stage';
