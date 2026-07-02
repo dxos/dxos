@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { FC, PropsWithChildren, ReactNode, Ref } from 'react';
+import type { FC, PropsWithChildren, ReactNode } from 'react';
 
 import type { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -177,7 +177,6 @@ export type CoreProps<T extends Record<string, any> = Record<string, unknown>> =
   limit?: number | undefined;
 }>;
 
-// TODO(burdon): Remove ref since relying on this would be error prone.
 export type ComponentProps<T extends Record<string, any> = Record<string, any>> = {
   /**
    * The resolved role NSID string (e.g. `org.dxos.role.article`). Present on
@@ -185,7 +184,6 @@ export type ComponentProps<T extends Record<string, any> = Record<string, any>> 
    * by comparing against a token's `.role` (e.g. `role === AppSurface.Section.role`).
    */
   role: string;
-  ref?: Ref<HTMLElement>;
 } & PropsWithChildren<{
   id: string;
   data: T;

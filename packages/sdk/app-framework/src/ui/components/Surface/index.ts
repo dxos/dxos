@@ -7,6 +7,8 @@ import type { DXN } from '@dxos/keys';
 // TODO(wittjosiah): Cleanup to avoid re-naming.
 import { SurfaceContext } from './context';
 import { SurfaceComponent, isSurfaceAvailable } from './SurfaceComponent';
+import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug';
+import { type SurfaceMetric, surfaceMetrics, useSurfaceMetrics } from './SurfaceMetrics';
 import {
   SurfaceProfilerProvider,
   useSurfaceProfilerCallback,
@@ -55,11 +57,21 @@ export namespace Surface {
   export const makeFilter = makeFilterFn;
   export const isFilter = isSurfaceFilterFn;
 
+  export const isDebugEnabled = isSurfaceDebugEnabled;
+  export const setDebug = setSurfaceDebug;
+
   export const ProfilerProvider = SurfaceProfilerProvider;
   export const useProfilerCallback = useSurfaceProfilerCallback;
   export const useProfilerEntries = useSurfaceProfilerEntries;
   export const useProfilerStats = useSurfaceProfilerStats;
   export const useProfilerClear = useSurfaceProfilerClear;
+
+  export type Metric = SurfaceMetric;
+  export const useMetrics = useSurfaceMetrics;
+  export const clearMetrics = () => surfaceMetrics.clear();
 }
 
 export type { SurfaceProfilerEntry, SurfaceProfilerStats } from './SurfaceProfilerContext';
+export type { SurfaceMetric } from './SurfaceMetrics';
+export { SurfaceManager } from './SurfaceManager';
+export { SurfaceManagerProvider, useSurfaceManager } from './SurfaceManagerContext';

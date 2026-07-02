@@ -17,7 +17,6 @@
     "test": "test-storybook --url http://127.0.0.1:9009"
   },
   "devDependencies": {
-    "@babel/parser": "catalog:",
     "@dxos/log": "workspace:*",
     "@dxos/storybook-addon-logger": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

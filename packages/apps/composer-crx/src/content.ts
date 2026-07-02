@@ -47,8 +47,7 @@ import {
  * Content script — loaded on every page at document_start. Hosts the DOM
  * picker and the page-actions / search-proxy relays.
  *
- * The popup cannot reliably await a round-trip reply because it closes when
- * the user mouses onto the page to pick. The popup fires a one-way
+ * The side panel does not await a round-trip reply: it fires a one-way
  * `start-picker` message; we push the picked snapshot to the background via
  * a deliver message. The background handles discovery + delivery.
  */

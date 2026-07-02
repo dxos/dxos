@@ -87,7 +87,12 @@ export const refreshRegistry = async (
       log.info('page-actions registry refreshed', { count: ack.actions.length });
       return;
     } catch (err) {
-      log.catch(err);
+      // A tab with no attached content script is a normal state (not every tab
+      // hosts one, and injection may still be in flight), so this is expected
+      // rather than an error — keep the stale cache and move on.
+      log.info('page-actions registry refresh unavailable', {
+        error: err instanceof Error ? err.message : String(err),
+      });
       return;
     }
   }
