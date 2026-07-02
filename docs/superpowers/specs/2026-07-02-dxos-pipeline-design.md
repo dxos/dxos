@@ -179,7 +179,10 @@ packages/core/compute/pipeline/
 
 Namespace-export convention per repo guidelines (`export * as Stage`, `export * as Pipeline`).
 
-**Dependencies (core):** `effect` (catalog), `@dxos/effect` (workspace). Nothing else.
+**Dependencies:** runtime — `effect` (catalog, peer) only; `dependencies` is empty. Dev/test —
+`@dxos/effect` (workspace) for `EffectEx.runPromise` (the repo lint rule `no-effect-run-promise`
+bans bare `Effect.runPromise`; `@dxos/effect` is dev-only so the published bundle stays
+`effect`-only) plus `vitest`. No `@dxos/*` **runtime** dependency; no `@dxos/types`.
 
 No `ContentBlock` helper entrypoint in this package for now: because `In` is fully generic and can
 be any union (including transcription's `Block | Silence | Tick`), transcription-specific

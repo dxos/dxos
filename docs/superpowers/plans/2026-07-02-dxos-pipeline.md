@@ -12,7 +12,7 @@
 
 - Package name `@dxos/pipeline`; `"private": true` in `package.json` (mandatory for new packages).
 - Location: `packages/core/compute/pipeline/`.
-- Core has **no `@dxos/*` dependency** and **no `@dxos/types` dependency**. Runtime dep: `effect` only.
+- Core **runtime** has **no `@dxos/*` dependency** and **no `@dxos/types` dependency**: `dependencies` is `{}`, runtime dep is `effect` only (peer). **Tests** use `EffectEx.runPromise` from `@dxos/effect` (a **dev-only** dependency) — the repo lint rule `no-effect-run-promise` bans bare `Effect.runPromise`, and `@dxos/effect` is dev-only so the published bundle stays `effect`-only. Never use `Effect.runPromise` in a test; always `EffectEx.runPromise`.
 - Namespace-export convention: `Stage.ts` and `Pipeline.ts` are `@import-as-namespace`; `index.ts` re-exports as `export * as Stage` / `export * as Pipeline`. Inside a namespaced file, do NOT prefix top-level types with the namespace name (e.g. the interface is `Stage`, seen by callers as `Stage.Stage`, matching the repo's `DXN.DXN` / `Ref.Ref` idiom).
 - TypeScript: single quotes, arrow functions, no default exports, comments end with a period and state the invariant (not history). No `as any`/`as unknown as`/non-null `!` casts; `as const` is fine.
 - Copyright header on every source file:
@@ -105,6 +105,7 @@ packages/core/compute/pipeline/
   "scripts": {},
   "dependencies": {},
   "devDependencies": {
+    "@dxos/effect": "workspace:*",
     "effect": "catalog:",
     "vitest": "catalog:"
   },
@@ -142,7 +143,11 @@ tasks:
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../../common/effect"
+    }
+  ]
 }
 ```
 
@@ -246,16 +251,20 @@ export const scriptedSource = <T>(items: readonly T[]): Stream.Stream<T> => Stre
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
+
 import { captureSink } from './index';
 
 describe('captureSink', () => {
   test('records every committed value in order', async ({ expect }) => {
     const { sink, items } = captureSink<number>();
-    await Effect.runPromise(Effect.all([sink(1, {}), sink(2, {}), sink(3, {})]));
+    await EffectEx.runPromise(Effect.all([sink(1, {}), sink(2, {}), sink(3, {})]));
     expect(items).toEqual([1, 2, 3]);
   });
 });
 ```
+
+> **Import order:** `@dxos/effect` is a separate import group between the `effect/*`/vitest externals and the local `./` imports (builtin → external → @dxos → internal → parent → sibling), per repo import-order rules.
 
 - [ ] **Step 10: Install and build**
 
@@ -270,8 +279,13 @@ Expected: PASS (1 test).
 
 - [ ] **Step 12: Commit**
 
+Registering a new package regenerates workspace files via the postinstall toolbox — include them:
+`pnpm-lock.yaml`, `release-please-config.json`, and `tsconfig.all.json` (adds the new package's
+project reference). The toolbox may also reorder keys in the new `package.json` (e.g. move
+`"private": true` next to `"version"`) — that is expected; keep it.
+
 ```bash
-git add packages/core/compute/pipeline pnpm-lock.yaml
+git add packages/core/compute/pipeline pnpm-lock.yaml release-please-config.json tsconfig.all.json
 git commit -m "feat(pipeline): scaffold @dxos/pipeline package with Sink + captureSink"
 ```
 
@@ -303,10 +317,12 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
+
 import * as Stage from './Stage';
 
-const collect = <Out, E>(stream: Stream.Stream<Out, E>): Promise<Out[]> =>
-  Effect.runPromise(stream.pipe(Stream.runCollect, Effect.map(Chunk.toReadonlyArray)) as Effect.Effect<Out[], E>);
+const collect = <Out, E>(stream: Stream.Stream<Out, E>): Promise<readonly Out[]> =>
+  EffectEx.runPromise(stream.pipe(Stream.runCollect, Effect.map(Chunk.toReadonlyArray)));
 
 describe('Stage.map', () => {
   test('applies the function to each item in order (concurrency 1)', async ({ expect }) => {
@@ -541,6 +557,8 @@ git commit -m "feat(pipeline): add Stage.window sliding-window constructor"
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
+
 import * as Pipeline from './Pipeline';
 import * as Stage from './Stage';
 import { captureSink, scriptedSource } from './testing';
@@ -548,7 +566,7 @@ import { captureSink, scriptedSource } from './testing';
 describe('Pipeline.run', () => {
   test('chains stages left-to-right and drains to the sink', async ({ expect }) => {
     const { sink, items } = captureSink<number>();
-    await Effect.runPromise(
+    await EffectEx.runPromise(
       Pipeline.run({
         source: scriptedSource([1, 2, 3]),
         stages: [
@@ -564,7 +582,7 @@ describe('Pipeline.run', () => {
 
   test('propagates the shared context to every stage', async ({ expect }) => {
     const { sink, items } = captureSink<number>();
-    await Effect.runPromise(
+    await EffectEx.runPromise(
       Pipeline.run({
         source: scriptedSource([1, 2]),
         stages: [Stage.map<number, number, { factor: number }>('scale', (n, ctx) => Effect.succeed(n * ctx.factor))],
@@ -577,7 +595,7 @@ describe('Pipeline.run', () => {
 
   test('skips undefined stage outputs before the sink', async ({ expect }) => {
     const { sink, items } = captureSink<number>();
-    await Effect.runPromise(
+    await EffectEx.runPromise(
       Pipeline.run({
         source: scriptedSource([1, 2, 3, 4]),
         stages: [
@@ -700,7 +718,7 @@ describe('Pipeline.run overflow', () => {
     const items: number[] = [];
     // A sink that yields between commits; back pressure must still deliver all items.
     const sink = (out: number) => Effect.sync(() => items.push(out)).pipe(Effect.zipLeft(Effect.yieldNow()));
-    await Effect.runPromise(
+    await EffectEx.runPromise(
       Pipeline.run({
         source: scriptedSource(Array.from({ length: 50 }, (_unused, index) => index)),
         stages: [Stage.map<number, number, {}>('id', (n) => Effect.succeed(n))],
@@ -715,7 +733,7 @@ describe('Pipeline.run overflow', () => {
 
   test('sliding pipeline runs to completion and delivers the final item', async ({ expect }) => {
     const { sink, items } = captureSink<number>();
-    await Effect.runPromise(
+    await EffectEx.runPromise(
       Pipeline.run({
         source: scriptedSource([1, 2, 3, 4, 5]),
         stages: [Stage.map<number, number, {}>('id', (n) => Effect.succeed(n))],
@@ -731,7 +749,7 @@ describe('Pipeline.run overflow', () => {
 
   test('per-stage overflow override runs to completion', async ({ expect }) => {
     const { sink, items } = captureSink<number>();
-    await Effect.runPromise(
+    await EffectEx.runPromise(
       Pipeline.run({
         source: scriptedSource([1, 2, 3]),
         stages: [Stage.map<number, number, {}>('id', (n) => Effect.succeed(n), { overflow: 'sliding', bufferSize: 1 })],
