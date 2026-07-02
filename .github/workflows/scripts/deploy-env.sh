@@ -29,16 +29,20 @@ COMPAT_DATE="2024-11-01"
 
 export DX_ENVIRONMENT="$ENVIRONMENT"
 
-# Resolve target apps for this environment (tab-separated: name, bundleTask, outDir, worker,
-# notFoundHandling, wranglerConfig).
+# Resolve target apps for this environment. Fields are joined with the US control char (0x1f), NOT a tab:
+# a manifest value can be empty (e.g. `worker` is absent when an app uses `wranglerConfig`), and tab is an
+# IFS-whitespace char, so `read` would collapse consecutive tabs and shift every field left. 0x1f is not
+# whitespace, so empty fields are preserved. Fields: name, bundleTask, outDir, worker, notFoundHandling,
+# wranglerConfig.
 mapfile -t TARGETS < <(node -e '
+  const SEP = String.fromCharCode(31);
   const manifest = require(process.argv[1]);
   const [environment, only] = process.argv.slice(2);
   for (const [name, cfg] of Object.entries(manifest)) {
     if (name === "//" || !cfg.environments) continue;
     if (!cfg.environments.includes(environment)) continue;
     if (only !== "all" && only !== name) continue;
-    console.log([name, cfg.bundleTask, cfg.outDir, cfg.worker || "", cfg.notFoundHandling || "none", cfg.wranglerConfig || ""].join("\t"));
+    console.log([name, cfg.bundleTask, cfg.outDir, cfg.worker || "", cfg.notFoundHandling || "none", cfg.wranglerConfig || ""].join(SEP));
   }
 ' "$MANIFEST" "$ENVIRONMENT" "$APP")
 
@@ -53,7 +57,7 @@ WRANGLER_CONFIG="$ROOT/wrangler.deploy.json"
 trap 'rm -f "$WRANGLER_CONFIG"' EXIT
 
 for target in "${TARGETS[@]}"; do
-  IFS=$'\t' read -r name task outDir worker notFoundHandling wranglerConfig <<< "$target"
+  IFS=$'\x1f' read -r name task outDir worker notFoundHandling wranglerConfig <<< "$target"
 
   echo "::group::Deploy ${name} -> ${ENVIRONMENT}"
 
