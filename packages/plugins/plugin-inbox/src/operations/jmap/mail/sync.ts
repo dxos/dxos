@@ -185,17 +185,20 @@ const syncMailbox = ({ binding, mailbox }: { binding: SyncBinding.SyncBinding; m
     return count;
   });
 
+/** Paginates JMAP email ids via `Email/query` until the query is exhausted. */
 export const streamJmapEmailIds = (target: JmapMail.Target, filter: Jmap.Filter | undefined) =>
   Stream.paginateChunkEffect(0, (position) =>
     Effect.gen(function* () {
-      const { ids } = yield* JmapMail.emailQuery(target, {
+      const { ids, total } = yield* JmapMail.emailQuery(target, {
         filter,
         sort: [{ property: 'receivedAt', isAscending: false }],
         position,
         limit: PAGE_SIZE,
+        calculateTotal: true,
       });
-      log('jmap sync: queried page', { position, count: ids.length });
-      const next = ids.length < PAGE_SIZE ? Option.none<number>() : Option.some(position + ids.length);
+      log('jmap sync: queried page', { position, count: ids.length, total });
+      const isExhausted = total !== undefined ? position + ids.length >= total : ids.length < PAGE_SIZE;
+      const next = isExhausted ? Option.none<number>() : Option.some(position + ids.length);
       return [Chunk.fromIterable(ids), next];
     }),
   );

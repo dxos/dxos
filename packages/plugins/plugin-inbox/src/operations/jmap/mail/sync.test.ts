@@ -38,10 +38,12 @@ const TestLayer = Layer.mergeAll(
 let originalFetch: typeof globalThis.fetch;
 let emailQueryIds: string[];
 let emailQueryPositions: number[];
+let emailQueryCalculateTotals: (boolean | undefined)[];
 
 beforeEach(() => {
   emailQueryIds = ['e1', 'e2', 'e3'];
   emailQueryPositions = [];
+  emailQueryCalculateTotals = [];
   originalFetch = globalThis.fetch;
   globalThis.fetch = vi.fn(async (...args: Parameters<typeof fetch>): Promise<Response> => {
     const [input, init] = args;
@@ -113,6 +115,24 @@ describe('JMAP sync read path', () => {
       expect(ids[0]).toBe('e1');
       expect(ids.at(-1)).toBe('e550');
       expect(emailQueryPositions).toEqual([0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500]);
+      expect(emailQueryCalculateTotals).toEqual(Array.from({ length: 11 }, () => true));
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'stops querying JMAP ids when total ends on a page boundary',
+    Effect.fnUntraced(function* ({ expect }) {
+      emailQueryIds = Array.from({ length: 100 }, (_, i) => `e${i + 1}`);
+
+      const ids = yield* streamJmapEmailIds({ apiUrl: API_URL, accountId: ACCOUNT_ID }, { inMailbox: 'mb-inbox' }).pipe(
+        Stream.runCollect,
+        Effect.map(Chunk.toArray),
+      );
+
+      expect(ids).toHaveLength(100);
+      expect(ids.at(-1)).toBe('e100');
+      expect(emailQueryPositions).toEqual([0, 50]);
+      expect(emailQueryCalculateTotals).toEqual([true, true]);
     }, Effect.provide(TestLayer)),
   );
 });
@@ -143,6 +163,7 @@ const respondToPost = (body: any): unknown => {
       const position = args.position ?? 0;
       const limit = args.limit ?? emailQueryIds.length;
       emailQueryPositions.push(position);
+      emailQueryCalculateTotals.push(args.calculateTotal);
       return {
         methodResponses: [
           [
