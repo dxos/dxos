@@ -2,7 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Repo, generateAutomergeUrl, initSubduction, parseAutomergeUrl } from '@automerge/automerge-repo';
+import {
+  type AutomergeUrl,
+  type Chunk,
+  Repo,
+  type StorageAdapterInterface,
+  type StorageKey,
+  generateAutomergeUrl,
+  initSubduction,
+  parseAutomergeUrl,
+} from '@automerge/automerge-repo';
 import {
   AuthenticatedTransport,
   BlobMeta,
@@ -18,6 +27,8 @@ import {
 import { beforeAll, describe, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
+
+import { createRepo, shutdownRepo } from './subduction-test-utils';
 
 class AsyncQueue<T> {
   private _items: T[] = [];
@@ -92,6 +103,106 @@ const createMemoryTransportPair = (): [MemoryTransport, MemoryTransport] => {
  * used in tests only to satisfy the `head` parameter of `Subduction.addCommit`.
  */
 const commitIdOf = (seed: number): CommitId => CommitId.fromBytes(new Uint8Array(32).fill(seed));
+
+const storageKeyToString = (key: StorageKey): string => key.join('\0');
+
+/**
+ * In-memory {@link StorageAdapterInterface} for repo restart tests.
+ */
+class MemoryStorageAdapter implements StorageAdapterInterface {
+  readonly #data = new Map<string, Uint8Array>();
+
+  async load(key: StorageKey): Promise<Uint8Array | undefined> {
+    return this.#data.get(storageKeyToString(key));
+  }
+
+  async save(key: StorageKey, binary: Uint8Array): Promise<void> {
+    this.#data.set(storageKeyToString(key), binary);
+  }
+
+  async saveBatch(entries: Array<[StorageKey, Uint8Array]>): Promise<void> {
+    for (const [key, binary] of entries) {
+      await this.save(key, binary);
+    }
+  }
+
+  async remove(key: StorageKey): Promise<void> {
+    this.#data.delete(storageKeyToString(key));
+  }
+
+  async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
+    const prefix = storageKeyToString(keyPrefix);
+    const chunks: Chunk[] = [];
+    for (const [key, data] of this.#data) {
+      if (key.startsWith(prefix)) {
+        chunks.push({ key: key.split('\0'), data });
+      }
+    }
+    chunks.sort((left, right) => storageKeyToString(left.key).localeCompare(storageKeyToString(right.key)));
+    return chunks;
+  }
+
+  async removeRange(keyPrefix: StorageKey): Promise<void> {
+    const prefix = storageKeyToString(keyPrefix);
+    for (const key of [...this.#data.keys()]) {
+      if (key.startsWith(prefix)) {
+        this.#data.delete(key);
+      }
+    }
+  }
+}
+
+type StorageOpName = 'load' | 'save' | 'saveBatch' | 'remove' | 'loadRange' | 'removeRange';
+
+/**
+ * Counts every storage adapter call. Used to assert restart recovery is read-only.
+ */
+class CountingStorageAdapter implements StorageAdapterInterface {
+  readonly ops: Record<StorageOpName, number> = {
+    load: 0,
+    save: 0,
+    saveBatch: 0,
+    remove: 0,
+    loadRange: 0,
+    removeRange: 0,
+  };
+
+  constructor(private readonly _inner: StorageAdapterInterface) {}
+
+  get writeOps(): number {
+    return this.ops.save + this.ops.saveBatch + this.ops.remove + this.ops.removeRange;
+  }
+
+  async load(key: StorageKey): Promise<Uint8Array | undefined> {
+    this.ops.load++;
+    return this._inner.load(key);
+  }
+
+  async save(key: StorageKey, binary: Uint8Array): Promise<void> {
+    this.ops.save++;
+    return this._inner.save(key, binary);
+  }
+
+  async saveBatch(entries: Array<[StorageKey, Uint8Array]>): Promise<void> {
+    this.ops.saveBatch++;
+    return this._inner.saveBatch(entries);
+  }
+
+  async remove(key: StorageKey): Promise<void> {
+    this.ops.remove++;
+    return this._inner.remove(key);
+  }
+
+  async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
+    this.ops.loadRange++;
+    return this._inner.loadRange(keyPrefix);
+  }
+
+  async removeRange(keyPrefix: StorageKey): Promise<void> {
+    this.ops.removeRange++;
+    return this._inner.removeRange(keyPrefix);
+  }
+}
 
 // TODO(mykola): subduction wasm/network tests are flaky on CI runners
 // (limited concurrency, signal-server timing). Re-enable once the suite
@@ -331,4 +442,35 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
       subB.free();
     },
   );
+
+  test.only('repo restart reloads documents from memory storage without extra writes', async ({ expect }) => {
+    const storage = new CountingStorageAdapter(new MemoryStorageAdapter());
+    const urls: AutomergeUrl[] = [];
+
+    {
+      const repo = createRepo({ network: [], storage }, { registerCleanup: false });
+      for (let index = 0; index < 3; index++) {
+        const handle = repo.create<{ index: number }>({ index });
+        urls.push(handle.url);
+      }
+      await repo.flush();
+      await shutdownRepo(repo);
+    }
+
+    const writesAfterCreate = storage.writeOps;
+    expect(writesAfterCreate).toBeGreaterThan(0);
+
+    {
+      const repo = createRepo({ network: [], storage }, { registerCleanup: false });
+      for (const url of urls) {
+        const handle = await repo.find<{ index: number }>(url);
+        await handle.whenReady(['ready']);
+        expect(handle.doc()?.index).toBeDefined();
+      }
+      await shutdownRepo(repo);
+    }
+
+    expect(storage.writeOps).toEqual(writesAfterCreate);
+    expect(storage.ops.load + storage.ops.loadRange).toBeGreaterThan(0);
+  });
 });
