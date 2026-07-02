@@ -93,7 +93,9 @@ const serialize = (message: Omit<IrcMessage, 'tags'> & { tags?: Record<string, s
   const parts: string[] = [];
   const tagEntries = Object.entries(message.tags ?? {});
   if (tagEntries.length > 0) {
-    parts.push('@' + tagEntries.map(([key, value]) => (value === '' ? key : `${key}=${escapeTagValue(value)}`)).join(';'));
+    parts.push(
+      '@' + tagEntries.map(([key, value]) => (value === '' ? key : `${key}=${escapeTagValue(value)}`)).join(';'),
+    );
   }
   if (message.prefix) {
     parts.push(':' + message.prefix);
