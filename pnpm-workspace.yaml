@@ -220,8 +220,8 @@ catalog:
   '@tailwindcss/postcss': ^4.3.0
   '@tailwindcss/vite': ^4.3.0
   '@tanstack/react-virtual': ^3.13.18
-  '@tauri-apps/api': ^2.11.0
-  '@tauri-apps/cli': ^2.11.1
+  '@tauri-apps/api': ^2.11.1
+  '@tauri-apps/cli': ^2.11.4
   '@tauri-apps/plugin-deep-link': ^2.4.9
   '@tauri-apps/plugin-dialog': ^2.7.1
   '@tauri-apps/plugin-fs': ^2.5.1
