@@ -91,11 +91,11 @@ catalogs:
       specifier: ^4.20260302.0
       version: 4.20260303.0
     '@codemirror/autocomplete':
-      specifier: ^6.20.2
-      version: 6.20.2
+      specifier: ^6.20.3
+      version: 6.20.3
     '@codemirror/commands':
-      specifier: ^6.10.3
-      version: 6.10.3
+      specifier: ^6.10.4
+      version: 6.10.4
     '@codemirror/lang-html':
       specifier: ^6.4.11
       version: 6.4.11
@@ -115,8 +115,8 @@ catalogs:
       specifier: ^6.1.3
       version: 6.1.3
     '@codemirror/language':
-      specifier: ^6.12.3
-      version: 6.12.3
+      specifier: ^6.12.4
+      version: 6.12.4
     '@codemirror/language-data':
       specifier: ^6.5.2
       version: 6.5.2
@@ -124,17 +124,17 @@ catalogs:
       specifier: 6.9.7
       version: 6.9.7
     '@codemirror/search':
+      specifier: ^6.7.1
+      version: 6.7.1
+    '@codemirror/state':
       specifier: ^6.7.0
       version: 6.7.0
-    '@codemirror/state':
-      specifier: ^6.6.0
-      version: 6.6.0
     '@codemirror/theme-one-dark':
       specifier: ^6.1.3
       version: 6.1.3
     '@codemirror/view':
-      specifier: ^6.43.0
-      version: 6.43.0
+      specifier: ^6.43.4
+      version: 6.43.4
     '@comunica/query-sparql-rdfjs':
       specifier: 5.2.3
       version: 5.2.3
@@ -2438,10 +2438,10 @@ importers:
         version: 2.6.0-subduction.37(patch_hash=563a7369aae1dd655f3beef22d027dfdf429c2708a2543568b1d63cbf9f90acd)
       '@codemirror/autocomplete':
         specifier: 'catalog:'
-        version: 6.20.2
+        version: 6.20.3
       '@codemirror/commands':
         specifier: 'catalog:'
-        version: 6.10.3
+        version: 6.10.4
       '@codemirror/lang-javascript':
         specifier: 'catalog:'
         version: 6.2.5
@@ -2453,16 +2453,16 @@ importers:
         version: 6.5.0
       '@codemirror/language':
         specifier: 'catalog:'
-        version: 6.12.3
+        version: 6.12.4
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/theme-one-dark':
         specifier: 'catalog:'
         version: 6.1.3
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -7268,7 +7268,7 @@ importers:
         version: 0.96.2(effect@3.21.4)
       '@effect/platform-bun':
         specifier: 'catalog:'
-        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/printer':
         specifier: 'catalog:'
         version: 0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4)
@@ -7401,7 +7401,7 @@ importers:
         version: 0.96.2(effect@3.21.4)
       '@effect/platform-bun':
         specifier: 'catalog:'
-        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/printer':
         specifier: 'catalog:'
         version: 0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4)
@@ -8192,16 +8192,16 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: 'catalog:'
-        version: 6.20.2
+        version: 6.20.3
       '@codemirror/language':
         specifier: 'catalog:'
-        version: 6.12.3
+        version: 6.12.4
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -9317,10 +9317,10 @@ importers:
     dependencies:
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -9740,7 +9740,7 @@ importers:
         version: 0.75.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/printer-ansi@0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4))(@effect/printer@0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/platform-bun':
         specifier: 'catalog:'
-        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@tauri-apps/api':
         specifier: 'catalog:'
         version: 2.11.0
@@ -10649,13 +10649,13 @@ importers:
     dependencies:
       '@codemirror/language':
         specifier: 'catalog:'
-        version: 6.12.3
+        version: 6.12.4
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -11232,10 +11232,10 @@ importers:
     dependencies:
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -11965,10 +11965,10 @@ importers:
         version: 3.3.0-fragments.2
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -12352,13 +12352,13 @@ importers:
     dependencies:
       '@codemirror/language':
         specifier: 'catalog:'
-        version: 6.12.3
+        version: 6.12.4
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -12967,10 +12967,10 @@ importers:
     dependencies:
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -13303,7 +13303,7 @@ importers:
     dependencies:
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -13682,16 +13682,16 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: 'catalog:'
-        version: 6.20.2
+        version: 6.20.3
       '@codemirror/language':
         specifier: 'catalog:'
-        version: 6.12.3
+        version: 6.12.4
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -14024,22 +14024,22 @@ importers:
         version: 3.3.0-fragments.2
       '@codemirror/autocomplete':
         specifier: 'catalog:'
-        version: 6.20.2
+        version: 6.20.3
       '@codemirror/lang-javascript':
         specifier: 'catalog:'
         version: 6.2.5
       '@codemirror/language':
         specifier: 'catalog:'
-        version: 6.12.3
+        version: 6.12.4
       '@codemirror/lint':
         specifier: 'catalog:'
         version: 6.9.7
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -14198,10 +14198,10 @@ importers:
         version: 1.6.2(typescript@6.0.3)
       '@valtown/codemirror-continue':
         specifier: 'catalog:'
-        version: 2.3.1(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)(@lezer/common@1.5.2)
+        version: 2.3.1(@codemirror/language@6.12.4)(@codemirror/state@6.7.0)(@codemirror/view@6.43.4)(@lezer/common@1.5.2)
       '@valtown/codemirror-ts':
         specifier: 'catalog:'
-        version: 2.3.1(@codemirror/autocomplete@6.20.2)(@codemirror/lint@6.9.7)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
+        version: 2.3.1(@codemirror/autocomplete@6.20.3)(@codemirror/lint@6.9.7)(@codemirror/state@6.7.0)(@codemirror/view@6.43.4)
       codemirror:
         specifier: 'catalog:'
         version: 6.0.2
@@ -14508,16 +14508,16 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: 'catalog:'
-        version: 6.20.2
+        version: 6.20.3
       '@codemirror/language':
         specifier: 'catalog:'
-        version: 6.12.3
+        version: 6.12.4
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -16172,7 +16172,7 @@ importers:
     dependencies:
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -16623,13 +16623,13 @@ importers:
     dependencies:
       '@codemirror/language':
         specifier: 'catalog:'
-        version: 6.12.3
+        version: 6.12.4
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -17008,19 +17008,19 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: 'catalog:'
-        version: 6.20.2
+        version: 6.20.3
       '@codemirror/language':
         specifier: 'catalog:'
-        version: 6.12.3
+        version: 6.12.4
       '@codemirror/lint':
         specifier: 'catalog:'
         version: 6.9.7
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@lezer/common':
         specifier: ^1.5.2
         version: 1.5.2
@@ -18771,7 +18771,7 @@ importers:
     dependencies:
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -18986,10 +18986,10 @@ importers:
         version: 3.2.10(@types/react@19.2.17)(react@19.2.7)
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -20057,10 +20057,10 @@ importers:
         version: 6.0.2
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/compute/conductor
@@ -20172,19 +20172,19 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: 'catalog:'
-        version: 6.20.2
+        version: 6.20.3
       '@codemirror/language':
         specifier: 'catalog:'
-        version: 6.12.3
+        version: 6.12.4
       '@codemirror/search':
         specifier: 'catalog:'
-        version: 6.7.0
+        version: 6.7.1
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -20269,16 +20269,16 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: 'catalog:'
-        version: 6.20.2
+        version: 6.20.3
       '@codemirror/language':
         specifier: 'catalog:'
-        version: 6.12.3
+        version: 6.12.4
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -20448,10 +20448,10 @@ importers:
         version: 3.3.0-fragments.2
       '@codemirror/autocomplete':
         specifier: 'catalog:'
-        version: 6.20.2
+        version: 6.20.3
       '@codemirror/commands':
         specifier: 'catalog:'
-        version: 6.10.3
+        version: 6.10.4
       '@codemirror/lang-html':
         specifier: 'catalog:'
         version: 6.4.11
@@ -20472,7 +20472,7 @@ importers:
         version: 6.1.3
       '@codemirror/language':
         specifier: 'catalog:'
-        version: 6.12.3
+        version: 6.12.4
       '@codemirror/language-data':
         specifier: 'catalog:'
         version: 6.5.2
@@ -20481,16 +20481,16 @@ importers:
         version: 6.9.7
       '@codemirror/search':
         specifier: 'catalog:'
-        version: 6.7.0
+        version: 6.7.1
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/theme-one-dark':
         specifier: 'catalog:'
         version: 6.1.3
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
@@ -20580,13 +20580,13 @@ importers:
         version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
       '@replit/codemirror-vim':
         specifier: 'catalog:'
-        version: 6.3.0(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
+        version: 6.3.0(@codemirror/commands@6.10.4)(@codemirror/language@6.12.4)(@codemirror/search@6.7.1)(@codemirror/state@6.7.0)(@codemirror/view@6.43.4)
       '@replit/codemirror-vscode-keymap':
         specifier: 'catalog:'
-        version: 6.0.2(@codemirror/autocomplete@6.20.2)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
+        version: 6.0.2(@codemirror/autocomplete@6.20.3)(@codemirror/commands@6.10.4)(@codemirror/language@6.12.4)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.1)(@codemirror/state@6.7.0)(@codemirror/view@6.43.4)
       '@uiw/codemirror-theme-vscode':
         specifier: 'catalog:'
-        version: 4.25.2(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
+        version: 4.25.2(@codemirror/language@6.12.4)(@codemirror/state@6.7.0)(@codemirror/view@6.43.4)
       ajv:
         specifier: 'catalog:'
         version: 8.18.0
@@ -20828,10 +20828,10 @@ importers:
         version: 6.1.0
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -21250,13 +21250,13 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: 'catalog:'
-        version: 6.20.2
+        version: 6.20.3
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/lit-grid':
         specifier: workspace:*
         version: link:../lit-grid
@@ -21463,16 +21463,16 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: 'catalog:'
-        version: 6.20.2
+        version: 6.20.3
       '@codemirror/language':
         specifier: 'catalog:'
-        version: 6.12.3
+        version: 6.12.4
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -21788,10 +21788,10 @@ importers:
         version: 3.2.10(@types/react@19.2.17)(react@19.2.7)
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -22056,13 +22056,13 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: 'catalog:'
-        version: 6.20.2
+        version: 6.20.3
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -22265,13 +22265,13 @@ importers:
     dependencies:
       '@codemirror/language':
         specifier: 'catalog:'
-        version: 6.12.3
+        version: 6.12.4
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -22344,10 +22344,10 @@ importers:
     dependencies:
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -22581,10 +22581,10 @@ importers:
         version: 3.3.0-fragments.2
       '@codemirror/autocomplete':
         specifier: 'catalog:'
-        version: 6.20.2
+        version: 6.20.3
       '@codemirror/commands':
         specifier: 'catalog:'
-        version: 6.10.3
+        version: 6.10.4
       '@codemirror/lang-html':
         specifier: 'catalog:'
         version: 6.4.11
@@ -22605,7 +22605,7 @@ importers:
         version: 6.1.3
       '@codemirror/language':
         specifier: 'catalog:'
-        version: 6.12.3
+        version: 6.12.4
       '@codemirror/language-data':
         specifier: 'catalog:'
         version: 6.5.2
@@ -22614,16 +22614,16 @@ importers:
         version: 6.9.7
       '@codemirror/search':
         specifier: 'catalog:'
-        version: 6.7.0
+        version: 6.7.1
       '@codemirror/state':
         specifier: 'catalog:'
-        version: 6.6.0
+        version: 6.7.0
       '@codemirror/theme-one-dark':
         specifier: 'catalog:'
         version: 6.1.3
       '@codemirror/view':
         specifier: 'catalog:'
-        version: 6.43.0
+        version: 6.43.4
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
@@ -22695,13 +22695,13 @@ importers:
         version: 1.6.3
       '@replit/codemirror-vim':
         specifier: 'catalog:'
-        version: 6.3.0(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
+        version: 6.3.0(@codemirror/commands@6.10.4)(@codemirror/language@6.12.4)(@codemirror/search@6.7.1)(@codemirror/state@6.7.0)(@codemirror/view@6.43.4)
       '@replit/codemirror-vscode-keymap':
         specifier: 'catalog:'
-        version: 6.0.2(@codemirror/autocomplete@6.20.2)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
+        version: 6.0.2(@codemirror/autocomplete@6.20.3)(@codemirror/commands@6.10.4)(@codemirror/language@6.12.4)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.1)(@codemirror/state@6.7.0)(@codemirror/view@6.43.4)
       '@uiw/codemirror-theme-vscode':
         specifier: 'catalog:'
-        version: 4.25.2(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
+        version: 4.25.2(@codemirror/language@6.12.4)(@codemirror/state@6.7.0)(@codemirror/view@6.43.4)
       ajv:
         specifier: 'catalog:'
         version: 8.18.0
@@ -24796,11 +24796,11 @@ packages:
   '@cloudflare/workers-types@4.20260303.0':
     resolution: {integrity: sha512-soUlr4NJVkh5dR09RwtziTMbBQ+lbdoEesTGw8WUlvmnQ2M4h7CmJzAjC6a7IivUodiiCSjbLcGV/8PyZpvZkA==}
 
-  '@codemirror/autocomplete@6.20.2':
-    resolution: {integrity: sha512-G5FPkgIiLjOgZMjqVjvuKQ1rGPtHogLldJr33eFJdVLtmwY+giGrlv/ewljLz6b9BSQLkjxuwBc6g6omDM+YxQ==}
+  '@codemirror/autocomplete@6.20.3':
+    resolution: {integrity: sha512-tlosUqb+3BbxCxZdu4tKeRghPFC+QM7q4X5YhKV2eCmPG+1r2F3f4AaSz5sCrFqUtX4Jh20VFTKecl16MgiV9g==}
 
-  '@codemirror/commands@6.10.3':
-    resolution: {integrity: sha512-JFRiqhKu+bvSkDLI+rUhJwSxQxYb759W5GBezE8Uc8mHLqC9aV/9aTC7yJSqCtB3F00pylrLCwnyS91Ap5ej4Q==}
+  '@codemirror/commands@6.10.4':
+    resolution: {integrity: sha512-Ryk9y9T0FFVF0cUGhAknveAyUOl/A1qReTFi+qPKtOh2Z9F4AUBz3XOrYD4ZEgZirdugVzHvd/2/Wcwy5OliTg==}
 
   '@codemirror/lang-angular@0.1.2':
     resolution: {integrity: sha512-Nq7lmx9SU+JyoaRcs6SaJs7uAmW2W06HpgJVQYeZptVGNWDzDvzhjwVb/ZuG1rwTlOocY4Y9GwNOBuKCeJbKtw==}
@@ -24819,9 +24819,6 @@ packages:
 
   '@codemirror/lang-java@6.0.1':
     resolution: {integrity: sha512-OOnmhH67h97jHzCuFaIEspbmsT98fNdhVhmA3zCxW0cn7l8rChDhZtwiwJ/JOKXgfm4J+ELxQihxaI7bj7mJRg==}
-
-  '@codemirror/lang-javascript@6.2.4':
-    resolution: {integrity: sha512-0WVmhp1QOqZ4Rt6GlVGwKJN3KW7Xh4H2q8ZZNGZaP6lRdxXJzmjm4FqvmOojVj6khWJHIb9sp7U/72W7xQgqAA==}
 
   '@codemirror/lang-javascript@6.2.5':
     resolution: {integrity: sha512-zD4e5mS+50htS7F+TYjBPsiIFGanfVqg4HyUz6WNFikgOPf2BgKlx+TQedI1w6n/IqRBVBbBWmGFdLB/7uxO4A==}
@@ -24871,8 +24868,8 @@ packages:
   '@codemirror/language-data@6.5.2':
     resolution: {integrity: sha512-CPkWBKrNS8stYbEU5kwBwTf3JB1kghlbh4FSAwzGW2TEscdeHHH4FGysREW86Mqnj3Qn09s0/6Ea/TutmoTobg==}
 
-  '@codemirror/language@6.12.3':
-    resolution: {integrity: sha512-QwCZW6Tt1siP37Jet9Tb02Zs81TQt6qQrZR2H+eGMcFsL1zMrk2/b9CLC7/9ieP1fjIUMgviLWMmgiHoJrj+ZA==}
+  '@codemirror/language@6.12.4':
+    resolution: {integrity: sha512-1q4PaT+o6PbgpkJt4Q8Fv5XJxTy4FUZ4MWETtyiDw3J0Pyr9E2vqcKL+k9wcvjNTIsauxvE7OfmWj3FRPHQ76A==}
 
   '@codemirror/legacy-modes@6.4.0':
     resolution: {integrity: sha512-5m/K+1A6gYR0e+h/dEde7LoGimMjRtWXZFg4Lo70cc8HzjSdHe3fLwjWMR0VRl5KFT1SxalSap7uMgPKF28wBA==}
@@ -24886,17 +24883,17 @@ packages:
   '@codemirror/search@6.5.11':
     resolution: {integrity: sha512-KmWepDE6jUdL6n8cAAqIpRmLPBZ5ZKnicE8oGU/s3QrAVID+0VhLFrzUucVKHG5035/BSykhExDL/Xm7dHthiA==}
 
-  '@codemirror/search@6.7.0':
-    resolution: {integrity: sha512-ZvGm99wc/s2cITtMT15LFdn8aH/aS+V+DqyGq/N5ZlV5vWtH+nILvC2nw0zX7ByNoHHDZ2IxxdW38O0tc5nVHg==}
+  '@codemirror/search@6.7.1':
+    resolution: {integrity: sha512-uMe5UO6PamJtSHrXhhHOzSX3ReWtiJrva6GnPMwSOrZtiExb5X5eExhr2OUZQVvdxPsKpY3Ro2mFbQadpPWmHA==}
 
-  '@codemirror/state@6.6.0':
-    resolution: {integrity: sha512-4nbvra5R5EtiCzr9BTHiTLc+MLXK2QGiAVYMyi8PkQd3SR+6ixar/Q/01Fa21TBIDOZXgeWV4WppsQolSreAPQ==}
+  '@codemirror/state@6.7.0':
+    resolution: {integrity: sha512-Zbl9NyscLMZkfXPQnNAIIAFftidrA1UbcJEIMp24C0Bukc2I5T8wJS0wsXYsnDOqCFJUeJ1BITGNs5CqPDSmSg==}
 
   '@codemirror/theme-one-dark@6.1.3':
     resolution: {integrity: sha512-NzBdIvEJmx6fjeremiGp3t/okrLPYT0d9orIc7AFun8oZcRk58aejkqhv6spnz4MLAevrKNPMQYXEWMg4s+sKA==}
 
-  '@codemirror/view@6.43.0':
-    resolution: {integrity: sha512-V7ZCLQO3Jus9hzh2jVCCPW3mO4IBMr43O37PqSUYautJSnnJF41YlgLw21x0fLJTYvJ+Vkm6Gp+qKGH9pltgXA==}
+  '@codemirror/view@6.43.4':
+    resolution: {integrity: sha512-YImu23iyKfncJzT7sRy+rEqEhSc8RhOHqDxwy4WzXRKJwYm6iwf/9OJk5ctCAdZ6yi2ZqaGEvmf55fSVqMDrgg==}
 
   '@colors/colors@1.6.0':
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
@@ -45421,163 +45418,153 @@ snapshots:
 
   '@cloudflare/workers-types@4.20260303.0': {}
 
-  '@codemirror/autocomplete@6.20.2':
+  '@codemirror/autocomplete@6.20.3':
     dependencies:
-      '@codemirror/language': 6.12.3
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/language': 6.12.4
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
       '@lezer/common': 1.5.2
 
-  '@codemirror/commands@6.10.3':
+  '@codemirror/commands@6.10.4':
     dependencies:
-      '@codemirror/language': 6.12.3
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/language': 6.12.4
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
       '@lezer/common': 1.5.2
 
   '@codemirror/lang-angular@0.1.2':
     dependencies:
       '@codemirror/lang-html': 6.4.11
       '@codemirror/lang-javascript': 6.2.5
-      '@codemirror/language': 6.12.3
+      '@codemirror/language': 6.12.4
       '@lezer/common': 1.5.2
       '@lezer/highlight': 1.2.3
       '@lezer/lr': 1.4.10
 
   '@codemirror/lang-cpp@6.0.2':
     dependencies:
-      '@codemirror/language': 6.12.3
+      '@codemirror/language': 6.12.4
       '@lezer/cpp': 1.1.0
 
   '@codemirror/lang-css@6.2.1':
     dependencies:
-      '@codemirror/autocomplete': 6.20.2
-      '@codemirror/language': 6.12.3
-      '@codemirror/state': 6.6.0
+      '@codemirror/autocomplete': 6.20.3
+      '@codemirror/language': 6.12.4
+      '@codemirror/state': 6.7.0
       '@lezer/common': 1.5.2
       '@lezer/css': 1.1.1
 
   '@codemirror/lang-go@6.0.1':
     dependencies:
-      '@codemirror/autocomplete': 6.20.2
-      '@codemirror/language': 6.12.3
-      '@codemirror/state': 6.6.0
+      '@codemirror/autocomplete': 6.20.3
+      '@codemirror/language': 6.12.4
+      '@codemirror/state': 6.7.0
       '@lezer/common': 1.5.2
       '@lezer/go': 1.0.0
 
   '@codemirror/lang-html@6.4.11':
     dependencies:
-      '@codemirror/autocomplete': 6.20.2
+      '@codemirror/autocomplete': 6.20.3
       '@codemirror/lang-css': 6.2.1
-      '@codemirror/lang-javascript': 6.2.4
-      '@codemirror/language': 6.12.3
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/lang-javascript': 6.2.5
+      '@codemirror/language': 6.12.4
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
       '@lezer/common': 1.5.2
       '@lezer/css': 1.1.1
       '@lezer/html': 1.3.12
 
   '@codemirror/lang-java@6.0.1':
     dependencies:
-      '@codemirror/language': 6.12.3
+      '@codemirror/language': 6.12.4
       '@lezer/java': 1.0.3
-
-  '@codemirror/lang-javascript@6.2.4':
-    dependencies:
-      '@codemirror/autocomplete': 6.20.2
-      '@codemirror/language': 6.12.3
-      '@codemirror/lint': 6.9.7
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
-      '@lezer/common': 1.5.2
-      '@lezer/javascript': 1.4.1
 
   '@codemirror/lang-javascript@6.2.5':
     dependencies:
-      '@codemirror/autocomplete': 6.20.2
-      '@codemirror/language': 6.12.3
-      '@codemirror/lint': 6.8.5
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/autocomplete': 6.20.3
+      '@codemirror/language': 6.12.4
+      '@codemirror/lint': 6.9.7
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
       '@lezer/common': 1.5.2
       '@lezer/javascript': 1.4.1
 
   '@codemirror/lang-jinja@6.0.1':
     dependencies:
-      '@codemirror/autocomplete': 6.20.2
+      '@codemirror/autocomplete': 6.20.3
       '@codemirror/lang-html': 6.4.11
-      '@codemirror/language': 6.12.3
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/language': 6.12.4
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
       '@lezer/common': 1.5.2
       '@lezer/highlight': 1.2.3
       '@lezer/lr': 1.4.10
 
   '@codemirror/lang-json@6.0.2':
     dependencies:
-      '@codemirror/language': 6.12.3
+      '@codemirror/language': 6.12.4
       '@lezer/json': 1.0.0
 
   '@codemirror/lang-less@6.0.1':
     dependencies:
       '@codemirror/lang-css': 6.2.1
-      '@codemirror/language': 6.12.3
+      '@codemirror/language': 6.12.4
       '@lezer/highlight': 1.2.3
       '@lezer/lr': 1.4.10
 
   '@codemirror/lang-liquid@6.2.1':
     dependencies:
-      '@codemirror/autocomplete': 6.20.2
+      '@codemirror/autocomplete': 6.20.3
       '@codemirror/lang-html': 6.4.11
-      '@codemirror/language': 6.12.3
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/language': 6.12.4
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
       '@lezer/common': 1.5.2
       '@lezer/highlight': 1.2.3
       '@lezer/lr': 1.4.10
 
   '@codemirror/lang-markdown@6.5.0':
     dependencies:
-      '@codemirror/autocomplete': 6.20.2
+      '@codemirror/autocomplete': 6.20.3
       '@codemirror/lang-html': 6.4.11
-      '@codemirror/language': 6.12.3
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/language': 6.12.4
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
       '@lezer/common': 1.5.2
       '@lezer/markdown': 1.6.3
 
   '@codemirror/lang-php@6.0.1':
     dependencies:
       '@codemirror/lang-html': 6.4.11
-      '@codemirror/language': 6.12.3
-      '@codemirror/state': 6.6.0
+      '@codemirror/language': 6.12.4
+      '@codemirror/state': 6.7.0
       '@lezer/common': 1.5.2
       '@lezer/php': 1.0.1
 
   '@codemirror/lang-python@6.1.2':
     dependencies:
-      '@codemirror/autocomplete': 6.20.2
-      '@codemirror/language': 6.12.3
+      '@codemirror/autocomplete': 6.20.3
+      '@codemirror/language': 6.12.4
       '@lezer/python': 1.1.2
 
   '@codemirror/lang-rust@6.0.1':
     dependencies:
-      '@codemirror/language': 6.12.3
+      '@codemirror/language': 6.12.4
       '@lezer/rust': 1.0.0
 
   '@codemirror/lang-sass@6.0.2':
     dependencies:
       '@codemirror/lang-css': 6.2.1
-      '@codemirror/language': 6.12.3
-      '@codemirror/state': 6.6.0
+      '@codemirror/language': 6.12.4
+      '@codemirror/state': 6.7.0
       '@lezer/common': 1.5.2
       '@lezer/sass': 1.0.3
 
   '@codemirror/lang-sql@6.4.0':
     dependencies:
-      '@codemirror/autocomplete': 6.20.2
-      '@codemirror/language': 6.12.3
-      '@codemirror/state': 6.6.0
+      '@codemirror/autocomplete': 6.20.3
+      '@codemirror/language': 6.12.4
+      '@codemirror/state': 6.7.0
       '@lezer/highlight': 1.2.3
       '@lezer/lr': 1.4.10
 
@@ -45585,31 +45572,31 @@ snapshots:
     dependencies:
       '@codemirror/lang-html': 6.4.11
       '@codemirror/lang-javascript': 6.2.5
-      '@codemirror/language': 6.12.3
+      '@codemirror/language': 6.12.4
       '@lezer/common': 1.5.2
       '@lezer/highlight': 1.2.3
       '@lezer/lr': 1.4.10
 
   '@codemirror/lang-wast@6.0.1':
     dependencies:
-      '@codemirror/language': 6.12.3
+      '@codemirror/language': 6.12.4
       '@lezer/highlight': 1.2.3
       '@lezer/lr': 1.4.10
 
   '@codemirror/lang-xml@6.1.0':
     dependencies:
-      '@codemirror/autocomplete': 6.20.2
-      '@codemirror/language': 6.12.3
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/autocomplete': 6.20.3
+      '@codemirror/language': 6.12.4
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
       '@lezer/common': 1.5.2
       '@lezer/xml': 1.0.6
 
   '@codemirror/lang-yaml@6.1.3':
     dependencies:
-      '@codemirror/autocomplete': 6.20.2
-      '@codemirror/language': 6.12.3
-      '@codemirror/state': 6.6.0
+      '@codemirror/autocomplete': 6.20.3
+      '@codemirror/language': 6.12.4
+      '@codemirror/state': 6.7.0
       '@lezer/common': 1.5.2
       '@lezer/highlight': 1.2.3
       '@lezer/lr': 1.4.10
@@ -45638,13 +45625,13 @@ snapshots:
       '@codemirror/lang-wast': 6.0.1
       '@codemirror/lang-xml': 6.1.0
       '@codemirror/lang-yaml': 6.1.3
-      '@codemirror/language': 6.12.3
+      '@codemirror/language': 6.12.4
       '@codemirror/legacy-modes': 6.4.0
 
-  '@codemirror/language@6.12.3':
+  '@codemirror/language@6.12.4':
     dependencies:
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
       '@lezer/common': 1.5.2
       '@lezer/highlight': 1.2.3
       '@lezer/lr': 1.4.10
@@ -45652,46 +45639,46 @@ snapshots:
 
   '@codemirror/legacy-modes@6.4.0':
     dependencies:
-      '@codemirror/language': 6.12.3
+      '@codemirror/language': 6.12.4
 
   '@codemirror/lint@6.8.5':
     dependencies:
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
       crelt: 1.0.6
 
   '@codemirror/lint@6.9.7':
     dependencies:
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
       crelt: 1.0.6
 
   '@codemirror/search@6.5.11':
     dependencies:
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
       crelt: 1.0.6
 
-  '@codemirror/search@6.7.0':
+  '@codemirror/search@6.7.1':
     dependencies:
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
       crelt: 1.0.6
 
-  '@codemirror/state@6.6.0':
+  '@codemirror/state@6.7.0':
     dependencies:
       '@marijn/find-cluster-break': 1.0.2
 
   '@codemirror/theme-one-dark@6.1.3':
     dependencies:
-      '@codemirror/language': 6.12.3
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/language': 6.12.4
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
       '@lezer/highlight': 1.2.3
 
-  '@codemirror/view@6.43.0':
+  '@codemirror/view@6.43.4':
     dependencies:
-      '@codemirror/state': 6.6.0
+      '@codemirror/state': 6.7.0
       crelt: 1.0.6
       style-mod: 4.1.0
       w3c-keyname: 2.2.6
@@ -48722,7 +48709,7 @@ snapshots:
       effect: 3.21.4
       multipasta: 0.2.7
 
-  '@effect/platform-bun@0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)':
+  '@effect/platform-bun@0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)':
     dependencies:
       '@effect/cluster': 0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/platform': 0.96.2(effect@3.21.4)
@@ -52433,23 +52420,23 @@ snapshots:
 
   '@remix-run/router@1.23.2': {}
 
-  '@replit/codemirror-vim@6.3.0(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)':
+  '@replit/codemirror-vim@6.3.0(@codemirror/commands@6.10.4)(@codemirror/language@6.12.4)(@codemirror/search@6.7.1)(@codemirror/state@6.7.0)(@codemirror/view@6.43.4)':
     dependencies:
-      '@codemirror/commands': 6.10.3
-      '@codemirror/language': 6.12.3
-      '@codemirror/search': 6.7.0
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/commands': 6.10.4
+      '@codemirror/language': 6.12.4
+      '@codemirror/search': 6.7.1
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
 
-  '@replit/codemirror-vscode-keymap@6.0.2(@codemirror/autocomplete@6.20.2)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)':
+  '@replit/codemirror-vscode-keymap@6.0.2(@codemirror/autocomplete@6.20.3)(@codemirror/commands@6.10.4)(@codemirror/language@6.12.4)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.1)(@codemirror/state@6.7.0)(@codemirror/view@6.43.4)':
     dependencies:
-      '@codemirror/autocomplete': 6.20.2
-      '@codemirror/commands': 6.10.3
-      '@codemirror/language': 6.12.3
+      '@codemirror/autocomplete': 6.20.3
+      '@codemirror/commands': 6.10.4
+      '@codemirror/language': 6.12.4
       '@codemirror/lint': 6.9.7
-      '@codemirror/search': 6.7.0
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/search': 6.7.1
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
 
   '@resvg/resvg-js-android-arm-eabi@2.6.2':
     optional: true
@@ -54978,19 +54965,19 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@uiw/codemirror-theme-vscode@4.25.2(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)':
+  '@uiw/codemirror-theme-vscode@4.25.2(@codemirror/language@6.12.4)(@codemirror/state@6.7.0)(@codemirror/view@6.43.4)':
     dependencies:
-      '@uiw/codemirror-themes': 4.25.2(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
+      '@uiw/codemirror-themes': 4.25.2(@codemirror/language@6.12.4)(@codemirror/state@6.7.0)(@codemirror/view@6.43.4)
     transitivePeerDependencies:
       - '@codemirror/language'
       - '@codemirror/state'
       - '@codemirror/view'
 
-  '@uiw/codemirror-themes@4.25.2(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)':
+  '@uiw/codemirror-themes@4.25.2(@codemirror/language@6.12.4)(@codemirror/state@6.7.0)(@codemirror/view@6.43.4)':
     dependencies:
-      '@codemirror/language': 6.12.3
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/language': 6.12.4
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
 
   '@ungap/structured-clone@1.2.0': {}
 
@@ -55060,19 +55047,19 @@ snapshots:
       '@use-gesture/core': 10.3.1
       react: 19.2.7
 
-  '@valtown/codemirror-continue@2.3.1(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)(@lezer/common@1.5.2)':
+  '@valtown/codemirror-continue@2.3.1(@codemirror/language@6.12.4)(@codemirror/state@6.7.0)(@codemirror/view@6.43.4)(@lezer/common@1.5.2)':
     dependencies:
-      '@codemirror/language': 6.12.3
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/language': 6.12.4
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
       '@lezer/common': 1.5.2
 
-  '@valtown/codemirror-ts@2.3.1(@codemirror/autocomplete@6.20.2)(@codemirror/lint@6.9.7)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)':
+  '@valtown/codemirror-ts@2.3.1(@codemirror/autocomplete@6.20.3)(@codemirror/lint@6.9.7)(@codemirror/state@6.7.0)(@codemirror/view@6.43.4)':
     dependencies:
-      '@codemirror/autocomplete': 6.20.2
+      '@codemirror/autocomplete': 6.20.3
       '@codemirror/lint': 6.9.7
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
 
   '@vercel/oidc@3.1.0': {}
 
@@ -57530,19 +57517,19 @@ snapshots:
 
   codemirror-lang-spreadsheet@1.3.0:
     dependencies:
-      '@codemirror/language': 6.12.3
+      '@codemirror/language': 6.12.4
       '@lezer/highlight': 1.2.3
       '@lezer/lr': 1.4.10
 
   codemirror@6.0.2:
     dependencies:
-      '@codemirror/autocomplete': 6.20.2
-      '@codemirror/commands': 6.10.3
-      '@codemirror/language': 6.12.3
+      '@codemirror/autocomplete': 6.20.3
+      '@codemirror/commands': 6.10.4
+      '@codemirror/language': 6.12.4
       '@codemirror/lint': 6.8.5
       '@codemirror/search': 6.5.11
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.43.0
+      '@codemirror/state': 6.7.0
+      '@codemirror/view': 6.43.4
 
   collapse-white-space@2.1.0: {}
 
