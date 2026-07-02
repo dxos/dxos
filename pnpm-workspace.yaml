@@ -214,7 +214,7 @@ catalog:
   '@storybook/web-components-vite': ^10.4.2
   '@svgr/cli': ^8.1.0
   '@swc/core': 1.15.43
-  '@swc/types': ^0.1.26
+  '@swc/types': ^0.1.27
   '@tailwindcss/forms': ^0.5.9
   '@tailwindcss/oxide': ^4.3.0
   '@tailwindcss/postcss': ^4.3.0
