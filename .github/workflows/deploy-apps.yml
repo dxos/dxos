@@ -198,6 +198,8 @@ jobs:
   # (not `main` — a signed build per main push is too costly). CrabNebula channel is derived from the
   # environment inside the reusable workflow. iOS → App Store Connect happens on `labs` only (see it).
   tauri:
+    # Wait for the shared bundle (build-bundle's `if` covers exactly these envs, so it always runs here).
+    needs: [build-bundle]
     if: >-
       github.repository == 'dxos/dxos' &&
       (inputs.app == 'all' || inputs.app == 'composer') &&

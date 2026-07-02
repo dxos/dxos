@@ -236,8 +236,27 @@ jobs:
       - name: Export DX_POSTHOG_API_KEY for Tauri bundle
         run: echo "DX_POSTHOG_API_KEY=$COMPOSER_APP_POSTHOG_API_KEY" >> $GITHUB_ENV
 
+      # Reuse the web bundle built once by deploy-apps.yml's build-bundle job (when called from there).
+      # Absent on standalone workflow_dispatch — the build step falls back to moon in that case.
+      - name: Download Composer bundle
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: composer-bundle
+          path: packages/apps/composer-app/out/composer
+
       - name: Build Tauri app
-        run: moon run composer-app:tauri-build
+        # With a prebuilt bundle: `tauri build` bare (no moon) — beforeBuildCommand is empty, so it embeds
+        # the downloaded out/composer and only does the native compile (+ the desktop ollama sidecar).
+        # Without one: fall back to `moon run` (which builds the bundle + sidecar via task deps).
+        run: |
+          if [ -f packages/apps/composer-app/out/composer/index.html ]; then
+            echo "Using prebuilt Composer bundle — tauri build bare (no moon)."
+            ( cd packages/apps/composer-app && node scripts/fetch-ollama.mjs && pnpm exec tauri build )
+          else
+            echo "No prebuilt bundle (standalone dispatch) — building via moon."
+            moon run composer-app:tauri-build
+          fi
         env:
           # The following environment variables are only set when building on macOS runners (depot-macos-latest).
           # This ensures that Apple-specific signing and notarization steps are only attempted on macOS,
@@ -353,8 +372,24 @@ jobs:
           ./scripts/ios-init.sh
         working-directory: ./packages/apps/composer-app
 
+      # Reuse the web bundle built once by deploy-apps.yml (when called from there); absent on standalone
+      # dispatch — the build step falls back to moon. iOS embeds the frontend but needs no ollama sidecar.
+      - name: Download Composer bundle
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: composer-bundle
+          path: packages/apps/composer-app/out/composer
+
       - name: Build Tauri app for iOS
-        run: moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
+        run: |
+          if [ -f packages/apps/composer-app/out/composer/index.html ]; then
+            echo "Using prebuilt Composer bundle — tauri ios build bare (no moon)."
+            ( cd packages/apps/composer-app && pnpm exec tauri ios build --export-method=app-store-connect )
+          else
+            echo "No prebuilt bundle (standalone dispatch) — building via moon."
+            moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
+          fi
         env:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
