@@ -65,6 +65,29 @@ export const map = <In, Out, Ctx, E = never>(
     ),
 });
 
+/**
+ * Sliding-window transform: invokes `fn` once per incoming item with a fixed-size rolling view of
+ * the last `size` items. The window is bounded by `size`, so memory does not grow with stream
+ * length; it composes with (and is distinct from) the overflow buffer, which bounds rate mismatch.
+ */
+export const window = <In, Out, Ctx, E = never>(
+  id: string,
+  size: number,
+  fn: (window: readonly In[], ctx: Ctx) => Effect.Effect<Out, E>,
+  options: WindowOptions = {},
+): Stage<In, Out, Ctx, E> => ({
+  id,
+  transform: (input, ctx) =>
+    input.pipe(
+      Stream.mapAccum([] as readonly In[], (buffer, item) => {
+        const next = [...buffer, item].slice(-size);
+        return [next, next];
+      }),
+      Stream.mapEffect((buffer) => fn(buffer, ctx), { concurrency: 1 }),
+      withBuffer(options),
+    ),
+});
+
 /** Drop items that do not match `pred`. */
 export const filter = <In, Ctx, E = never>(id: string, pred: (item: In) => boolean): Stage<In, In, Ctx, E> => ({
   id,

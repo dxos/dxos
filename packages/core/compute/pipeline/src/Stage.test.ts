@@ -35,3 +35,19 @@ describe('Stage.filter', () => {
     expect(out).toEqual([2, 4]);
   });
 });
+
+describe('Stage.window', () => {
+  test('invokes with a growing then sliding window of the last `size` items', async ({ expect }) => {
+    const stage = Stage.window<number, readonly number[], {}>('win', 2, (window) => Effect.succeed([...window]));
+    const out = await collect(stage.transform(Stream.fromIterable([1, 2, 3, 4]), {}));
+    expect(out).toEqual([[1], [1, 2], [2, 3], [3, 4]]);
+  });
+
+  test('injects the shared context', async ({ expect }) => {
+    const stage = Stage.window<number, number, { base: number }>('sum', 2, (window, ctx) =>
+      Effect.succeed(window.reduce((total, item) => total + item, ctx.base)),
+    );
+    const out = await collect(stage.transform(Stream.fromIterable([1, 2, 3]), { base: 100 }));
+    expect(out).toEqual([101, 103, 105]);
+  });
+});
