@@ -30,7 +30,6 @@ const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 const PAGE_SIZE = 50;
 const FETCH_CONCURRENCY = 5;
 const BATCH_SIZE = 10;
-const MAX_SCAN = 500;
 
 export default InboxOperation.JmapSync.pipe(
   Operation.withHandler(({ binding: bindingRef }) =>
@@ -102,9 +101,9 @@ const syncMailbox = ({ binding, mailbox }: { binding: SyncBinding.SyncBinding; m
     const inbox = folders.find((folder) => folder.role === 'inbox');
     log('jmap sync: folders resolved', { folders: folders.length, inboxId: inbox?.id });
 
-    // Dedup set — same pattern as Gmail's `existingGmailIds`.
+    // JMAP sync drains the provider query, so dedup against all known JMAP ids to keep retries idempotent.
     const objects = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-    const existingIds = collectForeignIds(objects, JMAP_MESSAGE_SOURCE, MAX_SCAN);
+    const existingIds = collectForeignIds(objects, JMAP_MESSAGE_SOURCE, objects.length);
 
     // Build the query filter: Inbox scope + optional date window + optional Gmail-like query DSL.
     const options = readBindingOptions(binding);
@@ -140,20 +139,7 @@ const syncMailbox = ({ binding, mailbox }: { binding: SyncBinding.SyncBinding; m
     // Stream pages of ids → concurrent email fetch → map → batch append.
     // Mirrors Gmail's streamGmailMessagesToFeed structure: Stream.flatMap with concurrency
     // decouples id-fetching from email-fetching so both pipeline stages run in parallel.
-    const count = yield* Stream.paginateChunkEffect(0, (position) =>
-      Effect.gen(function* () {
-        const { ids } = yield* JmapMail.emailQuery(target, {
-          filter,
-          sort: [{ property: 'receivedAt', isAscending: false }],
-          position,
-          limit: PAGE_SIZE,
-        });
-        log('jmap sync: queried page', { position, total: ids.length });
-        const next = ids.length < PAGE_SIZE ? Option.none<number>() : Option.some(position + ids.length);
-        return [Chunk.fromIterable(ids), next];
-      }),
-    ).pipe(
-      Stream.take(MAX_SCAN),
+    const count = yield* streamJmapEmailIds(target, filter).pipe(
       Stream.filter((id) => !existingIds.has(id)),
       // Fetch each email concurrently — same concurrency as Gmail's messageFetchConcurrency.
       Stream.flatMap(
@@ -198,3 +184,21 @@ const syncMailbox = ({ binding, mailbox }: { binding: SyncBinding.SyncBinding; m
     log('jmap sync complete', { newMessages: count });
     return count;
   });
+
+/** Paginates JMAP email ids via `Email/query` until the query is exhausted. */
+export const streamJmapEmailIds = (target: JmapMail.Target, filter: Jmap.Filter | undefined) =>
+  Stream.paginateChunkEffect(0, (position) =>
+    Effect.gen(function* () {
+      const { ids, total } = yield* JmapMail.emailQuery(target, {
+        filter,
+        sort: [{ property: 'receivedAt', isAscending: false }],
+        position,
+        limit: PAGE_SIZE,
+        calculateTotal: true,
+      });
+      log('jmap sync: queried page', { position, count: ids.length, total });
+      const isExhausted = total !== undefined ? position + ids.length >= total : ids.length < PAGE_SIZE;
+      const next = isExhausted ? Option.none<number>() : Option.some(position + ids.length);
+      return [Chunk.fromIterable(ids), next];
+    }),
+  );
