@@ -2,12 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Registry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
+
+import { Capability, CapabilityManager } from '@dxos/app-framework';
 
 import { type IncomingMessage } from '../services';
 import { makeFreeqChannel } from '../types';
 import { makeFreeqChannelBackend, toMessage } from './channel-backend';
+
+// `send`'s declared return type fixes its Effect requirement to `Capability.Service`; provide a
+// real (empty) manager to discharge it even though these backend implementations never read it.
+const withCapabilityService = <A, E>(effect: Effect.Effect<A, E, Capability.Service>): Promise<A> =>
+  effect.pipe(
+    Effect.provideService(Capability.Service, CapabilityManager.make({ registry: Registry.make() })),
+    Effect.runPromise,
+  );
 
 describe('freeq channel backend', () => {
   test('toMessage maps an incoming IRC message to a chat message', ({ expect }) => {
@@ -38,7 +49,43 @@ describe('freeq channel backend', () => {
     } as any;
 
     const backend = makeFreeqChannelBackend(manager);
-    await backend.send(channel, toMessage({ id: 'x', nick: 'me', text: 'hi', ts: 1 })).pipe(Effect.runPromise);
+    await withCapabilityService(backend.send(channel, toMessage({ id: 'x', nick: 'me', text: 'hi', ts: 1 })));
     expect(sent).toEqual([['#c', 'hi']]);
+  });
+
+  test('send passes a credentialProvider to acquire when lookupCredential resolves a handle', async ({ expect }) => {
+    const acquireCalls: any[] = [];
+    const fakeConnection = {
+      connect: async () => {},
+      join: async () => {},
+      part: () => {},
+      sendMessage: () => {},
+      onMessage: () => () => {},
+      close: () => {},
+    };
+    const manager = {
+      acquire: (params: any) => {
+        acquireCalls.push(params);
+        return { connection: fakeConnection, release: () => {} };
+      },
+    } as any;
+
+    const channel = {
+      backend: {
+        kind: 'org.dxos.channel.backend.freeq',
+        config: {
+          load: async () => makeFreeqChannel({ serverUrl: 'wss://s', channel: '#c', handle: 'alice.example' }),
+        },
+      },
+    } as any;
+
+    const lookupCredential = (handle: string) =>
+      handle === 'alice.example' ? { appPassword: 'app-pass', pdsUrl: 'https://pds.example' } : undefined;
+
+    const backend = makeFreeqChannelBackend(manager, lookupCredential);
+    await withCapabilityService(backend.send(channel, toMessage({ id: 'x', nick: 'me', text: 'hi', ts: 1 })));
+
+    expect(acquireCalls).toHaveLength(1);
+    expect(acquireCalls[0].credentialProvider).toBeDefined();
   });
 });

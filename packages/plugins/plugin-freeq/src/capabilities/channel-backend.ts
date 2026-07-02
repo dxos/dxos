@@ -6,13 +6,23 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { Message } from '@dxos/types';
 
 import { FREEQ_BACKEND_KIND } from '../constants';
-import { type ConnectionManager, FreeqRestApi, type IncomingMessage } from '../services';
+import * as FreeqCapabilities from '../FreeqCapabilities';
+import {
+  type ConnectionManager,
+  FreeqRestApi,
+  type IncomingMessage,
+  makeAppPasswordCredentialProvider,
+} from '../services';
 import { FreeqChannel, makeFreeqChannel } from '../types';
+
+/** Resolves stored credentials for a handle, or `undefined` for a guest (read-only) connection. */
+export type LookupCredential = (handle: string) => { appPassword: string; pdsUrl: string } | undefined;
 
 /** Maps an inbound freeq/IRC message to a transient (non-persisted) chat message. */
 export const toMessage = (incoming: IncomingMessage): Message.Message =>
@@ -24,12 +34,34 @@ export const toMessage = (incoming: IncomingMessage): Message.Message =>
 
 const toMessageFromRest = (rest: FreeqRestApi.FreeqRestMessage): Message.Message => toMessage(rest);
 
+/** Builds the `manager.acquire` params for a channel config, resolving credentials when a handle is present. */
+const acquireParamsFor = (
+  config: FreeqChannel,
+  lookupCredential: LookupCredential | undefined,
+): Parameters<ConnectionManager['acquire']>[0] => {
+  const handle = config.handle;
+  const credential = handle ? lookupCredential?.(handle) : undefined;
+  return {
+    serverUrl: config.serverUrl,
+    identityKey: handle ?? 'guest',
+    nick: handle?.split('.')[0] ?? 'guest',
+    credentialProvider:
+      handle && credential
+        ? makeAppPasswordCredentialProvider({ handle, appPassword: credential.appPassword, pdsUrl: credential.pdsUrl })
+        : undefined,
+    runResponse: (effect) => effect.pipe(Effect.provide(FetchHttpClient.layer), Effect.runPromise),
+  };
+};
+
 /**
  * Live, read+write freeq channel backend. Joins an IRC channel over a shared
  * WebSocket, backfills recent history from the REST API, and streams inbound
  * PRIVMSGs. Messages are transient and de-duplicated by freeq message id.
  */
-export const makeFreeqChannelBackend = (manager: ConnectionManager): ThreadCapabilities.ChannelBackendProvider => ({
+export const makeFreeqChannelBackend = (
+  manager: ConnectionManager,
+  lookupCredential?: LookupCredential,
+): ThreadCapabilities.ChannelBackendProvider => ({
   kind: FREEQ_BACKEND_KIND,
   label: 'Freeq',
   icon: 'ph--dog--regular',
@@ -60,13 +92,7 @@ export const makeFreeqChannelBackend = (manager: ConnectionManager): ThreadCapab
         return;
       }
 
-      // Guest connection for now; Task 9 supplies credentials + nick from the identity.
-      const acquired = manager.acquire({
-        serverUrl: config.serverUrl,
-        identityKey: config.handle ?? 'guest',
-        nick: config.handle?.split('.')[0] ?? 'guest',
-        runResponse: (effect) => effect.pipe(Effect.provide(FetchHttpClient.layer), Effect.runPromise),
-      });
+      const acquired = manager.acquire(acquireParamsFor(config, lookupCredential));
       release = acquired.release;
 
       void acquired.connection.join(config.channel);
@@ -107,15 +133,21 @@ export const makeFreeqChannelBackend = (manager: ConnectionManager): ThreadCapab
       if (!Obj.instanceOf(FreeqChannel, config)) {
         return;
       }
-      const acquired = manager.acquire({
-        serverUrl: config.serverUrl,
-        identityKey: config.handle ?? 'guest',
-        nick: config.handle?.split('.')[0] ?? 'guest',
-        runResponse: (effect) => effect.pipe(Effect.provide(FetchHttpClient.layer), Effect.runPromise),
-      });
+      const acquired = manager.acquire(acquireParamsFor(config, lookupCredential));
       const text = message.blocks.find((block) => block._tag === 'text')?.text ?? '';
       acquired.connection.sendMessage(config.channel, text);
       acquired.release();
     }),
   readOnly: (channel) => Obj.getMeta(channel).keys.length > 0,
 });
+
+/** Contributes the live freeq channel backend, bound to the shared connection manager. */
+export const ChannelBackend = Capability.makeModule<ThreadCapabilities.ChannelBackendProvider>(
+  Effect.fnUntraced(function* () {
+    const manager = yield* Capability.get(FreeqCapabilities.ConnectionManager);
+    // TODO(Task 11): supply lookupCredential from stored AccessToken once server auth shapes are confirmed.
+    return Capability.contributes(ThreadCapabilities.ChannelBackend, makeFreeqChannelBackend(manager));
+  }),
+);
+
+export default ChannelBackend;
