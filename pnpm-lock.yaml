@@ -3271,6 +3271,9 @@ importers:
       '@dxos/ui':
         specifier: workspace:*
         version: link:../../ui/ui
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/ui-editor
       agents:
         specifier: 'catalog:'
         version: 0.3.10(@ai-sdk/react@3.0.99(react@19.2.7)(zod@4.3.6))(@cloudflare/ai-chat@0.0.6)(@cloudflare/workers-types@4.20260303.0)(ai@6.0.97(zod@4.3.6))(react@19.2.7)(viem@2.54.1(typescript@6.0.3)(zod@4.3.6))(zod@4.3.6)

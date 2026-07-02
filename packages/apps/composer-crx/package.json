@@ -27,6 +27,7 @@
     "@dxos/react-ui-chat": "workspace:*",
     "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/ui": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "agents": "catalog:",
     "ai": "catalog:",
     "react": "catalog:",

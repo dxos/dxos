@@ -13,14 +13,11 @@ import { log } from '@dxos/log';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-markdown';
+import { compactSlots } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { SPACE_ID_PROP, SPACE_MODE_PROP } from '../../config';
 import { translationKey } from '../../translations';
-
-type Metadata = {
-  hidden?: boolean;
-};
 
 // Minimal registry: only the block-level `prompt` tag (user turns render as bubbles). No widgets,
 // so none of plugin-assistant's app-framework-coupled renderers are pulled in.
@@ -33,6 +30,10 @@ const streamOptions: MarkdownStreamProps['options'] = {
   typewriter: true,
   cursor: false,
   fader: false,
+};
+
+type Metadata = {
+  hidden?: boolean;
 };
 
 export type ChatProps = ThemedClassName<{
@@ -156,7 +157,13 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
     <div className={mx('grid grid-rows-[1fr_auto] min-h-0 bg-base-surface', classNames)}>
       {/* `data-hue` gives the `<prompt>` bubbles their panel tokens (see MarkdownStream). */}
       <div data-hue='blue' className='contents'>
-        <MarkdownStream ref={setController} classNames='min-h-0' registry={registry} options={streamOptions} />
+        <MarkdownStream
+          ref={setController}
+          classNames='min-h-0'
+          registry={registry}
+          options={streamOptions}
+          slots={compactSlots}
+        />
       </div>
 
       <div className='flex flex-col'>
