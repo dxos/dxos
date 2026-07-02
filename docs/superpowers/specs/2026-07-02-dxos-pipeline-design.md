@@ -252,6 +252,10 @@ pipeline (transcription fixtures, prototyping, tests).
   `Effect.acquireRelease`. Only hyparquet's isomorphic core (`parquetMetadataAsync`,
   `parquetReadObjects`) is imported — not its node file reader — so the neutral build is unaffected;
   the node `fs` handle is opened directly (static `node:fs/promises`, as sibling neutral packages do).
+  Using `node:fs` under the neutral build requires `@dxos/node-std` as a workspace dependency (the
+  build-time node-external shim, per sibling `functions-runtime`) — it is a platform shim, not a DXOS
+  domain coupling, is never imported in source, and the tree-shaken `.` entrypoint does not pull it,
+  so the core stays free of DXOS/ECHO coupling.
 - **Usage:** `Pipeline.run({ source: parquetSource(['a.parquet', 'b.parquet']), stages, sink, context })`.
 
 ## Decisions (resolved with user)
