@@ -3,3 +3,5 @@
 //
 
 export type { Sink } from './Sink';
+
+export * as Stage from './Stage';
