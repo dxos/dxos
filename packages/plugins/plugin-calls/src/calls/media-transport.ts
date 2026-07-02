@@ -1,0 +1,56 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type Context } from '@dxos/context';
+
+import { type TrackObject } from './types';
+
+/** A transcription segment produced natively by the transport (e.g. RealtimeKit's on-network ASR). */
+export type TranscriptEvent = {
+  /** Speaker's participant id (== DXOS device key / swarm `UserState.id`). */
+  deviceKey?: string;
+  text: string;
+  /** ISO timestamp of the segment. */
+  started?: string;
+  /** True while the segment is still being revised (interim result). */
+  pending?: boolean;
+  /** Stable id for deduplication across revisions. */
+  id?: string;
+};
+
+/**
+ * Media transport backend for a call: publishes local tracks and resolves remote tracks.
+ * Abstracts the concrete signaling/SFU implementation (Cloudflare Calls today, RealtimeKit next) so
+ * `MediaManager` and the UI depend only on `MediaStreamTrack`s, never on a specific provider's wire model.
+ */
+export interface MediaTransport {
+  /** True once a live session is established. */
+  get isOpen(): boolean;
+
+  /** Establish the live session. Return value is ignored (widened so `Resource`'s `Promise<this>` satisfies it). */
+  open(): Promise<unknown>;
+
+  /** Tear down the live session. Return value is ignored. */
+  close(): Promise<unknown>;
+
+  /**
+   * Publish (or replace) a local track. A `null` track with a `previousTrack` removes it.
+   * Returns the transport-specific descriptor of the published track.
+   */
+  pushTrack(options: {
+    ctx: Context;
+    track: MediaStreamTrack | null;
+    previousTrack?: TrackObject;
+    encodings?: RTCRtpEncodingParameters[];
+  }): Promise<TrackObject | undefined>;
+
+  /** Resolve a remote track referenced by `trackData` into a playable `MediaStreamTrack`. */
+  pullTrack(options: { ctx: Context; trackData: TrackObject }): Promise<MediaStreamTrack | undefined>;
+
+  /**
+   * Subscribe to native transcription events, if the transport provides them. Returns an unsubscribe.
+   * Transports without on-network transcription omit this.
+   */
+  subscribeTranscripts?(callback: (event: TranscriptEvent) => void): () => void;
+}

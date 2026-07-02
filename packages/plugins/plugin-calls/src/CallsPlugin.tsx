@@ -6,7 +6,7 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client';
 
-import { AppGraphBuilder, CallManager, CallTransport, ReactRoot, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, CallEvents, CallManager, CallTransport, ReactRoot, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -27,6 +27,11 @@ export const CallsPlugin = Plugin.define(meta).pipe(
     id: 'call-transport',
     activatesOn: ClientEvents.ClientReady,
     activate: CallTransport,
+  }),
+  Plugin.addModule({
+    id: 'call-events',
+    activatesOn: ClientEvents.ClientReady,
+    activate: CallEvents,
   }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },

@@ -3,3 +3,4 @@
 //
 
 export * from './call-testing';
+export * from './fake-transport';

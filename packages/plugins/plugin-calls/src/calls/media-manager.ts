@@ -8,10 +8,9 @@ import { type Context, Resource, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { type MediaTransport } from './media-transport';
 import { type EncodedTrackName, TrackNameCodec, type TrackObject } from './types';
 import {
-  type CallsServiceConfig,
-  CallsServicePeer,
   createBlackCanvasStreamTrack,
   createInaudibleAudioStreamTrack,
   getScreenshare,
@@ -35,7 +34,7 @@ export type MediaState = {
   pushedVideoTrack?: TrackObject;
   pushedAudioTrack?: TrackObject;
   pushedScreenshareTrack?: TrackObject;
-  peer?: CallsServicePeer;
+  peer?: MediaTransport;
 
   pulledAudioTracks: Record<EncodedTrackName, { track: MediaStreamTrack; ctx: Context }>;
   /**
@@ -50,10 +49,6 @@ const VIDEO_HEIGHT = 720;
 const MAX_WEB_CAM_FRAMERATE = 24;
 const MAX_WEB_CAM_BITRATE = 120_0000;
 const RETRY_INTERVAL = 100;
-
-export type MediaManagerProps = {
-  serviceConfig: CallsServiceConfig;
-};
 
 const USE_INAUDIBLE_AUDIO = true;
 
@@ -129,9 +124,9 @@ export class MediaManager extends Resource {
   }
 
   @synchronized
-  async join(serviceConfig: CallsServiceConfig): Promise<void> {
-    this._state.peer = new CallsServicePeer(serviceConfig);
-    await this._state.peer!.open();
+  async join(transport: MediaTransport): Promise<void> {
+    this._state.peer = transport;
+    await this._state.peer.open();
     this._pushTracksTask!.schedule();
   }
 

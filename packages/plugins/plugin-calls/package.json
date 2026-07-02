@@ -91,6 +91,7 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@cloudflare/realtimekit": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
@@ -102,6 +103,7 @@
     "@dxos/devtools": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -121,7 +123,6 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "@peermetrics/webrtc-stats": "catalog:",
     "md5-hex": "catalog:",
     "react-resize-detector": "catalog:"
   },

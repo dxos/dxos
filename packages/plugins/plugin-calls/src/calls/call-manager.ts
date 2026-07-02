@@ -6,19 +6,30 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
 import { isNonNullable } from '@dxos/util';
 
 import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer';
+import { type RoomJoiner, createEdgeRoomJoiner } from './edge-room-joiner';
 import { MediaManager, type MediaState } from './media-manager';
+import { type TranscriptEvent } from './media-transport';
+import {
+  type RealtimeKitMeetingFactory,
+  RealtimeKitTransport,
+  createRealtimeKitMeetingFactory,
+} from './realtime-kit-transport';
 import { type ActivityState, type EncodedTrackName, TrackNameCodec, type UserState } from './types';
 
 export type GlobalState = {
   call: CallState;
   media: MediaState;
+};
+
+export type CallManagerOptions = {
+  /** Overrides the RealtimeKit meeting factory (tests/stories); defaults to the real SDK binding. */
+  createMeeting?: RealtimeKitMeetingFactory;
 };
 
 /**
@@ -28,7 +39,10 @@ export class CallManager extends Resource {
   public readonly callStateUpdated = new Event<CallState>();
   // TODO(wittjosiah): Consolidate isSpeaking into the MediaState type.
   public readonly mediaStateUpdated = new Event<[MediaState, boolean]>();
+  public readonly roomJoined = new Event<{ roomId?: string }>();
   public readonly left = new Event<string>();
+  /** Native transcription segments produced by the transport (this client's own speech only). */
+  public readonly transcript = new Event<TranscriptEvent>();
 
   /**
    * Atom-based state. Updated via `_updateState()`.
@@ -68,8 +82,12 @@ export class CallManager extends Resource {
     Atom.make((get) => get(this._stateAtom).call.activities?.[key]),
   );
 
+  #transcriptUnsubscribe?: () => void;
+
   private readonly _swarmSynchronizer: CallSwarmSynchronizer;
   private readonly _mediaManager: MediaManager;
+  private readonly _roomJoiner: RoomJoiner;
+  private readonly _createMeeting: RealtimeKitMeetingFactory;
 
   //
   // Derived atoms for reactive UI subscriptions.
@@ -200,10 +218,10 @@ export class CallManager extends Resource {
     return this._mediaManager.turnScreenshareOff();
   }
 
-  // TODO(burdon): Can this be mocked?
   constructor(
     private readonly _client: Client,
     private readonly _registry: Registry.Registry,
+    options: CallManagerOptions = {},
   ) {
     super();
     this._client.config.getOrThrow('runtime.services.edge.url');
@@ -211,6 +229,8 @@ export class CallManager extends Resource {
     invariant(networkService, 'network service not found');
     this._swarmSynchronizer = new CallSwarmSynchronizer({ networkService });
     this._mediaManager = new MediaManager();
+    this._roomJoiner = createEdgeRoomJoiner(this._client);
+    this._createMeeting = options.createMeeting ?? createRealtimeKitMeetingFactory();
   }
 
   protected override async _open(): Promise<void> {
@@ -246,14 +266,32 @@ export class CallManager extends Resource {
   async join(): Promise<void> {
     this._swarmSynchronizer.setJoined(true);
     await this._swarmSynchronizer.join();
-    await this._mediaManager.join({
-      iceServers: this._client.config.get('runtime.services.ice'),
-      apiBase: `${getEdgeServiceEndpoint(this._client.config, EdgeServiceName.Calls)}/api/calls`,
+
+    const roomId = this._swarmSynchronizer._getState().roomId;
+    const deviceKey = this._client.halo.device?.deviceKey.toHex();
+    invariant(roomId && deviceKey, 'room id and device key are required to join a call');
+    const transport = new RealtimeKitTransport({
+      roomId,
+      deviceKey,
+      joiner: this._roomJoiner,
+      createMeeting: this._createMeeting,
     });
+    await this._mediaManager.join(transport);
+
+    // Native transcription broadcasts every participant; persist only our own so each segment is written once.
+    this.#transcriptUnsubscribe = transport.subscribeTranscripts?.((event) => {
+      if (event.deviceKey === deviceKey) {
+        this.transcript.emit(event);
+      }
+    });
+
+    this.roomJoined.emit({ roomId });
   }
 
   @synchronized
   async leave(): Promise<void> {
+    this.#transcriptUnsubscribe?.();
+    this.#transcriptUnsubscribe = undefined;
     this._swarmSynchronizer.setJoined(false);
     await this._swarmSynchronizer.leave();
     await this._mediaManager.leave();
