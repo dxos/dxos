@@ -7,8 +7,14 @@
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import { type Sink } from './Sink';
 import * as Stage from './Stage';
+
+/**
+ * Terminal commit for a pipeline: applies a stage's output value. Keeps stages pure — they emit
+ * typed `Out` descriptions and the sink performs the side effect (in-memory capture in tests, a
+ * database write in production).
+ */
+export type Sink<Out, Ctx, E = never> = (out: Out, ctx: Ctx) => Effect.Effect<void, E>;
 
 export type RunOptions<In, Out, Ctx, E = never> = {
   /** Source items; the run drains and resolves when this stream ends. */
