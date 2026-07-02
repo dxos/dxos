@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Snapshot } from '../page-actions/types';
-
 /**
  * Context handed to a bundled extractor. Runs in the content-script world of
  * the target page.
@@ -22,5 +20,3 @@ export type Extractor<T = unknown> = {
   name: string;
   run: (context: ExtractorContext) => Promise<T>;
 };
-
-export type { Snapshot };

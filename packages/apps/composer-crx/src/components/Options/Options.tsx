@@ -10,8 +10,8 @@ import { SpaceId } from '@dxos/keys';
 import { Input, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 
-import { DEFAULT_COMPOSER_URLS, getComposerUrls, setComposerUrls } from '../../bridge/urls';
 import { DEVELOPER_MODE_PROP, SPACE_ID_PROP, SPACE_MODE_PROP, getProp } from '../../config';
+import { DEFAULT_COMPOSER_URLS, getComposerUrls, setComposerUrls } from '../../core';
 import { translationKey } from '../../translations';
 
 // TODO(burdon): Use subgrid.

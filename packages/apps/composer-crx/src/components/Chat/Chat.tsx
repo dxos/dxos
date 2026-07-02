@@ -5,37 +5,51 @@
 import { type UIMessage } from '@ai-sdk/react';
 import { useAgentChat } from 'agents/ai-react';
 import { useAgent } from 'agents/react';
-import React, { type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import browser from 'webextension-polyfill';
 
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { IconButton, Input, ScrollContainer, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
-import { MarkdownView } from '@dxos/react-ui-markdown';
+import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
+import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-markdown';
+import { compactSlots } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { focusOrOpenComposerTab } from '../../bridge';
 import { SPACE_ID_PROP, SPACE_MODE_PROP } from '../../config';
 import { translationKey } from '../../translations';
+
+// Minimal registry: only the block-level `prompt` tag (user turns render as bubbles). No widgets,
+// so none of plugin-assistant's app-framework-coupled renderers are pulled in.
+const registry: MarkdownStreamProps['registry'] = {
+  prompt: { block: true },
+};
+
+const streamOptions: MarkdownStreamProps['options'] = {
+  autoScroll: true,
+  typewriter: true,
+  cursor: false,
+  fader: false,
+};
 
 type Metadata = {
   hidden?: boolean;
 };
 
 export type ChatProps = ThemedClassName<{
+  /** Chat-agent host (ws/wss); the agent connection is derived from it. */
   host?: string;
-  onPing?: () => Promise<string | null>;
-  onClip?: () => void;
+  /** URL of the page the panel is attached to; injected as chat context. */
   url?: string;
-  /** Extra toolbar items (e.g. page actions) rendered after the clip button. */
-  actions?: ReactNode;
 }>;
 
-export const Chat = ({ classNames, host, url, onClip, actions }: ChatProps) => {
+/**
+ * Simplified chat: a streaming markdown thread over an editor input, backed by the chat agent.
+ */
+export const Chat = ({ classNames, host, url }: ChatProps) => {
   const { t } = useTranslation(translationKey);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<ChatEditorController>(null);
   const spaceIdRef = useRef<SpaceId | null>(null);
-  const [text, setText] = useState('');
 
   // Chat agent client.
   const agent = useAgent({
@@ -58,95 +72,133 @@ export const Chat = ({ classNames, host, url, onClip, actions }: ChatProps) => {
     [messages],
   );
 
-  const currentUrl = useRef<string>(undefined);
-  const handleSubmit = useCallback(async () => {
-    const text = inputRef.current?.value?.trim();
-    if (!text?.length) {
+  // Render the thread to a single markdown document (see `renderThread`) and sync it into the
+  // stream. The AI streaming contract makes the rendered text grow monotonically, so a prefix
+  // diff is enough: append the suffix while streaming, reset when the thread is cleared/replaced.
+  const [controller, setController] = useState<MarkdownStreamController | null>(null);
+  const renderedRef = useRef('');
+  const content = useMemo(() => renderThread(filteredMessages), [filteredMessages]);
+  useEffect(() => {
+    if (!controller) {
       return;
     }
 
-    // TODO(burdon): Disable text input while processing.
-    setText('');
-
-    // Update context.
-    // TODO(burdon): Get current selection?
-    {
-      const context: string[] = [];
-
-      // Update current url.
-      if (currentUrl.current !== url || messages.length === 0) {
-        currentUrl.current = url;
-        context.push(
-          "Determine if the user's question relates to the website the user is currently viewing.",
-          `The current website is: ${url}`,
-        );
-      }
-
-      // Determine space mode.
-      const spaceMode = (await browser.storage.sync.get(SPACE_MODE_PROP))?.[SPACE_MODE_PROP];
-      const spaceId = (await browser.storage.sync.get(SPACE_ID_PROP))?.[SPACE_ID_PROP];
-      if (spaceMode && spaceId) {
-        if (SpaceId.isValid(spaceId) && (spaceId !== spaceIdRef.current || messages.length === 0)) {
-          context.push(`Otherwise use the configured Space to retrieve information.`, `The Space ID is: ${spaceId}`);
-          spaceIdRef.current = spaceId;
-        }
-      }
-
-      // Send system message.
-      if (context.length > 0) {
-        log.info('system', { context });
-        await sendMessage(
-          {
-            role: 'assistant',
-            parts: [
-              {
-                type: 'text',
-                text: ['<system-context>', ...context, '</system-context>'].join('\n'),
-              },
-            ],
-          },
-          {
-            metadata: { hidden: true },
-          },
-        );
-      }
+    const previous = renderedRef.current;
+    if (content === previous) {
+      return;
     }
+    if (previous.length > 0 && content.startsWith(previous)) {
+      void controller.append(content.slice(previous.length));
+    } else {
+      void controller.setContent(content);
+      controller.scrollToBottom('instant');
+    }
+    renderedRef.current = content;
+  }, [controller, content]);
 
-    // User message.
-    await sendMessage({
-      role: 'user',
-      parts: [{ type: 'text', text }],
-    });
-  }, [sendMessage, url]);
+  const currentUrl = useRef<string>(undefined);
+  const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
+    (value) => {
+      const text = value.trim();
+      if (!text.length) {
+        return;
+      }
+
+      void (async () => {
+        // Update context.
+        // TODO(burdon): Get current selection?
+        const context: string[] = [];
+
+        // Update current url.
+        if (currentUrl.current !== url || messages.length === 0) {
+          currentUrl.current = url;
+          context.push(
+            "Determine if the user's question relates to the website the user is currently viewing.",
+            `The current website is: ${url}`,
+          );
+        }
+
+        // Determine space mode.
+        const stored = await browser.storage.sync.get([SPACE_MODE_PROP, SPACE_ID_PROP]);
+        const spaceMode = stored?.[SPACE_MODE_PROP];
+        const spaceId = stored?.[SPACE_ID_PROP];
+        if (spaceMode && spaceId) {
+          if (SpaceId.isValid(spaceId) && (spaceId !== spaceIdRef.current || messages.length === 0)) {
+            context.push(`Otherwise use the configured Space to retrieve information.`, `The Space ID is: ${spaceId}`);
+            spaceIdRef.current = spaceId;
+          }
+        }
+
+        // Send system message.
+        if (context.length > 0) {
+          log.info('system', { context });
+          await sendMessage(
+            {
+              role: 'assistant',
+              parts: [{ type: 'text', text: ['<system-context>', ...context, '</system-context>'].join('\n') }],
+            },
+            { metadata: { hidden: true } },
+          );
+        }
+
+        // User message.
+        await sendMessage({ role: 'user', parts: [{ type: 'text', text }] });
+      })();
+
+      // Clear the editor.
+      return true;
+    },
+    [sendMessage, url, messages.length],
+  );
 
   const handleClear = useCallback(async () => {
     void stop();
     void clearError();
     void clearHistory();
-    setText('');
-    inputRef.current?.focus();
+    editorRef.current?.focus();
   }, [clearError, clearHistory, stop]);
 
-  const handleLaunchComposer = useCallback(() => {
-    void focusOrOpenComposerTab();
-  }, []);
-
   return (
-    <div className={mx('flex flex-col bg-base-surface', classNames)}>
-      {/* TODO(burdon): Replace with chat from plugin-assistant. */}
+    // Chat owns the content area: the thread fills and scrolls, the input is pinned to the bottom.
+    <div className={mx('grid grid-rows-[1fr_auto] min-h-0 bg-base-surface', classNames)}>
+      {/* `data-hue` gives the `<prompt>` bubbles their panel tokens (see MarkdownStream). */}
+      <div data-hue='blue' className='contents'>
+        <MarkdownStream
+          ref={setController}
+          classNames='min-h-0'
+          registry={registry}
+          options={streamOptions}
+          slots={compactSlots}
+        />
+      </div>
+
       <div className='flex flex-col'>
-        <div className='flex relative items-center'>
-          <Input.Root>
-            <Input.TextInput
-              ref={inputRef}
-              autoFocus
-              placeholder={t('chat.placeholder')}
-              value={text}
-              onChange={(ev) => setText(ev.target.value)}
-              onKeyDown={(ev) => ev.key === 'Enter' && handleSubmit()}
-              classNames='px-2 pt-[4px] pb-[4px] w-full rounded-none text-lg ring-none! ring-sky-500!'
-            />
-          </Input.Root>
+        {error && (
+          <div className='flex overflow-hidden items-center opacity-50'>
+            <div className='px-2 text-subdued text-xs whitespace-nowrap truncate'>
+              {error.message || t('chat.error.label')}
+            </div>
+            <div className='flex shrink-0'>
+              <IconButton
+                classNames='text-subdued'
+                variant='ghost'
+                icon='ph--clipboard--regular'
+                iconOnly
+                label={t('chat.copy.button')}
+                onClick={() => navigator.clipboard.writeText(error.message)}
+              />
+            </div>
+          </div>
+        )}
+        <div className='flex relative items-center p-1'>
+          <ChatEditor
+            ref={editorRef}
+            autoFocus
+            lineWrapping
+            classNames='w-full text-lg'
+            placeholder={t('chat.placeholder')}
+            onSubmit={handleSubmit}
+          />
           {filteredMessages.length > 0 && (
             <div className='flex items-center absolute right-1.5 top-0 bottom-0 z-10'>
               <IconButton
@@ -159,74 +211,32 @@ export const Chat = ({ classNames, host, url, onClip, actions }: ChatProps) => {
             </div>
           )}
         </div>
-        <Toolbar.Root>
-          {onClip && (
-            <IconButton
-              variant='ghost'
-              icon='ph--paperclip--regular'
-              iconOnly
-              label={t('clip.button')}
-              onClick={onClip}
-            />
-          )}
-          {actions}
-          <Toolbar.Separator />
-          <IconButton
-            variant='ghost'
-            icon='ph--arrow-square-out--regular'
-            iconOnly
-            label={t('launch-composer.button')}
-            onClick={handleLaunchComposer}
-          />
-        </Toolbar.Root>
       </div>
-
-      {/* TODO(burdon): Replace with ChatThread. */}
-      {filteredMessages.length > 0 && (
-        <div className='flex flex-col'>
-          <ScrollContainer.Root pin>
-            <ScrollContainer.Content classNames='max-h-[480px] p-3'>
-              <ScrollContainer.Viewport>
-                {filteredMessages.map((message, i) => (
-                  <div key={i} className={mx('flex', 'text-base', message.role === 'user' && 'justify-end my-3')}>
-                    <p className={mx(message.role === 'user' ? 'bg-sky-500 px-2 py-1 rounded-sm' : 'text-description')}>
-                      <MarkdownView
-                        content={message.parts
-                          .map((part) => (part.type === 'text' ? part.text : null))
-                          .filter(Boolean)
-                          .join('')}
-                      />
-                    </p>
-                  </div>
-                ))}
-              </ScrollContainer.Viewport>
-            </ScrollContainer.Content>
-          </ScrollContainer.Root>
-        </div>
-      )}
-
-      {error && (
-        <div className='flex overflow-hidden items-center opacity-50'>
-          <div className='flex overflow-hidden items-center opacity-50'>
-            <div className='px-2 text-subdued text-xs whitespace-nowrap truncate'>
-              {error.message || 'An error occurred'}
-            </div>
-            <div className='flex shrink-0'>
-              <IconButton
-                variant='ghost'
-                icon='ph--clipboard--regular'
-                iconOnly
-                label={t('chat.clear.button')}
-                classNames='text-subdued'
-                onClick={() => navigator.clipboard.writeText(error.message)}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
+
+/**
+ * Neutralize `<prompt>`/`</prompt>` in user text so it cannot break out of the bubble wrapper
+ * (a raw `</prompt>` would close the block early and let trailing text render as assistant markdown).
+ */
+const escapePromptText = (text: string): string => text.replace(/<(\/?)prompt>/g, '&lt;$1prompt>');
+
+/**
+ * Render the message thread to a single markdown document. User turns are wrapped in `<prompt>`
+ * blocks (rendered as bubbles by MarkdownStream); assistant turns are plain markdown. The output
+ * extends monotonically as the trailing message streams, which the syncer relies on.
+ */
+const renderThread = (messages: UIMessage<Metadata>[]): string =>
+  messages
+    .map((message) => {
+      const text = message.parts
+        .map((part) => (part.type === 'text' ? part.text : null))
+        .filter(Boolean)
+        .join('');
+      return message.role === 'user' ? `\n<prompt>${escapePromptText(text)}</prompt>\n` : `${text}\n`;
+    })
+    .join('');
 
 const isSecureUrl = (host: string) => {
   try {

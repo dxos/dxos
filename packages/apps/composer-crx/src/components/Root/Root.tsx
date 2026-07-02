@@ -6,13 +6,15 @@ import '@dxos-theme';
 
 import React, { type PropsWithChildren, useEffect } from 'react';
 
-import { ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { ErrorBoundary, ErrorBoundaryProps, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
 
-import { translations } from '../translations';
+import { translations } from '../../translations';
 
-export const Container = ({ children, classNames }: PropsWithChildren<{ classNames?: string }>) => {
+/**
+ * Wraps children with the app theme, tooltip provider, and a named error boundary.
+ */
+export const Root = ({ children, name }: PropsWithChildren<Pick<ErrorBoundaryProps, 'name'>>) => {
   // Monitor system theme.
   useEffect(() => {
     const setTheme = (darkMode: boolean) => {
@@ -28,7 +30,7 @@ export const Container = ({ children, classNames }: PropsWithChildren<{ classNam
   return (
     <ThemeProvider tx={defaultTx} resourceExtensions={translations} themeMode='dark'>
       <Tooltip.Provider>
-        <div className={mx(classNames)}>{children}</div>
+        <ErrorBoundary name={name}>{children}</ErrorBoundary>
       </Tooltip.Provider>
     </ThemeProvider>
   );

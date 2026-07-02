@@ -2,7 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Snapshot } from '../page-actions/types';
+// Import from submodules, not the `../actions` / `../picker` barrels: those transitively pull
+// `webextension-polyfill` (via the registry), which throws when this extractor is loaded in the
+// content script's node test environment.
+import { type Snapshot } from '../actions/types';
 import { harvestFavicon, harvestHints } from '../picker/harvest';
 import { type Extractor } from './types';
 
