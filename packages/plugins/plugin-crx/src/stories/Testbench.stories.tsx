@@ -12,9 +12,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 const DefaultStory = () => {
   const { title, image, paragraphs } = useMemo(
     () => ({
-      title: random.lorem.sentence(),
+      title: random.lorem.sentence(4),
       image: random.image.url(),
-      paragraphs: Array.from({ length: 10 }, () => random.lorem.paragraph()),
+      paragraphs: Array.from({ length: 10 }, () => random.lorem.paragraph(3)),
     }),
     [],
   );
