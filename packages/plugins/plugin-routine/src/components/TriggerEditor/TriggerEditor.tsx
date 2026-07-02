@@ -240,6 +240,7 @@ export const TriggerEditor = ({ classNames, db, routine, trigger, readonly }: Tr
       </Form.Root>
       {kind && (
         <Form.Root
+          key={`${trigger?.id ?? 'new'}:${resetNonce}`}
           schema={ComputeEnvironmentForm}
           db={db}
           readonly={readonly}
