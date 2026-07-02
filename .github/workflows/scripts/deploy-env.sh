@@ -29,7 +29,8 @@ COMPAT_DATE="2024-11-01"
 
 export DX_ENVIRONMENT="$ENVIRONMENT"
 
-# Resolve target apps for this environment (tab-separated: name, bundleTask, outDir, worker, notFoundHandling).
+# Resolve target apps for this environment (tab-separated: name, bundleTask, outDir, worker,
+# notFoundHandling, wranglerConfig).
 mapfile -t TARGETS < <(node -e '
   const manifest = require(process.argv[1]);
   const [environment, only] = process.argv.slice(2);
@@ -37,7 +38,7 @@ mapfile -t TARGETS < <(node -e '
     if (name === "//" || !cfg.environments) continue;
     if (!cfg.environments.includes(environment)) continue;
     if (only !== "all" && only !== name) continue;
-    console.log([name, cfg.bundleTask, cfg.outDir, cfg.worker, cfg.notFoundHandling || "none"].join("\t"));
+    console.log([name, cfg.bundleTask, cfg.outDir, cfg.worker || "", cfg.notFoundHandling || "none", cfg.wranglerConfig || ""].join("\t"));
   }
 ' "$MANIFEST" "$ENVIRONMENT" "$APP")
 
@@ -52,17 +53,9 @@ WRANGLER_CONFIG="$ROOT/wrangler.deploy.json"
 trap 'rm -f "$WRANGLER_CONFIG"' EXIT
 
 for target in "${TARGETS[@]}"; do
-  IFS=$'\t' read -r name task outDir worker notFoundHandling <<< "$target"
+  IFS=$'\t' read -r name task outDir worker notFoundHandling wranglerConfig <<< "$target"
 
-  # Production owns the bare Worker name (and the real custom domain); every other env gets a suffixed
-  # Worker so labs/staging/main never collide with production.
-  if [ "$ENVIRONMENT" = "production" ]; then
-    workerName="$worker"
-  else
-    workerName="${worker}-${ENVIRONMENT}"
-  fi
-
-  echo "::group::Deploy ${name} -> ${ENVIRONMENT} (worker: ${workerName})"
+  echo "::group::Deploy ${name} -> ${ENVIRONMENT}"
 
   # populate-env.sh exports the app's PostHog config under its package prefix (e.g. composer-app →
   # COMPOSER_APP_POSTHOG_*); the Vite build reads the DX_POSTHOG_* names, so map them here before bundling.
@@ -81,16 +74,30 @@ for target in "${TARGETS[@]}"; do
 
   moon run "$task"
 
-  node -e '
-    const fs = require("fs");
-    const [out, worker, directory, compatDate, notFoundHandling] = process.argv.slice(1);
-    fs.writeFileSync(out, JSON.stringify({
-      name: worker,
-      compatibility_date: compatDate,
-      assets: { directory, not_found_handling: notFoundHandling },
-    }, null, 2));
-  ' "$WRANGLER_CONFIG" "$workerName" "$outDir" "$COMPAT_DATE" "$notFoundHandling"
-
-  pnpm exec wrangler deploy --config "$WRANGLER_CONFIG"
+  if [ -n "$wranglerConfig" ]; then
+    # App ships its own Workers config (a `_worker.js` Worker + ASSETS binding, e.g. composer). The env's
+    # Worker name + bindings come from that config's [env.<environment>] section. `_worker.js` lives inside
+    # the asset dir, so keep it out of the asset upload (it is the Worker script, not an asset).
+    printf '_worker.js\n' > "$ROOT/$outDir/.assetsignore"
+    pnpm exec wrangler deploy --config "$ROOT/$wranglerConfig" --env "$ENVIRONMENT"
+  else
+    # Static app: generate a minimal assets-only Worker. Production owns the bare Worker name (and the real
+    # custom domain); every other env gets a suffixed Worker so labs/staging/main never collide with it.
+    if [ "$ENVIRONMENT" = "production" ]; then
+      workerName="$worker"
+    else
+      workerName="${worker}-${ENVIRONMENT}"
+    fi
+    node -e '
+      const fs = require("fs");
+      const [out, worker, directory, compatDate, notFoundHandling] = process.argv.slice(1);
+      fs.writeFileSync(out, JSON.stringify({
+        name: worker,
+        compatibility_date: compatDate,
+        assets: { directory, not_found_handling: notFoundHandling },
+      }, null, 2));
+    ' "$WRANGLER_CONFIG" "$workerName" "$outDir" "$COMPAT_DATE" "$notFoundHandling"
+    pnpm exec wrangler deploy --config "$WRANGLER_CONFIG"
+  fi
   echo "::endgroup::"
 done

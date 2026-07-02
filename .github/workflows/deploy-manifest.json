@@ -1,10 +1,9 @@
 {
-  "//": "Deployable apps, consumed by scripts/deploy-env.sh + deploy-apps.yml. Generic: add an app by adding an entry. `environments` lists which of main|labs|staging|production this app deploys to. `worker` is the Cloudflare Worker base name (production = `<worker>`, other envs = `<worker>-<env>`); `outDir` is its bundle output (repo-relative). `notFoundHandling` is the Workers Static Assets 404 behavior: `single-page-application` for client-routed SPAs, `404-page` for multi-page static sites (serves /404.html), `none` otherwise. NOTE: the example-app entries (todomvc/tasks/testbench) are provisional — their bundleTask/outDir/worker are confirmed as part of the Cloudflare Pages -> Workers migration (see docs/design/app-release-spec.md).",
+  "//": "Deployable apps, consumed by scripts/deploy-env.sh + deploy-apps.yml. Generic: add an app by adding an entry. `environments` lists which of main|labs|staging|production this app deploys to. `outDir` is its bundle output (repo-relative). An app is deployed one of two ways: (1) if it has a `wranglerConfig` (repo-relative path to a Workers wrangler config, e.g. composer, which ships a `_worker.js` Worker + ASSETS binding + D1/R2), deploy-env.sh runs `wrangler deploy --config <that> --env <environment>` and the Worker name + bindings come from the config's [env.<environment>] section; (2) otherwise it's a static site and deploy-env.sh generates a minimal assets-only Worker using `worker` (base name; production = `<worker>`, other envs = `<worker>-<env>`) and `notFoundHandling` (Workers Static Assets 404 behavior: `single-page-application` for client-routed SPAs, `404-page` for multi-page static sites serving /404.html, `none` otherwise). NOTE: the example-app entries (todomvc/tasks/testbench) are provisional — their bundleTask/outDir/worker are confirmed as part of the Cloudflare Pages -> Workers migration (see docs/design/app-release-spec.md).",
   "composer": {
     "bundleTask": "composer-app:bundle",
     "outDir": "packages/apps/composer-app/out/composer",
-    "worker": "composer",
-    "notFoundHandling": "single-page-application",
+    "wranglerConfig": "packages/apps/composer-app/wrangler.toml",
     "environments": ["main", "labs", "staging", "production"]
   },
   "docs": {
