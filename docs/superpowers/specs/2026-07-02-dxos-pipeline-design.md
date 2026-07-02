@@ -231,6 +231,29 @@ Illustrative, to validate the surface is sufficient (not built in this change):
   `TestLayer`; use `TestClock`/events over sleeps where timing is asserted.
 - Public-API level only (constructors + `Pipeline.run`), no reaching into internals.
 
+## Addendum — Parquet source (2026-07-02)
+
+A concrete pipeline **source** over a small set of parquet files, for feeding real data to a
+pipeline (transcription fixtures, prototyping, tests).
+
+- **Placement:** `src/testing/parquet.ts`, exported from the `@dxos/pipeline/testing` entrypoint.
+  `hyparquet` (pure-JS, isomorphic, neutral-safe) is a package **dependency** — imported only by the
+  `./testing` entrypoint, so the core `.` entrypoint stays effect-only in its imports.
+  `hyparquet-writer` is a **devDependency** used only to generate fixtures in tests (no committed
+  binary blobs).
+- **API:** `parquetSource(files: readonly string[]): Stream.Stream<ParquetRow, ParquetReadError>`
+  where `ParquetRow = Record<string, unknown>`. Errors surface in the stream's `E` channel as a
+  `ParquetReadError` (`Data.TaggedError`, carrying the offending `file`) — no untyped `Error`.
+- **Read strategy (lazy):** files are read in order (`Stream.flatMap(..., { concurrency: 1 })`);
+  within a file, an fs-backed `AsyncBuffer` slices byte ranges on demand and rows are emitted one
+  **row group** at a time (`metadata.row_groups` → absolute `[rowStart, rowEnd)` → `parquetReadObjects`
+  → `Stream.flattenIterables`). Decoded-row memory is bounded by the largest row group, not total
+  rows; the file handle's lifetime is scoped to the stream via `Stream.unwrapScoped` +
+  `Effect.acquireRelease`. Only hyparquet's isomorphic core (`parquetMetadataAsync`,
+  `parquetReadObjects`) is imported — not its node file reader — so the neutral build is unaffected;
+  the node `fs` handle is opened directly (static `node:fs/promises`, as sibling neutral packages do).
+- **Usage:** `Pipeline.run({ source: parquetSource(['a.parquet', 'b.parquet']), stages, sink, context })`.
+
 ## Decisions (resolved with user)
 
 1. **Item typing:** generic core `<In>`; a `ContentBlock` helper is deferred (no second consumer
