@@ -59,8 +59,72 @@ permissions:
   contents: write # Push the floating `env/<environment>` deploy pointer tag (labs/staging/production).
 
 jobs:
+  # Build Composer's web bundle ONCE and share it as an artifact so the web deploy + native (Tauri) jobs
+  # don't each rebuild it. Runs only where a native build co-runs (labs/staging/production, or the labs
+  # test-push) — `main` and static apps get no benefit and skip this. See docs/design/deploy-build-sharing.md.
+  build-bundle:
+    if: >-
+      github.repository == 'dxos/dxos' &&
+      (inputs.app == 'all' || inputs.app == 'composer' || github.event_name == 'push') &&
+      (inputs.environment == 'labs' || inputs.environment == 'staging' || inputs.environment == 'production'
+       || (github.event_name == 'push' && github.ref_name != 'main'))
+    runs-on: ubuntu-24.04-4
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 90
+    env:
+      DEPLOY_ENV: ${{ inputs.environment || (github.ref_name == 'main' && 'main' || 'labs') }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Set environment variables (Cloudflare creds, PostHog, …)
+        run: .github/workflows/scripts/populate-env.sh "$DEPLOY_ENV" >> $GITHUB_ENV
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+          COMPOSER_APP_PROD_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+          COMPOSER_APP_PROD_POSTHOG_PROJECT_ID: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_PROJECT_ID }}
+          COMPOSER_APP_PROD_POSTHOG_FEEDBACK_SURVEY_ID: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_FEEDBACK_SURVEY_ID }}
+          COMPOSER_APP_TEST_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_API_KEY }}
+          COMPOSER_APP_TEST_POSTHOG_PROJECT_ID: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_PROJECT_ID }}
+          COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID }}
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
+          IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
+          IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      # Build only (SKIP_DEPLOY) — the artifact is deployed by `deploy` and embedded by the tauri jobs.
+      - name: Build Composer bundle
+        run: .github/workflows/scripts/deploy-env.sh "$DEPLOY_ENV" composer
+        env:
+          NODE_ENV: production
+          SKIP_DEPLOY: '1'
+
+      - name: Upload Composer bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: composer-bundle
+          path: packages/apps/composer-app/out/composer
+          include-hidden-files: true
+          retention-days: 1
+
   deploy:
-    if: github.repository == 'dxos/dxos'
+    needs: [build-bundle]
+    # Run when build-bundle succeeded (consume the artifact) OR was skipped (main / static-only — build
+    # normally); skip only if build-bundle failed.
+    if: ${{ !cancelled() && needs.build-bundle.result != 'failure' && github.repository == 'dxos/dxos' }}
     runs-on: ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -105,10 +169,20 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      # Consume the prebuilt Composer bundle when the prep job produced one (labs/staging/production);
+      # `deploy-env.sh` then skips rebuilding composer (PREBUILT_APPS below).
+      - name: Download Composer bundle
+        if: needs.build-bundle.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: composer-bundle
+          path: packages/apps/composer-app/out/composer
+
       - name: Deploy
         run: .github/workflows/scripts/deploy-env.sh "$DEPLOY_ENV" "$DEPLOY_APP"
         env:
           NODE_ENV: production
+          PREBUILT_APPS: ${{ needs.build-bundle.result == 'success' && 'composer' || '' }}
 
       # Per-app floating pointer to the SHA currently deployed for this app+environment — the
       # branch-pointer replacement (e.g. `git diff composer/staging..composer/production`). `main` is the

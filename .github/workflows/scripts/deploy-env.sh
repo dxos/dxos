@@ -11,6 +11,12 @@
 #   environment : main | labs | staging | production
 #   app         : a manifest key (e.g. composer, docs) or "all" (default)
 #
+# Build-sharing (see docs/design/deploy-build-sharing.md), via env vars:
+#   SKIP_DEPLOY=1        build the selected app(s) but do NOT deploy — the prep job that produces the
+#                        shared bundle artifact.
+#   PREBUILT_APPS="a b"  space-separated app names whose bundle is already present (downloaded from the
+#                        prep artifact); skip `moon run <task>` for them and deploy the existing output.
+#
 # Cloudflare Pages aliased environments under one project via `--branch`; Workers instead uses one Worker
 # per environment. Production deploys to the bare Worker name (`<worker>`), which carries the real custom
 # domain; other envs deploy to `<worker>-<env>` (its own preview domain). DX_ENVIRONMENT is exported so
@@ -61,22 +67,33 @@ for target in "${TARGETS[@]}"; do
 
   echo "::group::Deploy ${name} -> ${ENVIRONMENT}"
 
-  # populate-env.sh exports the app's PostHog config under its package prefix (e.g. composer-app →
-  # COMPOSER_APP_POSTHOG_*); the Vite build reads the DX_POSTHOG_* names, so map them here before bundling.
-  pkgPrefix="${task%%:*}"          # composer-app:bundle -> composer-app
-  pkgPrefix="${pkgPrefix^^}"       # -> COMPOSER-APP
-  pkgPrefix="${pkgPrefix//-/_}"    # -> COMPOSER_APP
-  apiKeyVar="${pkgPrefix}_POSTHOG_API_KEY"
-  if [ -n "${!apiKeyVar:-}" ]; then
-    projectVar="${pkgPrefix}_POSTHOG_PROJECT_ID"
-    surveyVar="${pkgPrefix}_POSTHOG_FEEDBACK_SURVEY_ID"
-    export DX_POSTHOG_API_KEY="${!apiKeyVar}"
-    export DX_POSTHOG_PROJECT_ID="${!projectVar:-}"
-    export DX_POSTHOG_FEEDBACK_SURVEY_ID="${!surveyVar:-}"
-    export LOG_FILTER="error"
+  # Build unless this app's bundle was prebuilt (downloaded from the prep job's shared artifact).
+  if [[ " ${PREBUILT_APPS:-} " == *" ${name} "* ]]; then
+    echo "Using prebuilt bundle for ${name} (${outDir}); skipping ${task}."
+  else
+    # populate-env.sh exports the app's PostHog config under its package prefix (e.g. composer-app →
+    # COMPOSER_APP_POSTHOG_*); the Vite build reads the DX_POSTHOG_* names, so map them before bundling.
+    pkgPrefix="${task%%:*}"          # composer-app:bundle -> composer-app
+    pkgPrefix="${pkgPrefix^^}"       # -> COMPOSER-APP
+    pkgPrefix="${pkgPrefix//-/_}"    # -> COMPOSER_APP
+    apiKeyVar="${pkgPrefix}_POSTHOG_API_KEY"
+    if [ -n "${!apiKeyVar:-}" ]; then
+      projectVar="${pkgPrefix}_POSTHOG_PROJECT_ID"
+      surveyVar="${pkgPrefix}_POSTHOG_FEEDBACK_SURVEY_ID"
+      export DX_POSTHOG_API_KEY="${!apiKeyVar}"
+      export DX_POSTHOG_PROJECT_ID="${!projectVar:-}"
+      export DX_POSTHOG_FEEDBACK_SURVEY_ID="${!surveyVar:-}"
+      export LOG_FILTER="error"
+    fi
+    moon run "$task"
   fi
 
-  moon run "$task"
+  # Prep-job mode: build only, don't deploy (the caller uploads the built output as a shared artifact).
+  if [ -n "${SKIP_DEPLOY:-}" ]; then
+    echo "SKIP_DEPLOY set — built ${name}, not deploying."
+    echo "::endgroup::"
+    continue
+  fi
 
   if [ -n "$wranglerConfig" ]; then
     # App ships its own Workers config (a `_worker.js` Worker + ASSETS binding, e.g. composer). The env's
