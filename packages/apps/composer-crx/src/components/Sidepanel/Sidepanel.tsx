@@ -10,8 +10,8 @@ import { log } from '@dxos/log';
 import { ErrorBoundary, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { focusOrOpenComposerTab } from '../../bridge';
 import { THUMBNAIL_PROP, getConfig } from '../../config';
+import { focusOrOpenComposerTab } from '../../core';
 import { translationKey } from '../../translations';
 import { Chat } from '../Chat';
 import { PageActions } from '../PageActions';

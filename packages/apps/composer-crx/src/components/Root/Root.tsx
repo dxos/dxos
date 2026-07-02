@@ -9,7 +9,7 @@ import React, { type PropsWithChildren, useEffect } from 'react';
 import { ErrorBoundary, ErrorBoundaryProps, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 
-import { translations } from '../translations';
+import { translations } from '../../translations';
 
 /**
  * Wraps children with the app theme, tooltip provider, and a named error boundary.

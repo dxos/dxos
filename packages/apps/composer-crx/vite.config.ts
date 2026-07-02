@@ -80,8 +80,6 @@ export default defineConfig({
   resolve: {
     alias: {
       'node-fetch': 'isomorphic-fetch',
-      // Stub out codec-protobuf to disable eval, which contradicts the MV3 CSP.
-      // '@dxos/codec-protobuf': path.resolve(dirname, 'src/codec-protobuf.stub.ts'),
     },
   },
   worker: {

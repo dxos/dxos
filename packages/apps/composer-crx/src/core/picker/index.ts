@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { getActionsForUrl } from '../page-actions/registry';
-import { type Snapshot } from '../page-actions/types';
+import { getActionsForUrl } from '../actions/registry';
+import { type Snapshot } from '../actions/types';
 import { harvestFavicon, harvestHints, harvestSelection } from './harvest';
 import { showPickerNotice } from './notice';
 import { startPicker } from './picker';

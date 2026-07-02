@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type SnapshotHints, type SnapshotSelection } from '../page-actions/types';
+import { type SnapshotHints, type SnapshotSelection } from '../actions/types';
 
 const MAX_HTML_LENGTH = 1_000_000;
 

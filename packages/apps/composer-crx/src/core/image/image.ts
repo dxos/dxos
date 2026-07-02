@@ -8,7 +8,7 @@ import { EdgeServiceClient, Image } from '@dxos/edge-client/service';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import { THUMBNAIL_PROP, getConfig } from '../config';
+import { THUMBNAIL_PROP, getConfig } from '../../config';
 
 /**
  * Get content type from URL extension.

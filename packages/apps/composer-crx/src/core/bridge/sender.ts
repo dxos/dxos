@@ -33,15 +33,6 @@ const pickBestTab = (tabs: browser.Tabs.Tab[]): browser.Tabs.Tab | undefined => 
 };
 
 /**
- * Find the best currently-open Composer tab (highest score), if any.
- */
-export const findComposerTab = async (): Promise<browser.Tabs.Tab | undefined> => {
-  const urls = await getComposerUrls();
-  const tabs = await browser.tabs.query({ url: urls });
-  return pickBestTab(tabs);
-};
-
-/**
  * Normalize a chrome-style match pattern into an openable URL.
  *
  * Accepts strings like `http://localhost:5173/*` and returns a navigable
@@ -64,6 +55,15 @@ const matchPatternToUrl = (pattern: string): string | undefined => {
   } catch {
     return undefined;
   }
+};
+
+/**
+ * Find the best currently-open Composer tab (highest score), if any.
+ */
+export const findComposerTab = async (): Promise<browser.Tabs.Tab | undefined> => {
+  const urls = await getComposerUrls();
+  const tabs = await browser.tabs.query({ url: urls });
+  return pickBestTab(tabs);
 };
 
 /**

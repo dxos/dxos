@@ -7,9 +7,7 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
-import { isComposerUrl } from './bridge/urls';
 import { DEVELOPER_MODE_PROP, getProp } from './config';
-import { runExtractor } from './extractors';
 import {
   PAGE_ACTION_DELIVER_MESSAGE_TYPE,
   PAGE_ACTION_EXTRACT_MESSAGE_TYPE,
@@ -24,9 +22,11 @@ import {
   PAGE_ACTIONS_READY_MESSAGE_TYPE,
   decodeInvokeAck,
   decodeListAck,
-} from './page-actions';
-import { pickSnapshot } from './picker';
-import { showDebugPreview } from './picker/debug-preview';
+} from './core/actions';
+import { isComposerUrl } from './core/bridge/urls';
+import { runExtractor } from './core/extractors';
+import { pickSnapshot } from './core/picker';
+import { showDebugPreview } from './core/picker/debug-preview';
 import {
   PING_ACK_EVENT,
   PING_EVENT,
@@ -41,7 +41,7 @@ import {
   decodePingRequest,
   decodeRenderAck,
   decodeRenderRequest,
-} from './proxy';
+} from './core/proxy';
 
 /**
  * Content script — loaded on every page at document_start. Hosts the DOM
