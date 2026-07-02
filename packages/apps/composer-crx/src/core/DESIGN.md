@@ -4,14 +4,14 @@ Extension-side logic shared by the three runtime contexts — the **background**
 **content script** (injected into every page), and the **side panel** UI. Each subfolder is a
 self-contained module exported via its `index.ts`.
 
-| Folder | Responsibility |
-| --- | --- |
-| `actions/` | Page-action registry, matching, and invoke/run/deliver flows. |
-| `bridge/` | Composer tab discovery and the configured Composer origins. |
-| `extractors/` | Turn the current page into a serializable `Snapshot`. |
-| `image/` | Image/thumbnail action backed by the EDGE image service. |
-| `picker/` | In-page DOM element picker. |
-| `proxy/` | Background render-proxy and ping. |
+| Folder        | Responsibility                                                |
+| ------------- | ------------------------------------------------------------- |
+| `actions/`    | Page-action registry, matching, and invoke/run/deliver flows. |
+| `bridge/`     | Composer tab discovery and the configured Composer origins.   |
+| `extractors/` | Turn the current page into a serializable `Snapshot`.         |
+| `image/`      | Image/thumbnail action backed by the EDGE image service.      |
+| `picker/`     | In-page DOM element picker.                                   |
+| `proxy/`      | Background render-proxy and ping.                             |
 
 ## Page actions — `actions/`
 
@@ -34,7 +34,7 @@ self-contained module exported via its `index.ts`.
 - **Purpose** — turn the current page into the serializable `Snapshot` an action operation consumes.
 - **Functionality** — the default `snapshotExtractor` (source metadata, og/JSON-LD hints, current text selection, and document HTML truncated at `MAX_HTML_LENGTH`), plus `runExtractor(name, ctx)` which dispatches to a bundled extractor by name.
 - **Lifecycle** — runs in the content script's page world, on demand, when the background asks for inputs during `runPageAction` (the `EXTRACT` message).
-- **Protocol / integration** — extractors are referenced *by name* from action descriptors (`actions/`); their output is validated Composer-side by the target operation's input schema. Reuses `picker/harvest` for favicon/hints. Deliberately imports `actions/` and `picker/` submodules (not their barrels) to stay free of `webextension-polyfill`, since it runs in page/node contexts.
+- **Protocol / integration** — extractors are referenced _by name_ from action descriptors (`actions/`); their output is validated Composer-side by the target operation's input schema. Reuses `picker/harvest` for favicon/hints. Deliberately imports `actions/` and `picker/` submodules (not their barrels) to stay free of `webextension-polyfill`, since it runs in page/node contexts.
 - **State** — stateless; a static set of extractors keyed by name.
 
 ## Thumbnails — `image/`
