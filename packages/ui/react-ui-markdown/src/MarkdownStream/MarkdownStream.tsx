@@ -319,6 +319,7 @@ const useMarkdownStreamTextEditor = (
     options?.typewriter,
     options?.cursor,
     options?.fader,
+    slots,
     extraExtensions,
   ]);
 
