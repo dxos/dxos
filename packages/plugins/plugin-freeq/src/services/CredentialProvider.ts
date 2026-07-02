@@ -5,7 +5,9 @@
 import * as HttpBody from '@effect/platform/HttpBody';
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
+import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { FreeqAuthError } from '../errors';
 
@@ -20,11 +22,13 @@ export interface CredentialProvider {
   respond: (challenge: SaslChallenge) => Effect.Effect<string, FreeqAuthError, HttpClient.HttpClient>;
 }
 
-interface SessionResponse {
-  did: string;
-  accessJwt: string;
-  refreshJwt: string;
-}
+const SessionResponse = Schema.Struct({
+  did: Schema.String,
+  accessJwt: Schema.String,
+  refreshJwt: Schema.String,
+});
+
+type SessionResponse = Schema.Schema.Type<typeof SessionResponse>;
 
 const toBase64 = (value: string): string => btoa(String.fromCharCode(...new TextEncoder().encode(value)));
 
@@ -53,13 +57,8 @@ export const makeAppPasswordCredentialProvider = (options: {
       ),
     );
     const response = yield* client.execute(request);
-    return yield* response.json;
-  }).pipe(
-    // `response.json` is `unknown`; the PDS response shape is asserted here rather than
-    // schema-validated because this is an external boundary with no typed alternative yet.
-    Effect.map((body) => body as SessionResponse),
-    Effect.mapError((cause) => new FreeqAuthError({ cause })),
-  );
+    return yield* HttpClientResponse.schemaBodyJson(SessionResponse)(response);
+  }).pipe(Effect.mapError((cause) => new FreeqAuthError({ cause })));
 
   // The SASL response shape is provisional; confirm against the freeq server.
   const buildResponse = (current: SessionResponse): string =>
