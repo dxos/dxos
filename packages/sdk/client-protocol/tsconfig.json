@@ -22,9 +22,6 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../core/compute/compute"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {

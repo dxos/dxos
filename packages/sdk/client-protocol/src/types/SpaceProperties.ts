@@ -5,9 +5,12 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Feed, Ref, Type } from '@dxos/echo';
-import { Trigger } from '@dxos/compute';
 
-const { ComputeEnvironment } = Trigger;
+/**
+ * Where do triggers get executed.
+ */
+export const ComputeEnvironment = Schema.Literal('disabled', 'local', 'edge');
+export type ComputeEnvironment = Schema.Schema.Type<typeof ComputeEnvironment>;
 
 export const SpacePropertiesSchema = Schema.Struct({
   //

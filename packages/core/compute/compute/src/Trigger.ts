@@ -183,10 +183,7 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
      * Overrides the space-level compute environment for this trigger.
      * When unset, the space's computeEnvironment setting applies.
      */
-    computeEnvironment: ComputeEnvironment.pipe(
-      Schema.annotations({ title: 'Compute' }),
-      Schema.optional,
-    ),
+    computeEnvironment: ComputeEnvironment.pipe(Schema.annotations({ title: 'Compute' }), Schema.optional),
 
     concurrency: Schema.Number.pipe(
       Schema.annotations({

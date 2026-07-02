@@ -306,7 +306,11 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
   // Read per trigger identity / reset; a trigger with no spec yet starts with no kind (shows the picker).
   // `enabled` is a Trigger-level field, seeded alongside the spec-derived variant values.
   const defaultValues = useMemo<Partial<TriggerFormValues>>(
-    () => ({ ...triggerFormValues(trigger?.spec), enabled: trigger?.enabled, computeEnvironment: trigger?.computeEnvironment }),
+    () => ({
+      ...triggerFormValues(trigger?.spec),
+      enabled: trigger?.enabled,
+      computeEnvironment: trigger?.computeEnvironment,
+    }),
     [trigger, resetNonce],
   );
 
