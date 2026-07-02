@@ -17702,6 +17702,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
       '@dxos/credentials':
         specifier: workspace:*
         version: link:../../core/halo/credentials

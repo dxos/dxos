@@ -6,8 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { type ComputeEnvironment } from '@dxos/client-protocol';
-import { ServiceResolver } from '@dxos/compute';
+import { ServiceResolver, Trigger } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { type SpaceId } from '@dxos/keys';
@@ -31,7 +30,7 @@ import { type Space } from '@dxos/react-client/echo';
 //
 
 /** Trigger execution location the dispatcher should run locally. */
-const LOCAL_ENVIRONMENT: ComputeEnvironment = 'local';
+const LOCAL_ENVIRONMENT: Trigger.ComputeEnvironment = 'local';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -41,7 +40,7 @@ export default Capability.makeModule(
     /** Per-space property-subscription unsubscribe, last-seen environment, and in-flight transition fiber. */
     type Tracker = {
       unsubscribe: () => void;
-      lastEnvironment?: ComputeEnvironment;
+      lastEnvironment?: Trigger.ComputeEnvironment;
       inFlight?: Fiber.RuntimeFiber<unknown, unknown>;
     };
     const trackers = new Map<SpaceId, Tracker>();
@@ -52,7 +51,7 @@ export default Capability.makeModule(
      * environment. Returns a fiber so the caller can cancel a pending
      * transition when a new one supersedes it.
      */
-    const transition = (spaceId: SpaceId, environment: ComputeEnvironment) =>
+    const transition = (spaceId: SpaceId, environment: Trigger.ComputeEnvironment) =>
       runtime.runFork(
         Effect.gen(function* () {
           const dispatcher = yield* TriggerDispatcher;
@@ -65,7 +64,7 @@ export default Capability.makeModule(
         ),
       );
 
-    const apply = (tracker: Tracker, spaceId: SpaceId, environment: ComputeEnvironment): void => {
+    const apply = (tracker: Tracker, spaceId: SpaceId, environment: Trigger.ComputeEnvironment): void => {
       if (tracker.lastEnvironment === environment) {
         return;
       }
@@ -94,7 +93,7 @@ export default Capability.makeModule(
           if (trackers.get(space.id) !== tracker) {
             return;
           }
-          const readEnvironment = (): ComputeEnvironment => space.properties.computeEnvironment ?? LOCAL_ENVIRONMENT;
+          const readEnvironment = (): Trigger.ComputeEnvironment => space.properties.computeEnvironment ?? LOCAL_ENVIRONMENT;
           tracker.unsubscribe = Obj.subscribe(space.properties, () => apply(tracker, space.id, readEnvironment()));
           apply(tracker, space.id, readEnvironment());
         })

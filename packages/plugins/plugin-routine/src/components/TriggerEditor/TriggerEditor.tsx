@@ -30,10 +30,9 @@ import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector';
 // A recurring trigger fires on a cron, so the one-time `once` kind is not offered here.
 const RECURRING_KINDS = ['hourly', 'daily', 'weekly', 'monthly', 'custom'] as const satisfies readonly ScheduleKind[];
 
-// The `enabled` toggle is a field of the Trigger object (sibling of `spec`), not of any spec variant. It is
-// reused from the Trigger schema (rather than redeclared) and extended onto every form member so the editor
-// surfaces it once a kind is chosen; the value is written back to `trigger.enabled`, not the spec.
-const EnabledForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('enabled'));
+// Trigger-level fields (sibling of `spec`) reused from the Trigger schema and extended onto every form member
+// so the editor surfaces them once a kind is chosen; values are written back to `trigger.*`, not the spec.
+const TriggerLevelForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('enabled', 'computeEnvironment'));
 
 // Scoped trigger form, modeled as a top-level discriminated union (one member per pluggable variant) so the
 // Form renders the chosen kind's fields as one flat field set (no nested, bordered sub-fieldset). The kind
@@ -44,7 +43,7 @@ const TimerSpecForm = Schema.extend(
     kind: Schema.Literal('timer'),
     cron: Schema.String.pipe(Schema.annotations({ title: 'Schedule (cron)' }), Schema.optional),
   }),
-  EnabledForm,
+  TriggerLevelForm,
 );
 
 const SubscriptionSpecForm = Schema.extend(
@@ -56,7 +55,7 @@ const SubscriptionSpecForm = Schema.extend(
     deep: Schema.Boolean.pipe(Schema.annotations({ title: 'Nested' }), Schema.optional),
     delay: Schema.Number.pipe(Schema.annotations({ title: 'Delay (ms)' }), Schema.optional),
   }),
-  EnabledForm,
+  TriggerLevelForm,
 );
 
 const WebhookSpecForm = Schema.extend(
@@ -65,7 +64,7 @@ const WebhookSpecForm = Schema.extend(
     method: Schema.String.pipe(Schema.annotations({ title: 'Method' }), Schema.optional),
     port: Schema.Number.pipe(Schema.annotations({ title: 'Port' }), Schema.optional),
   }),
-  EnabledForm,
+  TriggerLevelForm,
 );
 
 const FeedSpecForm = Schema.extend(
@@ -77,14 +76,14 @@ const FeedSpecForm = Schema.extend(
       Schema.optional,
     ),
   }),
-  EnabledForm,
+  TriggerLevelForm,
 );
 
 const EmailSpecForm = Schema.extend(
   Schema.Struct({
     kind: Schema.Literal('email'),
   }),
-  EnabledForm,
+  TriggerLevelForm,
 );
 
 const TriggerForm = Schema.Union(TimerSpecForm, SubscriptionSpecForm, WebhookSpecForm, FeedSpecForm, EmailSpecForm);
@@ -96,6 +95,7 @@ type TriggerFormValues = Schema.Schema.Type<typeof TriggerForm>;
 type TriggerFormInput = {
   readonly kind?: TriggerKind;
   readonly enabled?: boolean;
+  readonly computeEnvironment?: Trigger.ComputeEnvironment;
   readonly cron?: string;
   readonly method?: string;
   readonly port?: number;
@@ -306,7 +306,7 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
   // Read per trigger identity / reset; a trigger with no spec yet starts with no kind (shows the picker).
   // `enabled` is a Trigger-level field, seeded alongside the spec-derived variant values.
   const defaultValues = useMemo<Partial<TriggerFormValues>>(
-    () => ({ ...triggerFormValues(trigger?.spec), enabled: trigger?.enabled }),
+    () => ({ ...triggerFormValues(trigger?.spec), enabled: trigger?.enabled, computeEnvironment: trigger?.computeEnvironment }),
     [trigger, resetNonce],
   );
 
@@ -334,9 +334,10 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
       const spec = triggerFormSpec(values);
       setKind(spec.kind);
       const enabled = values.enabled === true;
-      // Edit the spec and `enabled` on the trigger; the trigger's `function` and `input` (including the
-      // instructions binding and any operation-specific bindings like `{ magazine }`) are wired once by
-      // `Routine.make`, so they are not re-derived here.
+      const computeEnvironment = (values as TriggerFormInput).computeEnvironment;
+      // Edit the spec, `enabled`, and `computeEnvironment` on the trigger; the trigger's `function` and `input`
+      // (including the instructions binding and any operation-specific bindings like `{ magazine }`) are wired
+      // once by `Routine.make`, so they are not re-derived here.
       if (trigger) {
         Obj.update(trigger, (trigger) => {
           // The subscription spec's QueryAST is deeply readonly while the live ECHO draft's `spec` is mutable;
@@ -344,11 +345,12 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
           // (mirrors commands/trigger/update/subscription.ts).
           trigger.spec = spec as typeof trigger.spec;
           trigger.enabled = enabled;
+          trigger.computeEnvironment = computeEnvironment;
         });
       } else {
         // Defensive: the draft normally carries an owned trigger already (see `Routine.make`). If absent,
         // create one in memory and attach it to the routine graph — nothing is persisted until save.
-        const created = Trigger.make({ spec, enabled });
+        const created = Trigger.make({ spec, enabled, computeEnvironment });
         Obj.setParent(created, routine);
         Obj.update(routine, (routine) => {
           routine.triggers.push(Ref.make(created));
