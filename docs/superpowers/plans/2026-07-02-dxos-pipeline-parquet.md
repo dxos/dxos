@@ -270,6 +270,143 @@ If `git status` shows other changed files (e.g. toolbox-regenerated `release-ple
 
 ---
 
+---
+
+### Task 2: email parquet → `@dxos/types` Message (test-only demo)
+
+Demonstrates the generic pipeline serving the email use case: read a local email parquet dataset
+(path from `ROOT_DIR`) via `parquetSource`, map rows to `@dxos/types` `Message` objects with blocks.
+The mapper is **test-only** (`@dxos/types` is a devDependency; nothing in the built `.`/`./testing`
+entrypoints imports it, keeping the package generic).
+
+**Files:**
+- Modify: `packages/core/compute/pipeline/package.json` (add `@dxos/types` devDependency)
+- Modify: `packages/core/compute/pipeline/tsconfig.json` (add `../../../sdk/types` reference)
+- Restore: `packages/core/compute/pipeline/src/testing/parquet.test.ts` to the reviewed generated-fixture form (Task 1 Step 2 content — two generated files `fileA`/`fileB`, ordering + missing-file tests). The in-worktree WIP edits (ROOT_DIR/shard names) move to the new email test.
+- Create: `packages/core/compute/pipeline/src/testing/parquet-email.test.ts`
+
+**Interfaces:**
+- Row shape (parquet `dataset_info`): `message_id: string`, `subject: string`, `from: string`, `to/cc/bcc: string[]`, `date: timestamp[us] → Date`, `body: string`, `file_name: string`.
+- `Message.make({ created, sender: Actor, blocks: ContentBlock.Any[], properties })`; `Actor = { email?, name?, role?, ... }`; text block = `{ _tag: 'text', text }`.
+
+- [ ] **Step 1: Add `@dxos/types` devDependency + tsconfig ref**
+
+Run: `pnpm add --filter "@dxos/pipeline" --save-dev "@dxos/types"` (workspace pkg → resolves to `workspace:*`, NOT the catalog). Then add to `tsconfig.json` `references`: `{ "path": "../../../sdk/types" }`.
+
+- [ ] **Step 2: Create `src/testing/parquet-email.test.ts`**
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+import { readdir } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
+import { describe, test } from 'vitest';
+
+import { EffectEx } from '@dxos/effect';
+import { type ContentBlock, Message } from '@dxos/types';
+
+import { type ParquetRow, parquetSource } from './parquet';
+
+// The email dataset is exposed via ROOT_DIR (layout: `${ROOT_DIR}/data/train-*.parquet`).
+const ROOT_DIR = process.env.ROOT_DIR;
+
+// Map one email row (see the dataset's `dataset_info` schema) to a Message with a text body block.
+// Test-only: keeps the generic @dxos/pipeline package free of an @dxos/types runtime dependency.
+const asIso = (value: unknown): string => (value instanceof Date ? value : new Date(String(value))).toISOString();
+
+const emailToMessage = (row: ParquetRow): Message.Message => {
+  const block: ContentBlock.Text = { _tag: 'text', text: String(row.body ?? '') };
+  return Message.make({
+    created: asIso(row.date),
+    sender: { email: String(row.from ?? '') },
+    blocks: [block],
+    properties: {
+      messageId: row.message_id,
+      subject: row.subject,
+      to: row.to,
+      cc: row.cc,
+      bcc: row.bcc,
+      fileName: row.file_name,
+    },
+  });
+};
+
+describe('email parquet → Message', () => {
+  test('maps an email row to a Message with a text body block', ({ expect }) => {
+    const row: ParquetRow = {
+      message_id: '<abc@example.com>',
+      subject: 'Hello',
+      from: 'alice@example.com',
+      to: ['bob@example.com'],
+      cc: [],
+      bcc: [],
+      date: new Date('2020-01-02T03:04:05.000Z'),
+      body: 'Body text.',
+      file_name: 'inbox/1.',
+    };
+    const message = emailToMessage(row);
+    expect(message.sender.email).toBe('alice@example.com');
+    expect(message.created).toBe('2020-01-02T03:04:05.000Z');
+    expect(Message.extractText(message)).toBe('Body text.');
+    expect(message.properties?.subject).toBe('Hello');
+    expect(message.properties?.to).toEqual(['bob@example.com']);
+    expect(message.properties?.messageId).toBe('<abc@example.com>');
+  });
+
+  // Runs only when ROOT_DIR points at the local dataset; skipped in CI so the suite stays green.
+  describe.skipIf(!ROOT_DIR)('local dataset', () => {
+    test('reads shards and converts the first rows to Messages', async ({ expect }) => {
+      const dataDir = join(ROOT_DIR!, 'data');
+      const files = (await readdir(dataDir))
+        .filter((name) => /^train-.*\.parquet$/.test(name))
+        .sort()
+        .map((name) => join(dataDir, name));
+      expect(files.length).toBeGreaterThan(0);
+
+      const messages = await EffectEx.runPromise(
+        parquetSource(files).pipe(
+          Stream.take(5),
+          Stream.map(emailToMessage),
+          Stream.runCollect,
+          Effect.map((chunk) => [...chunk]),
+        ),
+      );
+
+      expect(messages).toHaveLength(5);
+      for (const message of messages) {
+        expect(typeof message.sender.email).toBe('string');
+        expect(message.blocks.some((block) => block._tag === 'text')).toBe(true);
+        expect(message.properties).toBeDefined();
+      }
+    });
+  });
+});
+```
+
+- [ ] **Step 3: Restore `src/testing/parquet.test.ts`** to the Task 1 Step 2 content (generated `fileA`/`fileB`, ordering + missing-file tests) — the generic, always-green coverage of `parquetSource`.
+
+- [ ] **Step 4: Verify**
+
+`moon run pipeline:test` (email mapper test + generic tests run; `ROOT_DIR`-gated test skipped when unset — confirm it is listed as skipped, not failed). `moon run pipeline:build`, `moon run pipeline:lint -- --fix`, `npx oxfmt --write packages/core/compute/pipeline`.
+
+- [ ] **Step 5: Purity + cast audit**
+
+`grep -rn "@dxos/types" packages/core/compute/pipeline/src/parquet.ts packages/core/compute/pipeline/src/Pipeline.ts packages/core/compute/pipeline/src/Stage.ts packages/core/compute/pipeline/src/index.ts packages/core/compute/pipeline/src/testing/index.ts` → **no matches** (@dxos/types only in the `*.test.ts`). Cast audit as in Task 1 Step 8.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add packages/core/compute/pipeline pnpm-lock.yaml
+git commit -m "test(pipeline): email parquet → @dxos/types Message demo (ROOT_DIR-gated)"
+```
+
+---
+
 ## Self-Review
 
 **Spec coverage (addendum):**
