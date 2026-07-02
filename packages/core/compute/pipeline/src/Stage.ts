@@ -30,7 +30,13 @@ export interface Stage<in In, out Out, in Ctx, out E = never> {
 
 /** Options shared by buffering stage constructors. */
 type BufferOptions = {
-  /** Per-stage overflow override; when set, a bounded buffer is inserted downstream of the stage. */
+  /**
+   * Per-stage overflow override; when set, a bounded buffer is inserted at the stage's async
+   * boundary. For {@link map} the buffer sits *before* `mapEffect`, so under load it sheds/coalesces
+   * in-flight input (`sliding` keeps the latest queued item — true latest-wins — `dropping` drops
+   * new arrivals while a run is in flight). For {@link window} it sits after windowing (a window
+   * must see every item), bounding output rate.
+   */
   readonly overflow?: Overflow;
   /** Buffer capacity for the per-stage override. */
   readonly bufferSize?: number;
@@ -59,10 +65,13 @@ export const map = <In, Out, Ctx, E = never>(
   options: MapOptions = {},
 ): Stage<In, Out, Ctx, E> => ({
   id,
+  // The overflow buffer sits *before* `mapEffect`: while a run is in flight it absorbs new input,
+  // so `sliding` coalesces to the latest queued item (latest-wins) and `dropping` sheds new arrivals.
+  // A buffer after `mapEffect` would bound outputs, not in-flight input, leaving overflow inert.
   transform: (input, ctx) =>
     input.pipe(
-      Stream.mapEffect((item) => fn(item, ctx), { concurrency: options.concurrency ?? 1 }),
       withBuffer(options),
+      Stream.mapEffect((item) => fn(item, ctx), { concurrency: options.concurrency ?? 1 }),
     ),
 });
 

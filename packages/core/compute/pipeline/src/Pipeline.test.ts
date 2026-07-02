@@ -121,4 +121,21 @@ describe('Pipeline.run overflow', () => {
     );
     expect(items[items.length - 1]).toBe(3);
   });
+
+  test('per-stage sliding overflow coalesces stale input while a slow run is in flight', async ({ expect }) => {
+    const runs: number[] = [];
+    // A slow map over a synchronous 4-item source: while the first run sleeps, items 2/3/4 arrive and
+    // the input-side sliding buffer (capacity 1) keeps only the latest, so intermediate items drop.
+    const slow = Stage.map<number, number, {}>(
+      'slow',
+      (n) => Effect.sync(() => runs.push(n)).pipe(Effect.zipRight(Effect.sleep('40 millis')), Effect.as(n)),
+      { overflow: 'sliding', bufferSize: 1 },
+    );
+    const { sink } = captureSink<number>();
+    await EffectEx.runPromise(
+      Pipeline.run({ source: scriptedSource([1, 2, 3, 4]), stages: [slow], sink, context: {} }),
+    );
+    expect(runs.length).toBeLessThan(4);
+    expect(runs.at(-1)).toBe(4);
+  });
 });

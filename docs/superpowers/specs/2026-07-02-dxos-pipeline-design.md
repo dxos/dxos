@@ -135,8 +135,11 @@ These map directly onto Effect's `Stream.buffer({ capacity, strategy })` strateg
 Granularity:
 - **Pipeline-level default** via `Pipeline.run({ overflow, bufferSize })`.
 - **Per-stage override** via the stage constructor `options.overflow` (e.g. transcription can run
-  `correct` with `suspend` but `summarize` with `sliding`). A per-stage override inserts a
-  `Stream.buffer` immediately downstream of that stage's transform.
+  `correct` with `suspend` but `summarize` with `sliding`). For `map` the buffer is inserted at the
+  stage's async boundary — *before* `mapEffect` — so under load it sheds/coalesces in-flight input
+  (`sliding` = true latest-wins, `dropping` = skip-while-busy); a buffer after the async work would
+  bound outputs only and leave the policy inert. For `window` the buffer sits after windowing (a
+  window must observe every item), bounding output rate.
 
 ### Runtime
 
