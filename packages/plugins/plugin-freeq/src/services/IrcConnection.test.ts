@@ -79,7 +79,7 @@ describe('IrcConnection', () => {
   test('replies to PING with PONG', ({ expect }) => {
     const mock = makeMockTransport();
     const connection = makeIrcConnection({ transport: mock.transport, nick: 'alice', runResponse: async () => '' });
-    connection.connect();
+    void connection.connect();
     mock.open();
     mock.emit('PING :srv1');
     expect(mock.sent).toContain('PONG :srv1');
