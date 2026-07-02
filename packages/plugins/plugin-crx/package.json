@@ -99,6 +99,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/random": "workspace:*",
     "@types/react": "catalog:",
     "react": "catalog:",
     "vite": "catalog:",
