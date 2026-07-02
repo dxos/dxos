@@ -30,9 +30,11 @@ import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector';
 // A recurring trigger fires on a cron, so the one-time `once` kind is not offered here.
 const RECURRING_KINDS = ['hourly', 'daily', 'weekly', 'monthly', 'custom'] as const satisfies readonly ScheduleKind[];
 
-// Trigger-level fields (sibling of `spec`) reused from the Trigger schema and extended onto every form member
-// so the editor surfaces them once a kind is chosen; values are written back to `trigger.*`, not the spec.
-const TriggerLevelForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('enabled', 'computeEnvironment'));
+// `enabled` is extended onto every spec form so it renders inline with the kind's fields.
+const EnabledForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('enabled'));
+
+// `computeEnvironment` is surfaced as a separate top-level field alongside the spec form.
+const ComputeEnvironmentForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('computeEnvironment'));
 
 // Scoped trigger form, modeled as a top-level discriminated union (one member per pluggable variant) so the
 // Form renders the chosen kind's fields as one flat field set (no nested, bordered sub-fieldset). The kind
@@ -43,7 +45,7 @@ const TimerSpecForm = Schema.extend(
     kind: Schema.Literal('timer'),
     cron: Schema.String.pipe(Schema.annotations({ title: 'Schedule (cron)' }), Schema.optional),
   }),
-  TriggerLevelForm,
+  EnabledForm,
 );
 
 const SubscriptionSpecForm = Schema.extend(
@@ -55,7 +57,7 @@ const SubscriptionSpecForm = Schema.extend(
     deep: Schema.Boolean.pipe(Schema.annotations({ title: 'Nested' }), Schema.optional),
     delay: Schema.Number.pipe(Schema.annotations({ title: 'Delay (ms)' }), Schema.optional),
   }),
-  TriggerLevelForm,
+  EnabledForm,
 );
 
 const WebhookSpecForm = Schema.extend(
@@ -64,7 +66,7 @@ const WebhookSpecForm = Schema.extend(
     method: Schema.String.pipe(Schema.annotations({ title: 'Method' }), Schema.optional),
     port: Schema.Number.pipe(Schema.annotations({ title: 'Port' }), Schema.optional),
   }),
-  TriggerLevelForm,
+  EnabledForm,
 );
 
 const FeedSpecForm = Schema.extend(
@@ -76,14 +78,14 @@ const FeedSpecForm = Schema.extend(
       Schema.optional,
     ),
   }),
-  TriggerLevelForm,
+  EnabledForm,
 );
 
 const EmailSpecForm = Schema.extend(
   Schema.Struct({
     kind: Schema.Literal('email'),
   }),
-  TriggerLevelForm,
+  EnabledForm,
 );
 
 const TriggerForm = Schema.Union(TimerSpecForm, SubscriptionSpecForm, WebhookSpecForm, FeedSpecForm, EmailSpecForm);
@@ -95,7 +97,6 @@ type TriggerFormValues = Schema.Schema.Type<typeof TriggerForm>;
 type TriggerFormInput = {
   readonly kind?: TriggerKind;
   readonly enabled?: boolean;
-  readonly computeEnvironment?: Trigger.ComputeEnvironment;
   readonly cron?: string;
   readonly method?: string;
   readonly port?: number;
@@ -186,13 +187,14 @@ export type TriggerEditorProps = ThemedClassName<{
 
 export const TriggerEditor = ({ classNames, db, routine, trigger, readonly }: TriggerEditorProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { defaultValues, fieldMap, kind, resetNonce, handleClose, handleValuesChanged } = useTriggerForm(
+  const { defaultValues, defaultComputeEnvironment, fieldMap, kind, resetNonce, handleClose, handleValuesChanged, handleComputeEnvironmentChanged } = useTriggerForm(
     routine,
     trigger,
   );
 
   // TODO(burdon): Not persistent; need to memo
   return (
+    <>
     <Form.Root
       // Remount when the bound trigger changes (picks up its spec) or on reset (reverts to the picker).
       key={`${trigger?.id ?? 'new'}:${resetNonce}`}
@@ -230,6 +232,20 @@ export const TriggerEditor = ({ classNames, db, routine, trigger, readonly }: Tr
         {kind === 'email' && <p className='px-2 text-sm text-description'>{t('trigger-kind.email-note.message')}</p>}
       </Form.Content>
     </Form.Root>
+    {kind && (
+      <Form.Root
+        schema={ComputeEnvironmentForm}
+        db={db}
+        readonly={readonly}
+        defaultValues={defaultComputeEnvironment}
+        onValuesChanged={handleComputeEnvironmentChanged}
+      >
+        <Form.Content>
+          <Form.FieldSet />
+        </Form.Content>
+      </Form.Root>
+    )}
+    </>
   );
 };
 
@@ -309,9 +325,13 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
     () => ({
       ...triggerFormValues(trigger?.spec),
       enabled: trigger?.enabled,
-      computeEnvironment: trigger?.computeEnvironment,
     }),
     [trigger, resetNonce],
+  );
+
+  const defaultComputeEnvironment = useMemo(
+    () => ({ computeEnvironment: trigger?.computeEnvironment }),
+    [trigger?.computeEnvironment],
   );
 
   // Mirror the active kind: gates the variant picker (shown only while unset) and the variant-specific notes.
@@ -338,10 +358,9 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
       const spec = triggerFormSpec(values);
       setKind(spec.kind);
       const enabled = values.enabled === true;
-      const computeEnvironment = values.computeEnvironment;
-      // Edit the spec, `enabled`, and `computeEnvironment` on the trigger; the trigger's `function` and `input`
-      // (including the instructions binding and any operation-specific bindings like `{ magazine }`) are wired
-      // once by `Routine.make`, so they are not re-derived here.
+      // Edit the spec and `enabled` on the trigger; `computeEnvironment` is handled by its own form below.
+      // The trigger's `function` and `input` (including the instructions binding and any operation-specific
+      // bindings like `{ magazine }`) are wired once by `Routine.make`, so they are not re-derived here.
       if (trigger) {
         Obj.update(trigger, (trigger) => {
           // The subscription spec's QueryAST is deeply readonly while the live ECHO draft's `spec` is mutable;
@@ -349,12 +368,11 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
           // (mirrors commands/trigger/update/subscription.ts).
           trigger.spec = spec as typeof trigger.spec;
           trigger.enabled = enabled;
-          trigger.computeEnvironment = computeEnvironment;
         });
       } else {
         // Defensive: the draft normally carries an owned trigger already (see `Routine.make`). If absent,
         // create one in memory and attach it to the routine graph — nothing is persisted until save.
-        const created = Trigger.make({ spec, enabled, computeEnvironment });
+        const created = Trigger.make({ spec, enabled });
         Obj.setParent(created, routine);
         Obj.update(routine, (routine) => {
           routine.triggers.push(Ref.make(created));
@@ -367,5 +385,17 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
     [routine, trigger],
   );
 
-  return { defaultValues, fieldMap, kind, resetNonce, handleClose, handleValuesChanged };
+  const handleComputeEnvironmentChanged = useCallback(
+    (values: Partial<Schema.Schema.Type<typeof ComputeEnvironmentForm>>) => {
+      if (!trigger) {
+        return;
+      }
+      Obj.update(trigger, (trigger) => {
+        trigger.computeEnvironment = values.computeEnvironment;
+      });
+    },
+    [trigger],
+  );
+
+  return { defaultValues, defaultComputeEnvironment, fieldMap, kind, resetNonce, handleClose, handleValuesChanged, handleComputeEnvironmentChanged };
 };
