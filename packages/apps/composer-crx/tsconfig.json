@@ -55,6 +55,9 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-chat"
+    },
+    {
       "path": "../../ui/react-ui-markdown"
     },
     {

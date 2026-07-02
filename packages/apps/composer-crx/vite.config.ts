@@ -152,7 +152,7 @@ export default defineConfig({
           default_title: 'Composer',
         },
         side_panel: {
-          default_path: 'panel.html',
+          default_path: 'side_panel.html',
         },
         permissions: ['contextMenus', 'activeTab', 'tabs', 'scripting', 'storage', 'notifications', 'sidePanel'],
         // TODO(review): broad host permissions for arbitrary search providers — scope/curate before publishing.
