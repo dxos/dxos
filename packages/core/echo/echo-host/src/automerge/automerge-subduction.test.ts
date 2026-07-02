@@ -27,6 +27,7 @@ import {
 import { beforeAll, describe, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
+import { log } from '@dxos/log';
 
 import { createRepo, shutdownRepo } from './subduction-test-utils';
 
@@ -167,40 +168,82 @@ class CountingStorageAdapter implements StorageAdapterInterface {
     removeRange: 0,
   };
 
-  constructor(private readonly _inner: StorageAdapterInterface) {}
+  #logging: boolean;
+
+  constructor(
+    private readonly _inner: StorageAdapterInterface,
+    { logging }: { logging?: boolean } = {},
+  ) {
+    this.#logging = logging ?? false;
+  }
+
+  get readOps(): number {
+    return this.ops.load + this.ops.loadRange;
+  }
 
   get writeOps(): number {
     return this.ops.save + this.ops.saveBatch + this.ops.remove + this.ops.removeRange;
   }
 
+  setLogging(logging: boolean): void {
+    this.#logging = logging;
+  }
+
   async load(key: StorageKey): Promise<Uint8Array | undefined> {
+    if (this.#logging) {
+      log.info('load', { key });
+    }
     this.ops.load++;
     return this._inner.load(key);
   }
 
   async save(key: StorageKey, binary: Uint8Array): Promise<void> {
+    if (this.#logging) {
+      log.info('save', { key });
+    }
     this.ops.save++;
     return this._inner.save(key, binary);
   }
 
   async saveBatch(entries: Array<[StorageKey, Uint8Array]>): Promise<void> {
+    if (this.#logging) {
+      log.info('saveBatch', { entries });
+    }
     this.ops.saveBatch++;
     return this._inner.saveBatch(entries);
   }
 
   async remove(key: StorageKey): Promise<void> {
+    if (this.#logging) {
+      log.info('remove', { key });
+    }
     this.ops.remove++;
     return this._inner.remove(key);
   }
 
   async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
+    if (this.#logging) {
+      log.info('loadRange', { keyPrefix });
+    }
     this.ops.loadRange++;
     return this._inner.loadRange(keyPrefix);
   }
 
   async removeRange(keyPrefix: StorageKey): Promise<void> {
+    if (this.#logging) {
+      log.info('removeRange', { keyPrefix });
+    }
     this.ops.removeRange++;
     return this._inner.removeRange(keyPrefix);
+  }
+
+  resetCounters(): void {
+    this.ops.load = 0;
+    this.ops.save = 0;
+    this.ops.saveBatch = 0;
+    this.ops.remove = 0;
+    this.ops.loadRange = 0;
+    this.ops.removeRange = 0;
   }
 }
 
@@ -444,12 +487,13 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
   );
 
   test.only('repo restart reloads documents from memory storage without extra writes', async ({ expect }) => {
+    // TODO(dmaretskyi): MemoryStorageAdapter vs MemoryStorage -- which API is right for subduction?
     const storage = new CountingStorageAdapter(new MemoryStorageAdapter());
     const urls: AutomergeUrl[] = [];
 
     {
       const repo = createRepo({ network: [], storage }, { registerCleanup: false });
-      for (let index = 0; index < 3; index++) {
+      for (let index = 0; index < 100; index++) {
         const handle = repo.create<{ index: number }>({ index });
         urls.push(handle.url);
       }
@@ -457,9 +501,9 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
       await shutdownRepo(repo);
     }
 
-    const writesAfterCreate = storage.writeOps;
-    expect(writesAfterCreate).toBeGreaterThan(0);
-
+    expect(storage.writeOps).toBeGreaterThan(0);
+    storage.resetCounters();
+    storage.setLogging(true);
     {
       const repo = createRepo({ network: [], storage }, { registerCleanup: false });
       for (const url of urls) {
@@ -470,7 +514,7 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
       await shutdownRepo(repo);
     }
 
-    expect(storage.writeOps).toEqual(writesAfterCreate);
-    expect(storage.ops.load + storage.ops.loadRange).toBeGreaterThan(0);
+    expect(storage.writeOps).toBe(0);
+    expect(storage.readOps).toBeGreaterThan(0);
   });
 });
