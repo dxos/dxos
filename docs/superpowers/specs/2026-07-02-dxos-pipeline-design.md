@@ -84,12 +84,20 @@ Authors compose pipelines from these; the raw `Stage.transform` interface is an 
 
 - `Stage.window(id, size, fn)` — sliding-window transform (see below).
   `fn: (window: readonly In[], ctx: Ctx) => Effect.Effect<Out, E>`.
+  `size` must be a positive integer; the constructor throws `RangeError` otherwise (a non-positive
+  `size` would make `.slice(-size)` degenerate — `slice(-0)` returns the whole array).
 
 - `Stage.filter(id, pred)` — drop items that do not match. `pred: (item: In) => boolean`.
   Implemented with `Stream.filter`.
 
-`Out` is frequently `Out | undefined` for stages that sometimes have nothing to emit; the runtime
-skips `undefined` before the sink (via `Stream.filter`), so a stage can no-op cleanly.
+`Out` is frequently `Out | undefined` for stages that sometimes have nothing to emit. The runtime
+drops `undefined` **between every stage and before the sink** (a `Stream.filter` after each stage's
+transform in the fold), so a stage can no-op cleanly at *any* position in the chain — a mid-chain
+stage's `undefined` never reaches the next stage's input. (Consequence: a pipeline whose `Out`
+legitimately includes `undefined` as a real value cannot deliver it; `undefined` always means
+no-op. Documented on `Pipeline.run`.) All stages and the source/sink share one error type `E`
+(`RunOptions<In, Out, Ctx, E>`); mixing distinct stage error types requires widening to their union
+at the call site — a typed per-stage builder is deferred future work.
 
 ### Windowing (in core — rationale)
 
