@@ -47,7 +47,7 @@ const fileRows = (file: string): Stream.Stream<ParquetRow, ParquetReadError> =>
     Effect.gen(function* () {
       const handle = yield* Effect.acquireRelease(
         Effect.tryPromise({ try: () => open(file, 'r'), catch: (cause) => new ParquetReadError({ file, cause }) }),
-        (open) => Effect.promise(() => open.close()),
+        (handle) => Effect.promise(() => handle.close()),
       );
       const { size } = yield* Effect.tryPromise({
         try: () => handle.stat(),
@@ -56,6 +56,8 @@ const fileRows = (file: string): Stream.Stream<ParquetRow, ParquetReadError> =>
       const asyncBuffer: AsyncBuffer = {
         byteLength: size,
         slice: async (start, end = size) => {
+          // Ranges hyparquet requests are always within [0, byteLength) (derived from the metadata),
+          // so the read fills the whole view; no short-read handling is needed.
           const view = new Uint8Array(end - start);
           await handle.read(view, 0, view.byteLength, start);
           return view.buffer;

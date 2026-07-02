@@ -14,6 +14,8 @@ import { EffectEx } from '@dxos/effect';
 
 import { ParquetReadError, type ParquetRow, parquetSource } from './parquet';
 
+// git clone https://huggingface.co/datasets/corbt/enron-emails
+
 const collect = (files: readonly string[]): Promise<readonly ParquetRow[]> =>
   EffectEx.runPromise(
     parquetSource(files).pipe(
