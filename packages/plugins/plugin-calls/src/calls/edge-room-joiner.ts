@@ -4,7 +4,6 @@
 
 import { type Client } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { type Context } from '@dxos/context';
 import { EdgeHttpClient, type JoinCallRoomResponse } from '@dxos/edge-client';
 
@@ -21,11 +20,12 @@ export type RoomJoiner = (ctx: Context, request: RoomJoinRequest) => Promise<Joi
 
 /**
  * Room joiner backed by the authenticated {@link EdgeHttpClient} (the same client the AI provider uses),
- * pointed at the calls-service. `setIdentity` runs per call so the verifiable-presentation auth header
- * tracks the current HALO identity; the RealtimeKit API token never reaches the client.
+ * pointed at the edge worker — which proxies `/calls/*` to calls-service and provides the `/auth`
+ * challenge endpoint. `setIdentity` runs per call so the verifiable-presentation auth header tracks the
+ * current HALO identity; the RealtimeKit API token never reaches the client.
  */
 export const createEdgeRoomJoiner = (client: Client): RoomJoiner => {
-  const httpClient = new EdgeHttpClient(getEdgeServiceEndpoint(client.config, EdgeServiceName.Calls));
+  const httpClient = new EdgeHttpClient(client.config.getOrThrow('runtime.services.edge.url'));
   return (ctx, request) => {
     if (client.halo.identity.get()) {
       httpClient.setIdentity(createEdgeIdentity(client));

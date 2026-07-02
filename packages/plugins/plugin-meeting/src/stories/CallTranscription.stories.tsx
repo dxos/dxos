@@ -34,9 +34,12 @@ import { Meeting } from '../types';
 // transcription into the meeting's transcript feed. It requires a network + microphone and is NOT a CI
 // test (nothing runs until the toolbar buttons are clicked).
 //
-// Point these at an edge deployment that has the authenticated `POST /api/rooms/join` route
-// (dxos/edge#685). The default calls-service is production, which only gains the route once #685 merges;
-// set CALLS_URL to your dev/staging calls-service deployment to exercise it before then.
+// The join routes through the edge worker's `/calls/*` proxy (which forwards to calls-service and
+// provides `/auth`), so EDGE_URL must point at an edge deployment carrying that proxy + the RealtimeKit
+// join route (dxos/edge#685). For local end-to-end, run the edge dev stack
+// (`DX_PARALLEL_WRANGLER_DEV=1 START_HUB=1 START_CALLS=1 moon run edge:dev`) and set EDGE_URL to
+// http://localhost:8787/. CALLS_URL only backs the direct `/transcribe` endpoint (unused by native
+// meeting transcription).
 //
 const EDGE_URL = 'https://edge.dxos.workers.dev/';
 const CALLS_URL = 'https://calls-service.dxos.workers.dev';

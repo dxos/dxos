@@ -448,14 +448,21 @@ export class EdgeHttpClient extends BaseHttpClient {
   /**
    * Join a call room: resolves (or creates) the RealtimeKit meeting for the room and mints a participant
    * auth token bound to the caller's verified identity. Authenticated (verifiable presentation), so
-   * `setIdentity` must have been called and the client constructed with the calls-service base URL.
+   * `setIdentity` must have been called. Routes through the edge worker's `/calls/*` proxy (like the AI
+   * provider's `/ai/*`), so this client is constructed with the edge base URL — edge forwards to
+   * calls-service and provides the `/auth` challenge endpoint standalone calls-service lacks.
    */
   public async joinCallRoom(
     ctx: Context,
     body: JoinCallRoomRequest,
     args?: EdgeHttpCallArgs,
   ): Promise<JoinCallRoomResponse> {
-    return this._call(ctx, new URL('/api/rooms/join', this.baseUrl), { ...args, body, method: 'POST', auth: true });
+    return this._call(ctx, new URL('/calls/api/rooms/join', this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
+      auth: true,
+    });
   }
 
   //
