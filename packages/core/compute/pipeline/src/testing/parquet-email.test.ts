@@ -92,7 +92,12 @@ describe('email parquet → Message', () => {
 
     const { sink, items } = captureSink<SenderCount>();
     await EffectEx.runPromise(
-      Pipeline.run({ source: scriptedSource(rows), stages: [countBySenderStage<never>()], sink, context: {} }),
+      Pipeline.run({
+        source: scriptedSource(rows),
+        stages: [countBySenderStage<never>()],
+        sink,
+        context: {},
+      }),
     );
 
     // The stage emits a running count per email; the final tally is the last count seen per sender.
