@@ -122,6 +122,9 @@
     "dx.config.ts",
     "src"
   ],
+  "scripts": {
+    "import-mbox": "vite-node ./scripts/import-mbox-space.ts --"
+  },
   "dependencies": {
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
@@ -191,9 +194,11 @@
     "@dxos/ui-theme": "workspace:*",
     "@effect/platform": "catalog:",
     "@types/js-yaml": "catalog:",
+    "@types/mailparser": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",
+    "mailparser": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"
