@@ -15,6 +15,8 @@ tasks:
       - '--entryPoint=src/plugin.ts'
       - '--entryPoint=src/services/ConnectionManager.ts'
       - '--entryPoint=src/services/CredentialProvider.ts'
+      - '--entryPoint=src/services/FreeqRestApi.ts'
+      - '--entryPoint=src/services/index.ts'
       - '--entryPoint=src/services/IrcConnection.ts'
       - '--entryPoint=src/services/IrcProtocol.ts'
       - '--entryPoint=src/services/Transport.ts'
