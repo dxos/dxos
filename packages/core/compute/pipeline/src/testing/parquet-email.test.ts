@@ -2,16 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { readdir } from 'node:fs/promises';
-import { join } from 'node:path';
-
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
+import { readdir } from 'node:fs/promises';
+import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 import { type ContentBlock, Message } from '@dxos/types';
 
+import * as Pipeline from '../Pipeline';
+import * as Stage from '../Stage';
+import { captureSink, scriptedSource } from './index';
 import { type ParquetRow, parquetSource } from './parquet';
 
 // The email dataset (https://huggingface.co/datasets/corbt/enron-emails) is exposed via ROOT_DIR;
@@ -39,6 +41,24 @@ const emailToMessage = (row: ParquetRow): Message.Message => {
   });
 };
 
+type SenderCount = { readonly sender: string; readonly count: number };
+
+// A pipeline stage that maintains a running count of emails per sender, emitting the updated count
+// for each email's sender as it flows through (a stateful scan; the counter map is bounded by the
+// number of distinct senders, not the stream length).
+const countBySenderStage = <E>(): Stage.Stage<ParquetRow, SenderCount, unknown, E> => ({
+  id: 'count-by-sender',
+  transform: (input) =>
+    input.pipe(
+      Stream.mapAccum(new Map<string, number>(), (counts, row) => {
+        const sender = String(row.from ?? '');
+        const count = (counts.get(sender) ?? 0) + 1;
+        counts.set(sender, count);
+        return [counts, { sender, count }];
+      }),
+    ),
+});
+
 describe('email parquet → Message', () => {
   test('maps an email row to a Message with a text body block', ({ expect }) => {
     const row: ParquetRow = {
@@ -62,6 +82,26 @@ describe('email parquet → Message', () => {
     expect(message.properties?.messageId).toBe('<abc@example.com>');
   });
 
+  test('a pipeline stage counts emails per sender', async ({ expect }) => {
+    const rows: ParquetRow[] = [
+      { from: 'alice@example.com', body: 'one' },
+      { from: 'bob@example.com', body: 'two' },
+      { from: 'alice@example.com', body: 'three' },
+      { from: 'carol@example.com', body: 'four' },
+    ];
+
+    const { sink, items } = captureSink<SenderCount>();
+    await EffectEx.runPromise(
+      Pipeline.run({ source: scriptedSource(rows), stages: [countBySenderStage<never>()], sink, context: {} }),
+    );
+
+    // The stage emits a running count per email; the final tally is the last count seen per sender.
+    const totals = new Map(items.map(({ sender, count }) => [sender, count]));
+    expect(totals.get('alice@example.com')).toBe(2);
+    expect(totals.get('bob@example.com')).toBe(1);
+    expect(totals.get('carol@example.com')).toBe(1);
+  });
+
   // Runs only when ROOT_DIR points at the local dataset; skipped in CI so the suite stays green.
   describe.skipIf(!ROOT_DIR)('local dataset', () => {
     test('reads shards and converts the first rows to Messages', async ({ expect }) => {
@@ -70,6 +110,7 @@ describe('email parquet → Message', () => {
       if (!rootDir) {
         return;
       }
+
       const dataDir = join(rootDir, 'data');
       const files = (await readdir(dataDir))
         .filter((name) => /^train-.*\.parquet$/.test(name))
