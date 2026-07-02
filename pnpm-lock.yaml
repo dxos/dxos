@@ -5742,6 +5742,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../../sdk/types
       effect:
         specifier: 3.21.4
         version: 3.21.4

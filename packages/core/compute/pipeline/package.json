@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@dxos/effect": "workspace:*",
+    "@dxos/types": "workspace:*",
     "effect": "catalog:",
     "hyparquet-writer": "catalog:",
     "vitest": "catalog:"
