@@ -29,6 +29,7 @@
 **Reference package to mirror throughout:** `packages/plugins/plugin-bluesky`.
 
 **Commands:**
+
 - Build: `moon run plugin-freeq:build`
 - Test one file: `moon run plugin-freeq:test -- src/services/IrcProtocol.test.ts`
 - Test all: `moon run plugin-freeq:test`
@@ -39,6 +40,7 @@
 ### Task 1: Scaffold the package
 
 **Files:**
+
 - Create: `packages/plugins/plugin-freeq/package.json`
 - Create: `packages/plugins/plugin-freeq/moon.yml`
 - Create: `packages/plugins/plugin-freeq/dx.config.ts`
@@ -51,6 +53,7 @@
 - Create: `packages/plugins/plugin-freeq/src/translations.ts`
 
 **Interfaces:**
+
 - Produces: `meta` (from `src/meta.ts`), `FreeqPlugin` (lazy, from `src/plugin.ts`), `translations`.
 
 - [ ] **Step 1: Create `package.json`** (copy of `plugin-bluesky/package.json`, adapted). Key edits: `name` → `@dxos/plugin-freeq`; `description` → freeq integration; `#plugin` source → `./src/FreeqPlugin.ts` (and `.d.ts`/`.mjs` paths); drop the `#operations` import (no operations in v1) and drop `#capabilities` for now (added in Task 9). Dependencies — keep: `@dxos/app-framework`, `@dxos/app-toolkit`, `@dxos/client`, `@dxos/echo`, `@dxos/echo-client`, `@dxos/errors`, `@dxos/invariant`, `@dxos/log`, `@dxos/plugin-client`, `@dxos/plugin-thread`, `@dxos/types`, `@dxos/util`, `@effect/platform` (`catalog:`), `effect` (`catalog:`). Remove: `@dxos/compute`, `@dxos/plugin-connector`, `@dxos/plugin-magazine`, `@dxos/protocols`, `@dxos/keys`. devDependencies + peerDependencies: keep identical to bluesky. Ensure `"private": true`.
@@ -310,17 +313,19 @@ git commit -m "feat(plugin-freeq): scaffold package"
 ### Task 2: IRCv3 codec (`IrcProtocol`)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-freeq/src/services/IrcProtocol.ts`
 - Test: `packages/plugins/plugin-freeq/src/services/IrcProtocol.test.ts`
 
 **Interfaces:**
+
 - Produces:
   ```ts
   interface IrcMessage {
-    tags: Record<string, string>;   // tag values; valueless tags map to ''
-    prefix?: string;                // servername or nick!user@host, without leading ':'
-    command: string;                // e.g. 'PRIVMSG', '001', 'AUTHENTICATE'
-    params: string[];               // trailing param is the last element, un-prefixed
+    tags: Record<string, string>; // tag values; valueless tags map to ''
+    prefix?: string; // servername or nick!user@host, without leading ':'
+    command: string; // e.g. 'PRIVMSG', '001', 'AUTHENTICATE'
+    params: string[]; // trailing param is the last element, un-prefixed
   }
   export const parse: (line: string) => IrcMessage;
   export const serialize: (message: Omit<IrcMessage, 'tags'> & { tags?: Record<string, string> }) => string;
@@ -483,7 +488,9 @@ export const serialize = (message: Omit<IrcMessage, 'tags'> & { tags?: Record<st
   const parts: string[] = [];
   const tagEntries = Object.entries(message.tags ?? {});
   if (tagEntries.length > 0) {
-    parts.push('@' + tagEntries.map(([key, value]) => (value === '' ? key : `${key}=${escapeTagValue(value)}`)).join(';'));
+    parts.push(
+      '@' + tagEntries.map(([key, value]) => (value === '' ? key : `${key}=${escapeTagValue(value)}`)).join(';'),
+    );
   }
   if (message.prefix) {
     parts.push(':' + message.prefix);
@@ -516,13 +523,16 @@ git commit -m "feat(plugin-freeq): add IRCv3 codec"
 ### Task 3: Constants, errors, and the `FreeqChannel` schema
 
 **Files:**
+
 - Create: `packages/plugins/plugin-freeq/src/constants.ts`
 - Create: `packages/plugins/plugin-freeq/src/errors.ts`
 - Create: `packages/plugins/plugin-freeq/src/types.ts`
 - Test: `packages/plugins/plugin-freeq/src/types.test.ts`
 
 **Interfaces:**
+
 - Produces:
+
   ```ts
   export const FREEQ_BACKEND_KIND = 'org.dxos.channel.backend.freeq';
   export const FREEQ_SOURCE = 'freeq';
@@ -587,7 +597,11 @@ import { FreeqChannel, makeFreeqChannel } from './types';
 
 describe('FreeqChannel', () => {
   test('makeFreeqChannel builds a config object', ({ expect }) => {
-    const channel = makeFreeqChannel({ serverUrl: 'wss://freeq.example', channel: '#general', handle: 'alice.bsky.social' });
+    const channel = makeFreeqChannel({
+      serverUrl: 'wss://freeq.example',
+      channel: '#general',
+      handle: 'alice.bsky.social',
+    });
     expect(Obj.instanceOf(FreeqChannel, channel)).toBe(true);
     expect(channel.serverUrl).toBe('wss://freeq.example');
     expect(channel.channel).toBe('#general');
@@ -657,14 +671,20 @@ git commit -m "feat(plugin-freeq): add constants, errors, FreeqChannel schema"
 ### Task 4: `CredentialProvider` (SASL seam + app-password impl)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-freeq/src/services/CredentialProvider.ts`
 - Test: `packages/plugins/plugin-freeq/src/services/CredentialProvider.test.ts`
 
 **Interfaces:**
+
 - Consumes: `FreeqAuthError` (Task 3), `@effect/platform` `HttpClient`.
 - Produces:
   ```ts
-  export interface SaslChallenge { sessionId: string; nonce: string; ts: number }
+  export interface SaslChallenge {
+    sessionId: string;
+    nonce: string;
+    ts: number;
+  }
   export interface CredentialProvider {
     // Returns the base64 SASL response payload for the given challenge.
     respond: (challenge: SaslChallenge) => Effect.Effect<string, FreeqAuthError, HttpClient.HttpClient>;
@@ -674,7 +694,7 @@ git commit -m "feat(plugin-freeq): add constants, errors, FreeqChannel schema"
   export const makeAppPasswordCredentialProvider: (options: {
     handle: string;
     appPassword: string;
-    pdsUrl: string;         // resolved PDS base, e.g. https://bsky.social
+    pdsUrl: string; // resolved PDS base, e.g. https://bsky.social
   }) => CredentialProvider;
   ```
 - The SASL response payload shape is a base64-encoded JSON `{ method: 'pds-session', did, jwt }`. **This shape is provisional — confirm against the freeq server in Task 5/Task 11 and adjust `buildResponse` only.**
@@ -702,9 +722,7 @@ const stubHttpClient = (body: unknown) =>
   Layer.succeed(
     HttpClient.HttpClient,
     HttpClient.make((request) =>
-      Effect.succeed(
-        HttpClientResponse.fromWeb(request, new Response(JSON.stringify(body), { status: 200 })),
-      ),
+      Effect.succeed(HttpClientResponse.fromWeb(request, new Response(JSON.stringify(body), { status: 200 }))),
     ),
   );
 
@@ -718,7 +736,10 @@ describe('AppPasswordCredentialProvider', () => {
 
     const payload = await provider
       .respond({ sessionId: 's1', nonce: 'n1', ts: 1 })
-      .pipe(Effect.provide(stubHttpClient({ did: 'did:plc:alice', accessJwt: 'JWT123', refreshJwt: 'R1' })), Effect.runPromise);
+      .pipe(
+        Effect.provide(stubHttpClient({ did: 'did:plc:alice', accessJwt: 'JWT123', refreshJwt: 'R1' })),
+        Effect.runPromise,
+      );
 
     const decoded = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(payload), (c) => c.charCodeAt(0))));
     expect(decoded).toMatchObject({ method: 'pds-session', did: 'did:plc:alice', jwt: 'JWT123' });
@@ -781,7 +802,10 @@ export const makeAppPasswordCredentialProvider = (options: {
     const request = HttpClientRequest.post(`${options.pdsUrl}/xrpc/com.atproto.server.createSession`).pipe(
       HttpClientRequest.setHeader('content-type', 'application/json'),
       HttpClientRequest.setBody(
-        HttpBody.text(JSON.stringify({ identifier: options.handle, password: options.appPassword }), 'application/json'),
+        HttpBody.text(
+          JSON.stringify({ identifier: options.handle, password: options.appPassword }),
+          'application/json',
+        ),
       ),
     );
     const response = yield* client.execute(request);
@@ -822,13 +846,16 @@ git commit -m "feat(plugin-freeq): add credential provider (app-password SASL)"
 ### Task 5: `IrcConnection` (WebSocket + SASL + JOIN/PRIVMSG state machine)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-freeq/src/services/Transport.ts`
 - Create: `packages/plugins/plugin-freeq/src/services/IrcConnection.ts`
 - Test: `packages/plugins/plugin-freeq/src/services/IrcConnection.test.ts`
 
 **Interfaces:**
+
 - Consumes: `IrcProtocol` (Task 2), `CredentialProvider`/`SaslChallenge` (Task 4), `FreeqConnectionError`/`FreeqAuthError` (Task 3), constants (Task 3), `HttpClient` (provided by the caller when running `credentialProvider.respond`).
 - Produces:
+
   ```ts
   // Line-oriented transport; the WebSocket impl frames on \r\n. Injected for tests.
   export interface Transport {
@@ -840,10 +867,15 @@ git commit -m "feat(plugin-freeq): add credential provider (app-password SASL)"
   }
   export const makeWebSocketTransport: (url: string, ctor?: typeof WebSocket) => Transport;
 
-  export interface IncomingMessage { id: string; nick: string; text: string; ts: number }
+  export interface IncomingMessage {
+    id: string;
+    nick: string;
+    text: string;
+    ts: number;
+  }
 
   export interface IrcConnection {
-    connect: () => Promise<void>;                 // resolves once SASL-registered (numeric 001)
+    connect: () => Promise<void>; // resolves once SASL-registered (numeric 001)
     join: (channel: string) => Promise<void>;
     part: (channel: string) => void;
     sendMessage: (channel: string, text: string) => void;
@@ -853,10 +885,11 @@ git commit -m "feat(plugin-freeq): add credential provider (app-password SASL)"
   export const makeIrcConnection: (options: {
     transport: Transport;
     nick: string;
-    credentialProvider?: CredentialProvider;   // omit for guest
+    credentialProvider?: CredentialProvider; // omit for guest
     runResponse: (effect: Effect.Effect<string, FreeqAuthError, HttpClient.HttpClient>) => Promise<string>;
   }) => IrcConnection;
   ```
+
 - `runResponse` is how the caller supplies the `HttpClient` layer (it runs the provider's `respond` effect to a promise). Keeps `IrcConnection` free of Effect wiring.
 
 - [ ] **Step 1: Write failing test** (`IrcConnection.test.ts`) driving a `MockTransport` through the full handshake:
@@ -1171,10 +1204,12 @@ git commit -m "feat(plugin-freeq): add IRC connection state machine"
 ### Task 6: `ConnectionManager` (shared socket, ref-counted)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-freeq/src/services/ConnectionManager.ts`
 - Test: `packages/plugins/plugin-freeq/src/services/ConnectionManager.test.ts`
 
 **Interfaces:**
+
 - Consumes: `IrcConnection`/`makeIrcConnection`/`Transport` (Task 5), `makeWebSocketTransport` (Task 5), `CredentialProvider` (Task 4).
 - Produces:
   ```ts
@@ -1380,18 +1415,27 @@ git commit -m "feat(plugin-freeq): add ref-counted connection manager"
 ### Task 7: `FreeqRestApi` (history backfill)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-freeq/src/services/FreeqRestApi.ts`
 - Create: `packages/plugins/plugin-freeq/src/services/index.ts`
 - Test: `packages/plugins/plugin-freeq/src/services/FreeqRestApi.test.ts`
 
 **Interfaces:**
+
 - Consumes: `HttpClient`, `FreeqConnectionError` (Task 3).
 - Produces:
   ```ts
-  export interface FreeqRestMessage { id: string; nick: string; text: string; ts: number }
+  export interface FreeqRestMessage {
+    id: string;
+    nick: string;
+    text: string;
+    ts: number;
+  }
   // GET {httpBase}/api/v1/channels/{channel}/messages  (channel without leading '#').
-  export const getMessages: (options: { httpBase: string; channel: string }) =>
-    Effect.Effect<ReadonlyArray<FreeqRestMessage>, FreeqConnectionError, HttpClient.HttpClient>;
+  export const getMessages: (options: {
+    httpBase: string;
+    channel: string;
+  }) => Effect.Effect<ReadonlyArray<FreeqRestMessage>, FreeqConnectionError, HttpClient.HttpClient>;
   // Derives the REST base (https) from a ws(s):// server URL.
   export const httpBaseFromWs: (serverUrl: string) => string;
   ```
@@ -1428,9 +1472,7 @@ describe('FreeqRestApi', () => {
 
   test('getMessages maps the REST payload', async ({ expect }) => {
     const messages = await FreeqRestApi.getMessages({ httpBase: 'https://freeq.example', channel: '#general' }).pipe(
-      Effect.provide(
-        stubHttpClient({ messages: [{ id: 'm1', nick: 'bob', text: 'hi', ts: 1700000000000 }] }),
-      ),
+      Effect.provide(stubHttpClient({ messages: [{ id: 'm1', nick: 'bob', text: 'hi', ts: 1700000000000 }] })),
       Effect.runPromise,
     );
     expect(messages).toEqual([{ id: 'm1', nick: 'bob', text: 'hi', ts: 1700000000000 }]);
@@ -1480,9 +1522,7 @@ export const getMessages = (options: {
   Effect.gen(function* () {
     const client = yield* HttpClient.HttpClient;
     const name = options.channel.replace(/^#/, '');
-    const request = HttpClientRequest.get(
-      `${options.httpBase}/api/v1/channels/${encodeURIComponent(name)}/messages`,
-    );
+    const request = HttpClientRequest.get(`${options.httpBase}/api/v1/channels/${encodeURIComponent(name)}/messages`);
     const response = yield* client.execute(request);
     const payload = yield* response.json;
     return (payload as RestPayload).messages ?? [];
@@ -1523,19 +1563,23 @@ git commit -m "feat(plugin-freeq): add REST history backfill"
 ### Task 8: `channel-backend` provider
 
 **Files:**
+
 - Create: `packages/plugins/plugin-freeq/src/FreeqCapabilities.ts`
 - Create: `packages/plugins/plugin-freeq/src/capabilities/channel-backend.ts`
 - Test: `packages/plugins/plugin-freeq/src/capabilities/channel-backend.test.ts`
 
 **Interfaces:**
+
 - Consumes: `ThreadCapabilities.ChannelBackendProvider` (`@dxos/plugin-thread`), `Message` (`@dxos/types`), `ConnectionManager`/`IncomingMessage` (Tasks 5–6), `FreeqRestApi` (Task 7), `FreeqChannel`/`makeFreeqChannel` (Task 3), `FREEQ_BACKEND_KIND` (Task 3).
 - Produces:
   ```ts
   // In FreeqCapabilities.ts:
-  export const ConnectionManager = Capability.make<ConnectionManagerClass>(`${meta.profile.key}.capability.connection-manager`);
+  export const ConnectionManager = Capability.make<ConnectionManagerClass>(
+    `${meta.profile.key}.capability.connection-manager`,
+  );
   // In channel-backend.ts:
   export const makeFreeqChannelBackend: (manager: ConnectionManagerClass) => ThreadCapabilities.ChannelBackendProvider;
-  export const toMessage: (incoming: IncomingMessage) => Message.Message;   // exported for tests
+  export const toMessage: (incoming: IncomingMessage) => Message.Message; // exported for tests
   ```
 - The provider builds `ConnectionParams` from the loaded `FreeqChannel`. **For this task the connection is unauthenticated (guest, `credentialProvider` omitted, `readOnly` when no handle).** Wiring the stored `AccessToken` credential into `credentialProvider` is finished in Task 9 where the `Client` capability is available.
 
@@ -1574,7 +1618,10 @@ describe('freeq channel backend', () => {
 
     // A FreeqChannel-shaped config resolved by a Channel-shaped stub.
     const channel = {
-      backend: { kind: 'org.dxos.channel.backend.freeq', config: { load: async () => ({ serverUrl: 'wss://s', channel: '#c' }) } },
+      backend: {
+        kind: 'org.dxos.channel.backend.freeq',
+        config: { load: async () => ({ serverUrl: 'wss://s', channel: '#c' }) },
+      },
     } as any;
 
     const backend = makeFreeqChannelBackend(manager);
@@ -1625,11 +1672,7 @@ import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { Message } from '@dxos/types';
 
 import { FREEQ_BACKEND_KIND } from '../constants';
-import {
-  type ConnectionManager,
-  type IncomingMessage,
-  FreeqRestApi,
-} from '../services';
+import { type ConnectionManager, type IncomingMessage, FreeqRestApi } from '../services';
 import { FreeqChannel, makeFreeqChannel } from '../types';
 
 /** Maps an inbound freeq/IRC message to a transient (non-persisted) chat message. */
@@ -1694,7 +1737,10 @@ export const makeFreeqChannelBackend = (manager: ConnectionManager): ThreadCapab
       });
 
       // Backfill history (best-effort; live messages win on id collision).
-      void FreeqRestApi.getMessages({ httpBase: FreeqRestApi.httpBaseFromWs(config.serverUrl), channel: config.channel })
+      void FreeqRestApi.getMessages({
+        httpBase: FreeqRestApi.httpBaseFromWs(config.serverUrl),
+        channel: config.channel,
+      })
         .pipe(Effect.provide(FetchHttpClient.layer), Effect.runPromise)
         .then((history) => {
           if (cancelled) {
@@ -1755,6 +1801,7 @@ git commit -m "feat(plugin-freeq): add live channel backend provider"
 ### Task 9: Wire the plugin (capabilities + credentials)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-freeq/src/capabilities/connection-manager.ts`
 - Create: `packages/plugins/plugin-freeq/src/capabilities/index.ts`
 - Modify: `packages/plugins/plugin-freeq/src/FreeqPlugin.ts`
@@ -1763,6 +1810,7 @@ git commit -m "feat(plugin-freeq): add live channel backend provider"
 - Modify: `packages/plugins/plugin-freeq/moon.yml`
 
 **Interfaces:**
+
 - Consumes: `FreeqCapabilities.ConnectionManager` (Task 8), `makeFreeqChannelBackend` (Task 8), `ThreadCapabilities.ChannelBackend` (`@dxos/plugin-thread`), `ConnectionManager` class (Task 6).
 - Produces: `ChannelBackend`, `ConnectionManager` lazy capability modules; a `FreeqPlugin` that contributes schema + both modules.
 
@@ -1825,8 +1873,9 @@ import { type ConnectionManager } from '../services';
 export const ChannelBackend = Capability.lazy<ThreadCapabilities.ChannelBackendProvider>('FreeqChannelBackend', () =>
   import('./channel-backend').then((module) => module.ChannelBackend),
 );
-export const ConnectionManager = Capability.lazy<ConnectionManager>('FreeqConnectionManager', () =>
-  import('./connection-manager'),
+export const ConnectionManager = Capability.lazy<ConnectionManager>(
+  'FreeqConnectionManager',
+  () => import('./connection-manager'),
 );
 ```
 
@@ -1875,7 +1924,6 @@ export default FreeqPlugin;
 - [ ] **Step 5: Add `#capabilities` to `package.json` `imports`** (same shape as bluesky's `#capabilities` entry, pointing at `./src/capabilities/index.ts`). Add `--entryPoint=src/capabilities/index.ts` and `--entryPoint=src/FreeqCapabilities.ts` to `moon.yml`. Append `export * from './FreeqCapabilities';` to `src/index.ts` if the capability tag should be public (optional).
 
 - [ ] **Step 6: Credential wiring (Phase-1, best-effort).** In `makeFreeqChannelBackend`, when a `handle` is present, build an `AppPasswordCredentialProvider` from a stored `AccessToken`. Since `subscribe` has no Effect context, resolve the `Client` capability at module-activation time and pass a `lookupCredential(handle) => { appPassword; pdsUrl } | undefined` function into `makeFreeqChannelBackend`. Implement `lookupCredential` by querying the space for an `AccessToken` with `source === FREEQ_SOURCE` and matching account. **If no credential exists, keep the guest path (current behavior).** Add a focused unit test that, given a `lookupCredential` returning a stub, the acquired `ConnectionParams.credentialProvider` is defined.
-
   - Modify signature: `makeFreeqChannelBackend(manager, lookupCredential?)`.
   - In the `ChannelBackend` module: `const client = yield* Capability.get(ClientCapabilities.Client);` then pass a `lookupCredential` closure that reads `AccessToken` objects. (Follow plugin-bluesky's `Credentials.fromConnection` for how it loads `AccessToken` and resolves the PDS via `resolveHandle`; reuse that PDS-resolution approach or copy the minimal `resolvePds` helper into `services/FreeqRestApi.ts`.)
 
@@ -1903,11 +1951,13 @@ git commit -m "feat(plugin-freeq): wire plugin capabilities and credentials"
 ### Task 10: Register in the Composer app
 
 **Files:**
+
 - Modify: `packages/apps/composer-app/package.json`
 - Modify: `packages/apps/composer-app/src/plugin-defs.tsx`
 - Modify: `packages/apps/composer-app/tsconfig.json`
 
 **Interfaces:**
+
 - Consumes: `FreeqPlugin` (from `@dxos/plugin-freeq/plugin`).
 
 - [ ] **Step 1: Add the dependency** — in `packages/apps/composer-app/package.json`, add `"@dxos/plugin-freeq": "workspace:*",` alongside `"@dxos/plugin-bluesky"` (keep alphabetical order among the `@dxos/plugin-*` entries).
@@ -1936,10 +1986,12 @@ git commit -m "feat(composer-app): register plugin-freeq"
 ### Task 11: Storybook + manual end-to-end verification
 
 **Files:**
+
 - Create: `packages/plugins/plugin-freeq/src/stories/FreeqChannel.stories.tsx`
 - Modify: `packages/plugins/plugin-freeq/moon.yml` (add `storybook` tags/tasks if the story needs them — mirror `plugin-bluesky/moon.yml` storybook config if present)
 
 **Interfaces:**
+
 - Consumes: `FreeqChannel`/`makeFreeqChannel`, the `ChannelArticle` container from `@dxos/plugin-thread` (dev dependency), a running freeq server.
 
 - [ ] **Step 1: Write the story** — a story that renders a `plugin-thread` channel bound to a `FreeqChannel` config. Follow `plugin-bluesky/src/stories/BlueskyChannel.stories.tsx` structure. Per the ECHO-in-stories rule, create the `FreeqChannel` inside a `render` function via `useMemo([], …)` + `createObject`, never in module-level `args`.
@@ -1975,4 +2027,7 @@ git commit -m "feat(plugin-freeq): add storybook story and finalize protocol sha
 - **Protocol shapes are provisional.** Three spots are explicitly isolated so a mismatch against the real server is a one-line fix, not a redesign: the SASL response builder (`CredentialProvider.buildResponse`), the SASL numeric-code `case`s (`IrcConnection`), and the REST decode (`FreeqRestApi.getMessages`). Task 11 confirms all three.
 - **Credential storage** reuses plugin-bluesky's `AccessToken` pattern (`source: 'freeq'`); the app-password capture form and OAuth (Phase 2) are out of scope here.
 - **`send` acquire/release** is intentionally minimal in Task 8 and tightened in Task 9; if reconnection semantics prove fiddly, promote the connection handle held by `subscribe` into the send path via a per-channel handle registry keyed on the `Channel` id.
+
+```
+
 ```

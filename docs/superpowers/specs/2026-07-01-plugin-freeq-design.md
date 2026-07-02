@@ -9,7 +9,7 @@
 `@dxos/plugin-freeq` is a new Composer plugin that integrates [freeq](https://github.com/chad/freeq) — an
 IRCv3 chat service that authenticates users via AT Protocol / Bluesky identities. The plugin contributes a
 **live, read+write message backend** to `plugin-thread` via the existing `ThreadCapabilities.ChannelBackend`
-capability. It is the first *bidirectional, streaming* external backend (bluesky is read-only polling; the
+capability. It is the first _bidirectional, streaming_ external backend (bluesky is read-only polling; the
 default feed backend is local ECHO).
 
 ## Goals
@@ -41,19 +41,17 @@ default feed backend is local ECHO).
 
 ```ts
 interface ChannelBackendProvider {
-  kind: string;                    // matches Channel.backend.kind
+  kind: string; // matches Channel.backend.kind
   label: string;
   icon?: string;
-  createFields: Schema.Schema.AnyNoContext;              // extra create-form inputs
+  createFields: Schema.Schema.AnyNoContext; // extra create-form inputs
   makeConfig: (options: Record<string, unknown>) => Obj.Any; // builds the persisted config object
   subscribe: (channel: Channel.Channel, onMessages: (messages: readonly Message.Message[]) => void) => () => void;
   send: (channel: Channel.Channel, message: Message.Message) => Effect.Effect<void, Error, Capability.Service>;
   readOnly?: (channel: Channel.Channel) => boolean;
 }
 
-export const ChannelBackend = Capability.make<ChannelBackendProvider>(
-  `${meta.profile.key}.capability.channel-backend`,
-);
+export const ChannelBackend = Capability.make<ChannelBackendProvider>(`${meta.profile.key}.capability.channel-backend`);
 ```
 
 - A `Channel` object (`packages/sdk/types/src/types/Channel.ts`) stores `backend.kind` (the provider id) and
@@ -66,6 +64,7 @@ export const ChannelBackend = Capability.make<ChannelBackendProvider>(
   more than one provider exists or any provider has extra fields.
 
 Reference implementations to mirror:
+
 - Default backend: `plugin-thread/src/capabilities/channel-backend-feed.ts` (live via ECHO reactive query).
 - External backend: `plugin-bluesky/src/capabilities/channel-backend.ts` (read-only, 30s polling, transient
   `Message.Message`, cached by stable id). plugin-bluesky uses **no `@atproto` SDK** — plain Effect
@@ -88,16 +87,20 @@ Reference implementations to mirror:
 
 freeq's SASL accepts three response types; only one is fully browser-feasible today:
 
-| Method | Browser-feasible | Notes |
-|---|---|---|
-| App-password → PDS session JWT | ✅ Yes (Phase 1) | `com.atproto.server.createSession(handle, app-password)` → `accessJwt`, presented as the PDS-session SASL response. Pure client-side. |
-| DPoP-bound OAuth token | ⚠️ Phase 2 | DXOS Edge holds the DPoP signing key and never releases it; binding a token to freeq's nonce requires signing the challenge on Edge. Needs a new Edge endpoint. Out of scope for this plugin-only change. |
-| DID-key signature | ✗ | Identity signing key not held client-side. |
+| Method                         | Browser-feasible | Notes                                                                                                                                                                                                     |
+| ------------------------------ | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| App-password → PDS session JWT | ✅ Yes (Phase 1) | `com.atproto.server.createSession(handle, app-password)` → `accessJwt`, presented as the PDS-session SASL response. Pure client-side.                                                                     |
+| DPoP-bound OAuth token         | ⚠️ Phase 2       | DXOS Edge holds the DPoP signing key and never releases it; binding a token to freeq's nonce requires signing the challenge on Edge. Needs a new Edge endpoint. Out of scope for this plugin-only change. |
+| DID-key signature              | ✗                | Identity signing key not held client-side.                                                                                                                                                                |
 
 ### CredentialProvider seam
 
 ```ts
-interface SaslChallenge { sessionId: string; nonce: string; ts: number }
+interface SaslChallenge {
+  sessionId: string;
+  nonce: string;
+  ts: number;
+}
 
 interface CredentialProvider {
   /** Produce the base64 SASL response payload for a freeq ATPROTO-CHALLENGE. */
@@ -163,7 +166,7 @@ packages/plugins/plugin-freeq/
   Effect `HttpClient` for `createSession`/`refreshSession`.
 
 - **`IrcConnection`** — owns exactly one WebSocket. State machine: `connecting → cap-negotiation →
-  authenticating (SASL) → registered → joined`. Responsibilities: CAP LS/REQ/END, the `ATPROTO-CHALLENGE`
+authenticating (SASL) → registered → joined`. Responsibilities: CAP LS/REQ/END, the `ATPROTO-CHALLENGE`
   exchange (delegating the response to a `CredentialProvider`), `NICK`/`USER`, `JOIN`/`PART`, inbound
   `PRIVMSG`/`NOTICE` dispatch keyed by channel, outbound `PRIVMSG`, `PING`/`PONG` keepalive, and reconnect with
   exponential backoff. Emits per-channel message events and membership. Guest fallback: if no credentials are
@@ -193,15 +196,16 @@ packages/plugins/plugin-freeq/
 
 ```ts
 Schema.Struct({
-  serverUrl: Schema.String,   // wss://host[:port]
-  channel: Schema.String,     // "#general"
+  serverUrl: Schema.String, // wss://host[:port]
+  channel: Schema.String, // "#general"
   handle: Schema.optional(Schema.String), // atproto handle/DID for auth binding
-})
+});
 ```
 
 ### Message mapping
 
 IRC `PRIVMSG` → `Message.make({ sender: { name: <nick> }, blocks: [{ _tag: 'text', text }], created })`.
+
 - Sender uses the IRC nick as `name` (freeq binds nick↔DID; DID mapping can enrich `sender` later).
 - Transient; cached by `msgid` so identity is stable across re-renders and merges with REST backfill.
 
