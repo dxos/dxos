@@ -1,0 +1,29 @@
+layer: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - pack
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/constants.ts'
+      - '--entryPoint=src/errors.ts'
+      - '--entryPoint=src/FreeqCapabilities.ts'
+      - '--entryPoint=src/FreeqPlugin.ts'
+      - '--entryPoint=src/meta.ts'
+      - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/capabilities/index.ts'
+      - '--entryPoint=src/capabilities/connection-manager.ts'
+      - '--entryPoint=src/capabilities/channel-backend.ts'
+      - '--entryPoint=src/services/ConnectionManager.ts'
+      - '--entryPoint=src/services/CredentialProvider.ts'
+      - '--entryPoint=src/services/FreeqRestApi.ts'
+      - '--entryPoint=src/services/index.ts'
+      - '--entryPoint=src/services/IrcConnection.ts'
+      - '--entryPoint=src/services/IrcProtocol.ts'
+      - '--entryPoint=src/services/Transport.ts'
+      - '--entryPoint=src/translations.ts'
+      - '--entryPoint=src/types.ts'
+      - '--platform=neutral'
