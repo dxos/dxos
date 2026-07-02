@@ -1324,7 +1324,7 @@ catalogs:
       specifier: ^0.18.5
       version: 0.18.12
     lit:
-      specifier: ^3.3.1
+      specifier: ^3.3.3
       version: 3.3.3
     localforage:
       specifier: ^1.10.0
