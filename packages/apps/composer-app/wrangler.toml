@@ -11,15 +11,18 @@
 #
 # Local dev: `moon run composer-app:bundle && wrangler dev` (uses the default/top-level bindings below).
 #
+# Bindings match what `_worker.ts` actually reads: ASSETS, ENVIRONMENT, SIGNOZ_INGEST_URL, FEEDBACK_LOGS
+# (R2), and the SIGNOZ_INGESTION_KEY secret. The old Pages `DB` (D1) binding is intentionally dropped — the
+# Worker never references it, and a stale database_id blocks deploy (D1 bindings are validated at deploy).
+#
 
 name = "composer"
 main = "./out/composer/_worker.js"
 compatibility_date = "2024-04-05"
 
 # Default / local-dev bindings (used by `wrangler dev`; per-env deploys use the [env.*] sections). Inline
-# form is deliberate — a `[vars]` table header would swallow the following d1/r2 keys into `vars.*`.
+# form is deliberate — a `[vars]` table header would swallow the following r2 key into `vars.*`.
 vars = { ENVIRONMENT = "dev", SIGNOZ_INGEST_URL = "https://ingest.eu.signoz.cloud" }
-d1_databases = [{ binding = "DB", database_name = "dev-users", database_id = "756b796d-02e5-45e7-9067-12144a2124b2" }]
 r2_buckets = [{ binding = "FEEDBACK_LOGS", bucket_name = "composer-feedback-logs-dev" }]
 
 [assets]
@@ -33,30 +36,26 @@ run_worker_first = ["/api/*"]
 # --- Per-environment Workers ---
 # `name` is the deployed Worker (production = the bare name that carries the custom domain; other envs are
 # suffixed). Bindings are NOT inherited into [env.*], so each repeats them.
-# NOTE (Cloudflare-side): each Worker needs its D1 database + R2 bucket to exist and the
-# `SIGNOZ_INGESTION_KEY` secret set (`wrangler secret put --env <env>`). labs + main use the dev
-# resources, staging mirrors the old Pages `preview`, production uses prod — confirm against the account.
+# NOTE (Cloudflare-side): each Worker needs its R2 bucket to exist and the `SIGNOZ_INGESTION_KEY` secret
+# set (`wrangler secret put --env <env>`). labs + main use the dev bucket, staging mirrors the old Pages
+# `preview`, production uses prod — confirm against the account.
 
 [env.production]
 name = "composer"
 vars = { ENVIRONMENT = "production", SIGNOZ_INGEST_URL = "https://ingest.eu.signoz.cloud" }
-d1_databases = [{ binding = "DB", database_name = "prod-users", database_id = "f48ca977-f25f-49d2-a203-5fc0cca01f55" }]
 r2_buckets = [{ binding = "FEEDBACK_LOGS", bucket_name = "composer-feedback-logs" }]
 
 [env.staging]
 name = "composer-staging"
 vars = { ENVIRONMENT = "staging", SIGNOZ_INGEST_URL = "https://ingest.eu.signoz.cloud" }
-d1_databases = [{ binding = "DB", database_name = "prod-users", database_id = "f48ca977-f25f-49d2-a203-5fc0cca01f55" }]
 r2_buckets = [{ binding = "FEEDBACK_LOGS", bucket_name = "composer-feedback-logs-preview" }]
 
 [env.labs]
 name = "composer-labs"
 vars = { ENVIRONMENT = "labs", SIGNOZ_INGEST_URL = "https://ingest.eu.signoz.cloud" }
-d1_databases = [{ binding = "DB", database_name = "dev-users", database_id = "756b796d-02e5-45e7-9067-12144a2124b2" }]
 r2_buckets = [{ binding = "FEEDBACK_LOGS", bucket_name = "composer-feedback-logs-dev" }]
 
 [env.main]
 name = "composer-main"
 vars = { ENVIRONMENT = "main", SIGNOZ_INGEST_URL = "https://ingest.eu.signoz.cloud" }
-d1_databases = [{ binding = "DB", database_name = "dev-users", database_id = "756b796d-02e5-45e7-9067-12144a2124b2" }]
 r2_buckets = [{ binding = "FEEDBACK_LOGS", bucket_name = "composer-feedback-logs-dev" }]
