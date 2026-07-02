@@ -338,7 +338,7 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
       const spec = triggerFormSpec(values);
       setKind(spec.kind);
       const enabled = values.enabled === true;
-      const computeEnvironment = (values as TriggerFormInput).computeEnvironment;
+      const computeEnvironment = values.computeEnvironment;
       // Edit the spec, `enabled`, and `computeEnvironment` on the trigger; the trigger's `function` and `input`
       // (including the instructions binding and any operation-specific bindings like `{ magazine }`) are wired
       // once by `Routine.make`, so they are not re-derived here.
