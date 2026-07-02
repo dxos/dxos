@@ -66,8 +66,6 @@ export const Welcome = ({
   onCreateAccount,
   onCreateAccountWithOAuth,
   onJoinWaitlist,
-  onSpaceInvitation,
-  onGoToLogin,
 }: WelcomeScreenProps) => {
   const { t } = useTranslation(meta.profile.key);
 
@@ -422,25 +420,6 @@ export const Welcome = ({
           </Tabs.Root>
         )}
 
-        {state === WelcomeState.SPACE_INVITATION && (
-          <div className='flex flex-col gap-8'>
-            <div className='flex flex-col gap-2'>
-              <h1 className='text-2xl'>{t('space-invitation.title')}</h1>
-              <p className='text-description'>{t('space-invitation.description')}</p>
-            </div>
-            <CompoundRow icon='ph--planet--regular' onClick={onSpaceInvitation}>
-              {t('join-space-button.label')}
-            </CompoundRow>
-            <div className='flex flex-col gap-2'>
-              <h1 className='text-2xl'>{t('go-to-login.title')}</h1>
-              <p className='text-description'>{t('go-to-login.description')}</p>
-            </div>
-            <CompoundRow icon='ph--user--regular' onClick={onGoToLogin}>
-              {t('go-to-login-button.label')}
-            </CompoundRow>
-          </div>
-        )}
-
         {(state === WelcomeState.EMAIL_SENT || state === WelcomeState.LOGIN_SENT) && (
           <div className='flex flex-col gap-8'>
             <div className='flex flex-col gap-2'>
@@ -777,18 +756,6 @@ const InlineForm = ({
     </Input.Root>
   );
 };
-
-const CompoundRow = ({ children, icon, onClick }: PropsWithChildren<{ icon: string; onClick?: () => unknown }>) => (
-  <button
-    type='button'
-    className='flex items-center gap-3 px-4 py-3 rounded-md border border-separator hover:bg-neutral-800/50 text-left w-full'
-    onClick={onClick}
-  >
-    <Icon icon={icon} size={5} />
-    <span className='flex-1'>{children}</span>
-    <Icon icon='ph--caret-right--bold' size={4} />
-  </button>
-);
 
 /** Horizontal "or" separator between alternative auth methods. */
 const OrDivider = ({ children }: PropsWithChildren) => (

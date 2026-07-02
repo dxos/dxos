@@ -41,7 +41,7 @@ export class WsReplicant {
     await this._edgeConnection.open();
 
     this._peerInfo = {
-      identityKey: this._edgeConnection.identityKey,
+      identityDid: this._edgeConnection.identityDid,
       peerKey: this._edgeConnection.peerKey,
     };
 

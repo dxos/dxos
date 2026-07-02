@@ -32,7 +32,6 @@ catalog:
   '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.37
   '@automerge/automerge-subduction': 0.16.0
   '@babel/core': ^7.18.13
-  '@babel/parser': 7.28.5
   '@babel/preset-typescript': ^7.27.1
   '@babel/runtime': ^7.9.6
   '@babylonjs/core': ^7.52.5
@@ -128,21 +127,21 @@ catalog:
   '@octokit/core': ^7.0.6
   '@octokit/rest': ^22.0.1
   '@opentelemetry/api': ^1.9.1
-  '@opentelemetry/api-logs': ^0.218.0
-  '@opentelemetry/auto-instrumentations-node': ^0.76.0
-  '@opentelemetry/auto-instrumentations-web': ^0.63.0
-  '@opentelemetry/core': ^2.7.1
-  '@opentelemetry/exporter-logs-otlp-http': ^0.218.0
-  '@opentelemetry/exporter-metrics-otlp-http': ^0.218.0
-  '@opentelemetry/exporter-trace-otlp-http': ^0.218.0
-  '@opentelemetry/instrumentation': ^0.218.0
-  '@opentelemetry/resources': ^2.7.1
-  '@opentelemetry/sdk-logs': ^0.218.0
-  '@opentelemetry/sdk-metrics': ^2.7.1
-  '@opentelemetry/sdk-node': ^0.218.0
-  '@opentelemetry/sdk-trace-base': ^2.7.1
-  '@opentelemetry/sdk-trace-node': ^2.7.1
-  '@opentelemetry/sdk-trace-web': ^2.7.1
+  '@opentelemetry/api-logs': ^0.219.0
+  '@opentelemetry/auto-instrumentations-node': ^0.77.0
+  '@opentelemetry/auto-instrumentations-web': ^0.64.0
+  '@opentelemetry/core': ^2.8.0
+  '@opentelemetry/exporter-logs-otlp-http': ^0.219.0
+  '@opentelemetry/exporter-metrics-otlp-http': ^0.219.0
+  '@opentelemetry/exporter-trace-otlp-http': ^0.219.0
+  '@opentelemetry/instrumentation': ^0.219.0
+  '@opentelemetry/resources': ^2.8.0
+  '@opentelemetry/sdk-logs': ^0.219.0
+  '@opentelemetry/sdk-metrics': ^2.8.0
+  '@opentelemetry/sdk-node': ^0.219.0
+  '@opentelemetry/sdk-trace-base': ^2.8.0
+  '@opentelemetry/sdk-trace-node': ^2.8.0
+  '@opentelemetry/sdk-trace-web': ^2.8.0
   '@opentelemetry/semantic-conventions': ^1.41.1
   '@opentui/core': 0.1.61
   '@opentui/core-darwin-arm64': 0.1.61

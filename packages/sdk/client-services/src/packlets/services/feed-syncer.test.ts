@@ -54,7 +54,7 @@ const createEdgeConnection = ({
   return {
     statusChanged: new Event<any>(),
     info: {},
-    identityKey: 'client-identity',
+    identityDid: 'did:halo:client-identity',
     peerKey: 'client-peer',
     isOpen: true,
     status: {

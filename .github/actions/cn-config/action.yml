@@ -13,8 +13,7 @@ runs:
   using: 'composite'
   steps:
     - uses: ./.github/actions/cn-channel
-      # TODO(wittjosiah): Switch to production.
-      if: github.ref_name != 'labs'
+      if: github.ref_name != 'production'
       id: release-channel
 
     - name: Find tauri.conf.json
@@ -29,8 +28,7 @@ runs:
       shell: bash
 
     - name: Update endpoints in tauri.conf.json
-      # TODO(wittjosiah): Switch to production.
-      if: github.ref_name != 'labs'
+      if: github.ref_name != 'production'
       run: |
         jq \
           --arg channel "${{ steps.release-channel.outputs.channel }}" \
