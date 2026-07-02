@@ -46,9 +46,10 @@ describe('PipelineRuntime', () => {
     expect(writes).toHaveLength(0);
   });
 
-  test('latest-wins interrupts an in-flight invocation', async ({ expect }) => {
+  test('latest-wins commits over the window without interrupting', async ({ expect }) => {
     const telemetry: TelemetryEvent[] = [];
-    // A slow stage so the synchronously-delivered second block interrupts the first's in-flight run.
+    // A slow stage over a fast two-block source: sliding overflow replaces stale queued work rather
+    // than interrupting the in-flight run, so every reported outcome is a clean commit.
     const slow: Stage<{ window: any[] }> = {
       id: 'slow',
       trigger: 'per-block',
@@ -63,6 +64,7 @@ describe('PipelineRuntime', () => {
     await EffectEx.runPromise(
       PipelineRuntime.run({ source, stages: [slow], commit, onTelemetry: (event) => telemetry.push(event) }),
     );
-    expect(telemetry.some((event) => event.outcome === 'interrupted')).toBe(true);
+    expect(telemetry.length).toBeGreaterThan(0);
+    expect(telemetry.every((event) => event.outcome === 'committed')).toBe(true);
   });
 });
