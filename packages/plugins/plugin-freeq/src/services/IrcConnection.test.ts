@@ -41,7 +41,7 @@ describe('IrcConnection', () => {
     mock.emit(':srv CAP * LS :sasl');
     mock.emit(':srv CAP alice ACK :sasl');
     // Server issues the challenge.
-    mock.emit('AUTHENTICATE ' + btoa(JSON.stringify({ sessionId: 's', nonce: 'n', ts: 1 })));
+    mock.emit('AUTHENTICATE ' + btoa(JSON.stringify({ session_id: 's', nonce: 'n', timestamp: 1 })));
     // SASL + registration success.
     mock.emit(':srv 900 alice :logged in');
     mock.emit(':srv 903 alice :SASL authentication successful');
@@ -122,7 +122,7 @@ describe('IrcConnection', () => {
     mock.open();
     mock.emit(':srv CAP * LS :sasl');
     mock.emit(':srv CAP alice ACK :sasl');
-    mock.emit('AUTHENTICATE ' + btoa(JSON.stringify({ sessionId: 's', nonce: 'n', ts: 1 })));
+    mock.emit('AUTHENTICATE ' + btoa(JSON.stringify({ session_id: 's', nonce: 'n', timestamp: 1 })));
     expect(mock.sent).toContain('AUTHENTICATE *');
   });
 
@@ -139,10 +139,97 @@ describe('IrcConnection', () => {
     mock.open();
     mock.emit(':srv CAP * LS :sasl');
     mock.emit(':srv CAP alice ACK :sasl');
-    mock.emit('AUTHENTICATE ' + btoa(JSON.stringify({ sessionId: 's', nonce: 'n', ts: 1 })));
+    mock.emit('AUTHENTICATE ' + btoa(JSON.stringify({ session_id: 's', nonce: 'n', timestamp: 1 })));
     mock.emit(':srv 904 alice :auth failed');
 
     await expect(connected).rejects.toBeInstanceOf(FreeqAuthError);
+  });
+
+  test('fragments a >400-char SASL response into chunked AUTHENTICATE lines plus a final +', async ({ expect }) => {
+    const mock = makeMockTransport();
+    const longResponse = 'A'.repeat(850);
+    const connection = makeIrcConnection({
+      transport: mock.transport,
+      nick: 'alice',
+      credentialProvider: { respond: () => undefined as never },
+      runResponse: async () => longResponse,
+    });
+
+    const connected = connection.connect();
+    mock.open();
+    mock.emit(':srv CAP * LS :sasl');
+    mock.emit(':srv CAP alice ACK :sasl');
+    mock.emit('AUTHENTICATE ' + btoa(JSON.stringify({ session_id: 's', nonce: 'n', timestamp: 1 })));
+    mock.emit(':srv 903 alice :SASL authentication successful');
+    mock.emit(':srv 001 alice :Welcome');
+    await connected;
+
+    const authenticateLines = mock.sent.filter((line) => line.startsWith('AUTHENTICATE '));
+    // Mechanism line + 3 chunks (400 + 400 + 50) + final terminator.
+    const chunkLines = authenticateLines.filter((line) => line !== 'AUTHENTICATE ATPROTO-CHALLENGE');
+    expect(chunkLines).toHaveLength(4);
+    chunkLines.slice(0, -1).forEach((line) => {
+      expect(line.slice('AUTHENTICATE '.length).length).toBeLessThanOrEqual(400);
+    });
+    expect(chunkLines.at(-1)).toBe('AUTHENTICATE +');
+    expect(
+      chunkLines
+        .slice(0, -1)
+        .map((line) => line.slice('AUTHENTICATE '.length))
+        .join(''),
+    ).toBe(longResponse);
+  });
+
+  test('sends a <=400-char SASL response as a single AUTHENTICATE line with no terminator', async ({ expect }) => {
+    const mock = makeMockTransport();
+    const connection = makeIrcConnection({
+      transport: mock.transport,
+      nick: 'alice',
+      credentialProvider: { respond: () => undefined as never },
+      runResponse: async () => 'SHORTRESPONSE',
+    });
+
+    const connected = connection.connect();
+    mock.open();
+    mock.emit(':srv CAP * LS :sasl');
+    mock.emit(':srv CAP alice ACK :sasl');
+    mock.emit('AUTHENTICATE ' + btoa(JSON.stringify({ session_id: 's', nonce: 'n', timestamp: 1 })));
+    mock.emit(':srv 903 alice :SASL authentication successful');
+    mock.emit(':srv 001 alice :Welcome');
+    await connected;
+
+    expect(mock.sent).toContain('AUTHENTICATE SHORTRESPONSE');
+    expect(mock.sent).not.toContain('AUTHENTICATE +');
+  });
+
+  test('rejects a pending connect() when the transport closes mid-handshake', async ({ expect }) => {
+    const mock = makeMockTransport();
+    const connection = makeIrcConnection({ transport: mock.transport, nick: 'alice', runResponse: async () => '' });
+    const connected = connection.connect();
+    mock.open();
+    mock.emit(':srv CAP * LS :sasl');
+    mock.emit(':srv CAP alice ACK :sasl');
+
+    mock.transport.close();
+
+    await expect(connected).rejects.toBeInstanceOf(FreeqConnectionError);
+  });
+
+  test('buffers part() until registration (001), then flushes it', async ({ expect }) => {
+    const mock = makeMockTransport();
+    const connection = makeIrcConnection({ transport: mock.transport, nick: 'alice', runResponse: async () => '' });
+    const connected = connection.connect();
+    mock.open();
+
+    const partLine = IrcProtocol.serialize({ command: 'PART', params: ['#general'] });
+    connection.part('#general');
+
+    expect(mock.sent).not.toContain(partLine);
+
+    mock.emit(':srv 001 alice :Welcome');
+    await connected;
+
+    expect(mock.sent).toContain(partLine);
   });
 
   test('rejects a pending connect() when close() is called mid-handshake', async ({ expect }) => {

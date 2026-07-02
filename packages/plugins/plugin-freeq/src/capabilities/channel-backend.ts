@@ -22,7 +22,7 @@ import {
 import { FreeqChannel, makeFreeqChannel } from '../types';
 
 /** Resolves stored credentials for a handle, or `undefined` for a guest (read-only) connection. */
-export type LookupCredential = (handle: string) => { appPassword: string; pdsUrl: string } | undefined;
+export type LookupCredential = (handle: string) => { appPassword: string } | undefined;
 
 /** Maps an inbound freeq/IRC message to a transient (non-persisted) chat message. */
 export const toMessage = (incoming: IncomingMessage): Message.Message =>
@@ -47,7 +47,7 @@ const acquireParamsFor = (
     nick: handle?.split('.')[0] ?? 'guest',
     credentialProvider:
       handle && credential
-        ? makeAppPasswordCredentialProvider({ handle, appPassword: credential.appPassword, pdsUrl: credential.pdsUrl })
+        ? makeAppPasswordCredentialProvider({ handle, appPassword: credential.appPassword })
         : undefined,
     runResponse: (effect) => effect.pipe(Effect.provide(FetchHttpClient.layer), Effect.runPromise),
   };
@@ -66,7 +66,10 @@ export const makeFreeqChannelBackend = (
   label: 'Freeq',
   icon: 'ph--dog--regular',
   createFields: Schema.Struct({
-    serverUrl: Schema.String.annotations({ title: 'Server URL', description: 'freeq WebSocket URL (wss://…).' }),
+    serverUrl: Schema.String.annotations({
+      title: 'Server URL',
+      description: 'freeq WebSocket URL, e.g. wss://irc.freeq.at/irc',
+    }),
     channel: Schema.String.annotations({ title: 'Channel', description: 'IRC channel name (e.g. #general).' }),
     handle: Schema.optional(
       Schema.String.annotations({ title: 'Handle', description: 'Bluesky handle for authentication (optional).' }),

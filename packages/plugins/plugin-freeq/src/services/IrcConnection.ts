@@ -33,6 +33,26 @@ export interface IrcConnection {
 
 const nickOf = (prefix?: string): string => (prefix ? prefix.split('!')[0] : 'unknown');
 
+/** Maximum payload length per `AUTHENTICATE` line, per the freeq/IRCv3 SASL framing. */
+const SASL_CHUNK_SIZE = 400;
+
+/**
+ * Sends a SASL response payload as one-or-more `AUTHENTICATE` lines. Payloads
+ * that fit in a single line are sent as-is; longer payloads are split into
+ * `SASL_CHUNK_SIZE`-char chunks followed by a final `AUTHENTICATE +` terminator,
+ * per the freeq wire protocol.
+ */
+const sendSaslResponse = (transport: Transport, response: string): void => {
+  if (response.length <= SASL_CHUNK_SIZE) {
+    transport.send('AUTHENTICATE ' + response);
+    return;
+  }
+  for (let index = 0; index < response.length; index += SASL_CHUNK_SIZE) {
+    transport.send('AUTHENTICATE ' + response.slice(index, index + SASL_CHUNK_SIZE));
+  }
+  transport.send('AUTHENTICATE +');
+};
+
 export const makeIrcConnection = (options: {
   transport: Transport;
   nick: string;
@@ -72,7 +92,7 @@ export const makeIrcConnection = (options: {
       return;
     }
     void runResponse(credentialProvider.respond(challenge))
-      .then((response) => transport.send('AUTHENTICATE ' + response))
+      .then((response) => sendSaslResponse(transport, response))
       .catch((error) => rejectConnect?.(new FreeqAuthError({ cause: error })));
   };
 
@@ -135,6 +155,15 @@ export const makeIrcConnection = (options: {
     transport.send(IrcProtocol.serialize({ command: 'NICK', params: [nick] }));
     transport.send(IrcProtocol.serialize({ command: 'USER', params: [nick, '0', '*', nick] }));
   });
+  // A drop before registration completes must not leave connect() hanging forever.
+  // Full reconnect/backoff is deferred; this only unblocks a pending caller.
+  transport.onClose(() => {
+    if (rejectConnect) {
+      rejectConnect(new FreeqConnectionError({ message: 'Connection closed before handshake completed.' }));
+      resolveConnect = undefined;
+      rejectConnect = undefined;
+    }
+  });
 
   return {
     connect: () =>
@@ -147,7 +176,7 @@ export const makeIrcConnection = (options: {
         enqueueOrSend(IrcProtocol.serialize({ command: 'JOIN', params: [channel] }));
         resolve();
       }),
-    part: (channel) => transport.send(IrcProtocol.serialize({ command: 'PART', params: [channel] })),
+    part: (channel) => enqueueOrSend(IrcProtocol.serialize({ command: 'PART', params: [channel] })),
     sendMessage: (channel, text) =>
       enqueueOrSend(IrcProtocol.serialize({ command: 'PRIVMSG', params: [channel, text] })),
     onMessage: (channel, cb) => {
@@ -156,13 +185,8 @@ export const makeIrcConnection = (options: {
       subscribers.set(channel, subs);
       return () => subs.delete(cb);
     },
-    close: () => {
-      if (rejectConnect) {
-        rejectConnect(new FreeqConnectionError({ message: 'Connection closed before handshake completed.' }));
-        resolveConnect = undefined;
-        rejectConnect = undefined;
-      }
-      transport.close();
-    },
+    // Rejecting a pending connect() is handled uniformly by the `onClose` handler
+    // above, since `transport.close()` triggers it the same way a remote drop would.
+    close: () => transport.close(),
   };
 };

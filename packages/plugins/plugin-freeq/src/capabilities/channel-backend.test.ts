@@ -79,8 +79,7 @@ describe('freeq channel backend', () => {
       },
     } as any;
 
-    const lookupCredential = (handle: string) =>
-      handle === 'alice.example' ? { appPassword: 'app-pass', pdsUrl: 'https://pds.example' } : undefined;
+    const lookupCredential = (handle: string) => (handle === 'alice.example' ? { appPassword: 'app-pass' } : undefined);
 
     const backend = makeFreeqChannelBackend(manager, lookupCredential);
     await withCapabilityService(backend.send(channel, toMessage({ id: 'x', nick: 'me', text: 'hi', ts: 1 })));
