@@ -10,7 +10,7 @@ import { useAtomCapability, useAtomCapabilityState, useCapabilities } from '@dxo
 import { log } from '@dxos/log';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
-import { linkEntities } from '@dxos/transcription-pipeline';
+import { linkEntities } from '@dxos/pipeline-transcription';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
 

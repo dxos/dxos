@@ -13,7 +13,7 @@ import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
 import { MediaStreamRecorder } from '@dxos/react-ui-transcription';
-import { Transcriber } from '@dxos/transcription-pipeline';
+import { Transcriber } from '@dxos/pipeline-transcription';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { type TranscriptionCapabilities } from '#types';

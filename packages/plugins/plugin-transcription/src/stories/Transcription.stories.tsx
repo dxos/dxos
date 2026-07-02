@@ -23,7 +23,7 @@ import {
   useFeedModelAdapter,
   useRecordingPipeline,
 } from '@dxos/react-ui-transcription';
-import { type CommitFn, type TranscribeConfig, makeCorrectionStage } from '@dxos/transcription-pipeline';
+import { type CommitFn, type TranscribeConfig, makeCorrectionStage } from '@dxos/pipeline-transcription';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { createStoryDecorators } from '../testing';

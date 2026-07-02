@@ -375,12 +375,12 @@
         },
         {
           "type": "json",
-          "path": "packages/core/compute/semantic-index/package.json",
+          "path": "packages/core/compute/pipeline-transcription/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/core/compute/transcription-pipeline/package.json",
+          "path": "packages/core/compute/semantic-index/package.json",
           "jsonpath": "$.version"
         },
         {

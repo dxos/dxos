@@ -9,7 +9,7 @@ import { synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
-import { type AudioChunk, type AudioRecorder, type WavConfig } from '@dxos/transcription-pipeline';
+import { type AudioChunk, type AudioRecorder, type WavConfig } from '@dxos/pipeline-transcription';
 
 // `extendable-media-recorder` references browser-only globals (Worker/AudioWorklet) at module load,
 // so it is imported lazily — keeping this package importable in non-browser contexts (node tests,

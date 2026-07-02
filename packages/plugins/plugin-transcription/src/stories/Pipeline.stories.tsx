@@ -53,7 +53,7 @@ import {
   makeDatabaseLookup,
   makeExtractionStage,
   makeSummarizationStage,
-} from '@dxos/transcription-pipeline';
+} from '@dxos/pipeline-transcription';
 import { type ContentBlock, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 import { appendPendingText, cancelPendingText, setPendingAnchor, setPendingInterim } from '@dxos/ui-editor';
