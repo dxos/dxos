@@ -37,10 +37,15 @@ type Metadata = {
 };
 
 export type ChatProps = ThemedClassName<{
+  /** Chat-agent host (ws/wss); the agent connection is derived from it. */
   host?: string;
+  /** URL of the page the panel is attached to; injected as chat context. */
   url?: string;
 }>;
 
+/**
+ * Simplified chat: a streaming markdown thread over an editor input, backed by the chat agent.
+ */
 export const Chat = ({ classNames, host, url }: ChatProps) => {
   const { t } = useTranslation(translationKey);
   const editorRef = useRef<ChatEditorController>(null);
@@ -114,8 +119,9 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
         }
 
         // Determine space mode.
-        const spaceMode = (await browser.storage.sync.get(SPACE_MODE_PROP))?.[SPACE_MODE_PROP];
-        const spaceId = (await browser.storage.sync.get(SPACE_ID_PROP))?.[SPACE_ID_PROP];
+        const stored = await browser.storage.sync.get([SPACE_MODE_PROP, SPACE_ID_PROP]);
+        const spaceMode = stored?.[SPACE_MODE_PROP];
+        const spaceId = stored?.[SPACE_ID_PROP];
         if (spaceMode && spaceId) {
           if (SpaceId.isValid(spaceId) && (spaceId !== spaceIdRef.current || messages.length === 0)) {
             context.push(`Otherwise use the configured Space to retrieve information.`, `The Space ID is: ${spaceId}`);
@@ -170,7 +176,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
         {error && (
           <div className='flex overflow-hidden items-center opacity-50'>
             <div className='px-2 text-subdued text-xs whitespace-nowrap truncate'>
-              {error.message || 'An error occurred'}
+              {error.message || t('chat.error.label')}
             </div>
             <div className='flex shrink-0'>
               <IconButton
@@ -178,7 +184,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
                 variant='ghost'
                 icon='ph--clipboard--regular'
                 iconOnly
-                label={t('chat.clear.button')}
+                label={t('chat.copy.button')}
                 onClick={() => navigator.clipboard.writeText(error.message)}
               />
             </div>
@@ -211,6 +217,12 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
 };
 
 /**
+ * Neutralize `<prompt>`/`</prompt>` in user text so it cannot break out of the bubble wrapper
+ * (a raw `</prompt>` would close the block early and let trailing text render as assistant markdown).
+ */
+const escapePromptText = (text: string): string => text.replace(/<(\/?)prompt>/g, '&lt;$1prompt>');
+
+/**
  * Render the message thread to a single markdown document. User turns are wrapped in `<prompt>`
  * blocks (rendered as bubbles by MarkdownStream); assistant turns are plain markdown. The output
  * extends monotonically as the trailing message streams, which the syncer relies on.
@@ -222,7 +234,7 @@ const renderThread = (messages: UIMessage<Metadata>[]): string =>
         .map((part) => (part.type === 'text' ? part.text : null))
         .filter(Boolean)
         .join('');
-      return message.role === 'user' ? `\n<prompt>${text}</prompt>\n` : `${text}\n`;
+      return message.role === 'user' ? `\n<prompt>${escapePromptText(text)}</prompt>\n` : `${text}\n`;
     })
     .join('');
 

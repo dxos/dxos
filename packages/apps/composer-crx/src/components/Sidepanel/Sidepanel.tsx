@@ -108,7 +108,12 @@ export const Sidepanel = () => {
         >
           {thumbnailUrl && <Thumbnail url={thumbnailUrl} />}
           {showChat && (
-            <ErrorBoundary name='sidepanel/chat' fallbackRender={() => null}>
+            <ErrorBoundary
+              name='sidepanel/chat'
+              fallbackRender={() => (
+                <div className='grid place-items-center p-4 text-sm text-description'>{t('chat.error.label')}</div>
+              )}
+            >
               <Chat host={host} url={tabUrl ?? undefined} />
             </ErrorBoundary>
           )}

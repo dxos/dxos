@@ -7,6 +7,8 @@ import '@dxos-theme';
 import React from 'react';
 import { type Root as ReactRoot, createRoot } from 'react-dom/client';
 
+import { log } from '@dxos/log';
+
 import { Sidepanel } from './components';
 
 declare global {
@@ -25,4 +27,4 @@ const main = async () => {
   globalThis.__composerPanelRoot.render(<Sidepanel />);
 };
 
-void main();
+main().catch((err) => log.catch(err));

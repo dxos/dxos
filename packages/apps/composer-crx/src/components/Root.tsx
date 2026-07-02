@@ -11,6 +11,9 @@ import { defaultTx } from '@dxos/react-ui';
 
 import { translations } from '../translations';
 
+/**
+ * Wraps children with the app theme, tooltip provider, and a named error boundary.
+ */
 export const Root = ({ children, name }: PropsWithChildren<Pick<ErrorBoundaryProps, 'name'>>) => {
   // Monitor system theme.
   useEffect(() => {
