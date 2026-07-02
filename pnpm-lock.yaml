@@ -15147,6 +15147,9 @@ importers:
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../../ui/react-ui-components
+      '@dxos/react-ui-dashboard':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-dashboard
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -20394,6 +20397,52 @@ importers:
       '@effect-atom/atom-react':
         specifier: 'catalog:'
         version: 0.5.0(@effect/experimental@0.60.0(effect@3.21.4)(ioredis@5.3.2))(effect@3.21.4)(react@19.2.7)(scheduler@0.27.0)
+      '@types/react':
+        specifier: ~19.2.17
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.17)
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ~19.2.7
+        version: 19.2.7(react@19.2.7)
+      vite:
+        specifier: '>=8.0.16'
+        version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
+  packages/ui/react-ui-dashboard:
+    dependencies:
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@radix-ui/react-context':
+        specifier: 'catalog:'
+        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
+      '@radix-ui/react-primitive':
+        specifier: 'catalog:'
+        version: 2.0.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@radix-ui/react-slot':
+        specifier: 'catalog:'
+        version: 1.1.2(@types/react@19.2.17)(react@19.2.7)
+      '@radix-ui/react-use-controllable-state':
+        specifier: 'catalog:'
+        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.4.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.4.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@testing-library/dom@10.4.1)(@types/react@19.2.17)(prettier@3.6.2)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(typescript@6.0.3)(vite@8.0.16(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))(webpack@5.105.2(@swc/core@1.15.43(@swc/helpers@0.5.17))(esbuild@0.28.1))
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17

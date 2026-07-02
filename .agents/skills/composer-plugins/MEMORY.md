@@ -4,6 +4,13 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-07-01 — plugin-space SpaceHome stories
+
+- `Surface.create` ids are DOT-separated and every segment must be camelCase (`story.spaceHomeRecent`); slashes or hyphens throw `Invalid surface id` at runtime (renders as a story error, not a build error).
+- `ClientPlugin({ types })` (testing) registers types with ECHO but does NOT contribute `AppCapabilities.Schema` — containers that build filters from `useCapabilities(AppCapabilities.Schema)` (e.g. `SpaceHomeRecent`) render empty in stories unless you add `Capability.contributes(AppCapabilities.Schema, [Task, Note])` to `withPluginManager` capabilities.
+- Translation keys are linted by `@dxos/rules(translation-key-format)`: the final segment needs a known suffix (`.label`, `.heading`, …) — `foo.range.all` fails, `foo.range-all.label` passes.
+- To story a shell article that delegates to a Surface role token (e.g. `SpaceHomeArticle` → `SpaceHomeContent`), contribute the child surfaces inline in the story's `withPluginManager({ capabilities })` instead of loading the whole plugin.
+
 ## 2026-06-30 — storybook cwd + settings-container story pattern
 
 - Storybook globs `packages/plugins/*/src/**/*.stories.tsx` relative to the CWD's repo root (`tools/storybook-react/.storybook/main.ts` → `rootDir`). Run `moon run storybook-react:serve` from INSIDE the worktree dir, never `cd` into the main repo first — doing so globs main's packages and your new worktree story files silently never appear in `/index.json` (story shows "Couldn't find story matching …"). Verify inclusion via `curl -s localhost:PORT/index.json`.

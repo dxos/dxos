@@ -38,6 +38,7 @@ import {
   SchemaContainer,
   SmallPresenceLive,
   SpaceHomeArticle,
+  SpaceHomeDashboard,
   SpaceHomeRecent,
   SpacePresence,
   SpaceSettings,
@@ -85,6 +86,11 @@ export default Capability.makeModule(
         id: 'spaceHomeRecent',
         filter: Surface.makeFilter(SpaceHomeContent),
         component: ({ data }) => <SpaceHomeRecent space={data.space} />,
+      }),
+      Surface.create({
+        id: 'spaceHomeDashboard',
+        filter: Surface.makeFilter(SpaceHomeContent),
+        component: ({ data }) => <SpaceHomeDashboard space={data.space} />,
       }),
       Surface.create({
         id: 'collectionFallback',

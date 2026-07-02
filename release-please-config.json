@@ -1205,6 +1205,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-dashboard/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-dnd/package.json",
           "jsonpath": "$.version"
         },
