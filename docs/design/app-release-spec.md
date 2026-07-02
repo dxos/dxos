@@ -174,6 +174,10 @@ Workers *before* moving the domains so there's no gap. See the runbook in `relea
 Not migrated here: `preview-deploy.yml` (per-PR previews still use Pages branch-alias URLs) — tracked as a
 follow-up. (The legacy `deploy-apps.sh` Pages path was deleted in the release-machinery cutover.)
 
+**Deploy build-sharing (follow-up):** the web + native jobs each rebuild Composer's bundle; a prep-job +
+artifact fan-out builds it once. Foundation landed (tauri deps hoist); the CI fan-out is deferred until the
+deploy is green. Design: [`deploy-build-sharing.md`](./deploy-build-sharing.md).
+
 ## Open items / prerequisites
 
 1. **Bot push to `main`** for the Composer bump commit + tags must be allowed under `main`'s
