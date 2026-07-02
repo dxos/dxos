@@ -274,8 +274,8 @@ catalogs:
       specifier: ^1.0.8
       version: 1.0.8
     '@moonrepo/cli':
-      specifier: 2.3.0
-      version: 2.3.0
+      specifier: 2.3.5
+      version: 2.3.5
     '@ngneat/falso':
       specifier: ^7.1.1
       version: 7.1.1
@@ -2035,7 +2035,7 @@ importers:
         version: 0.29.0(effect@3.21.4)(vitest@4.1.8)
       '@moonrepo/cli':
         specifier: 'catalog:'
-        version: 2.3.0
+        version: 2.3.5
       '@octokit/rest':
         specifier: 'catalog:'
         version: 22.0.1
@@ -7268,7 +7268,7 @@ importers:
         version: 0.96.2(effect@3.21.4)
       '@effect/platform-bun':
         specifier: 'catalog:'
-        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/printer':
         specifier: 'catalog:'
         version: 0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4)
@@ -7401,7 +7401,7 @@ importers:
         version: 0.96.2(effect@3.21.4)
       '@effect/platform-bun':
         specifier: 'catalog:'
-        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/printer':
         specifier: 'catalog:'
         version: 0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4)
@@ -9740,7 +9740,7 @@ importers:
         version: 0.75.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/printer-ansi@0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4))(@effect/printer@0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/platform-bun':
         specifier: 'catalog:'
-        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+        version: 0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@tauri-apps/api':
         specifier: 'catalog:'
         version: 2.11.0
@@ -27136,46 +27136,46 @@ packages:
     peerDependencies:
       three: '>= 0.159.0'
 
-  '@moonrepo/cli@2.3.0':
-    resolution: {integrity: sha512-8Za9r9sLPvnzvaaDWqEBnoSRG1QRsHZHWZZmQBp2s/Fr6qAcqMS1sF3zZonqo3zL1lW4srOUICUR1JQUzhlBvQ==}
+  '@moonrepo/cli@2.3.5':
+    resolution: {integrity: sha512-m5f4nN7E9GWWuHrbNnNU8eZXvEXaL0modnHWgq5TU4QH/omDte0OcR5GwQgYRKf9PWLi113chQZSzZh/UZ9O8A==}
     hasBin: true
 
-  '@moonrepo/core-linux-arm64-gnu@2.3.0':
-    resolution: {integrity: sha512-mXB5y58BihYwafRGY8K+LRsEYcB6qmBh30J+0bE3sYNPum1eT2QAuG+fQhhbLhTos1REP1eUJgjSAZ2pIjrQmA==}
+  '@moonrepo/core-linux-arm64-gnu@2.3.5':
+    resolution: {integrity: sha512-IRyZRYtyHhf5TRiCB9ykAew1KCdeNsGvUTuynQe4slUs4IHw0peWb/D9EGB7CYyXXmf1LGtsMk5QFu7u0MS45Q==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@moonrepo/core-linux-arm64-musl@2.3.0':
-    resolution: {integrity: sha512-gCw9fL/XqEGGqjUxCs0awCY5QZIm4V7UJIZ8eHm0OlospNmjMXJbCzAOgp+XYIns4kezINcs+bmm4cUl7VaszA==}
+  '@moonrepo/core-linux-arm64-musl@2.3.5':
+    resolution: {integrity: sha512-lPiqdkm3OFq7CZLEzjNRtrJwI6sWrY7DI9g2cFJe6PVlNlOCuiR/niLqs4/JH3LAIt0Gr569RVtSjci+30pAcg==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@moonrepo/core-linux-x64-gnu@2.3.0':
-    resolution: {integrity: sha512-vZmzqSJbzqIwdkAROlbkb5OIXL+pFWbu96P4hc3SG7iu3e9TQ8JnuL21i2Jd1mULbqA4zfcu25gbzECdSXPpOA==}
+  '@moonrepo/core-linux-x64-gnu@2.3.5':
+    resolution: {integrity: sha512-ZldlS+IbVQ0+uGSdiLXpQjdDFpcKYJqtDi/V0I5hFQQAdhR/zU/A87GkHp825ll1+4s4k0NX14ytB7jfH7DWKQ==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@moonrepo/core-linux-x64-musl@2.3.0':
-    resolution: {integrity: sha512-5oA4/q3/ryI7YCYbKEKZ0ZWGyU7KoKqi60Eqe2HfAXvkMiJCfUtsAmdZ8ybsWFQlQcbnKUPbqDCiacm67fcmdA==}
+  '@moonrepo/core-linux-x64-musl@2.3.5':
+    resolution: {integrity: sha512-tPYaCqd3S+9ih5v1KVhXaU4mvhpCcqJSeZAYM/gWdPB+vUvhx/dhH8zI18p/i0fc1TKDQ9CvJ8tmXK0Kn1V/tg==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@moonrepo/core-macos-arm64@2.3.0':
-    resolution: {integrity: sha512-QZaqPABNid8pDBfQFp6I/G78qY2vTjQrpoAjhB936LXt4GrQAGJTDQSzdyIkuzLZaHrkw7jeLAD3ktVtgI/94w==}
+  '@moonrepo/core-macos-arm64@2.3.5':
+    resolution: {integrity: sha512-Rz8YPG6yAw0mpGSCr4jvwPi6/cjkQd5wX5j1JxE/yMFHuFrzieqRwHmKbS1EU0nquJWaVJs2umFZ+aaX2qXQPQ==}
     cpu: [arm64]
     os: [darwin]
 
-  '@moonrepo/core-macos-x64@2.3.0':
-    resolution: {integrity: sha512-UP8P0y0VyXTy2PwLOnC5LXasV5OQYlmZIVaGFyDZK60SAtBjJ8pcq8L2P+gBYYjkbseejs8GJiL0peM/B621vg==}
+  '@moonrepo/core-macos-x64@2.3.5':
+    resolution: {integrity: sha512-rNCoXfe0xiOnjnQAVsq/OwbzqMCshnYq5ANKd+MwGQw8qPlLsVY0/TGW3DRUathTX+aIh9qaIoZqkquq41TRkg==}
     cpu: [x64]
     os: [darwin]
 
-  '@moonrepo/core-windows-x64-msvc@2.3.0':
-    resolution: {integrity: sha512-4is1mItYa/zYHDkSkFZZfVsqg0gIHZGzMpjRT9XRn4XZ+SOILCqGX2tDtdOecuI+jHYKZ1V5ElnFsX7a3L6Nwg==}
+  '@moonrepo/core-windows-x64-msvc@2.3.5':
+    resolution: {integrity: sha512-N+JwGBBSdSD5iEoL2+Z5rGNOlq20xqDkaqykavihgi9PlBuYpVy98mS5JT6C1LAj69G8N33UY3dsuJnYY9Aqzw==}
     cpu: [x64]
     os: [win32]
 
@@ -48719,7 +48719,7 @@ snapshots:
       effect: 3.21.4
       multipasta: 0.2.7
 
-  '@effect/platform-bun@0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)':
+  '@effect/platform-bun@0.90.0(@effect/cluster@0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)':
     dependencies:
       '@effect/cluster': 0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/platform': 0.96.2(effect@3.21.4)
@@ -49962,37 +49962,37 @@ snapshots:
       promise-worker-transferable: 1.0.4
       three: 0.178.0
 
-  '@moonrepo/cli@2.3.0':
+  '@moonrepo/cli@2.3.5':
     dependencies:
       detect-libc: 2.1.2
     optionalDependencies:
-      '@moonrepo/core-linux-arm64-gnu': 2.3.0
-      '@moonrepo/core-linux-arm64-musl': 2.3.0
-      '@moonrepo/core-linux-x64-gnu': 2.3.0
-      '@moonrepo/core-linux-x64-musl': 2.3.0
-      '@moonrepo/core-macos-arm64': 2.3.0
-      '@moonrepo/core-macos-x64': 2.3.0
-      '@moonrepo/core-windows-x64-msvc': 2.3.0
+      '@moonrepo/core-linux-arm64-gnu': 2.3.5
+      '@moonrepo/core-linux-arm64-musl': 2.3.5
+      '@moonrepo/core-linux-x64-gnu': 2.3.5
+      '@moonrepo/core-linux-x64-musl': 2.3.5
+      '@moonrepo/core-macos-arm64': 2.3.5
+      '@moonrepo/core-macos-x64': 2.3.5
+      '@moonrepo/core-windows-x64-msvc': 2.3.5
 
-  '@moonrepo/core-linux-arm64-gnu@2.3.0':
+  '@moonrepo/core-linux-arm64-gnu@2.3.5':
     optional: true
 
-  '@moonrepo/core-linux-arm64-musl@2.3.0':
+  '@moonrepo/core-linux-arm64-musl@2.3.5':
     optional: true
 
-  '@moonrepo/core-linux-x64-gnu@2.3.0':
+  '@moonrepo/core-linux-x64-gnu@2.3.5':
     optional: true
 
-  '@moonrepo/core-linux-x64-musl@2.3.0':
+  '@moonrepo/core-linux-x64-musl@2.3.5':
     optional: true
 
-  '@moonrepo/core-macos-arm64@2.3.0':
+  '@moonrepo/core-macos-arm64@2.3.5':
     optional: true
 
-  '@moonrepo/core-macos-x64@2.3.0':
+  '@moonrepo/core-macos-x64@2.3.5':
     optional: true
 
-  '@moonrepo/core-windows-x64-msvc@2.3.0':
+  '@moonrepo/core-windows-x64-msvc@2.3.5':
     optional: true
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
