@@ -18,7 +18,7 @@
     "withGlobalTauri": true
   },
   "build": {
-    "beforeBuildCommand": "node scripts/fetch-ollama.mjs && moon run composer-app:bundle",
+    "beforeBuildCommand": "",
     "beforeDevCommand": "node scripts/fetch-ollama.mjs && vite dev",
     "devUrl": "http://localhost:5173",
     "frontendDist": "../out/composer"
