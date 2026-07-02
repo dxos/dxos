@@ -4,6 +4,7 @@
 
 import { describe, test } from 'vitest';
 
+import { FreeqConnectionError } from '../errors';
 import { type Transport, makeIrcConnection } from './IrcConnection';
 import { IrcProtocol } from './IrcProtocol';
 
@@ -83,5 +84,29 @@ describe('IrcConnection', () => {
     mock.open();
     mock.emit('PING :srv1');
     expect(mock.sent).toContain('PONG :srv1');
+  });
+
+  test('aborts SASL as guest when no credentialProvider is supplied', ({ expect }) => {
+    const mock = makeMockTransport();
+    const connection = makeIrcConnection({ transport: mock.transport, nick: 'alice', runResponse: async () => '' });
+    void connection.connect();
+    mock.open();
+    mock.emit(':srv CAP * LS :sasl');
+    mock.emit(':srv CAP alice ACK :sasl');
+    mock.emit('AUTHENTICATE ' + btoa(JSON.stringify({ sessionId: 's', nonce: 'n', ts: 1 })));
+    expect(mock.sent).toContain('AUTHENTICATE *');
+  });
+
+  test('rejects a pending connect() when close() is called mid-handshake', async ({ expect }) => {
+    const mock = makeMockTransport();
+    const connection = makeIrcConnection({ transport: mock.transport, nick: 'alice', runResponse: async () => '' });
+    const connected = connection.connect();
+    mock.open();
+    mock.emit(':srv CAP * LS :sasl');
+    mock.emit(':srv CAP alice ACK :sasl');
+
+    connection.close();
+
+    await expect(connected).rejects.toBeInstanceOf(FreeqConnectionError);
   });
 });

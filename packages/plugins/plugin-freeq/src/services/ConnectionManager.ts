@@ -58,7 +58,14 @@ export class ConnectionManager {
     if (!entry) {
       entry = { connection: this.#makeConnection(params), refCount: 0 };
       this.#entries.set(key, entry);
-      void entry.connection.connect();
+      const created = entry;
+      // A connection that fails its handshake (e.g. SASL rejection) must not linger
+      // in `#entries`, or every later acquire for this key would reuse the dead connection.
+      void created.connection.connect().catch(() => {
+        if (this.#entries.get(key) === created) {
+          this.#entries.delete(key);
+        }
+      });
     }
     entry.refCount++;
 

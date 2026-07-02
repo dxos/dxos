@@ -39,6 +39,11 @@ describe('IrcProtocol', () => {
     expect(IrcProtocol.parse(line).params).toEqual(['#general', 'hello world']);
   });
 
+  test('unescapes \\r and \\n in tag values', ({ expect }) => {
+    const msg = IrcProtocol.parse('@+draft/note=line1\\rline2\\nline3 :srv PRIVMSG #c :hi');
+    expect(msg.tags['+draft/note']).toBe('line1\rline2\nline3');
+  });
+
   test('serialize emits a trailing param only when needed', ({ expect }) => {
     expect(IrcProtocol.serialize({ command: 'JOIN', params: ['#general'] })).toBe('JOIN #general');
     expect(IrcProtocol.serialize({ command: 'CAP', params: ['REQ', 'sasl'] })).toBe('CAP REQ :sasl');

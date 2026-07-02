@@ -8,7 +8,7 @@ import type * as Effect from 'effect/Effect';
 import { log } from '@dxos/log';
 
 import { SASL_MECHANISM } from '../constants';
-import type { FreeqAuthError } from '../errors';
+import { FreeqAuthError, FreeqConnectionError } from '../errors';
 import type { CredentialProvider, SaslChallenge } from './CredentialProvider';
 import { IrcProtocol } from './IrcProtocol';
 import type { Transport } from './Transport';
@@ -54,7 +54,7 @@ export const makeIrcConnection = (options: {
     try {
       challenge = JSON.parse(atob(payload));
     } catch (error) {
-      rejectConnect?.(error);
+      rejectConnect?.(new FreeqAuthError({ cause: error }));
       return;
     }
     void runResponse(credentialProvider.respond(challenge))
@@ -86,7 +86,7 @@ export const makeIrcConnection = (options: {
         break;
       case '904': // SASL failure.
       case '905':
-        rejectConnect?.(new Error('SASL authentication failed.'));
+        rejectConnect?.(new FreeqAuthError({ message: 'SASL authentication failed.' }));
         break;
       case '001': // Registration complete.
         resolveConnect?.();
@@ -139,6 +139,13 @@ export const makeIrcConnection = (options: {
       subscribers.set(channel, subs);
       return () => subs.delete(cb);
     },
-    close: () => transport.close(),
+    close: () => {
+      if (rejectConnect) {
+        rejectConnect(new FreeqConnectionError({ message: 'Connection closed before handshake completed.' }));
+        resolveConnect = undefined;
+        rejectConnect = undefined;
+      }
+      transport.close();
+    },
   };
 };
