@@ -370,6 +370,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/pipeline/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/semantic-index/package.json",
           "jsonpath": "$.version"
         },

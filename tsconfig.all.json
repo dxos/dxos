@@ -208,6 +208,9 @@
       "path": "packages/core/compute/operation/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/pipeline/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/semantic-index/tsconfig.json"
     },
     {
