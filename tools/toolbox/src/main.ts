@@ -35,9 +35,6 @@ if (argModuleStats) {
   await toolbox.updatePackages();
 } else {
   // TODO(wittjosiah): Update for moon.
-  // Overlap window: generate both release configs until the Phase 2 cutover deletes release-please
-  // (after a real Changesets release proves the new pipeline — overlap, do not gap).
-  await toolbox.updateReleasePlease();
   await toolbox.updateChangesets();
   await toolbox.updateRootPackage();
   // await toolbox.updateTags();

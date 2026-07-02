@@ -7,9 +7,9 @@
 ## Motivation
 
 Apps ship far more often than the SDK publishes to npm, and they build from **workspace source** — an app
-never needs the packages published to deploy. Today, though, a production app deploy is gated on an npm
-publish (`release.yml` → `published == true`) and `composer-app`'s version is bumped inside the shared
-"Version Packages" PR (via dependency ripple). That couples app cadence to package cadence, which:
+never needs the packages published to deploy. The problem this spec removes: coupling a production app
+deploy to an npm publish, and bumping `composer-app`'s version inside the shared "Version Packages" PR (via
+dependency ripple). That couples app cadence to package cadence, which:
 
 - **slows app releases** (you must cut a package release to ship the app), and
 - would **skip npm versions** if we bumped the app through the shared Version PR frequently while
@@ -171,8 +171,8 @@ for SPAs, `404-page` for docs) per app. This is **independent of the release/ver
 **Cloudflare-side (pending, human):** create the Workers, attach the custom domains (moving them off the
 Pages projects — the switchover, with brief downtime), then retire the Pages projects. Deploy the new
 Workers *before* moving the domains so there's no gap. See the runbook in `release-parked-steps.md §6`.
-Not migrated here: `preview-deploy.yml` (per-PR previews still use Pages branch-alias URLs) and the legacy
-`publish-all.yml`/`deploy-apps.sh` (slated for deletion) — both tracked as follow-ups.
+Not migrated here: `preview-deploy.yml` (per-PR previews still use Pages branch-alias URLs) — tracked as a
+follow-up. (The legacy `deploy-apps.sh` Pages path was deleted in the release-machinery cutover.)
 
 ## Open items / prerequisites
 

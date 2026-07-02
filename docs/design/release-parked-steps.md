@@ -25,12 +25,15 @@ JSON
 
 CI already handles `merge_group`, so enabling the queue is safe. Reversible.
 
-## 2. First real release proves the pipeline (Phase 2) — BEFORE any deletion
+## 2. First real release proves the pipeline (Phase 2)
 
-Overlap, do not gap. release-please stays live until a real Changesets release succeeds.
+> **Deviation from "overlap, do not gap":** this cutover PR removed the legacy machinery up front (see §3)
+> rather than after a proven release, on the decision to validate the new workflows directly on the PR
+> branch (temporary `push`→labs trigger on `deploy-apps.yml`; `--ref` dispatch of the on-main workflows).
+> The steps below are the first-real-release checklist to run once merged.
 
 1. Land a PR with a `.changeset/*.md` (a `patch` — see the pre-1.0 rule).
-2. `release.yml` opens the **"Version Packages" PR**. Review it: confirm Group A bumps together, Group B
+2. `publish-all.yml` opens the **"Version Packages" PR**. Review it: confirm Group A bumps together, Group B
    together, apps are untouched, `version.ts` + `tauri.conf.json` stamped.
 3. **Merge it** → publishes `@latest` (OIDC + provenance). Verify the packages on npm.
 4. Confirm `@next` publishes: run the **Release (next)** workflow (`workflow_dispatch`) — it cuts a
@@ -39,19 +42,21 @@ Overlap, do not gap. release-please stays live until a real Changesets release s
 
 **One-way door:** the first real `@latest` publish. Do not delete the old pipeline until this is green.
 
-## 3. Delete the old pipeline (Phase 2) — only after step 2 is green
+## 3. Delete the old pipeline (Phase 2) — DONE in this cutover PR
 
 The changeset check is **advisory**, wired into **Check** as the `changeset-reminder` job
 (`scripts/check-changeset.mjs` posts a sticky comment when a publishable change lacks one; it never
-blocks). `validate-pr-title.yaml` and release-please run in parallel during the overlap. Once a real
-Changesets `@latest` release has landed (step 2), delete the old pipeline in one PR:
+blocks). Executed:
 
-- Remove from `tools/toolbox/src/main.ts` the `updateReleasePlease()` call (keep `updateChangesets()`),
-  then delete the `updateReleasePlease` method and `release-please-config.json` / `.release-please-manifest.json`.
-- Delete `release-please.yml`, `release-candidate.yml`, `validate-pr-title.yaml`, the npm path of
-  `publish-all.yml`, `.github/workflows/scripts/bump-version.js`, `.github/workflows/scripts/publish.sh`,
-  and the `{x-release-please-version}` markers in the `version.ts` files.
-- Promote `agents/instructions/changesets.md` into the core `CLAUDE.md`.
+- ✅ Removed the `updateReleasePlease()` call + method from the toolbox generator, and deleted
+  `release-please-config.json` / `.release-please-manifest.json`.
+- ✅ Deleted `release-please.yml`, `release-candidate.yml`; replaced the per-branch npm path of
+  `publish-all.yml` with the Changesets publisher (`changeset publish` — kept in `publish-all.yml`
+  because npm's OIDC trusted publisher is bound to that filename); deleted
+  `scripts/{publish,deploy-apps,apps,bundle-apps}.sh` + `scripts/bump-version.js`; removed the
+  `{x-release-please-version}` markers from the `version.ts` files.
+- **Kept `validate-pr-title.yaml`** (enforces the PR-title convention; not release-please-specific).
+- ⬜ Promote `agents/instructions/changesets.md` into the core `CLAUDE.md` (still pending).
 - Keep `pkg-pr-new.yml`, `preview.yml`, `preview-deploy.yml`.
 
 ## 4. Retire long-lived branches (Phase 2) — last
@@ -97,11 +102,11 @@ Edit** on the account (Pages-only tokens won't deploy Workers).
    integration, not GitHub Actions. To bring it into this flow: disable the Cloudflare auto-build for docs,
    and rely on `deploy-apps.yml` (docs is in the manifest, `docs:bundle` → `docs/dist`,
    `notFoundHandling: 404-page`). Verify the first GH-Actions docs deploy before disabling the native one.
-3. **Follow-up migrations (still on Pages):** `preview-deploy.yml` posts per-PR previews via Pages
+3. **Follow-up migration (still on Pages):** `preview-deploy.yml` posts per-PR previews via Pages
    branch-alias URLs (`pr-<n>.composer-app.pages.dev`) — migrating to Workers means preview URLs (versions)
    or per-PR named Workers, a distinct URL contract (the sticky `composer-preview` comment references it).
-   The legacy `publish-all.yml` + `deploy-apps.sh` still `wrangler pages deploy`, but are slated for
-   deletion (§ the retire-legacy-workflows step) — migrate only if their deletion slips.
+   (The legacy `deploy-apps.sh` Pages path was deleted in the release-machinery cutover; only per-PR
+   previews remain on Pages.)
 
 ## Remaining smaller wiring (not blocking, no human gate)
 

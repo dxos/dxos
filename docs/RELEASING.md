@@ -21,13 +21,16 @@ The groups carry independent version numbers but **release together**: the singl
 ## Stable release → npm `@latest`
 
 1. Feature PRs include a `.changeset/*.md` (see the authoring guide). It is not required — CI's `changeset-reminder` job posts an advisory comment if a publishable change has none; chores just omit it.
-2. On every push to `main`, **`release.yml`** maintains a **"Version Packages" PR** (bumps versions, writes
-   changelogs, stamps `version.ts` + `tauri.conf.json` via `sync-versions.mjs`).
-3. **Human gate: merge the "Version Packages" PR.** The merge triggers `release.yml` to publish the bumped
-   packages to npm `@latest` (OIDC + provenance) and push tags.
+2. On every push to `main`, **`publish-all.yml`** maintains a **"Version Packages" PR** (bumps versions,
+   writes changelogs, stamps `version.ts` + `tauri.conf.json` via `sync-versions.mjs`).
+3. **Human gate: merge the "Version Packages" PR.** The merge triggers `publish-all.yml` to publish the
+   bumped packages to npm `@latest` (OIDC + provenance) and push tags.
 
 That's the whole loop: add changesets → merge the Version PR. (An on-demand `workflow_dispatch` on
-`release.yml` also exists.)
+`publish-all.yml` also exists.)
+
+> **Why `publish-all.yml`?** npm's OIDC trusted publisher is bound to that workflow filename, so the actual
+> `changeset publish` must run from it — publishing from any other file is rejected by npm's OIDC.
 
 ## Pre-release → npm `@next`
 
@@ -38,8 +41,8 @@ That's the whole loop: add changesets → merge the Version PR. (An on-demand `w
    `0.9.1-next-<datetime>` for packages with pending changesets — a fixed group snapshots together) and
    `changeset publish --tag next --no-git-tag`. Nothing is committed; no git tags. No-op when no changesets are pending.
 
-Snapshots are throwaway and never touch `@latest`. This repo does not use `pre` mode at all — `release.yml`
-fails fast if a stray `pre.json` ever appears.
+Snapshots are throwaway and never touch `@latest`. This repo does not use `pre` mode at all —
+`publish-all.yml` fails fast if a stray `pre.json` ever appears.
 
 ## Continuous package previews → pkg.pr.new
 
@@ -90,5 +93,8 @@ Not automated by this change — see the parked-steps section of the handoff:
 
 - Enable "require linear history" + merge queue on `main` (repo settings).
 - Retire the long-lived `production` / `staging` / `labs` / `dev` branches (back up tips first).
-- Delete release-please / per-commit-npm / PR-title workflows — only **after** a real release proves this
-  pipeline (overlap, do not gap).
+- This PR removed the legacy release machinery (`release-please.yml`, `release-candidate.yml`, the
+  per-branch npm path of `publish-all.yml`, `scripts/{publish,deploy-apps,apps,bundle-apps}.sh`,
+  `scripts/bump-version.js`, `release-please-config.json`, `.release-please-manifest.json`). If branch
+  protection lists any of their jobs as **required checks**, drop those requirements (repo settings) or the
+  merge queue will block. `validate-pr-title.yaml` is intentionally kept (enforces the PR-title convention).

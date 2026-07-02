@@ -25,7 +25,7 @@ The reference design is Effect-TS. Effect v3 (`Effect-TS/effect`) uses Changeset
 | Area | Today | Disposition |
 | --- | --- | --- |
 | Versioning | All ~400 packages lockstep at one version (`0.9.0`) | 🔄 split into two fixed publish groups (core/SDK; plugins+CLI); apps deploy, never publish |
-| Version config | `release-please-config.json` (~1,409 lines) regenerated on `pnpm install` by `tools/toolbox/src/toolbox.ts::updateReleasePlease()` | 🔄 replaced by generated `.changeset/config.json` |
+| Version config | `release-please-config.json` (~1,409 lines) regenerated on `pnpm install` by `tools/toolbox/src/toolbox.ts::updateReleasePlease()` | ✅ replaced by generated `.changeset/config.json` (`updateChangesets()`); old config + generator method deleted |
 | Change intent | Conventional-commit PR titles validated by `amannn/action-semantic-pull-request` | 🔄 replaced by `.changeset/*.md` files |
 | Branches | `main` / `staging` (force-pushed) / `production` / `labs` / `dev` + cut `rc-*` / `hotfix-*`; `rc → production → main` `--no-ff` chain | 🔄 collapse to trunk on `main` |
 | Continuous publish | Every push to `main`/`staging`/`labs` publishes `X.Y.Z-<tag>.<sha>` to npm | 🔄 removed; pkg.pr.new carries continuous code |
@@ -118,14 +118,14 @@ Pre-1.0 we run **two channels**: stable `main` → `@latest`, and snapshot `@nex
 
 ### Full release
 
-Driven by `release.yml` (push to `main`). The Changesets action maintains the **"Version Packages" PR** (consuming `.changeset/*.md`, bumping versions, writing changelogs). The human gate is **merging that PR**; the merge triggers the publish (npm OIDC + `--provenance`) and tags `@latest`. The only human actions in the whole loop: add a `.changeset/*.md` to feature PRs, then merge the Version Packages PR. (An optional `workflow_dispatch` entry on `release.yml` allows an on-demand publish without waiting for the next push.)
+Driven by `publish-all.yml` (push to `main`). The Changesets action maintains the **"Version Packages" PR** (consuming `.changeset/*.md`, bumping versions, writing changelogs). The human gate is **merging that PR**; the merge triggers the publish (npm OIDC + `--provenance`) and tags `@latest`. The only human actions in the whole loop: add a `.changeset/*.md` to feature PRs, then merge the Version Packages PR. (An optional `workflow_dispatch` entry on `publish-all.yml` allows an on-demand publish without waiting for the next push.) The publish stays in `publish-all.yml` because npm's OIDC trusted publisher is bound to that workflow filename.
 
 ### Pre-release
 
 Per-commit unreleased code is served by pkg.pr.new (Section 7), **not** by publishing to npm. The deliberate `@next` prerelease channel uses **Changesets snapshot releases** — no `pre` mode, no `.changeset/pre.json`, and no long-lived branch:
 
 - **Manually triggered.** `release-next.yml` runs on `workflow_dispatch`. It runs `changeset version --snapshot next` (calculated base version + commit suffix → `X.Y.Z-next-<commit>`, per the `snapshot` config) + `sync-versions`, then `changeset publish --tag next --no-git-tag`. Nothing is committed and no git tags are created — snapshots are throwaway. No-op when there are no pending changesets.
-- **No `pre` mode anywhere.** We deliberately avoid `changeset pre enter` (the Effect-v4 trap: it freezes stable releases until `pre exit` and pins `pre.json` to a branch). Snapshots need none of that. `release.yml` still **fails fast if `.changeset/pre.json` ever appears** as a defensive guard.
+- **No `pre` mode anywhere.** We deliberately avoid `changeset pre enter` (the Effect-v4 trap: it freezes stable releases until `pre exit` and pins `pre.json` to a branch). Snapshots need none of that. `publish-all.yml` still **fails fast if `.changeset/pre.json` ever appears** as a defensive guard.
 - `main` keeps publishing `@latest` via its "Version Packages" PR (above). The two channels are independent and need no cross-branch sync.
 - **Apps-split simplification:** once applications move to the separate repo, the only npm action here is "publish packages" — no app-deployment-vs-package-publish distinction to encode.
 
@@ -138,7 +138,7 @@ The old four deploy environments are preserved, but **environment is a deploy pa
 | **main** | automatic on push to `main` | continuous deploy |
 | **labs** | manual `workflow_dispatch` | ad-hoc test deploys (was the `labs` branch) |
 | **staging** | manual `workflow_dispatch` | pre-release; build sees `DX_ENVIRONMENT=staging` |
-| **production** | **automatic on a real release** | `release.yml` deploys production only when `changesets/action` reports `published == true`; **not** a manual option, so no arbitrary ref can reach it (the gate that replaces "push to `production` after a release-please cut") |
+| **production** | **manual, deliberate** | via **Release Composer** (versioned) or **Release App** (docs/examples) — decoupled from npm publishing; not reachable by an arbitrary ref. See `app-release-spec.md`. |
 
 **Tracking what's on each environment** (the one thing branches gave for free): each deploy force-updates a floating **`env/<name>` git tag** (`env/labs` / `env/staging` / `env/production`; `main` tracks the `main` env), so `git rev-parse env/production` / `git diff env/staging..env/production` show what's live. This replaces "look at the branch tip." No GitHub Environments are used — human gating is the "Version Packages" PR merge that triggers the release (and thus the production deploy).
 
@@ -207,11 +207,11 @@ Exit: ✅ membership generator + advisory changeset reminder landed (wired into 
 
 ### Phase 2 — Release-model cutover (single repo) ⬜
 
-- New: `.changeset/config.json` (generated); `.github/workflows/release.yml` (push to `main` + optional `workflow_dispatch`; `changesets/action@v1`, npm OIDC + `--provenance`, build/test via moon before publish); `release-next.yml` (**`workflow_dispatch`**; runs `changeset version --snapshot next` + `sync-versions` + `changeset publish --tag next --no-git-tag` in CI — snapshot releases, no branch / `pre` mode — see Section 6); `deploy-apps.yml` (app deploy migrated from `publish-all.yml`, version-decoupled); `scripts/sync-versions.mjs`; `docs/RELEASING.md` (documents which trigger to use — merge the Version PR for `@latest`, run the Release (next) workflow for `@next` — not commands to type). Root `package.json`: `changeset`, `changeset:version`, `changeset:publish` scripts (invoked **by the workflows**, not by hand).
+- New: `.changeset/config.json` (generated); the Changesets publisher lives in `.github/workflows/publish-all.yml` (push to `main` + optional `workflow_dispatch`; `changesets/action@v1`, npm OIDC + `--provenance`, build/test via moon before publish) — kept in that filename because npm's OIDC trusted publisher is bound to it; `release-next.yml` (**`workflow_dispatch`**; runs `changeset version --snapshot next` + `sync-versions` + `changeset publish --tag next --no-git-tag` in CI — snapshot releases, no branch / `pre` mode — see Section 6); `deploy-apps.yml` (app deploy migrated from `publish-all.yml`, version-decoupled); `scripts/sync-versions.mjs`; `docs/RELEASING.md` (documents which trigger to use — merge the Version PR for `@latest`, run the Release (next) workflow for `@next` — not commands to type). Root `package.json`: `changeset`, `changeset:version`, `changeset:publish` scripts (invoked **by the workflows**, not by hand).
 - Toolbox: replace `updateReleasePlease()` with `updateChangesets()` (typed `ProjectGraph`, no casts); CI asserts the config is in sync.
 - Validate the real pipeline by publishing a **`@next` snapshot** (run `release-next.yml`) and consuming it from a scratch install / the `edge` repo — this is the end-to-end proof (publish + install + dist-tag) that replaces the old Verdaccio dry-run.
-- Delete (after the pre-release **and** `release.yml` prove a publish — overlap, do not gap): `release-please-config.json`, `.release-please-manifest.json`, `release-please.yml`, `release-candidate.yml`, `validate-pr-title.yaml`, the npm path of `publish-all.yml`, `scripts/bump-version.js`, `scripts/publish.sh`, and the `{x-release-please-version}` markers.
-- Agent instructions cutover: `check-changeset.mjs` is wired into **Check** as the advisory `changeset-reminder` job. Promote [`agents/instructions/changesets.md`](../../agents/instructions/changesets.md) into the core `CLAUDE.md` (the "add a changeset when a change should ship in a release" rule) in the same change that deletes `validate-pr-title.yaml`.
+- ✅ Deleted (in this cutover PR): `release-please-config.json`, `.release-please-manifest.json`, `release-please.yml`, `release-candidate.yml`, the per-branch npm path of `publish-all.yml` (its body is now the Changesets publisher), `scripts/{publish,deploy-apps,apps,bundle-apps}.sh`, `scripts/bump-version.js`, and the `{x-release-please-version}` markers. **Kept** `validate-pr-title.yaml` (PR-title convention, not release-please-specific).
+- Agent instructions cutover: `check-changeset.mjs` is wired into **Check** as the advisory `changeset-reminder` job. Still pending: promote [`agents/instructions/changesets.md`](../../agents/instructions/changesets.md) into the core `CLAUDE.md` (the "add a changeset when a change should ship in a release" rule). `validate-pr-title.yaml` is kept (PR-title convention).
 - Keep: `pkg-pr-new.yml`, `preview.yml`, `preview-deploy.yml`. Retire long-lived branches last (back up tips first).
 - Cutover from `0.9.0`: both groups continue from `0.9.0`; Group B (plugins + cli) diverges from Group A on its first changeset; **standard semver** applies (the `0.x` minor→`1.0.0` cascade is fixed — see the de-risk finding) — at `0.x` breaking rides the `minor`, and `major` is the deliberate `1.0.0` cut.
 

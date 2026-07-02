@@ -63,6 +63,22 @@ for target in "${TARGETS[@]}"; do
   fi
 
   echo "::group::Deploy ${name} -> ${ENVIRONMENT} (worker: ${workerName})"
+
+  # populate-env.sh exports the app's PostHog config under its package prefix (e.g. composer-app →
+  # COMPOSER_APP_POSTHOG_*); the Vite build reads the DX_POSTHOG_* names, so map them here before bundling.
+  pkgPrefix="${task%%:*}"          # composer-app:bundle -> composer-app
+  pkgPrefix="${pkgPrefix^^}"       # -> COMPOSER-APP
+  pkgPrefix="${pkgPrefix//-/_}"    # -> COMPOSER_APP
+  apiKeyVar="${pkgPrefix}_POSTHOG_API_KEY"
+  if [ -n "${!apiKeyVar:-}" ]; then
+    projectVar="${pkgPrefix}_POSTHOG_PROJECT_ID"
+    surveyVar="${pkgPrefix}_POSTHOG_FEEDBACK_SURVEY_ID"
+    export DX_POSTHOG_API_KEY="${!apiKeyVar}"
+    export DX_POSTHOG_PROJECT_ID="${!projectVar:-}"
+    export DX_POSTHOG_FEEDBACK_SURVEY_ID="${!surveyVar:-}"
+    export LOG_FILTER="error"
+  fi
+
   moon run "$task"
 
   node -e '

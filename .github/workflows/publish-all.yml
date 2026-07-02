@@ -1,32 +1,32 @@
 name: Publish
+
+# npm publishing for Group A (core/SDK) and Group B (plugins + cli). Maintains the Changesets "Version
+# Packages" PR on every push to main; merging that PR publishes the bumped packages to npm @latest with
+# provenance. The human gate is merging the PR — nobody runs changeset/publish locally.
+#
+# This filename is load-bearing: npm's OIDC trusted publisher is configured against `publish-all.yml`, so
+# the actual `changeset publish` MUST run from this workflow (a different filename fails OIDC). Apps deploy
+# via deploy-apps.yml + the release-composer / release-app workflows, never here.
+
 on:
-  workflow_dispatch:
-    inputs:
-      publish_npm:
-        description: 'Publish a non-production branch to NPM'
-        default: 'false'
   push:
     branches:
-      - labs
       - main
-      - production
-      - staging
-      - dev
-  release:
-    types:
-      - published
+  workflow_dispatch: {} # On-demand publish without waiting for the next push.
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-npm-${{ github.event.inputs.publish_npm || 'false' }}
-  cancel-in-progress: true
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
-  contents: write # Required to upload release assets.
-  id-token: write # Required for npm trusted publisher OIDC.
+  contents: write # Create the Version Packages PR + git tags.
+  pull-requests: write # Maintain the Version Packages PR.
+  id-token: write # npm trusted-publisher OIDC + provenance.
 
 jobs:
   publish:
-    # Must use GitHub-hosted runner for npm provenance (sigstore attestation).
+    if: github.repository == 'dxos/dxos'
+    # GitHub-hosted runner required for npm provenance (sigstore attestation).
     runs-on: ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -39,94 +39,44 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
-      # TODO: read secrets directly from 1p?
-      - name: Set environment variables from secrets, env files. Also set DX_ENVIRONMENT and BRANCH
-        run: .github/workflows/scripts/populate-env.sh ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} >> $GITHUB_ENV
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
-          COMPOSER_APP_PROD_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
-          COMPOSER_APP_PROD_POSTHOG_PROJECT_ID: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_PROJECT_ID }}
-          COMPOSER_APP_PROD_POSTHOG_FEEDBACK_SURVEY_ID: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_FEEDBACK_SURVEY_ID }}
-          COMPOSER_APP_TEST_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_API_KEY }}
-          COMPOSER_APP_TEST_POSTHOG_PROJECT_ID: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_PROJECT_ID }}
-          COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID }}
-          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
-          DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
-          IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
-          IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+      # This repo does not use Changesets `pre` mode — the @next channel uses snapshot releases instead.
+      # A stray `.changeset/pre.json` would silently turn a stable publish into a pre-release, so fail fast.
+      - name: Guard against pre-release state on main
+        run: |
+          if [ -f .changeset/pre.json ]; then
+            echo "::error::.changeset/pre.json present — @next uses snapshot releases, not pre mode. Remove it (changeset pre exit)."
+            exit 1
+          fi
 
       - name: Setup
         uses: ./.github/actions/setup
         with:
-          # Isolate the publish cache from PR caches to prevent cache-poisoning
-          # attacks (see: TanStack npm supply-chain postmortem).
+          # Isolate publish cache from PR caches (cache-poisoning defense).
           cache-scope: publish
-          # Verify package checksums so a poisoned cache entry is detected.
           verify-integrity: 'true'
-
-      - name: Bump Versions
-        run: node .github/workflows/scripts/bump-version.js ${{ env.DX_ENVIRONMENT }}
-        if: env.BRANCH != 'production'
 
       - name: Build
         run: moon run :build
         env:
           NODE_ENV: production
 
-      # NOTE: Shell must be bundled before npm publish.
+      # Shell must be bundled before npm publish.
       - name: Bundle Shell
         run: moon run shell:bundle
         env:
           NODE_ENV: production
 
-      - name: Publish to NPM
-        id: npm-publish
-        run: .github/workflows/scripts/publish.sh
-        if: env.BRANCH == 'production' || env.BRANCH == 'staging' || github.event.inputs.publish_npm == 'true'
+      # When changesets exist, maintains/updates the "Version Packages" PR. When that PR is merged
+      # (versions bumped, no changesets remain), runs the publish command instead.
+      - name: Version PR or publish
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: pnpm changeset:version
+          publish: pnpm changeset:publish
+          commit: 'chore: version packages'
+          title: 'chore: version packages'
         env:
-          DISCORD_NPM_PUBLISH_WEBHOOK: ${{ secrets.DISCORD_NPM_PUBLISH_WEBHOOK }}
-
-      - name: Bundle Apps
-        run: .github/workflows/scripts/bundle-apps.sh
-        env:
-          NODE_ENV: production
-
-      - name: Upload Composer Source Maps to PostHog
-        if: env.POSTHOG_CLI_API_KEY != '' && env.COMPOSER_APP_POSTHOG_PROJECT_ID != ''
-        continue-on-error: true
-        env:
-          POSTHOG_CLI_HOST: https://eu.posthog.com
-        run: |
-          BUILD_DIR="packages/apps/composer-app/out/composer"
-          POSTHOG_CLI_PROJECT_ID="$COMPOSER_APP_POSTHOG_PROJECT_ID" pnpm -w exec posthog-cli sourcemap inject --directory "$BUILD_DIR"
-          POSTHOG_CLI_PROJECT_ID="$COMPOSER_APP_POSTHOG_PROJECT_ID" pnpm -w exec posthog-cli sourcemap upload --directory "$BUILD_DIR" \
-            --release-name composer \
-            --release-version "$GITHUB_SHA"
-
-      - name: Deploy Apps
-        run: .github/workflows/scripts/deploy-apps.sh
-        env:
-          NODE_ENV: production
-
-      - name: Bundle Devtools
-        run: moon run devtools-extension:bundle
-        env:
-          NODE_ENV: production
-
-      - name: Gather Artifacts for Devtools extension
-        run: |
-          ROOT_CWD="$(pwd)"
-          mkdir artifacts
-          pushd packages/devtools/devtools-extension/out/devtools-extension && zip -r $ROOT_CWD/artifacts/devtools.zip . && popd
-        if: github.event_name == 'release' && github.event.action == 'published'
-
-      - name: Upload Devtools extension
-        uses: fnkr/github-action-ghr@v1
-        env:
-          GHR_PATH: artifacts/
-          GITHUB_TOKEN: ${{ secrets.GH_DXOS_BOT_PAT }}
-        if: github.event_name == 'release' && github.event.action == 'published'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.
