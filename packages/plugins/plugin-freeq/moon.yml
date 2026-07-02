@@ -8,9 +8,12 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/constants.ts'
+      - '--entryPoint=src/errors.ts'
       - '--entryPoint=src/FreeqPlugin.ts'
       - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/plugin.ts'
       - '--entryPoint=src/services/IrcProtocol.ts'
       - '--entryPoint=src/translations.ts'
+      - '--entryPoint=src/types.ts'
       - '--platform=neutral'
