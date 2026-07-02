@@ -11,5 +11,6 @@ tasks:
       - '--entryPoint=src/FreeqPlugin.ts'
       - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/services/IrcProtocol.ts'
       - '--entryPoint=src/translations.ts'
       - '--platform=neutral'
