@@ -8,7 +8,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import sourcemaps from 'rollup-plugin-sourcemaps';
-import { defineConfig, searchForWorkspaceRoot } from 'vite';
+import { type Plugin, defineConfig, searchForWorkspaceRoot } from 'vite';
 import topLevelAwait from 'vite-plugin-top-level-await';
 import wasm from 'vite-plugin-wasm';
 
@@ -29,6 +29,22 @@ const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
 const outDir = prepareCanonicalDist(dirname);
+
+/**
+ * Remove the inline dark-mode `<script>` that ThemePlugin injects into every
+ * page's `<head>`. The MV3 extension CSP (`script-src 'self'`) forbids inline
+ * scripts, and `extension_pages` — unlike a web build — cannot whitelist a hash
+ * or nonce to permit one. The extension is dark-only (Container forces
+ * `themeMode='dark'`), so `class="dark"` on each page covers first paint. The
+ * injected `<style>` tags are left intact (inline styles are allowed).
+ */
+const stripInlineThemeScript = (): Plugin => ({
+  name: 'dxos-crx-strip-inline-theme-script',
+  transformIndexHtml: {
+    order: 'post',
+    handler: (html) => html.replace(/\s*<script data-dxos-theme="">[\s\S]*?<\/script>/g, ''),
+  },
+});
 
 /**
  * https://vitejs.dev/config
@@ -179,6 +195,10 @@ export default defineConfig({
         writeFileSync(path.join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
       },
     },
+
+    // Must come last: its post `transformIndexHtml` runs after ThemePlugin has
+    // injected the inline dark-mode script.
+    stripInlineThemeScript(),
   ],
 
   // TODO(wittjosiah): Tests failing.
