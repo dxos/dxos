@@ -42,7 +42,21 @@ const stripInlineThemeScript = (): Plugin => ({
   name: 'dxos-crx-strip-inline-theme-script',
   transformIndexHtml: {
     order: 'post',
-    handler: (html) => html.replace(/\s*<script data-dxos-theme="">[\s\S]*?<\/script>/g, ''),
+    handler: (html) => {
+      // Match by the `data-dxos-theme` marker attribute regardless of attribute
+      // order or any additional attributes, so a change to ThemePlugin's markup
+      // does not silently stop stripping (which would reintroduce the CSP
+      // violation). Warn at build time if nothing matched so the regression is
+      // visible rather than shipped.
+      const stripped = html.replace(/\s*<script\b[^>]*\bdata-dxos-theme\b[^>]*>[\s\S]*?<\/script>/g, '');
+      if (stripped === html) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          '[composer-crx] stripInlineThemeScript: no inline theme script found — ThemePlugin output may have changed; verify extension pages stay CSP-clean.',
+        );
+      }
+      return stripped;
+    },
   },
 });
 

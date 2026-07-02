@@ -20,6 +20,13 @@ import { THUMBNAIL_PROP, getConfig } from './config';
 const rootClasses = 'flex flex-col w-full';
 
 /**
+ * The active tab of the panel's window, resolved at call time. Callbacks read
+ * it fresh rather than closing over `useActiveTab` state to avoid stale-closure
+ * reads from their empty-dependency `useCallback`s.
+ */
+const getActiveTab = () => browser.tabs.query({ active: true, currentWindow: true }).then(([tab]) => tab);
+
+/**
  * Tracks the active tab of the current window. Unlike the popup, the side panel
  * stays open across navigation and tab switches, so it must react to changes.
  */
@@ -28,7 +35,7 @@ const useActiveTab = (): { id?: number; url: string | null } => {
   useEffect(() => {
     let cancelled = false;
     const refresh = async () => {
-      const [active] = await browser.tabs.query({ active: true, currentWindow: true });
+      const active = await getActiveTab();
       if (cancelled) {
         return;
       }
@@ -97,7 +104,7 @@ const Root = () => {
   // TODO(burdon): Demo to communicate with content script.
   const handlePing = useCallback<NonNullable<ChatProps['onPing']>>(async () => {
     log.info('sending...');
-    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    const tab = await getActiveTab();
     if (!tab?.id) {
       log.error('no active tab found');
       return null;
@@ -125,7 +132,7 @@ const Root = () => {
   }, []);
 
   const handleClip = useCallback(async () => {
-    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    const tab = await getActiveTab();
     if (!tab?.id) {
       return;
     }
