@@ -51,6 +51,20 @@ const parse = (line: string): IrcMessage => {
   const tags: Record<string, string> = {};
   if (rest.startsWith('@')) {
     const end = rest.indexOf(' ');
+    if (end === -1) {
+      // No content follows the tags segment (malformed/truncated line); there is no
+      // command or params to extract, so stop here rather than slicing with -1.
+      const tagStr = rest.slice(1);
+      for (const pair of tagStr.split(';')) {
+        const eq = pair.indexOf('=');
+        if (eq === -1) {
+          tags[pair] = '';
+        } else {
+          tags[pair.slice(0, eq)] = unescapeTagValue(pair.slice(eq + 1));
+        }
+      }
+      return { tags, prefix: undefined, command: '', params: [] };
+    }
     const tagStr = rest.slice(1, end);
     rest = rest.slice(end + 1).trimStart();
     for (const pair of tagStr.split(';')) {
@@ -66,6 +80,12 @@ const parse = (line: string): IrcMessage => {
   let prefix: string | undefined;
   if (rest.startsWith(':')) {
     const end = rest.indexOf(' ');
+    if (end === -1) {
+      // Lone prefix with nothing following (malformed/truncated line): the whole
+      // remainder is the prefix and there is no command or params.
+      prefix = rest.slice(1);
+      return { tags, prefix, command: '', params: [] };
+    }
     prefix = rest.slice(1, end);
     rest = rest.slice(end + 1).trimStart();
   }

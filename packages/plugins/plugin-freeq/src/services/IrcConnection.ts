@@ -45,6 +45,20 @@ export const makeIrcConnection = (options: {
   let resolveConnect: (() => void) | undefined;
   let rejectConnect: ((error: unknown) => void) | undefined;
 
+  // App-level lines (JOIN, PRIVMSG) must not reach a socket that has not completed
+  // registration: the transport may still be CONNECTING, and a real WebSocket throws
+  // on send() in that state. Handshake lines are sent directly since they are only
+  // ever issued in response to onOpen/server lines, once the socket is already OPEN.
+  let registered = false;
+  const outbound: string[] = [];
+  const enqueueOrSend = (line: string): void => {
+    if (registered) {
+      transport.send(line);
+    } else {
+      outbound.push(line);
+    }
+  };
+
   const handleChallenge = (payload: string): void => {
     if (!credentialProvider) {
       transport.send('AUTHENTICATE *'); // Abort SASL; proceed as guest.
@@ -59,7 +73,7 @@ export const makeIrcConnection = (options: {
     }
     void runResponse(credentialProvider.respond(challenge))
       .then((response) => transport.send('AUTHENTICATE ' + response))
-      .catch((error) => rejectConnect?.(error));
+      .catch((error) => rejectConnect?.(new FreeqAuthError({ cause: error })));
   };
 
   const handleLine = (line: string): void => {
@@ -89,9 +103,12 @@ export const makeIrcConnection = (options: {
         rejectConnect?.(new FreeqAuthError({ message: 'SASL authentication failed.' }));
         break;
       case '001': // Registration complete.
+        registered = true;
         resolveConnect?.();
         resolveConnect = undefined;
         rejectConnect = undefined;
+        outbound.forEach((line) => transport.send(line));
+        outbound.length = 0;
         break;
       case 'PRIVMSG': {
         const [channel, text] = message.params;
@@ -127,12 +144,12 @@ export const makeIrcConnection = (options: {
       }),
     join: (channel) =>
       new Promise<void>((resolve) => {
-        transport.send(IrcProtocol.serialize({ command: 'JOIN', params: [channel] }));
+        enqueueOrSend(IrcProtocol.serialize({ command: 'JOIN', params: [channel] }));
         resolve();
       }),
     part: (channel) => transport.send(IrcProtocol.serialize({ command: 'PART', params: [channel] })),
     sendMessage: (channel, text) =>
-      transport.send(IrcProtocol.serialize({ command: 'PRIVMSG', params: [channel, text] })),
+      enqueueOrSend(IrcProtocol.serialize({ command: 'PRIVMSG', params: [channel, text] })),
     onMessage: (channel, cb) => {
       const subs = subscribers.get(channel) ?? new Set();
       subs.add(cb);

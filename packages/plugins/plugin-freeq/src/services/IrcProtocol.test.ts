@@ -48,4 +48,17 @@ describe('IrcProtocol', () => {
     expect(IrcProtocol.serialize({ command: 'JOIN', params: ['#general'] })).toBe('JOIN #general');
     expect(IrcProtocol.serialize({ command: 'CAP', params: ['REQ', 'sasl'] })).toBe('CAP REQ :sasl');
   });
+
+  test('does not throw on a malformed lone-tag line with no trailing space', ({ expect }) => {
+    const msg = IrcProtocol.parse('@msgid=abc');
+    expect(msg.command).toBe('');
+    expect(msg.params).toEqual([]);
+  });
+
+  test('does not throw on a malformed lone-prefix line with no trailing space', ({ expect }) => {
+    const msg = IrcProtocol.parse(':srv');
+    expect(msg.prefix).toBe('srv');
+    expect(msg.command).toBe('');
+    expect(msg.params).toEqual([]);
+  });
 });

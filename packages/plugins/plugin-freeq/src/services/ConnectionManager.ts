@@ -69,21 +69,24 @@ export class ConnectionManager {
     }
     entry.refCount++;
 
+    // Capture the exact entry this handle acquired: if it is evicted (e.g. by a
+    // rejected connect()) and replaced before release() runs, this handle must not
+    // touch whatever new entry now lives at `key`.
+    const acquired = entry;
     let released = false;
     return {
-      connection: entry.connection,
+      connection: acquired.connection,
       release: () => {
         if (released) {
           return;
         }
         released = true;
-        const current = this.#entries.get(key);
-        if (!current) {
+        if (this.#entries.get(key) !== acquired) {
           return;
         }
-        current.refCount--;
-        if (current.refCount <= 0) {
-          current.connection.close();
+        acquired.refCount--;
+        if (acquired.refCount <= 0) {
+          acquired.connection.close();
           this.#entries.delete(key);
         }
       },

@@ -100,6 +100,39 @@ describe('ConnectionManager', () => {
     expect(connections[0]).not.toBe(connections[1]);
   });
 
+  test('a stale release from an evicted entry does not close a later live connection', async ({ expect }) => {
+    let created = 0;
+    const connections: any[] = [];
+    const manager = new ConnectionManager({
+      makeConnection: () => {
+        created++;
+        const shouldFail = created === 1;
+        const fake = makeFakeConnection(shouldFail ? { connect: () => Promise.reject(new Error('boom')) } : {});
+        connections.push(fake);
+        return fake;
+      },
+    });
+    const params = { serverUrl: 'wss://s', identityKey: 'did:a', nick: 'a', runResponse: async () => '' };
+
+    // h1 acquires entry1, whose connect() will reject and be evicted.
+    const h1 = manager.acquire(params);
+
+    // Let the rejected connect() promise settle and the eviction handler run.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // h2 acquires a fresh, live entry2 for the same key.
+    const h2 = manager.acquire(params);
+    expect(created).toBe(2);
+    expect(h2.connection).not.toBe(h1.connection);
+
+    // Releasing the stale h1 must not close h2's live connection.
+    h1.release();
+    expect(connections[1].closed).toBe(0);
+
+    h2.release();
+    expect(connections[1].closed).toBe(1);
+  });
+
   test('creates a fresh connection after acquire + full release', ({ expect }) => {
     let created = 0;
     const manager = new ConnectionManager({

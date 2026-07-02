@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { FreeqConnectionError } from '../errors';
+import { FreeqAuthError, FreeqConnectionError } from '../errors';
 import { type Transport, makeIrcConnection } from './IrcConnection';
 import { IrcProtocol } from './IrcProtocol';
 
@@ -70,11 +70,40 @@ describe('IrcConnection', () => {
     expect(received).toEqual(['hello']);
   });
 
-  test('sendMessage serializes a PRIVMSG', ({ expect }) => {
+  test('sendMessage serializes a PRIVMSG and sends immediately once registered', async ({ expect }) => {
     const mock = makeMockTransport();
     const connection = makeIrcConnection({ transport: mock.transport, nick: 'alice', runResponse: async () => '' });
+    const connected = connection.connect();
+    mock.open();
+    mock.emit(':srv 001 alice :Welcome');
+    await connected;
+
     connection.sendMessage('#general', 'hi there');
     expect(mock.sent).toContain(IrcProtocol.serialize({ command: 'PRIVMSG', params: ['#general', 'hi there'] }));
+  });
+
+  test('buffers join() and sendMessage() until registration (001), then flushes in order', async ({ expect }) => {
+    const mock = makeMockTransport();
+    const connection = makeIrcConnection({ transport: mock.transport, nick: 'alice', runResponse: async () => '' });
+    const connected = connection.connect();
+    mock.open();
+
+    void connection.join('#general');
+    connection.sendMessage('#general', 'hello');
+
+    const joinLine = IrcProtocol.serialize({ command: 'JOIN', params: ['#general'] });
+    const privmsgLine = IrcProtocol.serialize({ command: 'PRIVMSG', params: ['#general', 'hello'] });
+
+    // Neither app-level line may reach the transport before registration completes.
+    expect(mock.sent).not.toContain(joinLine);
+    expect(mock.sent).not.toContain(privmsgLine);
+
+    mock.emit(':srv 001 alice :Welcome');
+    await connected;
+
+    expect(mock.sent).toContain(joinLine);
+    expect(mock.sent).toContain(privmsgLine);
+    expect(mock.sent.indexOf(joinLine)).toBeLessThan(mock.sent.indexOf(privmsgLine));
   });
 
   test('replies to PING with PONG', ({ expect }) => {
@@ -95,6 +124,25 @@ describe('IrcConnection', () => {
     mock.emit(':srv CAP alice ACK :sasl');
     mock.emit('AUTHENTICATE ' + btoa(JSON.stringify({ sessionId: 's', nonce: 'n', ts: 1 })));
     expect(mock.sent).toContain('AUTHENTICATE *');
+  });
+
+  test('rejects connect() with FreeqAuthError on SASL failure (904)', async ({ expect }) => {
+    const mock = makeMockTransport();
+    const connection = makeIrcConnection({
+      transport: mock.transport,
+      nick: 'alice',
+      credentialProvider: { respond: () => undefined as never },
+      runResponse: async () => 'BASE64RESPONSE',
+    });
+
+    const connected = connection.connect();
+    mock.open();
+    mock.emit(':srv CAP * LS :sasl');
+    mock.emit(':srv CAP alice ACK :sasl');
+    mock.emit('AUTHENTICATE ' + btoa(JSON.stringify({ sessionId: 's', nonce: 'n', ts: 1 })));
+    mock.emit(':srv 904 alice :auth failed');
+
+    await expect(connected).rejects.toBeInstanceOf(FreeqAuthError);
   });
 
   test('rejects a pending connect() when close() is called mid-handshake', async ({ expect }) => {
