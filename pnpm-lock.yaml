@@ -2577,6 +2577,9 @@ importers:
       '@dxos/plugin-file':
         specifier: workspace:*
         version: link:../../plugins/plugin-file
+      '@dxos/plugin-freeq':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-freeq
       '@dxos/plugin-gallery':
         specifier: workspace:*
         version: link:../../plugins/plugin-gallery
