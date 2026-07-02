@@ -187,64 +187,70 @@ export type TriggerEditorProps = ThemedClassName<{
 
 export const TriggerEditor = ({ classNames, db, routine, trigger, readonly }: TriggerEditorProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { defaultValues, defaultComputeEnvironment, fieldMap, kind, resetNonce, handleClose, handleValuesChanged, handleComputeEnvironmentChanged } = useTriggerForm(
-    routine,
-    trigger,
-  );
+  const {
+    defaultValues,
+    defaultComputeEnvironment,
+    fieldMap,
+    kind,
+    resetNonce,
+    handleClose,
+    handleValuesChanged,
+    handleComputeEnvironmentChanged,
+  } = useTriggerForm(routine, trigger);
 
   // TODO(burdon): Not persistent; need to memo
   return (
     <>
-    <Form.Root
-      // Remount when the bound trigger changes (picks up its spec) or on reset (reverts to the picker).
-      key={`${trigger?.id ?? 'new'}:${resetNonce}`}
-      schema={TriggerForm}
-      db={db}
-      readonly={readonly}
-      fieldMap={fieldMap}
-      defaultValues={defaultValues}
-      onValuesChanged={handleValuesChanged}
-    >
-      <Form.Content classNames={mx(kind && 'pb-2 bg-card-surface border border-separator rounded-xs', classNames)}>
-        {/* TODO(burdon): Generalize indented section for discriminated unions. */}
-        {(kind && (
-          <>
-            <div className='flex items-center'>
-              <Input.Root>
-                <Input.Label classNames='pl-2 grow truncate'>{t(`trigger-kind.${kind}.label`)}</Input.Label>
-              </Input.Root>
-              {!readonly && (
-                <IconButton
-                  iconOnly
-                  variant='ghost'
-                  square
-                  icon='ph--x--regular'
-                  label={t('trigger-kind.clear.label')}
-                  onClick={handleClose}
-                />
-              )}
-            </div>
-            <Form.FieldSet classNames='px-2' />
-          </>
-        )) || <Form.FieldSet />}
-
-        {/* Email triggers have no configuration; surface an explanatory note instead of an empty body. */}
-        {kind === 'email' && <p className='px-2 text-sm text-description'>{t('trigger-kind.email-note.message')}</p>}
-      </Form.Content>
-    </Form.Root>
-    {kind && (
       <Form.Root
-        schema={ComputeEnvironmentForm}
+        // Remount when the bound trigger changes (picks up its spec) or on reset (reverts to the picker).
+        key={`${trigger?.id ?? 'new'}:${resetNonce}`}
+        schema={TriggerForm}
         db={db}
         readonly={readonly}
-        defaultValues={defaultComputeEnvironment}
-        onValuesChanged={handleComputeEnvironmentChanged}
+        fieldMap={fieldMap}
+        defaultValues={defaultValues}
+        onValuesChanged={handleValuesChanged}
       >
-        <Form.Content>
-          <Form.FieldSet />
+        <Form.Content classNames={mx(kind && 'pb-2 bg-card-surface border border-separator rounded-xs', classNames)}>
+          {/* TODO(burdon): Generalize indented section for discriminated unions. */}
+          {(kind && (
+            <>
+              <div className='flex items-center'>
+                <Input.Root>
+                  <Input.Label classNames='pl-2 grow truncate'>{t(`trigger-kind.${kind}.label`)}</Input.Label>
+                </Input.Root>
+                {!readonly && (
+                  <IconButton
+                    iconOnly
+                    variant='ghost'
+                    square
+                    icon='ph--x--regular'
+                    label={t('trigger-kind.clear.label')}
+                    onClick={handleClose}
+                  />
+                )}
+              </div>
+              <Form.FieldSet classNames='px-2' />
+            </>
+          )) || <Form.FieldSet />}
+
+          {/* Email triggers have no configuration; surface an explanatory note instead of an empty body. */}
+          {kind === 'email' && <p className='px-2 text-sm text-description'>{t('trigger-kind.email-note.message')}</p>}
         </Form.Content>
       </Form.Root>
-    )}
+      {kind && (
+        <Form.Root
+          schema={ComputeEnvironmentForm}
+          db={db}
+          readonly={readonly}
+          defaultValues={defaultComputeEnvironment}
+          onValuesChanged={handleComputeEnvironmentChanged}
+        >
+          <Form.Content>
+            <Form.FieldSet />
+          </Form.Content>
+        </Form.Root>
+      )}
     </>
   );
 };
@@ -397,5 +403,14 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
     [trigger],
   );
 
-  return { defaultValues, defaultComputeEnvironment, fieldMap, kind, resetNonce, handleClose, handleValuesChanged, handleComputeEnvironmentChanged };
+  return {
+    defaultValues,
+    defaultComputeEnvironment,
+    fieldMap,
+    kind,
+    resetNonce,
+    handleClose,
+    handleValuesChanged,
+    handleComputeEnvironmentChanged,
+  };
 };
