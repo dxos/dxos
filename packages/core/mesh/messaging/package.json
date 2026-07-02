@@ -34,6 +34,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
