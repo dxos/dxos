@@ -11172,6 +11172,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-table':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-table
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
