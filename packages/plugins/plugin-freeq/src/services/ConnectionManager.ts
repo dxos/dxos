@@ -61,8 +61,11 @@ export class ConnectionManager {
       const created = entry;
       // A connection that fails its handshake (e.g. SASL rejection) must not linger
       // in `#entries`, or every later acquire for this key would reuse the dead connection.
+      // The underlying socket is also closed here, since nothing else holds a reference
+      // to it once it is evicted.
       void created.connection.connect().catch(() => {
         if (this.#entries.get(key) === created) {
+          created.connection.close();
           this.#entries.delete(key);
         }
       });

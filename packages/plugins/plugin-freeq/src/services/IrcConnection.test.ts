@@ -5,24 +5,8 @@
 import { describe, test } from 'vitest';
 
 import { FreeqAuthError, FreeqConnectionError } from '../errors';
-import { type Transport, makeIrcConnection } from './IrcConnection';
+import { type IncomingMessage, type Transport, makeIrcConnection } from './IrcConnection';
 import { IrcProtocol } from './IrcProtocol';
-
-// Scriptable in-memory transport.
-const makeMockTransport = () => {
-  let lineCb: (line: string) => void = () => {};
-  let openCb: () => void = () => {};
-  let closeCb: () => void = () => {};
-  const sent: string[] = [];
-  const transport: Transport = {
-    send: (line) => sent.push(line),
-    close: () => closeCb(),
-    onLine: (cb) => (lineCb = cb),
-    onOpen: (cb) => (openCb = cb),
-    onClose: (cb) => (closeCb = cb),
-  };
-  return { transport, sent, emit: (line: string) => lineCb(line), open: () => openCb() };
-};
 
 describe('IrcConnection', () => {
   test('completes CAP + SASL handshake and resolves connect() on 001', async ({ expect }) => {
@@ -70,6 +54,26 @@ describe('IrcConnection', () => {
     expect(received).toEqual(['hello']);
   });
 
+  test('falls back to Date.now() when an inbound message has a malformed time tag', async ({ expect }) => {
+    const mock = makeMockTransport();
+    const connection = makeIrcConnection({ transport: mock.transport, nick: 'alice', runResponse: async () => '' });
+    const connected = connection.connect();
+    mock.open();
+    mock.emit(':srv 001 alice :Welcome');
+    await connected;
+
+    const received: IncomingMessage[] = [];
+    connection.onMessage('#general', (m) => received.push(m));
+    const before = Date.now();
+    mock.emit('@msgid=1;time=not-a-date :bob!b@h PRIVMSG #general :hello');
+    const after = Date.now();
+
+    expect(received).toHaveLength(1);
+    expect(Number.isFinite(received[0].ts)).toBe(true);
+    expect(received[0].ts).toBeGreaterThanOrEqual(before);
+    expect(received[0].ts).toBeLessThanOrEqual(after);
+  });
+
   test('sendMessage serializes a PRIVMSG and sends immediately once registered', async ({ expect }) => {
     const mock = makeMockTransport();
     const connection = makeIrcConnection({ transport: mock.transport, nick: 'alice', runResponse: async () => '' });
@@ -78,8 +82,46 @@ describe('IrcConnection', () => {
     mock.emit(':srv 001 alice :Welcome');
     await connected;
 
-    connection.sendMessage('#general', 'hi there');
+    void connection.sendMessage('#general', 'hi there');
     expect(mock.sent).toContain(IrcProtocol.serialize({ command: 'PRIVMSG', params: ['#general', 'hi there'] }));
+  });
+
+  test('sendMessage resolves immediately once registered', async ({ expect }) => {
+    const mock = makeMockTransport();
+    const connection = makeIrcConnection({ transport: mock.transport, nick: 'alice', runResponse: async () => '' });
+    const connected = connection.connect();
+    mock.open();
+    mock.emit(':srv 001 alice :Welcome');
+    await connected;
+
+    await expect(connection.sendMessage('#general', 'hi there')).resolves.toBeUndefined();
+  });
+
+  test('sendMessage on a not-yet-registered connection resolves only after the line flushes on 001', async ({
+    expect,
+  }) => {
+    const mock = makeMockTransport();
+    const connection = makeIrcConnection({ transport: mock.transport, nick: 'alice', runResponse: async () => '' });
+    const connected = connection.connect();
+    mock.open();
+
+    const privmsgLine = IrcProtocol.serialize({ command: 'PRIVMSG', params: ['#general', 'hello'] });
+    let flushed = false;
+    const sent = connection.sendMessage('#general', 'hello').then(() => {
+      flushed = true;
+    });
+
+    // The promise must not resolve, and the line must not reach the transport, before 001.
+    await Promise.resolve();
+    expect(flushed).toBe(false);
+    expect(mock.sent).not.toContain(privmsgLine);
+
+    mock.emit(':srv 001 alice :Welcome');
+    await connected;
+    await sent;
+
+    expect(flushed).toBe(true);
+    expect(mock.sent).toContain(privmsgLine);
   });
 
   test('buffers join() and sendMessage() until registration (001), then flushes in order', async ({ expect }) => {
@@ -89,7 +131,7 @@ describe('IrcConnection', () => {
     mock.open();
 
     void connection.join('#general');
-    connection.sendMessage('#general', 'hello');
+    void connection.sendMessage('#general', 'hello');
 
     const joinLine = IrcProtocol.serialize({ command: 'JOIN', params: ['#general'] });
     const privmsgLine = IrcProtocol.serialize({ command: 'PRIVMSG', params: ['#general', 'hello'] });
@@ -124,6 +166,26 @@ describe('IrcConnection', () => {
     mock.emit(':srv CAP alice ACK :sasl');
     mock.emit('AUTHENTICATE ' + btoa(JSON.stringify({ session_id: 's', nonce: 'n', timestamp: 1 })));
     expect(mock.sent).toContain('AUTHENTICATE *');
+  });
+
+  test('guest abort resolves connect() on 904 followed by 001, sending CAP END', async ({ expect }) => {
+    const mock = makeMockTransport();
+    const connection = makeIrcConnection({ transport: mock.transport, nick: 'alice', runResponse: async () => '' });
+    const connected = connection.connect();
+    mock.open();
+    mock.emit(':srv CAP * LS :sasl');
+    mock.emit(':srv CAP alice ACK :sasl');
+    mock.emit('AUTHENTICATE ' + btoa(JSON.stringify({ session_id: 's', nonce: 'n', timestamp: 1 })));
+
+    // Real freeq server behavior: a guest abort still yields a 904 numeric before
+    // proceeding to register the connection as an unauthenticated guest.
+    mock.emit(':srv 904 alice :SASL authentication failed');
+    mock.emit(':srv 001 alice :Welcome');
+
+    await connected;
+
+    expect(mock.sent).toContain('AUTHENTICATE *');
+    expect(mock.sent).toContain('CAP END');
   });
 
   test('rejects connect() with FreeqAuthError on SASL failure (904)', async ({ expect }) => {
@@ -245,3 +307,19 @@ describe('IrcConnection', () => {
     await expect(connected).rejects.toBeInstanceOf(FreeqConnectionError);
   });
 });
+
+// Scriptable in-memory transport.
+const makeMockTransport = () => {
+  let lineCb: (line: string) => void = () => {};
+  let openCb: () => void = () => {};
+  let closeCb: () => void = () => {};
+  const sent: string[] = [];
+  const transport: Transport = {
+    send: (line) => sent.push(line),
+    close: () => closeCb(),
+    onLine: (cb) => (lineCb = cb),
+    onOpen: (cb) => (openCb = cb),
+    onClose: (cb) => (closeCb = cb),
+  };
+  return { transport, sent, emit: (line: string) => lineCb(line), open: () => openCb() };
+};

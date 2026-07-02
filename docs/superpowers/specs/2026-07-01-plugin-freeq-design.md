@@ -110,13 +110,16 @@ Reference implementations to mirror:
 
 ## Background: freeq protocol
 
+**(superseded — see Addendum above for the shapes and framing validated against the live server.)**
+
 - **Transport (browser):** WebSocket. (freeq also offers TCP/TLS/iroh, none browser-reachable.)
-- **Wire format:** IRCv3 — `PRIVMSG`/`NOTICE` with message tags (e.g. `@msgid=...`, `@content-type=...`).
+- **Wire format:** IRCv3 — `PRIVMSG`/`NOTICE` with message tags (e.g. `@msgid=...`, `@content-type=...`); one
+  IRC line per WebSocket frame with no `\r\n` terminator.
 - **Auth:** IRCv3 SASL with a custom mechanism `ATPROTO-CHALLENGE`:
   1. Client: `CAP LS` → `CAP REQ :sasl` → `AUTHENTICATE ATPROTO-CHALLENGE`.
-  2. Server: `AUTHENTICATE <base64 JSON challenge {sessionId, nonce, ts}>`.
-  3. Client: `AUTHENTICATE <base64 JSON response>` — one of: PDS session JWT (app-password),
-     DPoP-bound OAuth token, or DID-key signature.
+  2. Server: `AUTHENTICATE <base64 JSON challenge {session_id, nonce, timestamp}>`.
+  3. Client: `AUTHENTICATE <base64url JSON response>` — one of: PDS session JWT (app-password;
+     `{ did, method, signature, pds_url, challenge_nonce }`), DPoP-bound OAuth token, or DID-key signature.
   4. Server verifies against the AT Protocol registry; DID binds to the connection/nick.
 - **History (read-only REST):** `GET /api/v1/channels/{name}/messages` (paginated), plus `/channels`,
   `/channels/{name}/members`, `/stats`. All writes go through the IRC protocol.
@@ -147,8 +150,9 @@ interface CredentialProvider {
 ```
 
 - **Phase 1 impl (`AppPasswordCredentialProvider`):** given a handle + app-password, resolve the PDS, call
-  `createSession`, cache `accessJwt`/`refreshJwt`, and return the PDS-session response payload. Refresh on
-  expiry via `com.atproto.server.refreshSession`.
+  `createSession` once, cache the resolved session (`accessJwt`, PDS URL) for the lifetime of the provider, and
+  return the PDS-session response payload on each SASL challenge. No `refreshSession` call is made; a new
+  session is only obtained by constructing a new provider (e.g. on reconnect).
 - **Phase 2 impl (future):** round-trips the SASL challenge to a DXOS Edge signing endpoint. Slots in behind
   the same interface with no change to `IrcConnection`.
 
@@ -201,19 +205,23 @@ packages/plugins/plugin-freeq/
   serialize the reverse. Handles tag escaping and trailing params. No external dependency. Fully unit-testable.
 
 - **`CredentialProvider`** — the SASL-responder seam (see Auth). Phase-1 app-password implementation uses
-  Effect `HttpClient` for `createSession`/`refreshSession`.
+  Effect `HttpClient` for a single `createSession` call, caching the resolved session for reuse across
+  SASL challenges.
 
-- **`IrcConnection`** — owns exactly one WebSocket. State machine: `connecting → cap-negotiation →
-authenticating (SASL) → registered → joined`. Responsibilities: CAP LS/REQ/END, the `ATPROTO-CHALLENGE`
+- **`IrcConnection`** — owns exactly one WebSocket. Responsibilities: CAP LS/REQ/END, the `ATPROTO-CHALLENGE`
   exchange (delegating the response to a `CredentialProvider`), `NICK`/`USER`, `JOIN`/`PART`, inbound
-  `PRIVMSG`/`NOTICE` dispatch keyed by channel, outbound `PRIVMSG`, `PING`/`PONG` keepalive, and reconnect with
-  exponential backoff. Emits per-channel message events and membership. Guest fallback: if no credentials are
-  configured, connect unauthenticated (server-permitting) and mark channels read-only.
+  `PRIVMSG`/`NOTICE` dispatch keyed by channel, outbound `PRIVMSG`, and `PING`/`PONG` keepalive. Emits
+  per-channel message events. Guest fallback: if no credentials are configured, abort SASL with
+  `AUTHENTICATE *`, send `CAP END`, and connect unauthenticated (server-permitting), marking channels
+  read-only. No reconnect/backoff in v1 (see Non-goals); a mid-handshake drop only rejects a pending
+  `connect()`.
 
-- **`ConnectionManager`** — capability keyed by `(serverUrl, identityDid)`. `acquire()` returns an existing
-  `IrcConnection` or creates one; ref-counted so multiple DXOS Channels on the same server multiplex one
-  socket. `release()` decrements; the connection `PART`s the channel and closes the socket when the count hits
-  zero. Exposed as `FreeqCapabilities.ConnectionManager`.
+- **`ConnectionManager`** — capability keyed by `(serverUrl, identity)`. `acquire()` returns an existing
+  `IrcConnection` or creates and connects one; ref-counted so multiple DXOS Channels on the same server
+  multiplex one socket. `release()` decrements the count and closes the socket once it reaches zero; there
+  is no per-channel `PART` on release. A connection whose handshake fails (e.g. SASL rejection) is evicted
+  and its socket closed as soon as `connect()` rejects, independent of ref-count. Exposed as
+  `FreeqCapabilities.ConnectionManager`.
 
 - **`FreeqRestApi`** — `getMessages(serverUrl, channel)` for history backfill on join, mapped to
   `Message.Message`. Effect `HttpClient`, timeout + bounded retry (mirrors `BlueskyApi` request pipeline).

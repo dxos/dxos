@@ -11,25 +11,6 @@ import { describe, test } from 'vitest';
 import { FreeqAuthError } from '../errors';
 import { makeAppPasswordCredentialProvider } from './CredentialProvider';
 
-// Routes each XRPC/DID-doc lookup the credential provider makes: resolveHandle
-// on the entryway, the PLC directory DID doc, then createSession on the
-// resolved PDS (not the entryway).
-const stubHttpClient = (responses: Record<string, unknown>) =>
-  Layer.succeed(
-    HttpClient.HttpClient,
-    HttpClient.make((request) => {
-      const url = request.url;
-      for (const [prefix, body] of Object.entries(responses)) {
-        if (url.startsWith(prefix)) {
-          return Effect.succeed(
-            HttpClientResponse.fromWeb(request, new Response(JSON.stringify(body), { status: 200 })),
-          );
-        }
-      }
-      return Effect.succeed(HttpClientResponse.fromWeb(request, new Response('not found', { status: 404 })));
-    }),
-  );
-
 describe('AppPasswordCredentialProvider', () => {
   test('resolves DID + PDS, creates a session, and builds a base64url SASL response', async ({ expect }) => {
     const provider = makeAppPasswordCredentialProvider({
@@ -188,3 +169,22 @@ describe('AppPasswordCredentialProvider', () => {
     expect(decoded.challenge_nonce).toBe('n2');
   });
 });
+
+// Routes each XRPC/DID-doc lookup the credential provider makes: resolveHandle
+// on the entryway, the PLC directory DID doc, then createSession on the
+// resolved PDS (not the entryway).
+const stubHttpClient = (responses: Record<string, unknown>) =>
+  Layer.succeed(
+    HttpClient.HttpClient,
+    HttpClient.make((request) => {
+      const url = request.url;
+      for (const [prefix, body] of Object.entries(responses)) {
+        if (url.startsWith(prefix)) {
+          return Effect.succeed(
+            HttpClientResponse.fromWeb(request, new Response(JSON.stringify(body), { status: 200 })),
+          );
+        }
+      }
+      return Effect.succeed(HttpClientResponse.fromWeb(request, new Response('not found', { status: 404 })));
+    }),
+  );

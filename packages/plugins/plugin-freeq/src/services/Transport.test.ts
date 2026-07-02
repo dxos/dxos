@@ -6,45 +6,6 @@ import { describe, test } from 'vitest';
 
 import { makeWebSocketTransport } from './Transport';
 
-type Listener = (event: any) => void;
-
-// Minimal fake WebSocket: freeq frames one IRC line per message, with no
-// trailing terminator, so the fake only needs to dispatch `message`/`open`/`close`.
-class FakeWebSocket {
-  static instances: FakeWebSocket[] = [];
-  sent: string[] = [];
-  #listeners = new Map<string, Set<Listener>>();
-
-  constructor(public url: string) {
-    FakeWebSocket.instances.push(this);
-  }
-
-  addEventListener(type: string, cb: Listener): void {
-    const set = this.#listeners.get(type) ?? new Set();
-    set.add(cb);
-    this.#listeners.set(type, set);
-  }
-
-  emit(type: string, event: any = {}): void {
-    this.#listeners.get(type)?.forEach((cb) => cb(event));
-  }
-
-  send(data: string): void {
-    this.sent.push(data);
-  }
-
-  close(): void {
-    this.emit('close');
-  }
-}
-
-const makeHarness = () => {
-  FakeWebSocket.instances.length = 0;
-  const transport = makeWebSocketTransport('wss://irc.freeq.at/irc', FakeWebSocket as any);
-  const socket = FakeWebSocket.instances[0];
-  return { transport, socket };
-};
-
 describe('makeWebSocketTransport', () => {
   test('delivers a frame with no trailing terminator as a single line', ({ expect }) => {
     const { transport, socket } = makeHarness();
@@ -106,4 +67,54 @@ describe('makeWebSocketTransport', () => {
 
     expect(socket.sent).toEqual(['NICK alice']);
   });
+
+  test('onError forwards the socket error event', ({ expect }) => {
+    const { transport, socket } = makeHarness();
+    const errors: unknown[] = [];
+    transport.onError?.((event) => errors.push(event));
+
+    const errorEvent = { type: 'error' };
+    socket.emit('error', errorEvent);
+
+    expect(errors).toEqual([errorEvent]);
+  });
 });
+
+type Listener = (event: any) => void;
+
+// Minimal fake WebSocket: freeq frames one IRC line per message, with no
+// trailing terminator, so the fake only needs to dispatch `message`/`open`/`close`/`error`.
+class FakeWebSocket {
+  static instances: FakeWebSocket[] = [];
+  sent: string[] = [];
+  #listeners = new Map<string, Set<Listener>>();
+
+  constructor(public url: string) {
+    FakeWebSocket.instances.push(this);
+  }
+
+  addEventListener(type: string, cb: Listener): void {
+    const set = this.#listeners.get(type) ?? new Set();
+    set.add(cb);
+    this.#listeners.set(type, set);
+  }
+
+  emit(type: string, event: any = {}): void {
+    this.#listeners.get(type)?.forEach((cb) => cb(event));
+  }
+
+  send(data: string): void {
+    this.sent.push(data);
+  }
+
+  close(): void {
+    this.emit('close');
+  }
+}
+
+const makeHarness = () => {
+  FakeWebSocket.instances.length = 0;
+  const transport = makeWebSocketTransport('wss://irc.freeq.at/irc', FakeWebSocket as any);
+  const socket = FakeWebSocket.instances[0];
+  return { transport, socket };
+};

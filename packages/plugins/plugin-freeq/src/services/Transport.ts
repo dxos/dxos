@@ -8,6 +8,8 @@ export interface Transport {
   onLine: (cb: (line: string) => void) => void;
   onOpen: (cb: () => void) => void;
   onClose: (cb: () => void) => void;
+  /** Optional; a socket `error` event precedes `close` but carries no useful payload in browsers. */
+  onError?: (cb: (event: Event) => void) => void;
 }
 
 /**
@@ -22,9 +24,11 @@ export const makeWebSocketTransport = (url: string, ctor: typeof WebSocket = Web
   let lineCb: (line: string) => void = () => {};
   let openCb: () => void = () => {};
   let closeCb: () => void = () => {};
+  let errorCb: (event: Event) => void = () => {};
 
   socket.addEventListener('open', () => openCb());
   socket.addEventListener('close', () => closeCb());
+  socket.addEventListener('error', (event) => errorCb(event));
   socket.addEventListener('message', (event) => {
     const data = typeof event.data === 'string' ? event.data : '';
     for (const line of data.split(/\r?\n/)) {
@@ -40,5 +44,6 @@ export const makeWebSocketTransport = (url: string, ctor: typeof WebSocket = Web
     onLine: (cb) => (lineCb = cb),
     onOpen: (cb) => (openCb = cb),
     onClose: (cb) => (closeCb = cb),
+    onError: (cb) => (errorCb = cb),
   };
 };

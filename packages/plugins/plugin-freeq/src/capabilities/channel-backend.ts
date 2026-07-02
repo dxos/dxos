@@ -89,40 +89,43 @@ export const makeFreeqChannelBackend = (
     const byId = new Map<string, Message.Message>();
     const emit = () => !cancelled && onMessages([...byId.values()]);
 
-    void channel.backend.config.load().then((config) => {
-      if (cancelled || !Obj.instanceOf(FreeqChannel, config) || !config.serverUrl || !config.channel) {
-        onMessages([]);
-        return;
-      }
+    void channel.backend.config
+      .load()
+      .then((config) => {
+        if (cancelled || !Obj.instanceOf(FreeqChannel, config) || !config.serverUrl || !config.channel) {
+          onMessages([]);
+          return;
+        }
 
-      const acquired = manager.acquire(acquireParamsFor(config, lookupCredential));
-      release = acquired.release;
+        const acquired = manager.acquire(acquireParamsFor(config, lookupCredential));
+        release = acquired.release;
 
-      void acquired.connection.join(config.channel);
-      unsubscribe = acquired.connection.onMessage(config.channel, (incoming) => {
-        byId.set(incoming.id, toMessage(incoming));
-        emit();
-      });
-
-      // Backfill history (best-effort; live messages win on id collision).
-      void FreeqRestApi.getMessages({
-        httpBase: FreeqRestApi.httpBaseFromWs(config.serverUrl),
-        channel: config.channel,
-      })
-        .pipe(Effect.provide(FetchHttpClient.layer), Effect.runPromise)
-        .then((history) => {
-          if (cancelled) {
-            return;
-          }
-          for (const rest of history) {
-            if (!byId.has(rest.id)) {
-              byId.set(rest.id, toMessageFromRest(rest));
-            }
-          }
+        void acquired.connection.join(config.channel).catch(() => {});
+        unsubscribe = acquired.connection.onMessage(config.channel, (incoming) => {
+          byId.set(incoming.id, toMessage(incoming));
           emit();
+        });
+
+        // Backfill history (best-effort; live messages win on id collision).
+        void FreeqRestApi.getMessages({
+          httpBase: FreeqRestApi.httpBaseFromWs(config.serverUrl),
+          channel: config.channel,
         })
-        .catch(() => emit());
-    });
+          .pipe(Effect.provide(FetchHttpClient.layer), Effect.runPromise)
+          .then((history) => {
+            if (cancelled) {
+              return;
+            }
+            for (const rest of history) {
+              if (!byId.has(rest.id)) {
+                byId.set(rest.id, toMessageFromRest(rest));
+              }
+            }
+            emit();
+          })
+          .catch(() => emit());
+      })
+      .catch(() => onMessages([]));
 
     return () => {
       cancelled = true;
@@ -138,7 +141,10 @@ export const makeFreeqChannelBackend = (
       }
       const acquired = manager.acquire(acquireParamsFor(config, lookupCredential));
       const text = message.blocks.find((block) => block._tag === 'text')?.text ?? '';
-      acquired.connection.sendMessage(config.channel, text);
+      // Must await the line actually reaching the transport before releasing: a fresh
+      // connection's socket closes as soon as the last handle releases, which would drop
+      // a still-buffered (pre-registration) message.
+      yield* Effect.promise(() => acquired.connection.sendMessage(config.channel, text));
       acquired.release();
     }),
   readOnly: (channel) => Obj.getMeta(channel).keys.length > 0,
@@ -147,7 +153,7 @@ export const makeFreeqChannelBackend = (
 /** Contributes the live freeq channel backend, bound to the shared connection manager. */
 export const ChannelBackend = Capability.makeModule<ThreadCapabilities.ChannelBackendProvider>(
   Effect.fnUntraced(function* () {
-    const manager = yield* Capability.get(FreeqCapabilities.ConnectionManager);
+    const manager = yield* Capability.waitFor(FreeqCapabilities.ConnectionManager);
     // TODO(Task 11): supply lookupCredential from stored AccessToken once server auth shapes are confirmed.
     return Capability.contributes(ThreadCapabilities.ChannelBackend, makeFreeqChannelBackend(manager));
   }),

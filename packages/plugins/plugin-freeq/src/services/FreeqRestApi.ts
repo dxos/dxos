@@ -32,7 +32,10 @@ export const getMessages = (options: {
   channel: string;
 }): Effect.Effect<ReadonlyArray<FreeqRestMessage>, FreeqConnectionError, HttpClient.HttpClient> =>
   Effect.gen(function* () {
-    const client = yield* HttpClient.HttpClient;
+    // `filterStatusOk` rejects a non-2xx response as a `ResponseError` (carrying `status`)
+    // before the body is decoded, so a 4xx/5xx is reported as a connection failure rather
+    // than misreported as a schema-decode error against an error-envelope body.
+    const client = (yield* HttpClient.HttpClient).pipe(HttpClient.filterStatusOk);
     const name = options.channel.replace(/^#/, '');
     const request = HttpClientRequest.get(`${options.httpBase}/api/v1/channels/${encodeURIComponent(name)}/messages`);
     const response = yield* client.execute(request);

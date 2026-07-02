@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
+import { FreeqConnectionError } from '../errors';
 import { FreeqRestApi } from './index';
 
 const stubHttpClient = (body: unknown) =>
@@ -30,5 +31,22 @@ describe('FreeqRestApi', () => {
       Effect.runPromise,
     );
     expect(messages).toEqual([{ id: 'm1', nick: 'bob', text: 'hi', ts: 1700000000000 }]);
+  });
+
+  test('getMessages fails with FreeqConnectionError (not a decode error) on a non-2xx response', async ({ expect }) => {
+    const httpClient = Layer.succeed(
+      HttpClient.HttpClient,
+      HttpClient.make((request) =>
+        Effect.succeed(HttpClientResponse.fromWeb(request, new Response('{"error":"not found"}', { status: 404 }))),
+      ),
+    );
+
+    const error = await FreeqRestApi.getMessages({ httpBase: 'https://freeq.example', channel: '#general' }).pipe(
+      Effect.flip,
+      Effect.provide(httpClient),
+      Effect.runPromise,
+    );
+
+    expect(error).toBeInstanceOf(FreeqConnectionError);
   });
 });

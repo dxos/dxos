@@ -26,7 +26,11 @@ export interface IrcConnection {
   connect: () => Promise<void>;
   join: (channel: string) => Promise<void>;
   part: (channel: string) => void;
-  sendMessage: (channel: string, text: string) => void;
+  /** Resolves once the line has actually been written to the transport (immediately if
+   * already registered, or after the buffered line flushes on registration). Callers that
+   * release a shared connection right after sending must await this to avoid the connection
+   * closing before the line reaches the socket. */
+  sendMessage: (channel: string, text: string) => Promise<void>;
   onMessage: (channel: string, cb: (message: IncomingMessage) => void) => () => void;
   close: () => void;
 }
@@ -70,20 +74,29 @@ export const makeIrcConnection = (options: {
   // on send() in that state. Handshake lines are sent directly since they are only
   // ever issued in response to onOpen/server lines, once the socket is already OPEN.
   let registered = false;
-  const outbound: string[] = [];
-  const enqueueOrSend = (line: string): void => {
+  const outbound: Array<{ line: string; onFlush: () => void }> = [];
+  // Resolves once `line` has actually reached the transport, so a caller that releases a
+  // shared connection right after sending can await the real send rather than the enqueue.
+  const enqueueOrSend = (line: string): Promise<void> => {
     if (registered) {
       transport.send(line);
-    } else {
-      outbound.push(line);
+      return Promise.resolve();
     }
+    return new Promise<void>((resolve) => outbound.push({ line, onFlush: resolve }));
   };
+
+  // The freeq server still emits a 904 after a guest's `AUTHENTICATE *` abort before
+  // proceeding to register the connection unauthenticated; only a real credential
+  // exchange (via credentialProvider) treats 904/905 as a connect() rejection.
+  let authAttempted = false;
 
   const handleChallenge = (payload: string): void => {
     if (!credentialProvider) {
       transport.send('AUTHENTICATE *'); // Abort SASL; proceed as guest.
+      transport.send('CAP END');
       return;
     }
+    authAttempted = true;
     let challenge: SaslChallenge;
     try {
       challenge = JSON.parse(atob(payload));
@@ -120,25 +133,34 @@ export const makeIrcConnection = (options: {
         break;
       case '904': // SASL failure.
       case '905':
-        rejectConnect?.(new FreeqAuthError({ message: 'SASL authentication failed.' }));
+        // A guest's own `AUTHENTICATE *` abort also surfaces as 904/905 on the real
+        // server; only reject connect() when we actually attempted authentication.
+        if (authAttempted) {
+          rejectConnect?.(new FreeqAuthError({ message: 'SASL authentication failed.' }));
+        }
         break;
       case '001': // Registration complete.
         registered = true;
         resolveConnect?.();
         resolveConnect = undefined;
         rejectConnect = undefined;
-        outbound.forEach((line) => transport.send(line));
+        outbound.forEach(({ line, onFlush }) => {
+          transport.send(line);
+          onFlush();
+        });
         outbound.length = 0;
         break;
       case 'PRIVMSG': {
         const [channel, text] = message.params;
         const subs = subscribers.get(channel);
         if (subs) {
+          // A malformed/unparseable `time` tag must not poison message ordering with NaN.
+          const parsed = message.tags.time ? Date.parse(message.tags.time) : NaN;
           const incoming: IncomingMessage = {
             id: message.tags.msgid ?? `local:${++synthetic}`,
             nick: nickOf(message.prefix),
             text: text ?? '',
-            ts: message.tags.time ? Date.parse(message.tags.time) : Date.now(),
+            ts: Number.isFinite(parsed) ? parsed : Date.now(),
           };
           subs.forEach((cb) => cb(incoming));
         }
@@ -155,6 +177,9 @@ export const makeIrcConnection = (options: {
     transport.send(IrcProtocol.serialize({ command: 'NICK', params: [nick] }));
     transport.send(IrcProtocol.serialize({ command: 'USER', params: [nick, '0', '*', nick] }));
   });
+  // Logged for observability only; the `onClose` handler below (not this one) is what
+  // unblocks a pending connect(), since a socket error is always followed by `close`.
+  transport.onError?.((event) => log.warn('freeq transport error', { event }));
   // A drop before registration completes must not leave connect() hanging forever.
   // Full reconnect/backoff is deferred; this only unblocks a pending caller.
   transport.onClose(() => {
@@ -171,12 +196,13 @@ export const makeIrcConnection = (options: {
         resolveConnect = resolve;
         rejectConnect = reject;
       }),
-    join: (channel) =>
-      new Promise<void>((resolve) => {
-        enqueueOrSend(IrcProtocol.serialize({ command: 'JOIN', params: [channel] }));
-        resolve();
-      }),
-    part: (channel) => enqueueOrSend(IrcProtocol.serialize({ command: 'PART', params: [channel] })),
+    // `join()`'s contract is to enqueue and return, not to await the flush: callers must
+    // not block on registration to proceed to onMessage()/subsequent sends.
+    join: (channel) => {
+      void enqueueOrSend(IrcProtocol.serialize({ command: 'JOIN', params: [channel] }));
+      return Promise.resolve();
+    },
+    part: (channel) => void enqueueOrSend(IrcProtocol.serialize({ command: 'PART', params: [channel] })),
     sendMessage: (channel, text) =>
       enqueueOrSend(IrcProtocol.serialize({ command: 'PRIVMSG', params: [channel, text] })),
     onMessage: (channel, cb) => {
