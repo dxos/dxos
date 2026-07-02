@@ -408,7 +408,7 @@ catalog:
   enquirer: ^2.3.6
   error-stack-parser: ^2.1.4
   esbuild: 0.28.1
-  esbuild-plugin-glsl: ^1.4.1
+  esbuild-plugin-glsl: ^1.4.2
   esbuild-plugin-inline-image: ^0.0.9
   esbuild-plugin-raw: 0.4.2
   esbuild-plugin-wasm: ^1.1.0
