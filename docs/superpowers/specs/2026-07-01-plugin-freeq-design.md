@@ -34,6 +34,44 @@ default feed backend is local ECHO).
 - Server-to-server federation.
 - Raw DID-key cryptographic-signature SASL method.
 - Persisting freeq messages into ECHO for offline history/search.
+- WebSocket reconnect with exponential backoff (deferred — see Addendum; only a
+  minimal `onClose` that rejects a pending connect is wired in v1).
+
+## Addendum (2026-07-01): live protocol findings & v1 scope decisions
+
+Validated against `irc.freeq.at` with a real Bluesky test account and by reading
+the freeq web-app bundle. These supersede the provisional shapes above where they
+differ:
+
+- **WebSocket endpoint path is `/irc`** (e.g. `wss://irc.freeq.at/irc`). The user
+  supplies the full URL in `FreeqChannel.serverUrl`.
+- **Framing: one IRC line per WebSocket frame, with no `\r\n` terminator.** The
+  transport delivers each frame as a line (splitting on `\r?\n` for robustness);
+  it must not require a terminator. This was the single most important correction —
+  a `\r\n`-only split receives nothing from freeq.
+- **SASL `ATPROTO-CHALLENGE`.** Challenge JSON is `{ session_id, nonce, timestamp }`
+  (snake_case; only `nonce` is used). The `pds-session` response is base64**url** of
+  `{ did, method: 'pds-session', signature: <accessJwt>, pds_url: <resolved PDS>,
+challenge_nonce: <nonce> }`, transmitted in ≤400-char `AUTHENTICATE` fragments
+  followed by a trailing `AUTHENTICATE +` when fragmented. `createSession` runs
+  against the account's resolved PDS (not the entryway).
+- **Authenticated send status.** Guest connect + read (register, JOIN, member list,
+  topic) works end-to-end. The app-password `pds-session` SASL is rejected
+  (`904 bad response`) by the deployed `irc.freeq.at` even when matching the
+  freeq-sdk format byte-for-byte — the freeq web app authenticates via OAuth/DPoP,
+  so the deployed server likely does not accept app-password `pds-session` tokens.
+  **v1 ships read-capable**: the SASL/credential code is correct per the reference
+  client, but authenticated send is validated later against a server that accepts
+  `pds-session` (a local instance) or via the Phase-2 OAuth path.
+- **`readOnly` follows the foreign-key meta default** (`Obj.getMeta(channel).keys.length > 0`).
+  A per-connection guest/authenticated distinction is not reflected because `readOnly`
+  is synchronous while the channel's `handle` lives in the async-loaded config; a guest
+  send simply fails at the server.
+- **History.** The REST `/api/v1/channels/{name}/messages` endpoint is not exposed on
+  the `irc.freeq.at` deployment (returns the SPA shell); history is instead available
+  via the IRC `draft/chathistory` capability. v1 keeps the REST-backfill client (it
+  degrades gracefully to an empty list when unavailable); IRC-based history is a
+  future enhancement.
 
 ## Background: how the backend seam works
 
