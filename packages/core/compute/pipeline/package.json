@@ -31,10 +31,14 @@
     "src"
   ],
   "scripts": {},
-  "dependencies": {},
+  "dependencies": {
+    "@dxos/node-std": "workspace:*",
+    "hyparquet": "catalog:"
+  },
   "devDependencies": {
     "@dxos/effect": "workspace:*",
     "effect": "catalog:",
+    "hyparquet-writer": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {

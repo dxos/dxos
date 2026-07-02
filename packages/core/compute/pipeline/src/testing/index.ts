@@ -24,3 +24,5 @@ export const captureSink = <Out>(): CaptureSink<Out> => {
 
 /** A finite source from a fixed list; the pipeline drains and resolves when it ends. */
 export const scriptedSource = <T>(items: readonly T[]): Stream.Stream<T> => Stream.fromIterable(items);
+
+export * from './parquet';
