@@ -11,9 +11,9 @@ import { isExtensionAvailable, pingExtension } from './pingExtension';
 
 const setAvailable = (available: boolean) => {
   if (available) {
-    document.documentElement.dataset.composerProxy = '1';
+    document.documentElement.dataset[Proxy.RENDER_READY_DATASET_KEY] = '1';
   } else {
-    delete document.documentElement.dataset.composerProxy;
+    delete document.documentElement.dataset[Proxy.RENDER_READY_DATASET_KEY];
   }
 };
 

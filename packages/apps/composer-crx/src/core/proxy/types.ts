@@ -43,12 +43,12 @@ export const DEFAULT_RENDER_TIMEOUT_MS = 20_000;
 export type RenderRequest = Proxy.RenderRequest;
 
 /** Discriminated set of failure modes returned in a non-ok ack. */
-export type RenderError = Proxy.RenderError;
+export type ProxyError = Proxy.ProxyError;
 
 /** Reply to a {@link RenderRequest}. */
 export type RenderAck = Proxy.RenderAck;
 
-const RENDER_ERRORS: readonly string[] = [
+const PROXY_ERRORS: readonly string[] = [
   'badRequest',
   'forbiddenOrigin',
   'noTab',
@@ -59,8 +59,7 @@ const RENDER_ERRORS: readonly string[] = [
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
-const isRenderError = (value: unknown): value is RenderError =>
-  typeof value === 'string' && RENDER_ERRORS.includes(value);
+const isProxyError = (value: unknown): value is ProxyError => typeof value === 'string' && PROXY_ERRORS.includes(value);
 
 /**
  * Validate and narrow an unknown value to a {@link RenderRequest}. Returns
@@ -120,7 +119,7 @@ export const decodeRenderAck = (value: unknown): RenderAck | undefined => {
     return { version: 1, id: value.id, ok: true, html: value.html, finalUrl: value.finalUrl };
   }
   if (value.ok === false) {
-    if (!isRenderError(value.error)) {
+    if (!isProxyError(value.error)) {
       return undefined;
     }
     return { version: 1, id: value.id, ok: false, error: value.error };
@@ -176,7 +175,7 @@ export const decodePingAck = (value: unknown): PingAck | undefined => {
     };
   }
   if (value.ok === false) {
-    if (!isRenderError(value.error)) {
+    if (!isProxyError(value.error)) {
       return undefined;
     }
     return { version: 1, id: value.id, ok: false, error: value.error };
