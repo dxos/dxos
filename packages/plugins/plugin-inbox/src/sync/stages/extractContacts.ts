@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Database, type Obj } from '@dxos/echo';
+import { type Obj } from '@dxos/echo';
 import { extractContact } from '@dxos/extractor-lib';
 import { Stage } from '@dxos/pipeline';
 import { type Message } from '@dxos/types';
 
-import * as SyncPipeline from '../SyncPipeline';
+import * as SyncBinding from '../SyncBinding';
 
 /** A mapped message ready for contact extraction and commit. */
 export type Mapped = {
@@ -17,13 +17,6 @@ export type Mapped = {
   readonly foreignId: string;
   readonly key: number;
   readonly tagUris: readonly string[];
-};
-
-/** Context an extract-contacts stage reads (a structural subset of the full pipeline context). */
-export type ExtractContext = {
-  readonly db: Database.Database;
-  /** Contact emails created earlier in this run, to dedup repeats before the first commit. */
-  readonly createdContactEmails: Set<string>;
 };
 
 /**
@@ -36,16 +29,17 @@ export type ExtractContext = {
  * the same new sender would each yield a created Person; the run-scoped `createdContactEmails` set
  * keeps only the first.
  */
-export const extractContactsStage: Stage.Stage<Mapped, SyncPipeline.CommitUnit, ExtractContext, never> = Stage.map(
+export const extractContactsStage: Stage.Stage<Mapped, SyncBinding.CommitUnit, never, SyncBinding.Service> = Stage.map(
   'extract-contacts',
-  (mapped, ctx) =>
+  (mapped: Mapped) =>
     Effect.gen(function* () {
-      const result = yield* extractContact({ db: ctx.db, source: mapped.message });
+      const { db, createdContactEmails } = yield* SyncBinding.Service;
+      const result = yield* extractContact({ db, source: mapped.message });
       const email = mapped.message.sender?.email?.trim().toLowerCase();
-      const alreadyCreated = !!email && ctx.createdContactEmails.has(email);
+      const alreadyCreated = !!email && createdContactEmails.has(email);
       const extractedObjects: Obj.Any[] = alreadyCreated ? [] : [...result.created];
       if (email && extractedObjects.length > 0) {
-        ctx.createdContactEmails.add(email);
+        createdContactEmails.add(email);
       }
 
       return {

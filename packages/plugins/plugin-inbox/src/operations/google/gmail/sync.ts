@@ -3,34 +3,31 @@
 //
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as HttpClient from '@effect/platform/HttpClient';
 import { addDays, format, subDays } from 'date-fns';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as Runtime from 'effect/Runtime';
 import * as Stream from 'effect/Stream';
 
-import type { Credential } from '@dxos/compute';
 import { Operation, Trace } from '@dxos/compute';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { type Resolver, resolve } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
-import { Stage } from '@dxos/pipeline';
+import { Pipeline, Stage } from '@dxos/pipeline';
 // Connection is referenced in the inferred type of this module's default export via
 // InboxOperation.GoogleMailSync's schema; the import lets TypeScript name it in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { type Connection, SyncBinding } from '@dxos/plugin-connector';
+import { type Connection, SyncBinding as ConnectorSyncBinding } from '@dxos/plugin-connector';
 import { Cursor, Person } from '@dxos/types';
 
 import { type DecodedMessage, decodeBody, mapToMessage } from './mapper';
 import { GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
 import { GoogleCredentials } from '../../../services';
-import { SyncPipeline, extractContactsStage, htmlToMarkdownStage, makeDedupStage } from '../../../sync';
+import { type Mapped, SyncBinding, extractContactsStage, htmlToMarkdownStage, makeDedupStage } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
 import { readBindingOptions } from '../../../util';
 import { parseFromHeader } from '../../util';
@@ -51,10 +48,12 @@ const STREAMING_CONFIG = {
   messageFetchConcurrency: 5,
   maxResults: 500,
   restrictedMax: 20,
+  /** Commit page size — kept ≤ 15 so each `Feed.append` is a single atomic queue insert. */
+  pageSize: 10,
 } as const;
 
 const syncSingleMailbox = (input: {
-  binding: SyncBinding.SyncBinding;
+  binding: ConnectorSyncBinding.SyncBinding;
   mailbox: Mailbox.Mailbox;
   db: Database.Database;
   userId: string;
@@ -64,14 +63,6 @@ const syncSingleMailbox = (input: {
 }) =>
   Effect.gen(function* () {
     const { binding, mailbox, db, userId, defaultLabel, defaultAfter, restrictedMode } = input;
-
-    // Capture runtimes so the pipeline source (Gmail fetch) and the contact resolver run with their
-    // requirements discharged — the pipeline itself is `R = never`. Two runtimes are captured with
-    // exact service sets so `Stream.provideContext` matches the source's requirements precisely.
-    const fetchContext = (
-      yield* Effect.runtime<HttpClient.HttpClient | GoogleCredentials | Credential.CredentialsService>()
-    ).context;
-    const resolverRuntime = yield* Effect.runtime<Resolver>();
 
     log('syncing gmail', { mailbox: Obj.getURI(mailbox), userId, after: defaultAfter, restrictedMode });
     const targetOptions = readBindingOptions(binding);
@@ -98,42 +89,46 @@ const syncSingleMailbox = (input: {
     const startDate = cursorKey > 0 ? new Date(cursorKey) : new Date(after);
     log('starting sync', { startDate: format(startDate, 'yyyy-MM-dd'), cursorKey, searchFilter: targetOptions.filter });
 
-    // Resolve an existing contact by email (read-only), run through the captured Resolver runtime so
-    // the mapping stage stays `R = never`.
-    const resolveContact = (email: string): Promise<Person.Person | undefined> =>
-      Runtime.runPromise(resolverRuntime)(resolve(Person.Person, { email }));
+    const stats: SyncBinding.Stats = { newMessages: 0 };
 
-    const { newMessages } = yield* SyncPipeline.run({
-      db,
-      feed,
-      tagIndex,
-      foreignKeySource: GMAIL_SOURCE,
-      cursorKey,
-      source: Stream.provideContext(
-        gmailSource(userId, defaultLabel, startDate, restrictedMode, targetOptions.filter),
-        fetchContext,
+    // Compose the pipeline: fetch → dedup → decode → html→markdown → map → extract-contacts, batch
+    // into pages, and commit each page. Shared state flows through the SyncBinding layer; the fetch
+    // (`HttpClient`/`GoogleCredentials`) and contact `resolve` (`Resolver`) requirements are provided
+    // by the handler's layer stack below.
+    const drain = gmailSource(userId, defaultLabel, startDate, restrictedMode, targetOptions.filter).pipe(
+      makeDedupStage<GoogleMail.Message>(
+        'dedup',
+        (message) => message.id,
+        (message) => Number.parseInt(message.internalDate),
       ),
-      stages: [
-        makeDedupStage<GoogleMail.Message>(
-          'dedup',
-          (message) => message.id,
-          (message) => Number.parseInt(message.internalDate),
-        ),
-        decodeBodyStage,
-        htmlToMarkdownStage<DecodedMessage>(),
-        makeMapToMessageStage(labelMap),
-        extractContactsStage,
-      ],
-      resolveContact,
-      persistCursorKey: (key) =>
-        Relation.update(binding, (binding) => {
-          binding.cursor = Cursor.formatKey(key);
-        }),
-    });
+      decodeBodyStage,
+      htmlToMarkdownStage<DecodedMessage>(),
+      makeMapToMessageStage(labelMap),
+      extractContactsStage,
+      Stream.grouped(STREAMING_CONFIG.pageSize),
+      Pipeline.run({ sink: SyncBinding.commit }),
+    );
 
-    yield* Trace.emitStatus(`Synced ${newMessages} messages`);
-    log('sync complete', { newMessages });
-    return newMessages;
+    yield* drain.pipe(
+      Effect.provide(
+        SyncBinding.layer({
+          db,
+          feed,
+          tagIndex,
+          foreignKeySource: GMAIL_SOURCE,
+          cursorKey,
+          persistCursorKey: (key) =>
+            Relation.update(binding, (binding) => {
+              binding.cursor = Cursor.formatKey(key);
+            }),
+          stats,
+        }),
+      ),
+    );
+
+    yield* Trace.emitStatus(`Synced ${stats.newMessages} messages`);
+    log('sync complete', { newMessages: stats.newMessages });
+    return stats.newMessages;
   });
 
 export default InboxOperation.GoogleMailSync.pipe(
@@ -209,18 +204,19 @@ const syncLabels = Effect.fn(function* (mailbox: Mailbox.Mailbox, userId: string
 });
 
 /** Gmail-specific decode stage: base64-decode the body; drop messages with no body. */
-const decodeBodyStage = Stage.map('decode-body', (message: GoogleMail.Message) =>
-  Effect.sync(() => decodeBody(message) ?? undefined),
+const decodeBodyStage: Stage.Stage<GoogleMail.Message, DecodedMessage, never, never> = Stage.map(
+  'decode-body',
+  (message: GoogleMail.Message) => Effect.sync(() => decodeBody(message) ?? undefined),
 );
 
-/** Gmail-specific mapping stage: resolve the sender contact, build the ECHO message, and resolve
- * provider label ids to tag URIs (the label map is Gmail-specific, closed over here). */
-const makeMapToMessageStage = (labelMap: Map<string, string>) =>
-  Stage.map('map-to-message', (decoded: DecodedMessage, ctx: SyncPipeline.SyncContext) =>
+/** Gmail-specific mapping stage: resolve the sender contact (via `Resolver`), build the ECHO message,
+ * and resolve provider label ids to tag URIs (the label map is Gmail-specific, closed over here). */
+const makeMapToMessageStage = (labelMap: Map<string, string>): Stage.Stage<DecodedMessage, Mapped, never, Resolver> =>
+  Stage.map('map-to-message', (decoded: DecodedMessage) =>
     Effect.gen(function* () {
       const fromHeader = decoded.raw.payload.headers.find(({ name }) => name === 'From');
       const from = fromHeader ? parseFromHeader(fromHeader.value) : undefined;
-      const contact = from?.email ? yield* Effect.promise(() => ctx.resolveContact(from.email)) : undefined;
+      const contact = from?.email ? yield* resolve(Person.Person, { email: from.email }) : undefined;
       const mapped = mapToMessage(decoded, contact ?? undefined);
       const tagUris = mapped.labelIds.flatMap((labelId) => {
         const uri = labelMap.get(labelId);
@@ -231,7 +227,7 @@ const makeMapToMessageStage = (labelMap: Map<string, string>) =>
         foreignId: decoded.raw.id,
         key: Number.parseInt(decoded.raw.internalDate),
         tagUris,
-      } satisfies Omit<SyncPipeline.CommitUnit, 'extractedObjects'>;
+      };
     }),
   );
 
