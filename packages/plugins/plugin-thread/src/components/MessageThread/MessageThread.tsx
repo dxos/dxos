@@ -73,7 +73,7 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
         // Pass `message.sender` as the fallback so externally-synced messages
         // (Slack, etc.) display the source-side sender name instead of "Anonymous"
         // when no DXOS identity matches.
-        return getMessageMetadata(message.id, sender?.identity, message.sender);
+        return getMessageMetadata(message.id, sender?.identity, message.sender, message.created);
       },
       [members],
     );

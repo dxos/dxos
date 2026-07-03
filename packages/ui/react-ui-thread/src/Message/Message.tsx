@@ -3,7 +3,7 @@
 //
 
 import { EditorView } from '@codemirror/view';
-import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
+import { format } from 'date-fns/format';
 import React, {
   type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
@@ -105,7 +105,7 @@ export type MessageHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'
 const MessageHeading = ({ children, classNames, timestamp, authorName, ...props }: MessageHeadingProps) => {
   return (
     <div {...props} className={mx('flex gap-2 items-start', classNames)}>
-      <p className='grow'>
+      <p className='grow flex items-baseline gap-2 min-w-0'>
         <MessageAuthorName authorName={authorName} />
         {timestamp && <MessageTime timestamp={timestamp} />}
       </p>
@@ -121,7 +121,9 @@ export type MessageAuthorNameProps = Pick<MessageMetadata, 'authorName'>;
 const MessageAuthorName = ({ authorName }: MessageAuthorNameProps) => {
   const { t } = useTranslation(translationKey);
   return (
-    <Avatar.Label classNames='block truncate text-sm text-subdued'>{authorName ?? t('anonymous.label')}</Avatar.Label>
+    <Avatar.Label classNames='block truncate min-w-0 shrink text-sm text-subdued'>
+      {authorName ?? t('anonymous.label')}
+    </Avatar.Label>
   );
 };
 
@@ -133,8 +135,8 @@ const MessageTime = ({ timestamp }: MessageTimeProps) => {
   const { dtLocale } = useTranslation(translationKey);
   const dt = timestamp ? new Date(timestamp) : undefined;
   return (
-    <time className='block text-subdued text-xs pb-0.5' dateTime={dt?.toISOString()}>
-      {dt ? formatDistanceToNow(dt, { locale: dtLocale, addSuffix: true }) : ''}
+    <time className='shrink-0 text-subdued text-xs' dateTime={dt?.toISOString()}>
+      {dt ? format(dt, 'p', { locale: dtLocale }) : ''}
     </time>
   );
 };
