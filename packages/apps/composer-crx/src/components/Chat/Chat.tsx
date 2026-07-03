@@ -87,8 +87,10 @@ export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
   );
 
   // Lift the chat-agent error to the host (shown in the side panel's status bar).
+  // Clear it on unmount so a stale error does not linger after Chat is hidden (e.g. a thumbnail).
   useEffect(() => {
     onError?.(error);
+    return () => onError?.(undefined);
   }, [error, onError]);
 
   // Render the thread to a single markdown document (see `renderThread`) and sync it into the
@@ -123,7 +125,9 @@ export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
         return;
       }
 
-      void (async () => {
+      // Fire-and-forget: `storage.sync.get` and `sendMessage` can reject, so route any failure to
+      // the logger rather than leaving an unhandled rejection.
+      (async () => {
         // Update context.
         // TODO(burdon): Get current selection?
         const context: string[] = [];
@@ -162,7 +166,7 @@ export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
 
         // User message.
         await sendMessage({ role: 'user', parts: [{ type: 'text', text }] });
-      })();
+      })().catch((err) => log.catch(err));
 
       // Clear the editor.
       return true;
