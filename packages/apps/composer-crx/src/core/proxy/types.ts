@@ -2,85 +2,51 @@
 // Copyright 2026 DXOS.org
 //
 
-/**
- * Search render-proxy protocol.
- *
- * The Composer web page asks the extension to fetch + JS-render a URL in a
- * background tab and returns the rendered HTML. This lets the commerce
- * plugin scrape client-rendered / anti-bot SPA sites a plain HTTP proxy
- * cannot. The extension is a PROXY ONLY — it performs no extraction.
- *
- * The page and the extension exchange messages over same-origin `window`
- * CustomEvents (page <-> content script) and a runtime message
- * (content script <-> background). This module is the single source of truth
- * for the wire shapes; both ends decode through the exported validators so a
- * malformed payload is rejected rather than trusted.
- */
+import type { Proxy } from '@dxos/crx-protocol';
 
 /**
- * Window CustomEvent name the page dispatches to request a render.
+ * Search render-proxy + ping protocol (extension side).
+ *
+ * The serializable wire *shapes* are the single source of truth in `@dxos/crx-protocol` (`Proxy`)
+ * and are imported here **type-only** (erased at build) so the extension — in particular the
+ * per-page content script, which decodes these directly — carries no `effect` runtime. Decoding is
+ * done by the hand-rolled validators below (also `effect`-free).
+ *
+ * The cross-tab CustomEvent name constants are plain string literals (not imported, to avoid pulling
+ * the `effect`-based schema module at runtime); their values MUST match the corresponding
+ * `Proxy.*` constants in `@dxos/crx-protocol`.
  */
+
+/** Window CustomEvent name the page dispatches to request a render. Matches `Proxy.RENDER_EVENT`. */
 export const RENDER_EVENT = 'composer:proxy:render';
 
-/**
- * Window CustomEvent name the content script dispatches with the ack.
- */
+/** Window CustomEvent name the content script dispatches with the ack. Matches `Proxy.RENDER_ACK_EVENT`. */
 export const RENDER_ACK_EVENT = 'composer:proxy:render:ack';
 
 /**
  * Runtime message `type` discriminator the content script forwards to the
- * background worker.
+ * background worker (extension-internal; not part of the shared cross-tab protocol).
  */
 export const RENDER_MESSAGE_TYPE = 'composer-crx:proxy:render';
 
 /**
  * `documentElement` dataset key the content relay sets once it is listening on
- * a Composer page (`document.documentElement.dataset.composerProxy`).
- * Lets the page detect render-proxy availability synchronously rather than
- * waiting for a request to time out.
+ * a Composer page. Lets the page detect render-proxy availability synchronously.
+ * Matches `Proxy.RENDER_READY_DATASET_KEY`.
  */
 export const RENDER_READY_DATASET_KEY = 'composerProxy';
 
-/**
- * Default ceiling for a single render before it is aborted.
- */
+/** Default ceiling for a single render before it is aborted. */
 export const DEFAULT_RENDER_TIMEOUT_MS = 20_000;
 
-/**
- * Request to render a URL in a background tab.
- */
-export type RenderRequest = {
-  version: 1;
-  /** Correlation id; the ack echoes it back. */
-  id: string;
-  url: string;
-  /** Poll for this CSS selector before reading the HTML. */
-  waitForSelector?: string;
-  /** Additional fixed delay (ms) before reading the HTML. */
-  waitForMs?: number;
-  /** Overall ceiling (ms) before the render is aborted. */
-  timeoutMs?: number;
-  /** Render in a focused (foreground) tab. Helps sites that gate background tabs. Default false. */
-  active?: boolean;
-};
+/** Request to render a URL in a background tab. */
+export type RenderRequest = Proxy.RenderRequest;
 
-/**
- * Discriminated set of failure modes returned in a non-ok ack.
- *   - `badRequest`      : the request failed validation.
- *   - `forbiddenOrigin` : the sender is not a configured Composer origin.
- *   - `noTab`           : the background tab could not be created.
- *   - `timeout`         : the render exceeded its time budget.
- *   - `invalidAck`      : the injected script returned an unexpected shape.
- *   - `transportError`  : an unexpected browser-API error.
- */
-export type RenderError = 'badRequest' | 'forbiddenOrigin' | 'noTab' | 'timeout' | 'invalidAck' | 'transportError';
+/** Discriminated set of failure modes returned in a non-ok ack. */
+export type RenderError = Proxy.RenderError;
 
-/**
- * Reply to a {@link RenderRequest}.
- */
-export type RenderAck =
-  | { version: 1; id: string; ok: true; html: string; finalUrl: string }
-  | { version: 1; id: string; ok: false; error: RenderError };
+/** Reply to a {@link RenderRequest}. */
+export type RenderAck = Proxy.RenderAck;
 
 const RENDER_ERRORS: readonly string[] = [
   'badRequest',
@@ -124,20 +90,16 @@ export const decodeRenderRequest = (value: unknown): RenderRequest | undefined =
     return undefined;
   }
 
-  const request: RenderRequest = { version: 1, id: value.id, url: value.url };
-  if (typeof value.waitForSelector === 'string') {
-    request.waitForSelector = value.waitForSelector;
-  }
-  if (typeof value.waitForMs === 'number') {
-    request.waitForMs = value.waitForMs;
-  }
-  if (typeof value.timeoutMs === 'number') {
-    request.timeoutMs = value.timeoutMs;
-  }
-  if (typeof value.active === 'boolean') {
-    request.active = value.active;
-  }
-  return request;
+  // Built immutably: the shared schema types are readonly.
+  return {
+    version: 1,
+    id: value.id,
+    url: value.url,
+    ...(typeof value.waitForSelector === 'string' ? { waitForSelector: value.waitForSelector } : {}),
+    ...(typeof value.waitForMs === 'number' ? { waitForMs: value.waitForMs } : {}),
+    ...(typeof value.timeoutMs === 'number' ? { timeoutMs: value.timeoutMs } : {}),
+    ...(typeof value.active === 'boolean' ? { active: value.active } : {}),
+  };
 };
 
 /**
@@ -166,38 +128,23 @@ export const decodeRenderAck = (value: unknown): RenderAck | undefined => {
   return undefined;
 };
 
-/**
- * Window CustomEvent name the page dispatches to probe the extension.
- */
+/** Window CustomEvent name the page dispatches to probe the extension. Matches `Proxy.PING_EVENT`. */
 export const PING_EVENT = 'composer:proxy:ping';
 
-/**
- * Window CustomEvent name the content script dispatches with the ping ack.
- */
+/** Window CustomEvent name the content script dispatches with the ping ack. Matches `Proxy.PING_ACK_EVENT`. */
 export const PING_ACK_EVENT = 'composer:proxy:ping:ack';
 
 /**
- * Runtime message `type` discriminator the content script forwards for a ping.
+ * Runtime message `type` discriminator the content script forwards for a ping
+ * (extension-internal; not part of the shared cross-tab protocol).
  */
 export const PING_MESSAGE_TYPE = 'composer-crx:proxy:ping';
 
-/**
- * Health-check round-trip: the page asks the extension to identify itself. Exercises the same
- * page → content-script → background path the render-proxy uses, so a successful ack proves the
- * messaging path (not just that the content script loaded).
- */
-export type PingRequest = {
-  version: 1;
-  /** Correlation id; the ack echoes it back. */
-  id: string;
-};
+/** Health-check round-trip: the page asks the extension to identify itself. */
+export type PingRequest = Proxy.PingRequest;
 
-/**
- * Reply to a {@link PingRequest}, carrying the extension's manifest identity.
- */
-export type PingAck =
-  | { version: 1; id: string; ok: true; extensionVersion: string; extensionName: string }
-  | { version: 1; id: string; ok: false; error: RenderError };
+/** Reply to a {@link PingRequest}, carrying the extension's manifest identity. */
+export type PingAck = Proxy.PingAck;
 
 /**
  * Validate and narrow an unknown value to a {@link PingRequest}.
