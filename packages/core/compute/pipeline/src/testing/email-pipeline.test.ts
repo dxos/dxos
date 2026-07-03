@@ -28,7 +28,8 @@ import { trim } from '@dxos/util';
 import * as Pipeline from '../Pipeline';
 import * as Stage from '../Stage';
 import { captureSink } from './capture';
-import { type ParquetRow, parquetSource } from './parquet';
+import { emailToMessage } from './email-fixtures';
+import { parquetSource } from './parquet';
 
 // The email dataset (https://huggingface.co/datasets/corbt/enron-emails) lives under ROOT_DIR with
 // layout `${ROOT_DIR}/data/train-*.parquet`. ROOT_DIR defaults to the local checkout produced by
@@ -59,27 +60,6 @@ const MODEL = process.env.OLLAMA_MODEL ?? 'com.openai.model.gpt-oss-20b.default'
 
 // Number of emails drawn from the head of the dataset for one run.
 const EMAIL_COUNT = 10;
-
-const asIso = (value: unknown): string => (value instanceof Date ? value : new Date(String(value))).toISOString();
-
-// Map one email row (see the dataset's `dataset_info` schema) to a Message carrying the body as a
-// text block. Mirrors `parquet-email.test.ts` so both suites map rows identically.
-const emailToMessage = (row: ParquetRow): Message.Message => {
-  const block: ContentBlock.Text = { _tag: 'text', text: String(row.body ?? '') };
-  return Message.make({
-    created: asIso(row.date),
-    sender: { email: String(row.from ?? '') },
-    blocks: [block],
-    properties: {
-      messageId: row.message_id,
-      subject: row.subject,
-      to: row.to,
-      cc: row.cc,
-      bcc: row.bcc,
-      fileName: row.file_name,
-    },
-  });
-};
 
 // Structured output the summarize stage asks the model for.
 const SummarySchema = Schema.Struct({
