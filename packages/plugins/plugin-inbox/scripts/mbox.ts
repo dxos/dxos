@@ -13,6 +13,9 @@
  * `mailparser` is a devDependency: this module is only reached by the import script, never bundled.
  */
 
+import { createReadStream } from 'node:fs';
+import { createInterface } from 'node:readline';
+
 import { type AddressObject, simpleParser } from 'mailparser';
 
 import { Obj } from '@dxos/echo';
@@ -26,39 +29,72 @@ export const TAKEOUT_SOURCE = 'gmail-takeout';
 export type MappedMessage = { message: Message.Message; labels: readonly string[] };
 
 /**
- * Splits a raw mbox file into individual RFC-822 message strings.
- *
- * mbox separates messages with a `From ` line (note the trailing space) at the start of a line, and
- * escapes any body line beginning with `From ` by prefixing `>` (and `>From` as `>>From`, etc.). We
- * split on the separator and unescape the quoting so each chunk is a faithful RFC-822 message.
+ * Accumulates mbox lines into RFC-822 message strings, one line at a time, so both an in-memory
+ * string (small fixtures/tests) and a streamed file (real Takeout exports, which can be several GB
+ * — too large for a single JS string, see `buffer.constants.MAX_STRING_LENGTH`) share one
+ * implementation of the mbox `From `-separator and `>From` body-unescaping rules.
  */
-export const splitMbox = (raw: string): string[] => {
-  const normalized = raw.replace(/\r\n/g, '\n');
-  const lines = normalized.split('\n');
-  const messages: string[] = [];
+const createMboxAccumulator = () => {
   let current: string[] | undefined;
 
-  const isSeparator = (line: string) => /^From /.test(line);
+  const finish = (): string | undefined => {
+    const message = current?.join('\n').trim();
+    current = undefined;
+    return message && message.length > 0 ? message : undefined;
+  };
 
-  for (const line of lines) {
-    if (isSeparator(line)) {
-      if (current) {
-        messages.push(current.join('\n'));
-      }
+  /** Feeds one line; returns a completed message when a new envelope separator is reached. */
+  const push = (line: string): string | undefined => {
+    if (/^From /.test(line)) {
+      const completed = finish();
       current = [];
-      continue; // Drop the `From ` envelope line itself.
+      return completed;
     }
     if (current) {
       // Unescape mbox `>From ` / `>>From ` body quoting.
       current.push(/^>+From /.test(line) ? line.slice(1) : line);
     }
-  }
-  if (current) {
-    messages.push(current.join('\n'));
-  }
+    return undefined;
+  };
 
-  return messages.map((message) => message.trim()).filter((message) => message.length > 0);
+  return { push, flush: finish };
 };
+
+/** Splits a small, already-in-memory mbox string into individual RFC-822 message strings. */
+export const splitMbox = (raw: string): string[] => {
+  const accumulator = createMboxAccumulator();
+  const messages: string[] = [];
+  for (const line of raw.replace(/\r\n/g, '\n').split('\n')) {
+    const message = accumulator.push(line);
+    if (message) {
+      messages.push(message);
+    }
+  }
+  const last = accumulator.flush();
+  if (last) {
+    messages.push(last);
+  }
+  return messages;
+};
+
+/**
+ * Streams a large mbox FILE line by line and yields each RFC-822 message as it completes — the file
+ * is never held in memory as a whole, so this scales to multi-GB Takeout exports.
+ */
+export async function* streamMboxMessages(path: string): AsyncGenerator<string> {
+  const lines = createInterface({ input: createReadStream(path, { encoding: 'utf8' }), crlfDelay: Infinity });
+  const accumulator = createMboxAccumulator();
+  for await (const line of lines) {
+    const message = accumulator.push(line);
+    if (message) {
+      yield message;
+    }
+  }
+  const last = accumulator.flush();
+  if (last) {
+    yield last;
+  }
+}
 
 /** Formats an mailparser address object as a raw header string (e.g. `Name <email>, ...`). */
 const formatAddress = (address: AddressObject | AddressObject[] | undefined): string | undefined => {
