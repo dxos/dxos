@@ -15,7 +15,7 @@ import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps
 import { compactSlots } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { SpaceId as SpaceIdConfig, SpaceMode } from '../../core/state';
+import { SpaceId as SpaceIdConfig, SpaceMode } from '../../core';
 import { translationKey } from '../../translations';
 
 // Minimal registry: only the block-level `prompt` tag (user turns render as bubbles). No widgets,

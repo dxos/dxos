@@ -63,10 +63,10 @@ const SidepanelContent = () => {
       }
     };
 
-    void consume();
+    void consume().catch((err) => log.catch(err));
     return ThumbnailUrl.subscribe((url) => {
       if (url) {
-        void consume();
+        void consume().catch((err) => log.catch(err));
       }
     });
   }, []);

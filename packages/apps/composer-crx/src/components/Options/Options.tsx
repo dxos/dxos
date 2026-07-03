@@ -63,8 +63,13 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
 
   const handleSpaceIdChange = async (ev: ChangeEvent<HTMLInputElement>) => {
     const next = ev.target.value;
-    await SpaceIdConfig.set(next);
+    // Reflect typing immediately, but persist only a valid (or cleared) id so the stored value stays
+    // consistent with the validated read path — a partial/malformed id would otherwise silently
+    // vanish on reload.
     setSpaceId(next);
+    if (next === '' || SpaceId.isValid(next)) {
+      await SpaceIdConfig.set(next);
+    }
   };
 
   // One match pattern per line; blank lines ignored. An empty editor restores the defaults so a
