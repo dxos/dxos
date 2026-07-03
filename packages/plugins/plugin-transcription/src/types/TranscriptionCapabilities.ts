@@ -9,7 +9,7 @@ import { type Atom } from '@effect-atom/atom-react';
 import { Capability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { type Feed } from '@dxos/echo';
-import { type EntityLookup as EntityLookupFn } from '@dxos/transcription-pipeline';
+import { type EntityLookup as EntityLookupFn } from '@dxos/pipeline-transcription';
 import { type Message } from '@dxos/types';
 
 import { meta } from '#meta';

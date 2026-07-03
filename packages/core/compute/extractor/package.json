@@ -1,6 +1,6 @@
 {
   "name": "@dxos/extractor",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Template-driven extraction of ECHO objects from source objects.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

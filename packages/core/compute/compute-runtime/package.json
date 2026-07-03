@@ -1,6 +1,6 @@
 {
   "name": "@dxos/compute-runtime",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Compute runtime: process manager, layer stack and runtime-level service resolution.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-ibkr",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "DXOS plugin that connects Interactive Brokers (Flex Web Service) and exposes portfolio/trades to the assistant.",
   "homepage": "https://dxos.org",
