@@ -3740,6 +3740,16 @@ importers:
         specifier: 'catalog:'
         version: 1.1.2
 
+  packages/common/crx-protocol:
+    dependencies:
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
+    devDependencies:
+      '@dxos/typings':
+        specifier: workspace:*
+        version: link:../typings
+
   packages/common/crypto:
     dependencies:
       '@dxos/invariant':
