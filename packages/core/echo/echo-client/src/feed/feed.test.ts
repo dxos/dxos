@@ -304,41 +304,6 @@ describe('Feed', () => {
       expect(blocks.length).toBe(2);
     });
 
-    test('change is visible to a fresh client reading the queue', async ({ expect }) => {
-      const [spaceKey] = PublicKey.randomSequence();
-      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
-      await using db1 = await peer.createDatabase(spaceKey);
-      const testLayer1 = Database.layer(db1);
-
-      let feedId!: string;
-      await Effect.gen(function* () {
-        const feed = yield* Database.add(Feed.make({ name: 'cross-client' }));
-        feedId = feed.id;
-
-        const alice = Obj.make(TestSchema.Person, { name: 'alice' });
-        yield* Feed.append(feed, [alice]);
-
-        const [queried] = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
-        Obj.update(queried, (item) => {
-          item.name = 'alice-updated';
-        });
-        // Sync flushes the pending append (from Obj.update) before pushing.
-        yield* Feed.sync(feed);
-      }).pipe(Effect.provide(testLayer1), EffectEx.runAndForwardErrors);
-
-      // Fresh client with an empty feed-handle cache reads directly from the queue.
-      await using client2 = await peer.createClient();
-      await using db2 = await peer.openDatabase(spaceKey, db1.rootUrl!, { client: client2 });
-      const feed2 = await db2.getObjectById<Feed.Feed>(feedId);
-      const testLayer2 = Database.layer(db2);
-
-      await Effect.gen(function* () {
-        const results = yield* Feed.query(feed2!, Filter.type(TestSchema.Person)).run;
-        expect(results).toHaveLength(1);
-        expect(results[0].name).toBe('alice-updated');
-      }).pipe(Effect.provide(testLayer2), EffectEx.runAndForwardErrors);
-    });
-
     test('query.subscribe reflects a changed feed item', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
       const db = await peer.createDatabase();

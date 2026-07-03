@@ -7,7 +7,14 @@ import * as Predicate from 'effect/Predicate';
 import { DeferredTask, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Database, Entity, type Feed, Obj, type Query, type Ref } from '@dxos/echo';
-import { type ObjectJSON, ParentId, SelfURIId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
+import {
+  ChangeId,
+  type ObjectJSON,
+  ParentId,
+  SelfURIId,
+  assertObjectModel,
+  setRefResolverOnData,
+} from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
@@ -136,10 +143,8 @@ export class FeedHandle {
   readonly #queryResultCache = new QueryResultCache();
 
   // Feed items are append-only, so mutating one (via `Obj.update`) persists a new entry with the
-  // same id. `#feedChangeSubscribed` guards against attaching the persist-on-change subscription
-  // more than once per object; `#pendingWrites` lets reads/sync wait for those fire-and-forget
-  // appends (triggered by the synchronous `Obj.update`) to reach the queue.
-  readonly #feedChangeSubscribed = new WeakSet<object>();
+  // same id. `#pendingWrites` lets reads/sync wait for those fire-and-forget appends (triggered by
+  // the synchronous `Obj.update`) to reach the queue.
   readonly #pendingWrites = new Set<Promise<void>>();
 
   constructor(
@@ -220,19 +225,22 @@ export class FeedHandle {
   /**
    * Persists mutations to a feed item made through the standard `Obj.update` API.
    *
-   * Feeds are append-only, so an item cannot be edited in place: each `Obj.update` appends a new
-   * entry with the same id, and reads collapse entries by id (keeping the latest). The append is
-   * fire-and-forget because `Obj.update` is synchronous; it is tracked in {@link #pendingWrites} so
-   * reads and sync can wait for it to reach the queue. Idempotent per object.
+   * Feed items are decoded as plain (non-reactive) objects with no change handler, so `Obj.update`
+   * would otherwise mutate them in place without persisting. Installing a `ChangeId` handler makes
+   * `Obj.update` also append a new entry with the same id (feeds are append-only; reads collapse
+   * entries by id, keeping the latest). The append is fire-and-forget because `Obj.update` is
+   * synchronous; it is tracked in {@link #pendingWrites} so reads and sync can wait for it to reach
+   * the queue. Idempotent; skips objects that already carry a change handler (e.g. reactive objects).
    */
   #installFeedChange(item: Entity.Unknown): void {
-    if (this.#feedChangeSubscribed.has(item)) {
+    // Only objects support `Obj.update`; feeds hold objects (relations use `Relation.update`).
+    if (!Obj.isObject(item) || Reflect.get(item, ChangeId) !== undefined) {
       return;
     }
-    this.#feedChangeSubscribed.add(item);
-    // `append` only touches hidden metadata and the local set — never the item's user data — so it
-    // does not re-notify this subscription, avoiding a mutate→append→mutate loop.
-    Obj.subscribe(item, () => {
+    defineHiddenProperty(item, ChangeId, (mutate: (target: Obj.Unknown) => void) => {
+      mutate(item);
+      // `append` only reads the item and touches hidden metadata + the local set, so it does not
+      // re-enter this handler — no mutate→append→mutate loop.
       this.#trackWrite(this.append([item]));
     });
   }
