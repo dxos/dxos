@@ -13,7 +13,7 @@ import { type ThreadContentProps } from '@dxos/react-ui-thread';
 import { Message, type Thread } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
-import { Chat } from '#components';
+import { MessageThread } from '#components';
 import { useStatus } from '#hooks';
 
 export type ThreadArticleProps = ThemedClassName<
@@ -58,7 +58,7 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
     };
 
     return (
-      <Chat
+      <MessageThread
         {...composableProps(props)}
         id={id}
         identity={identity}
