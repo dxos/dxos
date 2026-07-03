@@ -17,6 +17,7 @@ import * as Stream from 'effect/Stream';
 import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Ref as EchoRef, Feed, Obj, Relation } from '@dxos/echo';
+import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 // Connection is referenced in the inferred type of this module's default export via
 // InboxOperation.GoogleCalendarSync's schema; the import lets TypeScript name it in .d.ts.
@@ -26,7 +27,7 @@ import { type Event } from '@dxos/types';
 
 import { GoogleCalendar } from '../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { GoogleCredentials, InboxResolver } from '../../../services';
+import { GoogleCredentials } from '../../../services';
 import { InboxOperation } from '../../../types';
 import { Calendar } from '../../../types';
 import { mapEvent } from './mapper';

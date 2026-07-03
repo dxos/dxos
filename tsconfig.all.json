@@ -187,6 +187,9 @@
       "path": "packages/core/compute/extractor/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/extractor-lib/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/functions/tsconfig.json"
     },
     {
@@ -211,10 +214,13 @@
       "path": "packages/core/compute/operation/tsconfig.json"
     },
     {
-      "path": "packages/core/compute/semantic-index/tsconfig.json"
+      "path": "packages/core/compute/pipeline/tsconfig.json"
     },
     {
-      "path": "packages/core/compute/transcription-pipeline/tsconfig.json"
+      "path": "packages/core/compute/pipeline-transcription/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/semantic-index/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo/tsconfig.json"

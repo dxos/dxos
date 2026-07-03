@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/transcription-pipeline",
+  "name": "@dxos/pipeline-transcription",
   "version": "0.10.0",
   "description": "Streaming stage pipeline for transcription post-processing (correction, entity extraction, summarization).",
   "homepage": "https://dxos.org",
@@ -41,6 +41,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/pipeline": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/types": "workspace:*",
     "@effect/ai": "catalog:",
