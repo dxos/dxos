@@ -34,4 +34,6 @@ declare global {
   }
 }
 
-export const bootLoader = window.__bootLoader;
+// Guarded: `@dxos/app-framework/ui` has a `node` export and this module is re-exported through the
+// UI barrel, so a bare top-level `window` read would throw when imported in SSR / tests / tooling.
+export const bootLoader = typeof window !== 'undefined' ? window.__bootLoader : undefined;
