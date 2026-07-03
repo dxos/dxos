@@ -142,7 +142,7 @@ export default InboxOperation.GoogleContactsSync.pipe(
         // idempotent via the foreign-key lookup.
         const stats = { upserted: 0 };
         yield* connectionsSource().pipe(
-          Stream.filter((person) => memberNames.has(person.resourceName)),
+          Stage.filter('group-member', (person: GooglePeople.Person) => memberNames.has(person.resourceName)),
           mapPersonStage,
           Pipeline.run({
             sink: (mapped) =>
