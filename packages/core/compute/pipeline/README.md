@@ -19,3 +19,12 @@ await EffectEx.runPromise(
   }),
 );
 ```
+
+## Testing
+
+Install ollama then run the `setup` script.
+
+```bash
+moon run pipeline:setup
+moon run pipeline:test -- src/testing/email-pipeline.test.ts
+```
