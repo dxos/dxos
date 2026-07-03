@@ -17,9 +17,8 @@ import * as Runnable from './Runnable';
  * Where a trigger is executed.
  * *local* - trigger is executed on the client.
  * *edge* - trigger is executed on the edge.
- * *disabled* - trigger is not executed.
  */
-export const ComputeEnvironment = Schema.Literal('disabled', 'local', 'edge').annotations({ title: 'Compute' });
+export const ComputeEnvironment = Schema.Literal('local', 'edge').annotations({ title: 'Compute' });
 export type ComputeEnvironment = Schema.Schema.Type<typeof ComputeEnvironment>;
 
 /**
@@ -183,7 +182,7 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
      * Overrides the space-level compute environment for this trigger.
      * When unset, the space's computeEnvironment setting applies.
      */
-    computeEnvironment: ComputeEnvironment.pipe(Schema.annotations({ title: 'Compute' }), Schema.optional),
+    computeEnvironment: ComputeEnvironment.pipe(Schema.annotations({ title: 'Runs On' }), Schema.optional),
 
     concurrency: Schema.Number.pipe(
       Schema.annotations({

@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Trigger } from '@dxos/compute';
 import { type Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { IconButton, Input, ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, ThemedClassName, ToggleGroup, ToggleGroupItem, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { ParentLabelAnnotation } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
@@ -31,7 +31,7 @@ import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector';
 const RECURRING_KINDS = ['hourly', 'daily', 'weekly', 'monthly', 'custom'] as const satisfies readonly ScheduleKind[];
 
 // `enabled` is extended onto every spec form so it renders inline with the kind's fields.
-const EnabledForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('enabled'));
+const EnabledForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('enabled', 'computeEnvironment'));
 
 // `computeEnvironment` is surfaced as a separate top-level field alongside the spec form.
 const ComputeEnvironmentForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('computeEnvironment'));
@@ -238,20 +238,6 @@ export const TriggerEditor = ({ classNames, db, routine, trigger, readonly }: Tr
           {kind === 'email' && <p className='px-2 text-sm text-description'>{t('trigger-kind.email-note.message')}</p>}
         </Form.Content>
       </Form.Root>
-      {kind && (
-        <Form.Root
-          key={`${trigger?.id ?? 'new'}:${resetNonce}`}
-          schema={ComputeEnvironmentForm}
-          db={db}
-          readonly={readonly}
-          defaultValues={defaultComputeEnvironment}
-          onValuesChanged={handleComputeEnvironmentChanged}
-        >
-          <Form.Content>
-            <Form.FieldSet />
-          </Form.Content>
-        </Form.Root>
-      )}
     </>
   );
 };
@@ -379,7 +365,7 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
       } else {
         // Defensive: the draft normally carries an owned trigger already (see `Routine.make`). If absent,
         // create one in memory and attach it to the routine graph — nothing is persisted until save.
-        const created = Trigger.make({ spec, enabled });
+        const created = Trigger.make({ spec, enabled, computeEnvironment: 'local' });
         Obj.setParent(created, routine);
         Obj.update(routine, (routine) => {
           routine.triggers.push(Ref.make(created));
