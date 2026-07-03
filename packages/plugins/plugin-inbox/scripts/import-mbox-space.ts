@@ -61,7 +61,11 @@ const parseArgs = (argv: string[]): { in: string; out: string; name: string; lim
   const out = options.get('out') ?? input.replace(/\.mbox$/i, '') + '.dx.json';
   const name = options.get('name') ?? 'Inbox';
   const limitRaw = options.get('limit');
-  return { in: input, out, name, limit: limitRaw ? Number(limitRaw) : undefined };
+  const limit = limitRaw === undefined ? undefined : Number(limitRaw);
+  if (limit !== undefined && (!Number.isInteger(limit) || limit < 0)) {
+    throw new Error(`--limit must be a non-negative integer, got "${limitRaw}"`);
+  }
+  return { in: input, out, name, limit };
 };
 
 /** Builds the Mailbox, then streams the mbox file, appending parsed messages in bounded batches. */
