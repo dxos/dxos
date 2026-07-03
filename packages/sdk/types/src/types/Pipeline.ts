@@ -18,6 +18,13 @@ export const Column = Schema.Struct({
 
 export type Column = Schema.Schema.Type<typeof Column>;
 
+// TODO(wittjosiah): Rename this type to avoid the name collision with DXOS pipelines (`@dxos/pipeline`,
+//   the source→stages→sink streaming abstraction). This `Pipeline` is a board of View-backed columns
+//   that records progress through (sales/research/hiring "pipelines"); `Board` and `Kanban` are taken
+//   by other plugins. Candidates: `Funnel` (records flowing through ordered stages; sales-leaning),
+//   `Workflow` (neutral "stages"; note it can imply automation, which this is not), `Journey` (CRM
+//   customer-journey flavor), `Track` (short/generic). Renaming the TS class (and `plugin-pipeline`)
+//   resolves the collision; changing the DXN `org.dxos.type.pipeline` additionally needs a data migration.
 export class Pipeline extends Type.makeObject<Pipeline>(DXN.make('org.dxos.type.pipeline', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName'), Schema.optional),

@@ -76,6 +76,9 @@
       "path": "../../core/compute/functions-runtime"
     },
     {
+      "path": "../../core/compute/pipeline"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
