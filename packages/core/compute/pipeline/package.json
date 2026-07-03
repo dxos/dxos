@@ -15,14 +15,14 @@
   "type": "module",
   "exports": {
     ".": {
+      "default": "./dist/lib/neutral/index.mjs",
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "types": "./dist/types/src/index.d.ts"
     },
     "./testing": {
+      "default": "./dist/lib/neutral/testing/index.mjs",
       "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
+      "types": "./dist/types/src/testing/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -36,8 +36,16 @@
     "hyparquet": "catalog:"
   },
   "devDependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/extractor": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/ai": "catalog:",
+    "@effect/platform": "catalog:",
     "effect": "catalog:",
     "hyparquet-writer": "catalog:",
     "vitest": "catalog:"
