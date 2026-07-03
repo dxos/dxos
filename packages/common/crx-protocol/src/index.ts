@@ -3,3 +3,4 @@
 //
 
 export * as PageAction from './PageAction';
+export * from './channel';
