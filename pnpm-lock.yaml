@@ -5336,6 +5336,34 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
 
+  packages/core/compute/extractor-lib:
+    dependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../echo/echo
+      '@dxos/extractor':
+        specifier: workspace:*
+        version: link:../extractor
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../../sdk/types
+    devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../echo/echo-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.8(patch_hash=a7bf6a3d21c2bc782d60d0f0f916d76f304c0eb6fbf2827e8d981408c7b5120e)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.8)(@vitest/coverage-v8@4.1.8)(@vitest/ui@4.1.8)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
   packages/core/compute/functions:
     dependencies:
       '@dxos/ai':
@@ -5754,6 +5782,9 @@ importers:
       '@dxos/extractor':
         specifier: workspace:*
         version: link:../extractor
+      '@dxos/extractor-lib':
+        specifier: workspace:*
+        version: link:../extractor-lib
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -11345,6 +11376,9 @@ importers:
       '@dxos/extractor':
         specifier: workspace:*
         version: link:../../core/compute/extractor
+      '@dxos/extractor-lib':
+        specifier: workspace:*
+        version: link:../../core/compute/extractor-lib
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/compute/functions
@@ -16564,6 +16598,9 @@ importers:
       '@dxos/extractor':
         specifier: workspace:*
         version: link:../../core/compute/extractor
+      '@dxos/extractor-lib':
+        specifier: workspace:*
+        version: link:../../core/compute/extractor-lib
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

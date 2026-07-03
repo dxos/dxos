@@ -17,9 +17,10 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { AiService, Provider } from '@dxos/ai';
 import { OllamaAiServiceLayer } from '@dxos/ai/testing';
-import { type Database, Filter, Obj, Ref } from '@dxos/echo';
+import { type Database, Filter, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { extractContact } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -142,62 +143,6 @@ type Ctx = {
   readonly stats: Stats;
 };
 
-// A deterministic contact extractor mirroring plugin-inbox's `ContactMessageExtractor` /
-// `buildContactFromActor`: builds a Person from the sender and links/creates an Organization by email
-// domain. Persists via `db.add` directly (no Resolver/AiService layer), so its Effect is `R = never`.
-const extractContact = (message: Message.Message, db: Database.Database): Effect.Effect<void> =>
-  Effect.gen(function* () {
-    const email = message.sender.email?.trim().toLowerCase();
-    if (!email) {
-      return;
-    }
-
-    const existingContacts = yield* Effect.promise(() => db.query(Filter.type(Person.Person)).run());
-    const existingContact = existingContacts.find((contact) =>
-      contact.emails?.some((contactEmail) => contactEmail.value?.trim().toLowerCase() === email),
-    );
-    if (existingContact) {
-      return;
-    }
-
-    const contact = Obj.make(Person.Person, { emails: [{ value: email }] });
-    if (message.sender.name) {
-      Obj.update(contact, (contact) => {
-        contact.fullName = message.sender.name;
-      });
-    }
-
-    const emailDomain = email.split('@')[1]?.toLowerCase();
-    if (emailDomain) {
-      const existingOrganizations = yield* Effect.promise(() => db.query(Filter.type(Organization.Organization)).run());
-      const matchingOrg = existingOrganizations.find((org) => matchesDomain(org.website, emailDomain));
-      const organization =
-        matchingOrg ?? db.add(Obj.make(Organization.Organization, { website: `https://${emailDomain}` }));
-      Obj.update(contact, (contact) => {
-        contact.organization = Ref.make(organization);
-      });
-    }
-
-    db.add(contact);
-  });
-
-const matchesDomain = (website: string | undefined, emailDomain: string): boolean => {
-  if (!website) {
-    return false;
-  }
-  try {
-    const url = website.startsWith('http://') || website.startsWith('https://') ? website : `https://${website}`;
-    const websiteDomain = new URL(url).hostname.toLowerCase();
-    return (
-      websiteDomain === emailDomain ||
-      websiteDomain.endsWith(`.${emailDomain}`) ||
-      emailDomain.endsWith(`.${websiteDomain}`)
-    );
-  } catch {
-    return false;
-  }
-};
-
 // Stage 1: LLM summarization. Appends a second text block carrying the summary and records spam /
 // keyword metadata on `Message.properties` (ContentBlock.Text has no metadata field). Produces a new
 // Message rather than mutating in place. The model call degrades gracefully to an empty summary when
@@ -226,11 +171,21 @@ const summarizeStage: Stage.Stage<Message.Message, Message.Message, Ctx, never> 
     }),
 );
 
-// Stage 2: extract Person / Organization into the ECHO db. Passes the Message through unchanged; the
-// db write is the stage's only effect.
+// Stage 2: run the shared `contactExtractor` (the `@dxos/extractor` abstraction) to build a Person
+// (+ Organization link by domain) from the sender, then persist the extractor's uncommitted output
+// (normally the dispatcher's role). The extractor's `extract` has R = never, so it composes into
+// `Pipeline.run` (which carries no requirements channel). Passes the Message through unchanged.
 const extractStage: Stage.Stage<Message.Message, Message.Message, Ctx, never> = Stage.map(
   'extract-contact',
-  (message, ctx) => extractContact(message, ctx.db).pipe(Effect.as(message)),
+  (message, ctx) =>
+    extractContact({ db: ctx.db, source: message }).pipe(
+      Effect.map((result) => {
+        for (const object of result.created) {
+          ctx.db.add(object);
+        }
+        return message;
+      }),
+    ),
 );
 
 // Stage 3: pure-JS running tallies (no analysis libs — a Cloudflare-safe option would be a small

@@ -184,6 +184,9 @@
       "path": "packages/core/compute/extractor/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/extractor-lib/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/functions/tsconfig.json"
     },
     {

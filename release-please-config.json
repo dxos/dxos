@@ -330,6 +330,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/extractor-lib/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/functions/package.json",
           "jsonpath": "$.version"
         },

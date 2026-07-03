@@ -105,6 +105,7 @@
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/extractor": "workspace:*",
+    "@dxos/extractor-lib": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
