@@ -2,41 +2,46 @@
 // Copyright 2026 DXOS.org
 //
 
+import type { PageAction } from '@dxos/crx-protocol';
+
 /**
- * Page-actions wire protocol.
+ * Page-actions wire protocol (extension side).
  *
- * Extension-side mirror of `@dxos/plugin-crx`'s `types/PageAction.ts` — the
- * two modules MUST stay in sync. The extension does not depend on `effect`,
- * so the shapes are plain TypeScript types with hand-rolled validators in the
- * style of `../search-proxy/types.ts`.
+ * The serializable *shapes* are the single source of truth in `@dxos/crx-protocol` and are imported
+ * here **type-only** (erased at build) — so the extension, and in particular the per-page content
+ * script, carries no `effect` runtime. Decoding is done by the hand-rolled validators below (also
+ * `effect`-free) rather than `effect/Schema`, keeping the content-script bundle lean.
  *
- * Composer plugins contribute page actions; the extension caches their
- * serializable descriptors and surfaces them on web pages (popup toolbar,
- * context menu). The page and the extension exchange messages over
- * same-origin `window` CustomEvents (page <-> content script) and runtime
- * messages (content script <-> background). Both ends decode through the
- * exported validators so a malformed payload is rejected rather than trusted.
+ * Composer plugins contribute page actions; the extension caches their serializable descriptors and
+ * surfaces them on web pages (popup toolbar, context menu). The page and the extension exchange
+ * messages over same-origin `window` CustomEvents (page <-> content script) and runtime messages
+ * (content script <-> background). Both ends decode through the exported validators so a malformed
+ * payload is rejected rather than trusted.
+ *
+ * The cross-tab CustomEvent name constants below are plain string literals (not imported, to avoid
+ * pulling the `effect`-based schema module at runtime); their values MUST match the corresponding
+ * `PageAction.*_EVENT` constants in `@dxos/crx-protocol`.
  */
 
 /**
  * Window CustomEvent name the content script dispatches on a Composer page to
- * request the list of contributed page actions.
+ * request the list of contributed page actions. Matches `PageAction.LIST_EVENT`.
  */
 export const PAGE_ACTIONS_LIST_EVENT = 'composer:page-actions:list';
 
 /**
- * Window CustomEvent name the Composer page dispatches with the list ack.
+ * Window CustomEvent name the Composer page dispatches with the list ack. Matches `PageAction.LIST_ACK_EVENT`.
  */
 export const PAGE_ACTIONS_LIST_ACK_EVENT = 'composer:page-actions:list:ack';
 
 /**
  * Window CustomEvent name the content script dispatches on a Composer page to
- * invoke a page action with extracted inputs.
+ * invoke a page action with extracted inputs. Matches `PageAction.INVOKE_EVENT`.
  */
 export const PAGE_ACTION_INVOKE_EVENT = 'composer:page-action:invoke';
 
 /**
- * Window CustomEvent name the Composer page dispatches with the invoke ack.
+ * Window CustomEvent name the Composer page dispatches with the invoke ack. Matches `PageAction.INVOKE_ACK_EVENT`.
  */
 export const PAGE_ACTION_INVOKE_ACK_EVENT = 'composer:page-action:invoke:ack';
 
@@ -78,9 +83,8 @@ export const PAGE_ACTION_DELIVER_MESSAGE_TYPE = 'composer-crx:page-action:delive
 
 /**
  * Window CustomEvent dispatched by the Composer page once its page-actions
- * listeners are attached (mirrors `PageAction.READY_EVENT` in plugin-crx —
- * keep the string value in sync). The content-script relay listens for this
- * and forwards a ready runtime message to the background.
+ * listeners are attached. Matches `PageAction.READY_EVENT`. The content-script
+ * relay listens for this and forwards a ready runtime message to the background.
  */
 export const PAGE_ACTIONS_PAGE_READY_EVENT = 'composer:page-actions:ready';
 
@@ -101,7 +105,7 @@ export const PAGE_ACTIONS_STORAGE_KEY = 'composer-crx:page-actions-registry';
 /**
  * Where a page action can be surfaced.
  */
-export type PageActionContext = 'popup' | 'page' | 'selection' | 'link' | 'picker';
+export type PageActionContext = PageAction.Context;
 
 const PAGE_ACTION_CONTEXTS: readonly string[] = ['popup', 'page', 'selection', 'link', 'picker'];
 
@@ -110,83 +114,39 @@ const PAGE_ACTION_CONTEXTS: readonly string[] = ['popup', 'page', 'selection', '
  * `operation` carries the operation key for display/diagnostics only —
  * invocation is correlated by `id`.
  */
-export type PageActionDescriptor = {
-  id: string;
-  label: string;
-  icon: string;
-  urlPatterns: string[];
-  /** Lazy DOM condition evaluated at popup-open / invoke time. */
-  predicate?: { exists: string };
-  /** Named built-in extractor reference (extension-bundled), with optional params. */
-  extractor: { name: string; params?: unknown };
-  contexts: PageActionContext[];
-  operation: string;
-};
+export type PageActionDescriptor = PageAction.Descriptor;
 
 /**
- * Cached registry of page actions, persisted under
- * {@link PAGE_ACTIONS_STORAGE_KEY}.
+ * Cached registry of page actions, persisted under {@link PAGE_ACTIONS_STORAGE_KEY}.
+ * Extension-local (not part of the wire protocol): wraps the shared descriptors with a fetch time.
  */
 export type PageActionsRegistry = { fetchedAt: string; actions: PageActionDescriptor[] };
 
 /**
  * Reply to a page-actions list request.
  */
-export type ListAck =
-  | { version: 1; id: string; ok: true; actions: PageActionDescriptor[] }
-  | { version: 1; id: string; ok: false; error: string };
+export type ListAck = PageAction.ListAck;
 
 /**
  * Request to invoke a page action with inputs extracted from a page.
  */
-export type InvokeRequest = {
-  version: 1;
-  /** Correlation id; the ack echoes it back. */
-  id: string;
-  actionId: string;
-  page: { url: string; title: string; favicon?: string };
-  inputs: unknown;
-  invokedFrom: 'popup' | 'contextMenu' | 'picker';
-};
+export type InvokeRequest = PageAction.InvokeRequest;
 
 /**
  * Reply to an {@link InvokeRequest}.
  */
-export type InvokeAck =
-  | { version: 1; id: string; ok: true; objectId?: string }
-  | { version: 1; id: string; ok: false; error: string };
+export type InvokeAck = PageAction.InvokeAck;
 
 /**
  * Generic page capture produced by the extension's `snapshot` extractor.
- * Mirrors plugin-crx's `PageAction.Snapshot` (Clip source/selection/hints).
  */
-export type Snapshot = {
-  source: { url: string; title: string; favicon?: string; clippedAt: string };
-  selection?: {
-    text: string;
-    html?: string;
-    htmlTruncated?: boolean;
-    rect?: { x: number; y: number; width: number; height: number };
-  };
-  hints?: {
-    ogTitle?: string;
-    ogDescription?: string;
-    ogImage?: string;
-    jsonLd?: unknown[];
-    h1?: string;
-    firstImage?: string;
-  };
-  /** Downscaled thumbnail of the page's primary image as a data URL, captured by the background worker. */
-  imageData?: string;
-  html?: string;
-  htmlTruncated?: boolean;
-};
+export type Snapshot = PageAction.Snapshot;
 
 /** Nominal alias for the selection sub-shape of a {@link Snapshot}. */
-export type SnapshotSelection = NonNullable<Snapshot['selection']>;
+export type SnapshotSelection = NonNullable<PageAction.Snapshot['selection']>;
 
 /** Nominal alias for the hints sub-shape of a {@link Snapshot}. */
-export type SnapshotHints = NonNullable<Snapshot['hints']>;
+export type SnapshotHints = NonNullable<PageAction.Snapshot['hints']>;
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
@@ -225,22 +185,26 @@ export const decodeDescriptor = (value: unknown): PageActionDescriptor | undefin
     return undefined;
   }
 
-  const descriptor: PageActionDescriptor = {
+  // Build immutably: the shared schema types are readonly, so fields cannot be assigned post-construction.
+  const predicate =
+    isRecord(value.predicate) && typeof value.predicate.exists === 'string'
+      ? { exists: value.predicate.exists }
+      : undefined;
+  const extractor =
+    value.extractor.params !== undefined
+      ? { name: value.extractor.name, params: value.extractor.params }
+      : { name: value.extractor.name };
+
+  return {
     id: value.id,
     label: value.label,
     icon: value.icon,
     urlPatterns: [...value.urlPatterns],
-    extractor: { name: value.extractor.name },
+    extractor,
     contexts: value.contexts.filter(isPageActionContext),
     operation: value.operation,
+    ...(predicate ? { predicate } : {}),
   };
-  if (isRecord(value.predicate) && typeof value.predicate.exists === 'string') {
-    descriptor.predicate = { exists: value.predicate.exists };
-  }
-  if (value.extractor.params !== undefined) {
-    descriptor.extractor.params = value.extractor.params;
-  }
-  return descriptor;
 };
 
 /**
@@ -305,11 +269,9 @@ export const decodeInvokeAck = (value: unknown): InvokeAck | undefined => {
     if (value.objectId !== undefined && typeof value.objectId !== 'string') {
       return undefined;
     }
-    const ack: InvokeAck = { version: 1, id: value.id, ok: true };
-    if (typeof value.objectId === 'string') {
-      ack.objectId = value.objectId;
-    }
-    return ack;
+    return typeof value.objectId === 'string'
+      ? { version: 1, id: value.id, ok: true, objectId: value.objectId }
+      : { version: 1, id: value.id, ok: true };
   }
   if (value.ok === false) {
     if (typeof value.error !== 'string') {

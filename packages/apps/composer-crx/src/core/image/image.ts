@@ -8,7 +8,8 @@ import { EdgeServiceClient, Image } from '@dxos/edge-client/service';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import { THUMBNAIL_PROP, getConfig } from '../../config';
+import { getConfig } from '../../config';
+import { ThumbnailUrl } from '../state';
 
 /**
  * Get content type from URL extension.
@@ -79,7 +80,7 @@ export const createThumbnail = async (imageUrl: string) => {
       Image.thumbnail(client, blob, { filename: getFilenameFromUrl(imageUrl) }),
     );
     if (resultUrl) {
-      await browser.storage.local.set({ [THUMBNAIL_PROP]: resultUrl });
+      await ThumbnailUrl.set(resultUrl);
     }
   } catch (err) {
     log.error('thumbnail creation failed', { err });
