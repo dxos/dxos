@@ -48,6 +48,9 @@ const isHiddenContext = (message: UIMessage<Metadata>): boolean =>
   message.metadata?.hidden === true ||
   message.parts.some((part) => part.type === 'text' && part.text.trimStart().startsWith(HIDDEN_CONTEXT_PREFIX));
 
+/** Network status of the agent socket: probed on mount, updated live as the socket opens/closes. */
+export type ConnectionStatus = 'checking' | 'online' | 'offline';
+
 export type ChatProps = ThemedClassName<{
   /** Chat-agent host (ws/wss); the agent connection is derived from it. */
   host?: string;
@@ -55,8 +58,8 @@ export type ChatProps = ThemedClassName<{
   url?: string;
   /** Surfaces the chat-agent error so a host (the side panel) can show it in its status bar. */
   onError?: (error: Error | undefined) => void;
-  /** Surfaces the agent socket's connection state so a host can indicate when the agent is offline. */
-  onConnectionChange?: (connected: boolean) => void;
+  /** Surfaces the agent socket's network status so a host can display it (checking/online/offline). */
+  onConnectionChange?: (status: ConnectionStatus) => void;
 }>;
 
 /**
@@ -66,16 +69,17 @@ export const Chat = ({ classNames, host, url, onError, onConnectionChange }: Cha
   const { t } = useTranslation(translationKey);
   const editorRef = useRef<ChatEditorController>(null);
   const spaceIdRef = useRef<SpaceId | null>(null);
-  const [connected, setConnected] = useState(false);
+  const [status, setStatus] = useState<ConnectionStatus>('checking');
 
-  // Chat agent client. Track the socket state so the host can surface an offline indicator; a dead
-  // host retries with backoff (only `onClose` fires), so `connected` stays false until a socket opens.
+  // Chat agent client. The socket connects on mount, which is the network test for the AI service:
+  // `checking` until the first event, then `online`/`offline`. A dead host retries with backoff (only
+  // `onClose` fires), so it stays `offline` until a socket opens.
   const agent = useAgent({
     agent: 'chat',
     protocol: isSecureUrl(host ?? '') ? 'wss' : 'ws',
     host,
-    onOpen: () => setConnected(true),
-    onClose: () => setConnected(false),
+    onOpen: () => setStatus('online'),
+    onClose: () => setStatus('offline'),
   });
 
   // TODO(burdon): Define tools (see generic params).
@@ -101,11 +105,12 @@ export const Chat = ({ classNames, host, url, onError, onConnectionChange }: Cha
     return () => onError?.(undefined);
   }, [error, onError]);
 
-  // Lift the connection state so the host can indicate when the agent is offline.
+  // Lift the network status so the host can display it (and reset to `checking` on unmount so a stale
+  // status does not linger after Chat is hidden, e.g. a thumbnail).
   useEffect(() => {
-    onConnectionChange?.(connected);
-    return () => onConnectionChange?.(false);
-  }, [connected, onConnectionChange]);
+    onConnectionChange?.(status);
+    return () => onConnectionChange?.('checking');
+  }, [status, onConnectionChange]);
 
   // Render the thread to a single markdown document (see `renderThread`) and sync it into the
   // stream. The AI streaming contract makes the rendered text grow monotonically, so a prefix
