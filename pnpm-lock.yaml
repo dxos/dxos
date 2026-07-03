@@ -10010,6 +10010,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
+      '@dxos/crx-protocol':
+        specifier: workspace:*
+        version: link:../../common/crx-protocol
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
