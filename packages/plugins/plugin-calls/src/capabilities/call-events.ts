@@ -7,6 +7,7 @@ import * as Fiber from 'effect/Fiber';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Context } from '@dxos/context';
+import { log } from '@dxos/log';
 
 import { CallsCapabilities } from '#types';
 
@@ -27,29 +28,34 @@ export default Capability.makeModule(
         const manager = yield* Capability.waitFor(CallsCapabilities.Manager);
         const handlers = () => capabilities.getAll(CallsCapabilities.EventHandler);
 
+        // Handlers may be async; surface rejections instead of dropping them (unhandled promise).
+        const dispatch = (result: Promise<void> | void) => {
+          void Promise.resolve(result).catch((err) => log.catch(err));
+        };
+
         manager.roomJoined.on(ctx, ({ roomId }) => {
           for (const handler of handlers()) {
-            void handler.onJoin?.({ roomId });
+            dispatch(handler.onJoin?.({ roomId }));
           }
         });
         manager.left.on(ctx, (roomId) => {
           for (const handler of handlers()) {
-            void handler.onLeave?.(roomId);
+            dispatch(handler.onLeave?.(roomId));
           }
         });
         manager.callStateUpdated.on(ctx, (state) => {
           for (const handler of handlers()) {
-            void handler.onCallStateUpdated?.(state);
+            dispatch(handler.onCallStateUpdated?.(state));
           }
         });
         manager.mediaStateUpdated.on(ctx, (state) => {
           for (const handler of handlers()) {
-            void handler.onMediaStateUpdated?.(state);
+            dispatch(handler.onMediaStateUpdated?.(state));
           }
         });
         manager.transcript.on(ctx, (event) => {
           for (const handler of handlers()) {
-            void handler.onTranscript?.(event);
+            dispatch(handler.onTranscript?.(event));
           }
         });
       }).pipe(Effect.provideService(Capability.Service, capabilities)),

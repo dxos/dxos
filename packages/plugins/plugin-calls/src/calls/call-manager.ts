@@ -264,12 +264,14 @@ export class CallManager extends Resource {
   // TODO(mykola): Reconcile with _swarmSynchronizer.state.joined.
   @synchronized
   async join(): Promise<void> {
-    this._swarmSynchronizer.setJoined(true);
-    await this._swarmSynchronizer.join();
-
+    // Validate before mutating swarm state so a missing room id / device key can't leave us marked joined.
     const roomId = this._swarmSynchronizer._getState().roomId;
     const deviceKey = this._client.halo.device?.deviceKey.toHex();
     invariant(roomId && deviceKey, 'room id and device key are required to join a call');
+
+    this._swarmSynchronizer.setJoined(true);
+    await this._swarmSynchronizer.join();
+
     const transport = new RealtimeKitTransport({
       roomId,
       deviceKey,

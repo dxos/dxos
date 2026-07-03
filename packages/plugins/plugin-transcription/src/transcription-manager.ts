@@ -115,6 +115,10 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
     }
   }
 
+  /**
+   * Appends externally-produced transcript segments (e.g. native RealtimeKit transcription) directly to
+   * the feed, bypassing the local Whisper transcriber. No-op unless transcription is enabled.
+   */
   async addTranscript(segments: ContentBlock.Transcript[]): Promise<void> {
     if (!this.getEnabled()) {
       return;

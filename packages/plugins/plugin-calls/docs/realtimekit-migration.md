@@ -195,10 +195,14 @@ we explicitly do **not** add locks/KV/idempotency. No `MEETINGS` KV namespace, n
 - **Native events replace client-side capture** for calls: `TranscriptionManager` gains a second source — instead of
   `MediaStreamRecorder` + `/transcribe`, it consumes `transport.transcripts()`. The `MediaStreamRecorder` path stays
   for the **editor/chat** voice-input use cases (unaffected). This is toggled by which transport is active.
-- **Writer election (native transcription is centralized → all clients get the same events).** Elect exactly one writer
-  to append to the ECHO `Feed`: the peer that owns `MeetingPayload` (meeting creator / first joiner). Non-writers ignore
-  events for persistence but may render live. **Dedupe by event `id`** as a safety net so a writer hand-off can't
-  double-write. This gives real speaker labels (`customParticipantId`) — retiring the diarization stub for calls.
+- **Writer partitioning (shipped: per-speaker, not single-writer).** Native transcription is centralized — every client
+  receives every participant's events. To write each segment exactly once, each client persists **only the segments for
+  its own `deviceKey`** (`event.deviceKey === ownDeviceKey`); remote segments may still render live but are not appended.
+  This deliberately supersedes the earlier "elect one writer (`MeetingPayload` owner)" design: partitioning by speaker
+  removes the writer-failover problem entirely. There is **no successor to elect** — if a peer leaves mid-meeting, only
+  its own (now-ended) segments stop; every remaining peer keeps writing its own, so no gap and no hand-off window where a
+  segment is dropped or double-written. This gives real speaker labels (`customParticipantId`) — retiring the diarization
+  stub for calls.
 - Post-meeting Whisper (`transcribe_on_end` + webhook) is a **later, optional** enhancement (authoritative transcript
   reconciliation) — out of scope for phase 1.
 
@@ -304,7 +308,8 @@ Author-inspection loop: run storybook from the worktree (`moon run storybook-rea
    per-minute cost before default cutover.
 6. **Data residency / privacy** — native transcription streams audio through Cloudflare AI Gateway; confirm this is
    acceptable vs today's edge Whisper call (also Cloudflare, so likely equivalent).
-7. **Writer hand-off** — if the `MeetingPayload` owner leaves mid-meeting, elect a successor; id-dedupe covers overlap.
+7. **Writer partitioning** — resolved by per-speaker writing (see §5.5): each client persists only its own
+   `deviceKey`'s segments, so a peer leaving needs no successor election and opens no double-write window.
 
 ## 10. Out of scope (this spec)
 
