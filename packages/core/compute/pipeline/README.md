@@ -24,11 +24,4 @@ await EffectEx.runPromise(
 );
 ```
 
-## Testing
-
-Install ollama then run the `setup` script.
-
-```bash
-moon run pipeline:setup
-moon run pipeline:test -- src/testing/email-pipeline.test.ts
-```
+See [`@dxos/pipeline-email`](../pipeline-email) for a worked pipeline over the Enron email dataset.

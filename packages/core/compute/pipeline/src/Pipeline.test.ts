@@ -3,20 +3,21 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
 import * as Pipeline from './Pipeline';
 import * as Stage from './Stage';
-import { captureSink, scriptedSource } from './testing';
+import { captureSink } from './testing';
 
 describe('Pipeline.run', () => {
   test('chains stages left-to-right and drains to the sink', async ({ expect }) => {
     const { sink, items } = captureSink<number>();
     await EffectEx.runPromise(
       Pipeline.run({
-        source: scriptedSource([1, 2, 3]),
+        source: Stream.fromIterable([1, 2, 3]),
         stages: [
           Stage.map<number, number, {}>('double', (n) => Effect.succeed(n * 2)),
           Stage.map<number, number, {}>('inc', (n) => Effect.succeed(n + 1)),
@@ -32,7 +33,7 @@ describe('Pipeline.run', () => {
     const { sink, items } = captureSink<number>();
     await EffectEx.runPromise(
       Pipeline.run({
-        source: scriptedSource([1, 2]),
+        source: Stream.fromIterable([1, 2]),
         stages: [Stage.map<number, number, { factor: number }>('scale', (n, ctx) => Effect.succeed(n * ctx.factor))],
         sink,
         context: { factor: 5 },
@@ -45,7 +46,7 @@ describe('Pipeline.run', () => {
     const { sink, items } = captureSink<number>();
     await EffectEx.runPromise(
       Pipeline.run({
-        source: scriptedSource([1, 2, 3, 4]),
+        source: Stream.fromIterable([1, 2, 3, 4]),
         stages: [
           Stage.map<number, number | undefined, {}>('evens', (n) => Effect.succeed(n % 2 === 0 ? n : undefined)),
         ],
@@ -60,7 +61,7 @@ describe('Pipeline.run', () => {
     const { sink, items } = captureSink<number>();
     await EffectEx.runPromise(
       Pipeline.run({
-        source: scriptedSource([1, 2, 3, 4]),
+        source: Stream.fromIterable([1, 2, 3, 4]),
         stages: [
           // First stage no-ops on odds; the undefined must NOT reach the second stage.
           Stage.map<number, number | undefined, {}>('evens', (n) => Effect.succeed(n % 2 === 0 ? n : undefined)),
@@ -82,7 +83,7 @@ describe('Pipeline.run overflow', () => {
     const sink = (out: number) => Effect.sync(() => items.push(out)).pipe(Effect.zipLeft(Effect.yieldNow()));
     await EffectEx.runPromise(
       Pipeline.run({
-        source: scriptedSource(Array.from({ length: 50 }, (_unused, index) => index)),
+        source: Stream.fromIterable(Array.from({ length: 50 }, (_unused, index) => index)),
         stages: [Stage.map<number, number, {}>('id', (n) => Effect.succeed(n))],
         sink,
         context: {},
@@ -97,7 +98,7 @@ describe('Pipeline.run overflow', () => {
     const { sink, items } = captureSink<number>();
     await EffectEx.runPromise(
       Pipeline.run({
-        source: scriptedSource([1, 2, 3, 4, 5]),
+        source: Stream.fromIterable([1, 2, 3, 4, 5]),
         stages: [Stage.map<number, number, {}>('id', (n) => Effect.succeed(n))],
         sink,
         context: {},
@@ -113,7 +114,7 @@ describe('Pipeline.run overflow', () => {
     const { sink, items } = captureSink<number>();
     await EffectEx.runPromise(
       Pipeline.run({
-        source: scriptedSource([1, 2, 3]),
+        source: Stream.fromIterable([1, 2, 3]),
         stages: [Stage.map<number, number, {}>('id', (n) => Effect.succeed(n), { overflow: 'sliding', bufferSize: 1 })],
         sink,
         context: {},
@@ -133,7 +134,7 @@ describe('Pipeline.run overflow', () => {
     );
     const { sink } = captureSink<number>();
     await EffectEx.runPromise(
-      Pipeline.run({ source: scriptedSource([1, 2, 3, 4]), stages: [slow], sink, context: {} }),
+      Pipeline.run({ source: Stream.fromIterable([1, 2, 3, 4]), stages: [slow], sink, context: {} }),
     );
     expect(runs.length).toBeLessThan(4);
     expect(runs.at(-1)).toBe(4);

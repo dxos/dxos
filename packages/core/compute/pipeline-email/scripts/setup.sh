@@ -4,8 +4,8 @@ set -e
 # Provision the local fixtures for the ROOT_DIR-gated email-pipeline test:
 #   1. the Enron email dataset (git-ignored, under ./data), and
 #   2. the Ollama model used by the summarize stage.
-# Run `moon run pipeline:setup`, then point ROOT_DIR at the checkout:
-#   ROOT_DIR="$(pwd)/data/enron-emails" moon run pipeline:test -f -- src/testing/email-pipeline.test.ts
+# Run `moon run pipeline-email:setup`, then point ROOT_DIR at the checkout:
+#   ROOT_DIR="$(pwd)/data/enron-emails" moon run pipeline-email:test -f -- src/email-pipeline.test.ts
 
 # Ollama model tag to pull; must correspond to the OLLAMA_MODEL DXN used by the test
 # (default 'gpt-oss:20b' ↔ com.openai.model.gpt-oss-20b.default). Override for a different model, e.g.

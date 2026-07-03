@@ -1,7 +1,8 @@
 {
-  "name": "@dxos/pipeline",
+  "name": "@dxos/pipeline-email",
   "version": "0.9.0",
-  "description": "Generic back-pressured streaming pipeline (source → stages → sink).",
+  "private": true,
+  "description": "Worked email pipeline over the Enron dataset (parquet source → summarize/extract/stats stages).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -17,11 +18,6 @@
       "default": "./dist/lib/neutral/index.mjs",
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts"
-    },
-    "./testing": {
-      "default": "./dist/lib/neutral/testing/index.mjs",
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -29,17 +25,26 @@
     "dist",
     "src"
   ],
-  "scripts": {},
-  "dependencies": {},
+  "dependencies": {
+    "@dxos/node-std": "workspace:*",
+    "@dxos/pipeline": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "hyparquet": "catalog:"
+  },
   "devDependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/extractor-lib": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/ai": "catalog:",
     "effect": "catalog:",
+    "hyparquet-writer": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }
