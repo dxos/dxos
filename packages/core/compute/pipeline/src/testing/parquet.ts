@@ -47,7 +47,8 @@ const fileRows = (file: string): Stream.Stream<ParquetRow, ParquetReadError> =>
     Effect.gen(function* () {
       const handle = yield* Effect.acquireRelease(
         Effect.tryPromise({ try: () => open(file, 'r'), catch: (cause) => new ParquetReadError({ file, cause }) }),
-        (handle) => Effect.promise(() => handle.close()),
+        // `tryPromise` + `ignore` so a `close()` rejection is a swallowed failure, not a scope-killing defect.
+        (handle) => Effect.tryPromise(() => handle.close()).pipe(Effect.ignore),
       );
       const { size } = yield* Effect.tryPromise({
         try: () => handle.stat(),

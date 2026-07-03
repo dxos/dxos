@@ -16,14 +16,6 @@ import { ParquetReadError, type ParquetRow, parquetSource } from './parquet';
 
 // git clone https://huggingface.co/datasets/corbt/enron-emails
 
-const collect = (files: readonly string[]): Promise<readonly ParquetRow[]> =>
-  EffectEx.runPromise(
-    parquetSource(files).pipe(
-      Stream.runCollect,
-      Effect.map((chunk) => [...chunk]),
-    ),
-  );
-
 describe('parquetSource', () => {
   let dir: string;
   let fileA: string;
@@ -71,3 +63,11 @@ describe('parquetSource', () => {
     }
   });
 });
+
+const collect = (files: readonly string[]): Promise<readonly ParquetRow[]> =>
+  EffectEx.runPromise(
+    parquetSource(files).pipe(
+      Stream.runCollect,
+      Effect.map((chunk) => [...chunk]),
+    ),
+  );

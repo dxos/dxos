@@ -20,6 +20,9 @@ import { type TranscriptEvent } from './TranscriptEvent';
 /** Upper bound on retained blocks; bounds memory for long sessions (stages slice their own window). */
 const MAX_WINDOW = 128;
 
+/** Backpressure lag (in chunks) the broadcast driver may run ahead of the slowest branch. */
+const BROADCAST_BUFFER = 128;
+
 /**
  * Commits a stage's output to storage. Receives the exact window slice the stage was invoked with,
  * so `BlockUpdate.index` can be resolved against the originating blocks.
@@ -148,8 +151,11 @@ const run = (options: RunOptions): Effect.Effect<void> =>
         return yield* Stream.runDrain(source);
       }
 
-      const sink: Pipeline.Sink<Enriched, StageContext> = ({ write, window }) => commit(write, window);
-      const branches = yield* source.pipe(Stream.broadcast(enabled.length, MAX_WINDOW));
+      // Isolate commit failures per write: a failed commit must not fail its branch (which, under the
+      // unbounded `Effect.forEach`, would interrupt the sibling branches). Log and drop instead.
+      const sink: Pipeline.Sink<Enriched, StageContext> = ({ write, window }) =>
+        commit(write, window).pipe(Effect.catchAllCause((cause) => Effect.sync(() => log.catch(Cause.squash(cause)))));
+      const branches = yield* source.pipe(Stream.broadcast(enabled.length, BROADCAST_BUFFER));
 
       yield* Effect.forEach(
         branches,

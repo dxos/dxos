@@ -215,11 +215,13 @@ const statsStage: Stage.Stage<Message.Message, Message.Message, Ctx, never> = St
 
 // Bookend logging stage: emits one line describing the message as it enters/leaves the pipeline and
 // passes it through unchanged. (Visibility is controlled by LOG_FILTER, e.g. `LOG_FILTER=info`.)
+// Logs only the sender domain, not the full address, to avoid recording PII.
 const logStage = (label: string): Stage.Stage<Message.Message, Message.Message, Ctx, never> =>
   Stage.map(`log:${label}`, (message) =>
     Effect.sync(() => {
+      const senderDomain = message.sender.email?.split('@')[1];
       log.info(label, {
-        from: message.sender.email,
+        senderDomain,
         subject: message.properties?.subject,
         blocks: message.blocks.length,
         spam: message.properties?.spam,

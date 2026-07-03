@@ -11,9 +11,6 @@ import { EffectEx } from '@dxos/effect';
 
 import * as Stage from './Stage';
 
-const collect = <Out, E>(stream: Stream.Stream<Out, E>): Promise<readonly Out[]> =>
-  EffectEx.runPromise(stream.pipe(Stream.runCollect, Effect.map(Chunk.toReadonlyArray)));
-
 describe('Stage.map', () => {
   test('applies the function to each item in order (concurrency 1)', async ({ expect }) => {
     const stage = Stage.map<number, number, {}>('double', (n) => Effect.succeed(n * 2));
@@ -57,3 +54,6 @@ describe('Stage.window', () => {
     );
   });
 });
+
+const collect = <Out, E>(stream: Stream.Stream<Out, E>): Promise<readonly Out[]> =>
+  EffectEx.runPromise(stream.pipe(Stream.runCollect, Effect.map(Chunk.toReadonlyArray)));

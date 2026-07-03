@@ -8,6 +8,10 @@ per pipeline or per stage (`suspend` / `sliding` / `dropping`).
 ## Usage
 
 ```ts
+import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
+
+import { EffectEx } from '@dxos/effect';
 import { Pipeline, Stage } from '@dxos/pipeline';
 
 await EffectEx.runPromise(

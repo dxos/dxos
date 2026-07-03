@@ -109,8 +109,7 @@ const run = (options: RunOptions): Effect.Effect<void> =>
             stages: [windowTrigger(stage, configFor(stage.id)), runStage(stage, configFor(stage.id), presetDefault, onTelemetry)],
             sink,
             context: { lookup, model: resolveModel(configFor(stage.id), stage, presetDefault) },
-            overflow: stage.concurrency === 'latest-wins' ? 'sliding' : 'dropping',
-            bufferSize: 1,
+            // Overflow (latest-wins/skip-if-busy) is enforced by runStage's per-stage `map` buffer; not set here.
           }),
         { concurrency: 'unbounded', discard: true },
       );
@@ -176,7 +175,7 @@ const runStage = (
 };
 ```
 
-(Note: `runStage`'s `overflow` on the `map` is what enforces latest-wins/skip-if-busy; the `overflow` on `Pipeline.run` in Step 2 is redundant belt-and-suspenders — keep only one. Prefer the per-stage `map` overflow and drop it from `Pipeline.run`.)
+(Note: `runStage`'s `overflow` on the `map` is the single place that enforces latest-wins/skip-if-busy; `Pipeline.run` is deliberately left without an `overflow` in Step 2 to avoid a redundant second buffer.)
 
 - [ ] **Step 5: Adjust the telemetry test**
 

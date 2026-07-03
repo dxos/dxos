@@ -20,44 +20,7 @@ import { type ParquetRow, parquetSource } from './parquet';
 // its layout is `${ROOT_DIR}/data/train-*.parquet`.
 const ROOT_DIR = process.env.ROOT_DIR;
 
-const asIso = (value: unknown): string => (value instanceof Date ? value : new Date(String(value))).toISOString();
-
-// Map one email row (see the dataset's `dataset_info` schema) to a Message carrying the body as a
-// text block. Test-only: keeps the generic @dxos/pipeline package free of an @dxos/types dependency.
-const emailToMessage = (row: ParquetRow): Message.Message => {
-  const block: ContentBlock.Text = { _tag: 'text', text: String(row.body ?? '') };
-  return Message.make({
-    created: asIso(row.date),
-    sender: { email: String(row.from ?? '') },
-    blocks: [block],
-    properties: {
-      messageId: row.message_id,
-      subject: row.subject,
-      to: row.to,
-      cc: row.cc,
-      bcc: row.bcc,
-      fileName: row.file_name,
-    },
-  });
-};
-
 type SenderCount = { readonly sender: string; readonly count: number };
-
-// A pipeline stage that maintains a running count of emails per sender, emitting the updated count
-// for each email's sender as it flows through (a stateful scan; the counter map is bounded by the
-// number of distinct senders, not the stream length).
-const countBySenderStage = <E>(): Stage.Stage<ParquetRow, SenderCount, unknown, E> => ({
-  id: 'count-by-sender',
-  transform: (input) =>
-    input.pipe(
-      Stream.mapAccum(new Map<string, number>(), (counts, row) => {
-        const sender = String(row.from ?? '');
-        const count = (counts.get(sender) ?? 0) + 1;
-        counts.set(sender, count);
-        return [counts, { sender, count }];
-      }),
-    ),
-});
 
 describe('email parquet → Message', () => {
   test('maps an email row to a Message with a text body block', ({ expect }) => {
@@ -140,4 +103,41 @@ describe('email parquet → Message', () => {
       }
     });
   });
+});
+
+const asIso = (value: unknown): string => (value instanceof Date ? value : new Date(String(value))).toISOString();
+
+// Map one email row (see the dataset's `dataset_info` schema) to a Message carrying the body as a
+// text block. Test-only: keeps the generic @dxos/pipeline package free of an @dxos/types dependency.
+const emailToMessage = (row: ParquetRow): Message.Message => {
+  const block: ContentBlock.Text = { _tag: 'text', text: String(row.body ?? '') };
+  return Message.make({
+    created: asIso(row.date),
+    sender: { email: String(row.from ?? '') },
+    blocks: [block],
+    properties: {
+      messageId: row.message_id,
+      subject: row.subject,
+      to: row.to,
+      cc: row.cc,
+      bcc: row.bcc,
+      fileName: row.file_name,
+    },
+  });
+};
+
+// A pipeline stage that maintains a running count of emails per sender, emitting the updated count
+// for each email's sender as it flows through (a stateful scan; the counter map is bounded by the
+// number of distinct senders, not the stream length).
+const countBySenderStage = <E>(): Stage.Stage<ParquetRow, SenderCount, unknown, E> => ({
+  id: 'count-by-sender',
+  transform: (input) =>
+    input.pipe(
+      Stream.mapAccum(new Map<string, number>(), (counts, row) => {
+        const sender = String(row.from ?? '');
+        const count = (counts.get(sender) ?? 0) + 1;
+        counts.set(sender, count);
+        return [counts, { sender, count }];
+      }),
+    ),
 });
