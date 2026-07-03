@@ -4,6 +4,7 @@
 
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Cause from 'effect/Cause';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
@@ -22,28 +23,27 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { extractContact } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
+import { Pipeline, Stage } from '@dxos/pipeline';
+import { captureSink } from '@dxos/pipeline/testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import * as Pipeline from '../Pipeline';
-import * as Stage from '../Stage';
-import { captureSink } from './capture';
 import { emailToMessage } from './email-fixtures';
 import { parquetSource } from './parquet';
 
 // The email dataset (https://huggingface.co/datasets/corbt/enron-emails) lives under ROOT_DIR with
 // layout `${ROOT_DIR}/data/train-*.parquet`. ROOT_DIR defaults to the local checkout produced by
-// `moon run pipeline:setup` (packages/core/compute/pipeline/data/enron-emails); override it via the
-// ROOT_DIR env var. The suite is skipped unless that dataset is actually present — it also needs a
-// running Ollama (localhost:11434) and the native better-sqlite3 addon — so CI and un-provisioned
-// checkouts skip it.
+// `moon run pipeline-email:setup` (packages/core/compute/pipeline-email/data/enron-emails); override
+// it via the ROOT_DIR env var. The suite is skipped unless that dataset is actually present — it also
+// needs a running Ollama (localhost:11434) and the native better-sqlite3 addon — so CI and
+// un-provisioned checkouts skip it.
 const DEFAULT_ROOT_DIR = fileURLToPath(new URL('../../data/enron-emails', import.meta.url));
 const ROOT_DIR = process.env.ROOT_DIR ?? DEFAULT_ROOT_DIR;
 
 // Where the run's serialized outputs are written (git-ignored, under the package's ./data).
 const RESULTS_FILE = fileURLToPath(new URL('../../data/results.json', import.meta.url));
 
-const ORGS = [
+const TEST_ORGS = [
   { name: 'DXOS', website: 'https://dxos.org' },
   { name: 'Enron', website: 'https://enron.com' },
 ];
@@ -53,13 +53,18 @@ const HAS_DATASET = existsSync(join(ROOT_DIR, 'data'));
 
 // Local model served by Ollama (model DXN; its final NSID segment must be camelCase). Override via
 // OLLAMA_MODEL. Defaults to gpt-oss-20b, which reliably emits schema-conforming structured output for
-// `generateObject`; run `moon run pipeline:setup` (or `ollama pull gpt-oss:20b`) to fetch it. A weaker
-// model (e.g. OLLAMA_MODEL=com.meta.model.llama-3-2-1b.instruct) may fail structured output and fall
-// back to an empty summary.
+// `generateObject`; run `moon run pipeline-email:setup` (or `ollama pull gpt-oss:20b`) to fetch it.
+// A weaker model (e.g. OLLAMA_MODEL=com.meta.model.llama-3-2-1b.instruct) may fail structured output
+// and fall back to an empty summary.
 const MODEL = process.env.OLLAMA_MODEL ?? 'com.openai.model.gpt-oss-20b.default';
 
 // Number of emails drawn from the head of the dataset for one run.
 const EMAIL_COUNT = 10;
+
+const SUMMARIZE_PROMPT = trim`
+  Summarize the following email in one sentence, decide whether it is spam, and list up to five keywords.
+  Respond with ONLY a JSON object of the form {"summary": string, "isSpam": boolean, "keywords": string[]}.
+`;
 
 // Structured output the summarize stage asks the model for.
 const SummarySchema = Schema.Struct({
@@ -69,11 +74,6 @@ const SummarySchema = Schema.Struct({
 });
 
 type Summary = Schema.Schema.Type<typeof SummarySchema>;
-
-const SUMMARIZE_PROMPT = trim`
-  Summarize the following email in one sentence, decide whether it is spam, and list up to five keywords.
-  Respond with ONLY a JSON object of the form {"summary": string, "isSpam": boolean, "keywords": string[]}.
-`;
 
 // Model output is untyped JSON, often wrapped in prose/reasoning by local models; extract the first
 // object and coerce leniently (field names and types vary between models) rather than strict schema
@@ -100,7 +100,11 @@ const parseSummary = (raw: string): Summary => {
           : [],
     };
   } catch {
-    return { summary: '', isSpam: false, keywords: [] };
+    return {
+      summary: '',
+      isSpam: false,
+      keywords: [],
+    };
   }
 };
 
@@ -112,16 +116,20 @@ type Stats = {
   spam: number;
 };
 
-// Shared context threaded through every stage and the sink. The service closure and db are built
-// once up-front so each stage's Effect has `R = never` (Pipeline.run carries no requirements type),
-// keeping the stages themselves lightweight (Effect + closures) — Cloudflare-Worker-shaped. The heavy
-// bits (Ollama runtime, better-sqlite3-backed db) live here in the test harness, which is why the
-// whole suite is env-gated.
-type Ctx = {
-  readonly summarize: (text: string) => Promise<Summary>;
-  readonly db: Database.Database;
-  readonly stats: Stats;
-};
+// Shared context threaded through every stage via Effect's Requirements channel. The service
+// closure and db are built once up-front and provided at the edge (`Effect.provide` below), so the
+// individual stage Effects carry `R = Ctx` but the fully-composed program is reduced back to
+// `R = never` before `EffectEx.runPromise` — the same "provide at the edge" idiom used elsewhere in
+// this repo (e.g. `Database.layer`). The heavy bits (Ollama runtime, better-sqlite3-backed db) live
+// here in the test harness, which is why the whole suite is env-gated.
+class Ctx extends Context.Tag('EmailPipelineCtx')<
+  Ctx,
+  {
+    readonly summarize: (text: string) => Promise<Summary>;
+    readonly db: Database.Database;
+    readonly stats: Stats;
+  }
+>() {}
 
 // Stage 1: LLM summarization. Appends a second text block carrying the summary and records spam /
 // keyword metadata on `Message.properties` (ContentBlock.Text has no metadata field). Produces a new
@@ -129,51 +137,51 @@ type Ctx = {
 // Ollama is unreachable or a row fails (`tryPromise` captures the rejection so `orElse` can recover),
 // so the suite stays green whenever the dataset is checked out — real summaries when Ollama is up, an
 // empty-summary no-op otherwise.
-const summarizeStage: Stage.Stage<Message.Message, Message.Message, Ctx, never> = Stage.map(
-  'summarize',
-  (message, ctx) =>
-    Effect.gen(function* () {
-      const text = Message.extractText(message);
-      const result = yield* Effect.tryPromise(() => ctx.summarize(text)).pipe(
-        Effect.orElse(() => Effect.succeed<Summary>({ summary: '', isSpam: false, keywords: [] })),
-      );
-      const summaryBlock: ContentBlock.Text = { _tag: 'text', text: result.summary };
-      return Message.make({
-        created: message.created,
-        sender: message.sender,
-        blocks: [...message.blocks, summaryBlock],
-        properties: {
-          ...message.properties,
-          spam: result.isSpam,
-          keywords: result.keywords,
-        },
-      });
-    }),
+const summarizeStage: Stage.Stage<Message.Message, Message.Message, never, Ctx> = Stage.map('summarize', (message) =>
+  Effect.gen(function* () {
+    const { summarize } = yield* Ctx;
+    const text = Message.extractText(message);
+    const result = yield* Effect.tryPromise(() => summarize(text)).pipe(
+      Effect.orElse(() => Effect.succeed<Summary>({ summary: '', isSpam: false, keywords: [] })),
+    );
+    const summaryBlock: ContentBlock.Text = { _tag: 'text', text: result.summary };
+    return Message.make({
+      created: message.created,
+      sender: message.sender,
+      blocks: [...message.blocks, summaryBlock],
+      properties: {
+        ...message.properties,
+        spam: result.isSpam,
+        keywords: result.keywords,
+      },
+    });
+  }),
 );
 
 // Stage 2: run the shared `contactExtractor` (the `@dxos/extractor` abstraction) to build a Person
 // (+ Organization link by domain) from the sender, then persist the extractor's uncommitted output
 // (normally the dispatcher's role). The extractor's `extract` has R = never, so it composes into
-// `Pipeline.run` (which carries no requirements channel). Passes the Message through unchanged.
-const extractStage: Stage.Stage<Message.Message, Message.Message, Ctx, never> = Stage.map(
+// the Requirements channel the same way any other stage dependency does. Passes the Message through
+// unchanged.
+const extractStage: Stage.Stage<Message.Message, Message.Message, never, Ctx> = Stage.map(
   'extract-contact',
-  (message, ctx) =>
-    extractContact({ db: ctx.db, source: message }).pipe(
-      Effect.map((result) => {
-        for (const object of result.created) {
-          ctx.db.add(object);
-        }
-        return message;
-      }),
-    ),
+  (message) =>
+    Effect.gen(function* () {
+      const { db } = yield* Ctx;
+      const result = yield* extractContact({ db, source: message });
+      for (const object of result.created) {
+        db.add(object);
+      }
+      return message;
+    }),
 );
 
 // Stage 3: pure-JS running tallies (no analysis libs — a Cloudflare-safe option would be a small
 // pure-JS stats package, but none is added here). Mutates the context-carried accumulator and passes
 // the Message through so it reaches the sink for collection.
-const statsStage: Stage.Stage<Message.Message, Message.Message, Ctx, never> = Stage.map('stats', (message, ctx) =>
-  Effect.sync(() => {
-    const { stats } = ctx;
+const statsStage: Stage.Stage<Message.Message, Message.Message, never, Ctx> = Stage.map('stats', (message) =>
+  Effect.gen(function* () {
+    const { stats } = yield* Ctx;
     stats.total += 1;
     const sender = message.sender.email;
     if (sender) {
@@ -195,8 +203,9 @@ const statsStage: Stage.Stage<Message.Message, Message.Message, Ctx, never> = St
 
 // Bookend logging stage: emits one line describing the message as it enters/leaves the pipeline and
 // passes it through unchanged. (Visibility is controlled by LOG_FILTER, e.g. `LOG_FILTER=info`.)
-// Logs only the sender domain, not the full address, to avoid recording PII.
-const logStage = (label: string): Stage.Stage<Message.Message, Message.Message, Ctx, never> =>
+// Logs only the sender domain, not the full address, to avoid recording PII. Needs no shared context,
+// so it stays `R = never` even inside a pipeline that otherwise requires `Ctx`.
+const logStage = (label: string): Stage.Stage<Message.Message, Message.Message> =>
   Stage.map(`log:${label}`, (message) =>
     Effect.sync(() => {
       const senderDomain = message.sender.email?.split('@')[1];
@@ -211,9 +220,9 @@ const logStage = (label: string): Stage.Stage<Message.Message, Message.Message, 
   );
 
 describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', () => {
-  // Model layer built ONCE so it is not rebuilt per message. `AiService.model` provides the
-  // `LanguageModel`, resolved through the local Ollama provider; `OllamaAiServiceLayer` provides the
-  // `AiService` it requires.
+  // Model layer built ONCE so it is not rebuilt per message.
+  // `AiService.model` provides the `LanguageModel`, resolved through the local Ollama provider;
+  // `OllamaAiServiceLayer` provides the `AiService` it requires.
   const modelLayer = AiService.model(MODEL, { provider: Provider.ollama.id }).pipe(Layer.provide(OllamaAiServiceLayer));
   const runtime = ManagedRuntime.make(modelLayer.pipe(Layer.orDie));
 
@@ -224,7 +233,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
     builder = await new EchoTestBuilder().open();
     ({ db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person] }));
     // Seed a known Organization so domain-matching can link a sender's Person to it.
-    for (const org of ORGS) {
+    for (const org of TEST_ORGS) {
       db.add(Obj.make(Organization.Organization, org));
     }
     await db.flush({ indexes: true });
@@ -263,23 +272,23 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
           ),
         );
 
-      const context: Ctx = { summarize, db, stats };
+      const context: Context.Tag.Service<typeof Ctx> = { summarize, db, stats };
 
       const { sink, items } = captureSink<Message.Message>();
       await EffectEx.runPromise(
-        Pipeline.run({
-          source: parquetSource(files).pipe(Stream.take(EMAIL_COUNT), Stream.map(emailToMessage)),
-          stages: [
-            // Stages
+        Effect.provide(
+          parquetSource(files).pipe(
+            Stream.take(EMAIL_COUNT),
+            Stream.map(emailToMessage),
             logStage('email.in'),
             summarizeStage,
             extractStage,
             statsStage,
             logStage('email.out'),
-          ],
-          sink,
-          context,
-        }),
+            Pipeline.run({ sink }),
+          ),
+          Layer.succeed(Ctx, context),
+        ),
       );
 
       // The pipeline processes up to EMAIL_COUNT messages (fewer only if the dataset is smaller).

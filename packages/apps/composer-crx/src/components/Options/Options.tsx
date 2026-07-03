@@ -3,15 +3,20 @@
 //
 
 import React, { type ChangeEvent, useEffect, useState } from 'react';
-import browser from 'webextension-polyfill';
 
 import { Composer, DXOSHorizontalType } from '@dxos/brand';
 import { SpaceId } from '@dxos/keys';
 import { Input, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 
-import { DEVELOPER_MODE_PROP, SPACE_ID_PROP, SPACE_MODE_PROP, getProp } from '../../config';
-import { DEFAULT_COMPOSER_URLS, getComposerUrls, setComposerUrls } from '../../core';
+import {
+  DEFAULT_COMPOSER_URLS,
+  DeveloperMode,
+  SpaceId as SpaceIdConfig,
+  SpaceMode,
+  getComposerUrls,
+  setComposerUrls,
+} from '../../core';
 import { translationKey } from '../../translations';
 
 export type OptionsProps = {};
@@ -31,14 +36,14 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
 
   useEffect(() => {
     void (async () => {
-      setDeveloperMode(Boolean(await getProp(DEVELOPER_MODE_PROP)));
+      setDeveloperMode(await DeveloperMode.get());
     })();
   }, []);
 
   useEffect(() => {
     void (async () => {
-      const stored = await getProp(SPACE_ID_PROP);
-      if (SpaceId.isValid(stored)) {
+      const stored = await SpaceIdConfig.get();
+      if (stored && SpaceId.isValid(stored)) {
         setSpaceId(stored);
       }
     })();
@@ -46,20 +51,25 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
 
   const handleDeveloperModeChange = async (checked: boolean | 'indeterminate') => {
     const next = checked === 'indeterminate' ? false : Boolean(checked);
-    await browser.storage.sync.set({ [DEVELOPER_MODE_PROP]: next });
+    await DeveloperMode.set(next);
     setDeveloperMode(next);
   };
 
   const handleSpaceModeChange = async (checked: boolean | 'indeterminate') => {
     const next = checked === 'indeterminate' ? false : Boolean(checked);
-    await browser.storage.sync.set({ [SPACE_MODE_PROP]: next });
+    await SpaceMode.set(next);
     setSpaceMode(next);
   };
 
   const handleSpaceIdChange = async (ev: ChangeEvent<HTMLInputElement>) => {
     const next = ev.target.value;
-    await browser.storage.sync.set({ [SPACE_ID_PROP]: next });
+    // Reflect typing immediately, but persist only a valid (or cleared) id so the stored value stays
+    // consistent with the validated read path — a partial/malformed id would otherwise silently
+    // vanish on reload.
     setSpaceId(next);
+    if (next === '' || SpaceId.isValid(next)) {
+      await SpaceIdConfig.set(next);
+    }
   };
 
   // One match pattern per line; blank lines ignored. An empty editor restores the defaults so a

@@ -27,7 +27,7 @@ self-contained module exported via its `index.ts`.
 - **Functionality** — `findComposerTab` (query tabs matching the configured patterns and pick the best-scored one), `focusOrOpenComposerTab` / `openComposerTab`, and origin helpers `isComposerUrl` / `matchesPattern` (a small chrome match-pattern implementation).
 - **Lifecycle** — pure on-demand calls; no background listeners of its own. Invoked when the user launches Composer, when the registry refreshes, when the proxy origin-guards a sender, and when the picker resolves actions.
 - **Protocol / integration** — wraps `browser.tabs` / `browser.windows`; consumed by `actions/`, `proxy/` (origin guard), and the panel/background (launch button, `open-composer`).
-- **State** — the configured origins live in `browser.storage.sync` under `COMPOSER_URLS_PROP` (default `DEFAULT_COMPOSER_URLS`); `sender.ts` keeps an in-memory `lastUsedTabId` to bias tab scoring.
+- **State** — the configured origins are read/written via `getComposerUrls`/`setComposerUrls` (a `state/` `ComposerUrls` entry over `browser.storage.sync`, default `DEFAULT_COMPOSER_URLS`); `sender.ts` keeps an in-memory `lastUsedTabId` to bias tab scoring.
 
 ## Page extractors
 
@@ -42,7 +42,7 @@ self-contained module exported via its `index.ts`.
 - **Purpose** — the single image/thumbnail action (formerly the generic `actions/`).
 - **Functionality** — `createThumbnail(imageUrl)`: fetch the image, normalize its content-type, upload it to the EDGE image service, and persist the hosted URL.
 - **Lifecycle** — triggered from the background's `Create Thumbnail…` context-menu handler; the side panel is opened in the same gesture and shows the result.
-- **Protocol / integration** — uses `EdgeServiceClient` / `Image.thumbnail` (`@dxos/edge-client`); writes the hosted URL to `browser.storage.local` (`THUMBNAIL_PROP`), which the panel observes via `storage.onChanged`.
+- **Protocol / integration** — uses `EdgeServiceClient` / `Image.thumbnail` (`@dxos/edge-client`); writes the hosted URL via the `state/` `ThumbnailUrl` entry (`browser.storage.local`), which the panel observes via `ThumbnailUrl.subscribe`.
 - **State** — writes the hosted-URL result to `storage.local`; sets a transient error/success badge on the toolbar action; otherwise stateless.
 
 ## Element picker

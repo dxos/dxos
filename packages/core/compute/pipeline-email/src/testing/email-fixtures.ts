@@ -6,8 +6,7 @@ import { type ContentBlock, Message } from '@dxos/types';
 
 import { type ParquetRow } from './parquet';
 
-// Shared, test-only email fixtures. NOT re-exported from `testing/index.ts`: it imports @dxos/types
-// (a dev-only dependency), so keeping it out of the published entrypoint keeps the bundle effect-only.
+// Maps rows from the Enron email dataset (see the dataset's `dataset_info` schema) onto ECHO Messages.
 
 /** Coerce a parquet timestamp cell (a `Date`, or a string/number) to an ISO string. */
 export const asIso = (value: unknown): string =>
