@@ -71,6 +71,10 @@ const SidepanelContent = () => {
     void focusOrOpenComposerTab();
   }, []);
 
+  const handleOpenSettings = useCallback(() => {
+    void browser.runtime.openOptionsPage();
+  }, []);
+
   const handleClip = useCallback(async () => {
     const tab = await getActiveTab();
     if (!tab?.id) {
@@ -102,6 +106,13 @@ const SidepanelContent = () => {
           />
           {pageActions}
           <Toolbar.Separator />
+          <IconButton
+            variant='ghost'
+            icon='ph--gear--regular'
+            iconOnly
+            label={t('settings.button')}
+            onClick={handleOpenSettings}
+          />
           <IconButton
             variant='ghost'
             icon='ph--arrow-square-out--regular'

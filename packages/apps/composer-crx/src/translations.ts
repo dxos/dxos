@@ -19,6 +19,7 @@ export const translations = [
         'chat.offline.label': 'Agent offline',
         'clip.button': 'Clip',
         'launch-composer.button': 'Launch Composer',
+        'settings.button': 'Settings',
         'settings.dev-mode.label': 'Developer Mode',
         'settings.space-mode.label': 'Space Mode',
         'settings.space-id.label': 'Space ID',
