@@ -142,6 +142,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/extractor": "workspace:*",
+    "@dxos/extractor-lib": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
