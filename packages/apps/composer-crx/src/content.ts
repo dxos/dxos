@@ -7,9 +7,6 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
-import { isComposerUrl } from './bridge/urls';
-import { DEVELOPER_MODE_PROP, getProp } from './config';
-import { runExtractor } from './extractors';
 import {
   PAGE_ACTION_DELIVER_MESSAGE_TYPE,
   PAGE_ACTION_EXTRACT_MESSAGE_TYPE,
@@ -24,9 +21,11 @@ import {
   PAGE_ACTIONS_READY_MESSAGE_TYPE,
   decodeInvokeAck,
   decodeListAck,
-} from './page-actions';
-import { pickSnapshot } from './picker';
-import { showDebugPreview } from './picker/debug-preview';
+} from './core/actions';
+import { isComposerUrl } from './core/bridge/urls';
+import { runExtractor } from './core/extractors';
+import { pickSnapshot } from './core/picker';
+import { showDebugPreview } from './core/picker/debug-preview';
 import {
   PING_ACK_EVENT,
   PING_EVENT,
@@ -41,7 +40,11 @@ import {
   decodePingRequest,
   decodeRenderAck,
   decodeRenderRequest,
-} from './proxy';
+} from './core/proxy';
+// Import specific `core/` submodules rather than the top-level barrel: this is the content
+// script injected into every page, so it deliberately avoids pulling in background-only weight
+// (e.g. `bridge/sender`'s tab APIs, the `image` edge-client action) via a barrel.
+import { DeveloperMode } from './core/state';
 
 /**
  * Content script — loaded on every page at document_start. Hosts the DOM
@@ -280,7 +283,7 @@ const main = async () => {
 
     // When `developer-mode` is on, show the serialized JSON before delivery so
     // the user can inspect (and copy) the payload independently of Composer.
-    const debug = Boolean(await getProp(DEVELOPER_MODE_PROP));
+    const debug = await DeveloperMode.get();
     if (debug) {
       const confirmed = await showDebugPreview(picked.actionId, picked);
       if (!confirmed) {

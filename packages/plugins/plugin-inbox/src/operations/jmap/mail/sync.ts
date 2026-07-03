@@ -13,13 +13,14 @@ import * as Stream from 'effect/Stream';
 
 import { Operation, Trace } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { SyncBinding } from '@dxos/plugin-connector';
 import { Message } from '@dxos/types';
 
 import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
-import { InboxResolver, JmapCredentials } from '../../../services';
+import { JmapCredentials } from '../../../services';
 import { InboxOperation, Mailbox } from '../../../types';
 import { appendBatchToFeed, collectForeignIds, readBindingOptions } from '../../../util';
 import { mapEmail } from './mapper';

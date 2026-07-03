@@ -1,6 +1,6 @@
 {
   "name": "@dxos/semantic-index",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "Semantic index: extracts attributed propositions from text and answers SPARQL queries over them.",
   "homepage": "https://dxos.org",

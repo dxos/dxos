@@ -18,5 +18,6 @@ export default Config2.make({
     icon: { key: 'ph--video-camera--regular', hue: 'red' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-video',
     spec: 'PLUGIN.mdl',
+    tags: ['labs'],
   },
 });

@@ -26,12 +26,15 @@ import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, us
 import { type UseTextEditor, useTextEditor } from '@dxos/react-ui-editor';
 import {
   type AutoScrollProps,
+  PROMPT_ELEMENT,
+  ThemeExtensionsOptions,
   type XmlTagsOptions,
   type XmlWidgetState,
   type XmlWidgetStateManager,
   crawlerLineEffect,
   createBasicExtensions,
   createThemeExtensions,
+  createTurnSource,
   decorateMarkdown,
   documentSlots,
   extendedMarkdown,
@@ -40,6 +43,7 @@ import {
   navigateNextEffect,
   navigatePreviousEffect,
   scroller,
+  turnFolding,
   typewriter,
   typewriterBypass,
   xmlBlockDecoration,
@@ -54,6 +58,7 @@ import { isTruthy } from '@dxos/util';
 
 import { footer, setFooterVisibleEffect } from './footer';
 import { type StreamerOptions, createStreamer } from './stream';
+
 export interface MarkdownStreamController extends XmlWidgetStateManager {
   get length(): number | undefined;
   focus: () => void;
@@ -113,6 +118,11 @@ export type MarkdownStreamProps = ThemedClassName<
      */
     extensions?: Extension;
 
+    /**
+     * Theme extensions.
+     */
+    slots?: ThemeExtensionsOptions['slots'];
+
     /** Event handler. */
     onEvent?: (event: MarkdownStreamEvent) => void;
   } & (XmlTagsOptions & AutoScrollProps)
@@ -122,7 +132,7 @@ export type MarkdownStreamProps = ThemedClassName<
  * Codemirror-based markdown editor with xml tag widtgets and streaming support.
  */
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
-  ({ classNames, debug, content, options, registry, extensions, footer, onEvent }, forwardedRef) => {
+  ({ classNames, debug, content, options, registry, extensions, footer, slots, onEvent }, forwardedRef) => {
     // Store current content so that we can toggle debug mode. Default to '' so the
     // `append()` path (which does `contentRef.current += text`) doesn't concatenate
     // against `undefined` and stamp `"undefined"` into the transcript snapshot.
@@ -133,6 +143,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
 
     // Codemirror editor.
     const { parentRef, view, viewRef, widgets } = useMarkdownStreamTextEditor(contentRef, {
+      slots,
       debug,
       registry,
       options,
@@ -226,9 +237,13 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
   },
 );
 
-type MarkdownStreamTextEditorParams = Pick<MarkdownStreamProps, 'debug' | 'registry' | 'options' | 'extensions'> & {
-  setFooterRoot?: (el: HTMLElement | null) => void;
-};
+// Fold each agent response beneath its `<prompt>` (the head element rendered by `xmlBlockDecoration`).
+const turnSource = createTurnSource(PROMPT_ELEMENT);
+
+type MarkdownStreamTextEditorParams = Pick<MarkdownStreamProps, 'debug' | 'registry' | 'options' | 'extensions'> &
+  Pick<ThemeExtensionsOptions, 'slots'> & {
+    setFooterRoot?: (el: HTMLElement | null) => void;
+  };
 
 type MarkdownStreamTextEditorResult = UseTextEditor & {
   viewRef: RefObject<EditorView | null>;
@@ -240,7 +255,14 @@ type MarkdownStreamTextEditorResult = UseTextEditor & {
  */
 const useMarkdownStreamTextEditor = (
   currentContent: RefObject<string | undefined>,
-  { debug, registry, options, extensions: extraExtensions, setFooterRoot }: MarkdownStreamTextEditorParams,
+  {
+    debug,
+    registry,
+    options,
+    extensions: extensionsProp,
+    slots = documentSlots,
+    setFooterRoot,
+  }: MarkdownStreamTextEditorParams,
 ): MarkdownStreamTextEditorResult => {
   const { themeMode } = useThemeContext();
 
@@ -254,16 +276,8 @@ const useMarkdownStreamTextEditor = (
       initialValue: content,
       selection: EditorSelection.cursor(content?.length ?? 0),
       extensions: [
-        createBasicExtensions({
-          lineWrapping: true,
-          readOnly: true,
-        }),
-        createThemeExtensions({
-          slots: documentSlots,
-          scrollbarThin: true,
-          syntaxHighlighting: true,
-          themeMode,
-        }),
+        createBasicExtensions({ lineWrapping: true, readOnly: true }),
+        createThemeExtensions({ slots, scrollbarThin: true, syntaxHighlighting: true, themeMode }),
         xmlFormatting({ skip: debug ? [] : ['prompt'] }),
         !debug &&
           [
@@ -283,11 +297,12 @@ const useMarkdownStreamTextEditor = (
             // up these utility classes from this source file.
             xmlBlockDecoration({
               tag: 'prompt',
-              lineClass: 'cm-prompt-line my-8',
+              lineClass: 'cm-prompt-line',
               contentClass: 'cm-prompt-bubble dx-panel px-2 py-1.5 box-decoration-clone rounded-sm [&_*]:text-inherit!',
               hideTags: true,
             }),
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
+            turnFolding({ source: turnSource }),
             scroller({ overScroll: 80, autoScroll: options?.autoScroll }),
             options?.typewriter &&
               typewriter({
@@ -301,7 +316,7 @@ const useMarkdownStreamTextEditor = (
             options?.fader && fader(),
             setFooterRoot && footer(setFooterRoot),
           ].filter(isTruthy),
-        extraExtensions,
+        extensionsProp,
       ].filter(isTruthy),
     };
   }, [
@@ -312,7 +327,8 @@ const useMarkdownStreamTextEditor = (
     options?.typewriter,
     options?.cursor,
     options?.fader,
-    extraExtensions,
+    slots,
+    extensionsProp,
   ]);
 
   const viewRef = useDynamicRef(view);
