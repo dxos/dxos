@@ -26,10 +26,10 @@ catalog:
   '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': 3.2.10
   '@atproto/api': ^0.19.5
   '@automerge/automerge': 3.3.0-fragments.2
-  '@automerge/automerge-repo': 2.6.0-subduction.37
-  '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.37
-  '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.37
-  '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.37
+  '@automerge/automerge-repo': 2.6.0-subduction.40
+  '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.40
+  '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.40
+  '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.40
   '@automerge/automerge-subduction': 0.16.0
   '@babel/core': ^7.18.13
   '@babel/preset-typescript': ^7.27.1
@@ -779,7 +779,7 @@ overrides:
   ws: '>=8.17.1'
 
 patchedDependencies:
-  '@automerge/automerge-repo@2.6.0-subduction.37': patches/@automerge__automerge-repo@2.6.0-subduction.37.patch
+  '@automerge/automerge-repo@2.6.0-subduction.40': patches/@automerge__automerge-repo@2.6.0-subduction.40.patch
   '@automerge/automerge-subduction@0.16.0': patches/@automerge__automerge-subduction@0.16.0.patch
   '@effect-atom/atom@0.5.3': patches/@effect-atom__atom@0.5.3.patch
   '@vitest/browser@4.1.8': patches/@vitest__browser@4.1.8.patch
