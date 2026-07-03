@@ -69,6 +69,7 @@ export class CallSwarmSynchronizer extends Resource {
   private _reconcileSwarmStateTask?: DeferredTask = undefined;
 
   private _identityKey?: string = undefined;
+  private _identityDid?: string = undefined;
   private _deviceKey?: string = undefined;
   private _displayName?: string = undefined;
 
@@ -134,6 +135,7 @@ export class CallSwarmSynchronizer extends Resource {
    */
   _setIdentity(identity: Identity): void {
     this._identityKey = identity.identityKey.toHex();
+    this._identityDid = identity.did;
     this._displayName = identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
   }
 
@@ -184,12 +186,13 @@ export class CallSwarmSynchronizer extends Resource {
 
     const cleanup = () => {
       void stream.close();
-      if (topic && this._identityKey && this._deviceKey) {
-        log('leaving swarm', { topic, peer: { identityKey: this._identityKey, peerKey: this._deviceKey } });
+      if (topic && this._identityDid && this._deviceKey) {
+        // DX-1059: senders write `identityDid` only (see `_sendState`).
+        log('leaving swarm', { topic, peer: { identityDid: this._identityDid, peerKey: this._deviceKey } });
         void this._networkService
           .leaveSwarm({
             topic,
-            peer: { identityKey: this._identityKey, peerKey: this._deviceKey },
+            peer: { identityDid: this._identityDid, peerKey: this._deviceKey },
           })
           .catch((err) => log.catch(err));
       }
@@ -231,7 +234,7 @@ export class CallSwarmSynchronizer extends Resource {
   }
 
   private async _sendState(): Promise<void> {
-    if (!this._state.roomId || !this._identityKey || !this._deviceKey || !this._state.joined) {
+    if (!this._state.roomId || !this._identityKey || !this._identityDid || !this._deviceKey || !this._state.joined) {
       return;
     }
 
@@ -252,7 +255,9 @@ export class CallSwarmSynchronizer extends Resource {
     await this._networkService.joinSwarm({
       topic: getTopic(this._state.roomId),
       peer: {
-        identityKey: this._identityKey,
+        // DX-1059: `identityDid` is the only identity field senders write; the edge validates
+        // `source.identityDid` and rejects a peer that omits it with `EdgeIdentityChangedError`.
+        identityDid: this._identityDid,
         peerKey: this._deviceKey,
         state: codec.encode(state),
       },
