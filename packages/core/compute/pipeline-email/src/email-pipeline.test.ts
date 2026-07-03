@@ -22,26 +22,25 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { extractContact } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
+import { Pipeline, Stage } from '@dxos/pipeline';
+import { captureSink } from '@dxos/pipeline/testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import * as Pipeline from '../Pipeline';
-import * as Stage from '../Stage';
-import { captureSink } from './capture';
 import { emailToMessage } from './email-fixtures';
 import { parquetSource } from './parquet';
 
 // The email dataset (https://huggingface.co/datasets/corbt/enron-emails) lives under ROOT_DIR with
 // layout `${ROOT_DIR}/data/train-*.parquet`. ROOT_DIR defaults to the local checkout produced by
-// `moon run pipeline:setup` (packages/core/compute/pipeline/data/enron-emails); override it via the
-// ROOT_DIR env var. The suite is skipped unless that dataset is actually present — it also needs a
-// running Ollama (localhost:11434) and the native better-sqlite3 addon — so CI and un-provisioned
-// checkouts skip it.
-const DEFAULT_ROOT_DIR = fileURLToPath(new URL('../../data/enron-emails', import.meta.url));
+// `moon run pipeline-email:setup` (packages/core/compute/pipeline-email/data/enron-emails); override
+// it via the ROOT_DIR env var. The suite is skipped unless that dataset is actually present — it also
+// needs a running Ollama (localhost:11434) and the native better-sqlite3 addon — so CI and
+// un-provisioned checkouts skip it.
+const DEFAULT_ROOT_DIR = fileURLToPath(new URL('../data/enron-emails', import.meta.url));
 const ROOT_DIR = process.env.ROOT_DIR ?? DEFAULT_ROOT_DIR;
 
 // Where the run's serialized outputs are written (git-ignored, under the package's ./data).
-const RESULTS_FILE = fileURLToPath(new URL('../../data/results.json', import.meta.url));
+const RESULTS_FILE = fileURLToPath(new URL('../data/results.json', import.meta.url));
 
 const ORGS = [
   { name: 'DXOS', website: 'https://dxos.org' },
@@ -53,7 +52,7 @@ const HAS_DATASET = existsSync(join(ROOT_DIR, 'data'));
 
 // Local model served by Ollama (model DXN; its final NSID segment must be camelCase). Override via
 // OLLAMA_MODEL. Defaults to gpt-oss-20b, which reliably emits schema-conforming structured output for
-// `generateObject`; run `moon run pipeline:setup` (or `ollama pull gpt-oss:20b`) to fetch it. A weaker
+// `generateObject`; run `moon run pipeline-email:setup` (or `ollama pull gpt-oss:20b`) to fetch it. A weaker
 // model (e.g. OLLAMA_MODEL=com.meta.model.llama-3-2-1b.instruct) may fail structured output and fall
 // back to an empty summary.
 const MODEL = process.env.OLLAMA_MODEL ?? 'com.openai.model.gpt-oss-20b.default';

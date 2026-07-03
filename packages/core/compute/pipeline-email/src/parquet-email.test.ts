@@ -9,12 +9,11 @@ import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
+import { Pipeline, Stage } from '@dxos/pipeline';
+import { captureSink } from '@dxos/pipeline/testing';
 import { Message } from '@dxos/types';
 
-import * as Pipeline from '../Pipeline';
-import * as Stage from '../Stage';
 import { emailToMessage } from './email-fixtures';
-import { captureSink, scriptedSource } from './index';
 import { type ParquetRow, parquetSource } from './parquet';
 
 // The email dataset (https://huggingface.co/datasets/corbt/enron-emails) is exposed via ROOT_DIR;
@@ -57,7 +56,7 @@ describe('email parquet → Message', () => {
     const { sink, items } = captureSink<SenderCount>();
     await EffectEx.runPromise(
       Pipeline.run({
-        source: scriptedSource(rows),
+        source: Stream.fromIterable(rows),
         stages: [countBySenderStage<never>()],
         sink,
         context: {},
