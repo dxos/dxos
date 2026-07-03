@@ -28,6 +28,7 @@
   "dependencies": {
     "@dxos/node-std": "workspace:*",
     "@dxos/pipeline": "workspace:*",
+    "@dxos/semantic-index": "workspace:*",
     "@dxos/types": "workspace:*",
     "hyparquet": "catalog:"
   },

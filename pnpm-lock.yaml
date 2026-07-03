@@ -5794,6 +5794,9 @@ importers:
       '@dxos/pipeline':
         specifier: workspace:*
         version: link:../pipeline
+      '@dxos/semantic-index':
+        specifier: workspace:*
+        version: link:../semantic-index
       '@dxos/types':
         specifier: workspace:*
         version: link:../../../sdk/types
