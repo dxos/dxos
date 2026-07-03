@@ -420,6 +420,113 @@ const MessageTile = ({ message, classNames }: MessageTileProps) => {
 MessageTile.displayName = 'Message.Tile';
 
 //
+// Group
+//
+
+export type MessageGroupProps = {
+  /** Consecutive same-sender messages, in ascending time order, rendered as one tile. */
+  messages: readonly MessageType.Message[];
+  classNames?: MessageRootProps['classNames'];
+};
+
+/**
+ * Groups consecutive same-sender messages (see `Thread.Messages`'s grouping
+ * window) into a single tile: one heading (author + first message's
+ * timestamp) followed by one body per message, stacked in order. Per-message
+ * edit/delete controls are not shown per-row in a group — v1 shows them for
+ * the group's first message only, since the heading/controls layout is keyed
+ * to a single message.
+ */
+const MessageGroup = ({ messages, classNames }: MessageGroupProps) => {
+  const { t } = useTranslation(translationKey);
+  const { getMetadata, identityDid, editable, onMessageDelete, onAcceptProposal } = useThreadContext('Message.Group');
+  const [editing, setEditing] = useState(false);
+
+  const first = messages[0];
+  const metadata = getMetadata(first);
+  const isAuthor = !!identityDid && identityDid === metadata.authorId;
+  const hasProposal = first.blocks.some((block) => block._tag === 'proposal');
+
+  const handleEdit = useCallback(() => setEditing((value) => !value), []);
+  const handleDelete = useCallback(() => onMessageDelete?.(first.id), [onMessageDelete, first.id]);
+  const handleAcceptProposal = useCallback(() => onAcceptProposal?.(first.id), [onAcceptProposal, first.id]);
+  const handleSave = useCallback(
+    (text: string) => {
+      Obj.update(first, (first) => {
+        const block = first.blocks.find((block) => block._tag === 'text');
+        if (block && block._tag === 'text') {
+          block.text = text;
+        }
+      });
+    },
+    [first],
+  );
+
+  const showEdit = isAuthor && editable;
+  const showAccept = hasProposal && !!onAcceptProposal;
+  const showDelete = !!onMessageDelete;
+  const controls =
+    showEdit || showAccept || showDelete ? (
+      <div className={buttonGroupClassNames}>
+        {showEdit && (
+          <IconButton
+            data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
+            variant='ghost'
+            icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
+            iconOnly
+            label={t(editing ? 'save-message.label' : 'edit-message.label')}
+            classNames={[buttonClassNames, hoverableControlItem]}
+            onClick={handleEdit}
+          />
+        )}
+        {showAccept && (
+          <IconButton
+            data-testid='thread.message.accept'
+            variant='ghost'
+            icon='ph--check--regular'
+            iconOnly
+            label={t('accept-proposal.label')}
+            classNames={[buttonClassNames, hoverableControlItem]}
+            onClick={handleAcceptProposal}
+          />
+        )}
+        {showDelete && (
+          <IconButton
+            data-testid='thread.message.delete'
+            variant='ghost'
+            icon='ph--x--regular'
+            iconOnly
+            label={t('delete-message.label')}
+            classNames={[buttonClassNames, hoverableControlItem]}
+            onClick={handleDelete}
+          />
+        )}
+      </div>
+    ) : undefined;
+
+  return (
+    <MessageRoot
+      {...metadata}
+      controls={controls}
+      classNames={[hoverableControls, hoverableFocusedWithinControls, classNames]}
+    >
+      <MessageHeading authorName={metadata.authorName} timestamp={metadata.timestamp} />
+      {messages.map((message) => (
+        <MessageBody
+          key={message.id}
+          message={message}
+          isAuthor={isAuthor}
+          editing={editing && message === first}
+          onSave={handleSave}
+        />
+      ))}
+    </MessageRoot>
+  );
+};
+
+MessageGroup.displayName = 'Message.Group';
+
+//
 // Message
 //
 
@@ -431,4 +538,5 @@ export const Message = {
   Body: MessageBody,
   Textbox: MessageTextbox,
   Tile: MessageTile,
+  Group: MessageGroup,
 };
