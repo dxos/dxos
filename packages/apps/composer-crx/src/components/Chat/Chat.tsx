@@ -73,12 +73,14 @@ export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
   });
 
   // TODO(burdon): Define tools (see generic params).
-  // `resume` is omitted: it eagerly fetches prior messages on mount, and that fetch throws during
-  // render when the agent host is unreachable — crashing the panel into the error boundary instead
-  // of degrading to a status-bar error. Re-enable once `getInitialMessages` handles the offline host.
-  // TODO(burdon): Get initial messages (currently the history only appears after the first message).
+  // `getInitialMessages` overrides the default eager fetch of the agent's `get-messages` endpoint,
+  // which rejects and throws during render when the host is unreachable — crashing the panel into the
+  // error boundary instead of degrading to a status-bar error. Returning `[]` skips the fetch; the
+  // thread hydrates from the live stream once connected.
+  // TODO(burdon): Restore server-side history once the offline host degrades gracefully.
   const { error, messages, sendMessage, stop, clearError, clearHistory } = useAgentChat<unknown, UIMessage<Metadata>>({
     agent,
+    getInitialMessages: async () => [],
   });
 
   const filteredMessages = useMemo(
