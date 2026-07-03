@@ -97,35 +97,37 @@ export default InboxOperation.GoogleCalendarSync.pipe(
           const isInitialSync = cursorKey === 0;
           log('syncing google calendar', { calendar: Obj.getURI(calendar), calendarId, isInitialSync });
 
-          const result = yield* SyncBinding.run(
-            {
-              binding,
-              feed,
-              foreignKeySource: GOOGLE_INTEGRATION_SOURCE,
-              cursorKey,
-              // Store the cursor as an ISO `updated` timestamp (used as `updatedMin` next run).
-              formatCursor: (key) => new Date(key).toISOString(),
-            },
-            calendarSource(calendarId, cursorKey, {
-              syncBackDays: syncBack,
-              syncForwardDays: syncForward,
-              pageSize: defaults.pageSize,
-              searchFilter,
-            }).pipe(
-              SyncBinding.dedupStage<GoogleCalendar.Event>(
-                'dedup',
-                (event) => event.id,
-                (event) => (event.updated ? Date.parse(event.updated) : 0),
-              ),
-              makeRecurringDedupStage(isInitialSync),
-              mapEventStage,
-              Stream.grouped(COMMIT_PAGE_SIZE),
-              Pipeline.run({ sink: SyncBinding.commit }),
+          const stats: SyncBinding.Stats = { newMessages: 0 };
+          yield* calendarSource(calendarId, cursorKey, {
+            syncBackDays: syncBack,
+            syncForwardDays: syncForward,
+            pageSize: defaults.pageSize,
+            searchFilter,
+          }).pipe(
+            SyncBinding.dedupStage<GoogleCalendar.Event>(
+              'dedup',
+              (event) => event.id,
+              (event) => (event.updated ? Date.parse(event.updated) : 0),
+            ),
+            makeRecurringDedupStage(isInitialSync),
+            mapEventStage,
+            Stream.grouped(COMMIT_PAGE_SIZE),
+            Pipeline.run({ sink: SyncBinding.commit }),
+            Effect.provide(
+              SyncBinding.layer({
+                binding,
+                feed,
+                foreignKeySource: GOOGLE_INTEGRATION_SOURCE,
+                cursorKey,
+                // Store the cursor as an ISO `updated` timestamp (used as `updatedMin` next run).
+                formatCursor: (key) => new Date(key).toISOString(),
+                stats,
+              }),
             ),
           );
 
-          log('calendar sync complete', { newEvents: result.newMessages, isInitialSync });
-          return { newEvents: result.newMessages };
+          log('calendar sync complete', { newEvents: stats.newMessages, isInitialSync });
+          return { newEvents: stats.newMessages };
         }).pipe(
           Effect.provide(
             Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromConnection(connectionRef)),

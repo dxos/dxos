@@ -7,14 +7,14 @@ import * as Exit from 'effect/Exit';
 import * as Stream from 'effect/Stream';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { captureSink } from '@dxos/pipeline/testing';
-import { SyncBinding } from '@dxos/plugin-connector';
+import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { TagIndex } from '@dxos/schema';
-import { Cursor, Message, Organization, Person } from '@dxos/types';
+import { AccessToken, Message, Organization, Person } from '@dxos/types';
 
 import { EmailStage } from './index';
 
@@ -62,12 +62,25 @@ describe('sync pipeline harness', () => {
 
   const setup = async () => {
     const { db } = await builder.createDatabase({
-      types: [Message.Message, Person.Person, Organization.Organization, Feed.Feed, TagIndex.TagIndex],
+      types: [
+        Message.Message,
+        Person.Person,
+        Organization.Organization,
+        Feed.Feed,
+        TagIndex.TagIndex,
+        AccessToken.AccessToken,
+        Connection.Connection,
+        SyncBinding.SyncBinding,
+      ],
     });
     const feed = db.add(Feed.make({ name: 'mailbox' }));
     const tagIndex = TagIndex.make();
+    const accessToken = db.add(AccessToken.make({ source: 'test.mail', token: 'token' }));
+    const connection = db.add(Connection.make({ connectorId: 'test', accessToken: Ref.make(accessToken) }));
+    // The binding's target is unused by the pipeline; the feed stands in as a convenient local root.
+    const binding = db.add(SyncBinding.make({ [Relation.Source]: connection, [Relation.Target]: feed }));
     await db.flush({ indexes: true });
-    return { db, feed, tagIndex };
+    return { db, feed, tagIndex, binding };
   };
 
   // Provider-agnostic mapping stage: raw → mapped ECHO message (no contact resolution needed here).
@@ -118,6 +131,8 @@ describe('sync pipeline harness', () => {
     );
   };
 
+  const cursorOf = (binding: SyncBinding.SyncBinding): string | undefined => binding.cursor;
+
   const feedForeignIds = async (db: Database.Database, feed: Feed.Feed): Promise<string[]> => {
     const messages = await db.queryFeed(feed, Filter.type(Message.Message)).run();
     return messages.flatMap((message) =>
@@ -128,12 +143,8 @@ describe('sync pipeline harness', () => {
   };
 
   test('recovers from a mid-run fault without duplicating messages or contacts', async ({ expect }) => {
-    const { db, feed, tagIndex } = await setup();
-    let cursor: string | undefined;
-    const persistCursorKey = (key: number) => {
-      cursor = Cursor.formatKey(key);
-    };
-    const base = { db, feed, tagIndex, foreignKeySource: TEST_SOURCE, persistCursorKey };
+    const { db, feed, tagIndex, binding } = await setup();
+    const base = { db, binding, feed, tagIndex, foreignKeySource: TEST_SOURCE };
 
     // Run 1: fault after the first page (m1, m2) commits.
     const stats1: SyncBinding.Stats = { newMessages: 0 };
@@ -142,37 +153,33 @@ describe('sync pipeline harness', () => {
     );
     expect(Exit.isFailure(exit)).toBe(true);
 
-    // The committed page is durable; the cursor advanced to its last key.
+    // The committed page is durable; the binding cursor advanced to its last key (internalized).
     expect((await feedForeignIds(db, feed)).sort()).toEqual(['m1', 'm2']);
-    expect(cursor).toBe('20');
+    expect(cursorOf(binding)).toBe('20');
     expect(await db.query(Filter.type(Person.Person)).run()).toHaveLength(1);
 
     // Run 2: recovery — resumes from the cursor, no fault. No duplicates.
     const stats2: SyncBinding.Stats = { newMessages: 0 };
-    await EffectEx.runPromise(drain({ ...base, cursorKey: Cursor.parseKey(cursor), stats: stats2 }));
+    await EffectEx.runPromise(drain({ ...base, cursorKey: Number.parseInt(cursorOf(binding)!, 10), stats: stats2 }));
 
     expect(stats2.newMessages).toBe(3);
     const foreignIds = (await feedForeignIds(db, feed)).sort();
     expect(foreignIds).toEqual(['m1', 'm2', 'm3', 'm4', 'm5']);
     expect(new Set(foreignIds).size).toBe(foreignIds.length);
     expect(await db.query(Filter.type(Person.Person)).run()).toHaveLength(3);
-    expect(cursor).toBe('50');
+    expect(cursorOf(binding)).toBe('50');
   });
 
   test('re-running a completed sync is a no-op', async ({ expect }) => {
-    const { db, feed, tagIndex } = await setup();
-    let cursor: string | undefined;
-    const persistCursorKey = (key: number) => {
-      cursor = Cursor.formatKey(key);
-    };
-    const base = { db, feed, tagIndex, foreignKeySource: TEST_SOURCE, persistCursorKey };
+    const { db, feed, tagIndex, binding } = await setup();
+    const base = { db, binding, feed, tagIndex, foreignKeySource: TEST_SOURCE };
 
     const stats1: SyncBinding.Stats = { newMessages: 0 };
     await EffectEx.runPromise(drain({ ...base, cursorKey: 0, stats: stats1 }));
     expect(stats1.newMessages).toBe(RAWS.length);
 
     const stats2: SyncBinding.Stats = { newMessages: 0 };
-    await EffectEx.runPromise(drain({ ...base, cursorKey: Cursor.parseKey(cursor), stats: stats2 }));
+    await EffectEx.runPromise(drain({ ...base, cursorKey: Number.parseInt(cursorOf(binding)!, 10), stats: stats2 }));
     expect(stats2.newMessages).toBe(0);
     expect((await feedForeignIds(db, feed)).length).toBe(RAWS.length);
     expect(await db.query(Filter.type(Person.Person)).run()).toHaveLength(3);

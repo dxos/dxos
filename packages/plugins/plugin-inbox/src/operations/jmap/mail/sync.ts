@@ -110,26 +110,27 @@ export default InboxOperation.JmapSync.pipe(
             }),
         );
 
-        const result = yield* SyncBinding.run(
-          { binding, feed, tagIndex, foreignKeySource: JMAP_MESSAGE_SOURCE, cursorKey },
-          jmapSource(target, folders, cursorKey, readBindingOptions(binding)).pipe(
-            SyncBinding.dedupStage<JmapMail.Email>(
-              'dedup',
-              (email) => email.id,
-              (email) => new Date(email.receivedAt).getTime(),
-            ),
-            decodeBodyStage,
-            EmailStage.htmlToMarkdown,
-            mapToMessageStage,
-            EmailStage.onArrivalExtractors(mailbox),
-            EmailStage.extractContacts,
-            Stream.grouped(COMMIT_PAGE_SIZE),
-            Pipeline.run({ sink: SyncBinding.commit }),
+        const stats: SyncBinding.Stats = { newMessages: 0 };
+        yield* jmapSource(target, folders, cursorKey, readBindingOptions(binding)).pipe(
+          SyncBinding.dedupStage<JmapMail.Email>(
+            'dedup',
+            (email) => email.id,
+            (email) => new Date(email.receivedAt).getTime(),
+          ),
+          decodeBodyStage,
+          EmailStage.htmlToMarkdown,
+          mapToMessageStage,
+          EmailStage.onArrivalExtractors(mailbox),
+          EmailStage.extractContacts,
+          Stream.grouped(COMMIT_PAGE_SIZE),
+          Pipeline.run({ sink: SyncBinding.commit }),
+          Effect.provide(
+            SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: JMAP_MESSAGE_SOURCE, cursorKey, stats }),
           ),
         );
 
-        log('jmap sync complete', { newMessages: result.newMessages });
-        return result;
+        log('jmap sync complete', { newMessages: stats.newMessages });
+        return { newMessages: stats.newMessages };
       }).pipe(
         Effect.provide(
           Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, JmapCredentials.fromConnection(connectionRef)),

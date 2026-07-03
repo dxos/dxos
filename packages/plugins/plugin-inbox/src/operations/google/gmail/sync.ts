@@ -122,28 +122,29 @@ export default InboxOperation.GoogleMailSync.pipe(
           );
 
           // fetch → dedup → decode → html→markdown → map → extract-contacts → (optional) on-arrival
-          // extractors → commit each page. `SyncBinding.run` provides the per-run layer and stamps the
-          // binding's cursor / lastSyncAt; fetch + `Resolver` requirements come from the layer stack below.
-          const result = yield* SyncBinding.run(
-            { binding, feed, tagIndex, foreignKeySource: GMAIL_SOURCE, cursorKey },
-            gmailSource(userId, label, cursorKey, fallbackAfter, restrictedMode, targetOptions.filter).pipe(
-              SyncBinding.dedupStage<GoogleMail.Message>(
-                'dedup',
-                (message) => message.id,
-                (message) => Number.parseInt(message.internalDate),
-              ),
-              decodeBodyStage,
-              EmailStage.htmlToMarkdown,
-              mapToMessageStage,
-              EmailStage.onArrivalExtractors(mailbox),
-              EmailStage.extractContacts,
-              Stream.grouped(STREAMING_CONFIG.pageSize),
-              Pipeline.run({ sink: SyncBinding.commit }),
+          // extractors → commit each page. The SyncBinding layer advances the binding cursor per page
+          // (internally); fetch + `Resolver` requirements come from the layer stack below.
+          const stats: SyncBinding.Stats = { newMessages: 0 };
+          yield* gmailSource(userId, label, cursorKey, fallbackAfter, restrictedMode, targetOptions.filter).pipe(
+            SyncBinding.dedupStage<GoogleMail.Message>(
+              'dedup',
+              (message) => message.id,
+              (message) => Number.parseInt(message.internalDate),
+            ),
+            decodeBodyStage,
+            EmailStage.htmlToMarkdown,
+            mapToMessageStage,
+            EmailStage.onArrivalExtractors(mailbox),
+            EmailStage.extractContacts,
+            Stream.grouped(STREAMING_CONFIG.pageSize),
+            Pipeline.run({ sink: SyncBinding.commit }),
+            Effect.provide(
+              SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: GMAIL_SOURCE, cursorKey, stats }),
             ),
           );
 
-          log('gmail sync complete', { newMessages: result.newMessages });
-          return result;
+          log('gmail sync complete', { newMessages: stats.newMessages });
+          return { newMessages: stats.newMessages };
         }).pipe(
           Effect.provide(
             Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromConnection(connectionRef)),

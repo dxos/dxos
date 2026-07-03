@@ -76,6 +76,8 @@ export type Stats = { newMessages: number };
  * `stats.newMessages`) constructs those objects and reads them back after the run.
  */
 export type State = {
+  /** The binding whose cursor is advanced as pages commit. */
+  readonly binding: SyncBinding;
   /** Feed the mapped messages are appended to. */
   readonly feed: Feed.Feed;
   /** Tag index provider-label tags are applied against; absent for providers that don't tag. */
@@ -88,8 +90,8 @@ export type State = {
   readonly dedupSet: Set<string>;
   /** Contact emails created earlier in this run, to dedup repeats before the first commit. */
   readonly createdContactEmails: Set<string>;
-  /** Persists the advanced cursor key onto the binding (e.g. via `Relation.update`). */
-  readonly persistCursorKey: (key: number) => void;
+  /** Serializes the advanced cursor key for storage on the binding. */
+  readonly formatCursor: (key: number) => string;
   /** Mutable run tally, read back by the caller after the run. */
   readonly stats: Stats;
 };
@@ -111,8 +113,13 @@ export type CommitUnit = {
 /** Effect Requirements tag carrying the per-run {@link State}. */
 export class Service extends Context.Tag('@dxos/plugin-connector/SyncBinding')<Service, State>() {}
 
-/** Dependencies supplied by the caller; the Layer seeds `dedupSet` and `createdContactEmails`. */
-export type LayerOptions = Omit<State, 'dedupSet' | 'createdContactEmails'>;
+/**
+ * Dependencies supplied by the caller; the Layer seeds `dedupSet` / `createdContactEmails` and
+ * defaults `formatCursor` to the decimal high-water key.
+ */
+export type LayerOptions = Omit<State, 'dedupSet' | 'createdContactEmails' | 'formatCursor'> & {
+  readonly formatCursor?: (key: number) => string;
+};
 
 /**
  * Builds the sync-binding Layer, seeding the committed-id dedup set from the feed.
@@ -129,7 +136,12 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
     Effect.gen(function* () {
       const { db } = yield* Database.Service;
       const dedupSet = yield* Effect.promise(() => seedDedupSet(db, options.feed, options.foreignKeySource));
-      return { ...options, dedupSet, createdContactEmails: new Set<string>() };
+      return {
+        ...options,
+        formatCursor: options.formatCursor ?? ((key: number) => String(key)),
+        dedupSet,
+        createdContactEmails: new Set<string>(),
+      };
     }),
   );
 
@@ -167,7 +179,15 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
           db.add(object);
         }
       }
-      state.persistCursorKey(Math.max(...units.map((unit) => unit.key)));
+      // Advance the cursor and stamp the run status on the binding in the same commit as the writes.
+      // (A run with no new messages produces no commit, so `lastSyncAt` reflects the last page that
+      // landed rather than the last attempt — acceptable, and avoids a separate write path.)
+      const maxKey = Math.max(...units.map((unit) => unit.key));
+      Relation.update(state.binding, (binding) => {
+        binding.cursor = state.formatCursor(maxKey);
+        binding.lastSyncAt = new Date().toISOString();
+        binding.lastError = undefined;
+      });
       // Flush so the space-db mutations (tags, contacts, cursor) commit and are indexed, letting the
       // next run's dedup and contact resolution observe them.
       await db.flush({ indexes: true });
@@ -197,51 +217,6 @@ export const dedupStage = <In>(
       return item;
     }),
   );
-
-export type RunOptions = {
-  readonly binding: SyncBinding;
-  readonly feed: Feed.Feed;
-  readonly tagIndex?: TagIndex.TagIndex;
-  readonly foreignKeySource: string;
-  /** High-water key at run start (parsed from the binding's cursor by the caller). */
-  readonly cursorKey: number;
-  /** Serializes the advanced cursor key for storage; defaults to the decimal high-water key. */
-  readonly formatCursor?: (key: number) => string;
-};
-
-/**
- * Runs a sync pipeline against a binding, internalizing the binding bookkeeping: provides the
- * {@link Service} layer, advances the cursor after each committed page, and on success stamps
- * `lastSyncAt` / clears `lastError`. Returns the run tally.
- */
-export const run = <E, R>(
-  options: RunOptions,
-  pipeline: Effect.Effect<void, E, R>,
-): Effect.Effect<{ newMessages: number }, E, Database.Service | Exclude<R, Service>> =>
-  Effect.gen(function* () {
-    const { binding, formatCursor = (key: number) => String(key) } = options;
-    const stats: Stats = { newMessages: 0 };
-    yield* pipeline.pipe(
-      Effect.provide(
-        layer({
-          feed: options.feed,
-          tagIndex: options.tagIndex,
-          foreignKeySource: options.foreignKeySource,
-          cursorKey: options.cursorKey,
-          persistCursorKey: (key) =>
-            Relation.update(binding, (binding) => {
-              binding.cursor = formatCursor(key);
-            }),
-          stats,
-        }),
-      ),
-    );
-    Relation.update(binding, (binding) => {
-      binding.lastSyncAt = new Date().toISOString();
-      binding.lastError = undefined;
-    });
-    return { newMessages: stats.newMessages };
-  });
 
 /** Seeds the dedup set of already-committed foreign ids from the feed (see {@link layer} TODO). */
 const seedDedupSet = async (db: Database.Database, feed: Feed.Feed, foreignKeySource: string): Promise<Set<string>> => {
