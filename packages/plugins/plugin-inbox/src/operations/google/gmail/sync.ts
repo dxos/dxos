@@ -98,6 +98,29 @@ export default InboxOperation.GoogleMailSync.pipe(
             }),
           );
 
+          // Resolve the sender contact, build the ECHO message, and resolve label ids to tag URIs via
+          // the (Gmail-specific) label map captured here.
+          const mapToMessageStage: Stage.Stage<DecodedMessage, EmailStage.Mapped, never, Resolver> = Stage.map(
+            'map-to-message',
+            (decoded: DecodedMessage) =>
+              Effect.gen(function* () {
+                const fromHeader = decoded.raw.payload.headers.find(({ name }) => name === 'From');
+                const from = fromHeader ? parseFromHeader(fromHeader.value) : undefined;
+                const contact = from?.email ? yield* resolve(Person.Person, { email: from.email }) : undefined;
+                const mapped = mapToMessage(decoded, contact ?? undefined);
+                const tagUris = mapped.labelIds.flatMap((labelId) => {
+                  const uri = labelMap.get(labelId);
+                  return uri ? [uri] : [];
+                });
+                return {
+                  message: mapped.message,
+                  foreignId: decoded.raw.id,
+                  key: Number.parseInt(decoded.raw.internalDate),
+                  tagUris,
+                };
+              }),
+          );
+
           // fetch → dedup → decode → html→markdown → map → extract-contacts → (optional) on-arrival
           // extractors → commit each page. `SyncBinding.run` provides the per-run layer and stamps the
           // binding's cursor / lastSyncAt; fetch + `Resolver` requirements come from the layer stack below.
@@ -110,9 +133,9 @@ export default InboxOperation.GoogleMailSync.pipe(
                 (message) => Number.parseInt(message.internalDate),
               ),
               decodeBodyStage,
-              EmailStage.htmlToMarkdown<DecodedMessage>(),
-              makeMapToMessageStage(labelMap),
-              EmailStage.onArrivalExtractors<EmailStage.Mapped>(mailbox),
+              EmailStage.htmlToMarkdown,
+              mapToMessageStage,
+              EmailStage.onArrivalExtractors(mailbox),
               EmailStage.extractContacts,
               Stream.grouped(STREAMING_CONFIG.pageSize),
               Pipeline.run({ sink: SyncBinding.commit }),
@@ -157,30 +180,6 @@ const decodeBodyStage: Stage.Stage<GoogleMail.Message, DecodedMessage, never, ne
   'decode-body',
   (message: GoogleMail.Message) => Effect.sync(() => decodeBody(message) ?? undefined),
 );
-
-/** Gmail-specific mapping stage: resolve the sender contact (via `Resolver`), build the ECHO message,
- * and resolve provider label ids to tag URIs (the label map is Gmail-specific, closed over here). */
-const makeMapToMessageStage = (
-  labelMap: Map<string, string>,
-): Stage.Stage<DecodedMessage, EmailStage.Mapped, never, Resolver> =>
-  Stage.map('map-to-message', (decoded: DecodedMessage) =>
-    Effect.gen(function* () {
-      const fromHeader = decoded.raw.payload.headers.find(({ name }) => name === 'From');
-      const from = fromHeader ? parseFromHeader(fromHeader.value) : undefined;
-      const contact = from?.email ? yield* resolve(Person.Person, { email: from.email }) : undefined;
-      const mapped = mapToMessage(decoded, contact ?? undefined);
-      const tagUris = mapped.labelIds.flatMap((labelId) => {
-        const uri = labelMap.get(labelId);
-        return uri ? [uri] : [];
-      });
-      return {
-        message: mapped.message,
-        foreignId: decoded.raw.id,
-        key: Number.parseInt(decoded.raw.internalDate),
-        tagUris,
-      };
-    }),
-  );
 
 /**
  * Streams Gmail messages forward from the cursor: resume at the cursor's `internalDate` (else the

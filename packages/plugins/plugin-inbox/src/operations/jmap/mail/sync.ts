@@ -85,6 +85,31 @@ export default InboxOperation.JmapSync.pipe(
         // The cursor is the high-water `receivedAt` (epoch-ms) of the last committed email.
         const cursorKey = Cursor.parseKey(binding.cursor);
 
+        // Resolve the sender contact, build the ECHO message, and resolve folder ids to tag URIs via
+        // the (JMAP-specific) folder map captured here.
+        const mapToMessageStage: Stage.Stage<DecodedEmail, EmailStage.Mapped, never, Resolver> = Stage.map(
+          'map-to-message',
+          (decoded: DecodedEmail) =>
+            Effect.gen(function* () {
+              const fromAddress = decoded.raw.from?.[0];
+              const contact = fromAddress ? yield* resolve(Person.Person, { email: fromAddress.email }) : undefined;
+              const mapped = mapToMessage(decoded, contact ?? undefined);
+              if (!mapped) {
+                return undefined;
+              }
+              const tagUris = mapped.mailboxIds.flatMap((folderId) => {
+                const uri = folderTagMap.get(folderId);
+                return uri ? [uri] : [];
+              });
+              return {
+                message: mapped.message,
+                foreignId: decoded.raw.id,
+                key: new Date(decoded.raw.receivedAt).getTime(),
+                tagUris,
+              };
+            }),
+        );
+
         const result = yield* SyncBinding.run(
           { binding, feed, tagIndex, foreignKeySource: JMAP_MESSAGE_SOURCE, cursorKey },
           jmapSource(target, folders, cursorKey, readBindingOptions(binding)).pipe(
@@ -94,9 +119,9 @@ export default InboxOperation.JmapSync.pipe(
               (email) => new Date(email.receivedAt).getTime(),
             ),
             decodeBodyStage,
-            EmailStage.htmlToMarkdown<DecodedEmail>(),
-            makeMapToMessageStage(folderTagMap),
-            EmailStage.onArrivalExtractors<EmailStage.Mapped>(mailbox),
+            EmailStage.htmlToMarkdown,
+            mapToMessageStage,
+            EmailStage.onArrivalExtractors(mailbox),
             EmailStage.extractContacts,
             Stream.grouped(COMMIT_PAGE_SIZE),
             Pipeline.run({ sink: SyncBinding.commit }),
@@ -120,32 +145,6 @@ const decodeBodyStage: Stage.Stage<JmapMail.Email, DecodedEmail, never, never> =
   'decode-body',
   (email: JmapMail.Email) => Effect.sync(() => decodeBody(email) ?? undefined),
 );
-
-/** JMAP-specific mapping stage: resolve the sender contact (via `Resolver`), build the ECHO message,
- * and resolve folder ids to tag URIs (the folder map is JMAP-specific, closed over here). */
-const makeMapToMessageStage = (
-  folderTagMap: Map<string, string>,
-): Stage.Stage<DecodedEmail, EmailStage.Mapped, never, Resolver> =>
-  Stage.map('map-to-message', (decoded: DecodedEmail) =>
-    Effect.gen(function* () {
-      const fromAddress = decoded.raw.from?.[0];
-      const contact = fromAddress ? yield* resolve(Person.Person, { email: fromAddress.email }) : undefined;
-      const mapped = mapToMessage(decoded, contact ?? undefined);
-      if (!mapped) {
-        return undefined;
-      }
-      const tagUris = mapped.mailboxIds.flatMap((folderId) => {
-        const uri = folderTagMap.get(folderId);
-        return uri ? [uri] : [];
-      });
-      return {
-        message: mapped.message,
-        foreignId: decoded.raw.id,
-        key: new Date(decoded.raw.receivedAt).getTime(),
-        tagUris,
-      };
-    }),
-  );
 
 /**
  * Streams JMAP emails from the cursor: build the query filter (Inbox scope + date window from the

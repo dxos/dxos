@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
@@ -28,10 +29,11 @@ export type Bodied = { readonly body: string };
 
 /**
  * Normalizes an item's `body` from (possibly) HTML into markdown via `normalizeText` (turndown when
- * HTML, passthrough for plaintext). Requires nothing from the Requirements channel.
+ * HTML, passthrough for plaintext). Requires nothing from the Requirements channel. Written as a
+ * generic pipeable so the item type infers from the upstream stream (no type argument needed).
  */
-export const htmlToMarkdown = <In extends Bodied>(id = 'html-to-markdown'): Stage.Stage<In, In, never, never> =>
-  Stage.map(id, (item: In) => Effect.sync(() => ({ ...item, body: normalizeText(item.body) })));
+export const htmlToMarkdown = <In extends Bodied, E, R>(self: Stream.Stream<In, E, R>): Stream.Stream<In, E, R> =>
+  Stage.map('html-to-markdown', (item: In) => Effect.sync(() => ({ ...item, body: normalizeText(item.body) })))(self);
 
 /** A mapped message ready for contact extraction and commit. */
 export type Mapped = {
@@ -85,7 +87,11 @@ export const extractContacts: Stage.Stage<
  *
  * TODO(wittjosiah): Factor these extractors out into their own downstream pipeline.
  */
-export const onArrivalExtractors = <T extends { readonly message: Message.Message }>(
-  mailbox: Mailbox.Mailbox,
-): Stage.Stage<T, T, never, Capability.Service | Operation.Service> =>
-  Stage.map('on-arrival-extractors', (item: T) => runOnArrivalExtractors(mailbox, [item.message]).pipe(Effect.as(item)));
+export const onArrivalExtractors =
+  (mailbox: Mailbox.Mailbox) =>
+  <In extends { readonly message: Message.Message }, E, R>(
+    self: Stream.Stream<In, E, R>,
+  ): Stream.Stream<In, E, R | Capability.Service | Operation.Service> =>
+    Stage.map('on-arrival-extractors', (item: In) =>
+      runOnArrivalExtractors(mailbox, [item.message]).pipe(Effect.as(item)),
+    )(self);

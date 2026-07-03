@@ -37,7 +37,7 @@ describe('sync pipeline stages', () => {
     const { sink, items } = captureSink<{ body: string }>();
     await EffectEx.runPromise(
       Stream.fromIterable([{ body: '<p>Hello <strong>World</strong></p>' }]).pipe(
-        EmailStage.htmlToMarkdown(),
+        EmailStage.htmlToMarkdown,
         Pipeline.run({ sink }),
       ),
     );
