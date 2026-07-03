@@ -3,15 +3,6 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { type ThreadCapabilities } from '@dxos/plugin-thread';
 
-import { type ConnectionManager as ConnectionManagerService } from '../services';
-
-export const ChannelBackend = Capability.lazy<ThreadCapabilities.ChannelBackendProvider>(
-  'FreeqChannelBackend',
-  () => import('./channel-backend'),
-);
-export const ConnectionManager = Capability.lazy<ConnectionManagerService>(
-  'FreeqConnectionManager',
-  () => import('./connection-manager'),
-);
+// Contributes both the connection manager and the channel backend (see channel-backend.ts).
+export const ChannelBackend = Capability.lazy('FreeqChannelBackend', () => import('./channel-backend'));

@@ -13,12 +13,7 @@ import { Message } from '@dxos/types';
 
 import { FREEQ_BACKEND_KIND } from '../constants';
 import * as FreeqCapabilities from '../FreeqCapabilities';
-import {
-  type ConnectionManager,
-  FreeqRestApi,
-  type IncomingMessage,
-  makeAppPasswordCredentialProvider,
-} from '../services';
+import { ConnectionManager, FreeqRestApi, type IncomingMessage, makeAppPasswordCredentialProvider } from '../services';
 import { FreeqChannel, makeFreeqChannel } from '../types';
 
 /** Resolves stored credentials for a handle, or `undefined` for a guest (read-only) connection. */
@@ -150,12 +145,20 @@ export const makeFreeqChannelBackend = (
   readOnly: (channel) => Obj.getMeta(channel).keys.length > 0,
 });
 
-/** Contributes the live freeq channel backend, bound to the shared connection manager. */
-export const ChannelBackend = Capability.makeModule<ThreadCapabilities.ChannelBackendProvider>(
+/**
+ * Contributes the shared connection manager and the live freeq channel backend from a single
+ * module. Sibling Startup modules activate concurrently and only contribute once the whole wave
+ * has activated, so splitting these across two modules (with the backend `waitFor`-ing the manager)
+ * deadlocks activation; co-locating them removes the cross-module dependency.
+ */
+export const ChannelBackend = Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const manager = yield* Capability.waitFor(FreeqCapabilities.ConnectionManager);
+    const manager = new ConnectionManager();
     // TODO(Task 11): supply lookupCredential from stored AccessToken once server auth shapes are confirmed.
-    return Capability.contributes(ThreadCapabilities.ChannelBackend, makeFreeqChannelBackend(manager));
+    return [
+      Capability.contributes(FreeqCapabilities.ConnectionManager, manager),
+      Capability.contributes(ThreadCapabilities.ChannelBackend, makeFreeqChannelBackend(manager)),
+    ];
   }),
 );
 

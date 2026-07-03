@@ -15,7 +15,6 @@ tasks:
       - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/plugin.ts'
       - '--entryPoint=src/capabilities/index.ts'
-      - '--entryPoint=src/capabilities/connection-manager.ts'
       - '--entryPoint=src/capabilities/channel-backend.ts'
       - '--entryPoint=src/services/ConnectionManager.ts'
       - '--entryPoint=src/services/CredentialProvider.ts'

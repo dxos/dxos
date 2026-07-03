@@ -5,7 +5,7 @@
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { ChannelBackend, ConnectionManager } from '#capabilities';
+import { ChannelBackend } from '#capabilities';
 import { meta } from '#meta';
 
 // eslint-disable-next-line import/no-relative-packages
@@ -16,11 +16,8 @@ import { FreeqChannel } from './types';
 export const FreeqPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addSchemaModule({ schema: [FreeqChannel] }),
-  Plugin.addModule({
-    id: 'connection-manager',
-    activatesOn: ActivationEvents.Startup,
-    activate: ConnectionManager,
-  }),
+  // Single Startup module contributes both the connection manager and the channel backend
+  // (see channel-backend.ts) — same-wave modules cannot `waitFor` each other's contributions.
   Plugin.addModule({
     id: 'channel-backend',
     activatesOn: ActivationEvents.Startup,
