@@ -4,6 +4,8 @@
 
 import browser from 'webextension-polyfill';
 
+import { debugLog } from './debug-log';
+
 export const DEVELOPER_MODE_PROP = 'developer-mode';
 export const SPACE_MODE_PROP = 'space-mode';
 export const THUMBNAIL_PROP = 'thumbnail-url';
@@ -30,9 +32,11 @@ export const getProp = async (prop: string): Promise<boolean> => {
 
 export const getConfig = async (): Promise<Config> => {
   const devmode = Boolean(await getProp(DEVELOPER_MODE_PROP));
-  return {
+  const config = {
     devmode,
     chatAgentUrl: devmode ? DEV_CHAT_AGENT_URL : MAIN_CHAT_AGENT_URL,
     imageServiceUrl: devmode ? DEV_IMAGE_SERVICE_URL : MAIN_IMAGE_SERVICE_URL,
   };
+  debugLog('config', config);
+  return config;
 };

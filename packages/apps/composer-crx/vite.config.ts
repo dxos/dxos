@@ -80,8 +80,6 @@ export default defineConfig({
   resolve: {
     alias: {
       'node-fetch': 'isomorphic-fetch',
-      // Stub out codec-protobuf to disable eval, which contradicts the MV3 CSP.
-      // '@dxos/codec-protobuf': path.resolve(dirname, 'src/codec-protobuf.stub.ts'),
     },
   },
   worker: {
@@ -152,7 +150,7 @@ export default defineConfig({
           default_title: 'Composer',
         },
         side_panel: {
-          default_path: 'panel.html',
+          default_path: 'side_panel.html',
         },
         permissions: ['contextMenus', 'activeTab', 'tabs', 'scripting', 'storage', 'notifications', 'sidePanel'],
         // TODO(review): broad host permissions for arbitrary search providers — scope/curate before publishing.
