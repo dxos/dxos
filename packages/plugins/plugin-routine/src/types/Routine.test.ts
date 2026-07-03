@@ -39,6 +39,14 @@ describe('Routine', () => {
     expect(isRunInstructions(trigger.runnable)).toBe(true);
     const bound = trigger.input?.instructions;
     expect(Ref.isRef(bound) ? bound.target?.id : undefined).toBe(instructions.id);
+    expect(trigger.computeEnvironment).toBe('local');
+  });
+
+  test('make preserves an explicit trigger computeEnvironment override', ({ expect }) => {
+    const trigger = Trigger.make({ computeEnvironment: 'edge' });
+    const routine = Routine.make({ name: 'R', trigger });
+
+    expect(routine.triggers[0]?.target?.computeEnvironment).toBe('edge');
   });
 
   describe('blank template', () => {
