@@ -129,12 +129,15 @@ export const turnFolding = ({ source }: TurnFoldingOptions): Extension => {
 
 /** Gutter marker for a turn head: a caret whose direction reflects the fold state. */
 class TurnMarker extends GutterMarker {
-  constructor(private readonly _folded: boolean) {
+  #folded: boolean;
+
+  constructor(folded: boolean) {
     super();
+    this.#folded = folded;
   }
 
   override eq(other: TurnMarker): boolean {
-    return this._folded === other._folded;
+    return this.#folded === other.#folded;
   }
 
   override toDOM(): HTMLElement {
@@ -145,7 +148,7 @@ class TurnMarker extends GutterMarker {
           .classNames('w-4 h-4')
           .append(
             Domino.of('use', Domino.SVG).attributes({
-              href: Domino.icon(this._folded ? 'ph--caret-right--regular' : 'ph--caret-down--regular'),
+              href: Domino.icon(this.#folded ? 'ph--caret-right--regular' : 'ph--caret-down--regular'),
             }),
           ),
       ).root;
