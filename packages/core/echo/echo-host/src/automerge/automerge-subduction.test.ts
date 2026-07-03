@@ -486,32 +486,37 @@ describe.skipIf(process.env.CI)('automerge-subduction', () => {
     },
   );
 
-  test.only('repo restart reloads documents from memory storage without extra writes', async ({ expect }) => {
-    // TODO(dmaretskyi): MemoryStorageAdapter vs MemoryStorage -- which API is right for subduction?
+  test('repo restart reloads documents from memory storage without extra writes', async ({ expect }) => {
     const storage = new CountingStorageAdapter(new MemoryStorageAdapter());
     const urls: AutomergeUrl[] = [];
 
     {
-      const repo = createRepo({ network: [], storage }, { registerCleanup: false });
+      const repo = new Repo({
+        network: [],
+        storage,
+      });
       for (let index = 0; index < 100; index++) {
         const handle = repo.create<{ index: number }>({ index });
         urls.push(handle.url);
       }
       await repo.flush();
-      await shutdownRepo(repo);
+      await repo.shutdown();
     }
 
     expect(storage.writeOps).toBeGreaterThan(0);
     storage.resetCounters();
-    storage.setLogging(true);
+
     {
-      const repo = createRepo({ network: [], storage }, { registerCleanup: false });
+      const repo = new Repo({
+        network: [],
+        storage,
+      });
       for (const url of urls) {
         const handle = await repo.find<{ index: number }>(url);
         await handle.whenReady(['ready']);
         expect(handle.doc()?.index).toBeDefined();
       }
-      await shutdownRepo(repo);
+      await repo.shutdown();
     }
 
     expect(storage.writeOps).toBe(0);
