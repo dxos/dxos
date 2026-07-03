@@ -55,21 +55,27 @@ export type ChatProps = ThemedClassName<{
   url?: string;
   /** Surfaces the chat-agent error so a host (the side panel) can show it in its status bar. */
   onError?: (error: Error | undefined) => void;
+  /** Surfaces the agent socket's connection state so a host can indicate when the agent is offline. */
+  onConnectionChange?: (connected: boolean) => void;
 }>;
 
 /**
  * Simplified chat: a streaming markdown thread over an editor input, backed by the chat agent.
  */
-export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
+export const Chat = ({ classNames, host, url, onError, onConnectionChange }: ChatProps) => {
   const { t } = useTranslation(translationKey);
   const editorRef = useRef<ChatEditorController>(null);
   const spaceIdRef = useRef<SpaceId | null>(null);
+  const [connected, setConnected] = useState(false);
 
-  // Chat agent client.
+  // Chat agent client. Track the socket state so the host can surface an offline indicator; a dead
+  // host retries with backoff (only `onClose` fires), so `connected` stays false until a socket opens.
   const agent = useAgent({
     agent: 'chat',
     protocol: isSecureUrl(host ?? '') ? 'wss' : 'ws',
     host,
+    onOpen: () => setConnected(true),
+    onClose: () => setConnected(false),
   });
 
   // TODO(burdon): Define tools (see generic params).
@@ -94,6 +100,12 @@ export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
     onError?.(error);
     return () => onError?.(undefined);
   }, [error, onError]);
+
+  // Lift the connection state so the host can indicate when the agent is offline.
+  useEffect(() => {
+    onConnectionChange?.(connected);
+    return () => onConnectionChange?.(false);
+  }, [connected, onConnectionChange]);
 
   // Render the thread to a single markdown document (see `renderThread`) and sync it into the
   // stream. The AI streaming contract makes the rendered text grow monotonically, so a prefix

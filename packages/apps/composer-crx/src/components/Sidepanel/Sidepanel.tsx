@@ -34,6 +34,7 @@ const SidepanelContent = () => {
   const { id: tabId, url: tabUrl } = useActiveTab();
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [chatError, setChatError] = useState<Error | undefined>(undefined);
+  const [chatConnected, setChatConnected] = useState(false);
 
   // Load config.
   const [host, setHost] = useState<string | null>(null);
@@ -120,16 +121,21 @@ const SidepanelContent = () => {
               <div className='grid place-items-center p-4 text-sm text-description'>{t('chat.error.label')}</div>
             )}
           >
-            <Chat host={host} url={tabUrl ?? undefined} onError={setChatError} />
+            <Chat host={host} url={tabUrl ?? undefined} onError={setChatError} onConnectionChange={setChatConnected} />
           </ErrorBoundary>
         )}
       </Panel.Content>
 
-      {/* Status bar: chat-agent errors surface here (not inside the chat), otherwise the tab URL. */}
+      {/* Status bar: chat-agent errors take precedence, then an offline indicator while the agent
+          socket is unreachable, otherwise the tab URL. */}
       <Panel.Statusbar classNames='flex items-center px-2'>
         {chatError ? (
           <span className='text-xs text-error-text truncate' title={chatError.message}>
             {chatError.message}
+          </span>
+        ) : showChat && !chatConnected ? (
+          <span className='text-xs text-warning-text truncate' title={host ?? undefined}>
+            {t('chat.offline.label')}
           </span>
         ) : (
           <span className='text-xs text-description truncate'>{tabUrl}</span>

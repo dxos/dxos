@@ -16,6 +16,7 @@ export const translations = [
         'chat.clear.button': 'Clear',
         'chat.copy.button': 'Copy',
         'chat.error.label': 'An error occurred',
+        'chat.offline.label': 'Agent offline',
         'clip.button': 'Clip',
         'launch-composer.button': 'Launch Composer',
         'settings.dev-mode.label': 'Developer Mode',
