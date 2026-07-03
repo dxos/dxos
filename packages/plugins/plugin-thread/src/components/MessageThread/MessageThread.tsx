@@ -80,7 +80,12 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
 
     return (
       <Thread.Root getMetadata={getMetadata} components={components} identityDid={identity?.did} editable={false}>
-        <Thread.Content id={id} current={current} classNames={['dx-container', classNames]} ref={forwardedRef}>
+        <Thread.Content
+          id={id}
+          current={current}
+          classNames={['dx-container h-full border', classNames]}
+          ref={forwardedRef}
+        >
           <Thread.Messages messages={messages} />
           {!readOnly && (
             <>

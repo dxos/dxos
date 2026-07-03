@@ -85,6 +85,29 @@ describe('IrcConnection', () => {
     expect(mock.sent).toContain('CAP REQ :sasl');
   });
 
+  test('sends CAP END with no CAP REQ/AUTHENTICATE when the server advertises neither sasl nor echo-message', async ({
+    expect,
+  }) => {
+    const mock = makeMockTransport();
+    const connection = makeIrcConnection({
+      transport: mock.transport,
+      nick: 'alice',
+      credentialProvider: { respond: () => undefined as never },
+      runResponse: async () => 'BASE64RESPONSE',
+    });
+
+    const connected = connection.connect();
+    mock.open();
+    mock.emit(':srv CAP * LS :multi-prefix');
+
+    expect(mock.sent).toContain('CAP END');
+    expect(mock.sent.some((line) => line.startsWith('CAP REQ'))).toBe(false);
+    expect(mock.sent.some((line) => line.startsWith('AUTHENTICATE'))).toBe(false);
+
+    mock.emit(':srv 001 alice :Welcome');
+    await connected;
+  });
+
   test('dispatches inbound PRIVMSG to channel subscribers', async ({ expect }) => {
     const mock = makeMockTransport();
     const connection = makeIrcConnection({ transport: mock.transport, nick: 'alice', runResponse: async () => '' });

@@ -127,6 +127,10 @@ export const makeIrcConnection = (options: {
           const requested = ['sasl', 'echo-message'].filter((cap) => advertised.has(cap));
           if (requested.length > 0) {
             transport.send('CAP REQ :' + requested.join(' '));
+          } else {
+            // No CAP REQ is sent, and there is no CAP NAK handler to fall back on, so
+            // registration must be advanced here or the handshake would hang forever.
+            transport.send('CAP END');
           }
         } else if (message.params[1] === 'ACK') {
           transport.send('AUTHENTICATE ' + SASL_MECHANISM);

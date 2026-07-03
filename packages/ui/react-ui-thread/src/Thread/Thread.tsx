@@ -3,6 +3,7 @@
 //
 
 import { format } from 'date-fns/format';
+import { type Locale } from 'date-fns/locale';
 import { startOfDay } from 'date-fns/startOfDay';
 import React, {
   type ComponentPropsWithRef,
@@ -244,10 +245,19 @@ const messageTime = (message: MessageType.Message): number => {
  */
 const groupMessages = (
   messages: readonly MessageType.Message[],
-  { groupWindowMs, dayDivider, gapDividerMs }: { groupWindowMs: number; dayDivider: boolean; gapDividerMs: number },
+  {
+    groupWindowMs,
+    dayDivider,
+    gapDividerMs,
+    dtLocale,
+  }: { groupWindowMs: number; dayDivider: boolean; gapDividerMs: number; dtLocale?: Locale },
 ): ThreadItem[] => {
   const items: ThreadItem[] = [];
   let currentGroup: MessageGroupItem | undefined;
+  // Tracks the last message appended to `currentGroup`, since `Array.prototype.at(-1)`
+  // on `currentGroup.messages` would need a non-null assertion despite `currentGroup`
+  // always being non-empty by construction.
+  let lastGroupMessage: MessageType.Message | undefined;
   let prevTime: number | undefined;
   let prevDay: number | undefined;
 
@@ -259,15 +269,19 @@ const groupMessages = (
     const gapBoundary = !dayBoundary && prevTime !== undefined && time - prevTime > gapDividerMs;
 
     if (dayBoundary) {
-      items.push({ kind: 'divider', id: `divider:day:${day}`, label: format(day, 'EEEE, MMMM d') });
+      items.push({
+        kind: 'divider',
+        id: `divider:day:${day}`,
+        label: format(day, 'EEEE, MMMM d', { locale: dtLocale }),
+      });
       currentGroup = undefined;
     } else if (gapBoundary) {
       items.push({ kind: 'divider', id: `divider:gap:${time}` });
       currentGroup = undefined;
     }
 
-    const sameSenderAsGroup = currentGroup && senderKey(currentGroup.messages.at(-1)!) === senderKey(message);
-    const withinGroupWindow = currentGroup && time - messageTime(currentGroup.messages.at(-1)!) <= groupWindowMs;
+    const sameSenderAsGroup = currentGroup && lastGroupMessage && senderKey(lastGroupMessage) === senderKey(message);
+    const withinGroupWindow = currentGroup && lastGroupMessage && time - messageTime(lastGroupMessage) <= groupWindowMs;
 
     if (currentGroup && sameSenderAsGroup && withinGroupWindow) {
       currentGroup.messages.push(message);
@@ -275,6 +289,7 @@ const groupMessages = (
       currentGroup = { kind: 'group', id: getMessageId(message), messages: [message] };
       items.push(currentGroup);
     }
+    lastGroupMessage = message;
 
     prevTime = time;
     prevDay = day;
@@ -334,10 +349,11 @@ const ThreadMessages = ({
   gapDividerMs = DEFAULT_GAP_DIVIDER_MS,
   classNames,
 }: ThreadMessagesProps) => {
+  const { dtLocale } = useTranslation(translationKey);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const items = useMemo(
-    () => groupMessages(messages.filter(Boolean), { groupWindowMs, dayDivider, gapDividerMs }),
-    [messages, groupWindowMs, dayDivider, gapDividerMs],
+    () => groupMessages(messages.filter(Boolean), { groupWindowMs, dayDivider, gapDividerMs, dtLocale }),
+    [messages, groupWindowMs, dayDivider, gapDividerMs, dtLocale],
   );
 
   return (

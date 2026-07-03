@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { Obj, Ref } from '@dxos/echo';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { Panel, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type ThreadContentProps } from '@dxos/react-ui-thread';
 import { Message, type Thread } from '@dxos/types';
@@ -58,18 +58,23 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
     };
 
     return (
-      <MessageThread
-        {...composableProps(props)}
-        id={id}
-        identity={identity}
-        members={members}
-        messages={messages}
-        activity={activity}
-        onSend={handleSend}
-        autoFocus={autoFocus}
-        current={current}
-        ref={forwardedRef}
-      />
+      <Panel.Root>
+        <Panel.Toolbar></Panel.Toolbar>
+        <Panel.Content asChild>
+          <MessageThread
+            {...composableProps(props)}
+            id={id}
+            identity={identity}
+            members={members}
+            messages={messages}
+            activity={activity}
+            onSend={handleSend}
+            autoFocus={autoFocus}
+            current={current}
+            ref={forwardedRef}
+          />
+        </Panel.Content>
+      </Panel.Root>
     );
   },
 );
