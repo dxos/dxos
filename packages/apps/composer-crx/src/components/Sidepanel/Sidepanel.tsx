@@ -12,6 +12,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { THUMBNAIL_PROP, getConfig } from '../../config';
 import { focusOrOpenComposerTab } from '../../core';
+import { debugLog } from '../../debug-log';
 import { translationKey } from '../../translations';
 import { Chat } from '../Chat';
 import { PageActions } from '../PageActions';
@@ -43,6 +44,13 @@ const SidepanelContent = () => {
       setHost(config.chatAgentUrl);
     })();
   }, []);
+
+  // Dev diagnostic (no-op in production; see `debug-log`): surface the lifted chat-agent error.
+  useEffect(() => {
+    if (chatError) {
+      debugLog('chat:error', chatError);
+    }
+  }, [chatError]);
 
   // The thumbnail is produced by the context-menu action while the panel is
   // (re)opening, so consume it on mount and whenever it is written to storage.
