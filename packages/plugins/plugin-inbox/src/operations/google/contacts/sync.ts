@@ -154,7 +154,10 @@ export default InboxOperation.GoogleContactsSync.pipe(
           }),
         );
 
-        // Persist last sync timestamp on the binding.
+        // Persist last sync timestamp on the binding. The cursor is a placeholder `now` — contacts
+        // has no monotonic key yet.
+        // TODO(wittjosiah): Adopt the People API `syncToken` for incremental sync; once contacts has a
+        //   real cursor it can route through a non-feed SyncBinding variant (shared stats/lastSyncAt).
         Relation.update(binding, (binding) => {
           const now = new Date().toISOString();
           binding.cursor = now;
