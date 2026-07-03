@@ -75,6 +75,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/crx-protocol/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/crypto/package.json",
           "jsonpath": "$.version"
         },
