@@ -42,7 +42,7 @@ const ROOT_DIR = process.env.ROOT_DIR ?? DEFAULT_ROOT_DIR;
 // Where the run's serialized outputs are written (git-ignored, under the package's ./data).
 const RESULTS_FILE = fileURLToPath(new URL('../data/results.json', import.meta.url));
 
-const ORGS = [
+const TEST_ORGS = [
   { name: 'DXOS', website: 'https://dxos.org' },
   { name: 'Enron', website: 'https://enron.com' },
 ];
@@ -60,6 +60,11 @@ const MODEL = process.env.OLLAMA_MODEL ?? 'com.openai.model.gpt-oss-20b.default'
 // Number of emails drawn from the head of the dataset for one run.
 const EMAIL_COUNT = 10;
 
+const SUMMARIZE_PROMPT = trim`
+  Summarize the following email in one sentence, decide whether it is spam, and list up to five keywords.
+  Respond with ONLY a JSON object of the form {"summary": string, "isSpam": boolean, "keywords": string[]}.
+`;
+
 // Structured output the summarize stage asks the model for.
 const SummarySchema = Schema.Struct({
   summary: Schema.String,
@@ -68,11 +73,6 @@ const SummarySchema = Schema.Struct({
 });
 
 type Summary = Schema.Schema.Type<typeof SummarySchema>;
-
-const SUMMARIZE_PROMPT = trim`
-  Summarize the following email in one sentence, decide whether it is spam, and list up to five keywords.
-  Respond with ONLY a JSON object of the form {"summary": string, "isSpam": boolean, "keywords": string[]}.
-`;
 
 // Model output is untyped JSON, often wrapped in prose/reasoning by local models; extract the first
 // object and coerce leniently (field names and types vary between models) rather than strict schema
@@ -99,7 +99,11 @@ const parseSummary = (raw: string): Summary => {
           : [],
     };
   } catch {
-    return { summary: '', isSpam: false, keywords: [] };
+    return {
+      summary: '',
+      isSpam: false,
+      keywords: [],
+    };
   }
 };
 
@@ -223,7 +227,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
     builder = await new EchoTestBuilder().open();
     ({ db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person] }));
     // Seed a known Organization so domain-matching can link a sender's Person to it.
-    for (const org of ORGS) {
+    for (const org of TEST_ORGS) {
       db.add(Obj.make(Organization.Organization, org));
     }
     await db.flush({ indexes: true });
