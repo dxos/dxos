@@ -31,6 +31,9 @@
       "path": "packages/common/context/tsconfig.json"
     },
     {
+      "path": "packages/common/crx-protocol/tsconfig.json"
+    },
+    {
       "path": "packages/common/crypto/tsconfig.json"
     },
     {
