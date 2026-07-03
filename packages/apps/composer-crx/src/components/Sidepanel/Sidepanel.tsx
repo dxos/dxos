@@ -19,9 +19,17 @@ import { Root } from '../Root';
 import { Thumbnail } from '../Thumbnail';
 
 /**
- * Side panel root component.
+ * Side panel root component. `Root` (theme + i18n + tooltip + error boundary) must wrap the
+ * content so its `useTranslation` resolves against an initialized i18n instance — a consumer
+ * declared in the same component that renders the provider would sit above it and get raw keys.
  */
-export const Sidepanel = () => {
+export const Sidepanel = () => (
+  <Root name='sidepanel'>
+    <SidepanelContent />
+  </Root>
+);
+
+const SidepanelContent = () => {
   const { t } = useTranslation(translationKey);
   const { id: tabId, url: tabUrl } = useActiveTab();
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
@@ -79,59 +87,55 @@ export const Sidepanel = () => {
   const showChat = !thumbnailUrl && !!host;
 
   return (
-    <Root name='sidepanel'>
-      <Panel.Root classNames='absolute inset-0 dx-container'>
-        {/* App controls that are not chat-specific (clip, page actions, launch) live here, not inside Chat. */}
-        <Panel.Toolbar>
-          <Toolbar.Root>
-            <IconButton
-              variant='ghost'
-              icon='ph--paperclip--regular'
-              iconOnly
-              label={t('clip.button')}
-              disabled={tabId === undefined}
-              onClick={handleClip}
-            />
-            {pageActions}
-            <Toolbar.Separator />
-            <IconButton
-              variant='ghost'
-              icon='ph--arrow-square-out--regular'
-              iconOnly
-              label={t('launch-composer.button')}
-              onClick={handleLaunchComposer}
-            />
-          </Toolbar.Root>
-        </Panel.Toolbar>
+    <Panel.Root classNames='absolute inset-0 dx-container'>
+      {/* App controls that are not chat-specific (clip, page actions, launch) live here, not inside Chat. */}
+      <Panel.Toolbar>
+        <Toolbar.Root>
+          <IconButton
+            variant='ghost'
+            icon='ph--paperclip--regular'
+            iconOnly
+            label={t('clip.button')}
+            disabled={tabId === undefined}
+            onClick={handleClip}
+          />
+          {pageActions}
+          <Toolbar.Separator />
+          <IconButton
+            variant='ghost'
+            icon='ph--arrow-square-out--regular'
+            iconOnly
+            label={t('launch-composer.button')}
+            onClick={handleLaunchComposer}
+          />
+        </Toolbar.Root>
+      </Panel.Toolbar>
 
-        <Panel.Content
-          classNames={mx('grid grid-rows-[minmax(0,1fr)] min-h-0', thumbnailUrl && 'grid-cols-[auto_1fr]')}
-        >
-          {thumbnailUrl && <Thumbnail url={thumbnailUrl} />}
-          {showChat && (
-            <ErrorBoundary
-              name='sidepanel/chat'
-              fallbackRender={() => (
-                <div className='grid place-items-center p-4 text-sm text-description'>{t('chat.error.label')}</div>
-              )}
-            >
-              <Chat host={host} url={tabUrl ?? undefined} onError={setChatError} />
-            </ErrorBoundary>
-          )}
-        </Panel.Content>
+      <Panel.Content classNames={mx('grid grid-rows-[minmax(0,1fr)] min-h-0', thumbnailUrl && 'grid-cols-[auto_1fr]')}>
+        {thumbnailUrl && <Thumbnail url={thumbnailUrl} />}
+        {showChat && (
+          <ErrorBoundary
+            name='sidepanel/chat'
+            fallbackRender={() => (
+              <div className='grid place-items-center p-4 text-sm text-description'>{t('chat.error.label')}</div>
+            )}
+          >
+            <Chat host={host} url={tabUrl ?? undefined} onError={setChatError} />
+          </ErrorBoundary>
+        )}
+      </Panel.Content>
 
-        {/* Status bar: chat-agent errors surface here (not inside the chat), otherwise the tab URL. */}
-        <Panel.Statusbar classNames='flex items-center px-2'>
-          {chatError ? (
-            <span className='text-xs text-error-text truncate' title={chatError.message}>
-              {chatError.message}
-            </span>
-          ) : (
-            <span className='text-xs text-description truncate'>{tabUrl}</span>
-          )}
-        </Panel.Statusbar>
-      </Panel.Root>
-    </Root>
+      {/* Status bar: chat-agent errors surface here (not inside the chat), otherwise the tab URL. */}
+      <Panel.Statusbar classNames='flex items-center px-2'>
+        {chatError ? (
+          <span className='text-xs text-error-text truncate' title={chatError.message}>
+            {chatError.message}
+          </span>
+        ) : (
+          <span className='text-xs text-description truncate'>{tabUrl}</span>
+        )}
+      </Panel.Statusbar>
+    </Panel.Root>
   );
 };
 
