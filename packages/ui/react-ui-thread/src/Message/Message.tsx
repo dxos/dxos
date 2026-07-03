@@ -426,6 +426,8 @@ MessageTile.displayName = 'Message.Tile';
 export type MessageGroupProps = {
   /** Consecutive same-sender messages, in ascending time order, rendered as one tile. */
   messages: readonly MessageType.Message[];
+  /** Whether the avatar-rail continuation line is drawn below the tile; false for the last tile. */
+  continues?: boolean;
   classNames?: MessageRootProps['classNames'];
 };
 
@@ -437,7 +439,7 @@ export type MessageGroupProps = {
  * the group's first message only, since the heading/controls layout is keyed
  * to a single message.
  */
-const MessageGroup = ({ messages, classNames }: MessageGroupProps) => {
+const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupProps) => {
   const { t } = useTranslation(translationKey);
   const { getMetadata, identityDid, editable, onMessageDelete, onAcceptProposal } = useThreadContext('Message.Group');
   const [editing, setEditing] = useState(false);
@@ -507,6 +509,7 @@ const MessageGroup = ({ messages, classNames }: MessageGroupProps) => {
   return (
     <MessageRoot
       {...metadata}
+      continues={continues}
       controls={controls}
       classNames={[hoverableControls, hoverableFocusedWithinControls, classNames]}
     >

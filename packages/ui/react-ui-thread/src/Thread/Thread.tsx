@@ -209,7 +209,7 @@ ThreadHeader.displayName = 'Thread.Header';
 //
 
 /** A run of consecutive same-sender messages (within the grouping window) rendered as one tile. */
-type MessageGroupItem = { kind: 'group'; id: string; messages: MessageType.Message[] };
+type MessageGroupItem = { kind: 'group'; id: string; messages: MessageType.Message[]; last?: boolean };
 
 /**
  * A divider row between groups: day-labeled (calendar-day boundary) or plain
@@ -295,6 +295,11 @@ const groupMessages = (
     prevDay = day;
   }
 
+  // The trailing group is the last message tile; suppress its avatar-rail continuation line.
+  if (currentGroup) {
+    currentGroup.last = true;
+  }
+
   return items;
 };
 
@@ -319,7 +324,11 @@ ThreadDivider.displayName = 'Thread.Divider';
 
 const ThreadItemAdapter = ({ id, data, location, draggable, current, selected }: MosaicTileProps<ThreadItem>) => (
   <Mosaic.Tile id={id} data={data} location={location} draggable={draggable} current={current} selected={selected}>
-    {data.kind === 'divider' ? <ThreadDivider label={data.label} /> : <Message.Group messages={data.messages} />}
+    {data.kind === 'divider' ? (
+      <ThreadDivider label={data.label} />
+    ) : (
+      <Message.Group messages={data.messages} continues={!data.last} />
+    )}
   </Mosaic.Tile>
 );
 
