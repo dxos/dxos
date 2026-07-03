@@ -43,22 +43,26 @@ packages/core/compute/pipeline/
 ### Task 1: `parquetSource` (lazy row-group streaming over files)
 
 **Files:**
+
 - Modify: `packages/core/compute/pipeline/package.json` (add deps via pnpm)
 - Create: `packages/core/compute/pipeline/src/testing/parquet.ts`
 - Create: `packages/core/compute/pipeline/src/testing/parquet.test.ts`
 - Modify: `packages/core/compute/pipeline/src/testing/index.ts`
 
 **Interfaces:**
+
 - Produces: `ParquetRow = Record<string, unknown>`; `class ParquetReadError extends Data.TaggedError('ParquetReadError')<{ file: string; cause: unknown }>`; `parquetSource(files: readonly string[]): Stream.Stream<ParquetRow, ParquetReadError>`.
 - Consumes: `EffectEx.runPromise` (`@dxos/effect`, tests), `parquetWriteFile` (`hyparquet-writer`, tests).
 
 - [ ] **Step 1: Add dependencies**
 
 Run (from repo root, proto Node 24 on PATH; `HUSKY=0` if prompted):
+
 ```bash
 pnpm add --filter "@dxos/pipeline" --save-catalog "hyparquet"
 pnpm add --filter "@dxos/pipeline" --save-dev --save-catalog "hyparquet-writer"
 ```
+
 Expected: `package.json` gains `"hyparquet": "catalog:"` under `dependencies` and `"hyparquet-writer": "catalog:"` under `devDependencies`; `pnpm-workspace.yaml` catalog gains both (preserve existing comments); `pnpm-lock.yaml` updates. The toolbox postinstall may reorder `package.json` keys — that is expected.
 
 - [ ] **Step 2: Write the failing test — `src/testing/parquet.test.ts`**
@@ -82,7 +86,12 @@ import { EffectEx } from '@dxos/effect';
 import { ParquetReadError, type ParquetRow, parquetSource } from './parquet';
 
 const collect = (files: readonly string[]): Promise<readonly ParquetRow[]> =>
-  EffectEx.runPromise(parquetSource(files).pipe(Stream.runCollect, Effect.map((chunk) => [...chunk])));
+  EffectEx.runPromise(
+    parquetSource(files).pipe(
+      Stream.runCollect,
+      Effect.map((chunk) => [...chunk]),
+    ),
+  );
 
 describe('parquetSource', () => {
   let dir: string;
@@ -266,6 +275,7 @@ Expected: no matches (only `src/testing/*` may import hyparquet; the core `.` en
 git add packages/core/compute/pipeline pnpm-lock.yaml pnpm-workspace.yaml
 git commit -m "feat(pipeline): add parquetSource testing source over a set of parquet files"
 ```
+
 If `git status` shows other changed files (e.g. toolbox-regenerated `release-please-config.json`), include them and note it.
 
 ---
@@ -280,12 +290,14 @@ The mapper is **test-only** (`@dxos/types` is a devDependency; nothing in the bu
 entrypoints imports it, keeping the package generic).
 
 **Files:**
+
 - Modify: `packages/core/compute/pipeline/package.json` (add `@dxos/types` devDependency)
 - Modify: `packages/core/compute/pipeline/tsconfig.json` (add `../../../sdk/types` reference)
 - Restore: `packages/core/compute/pipeline/src/testing/parquet.test.ts` to the reviewed generated-fixture form (Task 1 Step 2 content — two generated files `fileA`/`fileB`, ordering + missing-file tests). The in-worktree WIP edits (ROOT_DIR/shard names) move to the new email test.
 - Create: `packages/core/compute/pipeline/src/testing/parquet-email.test.ts`
 
 **Interfaces:**
+
 - Row shape (parquet `dataset_info`): `message_id: string`, `subject: string`, `from: string`, `to/cc/bcc: string[]`, `date: timestamp[us] → Date`, `body: string`, `file_name: string`.
 - `Message.make({ created, sender: Actor, blocks: ContentBlock.Any[], properties })`; `Actor = { email?, name?, role?, ... }`; text block = `{ _tag: 'text', text }`.
 
@@ -410,6 +422,7 @@ git commit -m "test(pipeline): email parquet → @dxos/types Message demo (ROOT_
 ## Self-Review
 
 **Spec coverage (addendum):**
+
 - Placement in `src/testing/`, hyparquet dep / hyparquet-writer devDep → Task 1 Steps 1, 4, 5. ✓
 - `parquetSource` / `ParquetRow` / `ParquetReadError` API → Step 4. ✓
 - Lazy row-group streaming, ordered files, scoped fs handle, isomorphic-core-only import → Step 4. ✓

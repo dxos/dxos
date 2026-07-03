@@ -36,6 +36,7 @@ In `packages/core/compute/pipeline-transcription/package.json`: set `"name": "@d
 ```bash
 grep -rl "@dxos/transcription-pipeline" packages --include="*.ts" --include="*.json" | grep -v node_modules
 ```
+
 Replace `@dxos/transcription-pipeline` → `@dxos/pipeline-transcription` in every hit (9 `.ts` importers in `react-ui-transcription`/`plugin-transcription` + those two packages' `package.json` dependency keys). Also check `moon.yml`/docs for the string.
 
 - [ ] **Step 4: Reinstall + regenerate workspace files**
@@ -43,6 +44,7 @@ Replace `@dxos/transcription-pipeline` → `@dxos/pipeline-transcription` in eve
 ```bash
 HUSKY=0 pnpm install
 ```
+
 The toolbox regenerates `tsconfig.all.json`, `release-please-config.json`, project references. `@dxos/node-std`-style — no; just confirm the rename propagated.
 
 - [ ] **Step 5: Build the package + consumers**
@@ -52,6 +54,7 @@ moon run pipeline-transcription:build
 moon run react-ui-transcription:build
 moon run plugin-transcription:build
 ```
+
 Expected: all green (rename fully propagated; no dangling `@dxos/transcription-pipeline`).
 
 - [ ] **Step 6: Confirm no stale references + commit**
@@ -59,7 +62,9 @@ Expected: all green (rename fully propagated; no dangling `@dxos/transcription-p
 ```bash
 grep -rn "transcription-pipeline" packages --include="*.ts" --include="*.json" | grep -v node_modules | grep -v pipeline-transcription
 ```
+
 Expected: no matches (except intentional history). Commit:
+
 ```bash
 git add -A
 git commit -m "refactor(pipeline-transcription): rename from transcription-pipeline; add @dxos/pipeline dep"
@@ -70,6 +75,7 @@ git commit -m "refactor(pipeline-transcription): rename from transcription-pipel
 ### Task 2: Retrofit `PipelineRuntime.run` onto `@dxos/pipeline`
 
 **Files:**
+
 - Modify: `packages/core/compute/pipeline-transcription/src/PipelineRuntime.ts` (rewrite `run` body; narrow `StageOutcome`)
 - Modify: `packages/core/compute/pipeline-transcription/src/PipelineRuntime.test.ts` (adjust the one `interrupted` assertion)
 
@@ -106,7 +112,10 @@ const run = (options: RunOptions): Effect.Effect<void> =>
         (stage, index) =>
           Pipeline.run({
             source: Chunk.unsafeGet(branches, index),
-            stages: [windowTrigger(stage, configFor(stage.id)), runStage(stage, configFor(stage.id), presetDefault, onTelemetry)],
+            stages: [
+              windowTrigger(stage, configFor(stage.id)),
+              runStage(stage, configFor(stage.id), presetDefault, onTelemetry),
+            ],
             sink,
             context: { lookup, model: resolveModel(configFor(stage.id), stage, presetDefault) },
             // Overflow (latest-wins/skip-if-busy) is enforced by runStage's per-stage `map` buffer; not set here.
@@ -122,7 +131,10 @@ const run = (options: RunOptions): Effect.Effect<void> =>
 ```ts
 // Maintains this branch's rolling block window (blocks appended, capped at MAX_WINDOW) and emits the
 // window slice on events matching the stage's trigger; undefined otherwise (dropped before `run`).
-const windowTrigger = (stage: Stage<any, any>, config?: StageConfig): Stage.Stage<TranscriptEvent, Slice | undefined, StageContext> => ({
+const windowTrigger = (
+  stage: Stage<any, any>,
+  config?: StageConfig,
+): Stage.Stage<TranscriptEvent, Slice | undefined, StageContext> => ({
   id: `${stage.id}:window`,
   transform: (input) =>
     input.pipe(

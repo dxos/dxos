@@ -18,7 +18,7 @@ ingestion, event enrichment), but today it is coupled to:
 - `DXN` model routing and `PipelineConfig` (an ECHO type),
 - an `EntityLookup`-specific stage context,
 - owned `forkDaemon` fibers with `latest-wins` / `skip-if-busy` interruption (drop/interrupt
-  semantics — the *opposite* of back pressure).
+  semantics — the _opposite_ of back pressure).
 
 This document specifies a new, deliberately **simple** package `@dxos/pipeline` that keeps the
 genuinely reusable kernel — a back-pressured stream from source to sink, shared context, and a
@@ -43,7 +43,7 @@ typed write/sink seam — and lets transcription (and other pipelines) be built 
 
 A pipeline is an **ordered chain of stages** transforming a pull-based Effect `Stream` from a
 `source` to a `Sink`, with a single injected `Ctx` shared by every stage. Because Effect `Stream`
-is pull-based, and stages compose as stream transforms, back pressure is the *default* behavior:
+is pull-based, and stages compose as stream transforms, back pressure is the _default_ behavior:
 if the sink lags, the bounded buffer fills, upstream pulls stop, and the source is throttled —
 end to end, with no lost items unless a stage explicitly opts into a lossy overflow policy.
 
@@ -92,7 +92,7 @@ Authors compose pipelines from these; the raw `Stage.transform` interface is an 
 
 `Out` is frequently `Out | undefined` for stages that sometimes have nothing to emit. The runtime
 drops `undefined` **between every stage and before the sink** (a `Stream.filter` after each stage's
-transform in the fold), so a stage can no-op cleanly at *any* position in the chain — a mid-chain
+transform in the fold), so a stage can no-op cleanly at _any_ position in the chain — a mid-chain
 stage's `undefined` never reaches the next stage's input. (Consequence: a pipeline whose `Out`
 legitimately includes `undefined` as a real value cannot deliver it; `undefined` always means
 no-op. Documented on `Pipeline.run`.) All stages and the source/sink share one error type `E`
@@ -112,7 +112,7 @@ transcription-only helper) for three reasons:
    want "the last N items" just as much as transcription does. It is not transcription-shaped.
 3. **Its memory is bounded by design** — the window is capped at `size`, so it never grows with
    session length. This is distinct from, and composes with, the overflow buffer (below): the
-   window bounds *how much context a stage sees*; the buffer bounds *rate mismatch between stages*.
+   window bounds _how much context a stage sees_; the buffer bounds _rate mismatch between stages_.
 
 Back pressure is preserved: `Stage.window` is a `Stream.mapAccum`-style scan (append item, evict
 oldest beyond `size`) feeding `mapEffect` at concurrency 1 — still pull-based, still ordered.
@@ -124,19 +124,20 @@ Different pipelines need different behavior when a consumer cannot keep up:
 
 - **`suspend`** (default) — back pressure, never drop. Correct for email/document processing where
   every item must be handled.
-- **`sliding`** — drop the *oldest* buffered item, keep the latest. Correct for live transcription,
+- **`sliding`** — drop the _oldest_ buffered item, keep the latest. Correct for live transcription,
   where only the most recent window matters and staleness is worse than loss (this replaces the
   original's `latest-wins` intent without owning fibers).
-- **`dropping`** — drop the *newest* item when the buffer is full. Available for completeness.
+- **`dropping`** — drop the _newest_ item when the buffer is full. Available for completeness.
 
 These map directly onto Effect's `Stream.buffer({ capacity, strategy })` strategies
 (`"suspend" | "sliding" | "dropping"`), so the feature is essentially free.
 
 Granularity:
+
 - **Pipeline-level default** via `Pipeline.run({ overflow, bufferSize })`.
 - **Per-stage override** via the stage constructor `options.overflow` (e.g. transcription can run
   `correct` with `suspend` but `summarize` with `sliding`). For `map` the buffer is inserted at the
-  stage's async boundary — *before* `mapEffect` — so under load it sheds/coalesces in-flight input
+  stage's async boundary — _before_ `mapEffect` — so under load it sheds/coalesces in-flight input
   (`sliding` = true latest-wins, `dropping` = skip-while-busy); a buffer after the async work would
   bound outputs only and leave the policy inert. For `window` the buffer sits after windowing (a
   window must observe every item), bounding output rate.
@@ -159,6 +160,7 @@ export const Pipeline = Object.freeze({
 ```
 
 Behavior:
+
 1. Fold the stages over the source: `stages.reduce((s, stage) => stage.transform(s, ctx), source)`.
 2. Apply the pipeline-level `Stream.buffer({ capacity: bufferSize, strategy: overflow })`.
 3. Drain: `Stream.runForEach(out => sink(out, ctx))`.
@@ -270,5 +272,7 @@ pipeline (transcription fixtures, prototyping, tests).
 4. **Overflow (1b):** configurable per-pipeline with per-stage override — `suspend` (email, no
    drop) vs `sliding` (transcription, drop-ok) vs `dropping`.
 5. **Windowing (2):** in core, for the reasons documented above.
+
 ```
 
+```

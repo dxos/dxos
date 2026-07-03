@@ -45,10 +45,10 @@ compiles to a two-stage `@dxos/pipeline` chain over its broadcast branch:
    `undefined`. (Per-branch window = the original per-stage `sliceFor` behavior; no shared mutable
    `windowRef` needed.)
 2. **`Stage.map(runFn, { overflow })`** — `@dxos/pipeline`'s own `map`. `undefined` slices are dropped
-   *between stages* (the undefined-skip we added), so `runFn` fires only on trigger events. `runFn`
+   _between stages_ (the undefined-skip we added), so `runFn` fires only on trigger events. `runFn`
    invokes `descriptor.run(input, ctx)` and pairs the result with the slice it ran against:
    `runFn = (slice, ctx) => descriptor.run(descriptor.select?.(slice) ?? { window: slice }, ctx)
-   .pipe(Effect.map((write) => ({ write, window: slice })))`.
+.pipe(Effect.map((write) => ({ write, window: slice })))`.
 
 The shared **`Sink`** is `({ write, window }, ctx) => commit(write, window)` — wrapping the existing
 `CommitFn`, which needs the slice to resolve `BlockUpdate.index`. `Ctx = { lookup?, model }`

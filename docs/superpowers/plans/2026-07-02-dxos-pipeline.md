@@ -57,6 +57,7 @@ packages/core/compute/pipeline/
 ### Task 1: Package scaffold + `Sink` type + `captureSink` test helper
 
 **Files:**
+
 - Create: `packages/core/compute/pipeline/package.json`
 - Create: `packages/core/compute/pipeline/moon.yml`
 - Create: `packages/core/compute/pipeline/tsconfig.json`
@@ -69,6 +70,7 @@ packages/core/compute/pipeline/
 - Test: `packages/core/compute/pipeline/src/testing/capture.test.ts`
 
 **Interfaces:**
+
 - Produces: `Sink<Out, Ctx, E = never> = (out: Out, ctx: Ctx) => Effect.Effect<void, E>` (from `./Sink`).
 - Produces: `captureSink<Out>(): { sink: Sink<Out, unknown>; items: Out[] }` and `scriptedSource<T>(items: readonly T[]): Stream.Stream<T>` (from `./testing`).
 
@@ -103,10 +105,7 @@ packages/core/compute/pipeline/
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
+  "files": ["dist", "src"],
   "scripts": {},
   "dependencies": {},
   "devDependencies": {
@@ -145,9 +144,7 @@ tasks:
 ```json
 {
   "extends": "../../../../tsconfig.base.json",
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [
     {
       "path": "../../../common/effect"
@@ -179,6 +176,7 @@ export default createConfig({
 Run: `cp packages/core/compute/operation/LICENSE packages/core/compute/pipeline/LICENSE`
 
 `README.md`:
+
 ```markdown
 # @dxos/pipeline
 
@@ -299,11 +297,13 @@ git commit -m "feat(pipeline): scaffold @dxos/pipeline package with Sink + captu
 ### Task 2: `Stage.map` and `Stage.filter`
 
 **Files:**
+
 - Create: `packages/core/compute/pipeline/src/Stage.ts`
 - Modify: `packages/core/compute/pipeline/src/index.ts`
 - Test: `packages/core/compute/pipeline/src/Stage.test.ts`
 
 **Interfaces:**
+
 - Produces: `Stage<In, Out, Ctx, E = never>` interface `{ id: string; transform(input: Stream.Stream<In, E>, ctx: Ctx): Stream.Stream<Out, E> }`.
 - Produces: `type Overflow = 'suspend' | 'sliding' | 'dropping'` and `const DEFAULT_BUFFER_SIZE = 16`.
 - Produces: `map<In, Out, Ctx, E>(id, fn: (item: In, ctx: Ctx) => Effect.Effect<Out, E>, options?: MapOptions): Stage<In, Out, Ctx, E>` where `MapOptions = { concurrency?: number; overflow?: Overflow; bufferSize?: number }`.
@@ -463,10 +463,12 @@ git commit -m "feat(pipeline): add Stage.map and Stage.filter constructors"
 ### Task 3: `Stage.window`
 
 **Files:**
+
 - Modify: `packages/core/compute/pipeline/src/Stage.ts`
 - Modify: `packages/core/compute/pipeline/src/Stage.test.ts`
 
 **Interfaces:**
+
 - Produces: `window<In, Out, Ctx, E>(id, size: number, fn: (window: readonly In[], ctx: Ctx) => Effect.Effect<Out, E>, options?: WindowOptions): Stage<In, Out, Ctx, E>`.
 - Consumes: `Stage`, `WindowOptions`, `withBuffer`, `DEFAULT_BUFFER_SIZE` from Task 2.
 
@@ -543,11 +545,13 @@ git commit -m "feat(pipeline): add Stage.window sliding-window constructor"
 ### Task 4: `Pipeline.run` (chaining, context, undefined-skip)
 
 **Files:**
+
 - Create: `packages/core/compute/pipeline/src/Pipeline.ts`
 - Modify: `packages/core/compute/pipeline/src/index.ts`
 - Test: `packages/core/compute/pipeline/src/Pipeline.test.ts`
 
 **Interfaces:**
+
 - Produces: `RunOptions<In, Out, Ctx, E>` = `{ source: Stream.Stream<In, E>; stages: readonly Stage.Stage<any, any, Ctx, E>[]; sink: Sink<Out, Ctx, E>; context: Ctx; overflow?: Stage.Overflow; bufferSize?: number }`.
 - Produces: `run<In, Out, Ctx, E>(options: RunOptions<In, Out, Ctx, E>): Effect.Effect<void, E>`.
 - Consumes: `Sink` (Task 1); `Stage.Stage`, `Stage.Overflow`, `Stage.DEFAULT_BUFFER_SIZE` (Task 2); `captureSink`, `scriptedSource` (Task 1, in tests).
@@ -661,10 +665,7 @@ export const run = <In, Out, Ctx, E = never>(options: RunOptions<In, Out, Ctx, E
   // Heterogeneous chain: each stage's output type feeds the next stage's input. This is a genuine
   // type-system boundary (a typed list of transforms of differing types); the `unknown`/`any` are
   // confined to this fold and never surface in stage-author or caller signatures.
-  const chained = stages.reduce<Stream.Stream<unknown, E>>(
-    (stream, stage) => stage.transform(stream, context),
-    source,
-  );
+  const chained = stages.reduce<Stream.Stream<unknown, E>>((stream, stage) => stage.transform(stream, context), source);
 
   return chained.pipe(
     Stream.buffer({ capacity: bufferSize, strategy: overflow }),
@@ -705,13 +706,15 @@ git commit -m "feat(pipeline): add Pipeline.run chaining stages to a sink"
 ### Task 5: Overflow policy (pipeline + per-stage) and full verification
 
 **Files:**
+
 - Modify: `packages/core/compute/pipeline/src/Pipeline.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Pipeline.run` with `overflow`/`bufferSize` (Task 4); `Stage.map` with `overflow`/`bufferSize` (Task 2).
 - No new production symbols — this task verifies the overflow wiring added in Tasks 2 and 4.
 
-> **Note on scope:** precise drop-*counts* under overload are timing-dependent (producer-vs-consumer scheduling) and belong to Effect's `Stream.buffer`, which is already tested upstream. These tests verify the wiring: `suspend` loses nothing, and every strategy runs to completion. We deliberately do not assert an exact number of dropped items to avoid a flaky test.
+> **Note on scope:** precise drop-_counts_ under overload are timing-dependent (producer-vs-consumer scheduling) and belong to Effect's `Stream.buffer`, which is already tested upstream. These tests verify the wiring: `suspend` loses nothing, and every strategy runs to completion. We deliberately do not assert an exact number of dropped items to avoid a flaky test.
 
 - [ ] **Step 1: Add the failing tests to `src/Pipeline.test.ts`**
 
@@ -803,6 +806,7 @@ git commit -m "test(pipeline): verify overflow policy wiring (suspend/sliding/pe
 ## Self-Review
 
 **Spec coverage:**
+
 - Generic core `<In>`, no `@dxos/types` dep → Task 1–4 (deps `{}`, `effect` only). ✓
 - Write-description + `Sink` seam → Task 1 (`Sink`), Task 4 (drain). ✓
 - Effect + `Stream` substrate → all tasks. ✓
