@@ -5,7 +5,6 @@
 import { type Chunk, type StorageAdapterInterface, type StorageKey } from '@automerge/automerge-repo';
 import { type MixedEncoding } from 'level-transcoder';
 
-import { Resource } from '@dxos/context';
 import { type BatchLevel, type SublevelDB } from '@dxos/kv-store';
 import { type MaybePromise } from '@dxos/util';
 
@@ -29,9 +28,9 @@ export interface StorageCallbacks {
   afterSave(path: StorageKey): MaybePromise<void>;
 }
 
-export class LevelDBStorageAdapter extends Resource implements StorageAdapterInterface {
+export class LevelDBStorageAdapter implements StorageAdapterInterface {
   /**
-   * In-flight `loadRange` / `removeRange` iterations. Awaited in `_close` so
+   * In-flight `loadRange` / `removeRange` iterations. Awaited in `close` so
    * the adapter doesn't return from close while a `for await` on the sublevel
    * is still pending — otherwise the kv owner upstream would close the
    * sublevel and the iterator's next `.next()` would reject with
@@ -42,15 +41,26 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
    */
   readonly #inFlightIterations = new Set<Promise<unknown>>();
 
-  constructor(private readonly _params: LevelDBStorageAdapterProps) {
-    super();
+  #open = false;
+
+  constructor(private readonly _params: LevelDBStorageAdapterProps) {}
+
+  get isOpen(): boolean {
+    return this.#open;
   }
 
-  protected override async _close(): Promise<void> {
-    // New `loadRange`/`removeRange` calls already short-circuit on `!isOpen`
-    // (the Resource base flips state before invoking `_close`). Wait for any
-    // iterations that started while we were still open to finish before
-    // returning, so the upstream `kv` owner can safely close the sublevel.
+  async open(): Promise<void> {
+    this.#open = true;
+  }
+
+  async close(): Promise<void> {
+    if (!this.#open) {
+      return;
+    }
+    this.#open = false;
+    // New `loadRange`/`removeRange` calls already short-circuit on `!isOpen`.
+    // Wait for any iterations that started while we were still open to finish
+    // before returning, so the upstream `kv` owner can safely close the sublevel.
     if (this.#inFlightIterations.size > 0) {
       await Promise.all(this.#inFlightIterations);
     }

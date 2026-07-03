@@ -1,5 +1,5 @@
 diff --git a/dist/Repo.d.ts b/dist/Repo.d.ts
-index 6d59fcf90a6a89235c5c7d1e563a485100e38885..e5432f1c3280418648a32db19424bbdaf9d3b305 100644
+index de3b577133f1ee0ac56a60a09576cc6e37f37e72..f07b0a65869cef8b4dc9dfebfb08713f7531a0d4 100644
 --- a/dist/Repo.d.ts
 +++ b/dist/Repo.d.ts
 @@ -8,6 +8,7 @@ import { StorageAdapterInterface } from "./storage/StorageAdapterInterface.js";
@@ -10,7 +10,7 @@ index 6d59fcf90a6a89235c5c7d1e563a485100e38885..e5432f1c3280418648a32db19424bbda
  import type { AnyDocumentId, AutomergeUrl, DocumentId, PeerId, UrlHeads } from "./types.js";
  import { AbortOptions } from "./helpers/abortable.js";
  import { type Subduction } from "@automerge/automerge-subduction/slim";
-@@ -317,6 +318,8 @@ export interface RepoEvents {
+@@ -329,6 +330,8 @@ export interface RepoEvents {
      "heal-exhausted": (payload: {
          documentId: DocumentId;
      }) => void;
@@ -20,10 +20,10 @@ index 6d59fcf90a6a89235c5c7d1e563a485100e38885..e5432f1c3280418648a32db19424bbda
       * A Subduction peer (e.g. the sync server) advertised new heads for a
       * document. `storageId` is the peer's verifying-key peer id. Fires only for
 diff --git a/dist/Repo.js b/dist/Repo.js
-index fc9206088bf1c79e27f854abcbe748ea36ca72f4..ae3d41d4eab981d290c377bf5fa6ee0c41dcf479 100644
+index 3de5b46b4de4340580996a9379ee2fae5cceef23..5751e8482c10a4364682715ecdc09210e1d97eb1 100644
 --- a/dist/Repo.js
 +++ b/dist/Repo.js
-@@ -159,6 +159,18 @@ export class Repo extends EventEmitter {
+@@ -157,6 +157,18 @@ export class Repo extends EventEmitter {
              onConnectionChanged: connected => {
                  this.emit("subduction-connection", { connected });
              },
@@ -185,11 +185,11 @@ index 58e2506731d668f6c555f83f57ba29c3351b4723..9d782faf41382c2a20d2d386e821d63f
      isConnected(): boolean;
      generation(): number;
 diff --git a/dist/subduction/SubductionConnections.js b/dist/subduction/SubductionConnections.js
-index e20460653181da69b68a092d13d17840859d38a9..2d016f0a6945afa49c01ab0b99b72bcd3e227469 100644
+index d9dcbded092b95e69d41d142fe73a25b108de585..ff91b96b86aff5e9efd8ac06fcffb6383098ab20 100644
 --- a/dist/subduction/SubductionConnections.js
 +++ b/dist/subduction/SubductionConnections.js
-@@ -15,11 +15,13 @@ export class SubductionConnections {
-     #log = debug("automerge-repo:subduction:connections");
+@@ -7,11 +7,13 @@ export class SubductionConnections {
+     #log = makeLogger("automerge-repo:subduction:connections");
      #subduction;
      #onChangeCallback = null;
 +    #onPeerBound;
@@ -203,15 +203,14 @@ index e20460653181da69b68a092d13d17840859d38a9..2d016f0a6945afa49c01ab0b99b72bcd
      }
      // ── ConnectionManager interface ─────────────────────────────────────
      isConnecting() {
-@@ -57,11 +59,22 @@ export class SubductionConnections {
+@@ -48,10 +50,21 @@ export class SubductionConnections {
                      break;
                  }
                  const subduction = await this.#subduction;
 -                await subduction.connectTransport(transport, serviceName);
 +                const subductionPeerId = await subduction.connectTransport(transport, serviceName);
                  this.#setConnectionState(url, "running");
-                 this.#log(`connected to ${url}`);
-                 lifecycle(`connected to ${url}`);
+                 this.#log.debug(`connected to ${url}`);
                  backoff = RECONNECT_BASE_MS;
 +                // Notify after the connection state has flipped to "running"
 +                // so consumers reading repo state from inside the listener see
@@ -221,13 +220,13 @@ index e20460653181da69b68a092d13d17840859d38a9..2d016f0a6945afa49c01ab0b99b72bcd
 +                        this.#onPeerBound({ subductionPeerId, url });
 +                    }
 +                    catch (e) {
-+                        this.#log("onPeerBound threw for %s: %O", url, e);
++                        this.#log.warn(`onPeerBound threw for ${url}:`, e);
 +                    }
 +                }
                  await transport.closed();
-                 this.#log(`disconnected from ${url}`);
-                 lifecycle(`disconnected from ${url}`, "warn");
-@@ -87,6 +100,7 @@ export class SubductionConnections {
+                 this.#log.warn(`disconnected from ${url}`);
+             }
+@@ -74,6 +87,7 @@ export class SubductionConnections {
      }
      shutdown() {
          this.#isShutdown = true;
@@ -236,7 +235,7 @@ index e20460653181da69b68a092d13d17840859d38a9..2d016f0a6945afa49c01ab0b99b72bcd
              clearTimeout(timer);
              resolve();
 diff --git a/dist/subduction/source.d.ts b/dist/subduction/source.d.ts
-index 783d9f61eae0684037d8fbbe0b676a924ba53c18..bf8e9f45ae02e6d5345e310dffb44ca4539eebfc 100644
+index 825f7407bd8bf1f4b1f4fafe17f67e82778781a6..2a10de3c01e415de407c345f60698d38ce445d32 100644
 --- a/dist/subduction/source.d.ts
 +++ b/dist/subduction/source.d.ts
 @@ -1,4 +1,4 @@
@@ -282,29 +281,29 @@ index 783d9f61eae0684037d8fbbe0b676a924ba53c18..bf8e9f45ae02e6d5345e310dffb44ca4
      policy?: Policy;
      /**
       * What priority this source should have w.r.t to other sources
-@@ -111,7 +134,7 @@ export interface SubductionSourceOptions {
+@@ -116,7 +139,7 @@ export interface SubductionSourceOptions {
  export declare class SubductionSource implements DocumentSource {
      #private;
      readonly priority: SourcePriority;
--    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, priority, policy, timeouts, blobInterceptor, }: SubductionSourceOptions);
-+    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, onPeerBound, priority, policy, timeouts, blobInterceptor, }: SubductionSourceOptions);
+-    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, priority, policy, timeouts, compactionDeleteConcurrency, blobInterceptor, }: SubductionSourceOptions);
++    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, onPeerBound, priority, policy, timeouts, compactionDeleteConcurrency, blobInterceptor, }: SubductionSourceOptions);
      /** True if any connection manager has an established connection. */
      isConnected(): boolean;
      getSubduction(): Promise<Subduction>;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 33db9f0538a41312079e7ccb31ca57f6cb975ce9..0843ce5697de4edc350a98fd310e1536a36e9f44 100644
+index 890813ea22ab990a13b1af60ee8e3b2103652ac7..e06a3e5bc0f609c4fb02d2ffcfc5bff7e85896dc 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
-@@ -50,7 +50,7 @@ export class SubductionSource {
+@@ -60,7 +60,7 @@ export class SubductionSource {
       */
      #shuttingDown = false;
      priority;
--    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, priority = 2, policy, timeouts, blobInterceptor, }) {
-+    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, onPeerBound, priority = 2, policy, timeouts, blobInterceptor, }) {
+-    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, priority = 2, policy, timeouts, compactionDeleteConcurrency = DEFAULT_COMPACTION_DELETE_CONCURRENCY, blobInterceptor, }) {
++    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, onPeerBound, priority = 2, policy, timeouts, compactionDeleteConcurrency = DEFAULT_COMPACTION_DELETE_CONCURRENCY, blobInterceptor, }) {
          this.#blobInterceptor = blobInterceptor;
          this.#onConnectionChanged = onConnectionChanged;
          this.priority = priority;
-@@ -108,12 +108,23 @@ export class SubductionSource {
+@@ -119,12 +119,23 @@ export class SubductionSource {
              ...defaultTimeoutOption,
          }));
          // ── Connection managers ─────────────────────────────────────────

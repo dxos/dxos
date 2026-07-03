@@ -7,7 +7,6 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
-import { Resource } from '@dxos/context';
 import { RuntimeProvider } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { SqlTransaction } from '@dxos/sql-sqlite';
@@ -33,16 +32,29 @@ export type SqliteStorageCallbacks = {
  * Stores automerge document chunks in the `automerge_chunks` table.
  * Replaces LevelDBStorageAdapter.
  */
-export class SqliteStorageAdapter extends Resource implements StorageAdapterInterface {
+export class SqliteStorageAdapter implements StorageAdapterInterface {
   readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
   readonly #callbacks?: SqliteStorageCallbacks;
   readonly #monitor?: StorageAdapterDataMonitor;
 
+  #open = false;
+
   constructor({ runtime, callbacks, monitor }: SqliteStorageAdapterProps) {
-    super();
     this.#runtime = runtime;
     this.#callbacks = callbacks;
     this.#monitor = monitor;
+  }
+
+  get isOpen(): boolean {
+    return this.#open;
+  }
+
+  async open(): Promise<void> {
+    this.#open = true;
+  }
+
+  async close(): Promise<void> {
+    this.#open = false;
   }
 
   /**
