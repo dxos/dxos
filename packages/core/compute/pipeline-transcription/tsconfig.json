@@ -47,6 +47,9 @@
     },
     {
       "path": "../compute"
+    },
+    {
+      "path": "../pipeline"
     }
   ]
 }

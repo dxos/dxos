@@ -1,0 +1,59 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Chunk from 'effect/Chunk';
+import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
+import { describe, test } from 'vitest';
+
+import { EffectEx } from '@dxos/effect';
+
+import * as Stage from './Stage';
+
+describe('Stage.map', () => {
+  test('applies the function to each item in order (concurrency 1)', async ({ expect }) => {
+    const stage = Stage.map<number, number, {}>('double', (n) => Effect.succeed(n * 2));
+    const out = await collect(stage.transform(Stream.fromIterable([1, 2, 3]), {}));
+    expect(out).toEqual([2, 4, 6]);
+  });
+
+  test('injects the shared context', async ({ expect }) => {
+    const stage = Stage.map<number, number, { factor: number }>('scale', (n, ctx) => Effect.succeed(n * ctx.factor));
+    const out = await collect(stage.transform(Stream.fromIterable([1, 2, 3]), { factor: 10 }));
+    expect(out).toEqual([10, 20, 30]);
+  });
+});
+
+describe('Stage.filter', () => {
+  test('drops items that do not match the predicate', async ({ expect }) => {
+    const stage = Stage.filter<number, {}>('evens', (n) => n % 2 === 0);
+    const out = await collect(stage.transform(Stream.fromIterable([1, 2, 3, 4]), {}));
+    expect(out).toEqual([2, 4]);
+  });
+});
+
+describe('Stage.window', () => {
+  test('invokes with a growing then sliding window of the last `size` items', async ({ expect }) => {
+    const stage = Stage.window<number, readonly number[], {}>('win', 2, (window) => Effect.succeed([...window]));
+    const out = await collect(stage.transform(Stream.fromIterable([1, 2, 3, 4]), {}));
+    expect(out).toEqual([[1], [1, 2], [2, 3], [3, 4]]);
+  });
+
+  test('injects the shared context', async ({ expect }) => {
+    const stage = Stage.window<number, number, { base: number }>('sum', 2, (window, ctx) =>
+      Effect.succeed(window.reduce((total, item) => total + item, ctx.base)),
+    );
+    const out = await collect(stage.transform(Stream.fromIterable([1, 2, 3]), { base: 100 }));
+    expect(out).toEqual([101, 103, 105]);
+  });
+
+  test('rejects a non-positive window size', ({ expect }) => {
+    expect(() => Stage.window<number, number, {}>('bad', 0, (window) => Effect.succeed(window.length))).toThrow(
+      RangeError,
+    );
+  });
+});
+
+const collect = <Out, E>(stream: Stream.Stream<Out, E>): Promise<readonly Out[]> =>
+  EffectEx.runPromise(stream.pipe(Stream.runCollect, Effect.map(Chunk.toReadonlyArray)));
