@@ -30,16 +30,16 @@ export interface StorageCallbacks {
 
 export class LevelDBStorageAdapter implements StorageAdapterInterface {
   /**
-   * In-flight `loadRange` / `removeRange` iterations. Awaited in `close` so
-   * the adapter doesn't return from close while a `for await` on the sublevel
-   * is still pending — otherwise the kv owner upstream would close the
-   * sublevel and the iterator's next `.next()` would reject with
-   * `LEVEL_ITERATOR_NOT_OPEN`.
+   * In-flight DB operations (point reads/writes and `loadRange` / `removeRange`
+   * iterations). Awaited in `close` so the adapter doesn't return from close
+   * while work against the sublevel is still pending — otherwise the kv owner
+   * upstream could close the sublevel while a `.get`/`.batch`/iterator is
+   * still in flight, causing late rejections or lost writes.
    *
    * Promises stored here resolve regardless of outcome (the wrapper
    * `.catch`es) so `Promise.all` won't reject.
    */
-  readonly #inFlightIterations = new Set<Promise<unknown>>();
+  readonly #inFlightOperations = new Set<Promise<unknown>>();
 
   #open = false;
 
@@ -58,27 +58,31 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
       return;
     }
     this.#open = false;
-    // New `loadRange`/`removeRange` calls already short-circuit on `!isOpen`.
-    // Wait for any iterations that started while we were still open to finish
-    // before returning, so the upstream `kv` owner can safely close the sublevel.
-    if (this.#inFlightIterations.size > 0) {
-      await Promise.all(this.#inFlightIterations);
+    // New calls already short-circuit on `!isOpen`. Wait for any operations
+    // that started while we were still open to finish before returning, so
+    // the upstream `kv` owner can safely close the sublevel.
+    if (this.#inFlightOperations.size > 0) {
+      await Promise.all(this.#inFlightOperations);
     }
   }
 
-  #trackIteration<T>(work: Promise<T>): Promise<T> {
+  #trackOperation<T>(work: Promise<T>): Promise<T> {
     const settled = work.catch(() => undefined);
-    this.#inFlightIterations.add(settled);
-    void settled.finally(() => this.#inFlightIterations.delete(settled));
+    this.#inFlightOperations.add(settled);
+    void settled.finally(() => this.#inFlightOperations.delete(settled));
     return work;
   }
 
   async load(keyArray: StorageKey): Promise<Uint8Array | undefined> {
+    if (!this.isOpen) {
+      // TODO(mykola): this should be an error.
+      return undefined;
+    }
+    return this.#trackOperation(this.#doLoad(keyArray));
+  }
+
+  async #doLoad(keyArray: StorageKey): Promise<Uint8Array | undefined> {
     try {
-      if (!this.isOpen) {
-        // TODO(mykola): this should be an error.
-        return undefined;
-      }
       const startMs = Date.now();
       const chunk = await this._params.db.get<StorageKey, Uint8Array>(keyArray, { ...encodingOptions });
       this._params.monitor?.recordBytesLoaded(chunk.byteLength);
@@ -96,6 +100,10 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
     if (!this.isOpen) {
       return undefined;
     }
+    return this.#trackOperation(this.#doSave(keyArray, binary));
+  }
+
+  async #doSave(keyArray: StorageKey, binary: Uint8Array): Promise<void> {
     const startMs = Date.now();
     const batch = this._params.db.batch();
 
@@ -117,6 +125,10 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
     if (!this.isOpen || entries.length === 0) {
       return undefined;
     }
+    return this.#trackOperation(this.#doSaveBatch(entries));
+  }
+
+  async #doSaveBatch(entries: Array<[StorageKey, Uint8Array]>): Promise<void> {
     const startMs = Date.now();
     const batch = this._params.db.batch();
 
@@ -143,14 +155,14 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
     if (!this.isOpen) {
       return undefined;
     }
-    await this._params.db.del<StorageKey>(keyArray, { ...encodingOptions });
+    return this.#trackOperation(this._params.db.del<StorageKey>(keyArray, { ...encodingOptions }));
   }
 
   async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
     if (!this.isOpen) {
       return [];
     }
-    return this.#trackIteration(this.#doLoadRange(keyPrefix));
+    return this.#trackOperation(this.#doLoadRange(keyPrefix));
   }
 
   async #doLoadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
@@ -175,7 +187,7 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
     if (!this.isOpen) {
       return undefined;
     }
-    await this.#trackIteration(this.#doRemoveRange(keyPrefix));
+    await this.#trackOperation(this.#doRemoveRange(keyPrefix));
   }
 
   async #doRemoveRange(keyPrefix: StorageKey): Promise<void> {
