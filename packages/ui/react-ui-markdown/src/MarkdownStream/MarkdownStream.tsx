@@ -55,6 +55,7 @@ import { isTruthy } from '@dxos/util';
 
 import { footer, setFooterVisibleEffect } from './footer';
 import { type StreamerOptions, createStreamer } from './stream';
+
 export interface MarkdownStreamController extends XmlWidgetStateManager {
   get length(): number | undefined;
   focus: () => void;

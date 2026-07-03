@@ -6,7 +6,7 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
-import { isComposerUrl } from '../bridge/urls';
+import { isComposerUrl } from '../bridge';
 import { renderUrl } from './render';
 import {
   PING_MESSAGE_TYPE,

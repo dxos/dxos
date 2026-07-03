@@ -4,16 +4,16 @@ Extension-side logic shared by the three runtime contexts — the **background**
 **content script** (injected into every page), and the **side panel** UI. Each subfolder is a
 self-contained module exported via its `index.ts`.
 
-| Folder        | Responsibility                                                |
-| ------------- | ------------------------------------------------------------- |
-| `actions/`    | Page-action registry, matching, and invoke/run/deliver flows. |
-| `bridge/`     | Composer tab discovery and the configured Composer origins.   |
-| `extractors/` | Turn the current page into a serializable `Snapshot`.         |
-| `image/`      | Image/thumbnail action backed by the EDGE image service.      |
-| `picker/`     | In-page DOM element picker.                                   |
-| `proxy/`      | Background render-proxy and ping.                             |
+| Folder        | Module          | Responsibility                                                |
+| ------------- | --------------- | ------------------------------------------------------------- |
+| `/actions`    | Page actions    | Page-action registry, matching, and invoke/run/deliver flows. |
+| `/bridge`     | Composer bridge | Composer tab discovery and the configured Composer origins.   |
+| `/extractors` | Page extractors | Turns the current page into a serializable `Snapshot`.        |
+| `/image`      | Thumbnails      | Image/thumbnail action backed by the EDGE image service.      |
+| `/picker`     | Element picker  | In-page DOM element picker.                                   |
+| `/proxy`      | Search proxy    | Enables Composer to search the web via the extension.         |
 
-## Page actions — `actions/`
+## Page actions
 
 - **Purpose** — the page-action system: actions contributed by Composer plugins, matched to the current page and invoked on the user's behalf.
 - **Functionality** — a cached list of serializable `PageActionDescriptor`s (id, label, icon, URL patterns, optional DOM predicate, extractor, operation); URL/context filtering (`getActionsForUrl`, `matchesUrlPatterns`); the `run` flow (`runPageAction`: extract page inputs, then invoke the descriptor's operation in Composer) and the `deliver` flow (`deliverPickedSnapshot`: send a picker snapshot, enriched with a thumbnail, to Composer).
@@ -21,7 +21,7 @@ self-contained module exported via its `index.ts`.
 - **Protocol / integration** — runtime messages keyed by the `PAGE_ACTION(S)_*_MESSAGE_TYPE` discriminators (`READY`, `LIST`, `RUN`, `DELIVER`, `EXTRACT`, `PREDICATE`); the background relays `LIST`/`INVOKE` to the Composer page as `PAGE_ACTIONS_*_EVENT` CustomEvents. Uses `bridge/` to find the Composer tab, `extractors/` to gather inputs, and produces the `Snapshot` type consumed by `picker/` and `extractors/`. All inbound payloads cross a trust boundary and are validated via the `decode*` guards.
 - **State** — the registry is persisted in `browser.storage.local` under `PAGE_ACTIONS_STORAGE_KEY` (survives service-worker suspension); everything else is stateless request handling.
 
-## Composer bridge — `bridge/`
+## Composer bridge
 
 - **Purpose** — locate and reach the Composer app, and own the user-configurable list of Composer origins.
 - **Functionality** — `findComposerTab` (query tabs matching the configured patterns and pick the best-scored one), `focusOrOpenComposerTab` / `openComposerTab`, and origin helpers `isComposerUrl` / `matchesPattern` (a small chrome match-pattern implementation).
@@ -29,7 +29,7 @@ self-contained module exported via its `index.ts`.
 - **Protocol / integration** — wraps `browser.tabs` / `browser.windows`; consumed by `actions/`, `proxy/` (origin guard), and the panel/background (launch button, `open-composer`).
 - **State** — the configured origins live in `browser.storage.sync` under `COMPOSER_URLS_PROP` (default `DEFAULT_COMPOSER_URLS`); `sender.ts` keeps an in-memory `lastUsedTabId` to bias tab scoring.
 
-## Page extractors — `extractors/`
+## Page extractors
 
 - **Purpose** — turn the current page into the serializable `Snapshot` an action operation consumes.
 - **Functionality** — the default `snapshotExtractor` (source metadata, og/JSON-LD hints, current text selection, and document HTML truncated at `MAX_HTML_LENGTH`), plus `runExtractor(name, ctx)` which dispatches to a bundled extractor by name.
@@ -37,7 +37,7 @@ self-contained module exported via its `index.ts`.
 - **Protocol / integration** — extractors are referenced _by name_ from action descriptors (`actions/`); their output is validated Composer-side by the target operation's input schema. Reuses `picker/harvest` for favicon/hints. Deliberately imports `actions/` and `picker/` submodules (not their barrels) to stay free of `webextension-polyfill`, since it runs in page/node contexts.
 - **State** — stateless; a static set of extractors keyed by name.
 
-## Thumbnails — `image/`
+## Thumbnails
 
 - **Purpose** — the single image/thumbnail action (formerly the generic `actions/`).
 - **Functionality** — `createThumbnail(imageUrl)`: fetch the image, normalize its content-type, upload it to the EDGE image service, and persist the hosted URL.
@@ -45,7 +45,7 @@ self-contained module exported via its `index.ts`.
 - **Protocol / integration** — uses `EdgeServiceClient` / `Image.thumbnail` (`@dxos/edge-client`); writes the hosted URL to `browser.storage.local` (`THUMBNAIL_PROP`), which the panel observes via `storage.onChanged`.
 - **State** — writes the hosted-URL result to `storage.local`; sets a transient error/success badge on the toolbar action; otherwise stateless.
 
-## Element picker — `picker/`
+## Element picker
 
 - **Purpose** — let the user pick a page element interactively and clip it as a `Snapshot`.
 - **Functionality** — `startPicker` renders a full-viewport overlay (hover outline + a floating toolbar of the applicable actions, Esc to cancel) and resolves with the chosen element and action id; `pickSnapshot` orchestrates picker → harvest → snapshot; `harvest*` pulls favicon/hints/selection; `showPickerNotice` shows a transient in-page toast; `showDebugPreview` is a developer-mode snapshot inspector.
@@ -53,7 +53,7 @@ self-contained module exported via its `index.ts`.
 - **Protocol / integration** — panel → content `start-picker` (webext-bridge, fire-and-forget); resolves picker-context actions via `actions/getActionsForUrl(url, 'picker')`; delivers the result to the background via the `actions/` deliver message. Icons resolve from the extension-packaged `icons.svg`.
 - **State** — no persistent state; a transient DOM overlay host only (`__resetPickerForTests` clears it in tests).
 
-## Render proxy — `proxy/`
+## Render proxy
 
 - **Purpose** — fetch/render arbitrary pages on Composer's behalf, using the extension's cross-origin privilege to bypass page CORS, and answer a liveness ping.
 - **Functionality** — `installSearchProxy` registers the background listeners; `renderUrl` opens an unfocused popup window, waits for load, injects a reader to capture `{ html, finalUrl }`, then removes the window (`DEFAULT_RENDER_TIMEOUT_MS` bounds the wait). An unfocused window (rather than a background tab) keeps `visibilityState: 'visible'` so anti-bot checks pass.
