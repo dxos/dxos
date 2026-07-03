@@ -38,6 +38,7 @@ export type XmlBlockDecorationOptions = {
  * styling of XML blocks (chat prompts, callouts, etc.) where the inner content should
  * stay editable/copyable rather than living inside a CodeMirror widget.
  */
+// TODO(burdon): Change to array to support multiple tags.
 export const xmlBlockDecoration = ({
   tag,
   lineClass,
