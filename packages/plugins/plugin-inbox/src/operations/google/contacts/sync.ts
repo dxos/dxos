@@ -19,8 +19,8 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 // Connection is referenced in the inferred type of this module's default export via
 // InboxOperation.GoogleContactsSync's schema; the import lets TypeScript name it in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { type Connection } from '@dxos/plugin-connector';
-import { Person } from '@dxos/types';
+import { type Connection, SyncBinding } from '@dxos/plugin-connector';
+import { Cursor, Person } from '@dxos/types';
 
 import { GooglePeople } from '../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
@@ -28,8 +28,16 @@ import { GoogleCredentials } from '../../../services';
 import { InboxOperation } from '../../../types';
 import { mapGooglePerson } from './mapper';
 
+const COMMIT_PAGE_SIZE = 10;
+
 /** A contact mapped to DXOS `Person` props, tagged with the Google resource name for upsert. */
 type MappedPerson = { readonly resourceName: string; readonly props: ReturnType<typeof mapGooglePerson> };
+
+/** The contact's last-modified time (max across sources) as an epoch-ms cursor key; 0 when absent. */
+const updateTimeOf = (person: GooglePeople.Person): number => {
+  const times = (person.metadata?.sources ?? []).map((source) => (source.updateTime ? Date.parse(source.updateTime) : 0));
+  return times.length > 0 ? Math.max(...times) : 0;
+};
 
 /**
  * Fetch all members of a contact group by resource name.
@@ -55,10 +63,15 @@ const connectionsSource = () =>
     }),
   );
 
-/** Pipeline stage: map a Google contact to DXOS `Person` props (pure). */
-const mapPersonStage: Stage.Stage<GooglePeople.Person, MappedPerson, never, never> = Stage.map(
+/** Pipeline stage: map a Google contact to an upsert unit — Person props + the `updateTime` cursor key. */
+const mapPersonStage: Stage.Stage<GooglePeople.Person, SyncBinding.UpsertUnit<MappedPerson>, never, never> = Stage.map(
   'map-person',
-  (remote: GooglePeople.Person) => Effect.succeed({ resourceName: remote.resourceName, props: mapGooglePerson(remote) }),
+  (remote: GooglePeople.Person) =>
+    Effect.succeed({
+      item: { resourceName: remote.resourceName, props: mapGooglePerson(remote) },
+      foreignId: remote.resourceName,
+      key: updateTimeOf(remote),
+    }),
 );
 
 /**
@@ -133,40 +146,28 @@ export default InboxOperation.GoogleContactsSync.pipe(
         // The group membership is the set of resource names to keep; the source streams all
         // connections (paginated) and we filter to the group.
         const memberNames = new Set(yield* fetchGroupMembers(groupResourceName));
-        if (memberNames.size === 0) {
-          log('contact group is empty', { groupResourceName });
-        }
+        const cursorKey = Cursor.parseKey(binding.cursor);
 
-        // Pipeline: stream connections → filter to group members → map to Person props → upsert into
-        // the space. Unlike mail/calendar there is no feed; the upsert sink is the terminal write,
-        // idempotent via the foreign-key lookup.
-        const stats = { upserted: 0 };
+        // Pipeline: stream connections → filter to group members → map → upsert into the space. It's a
+        // DB target (no feed); the upsert sink is idempotent via the foreign key and advances the
+        // cursor (high-water contact `updateTime`) + run status in the same place as the write.
+        //
+        // NB: no dedup-by-cursor here — a contact added to the group without being modified has an
+        // `updateTime` older than the cursor, so deduping would silently drop it. We re-upsert every
+        // member each run (idempotent).
+        // TODO(wittjosiah): Skip unchanged contacts (dedup by updateTime) once we also detect group
+        //   membership changes, so newly-added-but-unmodified contacts still sync.
+        const stats: SyncBinding.Stats = { newMessages: 0 };
         yield* connectionsSource().pipe(
           Stage.filter('group-member', (person: GooglePeople.Person) => memberNames.has(person.resourceName)),
           mapPersonStage,
-          Pipeline.run({
-            sink: (mapped) =>
-              Effect.gen(function* () {
-                if (yield* upsertPerson(mapped)) {
-                  stats.upserted += 1;
-                }
-              }),
-          }),
+          Stream.grouped(COMMIT_PAGE_SIZE),
+          Pipeline.run({ sink: SyncBinding.upsertCommit(upsertPerson) }),
+          Effect.provide(SyncBinding.layer({ binding, foreignKeySource: GOOGLE_INTEGRATION_SOURCE, cursorKey, stats })),
         );
 
-        // Persist last sync timestamp on the binding. The cursor is a placeholder `now` — contacts
-        // has no monotonic key yet.
-        // TODO(wittjosiah): Adopt the People API `syncToken` for incremental sync; once contacts has a
-        //   real cursor it can route through a non-feed SyncBinding variant (shared stats/lastSyncAt).
-        Relation.update(binding, (binding) => {
-          const now = new Date().toISOString();
-          binding.cursor = now;
-          binding.lastSyncAt = now;
-          binding.lastError = undefined;
-        });
-
-        log('contact group sync complete', { groupResourceName, members: memberNames.size, upserted: stats.upserted });
-        return { upserted: stats.upserted };
+        log('contact group sync complete', { groupResourceName, members: memberNames.size, upserted: stats.newMessages });
+        return { upserted: stats.newMessages };
       }).pipe(
         Effect.provide(
           Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromConnection(connectionRef)),

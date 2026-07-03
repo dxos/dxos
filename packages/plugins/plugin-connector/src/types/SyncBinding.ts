@@ -12,6 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { Database, DXN, type Feed, Filter, Obj, Relation, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
+import { invariant } from '@dxos/invariant';
 import { Stage } from '@dxos/pipeline';
 import { Tagging, type TagIndex } from '@dxos/schema';
 
@@ -78,8 +79,8 @@ export type Stats = { newMessages: number };
 export type State = {
   /** The binding whose cursor is advanced as pages commit. */
   readonly binding: SyncBinding;
-  /** Feed the mapped messages are appended to. */
-  readonly feed: Feed.Feed;
+  /** Feed the mapped messages are appended to; absent for DB-target syncs (e.g. contacts upsert). */
+  readonly feed?: Feed.Feed;
   /** Tag index provider-label tags are applied against; absent for providers that don't tag. */
   readonly tagIndex?: TagIndex.TagIndex;
   /** Foreign-key source stamped on synced messages (dedup key namespace). */
@@ -135,7 +136,11 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
     Service,
     Effect.gen(function* () {
       const { db } = yield* Database.Service;
-      const dedupSet = yield* Effect.promise(() => seedDedupSet(db, options.feed, options.foreignKeySource));
+      const { feed } = options;
+      // DB-target syncs (no feed) rely on the cursor + idempotent write for dedup; there is no feed to seed.
+      const dedupSet = feed
+        ? yield* Effect.promise(() => seedDedupSet(db, feed, options.foreignKeySource))
+        : new Set<string>();
       return {
         ...options,
         formatCursor: options.formatCursor ?? ((key: number) => String(key)),
@@ -144,6 +149,18 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
       };
     }),
   );
+
+/**
+ * Advances the binding cursor to `maxKey` and stamps the run status, in a single `Relation.update`.
+ * Called from the write commit so the write and the cursor advance land together (the seam the future
+ * single-transaction TODO wraps).
+ */
+const advanceCursor = (state: State, maxKey: number): void =>
+  Relation.update(state.binding, (binding) => {
+    binding.cursor = state.formatCursor(maxKey);
+    binding.lastSyncAt = new Date().toISOString();
+    binding.lastError = undefined;
+  });
 
 /**
  * Commits one page of pipeline output — the single place non-idempotent writes happen. Use as the
@@ -163,10 +180,12 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
       return;
     }
     const state = yield* Service;
+    const feed = state.feed;
+    invariant(feed, 'SyncBinding.commit requires a feed target');
     const { db } = yield* Database.Service;
     yield* Effect.promise(async () => {
       await db.appendToFeed(
-        state.feed,
+        feed,
         units.map((unit) => unit.message),
       );
       for (const unit of units) {
@@ -179,15 +198,10 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
           db.add(object);
         }
       }
-      // Advance the cursor and stamp the run status on the binding in the same commit as the writes.
-      // (A run with no new messages produces no commit, so `lastSyncAt` reflects the last page that
-      // landed rather than the last attempt — acceptable, and avoids a separate write path.)
-      const maxKey = Math.max(...units.map((unit) => unit.key));
-      Relation.update(state.binding, (binding) => {
-        binding.cursor = state.formatCursor(maxKey);
-        binding.lastSyncAt = new Date().toISOString();
-        binding.lastError = undefined;
-      });
+      // Advance the cursor + run status in the same commit as the writes. (A run with no new messages
+      // produces no commit, so `lastSyncAt` reflects the last page that landed rather than the last
+      // attempt — acceptable, and avoids a separate write path.)
+      advanceCursor(state, Math.max(...units.map((unit) => unit.key)));
       // Flush so the space-db mutations (tags, contacts, cursor) commit and are indexed, letting the
       // next run's dedup and contact resolution observe them.
       await db.flush({ indexes: true });
@@ -197,6 +211,38 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
       state.stats.newMessages += units.length;
     });
   });
+
+/** An item written by {@link upsertCommit}: an object to upsert into the space plus its cursor key. */
+export type UpsertUnit<T> = { readonly item: T; readonly foreignId: string; readonly key: number };
+
+/**
+ * Commits a page to a DB target (no feed) via an idempotent upsert. `write` performs the
+ * provider-specific find-by-foreign-key → update-or-create and returns whether a new object was
+ * created (counted into `stats`). The cursor advance + run status land in the same `Relation.update`
+ * as the writes — the same commit-co-located seam as {@link commit}, so the future single-transaction
+ * TODO covers both. Idempotent, so a crash before the flush is safe: the next run re-upserts.
+ */
+export const upsertCommit =
+  <T>(write: (item: T) => Effect.Effect<boolean, never, Database.Service>) =>
+  (page: Chunk.Chunk<UpsertUnit<T>>): Effect.Effect<void, never, Service | Database.Service> =>
+    Effect.gen(function* () {
+      const units = Chunk.toReadonlyArray(page);
+      if (units.length === 0) {
+        return;
+      }
+      const state = yield* Service;
+      const { db } = yield* Database.Service;
+      for (const unit of units) {
+        if (yield* write(unit.item)) {
+          state.stats.newMessages += 1;
+        }
+      }
+      advanceCursor(state, Math.max(...units.map((unit) => unit.key)));
+      yield* Effect.promise(() => db.flush({ indexes: true }));
+      for (const unit of units) {
+        state.dedupSet.add(unit.foreignId);
+      }
+    });
 
 /**
  * Reusable dedup stage: drops items already reflected by the cursor — provider key below the run's
