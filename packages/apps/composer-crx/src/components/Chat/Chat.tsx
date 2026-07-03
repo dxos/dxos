@@ -134,6 +134,13 @@ export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
     renderedRef.current = content;
   }, [controller, content]);
 
+  const handleClear = useCallback(async () => {
+    void stop();
+    void clearError();
+    void clearHistory();
+    editorRef.current?.focus();
+  }, [clearError, clearHistory, stop]);
+
   const currentUrl = useRef<string>(undefined);
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (value) => {
@@ -144,7 +151,7 @@ export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
 
       // Fire-and-forget: `storage.sync.get` and `sendMessage` can reject, so route any failure to
       // the logger rather than leaving an unhandled rejection.
-      (async () => {
+      async function submitMessage() {
         // Update context.
         // TODO(burdon): Get current selection?
         const context: string[] = [];
@@ -182,8 +189,14 @@ export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
         }
 
         // User message.
-        await sendMessage({ role: 'user', parts: [{ type: 'text', text }] });
-      })().catch((err) => log.catch(err));
+        await sendMessage({
+          role: 'user',
+          parts: [{ type: 'text', text }],
+        });
+      }
+
+      // TODO(burdon): Propagate error.
+      void submitMessage().catch((err) => log.catch(err));
 
       // Clear the editor.
       return true;
@@ -191,52 +204,32 @@ export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
     [sendMessage, url, messages.length],
   );
 
-  const handleClear = useCallback(async () => {
-    void stop();
-    void clearError();
-    void clearHistory();
-    editorRef.current?.focus();
-  }, [clearError, clearHistory, stop]);
-
   return (
-    // Chat owns the content area: the thread fills and scrolls, the input is pinned to the bottom.
     <div className={mx('grid grid-rows-[1fr_auto] min-h-0 bg-base-surface', classNames)}>
       {/* `data-hue` gives the `<prompt>` bubbles their panel tokens (see MarkdownStream). */}
       <div data-hue='blue' className='contents'>
-        <MarkdownStream
-          ref={setController}
-          classNames='min-h-0'
-          debug={false}
-          registry={registry}
-          options={streamOptions}
-          slots={compactSlots}
-        />
+        <MarkdownStream registry={registry} options={streamOptions} slots={compactSlots} ref={setController} />
       </div>
-
-      <div className='flex flex-col'>
-        <div className='flex relative items-center gap-1 p-1'>
-          <ChatStatusIndicator classNames='shrink-0 p-1' processing={status === 'checking'} error={statusError} />
-          <ChatEditor
-            ref={editorRef}
-            autoFocus
-            lineWrapping
-            classNames='grow min-w-0 text-lg'
-            placeholder={t('chat.placeholder')}
-            onSubmit={handleSubmit}
+      <div className='flex relative items-center gap-1 p-1'>
+        <ChatStatusIndicator classNames='shrink-0 p-1' processing={status === 'checking'} error={statusError} />
+        <ChatEditor
+          classNames='grow min-w-0 text-lg'
+          autoFocus
+          lineWrapping
+          placeholder={t('chat.placeholder')}
+          onSubmit={handleSubmit}
+          ref={editorRef}
+        />
+        {/* TODO(burdon): Create new session; move to menu. */}
+        {filteredMessages.length > 0 && (
+          <IconButton
+            variant='ghost'
+            icon='ph--x--regular'
+            iconOnly
+            label={t('chat.clear.button')}
+            onClick={handleClear}
           />
-          {/* TODO(burdon): Create new session. */}
-          {filteredMessages.length > 0 && (
-            <div className='flex items-center absolute right-1.5 top-0 bottom-0 z-10'>
-              <IconButton
-                variant='ghost'
-                icon='ph--x--regular'
-                iconOnly
-                label={t('chat.clear.button')}
-                onClick={handleClear}
-              />
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
