@@ -11,9 +11,9 @@ import { type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { Transcriber } from '@dxos/pipeline-transcription';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
 import { MediaStreamRecorder } from '@dxos/react-ui-transcription';
-import { Transcriber } from '@dxos/transcription-pipeline';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { type TranscriptionCapabilities } from '#types';

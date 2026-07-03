@@ -9,6 +9,14 @@ const CONNECTION_MESSAGE =
 
 const SYNC_MESSAGE = 'Failed to fetch the Interactive Brokers Flex report.' as const;
 
+const EDGAR_FETCH_MESSAGE = 'Failed to fetch fundamentals from SEC EDGAR.' as const;
+
+const EDGAR_TICKER_MESSAGE = 'Ticker was not found in the SEC EDGAR company directory.' as const;
+
+const INSTRUMENT_SYMBOL_MESSAGE = 'Instrument is missing a primary symbol.' as const;
+
+const IMPORT_MESSAGE = 'The imported file is not a valid Interactive Brokers Flex report.' as const;
+
 /** The IBKR credential is absent or missing its Flex token / query id. */
 export class IbkrConnectionError extends BaseError.extend('IbkrConnectionError', CONNECTION_MESSAGE) {}
 
@@ -21,3 +29,26 @@ export class IbkrSyncError extends BaseError.extend('IbkrSyncError', SYNC_MESSAG
     super({ message: cause instanceof Error ? cause.message : String(cause), cause });
   }
 }
+
+/** A SEC EDGAR request failed. */
+export class EdgarFetchError extends BaseError.extend('EdgarFetchError', EDGAR_FETCH_MESSAGE) {
+  constructor(cause: unknown) {
+    super({ message: cause instanceof Error ? cause.message : String(cause), cause });
+  }
+}
+
+/** A ticker could not be resolved to a SEC CIK. */
+export class EdgarTickerNotFoundError extends BaseError.extend('EdgarTickerNotFoundError', EDGAR_TICKER_MESSAGE) {
+  constructor(ticker: string) {
+    super({ message: `Ticker "${ticker}" was not found in SEC EDGAR.` });
+  }
+}
+
+/** An Instrument object has no symbol to query. */
+export class InstrumentMissingSymbolError extends BaseError.extend(
+  'InstrumentMissingSymbolError',
+  INSTRUMENT_SYMBOL_MESSAGE,
+) {}
+
+/** An imported file is not a recognizable Flex Web Service report document. */
+export class IbkrImportError extends BaseError.extend('IbkrImportError', IMPORT_MESSAGE) {}

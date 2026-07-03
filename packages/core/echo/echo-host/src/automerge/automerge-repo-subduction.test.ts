@@ -67,6 +67,10 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
       await repo.shutdown();
     }
 
+    // `Repo.shutdown()` closes its storage adapter; reopen before reusing it for
+    // the second `Repo` that simulates a reload from disk.
+    await storage.open();
+
     {
       const repo = createRepo({ network: [], storage });
       const handle = await repo.find<{ field?: string }>(url as AutomergeUrl);
@@ -168,6 +172,9 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
         await shutdownRepo(peer1);
       }
 
+      // `Repo.shutdown()` closes its storage adapter; reopen before reusing it in the topology.
+      await storage.open();
+
       const { repos, adapters } = await createHostClientRepoTopology({ storages: [storage] });
       const [peer1, peer2] = repos;
       await connectAdapters(adapters);
@@ -209,6 +216,9 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
       expect(serverHandle.doc()!.field).to.deep.equal(value);
       await waitForSubductionSave();
       await repo.shutdown();
+
+      // `Repo.shutdown()` closes its storage adapter; reopen before reusing it for `repo2`.
+      await storage.open();
 
       const repo2 = createRepo({ network: [], storage });
       const reloaded = await repo2.find<any>(documentId);

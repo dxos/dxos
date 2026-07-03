@@ -10,10 +10,8 @@ import { createDidFromIdentityKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientOperation } from '@dxos/plugin-client';
-import { SpaceOperation } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type InvitationResult } from '@dxos/react-client/invitations';
 import { ThemeProvider, defaultTx } from '@dxos/react-ui';
 
 import { joinWaitlist, login, redeemAccountInvitation, validateInvitationCode } from '../credentials';
@@ -21,21 +19,15 @@ import { useForceDarkTheme } from '../hooks';
 import { meta } from '../meta';
 import { OnboardingOperation } from '../operations';
 import { translations } from '../translations';
-import { removeQueryParamByValue } from '../util';
 import { Welcome, WelcomeState } from './Welcome';
 
 export const WELCOME_SCREEN = `${meta.profile.key}.component.welcome-screen`;
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
-  const searchProps = new URLSearchParams(window.location.search);
-  const spaceInvitationCode = searchProps.get('spaceInvitationCode') ?? undefined;
-
   const client = useClient();
   const identity = useIdentity();
   const { invokePromise } = useOperationInvoker();
-  const [state, setState] = useState<WelcomeState>(
-    spaceInvitationCode ? WelcomeState.SPACE_INVITATION : WelcomeState.INIT,
-  );
+  const [state, setState] = useState<WelcomeState>(WelcomeState.INIT);
   const [error, setError] = useState(false);
   const pendingRef = useRef(false);
 
@@ -142,42 +134,6 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     },
     [invokePromise, error],
   );
-
-  const handleSpaceInvitation = async () => {
-    let identityCreated = true;
-    await invokePromise(ClientOperation.CreateIdentity, {}).catch(() => {
-      // This will happen if the identity already exists.
-      identityCreated = false;
-    });
-    const identity = client.halo.identity.get();
-    if (!identity) {
-      return;
-    }
-
-    const handleDone = async (result: InvitationResult | null) => {
-      await invokePromise(LayoutOperation.UpdateDialog, { state: false });
-      await invokePromise(LayoutOperation.SetLayoutMode, {
-        subject: result?.target ?? undefined,
-        mode: 'solo',
-      });
-
-      if (identityCreated) {
-        await invokePromise(ClientOperation.CreateAgent);
-      }
-    };
-
-    await invokePromise(SpaceOperation.Join, {
-      invitationCode: spaceInvitationCode,
-      onDone: handleDone,
-    });
-    spaceInvitationCode && removeQueryParamByValue(spaceInvitationCode);
-  };
-
-  const handleGoToLogin = useCallback(() => {
-    setState(WelcomeState.INIT);
-    // TODO(wittjosiah): Attempt to preserve the invitation code through the login flow.
-    spaceInvitationCode && removeQueryParamByValue(spaceInvitationCode);
-  }, []);
 
   const handleValidateInvitationCode = useCallback(
     async (code: string) => {
@@ -310,8 +266,6 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         onCreateAccount={!identity ? handleCreateAccount : undefined}
         onCreateAccountWithOAuth={!identity ? handleCreateAccountWithOAuth : undefined}
         onJoinWaitlist={handleJoinWaitlist}
-        onSpaceInvitation={spaceInvitationCode ? handleSpaceInvitation : undefined}
-        onGoToLogin={handleGoToLogin}
       />
     </ThemeProvider>
   );

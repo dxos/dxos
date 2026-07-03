@@ -79,19 +79,30 @@ export class MediaManager extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    this._blackCanvasStreamTrack = await createBlackCanvasStreamTrack({
-      ctx: this._ctx,
-      width: VIDEO_WIDTH,
-      height: VIDEO_HEIGHT,
-    });
-
-    this._state.videoTrack = this._blackCanvasStreamTrack;
     this._state.videoStream = new MediaStream();
-    this._state.videoStream.addTrack(this._state.videoTrack);
 
-    if (USE_INAUDIBLE_AUDIO) {
-      this._inaudibleAudioStreamTrack = await createInaudibleAudioStreamTrack({ ctx: this._ctx });
-      this._state.audioTrack = this._inaudibleAudioStreamTrack;
+    // The black-canvas and inaudible-audio placeholder tracks are only consumed once a call is
+    // active (they stand in for a disabled camera/mic). They rely on `canvas.captureStream()` and
+    // `AudioContext`, which are absent or non-functional in some headless browsers (notably the
+    // Playwright Linux WebKit build). Their creation must therefore not be able to fail activation:
+    // otherwise a browser that merely can't do calls would take down every plugin that shares the
+    // activation chain (surfacing as the app's fatal error dialog). Degrade to no placeholders.
+    try {
+      this._blackCanvasStreamTrack = await createBlackCanvasStreamTrack({
+        ctx: this._ctx,
+        width: VIDEO_WIDTH,
+        height: VIDEO_HEIGHT,
+      });
+
+      this._state.videoTrack = this._blackCanvasStreamTrack;
+      this._state.videoStream.addTrack(this._state.videoTrack);
+
+      if (USE_INAUDIBLE_AUDIO) {
+        this._inaudibleAudioStreamTrack = await createInaudibleAudioStreamTrack({ ctx: this._ctx });
+        this._state.audioTrack = this._inaudibleAudioStreamTrack;
+      }
+    } catch (err) {
+      log.warn('failed to create placeholder media tracks; calls will be unavailable', { err });
     }
 
     this._pushTracksTask = new DeferredTask(this._ctx, async () => {

@@ -25,6 +25,14 @@ export type SurfaceProfilerStats = {
   avgBaseDuration: number;
   lastActualDuration: number;
   lastCommitTime: number;
+  /** Candidates matched on the last dispatch (from Surface dev metrics). */
+  candidates?: number;
+  /** `true` when more candidates matched than rendered. */
+  truncated?: boolean;
+  /** Error boundary trips. */
+  errors?: number;
+  /** `true` when the surface's `data` prop identity churns without changing value. */
+  dataUnstable?: boolean;
 };
 
 export const SurfaceProfilerPanel = ({
@@ -56,6 +64,8 @@ export const SurfaceProfilerPanel = ({
             <th className='truncate'>Surface</th>
             <th className='w-[40px] text-right'>Mnt</th>
             <th className='w-[40px] text-right'>Upd</th>
+            <th className='w-[40px] text-right'>Cnd</th>
+            <th className='w-[40px] text-right'>Err</th>
             <th className='w-[60px] text-right'>Avg/ms</th>
             <th className='w-[60px] text-right'>Max/ms</th>
             <th className='w-[60px] text-right'>Last/ms</th>
@@ -63,12 +73,21 @@ export const SurfaceProfilerPanel = ({
         </thead>
         <tbody>
           {displayed.map((stat) => (
-            <tr key={stat.id}>
-              <td className='py-0.5 truncate cursor-pointer' title={stat.id}>
+            <tr key={stat.id} className={stat.dataUnstable ? 'text-error-text' : undefined}>
+              <td
+                className='py-0.5 truncate cursor-pointer'
+                title={stat.dataUnstable ? `${stat.id} (unstable data)` : stat.id}
+              >
+                {stat.dataUnstable ? '⚠ ' : ''}
                 {stat.id.split('/').pop()}
               </td>
               <td className='py-0.5 text-right'>{stat.mountCount}</td>
               <td className='py-0.5 text-right'>{stat.updateCount}</td>
+              <td className='py-0.5 text-right'>
+                {stat.candidates ?? '–'}
+                {stat.truncated ? '+' : ''}
+              </td>
+              <td className={`py-0.5 text-right ${stat.errors ? 'text-error-text' : ''}`}>{stat.errors || ''}</td>
               <td className='py-0.5 text-right'>
                 <Duration value={stat.avgActualDuration} />
               </td>

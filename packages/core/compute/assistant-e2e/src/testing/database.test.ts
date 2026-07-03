@@ -23,4 +23,15 @@ describe('Database', () => {
     }),
     { timeout: agentTestTimeout() },
   );
+
+  it.effect(
+    'create Person',
+    agentTest({
+      instructions: trim`
+        Create a new person object for Bernie Sanders".
+      `,
+      completionCriteria: ['Person object created with correct data.'],
+    }),
+    { timeout: agentTestTimeout() },
+  );
 });

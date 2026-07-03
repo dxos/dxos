@@ -7,10 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Entity, Type } from '@dxos/echo';
+import * as InboxResolver from '@dxos/extractor-lib';
 import { Message } from '@dxos/types';
 
 import { type GoogleMail } from '../../../apis';
-import { InboxResolver } from '../../../services';
 import { mapMessage } from './mapper';
 
 const makeGmailMessage = (overrides?: Partial<GoogleMail.Message>): GoogleMail.Message => ({
