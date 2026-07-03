@@ -29,7 +29,7 @@ import { GMAIL_SOURCE } from '../../../constants';
 import { GoogleCredentials } from '../../../services';
 import { type Mapped, SyncBinding, extractContactsStage, htmlToMarkdownStage, makeDedupStage } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
-import { readBindingOptions } from '../../../util';
+import { onArrivalExtractorsStage, readBindingOptions } from '../../../util';
 import { parseFromHeader } from '../../util';
 
 type DateChunk = {
@@ -104,6 +104,7 @@ const syncSingleMailbox = (input: {
       decodeBodyStage,
       htmlToMarkdownStage<DecodedMessage>(),
       makeMapToMessageStage(labelMap),
+      onArrivalExtractorsStage<Mapped>(mailbox),
       extractContactsStage,
       Stream.grouped(STREAMING_CONFIG.pageSize),
       Pipeline.run({ sink: SyncBinding.commit }),

@@ -18,10 +18,10 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Feed, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { Stage } from '@dxos/pipeline';
 import { type SyncBinding } from '@dxos/plugin-connector';
-import { Tagging } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import { isAiServiceUnavailable } from '../operations/extractor';
@@ -43,43 +43,15 @@ export const readBindingOptions = (binding: SyncBinding.SyncBinding) => {
 };
 
 /**
- * Collects the set of foreign ids (keyed by `foreignKeySource`) from the most recent `maxScan`
- * feed messages. Used to skip already-synced messages (dedup). Pure over an already-queried list so
- * callers that also need the messages (e.g. for a last-synced cursor) avoid a second feed query.
+ * Optional pipeline stage that runs the mailbox's configured on-arrival extractors (AI and others)
+ * for each item's message, passing the item through unchanged. Self-gating: a no-op when the mailbox
+ * has no extractors enabled. Sender→contact extraction is handled unconditionally by
+ * `extractContactsStage`; this stage covers the remaining, config-gated extractors.
+ *
+ * TODO(wittjosiah): Factor these extractors out into their own downstream pipeline.
  */
-export const collectForeignIds = (
-  messages: readonly Message.Message[],
-  foreignKeySource: string,
-  maxScan: number,
-): Set<string> =>
-  new Set(
-    messages.slice(-maxScan).flatMap((message) =>
-      Obj.getMeta(message)
-        .keys.filter((key) => key.source === foreignKeySource)
-        .map((key) => key.id),
-    ),
-  );
-
-/**
- * Appends a batch of messages to the feed, applies provider-folder tags via `getTagUris`, and runs
- * on-arrival extractors. Used by both Gmail sync (label tag map) and JMAP Mail sync (folder tag map).
- */
-export const appendBatchToFeed = (
-  feed: Feed.Feed,
-  mailbox: Mailbox.Mailbox,
-  messages: Message.Message[],
-  /** Returns the tag URIs to apply for the given message (e.g. one per Gmail label / JMAP folder). */
-  getTagUris: (message: Message.Message) => readonly string[],
-) =>
-  Effect.gen(function* () {
-    yield* Feed.append(feed, messages);
-    for (const message of messages) {
-      for (const uri of getTagUris(message)) {
-        Tagging.set(message, uri, { index: mailbox.tags.target });
-      }
-    }
-    yield* runOnArrivalExtractors(mailbox, messages);
-  });
+export const onArrivalExtractorsStage = <T extends { readonly message: Message.Message }>(mailbox: Mailbox.Mailbox) =>
+  Stage.map('on-arrival-extractors', (item: T) => runOnArrivalExtractors(mailbox, [item.message]).pipe(Effect.as(item)));
 
 /**
  * Runs configured auto-on-arrival extractors for a batch of just-synced messages. Selects the
