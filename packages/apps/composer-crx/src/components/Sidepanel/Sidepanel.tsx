@@ -25,6 +25,7 @@ export const Sidepanel = () => {
   const { t } = useTranslation(translationKey);
   const { id: tabId, url: tabUrl } = useActiveTab();
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const [chatError, setChatError] = useState<Error | undefined>(undefined);
 
   // Load config.
   const [host, setHost] = useState<string | null>(null);
@@ -114,13 +115,20 @@ export const Sidepanel = () => {
                 <div className='grid place-items-center p-4 text-sm text-description'>{t('chat.error.label')}</div>
               )}
             >
-              <Chat host={host} url={tabUrl ?? undefined} />
+              <Chat host={host} url={tabUrl ?? undefined} onError={setChatError} />
             </ErrorBoundary>
           )}
         </Panel.Content>
 
+        {/* Status bar: chat-agent errors surface here (not inside the chat), otherwise the tab URL. */}
         <Panel.Statusbar classNames='flex items-center px-2'>
-          <span className='text-xs text-description truncate'>{tabUrl}</span>
+          {chatError ? (
+            <span className='text-xs text-error-text truncate' title={chatError.message}>
+              {chatError.message}
+            </span>
+          ) : (
+            <span className='text-xs text-description truncate'>{tabUrl}</span>
+          )}
         </Panel.Statusbar>
       </Panel.Root>
     </Root>

@@ -36,17 +36,31 @@ type Metadata = {
   hidden?: boolean;
 };
 
+// Hidden context injected as an assistant turn so the agent has it, but never shown to the user.
+const HIDDEN_CONTEXT_PREFIX = '<system-context>';
+
+/**
+ * True for the injected system-context turn. `useAgentChat` does not reliably round-trip custom
+ * `metadata`, so the content marker is the durable signal — without it the raw `<system-context>`
+ * block leaks into the rendered thread.
+ */
+const isHiddenContext = (message: UIMessage<Metadata>): boolean =>
+  message.metadata?.hidden === true ||
+  message.parts.some((part) => part.type === 'text' && part.text.trimStart().startsWith(HIDDEN_CONTEXT_PREFIX));
+
 export type ChatProps = ThemedClassName<{
   /** Chat-agent host (ws/wss); the agent connection is derived from it. */
   host?: string;
   /** URL of the page the panel is attached to; injected as chat context. */
   url?: string;
+  /** Surfaces the chat-agent error so a host (the side panel) can show it in its status bar. */
+  onError?: (error: Error | undefined) => void;
 }>;
 
 /**
  * Simplified chat: a streaming markdown thread over an editor input, backed by the chat agent.
  */
-export const Chat = ({ classNames, host, url }: ChatProps) => {
+export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
   const { t } = useTranslation(translationKey);
   const editorRef = useRef<ChatEditorController>(null);
   const spaceIdRef = useRef<SpaceId | null>(null);
@@ -68,9 +82,14 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
   });
 
   const filteredMessages = useMemo(
-    () => messages.filter((message) => message.role !== 'system' && !message.metadata?.hidden),
+    () => messages.filter((message) => message.role !== 'system' && !isHiddenContext(message)),
     [messages],
   );
+
+  // Lift the chat-agent error to the host (shown in the side panel's status bar).
+  useEffect(() => {
+    onError?.(error);
+  }, [error, onError]);
 
   // Render the thread to a single markdown document (see `renderThread`) and sync it into the
   // stream. The AI streaming contract makes the rendered text grow monotonically, so a prefix
@@ -166,6 +185,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
         <MarkdownStream
           ref={setController}
           classNames='min-h-0'
+          debug={false}
           registry={registry}
           options={streamOptions}
           slots={compactSlots}
@@ -173,23 +193,6 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
       </div>
 
       <div className='flex flex-col'>
-        {error && (
-          <div className='flex overflow-hidden items-center opacity-50'>
-            <div className='px-2 text-subdued text-xs whitespace-nowrap truncate'>
-              {error.message || t('chat.error.label')}
-            </div>
-            <div className='flex shrink-0'>
-              <IconButton
-                classNames='text-subdued'
-                variant='ghost'
-                icon='ph--clipboard--regular'
-                iconOnly
-                label={t('chat.copy.button')}
-                onClick={() => navigator.clipboard.writeText(error.message)}
-              />
-            </div>
-          </div>
-        )}
         <div className='flex relative items-center p-1'>
           <ChatEditor
             ref={editorRef}
