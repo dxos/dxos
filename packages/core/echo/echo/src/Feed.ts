@@ -218,32 +218,6 @@ export const remove = (
   ).pipe(Effect.withSpan('Feed.remove'));
 
 /**
- * Applies a mutation to a feed item and persists it back to the feed.
- *
- * Feeds are append-only logs: rather than editing the stored entry in place, the change is written
- * as a new entry with the same id. Reads collapse entries by id (keeping the latest), so subsequent
- * queries observe the updated value. The passed object is also mutated in place, mirroring
- * `Obj.update`.
- *
- * @example
- * ```ts
- * const post = yield* Feed.query(feed, Filter.type(Post)).first;
- * yield* Feed.change(feed, Option.getOrThrow(post), (post) => {
- *   post.title = 'Updated title';
- * });
- * ```
- */
-export const change = <T extends Obj.Unknown>(
-  feed: Feed,
-  item: T,
-  callback: (item: Obj.Mutable<T>) => void,
-): Effect.Effect<void, never, Database.Service> =>
-  Database.Service.pipe(
-    Effect.flatMap(({ db }) => Effect.promise(() => db.changeFeedItem(feed, item, callback))),
-    Effect.withSpan('Feed.change'),
-  );
-
-/**
  * Creates a reactive query over items in a feed.
  *
  * Returns a {@link QueryResult.QueryResultEffect}: yielding it produces a subscribable

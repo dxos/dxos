@@ -89,6 +89,7 @@ export class FeedHandle {
 
       for (const obj of decodedObjects) {
         this._objectCache.set(obj.id, obj);
+        this.#installFeedChange(obj);
       }
 
       // Collapse append-only edits: a changed item appears as multiple blocks with the same id;
@@ -133,6 +134,13 @@ export class FeedHandle {
   // Shares one QueryResult instance (and its subscription) across repeated calls with the same
   // serialized query against this feed.
   readonly #queryResultCache = new QueryResultCache();
+
+  // Feed items are append-only, so mutating one (via `Obj.update`) persists a new entry with the
+  // same id. `#feedChangeSubscribed` guards against attaching the persist-on-change subscription
+  // more than once per object; `#pendingWrites` lets reads/sync wait for those fire-and-forget
+  // appends (triggered by the synchronous `Obj.update`) to reach the queue.
+  readonly #feedChangeSubscribed = new WeakSet<object>();
+  readonly #pendingWrites = new Set<Promise<void>>();
 
   constructor(
     private readonly _service: FeedProtocol.QueueService,
@@ -180,6 +188,7 @@ export class FeedHandle {
       if (this._parentEntity) {
         defineHiddenProperty(item, ParentId, this._parentEntity);
       }
+      this.#installFeedChange(item);
     }
 
     // Optimistic update. Feeds are append-only, so a changed item is stored as a new block with the
@@ -209,12 +218,38 @@ export class FeedHandle {
   }
 
   /**
-   * Applies a mutation to a feed item and persists it as a new entry with the same id.
-   * Feeds are append-only; changing an item appends a new block rather than editing in place.
+   * Persists mutations to a feed item made through the standard `Obj.update` API.
+   *
+   * Feeds are append-only, so an item cannot be edited in place: each `Obj.update` appends a new
+   * entry with the same id, and reads collapse entries by id (keeping the latest). The append is
+   * fire-and-forget because `Obj.update` is synchronous; it is tracked in {@link #pendingWrites} so
+   * reads and sync can wait for it to reach the queue. Idempotent per object.
    */
-  async change<T extends Obj.Unknown>(item: T, callback: (item: Obj.Mutable<T>) => void): Promise<void> {
-    Obj.update(item, callback);
-    await this.append([item]);
+  #installFeedChange(item: Entity.Unknown): void {
+    if (this.#feedChangeSubscribed.has(item)) {
+      return;
+    }
+    this.#feedChangeSubscribed.add(item);
+    // `append` only touches hidden metadata and the local set — never the item's user data — so it
+    // does not re-notify this subscription, avoiding a mutate→append→mutate loop.
+    Obj.subscribe(item, () => {
+      this.#trackWrite(this.append([item]));
+    });
+  }
+
+  #trackWrite(promise: Promise<void>): void {
+    this.#pendingWrites.add(promise);
+    void promise.finally(() => this.#pendingWrites.delete(promise));
+  }
+
+  /**
+   * Waits for fire-and-forget appends (from `Obj.update` on feed items) to reach the queue, so a
+   * subsequent read or sync observes them. Loops because draining may schedule further writes.
+   */
+  async #drainPendingWrites(): Promise<void> {
+    while (this.#pendingWrites.size > 0) {
+      await Promise.all([...this.#pendingWrites]);
+    }
   }
 
   async delete(ids: string[]): Promise<void> {
@@ -255,6 +290,10 @@ export class FeedHandle {
     shouldPush = true,
     shouldPull = true,
   }: { shouldPush?: boolean; shouldPull?: boolean } = {}): Promise<void> {
+    if (shouldPush) {
+      // Flush fire-and-forget appends from `Obj.update` on feed items so they are pushed.
+      await this.#drainPendingWrites();
+    }
     await this._service.syncQueue({
       subspaceTag: this._namespace,
       spaceId: this._spaceId,
@@ -278,6 +317,8 @@ export class FeedHandle {
   }
 
   async fetchObjectsJSON(): Promise<ObjectJSON[]> {
+    // Ensure fire-and-forget appends from `Obj.update` on feed items have landed before reading.
+    await this.#drainPendingWrites();
     const { objects } = await this._service.queryQueue({
       query: {
         queuesNamespace: this._namespace,
@@ -306,6 +347,7 @@ export class FeedHandle {
       database: this._database,
       parent: this._parentEntity,
     });
+    this.#installFeedChange(decoded);
     return decoded;
   }
 

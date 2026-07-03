@@ -7,7 +7,7 @@ import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Event } from '@dxos/async';
+import { Event, Trigger } from '@dxos/async';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
@@ -266,7 +266,7 @@ describe('Feed', () => {
   });
 
   describe('change', () => {
-    test('Feed.change persists a new version with the same id', async ({ expect }) => {
+    test('Obj.update on a feed item persists a new version with the same id', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
       const db = await peer.createDatabase();
       const testLayer = Database.layer(db);
@@ -282,13 +282,11 @@ describe('Feed', () => {
         const [queried] = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
         itemId = queried.id;
 
-        yield* Feed.change(feed, queried, (item) => {
+        // Mutating a feed item through the standard API persists a new entry with the same id.
+        Obj.update(queried, (item) => {
           item.name = 'alice-updated';
           item.age = 31;
         });
-
-        // The passed object is mutated in place (mirrors Obj.update).
-        expect(queried.name).toBe('alice-updated');
 
         // Re-query resolves to the latest version (entries collapse by id, keeping the latest).
         const results = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
@@ -301,9 +299,8 @@ describe('Feed', () => {
       // Both the original and the updated block are persisted to the queue (append-only log).
       const feeds = await peer.host.getAllFeedsForSpace(db.spaceId);
       const blocks =
-        feeds.find(
-          (entry) => entry.feedId === feed.id && entry.feedNamespace === FeedProtocol.WellKnownNamespaces.data,
-        )?.blocks ?? [];
+        feeds.find((entry) => entry.feedId === feed.id && entry.feedNamespace === FeedProtocol.WellKnownNamespaces.data)
+          ?.blocks ?? [];
       expect(blocks.length).toBe(2);
     });
 
@@ -322,9 +319,10 @@ describe('Feed', () => {
         yield* Feed.append(feed, [alice]);
 
         const [queried] = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
-        yield* Feed.change(feed, queried, (item) => {
+        Obj.update(queried, (item) => {
           item.name = 'alice-updated';
         });
+        // Sync flushes the pending append (from Obj.update) before pushing.
         yield* Feed.sync(feed);
       }).pipe(Effect.provide(testLayer1), EffectEx.runAndForwardErrors);
 
@@ -341,7 +339,7 @@ describe('Feed', () => {
       }).pipe(Effect.provide(testLayer2), EffectEx.runAndForwardErrors);
     });
 
-    test('query.subscribe fires when a feed item is changed', async ({ expect }) => {
+    test('query.subscribe reflects a changed feed item', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
       const db = await peer.createDatabase();
       const testLayer = Database.layer(db);
@@ -355,15 +353,21 @@ describe('Feed', () => {
         const [queried] = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
 
         const queryResult = yield* Feed.query(feed, Filter.type(TestSchema.Person));
-        const called = new Event();
-        const calledOnce = called.waitForCount(1);
-        const unsubscribe = queryResult.subscribe(() => called.emit());
+        const updated = new Trigger();
+        const unsubscribe = queryResult.subscribe(
+          () => {
+            if (queryResult.results.some((person) => person.name === 'alice-updated')) {
+              updated.wake();
+            }
+          },
+          { fire: true },
+        );
 
-        yield* Feed.change(feed, queried, (item) => {
+        Obj.update(queried, (item) => {
           item.name = 'alice-updated';
         });
 
-        yield* Effect.promise(() => calledOnce);
+        yield* Effect.promise(() => updated.wait());
         expect(queryResult.results).toHaveLength(1);
         expect(queryResult.results[0].name).toBe('alice-updated');
         unsubscribe();
