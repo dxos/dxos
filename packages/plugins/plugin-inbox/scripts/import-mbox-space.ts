@@ -24,6 +24,7 @@ import { fileURLToPath } from 'node:url';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
+import { Config } from '@dxos/config';
 import { Feed, Tag, Type } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
@@ -85,7 +86,11 @@ const { in: input, out, name } = parseArgs(process.argv.slice(2));
 const raw = await readFile(input, 'utf8');
 
 console.log(`booting client…`);
-const testBuilder = new TestBuilder();
+// An explicit empty Config (no `dataRoot`/`sqlitePath`, no `runtime.services.signaling`, no edge url)
+// makes `createLocalClientServices` resolve to in-memory SQLite storage and an in-process
+// MemorySignalManager/MemoryTransportFactory swarm — nothing is written to disk and no real network
+// connection (signaling, WebRTC, edge) is ever attempted.
+const testBuilder = new TestBuilder(new Config());
 const client = new Client({ services: testBuilder.createLocalClientServices() });
 await client.initialize();
 try {
