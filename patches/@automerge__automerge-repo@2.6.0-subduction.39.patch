@@ -20,10 +20,10 @@ index 6d59fcf90a6a89235c5c7d1e563a485100e38885..e5432f1c3280418648a32db19424bbda
       * A Subduction peer (e.g. the sync server) advertised new heads for a
       * document. `storageId` is the peer's verifying-key peer id. Fires only for
 diff --git a/dist/Repo.js b/dist/Repo.js
-index d13f731f39ba31bdd46883887b62f7a9827d87c5..a9616e1e9cf2eb352f0dee27bbf38a30dc937d69 100644
+index fc9206088bf1c79e27f854abcbe748ea36ca72f4..ae3d41d4eab981d290c377bf5fa6ee0c41dcf479 100644
 --- a/dist/Repo.js
 +++ b/dist/Repo.js
-@@ -156,6 +156,18 @@ export class Repo extends EventEmitter {
+@@ -159,6 +159,18 @@ export class Repo extends EventEmitter {
              onConnectionChanged: connected => {
                  this.emit("subduction-connection", { connected });
              },
@@ -185,10 +185,10 @@ index 58e2506731d668f6c555f83f57ba29c3351b4723..9d782faf41382c2a20d2d386e821d63f
      isConnected(): boolean;
      generation(): number;
 diff --git a/dist/subduction/SubductionConnections.js b/dist/subduction/SubductionConnections.js
-index bb0aecdca57b83b798e60101a16ac22366a6d1a1..6af71251baa294166e168060fd9b7d03c6ac3b60 100644
+index e20460653181da69b68a092d13d17840859d38a9..2d016f0a6945afa49c01ab0b99b72bcd3e227469 100644
 --- a/dist/subduction/SubductionConnections.js
 +++ b/dist/subduction/SubductionConnections.js
-@@ -7,11 +7,13 @@ export class SubductionConnections {
+@@ -15,11 +15,13 @@ export class SubductionConnections {
      #log = debug("automerge-repo:subduction:connections");
      #subduction;
      #onChangeCallback = null;
@@ -203,7 +203,7 @@ index bb0aecdca57b83b798e60101a16ac22366a6d1a1..6af71251baa294166e168060fd9b7d03
      }
      // ── ConnectionManager interface ─────────────────────────────────────
      isConnecting() {
-@@ -48,10 +50,21 @@ export class SubductionConnections {
+@@ -57,11 +59,22 @@ export class SubductionConnections {
                      break;
                  }
                  const subduction = await this.#subduction;
@@ -211,6 +211,7 @@ index bb0aecdca57b83b798e60101a16ac22366a6d1a1..6af71251baa294166e168060fd9b7d03
 +                const subductionPeerId = await subduction.connectTransport(transport, serviceName);
                  this.#setConnectionState(url, "running");
                  this.#log(`connected to ${url}`);
+                 lifecycle(`connected to ${url}`);
                  backoff = RECONNECT_BASE_MS;
 +                // Notify after the connection state has flipped to "running"
 +                // so consumers reading repo state from inside the listener see
@@ -225,8 +226,8 @@ index bb0aecdca57b83b798e60101a16ac22366a6d1a1..6af71251baa294166e168060fd9b7d03
 +                }
                  await transport.closed();
                  this.#log(`disconnected from ${url}`);
-             }
-@@ -74,6 +87,7 @@ export class SubductionConnections {
+                 lifecycle(`disconnected from ${url}`, "warn");
+@@ -87,6 +100,7 @@ export class SubductionConnections {
      }
      shutdown() {
          this.#isShutdown = true;
@@ -291,7 +292,7 @@ index 783d9f61eae0684037d8fbbe0b676a924ba53c18..bf8e9f45ae02e6d5345e310dffb44ca4
      isConnected(): boolean;
      getSubduction(): Promise<Subduction>;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 9a5dfa03ce3d57babf77423519db6cd7b7b2f6d2..0aacd923fe07a3366fa7e5a5ff3f3951ada4b3bb 100644
+index 33db9f0538a41312079e7ccb31ca57f6cb975ce9..0843ce5697de4edc350a98fd310e1536a36e9f44 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -50,7 +50,7 @@ export class SubductionSource {
