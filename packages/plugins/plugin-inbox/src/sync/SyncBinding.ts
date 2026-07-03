@@ -23,8 +23,9 @@ export type State = {
   readonly db: Database.Database;
   /** Feed the mapped messages are appended to. */
   readonly feed: Feed.Feed;
-  /** Tag index provider-label tags are applied against (feed items are immutable). */
-  readonly tagIndex: TagIndex.TagIndex;
+  /** Tag index provider-label tags are applied against (feed items are immutable). Absent for
+   * providers that don't tag (e.g. calendar events). */
+  readonly tagIndex?: TagIndex.TagIndex;
   /** Foreign-key source stamped on synced messages (dedup key namespace). */
   readonly foreignKeySource: string;
   /** High-water key at run start; items at/below it are already committed. */
@@ -103,8 +104,10 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
         units.map((unit) => unit.message),
       );
       for (const unit of units) {
-        for (const uri of unit.tagUris) {
-          Tagging.set(unit.message, uri, { index: state.tagIndex });
+        if (state.tagIndex) {
+          for (const uri of unit.tagUris) {
+            Tagging.set(unit.message, uri, { index: state.tagIndex });
+          }
         }
         for (const object of unit.extractedObjects) {
           state.db.add(object);
