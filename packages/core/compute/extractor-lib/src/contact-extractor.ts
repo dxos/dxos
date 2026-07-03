@@ -25,7 +25,13 @@ export const matchMessage = (source: Obj.Any): MatchResult => {
  */
 export const extractContact = ({ db, source }: ExtractInput): Effect.Effect<ExtractResult, never> =>
   Effect.gen(function* () {
-    const contact = yield* buildContactFromActor((source as Message.Message).sender, db);
+    // `dispatch` may invoke an explicitly-selected extractor without `match()`, so guard a
+    // sender-less message rather than crashing in `buildContactFromActor`.
+    const sender = (source as Message.Message).sender;
+    if (!sender) {
+      return { created: [], updated: [], relations: [] };
+    }
+    const contact = yield* buildContactFromActor(sender, db);
     return { created: contact ? [contact] : [], updated: [], relations: [] };
   });
 

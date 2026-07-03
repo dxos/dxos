@@ -11,7 +11,7 @@ import { InboxOperation } from '../../types';
 export const TEMPLATE_ID = 'org.dxos.plugin.inbox.extractor.contact';
 
 /**
- * Operation handler — wraps the shared `extract` so the extractor is also a first-class
+ * Operation handler — wraps the shared `extractContact` so the extractor is also a first-class
  * registered operation. Does NOT write to the database; the dispatcher persists.
  */
 const handler: Operation.WithHandler<typeof InboxOperation.ExtractContactFromMessage> =

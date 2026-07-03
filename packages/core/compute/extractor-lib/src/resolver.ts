@@ -42,7 +42,11 @@ export const createOrganizationResolver = Effect.gen(function* () {
 export const createPersonResolver = Effect.gen(function* () {
   const contacts = yield* Database.query(Query.select(Filter.type(Person.Person))).run;
   const resolver: ResolverFunction<Person.Person> = ({ email }: HasEmail) => {
-    return Effect.succeed(contacts.find((contact) => contact.emails?.some(({ value }) => value === email)));
+    // Case-insensitive, to match the domain-based Organization resolver (which lower-cases).
+    const normalizedEmail = email.toLowerCase();
+    return Effect.succeed(
+      contacts.find((contact) => contact.emails?.some(({ value }) => value?.toLowerCase() === normalizedEmail)),
+    );
   };
 
   return resolver;
