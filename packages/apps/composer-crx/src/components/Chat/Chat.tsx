@@ -6,7 +6,6 @@ import { type UIMessage } from '@ai-sdk/react';
 import { useAgentChat } from 'agents/ai-react';
 import { useAgent } from 'agents/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import browser from 'webextension-polyfill';
 
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -16,7 +15,7 @@ import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps
 import { compactSlots } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { SPACE_ID_PROP, SPACE_MODE_PROP } from '../../config';
+import { SpaceId as SpaceIdConfig, SpaceMode } from '../../core/state';
 import { translationKey } from '../../translations';
 
 // Minimal registry: only the block-level `prompt` tag (user turns render as bubbles). No widgets,
@@ -166,9 +165,8 @@ export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
         }
 
         // Determine space mode.
-        const stored = await browser.storage.sync.get([SPACE_MODE_PROP, SPACE_ID_PROP]);
-        const spaceMode = stored?.[SPACE_MODE_PROP];
-        const spaceId = stored?.[SPACE_ID_PROP];
+        const spaceMode = await SpaceMode.get();
+        const spaceId = await SpaceIdConfig.get();
         if (spaceMode && spaceId) {
           if (SpaceId.isValid(spaceId) && (spaceId !== spaceIdRef.current || messages.length === 0)) {
             context.push(`Otherwise use the configured Space to retrieve information.`, `The Space ID is: ${spaceId}`);

@@ -2,9 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import browser from 'webextension-polyfill';
-
-export const COMPOSER_URLS_PROP = 'composer-urls';
+import { decodeStringArray, defineState } from '../state';
 
 /**
  * Default list of URL patterns (chrome `match` form) the extension will scan
@@ -18,18 +16,12 @@ export const DEFAULT_COMPOSER_URLS = [
   'https://labs.composer.space/*',
 ];
 
-export const getComposerUrls = async (): Promise<string[]> => {
-  const stored = await browser.storage.sync.get(COMPOSER_URLS_PROP);
-  const value = stored?.[COMPOSER_URLS_PROP];
-  if (Array.isArray(value) && value.every((v) => typeof v === 'string')) {
-    return value as string[];
-  }
-  return DEFAULT_COMPOSER_URLS;
-};
+/** Configured Composer URL patterns, synced across the user's browsers (defaults to {@link DEFAULT_COMPOSER_URLS}). */
+const ComposerUrlsState = defineState('sync', 'composer-urls', DEFAULT_COMPOSER_URLS, decodeStringArray);
 
-export const setComposerUrls = async (urls: string[]): Promise<void> => {
-  await browser.storage.sync.set({ [COMPOSER_URLS_PROP]: urls });
-};
+export const getComposerUrls = (): Promise<string[]> => ComposerUrlsState.get();
+
+export const setComposerUrls = (urls: string[]): Promise<void> => ComposerUrlsState.set(urls);
 
 /**
  * Test a candidate URL against a single chrome-style match pattern.
