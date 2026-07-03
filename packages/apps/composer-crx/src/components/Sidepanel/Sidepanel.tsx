@@ -13,7 +13,7 @@ import { mx } from '@dxos/ui-theme';
 import { THUMBNAIL_PROP, getConfig } from '../../config';
 import { focusOrOpenComposerTab } from '../../core';
 import { translationKey } from '../../translations';
-import { Chat, type ConnectionStatus } from '../Chat';
+import { Chat } from '../Chat';
 import { PageActions } from '../PageActions';
 import { Root } from '../Root';
 import { Thumbnail } from '../Thumbnail';
@@ -34,7 +34,6 @@ const SidepanelContent = () => {
   const { id: tabId, url: tabUrl } = useActiveTab();
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [chatError, setChatError] = useState<Error | undefined>(undefined);
-  const [chatStatus, setChatStatus] = useState<ConnectionStatus>('checking');
 
   // Load config.
   const [host, setHost] = useState<string | null>(null);
@@ -132,25 +131,17 @@ const SidepanelContent = () => {
               <div className='grid place-items-center p-4 text-sm text-description'>{t('chat.error.label')}</div>
             )}
           >
-            <Chat host={host} url={tabUrl ?? undefined} onError={setChatError} onConnectionChange={setChatStatus} />
+            <Chat host={host} url={tabUrl ?? undefined} onError={setChatError} />
           </ErrorBoundary>
         )}
       </Panel.Content>
 
-      {/* Status bar: chat-agent errors take precedence, then the AI-service network status probed on
-          open (checking/offline), otherwise the tab URL once connected. */}
+      {/* Status bar: chat-agent errors surface here (the connection state is shown by the chat input's
+          status indicator), otherwise the tab URL. */}
       <Panel.Statusbar classNames='flex items-center px-2'>
         {chatError ? (
           <span className='text-xs text-error-text truncate' title={chatError.message}>
             {chatError.message}
-          </span>
-        ) : showChat && chatStatus === 'checking' ? (
-          <span className='text-xs text-description truncate' title={host ?? undefined}>
-            {t('chat.checking.label')}
-          </span>
-        ) : showChat && chatStatus === 'offline' ? (
-          <span className='text-xs text-warning-text truncate' title={host ?? undefined}>
-            {t('chat.offline.label')}
           </span>
         ) : (
           <span className='text-xs text-description truncate'>{tabUrl}</span>

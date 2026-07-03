@@ -11,7 +11,7 @@ import browser from 'webextension-polyfill';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
+import { ChatEditor, type ChatEditorController, type ChatEditorProps, ChatStatusIndicator } from '@dxos/react-ui-chat';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-markdown';
 import { compactSlots } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -58,14 +58,12 @@ export type ChatProps = ThemedClassName<{
   url?: string;
   /** Surfaces the chat-agent error so a host (the side panel) can show it in its status bar. */
   onError?: (error: Error | undefined) => void;
-  /** Surfaces the agent socket's network status so a host can display it (checking/online/offline). */
-  onConnectionChange?: (status: ConnectionStatus) => void;
 }>;
 
 /**
  * Simplified chat: a streaming markdown thread over an editor input, backed by the chat agent.
  */
-export const Chat = ({ classNames, host, url, onError, onConnectionChange }: ChatProps) => {
+export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
   const { t } = useTranslation(translationKey);
   const editorRef = useRef<ChatEditorController>(null);
   const spaceIdRef = useRef<SpaceId | null>(null);
@@ -105,12 +103,12 @@ export const Chat = ({ classNames, host, url, onError, onConnectionChange }: Cha
     return () => onError?.(undefined);
   }, [error, onError]);
 
-  // Lift the network status so the host can display it (and reset to `checking` on unmount so a stale
-  // status does not linger after Chat is hidden, e.g. a thumbnail).
-  useEffect(() => {
-    onConnectionChange?.(status);
-    return () => onConnectionChange?.('checking');
-  }, [status, onConnectionChange]);
+  // Map the network status to the indicator: a chat error takes precedence, otherwise an unreachable
+  // host reads as an error (with a tooltip), a pending connection spins, and a live socket idles.
+  const statusError = useMemo<Error | undefined>(
+    () => error ?? (status === 'offline' ? new Error(t('chat.offline.label')) : undefined),
+    [error, status, t],
+  );
 
   // Render the thread to a single markdown document (see `renderThread`) and sync it into the
   // stream. The AI streaming contract makes the rendered text grow monotonically, so a prefix
@@ -216,15 +214,17 @@ export const Chat = ({ classNames, host, url, onError, onConnectionChange }: Cha
       </div>
 
       <div className='flex flex-col'>
-        <div className='flex relative items-center p-1'>
+        <div className='flex relative items-center gap-1 p-1'>
+          <ChatStatusIndicator classNames='shrink-0 p-1' processing={status === 'checking'} error={statusError} />
           <ChatEditor
             ref={editorRef}
             autoFocus
             lineWrapping
-            classNames='w-full text-lg'
+            classNames='grow min-w-0 text-lg'
             placeholder={t('chat.placeholder')}
             onSubmit={handleSubmit}
           />
+          {/* TODO(burdon): Create new session. */}
           {filteredMessages.length > 0 && (
             <div className='flex items-center absolute right-1.5 top-0 bottom-0 z-10'>
               <IconButton
