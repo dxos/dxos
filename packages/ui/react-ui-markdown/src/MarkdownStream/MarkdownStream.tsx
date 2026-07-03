@@ -26,8 +26,8 @@ import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, us
 import { type UseTextEditor, useTextEditor } from '@dxos/react-ui-editor';
 import {
   type AutoScrollProps,
-  ThemeExtensionsOptions,
   PROMPT_ELEMENT,
+  ThemeExtensionsOptions,
   type XmlTagsOptions,
   type XmlWidgetState,
   type XmlWidgetStateManager,
