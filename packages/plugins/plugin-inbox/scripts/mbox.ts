@@ -13,10 +13,9 @@
  * `mailparser` is a devDependency: this module is only reached by the import script, never bundled.
  */
 
+import { type AddressObject, simpleParser } from 'mailparser';
 import { createReadStream } from 'node:fs';
 import { createInterface } from 'node:readline';
-
-import { type AddressObject, simpleParser } from 'mailparser';
 
 import { Obj } from '@dxos/echo';
 import { normalizeText } from '@dxos/markdown';
