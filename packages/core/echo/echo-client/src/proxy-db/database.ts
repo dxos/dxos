@@ -518,6 +518,14 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     );
   }
 
+  async changeFeedItem<T extends Obj.Unknown>(
+    feed: Feed.Feed,
+    item: T,
+    callback: (item: Obj.Mutable<T>) => void,
+  ): Promise<void> {
+    await this.#getFeedHandle(feed).change(item, callback);
+  }
+
   async removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void> {
     await this.#getFeedHandle(feed).delete(ids);
   }

@@ -91,10 +91,13 @@ export class FeedHandle {
         this._objectCache.set(obj.id, obj);
       }
 
-      changed = objectSetChanged(this._objects, decodedObjects);
+      // Collapse append-only edits: a changed item appears as multiple blocks with the same id;
+      // keep the latest so queries observe the current value.
+      const currentObjects = dedupeByIdKeepLast(decodedObjects);
+      changed = objectSetChanged(this._objects, currentObjects);
 
       TRACE_FEED_LOAD && log.info('feed refresh', { changed, objects: objects?.length ?? 0, refreshId: thisRefreshId });
-      this._objects = decodedObjects;
+      this._objects = currentObjects;
     } catch (err) {
       // TODO(dmaretskyi): This task occasionally fails with "The database connection is not open" error in tests -- some issue with teardown ordering.
       //                   We should find the root cause and fix it instead of muting the error.
@@ -179,8 +182,9 @@ export class FeedHandle {
       }
     }
 
-    // Optimistic update.
-    this._objects = [...this._objects, ...items];
+    // Optimistic update. Feeds are append-only, so a changed item is stored as a new block with the
+    // same id; collapse by id (keeping the latest) so the local view mirrors the persisted queue.
+    this._objects = dedupeByIdKeepLast([...this._objects, ...items]);
     for (const item of items) {
       this._objectCache.set(item.id, item);
     }
@@ -202,6 +206,15 @@ export class FeedHandle {
       this._error = err as Error;
       this.updated.emit();
     }
+  }
+
+  /**
+   * Applies a mutation to a feed item and persists it as a new entry with the same id.
+   * Feeds are append-only; changing an item appends a new block rather than editing in place.
+   */
+  async change<T extends Obj.Unknown>(item: T, callback: (item: Obj.Mutable<T>) => void): Promise<void> {
+    Obj.update(item, callback);
+    await this.append([item]);
   }
 
   async delete(ids: string[]): Promise<void> {
@@ -272,7 +285,7 @@ export class FeedHandle {
         queueIds: [this._feedId],
       },
     });
-    return (objects ?? []).flatMap((encoded) => {
+    const parsed = (objects ?? []).flatMap((encoded) => {
       try {
         return [JSON.parse(encoded) as ObjectJSON];
       } catch (err) {
@@ -280,6 +293,9 @@ export class FeedHandle {
         return [];
       }
     });
+    // Collapse append-only edits: a changed item is stored as a new block with the same id, so keep
+    // the latest block per id to expose the current value.
+    return dedupeByIdKeepLast(parsed);
   }
 
   async hydrateObject(obj: ObjectJSON): Promise<Entity.Unknown> {
@@ -371,6 +387,20 @@ export class FeedHandle {
     await this._refreshTask.join();
   }
 }
+
+/**
+ * Collapses entries by id, keeping the last occurrence for each id.
+ * Feeds are append-only logs, so a changed item is persisted as a new entry with the same id as the
+ * original; the latest entry is the current value. Insertion order of each id's first appearance is
+ * preserved.
+ */
+const dedupeByIdKeepLast = <T extends { id: string }>(items: T[]): T[] => {
+  const byId = new Map<string, T>();
+  for (const item of items) {
+    byId.set(item.id, item);
+  }
+  return Array.from(byId.values());
+};
 
 const objectSetChanged = (before: Entity.Unknown[], after: Entity.Unknown[]) => {
   if (before.length !== after.length) {

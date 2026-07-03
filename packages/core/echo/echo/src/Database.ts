@@ -180,6 +180,19 @@ export interface Database extends Queryable {
   deleteFromFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void>;
 
   /**
+   * Applies a mutation to a feed item and persists the result.
+   *
+   * Feeds are append-only logs, so a change is stored as a new entry with the same id rather than
+   * an in-place edit. Reads collapse entries by id (keeping the latest), so queries observe the
+   * updated value.
+   */
+  changeFeedItem<T extends Obj.Unknown>(
+    feed: Feed.Feed,
+    item: T,
+    callback: (item: Obj.Mutable<T>) => void,
+  ): Promise<void>;
+
+  /**
    * Wait for all pending changes to be saved to disk.
    * Optionaly waits for changes to be propagated to indexes and event handlers.
    */
@@ -355,6 +368,19 @@ export const deleteFromFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Eff
   Service.pipe(
     Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.deleteFromFeed(feed, entities))),
   ).pipe(Effect.withSpan('Database.deleteFromFeed'));
+
+/**
+ * Applies a mutation to a feed item and persists the result as a new entry with the same id.
+ * @see {@link Database.changeFeedItem}
+ */
+export const changeFeedItem = <T extends Obj.Unknown>(
+  feed: Feed.Feed,
+  item: T,
+  callback: (item: Obj.Mutable<T>) => void,
+): Effect.Effect<void, never, Service> =>
+  Service.pipe(
+    Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.changeFeedItem(feed, item, callback))),
+  ).pipe(Effect.withSpan('Database.changeFeedItem'));
 
 /**
  * Flushes pending changes to disk.
