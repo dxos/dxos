@@ -40,6 +40,51 @@ describe('IrcConnection', () => {
     expect(mock.sent).toContain('CAP END');
   });
 
+  test('requests echo-message alongside sasl when the server advertises both', async ({ expect }) => {
+    const mock = makeMockTransport();
+    const connection = makeIrcConnection({
+      transport: mock.transport,
+      nick: 'alice',
+      credentialProvider: { respond: () => undefined as never },
+      runResponse: async () => 'BASE64RESPONSE',
+    });
+
+    const connected = connection.connect();
+    mock.open();
+
+    mock.emit(':srv CAP * LS :sasl echo-message');
+    mock.emit(':srv CAP alice ACK :sasl echo-message');
+    mock.emit('AUTHENTICATE ' + btoa(JSON.stringify({ session_id: 's', nonce: 'n', timestamp: 1 })));
+    mock.emit(':srv 903 alice :SASL authentication successful');
+    mock.emit(':srv 001 alice :Welcome');
+
+    await connected;
+
+    // Order-insensitive: the handshake must request the intersection of what we
+    // support ({sasl, echo-message}) and what the server advertised.
+    const capReq = mock.sent.find((line) => line.startsWith('CAP REQ '));
+    expect(capReq).toBeDefined();
+    const requestedCaps = capReq!.slice('CAP REQ :'.length).split(' ');
+    expect(requestedCaps.sort()).toEqual(['echo-message', 'sasl']);
+    expect(mock.sent).toContain('CAP END');
+  });
+
+  test('requests only sasl when the server does not advertise echo-message', async ({ expect }) => {
+    const mock = makeMockTransport();
+    const connection = makeIrcConnection({
+      transport: mock.transport,
+      nick: 'alice',
+      credentialProvider: { respond: () => undefined as never },
+      runResponse: async () => 'BASE64RESPONSE',
+    });
+
+    void connection.connect();
+    mock.open();
+    mock.emit(':srv CAP * LS :sasl');
+
+    expect(mock.sent).toContain('CAP REQ :sasl');
+  });
+
   test('dispatches inbound PRIVMSG to channel subscribers', async ({ expect }) => {
     const mock = makeMockTransport();
     const connection = makeIrcConnection({ transport: mock.transport, nick: 'alice', runResponse: async () => '' });
