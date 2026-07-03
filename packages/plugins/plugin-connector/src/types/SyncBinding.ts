@@ -12,6 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { Database, DXN, type Feed, Filter, Obj, Relation, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
+import { Stage } from '@dxos/pipeline';
 import { Tagging, type TagIndex } from '@dxos/schema';
 
 import * as Connection from './Connection';
@@ -175,6 +176,71 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
       }
       state.stats.newMessages += units.length;
     });
+  });
+
+/**
+ * Reusable dedup stage: drops items already reflected by the cursor — provider key below the run's
+ * high-water cursor (`key < cursorKey`) or foreign id already committed (`dedupSet`). Reads the run
+ * state from {@link Service}; provider-agnostic via the `getForeignId` / `getKey` accessors.
+ */
+export const dedupStage = <In>(
+  id: string,
+  getForeignId: (item: In) => string,
+  getKey: (item: In) => number,
+): Stage.Stage<In, In, never, Service> =>
+  Stage.map(id, (item: In) =>
+    Effect.gen(function* () {
+      const { cursorKey, dedupSet } = yield* Service;
+      if (getKey(item) < cursorKey || dedupSet.has(getForeignId(item))) {
+        return undefined;
+      }
+      return item;
+    }),
+  );
+
+export type RunOptions = {
+  readonly binding: SyncBinding;
+  readonly feed: Feed.Feed;
+  readonly tagIndex?: TagIndex.TagIndex;
+  readonly foreignKeySource: string;
+  /** High-water key at run start (parsed from the binding's cursor by the caller). */
+  readonly cursorKey: number;
+  /** Serializes the advanced cursor key for storage; defaults to the decimal high-water key. */
+  readonly formatCursor?: (key: number) => string;
+};
+
+/**
+ * Runs a sync pipeline against a binding, internalizing the binding bookkeeping: provides the
+ * {@link Service} layer, advances the cursor after each committed page, and on success stamps
+ * `lastSyncAt` / clears `lastError`. Returns the run tally.
+ */
+export const run = <E, R>(
+  options: RunOptions,
+  pipeline: Effect.Effect<void, E, R>,
+): Effect.Effect<{ newMessages: number }, E, Database.Service | Exclude<R, Service>> =>
+  Effect.gen(function* () {
+    const { binding, formatCursor = (key: number) => String(key) } = options;
+    const stats: Stats = { newMessages: 0 };
+    yield* pipeline.pipe(
+      Effect.provide(
+        layer({
+          feed: options.feed,
+          tagIndex: options.tagIndex,
+          foreignKeySource: options.foreignKeySource,
+          cursorKey: options.cursorKey,
+          persistCursorKey: (key) =>
+            Relation.update(binding, (binding) => {
+              binding.cursor = formatCursor(key);
+            }),
+          stats,
+        }),
+      ),
+    );
+    Relation.update(binding, (binding) => {
+      binding.lastSyncAt = new Date().toISOString();
+      binding.lastError = undefined;
+    });
+    return { newMessages: stats.newMessages };
   });
 
 /** Seeds the dedup set of already-committed foreign ids from the feed (see {@link layer} TODO). */

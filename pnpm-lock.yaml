@@ -9825,6 +9825,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/pipeline':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client

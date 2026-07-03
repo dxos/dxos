@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 
-import { Operation, Trace } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { type Resolver, resolve } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
@@ -24,9 +24,9 @@ import { type DecodedEmail, decodeBody, mapToMessage } from './mapper';
 import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { JmapCredentials } from '../../../services';
-import { type Mapped, extractContactsStage, htmlToMarkdownStage, makeDedupStage } from '../../../sync';
+import { EmailStage } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
-import { onArrivalExtractorsStage, readBindingOptions } from '../../../util';
+import { readBindingOptions } from '../../../util';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
@@ -72,6 +72,8 @@ export default InboxOperation.JmapSync.pipe(
         const feed = yield* Database.load(mailbox.feed);
         const tagIndex = yield* Database.load(mailbox.tags);
 
+        // TODO(wittjosiah): Migrate this folder→Tag sync onto a pipeline too (source: folders; sink:
+        //   find-or-create Tag), rather than the imperative loop below.
         // Build a folder-id → tag-uri map — mirrors Gmail's `syncLabels`.
         const { list: folders } = yield* JmapMail.mailboxGet(target);
         const folderTagMap = new Map<string, string>();
@@ -82,44 +84,27 @@ export default InboxOperation.JmapSync.pipe(
 
         // The cursor is the high-water `receivedAt` (epoch-ms) of the last committed email.
         const cursorKey = Cursor.parseKey(binding.cursor);
-        const stats: SyncBinding.Stats = { newMessages: 0 };
 
-        yield* jmapSource(target, folders, cursorKey, readBindingOptions(binding)).pipe(
-          makeDedupStage<JmapMail.Email>(
-            'dedup',
-            (email) => email.id,
-            (email) => new Date(email.receivedAt).getTime(),
-          ),
-          decodeBodyStage,
-          htmlToMarkdownStage<DecodedEmail>(),
-          makeMapToMessageStage(folderTagMap),
-          onArrivalExtractorsStage<Mapped>(mailbox),
-          extractContactsStage,
-          Stream.grouped(COMMIT_PAGE_SIZE),
-          Pipeline.run({ sink: SyncBinding.commit }),
-          Effect.provide(
-            SyncBinding.layer({
-              feed,
-              tagIndex,
-              foreignKeySource: JMAP_MESSAGE_SOURCE,
-              cursorKey,
-              persistCursorKey: (key) =>
-                Relation.update(binding, (binding) => {
-                  binding.cursor = Cursor.formatKey(key);
-                }),
-              stats,
-            }),
+        const result = yield* SyncBinding.run(
+          { binding, feed, tagIndex, foreignKeySource: JMAP_MESSAGE_SOURCE, cursorKey },
+          jmapSource(target, folders, cursorKey, readBindingOptions(binding)).pipe(
+            SyncBinding.dedupStage<JmapMail.Email>(
+              'dedup',
+              (email) => email.id,
+              (email) => new Date(email.receivedAt).getTime(),
+            ),
+            decodeBodyStage,
+            EmailStage.htmlToMarkdown<DecodedEmail>(),
+            makeMapToMessageStage(folderTagMap),
+            EmailStage.onArrivalExtractors<EmailStage.Mapped>(mailbox),
+            EmailStage.extractContacts,
+            Stream.grouped(COMMIT_PAGE_SIZE),
+            Pipeline.run({ sink: SyncBinding.commit }),
           ),
         );
 
-        Relation.update(binding, (binding) => {
-          binding.lastSyncAt = new Date().toISOString();
-          binding.lastError = undefined;
-        });
-
-        yield* Trace.emitStatus(`Synced ${stats.newMessages} messages`);
-        log('jmap sync complete', { newMessages: stats.newMessages });
-        return { newMessages: stats.newMessages };
+        log('jmap sync complete', { newMessages: result.newMessages });
+        return result;
       }).pipe(
         Effect.provide(
           Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, JmapCredentials.fromConnection(connectionRef)),
@@ -138,7 +123,9 @@ const decodeBodyStage: Stage.Stage<JmapMail.Email, DecodedEmail, never, never> =
 
 /** JMAP-specific mapping stage: resolve the sender contact (via `Resolver`), build the ECHO message,
  * and resolve folder ids to tag URIs (the folder map is JMAP-specific, closed over here). */
-const makeMapToMessageStage = (folderTagMap: Map<string, string>): Stage.Stage<DecodedEmail, Mapped, never, Resolver> =>
+const makeMapToMessageStage = (
+  folderTagMap: Map<string, string>,
+): Stage.Stage<DecodedEmail, EmailStage.Mapped, never, Resolver> =>
   Stage.map('map-to-message', (decoded: DecodedEmail) =>
     Effect.gen(function* () {
       const fromAddress = decoded.raw.from?.[0];

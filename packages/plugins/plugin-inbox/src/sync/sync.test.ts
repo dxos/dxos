@@ -16,7 +16,7 @@ import { SyncBinding } from '@dxos/plugin-connector';
 import { TagIndex } from '@dxos/schema';
 import { Cursor, Message, Organization, Person } from '@dxos/types';
 
-import { type Mapped, extractContactsStage, htmlToMarkdownStage, makeDedupStage } from './index';
+import { EmailStage } from './index';
 
 const TEST_SOURCE = 'test.mail';
 
@@ -37,7 +37,7 @@ describe('sync pipeline stages', () => {
     const { sink, items } = captureSink<{ body: string }>();
     await EffectEx.runPromise(
       Stream.fromIterable([{ body: '<p>Hello <strong>World</strong></p>' }]).pipe(
-        htmlToMarkdownStage(),
+        EmailStage.htmlToMarkdown(),
         Pipeline.run({ sink }),
       ),
     );
@@ -71,7 +71,7 @@ describe('sync pipeline harness', () => {
   };
 
   // Provider-agnostic mapping stage: raw → mapped ECHO message (no contact resolution needed here).
-  const mapStage: Stage.Stage<Raw, Mapped, never, never> = Stage.map('map', (raw: Raw) =>
+  const mapStage: Stage.Stage<Raw, EmailStage.Mapped, never, never> = Stage.map('map', (raw: Raw) =>
     Effect.sync(() => ({
       message: Obj.make(Message.Message, {
         [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
@@ -101,13 +101,13 @@ describe('sync pipeline harness', () => {
     },
   ) => {
     const mapped = Stream.fromIterable(RAWS).pipe(
-      makeDedupStage<Raw>(
+      SyncBinding.dedupStage<Raw>(
         'dedup',
         (raw) => raw.id,
         (raw) => raw.key,
       ),
       mapStage,
-      extractContactsStage,
+      EmailStage.extractContacts,
     );
     const withFault = options.fault ? mapped.pipe(options.fault) : mapped;
     return withFault.pipe(

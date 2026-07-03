@@ -20,7 +20,6 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Stage } from '@dxos/pipeline';
 import { type SyncBinding } from '@dxos/plugin-connector';
 import { Message } from '@dxos/types';
 
@@ -41,17 +40,6 @@ export const readBindingOptions = (binding: SyncBinding.SyncBinding) => {
     filter: typeof raw.filter === 'string' ? raw.filter : undefined,
   };
 };
-
-/**
- * Optional pipeline stage that runs the mailbox's configured on-arrival extractors (AI and others)
- * for each item's message, passing the item through unchanged. Self-gating: a no-op when the mailbox
- * has no extractors enabled. Sender→contact extraction is handled unconditionally by
- * `extractContactsStage`; this stage covers the remaining, config-gated extractors.
- *
- * TODO(wittjosiah): Factor these extractors out into their own downstream pipeline.
- */
-export const onArrivalExtractorsStage = <T extends { readonly message: Message.Message }>(mailbox: Mailbox.Mailbox) =>
-  Stage.map('on-arrival-extractors', (item: T) => runOnArrivalExtractors(mailbox, [item.message]).pipe(Effect.as(item)));
 
 /**
  * Runs configured auto-on-arrival extractors for a batch of just-synced messages. Selects the
