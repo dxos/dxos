@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Trigger } from '@dxos/compute';
 import { type Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { IconButton, Input, ThemedClassName, ToggleGroup, ToggleGroupItem, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { ParentLabelAnnotation } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
