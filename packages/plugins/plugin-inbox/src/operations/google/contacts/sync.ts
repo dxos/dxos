@@ -3,8 +3,10 @@
 //
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -38,20 +40,20 @@ const fetchGroupMembers = Effect.fn(function* (groupResourceName: string) {
   return group.memberResourceNames ?? [];
 });
 
-/**
- * Fetch all contacts via paginated `people.connections.list`.
- * Returns a Map keyed by resourceName for O(1) group-membership lookups.
- */
-const fetchAllConnections = Effect.fn(function* () {
-  const people: GooglePeople.Person[] = [];
-  let pageToken: string | undefined;
-  do {
-    const response = yield* GooglePeople.listConnections({ pageToken });
-    people.push(...(response.connections ?? []));
-    pageToken = response.nextPageToken;
-  } while (pageToken);
-  return new Map(people.map((p) => [p.resourceName, p]));
-});
+/** Streams all contacts via paginated `people.connections.list` (one page at a time). */
+const connectionsSource = () =>
+  Stream.unfoldChunkEffect({ pageToken: Option.none<string>(), done: false }, (state) =>
+    Effect.gen(function* () {
+      if (state.done) {
+        return Option.none();
+      }
+      const response = yield* GooglePeople.listConnections({ pageToken: Option.getOrUndefined(state.pageToken) });
+      return Option.some([
+        Chunk.fromIterable(response.connections ?? []),
+        { pageToken: Option.fromNullable(response.nextPageToken), done: !response.nextPageToken },
+      ] as const);
+    }),
+  );
 
 /** Pipeline stage: map a Google contact to DXOS `Person` props (pure). */
 const mapPersonStage: Stage.Stage<GooglePeople.Person, MappedPerson, never, never> = Stage.map(
@@ -128,18 +130,19 @@ export default InboxOperation.GoogleContactsSync.pipe(
         }
         log('syncing google contact group', { groupResourceName });
 
-        // Fetch all connections once, then resolve the group's members from that map.
-        const connectionsByResourceName = yield* fetchAllConnections();
-        const memberNames = yield* fetchGroupMembers(groupResourceName);
-        const people = memberNames
-          .map((name) => connectionsByResourceName.get(name))
-          .filter((person): person is GooglePeople.Person => person !== undefined);
-        log('fetched group members', { groupResourceName, members: memberNames.length, matched: people.length });
+        // The group membership is the set of resource names to keep; the source streams all
+        // connections (paginated) and we filter to the group.
+        const memberNames = new Set(yield* fetchGroupMembers(groupResourceName));
+        if (memberNames.size === 0) {
+          log('contact group is empty', { groupResourceName });
+        }
 
-        // Pipeline: contacts → map to Person props → upsert into the space. Unlike mail/calendar there
-        // is no feed; the upsert sink is the terminal write, idempotent via the foreign-key lookup.
+        // Pipeline: stream connections → filter to group members → map to Person props → upsert into
+        // the space. Unlike mail/calendar there is no feed; the upsert sink is the terminal write,
+        // idempotent via the foreign-key lookup.
         const stats = { upserted: 0 };
-        yield* Stream.fromIterable(people).pipe(
+        yield* connectionsSource().pipe(
+          Stream.filter((person) => memberNames.has(person.resourceName)),
           mapPersonStage,
           Pipeline.run({
             sink: (mapped) =>
@@ -159,7 +162,7 @@ export default InboxOperation.GoogleContactsSync.pipe(
           binding.lastError = undefined;
         });
 
-        log('contact group sync complete', { groupResourceName, upserted: stats.upserted, total: people.length });
+        log('contact group sync complete', { groupResourceName, members: memberNames.size, upserted: stats.upserted });
         return { upserted: stats.upserted };
       }).pipe(
         Effect.provide(
