@@ -3,7 +3,6 @@
 //
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
@@ -14,10 +13,11 @@ import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
+import { Pipeline, Stage } from '@dxos/pipeline';
 // Connection is referenced in the inferred type of this module's default export via
 // InboxOperation.GoogleContactsSync's schema; the import lets TypeScript name it in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { type Connection, SyncBinding } from '@dxos/plugin-connector';
+import { type Connection, SyncBinding as ConnectorSyncBinding } from '@dxos/plugin-connector';
 import { Person } from '@dxos/types';
 
 import { GooglePeople } from '../../../apis';
@@ -25,6 +25,9 @@ import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
 import { GoogleCredentials } from '../../../services';
 import { InboxOperation } from '../../../types';
 import { mapGooglePerson } from './mapper';
+
+/** A contact mapped to DXOS `Person` props, tagged with the Google resource name for upsert. */
+type MappedPerson = { readonly resourceName: string; readonly props: ReturnType<typeof mapGooglePerson> };
 
 /**
  * Fetch all members of a contact group by resource name.
@@ -50,21 +53,27 @@ const fetchAllConnections = Effect.fn(function* () {
   return new Map(people.map((p) => [p.resourceName, p]));
 });
 
+/** Pipeline stage: map a Google contact to DXOS `Person` props (pure). */
+const mapPersonStage: Stage.Stage<GooglePeople.Person, MappedPerson, never, never> = Stage.map(
+  'map-person',
+  (remote: GooglePeople.Person) => Effect.succeed({ resourceName: remote.resourceName, props: mapGooglePerson(remote) }),
+);
+
 /**
- * Find an existing Person keyed by Google resource name, or create a new one.
- * Returns `true` when a new Person was created.
+ * Commit sink: find an existing Person keyed by Google resource name and update it, or create a new
+ * one — the single non-idempotent write, deferred out of the pure map stage. Idempotent across runs
+ * via the foreign-key lookup. Returns `true` when a new Person was created.
  */
-const upsertPerson = (remote: GooglePeople.Person) =>
+const upsertPerson = ({ resourceName, props }: MappedPerson) =>
   Effect.gen(function* () {
-    const props = mapGooglePerson(remote);
     const existing = yield* Database.query(
-      Query.select(Filter.foreignKeys(Person.Person, [{ source: GOOGLE_INTEGRATION_SOURCE, id: remote.resourceName }])),
+      Query.select(Filter.foreignKeys(Person.Person, [{ source: GOOGLE_INTEGRATION_SOURCE, id: resourceName }])),
     ).run;
 
     if (existing.length > 0) {
       if (existing.length > 1) {
         log.warn('multiple Person records share the same Google resource name', {
-          resourceName: remote.resourceName,
+          resourceName,
           count: existing.length,
         });
       }
@@ -101,7 +110,7 @@ const upsertPerson = (remote: GooglePeople.Person) =>
   });
 
 const syncOneGroup = (
-  binding: SyncBinding.SyncBinding,
+  binding: ConnectorSyncBinding.SyncBinding,
   groupResourceName: string,
   connectionsByResourceName: ReadonlyMap<string, GooglePeople.Person>,
 ) =>
@@ -120,21 +129,21 @@ const syncOneGroup = (
       .filter((person): person is GooglePeople.Person => person !== undefined);
     log('fetched group members', { groupResourceName, members: memberNames.length, matched: people.length });
 
-    const upserted = yield* Stream.fromIterable(people).pipe(
-      Stream.grouped(10),
-      Stream.mapEffect((batch) =>
-        Effect.gen(function* () {
-          let count = 0;
-          for (const person of Chunk.toArray(batch)) {
-            if (yield* upsertPerson(person)) {
-              count++;
+    // Pipeline: contacts → map to Person props → upsert into the space. Unlike mail/calendar there
+    // is no feed; the upsert sink is the terminal write, idempotent via the foreign-key lookup.
+    const stats = { upserted: 0 };
+    yield* Stream.fromIterable(people).pipe(
+      mapPersonStage,
+      Pipeline.run({
+        sink: (mapped) =>
+          Effect.gen(function* () {
+            if (yield* upsertPerson(mapped)) {
+              stats.upserted += 1;
             }
-          }
-          return count;
-        }),
-      ),
-      Stream.runFold(0, (acc, batchCount) => acc + batchCount),
+          }),
+      }),
     );
+    const upserted = stats.upserted;
 
     // Persist last sync timestamp on the binding.
     Relation.update(binding, (binding) => {
