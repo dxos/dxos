@@ -58,6 +58,7 @@ type MosaicRootProps = PropsWithChildren<{
   debug?: boolean;
 }>;
 
+// TODO(burdon): Make headless.
 const MosaicRoot = forwardRef<HTMLDivElement, MosaicRootProps>(({ children, asChild, debug }, forwardedRef) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
@@ -269,6 +270,7 @@ const MosaicRoot = forwardRef<HTMLDivElement, MosaicRootProps>(({ children, asCh
       dragging={dragging}
     >
       <Comp
+        // TODO(burdon): Make headless (move group to content).
         className='contents group'
         {...{
           [`data-${MOSAIC_ROOT_DEBUG_ATTR}`]: debug,
