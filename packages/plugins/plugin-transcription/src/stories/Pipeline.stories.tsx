@@ -31,6 +31,17 @@ import { Filter, Query } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
+import {
+  type CommitFn,
+  PipelineRuntime,
+  type Stage,
+  type TelemetryEvent,
+  TranscriptEvent,
+  makeCorrectionStage,
+  makeDatabaseLookup,
+  makeExtractionStage,
+  makeSummarizationStage,
+} from '@dxos/pipeline-transcription';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
@@ -43,17 +54,6 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { PipelineStatus } from '@dxos/react-ui-transcription';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import {
-  type CommitFn,
-  PipelineRuntime,
-  type Stage,
-  type TelemetryEvent,
-  TranscriptEvent,
-  makeCorrectionStage,
-  makeDatabaseLookup,
-  makeExtractionStage,
-  makeSummarizationStage,
-} from '@dxos/pipeline-transcription';
 import { type ContentBlock, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 import { appendPendingText, cancelPendingText, setPendingAnchor, setPendingInterim } from '@dxos/ui-editor';
