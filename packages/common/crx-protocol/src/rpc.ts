@@ -6,19 +6,23 @@ import * as Either from 'effect/Either';
 import * as Schema from 'effect/Schema';
 
 import { type Channel } from './channel';
-import { Message } from './message';
+import * as Message from './Message';
 
-const decode = Schema.decodeUnknownEither(Message);
+const decode = Schema.decodeUnknownEither(Message.Union);
 
 /** Decode an inbound value to a `Message`, or `undefined` if it is not one. */
-export const decodeMessage = (value: unknown): Message | undefined => {
+export const decodeMessage = (value: unknown): Message.Type | undefined => {
   const result = decode(value);
   return Either.isRight(result) ? result.right : undefined;
 };
 
 /** Send a request and resolve the reply correlated by `id`; reject on timeout. */
-export const request = (channel: Channel, message: Message, opts?: { timeoutMs?: number }): Promise<Message> =>
-  new Promise<Message>((resolve, reject) => {
+export const request = (
+  channel: Channel,
+  message: Message.Type,
+  opts?: { timeoutMs?: number },
+): Promise<Message.Type> =>
+  new Promise<Message.Type>((resolve, reject) => {
     const timeout = setTimeout(() => {
       off();
       reject(new Error(`crx-protocol request timed out: ${message._tag} ${message.id}`));
@@ -37,7 +41,7 @@ export const request = (channel: Channel, message: Message, opts?: { timeoutMs?:
 /** Serve inbound requests: decode, dispatch to `handler`, send any reply it returns. */
 export const serve = (
   channel: Channel,
-  handler: (message: Message) => Promise<Message | undefined> | Message | undefined,
+  handler: (message: Message.Type) => Promise<Message.Type | undefined> | Message.Type | undefined,
 ): (() => void) =>
   channel.subscribe((value) => {
     const message = decodeMessage(value);
