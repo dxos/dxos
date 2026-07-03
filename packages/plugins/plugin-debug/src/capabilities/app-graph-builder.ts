@@ -406,7 +406,7 @@ export default Capability.makeModule(
               id: 'devtoolsOverview',
               label: ['devtools-overview.label', { ns: meta.profile.key }],
               icon: 'ph--equalizer--regular',
-              data: 'devtools' as const,
+              data: 'devtoolsOverview' as const,
               position: Position.last,
             }),
           ]),
