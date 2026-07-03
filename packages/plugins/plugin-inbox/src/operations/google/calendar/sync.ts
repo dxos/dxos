@@ -53,68 +53,6 @@ const clearLegacyLastSyncedUpdate = (calendar: Calendar.Calendar) => {
   });
 };
 
-const syncOneCalendar = (
-  binding: SyncBinding.SyncBinding,
-  calendar: Calendar.Calendar,
-  defaults: { syncBackDays: number; syncForwardDays: number; pageSize: number; googleCalendarId: string },
-) =>
-  Effect.gen(function* () {
-    const feed = yield* Database.load(calendar.feed);
-    const fk = Obj.getMeta(calendar).keys?.find((k) => k.source === GOOGLE_INTEGRATION_SOURCE);
-    const googleCalendarId = fk?.id ?? binding.remoteId ?? defaults.googleCalendarId;
-    const optRecord = binding.options ?? {};
-    const syncBackDays = typeof optRecord.syncBackDays === 'number' ? optRecord.syncBackDays : defaults.syncBackDays;
-    const syncForwardDays =
-      typeof optRecord.syncForwardDays === 'number' ? optRecord.syncForwardDays : defaults.syncForwardDays;
-    const searchFilter = typeof optRecord.filter === 'string' ? optRecord.filter : undefined;
-
-    // The cursor is the event `updated` high-water mark (stored ISO, compared as epoch-ms). A missing
-    // cursor means initial sync (window by start time); otherwise incremental (by `updatedMin`).
-    const legacyLastSynced = readLegacyLastSyncedUpdate(calendar);
-    let storedCursor = typeof binding.cursor === 'string' ? binding.cursor : undefined;
-    if (legacyLastSynced && !storedCursor) {
-      persistCalendarCursor(binding, legacyLastSynced);
-      clearLegacyLastSyncedUpdate(calendar);
-      storedCursor = legacyLastSynced;
-    }
-    storedCursor ??= legacyLastSynced;
-    const cursorKey = storedCursor ? Date.parse(storedCursor) : 0;
-    const isInitialSync = cursorKey === 0;
-    log('syncing google calendar events', { googleCalendarId, isInitialSync });
-
-    const stats: SyncBinding.Stats = { newMessages: 0 };
-
-    yield* calendarSource(googleCalendarId, cursorKey, {
-      syncBackDays,
-      syncForwardDays,
-      pageSize: defaults.pageSize,
-      searchFilter,
-    }).pipe(
-      makeDedupStage<GoogleCalendar.Event>(
-        'dedup',
-        (event) => event.id,
-        (event) => (event.updated ? Date.parse(event.updated) : 0),
-      ),
-      makeRecurringDedupStage(isInitialSync),
-      mapEventStage,
-      Stream.grouped(COMMIT_PAGE_SIZE),
-      Pipeline.run({ sink: SyncBinding.commit }),
-      Effect.provide(
-        SyncBinding.layer({
-          feed,
-          foreignKeySource: GOOGLE_INTEGRATION_SOURCE,
-          cursorKey,
-          // Store the cursor as an ISO `updated` timestamp (used as `updatedMin` next run).
-          persistCursorKey: (key) => persistCalendarCursor(binding, new Date(key).toISOString()),
-          stats,
-        }),
-      ),
-    );
-
-    log('sync complete', { newEvents: stats.newMessages, isInitialSync });
-    return stats.newMessages;
-  });
-
 export default InboxOperation.GoogleCalendarSync.pipe(
   Operation.withHandler(
     ({ binding: bindingRef, googleCalendarId = 'primary', syncBackDays = 30, syncForwardDays = 365, pageSize = 100 }) =>
@@ -135,16 +73,67 @@ export default InboxOperation.GoogleCalendarSync.pipe(
             // The integration mechanism only ever binds Calendars for Google Calendar.
             return { newEvents: 0 };
           }
-          log('syncing google calendar', { calendar: Obj.getURI(calendar), ...defaults });
 
-          const total = yield* syncOneCalendar(binding, calendar, defaults);
+          const feed = yield* Database.load(calendar.feed);
+          const fk = Obj.getMeta(calendar).keys?.find((k) => k.source === GOOGLE_INTEGRATION_SOURCE);
+          const calendarId = fk?.id ?? binding.remoteId ?? defaults.googleCalendarId;
+          const optRecord = binding.options ?? {};
+          const syncBack = typeof optRecord.syncBackDays === 'number' ? optRecord.syncBackDays : defaults.syncBackDays;
+          const syncForward =
+            typeof optRecord.syncForwardDays === 'number' ? optRecord.syncForwardDays : defaults.syncForwardDays;
+          const searchFilter = typeof optRecord.filter === 'string' ? optRecord.filter : undefined;
+
+          // The cursor is the event `updated` high-water mark (stored ISO, compared as epoch-ms). A
+          // missing cursor means initial sync (window by start time); otherwise incremental
+          // (by `updatedMin`). Migrate the pre-integration `Calendar.lastSyncedUpdate` onto the cursor.
+          const legacyLastSynced = readLegacyLastSyncedUpdate(calendar);
+          let storedCursor = typeof binding.cursor === 'string' ? binding.cursor : undefined;
+          if (legacyLastSynced && !storedCursor) {
+            persistCalendarCursor(binding, legacyLastSynced);
+            clearLegacyLastSyncedUpdate(calendar);
+            storedCursor = legacyLastSynced;
+          }
+          storedCursor ??= legacyLastSynced;
+          const cursorKey = storedCursor ? Date.parse(storedCursor) : 0;
+          const isInitialSync = cursorKey === 0;
+          log('syncing google calendar', { calendar: Obj.getURI(calendar), calendarId, isInitialSync });
+
+          const stats: SyncBinding.Stats = { newMessages: 0 };
+
+          yield* calendarSource(calendarId, cursorKey, {
+            syncBackDays: syncBack,
+            syncForwardDays: syncForward,
+            pageSize: defaults.pageSize,
+            searchFilter,
+          }).pipe(
+            makeDedupStage<GoogleCalendar.Event>(
+              'dedup',
+              (event) => event.id,
+              (event) => (event.updated ? Date.parse(event.updated) : 0),
+            ),
+            makeRecurringDedupStage(isInitialSync),
+            mapEventStage,
+            Stream.grouped(COMMIT_PAGE_SIZE),
+            Pipeline.run({ sink: SyncBinding.commit }),
+            Effect.provide(
+              SyncBinding.layer({
+                feed,
+                foreignKeySource: GOOGLE_INTEGRATION_SOURCE,
+                cursorKey,
+                // Store the cursor as an ISO `updated` timestamp (used as `updatedMin` next run).
+                persistCursorKey: (key) => persistCalendarCursor(binding, new Date(key).toISOString()),
+                stats,
+              }),
+            ),
+          );
 
           Relation.update(binding, (binding) => {
             binding.lastSyncAt = new Date().toISOString();
             binding.lastError = undefined;
           });
 
-          return { newEvents: total };
+          log('calendar sync complete', { newEvents: stats.newMessages, isInitialSync });
+          return { newEvents: stats.newMessages };
         }).pipe(
           Effect.provide(
             Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromConnection(connectionRef)),

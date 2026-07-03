@@ -52,81 +52,6 @@ const STREAMING_CONFIG = {
   pageSize: 10,
 } as const;
 
-const syncSingleMailbox = (input: {
-  binding: SyncBinding.SyncBinding;
-  mailbox: Mailbox.Mailbox;
-  userId: string;
-  defaultLabel: string;
-  defaultAfter: string;
-  restrictedMode: boolean;
-}) =>
-  Effect.gen(function* () {
-    const { binding, mailbox, userId, defaultLabel, defaultAfter, restrictedMode } = input;
-
-    log('syncing gmail', { mailbox: Obj.getURI(mailbox), userId, after: defaultAfter, restrictedMode });
-    const targetOptions = readBindingOptions(binding);
-    const after =
-      targetOptions.syncBackDays !== undefined
-        ? format(subDays(new Date(), targetOptions.syncBackDays), 'yyyy-MM-dd')
-        : defaultAfter;
-
-    const feed = yield* Database.load(mailbox.feed);
-    // Resolve the child tag index so provider-label tags can be applied synchronously during commit.
-    const tagIndex = yield* Database.load(mailbox.tags);
-
-    const labelMap = yield* syncLabels(mailbox, userId).pipe(
-      Effect.catchAll((error) => {
-        log.catch(error);
-        return Effect.succeed(new Map<string, string>());
-      }),
-    );
-    log('synced labels', { count: labelMap.size });
-
-    // The cursor is the high-water `internalDate` (epoch-ms) of the last committed message; sync
-    // resumes from there rather than re-fetching the whole mailbox.
-    const cursorKey = Cursor.parseKey(binding.cursor);
-    const startDate = cursorKey > 0 ? new Date(cursorKey) : new Date(after);
-    log('starting sync', { startDate: format(startDate, 'yyyy-MM-dd'), cursorKey, searchFilter: targetOptions.filter });
-
-    const stats: SyncBinding.Stats = { newMessages: 0 };
-
-    // Compose the pipeline: fetch → dedup → decode → html→markdown → map → extract-contacts, batch
-    // into pages, and commit each page. Shared state flows through the SyncBinding layer; the fetch
-    // (`HttpClient`/`GoogleCredentials`) and contact `resolve` (`Resolver`) requirements are provided
-    // by the handler's layer stack.
-    yield* gmailSource(userId, defaultLabel, startDate, restrictedMode, targetOptions.filter).pipe(
-      makeDedupStage<GoogleMail.Message>(
-        'dedup',
-        (message) => message.id,
-        (message) => Number.parseInt(message.internalDate),
-      ),
-      decodeBodyStage,
-      htmlToMarkdownStage<DecodedMessage>(),
-      makeMapToMessageStage(labelMap),
-      onArrivalExtractorsStage<Mapped>(mailbox),
-      extractContactsStage,
-      Stream.grouped(STREAMING_CONFIG.pageSize),
-      Pipeline.run({ sink: SyncBinding.commit }),
-      Effect.provide(
-        SyncBinding.layer({
-          feed,
-          tagIndex,
-          foreignKeySource: GMAIL_SOURCE,
-          cursorKey,
-          persistCursorKey: (key) =>
-            Relation.update(binding, (binding) => {
-              binding.cursor = Cursor.formatKey(key);
-            }),
-          stats,
-        }),
-      ),
-    );
-
-    yield* Trace.emitStatus(`Synced ${stats.newMessages} messages`);
-    log('sync complete', { newMessages: stats.newMessages });
-    return stats.newMessages;
-  });
-
 export default InboxOperation.GoogleMailSync.pipe(
   Operation.withHandler(
     ({
@@ -154,21 +79,66 @@ export default InboxOperation.GoogleMailSync.pipe(
             return { newMessages: 0 };
           }
 
-          const total = yield* syncSingleMailbox({
-            binding,
-            mailbox,
-            userId,
-            defaultLabel: label,
-            defaultAfter: normalizedAfter,
-            restrictedMode,
-          });
+          const targetOptions = readBindingOptions(binding);
+          // `syncBackDays` overrides the default window start when there is no cursor yet.
+          const fallbackAfter =
+            targetOptions.syncBackDays !== undefined
+              ? format(subDays(new Date(), targetOptions.syncBackDays), 'yyyy-MM-dd')
+              : normalizedAfter;
+          const cursorKey = Cursor.parseKey(binding.cursor);
+          log('syncing gmail', { mailbox: Obj.getURI(mailbox), userId, cursorKey, restrictedMode });
+
+          const feed = yield* Database.load(mailbox.feed);
+          // Resolve the child tag index so provider-label tags can be applied synchronously during commit.
+          const tagIndex = yield* Database.load(mailbox.tags);
+          const labelMap = yield* syncLabels(mailbox, userId).pipe(
+            Effect.catchAll((error) => {
+              log.catch(error);
+              return Effect.succeed(new Map<string, string>());
+            }),
+          );
+
+          const stats: SyncBinding.Stats = { newMessages: 0 };
+
+          // fetch → dedup → decode → html→markdown → map → extract-contacts → (optional) on-arrival
+          // extractors → commit each page. Fetch (`HttpClient`/`GoogleCredentials`) and `Resolver`
+          // requirements come from the layer stack below; per-run state from the SyncBinding layer.
+          yield* gmailSource(userId, label, cursorKey, fallbackAfter, restrictedMode, targetOptions.filter).pipe(
+            makeDedupStage<GoogleMail.Message>(
+              'dedup',
+              (message) => message.id,
+              (message) => Number.parseInt(message.internalDate),
+            ),
+            decodeBodyStage,
+            htmlToMarkdownStage<DecodedMessage>(),
+            makeMapToMessageStage(labelMap),
+            onArrivalExtractorsStage<Mapped>(mailbox),
+            extractContactsStage,
+            Stream.grouped(STREAMING_CONFIG.pageSize),
+            Pipeline.run({ sink: SyncBinding.commit }),
+            Effect.provide(
+              SyncBinding.layer({
+                feed,
+                tagIndex,
+                foreignKeySource: GMAIL_SOURCE,
+                cursorKey,
+                persistCursorKey: (key) =>
+                  Relation.update(binding, (binding) => {
+                    binding.cursor = Cursor.formatKey(key);
+                  }),
+                stats,
+              }),
+            ),
+          );
 
           Relation.update(binding, (binding) => {
             binding.lastSyncAt = new Date().toISOString();
             binding.lastError = undefined;
           });
 
-          return { newMessages: total };
+          yield* Trace.emitStatus(`Synced ${stats.newMessages} messages`);
+          log('gmail sync complete', { newMessages: stats.newMessages });
+          return { newMessages: stats.newMessages };
         }).pipe(
           Effect.provide(
             Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromConnection(connectionRef)),
@@ -226,8 +196,19 @@ const makeMapToMessageStage = (labelMap: Map<string, string>): Stage.Stage<Decod
     }),
   );
 
-/** Streams Gmail messages from `startDate` forward: date-windowed id fetch → per-message fetch. */
-const gmailSource = (userId: string, label: string, startDate: Date, restricted: boolean, searchFilter?: string) => {
+/**
+ * Streams Gmail messages forward from the cursor: resume at the cursor's `internalDate` (else the
+ * `fallbackAfter` window start), then date-windowed id fetch → per-message fetch.
+ */
+const gmailSource = (
+  userId: string,
+  label: string,
+  cursorKey: number,
+  fallbackAfter: string,
+  restricted: boolean,
+  searchFilter?: string,
+) => {
+  const startDate = cursorKey > 0 ? new Date(cursorKey) : new Date(fallbackAfter);
   const config: DateRangeConfig = {
     startDate,
     endDate: restricted ? addDays(startDate, STREAMING_CONFIG.dateChunkDays + 1) : addDays(new Date(), 1),

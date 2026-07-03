@@ -17,7 +17,7 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 // Connection is referenced in the inferred type of this module's default export via
 // InboxOperation.GoogleContactsSync's schema; the import lets TypeScript name it in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { type Connection, SyncBinding } from '@dxos/plugin-connector';
+import { type Connection } from '@dxos/plugin-connector';
 import { Person } from '@dxos/types';
 
 import { GooglePeople } from '../../../apis';
@@ -109,54 +109,6 @@ const upsertPerson = ({ resourceName, props }: MappedPerson) =>
     return true;
   });
 
-const syncOneGroup = (
-  binding: SyncBinding.SyncBinding,
-  groupResourceName: string,
-  connectionsByResourceName: ReadonlyMap<string, GooglePeople.Person>,
-) =>
-  Effect.gen(function* () {
-    log('syncing google contact group', { groupResourceName });
-
-    const memberNames = yield* fetchGroupMembers(groupResourceName);
-    if (memberNames.length === 0) {
-      log('contact group is empty', { groupResourceName });
-      return 0;
-    }
-
-    // Resolve members from the pre-fetched connections map.
-    const people = memberNames
-      .map((name) => connectionsByResourceName.get(name))
-      .filter((person): person is GooglePeople.Person => person !== undefined);
-    log('fetched group members', { groupResourceName, members: memberNames.length, matched: people.length });
-
-    // Pipeline: contacts → map to Person props → upsert into the space. Unlike mail/calendar there
-    // is no feed; the upsert sink is the terminal write, idempotent via the foreign-key lookup.
-    const stats = { upserted: 0 };
-    yield* Stream.fromIterable(people).pipe(
-      mapPersonStage,
-      Pipeline.run({
-        sink: (mapped) =>
-          Effect.gen(function* () {
-            if (yield* upsertPerson(mapped)) {
-              stats.upserted += 1;
-            }
-          }),
-      }),
-    );
-    const upserted = stats.upserted;
-
-    // Persist last sync timestamp on the binding.
-    Relation.update(binding, (binding) => {
-      const now = new Date().toISOString();
-      binding.cursor = now;
-      binding.lastSyncAt = now;
-      binding.lastError = undefined;
-    });
-
-    log('contact group sync complete', { groupResourceName, upserted, total: people.length });
-    return upserted;
-  });
-
 export default InboxOperation.GoogleContactsSync.pipe(
   Operation.withHandler(({ binding: bindingRef }) =>
     Effect.gen(function* () {
@@ -174,11 +126,41 @@ export default InboxOperation.GoogleContactsSync.pipe(
         if (!groupResourceName) {
           return { upserted: 0 };
         }
+        log('syncing google contact group', { groupResourceName });
 
-        // Fetch all connections once and share across the upsert.
+        // Fetch all connections once, then resolve the group's members from that map.
         const connectionsByResourceName = yield* fetchAllConnections();
-        const total = yield* syncOneGroup(binding, groupResourceName, connectionsByResourceName);
-        return { upserted: total };
+        const memberNames = yield* fetchGroupMembers(groupResourceName);
+        const people = memberNames
+          .map((name) => connectionsByResourceName.get(name))
+          .filter((person): person is GooglePeople.Person => person !== undefined);
+        log('fetched group members', { groupResourceName, members: memberNames.length, matched: people.length });
+
+        // Pipeline: contacts → map to Person props → upsert into the space. Unlike mail/calendar there
+        // is no feed; the upsert sink is the terminal write, idempotent via the foreign-key lookup.
+        const stats = { upserted: 0 };
+        yield* Stream.fromIterable(people).pipe(
+          mapPersonStage,
+          Pipeline.run({
+            sink: (mapped) =>
+              Effect.gen(function* () {
+                if (yield* upsertPerson(mapped)) {
+                  stats.upserted += 1;
+                }
+              }),
+          }),
+        );
+
+        // Persist last sync timestamp on the binding.
+        Relation.update(binding, (binding) => {
+          const now = new Date().toISOString();
+          binding.cursor = now;
+          binding.lastSyncAt = now;
+          binding.lastError = undefined;
+        });
+
+        log('contact group sync complete', { groupResourceName, upserted: stats.upserted, total: people.length });
+        return { upserted: stats.upserted };
       }).pipe(
         Effect.provide(
           Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromConnection(connectionRef)),
@@ -186,4 +168,5 @@ export default InboxOperation.GoogleContactsSync.pipe(
       );
     }),
   ),
+  Operation.opaqueHandler,
 );
