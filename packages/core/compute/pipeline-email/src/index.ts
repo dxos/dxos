@@ -3,4 +3,3 @@
 //
 
 export * from './facts';
-export * from './email-fixtures';
