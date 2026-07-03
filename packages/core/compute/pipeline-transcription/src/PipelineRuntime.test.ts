@@ -46,9 +46,11 @@ describe('PipelineRuntime', () => {
     expect(writes).toHaveLength(0);
   });
 
-  test('latest-wins interrupts an in-flight invocation', async ({ expect }) => {
+  test('latest-wins coalesces stale work under load without interrupting', async ({ expect }) => {
     const telemetry: TelemetryEvent[] = [];
-    // A slow stage so the synchronously-delivered second block interrupts the first's in-flight run.
+    // A slow stage over three synchronously-delivered blocks: sliding overflow replaces stale queued
+    // work with the latest (rather than interrupting the in-flight run), so fewer than three runs
+    // commit and every reported outcome is a clean commit (no interrupt/error signal).
     const slow: Stage<{ window: any[] }> = {
       id: 'slow',
       trigger: 'per-block',
@@ -59,10 +61,14 @@ describe('PipelineRuntime', () => {
     const source = Stream.fromIterable([
       TranscriptEvent.block({ _tag: 'transcript', started: 's', text: 'one' }),
       TranscriptEvent.block({ _tag: 'transcript', started: 's', text: 'two' }),
+      TranscriptEvent.block({ _tag: 'transcript', started: 's', text: 'three' }),
     ]);
     await EffectEx.runPromise(
       PipelineRuntime.run({ source, stages: [slow], commit, onTelemetry: (event) => telemetry.push(event) }),
     );
-    expect(telemetry.some((event) => event.outcome === 'interrupted')).toBe(true);
+    const committed = telemetry.filter((event) => event.outcome === 'committed');
+    expect(committed.length).toBeGreaterThan(0);
+    expect(committed.length).toBeLessThan(3);
+    expect(telemetry.every((event) => event.outcome === 'committed')).toBe(true);
   });
 });

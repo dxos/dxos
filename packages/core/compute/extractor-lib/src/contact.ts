@@ -8,13 +8,13 @@ import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type Actor, Organization, Person } from '@dxos/types';
 
+import { matchesDomain } from './domain';
+
 /**
- * Shared contact-creation logic used by both:
- *  - the ExtractContact operation (actor-targeted; invoked from the message-header avatar button)
- *  - ContactMessageExtractor (whole-message; runs through ExtractMessage like any other extractor).
+ * Shared contact-creation logic.
  *
  * Builds a fresh Person from the actor (no `db.add` here — caller decides whether to add directly
- * or route through SpaceOperation.AddObject so the visibility/hidden flag can differ per caller).
+ * or route through an operation so the visibility/hidden flag can differ per caller).
  * Returns `undefined` when the actor has no email, or when a Person with that email already
  * exists in the space.
  */
@@ -62,21 +62,3 @@ export const buildContactFromActor = (
 
     return newContact;
   });
-
-const matchesDomain = (website: string | undefined, emailDomain: string): boolean => {
-  if (!website) {
-    return false;
-  }
-  try {
-    const url = website.startsWith('http://') || website.startsWith('https://') ? website : `https://${website}`;
-    const websiteDomain = new URL(url).hostname.toLowerCase();
-    return (
-      websiteDomain === emailDomain ||
-      websiteDomain.endsWith(`.${emailDomain}`) ||
-      emailDomain.endsWith(`.${websiteDomain}`)
-    );
-  } catch (err) {
-    log.warn('parsing website URL', { website, error: err });
-    return false;
-  }
-};

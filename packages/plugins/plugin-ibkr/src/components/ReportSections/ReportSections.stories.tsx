@@ -4,7 +4,9 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '#translations';
 
@@ -13,8 +15,8 @@ import { ReportSections } from './ReportSections';
 const meta = {
   title: 'plugins/plugin-ibkr/ReportSections',
   component: ReportSections,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  parameters: { layout: 'fullscreen', translations },
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withRegistry],
+  parameters: { layout: 'fullscreen', translations: [...translations, ...tableTranslations] },
 } satisfies Meta<typeof ReportSections>;
 
 export default meta;
