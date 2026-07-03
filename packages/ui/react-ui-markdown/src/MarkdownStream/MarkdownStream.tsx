@@ -26,12 +26,14 @@ import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, us
 import { type UseTextEditor, useTextEditor } from '@dxos/react-ui-editor';
 import {
   type AutoScrollProps,
+  PROMPT_ELEMENT,
   type XmlTagsOptions,
   type XmlWidgetState,
   type XmlWidgetStateManager,
   crawlerLineEffect,
   createBasicExtensions,
   createThemeExtensions,
+  createTurnSource,
   decorateMarkdown,
   documentSlots,
   extendedMarkdown,
@@ -40,6 +42,7 @@ import {
   navigateNextEffect,
   navigatePreviousEffect,
   scroller,
+  turnFolding,
   typewriter,
   typewriterBypass,
   xmlBlockDecoration,
@@ -226,6 +229,9 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
   },
 );
 
+// Fold each agent response beneath its `<prompt>` (the head element rendered by `xmlBlockDecoration`).
+const turnSource = createTurnSource(PROMPT_ELEMENT);
+
 type MarkdownStreamTextEditorParams = Pick<MarkdownStreamProps, 'debug' | 'registry' | 'options' | 'extensions'> & {
   setFooterRoot?: (el: HTMLElement | null) => void;
 };
@@ -240,7 +246,7 @@ type MarkdownStreamTextEditorResult = UseTextEditor & {
  */
 const useMarkdownStreamTextEditor = (
   currentContent: RefObject<string | undefined>,
-  { debug, registry, options, extensions: extraExtensions, setFooterRoot }: MarkdownStreamTextEditorParams,
+  { debug, registry, options, extensions: extensionsProp, setFooterRoot }: MarkdownStreamTextEditorParams,
 ): MarkdownStreamTextEditorResult => {
   const { themeMode } = useThemeContext();
 
@@ -283,11 +289,12 @@ const useMarkdownStreamTextEditor = (
             // up these utility classes from this source file.
             xmlBlockDecoration({
               tag: 'prompt',
-              lineClass: 'cm-prompt-line my-8',
+              lineClass: 'cm-prompt-line',
               contentClass: 'cm-prompt-bubble dx-panel px-2 py-1.5 box-decoration-clone rounded-sm [&_*]:text-inherit!',
               hideTags: true,
             }),
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
+            turnFolding({ source: turnSource }),
             scroller({ overScroll: 80, autoScroll: options?.autoScroll }),
             options?.typewriter &&
               typewriter({
@@ -301,7 +308,7 @@ const useMarkdownStreamTextEditor = (
             options?.fader && fader(),
             setFooterRoot && footer(setFooterRoot),
           ].filter(isTruthy),
-        extraExtensions,
+        extensionsProp,
       ].filter(isTruthy),
     };
   }, [
@@ -312,7 +319,7 @@ const useMarkdownStreamTextEditor = (
     options?.typewriter,
     options?.cursor,
     options?.fader,
-    extraExtensions,
+    extensionsProp,
   ]);
 
   const viewRef = useDynamicRef(view);

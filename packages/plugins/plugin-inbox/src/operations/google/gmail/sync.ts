@@ -16,6 +16,7 @@ import * as Stream from 'effect/Stream';
 import type { Credential } from '@dxos/compute';
 import { Operation, Trace } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 // Connection is referenced in the inferred type of this module's default export via
 // InboxOperation.GoogleMailSync's schema; the import lets TypeScript name it in .d.ts.
@@ -25,7 +26,7 @@ import { Message } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
-import { GoogleCredentials, InboxResolver } from '../../../services';
+import { GoogleCredentials } from '../../../services';
 import { InboxOperation, Mailbox } from '../../../types';
 import { appendBatchToFeed, collectForeignIds, readBindingOptions } from '../../../util';
 import { mapMessage } from './mapper';

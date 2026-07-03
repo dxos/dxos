@@ -128,6 +128,7 @@
 
   --color-inverse-surface: light-dark(var(--color-neutral-800), var(--color-neutral-200));
   --color-inverse-fg: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-inverse-text: light-dark(var(--color-neutral-50), var(--color-neutral-950));
 
   /*
    * Text emphasis — foregrounds at decreasing emphasis, anchored on --color-base-fg (strongest):
