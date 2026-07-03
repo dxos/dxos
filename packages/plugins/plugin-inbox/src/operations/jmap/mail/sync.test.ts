@@ -4,9 +4,11 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, it } from '@effect/vitest';
+import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
+import * as Stream from 'effect/Stream';
 import { afterEach, beforeEach, vi } from 'vitest';
 
 import { Obj } from '@dxos/echo';
@@ -16,6 +18,7 @@ import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { JmapCredentials } from '../../../services';
 import { mapEmail } from './mapper';
+import { streamJmapEmailIds } from './sync';
 
 const HOST = 'api.fastmail.com';
 const ACCOUNT_ID = 'u9999';
@@ -34,8 +37,14 @@ const TestLayer = Layer.mergeAll(
 );
 
 let originalFetch: typeof globalThis.fetch;
+let emailQueryIds: string[];
+let emailQueryPositions: number[];
+let emailQueryCalculateTotals: (boolean | undefined)[];
 
 beforeEach(() => {
+  emailQueryIds = ['e1', 'e2', 'e3'];
+  emailQueryPositions = [];
+  emailQueryCalculateTotals = [];
   originalFetch = globalThis.fetch;
   globalThis.fetch = vi.fn(async (...args: Parameters<typeof fetch>): Promise<Response> => {
     const [input, init] = args;
@@ -92,6 +101,41 @@ describe('JMAP sync read path', () => {
       expect(first.mailboxIds).toContain('mb-inbox');
     }, Effect.provide(TestLayer)),
   );
+
+  it.effect(
+    'continues querying JMAP ids past the old scan window',
+    Effect.fnUntraced(function* ({ expect }) {
+      emailQueryIds = Array.from({ length: 550 }, (_, i) => `e${i + 1}`);
+
+      const ids = yield* streamJmapEmailIds({ apiUrl: API_URL, accountId: ACCOUNT_ID }, { inMailbox: 'mb-inbox' }).pipe(
+        Stream.runCollect,
+        Effect.map(Chunk.toArray),
+      );
+
+      expect(ids).toHaveLength(550);
+      expect(ids[0]).toBe('e1');
+      expect(ids.at(-1)).toBe('e550');
+      expect(emailQueryPositions).toEqual([0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500]);
+      expect(emailQueryCalculateTotals).toEqual(Array.from({ length: 11 }, () => true));
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'stops querying JMAP ids when total ends on a page boundary',
+    Effect.fnUntraced(function* ({ expect }) {
+      emailQueryIds = Array.from({ length: 100 }, (_, i) => `e${i + 1}`);
+
+      const ids = yield* streamJmapEmailIds({ apiUrl: API_URL, accountId: ACCOUNT_ID }, { inMailbox: 'mb-inbox' }).pipe(
+        Stream.runCollect,
+        Effect.map(Chunk.toArray),
+      );
+
+      expect(ids).toHaveLength(100);
+      expect(ids.at(-1)).toBe('e100');
+      expect(emailQueryPositions).toEqual([0, 50]);
+      expect(emailQueryCalculateTotals).toEqual([true, true]);
+    }, Effect.provide(TestLayer)),
+  );
 });
 
 const makeEmail = (id: string) => ({
@@ -116,8 +160,25 @@ const respondToPost = (body: any): unknown => {
           ['Mailbox/get', { accountId: ACCOUNT_ID, list: [{ id: 'mb-inbox', name: 'Inbox', role: 'inbox' }] }, '0'],
         ],
       };
-    case 'Email/query':
-      return { methodResponses: [['Email/query', { accountId: ACCOUNT_ID, ids: ['e1', 'e2', 'e3'], total: 3 }, '0']] };
+    case 'Email/query': {
+      const position = args.position ?? 0;
+      const limit = args.limit ?? emailQueryIds.length;
+      emailQueryPositions.push(position);
+      emailQueryCalculateTotals.push(args.calculateTotal);
+      return {
+        methodResponses: [
+          [
+            'Email/query',
+            {
+              accountId: ACCOUNT_ID,
+              ids: emailQueryIds.slice(position, position + limit),
+              total: emailQueryIds.length,
+            },
+            '0',
+          ],
+        ],
+      };
+    }
     case 'Email/get':
       return { methodResponses: [['Email/get', { accountId: ACCOUNT_ID, list: args.ids.map(makeEmail) }, '0']] };
     default:
