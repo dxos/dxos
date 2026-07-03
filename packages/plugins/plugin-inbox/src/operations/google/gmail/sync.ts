@@ -20,14 +20,14 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 // Connection is referenced in the inferred type of this module's default export via
 // InboxOperation.GoogleMailSync's schema; the import lets TypeScript name it in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { type Connection, SyncBinding as ConnectorSyncBinding } from '@dxos/plugin-connector';
+import { type Connection, SyncBinding } from '@dxos/plugin-connector';
 import { Cursor, Person } from '@dxos/types';
 
 import { type DecodedMessage, decodeBody, mapToMessage } from './mapper';
 import { GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
 import { GoogleCredentials } from '../../../services';
-import { type Mapped, SyncBinding, extractContactsStage, htmlToMarkdownStage, makeDedupStage } from '../../../sync';
+import { type Mapped, extractContactsStage, htmlToMarkdownStage, makeDedupStage } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
 import { onArrivalExtractorsStage, readBindingOptions } from '../../../util';
 import { parseFromHeader } from '../../util';
@@ -53,16 +53,15 @@ const STREAMING_CONFIG = {
 } as const;
 
 const syncSingleMailbox = (input: {
-  binding: ConnectorSyncBinding.SyncBinding;
+  binding: SyncBinding.SyncBinding;
   mailbox: Mailbox.Mailbox;
-  db: Database.Database;
   userId: string;
   defaultLabel: string;
   defaultAfter: string;
   restrictedMode: boolean;
 }) =>
   Effect.gen(function* () {
-    const { binding, mailbox, db, userId, defaultLabel, defaultAfter, restrictedMode } = input;
+    const { binding, mailbox, userId, defaultLabel, defaultAfter, restrictedMode } = input;
 
     log('syncing gmail', { mailbox: Obj.getURI(mailbox), userId, after: defaultAfter, restrictedMode });
     const targetOptions = readBindingOptions(binding);
@@ -94,8 +93,8 @@ const syncSingleMailbox = (input: {
     // Compose the pipeline: fetch → dedup → decode → html→markdown → map → extract-contacts, batch
     // into pages, and commit each page. Shared state flows through the SyncBinding layer; the fetch
     // (`HttpClient`/`GoogleCredentials`) and contact `resolve` (`Resolver`) requirements are provided
-    // by the handler's layer stack below.
-    const drain = gmailSource(userId, defaultLabel, startDate, restrictedMode, targetOptions.filter).pipe(
+    // by the handler's layer stack.
+    yield* gmailSource(userId, defaultLabel, startDate, restrictedMode, targetOptions.filter).pipe(
       makeDedupStage<GoogleMail.Message>(
         'dedup',
         (message) => message.id,
@@ -108,12 +107,8 @@ const syncSingleMailbox = (input: {
       extractContactsStage,
       Stream.grouped(STREAMING_CONFIG.pageSize),
       Pipeline.run({ sink: SyncBinding.commit }),
-    );
-
-    yield* drain.pipe(
       Effect.provide(
         SyncBinding.layer({
-          db,
           feed,
           tagIndex,
           foreignKeySource: GMAIL_SOURCE,
@@ -162,7 +157,6 @@ export default InboxOperation.GoogleMailSync.pipe(
           const total = yield* syncSingleMailbox({
             binding,
             mailbox,
-            db,
             userId,
             defaultLabel: label,
             defaultAfter: normalizedAfter,

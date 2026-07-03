@@ -4,12 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Obj } from '@dxos/echo';
+import { Database, type Obj } from '@dxos/echo';
 import { extractContact } from '@dxos/extractor-lib';
 import { Stage } from '@dxos/pipeline';
+import { SyncBinding } from '@dxos/plugin-connector';
 import { type Message } from '@dxos/types';
-
-import * as SyncBinding from '../SyncBinding';
 
 /** A mapped message ready for contact extraction and commit. */
 export type Mapped = {
@@ -29,12 +28,16 @@ export type Mapped = {
  * the same new sender would each yield a created Person; the run-scoped `createdContactEmails` set
  * keeps only the first.
  */
-export const extractContactsStage: Stage.Stage<Mapped, SyncBinding.CommitUnit, never, SyncBinding.Service> = Stage.map(
-  'extract-contacts',
-  (mapped: Mapped) =>
-    Effect.gen(function* () {
-      const { db, createdContactEmails } = yield* SyncBinding.Service;
-      const result = yield* extractContact({ db, source: mapped.message });
+export const extractContactsStage: Stage.Stage<
+  Mapped,
+  SyncBinding.CommitUnit,
+  never,
+  SyncBinding.Service | Database.Service
+> = Stage.map('extract-contacts', (mapped: Mapped) =>
+  Effect.gen(function* () {
+    const { createdContactEmails } = yield* SyncBinding.Service;
+    const { db } = yield* Database.Service;
+    const result = yield* extractContact({ db, source: mapped.message });
       const email = mapped.message.sender?.email?.trim().toLowerCase();
       const alreadyCreated = !!email && createdContactEmails.has(email);
       const extractedObjects: Obj.Any[] = alreadyCreated ? [] : [...result.created];

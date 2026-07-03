@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Stage } from '@dxos/pipeline';
-
-import * as SyncBinding from '../SyncBinding';
+import { SyncBinding } from '@dxos/plugin-connector';
 
 /**
  * Drops items already reflected by the cursor. An item is skipped when its provider key is below the

@@ -17,7 +17,7 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 // Connection is referenced in the inferred type of this module's default export via
 // InboxOperation.GoogleContactsSync's schema; the import lets TypeScript name it in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { type Connection, SyncBinding as ConnectorSyncBinding } from '@dxos/plugin-connector';
+import { type Connection, SyncBinding } from '@dxos/plugin-connector';
 import { Person } from '@dxos/types';
 
 import { GooglePeople } from '../../../apis';
@@ -110,7 +110,7 @@ const upsertPerson = ({ resourceName, props }: MappedPerson) =>
   });
 
 const syncOneGroup = (
-  binding: ConnectorSyncBinding.SyncBinding,
+  binding: SyncBinding.SyncBinding,
   groupResourceName: string,
   connectionsByResourceName: ReadonlyMap<string, GooglePeople.Person>,
 ) =>

@@ -17,14 +17,14 @@ import { type Resolver, resolve } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-import { SyncBinding as ConnectorSyncBinding } from '@dxos/plugin-connector';
+import { SyncBinding } from '@dxos/plugin-connector';
 import { Cursor, Person } from '@dxos/types';
 
 import { type DecodedEmail, decodeBody, mapToMessage } from './mapper';
 import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { JmapCredentials } from '../../../services';
-import { type Mapped, SyncBinding, extractContactsStage, htmlToMarkdownStage, makeDedupStage } from '../../../sync';
+import { type Mapped, extractContactsStage, htmlToMarkdownStage, makeDedupStage } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
 import { onArrivalExtractorsStage, readBindingOptions } from '../../../util';
 
@@ -59,7 +59,7 @@ export default InboxOperation.JmapSync.pipe(
           return { newMessages: 0 };
         }
 
-        const total = yield* syncMailbox({ binding, mailbox, db });
+        const total = yield* syncMailbox({ binding, mailbox });
 
         Relation.update(binding, (binding) => {
           binding.lastSyncAt = new Date().toISOString();
@@ -77,15 +77,7 @@ export default InboxOperation.JmapSync.pipe(
   Operation.opaqueHandler,
 );
 
-const syncMailbox = ({
-  binding,
-  mailbox,
-  db,
-}: {
-  binding: ConnectorSyncBinding.SyncBinding;
-  mailbox: Mailbox.Mailbox;
-  db: Database.Database;
-}) =>
+const syncMailbox = ({ binding, mailbox }: { binding: SyncBinding.SyncBinding; mailbox: Mailbox.Mailbox }) =>
   Effect.gen(function* () {
     const session = yield* Jmap.getSession;
     const accountId = session.primaryAccounts[MAIL_ACCOUNT_CAPABILITY];
@@ -96,6 +88,7 @@ const syncMailbox = ({
     const target: JmapMail.Target = { apiUrl: session.apiUrl, accountId };
     log('jmap sync: session resolved', { apiUrl: session.apiUrl, accountId });
 
+    const { db } = yield* Database.Service;
     const feed = yield* Database.load(mailbox.feed);
     const tagIndex = yield* Database.load(mailbox.tags);
 
@@ -142,7 +135,7 @@ const syncMailbox = ({
 
     const stats: SyncBinding.Stats = { newMessages: 0 };
 
-    const drain = jmapSource(target, filter).pipe(
+    yield* jmapSource(target, filter).pipe(
       makeDedupStage<JmapMail.Email>(
         'dedup',
         (email) => email.id,
@@ -155,12 +148,8 @@ const syncMailbox = ({
       extractContactsStage,
       Stream.grouped(COMMIT_PAGE_SIZE),
       Pipeline.run({ sink: SyncBinding.commit }),
-    );
-
-    yield* drain.pipe(
       Effect.provide(
         SyncBinding.layer({
-          db,
           feed,
           tagIndex,
           foreignKeySource: JMAP_MESSAGE_SOURCE,

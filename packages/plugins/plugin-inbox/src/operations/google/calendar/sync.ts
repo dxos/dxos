@@ -21,18 +21,18 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 // Connection is referenced in the inferred type of this module's default export via
 // InboxOperation.GoogleCalendarSync's schema; the import lets TypeScript name it in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { type Connection, SyncBinding as ConnectorSyncBinding } from '@dxos/plugin-connector';
+import { type Connection, SyncBinding } from '@dxos/plugin-connector';
 
 import { mapEvent } from './mapper';
 import { GoogleCalendar } from '../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
 import { GoogleCredentials } from '../../../services';
-import { SyncBinding, makeDedupStage } from '../../../sync';
+import { makeDedupStage } from '../../../sync';
 import { Calendar, InboxOperation } from '../../../types';
 
 const COMMIT_PAGE_SIZE = 10;
 
-const persistCalendarCursor = (binding: ConnectorSyncBinding.SyncBinding, lastUpdate: string) => {
+const persistCalendarCursor = (binding: SyncBinding.SyncBinding, lastUpdate: string) => {
   Relation.update(binding, (binding) => {
     binding.cursor = lastUpdate;
   });
@@ -54,9 +54,8 @@ const clearLegacyLastSyncedUpdate = (calendar: Calendar.Calendar) => {
 };
 
 const syncOneCalendar = (
-  binding: ConnectorSyncBinding.SyncBinding,
+  binding: SyncBinding.SyncBinding,
   calendar: Calendar.Calendar,
-  db: Database.Database,
   defaults: { syncBackDays: number; syncForwardDays: number; pageSize: number; googleCalendarId: string },
 ) =>
   Effect.gen(function* () {
@@ -85,7 +84,7 @@ const syncOneCalendar = (
 
     const stats: SyncBinding.Stats = { newMessages: 0 };
 
-    const drain = calendarSource(googleCalendarId, cursorKey, {
+    yield* calendarSource(googleCalendarId, cursorKey, {
       syncBackDays,
       syncForwardDays,
       pageSize: defaults.pageSize,
@@ -100,12 +99,8 @@ const syncOneCalendar = (
       mapEventStage,
       Stream.grouped(COMMIT_PAGE_SIZE),
       Pipeline.run({ sink: SyncBinding.commit }),
-    );
-
-    yield* drain.pipe(
       Effect.provide(
         SyncBinding.layer({
-          db,
           feed,
           foreignKeySource: GOOGLE_INTEGRATION_SOURCE,
           cursorKey,
@@ -142,7 +137,7 @@ export default InboxOperation.GoogleCalendarSync.pipe(
           }
           log('syncing google calendar', { calendar: Obj.getURI(calendar), ...defaults });
 
-          const total = yield* syncOneCalendar(binding, calendar, db, defaults);
+          const total = yield* syncOneCalendar(binding, calendar, defaults);
 
           Relation.update(binding, (binding) => {
             binding.lastSyncAt = new Date().toISOString();

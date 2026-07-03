@@ -7,15 +7,15 @@ import * as Exit from 'effect/Exit';
 import * as Stream from 'effect/Stream';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { type Database, Feed, Filter, Obj } from '@dxos/echo';
+import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { captureSink } from '@dxos/pipeline/testing';
+import { SyncBinding } from '@dxos/plugin-connector';
 import { TagIndex } from '@dxos/schema';
 import { Cursor, Message, Organization, Person } from '@dxos/types';
 
-import * as SyncBinding from './SyncBinding';
 import { type Mapped, extractContactsStage, htmlToMarkdownStage, makeDedupStage } from './index';
 
 const TEST_SOURCE = 'test.mail';
@@ -95,7 +95,10 @@ describe('sync pipeline harness', () => {
   };
 
   const drain = (
-    options: SyncBinding.LayerOptions & { fault?: Stage.Stage<SyncBinding.CommitUnit, SyncBinding.CommitUnit, Error> },
+    options: SyncBinding.LayerOptions & {
+      db: Database.Database;
+      fault?: Stage.Stage<SyncBinding.CommitUnit, SyncBinding.CommitUnit, Error>;
+    },
   ) => {
     const mapped = Stream.fromIterable(RAWS).pipe(
       makeDedupStage<Raw>(
@@ -111,6 +114,7 @@ describe('sync pipeline harness', () => {
       Stream.grouped(2),
       Pipeline.run({ sink: SyncBinding.commit }),
       Effect.provide(SyncBinding.layer(options)),
+      Effect.provide(Database.layer(options.db)),
     );
   };
 
