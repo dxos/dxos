@@ -82,7 +82,8 @@ export const refreshRegistry = async (
         log.info('page-actions registry refresh failed', { error: ack.error });
         return;
       }
-      const registry: PageActionsRegistry = { fetchedAt: new Date().toISOString(), actions: ack.actions };
+      // Copy the readonly ack array into the registry's mutable actions field.
+      const registry: PageActionsRegistry = { fetchedAt: new Date().toISOString(), actions: [...ack.actions] };
       await api.storageSet(PAGE_ACTIONS_STORAGE_KEY, registry);
       log.info('page-actions registry refreshed', { count: ack.actions.length });
       return;
