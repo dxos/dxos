@@ -7,6 +7,7 @@ import browser from 'webextension-polyfill';
 import { log } from '@dxos/log';
 
 import { findComposerTab } from '../bridge/sender';
+import { defineState } from '../state';
 import { matchesUrlPatterns } from './match-pattern';
 import {
   PAGE_ACTIONS_LIST_MESSAGE_TYPE,
@@ -82,7 +83,8 @@ export const refreshRegistry = async (
         log.info('page-actions registry refresh failed', { error: ack.error });
         return;
       }
-      const registry: PageActionsRegistry = { fetchedAt: new Date().toISOString(), actions: ack.actions };
+      // Copy the readonly ack array into the registry's mutable actions field.
+      const registry: PageActionsRegistry = { fetchedAt: new Date().toISOString(), actions: [...ack.actions] };
       await api.storageSet(PAGE_ACTIONS_STORAGE_KEY, registry);
       log.info('page-actions registry refreshed', { count: ack.actions.length });
       return;
@@ -99,14 +101,18 @@ export const refreshRegistry = async (
 };
 
 /**
- * Read the cached registry (empty when never fetched). The stored value is
- * re-validated on every read — storage content survives extension upgrades
- * and is treated as untrusted input.
+ * The cached page-actions registry. The stored value is re-validated on every read via
+ * {@link decodeRegistry} — storage content survives extension upgrades and is treated as untrusted.
  */
-export const getRegistry = async (): Promise<PageActionsRegistry> => {
-  const stored = await browser.storage.local.get(PAGE_ACTIONS_STORAGE_KEY);
-  return decodeRegistry(stored?.[PAGE_ACTIONS_STORAGE_KEY]) ?? { fetchedAt: '', actions: [] };
-};
+const RegistryState = defineState<PageActionsRegistry>(
+  'local',
+  PAGE_ACTIONS_STORAGE_KEY,
+  { fetchedAt: '', actions: [] },
+  decodeRegistry,
+);
+
+/** Read the cached registry (empty when never fetched). */
+export const getRegistry = (): Promise<PageActionsRegistry> => RegistryState.get();
 
 /**
  * Cached actions applicable to a URL in a given context.

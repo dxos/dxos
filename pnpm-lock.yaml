@@ -3253,6 +3253,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/crx-protocol':
+        specifier: workspace:*
+        version: link:../../common/crx-protocol
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools
