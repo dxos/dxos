@@ -22,7 +22,6 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 // InboxOperation.GoogleCalendarSync's schema; the import lets TypeScript name it in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Connection, SyncBinding } from '@dxos/plugin-connector';
-import { Cursor } from '@dxos/types';
 
 import { mapEvent } from './mapper';
 import { GoogleCalendar } from '../../../apis';
@@ -31,27 +30,6 @@ import { GoogleCredentials } from '../../../services';
 import { Calendar, InboxOperation } from '../../../types';
 
 const COMMIT_PAGE_SIZE = 10;
-
-const persistCalendarCursor = (cursor: Cursor.Cursor, lastUpdate: string) => {
-  Obj.update(cursor, (cursor) => {
-    cursor.value = lastUpdate;
-  });
-};
-
-/** Pre-integration `Calendar.lastSyncedUpdate` persisted on legacy objects — migrate onto `binding.cursor`. */
-const readLegacyLastSyncedUpdate = (calendar: Calendar.Calendar): string | undefined => {
-  const legacy = calendar as Calendar.Calendar & { lastSyncedUpdate?: unknown };
-  return typeof legacy.lastSyncedUpdate === 'string' ? legacy.lastSyncedUpdate : undefined;
-};
-
-const clearLegacyLastSyncedUpdate = (calendar: Calendar.Calendar) => {
-  if (readLegacyLastSyncedUpdate(calendar) === undefined) {
-    return;
-  }
-  Obj.update(calendar, (calendar) => {
-    delete (calendar as { lastSyncedUpdate?: string }).lastSyncedUpdate;
-  });
-};
 
 export default InboxOperation.GoogleCalendarSync.pipe(
   Operation.withHandler(
@@ -85,17 +63,9 @@ export default InboxOperation.GoogleCalendarSync.pipe(
 
           // The cursor is the event `updated` high-water mark (stored ISO, compared as epoch-ms). A
           // missing cursor means initial sync (window by start time); otherwise incremental
-          // (by `updatedMin`). Migrate the pre-integration `Calendar.lastSyncedUpdate` onto the cursor.
+          // (by `updatedMin`).
           const cursor = yield* Database.load(binding.cursor);
-          const legacyLastSynced = readLegacyLastSyncedUpdate(calendar);
-          let storedCursor = typeof cursor.value === 'string' ? cursor.value : undefined;
-          if (legacyLastSynced && !storedCursor) {
-            persistCalendarCursor(cursor, legacyLastSynced);
-            clearLegacyLastSyncedUpdate(calendar);
-            storedCursor = legacyLastSynced;
-          }
-          storedCursor ??= legacyLastSynced;
-          const cursorKey = storedCursor ? Date.parse(storedCursor) : 0;
+          const cursorKey = typeof cursor.value === 'string' ? Date.parse(cursor.value) : 0;
           const isInitialSync = cursorKey === 0;
           log('syncing google calendar', { calendar: Obj.getURI(calendar), calendarId, isInitialSync });
 
