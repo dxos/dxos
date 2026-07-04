@@ -12,6 +12,7 @@ import {
   randFloat,
   randFullName,
   randHexaDecimal,
+  randImg,
   randJobTitle,
   randNumber,
   randParagraph,
@@ -67,8 +68,7 @@ export const random = {
     iso8601: () => randRecentDate().toISOString(),
   },
   image: {
-    // Seed per call so generated objects get distinct images (falso's `randImg` is a constant URL).
-    url: () => `https://picsum.photos/seed/${randUuid()}/256/256`,
+    url: () => randImg(),
   },
 
   //

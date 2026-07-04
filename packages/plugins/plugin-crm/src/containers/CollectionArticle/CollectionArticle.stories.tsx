@@ -74,11 +74,16 @@ const meta = {
                 ]),
               );
 
-              // The generator does not populate array fields; derive emails from each person's name.
+              // The generator only populates fields with a GeneratorAnnotation and skips array fields;
+              // enrich persons (job data, distinct image, derived emails) and organizations (distinct
+              // image) so the masonry and table views show varied, fully-populated cards.
               objects
                 .filter((object): object is Person.Person => Obj.instanceOf(Person.Person, object))
                 .forEach((person, index) => {
                   Obj.update(person, (person: Obj.Mutable<Person.Person>) => {
+                    person.jobTitle = random.person.jobTitle();
+                    person.department = random.commerce.department();
+                    person.image = `https://picsum.photos/seed/${random.string.uuid()}/256/256`;
                     const slug = (person.fullName ?? 'user')
                       .toLowerCase()
                       .replace(/[^a-z0-9]+/g, '.')
@@ -87,6 +92,15 @@ const meta = {
                       { value: `${slug}@example.com` },
                       ...(index % 3 === 0 ? [{ label: 'work', value: `${slug}@work.example.com` }] : []),
                     ];
+                  });
+                });
+              objects
+                .filter((object): object is Organization.Organization =>
+                  Obj.instanceOf(Organization.Organization, object),
+                )
+                .forEach((organization) => {
+                  Obj.update(organization, (organization: Obj.Mutable<Organization.Organization>) => {
+                    organization.image = `https://picsum.photos/seed/${random.string.uuid()}/256/256`;
                   });
                 });
             }),
