@@ -10006,6 +10006,12 @@ importers:
       '@dxos/react-ui-masonry':
         specifier: workspace:*
         version: link:../../ui/react-ui-masonry
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-search':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-search
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
@@ -10049,6 +10055,12 @@ importers:
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@effect/vitest':
         specifier: 'catalog:'
         version: 0.29.0(effect@3.21.4)(vitest@4.1.8)
@@ -16350,6 +16362,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-mosaic
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme

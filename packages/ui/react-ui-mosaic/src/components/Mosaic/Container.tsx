@@ -76,7 +76,7 @@ const [MosaicContainerContextProvider, useMosaicContainerContext] =
 // State attribute: [&:has(>_[data-mosaic-container-state=active])]
 const MOSAIC_CONTAINER_STATE_ATTR = 'mosaic-container-state';
 
-// State attribute: [&:has(>_[data-mosaic-debug=true])]
+// Debug flag on the container's `group` element; Placeholder reads it via `group-data-[mosaic-debug=true]` (see styles.ts).
 const MOSAIC_CONTAINER_DEBUG_ATTR = 'mosaic-debug';
 
 // CSS variables: [var(--mosaic-placeholder-xxx)]

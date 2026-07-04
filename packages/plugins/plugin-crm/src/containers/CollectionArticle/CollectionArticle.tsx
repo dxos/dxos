@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -9,22 +10,27 @@ import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
-import { Card, Focus, Icon, Panel, ToggleGroup, ToggleGroupIconItem, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Focus, Icon, Panel, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
+import { Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
+import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { DynamicTable } from '@dxos/react-ui-table';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
+// TODO(burdon): Reconcile with MasonryArticle; remove plugin-masonry?
+// TODO(burdon): Move to plugin-space (supercedes TypeCollectionArticle).
+
 /** Sidebar layout modes for a type collection. */
 type Layout = 'masonry' | 'table';
 
-const LAYOUT_ICONS: Record<Layout, string> = {
-  masonry: 'ph--squares-four--regular',
-  table: 'ph--table--regular',
-};
+const LAYOUTS: { value: Layout; icon: string }[] = [
+  { value: 'masonry', icon: 'ph--squares-four--regular' },
+  { value: 'table', icon: 'ph--table--regular' },
+];
 
 export type CollectionArticleProps = {
   role?: string;
@@ -35,9 +41,9 @@ export type CollectionArticleProps = {
 
 /**
  * Generic collection view for every object of a type: a toolbar with a Masonry/Table layout switch
- * over a shared query. Mirrors the database type folder (`TypeCollectionArticle`) but lets the user
- * choose between the header-card masonry and a schema-derived table. Selecting an item opens it as a
- * sibling plank.
+ * and a text filter over a shared query. Mirrors the database type folder (`TypeCollectionArticle`)
+ * but lets the user choose between the header-card masonry and a schema-derived table. Selecting an
+ * item opens it as a sibling plank.
  */
 export const CollectionArticle = ({ role, space, type, attendableId }: CollectionArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -46,6 +52,40 @@ export const CollectionArticle = ({ role, space, type, attendableId }: Collectio
   const [layout, setLayout] = useState<Layout>('masonry');
 
   const objects = useQuery(space.db, Filter.type(Type.getURI(type)));
+
+  // Text filter over the object labels; feeds both the masonry tiles and the table rows.
+  const { results, handleSearch } = useSearchListResults<Obj.Unknown>({
+    items: objects,
+    extract: (object) => Obj.getLabel(object) ?? '',
+  });
+
+  // Layout switch as an idiomatic single-select toggle group; the atom rebuilds when `layout`
+  // changes so the active item reflects state.
+  const actionsAtom = useMemo(
+    () =>
+      Atom.make(() =>
+        MenuBuilder.make()
+          .group(
+            'layout',
+            {
+              variant: 'toggleGroup',
+              selectCardinality: 'single',
+              value: layout,
+              label: ['layout.label', { ns: meta.profile.key }],
+            },
+            (group) => {
+              LAYOUTS.forEach(({ value, icon }) => {
+                group.action(value, { label: [`layout-${value}.label`, { ns: meta.profile.key }], icon }, () =>
+                  setLayout(value),
+                );
+              });
+            },
+          )
+          .build(),
+      ),
+    [layout],
+  );
+  const menuActions = useMenuActions(actionsAtom);
 
   const handleOpen = useCallback(
     (object: Obj.Unknown) => {
@@ -66,45 +106,48 @@ export const CollectionArticle = ({ role, space, type, attendableId }: Collectio
 
   const tileItems = useMemo<TileData[]>(
     () =>
-      objects.map((object) => ({
+      results.map((object) => ({
         object,
         current: Obj.getURI(object) === currentId,
         onOpen: handleOpen,
         onDelete: Obj.getParent(object) ? undefined : handleDelete,
       })),
-    [objects, currentId, handleOpen, handleDelete],
+    [results, currentId, handleOpen, handleDelete],
   );
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root classNames='justify-end'>
-          <ToggleGroup type='single' value={layout} onValueChange={(value) => value && setLayout(value as Layout)}>
-            {(Object.keys(LAYOUT_ICONS) as Layout[]).map((value) => (
-              <ToggleGroupIconItem
-                key={value}
-                value={value}
-                icon={LAYOUT_ICONS[value]}
-                label={t(`layout-${value}.label`)}
-              />
-            ))}
-          </ToggleGroup>
-        </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
-        {objects.length === 0 ? (
-          <Empty classNames='bs-full' label={t('type-collection-empty.message')} />
-        ) : layout === 'table' ? (
-          <DynamicTable type={type} rows={objects} onRowClick={handleOpen} />
-        ) : (
-          <Masonry.Root Tile={TileAdapter}>
-            <Masonry.Content classNames='p-trim-md'>
-              <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
-            </Masonry.Content>
-          </Masonry.Root>
-        )}
-      </Panel.Content>
-    </Panel.Root>
+    <SearchList.Root onSearch={handleSearch}>
+      <Panel.Root role={role}>
+        <Panel.Toolbar classNames='flex items-center gap-2'>
+          <SearchList.Input placeholder={t('search-placeholder.label')} classNames='grow' />
+          {/* Constrain the menu toolbar to its content so the search input fills the left.
+              `alwaysActive` keeps the layout toggle full-opacity; it needs no attention gating. */}
+          <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
+            <Menu.Toolbar classNames='w-auto!' />
+          </Menu.Root>
+        </Panel.Toolbar>
+        <Panel.Content>
+          {objects.length === 0 ? (
+            <Empty classNames='bs-full' label={t('type-collection-empty.message')} />
+          ) : results.length === 0 ? (
+            <Empty classNames='bs-full' label={t('search-no-results.message')} />
+          ) : layout === 'table' ? (
+            <DynamicTable
+              type={type}
+              rows={results}
+              features={{ selection: { enabled: false }, dataEditable: false, schemaEditable: false, pinColumns: 1 }}
+              onRowClick={handleOpen}
+            />
+          ) : (
+            <Masonry.Root Tile={TileAdapter}>
+              <Masonry.Content classNames='p-trim-md'>
+                <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
+              </Masonry.Content>
+            </Masonry.Root>
+          )}
+        </Panel.Content>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 
