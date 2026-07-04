@@ -21,7 +21,7 @@ import { getSession, hydrate } from '@dxos/compute/AgentService';
 import { Annotation, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { DXN, EntityId } from '@dxos/keys';
+import { DXN, EID, EntityId, type SpaceId } from '@dxos/keys';
 import { Message, Organization } from '@dxos/types';
 
 import { ProcessManager } from '../index';
@@ -142,6 +142,26 @@ const StubDelegationStrategy: DelegationStrategy = {
 const DelegationTestLayer = AssistantTestLayer({
   ...assistantTestLayerOptions,
   agent: { delegationStrategy: StubDelegationStrategy },
+});
+
+//
+// Space MCP resolver fixtures.
+//
+
+/**
+ * Records the spaces the agent's MCP resolver is consulted for, proving the request seam invokes the
+ * space-scoped provider. Returns no servers — the wiring, not a live MCP connection, is under test.
+ */
+const mcpResolverHarness: { spaceIds: SpaceId[] } = { spaceIds: [] };
+
+const McpResolverTestLayer = AssistantTestLayer({
+  ...assistantTestLayerOptions,
+  agent: {
+    getMcpServers: (spaceId) => {
+      mcpResolverHarness.spaceIds.push(spaceId);
+      return Promise.resolve([]);
+    },
+  },
 });
 
 describe('Agent Service', () => {
@@ -519,5 +539,35 @@ describe('Agent Service', () => {
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
+  );
+
+  // Guards the regression from #11054: a refactor dropped the wiring that fed space-level MCP servers
+  // to agent sessions (the app-wide AgentService layer stopped providing `getMcpServers`), so servers
+  // configured via the chat MCP panel reached nothing. The request seam must consult the space-scoped
+  // resolver on each turn. The resolver is invoked before the model call, so a memoization miss would
+  // still fail elsewhere — the assertion below proves the wiring, not a live MCP connection.
+  // Placed last so the extra turn does not perturb the shared deterministic ID stream above.
+  // Reuses the existing memoized single-turn "capital of France" fixture, so no regeneration is
+  // needed; if this prompt changes, regenerate fixtures via the `regenerate-memoized-llm` skill.
+  it.effect(
+    'consults the space-scoped MCP server resolver on each turn',
+    Effect.fnUntraced(
+      function* (_) {
+        mcpResolverHarness.spaceIds = [];
+        const agent = yield* AgentService.createSession();
+
+        const parsed = EID.tryParse(Obj.getURI(agent.feed));
+        const expectedSpaceId = parsed ? EID.getSpaceId(parsed) : undefined;
+
+        yield* agent.submitPrompt('What is the capital of France? Reply with just the city name.');
+        yield* agent.waitForCompletion();
+
+        expect(expectedSpaceId).toBeDefined();
+        expect(mcpResolverHarness.spaceIds).toContain(expectedSpaceId);
+      },
+      Effect.provide(McpResolverTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
   );
 });
