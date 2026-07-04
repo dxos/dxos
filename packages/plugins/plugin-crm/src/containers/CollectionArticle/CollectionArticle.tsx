@@ -21,6 +21,9 @@ import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
+// TODO(burdon): Reconcile with MasonryArticle.
+// TODO(burdon): Move to plugin-space (supercedes TypeCollectionArticle).
+
 /** Sidebar layout modes for a type collection. */
 type Layout = 'masonry' | 'table';
 
@@ -115,11 +118,11 @@ export const CollectionArticle = ({ role, space, type, attendableId }: Collectio
   return (
     <SearchList.Root onSearch={handleSearch}>
       <Panel.Root role={role}>
-        <Panel.Toolbar>
+        <Panel.Toolbar classNames='flex items-center gap-2'>
+          <SearchList.Input placeholder={t('search-placeholder.label')} classNames='grow' />
+          {/* Constrain the menu toolbar to its content so the search input fills the left. */}
           <Menu.Root {...menuActions} attendableId={attendableId}>
-            <Menu.Toolbar>
-              <SearchList.Input placeholder={t('search-placeholder.label')} classNames='is-full' />
-            </Menu.Toolbar>
+            <Menu.Toolbar classNames='w-auto!' />
           </Menu.Root>
         </Panel.Toolbar>
         <Panel.Content>
