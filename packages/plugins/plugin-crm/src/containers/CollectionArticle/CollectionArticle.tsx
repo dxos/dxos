@@ -120,8 +120,9 @@ export const CollectionArticle = ({ role, space, type, attendableId }: Collectio
       <Panel.Root role={role}>
         <Panel.Toolbar classNames='flex items-center gap-2'>
           <SearchList.Input placeholder={t('search-placeholder.label')} classNames='grow' />
-          {/* Constrain the menu toolbar to its content so the search input fills the left. */}
-          <Menu.Root {...menuActions} attendableId={attendableId}>
+          {/* Constrain the menu toolbar to its content so the search input fills the left.
+              `alwaysActive` keeps the layout toggle full-opacity; it needs no attention gating. */}
+          <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
             <Menu.Toolbar classNames='w-auto!' />
           </Menu.Root>
         </Panel.Toolbar>
