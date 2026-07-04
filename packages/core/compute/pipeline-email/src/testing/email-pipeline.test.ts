@@ -30,6 +30,7 @@ import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { type FactIndexer, extractFactsStage } from '../extract-stage';
+import { buildEntityIndex, reconcileFactEntities } from '../fact-index';
 import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../facts';
 import { buildThreads } from '../threads';
 import { Thread } from '../types';
@@ -345,6 +346,18 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
         }),
       );
       expect(facts.length).toBeGreaterThanOrEqual(0);
+
+      // Reconcile advisory fact entities against the canonical ECHO Person/Organization objects the
+      // pipeline created (slice-1 §9.1). Facts are sparse/flaky under gpt-oss, so the resolved count
+      // is best-effort here — the reconciliation logic itself is proven deterministically in
+      // fact-index.test.ts.
+      const orgsForIndex = await db.query(Filter.type(Organization.Organization)).run();
+      const entityIndex = buildEntityIndex([...persons, ...orgsForIndex]);
+      const resolved = facts.flatMap((fact) => {
+        const refs = reconcileFactEntities(fact, entityIndex);
+        return refs.subject || refs.object ? [refs] : [];
+      });
+      expect(resolved.length).toBeGreaterThanOrEqual(0);
 
       // Threads are deterministic (grouped from the captured messages), so assert them strictly.
       const threads = buildThreads(items, { ownerEmail: 'owner@dxos.org', now: new Date().toISOString() });
