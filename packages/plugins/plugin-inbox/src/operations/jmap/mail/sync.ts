@@ -20,13 +20,13 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 import { SyncBinding } from '@dxos/plugin-connector';
 import { Cursor, Person } from '@dxos/types';
 
-import { type DecodedEmail, decodeBody, mapToMessage } from './mapper';
 import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { JmapCredentials } from '../../../services';
 import { EmailStage } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
 import { readBindingOptions } from '../../../util';
+import { type DecodedEmail, decodeBody, mapToMessage } from './mapper';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 

@@ -23,7 +23,6 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 import { type Connection, SyncBinding } from '@dxos/plugin-connector';
 import { Cursor, Person } from '@dxos/types';
 
-import { type DecodedMessage, decodeBody, mapToMessage } from './mapper';
 import { GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
 import { GoogleCredentials } from '../../../services';
@@ -31,6 +30,7 @@ import { EmailStage } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
 import { readBindingOptions } from '../../../util';
 import { parseFromHeader } from '../../util';
+import { type DecodedMessage, decodeBody, mapToMessage } from './mapper';
 
 type DateChunk = {
   readonly start: Date;

@@ -23,11 +23,11 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Connection, SyncBinding } from '@dxos/plugin-connector';
 
-import { mapEvent } from './mapper';
 import { GoogleCalendar } from '../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
 import { GoogleCredentials } from '../../../services';
 import { Calendar, InboxOperation } from '../../../types';
+import { mapEvent } from './mapper';
 
 const COMMIT_PAGE_SIZE = 10;
 

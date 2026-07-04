@@ -9,8 +9,8 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Expando } from '@dxos/schema';
 import { AccessToken, Cursor } from '@dxos/types';
 
-import { migrations } from './migrations';
 import { Connection, SyncBinding } from '../types';
+import { migrations } from './migrations';
 
 describe('SyncBinding migrations', () => {
   let builder: EchoTestBuilder;
