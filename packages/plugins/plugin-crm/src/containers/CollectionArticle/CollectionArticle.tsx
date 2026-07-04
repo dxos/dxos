@@ -80,6 +80,7 @@ export const CollectionArticle = ({ role, space, type, attendableId }: Collectio
       <Panel.Toolbar asChild>
         <Toolbar.Root classNames='justify-end'>
           <ToggleGroup type='single' value={layout} onValueChange={(value) => value && setLayout(value as Layout)}>
+            {/* TODO(burdon): Use app graph. */}
             {(Object.keys(LAYOUT_ICONS) as Layout[]).map((value) => (
               <ToggleGroupIconItem
                 key={value}
@@ -95,7 +96,12 @@ export const CollectionArticle = ({ role, space, type, attendableId }: Collectio
         {objects.length === 0 ? (
           <Empty classNames='bs-full' label={t('type-collection-empty.message')} />
         ) : layout === 'table' ? (
-          <DynamicTable type={type} rows={objects} onRowClick={handleOpen} />
+          <DynamicTable
+            type={type}
+            rows={objects}
+            features={{ selection: { enabled: false }, dataEditable: false, schemaEditable: false, pinColumns: 1 }}
+            onRowClick={handleOpen}
+          />
         ) : (
           <Masonry.Root Tile={TileAdapter}>
             <Masonry.Content classNames='p-trim-md'>
