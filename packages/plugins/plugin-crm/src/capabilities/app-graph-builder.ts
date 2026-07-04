@@ -47,12 +47,20 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'crmTypes',
         match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.crm),
-        connector: (space, get) =>
-          Effect.succeed(
-            CRM_TYPES.map((type) => createTypeNode({ type, space, get })).filter(
+        connector: (space, get) => {
+          // Index the registry once per rebuild so each type resolves its registered schema in O(1).
+          const registered = new Map(
+            space.db.graph.registry
+              .list()
+              .filter(Type.isType)
+              .map((entry) => [Type.getTypename(entry), entry] as const),
+          );
+          return Effect.succeed(
+            CRM_TYPES.map((type) => createTypeNode({ type, space, get, registered })).filter(
               (node): node is NonNullable<typeof node> => node !== null,
             ),
-          ),
+          );
+        },
       }),
     ]);
 
@@ -65,10 +73,12 @@ const createTypeNode = ({
   type,
   space,
   get,
+  registered,
 }: {
   type: Type.AnyEntity;
   space: Space;
   get: Atom.Context;
+  registered: ReadonlyMap<string, Type.AnyEntity>;
 }): Node.NodeArg<Type.AnyEntity> | null => {
   const typename = Type.getTypename(type);
   const objects = get(space.db.query(Filter.type(Type.getURI(type))).atom);
@@ -77,11 +87,7 @@ const createTypeNode = ({
   }
 
   // Prefer the registry copy of the schema: raw schema classes don't carry annotations reliably.
-  const registered = space.db.graph.registry
-    .list()
-    .filter(Type.isType)
-    .find((entry) => Type.getTypename(entry) === typename);
-  const entity = registered ?? type;
+  const entity = registered.get(typename) ?? type;
   const annotation = Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(entity)));
 
   return Node.make({
