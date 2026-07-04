@@ -52,9 +52,9 @@ export type ThreadRootProps = PropsWithChildren<
 
 /**
  * Headless root of a thread. Provides message-tile context (metadata resolver,
- * injected renderers, callbacks) and the Mosaic root that `Thread.Messages`
- * renders its virtual stack within. Renders no DOM of its own — wrap the visible
- * thread chrome in `Thread.Content`.
+ * injected renderers, callbacks). Requires an ambient `Mosaic.Root` ancestor,
+ * within which `Thread.Messages` renders its virtual stack. Renders no DOM of
+ * its own — wrap the visible thread chrome in `Thread.Content`.
  */
 const ThreadRoot = ({
   children,
@@ -85,7 +85,7 @@ const ThreadRoot = ({
       onMessageDelete={onMessageDelete}
       onAcceptProposal={onAcceptProposal}
     >
-      <Mosaic.Root>{children}</Mosaic.Root>
+      {children}
     </ThreadContextProvider>
   );
 };

@@ -50,30 +50,28 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
             <Message.Title>{t('row-details-no-selection.label')}</Message.Title>
           </Message.Root>
         ) : (
-          <Mosaic.Root>
-            <Mosaic.Container
-              asChild
-              orientation='vertical'
-              autoScroll={viewport}
-              eventHandler={{ id: objectId, canDrop: () => true }}
-            >
-              <ScrollArea.Root orientation='vertical'>
-                <ScrollArea.Viewport ref={setViewport}>
-                  <Mosaic.Stack
-                    items={selectedObjects}
-                    getId={(obj) => obj.id}
-                    Tile={({ ...props }) => (
-                      <Mosaic.Tile {...props}>
-                        <Card.Root>
-                          <ObjectForm object={props.data} type={type} />
-                        </Card.Root>
-                      </Mosaic.Tile>
-                    )}
-                  />
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
-            </Mosaic.Container>
-          </Mosaic.Root>
+          <Mosaic.Container
+            asChild
+            orientation='vertical'
+            autoScroll={viewport}
+            eventHandler={{ id: objectId, canDrop: () => true }}
+          >
+            <ScrollArea.Root orientation='vertical'>
+              <ScrollArea.Viewport ref={setViewport}>
+                <Mosaic.Stack
+                  items={selectedObjects}
+                  getId={(obj) => obj.id}
+                  Tile={({ ...props }) => (
+                    <Mosaic.Tile {...props}>
+                      <Card.Root>
+                        <ObjectForm object={props.data} type={type} />
+                      </Card.Root>
+                    </Mosaic.Tile>
+                  )}
+                />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Mosaic.Container>
         )}
       </Panel.Content>
     </Panel.Root>
