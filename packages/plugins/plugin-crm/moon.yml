@@ -4,6 +4,8 @@ tags:
   - ts-build
   - ts-test
   - pack
+  - storybook
+  - ts-test-storybook
 tasks:
   compile:
     args:
@@ -11,6 +13,7 @@ tasks:
       - '--entryPoint=src/CrmPlugin.ts'
       - '--entryPoint=src/skills/index.ts'
       - '--entryPoint=src/capabilities/index.ts'
+      - '--entryPoint=src/containers/index.ts'
       - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/operations/index.ts'
       - '--entryPoint=src/plugin.ts'
