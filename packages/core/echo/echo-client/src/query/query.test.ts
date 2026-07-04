@@ -137,8 +137,8 @@ describe('Query', () => {
     });
 
     test('limit with ordering', async () => {
-      const allObjects = await db.query(Query.select(Filter.everything()).orderBy(Order.natural)).run();
-      const limitedObjects = await db.query(Query.select(Filter.everything()).orderBy(Order.natural).limit(3)).run();
+      const allObjects = await db.query(Query.select(Filter.everything()).orderBy(Order.natural())).run();
+      const limitedObjects = await db.query(Query.select(Filter.everything()).orderBy(Order.natural()).limit(3)).run();
 
       expect(limitedObjects).to.have.length(3);
       // Verify the results are ordered consistently.

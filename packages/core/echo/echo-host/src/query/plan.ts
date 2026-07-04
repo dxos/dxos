@@ -34,7 +34,8 @@ export namespace QueryPlan {
     | UnionStep
     | SetDifferenceStep
     | OrderStep
-    | LimitStep;
+    | LimitStep
+    | SkipStep;
 
   /**
    * Clear the current working set.
@@ -267,5 +268,14 @@ export namespace QueryPlan {
     _tag: 'LimitStep';
 
     limit: number;
+  };
+
+  /**
+   * Skip a number of results (offset).
+   */
+  export type SkipStep = {
+    _tag: 'SkipStep';
+
+    skip: number;
   };
 }

@@ -144,6 +144,14 @@ export interface Query<T> {
   'limit'(limit: number): Query<T>;
 
   /**
+   * Skip a number of results (offset). Combined with `orderBy` and `limit`, expresses a windowed
+   * (paginated) read.
+   * @param skip - Number of leading results to skip.
+   * @returns Query for the remaining results.
+   */
+  'skip'(skip: number): Query<T>;
+
+  /**
    * Query from selected databases only.
    *
    * Example:
@@ -339,6 +347,14 @@ class QueryClass implements Any {
       type: 'limit',
       query: this.ast,
       limit,
+    });
+  }
+
+  'skip'(skip: number): Any {
+    return new QueryClass({
+      type: 'skip',
+      query: this.ast,
+      skip,
     });
   }
 

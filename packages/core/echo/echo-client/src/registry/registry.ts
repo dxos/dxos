@@ -353,6 +353,10 @@ const executeQuery = (registry: Registry.Registry, ast: QueryAST.Query): Entity.
       const inner = executeQuery(registry, ast.query);
       return inner.slice(0, ast.limit);
     }
+    case 'skip': {
+      const inner = executeQuery(registry, ast.query);
+      return inner.slice(ast.skip);
+    }
     // Scope (`from`) and `options` are unwrapped: a direct registry query ignores scope.
     case 'from':
       return executeQuery(registry, ast.query);

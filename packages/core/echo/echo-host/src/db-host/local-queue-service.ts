@@ -56,13 +56,14 @@ export class LocalQueueServiceImpl implements QueueService {
     const { spaceId, queueIds } = query;
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
-        const cursor = query.after ? parseInt(query.after) : -1;
         const result = yield* this.#feedStore.query({
           requestId: crypto.randomUUID(),
           feedNamespace: request.query.queuesNamespace || FeedProtocol.WellKnownNamespaces.data,
           spaceId: spaceId! as SpaceId,
           query: { feedIds: queueIds ?? [] },
-          position: cursor,
+          cursor: query.after ? FeedProtocol.FeedCursor.make(query.after) : undefined,
+          before: query.before ? FeedProtocol.FeedCursor.make(query.before) : undefined,
+          reverse: query.reverse,
           limit: query.limit,
         });
 
@@ -70,15 +71,11 @@ export class LocalQueueServiceImpl implements QueueService {
           JSON.stringify(EchoFeedCodec.decode(block.data, block.position ?? undefined) as ObjectJSON),
         );
 
-        const lastBlock = result.blocks[result.blocks.length - 1];
-        const nextCursor = lastBlock && lastBlock.position != null ? String(lastBlock.position) : null;
-
         return Function.identity<QueueQueryResult>({
           objects,
-
-          // TODO(dmaretskyi): This is wrong, fix later - cursors should come directly from the feed.
-          nextCursor: nextCursor?.toString() ?? '',
-          prevCursor: '',
+          nextCursor: result.nextCursor,
+          prevCursor: result.prevCursor ?? '',
+          hasMore: result.hasMore,
         });
       }),
     );

@@ -143,6 +143,84 @@ describe('LocalQueueServiceImpl', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('should support reverse pagination with before cursors', () =>
+    Effect.gen(function* () {
+      const runtime = Effect.succeed(yield* Effect.runtime<any>());
+      const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
+      yield* feedStore.migrate();
+      const service = new LocalQueueServiceImpl(runtime, feedStore);
+      const spaceId = 'space-2' as SpaceId;
+      const queueId = EntityId.random();
+
+      const items = Array.from({ length: 10 }, (_, i) => ({ id: `obj${i}`, data: `test${i}` }));
+      yield* Effect.promise(() =>
+        service.insertIntoQueue({
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
+          spaceId,
+          queueId,
+          objects: items.map((item) => JSON.stringify(item)),
+        }),
+      );
+
+      // Head page: newest 3, reverse order.
+      const head = yield* Effect.promise(() =>
+        service.queryQueue({
+          query: { spaceId, queueIds: [queueId], reverse: true, limit: 3 },
+        }),
+      );
+      expect(head.objects!.map((o) => JSON.parse(o).id)).toEqual(['obj9', 'obj8', 'obj7']);
+      expect(head.hasMore).toBe(true);
+      expect(head.prevCursor).toBeTruthy();
+
+      // Walk older via `before`.
+      const older = yield* Effect.promise(() =>
+        service.queryQueue({
+          query: { spaceId, queueIds: [queueId], reverse: true, before: head.prevCursor!, limit: 3 },
+        }),
+      );
+      expect(older.objects!.map((o) => JSON.parse(o).id)).toEqual(['obj6', 'obj5', 'obj4']);
+      expect(older.hasMore).toBe(true);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('should pass tombstone blocks through paginated reads', () =>
+    Effect.gen(function* () {
+      const runtime = Effect.succeed(yield* Effect.runtime<any>());
+      const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
+      yield* feedStore.migrate();
+      const service = new LocalQueueServiceImpl(runtime, feedStore);
+      const spaceId = 'space-3' as SpaceId;
+      const queueId = EntityId.random();
+      const objectId = EntityId.random();
+
+      yield* Effect.promise(() =>
+        service.insertIntoQueue({
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
+          spaceId,
+          queueId,
+          objects: [JSON.stringify({ id: objectId, data: 'test' })],
+        }),
+      );
+      yield* Effect.promise(() =>
+        service.deleteFromQueue({
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
+          spaceId,
+          queueId,
+          objectIds: [objectId],
+        }),
+      );
+
+      const head = yield* Effect.promise(() =>
+        service.queryQueue({
+          query: { spaceId, queueIds: [queueId], reverse: true, limit: 10 },
+        }),
+      );
+      expect(head.objects).toHaveLength(2);
+      expect(JSON.parse(head.objects![0])).toMatchObject({ 'id': objectId, '@deleted': true });
+      expect(JSON.parse(head.objects![1])).toMatchObject({ id: objectId, data: 'test' });
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('should report local push backlog in getSyncState', () =>
     Effect.gen(function* () {
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: false });

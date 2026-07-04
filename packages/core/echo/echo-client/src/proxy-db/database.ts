@@ -61,7 +61,7 @@ import {
 } from '../echo-handler';
 import { FeedHandle } from '../feed/feed-handle';
 import { type HypergraphImpl } from '../hypergraph';
-import { isSimpleSelectionQuery } from '../query';
+import { isSimpleFeedWindowQuery } from '../query';
 import { type ObjectMigration } from './object-migration';
 
 export interface EchoDatabase extends Database.Database {
@@ -809,7 +809,7 @@ const isQueryScoped = (query: QueryAST.Query): boolean => {
  * Index-only queries (e.g. full-text search) must instead run through the host indexer.
  */
 const isClientEvaluableFeedQuery = (query: QueryAST.Query): boolean => {
-  const simple = isSimpleSelectionQuery(query);
+  const simple = isSimpleFeedWindowQuery(query);
   return simple != null && !filterContainsTextSearch(simple.filter);
 };
 

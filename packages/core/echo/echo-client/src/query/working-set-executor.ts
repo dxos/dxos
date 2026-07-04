@@ -126,6 +126,8 @@ export class WorkingSetQueryExecutor {
         return this._execOrderStep(step, ws);
       case 'LimitStep':
         return ws.slice(0, step.limit);
+      case 'SkipStep':
+        return ws.slice(step.skip);
       default:
         return null;
     }
@@ -513,8 +515,10 @@ export class WorkingSetQueryExecutor {
 
   private _compareByOrder(itemA: WorkingSetItem, itemB: WorkingSetItem, order: QueryAST.Order): number {
     switch (order.kind) {
-      case 'natural':
-        return itemA.objectId.localeCompare(itemB.objectId);
+      case 'natural': {
+        const comparison = itemA.objectId.localeCompare(itemB.objectId);
+        return order.direction === 'desc' ? -comparison : comparison;
+      }
       case 'rank':
         // No rank info available in working set; treat as equal.
         return 0;

@@ -162,23 +162,31 @@ export class FeedStore {
         const sql = yield* SqlClient.SqlClient;
         let feedIds: string[] | undefined = [];
         let cursorInsertionId = -1;
+        let beforeInsertionId: number | undefined;
         let cursorToken: string | undefined;
 
         if (!request.spaceId) {
           return yield* Effect.die(new Error('spaceId is required'));
         }
 
-        if (
-          (request.position !== undefined ? 1 : 0) +
-            (request.cursor !== undefined ? 1 : 0) +
-            (request.unpositionedOnly === true ? 1 : 0) >
-          1
-        ) {
-          return yield* Effect.die(new Error('Only one of position, cursor, or unpositionedOnly can be used'));
+        // `reverse` reads by insertion order (newest-first) with no cursor bound needed --
+        // it can start unbounded from the newest block, so it alone selects cursor mode.
+        const cursorModeRequested =
+          request.cursor !== undefined || request.before !== undefined || request.reverse === true;
+        const positionModeCount =
+          (request.position !== undefined ? 1 : 0) + (request.unpositionedOnly === true ? 1 : 0);
+
+        if (positionModeCount > 1) {
+          return yield* Effect.die(new Error('Only one of position or unpositionedOnly can be used'));
+        }
+        if (positionModeCount > 0 && cursorModeRequested) {
+          return yield* Effect.die(
+            new Error('cursor/before/reverse cannot be combined with position or unpositionedOnly'),
+          );
         }
 
         if (request.cursor) {
-          const { token, insertionId } = decodeCursor(request.cursor as FeedCursor);
+          const { token, insertionId } = decodeCursor(request.cursor);
           if (!token || insertionId === undefined || isNaN(insertionId)) {
             return yield* Effect.die(new Error(`Invalid cursor format`));
           }
@@ -186,9 +194,21 @@ export class FeedStore {
           cursorInsertionId = insertionId;
         }
 
-        // Validate Token if cursor used.
+        if (request.before) {
+          const { token, insertionId } = decodeCursor(request.before);
+          if (!token || insertionId === undefined || isNaN(insertionId)) {
+            return yield* Effect.die(new Error(`Invalid before cursor format`));
+          }
+          if (cursorToken !== undefined && token !== cursorToken) {
+            return yield* Effect.die(new Error(`Cursor token mismatch between cursor and before`));
+          }
+          cursorToken = token;
+          beforeInsertionId = insertionId;
+        }
+
+        // Validate Token if cursor or before used.
         const validCursorToken = yield* this.#ensureCursorToken(request.spaceId);
-        if (request.cursor && cursorToken !== validCursorToken) {
+        if (cursorToken !== undefined && cursorToken !== validCursorToken) {
           return yield* Effect.die(new Error(`Cursor token mismatch`));
         }
 
@@ -233,7 +253,8 @@ export class FeedStore {
           return {
             requestId: request.requestId,
             blocks: [],
-            nextCursor: encodeCursor(validCursorToken, -1),
+            nextCursor: request.cursor ?? encodeCursor(validCursorToken, -1),
+            prevCursor: request.before,
             hasMore: false,
           };
         }
@@ -249,15 +270,19 @@ export class FeedStore {
             ${sql`AND feeds.feedNamespace = ${request.feedNamespace}`}
         `;
 
-        // Add filter based on cursor or position.
-        const filter = request.cursor
-          ? sql`AND blocks.insertionId > ${cursorInsertionId}`
+        // Add filter based on cursor/before range or position.
+        const filter = cursorModeRequested
+          ? sql`AND blocks.insertionId > ${cursorInsertionId} ${
+              beforeInsertionId !== undefined ? sql`AND blocks.insertionId < ${beforeInsertionId}` : sql``
+            }`
           : request.unpositionedOnly
             ? sql`AND blocks.position IS NULL`
             : sql`AND (blocks.position > ${position} OR blocks.position IS NULL)`;
 
-        const orderBy = request.cursor
-          ? sql`ORDER BY blocks.insertionId ASC`
+        const orderBy = cursorModeRequested
+          ? request.reverse
+            ? sql`ORDER BY blocks.insertionId DESC`
+            : sql`ORDER BY blocks.insertionId ASC`
           : sql`ORDER BY blocks.position ASC NULLS LAST`;
 
         const requestLimit = request.limit;
@@ -277,15 +302,17 @@ export class FeedStore {
           data: new Uint8Array(row.data),
         }));
 
+        // Cursors bound the returned page regardless of read direction: `nextCursor` always
+        // resumes toward newer blocks (max insertionId), `prevCursor` toward older (min insertionId).
         let nextCursor: FeedCursor = request.cursor ?? encodeCursor(validCursorToken, -1);
-        if (blocks.length > 0 && request.spaceId) {
-          const lastBlock = blocks[blocks.length - 1];
-          if (lastBlock.insertionId !== undefined) {
-            nextCursor = encodeCursor(validCursorToken, lastBlock.insertionId);
-          }
+        let prevCursor: FeedCursor | undefined = request.before;
+        const insertionIds = blocks.map((block) => block.insertionId).filter((id): id is number => id !== undefined);
+        if (insertionIds.length > 0) {
+          nextCursor = encodeCursor(validCursorToken, Math.max(...insertionIds));
+          prevCursor = encodeCursor(validCursorToken, Math.min(...insertionIds));
         }
 
-        return { requestId: request.requestId, blocks, nextCursor, hasMore } satisfies QueryResponse;
+        return { requestId: request.requestId, blocks, nextCursor, prevCursor, hasMore } satisfies QueryResponse;
       }).pipe(Effect.withSpan('FeedStore.query')),
   );
 

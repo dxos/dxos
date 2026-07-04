@@ -147,6 +147,20 @@ export const QueryRequest = Schema.Struct({
   unpositionedOnly: Schema.optional(Schema.Boolean),
 
   /**
+   * Get blocks strictly preceding this cursor (exclusive).
+   *
+   * Must not be used with `position` or `unpositionedOnly`. Can combine with `cursor` to bound a range.
+   */
+  before: Schema.optional(FeedCursor),
+
+  /**
+   * Read blocks newest-first (descending insertion order) instead of the default oldest-first.
+   *
+   * Only valid in cursor mode (with `cursor` and/or `before`); not valid with `position`/`unpositionedOnly`.
+   */
+  reverse: Schema.optional(Schema.Boolean),
+
+  /**
    * Maximum number of blocks to return.
    */
   limit: Schema.optional(Schema.Number),
@@ -163,9 +177,15 @@ export const QueryResponse = Schema.Struct({
   requestId: Schema.optional(Schema.String),
 
   /**
-   * Cursor to continue reading from this result boundary.
+   * Cursor to continue reading from this result boundary (toward newer blocks / `after`).
    */
   nextCursor: FeedCursor,
+
+  /**
+   * Cursor to continue reading toward older blocks (pass as `before`).
+   * Set whenever the result page is non-empty.
+   */
+  prevCursor: Schema.optional(FeedCursor),
 
   /**
    * Indicates whether more matching blocks are available.

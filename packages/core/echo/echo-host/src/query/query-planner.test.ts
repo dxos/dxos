@@ -58,6 +58,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -164,6 +165,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -253,6 +255,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -324,6 +327,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -433,6 +437,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -490,6 +495,7 @@ describe('QueryPlanner', () => {
                     "_tag": "OrderStep",
                     "order": [
                       {
+                        "direction": "asc",
                         "kind": "natural",
                       },
                     ],
@@ -531,6 +537,7 @@ describe('QueryPlanner', () => {
                     "_tag": "OrderStep",
                     "order": [
                       {
+                        "direction": "asc",
                         "kind": "natural",
                       },
                     ],
@@ -543,6 +550,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -630,6 +638,7 @@ describe('QueryPlanner', () => {
                   "_tag": "OrderStep",
                   "order": [
                     {
+                      "direction": "asc",
                       "kind": "natural",
                     },
                   ],
@@ -671,6 +680,7 @@ describe('QueryPlanner', () => {
                   "_tag": "OrderStep",
                   "order": [
                     {
+                      "direction": "asc",
                       "kind": "natural",
                     },
                   ],
@@ -682,6 +692,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -753,6 +764,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -801,6 +813,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -840,6 +853,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -901,6 +915,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -972,6 +987,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1021,6 +1037,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1070,6 +1087,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1122,6 +1140,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1173,6 +1192,7 @@ describe('QueryPlanner', () => {
             "limit": 10,
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1284,6 +1304,7 @@ describe('QueryPlanner', () => {
                     "limit": 5,
                     "order": [
                       {
+                        "direction": "asc",
                         "kind": "natural",
                       },
                     ],
@@ -1327,6 +1348,7 @@ describe('QueryPlanner', () => {
                     "limit": 5,
                     "order": [
                       {
+                        "direction": "asc",
                         "kind": "natural",
                       },
                     ],
@@ -1339,6 +1361,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1387,6 +1410,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1433,6 +1457,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1522,6 +1547,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],
@@ -1595,6 +1621,7 @@ describe('QueryPlanner', () => {
             "_tag": "OrderStep",
             "order": [
               {
+                "direction": "asc",
                 "kind": "natural",
               },
             ],

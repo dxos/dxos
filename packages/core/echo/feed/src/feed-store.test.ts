@@ -343,6 +343,144 @@ describe('Feed V2', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('reverse read returns newest-first page and hasMore', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      for (let i = 0; i < 10; i++) {
+        yield* feed.appendLocal([
+          { spaceId, feedId, feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([i]) },
+        ]);
+      }
+
+      const head = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        reverse: true,
+        limit: 3,
+      });
+
+      expect(head.blocks.map((block) => block.data[0])).toEqual([9, 8, 7]);
+      expect(head.hasMore).toBe(true);
+      expect(head.prevCursor).toBeDefined();
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('before paging walks toward the start of the feed', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      for (let i = 0; i < 10; i++) {
+        yield* feed.appendLocal([
+          { spaceId, feedId, feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([i]) },
+        ]);
+      }
+
+      const head = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        reverse: true,
+        limit: 3,
+      });
+      expect(head.blocks.map((block) => block.data[0])).toEqual([9, 8, 7]);
+
+      const older = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        reverse: true,
+        before: head.prevCursor!,
+        limit: 3,
+      });
+      expect(older.blocks.map((block) => block.data[0])).toEqual([6, 5, 4]);
+      expect(older.hasMore).toBe(true);
+
+      // Walk to the start of the feed: hasMore flips false and fewer than `limit` items return.
+      const tail1 = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        reverse: true,
+        before: older.prevCursor!,
+        limit: 3,
+      });
+      expect(tail1.blocks.map((block) => block.data[0])).toEqual([3, 2, 1]);
+      expect(tail1.hasMore).toBe(true);
+
+      const tail2 = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        reverse: true,
+        before: tail1.prevCursor!,
+        limit: 3,
+      });
+      expect(tail2.blocks.map((block) => block.data[0])).toEqual([0]);
+      expect(tail2.hasMore).toBe(false);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('reverse read on an empty feed returns no blocks and hasMore false', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      const result = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        reverse: true,
+        limit: 5,
+      });
+
+      expect(result.blocks).toHaveLength(0);
+      expect(result.hasMore).toBe(false);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('forward cursor reads are unaffected by reverse/before support', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      yield* feed.appendLocal([
+        { spaceId, feedId, feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([1]) },
+        { spaceId, feedId, feedNamespace: WellKnownNamespaces.data, data: new Uint8Array([2]) },
+      ]);
+
+      const page1 = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        limit: 1,
+      });
+      expect(page1.blocks.map((block) => block.data[0])).toEqual([1]);
+      expect(page1.hasMore).toBe(true);
+
+      const page2 = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        cursor: page1.nextCursor,
+        limit: 1,
+      });
+      expect(page2.blocks.map((block) => block.data[0])).toEqual([2]);
+      expect(page2.hasMore).toBe(false);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('append local', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
