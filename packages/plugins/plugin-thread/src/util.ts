@@ -35,12 +35,15 @@ export const getMessageMetadata = (
    * author label and a stable seed for the avatar fallback.
    */
   fallbackSender?: { name?: string; email?: string },
+  /** ISO date string when the message was sent; omitted for the composer's own metadata. */
+  created?: string,
 ): MessageMetadata => {
   const fallback = identity?.identityKey
     ? hexToFallback(identity.identityKey.toHex())
     : toFallback(hashString(fallbackSender?.name ?? fallbackSender?.email ?? '0'));
   return {
     id,
+    timestamp: created,
     authorId: identity?.did,
     authorName:
       identity?.profile?.displayName ??
