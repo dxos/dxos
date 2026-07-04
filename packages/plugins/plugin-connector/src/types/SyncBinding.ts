@@ -11,6 +11,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Database, DXN, type Feed, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Format } from '@dxos/echo/Format';
 import { invariant } from '@dxos/invariant';
 import { Stage } from '@dxos/pipeline';
 import { Tagging, type TagIndex } from '@dxos/schema';
@@ -71,6 +72,27 @@ export const make = (props: Omit<Relation.MakeProps<typeof SyncBinding>, 'cursor
   Obj.setParent(cursor, binding);
   return binding;
 };
+
+/**
+ * The pre-0.2.0 `SyncBinding` shape: cursor + run status were inline string fields rather than a
+ * {@link Cursor} object reference. Retained only as the `from` schema for the 0.1.0 → 0.2.0 migration
+ * (see `capabilities/migrations.ts`); not used to create new bindings.
+ */
+export class SyncBindingV1 extends Type.makeRelation<SyncBindingV1>(DXN.make('org.dxos.type.syncBinding', '0.1.0'))({
+  source: Connection.Connection,
+  target: Obj.Unknown,
+})(
+  Schema.Struct({
+    id: Obj.ID,
+    remoteId: Schema.String.pipe(Schema.optional),
+    name: Schema.String.pipe(Schema.optional),
+    cursor: Schema.String.pipe(Schema.optional),
+    lastSyncAt: Format.DateTime.pipe(Schema.optional),
+    lastError: Schema.String.pipe(Schema.optional),
+    snapshots: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.optional),
+    options: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.optional),
+  }),
+) {}
 
 //
 // Sync pipeline.

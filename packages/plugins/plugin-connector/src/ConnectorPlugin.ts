@@ -12,6 +12,7 @@ import {
   BuiltinConnectors,
   Coordinator,
   CreateObject,
+  Migrations,
   OAuthRedirect,
   OperationHandler,
   ReactSurface,
@@ -32,7 +33,18 @@ export const ConnectorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
-    schema: [AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, SyncBinding.SyncBinding],
+    schema: [
+      AccessToken.AccessToken,
+      Connection.Connection,
+      Cursor.Cursor,
+      SyncBinding.SyncBinding,
+      // Registered so the 0.1.0 → 0.2.0 migration can decode legacy bindings.
+      SyncBinding.SyncBindingV1,
+    ],
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.SetupMigration,
+    activate: Migrations,
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

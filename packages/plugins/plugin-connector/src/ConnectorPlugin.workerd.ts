@@ -13,8 +13,16 @@ import { Connection, SyncBinding } from '#types';
 export const ConnectorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
-    schema: [AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, SyncBinding.SyncBinding],
+    schema: [
+      AccessToken.AccessToken,
+      Connection.Connection,
+      Cursor.Cursor,
+      SyncBinding.SyncBinding,
+      // Registered so a legacy 0.1.0 binding can still be decoded (migration runs in the app/node).
+      SyncBinding.SyncBindingV1,
+    ],
   }),
+
   Plugin.make,
 );
 
