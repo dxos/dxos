@@ -5806,6 +5806,9 @@ importers:
       '@dxos/pipeline':
         specifier: workspace:*
         version: link:../pipeline
+      '@dxos/semantic-index':
+        specifier: workspace:*
+        version: link:../semantic-index
       '@dxos/types':
         specifier: workspace:*
         version: link:../../../sdk/types
@@ -5925,6 +5928,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -16356,6 +16362,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-mosaic
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme

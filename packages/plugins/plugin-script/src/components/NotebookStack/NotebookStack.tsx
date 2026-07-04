@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useId, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { DropdownMenu, IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -50,11 +50,14 @@ export const NotebookStack = composable<HTMLDivElement, NotebookStackProps>(
       [db, graph, promptResults, onCellInsert, onCellDelete, env],
     );
 
+    // Per-instance discriminator so the same notebook opened twice doesn't collide in the Mosaic registry.
+    const instanceId = useId();
+
     // Reorder cells in place; placeholder/tile locations are 1-based with half-step placeholders between
     // tiles, so the floor of the drop location is the destination array index (see Mosaic.Stack).
     const eventHandler = useMemo<MosaicEventHandler<Notebook.Cell>>(
       () => ({
-        id: notebook?.id ?? 'notebook',
+        id: `notebook:${notebook?.id ?? 'anon'}:${instanceId}`,
         // Only the notebook's own cells are droppable; onDrop only reorders within this notebook.
         canDrop: ({ source }) => !!notebook && notebook.cells.some((cell) => cell.id === source.id),
         onDrop: ({ source, target }) => {
@@ -81,25 +84,23 @@ export const NotebookStack = composable<HTMLDivElement, NotebookStackProps>(
           });
         },
       }),
-      [notebook],
+      [notebook, instanceId],
     );
 
     return (
-      <Mosaic.Root>
-        <Mosaic.Container
-          asChild
-          orientation='vertical'
-          autoScroll={viewport}
-          eventHandler={eventHandler}
-          ref={forwardedRef}
-        >
-          <ScrollArea.Root orientation='vertical' padding {...composableProps(props)}>
-            <ScrollArea.Viewport ref={setViewport}>
-              <Mosaic.Stack orientation='vertical' items={notebook?.cells ?? []} getId={getCellId} Tile={Tile} />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Mosaic.Container>
-      </Mosaic.Root>
+      <Mosaic.Container
+        asChild
+        orientation='vertical'
+        autoScroll={viewport}
+        eventHandler={eventHandler}
+        ref={forwardedRef}
+      >
+        <ScrollArea.Root orientation='vertical' padding {...composableProps(props)}>
+          <ScrollArea.Viewport ref={setViewport}>
+            <Mosaic.Stack orientation='vertical' items={notebook?.cells ?? []} getId={getCellId} Tile={Tile} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Mosaic.Container>
     );
   },
 );
