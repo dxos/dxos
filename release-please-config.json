@@ -75,6 +75,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/crx-protocol/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/crypto/package.json",
           "jsonpath": "$.version"
         },
@@ -330,6 +335,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/extractor-lib/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/functions/package.json",
           "jsonpath": "$.version"
         },
@@ -370,12 +380,22 @@
         },
         {
           "type": "json",
-          "path": "packages/core/compute/semantic-index/package.json",
+          "path": "packages/core/compute/pipeline/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/core/compute/transcription-pipeline/package.json",
+          "path": "packages/core/compute/pipeline-email/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/pipeline-transcription/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/semantic-index/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -681,6 +701,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-file/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-freeq/package.json",
           "jsonpath": "$.version"
         },
         {

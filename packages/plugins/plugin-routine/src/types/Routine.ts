@@ -78,6 +78,16 @@ export const instructionsRef = (routine: Pick<Routine, 'spec'>): Ref.Ref<Instruc
 export const runnableRef = (routine: Pick<Routine, 'spec'>): Ref.Ref<Runnable.Runnable> | undefined =>
   routine.spec?.kind === 'runnable' ? routine.spec.runnable : undefined;
 
+/** New routines default to local compute unless a template explicitly overrides it. */
+const ensureLocalComputeEnvironment = (trigger: Trigger.Trigger): void => {
+  if (trigger.computeEnvironment != null) {
+    return;
+  }
+  Obj.update(trigger, (trigger) => {
+    trigger.computeEnvironment = 'local';
+  });
+};
+
 /** Strip a stale `instructions` binding from a trigger input. */
 const withoutInstructions = (input: Record<string, unknown> | undefined): Record<string, unknown> | undefined => {
   if (!input || !('instructions' in input)) {
@@ -133,6 +143,7 @@ export const make = ({
     });
   }
   if (trigger) {
+    ensureLocalComputeEnvironment(trigger);
     Obj.setParent(trigger, routine);
     Obj.update(routine, (routine) => {
       routine.triggers.push(Ref.make(trigger));

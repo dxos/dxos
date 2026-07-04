@@ -45,6 +45,6 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-trip',
     icon: { key: 'ph--airplane-takeoff--regular', hue: 'sky' },
     spec: 'PLUGIN.mdl',
-    tags: ['travel'],
+    tags: ['labs', 'travel'],
   },
 });

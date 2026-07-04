@@ -7,44 +7,15 @@ import React, { type PropsWithChildren, useEffect, useLayoutEffect } from 'react
 import { Capabilities } from '../../../common';
 import { topologicalSort } from '../../../helpers';
 import { LoadingState, type StartupProgress, type UseAppOptions, useCapabilities, useLoading } from '../../hooks';
+import { bootLoader } from './loader';
 
-declare global {
-  interface Window {
-    /**
-     * Driver injected by `@dxos/app-framework/vite-plugin`'s `bootLoaderPlugin`
-     * (a Solid app inlined into `index.html`). Declared here — on a module that
-     * is part of the `@dxos/app-framework/ui` export surface — so the React side
-     * and host apps (e.g. composer-app) can drive the loader without each
-     * re-declaring the type. The canonical definition lives in the plugin's
-     * `loader-app/types.ts`; this mirror exists because that source compiles in a
-     * separate (Solid) program that doesn't ship its globals to consumers.
-     */
-    __bootLoader?: {
-      status: (payload: {
-        event?: string;
-        module?: string;
-        humanized: string;
-        /**
-         * Optional `(index/total)` tick. When present, the loader replaces the
-         * current line in place ("Loading plugins (12/80)") instead of appending
-         * a new entry — keeps the visible log compact during long counted phases.
-         */
-        range?: { index: number; total: number };
-      }) => void;
-      progress: (fraction?: number) => void;
-      ready: () => void;
-      dismiss: () => void;
-    };
-  }
-}
+const FIRST_INTERACTIVE_MARK = 'app-framework:first-interactive';
 
 export type AppProps = Pick<UseAppOptions, 'debounce'> & {
   ready: boolean;
   error: unknown;
   progress?: StartupProgress;
 };
-
-const FIRST_INTERACTIVE_MARK = 'app-framework:first-interactive';
 
 export const App = ({ ready, error, debounce, progress }: AppProps) => {
   const reactContexts = useCapabilities(Capabilities.ReactContext);
@@ -62,10 +33,11 @@ export const App = ({ ready, error, debounce, progress }: AppProps) => {
     if (stage >= LoadingState.FadeOut) {
       return;
     }
+
     const fraction = progress?.progress ?? 0;
-    window.__bootLoader?.progress(0.5 + fraction * 0.5);
+    bootLoader?.progress(0.5 + fraction * 0.5);
     if (progress?.humanizedName) {
-      window.__bootLoader?.status({
+      bootLoader?.status({
         event: progress.event,
         module: progress.module,
         humanized: `Activating ${progress.humanizedName}`,
@@ -78,7 +50,7 @@ export const App = ({ ready, error, debounce, progress }: AppProps) => {
   // same frame the real shell starts rendering beneath it.
   useLayoutEffect(() => {
     if (stage >= LoadingState.FadeOut) {
-      window.__bootLoader?.ready();
+      bootLoader?.ready();
     }
   }, [stage]);
 
@@ -97,7 +69,7 @@ export const App = ({ ready, error, debounce, progress }: AppProps) => {
     if (performance.getEntriesByName(FIRST_INTERACTIVE_MARK).length === 0) {
       performance.mark(FIRST_INTERACTIVE_MARK);
     }
-    window.__bootLoader?.dismiss();
+    bootLoader?.dismiss();
   }, [placeholderDismissed]);
 
   // Used in tests to exercise the error boundary & reset dialog (see

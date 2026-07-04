@@ -1,0 +1,3 @@
+# Local dataset downloaded by scripts/setup.sh; keep the directory, ignore its contents.
+/data/*
+!/data/.gitkeep

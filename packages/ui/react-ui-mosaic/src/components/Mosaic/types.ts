@@ -59,9 +59,17 @@ export type MosaicTargetData = MosaicTileData | MosaicPlaceholderData;
  */
 export interface MosaicEventHandler<TData = any, TObject = any> {
   /**
-   * Container identifier.
+   * Container identifier. Must be unique per live container instance across the whole Mosaic root
+   * (append a `useId()` discriminator when the same object may mount in multiple containers).
    */
   id: string;
+
+  /**
+   * Open, container-defined descriptor of what this container holds. Not interpreted by Mosaic;
+   * surfaced to the other container's `canDrop`/`onDrop` so cross-container drop rules can decide
+   * whether a source is acceptable without parsing the opaque `id`.
+   */
+  payload?: unknown;
 
   /**
    * Determine if the item can be dropped into this container.

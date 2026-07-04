@@ -52,6 +52,36 @@ const DynamicTableStory = () => {
   return <DynamicTable properties={properties} rows={rows} />;
 };
 
+const useWidePropertiesAndObjects = () => {
+  const properties = useMemo<SchemaPropertyDefinition[]>(
+    () => [
+      { name: 'name', format: Format.TypeFormat.String },
+      { name: 'email', format: Format.TypeFormat.String },
+      { name: 'company', format: Format.TypeFormat.String },
+      { name: 'product', format: Format.TypeFormat.String },
+      { name: 'city', format: Format.TypeFormat.String },
+      { name: 'url', format: Format.TypeFormat.String },
+      { name: 'age', format: Format.TypeFormat.Number },
+    ],
+    [],
+  );
+
+  const [rows] = useState<any[]>(
+    Array.from({ length: 20 }, () => ({
+      id: random.string.uuid(),
+      name: random.person.fullName(),
+      email: random.internet.email(),
+      company: random.company.name(),
+      product: random.commerce.productName(),
+      city: random.geo.airport().name,
+      url: random.internet.url(),
+      age: random.number.int({ min: 18, max: 80 }),
+    })),
+  );
+
+  return { properties, rows };
+};
+
 //
 // Story definitions.
 //
@@ -93,6 +123,34 @@ export const WithClickToSelect: StoryObj = {
 
     const features = useMemo<Partial<TableFeatures>>(
       () => ({ selection: { enabled: true, mode: 'single' as const }, dataEditable: false }),
+      [],
+    );
+
+    return <DynamicTable properties={properties} rows={rows} features={features} />;
+  },
+};
+
+export const WithPinnedColumns: StoryObj = {
+  render: () => {
+    const { properties, rows } = useWidePropertiesAndObjects();
+
+    // Pin the first data column (Name) so it stays visible while the rest scroll horizontally.
+    const features = useMemo<Partial<TableFeatures>>(
+      () => ({ selection: { enabled: true, mode: 'multiple' as const }, dataEditable: false, pinColumns: 1 }),
+      [],
+    );
+
+    return <DynamicTable properties={properties} rows={rows} features={features} />;
+  },
+};
+
+export const WithMultiplePinnedColumns: StoryObj = {
+  render: () => {
+    const { properties, rows } = useWidePropertiesAndObjects();
+
+    // Pin the first two data columns (Name, Email).
+    const features = useMemo<Partial<TableFeatures>>(
+      () => ({ selection: { enabled: false }, dataEditable: false, pinColumns: 2 }),
       [],
     );
 

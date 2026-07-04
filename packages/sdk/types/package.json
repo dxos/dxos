@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "@dxos/effect": "workspace:*",
+    "@dxos/pipeline": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
