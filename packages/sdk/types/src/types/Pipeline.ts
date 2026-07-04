@@ -22,11 +22,8 @@ export type Column = Schema.Schema.Type<typeof Column>;
 //   the source→stages→sink streaming abstraction). This `Pipeline` is a board of View-backed columns
 //   that records progress through (sales/research/hiring "pipelines"); `Board` and `Kanban` are taken
 //   by other plugins. Renaming the TS class (and `plugin-pipeline`) resolves the collision; changing
-//   the DXN `org.dxos.type.pipeline` additionally needs a data migration. Candidates:
-//   - `Funnel` — records flowing through ordered stages; sales-leaning.
-//   - `Workflow` — neutral "stages"; note it can imply automation, which this is not.
-//   - `Journey` — CRM customer-journey flavor.
-//   - `Track` — short/generic.
+//   the DXN `org.dxos.type.pipeline` additionally needs a data migration.
+//   Candidates: `Funnel`, `Workflow`, `Journey`, `Track`.
 // TODO(wittjosiah): Factor this type out of `@dxos/types` into its owning `plugin-pipeline` — it's a
 //   plugin-specific board type (View-backed columns), not a cross-cutting core type.
 export class Pipeline extends Type.makeObject<Pipeline>(DXN.make('org.dxos.type.pipeline', '0.1.0'))(
