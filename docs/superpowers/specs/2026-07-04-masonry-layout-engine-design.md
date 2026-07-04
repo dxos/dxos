@@ -74,9 +74,11 @@ type LayoutResult = { rects: Rect[]; columnWidth: number; height: number };
 const layout = (opts: {
   heights: readonly number[]; // measured tile heights (px), item order
   columnCount: number;
-  containerWidth: number;     // px, already net of scrollbar allowance
+  containerWidth: number; // px, already net of scrollbar allowance
   gutterPx: number;
-}): LayoutResult => { /* ... */ };
+}): LayoutResult => {
+  /* ... */
+};
 ```
 
 - `columnWidth = (containerWidth - (columnCount - 1) * gutterPx) / columnCount`.
@@ -107,11 +109,11 @@ const layout = (opts: {
 
 - The Viewport container is `position: relative`, `height` set to the layout
   result height. Each tile wrapper is `position: absolute; width: columnWidth;
-  transform: translate(x, y)`.
+transform: translate(x, y)`.
 - **FLIP:** on layout change, capture previous `translate` per id (First), apply
   the new one (Last), then animate the delta via the Web Animations API
   (`element.animate([{ transform: prev }, { transform: next }], { duration,
-  easing })`). New items fade/scale in; removed items are dropped immediately
+easing })`). New items fade/scale in; removed items are dropped immediately
   (no exit animation in Phase 1).
 - **Reduced motion:** if `matchMedia('(prefers-reduced-motion: reduce)')`
   matches, skip animation and snap to the new transform.
@@ -164,7 +166,7 @@ navigation, and note the option in code.
   - shortest-column assignment: given heights `[10, 10, 100, 10]`, `columnCount=2`,
     item 3 lands in the column made shorter by item order, not `index % 2`.
   - geometry: `x`/`columnWidth` account for gutter; total `height = max column −
-    trailing gutter`.
+trailing gutter`.
   - `columnCount=1` stacks vertically; empty input → height 0.
   - stable tie-breaking (equal heights → lowest column index).
 - **Component/story smoke:** existing `Masonry.stories.tsx` re-pointed to the
@@ -176,10 +178,11 @@ navigation, and note the option in code.
 ## Story fixtures
 
 Update `Masonry.stories.tsx` to generate items with the same `@dxos/schema/testing`
-+ `@dxos/random` person generator used in the CRM `CollectionArticle` story
-(#12084), enriching `jobTitle`/`department`/`image`/`emails` locally in the story
-so cards have varied heights that exercise balancing. Do **not** add generator
-annotations to shared schemas.
+
+- `@dxos/random` person generator used in the CRM `CollectionArticle` story
+  (#12084), enriching `jobTitle`/`department`/`image`/`emails` locally in the story
+  so cards have varied heights that exercise balancing. Do **not** add generator
+  annotations to shared schemas.
 
 ## Migration / rollout
 
