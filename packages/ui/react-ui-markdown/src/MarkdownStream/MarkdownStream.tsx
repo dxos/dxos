@@ -283,28 +283,13 @@ const useMarkdownStreamTextEditor = (
           [
             extendedMarkdown({ registry }),
             decorateMarkdown({
-              // `echo:`/`dxn:` links/images are handled by the `link-preview` entry in the
-              // registry via `xmlTags` `urlSchemes`. Skipping them here avoids `decorateMarkdown`
-              // adding a non-functional `LinkButton` anchor on top of the same node.
+              // xmlTags extension will handle `dxn:`/`echo:` links/images.
               skip: (node) =>
                 (node.name === 'Link' || node.name === 'Image') &&
                 (node.url.startsWith('dxn:') || node.url.startsWith('echo:')),
             }),
             // TODO(burdon): Make optional; Removes need for '\n\n'.
             lineSpacing(),
-            // NOTE: An ancestor element must set `data-hue` so `.dx-panel` resolves to the user's
-            // hue tokens (see `packages/ui/ui-theme/src/css/components/panel.css`). Tailwind picks
-            // up these utility classes from this source file.
-            //
-            // The bubble is styled at the line (block) level rather than as an inline mark so that
-            // a multi-line prompt renders as one contiguous block with a continuous left band,
-            // instead of a separate pill per visual line. `dx-panel` is used only for its
-            // hue-aware `border-{hue}-border`; the fill and text are overridden to neutral surface
-            // tokens (the panel's `text-neutral-900` only reads on a light hue fill), so colour
-            // comes from the left border band rather than a strong background. Tailwind preflight
-            // zeroes border widths, so the left border alone yields just the band. Keep the band
-            // width (`border-l-[8px]`) and the left padding (`pl-[8px]!`) equal so content stays
-            // flush against the band regardless of the chosen band thickness.
             xmlBlockDecoration({
               tag: 'prompt',
               lineClass:
