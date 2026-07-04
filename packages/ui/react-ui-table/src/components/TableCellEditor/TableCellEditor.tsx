@@ -17,6 +17,7 @@ import {
   type EditorKeyOrBlurHandler,
   GridCellEditor,
   type GridCellEditorProps,
+  type GridEditing,
   type GridScopedProps,
   editorKeys,
   parseCellIndex,
@@ -44,6 +45,30 @@ export type TableCellEditorProps<T extends Type.AnyEntity = Type.AnyEntity> = {
   onSave?: () => void;
 };
 
+/**
+ * Resolves the field projection for the cell being edited, guarding against an out-of-range field
+ * index (e.g. a stale cell, or a pinned plane whose `getFieldIndex` maps beyond the projection).
+ */
+const resolveFieldProjection = (
+  model: TableModel | undefined,
+  editing: GridEditing | undefined,
+): FieldProjection | undefined => {
+  if (!model || !editing) {
+    return undefined;
+  }
+
+  const { col, plane } = parseCellIndex(editing.index);
+  const fieldIndex = model.getFieldIndex(plane, col);
+  const fields = model.projection.getFields();
+  if (fieldIndex === undefined || fieldIndex < 0 || fieldIndex >= fields.length) {
+    return undefined;
+  }
+
+  const fieldProjection = model.projection.getFieldProjection(fields[fieldIndex].id);
+  invariant(fieldProjection);
+  return fieldProjection;
+};
+
 export const TableValueEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
   __gridScope,
   schema,
@@ -55,21 +80,7 @@ export const TableValueEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
 }: GridScopedProps<TableCellEditorProps<T>>) => {
   const { editing } = useGridContext('TableValueEditor', __gridScope);
 
-  const fieldProjection = useMemo<FieldProjection | undefined>(() => {
-    if (!model || !editing) {
-      return;
-    }
-
-    const { col, plane } = parseCellIndex(editing.index);
-    const fieldIndex = model.getFieldIndex(plane, col);
-    if (fieldIndex === undefined) {
-      return;
-    }
-    const field = model.projection.getFields()[fieldIndex];
-    const fieldProjection = model.projection.getFieldProjection(field.id);
-    invariant(fieldProjection);
-    return fieldProjection;
-  }, [model, editing]);
+  const fieldProjection = useMemo(() => resolveFieldProjection(model, editing), [model, editing]);
 
   if (
     fieldProjection?.props.type === TypeEnum.Array ||
@@ -112,21 +123,7 @@ export const TableCellEditor = ({
   const [validationError, setValidationError] = useState<string | null>(null);
   const [validationVariant, setValidationVariant] = useState<'error' | 'warning'>('error');
 
-  const fieldProjection = useMemo<FieldProjection | undefined>(() => {
-    if (!model || !editing) {
-      return;
-    }
-
-    const { col, plane } = parseCellIndex(editing.index);
-    const fieldIndex = model.getFieldIndex(plane, col);
-    if (fieldIndex === undefined) {
-      return;
-    }
-    const field = model.projection.getFields()[fieldIndex];
-    const fieldProjection = model.projection.getFieldProjection(field.id);
-    invariant(fieldProjection);
-    return fieldProjection;
-  }, [model, editing]);
+  const fieldProjection = useMemo(() => resolveFieldProjection(model, editing), [model, editing]);
 
   // TOOD(burdon): Attach to event handler?
   const handleEnter = useCallback(

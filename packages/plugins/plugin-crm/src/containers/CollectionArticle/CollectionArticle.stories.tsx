@@ -23,12 +23,9 @@ import { translations } from '#translations';
 
 import { CollectionArticle } from './CollectionArticle';
 
-// The value generator resolves each field's `GeneratorAnnotation` (e.g. `person.fullName`) against
-// the faker-backed `random` via dot-path lookup; the shape doesn't match the flat `ValueGenerator`
-// record type, so cast at this test-only boundary (matches RefEditor/Popover stories).
-const generator: ValueGenerator = random as any;
-
 random.seed(1);
+
+const generator: ValueGenerator = random as any;
 
 type StoryArgs = {
   type: Type.AnyEntity;

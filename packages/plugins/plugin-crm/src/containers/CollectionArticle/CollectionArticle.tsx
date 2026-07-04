@@ -129,6 +129,8 @@ export const CollectionArticle = ({ role, space, type, attendableId }: Collectio
         <Panel.Content>
           {objects.length === 0 ? (
             <Empty classNames='bs-full' label={t('type-collection-empty.message')} />
+          ) : results.length === 0 ? (
+            <Empty classNames='bs-full' label={t('search-no-results.message')} />
           ) : layout === 'table' ? (
             <DynamicTable
               type={type}

@@ -383,8 +383,16 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   /**
    * Number of frozen-start columns preceding the pinned data columns (the selection column, if enabled).
    */
-  private get selectionColumns(): number {
+  public get selectionColumns(): number {
     return this._features.selection.enabled ? 1 : 0;
+  }
+
+  /**
+   * Total number of columns rendered in the `frozenColsStart` plane: the selection column (if enabled)
+   * plus the pinned data columns. Single source of truth for the frozen-start boundary.
+   */
+  public get frozenColsStart(): number {
+    return this.selectionColumns + this.pinColumns;
   }
 
   /**
@@ -470,8 +478,8 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     // The projection.fields atom handles subscriptions to view changes internally.
     this._columnMeta = Atom.make((get) => {
       const fields = get(this._projection.fields);
-      const pin = Math.max(0, Math.min(this._features.pinColumns, fields.length));
-      const selectionColumns = this._features.selection.enabled ? 1 : 0;
+      const pin = this.pinColumns;
+      const selectionColumns = this.selectionColumns;
 
       const fieldSize = (field: (typeof fields)[number]) => ({
         size: this.table.sizes[field.path] ?? 256,
@@ -837,7 +845,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   ): void {
     const fields = this._projection?.getFields() ?? [];
     const fieldIndex = this.getFieldIndex(plane, col);
-    if (fieldIndex === undefined) {
+    if (fieldIndex === undefined || fieldIndex < 0 || fieldIndex >= fields.length) {
       return;
     }
     const field = fields[fieldIndex];

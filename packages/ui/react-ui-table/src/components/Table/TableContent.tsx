@@ -81,13 +81,10 @@ export const TableContent = composable<HTMLDivElement, TableContentProps>(
         model?.features.schemaEditable === false &&
         model.rowActions.length === 0;
 
-      const selectionColumns = model?.features.selection.enabled ? 1 : 0;
-      const pinColumns = model?.pinColumns ?? 0;
-
       return {
         frozenRowsStart: 1,
         frozenRowsEnd: Math.max(1, draftRowCount),
-        frozenColsStart: selectionColumns + pinColumns,
+        frozenColsStart: model?.frozenColsStart ?? 0,
         frozenColsEnd: noActionColumn ? 0 : 1,
       };
     }, [model, draftRowCount, columnCount]);

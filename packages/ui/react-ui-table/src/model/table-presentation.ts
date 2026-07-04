@@ -390,7 +390,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
    */
   private getFrozenColsStartCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const selectionColumns = this.model.features.selection.enabled ? 1 : 0;
+    const selectionColumns = this.model.selectionColumns;
     const fields = this.model.projection?.getFields() ?? [];
     const pin = this.model.pinColumns;
 
@@ -447,7 +447,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
    */
   private getFixedStartStartCells(): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const selectionColumns = this.model.features.selection.enabled ? 1 : 0;
+    const selectionColumns = this.model.selectionColumns;
 
     if (selectionColumns > 0) {
       const showSelectAll = this.model.features.selection.enabled && this.model.selection.selectionMode !== 'single';
@@ -527,7 +527,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
   private getFixedEndStartCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
     const draftRows = this.model.getDraftRows();
-    const selectionColumns = this.model.features.selection.enabled ? 1 : 0;
+    const selectionColumns = this.model.selectionColumns;
     const fields = this.model.projection?.getFields() ?? [];
     const pin = this.model.pinColumns;
 

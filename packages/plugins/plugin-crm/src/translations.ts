@@ -16,6 +16,7 @@ export const translations = [
         'layout-masonry.label': 'Cards',
         'layout-table.label': 'Table',
         'search-placeholder.label': 'Filter...',
+        'search-no-results.message': 'No matches.',
         'type-collection-empty.message': 'No items.',
         'object-name.placeholder': 'New object',
         'delete-object.label': 'Delete',

@@ -128,6 +128,19 @@ describe('TablePresentation', () => {
       expect(model.getFieldIndex('grid', 0)).toBe(1);
       expect(model.getFieldIndex('grid', 1)).toBe(2);
     });
+
+    it('mutates the pinned field via its frozen-plane column', () => {
+      model.updateCellData({ plane: 'frozenColsStart', col: 0, row: 0 }, () => 'Pinned');
+      const cells = presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 0, col: 0 } }, 'frozenColsStart');
+      expect(cells['0,0']?.value).toBe('Pinned');
+    });
+
+    it('ignores mutations for out-of-range columns without throwing', () => {
+      expect(() => model.updateCellData({ plane: 'grid', col: 999, row: 0 }, () => 'x')).not.toThrow();
+      // The pinned field is unchanged.
+      const cells = presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 0, col: 0 } }, 'frozenColsStart');
+      expect(cells['0,0']?.value).toBe('A');
+    });
   });
 });
 
