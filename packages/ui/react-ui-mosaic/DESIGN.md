@@ -54,14 +54,15 @@ not on `useListSelection`. (Why these diverge from react-ui-list's aspects — a
 whether they should converge — is the analysis in
 [`react-ui-list/AUDIT.md`](../react-ui-list/AUDIT.md).)
 
-## Cross-container drag-and-drop (planned)
+## Cross-container drag-and-drop
 
-Phases 1–3 made a single app-level `Mosaic.Root` the only live drag boundary, so
-every `Mosaic.Container` in the app registers into **one shared handler registry**
-keyed by `eventHandler.id`. This is the prerequisite for dragging a tile from one
-container into a _different_ one; the remaining work (Phase 4) is the drop policy.
+A single app-level `Mosaic.Root` is the only live drag boundary, so every
+`Mosaic.Container` in the app registers into **one shared handler registry** keyed
+by `eventHandler.id`. This is what lets a tile be dragged from one container into a
+_different_ one. The registry mechanics are in place; the cross-container drop
+**policy** is not yet built.
 
-**Invariants already in place:**
+**Invariants the shared registry relies on:**
 
 - **One live Root.** Each layout shell (`DeckLayout`, `SimpleLayout`, the testing
   layout) mounts a `Mosaic.Root`, and exactly one layout is mounted at runtime. No
@@ -77,7 +78,7 @@ container into a _different_ one; the remaining work (Phase 4) is the drop polic
   it; it exists so a target's drop logic can decide acceptance from typed data
   rather than by parsing the opaque `id`. Unpopulated until the rules below land.
 
-**Phase 4 — the drop rules (not yet built):**
+**The drop rules (not yet built):**
 
 1. **Thread the source payload to the target.** On drop, `Root` already resolves
    the source handler (`handlers[source.containerId]`); pass its `payload` into the
@@ -93,13 +94,12 @@ container into a _different_ one; the remaining work (Phase 4) is the drop polic
    package carries only the mechanism (registry, payload plumbing), never the
    policy.
 
-**Deferred within Phase 4 — Board-based containers.** `Board.Content` (kanban,
-pipeline) has _nested_ handlers: the columns container plus a per-column item
-container keyed by `column.columnValue`. Making those unique per instance requires
-threading a `useId()` discriminator through the tile-render path
+**Deferred — Board-based containers.** `Board.Content` (kanban, pipeline) has
+_nested_ handlers: the columns container plus a per-column item container keyed by
+`column.columnValue`. Making those unique per instance requires threading a
+`useId()` discriminator through the tile-render path
 (`Mosaic.Stack` → column `Tile` → `useKanbanItemEventHandler`), which `Mosaic.Stack`
-does not forward today. Their duplicate-mount collision predates the single-root
-change, so it was left for this phase rather than half-fixed.
+does not forward today. This is a known gap in the per-instance-id invariant above.
 
 ## Component hierarchies
 
