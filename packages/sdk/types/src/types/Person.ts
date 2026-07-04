@@ -48,8 +48,16 @@ const PersonSchema = Schema.Struct({
     }),
     Schema.optional,
   ),
-  jobTitle: Schema.String.pipe(Schema.annotations({ title: 'Job Title' }), Schema.optional),
-  department: Schema.String.pipe(Schema.annotations({ title: 'Department' }), Schema.optional),
+  jobTitle: Schema.String.pipe(
+    Schema.annotations({ title: 'Job Title' }),
+    GeneratorAnnotation.set('person.jobTitle'),
+    Schema.optional,
+  ),
+  department: Schema.String.pipe(
+    Schema.annotations({ title: 'Department' }),
+    GeneratorAnnotation.set('commerce.department'),
+    Schema.optional,
+  ),
   notes: Schema.String.pipe(Schema.annotations({ title: 'Notes' }), Schema.optional),
   // TODO(burdon): Change to array of `handles`.
   emails: Schema.Array(

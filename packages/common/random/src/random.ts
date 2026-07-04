@@ -6,12 +6,13 @@ import {
   rand,
   randChanceBoolean,
   randCompanyName,
+  randDepartment,
   randEmail,
   randFirstName,
   randFloat,
   randFullName,
   randHexaDecimal,
-  randImg,
+  randJobTitle,
   randNumber,
   randParagraph,
   randProductName,
@@ -66,7 +67,8 @@ export const random = {
     iso8601: () => randRecentDate().toISOString(),
   },
   image: {
-    url: () => randImg(),
+    // Seed per call so generated objects get distinct images (falso's `randImg` is a constant URL).
+    url: () => `https://picsum.photos/seed/${randUuid()}/256/256`,
   },
 
   //
@@ -112,12 +114,14 @@ export const random = {
   person: {
     firstName: () => randFirstName(),
     fullName: () => randFullName(),
+    jobTitle: () => randJobTitle(),
   },
   company: {
     name: () => randCompanyName(),
   },
   commerce: {
     productName: () => randProductName(),
+    department: () => randDepartment(),
   },
   geo: {
     airport: () => rand(airports),
