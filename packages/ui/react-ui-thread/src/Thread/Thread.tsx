@@ -29,7 +29,7 @@ import {
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicEventHandler, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type Message as MessageType } from '@dxos/types';
 import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
@@ -334,6 +334,8 @@ const ThreadItemAdapter = ({ id, data, location, draggable, current, selected }:
 
 export type ThreadMessagesProps = ThemedClassName<{
   messages: readonly MessageType.Message[];
+  /** Stable id of the owning thread; scopes the Mosaic container so multiple threads don't collide. */
+  id?: string;
   /** Estimated tile height for the virtualizer. */
   estimateSize?: number;
   currentId?: string;
@@ -351,6 +353,7 @@ const DEFAULT_GAP_DIVIDER_MS = 3 * 60 * 60 * 1000;
 /** Virtualized stack of message tiles (via Mosaic), within an internal scroll area. */
 const ThreadMessages = ({
   messages,
+  id,
   estimateSize = 80,
   currentId,
   groupWindowMs = DEFAULT_GROUP_WINDOW_MS,
@@ -364,6 +367,11 @@ const ThreadMessages = ({
     () => groupMessages(messages.filter(Boolean), { groupWindowMs, dayDivider, gapDividerMs, dtLocale }),
     [messages, groupWindowMs, dayDivider, gapDividerMs, dtLocale],
   );
+  // Stable handler identity; the id scopes the container so concurrent threads don't clobber each other in the Mosaic registry.
+  const eventHandler = useMemo<MosaicEventHandler>(
+    () => ({ id: id ? `thread-${id}` : 'thread', canDrop: () => false }),
+    [id],
+  );
 
   return (
     <Mosaic.Container
@@ -371,7 +379,7 @@ const ThreadMessages = ({
       orientation='vertical'
       autoScroll={viewport}
       currentId={currentId}
-      eventHandler={{ id: 'thread', canDrop: () => false }}
+      eventHandler={eventHandler}
     >
       <ScrollArea.Root classNames={mx('col-span-2 flex-1 min-h-0', classNames)} orientation='vertical'>
         <ScrollArea.Viewport ref={setViewport}>
