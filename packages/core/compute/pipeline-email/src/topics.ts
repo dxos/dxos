@@ -4,8 +4,7 @@
 
 import { Obj } from '@dxos/echo';
 
-import { type Summarizer } from './prompts';
-import { DEFAULT_EMAIL_PROMPTS, type EmailPrompts, mergePrompts } from './prompts';
+import { DEFAULT_EMAIL_PROMPTS, type EmailPrompts, type Summarizer, mergePrompts } from './prompts';
 import { type Thread, Topic } from './types';
 
 // Subject tokens that carry no topical signal; excluded from signatures and keywords.
@@ -83,23 +82,23 @@ const tokenize = (subject: string, options: Required<TopicOptions>): Set<string>
       .filter((token) => token.length >= options.minTokenLength && !options.stopwords.includes(token)),
   );
 
-const jaccard = (a: Set<string>, b: Set<string>): number => {
-  if (a.size === 0 || b.size === 0) {
+const jaccard = (left: Set<string>, right: Set<string>): number => {
+  if (left.size === 0 || right.size === 0) {
     return 0;
   }
   let shared = 0;
-  for (const token of a) {
-    if (b.has(token)) {
+  for (const token of left) {
+    if (right.has(token)) {
       shared += 1;
     }
   }
-  return shared / (a.size + b.size - shared);
+  return shared / (left.size + right.size - shared);
 };
 
-const sharedCount = (a: Set<string>, b: Set<string>): number => {
+const sharedCount = (left: Set<string>, right: Set<string>): number => {
   let shared = 0;
-  for (const value of a) {
-    if (b.has(value)) {
+  for (const value of left) {
+    if (right.has(value)) {
       shared += 1;
     }
   }
@@ -153,7 +152,7 @@ export const clusterThreads = (threads: readonly Thread[], options?: TopicOption
       }
     }
     const keywords = [...counts.entries()]
-      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
       .slice(0, opts.maxKeywords)
       .map(([token]) => token);
 

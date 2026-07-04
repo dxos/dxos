@@ -11,28 +11,8 @@ import { buildThreads } from './threads';
 import { clusterThreads, materializeTopics, summarizeTopics } from './topics';
 import { Topic } from './types';
 
-const msg = (subject: string, from: string, created: string, summary?: string) =>
-  Message.make({
-    created,
-    sender: { email: from },
-    blocks: [{ _tag: 'text', text: 'body' }],
-    properties: { subject, messageId: `<${from}:${created}>`, ...(summary ? { summary } : {}) },
-  });
-
 const OWNER = 'me@enron.com';
 const NOW = '2001-05-02T00:00:00.000Z';
-
-// Two related threads (shared participants + overlapping subject tokens) and one unrelated thread.
-const threads = () =>
-  buildThreads(
-    [
-      msg('Q2 report draft', 'alice@enron.com', '2001-05-01T10:00:00.000Z', 'Draft circulated.'),
-      msg('RE: Q2 report draft', OWNER, '2001-05-01T11:00:00.000Z', 'Comments sent.'),
-      msg('Q2 report budget numbers', 'alice@enron.com', '2001-05-01T12:00:00.000Z', 'Budget attached.'),
-      msg('Lunch on friday?', 'zed@other.org', '2001-05-01T13:00:00.000Z'),
-    ],
-    { ownerEmail: OWNER, now: NOW },
-  );
 
 describe('topics', () => {
   test('clusters related threads and separates unrelated ones', ({ expect }) => {
@@ -88,3 +68,23 @@ describe('topics', () => {
     expect(first.threadIds.length).toBeGreaterThan(0);
   });
 });
+
+const msg = (subject: string, from: string, created: string, summary?: string) =>
+  Message.make({
+    created,
+    sender: { email: from },
+    blocks: [{ _tag: 'text', text: 'body' }],
+    properties: { subject, messageId: `<${from}:${created}>`, ...(summary ? { summary } : {}) },
+  });
+
+// Two related threads (shared participants + overlapping subject tokens) and one unrelated thread.
+const threads = () =>
+  buildThreads(
+    [
+      msg('Q2 report draft', 'alice@enron.com', '2001-05-01T10:00:00.000Z', 'Draft circulated.'),
+      msg('RE: Q2 report draft', OWNER, '2001-05-01T11:00:00.000Z', 'Comments sent.'),
+      msg('Q2 report budget numbers', 'alice@enron.com', '2001-05-01T12:00:00.000Z', 'Budget attached.'),
+      msg('Lunch on friday?', 'zed@other.org', '2001-05-01T13:00:00.000Z'),
+    ],
+    { ownerEmail: OWNER, now: NOW },
+  );

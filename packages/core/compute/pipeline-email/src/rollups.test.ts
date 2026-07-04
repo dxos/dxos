@@ -8,14 +8,6 @@ import { Message } from '@dxos/types';
 
 import { buildRollups } from './rollups';
 
-const msg = (subject: string, from: string, created: string) =>
-  Message.make({
-    created,
-    sender: { email: from },
-    blocks: [{ _tag: 'text', text: 'body' }],
-    properties: { subject, messageId: `<${from}:${created}>` },
-  });
-
 describe('buildRollups', () => {
   test('aggregates per sender: counts, contact span, cadence, threads', ({ expect }) => {
     const rollups = buildRollups([
@@ -48,3 +40,11 @@ describe('buildRollups', () => {
     expect(buildRollups([anonymous])).toHaveLength(0);
   });
 });
+
+const msg = (subject: string, from: string, created: string) =>
+  Message.make({
+    created,
+    sender: { email: from },
+    blocks: [{ _tag: 'text', text: 'body' }],
+    properties: { subject, messageId: `<${from}:${created}>` },
+  });

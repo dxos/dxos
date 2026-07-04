@@ -15,33 +15,10 @@ import { clusterThreads } from './topics';
 const OWNER = 'me@enron.com';
 const NOW = '2001-06-01T00:00:00.000Z';
 
-const msg = (subject: string, from: string, created: string) =>
-  Message.make({
-    created,
-    sender: { email: from },
-    blocks: [{ _tag: 'text', text: 'body' }],
-    properties: { subject, messageId: `<${from}:${created}>` },
-  });
-
 const COMMITMENTS: Commitment[] = [
   { who: 'alice@enron.com', what: 'Q2 report', dueBy: '2001-05-18', factId: 'f1', source: '<m1>' },
   { who: 'bob@enron.com', what: 'budget', factId: 'f2', source: '<m2>' },
 ];
-
-const input = () => {
-  const messages = [
-    // Recent thread awaiting my reply; older thread long stalled.
-    msg('Q2 report', 'alice@enron.com', '2001-05-31T10:00:00.000Z'),
-    msg('Old deal terms', 'bob@enron.com', '2001-04-01T10:00:00.000Z'),
-  ];
-  const threads = buildThreads(messages, { ownerEmail: OWNER, now: NOW });
-  return {
-    threads,
-    topics: clusterThreads(threads),
-    commitments: COMMITMENTS,
-    rollups: buildRollups(messages),
-  };
-};
 
 describe('digest', () => {
   test('builds a deterministic skeleton', ({ expect }) => {
@@ -76,3 +53,26 @@ describe('digest', () => {
     expect(degraded.narrative).toBe('');
   });
 });
+
+const msg = (subject: string, from: string, created: string) =>
+  Message.make({
+    created,
+    sender: { email: from },
+    blocks: [{ _tag: 'text', text: 'body' }],
+    properties: { subject, messageId: `<${from}:${created}>` },
+  });
+
+const input = () => {
+  const messages = [
+    // Recent thread awaiting my reply; older thread long stalled.
+    msg('Q2 report', 'alice@enron.com', '2001-05-31T10:00:00.000Z'),
+    msg('Old deal terms', 'bob@enron.com', '2001-04-01T10:00:00.000Z'),
+  ];
+  const threads = buildThreads(messages, { ownerEmail: OWNER, now: NOW });
+  return {
+    threads,
+    topics: clusterThreads(threads),
+    commitments: COMMITMENTS,
+    rollups: buildRollups(messages),
+  };
+};
