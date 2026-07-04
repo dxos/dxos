@@ -91,14 +91,13 @@ const BoardRoot = BoardRootInner as <TColumn = any, TItem = any>(props: BoardRoo
 const BOARD_CONTENT_NAME = 'Board.Content';
 
 type BoardContentProps<TColumn = any> = ThemedClassName<{
-  id: string;
   debug?: boolean;
   eventHandler?: MosaicEventHandler<TColumn>;
   Tile?: MosaicStackProps<TColumn>['Tile'];
 }>;
 
 const BoardContentInner = composable<HTMLDivElement, BoardContentProps>(
-  ({ id: _id, debug, eventHandler, Tile = DefaultBoardColumn, ...props }, forwardedRef) => {
+  ({ debug, eventHandler, Tile = DefaultBoardColumn, ...props }, forwardedRef) => {
     const { model } = useBoardContext(BOARD_CONTENT_NAME);
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
