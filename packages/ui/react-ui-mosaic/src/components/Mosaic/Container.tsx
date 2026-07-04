@@ -76,6 +76,9 @@ const [MosaicContainerContextProvider, useMosaicContainerContext] =
 // State attribute: [&:has(>_[data-mosaic-container-state=active])]
 const MOSAIC_CONTAINER_STATE_ATTR = 'mosaic-container-state';
 
+// State attribute: [&:has(>_[data-mosaic-debug=true])]
+const MOSAIC_CONTAINER_DEBUG_ATTR = 'mosaic-debug';
+
 // CSS variables: [var(--mosaic-placeholder-xxx)]
 const MOSAIC_CONTAINER_PLACEHOLDER_WIDTH = '--mosaic-placeholder-width';
 const MOSAIC_CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
@@ -104,6 +107,8 @@ type MosaicContainerProps = PropsWithChildren<
     /** Called when a tile requests to toggle selection. */
     onSelectionChange?: (id: string, selected: boolean) => void;
     debug?: () => ReactNode;
+    /** Toggles the `group` target that Placeholder's debug-highlight selectors read (see styles.ts). */
+    placeholderDebug?: boolean;
   }
 >;
 
@@ -126,6 +131,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
       selectedIds,
       onSelectionChange,
       debug,
+      placeholderDebug,
       ...props
     },
     forwardedRef,
@@ -317,7 +323,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
       >
         <Comp
           {...composableProps(props, {
-            classNames: 'h-full',
+            classNames: 'h-full group',
             style: {
               [MOSAIC_CONTAINER_PLACEHOLDER_WIDTH]:
                 state.type === 'active' && state.bounds ? `${state.bounds.width}px` : '0px',
@@ -327,6 +333,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
           })}
           {...{
             [`data-${MOSAIC_CONTAINER_STATE_ATTR}`]: state.type,
+            [`data-${MOSAIC_CONTAINER_DEBUG_ATTR}`]: placeholderDebug,
           }}
           ref={composedRef}
         >

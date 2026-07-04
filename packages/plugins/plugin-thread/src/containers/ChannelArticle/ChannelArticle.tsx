@@ -117,10 +117,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
           <Surface.Surface type={AppSurface.Article} data={{ subject: { roomId: id }, attendableId }} limit={1} />
         </Panel.Content>
       ) : (
-        // Not `asChild`: Panel.Root is a CSS grid and the `grid-area: content` placement must land on
-        // a real box. MessageThread's outermost node is Mosaic.Root's `display:contents` div, which
-        // cannot be a grid item, so wrapping in Panel.Content's own box lets MessageThread fill via `h-full`.
-        <Panel.Content>
+        <Panel.Content asChild>
           <MessageThread
             id={id}
             classNames='dx-document'

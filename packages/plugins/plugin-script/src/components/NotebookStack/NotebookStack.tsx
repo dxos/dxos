@@ -85,8 +85,14 @@ export const NotebookStack = composable<HTMLDivElement, NotebookStackProps>(
     );
 
     return (
-      <Mosaic.Root ref={forwardedRef}>
-        <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
+      <Mosaic.Root>
+        <Mosaic.Container
+          asChild
+          orientation='vertical'
+          autoScroll={viewport}
+          eventHandler={eventHandler}
+          ref={forwardedRef}
+        >
           <ScrollArea.Root orientation='vertical' padding {...composableProps(props)}>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.Stack orientation='vertical' items={notebook?.cells ?? []} getId={getCellId} Tile={Tile} />

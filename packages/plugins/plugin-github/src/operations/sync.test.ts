@@ -9,7 +9,7 @@ import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Connection, SyncBinding } from '@dxos/plugin-connector';
-import { AccessToken, Organization, Person, Project, Task } from '@dxos/types';
+import { AccessToken, Cursor, Organization, Person, Project, Task } from '@dxos/types';
 
 import { GITHUB_SOURCE } from '../constants';
 import { GitHubApi } from '../services';
@@ -54,6 +54,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     graph.registry.add([
       AccessToken.AccessToken,
       Connection.Connection,
+      Cursor.Cursor,
       SyncBinding.SyncBinding,
       Organization.Organization,
       Person.Person,
