@@ -62,6 +62,12 @@ describe('topics', () => {
     expect(q2?.label.length).toBeGreaterThan(0);
   });
 
+  test('blank-subject threads still get a non-empty topic label', ({ expect }) => {
+    const blank = buildThreads([msg('', 'a@x.com', '2001-05-01T10:00:00.000Z')], { ownerEmail: OWNER, now: NOW });
+    const [draft] = clusterThreads(blank);
+    expect(draft.label).toBe('no-subject');
+  });
+
   test('summarizeTopics replaces summaries via the summarizer and degrades on failure', async ({ expect }) => {
     const drafts = clusterThreads(threads());
     const summarized = await summarizeTopics(drafts, async () => 'LLM topic summary.');

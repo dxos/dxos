@@ -459,7 +459,8 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
         ),
       );
     },
-    // The LLM call per message dominates; give the whole run a generous budget.
-    5 * 60_000,
+    // LLM calls dominate: one summarize + one extraction per message, plus per-topic summaries and
+    // the digest narration at the corpus layer — budget accordingly.
+    10 * 60_000,
   );
 });

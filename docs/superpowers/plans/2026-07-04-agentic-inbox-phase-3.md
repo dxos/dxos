@@ -15,15 +15,15 @@
 
 ## Modules (all internal; lean `index.ts` preserved)
 
-| File | Exports | Test |
-| --- | --- | --- |
-| `src/prompts.ts` | `EmailPrompts`, `DEFAULT_EMAIL_PROMPTS`, `mergePrompts` | `prompts.test.ts` |
-| `src/types/Topic.ts` | `Topic` ECHO type (`org.dxos.type.emailTopic`) | `Topic.test.ts` |
-| `src/topics.ts` | `buildTopics(threads, opts?)`, `summarizeTopics(topics, summarize, opts?)`, `DEFAULT_TOPIC_OPTIONS` | `topics.test.ts` |
-| `src/ledger.ts` | `commitmentLedger(store, opts?)`, `Commitment`, `DEFAULT_LEDGER_OPTIONS` | `ledger.test.ts` |
-| `src/rollups.ts` | `buildRollups(messages, opts?)`, `RelationshipRollup` | `rollups.test.ts` |
-| `src/digest.ts` | `buildDigest(input, opts?)`, `renderDigest`, `Digest` | `digest.test.ts` |
-| `DESIGN.md` | phases 1–3 as built; phases 4–5 design (capability + action layers) | — |
+| File                 | Exports                                                                                             | Test              |
+| -------------------- | --------------------------------------------------------------------------------------------------- | ----------------- |
+| `src/prompts.ts`     | `EmailPrompts`, `DEFAULT_EMAIL_PROMPTS`, `mergePrompts`                                             | `prompts.test.ts` |
+| `src/types/Topic.ts` | `Topic` ECHO type (`org.dxos.type.emailTopic`)                                                      | `Topic.test.ts`   |
+| `src/topics.ts`      | `buildTopics(threads, opts?)`, `summarizeTopics(topics, summarize, opts?)`, `DEFAULT_TOPIC_OPTIONS` | `topics.test.ts`  |
+| `src/ledger.ts`      | `commitmentLedger(store, opts?)`, `Commitment`, `DEFAULT_LEDGER_OPTIONS`                            | `ledger.test.ts`  |
+| `src/rollups.ts`     | `buildRollups(messages, opts?)`, `RelationshipRollup`                                               | `rollups.test.ts` |
+| `src/digest.ts`      | `buildDigest(input, opts?)`, `renderDigest`, `Digest`                                               | `digest.test.ts`  |
+| `DESIGN.md`          | phases 1–3 as built; phases 4–5 design (capability + action layers)                                 | —                 |
 
 Gated Enron test gains a corpus section: topics (strict: ≥1, every thread assigned once), rollups (strict: one per sender), ledger (advisory count, strict shape), digest (strict skeleton, advisory narrative). Unit tests are deterministic (scripted fixtures, `mockAiService`/stub summarizer — no network).
 

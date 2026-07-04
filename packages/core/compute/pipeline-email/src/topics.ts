@@ -161,8 +161,11 @@ export const clusterThreads = (threads: readonly Thread[], options?: TopicOption
       member.thread.summary.length > 0 ? [member.thread.summary] : [],
     );
 
+    // Label from top keywords; a keyword-less cluster (e.g. blank subjects) falls back through the
+    // first thread's subject to its threadId so the label is never empty.
+    const first = cluster.members[0].thread;
     return {
-      label: keywords.length > 0 ? keywords.slice(0, 3).join(' ') : cluster.members[0].thread.subject,
+      label: keywords.length > 0 ? keywords.slice(0, 3).join(' ') : first.subject || first.threadId,
       summary: summaries.join('\n'),
       threadIds: cluster.members.map((member) => member.thread.threadId),
       participants: [...cluster.participants].sort(),

@@ -82,12 +82,32 @@ draft|proposed|approved|sent|rejected }`) — drafted from thread + facts + prio
 - Suggested tasks / calendar events / triage labels materialize as pending ECHO objects awaiting
   approval, per the autonomy tier.
 
-## Integration notes
+## Integration notes — plugin-crm / plugin-inbox / assistant-e2e (reconciled 2026-07-04)
 
-- **plugin-crm / assistant-e2e:** `plugin-crm` renders mailboxes over the same `@dxos/types`
-  `Message`/`Person`/`Organization`; this package's outputs (`Thread`, `Topic`, rollups) are
-  candidates for CRM surfaces (thread state → mailbox triage, rollups → contact panels). The e2e
-  suites (`assistant-e2e`, e.g. `crm-mailbox.test.ts`) exercise mailbox skills against that data;
-  discovery types stay internal here until a consumer plugin adopts them.
+Verified against `plugin-crm`, `plugin-inbox`, and `assistant-e2e` (`crm-mailbox.test.ts`):
+
+- **No coupling or collisions today.** Nothing imports `@dxos/pipeline-email`; the typenames
+  `org.dxos.type.emailThread` / `org.dxos.type.emailTopic` are unique (`org.dxos.type.thread` is the
+  unrelated chat Thread; `org.dxos.type.mailbox` is `plugin-inbox`'s container). Registering these
+  types does not affect the e2e harness — `agentTest` only registers types a test lists explicitly,
+  so `crm-mailbox.test.ts` and its memoized LLM fixture are untouched.
+- **Shared data model.** All parties speak `@dxos/types` `Message` (`properties.subject`,
+  `threadId?`) and canonical `Person`/`Organization` — `plugin-crm`'s fixtures build exactly the
+  `Message.make({ sender, blocks, properties: { subject } })` shape this package's
+  `deriveThreadId`/`buildThreads`/`buildRollups` consume, so the corpus layer can run over a CRM
+  mailbox unchanged. `plugin-crm`'s `ProfileOf.summary` (profile text) is unrelated to email
+  summaries.
+- **Convergence to resolve when a plugin adopts this package** (tracked, not blocking):
+  1. Per-message summaries: `plugin-inbox`'s `summarize-extractor` writes a separate
+     `Markdown.Document`; this package writes `Message.properties.summary`. Pick one pattern (the
+     properties field feeds `buildThreads`/topic summaries directly; the extractor convention suits
+     UI documents) or bridge them in the extractor.
+  2. Spam: `plugin-inbox`'s `MessageState.SPAM` is an unused placeholder; this package sets
+     `Message.properties.spam` — a natural producer for that state.
+  3. Surfaces: `Thread.state` (awaiting-mine/stalled) → mailbox triage; rollups → contact panels;
+     `Topic`/digest → briefing views. Requires promoting the types out of package-internal scope.
+- **e2e gating differs by design:** `crm-mailbox.test.ts` replays memoized conversations in normal
+  CI; this package's Enron test is env-gated (`ROOT_DIR` + Ollama). Both suites pass alongside this
+  package's changes (verified in the phase-3 run).
 - Known gap: a transient unhandled rejection escaping the real-Ollama extraction path under the
   gated Enron test (assertions pass; investigation in `docs/superpowers` ledger; deferred, CI-safe).
