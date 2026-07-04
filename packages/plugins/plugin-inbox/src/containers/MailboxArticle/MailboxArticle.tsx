@@ -11,7 +11,7 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
-import { useObject, usePaginatedQuery, useQuery } from '@dxos/react-client/echo';
+import { useObject, usePagination, useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
@@ -164,21 +164,21 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   // whole feed up front.
   const {
     items: messages,
-    loadNext,
-    loadPrevious,
+    getNext,
+    getPrevious,
     hasMore,
     isLoading: messagesLoading,
     atHead,
     jumpToHead,
-  } = usePaginatedQuery(
+  } = usePagination(
     db,
     feed
       ? Query.select(Filter.type(Message.Message)).from(feed).orderBy(Order.natural('desc')).limit(MAILBOX_PAGE_SIZE)
       : Query.select(Filter.nothing()).limit(MAILBOX_PAGE_SIZE),
   );
   const pagination = useMemo(
-    () => ({ loadNext, loadPrevious, hasMore, isLoading: messagesLoading, atHead, jumpToHead }),
-    [loadNext, loadPrevious, hasMore, messagesLoading, atHead, jumpToHead],
+    () => ({ getNext, getPrevious, hasMore, isLoading: messagesLoading, atHead, jumpToHead }),
+    [getNext, getPrevious, hasMore, messagesLoading, atHead, jumpToHead],
   );
 
   // Feed/queue queries don't yet support text-search and complex filter combinations,

@@ -5,7 +5,7 @@
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { type PaginatedQueryResult } from '@dxos/react-client/echo';
+import { type PaginationResult } from '@dxos/react-client/echo';
 import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
@@ -66,10 +66,10 @@ export type MessageStackProps = {
    */
   conversations?: boolean;
   /**
-   * When `messages` is a lazily-loaded window (see `usePaginatedQuery`), drives loading more
+   * When `messages` is a lazily-loaded window (see `usePagination`), drives loading more
    * older messages as the user scrolls toward the loaded end.
    */
-  pagination?: Omit<PaginatedQueryResult<unknown>, 'items'>;
+  pagination?: Omit<PaginationResult<unknown>, 'items'>;
   onAction?: MessageStackActionHandler;
 };
 
@@ -195,8 +195,8 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
 
     // Requests the next (older) page once the visible range approaches the loaded end, or the
     // previous (newer) page once it approaches the loaded start, and preserves scroll position
-    // across the resulting `items` change (see `useVirtualizerPagination`). `pagination.loadNext`/
-    // `loadPrevious` are single-flight and a no-op once exhausted/at the head, so triggering them
+    // across the resulting `items` change (see `useVirtualizerPagination`). `pagination.getNext`/
+    // `getPrevious` are single-flight and a no-op once exhausted/at the head, so triggering them
     // on every virtualizer change while near either edge is safe.
     const { onChange: handleVirtualizerChange } = useVirtualizerPagination({
       items,

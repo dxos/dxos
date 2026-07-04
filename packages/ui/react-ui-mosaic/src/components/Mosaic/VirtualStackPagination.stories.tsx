@@ -23,10 +23,10 @@ type ListItem = { id: string; index: number };
 type Range = { skip: number; limit: number };
 
 /**
- * Windows a plain in-memory array the same way `usePaginatedQuery` windows a live query: a page
- * size, a bounded max window, and loadNext/loadPrevious that grow the window until it hits
+ * Windows a plain in-memory array the same way `usePagination` windows a live query: a page
+ * size, a bounded max window, and getNext/getPrevious that grow the window until it hits
  * `MAX_WINDOW_SIZE`, then slide it instead. Demonstrates that `useVirtualizerPagination` only
- * needs a `{ items, loadNext, loadPrevious }` shape -- nothing ECHO-specific.
+ * needs a `{ items, getNext, getPrevious }` shape -- nothing ECHO-specific.
  */
 const usePaginatedItems = (total: number) => {
   const [range, setRange] = useState<Range>({ skip: 0, limit: PAGE_SIZE });
@@ -39,7 +39,7 @@ const usePaginatedItems = (total: number) => {
     });
   }, [range, total]);
 
-  const loadNext = useCallback(() => {
+  const getNext = useCallback(() => {
     setRange((prev) => {
       if (prev.skip + prev.limit >= total) {
         return prev;
@@ -51,11 +51,11 @@ const usePaginatedItems = (total: number) => {
     });
   }, [total]);
 
-  const loadPrevious = useCallback(() => {
+  const getPrevious = useCallback(() => {
     setRange((prev) => (prev.skip === 0 ? prev : { ...prev, skip: Math.max(0, prev.skip - PAGE_SIZE) }));
   }, []);
 
-  return { items, loadNext, loadPrevious, atHead: range.skip === 0 };
+  return { items, getNext, getPrevious, atHead: range.skip === 0 };
 };
 
 const ListItemTile: FC<MosaicTileProps<ListItem>> = ({ data, location, current }) => (
@@ -71,8 +71,8 @@ const ListItemTile: FC<MosaicTileProps<ListItem>> = ({ data, location, current }
 );
 
 const VirtualStackPaginationStory = () => {
-  const { items, loadNext, loadPrevious, atHead } = usePaginatedItems(TOTAL_ITEMS);
-  const pagination = useMemo(() => ({ loadNext, loadPrevious }), [loadNext, loadPrevious]);
+  const { items, getNext, getPrevious, atHead } = usePaginatedItems(TOTAL_ITEMS);
+  const pagination = useMemo(() => ({ getNext, getPrevious }), [getNext, getPrevious]);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
   const { onChange } = useVirtualizerPagination({
@@ -131,7 +131,7 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * `Mosaic.VirtualStack` paginated by `useVirtualizerPagination` over a plain in-memory array --
- * no ECHO query or `usePaginatedQuery` involved. Scroll down to grow the window, then keep
+ * no ECHO query or `usePagination` involved. Scroll down to grow the window, then keep
  * scrolling past `MAX_WINDOW_SIZE` to see it slide (evicting the newest items); scroll back up to
  * slide it back toward the head without a visible jump.
  */

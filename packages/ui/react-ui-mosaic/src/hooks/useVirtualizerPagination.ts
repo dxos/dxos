@@ -12,9 +12,9 @@ const DEFAULT_THRESHOLD = 12;
 
 export type VirtualizerPaginationController = {
   /** Requests the next (e.g. older) page. Omit to disable the bottom-edge trigger. */
-  loadNext?: () => void;
+  getNext?: () => void;
   /** Requests the previous (e.g. newer) page. Omit to disable the top-edge trigger. */
-  loadPrevious?: () => void;
+  getPrevious?: () => void;
 };
 
 export type UseVirtualizerPaginationProps<TItem = any> = {
@@ -88,11 +88,11 @@ export const useVirtualizerPagination = <TItem = any>({
       const virtualItems = virtualizer.getVirtualItems();
       const firstVisible = virtualItems.at(0);
       const lastVisible = virtualItems.at(-1);
-      if (pagination?.loadNext && lastVisible && lastVisible.index >= itemCount - threshold) {
-        pagination.loadNext();
+      if (pagination?.getNext && lastVisible && lastVisible.index >= itemCount - threshold) {
+        pagination.getNext();
       }
-      if (pagination?.loadPrevious && firstVisible && firstVisible.index < threshold) {
-        pagination.loadPrevious();
+      if (pagination?.getPrevious && firstVisible && firstVisible.index < threshold) {
+        pagination.getPrevious();
       }
     },
     [pagination, itemCount, threshold],

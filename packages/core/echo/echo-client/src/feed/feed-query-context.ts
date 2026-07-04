@@ -19,7 +19,7 @@ import { type FeedWindow } from './feed-window';
 
 /**
  * A feed-scoped query is windowed (lazily loaded via {@link FeedWindow}) when it orders by
- * natural-descending (newest-first) and carries a limit -- exactly the shape `usePaginatedQuery`
+ * natural-descending (newest-first) and carries a limit -- exactly the shape `usePagination`
  * produces. Any other order (or no limit) falls back to filtering/sorting/slicing the fully
  * fetched feed in memory, matching the host indexer's reasoning that content-based reorders need
  * the full candidate set before slicing.

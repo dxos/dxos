@@ -51,7 +51,7 @@ type FeedWindowPage = {
  *    when `skip` moves before `rangeStart` -- i.e. the caller is scrolling back up after eviction
  *    had advanced the window away from the head;
  *  - trims whole pages outside `[skip, skip + limit)` on either edge, so the caller (which picks
- *    `skip`/`limit` to keep its own window bounded -- see `usePaginatedQuery`) never accumulates
+ *    `skip`/`limit` to keep its own window bounded -- see `usePagination`) never accumulates
  *    more than it currently needs. Pages (not individual items) are the eviction unit.
  *
  * Owned by a single {@link FeedHandle} and shared across all windowed queries against that feed;
@@ -102,7 +102,7 @@ export class FeedWindow {
    * was loaded.
    *
    * A request for `skip: 0` always re-anchors to the live head, resetting first if eviction had
-   * previously advanced `rangeStart` -- this is what makes `usePaginatedQuery`'s `jumpToHead`
+   * previously advanced `rangeStart` -- this is what makes `usePagination`'s `jumpToHead`
    * (which simply resets its own `skip` state to 0 and re-requests) work correctly.
    */
   setRange(skip: number, limit: number): Promise<{ hasMore: boolean }> {

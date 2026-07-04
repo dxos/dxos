@@ -492,7 +492,7 @@ describe('Feed', () => {
         const feed = yield* Database.add(Feed.make({ name: 'windowed-bidirectional' }));
         yield* appendPeople(feed, 30);
 
-        // Load the head first (rangeStart = 0), same as a fresh `usePaginatedQuery` mount.
+        // Load the head first (rangeStart = 0), same as a fresh `usePagination` mount.
         const head = yield* Feed.query(
           feed,
           Query.select(Filter.type(TestSchema.Person)).orderBy(Order.natural('desc')).limit(5),

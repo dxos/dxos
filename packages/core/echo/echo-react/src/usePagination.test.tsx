@@ -9,9 +9,9 @@ import { Database, Feed, Filter, Obj, Order, Query } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { usePaginatedQuery } from './usePaginatedQuery';
+import { usePagination } from './usePagination';
 
-describe('usePaginatedQuery', () => {
+describe('usePagination', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -35,7 +35,7 @@ describe('usePaginatedQuery', () => {
     await appendPeople(feed, db, 10);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
-    const { result } = renderHook(() => usePaginatedQuery(db, query));
+    const { result } = renderHook(() => usePagination(db, query));
 
     await waitFor(() => {
       expect(result.current.items.map((person) => person.name)).toEqual(['person-9', 'person-8', 'person-7']);
@@ -44,20 +44,20 @@ describe('usePaginatedQuery', () => {
     expect(result.current.atHead).toBe(true);
   });
 
-  test('loadNext extends the window toward older items', async () => {
+  test('getNext extends the window toward older items', async () => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const feed = db.add(Feed.make({ name: 'windowed' }));
     await appendPeople(feed, db, 10);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
-    const { result } = renderHook(() => usePaginatedQuery(db, query));
+    const { result } = renderHook(() => usePagination(db, query));
 
     await waitFor(() => {
       expect(result.current.items).toHaveLength(3);
     });
 
-    result.current.loadNext();
+    result.current.getNext();
 
     await waitFor(() => {
       expect(result.current.items.map((person) => person.name)).toEqual([
@@ -71,10 +71,10 @@ describe('usePaginatedQuery', () => {
     });
   });
 
-  test('a burst of synchronous loadNext calls in the same tick only advances by one page', async () => {
+  test('a burst of synchronous getNext calls in the same tick only advances by one page', async () => {
     // Regression test: a virtualizer's `onChange` can fire multiple times for a single "scrolled
     // near the edge" event (once per newly-rendered row) before React re-renders with the new
-    // range. `loadNext`'s single-flight guard must hold across that whole burst, not just across
+    // range. `getNext`'s single-flight guard must hold across that whole burst, not just across
     // renders -- otherwise the window jumps by (burst size) pages instead of one.
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
@@ -82,15 +82,15 @@ describe('usePaginatedQuery', () => {
     await appendPeople(feed, db, 30);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
-    const { result } = renderHook(() => usePaginatedQuery(db, query));
+    const { result } = renderHook(() => usePagination(db, query));
 
     await waitFor(() => {
       expect(result.current.items).toHaveLength(3);
     });
 
-    // Simulate the burst: call loadNext synchronously many times before any re-render happens.
+    // Simulate the burst: call getNext synchronously many times before any re-render happens.
     for (let i = 0; i < 10; i++) {
-      result.current.loadNext();
+      result.current.getNext();
     }
 
     await waitFor(() => {
@@ -110,14 +110,14 @@ describe('usePaginatedQuery', () => {
     await appendPeople(feed, db, 5);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
-    const { result } = renderHook(() => usePaginatedQuery(db, query));
+    const { result } = renderHook(() => usePagination(db, query));
 
     await waitFor(() => {
       expect(result.current.items).toHaveLength(3);
     });
     expect(result.current.hasMore).toBe(true);
 
-    result.current.loadNext();
+    result.current.getNext();
 
     await waitFor(() => {
       expect(result.current.items).toHaveLength(5);
@@ -132,18 +132,18 @@ describe('usePaginatedQuery', () => {
     await appendPeople(feed, db, 20);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(5);
-    const { result } = renderHook(() => usePaginatedQuery(db, query, { maxWindowSize: 10 }));
+    const { result } = renderHook(() => usePagination(db, query, { maxWindowSize: 10 }));
 
     await waitFor(() => {
       expect(result.current.items).toHaveLength(5);
     });
     expect(result.current.atHead).toBe(true);
 
-    result.current.loadNext(); // limit -> 10 (within maxWindowSize)
+    result.current.getNext(); // limit -> 10 (within maxWindowSize)
     await waitFor(() => expect(result.current.items).toHaveLength(10));
     expect(result.current.atHead).toBe(true);
 
-    result.current.loadNext(); // would exceed maxWindowSize -> skip grows instead, limit stays at 10
+    result.current.getNext(); // would exceed maxWindowSize -> skip grows instead, limit stays at 10
     await waitFor(() => {
       expect(result.current.items).toHaveLength(10);
       expect(result.current.atHead).toBe(false);
@@ -175,7 +175,7 @@ describe('usePaginatedQuery', () => {
     });
   });
 
-  test('loadNext past maxWindowSize does not transiently undershoot the window size', async () => {
+  test('getNext past maxWindowSize does not transiently undershoot the window size', async () => {
     // Regression test: reading the query's synchronous `.results` immediately upon subscribing
     // (previously via `subscribe(cb, { fire: true })`) reflected whatever the shared `FeedWindow`
     // had buffered *before* its async fetch extended to cover a newly advanced `skip` -- e.g.
@@ -190,17 +190,17 @@ describe('usePaginatedQuery', () => {
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(5);
     const lengths: number[] = [];
     const { result } = renderHook(() => {
-      const paginated = usePaginatedQuery(db, query, { maxWindowSize: 10 });
+      const paginated = usePagination(db, query, { maxWindowSize: 10 });
       lengths.push(paginated.items.length);
       return paginated;
     });
 
     await waitFor(() => expect(result.current.items).toHaveLength(5));
-    result.current.loadNext(); // limit -> 10 (within maxWindowSize)
+    result.current.getNext(); // limit -> 10 (within maxWindowSize)
     await waitFor(() => expect(result.current.items).toHaveLength(10));
     lengths.length = 0;
 
-    result.current.loadNext(); // slides skip 0 -> 5, evicting the newest 5 -- the undershoot path
+    result.current.getNext(); // slides skip 0 -> 5, evicting the newest 5 -- the undershoot path
     await waitFor(() => {
       expect(result.current.items).toHaveLength(10);
       expect(result.current.atHead).toBe(false);
@@ -209,21 +209,21 @@ describe('usePaginatedQuery', () => {
     expect(Math.min(...lengths)).toBe(10);
   });
 
-  test('loadPrevious slides the window back toward the head after it has advanced', async () => {
+  test('getPrevious slides the window back toward the head after it has advanced', async () => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const feed = db.add(Feed.make({ name: 'windowed' }));
     await appendPeople(feed, db, 30);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(5);
-    const { result } = renderHook(() => usePaginatedQuery(db, query, { maxWindowSize: 10 }));
+    const { result } = renderHook(() => usePagination(db, query, { maxWindowSize: 10 }));
 
     await waitFor(() => expect(result.current.items).toHaveLength(5));
 
-    result.current.loadNext(); // limit -> 10 (within maxWindowSize)
+    result.current.getNext(); // limit -> 10 (within maxWindowSize)
     await waitFor(() => expect(result.current.items).toHaveLength(10));
 
-    result.current.loadNext(); // exceeds maxWindowSize -> slides forward (skip: 0 -> 5)
+    result.current.getNext(); // exceeds maxWindowSize -> slides forward (skip: 0 -> 5)
     await waitFor(() => {
       expect(result.current.atHead).toBe(false);
       expect(result.current.items.map((person) => person.name)).toEqual([
@@ -240,8 +240,8 @@ describe('usePaginatedQuery', () => {
       ]);
     });
 
-    // loadPrevious is the inverse of the slide above: it should land exactly back on the head.
-    result.current.loadPrevious();
+    // getPrevious is the inverse of the slide above: it should land exactly back on the head.
+    result.current.getPrevious();
     await waitFor(() => {
       expect(result.current.atHead).toBe(true);
       expect(result.current.items.map((person) => person.name)).toEqual([
@@ -259,15 +259,15 @@ describe('usePaginatedQuery', () => {
     });
 
     // Already at the head -- no-op.
-    result.current.loadPrevious();
+    result.current.getPrevious();
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(result.current.atHead).toBe(true);
     expect(result.current.items).toHaveLength(10);
   });
 
-  test('items never regresses to empty across a loadNext transition (no scroll-jump regression)', async () => {
-    // Regression test for a bug where `usePaginatedQuery` delegated to the generic `useQuery`
-    // hook: every `loadNext` produced a brand new query AST, and `useQuery`'s AST-keyed
+  test('items never regresses to empty across a getNext transition (no scroll-jump regression)', async () => {
+    // Regression test for a bug where `usePagination` delegated to the generic `useQuery`
+    // hook: every `getNext` produced a brand new query AST, and `useQuery`'s AST-keyed
     // subscription started that new query from an empty snapshot before its async load resolved
     // -- flashing `items` to `[]` on every page load, which collapsed the virtualizer and snapped
     // scroll position back to the top in the real app.
@@ -279,7 +279,7 @@ describe('usePaginatedQuery', () => {
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
     const lengths: number[] = [];
     const { result } = renderHook(() => {
-      const paginated = usePaginatedQuery(db, query);
+      const paginated = usePagination(db, query);
       lengths.push(paginated.items.length);
       return paginated;
     });
@@ -287,7 +287,7 @@ describe('usePaginatedQuery', () => {
     await waitFor(() => expect(result.current.items).toHaveLength(3));
     lengths.length = 0;
 
-    result.current.loadNext();
+    result.current.getNext();
     await waitFor(() => expect(result.current.items).toHaveLength(6));
 
     expect(lengths.every((length) => length > 0)).toBe(true);
@@ -300,7 +300,7 @@ describe('usePaginatedQuery', () => {
     await appendPeople(feed, db, 2);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(5);
-    const { result } = renderHook(() => usePaginatedQuery(db, query));
+    const { result } = renderHook(() => usePagination(db, query));
 
     await waitFor(() => {
       expect(result.current.items.map((person) => person.name)).toEqual(['person-1', 'person-0']);
@@ -319,7 +319,7 @@ describe('usePaginatedQuery', () => {
     const feed = db.add(Feed.make({ name: 'windowed' }));
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc'));
-    expect(() => renderHook(() => usePaginatedQuery(db, query))).toThrow(/\.limit\(pageSize\)/);
+    expect(() => renderHook(() => usePagination(db, query))).toThrow(/\.limit\(pageSize\)/);
   });
 
   test('throws when the query already carries a skip', async () => {
@@ -332,6 +332,6 @@ describe('usePaginatedQuery', () => {
       .orderBy(Order.natural('desc'))
       .skip(5)
       .limit(5);
-    expect(() => renderHook(() => usePaginatedQuery(db, query))).toThrow(/manages \.skip\(\)/);
+    expect(() => renderHook(() => usePagination(db, query))).toThrow(/manages \.skip\(\)/);
   });
 });
