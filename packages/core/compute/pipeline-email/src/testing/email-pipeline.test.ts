@@ -287,15 +287,19 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
 
       // Index each message into the fact substrate. The model + provider ride on ExtractOptions so
       // semantic-index resolves the Ollama model (its default is Anthropic); a failed extraction
-      // degrades to no facts in `extractFactsStage`, so the run stays green.
-      const indexFacts: FactIndexer = (message) =>
-        factRuntime.runPromise(
+      // degrades to no facts in `extractFactsStage`, so the run stays green. The counter proves the
+      // stage actually invoked indexing (facts themselves are advisory — see the assertions below).
+      let indexedMessageCount = 0;
+      const indexFacts: FactIndexer = (message) => {
+        indexedMessageCount += 1;
+        return factRuntime.runPromise(
           SemanticPipeline.run([messageToDocument(message)], {
             ...EMAIL_EXTRACT_OPTIONS,
             model: MODEL,
             provider: Provider.ollama.id,
           }),
         );
+      };
 
       const { sink, items } = captureSink<Message.Message>();
       await EffectEx.runPromise(
@@ -339,13 +343,16 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
       // schema-conforming (the summarize stage sidesteps this with lenient `generateText`), so the
       // fact count is best-effort here — the deterministic proof of extraction lives in
       // extract-stage.test.ts (mockAiService). Assert only that the substrate is queryable.
+      // The extract-facts stage ran for every captured message (proves the wiring executed, even
+      // though the facts it produced are advisory and may be empty under a flaky model).
+      expect(indexedMessageCount).toBe(items.length);
       const facts = await factRuntime.runPromise(
         Effect.gen(function* () {
           const store = yield* SemanticStore;
           return yield* store.query({});
         }),
       );
-      expect(facts.length).toBeGreaterThanOrEqual(0);
+      expect(Array.isArray(facts)).toBe(true);
 
       // Reconcile advisory fact entities against the canonical ECHO Person/Organization objects the
       // pipeline created (slice-1 §9.1). Facts are sparse/flaky under gpt-oss, so the resolved count
@@ -357,10 +364,12 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
         const refs = reconcileFactEntities(fact, entityIndex);
         return refs.subject || refs.object ? [refs] : [];
       });
-      expect(resolved.length).toBeGreaterThanOrEqual(0);
+      expect(Array.isArray(resolved)).toBe(true);
 
-      // Threads are deterministic (grouped from the captured messages), so assert them strictly.
+      // Threads are deterministic (grouped from the captured messages), so assert them strictly: at
+      // least one thread is materialized and every stored thread references its messages.
       const threads = buildThreads(items, { ownerEmail: 'owner@dxos.org', now: new Date().toISOString() });
+      expect(threads.length).toBeGreaterThan(0);
       for (const thread of threads) {
         db.add(thread);
       }
