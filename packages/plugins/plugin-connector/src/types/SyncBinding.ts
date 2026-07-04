@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Database, DXN, type Feed, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { invariant } from '@dxos/invariant';
 import { Stage } from '@dxos/pipeline';
@@ -175,14 +175,11 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
   Layer.effect(
     Service,
     Effect.gen(function* () {
-      const { db } = yield* Database.Service;
       const { feed } = options;
       // A binding always has its cursor (materialized at creation); a missing one is a defect.
       const cursor = yield* Database.load(options.binding.cursor).pipe(Effect.orDie);
       // DB-target syncs (no feed) rely on the cursor + idempotent write for dedup; there is no feed to seed.
-      const dedupSet = feed
-        ? yield* Effect.promise(() => seedDedupSet(db, feed, options.foreignKeySource))
-        : new Set<string>();
+      const dedupSet = feed ? yield* seedDedupSet(feed, options.foreignKeySource) : new Set<string>();
       return {
         ...options,
         cursor,
@@ -309,13 +306,19 @@ export const dedupStage = <In>(
   );
 
 /** Seeds the dedup set of already-committed foreign ids from the feed (see {@link layer} TODO). */
-const seedDedupSet = async (db: Database.Database, feed: Feed.Feed, foreignKeySource: string): Promise<Set<string>> => {
-  const items = await db.queryFeed(feed, Filter.everything()).run();
-  return new Set(
-    items.flatMap((item) =>
-      Obj.getMeta(item)
-        .keys.filter((key) => key.source === foreignKeySource)
-        .map((key) => key.id),
+const seedDedupSet = (
+  feed: Feed.Feed,
+  foreignKeySource: string,
+): Effect.Effect<Set<string>, never, Database.Service> =>
+  Feed.query(feed, Filter.everything()).run.pipe(
+    Effect.map(
+      (items) =>
+        new Set(
+          items.flatMap((item) =>
+            Obj.getMeta(item)
+              .keys.filter((key) => key.source === foreignKeySource)
+              .map((key) => key.id),
+          ),
+        ),
     ),
   );
-};
