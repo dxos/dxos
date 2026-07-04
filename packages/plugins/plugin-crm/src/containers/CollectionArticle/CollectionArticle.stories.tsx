@@ -78,12 +78,12 @@ const meta = {
               objects
                 .filter((object): object is Person.Person => Obj.instanceOf(Person.Person, object))
                 .forEach((person, index) => {
-                  Obj.update(person, (mutable: Obj.Mutable<Person.Person>) => {
-                    const slug = (mutable.fullName ?? 'user')
+                  Obj.update(person, (person: Obj.Mutable<Person.Person>) => {
+                    const slug = (person.fullName ?? 'user')
                       .toLowerCase()
                       .replace(/[^a-z0-9]+/g, '.')
                       .replace(/^\.+|\.+$/g, '');
-                    mutable.emails = [
+                    person.emails = [
                       { value: `${slug}@example.com` },
                       ...(index % 3 === 0 ? [{ label: 'work', value: `${slug}@work.example.com` }] : []),
                     ];
