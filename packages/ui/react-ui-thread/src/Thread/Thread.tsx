@@ -12,6 +12,7 @@ import React, {
   forwardRef,
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -367,10 +368,11 @@ const ThreadMessages = ({
     () => groupMessages(messages.filter(Boolean), { groupWindowMs, dayDivider, gapDividerMs, dtLocale }),
     [messages, groupWindowMs, dayDivider, gapDividerMs, dtLocale],
   );
-  // Stable handler identity; the id scopes the container so concurrent threads don't clobber each other in the Mosaic registry.
+  // Per-instance id keeps concurrent threads (incl. the same thread mounted twice) distinct in the Mosaic registry.
+  const instanceId = useId();
   const eventHandler = useMemo<MosaicEventHandler>(
-    () => ({ id: id ? `thread-${id}` : 'thread', canDrop: () => false }),
-    [id],
+    () => ({ id: `thread:${id ?? 'anon'}:${instanceId}`, canDrop: () => false }),
+    [id, instanceId],
   );
 
   return (
