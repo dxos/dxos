@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import * as Chunk from 'effect/Chunk';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
@@ -72,3 +74,26 @@ export const parseKey = (value: string | undefined): number => {
 
 /** Serializes a monotonic integer high-water mark for storage in {@link Cursor.value}. */
 export const formatKey = (key: number): string => String(key);
+
+/**
+ * A pipeline sink that commits a page of items and advances the cursor to the page's high-water key —
+ * the seam that makes a run idempotent (a re-run resumes from here). `write` performs the
+ * provider-specific write for the page; `keyOf` extracts each item's monotonic key; `format` serializes
+ * it (defaults to {@link formatKey}). Use after `Stream.grouped(pageSize)` with `Pipeline.run({ sink })`.
+ */
+export const commit =
+  <T, E = never, R = never>(options: {
+    cursor: Cursor;
+    write: (items: readonly T[]) => Effect.Effect<void, E, R>;
+    keyOf: (item: T) => number;
+    format?: (key: number) => string;
+  }) =>
+  (page: Chunk.Chunk<T>): Effect.Effect<void, E, R> =>
+    Effect.gen(function* () {
+      const items = Chunk.toReadonlyArray(page);
+      if (items.length === 0) {
+        return;
+      }
+      yield* options.write(items);
+      advance(options.cursor, (options.format ?? formatKey)(Math.max(...items.map(options.keyOf))));
+    });

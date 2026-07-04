@@ -47,12 +47,11 @@ describe('Cursor idempotency', () => {
         // One item per page, so each commit + cursor advance lands independently.
         Stream.grouped(1),
         Pipeline.run({
-          sink: (page) =>
-            Effect.sync(() => {
-              const items = [...page];
-              committed.push(...items.map((item) => item.id));
-              Cursor.advance(cursor, Cursor.formatKey(Math.max(...items.map((item) => item.key))));
-            }),
+          sink: Cursor.commit({
+            cursor,
+            write: (items) => Effect.sync(() => committed.push(...items.map((item) => item.id))),
+            keyOf: (item) => item.key,
+          }),
         }),
       );
     };
