@@ -47,7 +47,9 @@ describe('extractFactsStage', () => {
     });
 
     const { sink, items } = captureSink<Message.Message>();
-    await EffectEx.runPromise(Stream.fromIterable([message]).pipe(extractFactsStage(indexFacts), Pipeline.run({ sink })));
+    await EffectEx.runPromise(
+      Stream.fromIterable([message]).pipe(extractFactsStage(indexFacts), Pipeline.run({ sink })),
+    );
 
     // The Message passes through unchanged.
     expect(items).toHaveLength(1);

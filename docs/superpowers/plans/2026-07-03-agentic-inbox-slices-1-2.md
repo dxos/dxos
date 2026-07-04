@@ -42,9 +42,11 @@ Slice 1 = Tasks 1–4. Slice 2 = Tasks 5–8.
 ## Task 1: Add `@dxos/semantic-index` dependency
 
 **Files:**
+
 - Modify: `packages/core/compute/pipeline-email/package.json`
 
 **Interfaces:**
+
 - Produces: `@dxos/semantic-index` importable from the package (`SemanticPipeline`, `SemanticStore`, `Fact`, `extractDocFacts`, `ExtractDocument`, `ExtractOptions`, `DEFAULT_EXTRACTION_RULES`) and `@dxos/semantic-index/testing` (`mockAiService`, `queuedAiService`).
 
 - [ ] **Step 1: Add the dependency**
@@ -83,11 +85,13 @@ git commit -m "feat(pipeline-email): add @dxos/semantic-index dependency"
 ## Task 2: `messageToDocument` mapping + email extraction rules
 
 **Files:**
+
 - Create: `packages/core/compute/pipeline-email/src/facts.ts`
 - Test: `packages/core/compute/pipeline-email/src/facts.test.ts`
 - Modify: `packages/core/compute/pipeline-email/src/index.ts`
 
 **Interfaces:**
+
 - Consumes: `Message` from `@dxos/types`; `ExtractDocument`, `ExtractOptions` from `@dxos/semantic-index`.
 - Produces:
   - `messageToDocument(message: Message.Message): ExtractDocument` — `{ text: body, source: stable message id, author?: sender email, date?: created }`.
@@ -213,11 +217,13 @@ git commit -m "feat(pipeline-email): map Message to semantic-index ExtractDocume
 ## Task 3: Fact-extraction stage wired to an in-memory SemanticStore
 
 **Files:**
+
 - Create: `packages/core/compute/pipeline-email/src/extract-stage.ts`
 - Test: `packages/core/compute/pipeline-email/src/extract-stage.test.ts`
 - Modify: `packages/core/compute/pipeline-email/src/index.ts`
 
 **Interfaces:**
+
 - Consumes: `messageToDocument`, `EMAIL_EXTRACT_OPTIONS` (Task 2); `Stage` from `@dxos/pipeline`; `Fact`, `SemanticPipeline`, `SemanticStore` from `@dxos/semantic-index`.
 - Produces:
   - `type FactIndexer = (message: Message.Message) => Promise<Fact[]>` — extract + persist one message's facts, returning them.
@@ -293,10 +299,12 @@ describe('extractFactsStage', () => {
     expect(items).toHaveLength(1);
 
     // The fact was persisted; read it back from the same store.
-    const facts: Fact[] = await runtime.runPromise(Effect.gen(function* () {
-      const store = yield* SemanticStore;
-      return yield* store.query({});
-    }));
+    const facts: Fact[] = await runtime.runPromise(
+      Effect.gen(function* () {
+        const store = yield* SemanticStore;
+        return yield* store.query({});
+      }),
+    );
     await runtime.dispose();
 
     expect(facts.length).toBeGreaterThan(0);
@@ -375,11 +383,13 @@ git commit -m "feat(pipeline-email): add fact-extraction stage over SemanticStor
 ## Task 4: Entity reconciliation index (facts → canonical ECHO Person/Organization)
 
 **Files:**
+
 - Create: `packages/core/compute/pipeline-email/src/fact-index.ts`
 - Test: `packages/core/compute/pipeline-email/src/fact-index.test.ts`
 - Modify: `packages/core/compute/pipeline-email/src/index.ts`
 
 **Interfaces:**
+
 - Consumes: `normalizeEntityId` from `@dxos/semantic-index`; `Person`, `Organization` from `@dxos/types`; `Fact` from `@dxos/semantic-index`; `Obj` from `@dxos/echo`.
 - Produces:
   - `buildEntityIndex(objects: readonly (Person.Person | Organization.Organization)[]): Map<string, string>` — maps `normalizeEntityId(name/email)` → the object's DXN string. This is the reconciliation table; entities remain canonical in ECHO (spec §4), facts merely reference them.
@@ -528,11 +538,13 @@ git commit -m "feat(pipeline-email): reconcile extracted fact entities to ECHO o
 ## Task 5: Thread derivation (`threadId` from normalized subject)
 
 **Files:**
+
 - Create: `packages/core/compute/pipeline-email/src/threading.ts`
 - Test: `packages/core/compute/pipeline-email/src/threading.test.ts`
 - Modify: `packages/core/compute/pipeline-email/src/index.ts`
 
 **Interfaces:**
+
 - Consumes: `Message` from `@dxos/types`.
 - Produces:
   - `normalizeSubject(subject: string): string` — strip `Re:`/`Fwd:`/`Fw:` prefixes (repeatedly), collapse whitespace, lowercase.
@@ -637,12 +649,14 @@ git commit -m "feat(pipeline-email): derive threadId from normalized subject"
 ## Task 6: `Thread` ECHO object type
 
 **Files:**
+
 - Create: `packages/core/compute/pipeline-email/src/types/Thread.ts`
 - Create: `packages/core/compute/pipeline-email/src/types/index.ts`
 - Test: `packages/core/compute/pipeline-email/src/types/Thread.test.ts`
 - Modify: `packages/core/compute/pipeline-email/src/index.ts`
 
 **Interfaces:**
+
 - Consumes: `Type`, `Obj` from `@dxos/echo`; `Schema` from `effect`; `DXN` from `@dxos/keys` (as used by `Type.makeObject`).
 - Produces:
   - `ThreadState` = `'awaiting-mine' | 'awaiting-theirs' | 'resolved' | 'stalled'`.
@@ -760,11 +774,13 @@ git commit -m "feat(pipeline-email): add Thread ECHO object type"
 ## Task 7: `buildThreads` — group messages and compute thread state
 
 **Files:**
+
 - Create: `packages/core/compute/pipeline-email/src/threads.ts`
 - Test: `packages/core/compute/pipeline-email/src/threads.test.ts`
 - Modify: `packages/core/compute/pipeline-email/src/index.ts`
 
 **Interfaces:**
+
 - Consumes: `deriveThreadId` (Task 5); `Thread`, `ThreadState` (Task 6); `messageSource` (Task 2); `Message` from `@dxos/types`; `Obj` from `@dxos/echo`.
 - Produces:
   - `buildThreads(messages: readonly Message.Message[], options: { ownerEmail: string; now: string; stalePeriodMs?: number }): Thread[]` — group by `deriveThreadId`, compute participants/messageIds/summary and a `ThreadState`:
@@ -888,11 +904,7 @@ export type BuildThreadsOptions = {
 
 // Coarse thread state from who spoke last and how long ago. `resolved` needs a signal we do not yet
 // extract, so it is not inferred in this slice.
-const computeState = (
-  lastFromOwner: boolean,
-  lastCreated: string,
-  options: BuildThreadsOptions,
-): ThreadState => {
+const computeState = (lastFromOwner: boolean, lastCreated: string, options: BuildThreadsOptions): ThreadState => {
   const idleMs = new Date(options.now).getTime() - new Date(lastCreated).getTime();
   const stale = idleMs > (options.stalePeriodMs ?? DEFAULT_STALE_PERIOD_MS);
   if (stale) {
@@ -963,9 +975,11 @@ git commit -m "feat(pipeline-email): build Thread objects with coarse state from
 ## Task 8: Integrate fact extraction + thread materialization into the Enron run
 
 **Files:**
+
 - Modify: `packages/core/compute/pipeline-email/src/email-pipeline.test.ts`
 
 **Interfaces:**
+
 - Consumes: everything from Tasks 2–7; the existing env-gated harness (`EchoTestBuilder`, `OllamaAiServiceLayer`, `captureSink`, `parquetSource`).
 
 This task extends the existing env-gated suite (do not create a new file). It adds a `SemanticStore.layerMemory` runtime, an `extractFactsStage`, and — after the run — `buildThreads` materialized into ECHO, asserting both facts and threads are produced.
@@ -1057,6 +1071,7 @@ git commit -m "test(pipeline-email): extract facts and materialize threads in th
 ## Self-Review
 
 **Spec coverage (slices §9.1–9.2):**
+
 - §9.1 "run the message stream through semantic-index extraction (email-tuned rules)" → Tasks 2, 3.
 - §9.1 "reconcile entities to Person/Organization" → Task 4.
 - §9.1 "verdict: which ① aspects are naturally facts" → observable via Task 8's fact assertions + the extraction rules; the E/C/Q verdict is captured by inspection of produced facts (a written finding, not code — noted in the spec, deferred to post-run analysis).

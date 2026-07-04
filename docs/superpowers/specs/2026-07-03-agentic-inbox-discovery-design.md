@@ -136,9 +136,9 @@ Two graphs bridged by DXN refs, with a clear canonicality rule.
 
 > **ECHO is canonical. The fact graph is tentative and advisory.** Extracted facts are
 > conflict-prone, their accuracy depends on context and sender, and they go stale quickly.
-> They are an *evidence/signal* layer that informs discovery and grounds actions (via valence +
+> They are an _evidence/signal_ layer that informs discovery and grounds actions (via valence +
 > provenance) — they never govern truth. Materialized ECHO entities (`Thread`, `ActionItem`, …)
-> are authoritative objects the user and app own; a fact may *suggest* creating or updating one,
+> are authoritative objects the user and app own; a fact may _suggest_ creating or updating one,
 > but the entity is not a mechanically-rebuilt projection of the fact graph. When they disagree,
 > ECHO wins. (This is also the honest test of semantic-index: does an advisory fact layer earn
 > its keep given ECHO already holds canonical state?)

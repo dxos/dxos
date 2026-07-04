@@ -8,29 +8,29 @@
 
 ## API delta (old → new)
 
-| Concern | Old (our branch) | New (main) |
-|---|---|---|
-| Stage type | `Stage<In,Out,Ctx,E>` | `Stage<In,Out,E,R>` = `(Stream<In>) => Stream<Out>` |
-| `Stage.map` | `map(id, (item, ctx) => Effect<Out,E>)` | `map(id, (item) => Effect<Out,E,R>)` — no ctx; deps via `R` |
-| Reading deps | `ctx.foo` | `const { foo } = yield* Ctx` (a `Context.Tag`) inside `Effect.gen` |
-| Run | `Pipeline.run({ source, stages, sink, context })` | `source.pipe(stageA, stageB, Pipeline.run({ sink }))` |
-| Providing ctx | `context: {...}` arg | `Effect.provide(program, Layer.succeed(Ctx, {...}))` at the edge |
-| Sink | `Sink<Out,Ctx,E>` | `Sink<Out,E,R>` = `(out) => Effect<void,E,R>` |
-| Factory stage | n/a | idiomatic — e.g. main's `logStage(label): Stage<...>` |
+| Concern       | Old (our branch)                                  | New (main)                                                         |
+| ------------- | ------------------------------------------------- | ------------------------------------------------------------------ |
+| Stage type    | `Stage<In,Out,Ctx,E>`                             | `Stage<In,Out,E,R>` = `(Stream<In>) => Stream<Out>`                |
+| `Stage.map`   | `map(id, (item, ctx) => Effect<Out,E>)`           | `map(id, (item) => Effect<Out,E,R>)` — no ctx; deps via `R`        |
+| Reading deps  | `ctx.foo`                                         | `const { foo } = yield* Ctx` (a `Context.Tag`) inside `Effect.gen` |
+| Run           | `Pipeline.run({ source, stages, sink, context })` | `source.pipe(stageA, stageB, Pipeline.run({ sink }))`              |
+| Providing ctx | `context: {...}` arg                              | `Effect.provide(program, Layer.succeed(Ctx, {...}))` at the edge   |
+| Sink          | `Sink<Out,Ctx,E>`                                 | `Sink<Out,E,R>` = `(out) => Effect<void,E,R>`                      |
+| Factory stage | n/a                                               | idiomatic — e.g. main's `logStage(label): Stage<...>`              |
 
 ## Conflict resolution (shared files)
 
-| File | Resolution |
-|---|---|
-| `pipeline-email/src/index.ts` | Take `export * from './facts';` (main is `export {}`; facts is our only public addition — keep lean). |
-| `pipeline-email/package.json` | Main's deps + add `"@dxos/semantic-index": "workspace:*"` to `dependencies`. Keep our `hyparquet`/etc. as main has them. |
-| `pipeline-email/tsconfig.json` | Let the postinstall toolbox regenerate references after `pnpm install`; ensure `../semantic-index` is present. |
-| `pipeline-email/src/testing/parquet-email.test.ts` | Take main's new-API version (mergiraf auto-resolves; our old change was the now-obsolete `scriptedSource`→`Stream.fromIterable` inline). Verify it compiles. |
-| `pipeline-email/src/testing/email-pipeline.test.ts` | **Adopt main's new-API version as the base**, then apply the additions in Step 4. |
-| `pipeline/src/Pipeline.test.ts` | Take **main's** entirely (our old-API edits are obsolete). |
-| `pipeline/README.md` | Take **main's** entirely (it documents the new API; it already includes our "see pipeline-email" line). |
-| `pnpm-lock.yaml` | Regenerate via `pnpm install`. |
-| `semantic-index/**` | **No conflict** — our override commit (`5f5c2cd1`) merges cleanly onto main's `semantic-index`. Verify after merge. |
+| File                                                | Resolution                                                                                                                                                   |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pipeline-email/src/index.ts`                       | Take `export * from './facts';` (main is `export {}`; facts is our only public addition — keep lean).                                                        |
+| `pipeline-email/package.json`                       | Main's deps + add `"@dxos/semantic-index": "workspace:*"` to `dependencies`. Keep our `hyparquet`/etc. as main has them.                                     |
+| `pipeline-email/tsconfig.json`                      | Let the postinstall toolbox regenerate references after `pnpm install`; ensure `../semantic-index` is present.                                               |
+| `pipeline-email/src/testing/parquet-email.test.ts`  | Take main's new-API version (mergiraf auto-resolves; our old change was the now-obsolete `scriptedSource`→`Stream.fromIterable` inline). Verify it compiles. |
+| `pipeline-email/src/testing/email-pipeline.test.ts` | **Adopt main's new-API version as the base**, then apply the additions in Step 4.                                                                            |
+| `pipeline/src/Pipeline.test.ts`                     | Take **main's** entirely (our old-API edits are obsolete).                                                                                                   |
+| `pipeline/README.md`                                | Take **main's** entirely (it documents the new API; it already includes our "see pipeline-email" line).                                                      |
+| `pnpm-lock.yaml`                                    | Regenerate via `pnpm install`.                                                                                                                               |
+| `semantic-index/**`                                 | **No conflict** — our override commit (`5f5c2cd1`) merges cleanly onto main's `semantic-index`. Verify after merge.                                          |
 
 Our new files that arrive without textual conflict (main lacks them): `facts.ts`, `fact-index.ts`, `threading.ts`, `threads.ts`, `types/Thread.ts`, `types/index.ts` and their `*.test.ts`. Only `extract-stage.ts` + `extract-stage.test.ts` need **code migration** (they use the old `Stage`/`Pipeline` API) even though they merge without markers.
 
@@ -91,12 +91,7 @@ export const extractFactsStage = (indexFacts: FactIndexer): Stage.Stage<Message.
 ```ts
 // (imports unchanged except:) drop the old Pipeline.run({source,stages,...}) shape.
 const { sink, items } = captureSink<Message.Message>();
-await EffectEx.runPromise(
-  Stream.fromIterable([message]).pipe(
-    extractFactsStage(indexFacts),
-    Pipeline.run({ sink }),
-  ),
-);
+await EffectEx.runPromise(Stream.fromIterable([message]).pipe(extractFactsStage(indexFacts), Pipeline.run({ sink })));
 ```
 
 Keep the rest of the test (the `mockAiService` + `SemanticStore.layerMemory` runtime, `indexFacts`, and the `store.query({})` read-back asserting `facts[0].assertion.object.label === 'Q2 report'`). This is the **deterministic** proof of extraction.
@@ -111,7 +106,11 @@ Starting from main's new-API version, add:
    const factRuntime = ManagedRuntime.make(SemanticStore.layerMemory.pipe(Layer.provideMerge(OllamaAiServiceLayer)));
    const indexFacts: FactIndexer = (message) =>
      factRuntime.runPromise(
-       SemanticPipeline.run([messageToDocument(message)], { ...EMAIL_EXTRACT_OPTIONS, model: MODEL, provider: Provider.ollama.id }),
+       SemanticPipeline.run([messageToDocument(message)], {
+         ...EMAIL_EXTRACT_OPTIONS,
+         model: MODEL,
+         provider: Provider.ollama.id,
+       }),
      );
    ```
 3. Insert `extractFactsStage(indexFacts)` into the `.pipe(...)` chain after `summarizeStage`.
@@ -133,6 +132,7 @@ moon run pipeline:build pipeline-email:build semantic-index:build
 moon run pipeline-email:test semantic-index:test pipeline:test    # gated Enron test skips w/o ROOT_DIR+Ollama
 moon run pipeline-email:lint semantic-index:lint pipeline:lint -- --fix
 ```
+
 Non-gated suites must pass; the gated Enron test must SKIP cleanly (or, with a dataset+Ollama, PASS — threads strict, facts lenient).
 
 ### Step 7 — Commit the merge
