@@ -30,24 +30,10 @@
     "src"
   ],
   "scripts": {},
-  "dependencies": {
-    "@dxos/node-std": "workspace:*",
-    "hyparquet": "catalog:"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "@dxos/ai": "workspace:*",
-    "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/extractor": "workspace:*",
-    "@dxos/extractor-lib": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/types": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect/ai": "catalog:",
-    "@effect/platform": "catalog:",
     "effect": "catalog:",
-    "hyparquet-writer": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {

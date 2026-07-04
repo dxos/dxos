@@ -115,6 +115,7 @@ const BoardContentInner = composable<HTMLDivElement, BoardContentProps>(
             autoScroll={viewport}
             eventHandler={eventHandler}
             debug={debugHandler}
+            placeholderDebug={debug}
           >
             <ScrollArea.Root orientation='horizontal' centered padding>
               <ScrollArea.Viewport classNames='snap-mandatory snap-x md:snap-none' ref={setViewport}>

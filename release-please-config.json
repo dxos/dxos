@@ -385,6 +385,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/pipeline-email/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/pipeline-transcription/package.json",
           "jsonpath": "$.version"
         },
@@ -696,6 +701,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-file/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-freeq/package.json",
           "jsonpath": "$.version"
         },
         {

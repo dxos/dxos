@@ -18,7 +18,7 @@ import { meta } from '#meta';
 
 import { getMessageMetadata } from '../../util';
 
-export type ChatProps = ThemedClassName<{
+export type MessageThreadProps = ThemedClassName<{
   /** Stable id used for the underlying thread root and message metadata. */
   id: string;
   /** Identity used to attribute outgoing messages in the textbox metadata. */
@@ -48,12 +48,12 @@ export type ChatProps = ThemedClassName<{
 }>;
 
 /**
- * Pure chat UI: message list + composer textbox + activity indicator, built on
- * the `@dxos/react-ui-thread` primitives. Does not load data or invoke
- * operations — the caller passes messages and an `onSend` callback. Used by
- * `ChannelArticle` and `ThreadArticle`.
+ * Pure message-thread UI: message list + composer textbox + activity
+ * indicator, built on the `@dxos/react-ui-thread` primitives. Does not load
+ * data or invoke operations — the caller passes messages and an `onSend`
+ * callback. Used by `ChannelArticle` and `ThreadArticle`.
  */
-export const Chat = composable<HTMLDivElement, ChatProps>(
+export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
   ({ id, identity, members, messages, activity, onSend, autoFocus, current, readOnly, classNames }, forwardedRef) => {
     const { t } = useTranslation(meta.profile.key);
 
@@ -73,14 +73,19 @@ export const Chat = composable<HTMLDivElement, ChatProps>(
         // Pass `message.sender` as the fallback so externally-synced messages
         // (Slack, etc.) display the source-side sender name instead of "Anonymous"
         // when no DXOS identity matches.
-        return getMessageMetadata(message.id, sender?.identity, message.sender);
+        return getMessageMetadata(message.id, sender?.identity, message.sender, message.created);
       },
       [members],
     );
 
     return (
       <Thread.Root getMetadata={getMetadata} components={components} identityDid={identity?.did} editable={false}>
-        <Thread.Content id={id} current={current} classNames={['dx-container', classNames]} ref={forwardedRef}>
+        <Thread.Content
+          id={id}
+          current={current}
+          classNames={['dx-container h-full border', classNames]}
+          ref={forwardedRef}
+        >
           <Thread.Messages messages={messages} />
           {!readOnly && (
             <>

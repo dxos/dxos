@@ -2,14 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import browser from 'webextension-polyfill';
-
+// Deep import (not the `./core` barrel) so this module — reachable from lean contexts — does not
+// pull background-only weight (e.g. the edge-client-backed `image` action).
+import { DeveloperMode } from './core/state';
 import { debugLog } from './debug-log';
-
-export const DEVELOPER_MODE_PROP = 'developer-mode';
-export const SPACE_MODE_PROP = 'space-mode';
-export const THUMBNAIL_PROP = 'thumbnail-url';
-export const SPACE_ID_PROP = 'space-id';
 
 export const HOME_URL = 'https://labs.composer.space';
 
@@ -25,13 +21,9 @@ export type Config = {
   imageServiceUrl: string;
 };
 
-export const getProp = async (prop: string): Promise<boolean> => {
-  const storage = await browser.storage.sync.get(prop);
-  return Boolean(storage?.[prop]);
-};
-
+/** Resolve the runtime config; service endpoints switch to local dev servers in developer mode. */
 export const getConfig = async (): Promise<Config> => {
-  const devmode = Boolean(await getProp(DEVELOPER_MODE_PROP));
+  const devmode = await DeveloperMode.get();
   const config = {
     devmode,
     chatAgentUrl: devmode ? DEV_CHAT_AGENT_URL : MAIN_CHAT_AGENT_URL,

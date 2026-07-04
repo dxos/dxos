@@ -5,11 +5,8 @@
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { type ElementDragPayload, monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
-import React, { type PropsWithChildren, forwardRef, useCallback, useEffect, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 
@@ -50,19 +47,13 @@ const [MosaicRootContextProvider, useMosaicRootContext] = createContext<MosaicRo
 
 const MOSAIC_ROOT_NAME = 'Mosaic.Root';
 
-// State attribute: [&:has(>_[data-mosaic-debug=true])]
-const MOSAIC_ROOT_DEBUG_ATTR = 'mosaic-debug';
+type MosaicRootProps = PropsWithChildren;
 
-type MosaicRootProps = PropsWithChildren<{
-  asChild?: boolean;
-  debug?: boolean;
-}>;
-
-const MosaicRoot = forwardRef<HTMLDivElement, MosaicRootProps>(({ children, asChild, debug }, forwardedRef) => {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
-  const Comp = asChild ? Slot : Primitive.div;
-
+/**
+ * Headless: provides drag-and-drop orchestration and context only, renders no DOM of its own.
+ * Consumers wrap the visible chrome they control (typically via `Mosaic.Container`).
+ */
+const MosaicRoot = ({ children }: MosaicRootProps) => {
   const [handlers, setHandlers] = useState<Record<string, MosaicEventHandler>>({});
   const [dragging, setDragging] = useState<MosaicDraggingState | undefined>();
 
@@ -268,18 +259,10 @@ const MosaicRoot = forwardRef<HTMLDivElement, MosaicRootProps>(({ children, asCh
       }
       dragging={dragging}
     >
-      <Comp
-        className='contents group'
-        {...{
-          [`data-${MOSAIC_ROOT_DEBUG_ATTR}`]: debug,
-        }}
-        ref={composedRef}
-      >
-        {children}
-      </Comp>
+      {children}
     </MosaicRootContextProvider>
   );
-});
+};
 
 MosaicRoot.displayName = MOSAIC_ROOT_NAME;
 

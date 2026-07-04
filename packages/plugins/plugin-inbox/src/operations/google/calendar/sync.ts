@@ -4,139 +4,32 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { addDays } from 'date-fns';
-import * as Array from 'effect/Array';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
-import * as Predicate from 'effect/Predicate';
-import * as Ref from 'effect/Ref';
+import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
-import { Database, Ref as EchoRef, Feed, Obj, Relation } from '@dxos/echo';
+import { Database, Ref as EchoRef, Obj, Relation } from '@dxos/echo';
+import { type Resolver } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
+import { Pipeline, Stage } from '@dxos/pipeline';
 // Connection is referenced in the inferred type of this module's default export via
 // InboxOperation.GoogleCalendarSync's schema; the import lets TypeScript name it in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Connection, SyncBinding } from '@dxos/plugin-connector';
-import { type Event } from '@dxos/types';
 
 import { GoogleCalendar } from '../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
 import { GoogleCredentials } from '../../../services';
-import { InboxOperation } from '../../../types';
-import { Calendar } from '../../../types';
+import { Calendar, InboxOperation } from '../../../types';
 import { mapEvent } from './mapper';
 
-type BaseSyncProps<T = unknown> = {
-  googleCalendarId: string;
-  pageSize: number;
-  searchFilter?: string;
-  newEvents: Ref.Ref<Event.Event[]>;
-  nextPage: Ref.Ref<string | undefined>;
-  latestUpdate: Ref.Ref<string | undefined>;
-} & T;
-
-const persistCalendarCursor = (binding: SyncBinding.SyncBinding, lastUpdate: string) => {
-  Relation.update(binding, (binding) => {
-    binding.cursor = lastUpdate;
-  });
-};
-
-/** Pre-integration `Calendar.lastSyncedUpdate` persisted on legacy objects — migrate onto `binding.cursor`. */
-const readLegacyLastSyncedUpdate = (calendar: Calendar.Calendar): string | undefined => {
-  const legacy = calendar as Calendar.Calendar & { lastSyncedUpdate?: unknown };
-  return typeof legacy.lastSyncedUpdate === 'string' ? legacy.lastSyncedUpdate : undefined;
-};
-
-const clearLegacyLastSyncedUpdate = (calendar: Calendar.Calendar) => {
-  if (readLegacyLastSyncedUpdate(calendar) === undefined) {
-    return;
-  }
-  Obj.update(calendar, (calendar) => {
-    delete (calendar as { lastSyncedUpdate?: string }).lastSyncedUpdate;
-  });
-};
-
-const syncOneCalendar = (
-  binding: SyncBinding.SyncBinding,
-  calendar: Calendar.Calendar,
-  defaults: { syncBackDays: number; syncForwardDays: number; pageSize: number; googleCalendarId: string },
-) =>
-  Effect.gen(function* () {
-    const feed = yield* Database.load(calendar.feed);
-    const fk = Obj.getMeta(calendar).keys?.find((k) => k.source === GOOGLE_INTEGRATION_SOURCE);
-    const googleCalendarId = fk?.id ?? binding.remoteId ?? defaults.googleCalendarId;
-    const optRecord = binding.options ?? {};
-    const syncBackDays = typeof optRecord.syncBackDays === 'number' ? optRecord.syncBackDays : defaults.syncBackDays;
-    const syncForwardDays =
-      typeof optRecord.syncForwardDays === 'number' ? optRecord.syncForwardDays : defaults.syncForwardDays;
-    const searchFilter = typeof optRecord.filter === 'string' ? optRecord.filter : undefined;
-
-    const legacyLastSynced = readLegacyLastSyncedUpdate(calendar);
-
-    let storedCursor = typeof binding.cursor === 'string' ? binding.cursor : undefined;
-
-    if (legacyLastSynced && !storedCursor) {
-      persistCalendarCursor(binding, legacyLastSynced);
-      clearLegacyLastSyncedUpdate(calendar);
-      storedCursor = legacyLastSynced;
-    }
-
-    storedCursor ??= legacyLastSynced;
-    const isInitialSync = !storedCursor;
-
-    const newEvents = yield* Ref.make<Event.Event[]>([]);
-    const nextPage = yield* Ref.make<string | undefined>(undefined);
-    const latestUpdate = yield* Ref.make<string | undefined>(undefined);
-
-    if (isInitialSync) {
-      yield* performInitialSync({
-        googleCalendarId,
-        syncBackDays,
-        syncForwardDays,
-        pageSize: defaults.pageSize,
-        searchFilter,
-        newEvents,
-        nextPage,
-        latestUpdate,
-      });
-    } else {
-      yield* performIncrementalSync({
-        googleCalendarId,
-        updatedMin: storedCursor!,
-        pageSize: defaults.pageSize,
-        searchFilter,
-        newEvents,
-        nextPage,
-        latestUpdate,
-      });
-    }
-
-    const lastUpdate = yield* Ref.get(latestUpdate);
-    if (lastUpdate) {
-      persistCalendarCursor(binding, lastUpdate);
-      log('updated binding cursor for calendar', { lastUpdate, calendarId: calendar.id });
-    }
-
-    const queueEvents = yield* Ref.get(newEvents);
-    if (queueEvents.length > 0) {
-      yield* Function.pipe(
-        queueEvents,
-        Stream.fromIterable,
-        Stream.grouped(10),
-        Stream.mapEffect((batch) => Feed.append(feed, Chunk.toArray(batch))),
-        Stream.runDrain,
-      );
-    }
-
-    log('sync complete', { newEvents: queueEvents.length, isInitialSync });
-    return queueEvents.length;
-  });
+const COMMIT_PAGE_SIZE = 10;
 
 export default InboxOperation.GoogleCalendarSync.pipe(
   Operation.withHandler(
@@ -158,16 +51,55 @@ export default InboxOperation.GoogleCalendarSync.pipe(
             // The integration mechanism only ever binds Calendars for Google Calendar.
             return { newEvents: 0 };
           }
-          log('syncing google calendar', { calendar: Obj.getURI(calendar), ...defaults });
 
-          const total = yield* syncOneCalendar(binding, calendar, defaults);
+          const feed = yield* Database.load(calendar.feed);
+          const fk = Obj.getMeta(calendar).keys?.find((k) => k.source === GOOGLE_INTEGRATION_SOURCE);
+          const calendarId = fk?.id ?? binding.remoteId ?? defaults.googleCalendarId;
+          const optRecord = binding.options ?? {};
+          const syncBack = typeof optRecord.syncBackDays === 'number' ? optRecord.syncBackDays : defaults.syncBackDays;
+          const syncForward =
+            typeof optRecord.syncForwardDays === 'number' ? optRecord.syncForwardDays : defaults.syncForwardDays;
+          const searchFilter = typeof optRecord.filter === 'string' ? optRecord.filter : undefined;
 
-          Relation.update(binding, (binding) => {
-            binding.lastSyncAt = new Date().toISOString();
-            binding.lastError = undefined;
-          });
+          // The cursor is the event `updated` high-water mark (stored ISO, compared as epoch-ms). A
+          // missing cursor means initial sync (window by start time); otherwise incremental
+          // (by `updatedMin`).
+          const cursor = yield* Database.load(binding.cursor);
+          const cursorKey = typeof cursor.value === 'string' ? Date.parse(cursor.value) : 0;
+          const isInitialSync = cursorKey === 0;
+          log('syncing google calendar', { calendar: Obj.getURI(calendar), calendarId, isInitialSync });
 
-          return { newEvents: total };
+          const stats: SyncBinding.Stats = { newMessages: 0 };
+          yield* calendarSource(calendarId, cursorKey, {
+            syncBackDays: syncBack,
+            syncForwardDays: syncForward,
+            pageSize: defaults.pageSize,
+            searchFilter,
+          }).pipe(
+            SyncBinding.dedupStage<GoogleCalendar.Event>(
+              'dedup',
+              (event) => event.id,
+              (event) => (event.updated ? Date.parse(event.updated) : 0),
+            ),
+            makeRecurringDedupStage(isInitialSync),
+            mapEventStage,
+            Stream.grouped(COMMIT_PAGE_SIZE),
+            Pipeline.run({ sink: SyncBinding.commit }),
+            Effect.provide(
+              SyncBinding.layer({
+                binding,
+                feed,
+                foreignKeySource: GOOGLE_INTEGRATION_SOURCE,
+                cursorKey,
+                // Store the cursor as an ISO `updated` timestamp (used as `updatedMin` next run).
+                formatCursor: (key) => new Date(key).toISOString(),
+                stats,
+              }),
+            ),
+          );
+
+          log('calendar sync complete', { newEvents: stats.newMessages, isInitialSync });
+          return { newEvents: stats.newMessages };
         }).pipe(
           Effect.provide(
             Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromConnection(connectionRef)),
@@ -175,127 +107,81 @@ export default InboxOperation.GoogleCalendarSync.pipe(
         );
       }),
   ),
+  Operation.opaqueHandler,
 );
 
-const performInitialSync = Effect.fn(function* ({
-  googleCalendarId,
-  pageSize,
-  newEvents,
-  nextPage,
-  latestUpdate,
-  syncBackDays,
-  syncForwardDays,
-  searchFilter,
-}: BaseSyncProps<{
-  syncBackDays: number;
-  syncForwardDays: number;
-}>) {
-  log('performing initial sync', { syncBackDays, syncForwardDays });
-  const now = new Date();
-  const timeMin = addDays(now, -syncBackDays).toISOString();
-  const timeMax = addDays(now, syncForwardDays).toISOString();
+/** Maps a Google event to a commit unit (event → feed). Resolves attendees via `Resolver`; drops
+ * cancelled/start-less events (mapEvent returns null). Events carry no tags or extracted objects. */
+const mapEventStage: Stage.Stage<GoogleCalendar.Event, SyncBinding.CommitUnit, never, Resolver> = Stage.map(
+  'map-event',
+  (event: GoogleCalendar.Event) =>
+    mapEvent(event).pipe(
+      Effect.map((mapped) =>
+        mapped
+          ? {
+              message: mapped,
+              foreignId: event.id,
+              key: event.updated ? Date.parse(event.updated) : 0,
+              tagUris: [],
+              extractedObjects: [],
+            }
+          : undefined,
+      ),
+    ),
+);
 
-  const seenRecurringEventIds = yield* Ref.make<Set<string>>(new Set());
-
-  do {
-    const pageToken = yield* Ref.get(nextPage);
-    log('requesting events by start time', { timeMin, timeMax, pageToken });
-    const { items = [], nextPageToken } = yield* GoogleCalendar.listEventsByStartTime(
-      googleCalendarId,
-      timeMin,
-      timeMax,
-      pageSize,
-      pageToken,
-      searchFilter,
-    );
-    yield* Ref.update(nextPage, () => nextPageToken);
-    yield* processEvents({ items, newEvents, latestUpdate, seenRecurringEventIds });
-  } while (yield* Ref.get(nextPage));
-});
-
-const performIncrementalSync = Effect.fn(function* ({
-  googleCalendarId,
-  pageSize,
-  newEvents,
-  nextPage,
-  latestUpdate,
-  updatedMin,
-  searchFilter,
-}: BaseSyncProps<{
-  updatedMin: string;
-}>) {
-  log('performing incremental sync', { updatedMin });
-
-  do {
-    const pageToken = yield* Ref.get(nextPage);
-    log('requesting events by updated time', { updatedMin, pageToken });
-    const { items = [], nextPageToken } = yield* GoogleCalendar.listEventsByUpdated(
-      googleCalendarId,
-      updatedMin,
-      pageSize,
-      pageToken,
-      searchFilter,
-    );
-    yield* Ref.update(nextPage, () => nextPageToken);
-
-    yield* processEvents({ items, newEvents, latestUpdate });
-  } while (yield* Ref.get(nextPage));
-});
-
-const processEvents = Effect.fn(function* ({
-  items,
-  newEvents,
-  latestUpdate,
-  seenRecurringEventIds,
-}: {
-  items: readonly GoogleCalendar.Event[];
-  newEvents: Ref.Ref<Event.Event[]>;
-  latestUpdate: Ref.Ref<string | undefined>;
-  seenRecurringEventIds?: Ref.Ref<Set<string>>;
-}) {
-  if (items.length > 0) {
-    const maxUpdated = items.reduce((max, event) => {
-      if (event.updated && (!max || event.updated > max)) {
-        return event.updated;
-      }
-
-      return max;
-    }, '');
-    if (maxUpdated) {
-      yield* Ref.update(latestUpdate, (current) => (!current || maxUpdated > current ? maxUpdated : current));
-    }
-  }
-
-  let filteredItems = items;
-  if (seenRecurringEventIds) {
-    const seen = yield* Ref.get(seenRecurringEventIds);
-    filteredItems = items.filter((event) => {
-      if (!event.recurringEventId) {
-        return true;
+/** Drops repeat instances of a recurring series (keeps the first), matching the initial-sync dedup.
+ * A no-op for incremental sync, where `listEventsByUpdated` returns series masters. */
+const makeRecurringDedupStage = (enabled: boolean): Stage.Stage<GoogleCalendar.Event, GoogleCalendar.Event> => {
+  const seen = new Set<string>();
+  return Stage.map('dedup-recurring', (event: GoogleCalendar.Event) =>
+    Effect.sync(() => {
+      if (!enabled || !event.recurringEventId) {
+        return event;
       }
       if (seen.has(event.recurringEventId)) {
-        return false;
+        return undefined;
       }
       seen.add(event.recurringEventId);
-      return true;
-    });
-    yield* Ref.set(seenRecurringEventIds, seen);
-
-    if (filteredItems.length < items.length) {
-      log('deduplicated recurring events', {
-        total: items.length,
-        kept: filteredItems.length,
-        duplicates: items.length - filteredItems.length,
-      });
-    }
-  }
-
-  const eventObjects = yield* Function.pipe(
-    filteredItems,
-    Array.map((event) => mapEvent(event)),
-    Effect.all,
-    Effect.map((objects) => Array.filter(objects, Predicate.isNotNullable)),
+      return event;
+    }),
   );
+};
 
-  yield* Ref.update(newEvents, (events) => [...events, ...eventObjects]);
-});
+/** Streams Google Calendar events: initial sync windows by start time, incremental by `updatedMin`. */
+const calendarSource = (
+  calendarId: string,
+  cursorKey: number,
+  opts: { syncBackDays: number; syncForwardDays: number; pageSize: number; searchFilter?: string },
+) => {
+  const fetchPage = (pageToken: string | undefined) =>
+    cursorKey === 0
+      ? GoogleCalendar.listEventsByStartTime(
+          calendarId,
+          addDays(new Date(), -opts.syncBackDays).toISOString(),
+          addDays(new Date(), opts.syncForwardDays).toISOString(),
+          opts.pageSize,
+          pageToken,
+          opts.searchFilter,
+        )
+      : GoogleCalendar.listEventsByUpdated(
+          calendarId,
+          new Date(cursorKey).toISOString(),
+          opts.pageSize,
+          pageToken,
+          opts.searchFilter,
+        );
+
+  return Stream.unfoldChunkEffect({ pageToken: Option.none<string>(), done: false }, (state) =>
+    Effect.gen(function* () {
+      if (state.done) {
+        return Option.none();
+      }
+      const { items = [], nextPageToken } = yield* fetchPage(Option.getOrUndefined(state.pageToken));
+      return Option.some([
+        Chunk.fromIterable(items),
+        { pageToken: Option.fromNullable(nextPageToken), done: !nextPageToken },
+      ] as const);
+    }),
+  );
+};

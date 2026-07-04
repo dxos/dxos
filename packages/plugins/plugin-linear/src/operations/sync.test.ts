@@ -9,7 +9,7 @@ import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Connection, SyncBinding } from '@dxos/plugin-connector';
-import { AccessToken, Project, Task } from '@dxos/types';
+import { AccessToken, Cursor, Project, Task } from '@dxos/types';
 
 import { LINEAR_SOURCE } from '../constants';
 import { LinearApi } from '../services';
@@ -53,6 +53,7 @@ describe('plugin-linear sync', () => {
     graph.registry.add([
       AccessToken.AccessToken,
       Connection.Connection,
+      Cursor.Cursor,
       SyncBinding.SyncBinding,
       Project.Project,
       Task.Task,

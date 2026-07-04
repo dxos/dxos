@@ -9,12 +9,11 @@ import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
+import { Pipeline, Stage } from '@dxos/pipeline';
+import { captureSink } from '@dxos/pipeline/testing';
 import { Message } from '@dxos/types';
 
-import * as Pipeline from '../Pipeline';
-import * as Stage from '../Stage';
 import { emailToMessage } from './email-fixtures';
-import { captureSink, scriptedSource } from './index';
 import { type ParquetRow, parquetSource } from './parquet';
 
 // The email dataset (https://huggingface.co/datasets/corbt/enron-emails) is exposed via ROOT_DIR;
@@ -55,14 +54,7 @@ describe('email parquet → Message', () => {
     ];
 
     const { sink, items } = captureSink<SenderCount>();
-    await EffectEx.runPromise(
-      Pipeline.run({
-        source: scriptedSource(rows),
-        stages: [countBySenderStage<never>()],
-        sink,
-        context: {},
-      }),
-    );
+    await EffectEx.runPromise(Stream.fromIterable(rows).pipe(countBySenderStage<never>(), Pipeline.run({ sink })));
 
     // The stage emits a running count per email; the final tally is the last count seen per sender.
     const totals = new Map(items.map(({ sender, count }) => [sender, count]));
@@ -109,9 +101,9 @@ describe('email parquet → Message', () => {
 // A pipeline stage that maintains a running count of emails per sender, emitting the updated count
 // for each email's sender as it flows through (a stateful scan; the counter map is bounded by the
 // number of distinct senders, not the stream length).
-const countBySenderStage = <E>(): Stage.Stage<ParquetRow, SenderCount, unknown, E> => ({
-  id: 'count-by-sender',
-  transform: (input) =>
+const countBySenderStage =
+  <E = never>(): Stage.Stage<ParquetRow, SenderCount, E> =>
+  (input) =>
     input.pipe(
       Stream.mapAccum(new Map<string, number>(), (counts, row) => {
         const sender = String(row.from ?? '');
@@ -119,5 +111,4 @@ const countBySenderStage = <E>(): Stage.Stage<ParquetRow, SenderCount, unknown, 
         counts.set(sender, count);
         return [counts, { sender, count }];
       }),
-    ),
-});
+    );

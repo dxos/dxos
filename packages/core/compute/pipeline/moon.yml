@@ -5,13 +5,6 @@ tags:
   - ts-test
   - pack
 tasks:
-  # Checkout the Enron email dataset into ./data for the ROOT_DIR-gated enron-pipeline test.
-  setup:
-    command: 'sh scripts/setup.sh'
-    options:
-      runInCI: false
-      cache: false
-
   compile:
     args:
       - '--entryPoint=src/index.ts'

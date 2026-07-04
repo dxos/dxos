@@ -10,8 +10,8 @@ import { log } from '@dxos/log';
 import { ErrorBoundary, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { THUMBNAIL_PROP, getConfig } from '../../config';
-import { focusOrOpenComposerTab } from '../../core';
+import { getConfig } from '../../config';
+import { ThumbnailUrl, focusOrOpenComposerTab } from '../../core';
 import { debugLog } from '../../debug-log';
 import { translationKey } from '../../translations';
 import { Chat } from '../Chat';
@@ -56,22 +56,19 @@ const SidepanelContent = () => {
   // (re)opening, so consume it on mount and whenever it is written to storage.
   useEffect(() => {
     const consume = async () => {
-      const result = await browser.storage.local.get(THUMBNAIL_PROP);
-      const url = result?.[THUMBNAIL_PROP] as string | undefined;
+      const url = await ThumbnailUrl.get();
       if (url) {
         setThumbnailUrl(url);
-        await browser.storage.local.remove(THUMBNAIL_PROP);
+        await ThumbnailUrl.remove();
       }
     };
 
-    void consume();
-    const onChanged = (changes: Record<string, browser.Storage.StorageChange>, area: string) => {
-      if (area === 'local' && changes[THUMBNAIL_PROP]?.newValue) {
-        void consume();
+    void consume().catch((err) => log.catch(err));
+    return ThumbnailUrl.subscribe((url) => {
+      if (url) {
+        void consume().catch((err) => log.catch(err));
       }
-    };
-    browser.storage.onChanged.addListener(onChanged);
-    return () => browser.storage.onChanged.removeListener(onChanged);
+    });
   }, []);
 
   const handleLaunchComposer = useCallback(() => {
