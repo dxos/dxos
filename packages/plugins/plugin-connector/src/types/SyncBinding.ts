@@ -192,7 +192,13 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
 
 /**
  * Advances the cursor to `maxKey` and stamps the run status. Called from the write commit so the
- * write and the cursor advance land together (the seam the future single-transaction TODO wraps).
+ * write and the cursor advance land together — the seam the single-transaction TODO below wraps.
+ *
+ * TODO(wittjosiah): Make the page write and this cursor advance atomic. Today they are separate
+ *   stores (feed queue / space-db for {@link commit}, or two space-db mutations for
+ *   {@link upsertCommit}) flushed together but not transactionally, so a crash between them can
+ *   re-land a page (idempotency + the {@link layer} dedup set cover this until then). Once ECHO can
+ *   commit the write and the cursor together, wrap both here and drop the dedup set.
  */
 const advanceCursor = (state: State, maxKey: number): void =>
   Cursor.advance(state.cursor, state.formatCursor(maxKey));
