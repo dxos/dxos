@@ -21,7 +21,7 @@ import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-// TODO(burdon): Reconcile with MasonryArticle.
+// TODO(burdon): Reconcile with MasonryArticle; remove plugin-masonry?
 // TODO(burdon): Move to plugin-space (supercedes TypeCollectionArticle).
 
 /** Sidebar layout modes for a type collection. */
