@@ -24,8 +24,14 @@ import { extractContact } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { captureSink } from '@dxos/pipeline/testing';
+import { SemanticPipeline, SemanticStore, Type } from '@dxos/semantic-index';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
+
+import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../facts';
+import { type FactIndexer, extractFactsStage } from '../extract-stage';
+import { buildThreads } from '../threads';
+import { Thread } from '../types';
 
 import { emailToMessage } from './email-fixtures';
 import { parquetSource } from './parquet';
@@ -122,6 +128,7 @@ type Stats = {
 // whole suite is env-gated.
 type Ctx = {
   readonly summarize: (text: string) => Promise<Summary>;
+  readonly indexFacts: FactIndexer;
   readonly db: Database.Database;
   readonly stats: Stats;
 };
@@ -219,13 +226,16 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
   // `OllamaAiServiceLayer` provides the `AiService` it requires.
   const modelLayer = AiService.model(MODEL, { provider: Provider.ollama.id }).pipe(Layer.provide(OllamaAiServiceLayer));
   const runtime = ManagedRuntime.make(modelLayer.pipe(Layer.orDie));
+  // In-memory fact substrate for this run; shares the Ollama-backed AiService (semantic-index resolves
+  // its own extraction model through it, independent of `MODEL` above) with the summarize stage.
+  const factRuntime = ManagedRuntime.make(SemanticStore.layerMemory.pipe(Layer.provideMerge(OllamaAiServiceLayer)));
 
   let builder: EchoTestBuilder;
   let db: Database.Database;
 
   beforeAll(async () => {
     builder = await new EchoTestBuilder().open();
-    ({ db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person] }));
+    ({ db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person, Thread] }));
     // Seed a known Organization so domain-matching can link a sender's Person to it.
     for (const org of TEST_ORGS) {
       db.add(Obj.make(Organization.Organization, org));
@@ -235,6 +245,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
 
   afterAll(async () => {
     await runtime.dispose();
+    await factRuntime.dispose();
     await builder.close();
   });
 
@@ -266,7 +277,16 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
           ),
         );
 
-      const context: Ctx = { summarize, db, stats };
+      const indexFacts: FactIndexer = (message) =>
+        factRuntime.runPromise(
+          SemanticPipeline.run([messageToDocument(message)], {
+            ...EMAIL_EXTRACT_OPTIONS,
+            model: MODEL,
+            provider: Provider.ollama.id,
+          }),
+        );
+
+      const context: Ctx = { summarize, indexFacts, db, stats };
 
       const { sink, items } = captureSink<Message.Message>();
       await EffectEx.runPromise(
@@ -276,6 +296,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
             // Stages
             logStage('email.in'),
             summarizeStage,
+            extractFactsStage(),
             extractStage,
             statsStage,
             logStage('email.out'),
@@ -304,6 +325,25 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
       expect(stats.total).toBe(items.length);
       expect(stats.from.size).toBeGreaterThan(0);
       expect(stats.to.size).toBeGreaterThan(0);
+
+      // Facts: the advisory substrate is populated and queryable.
+      const facts: Type.Fact[] = await factRuntime.runPromise(
+        Effect.gen(function* () {
+          const store = yield* SemanticStore;
+          return yield* store.query({});
+        }),
+      );
+      expect(facts.length).toBeGreaterThan(0);
+
+      // Threads: group the captured messages and persist canonical Thread objects.
+      const threads = buildThreads(items, { ownerEmail: 'owner@dxos.org', now: new Date().toISOString() });
+      for (const thread of threads) {
+        db.add(thread);
+      }
+      await db.flush({ indexes: true });
+      const storedThreads = await db.query(Filter.type(Thread)).run();
+      expect(storedThreads.length).toBe(threads.length);
+      expect(storedThreads.every((thread) => thread.messageIds.length > 0)).toBe(true);
 
       // Serialize the run's outputs for inspection (git-ignored under ./data). `Obj.toJSON` is the
       // canonical ECHO serialization (encodes refs as DXNs).
