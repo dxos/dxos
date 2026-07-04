@@ -406,6 +406,9 @@
       "path": "packages/plugins/plugin-file/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-freeq/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-gallery/tsconfig.json"
     },
     {

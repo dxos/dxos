@@ -705,6 +705,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-freeq/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-gallery/package.json",
           "jsonpath": "$.version"
         },

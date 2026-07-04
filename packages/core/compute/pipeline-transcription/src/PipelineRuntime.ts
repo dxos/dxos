@@ -3,7 +3,9 @@
 //
 
 import * as Cause from 'effect/Cause';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import { pipe } from 'effect/Function';
 import * as Stream from 'effect/Stream';
 
 import { DXN } from '@dxos/echo';
@@ -67,6 +69,17 @@ type Slice = ContentBlock.Transcript[];
 /** A stage invocation's output paired with the slice it ran over (needed by {@link CommitFn}). */
 type Enriched = { readonly write: StageWrite; readonly window: Slice };
 
+/**
+ * Private bridge between this module's plain `StageContext` object and `@dxos/pipeline`'s
+ * Requirements-based `Stage`. Not part of any public contract: stage authors (see `Stage.ts`) keep
+ * receiving `ctx: StageContext` as an explicit parameter; only this module's internal wiring into
+ * `@dxos/pipeline` goes through Effect's Context/Layer mechanism.
+ */
+class StageContextService extends Context.Tag('@dxos/pipeline-transcription/StageContextService')<
+  StageContextService,
+  StageContext
+>() {}
+
 const triggerMatches = (stage: Stage<any, any>, kind: TranscriptEvent['kind']): boolean =>
   (stage.trigger === 'per-block' && kind === 'block') ||
   (stage.trigger === 'on-silence' && kind === 'silence') ||
@@ -78,24 +91,23 @@ const triggerKind = (stage: Stage<any, any>): TranscriptEvent['kind'] =>
 /**
  * Per-stage window + trigger, as a `@dxos/pipeline` stage. Maintains this branch's own rolling block
  * window (blocks appended, capped at {@link MAX_WINDOW}) and emits the window slice on events matching
- * the stage's trigger; `undefined` otherwise (dropped between stages before the run stage fires).
+ * the stage's trigger; otherwise it filters the item out, so a non-triggering event never reaches
+ * {@link runStage}.
  */
 const windowTrigger = (
   stage: Stage<any, any>,
   config: StageConfig | undefined,
-): PipelineStage.Stage<TranscriptEvent, Slice | undefined, StageContext> => {
+): PipelineStage.Stage<TranscriptEvent, Slice> => {
   const blocks = config?.window?.blocks ?? stage.window?.blocks;
-  return {
-    id: `${stage.id}:window`,
-    transform: (input) =>
-      input.pipe(
-        Stream.mapAccum([] as Slice, (window, event) => {
-          const next = event.kind === 'block' ? [...window, event.block].slice(-MAX_WINDOW) : window;
-          const slice = triggerMatches(stage, event.kind) ? (blocks ? next.slice(-blocks) : next) : undefined;
-          return [next, slice];
-        }),
-      ),
-  };
+  return (input) =>
+    input.pipe(
+      Stream.mapAccum([] as Slice, (window, event) => {
+        const next = event.kind === 'block' ? [...window, event.block].slice(-MAX_WINDOW) : window;
+        const slice = triggerMatches(stage, event.kind) ? (blocks ? next.slice(-blocks) : next) : undefined;
+        return [next, slice];
+      }),
+      Stream.filter((slice): slice is Slice => slice !== undefined),
+    );
 };
 
 /**
@@ -109,13 +121,14 @@ const runStage = (
   config: StageConfig | undefined,
   presetDefault: DXN.DXN | undefined,
   onTelemetry?: (event: TelemetryEvent) => void,
-): PipelineStage.Stage<Slice, Enriched | undefined, StageContext> => {
+): PipelineStage.Stage<Slice, Enriched, never, StageContextService> => {
   const model = resolveModel(config, stage, presetDefault);
   const trigger = triggerKind(stage);
   return PipelineStage.map(
     stage.id,
-    (slice: Slice, context: StageContext) =>
+    (slice: Slice) =>
       Effect.gen(function* () {
+        const context = yield* StageContextService;
         const started = yield* Effect.sync(() => Date.now());
         const input = stage.select ? stage.select(slice) : { window: slice };
         const write = yield* stage.run(input, context);
@@ -153,7 +166,7 @@ const run = (options: RunOptions): Effect.Effect<void> =>
 
       // Isolate commit failures per write: a failed commit must not fail its branch (which, under the
       // unbounded `Effect.forEach`, would interrupt the sibling branches). Log and drop instead.
-      const sink: Pipeline.Sink<Enriched, StageContext> = ({ write, window }) =>
+      const sink: Pipeline.Sink<Enriched> = ({ write, window }) =>
         commit(write, window).pipe(Effect.catchAllCause((cause) => Effect.sync(() => log.catch(Cause.squash(cause)))));
       const branches = yield* source.pipe(Stream.broadcast(enabled.length, BROADCAST_BUFFER));
 
@@ -163,12 +176,13 @@ const run = (options: RunOptions): Effect.Effect<void> =>
           const stage = enabled[index];
           const config = configFor(stage.id);
           const context: StageContext = { lookup, model: resolveModel(config, stage, presetDefault) };
-          return Pipeline.run({
-            source: branch,
-            stages: [windowTrigger(stage, config), runStage(stage, config, presetDefault, onTelemetry)],
-            sink,
-            context,
-          });
+          return pipe(
+            branch,
+            windowTrigger(stage, config),
+            runStage(stage, config, presetDefault, onTelemetry),
+            Pipeline.run({ sink }),
+            Effect.provideService(StageContextService, context),
+          );
         },
         { concurrency: 'unbounded', discard: true },
       );

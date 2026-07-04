@@ -31,6 +31,7 @@ import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
 import { DuffelPlugin } from '@dxos/plugin-duffel/plugin';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
 import { FilePlugin } from '@dxos/plugin-file/plugin';
+import { FreeqPlugin } from '@dxos/plugin-freeq/plugin';
 import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
 import { GeneratorPlugin } from '@dxos/plugin-generator/plugin';
@@ -275,6 +276,7 @@ export const getPlugins = ({
 
     // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
     BlueskyPlugin(),
+    FreeqPlugin(),
     GalleryPlugin(),
     GitHubPlugin(),
     IrohBeaconPlugin(),

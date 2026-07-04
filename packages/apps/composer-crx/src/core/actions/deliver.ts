@@ -6,16 +6,56 @@ import { log } from '@dxos/log';
 
 import { type DeliverInvokeOptions, type InvokeBridgeApi, deliverInvoke } from './invoke';
 import { enrichSnapshotWithThumbnail } from './thumbnail';
-import { type InvokeAck, type InvokeRequest, type Snapshot } from './types';
+import { type InvokeAck, type InvokeRequest, type Snapshot, type SnapshotHints, type SnapshotSelection } from './types';
 import { nextId } from './util';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+
+/** Structurally validate the optional selection sub-object; `undefined` if absent/invalid. */
+const decodeSelection = (value: unknown): SnapshotSelection | undefined => {
+  if (!isRecord(value) || typeof value.text !== 'string') {
+    return undefined;
+  }
+  const rect = value.rect;
+  const decodedRect =
+    isRecord(rect) &&
+    typeof rect.x === 'number' &&
+    typeof rect.y === 'number' &&
+    typeof rect.width === 'number' &&
+    typeof rect.height === 'number'
+      ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
+      : undefined;
+  return {
+    text: value.text,
+    ...(typeof value.html === 'string' ? { html: value.html } : {}),
+    ...(typeof value.htmlTruncated === 'boolean' ? { htmlTruncated: value.htmlTruncated } : {}),
+    ...(decodedRect ? { rect: decodedRect } : {}),
+  };
+};
+
+/** Structurally validate the optional hints sub-object; `undefined` if absent. */
+const decodeHints = (value: unknown): SnapshotHints | undefined => {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+  return {
+    ...(typeof value.ogTitle === 'string' ? { ogTitle: value.ogTitle } : {}),
+    ...(typeof value.ogDescription === 'string' ? { ogDescription: value.ogDescription } : {}),
+    ...(typeof value.ogImage === 'string' ? { ogImage: value.ogImage } : {}),
+    ...(typeof value.h1 === 'string' ? { h1: value.h1 } : {}),
+    ...(typeof value.firstImage === 'string' ? { firstImage: value.firstImage } : {}),
+    ...(Array.isArray(value.jsonLd) ? { jsonLd: value.jsonLd } : {}),
+  };
+};
 
 /**
  * Validate an inbound runtime-message payload for the deliver handler.
  * The message crosses a trust boundary (content script → background worker),
  * so every required field is checked before `deliverPickedSnapshot` is called.
  * Returns the typed payload on success, `undefined` on any validation failure.
+ *
+ * Built immutably (the shared schema types are readonly): validate the required
+ * shape, copy known fields via conditional spreads, tolerate unknown extras.
  */
 export const decodeDeliverPayload = (value: unknown): { actionId: string; snapshot: Snapshot } | undefined => {
   if (!isRecord(value)) {
@@ -36,78 +76,23 @@ export const decodeDeliverPayload = (value: unknown): { actionId: string; snapsh
     return undefined;
   }
 
-  // Build the source sub-object from validated fields.
   const source: Snapshot['source'] = {
     url: rawSource.url,
     title: rawSource.title,
     clippedAt: rawSource.clippedAt,
+    ...(typeof rawSource.favicon === 'string' ? { favicon: rawSource.favicon } : {}),
   };
-  if (typeof rawSource.favicon === 'string') {
-    source.favicon = rawSource.favicon;
-  }
 
-  // Build the snapshot, copying optional sub-objects through structural guards
-  // (mirrors the decodeDescriptor pattern: validate the required shape, copy
-  // known fields, tolerate unknown extras).
-  const snapshot: Snapshot = { source };
-
-  if (isRecord(raw.selection) && typeof raw.selection.text === 'string') {
-    const sel: NonNullable<Snapshot['selection']> = { text: raw.selection.text };
-    if (typeof raw.selection.html === 'string') {
-      sel.html = raw.selection.html;
-    }
-    if (typeof raw.selection.htmlTruncated === 'boolean') {
-      sel.htmlTruncated = raw.selection.htmlTruncated;
-    }
-    if (
-      isRecord(raw.selection.rect) &&
-      typeof raw.selection.rect.x === 'number' &&
-      typeof raw.selection.rect.y === 'number' &&
-      typeof raw.selection.rect.width === 'number' &&
-      typeof raw.selection.rect.height === 'number'
-    ) {
-      sel.rect = {
-        x: raw.selection.rect.x,
-        y: raw.selection.rect.y,
-        width: raw.selection.rect.width,
-        height: raw.selection.rect.height,
-      };
-    }
-    snapshot.selection = sel;
-  }
-
-  if (isRecord(raw.hints)) {
-    const hints: NonNullable<Snapshot['hints']> = {};
-    if (typeof raw.hints.ogTitle === 'string') {
-      hints.ogTitle = raw.hints.ogTitle;
-    }
-    if (typeof raw.hints.ogDescription === 'string') {
-      hints.ogDescription = raw.hints.ogDescription;
-    }
-    if (typeof raw.hints.ogImage === 'string') {
-      hints.ogImage = raw.hints.ogImage;
-    }
-    if (typeof raw.hints.h1 === 'string') {
-      hints.h1 = raw.hints.h1;
-    }
-    if (typeof raw.hints.firstImage === 'string') {
-      hints.firstImage = raw.hints.firstImage;
-    }
-    if (Array.isArray(raw.hints.jsonLd)) {
-      hints.jsonLd = raw.hints.jsonLd;
-    }
-    snapshot.hints = hints;
-  }
-
-  if (typeof raw.imageData === 'string') {
-    snapshot.imageData = raw.imageData;
-  }
-  if (typeof raw.html === 'string') {
-    snapshot.html = raw.html;
-  }
-  if (typeof raw.htmlTruncated === 'boolean') {
-    snapshot.htmlTruncated = raw.htmlTruncated;
-  }
+  const selection = decodeSelection(raw.selection);
+  const hints = decodeHints(raw.hints);
+  const snapshot: Snapshot = {
+    source,
+    ...(selection ? { selection } : {}),
+    ...(hints ? { hints } : {}),
+    ...(typeof raw.imageData === 'string' ? { imageData: raw.imageData } : {}),
+    ...(typeof raw.html === 'string' ? { html: raw.html } : {}),
+    ...(typeof raw.htmlTruncated === 'boolean' ? { htmlTruncated: raw.htmlTruncated } : {}),
+  };
 
   return { actionId: value.actionId, snapshot };
 };

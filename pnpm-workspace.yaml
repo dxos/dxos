@@ -271,6 +271,7 @@ catalog:
   '@types/lodash.merge': ^4.6.6
   '@types/lodash.orderby': ^4.6.9
   '@types/lodash.sortby': ^4.7.7
+  '@types/mailparser': ^3.4.6
   '@types/minimatch': ^5.1.2
   '@types/mocha': ^10.0.7
   '@types/n3': ^1.26.1
@@ -505,6 +506,7 @@ catalog:
   loupe: 2.3.7
   luxon: ^3.4.4
   madge: 8.0.0
+  mailparser: ^3.9.12
   main-thread-scheduling: ^14.1.1
   manifold-3d: ^3.0.0
   marked: ^12.0.2

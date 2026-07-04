@@ -22,6 +22,9 @@
       "path": "../../../tools/vite-plugin-shutdown"
     },
     {
+      "path": "../../common/crx-protocol"
+    },
+    {
       "path": "../../common/effect"
     },
     {
