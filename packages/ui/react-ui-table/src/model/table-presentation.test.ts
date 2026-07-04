@@ -84,6 +84,50 @@ describe('TablePresentation', () => {
       expect(cells['0,1']?.value).toBe('C');
     });
   });
+
+  describe('pinned columns', () => {
+    let registry: Registry.Registry;
+    let model: TableModel;
+    let presentation: TablePresentation;
+
+    beforeEach(async () => {
+      registry = Registry.make();
+      model = createTableModel(registry, { features: { selection: { enabled: false }, pinColumns: 1 } });
+      await model.open();
+      model.setRows([
+        { id: '1', title: 'A', count: 1 },
+        { id: '2', title: 'B', count: 2 },
+      ]);
+      presentation = new TablePresentation(registry, model);
+    });
+
+    it('renders the first data column in the frozenColsStart plane', () => {
+      const cells = presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 1, col: 0 } }, 'frozenColsStart');
+      // Pinned field occupies plane-local column 0 (no selection column).
+      expect(cells['0,0']?.value).toBe('A');
+      expect(cells['0,1']?.value).toBe('B');
+    });
+
+    it('offsets the scrolling grid plane past the pinned columns', () => {
+      const cells = presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 1, col: 0 } }, 'grid');
+      // The grid plane starts at the second field (count) since the first (title) is pinned.
+      expect(cells['0,0']?.value).toBe('1');
+      expect(cells['0,1']?.value).toBe('2');
+    });
+
+    it('renders the pinned column header in the fixedStartStart corner', () => {
+      const cells = presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 0, col: 0 } }, 'fixedStartStart');
+      expect(cells['0,0']?.accessoryHtml).toContain('title');
+    });
+
+    it('maps plane-local columns to field indices', () => {
+      // frozenColsStart column 0 -> field 0 (pinned); grid column 0 -> field 1.
+      expect(model.getFieldIndex('frozenColsStart', 0)).toBe(0);
+      expect(model.getFieldIndex('frozenColsStart', 1)).toBeUndefined();
+      expect(model.getFieldIndex('grid', 0)).toBe(1);
+      expect(model.getFieldIndex('grid', 1)).toBe(2);
+    });
+  });
 });
 
 const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(

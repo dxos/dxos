@@ -81,13 +81,16 @@ export const TableContent = composable<HTMLDivElement, TableContentProps>(
         model?.features.schemaEditable === false &&
         model.rowActions.length === 0;
 
+      const selectionColumns = model?.features.selection.enabled ? 1 : 0;
+      const pinColumns = model?.pinColumns ?? 0;
+
       return {
         frozenRowsStart: 1,
         frozenRowsEnd: Math.max(1, draftRowCount),
-        frozenColsStart: model?.features.selection.enabled ? 1 : 0,
+        frozenColsStart: selectionColumns + pinColumns,
         frozenColsEnd: noActionColumn ? 0 : 1,
       };
-    }, [model, draftRowCount]);
+    }, [model, draftRowCount, columnCount]);
 
     const getCells = useCallback<NonNullable<GridContentProps['getCells']>>(
       (range: DxGridPlaneRange, plane: DxGridPlane) => presentation?.getCells(range, plane) ?? {},
@@ -232,7 +235,7 @@ export const TableContent = composable<HTMLDivElement, TableContentProps>(
             }
             case 'switch': {
               if (model) {
-                model.updateCellData({ row: data.rowIndex, col: data.colIndex }, (value) => !value);
+                model.updateCellData({ row: data.rowIndex, col: data.colIndex, plane: data.plane }, (value) => !value);
               }
               break;
             }
@@ -341,7 +344,7 @@ export const TableContent = composable<HTMLDivElement, TableContentProps>(
       (event) => {
         if (event.axis === 'col') {
           const columnIndex = parseInt(event.index, 10);
-          model?.setColumnWidth(columnIndex, event.size);
+          model?.setColumnWidth(columnIndex, event.size, event.plane);
         }
       },
       [model],

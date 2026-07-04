@@ -16,6 +16,7 @@ import { type ViewStateManager } from '@dxos/react-ui-attention';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
+  type DxGridPlane,
   type DxGridPlanePosition,
   type DxGridPlaneRange,
   type DxGridPosition,
@@ -88,12 +89,18 @@ export type TableFeatures = {
   selection: { enabled: boolean; mode?: SelectionMode };
   dataEditable: boolean;
   schemaEditable: boolean;
+  /**
+   * Number of leading data columns to pin (freeze) so they remain visible while the remaining
+   * columns scroll horizontally. Pinned columns are rendered in the grid's frozen-column planes.
+   */
+  pinColumns: number;
 };
 
 const defaultFeatures: TableFeatures = {
   selection: { enabled: true, mode: 'multiple' },
   dataEditable: false,
   schemaEditable: false,
+  pinColumns: 0,
 };
 
 export type InsertRowResult = 'draft' | 'final';
@@ -366,6 +373,49 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   /**
+   * Number of leading data columns pinned (frozen), clamped to the available field count.
+   */
+  public get pinColumns(): number {
+    const fieldCount = this.getColumnCount();
+    return Math.max(0, Math.min(this._features.pinColumns, fieldCount));
+  }
+
+  /**
+   * Number of frozen-start columns preceding the pinned data columns (the selection column, if enabled).
+   */
+  private get selectionColumns(): number {
+    return this._features.selection.enabled ? 1 : 0;
+  }
+
+  /**
+   * Maps a plane-local column index to a field index for the data-bearing planes.
+   * Returns undefined for non-data columns (e.g. the selection or action columns).
+   *
+   * Column layout across planes:
+   * - `frozenColsStart`: [selection?] then the first `pinColumns` data fields.
+   * - `grid` / `frozenRowsStart` / `frozenRowsEnd`: data fields starting at index `pinColumns`.
+   */
+  public getFieldIndex(plane: DxGridPlane, planeCol: number): number | undefined {
+    switch (plane) {
+      case 'frozenColsStart':
+      case 'fixedStartStart':
+      case 'fixedEndStart': {
+        const dataCol = planeCol - this.selectionColumns;
+        if (dataCol < 0 || dataCol >= this.pinColumns) {
+          return undefined;
+        }
+        return dataCol;
+      }
+      case 'grid':
+      case 'frozenRowsStart':
+      case 'frozenRowsEnd':
+        return this.pinColumns + planeCol;
+      default:
+        return undefined;
+    }
+  }
+
+  /**
    * Gets the current sort state.
    * Priority: in-memory sort (local changes) > persisted sort (from query AST).
    */
@@ -420,13 +470,29 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     // The projection.fields atom handles subscriptions to view changes internally.
     this._columnMeta = Atom.make((get) => {
       const fields = get(this._projection.fields);
-      const meta = Object.fromEntries(
-        fields.map((field, index: number) => [index, { size: this.table.sizes[field.path] ?? 256, resizeable: true }]),
-      );
+      const pin = Math.max(0, Math.min(this._features.pinColumns, fields.length));
+      const selectionColumns = this._features.selection.enabled ? 1 : 0;
+
+      const fieldSize = (field: (typeof fields)[number]) => ({
+        size: this.table.sizes[field.path] ?? 256,
+        resizeable: true,
+      });
+
+      // The scrolling `grid` plane holds the un-pinned fields, re-keyed to plane-local indices.
+      const grid = Object.fromEntries(fields.slice(pin).map((field, index: number) => [index, fieldSize(field)]));
+
+      // The `frozenColsStart` plane holds the selection column (if enabled) followed by the pinned fields.
+      const frozenColsStart: Record<number, { size: number; resizeable: boolean }> = {};
+      if (selectionColumns > 0) {
+        frozenColsStart[0] = { size: 30, resizeable: false };
+      }
+      fields.slice(0, pin).forEach((field, index: number) => {
+        frozenColsStart[selectionColumns + index] = fieldSize(field);
+      });
 
       return {
-        grid: meta,
-        frozenColsStart: { 0: { size: 30, resizeable: false } },
+        grid,
+        frozenColsStart,
         frozenColsEnd: { 0: { size: 32, resizeable: false } },
       };
     });
@@ -625,11 +691,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   public getCellData = (cell: DxGridPosition): any => {
     const { col, row, plane } = cell;
     const fields = this._projection?.getFields() ?? [];
-    if (col < 0 || col >= fields.length) {
+    const fieldIndex = this.getFieldIndex(plane, col);
+    if (fieldIndex === undefined || fieldIndex < 0 || fieldIndex >= fields.length) {
       return undefined;
     }
 
-    const field = fields[col];
+    const field = fields[fieldIndex];
     let value: any;
 
     if (plane === 'frozenRowsEnd') {
@@ -671,11 +738,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public validateCellData = async ({ col, row, plane }: DxGridPosition, value: any): Promise<ValidationResult> => {
     const fields = this._projection?.getFields() ?? [];
-    if (col < 0 || col >= fields.length) {
+    const fieldIndex = this.getFieldIndex(plane, col);
+    if (fieldIndex === undefined || fieldIndex < 0 || fieldIndex >= fields.length) {
       return { valid: false, error: 'Invalid column index' };
     }
 
-    const field = fields[col];
+    const field = fields[fieldIndex];
     const { props } = this._projection.getFieldProjection(field.id);
     const transformedValue = editorTextToCellValue(props, value);
 
@@ -727,11 +795,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   public setCellData = (cell: DxGridPosition, value: any): void => {
     const { col, row, plane } = cell;
     const fields = this._projection?.getFields() ?? [];
-    if (col < 0 || col >= fields.length) {
+    const fieldIndex = this.getFieldIndex(plane, col);
+    if (fieldIndex === undefined || fieldIndex < 0 || fieldIndex >= fields.length) {
       return;
     }
 
-    const field = fields[col];
+    const field = fields[fieldIndex];
     const { props } = this._projection.getFieldProjection(field.id);
     const transformedValue = editorTextToCellValue(props, value);
 
@@ -762,9 +831,16 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
    * @param {DxGridPlanePosition} position - The position of the cell to update.
    * @param {(value: any) => any} update - A function that takes the current value and returns the updated value.
    */
-  public updateCellData({ col, row }: DxGridPlanePosition, update: (value: any) => any): void {
+  public updateCellData(
+    { col, row, plane = 'grid' }: DxGridPlanePosition & { plane?: DxGridPlane },
+    update: (value: any) => any,
+  ): void {
     const fields = this._projection?.getFields() ?? [];
-    const field = fields[col];
+    const fieldIndex = this.getFieldIndex(plane, col);
+    if (fieldIndex === undefined) {
+      return;
+    }
+    const field = fields[fieldIndex];
     const sortedRows = this._registry.get(this._sortedRows);
     const rowData = sortedRows[row];
 
@@ -821,11 +897,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   // Resize
   //
 
-  public setColumnWidth(columnIndex: number, width: number): void {
+  public setColumnWidth(columnIndex: number, width: number, plane: DxGridPlane = 'grid'): void {
     const fields = this._projection?.getFields() ?? [];
-    if (columnIndex < fields.length) {
+    const fieldIndex = this.getFieldIndex(plane, columnIndex);
+    if (fieldIndex !== undefined && fieldIndex < fields.length) {
       const newWidth = Math.max(0, width);
-      const field = fields[columnIndex];
+      const field = fields[fieldIndex];
       if (field) {
         this._change.table((mutableTable) => {
           mutableTable.sizes[field.path] = newWidth;

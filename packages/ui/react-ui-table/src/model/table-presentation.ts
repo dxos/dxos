@@ -59,13 +59,13 @@ export class TablePresentation<T extends TableRow = TableRow> {
         cells = this.getHeaderCells(range);
         break;
       case 'frozenColsStart':
-        cells = this.getSelectionColumnCells(range);
+        cells = this.getFrozenColsStartCells(range);
         break;
       case 'frozenColsEnd':
         cells = this.getActionColumnCells(range);
         break;
       case 'fixedStartStart':
-        cells = this.getSelectAllCell();
+        cells = this.getFixedStartStartCells();
         break;
       case 'fixedStartEnd':
         cells = this.getNewColumnCell();
@@ -74,7 +74,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
         cells = this.getDraftRowCells(range);
         break;
       case 'fixedEndStart':
-        cells = this.getDraftIconCells(range);
+        cells = this.getFixedEndStartCells(range);
         break;
       case 'fixedEndEnd':
         cells = this.getDraftActionCells(range);
@@ -110,6 +110,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     field: View.FieldType,
     colIndex: number,
     displayIndex: number,
+    plane: DxGridPlane = 'grid',
   ): void {
     const { props } = this.getFieldProjection(field.id);
 
@@ -229,6 +230,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       cell.accessoryHtml = tableControls.switch.render({
         colIndex,
         rowIndex: displayIndex,
+        plane,
         checked: value ?? false,
       });
       cell.readonly = 'no-text-select';
@@ -275,15 +277,18 @@ export class TablePresentation<T extends TableRow = TableRow> {
   private getMainGridCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
     const fields = this.model.projection?.getFields() ?? [];
+    // Pinned fields live in the frozen-column planes; the scrolling grid holds the remainder.
+    const pin = this.model.pinColumns;
+    const scrollingFields = fields.length - pin;
 
     for (let row = range.start.row; row <= range.end.row && row < this.model.getRowCount(); row++) {
-      for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
-        const field = fields[col];
+      for (let col = range.start.col; col <= range.end.col && col < scrollingFields; col++) {
+        const field = fields[pin + col];
         if (!field) {
           continue;
         }
 
-        this.createDataCell(cells, this.model.getRows()[row], field, col, row);
+        this.createDataCell(cells, this.model.getRows()[row], field, col, row, 'grid');
       }
     }
 
@@ -295,9 +300,13 @@ export class TablePresentation<T extends TableRow = TableRow> {
     const fields = this.model.projection?.getFields() ?? [];
     const draftRows = this.model.getDraftRows();
 
+    // Pinned fields' draft cells render in the fixedEndStart corner; the scrolling draft row holds the remainder.
+    const pin = this.model.pinColumns;
+    const scrollingFields = fields.length - pin;
+
     // Return cells of the CTA row if no draft row is active
     if (draftRows.length === 0) {
-      for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
+      for (let col = range.start.col; col <= range.end.col && col < scrollingFields; col++) {
         cells[toPlaneCellIndex({ col, row: 0 })] = {
           value: '',
           readonly: true,
@@ -307,23 +316,13 @@ export class TablePresentation<T extends TableRow = TableRow> {
     } else {
       for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
         const draftRow = draftRows[row];
-        for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
-          const cellIndex = toPlaneCellIndex({ col, row });
-          const field = fields[col];
+        for (let col = range.start.col; col <= range.end.col && col < scrollingFields; col++) {
+          const field = fields[pin + col];
           if (!field) {
             continue;
           }
 
-          this.createDataCell(cells, draftRow.data, field, col, row);
-
-          if (this.model.hasDraftRowValidationError(row, field.path)) {
-            const cellValue = cells[cellIndex];
-            if (cellValue) {
-              const existingClasses = cellValue.className || '';
-              const draftClasses = 'dx-grid__cell--flagged';
-              cellValue.className = existingClasses ? `${existingClasses} ${draftClasses}` : draftClasses;
-            }
-          }
+          this.createDraftDataCell(cells, draftRow.data, field, col, row, 'frozenRowsEnd');
         }
       }
     }
@@ -331,41 +330,96 @@ export class TablePresentation<T extends TableRow = TableRow> {
     return cells;
   }
 
+  /**
+   * Renders a draft-row data cell and applies the validation-error flag when the field is invalid.
+   */
+  private createDraftDataCell(
+    cells: DxGridPlaneCells,
+    obj: T,
+    field: View.FieldType,
+    planeCol: number,
+    rowIndex: number,
+    plane: DxGridPlane,
+  ): void {
+    const cellIndex = toPlaneCellIndex({ col: planeCol, row: rowIndex });
+    this.createDataCell(cells, obj, field, planeCol, rowIndex, plane);
+
+    if (this.model.hasDraftRowValidationError(rowIndex, field.path)) {
+      const cellValue = cells[cellIndex];
+      if (cellValue) {
+        const existingClasses = cellValue.className || '';
+        const draftClasses = 'dx-grid__cell--flagged';
+        cellValue.className = existingClasses ? `${existingClasses} ${draftClasses}` : draftClasses;
+      }
+    }
+  }
+
   private getHeaderCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
     const fields = this.model.projection?.getFields() ?? [];
-    const currentSort = this.model.getSorting();
-    for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
-      const { field, props } = this.model.projection.getFieldProjection(fields[col].id);
-      const direction = currentSort?.fieldId === field.id ? currentSort.direction : undefined;
-
-      cells[toPlaneCellIndex({ col, row: 0 })] = {
-        // TODO(burdon): Use same logic as form for fallback title.
-        value: '',
-        resizeHandle: 'col',
-        accessoryHtml: `
-          <span class="grow min-w-0 truncate">${props.title ?? field.path}</span>
-          ${direction !== undefined ? tableButtons.sort.render({ fieldId: field.id, direction }) : ''}
-          ${tableButtons.columnSettings.render({ fieldId: field.id })}
-        `,
-        className: 'bg-axis-surface! text-axis-text! [&>div]:flex [&>div]:items-stretch',
-      };
+    // Pinned fields' headers render in the fixedStartStart corner; the scrolling header holds the remainder.
+    const pin = this.model.pinColumns;
+    const scrollingFields = fields.length - pin;
+    for (let col = range.start.col; col <= range.end.col && col < scrollingFields; col++) {
+      this.createHeaderCell(cells, fields[pin + col].id, col);
     }
 
     return cells;
   }
 
-  private getSelectionColumnCells(range: DxGridPlaneRange): DxGridPlaneCells {
+  private createHeaderCell(cells: DxGridPlaneCells, fieldId: string, planeCol: number): void {
+    const currentSort = this.model.getSorting();
+    const { field, props } = this.model.projection.getFieldProjection(fieldId);
+    const direction = currentSort?.fieldId === field.id ? currentSort.direction : undefined;
+
+    cells[toPlaneCellIndex({ col: planeCol, row: 0 })] = {
+      // TODO(burdon): Use same logic as form for fallback title.
+      value: '',
+      resizeHandle: 'col',
+      accessoryHtml: `
+        <span class="grow min-w-0 truncate">${props.title ?? field.path}</span>
+        ${direction !== undefined ? tableButtons.sort.render({ fieldId: field.id, direction }) : ''}
+        ${tableButtons.columnSettings.render({ fieldId: field.id })}
+      `,
+      className: 'bg-axis-surface! text-axis-text! [&>div]:flex [&>div]:items-stretch',
+    };
+  }
+
+  /**
+   * Renders the frozenColsStart plane: the selection column (if enabled) followed by the pinned data columns.
+   */
+  private getFrozenColsStartCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
+    const selectionColumns = this.model.features.selection.enabled ? 1 : 0;
+    const fields = this.model.projection?.getFields() ?? [];
+    const pin = this.model.pinColumns;
+
     for (let row = range.start.row; row <= range.end.row && row < this.model.getRowCount(); row++) {
-      const isSelected = this.model.selection.isRowIndexSelected(row);
-      const classes = cellClassesForRowSelection(isSelected, this.model.selection.selectionMode);
-      cells[toPlaneCellIndex({ col: 0, row })] = {
-        value: '',
-        readonly: 'no-text-select',
-        className: classes ? mx(classes) : undefined,
-        accessoryHtml: tableControls.checkbox.render({ rowIndex: row, checked: isSelected }),
-      };
+      if (selectionColumns > 0) {
+        const isSelected = this.model.selection.isRowIndexSelected(row);
+        const classes = cellClassesForRowSelection(isSelected, this.model.selection.selectionMode);
+        cells[toPlaneCellIndex({ col: 0, row })] = {
+          value: '',
+          readonly: 'no-text-select',
+          className: classes ? mx(classes) : undefined,
+          accessoryHtml: tableControls.checkbox.render({ rowIndex: row, checked: isSelected }),
+        };
+      }
+
+      for (let dataCol = 0; dataCol < pin; dataCol++) {
+        const field = fields[dataCol];
+        if (!field) {
+          continue;
+        }
+        this.createDataCell(
+          cells,
+          this.model.getRows()[row],
+          field,
+          selectionColumns + dataCol,
+          row,
+          'frozenColsStart',
+        );
+      }
     }
 
     return cells;
@@ -387,29 +441,41 @@ export class TablePresentation<T extends TableRow = TableRow> {
     return cells;
   }
 
-  private getSelectAllCell(): DxGridPlaneCells {
-    if (!this.model.features.selection.enabled || this.model.selection.selectionMode === 'single') {
-      return {
-        [toPlaneCellIndex({ col: 0, row: 0 })]: {
-          className: 'bg-axis-surface!',
-          readonly: true,
-          value: '',
-        },
-      };
-    }
+  /**
+   * Renders the fixedStartStart corner (frozen header row x frozen columns): the select-all cell (if the
+   * selection column is enabled) followed by the pinned columns' header cells.
+   */
+  private getFixedStartStartCells(): DxGridPlaneCells {
+    const cells: DxGridPlaneCells = {};
+    const selectionColumns = this.model.features.selection.enabled ? 1 : 0;
 
-    return {
-      [toPlaneCellIndex({ col: 0, row: 0 })]: {
-        accessoryHtml: tableControls.checkbox.render({
-          rowIndex: 0,
-          header: true,
-          checked: this.model.selection.allRowsSelected,
-        }),
+    if (selectionColumns > 0) {
+      const showSelectAll = this.model.features.selection.enabled && this.model.selection.selectionMode !== 'single';
+      cells[toPlaneCellIndex({ col: 0, row: 0 })] = {
+        accessoryHtml: showSelectAll
+          ? tableControls.checkbox.render({
+              rowIndex: 0,
+              header: true,
+              checked: this.model.selection.allRowsSelected,
+            })
+          : undefined,
         className: 'bg-axis-surface!',
         readonly: true,
         value: '',
-      },
-    };
+      };
+    }
+
+    const fields = this.model.projection?.getFields() ?? [];
+    const pin = this.model.pinColumns;
+    for (let dataCol = 0; dataCol < pin; dataCol++) {
+      const field = fields[dataCol];
+      if (!field) {
+        continue;
+      }
+      this.createHeaderCell(cells, field.id, selectionColumns + dataCol);
+    }
+
+    return cells;
   }
 
   private getNewColumnCell(): DxGridPlaneCells {
@@ -454,17 +520,43 @@ export class TablePresentation<T extends TableRow = TableRow> {
     return cells;
   }
 
-  private getDraftIconCells(range: DxGridPlaneRange): DxGridPlaneCells {
+  /**
+   * Renders the fixedEndStart corner (draft row x frozen columns): the draft "+" icon (if the selection
+   * column is enabled) followed by the pinned columns' draft cells.
+   */
+  private getFixedEndStartCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
     const draftRows = this.model.getDraftRows();
+    const selectionColumns = this.model.features.selection.enabled ? 1 : 0;
+    const fields = this.model.projection?.getFields() ?? [];
+    const pin = this.model.pinColumns;
 
     for (let row = range.start.row; row <= range.end.row; row++) {
-      cells[toPlaneCellIndex({ col: 0, row })] = {
-        value: '',
-        readonly: true,
-        accessoryHtml: '<dx-icon icon="ph--plus--regular" class="contents"></dx-icon>',
-        className: mx('[&>div]:grid [&>div]:place-content-center', draftRows.length < 1 && 'dx-grid__row--cta__cell'),
-      };
+      if (selectionColumns > 0) {
+        cells[toPlaneCellIndex({ col: 0, row })] = {
+          value: '',
+          readonly: true,
+          accessoryHtml: '<dx-icon icon="ph--plus--regular" class="contents"></dx-icon>',
+          className: mx('[&>div]:grid [&>div]:place-content-center', draftRows.length < 1 && 'dx-grid__row--cta__cell'),
+        };
+      }
+
+      for (let dataCol = 0; dataCol < pin; dataCol++) {
+        const field = fields[dataCol];
+        if (!field) {
+          continue;
+        }
+        const planeCol = selectionColumns + dataCol;
+        if (draftRows.length === 0) {
+          cells[toPlaneCellIndex({ col: planeCol, row })] = {
+            value: '',
+            readonly: true,
+            className: 'dx-grid__row--cta__cell',
+          };
+        } else if (row < draftRows.length) {
+          this.createDraftDataCell(cells, draftRows[row].data, field, planeCol, row, 'fixedEndStart');
+        }
+      }
     }
 
     return cells;
