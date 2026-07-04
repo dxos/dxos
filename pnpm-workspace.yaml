@@ -26,10 +26,10 @@ catalog:
   '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': 3.2.10
   '@atproto/api': ^0.19.5
   '@automerge/automerge': 3.3.0-fragments.2
-  '@automerge/automerge-repo': 2.6.0-subduction.37
-  '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.37
-  '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.37
-  '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.37
+  '@automerge/automerge-repo': 2.6.0-subduction.40
+  '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.40
+  '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.40
+  '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.40
   '@automerge/automerge-subduction': 0.16.0
   '@babel/core': ^7.18.13
   '@babel/preset-typescript': ^7.27.1
@@ -120,7 +120,7 @@ catalog:
   '@lezer/xml': ^1.0.6
   '@lit/react': ^1.0.8
   '@modelcontextprotocol/sdk': ^1.27.1
-  '@moonrepo/cli': 2.3.5
+  '@moonrepo/cli': 2.3.0
   '@ngneat/falso': ^7.1.1
   '@observablehq/plot': ^0.6.11
   '@obsidize/tar-browserify': ^5.2.0
@@ -271,6 +271,7 @@ catalog:
   '@types/lodash.merge': ^4.6.6
   '@types/lodash.orderby': ^4.6.9
   '@types/lodash.sortby': ^4.7.7
+  '@types/mailparser': ^3.4.6
   '@types/minimatch': ^5.1.2
   '@types/mocha': ^10.0.7
   '@types/n3': ^1.26.1
@@ -448,6 +449,8 @@ catalog:
   highlight.js: ^11.9.0
   html-to-image: ^1.11.13
   husky: ^8.0.0
+  hyparquet: ^1.26.2
+  hyparquet-writer: ^0.16.1
   hypercore: ^9.12.0
   hypercore-crypto: ^2.3.0
   hypercore-protocol: ^8.0.7
@@ -503,6 +506,7 @@ catalog:
   loupe: 2.3.7
   luxon: ^3.4.4
   madge: 8.0.0
+  mailparser: ^3.9.12
   main-thread-scheduling: ^14.1.1
   manifold-3d: ^3.0.0
   marked: ^12.0.2
@@ -777,7 +781,7 @@ overrides:
   ws: '>=8.17.1'
 
 patchedDependencies:
-  '@automerge/automerge-repo@2.6.0-subduction.37': patches/@automerge__automerge-repo@2.6.0-subduction.37.patch
+  '@automerge/automerge-repo@2.6.0-subduction.40': patches/@automerge__automerge-repo@2.6.0-subduction.40.patch
   '@automerge/automerge-subduction@0.16.0': patches/@automerge__automerge-subduction@0.16.0.patch
   '@effect-atom/atom@0.5.3': patches/@effect-atom__atom@0.5.3.patch
   '@vitest/browser@4.1.8': patches/@vitest__browser@4.1.8.patch

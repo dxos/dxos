@@ -33,7 +33,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute/transcription-pipeline"
+      "path": "../../core/compute/pipeline-transcription"
     },
     {
       "path": "../../core/echo/echo"
