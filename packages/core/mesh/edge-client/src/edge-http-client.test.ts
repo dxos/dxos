@@ -64,6 +64,12 @@ describe('EdgeHttpClient blobs', () => {
     vi.unstubAllGlobals();
   });
 
+  test('getBlobUrl URL-encodes the key', ({ expect }) => {
+    const client = new EdgeHttpClient('https://edge.example.com');
+    expect(client.getBlobUrl('abc123').toString()).toBe('https://edge.example.com/api/file/abc123');
+    expect(client.getBlobUrl('a/b/../c').toString()).toBe('https://edge.example.com/api/file/a%2Fb%2F..%2Fc');
+  });
+
   test('putBlob sends a raw POST body and pre-fetches /auth', async ({ expect }) => {
     const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
       const url = String(input instanceof URL ? input : (input.url ?? input));

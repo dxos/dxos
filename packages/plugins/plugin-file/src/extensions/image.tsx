@@ -128,41 +128,53 @@ const buildDecorations = ({
       }
 
       const cacheKey = urlText;
-      const blobUrlPromise = (async () => {
-        const matched = await space.db.query(Filter.id(echoUri!)).first();
-        if (!matched || !Obj.instanceOf(File.File, matched)) {
-          return undefined;
-        }
+      const cached = blobUrlCache[cacheKey];
+      // Skip the DB query and Blob resolution entirely once a URL is cached — otherwise every
+      // decoration rebuild (e.g. on cursor movement) re-fetches and, on the object-URL fallback
+      // path, mints and leaks a new `blob:` URL even though the cached one is still valid.
+      const blobUrlPromise =
+        cached ??
+        (async () => {
+          const matched = await space.db.query(Filter.id(echoUri!)).first();
+          if (!matched || !Obj.instanceOf(File.File, matched)) {
+            return undefined;
+          }
 
-        const url = await EffectEx.runPromise(
-          Effect.gen(function* () {
-            const blob = yield* Database.load(matched.data);
-            const urlOption = yield* Blob.url(blob);
-            if (Option.isSome(urlOption)) {
-              return urlOption.value;
-            }
-            const bytes = yield* Blob.read(blob);
-            // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while
-            // DOM's `BlobPart` only covers `ArrayBuffer`-backed views — a gap between the DOM lib
-            // types and the TS standard lib, not fixable by typing `bytes` differently.
-            return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: matched.type }));
-          }).pipe(
-            Effect.provide(Database.layer(space.db)),
-            Effect.catchAll(() => Effect.succeed(undefined)),
-          ),
-        );
-        if (!url) {
-          return undefined;
-        }
-        blobUrlCache[cacheKey] = url;
-        preload(url);
-        return url;
-      })();
+          const url = await EffectEx.runPromise(
+            Effect.gen(function* () {
+              const blob = yield* Database.load(matched.data);
+              const urlOption = yield* Blob.url(blob);
+              if (Option.isSome(urlOption)) {
+                return urlOption.value;
+              }
+              const bytes = yield* Blob.read(blob);
+              // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while
+              // DOM's `BlobPart` only covers `ArrayBuffer`-backed views — a gap between the DOM lib
+              // types and the TS standard lib, not fixable by typing `bytes` differently.
+              return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: matched.type }));
+            }).pipe(
+              Effect.provide(Database.layer(space.db)),
+              Effect.catchAll(() => Effect.succeed(undefined)),
+            ),
+          );
+          if (!url) {
+            return undefined;
+          }
+          // Only object URLs we minted via `createObjectURL` above need revoking — `Blob.url()`
+          // results (data:/https: URLs) aren't owned by this cache.
+          const previous = blobUrlCache[cacheKey];
+          if (previous?.startsWith('blob:')) {
+            URL.revokeObjectURL(previous);
+          }
+          blobUrlCache[cacheKey] = url;
+          preload(url);
+          return url;
+        })();
 
       decorations.push(
         Decoration.replace({
           block: true,
-          widget: new DxnImageWidget(urlText, blobUrlCache[cacheKey] ?? blobUrlPromise),
+          widget: new DxnImageWidget(urlText, blobUrlPromise),
         }).range(hide ? node.from : node.to, node.to),
       );
     },

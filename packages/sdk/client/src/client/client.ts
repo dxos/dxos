@@ -506,10 +506,14 @@ export class Client {
         }
         try {
           edgeHttpClient.setIdentity(createEdgeIdentity(this));
-        } catch {
+        } catch (error) {
           // Identity and device become ready asynchronously and independently — createEdgeIdentity
-          // throws if device isn't ready yet. Retried by the next identity or device update, once
-          // both are available.
+          // throws 'Identity not available' if device isn't ready yet, retried by the next
+          // identity or device update once both are available. Anything else is unexpected and
+          // shouldn't fail silently.
+          if (!(error instanceof Error) || error.message !== 'Identity not available') {
+            log.error('failed to update edge identity', { error });
+          }
         }
       };
       updateIdentity();

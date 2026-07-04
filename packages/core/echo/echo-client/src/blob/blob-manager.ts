@@ -40,6 +40,7 @@ interface RegisteredBackend {
  */
 export class BlobManager {
   #backendsByScheme = new Map<string, RegisteredBackend>();
+  #backendsByName = new Map<string, RegisteredBackend>();
   #defaultStorage: string = Blob.Storage.inline;
 
   /**
@@ -51,16 +52,25 @@ export class BlobManager {
     return this.#defaultStorage;
   }
 
+  /**
+   * Registers a blob storage backend under `name`, claiming its declared URI schemes for
+   * read-time dispatch. Throws if another backend already claims one of those schemes. Returns a
+   * cleanup function that unregisters it.
+   */
   registerBackend(name: string, backend: Blob.Backend, options?: { default?: boolean }): CleanupFn {
     for (const scheme of backend.schemes) {
       if (this.#backendsByScheme.has(scheme)) {
         throw new Error(`Blob scheme already registered by another backend: ${scheme}`);
       }
     }
+    if (this.#backendsByName.has(name)) {
+      throw new Error(`Blob backend name already registered: ${name}`);
+    }
     const registered: RegisteredBackend = { name, backend };
     for (const scheme of backend.schemes) {
       this.#backendsByScheme.set(scheme, registered);
     }
+    this.#backendsByName.set(name, registered);
     if (options?.default) {
       this.#defaultStorage = name;
     }
@@ -70,9 +80,16 @@ export class BlobManager {
           this.#backendsByScheme.delete(scheme);
         }
       }
+      if (this.#backendsByName.get(name) === registered) {
+        this.#backendsByName.delete(name);
+      }
     };
   }
 
+  /**
+   * Writes `bytes` via the named storage backend (or the configured default), returning an
+   * un-added Blob object.
+   */
   async createBlob(
     spaceId: SpaceId,
     bytes: Uint8Array,
@@ -83,14 +100,23 @@ export class BlobManager {
     return Blob.make({ type: options?.type, size: bytes.byteLength, data });
   }
 
+  /**
+   * Reads a blob's bytes, dispatched by URI scheme for external storage.
+   */
   async readBlob(spaceId: SpaceId, blob: Blob.Blob): Promise<Uint8Array> {
     return this.#get(spaceId, blob.data);
   }
 
+  /**
+   * Checks whether a blob's bytes are currently available.
+   */
   async blobExists(spaceId: SpaceId, blob: Blob.Blob): Promise<boolean> {
     return this.#has(spaceId, blob.data);
   }
 
+  /**
+   * Returns a renderable URL for a blob, if the backend for its storage implements `getUrl`.
+   */
   async getBlobUrl(spaceId: SpaceId, blob: Blob.Blob): Promise<string | undefined> {
     return this.#getUrl(spaceId, blob.data, blob.type);
   }
@@ -145,7 +171,13 @@ export class BlobManager {
     if (!registered) {
       return false;
     }
-    return registered.backend.has({ spaceId, uri: data.uri });
+    try {
+      return await registered.backend.has({ spaceId, uri: data.uri });
+    } catch {
+      // A rejecting backend (e.g. offline) means existence can't be confirmed — report as absent
+      // rather than letting the rejection become an unrecoverable defect for callers.
+      return false;
+    }
   }
 
   async #getUrl(spaceId: SpaceId, data: Blob.BlobData, contentType?: string): Promise<string | undefined> {
@@ -157,16 +189,17 @@ export class BlobManager {
     if (!registered?.backend.getUrl) {
       return undefined;
     }
-    return registered.backend.getUrl({ spaceId, uri: data.uri, contentType });
+    try {
+      return await registered.backend.getUrl({ spaceId, uri: data.uri, contentType });
+    } catch {
+      // A rejecting backend means no renderable URL is available right now — same as not
+      // implementing `getUrl` at all, rather than an unrecoverable defect for callers.
+      return undefined;
+    }
   }
 
   #findByName(name: string): RegisteredBackend | undefined {
-    for (const registered of this.#backendsByScheme.values()) {
-      if (registered.name === name) {
-        return registered;
-      }
-    }
-    return undefined;
+    return this.#backendsByName.get(name);
   }
 
   #resolveScheme(uri: string): RegisteredBackend {

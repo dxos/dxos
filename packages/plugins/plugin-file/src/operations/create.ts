@@ -34,6 +34,14 @@ export class NoBackendError extends Error {
   }
 }
 
+export class FileReadError extends Error {
+  constructor(cause: unknown) {
+    super('Failed to read file contents.');
+    this.name = 'FileReadError';
+    this.cause = cause;
+  }
+}
+
 /**
  * Resolves the storage name to force for an upload:
  * - the id the user explicitly configured in Settings.backend, if it matches a registered
@@ -75,7 +83,12 @@ const handler: Operation.WithHandler<typeof FileOperation.Create> = FileOperatio
         return yield* Effect.fail(new UnsupportedFileTypeError(file.type));
       }
       const storage = yield* resolveActiveStorage;
-      const bytes = new Uint8Array(yield* Effect.promise(() => file.arrayBuffer()));
+      const bytes = new Uint8Array(
+        yield* Effect.tryPromise({
+          try: () => file.arrayBuffer(),
+          catch: (error) => new FileReadError(error),
+        }),
+      );
       // The size cap only applies to `inline` storage — `Blob.fromBytes` enforces it internally;
       // other backends scale beyond it.
       const object = yield* File.fromBytes(bytes, {

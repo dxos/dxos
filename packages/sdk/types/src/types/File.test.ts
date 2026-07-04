@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Blob, Database, Obj } from '@dxos/echo';
+import { Blob, Database, Err, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
@@ -57,6 +57,6 @@ describe('File', () => {
       Effect.gen(function* () {
         yield* File.fromBytes(bytes, { name: 'big.bin', type: 'application/octet-stream' });
       }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors),
-    ).rejects.toBeInstanceOf(Error);
+    ).rejects.toBeInstanceOf(Err.BlobTooLargeError);
   });
 });

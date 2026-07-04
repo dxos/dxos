@@ -62,12 +62,14 @@ describe('createEdgeBlobBackend', () => {
   });
 
   test('getUrl builds a direct edge URL from the hash portion of the URI', async ({ expect }) => {
-    const edgeClient = { baseUrl: 'https://edge.example.com' } as unknown as EdgeHttpClient;
+    const getBlobUrl = vi.fn((key: string) => new URL(`/api/file/${key}`, 'https://edge.example.com'));
+    const edgeClient = { getBlobUrl } as unknown as EdgeHttpClient;
     const backend = createEdgeBlobBackend({ edgeClient });
 
     const spaceId = SpaceId.random();
     const result = await backend.getUrl?.({ spaceId, uri: 'sha256:deadbeef' });
 
     expect(result).toBe('https://edge.example.com/api/file/deadbeef');
+    expect(getBlobUrl).toHaveBeenCalledWith('deadbeef');
   });
 });

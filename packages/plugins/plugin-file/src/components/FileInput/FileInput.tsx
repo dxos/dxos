@@ -6,7 +6,6 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import { Blob } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -25,10 +24,11 @@ export const FileInput = ({ schema, onChange }: FileInputProps) => {
 
   const onDropAccepted = useCallback((files: File[]) => onChange?.(files[0]), [onChange]);
 
+  // No client-side size cap here — the active backend determines the limit (inline is capped,
+  // edge/wnfs are not), and `op:Create` enforces it against the actual selected backend.
   const { acceptedFiles, getRootProps, getInputProps, isFocused, isDragAccept, isDragReject } = useDropzone({
     multiple: false,
     accept,
-    maxSize: Blob.MAX_INLINE_SIZE,
     onDropAccepted,
   });
 

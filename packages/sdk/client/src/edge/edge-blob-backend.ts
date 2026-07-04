@@ -40,5 +40,5 @@ export const createEdgeBlobBackend = ({ edgeClient }: CreateEdgeBlobBackendOptio
 
   has: async ({ uri }) => edgeClient.hasBlob(Context.default(), parseSha256Uri(uri)),
 
-  getUrl: async ({ uri }) => new URL(`/api/file/${parseSha256Uri(uri)}`, edgeClient.baseUrl).toString(),
+  getUrl: async ({ uri }) => edgeClient.getBlobUrl(parseSha256Uri(uri)).toString(),
 });

@@ -208,8 +208,9 @@ export interface Database extends Queryable {
 
   /**
    * Hashes and uploads `bytes` via the chosen storage backend, returning an un-added Blob object.
-   * Rejects with `Err.BlobTooLargeError` (inline storage over the size cap) or
-   * `Err.BlobWriteError` (backend upload failure).
+   * Rejects with `Err.BlobTooLargeError` (inline storage over the size cap), `Err.BlobWriteError`
+   * (backend upload failure), or `Err.BlobNotAvailableError` (`reason: 'backend-not-registered'`
+   * — the requested storage name has no registered backend).
    */
   createBlob(bytes: Uint8Array, options?: { type?: string; storage?: string }): Promise<Blob.Blob>;
 

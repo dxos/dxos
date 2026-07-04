@@ -10,6 +10,7 @@ import { type Client } from '@dxos/client';
 import { type Blob } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { FileCapabilities } from '@dxos/plugin-file/types';
 
@@ -23,6 +24,13 @@ interface CreateWnfsBlobBackendOptions {
   instances?: WnfsCapabilities.Instances;
 }
 
+/**
+ * Blob backend that stores bytes in a space's WNFS private forest, addressed by `wnfs://…` URIs.
+ * The underlying WASM bindings (`directory.read`) don't expose a distinct not-found error type, so
+ * `readBytes`/`getUrl` can't tell a missing path from a genuine transport/blockstore failure —
+ * both are logged and reported as a miss (`undefined`) rather than risk rethrowing on the common
+ * missing-file path.
+ */
 export const createWnfsBlobBackend = ({
   client,
   blockstore,
@@ -36,7 +44,8 @@ export const createWnfsBlobBackend = ({
     try {
       const { directory, forest } = await loadWnfs({ blockstore, instances, space });
       return await readWnfsFile({ wnfsUrl: uri, blockstore, forest, directory });
-    } catch {
+    } catch (error) {
+      log.warn('failed to read wnfs blob', { spaceId, uri, error });
       return undefined;
     }
   };
@@ -67,7 +76,8 @@ export const createWnfsBlobBackend = ({
       try {
         const { directory, forest } = await loadWnfs({ blockstore, instances, space });
         return await getBlobUrl({ wnfsUrl: uri, blockstore, directory, forest, type: contentType });
-      } catch {
+      } catch (error) {
+        log.warn('failed to resolve wnfs blob url', { spaceId, uri, error });
         return undefined;
       }
     },

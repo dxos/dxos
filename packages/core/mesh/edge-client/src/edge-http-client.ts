@@ -263,6 +263,14 @@ export class EdgeHttpClient extends BaseHttpClient {
   //
 
   /**
+   * Builds the URL for the blob stored under `key`. `key` is URL-encoded for defense in depth —
+   * callers only ever pass a sha256 hex digest today, but this is a public client method.
+   */
+  public getBlobUrl(key: string): URL {
+    return new URL(`/api/file/${encodeURIComponent(key)}`, this.baseUrl);
+  }
+
+  /**
    * Uploads bytes to the edge blob service, keyed by content hash. Pre-fetches `/auth` (`auth:
    * true`) so large bodies aren't sent twice on an auth challenge.
    */
@@ -276,7 +284,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     if (args?.contentType) {
       headers['Content-Type'] = args.contentType;
     }
-    await this._callRaw(ctx, new URL(`/api/file/${key}`, this.baseUrl), {
+    await this._callRaw(ctx, this.getBlobUrl(key), {
       retry: args?.retry,
       auth: args?.auth ?? true,
       method: 'POST',
@@ -293,7 +301,7 @@ export class EdgeHttpClient extends BaseHttpClient {
    * found.
    */
   public async getBlob(ctx: Context, key: string, args?: EdgeHttpCallArgs): Promise<Uint8Array | undefined> {
-    const response = await this._callRaw(ctx, new URL(`/api/file/${key}`, this.baseUrl), { ...args, method: 'GET' });
+    const response = await this._callRaw(ctx, this.getBlobUrl(key), { ...args, method: 'GET' });
     if (response.status === 404) {
       return undefined;
     }
@@ -304,7 +312,7 @@ export class EdgeHttpClient extends BaseHttpClient {
    * Checks whether bytes are stored under `key`, without downloading them.
    */
   public async hasBlob(ctx: Context, key: string, args?: EdgeHttpCallArgs): Promise<boolean> {
-    const response = await this._callRaw(ctx, new URL(`/api/file/${key}`, this.baseUrl), { ...args, method: 'HEAD' });
+    const response = await this._callRaw(ctx, this.getBlobUrl(key), { ...args, method: 'HEAD' });
     return response.status !== 404;
   }
 
@@ -313,7 +321,7 @@ export class EdgeHttpClient extends BaseHttpClient {
    * deferred), provided for completeness.
    */
   public async deleteBlob(ctx: Context, key: string, args?: EdgeHttpCallArgs): Promise<void> {
-    await this._callRaw(ctx, new URL(`/api/file/${key}`, this.baseUrl), { ...args, method: 'DELETE' });
+    await this._callRaw(ctx, this.getBlobUrl(key), { ...args, method: 'DELETE' });
   }
 
   //
