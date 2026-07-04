@@ -115,6 +115,7 @@ export const ChatPrompt = ({
         <ChatEditor
           ref={editorRef}
           autoFocus
+          markdown
           lineWrapping
           classNames='col-span-2 pt-0.5'
           placeholder={placeholder ?? t('prompt.placeholder')}
