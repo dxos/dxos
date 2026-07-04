@@ -10049,6 +10049,12 @@ importers:
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@effect/vitest':
         specifier: 'catalog:'
         version: 0.29.0(effect@3.21.4)(vitest@4.1.8)

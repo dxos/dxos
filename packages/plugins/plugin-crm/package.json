@@ -137,6 +137,8 @@
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "vite": "catalog:",

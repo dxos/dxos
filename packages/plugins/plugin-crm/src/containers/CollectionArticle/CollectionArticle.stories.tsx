@@ -9,19 +9,26 @@ import React from 'react';
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Obj, type Type } from '@dxos/echo';
+import { type Type } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
 import { translations } from '#translations';
 
 import { CollectionArticle } from './CollectionArticle';
 
-const OBJECT_COUNT = 8;
+// The value generator resolves each field's `GeneratorAnnotation` (e.g. `person.fullName`) against
+// the faker-backed `random` via dot-path lookup; the shape doesn't match the flat `ValueGenerator`
+// record type, so cast at this test-only boundary (matches RefEditor/Popover stories).
+const generator: ValueGenerator = random as any;
+
+random.seed(1);
 
 type StoryArgs = {
   type: Type.AnyEntity;
@@ -56,22 +63,19 @@ const meta = {
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
 
-              for (let i = 0; i < OBJECT_COUNT; i++) {
-                space.db.add(
-                  Obj.make(Organization.Organization, {
-                    name: `Organization ${i + 1}`,
-                    description: `A sample organization used to exercise the collection card body (${i + 1}).`,
-                    website: `https://example-${i + 1}.com`,
-                  }),
-                );
-                space.db.add(
-                  Obj.make(Person.Person, {
-                    fullName: `Person ${i + 1}`,
-                    jobTitle: 'Engineer',
-                    emails: [{ value: `person${i + 1}@example.com` }],
-                  }),
-                );
-              }
+              const createObjects = createObjectFactory(space.db, generator);
+              yield* Effect.promise(() =>
+                createObjects([
+                  {
+                    type: Organization.Organization,
+                    count: 16,
+                  },
+                  {
+                    type: Person.Person,
+                    count: 32,
+                  },
+                ]),
+              );
             }),
         }),
       ],
