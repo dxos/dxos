@@ -165,6 +165,8 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
         invariant(remoteId, 'SyncBinding is missing a remoteId for Discord channel.');
         invariant(Channel.instanceOf(localRoot), 'SyncBinding target is not a Channel.');
 
+        // Captured on the success path so the cursor's value + run status advance in one atomic update.
+        let newestId: string | undefined;
         const outcome = yield* Effect.either(
           Effect.gen(function* () {
             const rest = yield* DiscordREST;
@@ -207,17 +209,14 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
             invariant(feed, 'Channel is not feed-backed');
             yield* Feed.append(feed, mapped);
 
-            const newestId = messages[messages.length - 1].id;
-            Obj.update(cursor, (cursor) => {
-              cursor.value = newestId;
-            });
+            newestId = messages[messages.length - 1].id;
 
             return { pulled: { added: mapped.length } };
           }).pipe(Effect.provide(Database.layer(db)), Effect.provide(makeDiscordLayer(Ref.make(connection)))),
         );
 
         if (outcome._tag === 'Right') {
-          Cursor.advance(cursor);
+          Cursor.advance(cursor, newestId);
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {
               id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,

@@ -289,6 +289,8 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
           const remoteId =
             binding.remoteId ?? Obj.getMeta(localRoot).keys.find((key) => key.source === SLACK_SOURCE)?.id;
 
+          // Captured on the success path so the cursor's value + run status advance in one atomic update.
+          let newestTs: string | undefined;
           const syncResult = yield* Effect.either(
             Effect.gen(function* () {
               if (remoteId === undefined) {
@@ -328,12 +330,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
               invariant(feed, 'Channel is not feed-backed');
               yield* Feed.append(feed, mapped);
 
-              // Advance the binding's cursor to the newest `ts` seen so the
-              // next sync is incremental.
-              const newestTs = sorted[sorted.length - 1].ts;
-              Obj.update(cursor, (cursor) => {
-                cursor.value = newestTs;
-              });
+              // Capture the newest `ts` seen; the cursor advances (value + status) after the sync
+              // succeeds so the next sync is incremental.
+              newestTs = sorted[sorted.length - 1].ts;
 
               // Mirror the conversation's display name onto the local Channel if
               // we just learned a better one (first sync, or renamed remotely).
@@ -350,9 +349,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
             }),
           );
 
-          // Record per-binding sync status on the cursor object.
+          // Record per-binding sync status on the cursor object (value + status in one atomic update).
           if (syncResult._tag === 'Right') {
-            Cursor.advance(cursor);
+            Cursor.advance(cursor, newestTs);
           } else {
             Cursor.recordError(cursor, formatSlackSyncFailure(syncResult.left));
           }
