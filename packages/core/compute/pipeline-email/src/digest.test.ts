@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { Message } from '@dxos/types';
 
-import { type Commitment } from './ledger';
 import { buildDigest, narrateDigest, renderDigest } from './digest';
+import { type Commitment } from './ledger';
 import { buildRollups } from './rollups';
 import { buildThreads } from './threads';
 import { clusterThreads } from './topics';

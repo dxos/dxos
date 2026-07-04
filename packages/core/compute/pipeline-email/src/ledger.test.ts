@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { afterAll, describe, test } from 'vitest';
 
-import { SemanticStore, normalizeEntityId, type Type } from '@dxos/semantic-index';
+import { SemanticStore, type Type, normalizeEntityId } from '@dxos/semantic-index';
 
 import { commitmentLedger } from './ledger';
 
@@ -26,7 +26,11 @@ const fact = (
     object: { entity: normalizeEntityId(object), label: object },
     ...(extra?.validTo ? { validTo: extra.validTo } : {}),
   },
-  valence: { factuality: 'CT+', polarity: '+', ...(extra?.confidence !== undefined ? { confidence: extra.confidence } : {}) },
+  valence: {
+    factuality: 'CT+',
+    polarity: '+',
+    ...(extra?.confidence !== undefined ? { confidence: extra.confidence } : {}),
+  },
   attribution: { source: `<${id}@enron.com>`, generatedAtTime: '2001-05-01T10:00:00.000Z' },
   recordedAt: '2001-05-01T10:00:00.000Z',
   extractor: { id: 'test', model: 'test', version: '1' },

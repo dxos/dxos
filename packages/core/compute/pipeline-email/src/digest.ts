@@ -3,10 +3,10 @@
 //
 
 import { type Commitment } from './ledger';
-import { DEFAULT_EMAIL_PROMPTS, type EmailPrompts, mergePrompts, type Summarizer } from './prompts';
+import { DEFAULT_EMAIL_PROMPTS, type EmailPrompts, type Summarizer, mergePrompts } from './prompts';
 import { type RelationshipRollup } from './rollups';
-import { type Thread } from './types';
 import { type TopicDraft } from './topics';
+import { type Thread } from './types';
 
 /**
  * Everything the corpus pass has computed; the digest is a Query-mode view over it (spec §3③
@@ -66,8 +66,9 @@ export const renderDigest = (digest: Digest): string =>
     `Awaiting my reply: ${digest.awaitingMine.join(', ') || 'none'}`,
     `Stalled: ${digest.stalledThreads.join(', ') || 'none'}`,
     `Due commitments: ${
-      digest.dueCommitments.map((commitment) => `${commitment.who} → ${commitment.what} (${commitment.dueBy})`).join('; ') ||
-      'none'
+      digest.dueCommitments
+        .map((commitment) => `${commitment.who} → ${commitment.what} (${commitment.dueBy})`)
+        .join('; ') || 'none'
     }`,
     `Top topics: ${digest.topTopics.map((topic) => `${topic.label} (${topic.threadCount})`).join('; ') || 'none'}`,
   ].join('\n');

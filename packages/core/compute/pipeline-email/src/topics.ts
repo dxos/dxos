@@ -10,8 +10,28 @@ import { type Thread, Topic } from './types';
 
 // Subject tokens that carry no topical signal; excluded from signatures and keywords.
 const DEFAULT_STOPWORDS: readonly string[] = [
-  'the', 'and', 'for', 'with', 'from', 'about', 'this', 'that', 'your', 'our', 'are', 'was', 'will',
-  'has', 'have', 'not', 'you', 'all', 'any', 'can', 'per', 'new',
+  'the',
+  'and',
+  'for',
+  'with',
+  'from',
+  'about',
+  'this',
+  'that',
+  'your',
+  'our',
+  'are',
+  'was',
+  'will',
+  'has',
+  'have',
+  'not',
+  'you',
+  'all',
+  'any',
+  'can',
+  'per',
+  'new',
 ];
 
 /**

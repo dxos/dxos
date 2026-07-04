@@ -29,11 +29,16 @@ import { SemanticPipeline, SemanticStore } from '@dxos/semantic-index';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { buildDigest, narrateDigest, renderDigest } from '../digest';
 import { type FactIndexer, extractFactsStage } from '../extract-stage';
 import { buildEntityIndex, reconcileFactEntities } from '../fact-index';
 import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../facts';
+import { commitmentLedger } from '../ledger';
+import { type Summarizer } from '../prompts';
+import { buildRollups } from '../rollups';
 import { buildThreads } from '../threads';
-import { Thread } from '../types';
+import { clusterThreads, materializeTopics, summarizeTopics } from '../topics';
+import { Thread, Topic } from '../types';
 import { emailToMessage } from './email-fixtures';
 import { parquetSource } from './parquet';
 
@@ -241,7 +246,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
 
   beforeAll(async () => {
     builder = await new EchoTestBuilder().open();
-    ({ db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person, Thread] }));
+    ({ db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person, Thread, Topic] }));
     // Seed a known Organization so domain-matching can link a sender's Person to it.
     for (const org of TEST_ORGS) {
       db.add(Obj.make(Organization.Organization, org));
@@ -378,6 +383,56 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
       expect(storedThreads.length).toBe(threads.length);
       expect(storedThreads.every((thread) => thread.messageIds.length > 0)).toBe(true);
 
+      // Corpus layer (phase 3). Clustering is deterministic, so assert it strictly: every thread
+      // lands in exactly one topic. LLM enrichment (topic summaries, digest narrative) is advisory
+      // and degradable — proven deterministically in topics/digest unit tests.
+      const narrate: Summarizer = (prompt) =>
+        runtime.runPromise(
+          Effect.scoped(LanguageModel.generateText({ prompt })).pipe(
+            Effect.map((response) => response.text),
+            Effect.catchAllCause(() => Effect.succeed('')),
+          ),
+        );
+      const drafts = await summarizeTopics(clusterThreads(threads), narrate);
+      expect(drafts.length).toBeGreaterThan(0);
+      expect(drafts.flatMap((draft) => [...draft.threadIds]).sort()).toEqual(
+        threads.map((thread) => thread.threadId).sort(),
+      );
+      const topics = materializeTopics(drafts);
+      for (const topic of topics) {
+        db.add(topic);
+      }
+      await db.flush({ indexes: true });
+      const storedTopics = await db.query(Filter.type(Topic)).run();
+      expect(storedTopics.length).toBe(topics.length);
+
+      // Commitment ledger over the advisory fact store: rows (if any) must be grounded in a fact.
+      const commitments = await factRuntime.runPromise(
+        Effect.gen(function* () {
+          const store = yield* SemanticStore;
+          return yield* commitmentLedger(store);
+        }),
+      );
+      expect(commitments.every((commitment) => commitment.factId.length > 0 && commitment.source.length > 0)).toBe(
+        true,
+      );
+
+      // Rollups are deterministic: one per distinct sender among the processed messages.
+      const rollups = buildRollups(items);
+      const senders = new Set(
+        items.flatMap((message) => (message.sender.email ? [message.sender.email.toLowerCase()] : [])),
+      );
+      expect(rollups.length).toBe(senders.size);
+
+      // Digest skeleton is deterministic; the narrative is advisory (may be empty when degraded).
+      const digest = await narrateDigest(
+        buildDigest({ threads, topics: drafts, commitments, rollups }, { now: new Date().toISOString() }),
+        narrate,
+      );
+      expect(digest.threadCount).toBe(threads.length);
+      expect(digest.topicCount).toBe(drafts.length);
+      expect(typeof digest.narrative).toBe('string');
+
       // Serialize the run's outputs for inspection (git-ignored under ./data). `Obj.toJSON` is the
       // canonical ECHO serialization (encodes refs as DXNs).
       const organizations = await db.query(Filter.type(Organization.Organization)).run();
@@ -388,6 +443,10 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
             messages: items.map((message) => Obj.toJSON(message)),
             organizations: organizations.map((organization) => Obj.toJSON(organization)),
             persons: persons.map((person) => Obj.toJSON(person)),
+            topics: storedTopics.map((topic) => Obj.toJSON(topic)),
+            commitments,
+            rollups,
+            digest: renderDigest(digest),
             stats: {
               total: stats.total,
               spam: stats.spam,
