@@ -44,7 +44,7 @@ describe('usePaginatedQuery', () => {
     expect(result.current.atHead).toBe(true);
   });
 
-  test('loadMore extends the window toward older items', async () => {
+  test('loadNext extends the window toward older items', async () => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const feed = db.add(Feed.make({ name: 'windowed' }));
@@ -57,7 +57,7 @@ describe('usePaginatedQuery', () => {
       expect(result.current.items).toHaveLength(3);
     });
 
-    result.current.loadMore();
+    result.current.loadNext();
 
     await waitFor(() => {
       expect(result.current.items.map((person) => person.name)).toEqual([
@@ -71,10 +71,10 @@ describe('usePaginatedQuery', () => {
     });
   });
 
-  test('a burst of synchronous loadMore calls in the same tick only advances by one page', async () => {
+  test('a burst of synchronous loadNext calls in the same tick only advances by one page', async () => {
     // Regression test: a virtualizer's `onChange` can fire multiple times for a single "scrolled
     // near the edge" event (once per newly-rendered row) before React re-renders with the new
-    // range. `loadMore`'s single-flight guard must hold across that whole burst, not just across
+    // range. `loadNext`'s single-flight guard must hold across that whole burst, not just across
     // renders -- otherwise the window jumps by (burst size) pages instead of one.
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
@@ -88,9 +88,9 @@ describe('usePaginatedQuery', () => {
       expect(result.current.items).toHaveLength(3);
     });
 
-    // Simulate the burst: call loadMore synchronously many times before any re-render happens.
+    // Simulate the burst: call loadNext synchronously many times before any re-render happens.
     for (let i = 0; i < 10; i++) {
-      result.current.loadMore();
+      result.current.loadNext();
     }
 
     await waitFor(() => {
@@ -117,7 +117,7 @@ describe('usePaginatedQuery', () => {
     });
     expect(result.current.hasMore).toBe(true);
 
-    result.current.loadMore();
+    result.current.loadNext();
 
     await waitFor(() => {
       expect(result.current.items).toHaveLength(5);
@@ -139,11 +139,11 @@ describe('usePaginatedQuery', () => {
     });
     expect(result.current.atHead).toBe(true);
 
-    result.current.loadMore(); // limit -> 10 (within maxWindowSize)
+    result.current.loadNext(); // limit -> 10 (within maxWindowSize)
     await waitFor(() => expect(result.current.items).toHaveLength(10));
     expect(result.current.atHead).toBe(true);
 
-    result.current.loadMore(); // would exceed maxWindowSize -> skip grows instead, limit stays at 10
+    result.current.loadNext(); // would exceed maxWindowSize -> skip grows instead, limit stays at 10
     await waitFor(() => {
       expect(result.current.items).toHaveLength(10);
       expect(result.current.atHead).toBe(false);
@@ -175,7 +175,7 @@ describe('usePaginatedQuery', () => {
     });
   });
 
-  test('loadMore past maxWindowSize does not transiently undershoot the window size', async () => {
+  test('loadNext past maxWindowSize does not transiently undershoot the window size', async () => {
     // Regression test: reading the query's synchronous `.results` immediately upon subscribing
     // (previously via `subscribe(cb, { fire: true })`) reflected whatever the shared `FeedWindow`
     // had buffered *before* its async fetch extended to cover a newly advanced `skip` -- e.g.
@@ -196,11 +196,11 @@ describe('usePaginatedQuery', () => {
     });
 
     await waitFor(() => expect(result.current.items).toHaveLength(5));
-    result.current.loadMore(); // limit -> 10 (within maxWindowSize)
+    result.current.loadNext(); // limit -> 10 (within maxWindowSize)
     await waitFor(() => expect(result.current.items).toHaveLength(10));
     lengths.length = 0;
 
-    result.current.loadMore(); // slides skip 0 -> 5, evicting the newest 5 -- the undershoot path
+    result.current.loadNext(); // slides skip 0 -> 5, evicting the newest 5 -- the undershoot path
     await waitFor(() => {
       expect(result.current.items).toHaveLength(10);
       expect(result.current.atHead).toBe(false);
@@ -209,7 +209,7 @@ describe('usePaginatedQuery', () => {
     expect(Math.min(...lengths)).toBe(10);
   });
 
-  test('loadNewer slides the window back toward the head after it has advanced', async () => {
+  test('loadPrevious slides the window back toward the head after it has advanced', async () => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const feed = db.add(Feed.make({ name: 'windowed' }));
@@ -220,10 +220,10 @@ describe('usePaginatedQuery', () => {
 
     await waitFor(() => expect(result.current.items).toHaveLength(5));
 
-    result.current.loadMore(); // limit -> 10 (within maxWindowSize)
+    result.current.loadNext(); // limit -> 10 (within maxWindowSize)
     await waitFor(() => expect(result.current.items).toHaveLength(10));
 
-    result.current.loadMore(); // exceeds maxWindowSize -> slides forward (skip: 0 -> 5)
+    result.current.loadNext(); // exceeds maxWindowSize -> slides forward (skip: 0 -> 5)
     await waitFor(() => {
       expect(result.current.atHead).toBe(false);
       expect(result.current.items.map((person) => person.name)).toEqual([
@@ -240,8 +240,8 @@ describe('usePaginatedQuery', () => {
       ]);
     });
 
-    // loadNewer is the inverse of the slide above: it should land exactly back on the head.
-    result.current.loadNewer();
+    // loadPrevious is the inverse of the slide above: it should land exactly back on the head.
+    result.current.loadPrevious();
     await waitFor(() => {
       expect(result.current.atHead).toBe(true);
       expect(result.current.items.map((person) => person.name)).toEqual([
@@ -259,15 +259,15 @@ describe('usePaginatedQuery', () => {
     });
 
     // Already at the head -- no-op.
-    result.current.loadNewer();
+    result.current.loadPrevious();
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(result.current.atHead).toBe(true);
     expect(result.current.items).toHaveLength(10);
   });
 
-  test('items never regresses to empty across a loadMore transition (no scroll-jump regression)', async () => {
+  test('items never regresses to empty across a loadNext transition (no scroll-jump regression)', async () => {
     // Regression test for a bug where `usePaginatedQuery` delegated to the generic `useQuery`
-    // hook: every `loadMore` produced a brand new query AST, and `useQuery`'s AST-keyed
+    // hook: every `loadNext` produced a brand new query AST, and `useQuery`'s AST-keyed
     // subscription started that new query from an empty snapshot before its async load resolved
     // -- flashing `items` to `[]` on every page load, which collapsed the virtualizer and snapped
     // scroll position back to the top in the real app.
@@ -287,7 +287,7 @@ describe('usePaginatedQuery', () => {
     await waitFor(() => expect(result.current.items).toHaveLength(3));
     lengths.length = 0;
 
-    result.current.loadMore();
+    result.current.loadNext();
     await waitFor(() => expect(result.current.items).toHaveLength(6));
 
     expect(lengths.every((length) => length > 0)).toBe(true);

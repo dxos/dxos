@@ -109,10 +109,3 @@ export const Empty: Story = {
     count: 0,
   },
 };
-
-/** Verifies lazy loading: only the newest page renders initially; scrolling loads older messages. */
-export const LargeMailbox: Story = {
-  args: {
-    count: 2000,
-  },
-};

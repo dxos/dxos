@@ -2,23 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Virtualizer } from '@tanstack/react-virtual';
-import React, {
-  type KeyboardEvent,
-  type MouseEvent,
-  forwardRef,
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { type PaginatedQueryResult } from '@dxos/react-client/echo';
 import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import {
+  Focus,
+  Mosaic,
+  type MosaicTileProps,
+  useMosaicContainer,
+  useVirtualizerPagination,
+} from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
 
 import { useGmailTags } from '#hooks';
@@ -52,9 +48,6 @@ export type MessageStackTag = { id: string; label: string; hue?: string };
  * (MailboxArticle) so each tile can look up its tags by message id with no extra query.
  */
 export type MessageTagsIndex = Record<string, MessageStackTag[]>;
-
-/** Number of virtual rows from the loaded end at which the next page is requested. */
-const LOAD_MORE_THRESHOLD = 12;
 
 export type MessageStackProps = {
   id: string;
@@ -198,88 +191,18 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
       }
     }, []);
 
-    // Request the next (older) page once the visible range approaches the loaded end, or slide
-    // back toward the head once it approaches the loaded start (mirrors `loadMore`, in the
-    // opposite direction). Both are single-flight and a no-op once exhausted/at the head, so
-    // calling them on every virtualizer change while near either edge is safe.
-    const itemCount = items?.length ?? 0;
     const getItemId = useCallback((item: any) => item.conversationId ?? item.message?.id, []);
 
-    // Tracks the live virtualizer instance (for imperative `scrollToOffset` calls) and the
-    // identity/on-screen offset of whichever item was first-visible just before `items` last
-    // changed.
-    const virtualizerRef = useRef<Virtualizer<any, any> | null>(null);
-    const anchorRef = useRef<{ id: string; offsetFromTop: number } | null>(null);
-    const prevItemsRef = useRef(items);
-
-    // Snapshot the anchor the moment `items` is about to change, during render rather than inside
-    // `onChange` or an effect. `@tanstack/react-virtual` calls `onChange` synchronously as part of
-    // consuming an updated `count`/`items` option on *every* render (`setOptions` runs unconditionally
-    // in the render body, not an effect) -- so by the time `onChange` fires for this render, it
-    // already sees the NEW `items`, making "first visible item in `items`" self-referential and the
-    // compensation below a permanent no-op. Right here, before the child has re-rendered with the
-    // new array, `virtualizerRef.current` still reflects the outgoing array's measurements/scroll
-    // offset, so indexing into `prevItemsRef.current` (the outgoing array) with it is accurate.
-    if (prevItemsRef.current !== items) {
-      const virtualizer = virtualizerRef.current;
-      const firstVisible = virtualizer?.getVirtualItems().at(0);
-      if (virtualizer && firstVisible) {
-        const anchorItem = prevItemsRef.current?.[firstVisible.index];
-        const anchorId = anchorItem && getItemId(anchorItem);
-        if (anchorId) {
-          anchorRef.current = { id: anchorId, offsetFromTop: firstVisible.start - (virtualizer.scrollOffset ?? 0) };
-        }
-      }
-      prevItemsRef.current = items;
-    }
-
-    const handleVirtualizerChange = useCallback(
-      (virtualizer: Virtualizer<any, any>) => {
-        virtualizerRef.current = virtualizer;
-        const virtualItems = virtualizer.getVirtualItems();
-        const firstVisible = virtualItems.at(0);
-        const lastVisible = virtualItems.at(-1);
-        const willLoadMore = !!pagination && !!lastVisible && lastVisible.index >= itemCount - LOAD_MORE_THRESHOLD;
-        const willLoadNewer = !!pagination && !!firstVisible && firstVisible.index < LOAD_MORE_THRESHOLD;
-        if (!pagination) {
-          return;
-        }
-        if (willLoadMore) {
-          pagination.loadMore();
-        }
-        if (willLoadNewer) {
-          pagination.loadNewer();
-        }
-      },
-      [pagination, itemCount],
-    );
-
-    // Restores the previously-first-visible item to the same on-screen offset it had before
-    // `items` changed. `@tanstack/react-virtual` keys items by stable id (measured sizes survive
-    // reordering), but it recomputes every item's *pixel offset* from the current array order on
-    // each render, with no built-in compensation for insertion/removal at the front -- so evicting
-    // the newest items (`loadMore` past `maxWindowSize`) or prepending newer ones (`loadNewer`)
-    // otherwise shifts all content under a scroll offset that itself never moves, reading as a
-    // jump/flicker. A no-op when the anchor item's index hasn't moved (e.g. appending at the end).
-    useLayoutEffect(() => {
-      const virtualizer = virtualizerRef.current;
-      const anchor = anchorRef.current;
-      if (!virtualizer || !anchor || !items) {
-        return;
-      }
-      const newIndex = items.findIndex((item) => getItemId(item) === anchor.id);
-      if (newIndex < 0) {
-        return;
-      }
-      const offset = virtualizer.getOffsetForIndex(newIndex, 'start');
-      if (!offset) {
-        return;
-      }
-      const target = offset[0] - anchor.offsetFromTop;
-      if (target !== virtualizer.scrollOffset) {
-        virtualizer.scrollToOffset(target, { align: 'start' });
-      }
-    }, [items, getItemId]);
+    // Requests the next (older) page once the visible range approaches the loaded end, or the
+    // previous (newer) page once it approaches the loaded start, and preserves scroll position
+    // across the resulting `items` change (see `useVirtualizerPagination`). `pagination.loadNext`/
+    // `loadPrevious` are single-flight and a no-op once exhausted/at the head, so triggering them
+    // on every virtualizer change while near either edge is safe.
+    const { onChange: handleVirtualizerChange } = useVirtualizerPagination({
+      items,
+      getId: getItemId,
+      pagination,
+    });
 
     return (
       <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>

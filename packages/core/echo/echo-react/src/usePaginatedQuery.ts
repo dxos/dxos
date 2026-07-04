@@ -18,12 +18,12 @@ export type PaginatedQueryResult<T> = {
   /** Loaded window, in query order (newest first for `Order.natural('desc')`). */
   items: T[];
   /** Extends toward older items by one page. Single-flight; no-op while loading or exhausted. */
-  loadMore: () => void;
+  loadNext: () => void;
   /**
-   * Extends back toward the head by one page (the inverse of `loadMore`). Single-flight; no-op
+   * Extends back toward the head by one page (the inverse of `loadNext`). Single-flight; no-op
    * while loading or already at the head.
    */
-  loadNewer: () => void;
+  loadPrevious: () => void;
   /** Whether older items remain beyond what is currently loaded. Inferred from the last page's size. */
   hasMore: boolean;
   isLoading: boolean;
@@ -49,14 +49,14 @@ type Range = { identityKey: string; skip: number; limit: number };
  * range change (new `skip`/`limit`) produces a brand new `QueryResult` instance, and `useQuery`'s
  * snapshot always mirrors whatever query is passed *right now* -- there's no way for it to keep
  * showing the previous range's data while the new range loads. That flash-to-empty on every
- * `loadMore`/`loadNewer` was collapsing the virtualizer and snapping scroll position. Here,
+ * `loadNext`/`loadPrevious` was collapsing the virtualizer and snapping scroll position. Here,
  * `items` is only reset to empty when the underlying "what" (filter/order/page size/resource)
  * changes identity, not when only `skip`/`limit` move -- it keeps showing the previous window
  * until the new range's first real result arrives.
  *
  * @example
  * ```tsx
- * const { items, loadMore, hasMore, isLoading, atHead, jumpToHead } = usePaginatedQuery(
+ * const { items, loadNext, hasMore, isLoading, atHead, jumpToHead } = usePaginatedQuery(
  *   db,
  *   Query.select(Filter.type(Message.Message)).from(feed).orderBy(Order.natural('desc')).limit(50),
  * );
@@ -85,7 +85,7 @@ export const usePaginatedQuery = <
   // page size, or resource) changes identity.
   const identityKey = `${resource ? '1' : '0'}:${innerAstKey}:${pageSize}`;
   const [state, setState] = useState<Range>(() => ({ identityKey, skip: 0, limit: pageSize }));
-  // Guards `loadMore`/`loadNewer` against a burst of synchronous re-entrant calls within the same
+  // Guards `loadNext`/`loadPrevious` against a burst of synchronous re-entrant calls within the same
   // tick (a virtualizer's `onChange` can fire once per newly-rendered row, so a single
   // "scrolled near the edge" event may invoke the callback many times before React re-renders
   // with the new range). `isLoading` state can't gate this: it only updates on the *next* render,
@@ -179,7 +179,7 @@ export const usePaginatedQuery = <
   const atHeadRef = useRef(atHead);
   atHeadRef.current = atHead;
 
-  const loadMore = useCallback(() => {
+  const loadNext = useCallback(() => {
     if (pendingRef.current || !hasMoreRef.current) {
       return;
     }
@@ -196,7 +196,7 @@ export const usePaginatedQuery = <
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [identityKey, pageSize, maxWindowSize]);
 
-  const loadNewer = useCallback(() => {
+  const loadPrevious = useCallback(() => {
     if (pendingRef.current || atHeadRef.current) {
       return;
     }
@@ -207,7 +207,7 @@ export const usePaginatedQuery = <
       }
       // Slides the window toward the head at constant size (limit unchanged) -- decreasing skip
       // while holding limit fixed both reveals newer items at the front and drops an equal count
-      // of the oldest loaded items, mirroring loadMore's own "slide" branch (taken once it hits
+      // of the oldest loaded items, mirroring loadNext's own "slide" branch (taken once it hits
       // maxWindowSize) in the opposite direction.
       return { ...prev, skip: Math.max(0, prev.skip - pageSize) };
     });
@@ -220,5 +220,5 @@ export const usePaginatedQuery = <
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [identityKey, pageSize]);
 
-  return { items, loadMore, loadNewer, hasMore, isLoading, atHead, jumpToHead };
+  return { items, loadNext, loadPrevious, hasMore, isLoading, atHead, jumpToHead };
 };

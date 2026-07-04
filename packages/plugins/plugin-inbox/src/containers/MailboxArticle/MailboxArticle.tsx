@@ -164,8 +164,8 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   // whole feed up front.
   const {
     items: messages,
-    loadMore,
-    loadNewer,
+    loadNext,
+    loadPrevious,
     hasMore,
     isLoading: messagesLoading,
     atHead,
@@ -177,8 +177,8 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
       : Query.select(Filter.nothing()).limit(MAILBOX_PAGE_SIZE),
   );
   const pagination = useMemo(
-    () => ({ loadMore, loadNewer, hasMore, isLoading: messagesLoading, atHead, jumpToHead }),
-    [loadMore, loadNewer, hasMore, messagesLoading, atHead, jumpToHead],
+    () => ({ loadNext, loadPrevious, hasMore, isLoading: messagesLoading, atHead, jumpToHead }),
+    [loadNext, loadPrevious, hasMore, messagesLoading, atHead, jumpToHead],
   );
 
   // Feed/queue queries don't yet support text-search and complex filter combinations,
