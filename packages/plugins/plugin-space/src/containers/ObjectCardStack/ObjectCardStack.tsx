@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef, useId, useMemo, useState } from 'react';
 
 import { Filter, Obj, type View } from '@dxos/echo';
 import { useQuery, useType } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { ObjectForm } from '@dxos/react-ui-form';
-import { Mosaic } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicEventHandler } from '@dxos/react-ui-mosaic';
 import { getTypeURIFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -35,6 +35,13 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
 
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
+  // Per-instance discriminator so the same object opened twice doesn't collide in the Mosaic registry.
+  const instanceId = useId();
+  const eventHandler = useMemo<MosaicEventHandler>(
+    () => ({ id: `object-card-stack:${objectId}:${instanceId}`, canDrop: () => true }),
+    [objectId, instanceId],
+  );
+
   if (!type) {
     return null;
   }
@@ -50,30 +57,23 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
             <Message.Title>{t('row-details-no-selection.label')}</Message.Title>
           </Message.Root>
         ) : (
-          <Mosaic.Root>
-            <Mosaic.Container
-              asChild
-              orientation='vertical'
-              autoScroll={viewport}
-              eventHandler={{ id: objectId, canDrop: () => true }}
-            >
-              <ScrollArea.Root orientation='vertical'>
-                <ScrollArea.Viewport ref={setViewport}>
-                  <Mosaic.Stack
-                    items={selectedObjects}
-                    getId={(obj) => obj.id}
-                    Tile={({ ...props }) => (
-                      <Mosaic.Tile {...props}>
-                        <Card.Root>
-                          <ObjectForm object={props.data} type={type} />
-                        </Card.Root>
-                      </Mosaic.Tile>
-                    )}
-                  />
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
-            </Mosaic.Container>
-          </Mosaic.Root>
+          <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
+            <ScrollArea.Root orientation='vertical'>
+              <ScrollArea.Viewport ref={setViewport}>
+                <Mosaic.Stack
+                  items={selectedObjects}
+                  getId={(obj) => obj.id}
+                  Tile={({ ...props }) => (
+                    <Mosaic.Tile {...props}>
+                      <Card.Root>
+                        <ObjectForm object={props.data} type={type} />
+                      </Card.Root>
+                    </Mosaic.Tile>
+                  )}
+                />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Mosaic.Container>
         )}
       </Panel.Content>
     </Panel.Root>

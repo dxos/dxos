@@ -15,6 +15,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { type CommitFn, type TranscribeConfig, makeCorrectionStage } from '@dxos/pipeline-transcription';
 import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import {
   Transcription,
@@ -23,7 +24,6 @@ import {
   useFeedModelAdapter,
   useRecordingPipeline,
 } from '@dxos/react-ui-transcription';
-import { type CommitFn, type TranscribeConfig, makeCorrectionStage } from '@dxos/transcription-pipeline';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { createStoryDecorators } from '../testing';

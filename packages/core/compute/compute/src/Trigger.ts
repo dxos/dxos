@@ -14,6 +14,14 @@ import { OptionsAnnotationId } from '@dxos/echo/Format';
 import * as Runnable from './Runnable';
 
 /**
+ * Where a trigger is executed.
+ * *local* - trigger is executed on the client.
+ * *edge* - trigger is executed on the edge.
+ */
+export const ComputeEnvironment = Schema.Literal('local', 'edge').annotations({ title: 'Compute' });
+export type ComputeEnvironment = Schema.Schema.Type<typeof ComputeEnvironment>;
+
+/**
  * Type discriminator for TriggerType.
  * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
@@ -169,6 +177,12 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
     runnable: Schema.optional(Ref.Ref(Runnable.Runnable).annotations({ title: 'Runnable' })),
     spec: Schema.optional(Spec),
     enabled: Schema.optional(Schema.Boolean),
+
+    /**
+     * Overrides the space-level compute environment for this trigger.
+     * When unset, the space's computeEnvironment setting applies.
+     */
+    computeEnvironment: ComputeEnvironment.pipe(Schema.annotations({ title: 'Runs On' }), Schema.optional),
 
     concurrency: Schema.Number.pipe(
       Schema.annotations({

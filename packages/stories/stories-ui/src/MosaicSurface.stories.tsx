@@ -75,10 +75,10 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryArgs) =>
   }, [columnsProp, db, registry]);
 
   return (
-    <Mosaic.Root asChild debug={debug}>
+    <Mosaic.Root>
       <div className={mx('grid overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
         <Board.Root model={model}>
-          <Board.Content id='board' debug={debug} />
+          <Board.Content debug={debug} />
         </Board.Root>
 
         {debug && (

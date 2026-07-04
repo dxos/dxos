@@ -4,7 +4,7 @@
 
 import React, { Fragment } from 'react';
 
-import { type TelemetryEvent } from '@dxos/transcription-pipeline';
+import { type TelemetryEvent } from '@dxos/pipeline-transcription';
 
 import { type PipelinePhase } from '../../types';
 

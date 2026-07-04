@@ -12,7 +12,7 @@ import {
   type Stage,
   type TranscribeConfig,
   runAsrPipeline,
-} from '@dxos/transcription-pipeline';
+} from '@dxos/pipeline-transcription';
 import { type ContentBlock } from '@dxos/types';
 
 import { MediaStreamRecorder } from '../capture';
