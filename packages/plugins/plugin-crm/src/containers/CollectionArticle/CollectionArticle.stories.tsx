@@ -9,7 +9,7 @@ import React from 'react';
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { type Type } from '@dxos/echo';
+import { Obj, type Type } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -61,7 +61,7 @@ const meta = {
               yield* Effect.promise(() => space.waitUntilReady());
 
               const createObjects = createObjectFactory(space.db, generator);
-              yield* Effect.promise(() =>
+              const objects = yield* Effect.promise(() =>
                 createObjects([
                   {
                     type: Organization.Organization,
@@ -73,6 +73,22 @@ const meta = {
                   },
                 ]),
               );
+
+              // The generator does not populate array fields; derive emails from each person's name.
+              objects
+                .filter((object): object is Person.Person => Obj.instanceOf(Person.Person, object))
+                .forEach((person, index) => {
+                  Obj.update(person, (mutable: Obj.Mutable<Person.Person>) => {
+                    const slug = (mutable.fullName ?? 'user')
+                      .toLowerCase()
+                      .replace(/[^a-z0-9]+/g, '.')
+                      .replace(/^\.+|\.+$/g, '');
+                    mutable.emails = [
+                      { value: `${slug}@example.com` },
+                      ...(index % 3 === 0 ? [{ label: 'work', value: `${slug}@work.example.com` }] : []),
+                    ];
+                  });
+                });
             }),
         }),
       ],
