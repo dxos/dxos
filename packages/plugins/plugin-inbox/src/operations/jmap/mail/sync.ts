@@ -83,7 +83,8 @@ export default InboxOperation.JmapSync.pipe(
         }
 
         // The cursor is the high-water `receivedAt` (epoch-ms) of the last committed email.
-        const cursorKey = Cursor.parseKey(binding.cursor);
+        const cursor = yield* Database.load(binding.cursor);
+        const cursorKey = Cursor.parseKey(cursor.value);
 
         // Resolve the sender contact, build the ECHO message, and resolve folder ids to tag URIs via
         // the (JMAP-specific) folder map captured here.

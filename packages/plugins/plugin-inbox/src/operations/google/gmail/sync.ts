@@ -85,7 +85,8 @@ export default InboxOperation.GoogleMailSync.pipe(
             targetOptions.syncBackDays !== undefined
               ? format(subDays(new Date(), targetOptions.syncBackDays), 'yyyy-MM-dd')
               : normalizedAfter;
-          const cursorKey = Cursor.parseKey(binding.cursor);
+          const cursor = yield* Database.load(binding.cursor);
+          const cursorKey = Cursor.parseKey(cursor.value);
           log('syncing gmail', { mailbox: Obj.getURI(mailbox), userId, cursorKey, restrictedMode });
 
           const feed = yield* Database.load(mailbox.feed);

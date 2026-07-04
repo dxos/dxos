@@ -10,11 +10,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Database, DXN, type Feed, Filter, Obj, Relation, Type } from '@dxos/echo';
-import { Format } from '@dxos/echo/Format';
+import { Database, DXN, type Feed, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Stage } from '@dxos/pipeline';
 import { Tagging, type TagIndex } from '@dxos/schema';
+import { Cursor } from '@dxos/types';
 
 import * as Connection from './Connection';
 
@@ -28,7 +28,7 @@ import * as Connection from './Connection';
  * object is materialized when the binding is created (eager), not lazily on
  * first sync.
  */
-export class SyncBinding extends Type.makeRelation<SyncBinding>(DXN.make('org.dxos.type.syncBinding', '0.1.0'))({
+export class SyncBinding extends Type.makeRelation<SyncBinding>(DXN.make('org.dxos.type.syncBinding', '0.2.0'))({
   source: Connection.Connection,
   target: Obj.Unknown,
 })(
@@ -38,12 +38,13 @@ export class SyncBinding extends Type.makeRelation<SyncBinding>(DXN.make('org.dx
     remoteId: Schema.String.pipe(Schema.optional),
     /** Cached display label for the remote target. */
     name: Schema.String.pipe(Schema.optional),
-    /** Provider-defined sync cursor (opaque). */
-    cursor: Schema.String.pipe(Schema.optional),
-    /** Last successful sync (ISO). */
-    lastSyncAt: Format.DateTime.pipe(Schema.optional),
-    /** Last sync failure message. */
-    lastError: Schema.String.pipe(Schema.optional),
+    /**
+     * Durable progress cursor for this sync — the resume position (`value`) plus last-run status
+     * (`lastRunAt`/`lastError`). A standalone {@link Cursor} object (not a sync-specific concept),
+     * materialized as a child at creation. Superseded the inline `cursor`/`lastSyncAt`/`lastError`
+     * fields in 0.2.0.
+     */
+    cursor: Ref.Ref(Cursor.Cursor),
     /**
      * Last-seen remote fields keyed by foreign id (matches `Obj.Meta.keys`).
      * Shape is provider-defined; drives pull merge `(local, remote, snapshot)` — remote wins on conflict.
@@ -56,8 +57,20 @@ export class SyncBinding extends Type.makeRelation<SyncBinding>(DXN.make('org.dx
 
 export const instanceOf = (value: unknown): value is SyncBinding => Relation.instanceOf(SyncBinding, value);
 
-/** Creates a `SyncBinding` relation linking a {@link Connection} to its synced local root. */
-export const make = (props: Relation.MakeProps<typeof SyncBinding>) => Relation.make(SyncBinding, props);
+/**
+ * Creates a `SyncBinding` relation linking a {@link Connection} to its synced local root, with a
+ * fresh {@link Cursor} materialized as a child (cascade-deleted with the binding). The cursor is
+ * supplied here so callers never construct one; pass an explicit `cursor` only to reuse an existing
+ * one.
+ */
+export const make = (props: Omit<Relation.MakeProps<typeof SyncBinding>, 'cursor'>) => {
+  const cursor = Cursor.make();
+  const binding = Relation.make(SyncBinding, { ...props, cursor: Ref.make(cursor) });
+  // The cursor is owned by the binding: parenting cascade-deletes it with the binding, and persists it
+  // transitively when the binding is added.
+  Obj.setParent(cursor, binding);
+  return binding;
+};
 
 //
 // Sync pipeline.
@@ -77,8 +90,10 @@ export type Stats = { newMessages: number };
  * `stats.newMessages`) constructs those objects and reads them back after the run.
  */
 export type State = {
-  /** The binding whose cursor is advanced as pages commit. */
+  /** The binding being synced. */
   readonly binding: SyncBinding;
+  /** The binding's cursor object, advanced as pages commit (resolved from `binding.cursor`). */
+  readonly cursor: Cursor.Cursor;
   /** Feed the mapped messages are appended to; absent for DB-target syncs (e.g. contacts upsert). */
   readonly feed?: Feed.Feed;
   /** Tag index provider-label tags are applied against; absent for providers that don't tag. */
@@ -118,7 +133,7 @@ export class Service extends Context.Tag('@dxos/plugin-connector/SyncBinding')<S
  * Dependencies supplied by the caller; the Layer seeds `dedupSet` / `createdContactEmails` and
  * defaults `formatCursor` to the decimal high-water key.
  */
-export type LayerOptions = Omit<State, 'dedupSet' | 'createdContactEmails' | 'formatCursor'> & {
+export type LayerOptions = Omit<State, 'cursor' | 'dedupSet' | 'createdContactEmails' | 'formatCursor'> & {
   readonly formatCursor?: (key: number) => string;
 };
 
@@ -137,13 +152,16 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
     Effect.gen(function* () {
       const { db } = yield* Database.Service;
       const { feed } = options;
+      // A binding always has its cursor (materialized at creation); a missing one is a defect.
+      const cursor = yield* Database.load(options.binding.cursor).pipe(Effect.orDie);
       // DB-target syncs (no feed) rely on the cursor + idempotent write for dedup; there is no feed to seed.
       const dedupSet = feed
         ? yield* Effect.promise(() => seedDedupSet(db, feed, options.foreignKeySource))
         : new Set<string>();
       return {
         ...options,
-        formatCursor: options.formatCursor ?? ((key: number) => String(key)),
+        cursor,
+        formatCursor: options.formatCursor ?? Cursor.formatKey,
         dedupSet,
         createdContactEmails: new Set<string>(),
       };
@@ -151,16 +169,11 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
   );
 
 /**
- * Advances the binding cursor to `maxKey` and stamps the run status, in a single `Relation.update`.
- * Called from the write commit so the write and the cursor advance land together (the seam the future
- * single-transaction TODO wraps).
+ * Advances the cursor to `maxKey` and stamps the run status. Called from the write commit so the
+ * write and the cursor advance land together (the seam the future single-transaction TODO wraps).
  */
 const advanceCursor = (state: State, maxKey: number): void =>
-  Relation.update(state.binding, (binding) => {
-    binding.cursor = state.formatCursor(maxKey);
-    binding.lastSyncAt = new Date().toISOString();
-    binding.lastError = undefined;
-  });
+  Cursor.advance(state.cursor, state.formatCursor(maxKey));
 
 /**
  * Commits one page of pipeline output — the single place non-idempotent writes happen. Use as the

@@ -14,7 +14,7 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 import { captureSink } from '@dxos/pipeline/testing';
 import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { TagIndex } from '@dxos/schema';
-import { AccessToken, Message, Organization, Person } from '@dxos/types';
+import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
 
 import { EmailStage } from './index';
 
@@ -70,6 +70,7 @@ describe('sync pipeline harness', () => {
         TagIndex.TagIndex,
         AccessToken.AccessToken,
         Connection.Connection,
+        Cursor.Cursor,
         SyncBinding.SyncBinding,
       ],
     });
@@ -131,7 +132,7 @@ describe('sync pipeline harness', () => {
     );
   };
 
-  const cursorOf = (binding: SyncBinding.SyncBinding): string | undefined => binding.cursor;
+  const cursorOf = (binding: SyncBinding.SyncBinding): string | undefined => binding.cursor.target?.value;
 
   const feedForeignIds = async (db: Database.Database, feed: Feed.Feed): Promise<string[]> => {
     const messages = await db.queryFeed(feed, Filter.type(Message.Message)).run();

@@ -13,7 +13,7 @@ import { Database, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Channel, ContentBlock, Message } from '@dxos/types';
+import { Channel, ContentBlock, Cursor, Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -158,6 +158,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
         // supplies the credential for the Discord layer, the target is the
         // local Channel, and `remoteId` is the Discord channel id to pull.
         const bindingObj = yield* Database.load(bindingRef).pipe(Effect.provide(Database.layer(db)));
+        const cursor = yield* Database.load(bindingObj.cursor).pipe(Effect.provide(Database.layer(db)));
         const connection = Relation.getSource(bindingObj);
         const localRoot = Relation.getTarget(bindingObj);
         const remoteId = bindingObj.remoteId;
@@ -168,7 +169,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
           Effect.gen(function* () {
             const rest = yield* DiscordREST;
 
-            const initialAfter = computeInitialCursor(bindingObj.cursor, bindingObj.options);
+            const initialAfter = computeInitialCursor(cursor.value, bindingObj.options);
 
             // Drain message pagination. Discord returns newest-first within a
             // page even when paging by `after`; sort each page ascending so the
@@ -207,8 +208,8 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
             yield* Feed.append(feed, mapped);
 
             const newestId = messages[messages.length - 1].id;
-            Relation.update(bindingObj, (bindingObj) => {
-              bindingObj.cursor = newestId;
+            Obj.update(cursor, (cursor) => {
+              cursor.value = newestId;
             });
 
             return { pulled: { added: mapped.length } };
@@ -216,10 +217,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
         );
 
         if (outcome._tag === 'Right') {
-          Relation.update(bindingObj, (bindingObj) => {
-            bindingObj.lastSyncAt = new Date().toISOString();
-            bindingObj.lastError = undefined;
-          });
+          Cursor.advance(cursor);
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {
               id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
@@ -230,9 +228,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
           return outcome.right;
         } else {
           const message = formatDiscordSyncFailure(outcome.left);
-          Relation.update(bindingObj, (bindingObj) => {
-            bindingObj.lastError = message;
-          });
+          Cursor.recordError(cursor, message);
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {
               id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,

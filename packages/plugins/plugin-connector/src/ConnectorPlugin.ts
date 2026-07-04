@@ -5,7 +5,7 @@
 import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client';
-import { AccessToken } from '@dxos/types';
+import { AccessToken, Cursor } from '@dxos/types';
 
 import {
   AppGraphBuilder,
@@ -31,7 +31,9 @@ export const ConnectorPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [AccessToken.AccessToken, Connection.Connection, SyncBinding.SyncBinding] }),
+  AppPlugin.addSchemaModule({
+    schema: [AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, SyncBinding.SyncBinding],
+  }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({

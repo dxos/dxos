@@ -22,6 +22,7 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 // InboxOperation.GoogleCalendarSync's schema; the import lets TypeScript name it in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Connection, SyncBinding } from '@dxos/plugin-connector';
+import { Cursor } from '@dxos/types';
 
 import { mapEvent } from './mapper';
 import { GoogleCalendar } from '../../../apis';
@@ -31,9 +32,9 @@ import { Calendar, InboxOperation } from '../../../types';
 
 const COMMIT_PAGE_SIZE = 10;
 
-const persistCalendarCursor = (binding: SyncBinding.SyncBinding, lastUpdate: string) => {
-  Relation.update(binding, (binding) => {
-    binding.cursor = lastUpdate;
+const persistCalendarCursor = (cursor: Cursor.Cursor, lastUpdate: string) => {
+  Obj.update(cursor, (cursor) => {
+    cursor.value = lastUpdate;
   });
 };
 
@@ -85,10 +86,11 @@ export default InboxOperation.GoogleCalendarSync.pipe(
           // The cursor is the event `updated` high-water mark (stored ISO, compared as epoch-ms). A
           // missing cursor means initial sync (window by start time); otherwise incremental
           // (by `updatedMin`). Migrate the pre-integration `Calendar.lastSyncedUpdate` onto the cursor.
+          const cursor = yield* Database.load(binding.cursor);
           const legacyLastSynced = readLegacyLastSyncedUpdate(calendar);
-          let storedCursor = typeof binding.cursor === 'string' ? binding.cursor : undefined;
+          let storedCursor = typeof cursor.value === 'string' ? cursor.value : undefined;
           if (legacyLastSynced && !storedCursor) {
-            persistCalendarCursor(binding, legacyLastSynced);
+            persistCalendarCursor(cursor, legacyLastSynced);
             clearLegacyLastSyncedUpdate(calendar);
             storedCursor = legacyLastSynced;
           }

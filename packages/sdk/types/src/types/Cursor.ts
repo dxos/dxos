@@ -35,6 +35,28 @@ export class Cursor extends Type.makeObject<Cursor>(DXN.make('org.dxos.type.curs
 
 export const make = (props: Obj.MakeProps<typeof Cursor> = {}): Cursor => Obj.make(Cursor, props);
 
+export const instanceOf = (value: unknown): value is Cursor => Obj.instanceOf(Cursor, value);
+
+/**
+ * Records a successful run: advances `value` when a new high-water mark is provided, stamps
+ * `lastRunAt`, and clears `lastError`. Pass no `value` to record a run that produced nothing new
+ * (status refreshed, position unchanged). The single write seam any pipeline uses on success.
+ */
+export const advance = (cursor: Cursor, value?: string): void =>
+  Obj.update(cursor, (cursor) => {
+    if (value !== undefined) {
+      cursor.value = value;
+    }
+    cursor.lastRunAt = new Date().toISOString();
+    cursor.lastError = undefined;
+  });
+
+/** Records a failed run: stamps `lastError`, leaving `value` and `lastRunAt` untouched. */
+export const recordError = (cursor: Cursor, message: string): void =>
+  Obj.update(cursor, (cursor) => {
+    cursor.lastError = message;
+  });
+
 /**
  * Encodes a monotonic integer high-water mark into the opaque `value` string — the common convention
  * for a cursor that tracks an incrementing position (epoch timestamp, sequence number, offset).
