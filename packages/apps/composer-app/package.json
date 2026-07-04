@@ -74,6 +74,7 @@
     "@dxos/plugin-duffel": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-file": "workspace:*",
+    "@dxos/plugin-freeq": "workspace:*",
     "@dxos/plugin-gallery": "workspace:*",
     "@dxos/plugin-game": "workspace:*",
     "@dxos/plugin-generator": "workspace:*",
