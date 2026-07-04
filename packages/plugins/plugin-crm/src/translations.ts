@@ -12,8 +12,10 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'CRM',
         'nav-tree-group-crm.label': 'CRM',
+        'layout.label': 'Layout',
         'layout-masonry.label': 'Cards',
         'layout-table.label': 'Table',
+        'search-placeholder.label': 'Filter...',
         'type-collection-empty.message': 'No items.',
         'object-name.placeholder': 'New object',
         'delete-object.label': 'Delete',
