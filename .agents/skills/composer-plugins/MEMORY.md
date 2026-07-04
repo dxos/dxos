@@ -4,16 +4,6 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
-<<<<<<< HEAD
-## 2026-07-01 — plugin-space SpaceHome stories
-
-- `Surface.create` ids are DOT-separated and every segment must be camelCase (`story.spaceHomeRecent`); slashes or hyphens throw `Invalid surface id` at runtime (renders as a story error, not a build error).
-- `ClientPlugin({ types })` (testing) registers types with ECHO but does NOT contribute `AppCapabilities.Schema` — containers that build filters from `useCapabilities(AppCapabilities.Schema)` (e.g. `SpaceHomeRecent`) render empty in stories unless you add `Capability.contributes(AppCapabilities.Schema, [Task, Note])` to `withPluginManager` capabilities.
-- Translation keys are linted by `@dxos/rules(translation-key-format)`: the final segment needs a known suffix (`.label`, `.heading`, …) — `foo.range.all` fails, `foo.range-all.label` passes.
-- To story a shell article that delegates to a Surface role token (e.g. `SpaceHomeArticle` → `SpaceHomeContent`), contribute the child surfaces inline in the story's `withPluginManager({ capabilities })` instead of loading the whole plugin.
-
-||||||| 0bfa153129
-=======
 ## 2026-07-03 — plugin-crm (CRM nav section + generic collection article)
 
 - Add a top-level nav section by contributing a group node via `AppNode.makeGroup({ id: Paths.GroupSegments.X, type: Paths.GroupTypes.X, label, space, position })` matched `AppNodeMatcher.whenSpace`, then child nodes matched `AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.X)`. New group ids/types are centrally declared in `@dxos/app-toolkit` `Paths.GroupSegments`/`GroupTypes` (ai/content/communications/crm/system) — add there, not per-plugin. Group auto-hides when it has no children.
@@ -25,7 +15,13 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 - Story for a container using capability hooks (useQuery/useOperationInvoker/useSelection): mirror `TypeCollectionArticle.stories.tsx` — `withPluginManager({ capabilities:[Capability.contributes(AppCapabilities.Translations, translations)], plugins:[...corePlugins(), StorybookPlugin({}), PreviewPlugin(), ClientPlugin({ types, onClientInitialized })] })` + `withLayout({layout:'fullscreen'})`. Needs devDeps `@dxos/plugin-client`, `@dxos/plugin-preview`, `@dxos/plugin-testing`, `@storybook/react-vite` + the `storybook`/`ts-test-storybook` moon tags.
 - New workspace deps: add `workspace:*` to package.json AND a matching `references` entry in tsconfig.json by hand (postinstall ref-sync is skipped), then `pnpm install --no-frozen-lockfile`. New internal barrel (`#containers`) needs both a package.json `imports` alias and a `--entryPoint=src/containers/index.ts` in moon.yml.
 
->>>>>>> origin/main
+## 2026-07-01 — plugin-space SpaceHome stories
+
+- `Surface.create` ids are DOT-separated and every segment must be camelCase (`story.spaceHomeRecent`); slashes or hyphens throw `Invalid surface id` at runtime (renders as a story error, not a build error).
+- `ClientPlugin({ types })` (testing) registers types with ECHO but does NOT contribute `AppCapabilities.Schema` — containers that build filters from `useCapabilities(AppCapabilities.Schema)` (e.g. `SpaceHomeRecent`) render empty in stories unless you add `Capability.contributes(AppCapabilities.Schema, [Task, Note])` to `withPluginManager` capabilities.
+- Translation keys are linted by `@dxos/rules(translation-key-format)`: the final segment needs a known suffix (`.label`, `.heading`, …) — `foo.range.all` fails, `foo.range-all.label` passes.
+- To story a shell article that delegates to a Surface role token (e.g. `SpaceHomeArticle` → `SpaceHomeContent`), contribute the child surfaces inline in the story's `withPluginManager({ capabilities })` instead of loading the whole plugin.
+
 ## 2026-06-30 — storybook cwd + settings-container story pattern
 
 - Storybook globs `packages/plugins/*/src/**/*.stories.tsx` relative to the CWD's repo root (`tools/storybook-react/.storybook/main.ts` → `rootDir`). Run `moon run storybook-react:serve` from INSIDE the worktree dir, never `cd` into the main repo first — doing so globs main's packages and your new worktree story files silently never appear in `/index.json` (story shows "Couldn't find story matching …"). Verify inclusion via `curl -s localhost:PORT/index.json`.
