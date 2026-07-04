@@ -13,13 +13,10 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 
 import * as Cursor from './Cursor';
 
-// A minimal end-to-end demonstration that a Cursor makes a pipeline idempotent. The cursor is the
-// single durable position a run resumes from: a pure dedup stage drops anything at or below the
-// cursor's high-water key, and the commit sink advances the cursor as it writes. We exercise
-// (1) a clean success, (2) a run that commits some pages then crashes mid-stream, and (3) a recovery
-// run that re-processes the same source without re-committing anything already past the cursor.
-//
-// Nothing here is sync-specific — the "sink" is a plain array; the cursor alone provides idempotency.
+// A Cursor makes a pipeline idempotent: it is the durable position a run resumes from. A pure dedup
+// stage drops anything at or below the cursor's high-water key, and the commit advances the cursor as
+// it writes. These tests demonstrate that with a generic pipeline over a plain-array sink — nothing
+// here is sync-specific.
 describe('Cursor idempotency', () => {
   let builder: EchoTestBuilder;
 
@@ -31,75 +28,104 @@ describe('Cursor idempotency', () => {
     await builder.close();
   });
 
-  // One source item: an id and a monotonic key (e.g. an updated-at time / offset).
-  type Item = { readonly id: string; readonly key: number };
-  const ITEMS: readonly Item[] = [
-    { id: 'a', key: 10 },
-    { id: 'b', key: 20 },
-    { id: 'c', key: 30 },
-    { id: 'd', key: 40 },
-  ];
-
-  test('success → mid-run failure → recovery, without reprocessing', async ({ expect }) => {
+  /**
+   * A fresh harness: a `cursor`, the `committed` sink (all ids written so far), and a `run` that
+   * streams the source through a dedup-by-cursor stage into a commit that advances the cursor. Each
+   * `run` resumes from the cursor, exactly as a real pipeline would.
+   */
+  const setup = async () => {
     const { db } = await builder.createDatabase({ types: [Cursor.Cursor] });
     const cursor = db.add(Cursor.make());
-    // The sink: everything the pipeline has durably committed. A re-run must never append a duplicate.
     const committed: string[] = [];
 
-    // Runs the pipeline once, resuming from the cursor. `limit` simulates how much of the source is
-    // available this run; `fault` optionally crashes the stream after N items reach the commit sink.
-    const run = (options: { limit: number; fault?: Stage.Stage<Item, Item, Error> }) => {
+    const run = ({ available, failAfter }: RunOptions) => {
       const highWater = Cursor.parseKey(cursor.value);
-      const source = Stream.fromIterable(ITEMS.slice(0, options.limit)).pipe(
-        // Idempotency gate: drop anything already reflected by the cursor.
+      const source = Stream.fromIterable(ITEMS.slice(0, available)).pipe(
         Stage.filter('dedup', (item: Item) => item.key > highWater),
       );
-      return (options.fault ? source.pipe(options.fault) : source).pipe(
-        // One item per page so each commit + cursor advance lands independently.
+      return (failAfter === undefined ? source : source.pipe(failAt(failAfter))).pipe(
+        // One item per page, so each commit + cursor advance lands independently.
         Stream.grouped(1),
         Pipeline.run({
           sink: (page) =>
             Effect.sync(() => {
               const items = [...page];
-              if (items.length === 0) {
-                return;
-              }
-              // The commit: write the page, then advance the cursor to its high-water key. In a real
-              // store these would be one transaction; the cursor advance is what makes the re-run safe.
-              for (const item of items) {
-                committed.push(item.id);
-              }
+              committed.push(...items.map((item) => item.id));
               Cursor.advance(cursor, Cursor.formatKey(Math.max(...items.map((item) => item.key))));
             }),
         }),
       );
     };
 
-    // 1. Success: the first two items arrive and commit; the cursor advances to the highest key.
-    await EffectEx.runPromise(run({ limit: 2 }));
-    expect(committed).toEqual(['a', 'b']);
-    expect(cursor.value).toBe('20');
+    return { cursor, committed, run };
+  };
 
-    // 2. Failure: two more items are available. Dedup skips a/b; `c` commits (cursor → 30), then the
-    //    run crashes before `d`. The cursor reflects only what actually landed.
-    const exit = await EffectEx.runPromise(Effect.exit(run({ limit: 4, fault: faultAfter(1) })));
-    expect(Exit.isFailure(exit)).toBe(true);
-    expect(committed).toEqual(['a', 'b', 'c']);
-    expect(cursor.value).toBe('30');
+  test('commits every item and advances the cursor to the high-water key', async ({ expect }) => {
+    const { cursor, committed, run } = await setup();
 
-    // 3. Recovery: re-run the same source. Dedup drops a/b/c (at or below the cursor); only `d` is
-    //    new. No duplicates, and the cursor completes at the highest key.
-    await EffectEx.runPromise(run({ limit: 4 }));
+    await EffectEx.runPromise(run({ available: 4 }));
+
     expect(committed).toEqual(['a', 'b', 'c', 'd']);
     expect(cursor.value).toBe('40');
   });
 
-  // Fails the stream after `n` items pass through, simulating a crash mid-run.
-  const faultAfter = (n: number): Stage.Stage<Item, Item, Error> => {
-    let count = 0;
-    return Stage.map('fault', (item: Item) => {
-      count += 1;
-      return count > n ? Effect.fail(new Error('injected fault')) : Effect.succeed(item);
-    });
-  };
+  test('skips items already at or below the cursor on a later run', async ({ expect }) => {
+    const { cursor, committed, run } = await setup();
+
+    await EffectEx.runPromise(run({ available: 2 }));
+    expect(cursor.value).toBe('20');
+
+    // The source now offers all four; only the two past the cursor are committed.
+    await EffectEx.runPromise(run({ available: 4 }));
+
+    expect(committed).toEqual(['a', 'b', 'c', 'd']);
+    expect(cursor.value).toBe('40');
+  });
+
+  test('a mid-run failure commits only the completed pages and leaves the cursor there', async ({ expect }) => {
+    const { cursor, committed, run } = await setup();
+
+    const exit = await EffectEx.runPromise(Effect.exit(run({ available: 4, failAfter: 3 })));
+
+    expect(Exit.isFailure(exit)).toBe(true);
+    expect(committed).toEqual(['a', 'b', 'c']);
+    expect(cursor.value).toBe('30');
+  });
+
+  test('recovers from a failure without reprocessing committed items', async ({ expect }) => {
+    const { cursor, committed, run } = await setup();
+
+    await EffectEx.runPromise(Effect.exit(run({ available: 4, failAfter: 3 })));
+    expect(committed).toEqual(['a', 'b', 'c']);
+
+    // The recovery run resumes from the cursor: only the uncommitted tail is written.
+    await EffectEx.runPromise(run({ available: 4 }));
+
+    expect(committed).toEqual(['a', 'b', 'c', 'd']);
+    expect(cursor.value).toBe('40');
+  });
 });
+
+// One source item: an id and a monotonic key (e.g. an updated-at time / offset).
+type Item = { readonly id: string; readonly key: number };
+const ITEMS: readonly Item[] = [
+  { id: 'a', key: 10 },
+  { id: 'b', key: 20 },
+  { id: 'c', key: 30 },
+  { id: 'd', key: 40 },
+];
+
+type RunOptions = {
+  /** How many of {@link ITEMS} the source offers this run (simulates the source growing over time). */
+  readonly available: number;
+  /** Crash the run after this many items reach the commit sink. */
+  readonly failAfter?: number;
+};
+
+/** Fails the stream once more than `n` items have passed through, simulating a crash mid-run. */
+const failAt = (n: number): Stage.Stage<Item, Item, Error> => {
+  let count = 0;
+  return Stage.map('fault', (item: Item) =>
+    ++count > n ? Effect.fail(new Error('injected fault')) : Effect.succeed(item),
+  );
+};
