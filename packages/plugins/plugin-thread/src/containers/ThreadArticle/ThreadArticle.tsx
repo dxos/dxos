@@ -60,9 +60,7 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
     return (
       <Panel.Root>
         <Panel.Toolbar></Panel.Toolbar>
-        {/* Not `asChild`: the grid-area placement must land on a real box, not MessageThread's
-            Mosaic.Root `display:contents` root (see ChannelArticle). */}
-        <Panel.Content>
+        <Panel.Content asChild>
           <MessageThread
             {...composableProps(props)}
             id={id}
