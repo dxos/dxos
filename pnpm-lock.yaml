@@ -9828,6 +9828,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/pipeline':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -11525,6 +11528,9 @@ importers:
       '@dxos/markdown':
         specifier: workspace:*
         version: link:../../common/markdown
+      '@dxos/pipeline':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -18697,6 +18703,12 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
     devDependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/pipeline':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../react-client
