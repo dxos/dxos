@@ -497,7 +497,13 @@ describe('Feed', () => {
           feed,
           Query.select(Filter.type(TestSchema.Person)).orderBy(Order.natural('desc')).limit(5),
         ).run;
-        expect(head.map((person) => person.name)).toEqual(['person-29', 'person-28', 'person-27', 'person-26', 'person-25']);
+        expect(head.map((person) => person.name)).toEqual([
+          'person-29',
+          'person-28',
+          'person-27',
+          'person-26',
+          'person-25',
+        ]);
 
         // Jump far toward older items -- evicts the pages covering the head off the front of the
         // window (rangeStart advances past 20).
@@ -505,7 +511,13 @@ describe('Feed', () => {
           feed,
           Query.select(Filter.type(TestSchema.Person)).orderBy(Order.natural('desc')).skip(20).limit(5),
         ).run;
-        expect(older.map((person) => person.name)).toEqual(['person-9', 'person-8', 'person-7', 'person-6', 'person-5']);
+        expect(older.map((person) => person.name)).toEqual([
+          'person-9',
+          'person-8',
+          'person-7',
+          'person-6',
+          'person-5',
+        ]);
 
         // Slide back toward the head into the now-evicted gap (positions 5-9). This only works if
         // the window fetches newer items to recover what it dropped, rather than treating anything
