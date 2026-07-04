@@ -101,32 +101,28 @@ const meta = {
 
               // A live binding carrying options + a recent sync timestamp (on its cursor).
               const roadmap = space.db.add(Obj.make(Expando.Expando, { name: 'Product Roadmap' }));
-              const roadmapBinding = space.db.add(
+              space.db.add(
                 SyncBinding.make({
                   [Relation.Source]: connection,
                   [Relation.Target]: roadmap,
                   remoteId: 'board-1',
                   name: 'Product Roadmap',
                   options: { includeArchived: true, label: 'roadmap' },
+                  cursor: { lastRunAt: new Date().toISOString() },
                 }),
               );
-              Obj.update(roadmapBinding.cursor.target!, (cursor) => {
-                cursor.lastRunAt = new Date().toISOString();
-              });
 
               // A live binding that has never synced and recorded an error (on its cursor).
               const engineering = space.db.add(Obj.make(Expando.Expando, { name: 'Engineering' }));
-              const engineeringBinding = space.db.add(
+              space.db.add(
                 SyncBinding.make({
                   [Relation.Source]: connection,
                   [Relation.Target]: engineering,
                   remoteId: 'board-2',
                   name: 'Engineering',
+                  cursor: { lastError: 'Rate limited by remote service.' },
                 }),
               );
-              Obj.update(engineeringBinding.cursor.target!, (cursor) => {
-                cursor.lastError = 'Rate limited by remote service.';
-              });
 
               // An orphaned binding whose target object was deleted elsewhere.
               const orphaned = space.db.add(Obj.make(Expando.Expando, { name: 'Deleted Board' }));

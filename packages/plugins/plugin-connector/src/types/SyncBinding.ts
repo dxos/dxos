@@ -61,15 +61,18 @@ export const instanceOf = (value: unknown): value is SyncBinding => Relation.ins
 /**
  * Creates a `SyncBinding` relation linking a {@link Connection} to its synced local root, with a
  * fresh {@link Cursor} materialized as a child (cascade-deleted with the binding). The cursor is
- * supplied here so callers never construct one; pass an explicit `cursor` only to reuse an existing
- * one.
+ * constructed here so callers never build one; pass `cursor` to initialize its fields (`value`,
+ * `lastRunAt`, `lastError`) — e.g. to seed sync state.
  */
-export const make = (props: Omit<Relation.MakeProps<typeof SyncBinding>, 'cursor'>) => {
-  const cursor = Cursor.make();
+export const make = ({
+  cursor: cursorProps,
+  ...props
+}: Omit<Relation.MakeProps<typeof SyncBinding>, 'cursor'> & { cursor?: Obj.MakeProps<typeof Cursor.Cursor> }) => {
+  const cursor = Cursor.make(cursorProps);
   const binding = Relation.make(SyncBinding, { ...props, cursor: Ref.make(cursor) });
   // The cursor is owned by the binding: parenting cascade-deletes it with the binding, and persists it
   // transitively when the binding is added.
-  Obj.setParent(cursor, binding);
+  Relation.setParent(cursor, binding);
   return binding;
 };
 

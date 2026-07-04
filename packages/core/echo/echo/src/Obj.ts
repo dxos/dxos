@@ -744,13 +744,11 @@ export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
 /**
  * Sets the parent of an object.
  * If a parent (or any transitive parent) is deleted, the object will be deleted.
- * Only objects may have a parent, but the parent may be any entity — an object or a relation (e.g. a
- * relation that owns a child object cascade-deletes it). The delete-cascade resolves the parent by id
- * regardless of kind.
+ * Only objects are allowed to have a parent.
  */
-export const setParent = (entity: Unknown, parent: Entity.Unknown | undefined) => {
+export const setParent = (entity: Unknown, parent: Any | undefined) => {
   assertArgument(isObject(entity), 'Expected an object');
-  assertArgument(parent === undefined || Entity.isEntity(parent), 'Expected an entity');
+  assertArgument(parent === undefined || isObject(parent), 'Expected an object');
   assumeType<internal.InternalObjectProps>(entity);
   assumeType<internal.InternalObjectProps | undefined>(parent);
   entity[internal.ParentId] = parent;

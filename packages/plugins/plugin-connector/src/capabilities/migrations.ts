@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Migration, Obj, Ref, Relation } from '@dxos/echo';
+import { Migration, Ref, Relation } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Cursor } from '@dxos/types';
 
@@ -36,7 +36,7 @@ export const migrations = [
       // Own the cursor: cascade-delete with the binding (matches `SyncBinding.make`).
       const cursor = object.cursor.target;
       if (cursor) {
-        Obj.setParent(cursor, object);
+        Relation.setParent(cursor, object);
       }
     },
   }),

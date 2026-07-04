@@ -143,19 +143,16 @@ describe('reconcileSyncBindings', () => {
     const { db, connection } = await setup();
     const obj = db.add(Obj.make(Expando.Expando, { name: 'kept' }));
     const lastRunAt = '2026-04-01T00:00:00.000Z';
+    // Sync state lives on the binding's cursor object (0.2.0); seed it to verify reconcile preserves it.
     const existing = db.add(
       SyncBinding.make({
         [Relation.Source]: connection,
         [Relation.Target]: obj,
         remoteId: 'kept',
         name: 'Kept',
+        cursor: { value: 'sentinel', lastRunAt },
       }),
     );
-    // Sync state lives on the binding's cursor object (0.2.0); seed it to verify reconcile preserves it.
-    Obj.update(existing.cursor.target!, (cursor) => {
-      cursor.value = 'sentinel';
-      cursor.lastRunAt = lastRunAt;
-    });
 
     const result = await reconcile(db, connection, makeConnector(), [{ remoteId: 'kept', name: 'Kept' }]);
     expect(result.added).toBe(0);
