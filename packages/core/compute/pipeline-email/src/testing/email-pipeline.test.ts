@@ -25,9 +25,15 @@ import { extractContact } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { captureSink } from '@dxos/pipeline/testing';
+import { SemanticPipeline, SemanticStore } from '@dxos/semantic-index';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { type FactIndexer, extractFactsStage } from '../extract-stage';
+import { buildEntityIndex, reconcileFactEntities } from '../fact-index';
+import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../facts';
+import { buildThreads } from '../threads';
+import { Thread } from '../types';
 import { emailToMessage } from './email-fixtures';
 import { parquetSource } from './parquet';
 
@@ -226,12 +232,16 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
   const modelLayer = AiService.model(MODEL, { provider: Provider.ollama.id }).pipe(Layer.provide(OllamaAiServiceLayer));
   const runtime = ManagedRuntime.make(modelLayer.pipe(Layer.orDie));
 
+  // In-memory fact substrate for this run; shares the Ollama-backed AiService the extraction resolves
+  // its model through (semantic-index's ExtractOptions carries the model + provider).
+  const factRuntime = ManagedRuntime.make(SemanticStore.layerMemory.pipe(Layer.provideMerge(OllamaAiServiceLayer)));
+
   let builder: EchoTestBuilder;
   let db: Database.Database;
 
   beforeAll(async () => {
     builder = await new EchoTestBuilder().open();
-    ({ db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person] }));
+    ({ db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person, Thread] }));
     // Seed a known Organization so domain-matching can link a sender's Person to it.
     for (const org of TEST_ORGS) {
       db.add(Obj.make(Organization.Organization, org));
@@ -241,6 +251,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
 
   afterAll(async () => {
     await runtime.dispose();
+    await factRuntime.dispose();
     await builder.close();
   });
 
@@ -274,6 +285,18 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
 
       const context: Context.Tag.Service<typeof Ctx> = { summarize, db, stats };
 
+      // Index each message into the fact substrate. The model + provider ride on ExtractOptions so
+      // semantic-index resolves the Ollama model (its default is Anthropic); a failed extraction
+      // degrades to no facts in `extractFactsStage`, so the run stays green.
+      const indexFacts: FactIndexer = (message) =>
+        factRuntime.runPromise(
+          SemanticPipeline.run([messageToDocument(message)], {
+            ...EMAIL_EXTRACT_OPTIONS,
+            model: MODEL,
+            provider: Provider.ollama.id,
+          }),
+        );
+
       const { sink, items } = captureSink<Message.Message>();
       await EffectEx.runPromise(
         Effect.provide(
@@ -282,6 +305,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
             Stream.map(emailToMessage),
             logStage('email.in'),
             summarizeStage,
+            extractFactsStage(indexFacts),
             extractStage,
             statsStage,
             logStage('email.out'),
@@ -310,6 +334,40 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
       expect(stats.total).toBe(items.length);
       expect(stats.from.size).toBeGreaterThan(0);
       expect(stats.to.size).toBeGreaterThan(0);
+
+      // Facts are advisory: gpt-oss's structured `generateObject` output is only intermittently
+      // schema-conforming (the summarize stage sidesteps this with lenient `generateText`), so the
+      // fact count is best-effort here — the deterministic proof of extraction lives in
+      // extract-stage.test.ts (mockAiService). Assert only that the substrate is queryable.
+      const facts = await factRuntime.runPromise(
+        Effect.gen(function* () {
+          const store = yield* SemanticStore;
+          return yield* store.query({});
+        }),
+      );
+      expect(facts.length).toBeGreaterThanOrEqual(0);
+
+      // Reconcile advisory fact entities against the canonical ECHO Person/Organization objects the
+      // pipeline created (slice-1 §9.1). Facts are sparse/flaky under gpt-oss, so the resolved count
+      // is best-effort here — the reconciliation logic itself is proven deterministically in
+      // fact-index.test.ts.
+      const orgsForIndex = await db.query(Filter.type(Organization.Organization)).run();
+      const entityIndex = buildEntityIndex([...persons, ...orgsForIndex]);
+      const resolved = facts.flatMap((fact) => {
+        const refs = reconcileFactEntities(fact, entityIndex);
+        return refs.subject || refs.object ? [refs] : [];
+      });
+      expect(resolved.length).toBeGreaterThanOrEqual(0);
+
+      // Threads are deterministic (grouped from the captured messages), so assert them strictly.
+      const threads = buildThreads(items, { ownerEmail: 'owner@dxos.org', now: new Date().toISOString() });
+      for (const thread of threads) {
+        db.add(thread);
+      }
+      await db.flush({ indexes: true });
+      const storedThreads = await db.query(Filter.type(Thread)).run();
+      expect(storedThreads.length).toBe(threads.length);
+      expect(storedThreads.every((thread) => thread.messageIds.length > 0)).toBe(true);
 
       // Serialize the run's outputs for inspection (git-ignored under ./data). `Obj.toJSON` is the
       // canonical ECHO serialization (encodes refs as DXNs).

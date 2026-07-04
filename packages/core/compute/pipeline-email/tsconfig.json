@@ -33,6 +33,9 @@
     },
     {
       "path": "../pipeline"
+    },
+    {
+      "path": "../semantic-index"
     }
   ]
 }
