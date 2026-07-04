@@ -302,7 +302,9 @@ const useMarkdownStreamTextEditor = (
             // hue-aware `border-{hue}-border`; the fill and text are overridden to neutral surface
             // tokens (the panel's `text-neutral-900` only reads on a light hue fill), so colour
             // comes from the left border band rather than a strong background. Tailwind preflight
-            // zeroes border widths, so `border-l-2` alone yields just the band.
+            // zeroes border widths, so the left border alone yields just the band. Keep the band
+            // width (`border-l-[8px]`) and the left padding (`pl-[8px]!`) equal so content stays
+            // flush against the band regardless of the chosen band thickness.
             xmlBlockDecoration({
               tag: 'prompt',
               lineClass:

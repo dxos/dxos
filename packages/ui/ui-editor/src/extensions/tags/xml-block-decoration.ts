@@ -69,8 +69,10 @@ export const xmlBlockDecoration = ({
   const hideDecoration = hideTags ? Decoration.replace({}) : undefined;
 
   // Match an opening `<tag>` or `<tag …attrs>` (not self-closing); the paired `</tag>` is located
-  // by scanning forward so unrelated markup between blocks cannot break matching.
-  const openTagRegExp = new RegExp(`<${tag}(?:\\s[^>]*)?>`, 'g');
+  // by scanning forward so unrelated markup between blocks cannot break matching. `tag` is escaped
+  // so a name containing regex metacharacters (e.g. `foo.bar`) matches literally.
+  const escapedTag = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const openTagRegExp = new RegExp(`<${escapedTag}(?:\\s[^>]*)?>`, 'g');
   const closeTagStr = `</${tag}>`;
 
   const buildDecorations = (view: EditorView): DecorationSet => {
@@ -110,9 +112,13 @@ export const xmlBlockDecoration = ({
         // can be styled distinctly (e.g. rounding the top/bottom of a single block bubble).
         const lines = [];
         let pos = contentFrom;
-        while (pos <= contentTo && pos <= docLength) {
+        while (pos < contentTo && pos <= docLength) {
           const line = view.state.doc.lineAt(pos);
-          lines.push(line);
+          // Only lines that intersect visible content: a hidden close tag on its own line would
+          // otherwise get an empty rounded bubble line after the tag is replaced.
+          if (line.to > contentFrom && line.from < contentTo) {
+            lines.push(line);
+          }
           if (line.to >= contentTo) {
             break;
           }
