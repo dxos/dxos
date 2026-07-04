@@ -15,7 +15,7 @@ import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type Channel } from '@dxos/types';
 
-import { Chat } from '#components';
+import { MessageThread } from '#components';
 import { useMessages, useStatus } from '#hooks';
 import { meta } from '#meta';
 import { ThreadCapabilities, ThreadOperation, resolveProvider } from '#types';
@@ -117,8 +117,11 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
           <Surface.Surface type={AppSurface.Article} data={{ subject: { roomId: id }, attendableId }} limit={1} />
         </Panel.Content>
       ) : (
-        <Panel.Content asChild>
-          <Chat
+        // Not `asChild`: Panel.Root is a CSS grid and the `grid-area: content` placement must land on
+        // a real box. MessageThread's outermost node is Mosaic.Root's `display:contents` div, which
+        // cannot be a grid item, so wrapping in Panel.Content's own box lets MessageThread fill via `h-full`.
+        <Panel.Content>
+          <MessageThread
             id={id}
             classNames='dx-document'
             identity={identity ?? undefined}
