@@ -5,21 +5,15 @@
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
-import { VirtuosoMasonry as NaturalVirtuosoMasonry, type VirtuosoMasonryProps } from '@virtuoso.dev/masonry';
-import React, {
-  type ComponentType,
-  type CSSProperties,
-  type JSX,
-  type PropsWithChildren,
-  type Ref,
-  useMemo,
-  useRef,
-} from 'react';
+import React, { type ComponentType, type JSX, type PropsWithChildren, type Ref, useMemo, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
 import { composable, composableProps, scrollbar } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
+
+import { useFlip } from './useFlip';
+import { useMasonryLayout } from './useMasonryLayout';
 
 //
 // Context
@@ -124,9 +118,10 @@ const MasonryContent = MasonryContentInner as (
 //
 // Viewport
 //
-// The inner render layer: renders the ScrollArea.Viewport wrapped around
-// VirtuosoMasonry. Style this layer separately from Content to control
-// the tile grid (e.g. inner padding, alignment).
+// The inner render layer: renders the ScrollArea.Viewport wrapped around the
+// absolute layout engine. Each tile is positioned with translate(x, y) into a
+// balanced (shortest-column-first) grid; reflow is animated with FLIP. Style
+// this layer separately from Content to control the tile grid.
 //
 
 type MasonryViewportProps<Item> = ThemedClassName<{
@@ -140,74 +135,77 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
   ({ items, getId, ...props }, forwardedRef) => {
     const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gutter } = useMasonryContext('Masonry.Viewport');
     const { width } = useMasonryContentContext('Masonry.Viewport');
-    const columnCount = useColumnCount(
-      width - (scrollbar.md.size + scrollbar.md.padding),
-      columns,
-      maxColumns,
-      minColumnWidth,
-      maxColumnWidth,
-      gutter,
-    );
+    const remInPx = usePx(1);
+    const contentWidth = width - (scrollbar.md.size + scrollbar.md.padding);
+    const columnCount = useColumnCount(contentWidth, columns, maxColumns, minColumnWidth, maxColumnWidth, gutter);
 
-    // Arrow-key navigation across tiles. Uses Tabster's `both` axis so all
-    // four arrows move focus through the items. True 2D (grid) axis doesn't
-    // work inside a masonry because VirtuosoMasonry lays items out column-
-    // first in the DOM — tabster's Grid direction requires the next DOM
-    // element to be to the right of the current for ArrowRight, which is
-    // never the case between columns here. `both` treats the keys as flat
-    // next/previous-focusable, which gives predictable wrap-around in DOM
-    // order for all four directions.
+    // Cap each column at `maxColumnWidth` and center the grid so it doesn't stretch
+    // to the far edge when the container is wider than the natural card width.
+    const gutterPx = gutter * remInPx;
+    const rawColumnWidth = (contentWidth - (columnCount - 1) * gutterPx) / columnCount;
+    const cappedColumnWidth = Math.min(rawColumnWidth, maxColumnWidth * remInPx);
+    const gridWidth = columnCount * cappedColumnWidth + (columnCount - 1) * gutterPx;
+
+    const ids = useMemo(() => items.map((item, index) => getId?.(item) ?? String(index)), [items, getId]);
+    const { rects, columnWidth, height, getTileRef, nodes } = useMasonryLayout({
+      ids,
+      columnCount,
+      containerWidth: gridWidth,
+      gutterPx,
+    });
+    useFlip({ nodes, ids, rects, enabled: true });
+
+    // Arrow-key navigation across tiles. Uses Tabster's `both` axis so all four
+    // arrows move focus through the items as flat next/previous-focusable, giving
+    // predictable wrap-around in DOM order.
     const arrowNavigationAttrs = useArrowNavigationGroup({
       axis: 'both',
       memorizeCurrent: true,
       tabbable: true,
     });
 
-    const TileAdapter = useMemo(() => {
-      const Adapter = ({ data, index }: { data: any; index: number }) => (
-        <div role='listitem' style={{ paddingBottom: `${gutter}rem` }}>
-          <Tile index={index} data={data} />
-        </div>
-      );
-      Adapter.displayName = 'Masonry.TileAdapter';
-      return Adapter;
-    }, [Tile, gutter]);
-
     if (width <= 0) {
       return null;
     }
 
-    // VirtuosoMasonry renders the scroller as a full-width flex row whose column children carry an
-    // inline `flexGrow: 1`. Capping each column at `maxColumnWidth` lets the columns grow to fill the
-    // row but stop at the natural card width; `justify-center` then distributes the remaining space as
-    // symmetric margins so the grid stays centered without the scroll container leaving the far edge.
     return (
       <ScrollArea.Viewport asChild>
-        <VirtuosoMasonry
+        <div
           {...composableProps(props, {
-            classNames: ['justify-center', '[&>div]:max-w-[var(--dx-masonry-column-max)]'],
-            style: { 'gap': `${gutter}rem`, '--dx-masonry-column-max': `${maxColumnWidth}rem` } as CSSProperties,
+            classNames: 'relative mx-auto',
+            style: { width: `${gridWidth}px`, height: `${height}px` },
           })}
           {...arrowNavigationAttrs}
-          ItemContent={TileAdapter}
-          columnCount={columnCount}
-          data={items as any[]}
-          // ref={forwardedRef}
-        />
+          role='list'
+          ref={forwardedRef}
+        >
+          {items.map((item, index) => {
+            const id = ids[index];
+            const rect = rects[index];
+            return (
+              <div
+                key={id}
+                ref={getTileRef(id)}
+                role='listitem'
+                style={{
+                  position: 'absolute',
+                  insetBlockStart: 0,
+                  insetInlineStart: 0,
+                  width: `${columnWidth}px`,
+                  transform: rect ? `translate(${rect.x}px, ${rect.y}px)` : undefined,
+                }}
+              >
+                <Tile index={index} data={item} />
+              </div>
+            );
+          })}
+        </div>
       </ScrollArea.Viewport>
     );
   },
 );
 
 MasonryViewportInner.displayName = 'Masonry.Viewport';
-
-/**
- * NOTE: Required in order for our Viewport to take over the scroll area.
- * https://github.com/petyosi/react-virtuoso/issues/1305
- */
-const VirtuosoMasonry = composable<HTMLDivElement, VirtuosoMasonryProps<any, any>>(({ ...props }, _forwardedRef) => {
-  return <NaturalVirtuosoMasonry {...props} />;
-});
 
 const MasonryViewport = MasonryViewportInner as <Item>(
   props: MasonryViewportProps<Item> & {

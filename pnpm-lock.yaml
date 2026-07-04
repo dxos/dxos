@@ -819,9 +819,6 @@ catalogs:
     '@valtown/codemirror-ts':
       specifier: ^2.3.1
       version: 2.3.1
-    '@virtuoso.dev/masonry':
-      specifier: ^1.4.2
-      version: 1.4.3
     '@vitejs/plugin-react':
       specifier: ^6.0.2
       version: 6.0.2
@@ -21895,9 +21892,6 @@ importers:
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@virtuoso.dev/masonry':
-        specifier: 'catalog:'
-        version: 1.4.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react-resize-detector:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -32650,18 +32644,6 @@ packages:
   '@vercel/oidc@3.1.0':
     resolution: {integrity: sha512-Fw28YZpRnA3cAHHDlkt7xQHiJ0fcL+NRcIqsocZQUSmbzeIKRpwttJjik5ZGanXP+vlA4SbTg+AbA3bP363l+w==}
     engines: {node: '>= 20'}
-
-  '@virtuoso.dev/gurx@1.2.3':
-    resolution: {integrity: sha512-zqIzVOQgJGEbrG+hvNiNHdrtM2G/9zBVgBSRUAW2yT8iUOouSHAsPIxpCU/xsAYEwicXURGhU6cxzgBPVjXL+g==}
-    peerDependencies:
-      react: ~19.2.7
-      react-dom: ~19.2.7
-
-  '@virtuoso.dev/masonry@1.4.3':
-    resolution: {integrity: sha512-3LxsW2TxlWn061NWZFSi8FhLVK0bwNfGZNPMMsKBg5uxhgVUo8j7XaEuOMgY9UO/EuIFMijAyHDc3DO3A5+KCA==}
-    peerDependencies:
-      react: ~19.2.7
-      react-dom: ~19.2.7
 
   '@vitejs/plugin-react-swc@4.3.1':
     resolution: {integrity: sha512-PaeokKjAGraNN+s5SIApgsktnJprIyt3zgEIu7awnEdfn29QiB2crTcCzyi2XGpX9rUnTc0cKU07Wm0N0g7H2w==}
@@ -55446,17 +55428,6 @@ snapshots:
       '@codemirror/view': 6.43.4
 
   '@vercel/oidc@3.1.0': {}
-
-  '@virtuoso.dev/gurx@1.2.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
-    dependencies:
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
-
-  '@virtuoso.dev/masonry@1.4.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
-    dependencies:
-      '@virtuoso.dev/gurx': 1.2.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
 
   '@vitejs/plugin-react-swc@4.3.1(@swc/helpers@0.5.17)(vite@8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))':
     dependencies:

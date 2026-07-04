@@ -33,7 +33,6 @@
     "@fluentui/react-tabster": "catalog:",
     "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",
-    "@virtuoso.dev/masonry": "catalog:",
     "react-resize-detector": "catalog:"
   },
   "devDependencies": {
