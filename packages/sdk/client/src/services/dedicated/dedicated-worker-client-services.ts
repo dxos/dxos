@@ -43,6 +43,9 @@ const DEFAULT_LEADER_PORT_TIMEOUT = LOCK_OR_RPC_WAIT_TIMEOUT;
 // Backoff before re-entering leader election after the leader session itself fails (as opposed to
 // the lock being stolen), so a persistently failing worker doesn't spin the election in a tight loop.
 const DEFAULT_LEADER_RETRY_BACKOFF = 1_000;
+// Cap on the exponential backoff below, so a worker that fails indefinitely still retries on a
+// bounded interval rather than backing off forever.
+const MAX_LEADER_RETRY_BACKOFF = 30_000;
 
 // Sentinel resolved when a follower gives up waiting for a port from the leader.
 const LEADER_TIMEOUT = Symbol('leader-timeout');
@@ -105,6 +108,9 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
   #lastLeaderHeartbeat = 0;
   // Timestamp (ms) of the last steal attempt; gates against thrashing re-election.
   #lastStealAttempt = 0;
+  // Consecutive leader-session open failures; grows the retry backoff and resets once a session
+  // opens successfully.
+  #leaderFailureCount = 0;
   // Resolves the leader-lock hold; woken on close, worker termination, or when our lock is stolen.
   #leaderDone: Trigger | undefined;
 
@@ -222,6 +228,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
               log('dedicated-worker-client-services: opening leader session');
               await waitWithLockOrRpcTimeout(this.#leaderSession.open(), 'opening dedicated worker leader session');
               log('dedicated-worker-client-services: leader session opened');
+              this.#leaderFailureCount = 0;
               await done.wait(); // Hold until the leader session is closed.
               log('dedicated-worker-client-services: leader session done');
             } finally {
@@ -257,12 +264,20 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
         // The leader session itself failed (e.g. worker init/crash). The lock is released once this
         // callback rejects, so re-enter the election after a backoff — otherwise this tab can never
         // host or reconnect to a worker again, leaving followers retrying `provide-port` forever.
+        // Back off exponentially (capped) with jitter so a persistently failing worker retries on a
+        // bounded interval instead of a tight loop, and so multiple tabs hitting the same failure
+        // don't all retry the lock in lockstep.
+        const backoff = Math.min(this.#leaderRetryBackoff * 2 ** this.#leaderFailureCount, MAX_LEADER_RETRY_BACKOFF);
+        const jitteredBackoff = backoff * (0.5 + Math.random() * 0.5);
+        this.#leaderFailureCount++;
         log.warn('dedicated-worker-client-services: leader session failed, backing off and re-watching', {
           clientId: this.#clientId,
           error,
+          failureCount: this.#leaderFailureCount,
+          backoff: jitteredBackoff,
         });
         try {
-          await sleepWithContext(this._ctx, this.#leaderRetryBackoff);
+          await sleepWithContext(this._ctx, jitteredBackoff);
         } catch {
           // Disposed while backing off.
           return;

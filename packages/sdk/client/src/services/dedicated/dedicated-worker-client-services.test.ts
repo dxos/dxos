@@ -88,7 +88,7 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
   // Timeout override: exercises lock acquisition, the retry backoff, and a fresh WorkerRuntime
   // start, which typically takes ~300ms but has enough variance (verified over repeated runs) to
   // warrant more margin than the 1s describe-level default.
-  test('recovers when the leader session itself fails, backing off and re-electing', { timeout: 2_000 }, async () => {
+  test('recovers when the leader session itself fails, backing off and re-electing', { timeout: 4_000 }, async () => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 
