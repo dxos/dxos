@@ -94,10 +94,11 @@ describe('TablePresentation', () => {
       registry = Registry.make();
       model = createTableModel(registry, { features: { selection: { enabled: false }, pinColumns: 1 } });
       await model.open();
-      model.setRows([
+      const rows: any[] = [
         { id: '1', title: 'A', count: 1 },
         { id: '2', title: 'B', count: 2 },
-      ]);
+      ];
+      model.setRows(rows);
       presentation = new TablePresentation(registry, model);
     });
 
