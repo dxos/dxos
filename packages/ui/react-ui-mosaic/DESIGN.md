@@ -54,6 +54,53 @@ not on `useListSelection`. (Why these diverge from react-ui-list's aspects — a
 whether they should converge — is the analysis in
 [`react-ui-list/AUDIT.md`](../react-ui-list/AUDIT.md).)
 
+## Cross-container drag-and-drop (planned)
+
+Phases 1–3 made a single app-level `Mosaic.Root` the only live drag boundary, so
+every `Mosaic.Container` in the app registers into **one shared handler registry**
+keyed by `eventHandler.id`. This is the prerequisite for dragging a tile from one
+container into a _different_ one; the remaining work (Phase 4) is the drop policy.
+
+**Invariants already in place:**
+
+- **One live Root.** Each layout shell (`DeckLayout`, `SimpleLayout`, the testing
+  layout) mounts a `Mosaic.Root`, and exactly one layout is mounted at runtime. No
+  other component mounts its own Root — a nested Root would fork the registry and
+  isolate its subtree from cross-container drags.
+- **Per-instance container ids.** An id must be unique per _live container
+  instance_, not per object: the same ECHO object can mount in two containers at
+  once (the in-call chat companion beside the primary, or "open in new plank").
+  Object-derived ids therefore append a stable `useId()` discriminator —
+  `` `${objectUri}:${useId()}` ``.
+- **`payload` seam.** `MosaicEventHandler.payload?: unknown` is an open,
+  container-defined descriptor of what a container holds. Mosaic never interprets
+  it; it exists so a target's drop logic can decide acceptance from typed data
+  rather than by parsing the opaque `id`. Unpopulated until the rules below land.
+
+**Phase 4 — the drop rules (not yet built):**
+
+1. **Thread the source payload to the target.** On drop, `Root` already resolves
+   the source handler (`handlers[source.containerId]`); pass its `payload` into the
+   target's `canDrop`/`onDrop` as an additive argument. Targets then decide
+   acceptance from typed data, keeping identity (`id`) and semantics (`payload`)
+   separate.
+2. **Populate `payload` per container.** Object-bound containers set e.g.
+   `{ typename, uri }`; structural containers (deck, nav) a role tag. This is
+   non-uniform by construction — generic UI containers (`Thread`, `Board`) hold no
+   single object and must receive their `payload` from the plugin caller.
+3. **Accept-matrix is app policy, not a Mosaic concern.** Which tile types a
+   container accepts is decided per-plugin, in that container's `canDrop`. This
+   package carries only the mechanism (registry, payload plumbing), never the
+   policy.
+
+**Deferred within Phase 4 — Board-based containers.** `Board.Content` (kanban,
+pipeline) has _nested_ handlers: the columns container plus a per-column item
+container keyed by `column.columnValue`. Making those unique per instance requires
+threading a `useId()` discriminator through the tile-render path
+(`Mosaic.Stack` → column `Tile` → `useKanbanItemEventHandler`), which `Mosaic.Stack`
+does not forward today. Their duplicate-mount collision predates the single-root
+change, so it was left for this phase rather than half-fixed.
+
 ## Component hierarchies
 
 Compound nesting a consumer must follow. `*` marks an optional element.
