@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
+import { type CleanupFn, Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesProvider,
@@ -19,7 +19,7 @@ import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { type Hypergraph, Type } from '@dxos/echo';
+import { Blob, type Hypergraph, Type } from '@dxos/echo';
 import { EchoClient } from '@dxos/echo-client';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -38,7 +38,7 @@ import { createIFramePort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
-import { type ClientEdgeAPI, createClientEdgeAPI } from '../edge';
+import { type ClientEdgeAPI, createClientEdgeAPI, createEdgeBlobBackend, createEdgeIdentity } from '../edge';
 import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
@@ -121,6 +121,8 @@ export class Client {
   private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
   private _edgeHttpClient?: EdgeHttpClient = undefined;
   private _edgeApi?: ClientEdgeAPI = undefined;
+  private _edgeIdentitySubscription?: { unsubscribe: () => void };
+  private _edgeBlobBackendCleanup?: CleanupFn;
 
   constructor(options: ClientOptions = {}) {
     if (
@@ -496,6 +498,37 @@ export class Client {
       : undefined;
     this._runtime = new ClientRuntime({ spaces, halo, mesh, shell });
 
+    if (this._edgeHttpClient) {
+      const edgeHttpClient = this._edgeHttpClient;
+      const updateIdentity = () => {
+        if (!halo.identity.get()) {
+          return;
+        }
+        try {
+          edgeHttpClient.setIdentity(createEdgeIdentity(this));
+        } catch {
+          // Identity and device become ready asynchronously and independently — createEdgeIdentity
+          // throws if device isn't ready yet. Retried by the next identity or device update, once
+          // both are available.
+        }
+      };
+      updateIdentity();
+      const identitySubscription = halo.identity.subscribe(updateIdentity);
+      const deviceSubscription = halo.devices.subscribe(updateIdentity);
+      this._edgeIdentitySubscription = {
+        unsubscribe: () => {
+          identitySubscription.unsubscribe();
+          deviceSubscription.unsubscribe();
+        },
+      };
+
+      this._edgeBlobBackendCleanup = this._echoClient.graph.registerBlobBackend(
+        Blob.Storage.edge,
+        createEdgeBlobBackend({ edgeClient: edgeHttpClient }),
+        { default: true },
+      );
+    }
+
     invariant(this._services.services.SystemService, 'SystemService is not available.');
     log('client._open: subscribing to system status...');
     this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 }, { ctx });
@@ -599,6 +632,10 @@ export class Client {
     await this._echoClient.close(this._ctx);
     log.verbose('client._close: closing services...');
     await this._services?.close();
+    this._edgeIdentitySubscription?.unsubscribe();
+    this._edgeIdentitySubscription = undefined;
+    this._edgeBlobBackendCleanup?.();
+    this._edgeBlobBackendCleanup = undefined;
     this._edgeHttpClient = undefined;
     this._edgeApi = undefined;
     log('closed');

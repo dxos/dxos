@@ -6,12 +6,13 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
+import { Blob } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { FileAction, MAX_FILE_SIZE } from '#types';
+import { FileAction } from '#types';
 
 export type FileInputProps = {
   schema: Schema.Schema.AnyNoContext;
@@ -27,7 +28,7 @@ export const FileInput = ({ schema, onChange }: FileInputProps) => {
   const { acceptedFiles, getRootProps, getInputProps, isFocused, isDragAccept, isDragReject } = useDropzone({
     multiple: false,
     accept,
-    maxSize: MAX_FILE_SIZE,
+    maxSize: Blob.MAX_INLINE_SIZE,
     onDropAccepted,
   });
 

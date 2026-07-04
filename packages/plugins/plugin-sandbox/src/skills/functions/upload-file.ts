@@ -22,8 +22,9 @@ export default UploadFile.pipe(
 
       const loadedSandbox = yield* Database.load(sandbox);
       const loadedFile = yield* Database.load(file);
+      const blob = yield* Database.load(loadedFile.data);
 
-      const content = fileToString(loadedFile);
+      const content = blob.data._tag === 'inline' ? new TextDecoder().decode(blob.data.bytes) : blob.data.uri;
       const sandboxId = loadedSandbox.id;
       const spaceId = db.spaceId;
       const sandboxClient = createSandboxClient(client);
@@ -34,16 +35,3 @@ export default UploadFile.pipe(
     }),
   ),
 );
-
-const fileToString = (file: { data?: { _tag: string; bytes?: Uint8Array; url?: string } }): string => {
-  if (!file.data) {
-    return '';
-  }
-  if (file.data._tag === 'inline' && file.data.bytes) {
-    return new TextDecoder().decode(file.data.bytes);
-  }
-  if (file.data._tag === 'external' && file.data.url) {
-    return file.data.url;
-  }
-  return '';
-};

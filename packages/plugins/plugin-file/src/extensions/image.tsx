@@ -5,10 +5,13 @@
 import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, type Range, StateField } from '@codemirror/state';
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Filter, Obj } from '@dxos/echo';
+import { Blob, Database, Filter, Obj } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Status, ThemeProvider } from '@dxos/react-ui';
@@ -16,13 +19,12 @@ import { defaultTx } from '@dxos/react-ui';
 import { focusField } from '@dxos/ui-editor';
 import { type MaybePromise } from '@dxos/util';
 
-import { File, FileCapabilities } from '#types';
+import { File } from '#types';
 
 const WAIT_UNTIL_LOADER = 1500;
 
 export type ImageOptions = {
   space: Space;
-  resolvers: readonly FileCapabilities.UrlResolver[];
 };
 
 /**
@@ -79,7 +81,7 @@ const buildDecorations = ({
   to,
   blobUrlCache,
   preload,
-  options: { space, resolvers },
+  options: { space },
 }: {
   state: EditorState;
   from: number;
@@ -132,16 +134,23 @@ const buildDecorations = ({
           return undefined;
         }
 
-        let url: string | undefined;
-        const { data } = matched;
-        if (data._tag === 'inline') {
-          url = URL.createObjectURL(new Blob([data.bytes as BlobPart], { type: matched.type }));
-        } else if (/^(?:https?|data|blob):/i.test(data.url)) {
-          url = data.url;
-        } else {
-          const resolver = resolvers.find((r) => r.test(data.url));
-          url = await resolver?.resolve(data.url, matched, space);
-        }
+        const url = await EffectEx.runPromise(
+          Effect.gen(function* () {
+            const blob = yield* Database.load(matched.data);
+            const urlOption = yield* Blob.url(blob);
+            if (Option.isSome(urlOption)) {
+              return urlOption.value;
+            }
+            const bytes = yield* Blob.read(blob);
+            // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while
+            // DOM's `BlobPart` only covers `ArrayBuffer`-backed views — a gap between the DOM lib
+            // types and the TS standard lib, not fixable by typing `bytes` differently.
+            return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: matched.type }));
+          }).pipe(
+            Effect.provide(Database.layer(space.db)),
+            Effect.catchAll(() => Effect.succeed(undefined)),
+          ),
+        );
         if (!url) {
           return undefined;
         }
