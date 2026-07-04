@@ -4,8 +4,6 @@ tags:
   - ts-build
   - ts-test
   - pack
-  - storybook
-  - ts-test-storybook
 tasks:
   compile:
     args:
