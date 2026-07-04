@@ -35,7 +35,9 @@ type MappedPerson = { readonly resourceName: string; readonly props: ReturnType<
 
 /** The contact's last-modified time (max across sources) as an epoch-ms cursor key; 0 when absent. */
 const updateTimeOf = (person: GooglePeople.Person): number => {
-  const times = (person.metadata?.sources ?? []).map((source) => (source.updateTime ? Date.parse(source.updateTime) : 0));
+  const times = (person.metadata?.sources ?? []).map((source) =>
+    source.updateTime ? Date.parse(source.updateTime) : 0,
+  );
   return times.length > 0 ? Math.max(...times) : 0;
 };
 
@@ -167,7 +169,11 @@ export default InboxOperation.GoogleContactsSync.pipe(
           Effect.provide(SyncBinding.layer({ binding, foreignKeySource: GOOGLE_INTEGRATION_SOURCE, cursorKey, stats })),
         );
 
-        log('contact group sync complete', { groupResourceName, members: memberNames.size, upserted: stats.newMessages });
+        log('contact group sync complete', {
+          groupResourceName,
+          members: memberNames.size,
+          upserted: stats.newMessages,
+        });
         return { upserted: stats.newMessages };
       }).pipe(
         Effect.provide(

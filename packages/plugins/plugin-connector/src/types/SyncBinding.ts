@@ -200,8 +200,7 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
  *   re-land a page (idempotency + the {@link layer} dedup set cover this until then). Once ECHO can
  *   commit the write and the cursor together, wrap both here and drop the dedup set.
  */
-const advanceCursor = (state: State, maxKey: number): void =>
-  Cursor.advance(state.cursor, state.formatCursor(maxKey));
+const advanceCursor = (state: State, maxKey: number): void => Cursor.advance(state.cursor, state.formatCursor(maxKey));
 
 /**
  * Commits one page of pipeline output — the single place non-idempotent writes happen. Use as the
@@ -306,10 +305,7 @@ export const dedupStage = <In>(
   );
 
 /** Seeds the dedup set of already-committed foreign ids from the feed (see {@link layer} TODO). */
-const seedDedupSet = (
-  feed: Feed.Feed,
-  foreignKeySource: string,
-): Effect.Effect<Set<string>, never, Database.Service> =>
+const seedDedupSet = (feed: Feed.Feed, foreignKeySource: string): Effect.Effect<Set<string>, never, Database.Service> =>
   Feed.query(feed, Filter.everything()).run.pipe(
     Effect.map(
       (items) =>

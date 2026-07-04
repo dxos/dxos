@@ -78,7 +78,9 @@ export default InboxOperation.JmapSync.pipe(
         const { list: folders } = yield* JmapMail.mailboxGet(target);
         const folderTagMap = new Map<string, string>();
         for (const folder of folders) {
-          const tag = yield* Effect.promise(() => Mailbox.findOrCreateJmapTag(db, { id: folder.id, name: folder.name }));
+          const tag = yield* Effect.promise(() =>
+            Mailbox.findOrCreateJmapTag(db, { id: folder.id, name: folder.name }),
+          );
           folderTagMap.set(folder.id, Mailbox.tagUri(tag));
         }
 
