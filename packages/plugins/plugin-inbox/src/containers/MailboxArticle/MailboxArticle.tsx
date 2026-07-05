@@ -11,7 +11,7 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, usePagination, useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
@@ -178,22 +178,19 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   // Messages. Bounded to the newest `windowSize` (a tail window over the feed) so the data handed to
   // React — and the per-render derived maps — stay bounded as the feed grows during sync; the oldest
   // fall out of the window. "Load older" (`handleLoadOlder`) extends the window on scroll-to-end.
-  const [windowSize, setWindowSize] = useState(WINDOW);
-  useEffect(() => setWindowSize(WINDOW), [subject.id]);
-  const messages = useQuery(
+  // Windowed pagination over the feed. `usePagination` owns the window and holds the prior results
+  // across a window change, so growing the window never blanks the list (which would reset scroll).
+  // Order by the message date (not feed insertion order): a backward/backfill sync appends out of time
+  // order, so the newest-window must be selected by `created`, not position. The `order` clause routes
+  // this to the host indexer (see `isClientEvaluableFeedQuery`).
+  const { objects: messages, loadMore: handleLoadOlder } = usePagination(
     db,
-    feed
-      ? // Order by the message date (not feed insertion order): a backward/backfill sync appends
-        // out of time order, so the newest-`windowSize` window must be selected by `created`, not
-        // position. The `order` clause routes this to the host indexer (see `isClientEvaluableFeedQuery`).
-        Query.select(Filter.type(Message.Message)).from(feed).orderBy(Order.property('created', 'desc')).limit(windowSize)
-      : Query.select(Filter.nothing()),
+    (limit) =>
+      feed
+        ? Query.select(Filter.type(Message.Message)).from(feed).orderBy(Order.property('created', 'desc')).limit(limit)
+        : Query.select(Filter.nothing()),
+    { pageSize: WINDOW },
   );
-
-  const handleLoadOlder = useCallback(() => {
-    // Only grow when the window is full — a short result means the oldest message is already resident.
-    setWindowSize((size) => (messages.length >= size ? size + WINDOW : size));
-  }, [messages.length]);
 
   // Feed/queue queries don't yet support text-search and complex filter combinations,
   // so query Messages by type only and apply the parsed filter client-side.
