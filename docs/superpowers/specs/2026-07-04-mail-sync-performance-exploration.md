@@ -332,3 +332,189 @@ idempotently on re-sync), (b) larger commit pages (bounded by the ≤15 atomic-q
 or (c) an ECHO-level change so per-message index data isn't a single re-serialized doc. Each carries a
 UX/crash-consistency trade-off, and none addresses the production worker/EDGE cost — so the direction
 is a checkpoint rather than an autopilot change.
+
+## Write-path root cause + open items (2026-07-05, isolation probes)
+
+Isolation micro-benchmarks (gated `DX_PROBE`, in `plugin-inbox` + `echo-client`) pinned the growing
+factor to **index writes**, not the feed:
+
+- **`db.appendToFeed` is O(1) in isolation** (flat ~1ms/page to 4800+ items). Queue append does not
+  rewrite the tail. So the real-app 18s append is *purely* cross-thread worker/EDGE contention.
+- **`Tagging.setBatch` grows with index size**: single shared tag (growing array) is linear/page →
+  O(n²); distinct keys (growing record) is far worse (7→97→446ms at 600→1200 keys).
+
+**Root cause (confirmed by sub-step breakdown, `echo-client/src/echo-write-breakdown.test.ts`):** an
+ECHO array `.push(x)` is not a plain mutation — the reactive proxy turns *each* call into its own
+automerge change (`arrayPush → core.change → A.change`), and each change re-accesses the growing array
+(O(N)). A loop of K single-element pushes into an N-array is **O(K·N)**; a single `push(...K items)` is
+one change (O(N) once). Measured at N=3600: 10× single pushes = 16.6ms vs one batched push = 2.0ms
+(≈ raw automerge). Empty change is flat (~0.06ms) and raw automerge push is near-flat, so it's neither
+the change machinery nor automerge — it's one-change-per-element × array re-access. `TagIndex.setBatch`
+compounds this with an `index[tagId].includes(objectId)` membership scan (O(array)) per entry.
+
+**Fix (schema-level, targeted):** in `TagIndex.setBatch` / `ThreadIndex.addBatch`, group entries by
+key, dedup against an in-memory `Set` (not `.includes` on the proxy), and append with one
+`index[key].push(...newIds)` per key per page. Keeps in-place append (no DX-984 history blow-up — still
+K ops, not a spread-replace), turns K changes into 1 and K O(array) scans into O(1) lookups.
+
+**ECHO-level follow-up (LATER — bigger scope, not yet scheduled):** coalesce consecutive array-proxy
+mutations within a single change context (`executeChange`/`batchEvents`) into one `core.change` instead
+of one change per `.push()`. Today `batchEvents` only batches reactive *notifications*, not the
+underlying automerge changes. Fixing this at the proxy layer would remove this O(K·N) class everywhere
+(every `for … push` loop inside an `Obj.update`), not just in the two index types. Candidate ECHO
+issue; measure the `core.change` open/finalize overhead as part of scoping.
+
+**Still open / not fully attributed (close by re-measuring after the schema fix):**
+1. **`paintYield`'s full-sync magnitude** — in isolation the async drain was flat, so the full-sync
+   growth (5→41 ms/msg) is only *plausibly* the async tail of the same index writes. Not directly
+   isolated; could include reactive-subscriber fan-out.
+2. **`appendToFeed`'s mild full-sync growth** (1.1→2.3 ms/msg) contradicts the flat isolation result —
+   unexplained; likely secondary (heap/GC pressure, or larger real Message objects), not a dominant term.
+3. **`DatabaseImpl` dispose-callback accumulation** — the "Context has a large number of dispose
+   callbacks (this might be a memory leak)" warning fires even in the isolated probe. Callbacks that
+   accumulate over the run and fire per change would be a genuine growing factor; unexplored suspect,
+   matches the real-app forensics ("derive callbacks growing").
+
+**Next step:** apply the schema-level batched-append fix and re-run the primitives + full-sync
+benchmarks. If `tags`/`sideEffects`/`paintYield` all flatten, the index writes explained them; whatever
+growth survives isolates items (1)/(3) above for separate work.
+
+## `appendToFeed` growth — resolved: not a real growing factor (2026-07-05)
+
+Chased the one contradiction (isolation flat, full-sync span grew ~1.1→2.3 ms/msg). Built three
+isolation variants (`plugin-inbox/.../sync-primitives-bench.test.ts`): appendToFeed with (a) minimal
+messages, (b) realistic 800-char bodies, (c) interleaved with the real heavy `Tagging.setBatch` churn
+(per-element pushes on a growing array + the growing space doc). **All three stay flat (~1–2 ms/page,
+no upward trend) to 5400+ items.** Confirmed by reading `FeedHandle.append`: the working set is bounded
+(`[...this._objects, ...items]` + `_trimToRetention()` cap at 500) and `insertIntoQueue` is O(1).
+
+Conclusion: **`appendToFeed` is O(1) per page — not a growing factor.** The apparent growth in the
+full-sync OTEL bench is a **measurement artifact**: the span wraps `Effect.promise(() =>
+appendToFeed(...))`, an async await point, so it absorbs the growing *event-loop backlog* (the deferred
+automerge persistence + reactive callbacks from the O(N²) index writes) that piles up as the run
+progresses — the same backlog that dominates `paintYield`, just a smaller share landing here. It is a
+*symptom* of the index-write O(N²), not an independent bottleneck. (The ~10× constant gap vs isolation
+is richer real messages — sender Refs, foreign-key meta — plus Effect overhead; constant, not growing.)
+
+Updated open-items status:
+1. `paintYield` magnitude — still the async tail of the index writes (now corroborated: append's growth
+   is the same backlog-absorption effect). Confirm it collapses once the index-write fix lands.
+2. `appendToFeed` growth — **RESOLVED** (measurement artifact; append is O(1)).
+3. `DatabaseImpl`/`QueryServiceImpl` dispose-callback accumulation (301-cap warning) — fires even in the
+   isolated probes, yet append stayed flat there, so it is NOT inflating append. Remains an unexplored
+   suspect for `paintYield`; a genuine leak worth its own look, but not on the append path.
+
+Net: the ONLY confirmed super-linear factor in local sync is the index writes (`TagIndex`/`ThreadIndex`
+one-change-per-`.push()` × O(array), + O(array) `.includes` dedup). Everything else is flat or a
+downstream measurement of that backlog.
+
+## CPU profile — the REAL dominant factor: `Repo.handles` O(N) lookups (2026-07-05)
+
+OTEL spans only cover instrumented + `@trace` calls; they cannot see GC, deferred automerge
+persistence, or host-side storage work (it runs between spans). A CPU sampling profile of a full sync
+(`sync-cpu-profile.test.ts`, `node:inspector` Profiler, self-time by function) shows what actually
+holds the thread, n=4000 → 2670 synced, 52s wall:
+
+| self-time | function |
+|--:|---|
+| **30%** | **`get handles` — `@automerge/automerge-repo/Repo.js:383`** |
+| 13% | `run` (Effect fiber loop / wasm) |
+| 4%  | `(garbage collector)` |
+| ~8% | automerge wasm (BTreeMap insert, string build, malloc, assign) |
+| 2%  | `SchemaClass` / `Schema.make` |
+| ~1% each | base-x encode, sha256, `echo-handler` get/decode, `TagIndex.ts:108` (~390ms) |
+
+**`Repo.handles` is a getter that rebuilds a fresh object over ALL cached handles (`for … of
+Object.entries(this.#queries)`) — O(handles) per access.** echo-host indexes into it for *single*
+lookups: `this._repo.handles[documentId]`. Confirmed callers, attributed from the profile's call tree
+(self-time inside `get handles`): **`getHeads` (`automerge-host.ts:757`) — 5.5s (dominant)**,
+`_afterSave` (`:669`, fires after every SQLite chunk commit) — 1.5s, and `getHandleState`
+(`handle-state.ts:47`) — 0.16s. Each call is O(total handles); handles grow one-per-document as the
+sync writes objects → **O(N²)**, and together they are the 30%.
+
+**This supersedes the earlier "index writes dominate" conclusion.** The `TagIndex`/`ThreadIndex`
+per-`.push()` cost is real but minor (~390ms / <1%); the dominant local O(N²) is `Repo.handles`.
+
+**This also unifies the local harness with the real-app forensics.** In-process (test) the O(N²)
+`repo.handles[id]` work runs on the main thread → shows as `get handles` 30% self-time and inflates the
+`appendToFeed`/`paintYield` await points (they sit behind the growing per-save storage work — exactly
+"something else is slowing them down"). In the real app echo-host runs in a **worker**, so the same
+O(N²) runs there: the client's `appendToFeed` RPC waits on the saturated worker → the observed 18s
+stalls, and unbounded handle accumulation → the OOM. Same bug, two vantage points.
+
+**Fix direction (core, high-impact):** give automerge-repo `Repo` an O(1) handle accessor (direct
+`#queries[id]?.handle` / `getHandle(id)`) and migrate the echo-host call sites (`_afterSave`,
+`getHandleState`, `flush`, `getHeads`) off `repo.handles[id]` / `Object.keys(repo.handles)`. This
+targets the actual production bottleneck, unlike the plugin-level index-write fix (still worth doing,
+but secondary). Also investigate whether handles should be bounded/evicted (the OOM + "301 dispose
+callbacks" warning suggest unbounded growth).
+
+## After the getHandle fix — the NEXT (now dominant) O(n²): subduction storage reads (2026-07-05)
+
+The `getHandle` O(1) fix removed the `repo.handles` factor: full-sync root per-message dropped 47.9 →
+27.5 ms/msg at n=6000 (−43%), `paintYield` 41 → 21 (−48%). But it's still super-linear (`paintYield`
+4.3→7.4→21.3; `tags` 0.69→2.42), so more remained.
+
+Ranked functions by **per-message self-time growth** (CPU profile at n=1500 vs n=6000; a linear function
+is flat per-message, a super-linear one rises) — the entire top of the list is the storage/compaction
+path:
+
+| growth (per-msg) | function |
+|--:|---|
+| 198× | `wasm-function[806]` (automerge-subduction wasm — compaction) |
+| 103× | `sqlite-storage-adapter.ts:174` (`loadRange` row map) |
+| 96× | `interpretAsDocumentId` (automerge-repo) |
+| 95× | `CommitWithBlob` (automerge-subduction wasm) |
+| 66× | `loadAllCommits` (automerge-repo `subduction/storage.js`) |
+| 43× | `toUint8Array` (`sqlite-storage-adapter.ts:165`) |
+
+**Quantified with a `loadRange` counter (env-gated, then reverted), 4× the messages:**
+
+| metric | n=1500 (1003 synced) | n=6000 (4013 synced) | growth |
+|---|--:|--:|--:|
+| `loadRange` calls | 2,344 | 258,792 | **110×** |
+| rows loaded | 1,245 | 1,376,449 | **1,105×** |
+| rows / synced msg | 1.24 | 343 | 277× |
+
+So 4× the data → **110× the SQLite reads, 1,100× the rows**. `loadAllCommits` (called only by the
+subduction **wasm** compaction — no JS caller) re-reads a document's entire persisted commit+blob set
+(`loadRange` → SQL over all chunks + `toUint8Array` per row) via `CommitWithBlob`, and the wasm invokes
+it a super-linearly growing number of times as the sync progresses. `#saveNewCommits` (the JS save
+path) is already incremental (O(new), with an explicit anti-O(n) comment), so the non-linearity is the
+**compaction reloading the growing persisted commit set repeatedly**, not the doc-side save.
+
+**Root cause (remaining):** subduction/sedimentree compaction re-reads all persisted commits of the
+growing feed/space documents from SQLite on a super-linear schedule → O(n²)+ storage work. This is the
+dominant driver of "sync gets slower the more it syncs" after the handle fix.
+
+**Fix direction:** the real fix is in the **automerge-subduction Rust/wasm fork** — make compaction
+incremental (don't reload the full commit set per pass) / cache the sedimentree state in memory. The
+wasm's Rust source is not in this repo (it ships as a prebuilt wasm dependency), so it is out of reach
+of a JS/TS patch here. A JS-side *mitigation* worth measuring: a read-through cache in
+`sqlite-storage-adapter.loadRange` (keep chunks in memory keyed by prefix) — that removes the SQLite +
+`toUint8Array` cost (the `sqlite-storage-adapter` frames, ~77 µs/msg) but not the wasm compaction's own
+O(n²) work or the JS↔wasm call overhead from 258k calls. Full linear scaling needs the fork change.
+
+## Measurement: storage read-through cache (temporary, reverted) — a dead end (2026-07-05)
+
+To attribute the residual O(n²) between SQLite I/O and the subduction wasm, added a temporary
+read-through cache to `SqliteStorageAdapter.loadRange` (incrementally maintained on save/remove;
+single-writer adapter → authoritative). Result:
+
+- **SQL reads collapsed**: rows loaded from SQLite 1,376,449 → 3,193 (430×↓), 98.1% cache hit rate,
+  ~0.8 SQL rows/msg (flat/linear). So the cache works exactly as designed and the SQLite layer is no
+  longer doing super-linear work.
+- **But top-level sync got slightly WORSE**, not better — root per-message n=6000: 27.5 → 36.6 ms.
+  The cache traded SQLite I/O for resident memory + per-save maintenance, and the actual bottleneck was
+  never the SQL.
+- **The re-profile proves it**: with SQLite eliminated, the entire top of the per-message-growth ranking
+  is now the **automerge-subduction wasm** (`wasm-function[806]` 444×, `CommitWithBlob`,
+  `getArrayU8FromWasm0`, `_assertClass`, `makeMutClosure`, `__wrap`…) plus `loadAllCommits` (104× — the
+  JS that re-constructs a `CommitWithBlob` for every chunk on each call). `loadRange` was still *called*
+  380k times (98% served from cache) — the wasm's O(n²) call frequency is unchanged.
+
+**Conclusion:** a storage-layer cache is NOT the fix — the SQL was a symptom. The fundamental O(n²) is
+the subduction/sedimentree **compaction reprocessing the growing commit set** (wasm, reached via
+`loadAllCommits` re-reading all commits, called a super-linearly growing number of times). The only
+real lever is the **automerge-subduction wasm compaction** (make it incremental / stop reprocessing the
+full set per pass) — whose Rust source is not in this repo. Cache reverted.
