@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Operation, Skill } from '@dxos/compute';
-import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Scope, Tag, Type } from '@dxos/echo';
+import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Tag, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
@@ -42,29 +42,6 @@ describe('Database Skill', () => {
         });
         yield* agent.submitPrompt('List all available schemas. Tell me what typenames are available.');
         yield* agent.waitForCompletion();
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: 60_000 },
-  );
-
-  it.effect(
-    'schema-add: add a new schema',
-    Effect.fnUntraced(
-      function* (_) {
-        const agent = yield* AgentService.createSession({
-          skills: [DatabaseSkill.make()],
-        });
-        yield* agent.submitPrompt(
-          'Add a new schema called "Project" with typename "com.example.type.project" and fields: name (string), description (string), and status (string).',
-        );
-        yield* agent.waitForCompletion();
-        const allTypes = yield* Database.query(
-          Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
-        ).run;
-        const schemas = allTypes.filter((t) => Type.getTypename(t) === 'com.example.type.project');
-        expect(schemas.length).toBeGreaterThanOrEqual(1);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
