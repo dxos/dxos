@@ -19,14 +19,14 @@ describe('layout', () => {
     expect(rects.map((rect) => rect.column)).toEqual([0, 1]);
   });
 
-  test('computes column width and offsets accounting for the perimeter gap', ({ expect }) => {
+  test('fills the width using interior gaps only, with a top perimeter gap', ({ expect }) => {
     const { rects, columnWidth } = layout({ heights: [10, 10], columnCount: 2, containerWidth: 100, gapPx: 10 });
-    expect(columnWidth).toBe(35); // (100 - 3 * 10) / 2
-    expect(rects[0]).toMatchObject({ x: 10, y: 10, column: 0 }); // leading gap on both axes
-    expect(rects[1]).toMatchObject({ x: 55, y: 10, column: 1 }); // 10 + 1 * (35 + 10)
+    expect(columnWidth).toBe(45); // (100 - 1 * 10) / 2 — columns fill, no outer gap
+    expect(rects[0]).toMatchObject({ x: 0, y: 10, column: 0 }); // flush left; top perimeter gap
+    expect(rects[1]).toMatchObject({ x: 55, y: 10, column: 1 }); // 0 + 1 * (45 + 10)
   });
 
-  test('stacks vertically in a single column with perimeter gaps', ({ expect }) => {
+  test('stacks vertically in a single column with top and bottom perimeter gaps', ({ expect }) => {
     const { rects, height } = layout({ heights: [30, 20], columnCount: 1, containerWidth: 100, gapPx: 10 });
     expect(rects.map((rect) => rect.y)).toEqual([10, 50]); // 10 gap, then 10 + 30 + 10
     expect(height).toBe(80); // 10 + 30 + 10 + 20 + 10

@@ -27,7 +27,7 @@ export type LayoutOptions = {
   columnCount: number;
   /** Available content width (px), already net of any scrollbar allowance. */
   containerWidth: number;
-  /** Space (px) applied uniformly between tiles and around the grid perimeter. */
+  /** Space (px) between tiles and, vertically, around the grid perimeter. */
   gapPx: number;
 };
 
@@ -37,13 +37,16 @@ export type LayoutOptions = {
  * index for stable ordering). Pure and synchronous so column balancing is unit
  * testable without a DOM.
  *
- * The gap is applied uniformly: `columnCount` columns consume
- * `columnCount + 1` gaps horizontally (both outer edges plus the interior
- * splits), and each column is padded by one gap at the top and bottom.
+ * Columns are separated by a single gap and stretch to fill `containerWidth`
+ * (`maxColumnWidth` is applied upstream by choosing the column count, not by
+ * capping width here, so left/right spacing stays equal to the gap). The
+ * left/right perimeter is owned by the scroll container (via its `--gutter`); the
+ * layout only adds the top and bottom perimeter so vertical spacing matches too.
  */
 export const layout = ({ heights, columnCount, containerWidth, gapPx }: LayoutOptions): LayoutResult => {
   const columns = Math.max(1, Math.floor(columnCount));
-  const columnWidth = (containerWidth - (columns + 1) * gapPx) / columns;
+  const columnWidth = (containerWidth - (columns - 1) * gapPx) / columns;
+
   // Seed each column with the top gap so the first row clears the perimeter.
   const columnHeights = new Array<number>(columns).fill(gapPx);
 
@@ -56,7 +59,7 @@ export const layout = ({ heights, columnCount, containerWidth, gapPx }: LayoutOp
     }
 
     const rect: Rect = {
-      x: gapPx + target * (columnWidth + gapPx),
+      x: target * (columnWidth + gapPx),
       y: columnHeights[target],
       column: target,
     };
