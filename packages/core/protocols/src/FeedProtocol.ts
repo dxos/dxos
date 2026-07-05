@@ -150,6 +150,12 @@ export const QueryRequest = Schema.Struct({
    * Maximum number of blocks to return.
    */
   limit: Schema.optional(Schema.Number),
+
+  /**
+   * Return blocks in reverse (newest-first) order. Combined with `limit`, yields a bounded tail read
+   * of the most recently appended blocks.
+   */
+  reverse: Schema.optional(Schema.Boolean),
 });
 export interface QueryRequest extends Schema.Schema.Type<typeof QueryRequest> {}
 

@@ -27,14 +27,18 @@ import {
   RelatedToContact,
   RelatedToOrganization,
   SaveFilterPopover,
+  ThreadArticle,
 } from '#containers';
 import { Calendar, DraftMessage, Mailbox } from '#types';
 
-import { MAILBOX_DRAFTS_NODE_DATA, POPOVER_SAVE_FILTER } from '../constants';
+import { MAILBOX_DRAFTS_NODE_DATA, POPOVER_SAVE_FILTER, type ThreadCompanionData } from '../constants';
 import { getDraftsId } from '../paths';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
   Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
+
+const isThreadCompanion = (subject: unknown): subject is ThreadCompanionData =>
+  typeof subject === 'object' && subject !== null && 'mailbox' in subject && Mailbox.instanceOf(subject.mailbox);
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -96,6 +100,21 @@ export default Capability.makeModule(() =>
               companionTo={companionTo}
               mailbox={companionTo ? undefined : mailbox}
             />
+          );
+        },
+      }),
+      Surface.create({
+        id: 'thread',
+        // A thread has no ECHO object of its own; the companion carries `{ mailbox, threadId }` as its
+        // subject (see `mailboxThread` graph connector), matched structurally here.
+        filter: Surface.makeFilter(AppSurface.Article, (data) => isThreadCompanion(data.subject)),
+        component: ({ data, role }) => {
+          if (!isThreadCompanion(data.subject)) {
+            return null;
+          }
+          const { mailbox, threadId } = data.subject;
+          return (
+            <ThreadArticle role={role} mailbox={mailbox} threadId={threadId} attendableId={data.attendableId} />
           );
         },
       }),

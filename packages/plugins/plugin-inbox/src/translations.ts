@@ -55,6 +55,7 @@ export const translations = [
         'action-delete.menu': 'Delete',
         'action-mark-read.menu': 'Mark as read',
         'message.label': 'Message',
+        'thread.label': 'Conversation',
         'event.label': 'Event',
         'inbox.label': 'Inbox',
 

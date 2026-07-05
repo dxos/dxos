@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Database, DXN, Feed, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { invariant } from '@dxos/invariant';
 import { Stage } from '@dxos/pipeline';
@@ -111,8 +111,8 @@ export type Stats = { newMessages: number };
 
 /**
  * Per-run sync state provided to the pipeline stages and the commit sink. Mutable fields (`dedupSet`,
- * `createdContactEmails`, `stats`) accumulate across the run; a caller that needs the result (e.g.
- * `stats.newMessages`) constructs those objects and reads them back after the run.
+ * `stats`) accumulate across the run; a caller that needs the result (e.g. `stats.newMessages`)
+ * constructs those objects and reads them back after the run.
  */
 export type State = {
   /** The binding being synced. */
@@ -129,8 +129,6 @@ export type State = {
   readonly cursorKey: number;
   /** Foreign ids already committed (seeded from the feed, extended as pages commit). */
   readonly dedupSet: Set<string>;
-  /** Contact emails created earlier in this run, to dedup repeats before the first commit. */
-  readonly createdContactEmails: Set<string>;
   /** Serializes the advanced cursor key for storage on the binding. */
   readonly formatCursor: (key: number) => string;
   /** Mutable run tally, read back by the caller after the run. */
@@ -149,27 +147,39 @@ export type CommitUnit = {
   readonly tagUris: readonly string[];
   /** Objects extracted from the message (e.g. contacts) that the commit should `db.add`. */
   readonly extractedObjects: readonly Obj.Any[];
+  /**
+   * Provider-supplied deferred writes run inside the commit's flush, after the feed append. The
+   * generic seam for aggregated side effects a stage records but must not perform itself (pipeline
+   * stages stay idempotent) — e.g. recording thread membership. Kept domain-agnostic so no
+   * provider-specific concept leaks into this shared type.
+   *
+   * `commit()` invokes each *distinct* function reference at most once per page, passing every unit
+   * in the page that attached it (not just the unit it came from) — so a stage that attaches one
+   * stable closure to every unit gets a single batched call per page instead of one call per unit.
+   * Identity, not structural equality, determines "distinct": a stage must reuse the same closure
+   * reference across units in a run to be batched (see `EmailStage.recordThreads`).
+   */
+  readonly sideEffects?: readonly ((db: Database.Database, units: readonly CommitUnit[]) => void)[];
 };
 
 /** Effect Requirements tag carrying the per-run {@link State}. */
 export class Service extends Context.Tag('@dxos/plugin-connector/SyncBinding')<Service, State>() {}
 
 /**
- * Dependencies supplied by the caller; the Layer seeds `dedupSet` / `createdContactEmails` and
- * defaults `formatCursor` to the decimal high-water key.
+ * Dependencies supplied by the caller; the Layer seeds `dedupSet` and defaults `formatCursor` to the
+ * decimal high-water key.
  */
-export type LayerOptions = Omit<State, 'cursor' | 'dedupSet' | 'createdContactEmails' | 'formatCursor'> & {
+export type LayerOptions = Omit<State, 'cursor' | 'dedupSet' | 'formatCursor'> & {
   readonly formatCursor?: (key: number) => string;
 };
 
 /**
- * Builds the sync-binding Layer, seeding the committed-id dedup set from the feed.
+ * Builds the sync-binding Layer, seeding the committed-id dedup set from a bounded tail read of the
+ * feed (see {@link DEDUP_SEED_TAIL}) — this closes the append→advance crash window without decoding
+ * the whole feed. The queue and space-db are separate stores with no shared transaction, so a page
+ * can land in the feed before its cursor advance persists.
  *
- * TODO(wittjosiah): The dedup set is a full-feed read that closes the append→advance crash window (a
- * page can land in the feed before its cursor advance persists, since queue and space-db are separate
- * stores with no shared transaction). Evolve in two steps: (1) a bounded newest-N tail read once the
- * queue supports reverse reads — only the last in-flight page can be un-cursored; then (2) drop it
- * entirely once feed + cursor writes can commit transactionally.
+ * TODO(wittjosiah): Drop the seed entirely once feed + cursor writes can commit transactionally.
  */
 export const layer = (options: LayerOptions): Layer.Layer<Service, never, Database.Service> =>
   Layer.effect(
@@ -185,7 +195,6 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
         cursor,
         formatCursor: options.formatCursor ?? Cursor.formatKey,
         dedupSet,
-        createdContactEmails: new Set<string>(),
       };
     }),
   );
@@ -202,13 +211,14 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
  */
 const advanceCursor = (state: State, maxKey: number): void => Cursor.advance(state.cursor, state.formatCursor(maxKey));
 
+
 /**
  * Commits one page of pipeline output — the single place non-idempotent writes happen. Use as the
  * `Pipeline.run` sink after `Stream.grouped(pageSize)` (which also emits the trailing partial page,
  * so no separate flush is needed).
  *
  * Order matters for crash recovery: the feed append (a queue write) commits first, then the space-db
- * mutations (tags, contacts, cursor advance) commit together in one `flush`. The queue and the space
+ * mutations (tags, contacts, side effects, cursor advance) commit together in one `flush`. The queue and the space
  * document are separate stores with no shared transaction, so a crash between the two leaves the page
  * in the feed with the cursor un-advanced — the next run re-fetches it and the feed-seeded dedup set
  * drops it. Advancing the cursor before the append would instead lose messages.
@@ -228,23 +238,62 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
         feed,
         units.map((unit) => unit.message),
       );
-      for (const unit of units) {
-        if (state.tagIndex) {
+      // Yield a macrotask after the feed append so the browser can paint the just-appended messages
+      // before this page's space-db side effects (tag/contact/thread mutations) run. Otherwise the
+      // append and the side-effect reactive cascade execute as one uninterrupted synchronous burst
+      // and the messages never paint until the whole sync settles.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      // Apply every (message, tag) pair for the page in ONE `Obj.update` on the tag index (one
+      // Automerge change + one reactive notification), not one per pair. The per-pair storm (a page's
+      // worth of separate changes/notifications, ×25 pages/sec) would otherwise saturate the main
+      // thread and freeze the UI mid-sync.
+      if (state.tagIndex) {
+        const tagEntries: { object: Obj.Any; tagId: string }[] = [];
+        for (const unit of units) {
           for (const uri of unit.tagUris) {
-            Tagging.set(unit.message, uri, { index: state.tagIndex });
+            tagEntries.push({ object: unit.message, tagId: uri });
           }
         }
+        Tagging.setBatch(tagEntries, { index: state.tagIndex });
+      }
+      for (const unit of units) {
         for (const object of unit.extractedObjects) {
           db.add(object);
         }
+      }
+      // Invoke each DISTINCT side-effect function (by identity) once per page, passing every unit in
+      // the page that attached it — not just the unit it came from. A stage that attaches one stable
+      // closure to every unit (e.g. `EmailStage.recordThreads`) therefore gets a single batched call
+      // per page instead of one call per unit, so e.g. a thread-index update is one `Obj.update` per
+      // page rather than one per message.
+      const sideEffectUnits = new Map<(db: Database.Database, units: readonly CommitUnit[]) => void, CommitUnit[]>();
+      for (const unit of units) {
+        for (const sideEffect of unit.sideEffects ?? []) {
+          const existing = sideEffectUnits.get(sideEffect);
+          if (existing) {
+            existing.push(unit);
+          } else {
+            sideEffectUnits.set(sideEffect, [unit]);
+          }
+        }
+      }
+      for (const [sideEffect, sideEffectUnitList] of sideEffectUnits) {
+        sideEffect(db, sideEffectUnitList);
       }
       // Advance the cursor + run status in the same commit as the writes. (A run with no new messages
       // produces no commit, so `lastSyncAt` reflects the last page that landed rather than the last
       // attempt — acceptable, and avoids a separate write path.)
       advanceCursor(state, Math.max(...units.map((unit) => unit.key)));
-      // Flush so the space-db mutations (tags, contacts, cursor) commit and are indexed, letting the
-      // next run's dedup and contact resolution observe them.
-      await db.flush({ indexes: true });
+      // No mid-run flush. Nothing within the run needs persisted/indexed space-db state: the feed
+      // append is separately durable per page, dedup uses the feed-seeded + in-memory set, the contact
+      // lookup is cached in memory (no per-message db query), and the UI observes tag/thread mutations
+      // via in-memory reactivity. Re-serializing the ever-growing space doc every few pages was the
+      // dominant per-page cost (O(doc) per flush → O(n²) over a run); the caller flushes once, with
+      // indexes, at the end of the run instead.
+      //
+      // Trade-off: a crash mid-run loses this run's in-memory cursor advance + space mutations. The
+      // messages are still durable in the feed, so the next run re-fetches from the last persisted
+      // cursor and re-applies side effects idempotently (feed dedup drops the already-appended pages).
       for (const unit of units) {
         state.dedupSet.add(unit.foreignId);
       }
@@ -304,9 +353,18 @@ export const dedupStage = <In>(
     }),
   );
 
-/** Seeds the dedup set of already-committed foreign ids from the feed (see {@link layer} TODO). */
+/**
+ * Bound on the dedup seed's tail read. The set only needs feed messages whose key is at/after the
+ * cursor high-water: the last committed page plus at most one crash-orphaned page (append and
+ * cursor-advance flush per page, so a crash leaves ≤1 un-cursored page). Everything older is dropped
+ * by {@link dedupStage}'s `key < cursorKey` check, so a bounded newest-N tail read suffices. Sized
+ * with generous headroom over any provider's commit page size.
+ */
+const DEDUP_SEED_TAIL = 500;
+
+/** Seeds the dedup set of recently-committed foreign ids from the feed tail (see {@link DEDUP_SEED_TAIL}). */
 const seedDedupSet = (feed: Feed.Feed, foreignKeySource: string): Effect.Effect<Set<string>, never, Database.Service> =>
-  Feed.query(feed, Filter.everything()).run.pipe(
+  Feed.readLatest(feed, { limit: DEDUP_SEED_TAIL }).pipe(
     Effect.map(
       (items) =>
         new Set(

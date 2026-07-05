@@ -196,6 +196,12 @@ export interface Database extends Queryable {
   queryFeed(feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<any>;
 
   /**
+   * One-shot bounded tail read: the most recently appended `limit` objects (newest first). Avoids
+   * decoding the whole feed for callers that only need the tail (e.g. a dedup seed at sync start).
+   */
+  readFeedLatest(feed: Feed.Feed, limit: number): Promise<Obj.Unknown[]>;
+
+  /**
    * Syncs a feed with the server.
    */
   syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void>;

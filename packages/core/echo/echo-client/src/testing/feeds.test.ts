@@ -291,6 +291,90 @@ describe('feeds', () => {
     });
   });
 
+  describe('Windowed query', () => {
+    test('one-shot `.limit(n)` returns the newest N (tail window), ascending', async ({ expect }) => {
+      await using peer = await builder.createPeer({
+        types: [Feed.Feed, TestSchema.Person],
+        assignQueuePositions: true,
+      });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      await db.appendToFeed(feed, [
+        Obj.make(TestSchema.Person, { name: 'a' }),
+        Obj.make(TestSchema.Person, { name: 'b' }),
+        Obj.make(TestSchema.Person, { name: 'c' }),
+        Obj.make(TestSchema.Person, { name: 'd' }),
+      ]);
+
+      const scope = Scope.feed(Feed.getQueueUri(feed)!);
+      const window = await db.query(Query.select(Filter.type(TestSchema.Person)).from(scope).limit(2)).run();
+      // Newest two (appended last), returned in ascending (append) order.
+      expect(window.map((obj) => (obj as TestSchema.Person).name)).toEqual(['c', 'd']);
+
+      // No limit ⇒ the whole feed (unchanged behavior).
+      const all = await db.query(Query.select(Filter.type(TestSchema.Person)).from(scope)).run();
+      expect(all).toHaveLength(4);
+    });
+
+    test('reactive `.limit(n)` windows the newest N and extends when the limit grows', async ({ expect }) => {
+      await using peer = await builder.createPeer({
+        types: [Feed.Feed, TestSchema.Person],
+        assignQueuePositions: true,
+      });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      await db.appendToFeed(feed, [
+        Obj.make(TestSchema.Person, { name: 'a' }),
+        Obj.make(TestSchema.Person, { name: 'b' }),
+        Obj.make(TestSchema.Person, { name: 'c' }),
+      ]);
+
+      const scope = Scope.feed(Feed.getQueueUri(feed)!);
+
+      const narrow = db.query(Query.select(Filter.type(TestSchema.Person)).from(scope).limit(2));
+      const narrowCalled = new Event();
+      const narrowOnce = narrowCalled.waitForCount(1);
+      const narrowSub = narrow.subscribe(() => narrowCalled.emit(), { fire: true });
+      await narrowOnce;
+      expect(narrow.results.map((obj) => obj.name).sort()).toEqual(['b', 'c']);
+      narrowSub();
+
+      // A wider window (the "load older" case) surfaces the older items too.
+      const wide = db.query(Query.select(Filter.type(TestSchema.Person)).from(scope).limit(10));
+      const wideCalled = new Event();
+      const wideOnce = wideCalled.waitForCount(1);
+      const wideSub = wide.subscribe(() => wideCalled.emit(), { fire: true });
+      await wideOnce;
+      expect(wide.results.map((obj) => obj.name).sort()).toEqual(['a', 'b', 'c']);
+      wideSub();
+    });
+
+    test('windowed query returns the newest N in order at scale', async ({ expect }) => {
+      await using peer = await builder.createPeer({
+        types: [Feed.Feed, TestSchema.Person],
+        assignQueuePositions: true,
+      });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      const total = 60;
+      await db.appendToFeed(
+        feed,
+        Array.from({ length: total }, (_, index) => Obj.make(TestSchema.Person, { name: `p${index}` })),
+      );
+
+      const window = await db
+        .query(Query.select(Filter.type(TestSchema.Person)).from(Scope.feed(Feed.getQueueUri(feed)!)).limit(25))
+        .run();
+      // Newest 25 (p35..p59), ascending by append order.
+      expect(window.map((obj) => (obj as TestSchema.Person).name)).toEqual(
+        Array.from({ length: 25 }, (_, index) => `p${total - 25 + index}`),
+      );
+    });
+  });
+
   describe('Durability', () => {
     test('feed objects survive reload', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });

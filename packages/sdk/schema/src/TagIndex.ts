@@ -48,6 +48,13 @@ export interface Accessor {
   tags(objectId: EntityId): string[];
   /** Applies a tag to an object (creating the tag entry when absent); idempotent. */
   setTag(tagId: string, objectId: EntityId): void;
+  /**
+   * Applies many (tagId, objectId) pairs in a single `Obj.update` (one Automerge change + one
+   * reactive notification for the whole batch, vs one per {@link setTag}). Use for a sync page's
+   * worth of tag applications — the per-call change/notification storm otherwise dominates commit and
+   * freezes the UI. Idempotent per pair, same as {@link setTag}.
+   */
+  setBatch(entries: readonly { tagId: string; objectId: EntityId }[]): void;
   /** Removes a tag from an object, pruning the tag entry when it empties. */
   unsetTag(tagId: string, objectId: EntityId): void;
 }
@@ -124,6 +131,24 @@ export const bind = (tagIndex: TagIndex): Accessor => {
           index[tagId].push(objectId);
         }
       }),
+    setBatch: (entries) => {
+      if (entries.length === 0) {
+        return;
+      }
+      write((index) => {
+        // One `Object.keys` snapshot for the whole batch, extended in place as tags are created —
+        // and, crucially, one `Obj.update` (one change + one notification) for all pairs.
+        const known = new Set(Object.keys(index));
+        for (const { tagId, objectId } of entries) {
+          if (!known.has(tagId)) {
+            index[tagId] = [objectId];
+            known.add(tagId);
+          } else if (!index[tagId].includes(objectId)) {
+            index[tagId].push(objectId);
+          }
+        }
+      });
+    },
     unsetTag: (tagId, objectId) =>
       write((index) => {
         if (!has(index, tagId)) {

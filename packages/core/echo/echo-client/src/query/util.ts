@@ -96,6 +96,42 @@ export const isSimpleSelectionQuery = (
   }
 };
 
+/**
+ * Feed-query analysis: like {@link isSimpleSelectionQuery} but also unwraps `limit`/`order` clauses
+ * and surfaces the window `limit`. Kept separate from `isSimpleSelectionQuery` so the shared
+ * space-query routing (which treats a `limit`/`order` clause as non-simple on purpose) is unaffected;
+ * only the client-evaluable feed path understands a windowed feed query.
+ *
+ * A `limit` on a feed query is interpreted as a bounded newest-N tail window: the feed's natural
+ * order is append order, so the newest `limit` items are the tail (see `FeedQueryContext`). `order`
+ * clauses are unwrapped and otherwise ignored — the tail window is always newest-by-position.
+ */
+export const analyzeFeedQuery = (
+  query: QueryAST.Query,
+): { filter: QueryAST.Filter; limit?: number } | null => {
+  switch (query.type) {
+    case 'limit': {
+      const inner = analyzeFeedQuery(query.query);
+      // Innermost limit wins (a nested limit is already narrower); ignore an outer, wider one.
+      return inner ? { ...inner, limit: inner.limit ?? query.limit } : null;
+    }
+    case 'order':
+    case 'options':
+    case 'from': {
+      return analyzeFeedQuery(query.query);
+    }
+    case 'select': {
+      if (filterContainsTimestamp(query.filter) || filterContainsChildOf(query.filter)) {
+        return null;
+      }
+      return { filter: query.filter };
+    }
+    default: {
+      return null;
+    }
+  }
+};
+
 export type RegistryQueryScope = { included: boolean; locations: ReadonlySet<'local' | 'remote'> };
 
 /**

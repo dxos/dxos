@@ -10,6 +10,8 @@ import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
+import * as ThreadIndex from './ThreadIndex';
+
 /**
  * Foreign-key source for Gmail provider labels. A Gmail label maps to a {@link Tag} object carrying
  * a foreign key `{ source: GMAIL_TAG_SOURCE, id: <gmail-label-id> }`; "provider" tags are those with
@@ -45,6 +47,11 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     // Messages are immutable Queue items, so their tag associations live in a child `TagIndex` object
     // (the `meta.tags` augmentation for feed objects). Tag labels/hues live on the `Tag` objects.
     tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
+    // Inverse conversation index for immutable feed Messages: provider thread id → message refs.
+    // Optional/lazy (provisioned on first sync by {@link getOrCreateThreadIndex}) so mailboxes created
+    // before the field existed need no migration. Members are refs so the thread detail view resolves
+    // them directly rather than scanning the feed.
+    threads: Ref.Ref(ThreadIndex.ThreadIndex).pipe(FormInputAnnotation.set(false), Schema.optional),
     extractors: Schema.Struct({
       enabled: Schema.Array(Schema.String),
       threshold: Schema.Number.pipe(Schema.between(0, 1)),
@@ -218,3 +225,46 @@ export const buildMessageTagsIndex = (mailbox: Mailbox | Obj.Snapshot<Mailbox>):
 /** Returns the tag uris currently applied to a single message. */
 export const getTagsForMessage = (mailbox: Mailbox, message: Message.Message): string[] =>
   Tagging.get(message, { index: mailbox.tags.target });
+
+//
+// Conversation (thread) index API.
+//
+
+/**
+ * Returns the mailbox's conversation index, provisioning it on first use. Optional/lazy so mailboxes
+ * created before the `threads` field existed need no migration; mirrors {@link Starred.toggleStarred}'s
+ * lazy tag-index provisioning.
+ */
+export const getOrCreateThreadIndex = (mailbox: Mailbox, db: Database.Database): ThreadIndex.ThreadIndex => {
+  const existing = mailbox.threads?.target;
+  if (existing) {
+    return existing;
+  }
+  const index = db.add(ThreadIndex.make());
+  // Thread index is a child: cascade-deleted with the mailbox.
+  Obj.setParent(index, mailbox);
+  Obj.update(mailbox, (mailbox) => {
+    mailbox.threads = Ref.make(index);
+  });
+  return index;
+};
+
+/**
+ * Message count per thread id from the conversation index — authoritative regardless of which
+ * messages are currently loaded into memory (used for conversation-tile counts).
+ */
+export const buildThreadCounts = (mailbox: Mailbox | Obj.Snapshot<Mailbox>): Record<string, number> => {
+  const counts: Record<string, number> = {};
+  const index = mailbox.threads?.target?.index;
+  if (!index) {
+    return counts;
+  }
+  // Read the index record once (O(n)). Going through `ThreadIndex.bind(...).messages(threadId)` per
+  // thread would re-run `Object.keys(index)` on the reactive proxy for every thread (O(n²)), which
+  // dominates render time as the conversation count grows during sync. Keys from `Object.keys` exist,
+  // so indexing them does not auto-vivify.
+  for (const threadId of Object.keys(index)) {
+    counts[threadId] = index[threadId]?.length ?? 0;
+  }
+  return counts;
+};

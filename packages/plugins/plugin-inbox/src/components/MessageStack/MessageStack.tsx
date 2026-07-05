@@ -2,7 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
+import React, {
+  type KeyboardEvent,
+  type MouseEvent,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card, ScrollArea } from '@dxos/react-ui';
@@ -58,15 +66,55 @@ export type MessageStackProps = {
    * conversations.
    */
   conversations?: boolean;
+  /**
+   * Authoritative message count per conversation (thread id → count), from the mailbox's thread index.
+   * Preferred over the loaded-window group size, which can undercount when not all thread members are
+   * resident. Falls back to the group size when absent.
+   */
+  threadCounts?: Record<string, number>;
   onAction?: MessageStackActionHandler;
+  /** Fired when the viewport scrolls near the bottom — used to page in older messages (extend the window). */
+  onEndReached?: () => void;
 };
+
+/** Distance (px) from the bottom of the viewport at which `onEndReached` fires. */
+const END_REACHED_THRESHOLD = 400;
 
 /**
  * Card-based message stack component using mosaic layout.
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
-  ({ messages, tags, currentId, selectedIds, starredIds, conversations, onAction, ...props }, forwardedRef) => {
+  (
+    {
+      messages,
+      tags,
+      currentId,
+      selectedIds,
+      starredIds,
+      conversations,
+      threadCounts,
+      onAction,
+      onEndReached,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
+
+    // Page in older messages when the user nears the bottom of the (newest-first) stack. The window
+    // bounds the loaded data; `Mosaic.VirtualStack` already virtualizes the DOM.
+    useEffect(() => {
+      if (!viewport || !onEndReached) {
+        return;
+      }
+      const handleScroll = () => {
+        if (viewport.scrollTop + viewport.clientHeight >= viewport.scrollHeight - END_REACHED_THRESHOLD) {
+          onEndReached();
+        }
+      };
+      viewport.addEventListener('scroll', handleScroll, { passive: true });
+      return () => viewport.removeEventListener('scroll', handleScroll);
+    }, [viewport, onEndReached]);
 
     const conversationGroups = useMemo(() => {
       if (!conversations) {
@@ -98,6 +146,8 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
           conversationId,
           messages: conversationMessages,
           tags,
+          // Authoritative count from the thread index; the loaded group is only the resident members.
+          count: threadCounts?.[conversationId] ?? conversationMessages.length,
           // Conversations show the latest message; star reflects/toggles that message.
           starred: starredIds?.has(conversationMessages[0]?.id),
           onAction,
@@ -110,7 +160,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
         starred: starredIds?.has(message.id),
         onAction,
       }));
-    }, [conversationGroups, messages, tags, starredIds, onAction]);
+    }, [conversationGroups, messages, tags, starredIds, threadCounts, onAction]);
 
     // In conversation view, the incoming `currentId` is a message ID (set when a
     // specific message becomes selected), but the tiles are keyed by conversation ID.
@@ -296,6 +346,8 @@ type ConversationTileData = {
   conversationId: string;
   messages: Message.Message[];
   tags?: MessageTagsIndex;
+  /** Total messages in the conversation (from the thread index); may exceed the rendered preview. */
+  count?: number;
   starred?: boolean;
   onAction?: MessageStackActionHandler;
 };
@@ -304,8 +356,9 @@ type ConversationTileProps = Pick<MosaicTileProps<ConversationTileData>, 'data' 
 
 const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
   ({ data, location, current }, forwardedRef) => {
-    const { conversationId, messages, starred, onAction } = data;
+    const { conversationId, messages, count, starred, onAction } = data;
     const latest = messages[0];
+    const messageCount = count ?? messages.length;
     const { subject } = getMessageProps(latest, new Date());
     const { setCurrentId, setSelected } = useMosaicContainer('ConversationTile');
 
@@ -354,7 +407,14 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
           menu
           starred={starred}
           onToggleStar={onAction ? handleToggleStar : undefined}
-          title={<span className='grow truncate font-medium'>{subject}</span>}
+          title={
+            <>
+              <span className='grow truncate font-medium'>{subject}</span>
+              {messageCount > 1 && (
+                <span className='text-xs text-description whitespace-nowrap shrink-0'>{messageCount}</span>
+              )}
+            </>
+          }
         />
         <Card.Body>
           {/* TODO(burdon): Currently limits to last n messages. */}

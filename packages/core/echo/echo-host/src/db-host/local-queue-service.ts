@@ -64,6 +64,7 @@ export class LocalQueueServiceImpl implements QueueService {
           query: { feedIds: queueIds ?? [] },
           position: cursor,
           limit: query.limit,
+          reverse: query.reverse,
         });
 
         const objects = result.blocks.map((block: FeedProtocol.Block) =>

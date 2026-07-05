@@ -26,9 +26,14 @@ import { InboxOperation } from '#types';
 import { InboxCapabilities, Mailbox, Starred } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
-import { getMailboxMessagePath } from '../../paths';
 import { matchesFilter, sortByCreated } from '../../util';
 import { InitializeMailbox, InitializeMailboxAction } from './InitializeMailbox';
+
+/** Initial mailbox window: the newest N messages are loaded; extended on scroll-to-end (see `handleLoadOlder`). */
+const WINDOW = 100;
+
+/** Debounce (ms) for the tag/thread index subscription bumps, coalescing a burst of sync commits into one render. */
+const INDEX_BUMP_DEBOUNCE = 200;
 
 export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   Mailbox.Mailbox,
@@ -122,29 +127,44 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
 
   const tagMap = useTags(db);
 
-  // Build message-to-tags map by inverting the Mailbox tag index.
-  // NOT memoized: `Mailbox.applyTag`/`removeTag` mutate nested data under `mailbox.tags`,
-  // which a `[mailbox.tags]` dependency wouldn't observe — same ECHO reactivity pitfall
-  // documented in `ExtractedTags.tsx`.
+  // `mailbox.tags` (tag index) and `mailbox.threads` (thread index) are mutated in place by tagging
+  // and sync, which `useQuery` doesn't observe — so subscribe to each index directly and re-derive
+  // on change. The subscription bumps are debounced (INDEX_BUMP_DEBOUNCE) so a burst of sync-chunk
+  // commits coalesces into one render; the derivations then memoize off the resulting tick (keeping
+  // them off the render-hot path even though `mailbox` identity is stable across in-place mutations).
+  const [tagTick, bumpTags] = useReducer((tick: number) => tick + 1, 0);
+  const [threadTick, bumpThreads] = useReducer((tick: number) => tick + 1, 0);
+  const debouncedBumpTags = useDebouncedBump(bumpTags);
+  const debouncedBumpThreads = useDebouncedBump(bumpThreads);
+  const tagIndex = mailbox.tags?.target;
+  useEffect(() => (tagIndex ? Obj.subscribe(tagIndex, debouncedBumpTags) : undefined), [tagIndex, debouncedBumpTags]);
+  const threadIndex = mailbox.threads?.target;
+  useEffect(
+    () => (threadIndex ? Obj.subscribe(threadIndex, debouncedBumpThreads) : undefined),
+    [threadIndex, debouncedBumpThreads],
+  );
+
   // `messageTagUris` is the raw tag-uri index (used for client-side filtering, same id space as the
   // query); `messageTagsMap` resolves those uris to label/hue chips for rendering.
-  const messageTagUris = Mailbox.buildMessageTagsIndex(mailbox);
-  const messageTagsMap: Record<string, { id: string; label: string; hue?: string }[]> = {};
-  for (const [messageId, uris] of Object.entries(messageTagUris)) {
-    messageTagsMap[messageId] = uris.flatMap((uri) => {
-      const tag = tagMap[uri];
-      return tag ? [{ id: uri, label: tag.label, hue: tag.hue }] : [];
-    });
-  }
+  const messageTagUris = useMemo(() => Mailbox.buildMessageTagsIndex(mailbox), [mailbox, tagTick]);
+  const messageTagsMap = useMemo(() => {
+    const map: Record<string, { id: string; label: string; hue?: string }[]> = {};
+    for (const [messageId, uris] of Object.entries(messageTagUris)) {
+      map[messageId] = uris.flatMap((uri) => {
+        const tag = tagMap[uri];
+        return tag ? [{ id: uri, label: tag.label, hue: tag.hue }] : [];
+      });
+    }
+    return map;
+  }, [messageTagUris, tagMap]);
 
-  // Starred messages drive the per-tile star toggle. Tagging mutates the child `TagIndex` in place,
-  // which `useQuery` doesn't observe, so subscribe to that index directly and re-derive on change.
+  // Starred messages drive the per-tile star toggle; starred state also lives under the tag index.
   const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
-  const tagIndex = mailbox.tags?.target;
-  const [, bumpStarred] = useReducer((tick: number) => tick + 1, 0);
-  useEffect(() => (tagIndex ? Obj.subscribe(tagIndex, bumpStarred) : undefined), [tagIndex]);
-  const starredIds = Starred.getStarredIds(mailbox, starredUri);
+  const starredIds = useMemo(() => Starred.getStarredIds(mailbox, starredUri), [mailbox, starredUri, tagTick]);
+
+  // Conversation counts drive the per-tile message count, derived from the thread index.
+  const threadCounts = useMemo(() => Mailbox.buildThreadCounts(mailbox), [mailbox, threadTick]);
 
   // Filter.
   const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
@@ -155,11 +175,20 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     setFilter(filter);
   }, [filterText, builder]);
 
-  // Messages.
+  // Messages. Bounded to the newest `windowSize` (a tail window over the feed) so the data handed to
+  // React — and the per-render derived maps — stay bounded as the feed grows during sync; the oldest
+  // fall out of the window. "Load older" (`handleLoadOlder`) extends the window on scroll-to-end.
+  const [windowSize, setWindowSize] = useState(WINDOW);
+  useEffect(() => setWindowSize(WINDOW), [subject.id]);
   const messages = useQuery(
     db,
-    feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
+    feed ? Query.select(Filter.type(Message.Message)).from(feed).limit(windowSize) : Query.select(Filter.nothing()),
   );
+
+  const handleLoadOlder = useCallback(() => {
+    // Only grow when the window is full — a short result means the oldest message is already resident.
+    setWindowSize((size) => (messages.length >= size ? size + WINDOW : size));
+  }, [messages.length]);
 
   // Feed/queue queries don't yet support text-search and complex filter combinations,
   // so query Messages by type only and apply the parsed filter client-side.
@@ -184,14 +213,21 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   }, [subject.id]);
 
   // TODO(burdon): Actual test should be if we have synced; not number of messages.
-  // Delay showing empty state to prevent flicker as messages are loaded.
+  // Show the message list as soon as any messages are present; only fall back to the empty state
+  // after a brief delay of genuinely having none (prevents an initial-load flicker). Keyed on the
+  // COUNT, not the query-result identity: keying on `messages` (which changes on every update) plus
+  // an always-delayed setter meant that during a sync the timeout was cleared before it ever fired,
+  // latching the empty state `true` while messages streamed in — the mailbox showed empty for the
+  // whole burst and only revealed messages once updates slowed past the 1s window.
   const [isEmpty, setEmpty] = useState<boolean>(false);
   useEffect(() => {
-    const t = setTimeout(() => {
-      setEmpty(messages.length === 0);
-    }, 1_000);
+    if (messages.length > 0) {
+      setEmpty(false);
+      return;
+    }
+    const t = setTimeout(() => setEmpty(true), 1_000);
     return () => clearTimeout(t);
-  }, [messages]);
+  }, [messages.length]);
 
   const handleClear = useCallback(() => {
     setFilterText(filterProp ?? '');
@@ -204,14 +240,10 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
       if (!message || !db) {
         return;
       }
-      void showItem({
-        contextId: id,
-        selectionId: message.id,
-        companion: linkedSegment('message'),
-        path: getMailboxMessagePath(db.spaceId, mailbox.id, message.id),
-      });
+      // Open the unified conversation view; the `mailboxThread` connector derives the thread from the selection.
+      void showItem({ contextId: id, selectionId: message.id, companion: linkedSegment('thread') });
     },
-    [db, id, mailbox.id, sortedMessages, showItem],
+    [db, id, sortedMessages, showItem],
   );
 
   useArticleKeyboardNavigation({ articleId: id, items: sortedMessages, currentId, onSelect: handleNavigate });
@@ -219,19 +251,15 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   const handleAction = useCallback<MessageStackActionHandler>(
     (action) => {
       switch (action.type) {
-        // 'current' fires when a specific message is clicked;
-        // 'current-conversation' fires when the enclosing conversation is clicked (with its latest message).
+        // A message click ('current') and a conversation click ('current-conversation') both open the
+        // one unified conversation (thread) view — a single message is just a one-message conversation.
+        // Selecting the message lets the `mailboxThread` connector derive the conversation to render.
         case 'current':
         case 'current-conversation': {
           const message = sortedMessages.find((message) => message.id === action.messageId);
           invariant(message);
           invariant(db);
-          void showItem({
-            contextId: id,
-            selectionId: message.id,
-            companion: linkedSegment('message'),
-            path: getMailboxMessagePath(db.spaceId, mailbox.id, message.id),
-          });
+          void showItem({ contextId: id, selectionId: message.id, companion: linkedSegment('thread') });
           break;
         }
 
@@ -269,7 +297,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
         }
       }
     },
-    [db, id, mailbox.id, subject, sortedMessages, invokePromise, showItem],
+    [db, id, subject, sortedMessages, invokePromise, showItem],
   );
 
   const handleSaveFilter = useCallback(() => {
@@ -313,8 +341,10 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
             currentId={currentId}
             tags={messageTagsMap}
             starredIds={starredIds}
+            threadCounts={threadCounts}
             conversations={settings.conversations}
             onAction={handleAction}
+            onEndReached={handleLoadOlder}
           />
         )}
       </Panel.Content>
@@ -369,6 +399,34 @@ const MailboxFilter = ({
       <IconButton icon='ph--x--regular' iconOnly label={t('mailbox-toolbar-clear-button.label')} onClick={onClear} />
     </>
   );
+};
+
+/**
+ * Wraps a bump callback so a burst of index mutations (e.g. one per sync-chunk commit) collapses into
+ * a single deferred call, and cancels the pending timer on unmount. Returns a stable function.
+ */
+const useDebouncedBump = (bump: () => void): (() => void) => {
+  const { handler, cancel } = useMemo(() => {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    return {
+      handler: () => {
+        if (timeout !== undefined) {
+          clearTimeout(timeout);
+        }
+        timeout = setTimeout(() => {
+          timeout = undefined;
+          bump();
+        }, INDEX_BUMP_DEBOUNCE);
+      },
+      cancel: () => {
+        if (timeout !== undefined) {
+          clearTimeout(timeout);
+        }
+      },
+    };
+  }, [bump]);
+  useEffect(() => cancel, [cancel]);
+  return handler;
 };
 
 /**

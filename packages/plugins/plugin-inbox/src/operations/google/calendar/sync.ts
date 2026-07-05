@@ -98,6 +98,10 @@ export default InboxOperation.GoogleCalendarSync.pipe(
             ),
           );
 
+          // Flush indexes once at the end of the run (per-page commits no longer flush — see
+          // `SyncBinding.commit`) so cross-run dedup / resolution observe this run's writes.
+          yield* Effect.promise(() => db.flush({ indexes: true }));
+
           log('calendar sync complete', { newEvents: stats.newMessages, isInitialSync });
           return { newEvents: stats.newMessages };
         }).pipe(

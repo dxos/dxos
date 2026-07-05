@@ -61,7 +61,7 @@ import {
 } from '../echo-handler';
 import { FeedHandle } from '../feed/feed-handle';
 import { type HypergraphImpl } from '../hypergraph';
-import { isSimpleSelectionQuery } from '../query';
+import { analyzeFeedQuery } from '../query';
 import { type ObjectMigration } from './object-migration';
 
 export interface EchoDatabase extends Database.Database {
@@ -539,6 +539,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._queryFeed(feedUri, query);
   }
 
+  async readFeedLatest(feed: Feed.Feed, limit: number): Promise<Obj.Unknown[]> {
+    // Queue items are hydrated as generic entities; a feed holds objects (not relations), so the
+    // downcast is sound at this boundary.
+    return (await this.#getFeedHandle(feed).fetchLatestObjects(limit)) as Obj.Unknown[];
+  }
+
   /**
    * @internal
    * Sets or refreshes the feed backend service (e.g. after reconnection).
@@ -809,8 +815,10 @@ const isQueryScoped = (query: QueryAST.Query): boolean => {
  * Index-only queries (e.g. full-text search) must instead run through the host indexer.
  */
 const isClientEvaluableFeedQuery = (query: QueryAST.Query): boolean => {
-  const simple = isSimpleSelectionQuery(query);
-  return simple != null && !filterContainsTextSearch(simple.filter);
+  // `analyzeFeedQuery` (not `isSimpleSelectionQuery`) so a windowed feed query (`.limit(n)`) still
+  // routes to the feed handle; the shared simple-query check treats a limit clause as non-simple.
+  const analyzed = analyzeFeedQuery(query);
+  return analyzed != null && !filterContainsTextSearch(analyzed.filter);
 };
 
 const filterContainsTextSearch = (filter: QueryAST.Filter): boolean => {

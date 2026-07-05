@@ -256,9 +256,11 @@ export class FeedStore {
             ? sql`AND blocks.position IS NULL`
             : sql`AND (blocks.position > ${position} OR blocks.position IS NULL)`;
 
+        // Reverse yields newest-first; combined with `limit` this is a bounded tail read.
+        const direction = request.reverse ? sql`DESC` : sql`ASC`;
         const orderBy = request.cursor
-          ? sql`ORDER BY blocks.insertionId ASC`
-          : sql`ORDER BY blocks.position ASC NULLS LAST`;
+          ? sql`ORDER BY blocks.insertionId ${direction}`
+          : sql`ORDER BY blocks.position ${direction} NULLS LAST`;
 
         const requestLimit = request.limit;
         const queryLimit = requestLimit != null ? requestLimit + 1 : undefined;

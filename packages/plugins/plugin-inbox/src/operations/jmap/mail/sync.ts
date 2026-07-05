@@ -71,6 +71,8 @@ export default InboxOperation.JmapSync.pipe(
         const { db } = yield* Database.Service;
         const feed = yield* Database.load(mailbox.feed);
         const tagIndex = yield* Database.load(mailbox.tags);
+        // Conversation index (lazily provisioned): thread membership is recorded during commit.
+        const threadIndex = Mailbox.getOrCreateThreadIndex(mailbox, db);
 
         // TODO(wittjosiah): Migrate this folder→Tag sync onto a pipeline too (source: folders; sink:
         //   find-or-create Tag), rather than the imperative loop below.
@@ -124,13 +126,18 @@ export default InboxOperation.JmapSync.pipe(
           EmailStage.htmlToMarkdown,
           mapToMessageStage,
           EmailStage.onArrivalExtractors(mailbox),
-          EmailStage.extractContacts,
+          EmailStage.extractContacts(),
+          EmailStage.recordThreads(threadIndex),
           Stream.grouped(COMMIT_PAGE_SIZE),
           Pipeline.run({ sink: SyncBinding.commit }),
           Effect.provide(
             SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: JMAP_MESSAGE_SOURCE, cursorKey, stats }),
           ),
         );
+
+        // Flush indexes once at the end of the run (per-page commits no longer flush — see
+        // `SyncBinding.commit`) so cross-run dedup / contact resolution observe this run's writes.
+        yield* Effect.promise(() => db.flush({ indexes: true }));
 
         log('jmap sync complete', { newMessages: stats.newMessages });
         return { newMessages: stats.newMessages };
@@ -166,13 +173,16 @@ const jmapSource = (
         resolveMailbox: (nameOrRole) => JmapMail.resolveMailboxByNameOrRole(folders, nameOrRole),
       })
     : Option.none<Jmap.Filter>();
-  // When the user filter already scopes a mailbox, skip the forced Inbox restriction.
+  // When the user filter already scopes a mailbox, skip the default folder restriction.
   const scopesMailbox = Option.match(userFilter, { onNone: () => false, onSome: JmapMail.filterScopesMailbox });
-  const inbox = folders.find((folder) => folder.role === 'inbox');
+  // Default to all mail (every folder incl. Sent) so full conversations sync, excluding Trash/Junk/Drafts.
+  const excludedFolderIds = folders
+    .filter((folder) => folder.role === 'trash' || folder.role === 'junk' || folder.role === 'drafts')
+    .map((folder) => folder.id);
 
   const conditions: Jmap.Filter[] = [];
-  if (inbox && !scopesMailbox) {
-    conditions.push({ inMailbox: inbox.id });
+  if (!scopesMailbox && excludedFolderIds.length > 0) {
+    conditions.push({ inMailboxOtherThan: excludedFolderIds });
   }
   if (cursorKey > 0) {
     conditions.push({ after: new Date(cursorKey).toISOString() });

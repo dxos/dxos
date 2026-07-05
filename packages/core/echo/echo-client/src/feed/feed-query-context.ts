@@ -13,8 +13,14 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type QueryContext, isSimpleSelectionQuery } from '../query';
+import { type QueryContext, analyzeFeedQuery } from '../query';
 import { type FeedHandle } from './feed-handle';
+
+// A sync appends a page (~10 items) roughly twice a second and the feed also polls every second; each
+// fires `updated`. Recomputing (and re-rendering) on every one is a render storm. Coalesce them into
+// at most one recompute per window (leading + trailing edge), keeping latency low while capping the
+// re-render rate during a burst.
+const FEED_UPDATE_THROTTLE = 250;
 
 export class FeedQueryContext implements QueryContext {
   readonly #feed: FeedHandle;
@@ -23,6 +29,12 @@ export class FeedQueryContext implements QueryContext {
 
   // Extracted from query.
   #filter?: QueryAST.Filter = undefined;
+  // Bounded tail window: when set, results are the newest `#limit` matching items (see `analyzeFeedQuery`).
+  #limit?: number = undefined;
+
+  // Throttle bookkeeping for coalescing `updated` bursts (see `FEED_UPDATE_THROTTLE`).
+  #throttleTimer: ReturnType<typeof setTimeout> | undefined = undefined;
+  #throttlePending = false;
 
   readonly changed = new Event();
 
@@ -35,11 +47,21 @@ export class FeedQueryContext implements QueryContext {
    * One-shot run.
    */
   async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry[]> {
-    const trivial = isSimpleSelectionQuery(query);
-    if (!trivial) {
+    const analyzed = analyzeFeedQuery(query);
+    if (!analyzed) {
       throw new Error('Query not supported.');
     }
-    const { filter } = trivial;
+    const { filter, limit } = analyzed;
+
+    // A windowed query reads only the tail (newest `limit`) instead of decoding the whole feed.
+    // `fetchLatestObjects` yields newest-first; reverse back to ascending (append) order to match
+    // the unbounded path (and `getResults`).
+    if (limit !== undefined) {
+      const tail = (await this.#feed.fetchLatestObjects(limit)).reverse();
+      return tail
+        .filter((object) => filterMatchObjectJSON(filter, Entity.toJSON(object)))
+        .map((object) => ({ id: object.id, result: object }));
+    }
 
     const objects = await Function.pipe(
       await this.#feed.fetchObjectsJSON(),
@@ -71,10 +93,37 @@ export class FeedQueryContext implements QueryContext {
   start(): void {
     this.#runCtx = this.#parentCtx.derive();
     this.#runCtx.onDispose(this.#feed.beginPolling());
-    this.#feed.updated.on(this.#runCtx, () => {
-      this.changed.emit();
+    // Register this query's window so the feed retains (at least) the newest `#limit` items; the
+    // matching unregister is tied to the same ctx, so `stop()` (which disposes it) balances it.
+    this.#feed.registerWindow(this.#limit);
+    this.#runCtx.onDispose(() => this.#feed.unregisterWindow(this.#limit));
+    this.#feed.updated.on(this.#runCtx, this.#onFeedUpdated);
+    this.#runCtx.onDispose(() => {
+      if (this.#throttleTimer !== undefined) {
+        clearTimeout(this.#throttleTimer);
+        this.#throttleTimer = undefined;
+        this.#throttlePending = false;
+      }
     });
   }
+
+  // Coalesce a burst of feed `updated` events into one recompute per `FEED_UPDATE_THROTTLE`: emit
+  // immediately (leading edge), then swallow further events for the window and emit once more at the
+  // end if any arrived (trailing edge).
+  readonly #onFeedUpdated = (): void => {
+    if (this.#throttleTimer !== undefined) {
+      this.#throttlePending = true;
+      return;
+    }
+    this.changed.emit();
+    this.#throttleTimer = setTimeout(() => {
+      this.#throttleTimer = undefined;
+      if (this.#throttlePending) {
+        this.#throttlePending = false;
+        this.#onFeedUpdated();
+      }
+    }, FEED_UPDATE_THROTTLE);
+  };
 
   /**
    * Stop reactive query.
@@ -88,12 +137,12 @@ export class FeedQueryContext implements QueryContext {
    * Update the filter (for reactive queries).
    */
   update(query: QueryAST.Query): void {
-    const trivial = isSimpleSelectionQuery(query);
-    if (!trivial) {
+    const analyzed = analyzeFeedQuery(query);
+    if (!analyzed) {
       throw new Error('Query not supported.');
     }
-    const { filter } = trivial;
-    this.#filter = filter;
+    this.#filter = analyzed.filter;
+    this.#limit = analyzed.limit;
     this.changed.emit();
   }
 
@@ -103,14 +152,18 @@ export class FeedQueryContext implements QueryContext {
   getResults(): QueryResult.EntityEntry[] {
     invariant(this.#filter);
 
-    return Function.pipe(
+    const matches = Function.pipe(
       this.#feed.getObjectsSync(),
       // TODO(dmaretskyi): We end-up marshaling objects from JSON and back.
       Array.filter((obj) => filterMatchObjectJSON(this.#filter!, Entity.toJSON(obj))),
-      Array.map((object) => ({
-        id: object.id,
-        result: object,
-      })),
     );
+    // Bounded tail window: `getObjectsSync` is in ascending (append) order, so the newest `#limit`
+    // are the last `#limit`. This bounds the data handed to consumers (not just rendered DOM); as
+    // the feed grows during sync the oldest fall out of the window.
+    const windowed = this.#limit !== undefined ? matches.slice(-this.#limit) : matches;
+    return windowed.map((object) => ({
+      id: object.id,
+      result: object,
+    }));
   }
 }

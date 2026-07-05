@@ -25,12 +25,23 @@ import { meta } from '#meta';
 import { InboxOperation } from '#types';
 import { Calendar, DraftMessage, Mailbox } from '#types';
 
-import { MAILBOX_DRAFTS_NODE_DATA, MAILBOX_DRAFTS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
+import {
+  MAILBOX_DRAFTS_NODE_DATA,
+  MAILBOX_DRAFTS_TYPE,
+  MAILBOXES_SECTION_TYPE,
+  type ThreadCompanionData,
+} from '../constants';
 import { getCalendarsPath, getDraftsId, getMailboxesPath, getMailboxesSectionId } from '../paths';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
 const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
+
+// The navtree new-message badge only needs to distinguish "some new" up to a cap, so it queries a
+// bounded newest-N window instead of the whole feed. This keeps the always-mounted count query from
+// loading (and pinning the client's retention window to) the entire mailbox — the badge saturates at
+// this many rather than reporting an exact count for very large unread backlogs.
+const NEW_MESSAGE_COUNT_WINDOW = 100;
 
 type FeedObjectNodeConfig<Parent extends Obj.Unknown, Child extends Obj.Unknown> = {
   id: string;
@@ -172,7 +183,7 @@ export default Capability.makeModule(
               const mailboxSnapshot = get(Obj.atom(mailbox));
               const feed = mailboxSnapshot.feed ? get(mailboxSnapshot.feed.atom) : undefined;
               const messages = feed
-                ? get(space.db.query(Query.select(Filter.type(Message.Message)).from(feed)).atom)
+                ? get(space.db.query(Query.select(Filter.type(Message.Message)).from(feed).limit(NEW_MESSAGE_COUNT_WINDOW)).atom)
                 : [];
               const modifiedCount = Mailbox.getNewMessageCount(mailboxSnapshot, messages);
 
@@ -318,6 +329,38 @@ export default Capability.makeModule(
               label: ['message.label', { ns: meta.profile.key }],
               icon: 'ph--envelope-open--regular',
               data: message ?? 'message',
+            }),
+          ]);
+        },
+      }),
+
+      // Thread detail companion, parallel to `mailboxMessage`: derives the selected message's thread id
+      // and exposes a `linkedSegment('thread')` companion carrying `{ mailbox, threadId }` for the
+      // thread surface. Companion-only (no navigable path), since a thread has no ECHO object to resolve.
+      GraphBuilder.createExtension({
+        id: 'mailboxThread',
+        match: (node) =>
+          Mailbox.instanceOf(node.data) ? Option.some({ mailbox: node.data, nodeId: node.id }) : Option.none(),
+        connector: (matched, get) => {
+          const mailbox = matched.mailbox;
+          const db = Obj.getDatabase(mailbox);
+          const feed = mailbox.feed ? (get(mailbox.feed.atom) as Feed.Feed | undefined) : undefined;
+          if (!db || !feed) {
+            return Effect.succeed([]);
+          }
+
+          const messageId = get(selectedId(matched.nodeId));
+          const message = get(
+            db.query(Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed)).atom,
+          )[0];
+          return Effect.succeed([
+            AppNode.makeCompanion<ThreadCompanionData>({
+              id: linkedSegment('thread'),
+              label: ['thread.label', { ns: meta.profile.key }],
+              icon: 'ph--chats-circle--regular',
+              // Conversation key: the message's thread id, or its own id when unthreaded (a one-message
+              // conversation), matching `MessageStack`/`ThreadArticle` grouping.
+              data: { mailbox, threadId: message ? (message.threadId ?? message.id) : undefined },
             }),
           ]);
         },

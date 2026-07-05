@@ -5,6 +5,7 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { addDays, format, subDays } from 'date-fns';
 import * as Chunk from 'effect/Chunk';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
@@ -44,20 +45,35 @@ type DateRangeConfig = {
 };
 
 const STREAMING_CONFIG = {
-  dateChunkDays: 7,
+  dateChunkDays: 1,
   messageFetchConcurrency: 5,
-  maxResults: 500,
-  restrictedMax: 20,
+  maxResults: 100,
+  restrictedMax: 10,
   /** Commit page size — kept ≤ 15 so each `Feed.append` is a single atomic queue insert. */
   pageSize: 10,
+  /**
+   * Max time to wait before committing a partial page. Bounds time-to-first-message: with small date
+   * windows a full page of `pageSize` can take many sequential fetches to accumulate, so commit
+   * whatever is ready within this window instead of stalling the UI until 10 arrive.
+   */
+  pageTimeout: Duration.seconds(1),
 } as const;
+
+// Single-flight guard keyed by binding id: a full "all mail" sync can run for many minutes, so the
+// 5-minute timer trigger (or a repeat manual invoke) would otherwise start a second concurrent sync
+// over the same feed — doubling Gmail traffic, main-thread work, and memory, and keeping the binding
+// "syncing" indefinitely. A run in progress covers the caller's intent (its cursor advances), so a
+// concurrent request is skipped.
+const activeSyncs = new Set<string>();
 
 export default InboxOperation.GoogleMailSync.pipe(
   Operation.withHandler(
     ({
       binding: bindingRef,
       userId = 'me',
-      label = 'inbox',
+      // Default to all mail (every folder incl. Sent) so full conversations sync; a specific label
+      // restricts to that folder. See `fetchMessagesForDateRange` for how `'all'` maps to the query.
+      label = 'all',
       after = format(subDays(new Date(), 30), 'yyyy-MM-dd'),
       restrictedMode = false,
     }) =>
@@ -67,6 +83,12 @@ export default InboxOperation.GoogleMailSync.pipe(
         if (!bindingObj || !db) {
           return { newMessages: 0 };
         }
+
+        if (activeSyncs.has(bindingObj.id)) {
+          log('gmail sync already running for binding, skipping', { binding: bindingObj.id });
+          return { newMessages: 0 };
+        }
+        activeSyncs.add(bindingObj.id);
 
         const connectionRef = Ref.make(Relation.getSource(bindingObj));
         const normalizedAfter = typeof after === 'number' ? format(new Date(after), 'yyyy-MM-dd') : after;
@@ -92,6 +114,8 @@ export default InboxOperation.GoogleMailSync.pipe(
           const feed = yield* Database.load(mailbox.feed);
           // Resolve the child tag index so provider-label tags can be applied synchronously during commit.
           const tagIndex = yield* Database.load(mailbox.tags);
+          // Conversation index (lazily provisioned): thread membership is recorded during commit.
+          const threadIndex = Mailbox.getOrCreateThreadIndex(mailbox, db);
           const labelMap = yield* syncLabels(mailbox, userId).pipe(
             Effect.catchAll((error) => {
               log.catch(error);
@@ -133,16 +157,27 @@ export default InboxOperation.GoogleMailSync.pipe(
               (message) => Number.parseInt(message.internalDate),
             ),
             decodeBodyStage,
-            EmailStage.htmlToMarkdown,
+            // HTML→markdown (turndown) intentionally disabled: it was a measurable share of sync CPU and
+            // is deferred pending benchmark-driven re-evaluation. Bodies stay raw HTML for now.
+            // TODO(wittjosiah): Re-enable (or replace with a cheaper HTML→text) once the benchmark
+            //   (docs/superpowers/specs/2026-07-04-mail-sync-performance-exploration.md) quantifies it.
+            // EmailStage.htmlToMarkdown,
             mapToMessageStage,
             EmailStage.onArrivalExtractors(mailbox),
-            EmailStage.extractContacts,
-            Stream.grouped(STREAMING_CONFIG.pageSize),
+            EmailStage.extractContacts(),
+            EmailStage.recordThreads(threadIndex),
+            // Emit a page when it fills OR after `pageTimeout`, so the first messages commit (and
+            // render) as soon as they're processed rather than waiting to accumulate a full page.
+            Stream.groupedWithin(STREAMING_CONFIG.pageSize, STREAMING_CONFIG.pageTimeout),
             Pipeline.run({ sink: SyncBinding.commit }),
             Effect.provide(
               SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: GMAIL_SOURCE, cursorKey, stats }),
             ),
           );
+
+          // Flush indexes once, at the end of the run, so cross-run dedup / contact resolution observe
+          // this run's writes (per-page commits no longer flush — see `SyncBinding.commit`).
+          yield* Effect.promise(() => db.flush({ indexes: true }));
 
           log('gmail sync complete', { newMessages: stats.newMessages });
           return { newMessages: stats.newMessages };
@@ -150,6 +185,8 @@ export default InboxOperation.GoogleMailSync.pipe(
           Effect.provide(
             Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromConnection(connectionRef)),
           ),
+          // Release the single-flight guard on completion, interruption, or failure.
+          Effect.ensuring(Effect.sync(() => activeSyncs.delete(bindingObj.id))),
         );
       }),
   ),
@@ -249,7 +286,11 @@ const fetchMessagesForDateRange = (userId: string, label: string, dateChunk: Dat
         return Option.none();
       }
 
-      const scope = `in:anywhere label:${label} after:${format(dateChunk.start, 'yyyy/MM/dd')} before:${format(dateChunk.end, 'yyyy/MM/dd')}`;
+      // `'all'` → All Mail (incl. Sent) minus Spam/Trash/Drafts/Chats, so conversations are complete;
+      // any other value restricts to that Gmail label.
+      const folderScope =
+        label === 'all' ? 'in:anywhere -in:spam -in:trash -in:drafts -in:chats' : `in:anywhere label:${label}`;
+      const scope = `${folderScope} after:${format(dateChunk.start, 'yyyy/MM/dd')} before:${format(dateChunk.end, 'yyyy/MM/dd')}`;
       const query = searchFilter ? `${scope} ${searchFilter}` : scope;
       log('fetching message IDs', {
         query,

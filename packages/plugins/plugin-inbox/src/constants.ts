@@ -6,6 +6,10 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
+// Direct module path (not the `#types` barrel) to avoid a cycle: the barrel re-exports `DraftEvent`,
+// which imports this file. Type-only, so it is erased at runtime regardless.
+import { type Mailbox } from './types/Mailbox';
+
 /** Google Calendar / Gmail foreign-key `Meta.keys[].source` used by inbox sync. */
 export const GOOGLE_INTEGRATION_SOURCE = 'com.google';
 
@@ -42,3 +46,12 @@ export const MAILBOX_DRAFTS_TYPE = `${meta.profile.key}.drafts`;
  * Sentinel `data` value for the drafts folder graph node. Must be non-null so the nav tree can select it (`handleSelect` skips `!node.data`).
  */
 export const MAILBOX_DRAFTS_NODE_DATA = `${meta.profile.key}.drafts-folder` as const;
+
+/**
+ * Companion `data` for the thread detail view: the owning mailbox plus the selected conversation's
+ * thread id. The `mailboxThread` graph connector derives it from the current selection; the thread
+ * surface renders {@link ThreadArticle} for it. Carried as the companion node's `data` (like the
+ * message companion carries the message object) rather than a resolvable object, since a thread has
+ * no ECHO object of its own.
+ */
+export type ThreadCompanionData = { mailbox: Mailbox; threadId?: string };

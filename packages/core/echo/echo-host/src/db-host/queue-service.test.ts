@@ -143,6 +143,38 @@ describe('LocalQueueServiceImpl', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('should support reverse (newest-first) bounded tail reads', () =>
+    Effect.gen(function* () {
+      const runtime = Effect.succeed(yield* Effect.runtime<any>());
+      const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
+      yield* feedStore.migrate();
+      const service = new LocalQueueServiceImpl(runtime, feedStore);
+      const spaceId = 'space-1' as SpaceId;
+      const queueId = EntityId.random();
+
+      const items = Array.from({ length: 10 }, (_, i) => ({ id: `obj${i}`, data: `test${i}` }));
+      yield* Effect.promise(() =>
+        service.insertIntoQueue({
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
+          spaceId,
+          queueId,
+          objects: items.map((item) => JSON.stringify(item)),
+        }),
+      );
+
+      // Reverse + limit yields the most recently appended items, newest first.
+      const tail = yield* Effect.promise(() =>
+        service.queryQueue({
+          query: { spaceId, queueIds: [queueId], limit: 3, reverse: true },
+        }),
+      );
+      expect(tail.objects).toHaveLength(3);
+      expect(JSON.parse(tail.objects![0])).toMatchObject(items[9]);
+      expect(JSON.parse(tail.objects![1])).toMatchObject(items[8]);
+      expect(JSON.parse(tail.objects![2])).toMatchObject(items[7]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('should report local push backlog in getSyncState', () =>
     Effect.gen(function* () {
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: false });
