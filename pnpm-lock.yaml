@@ -739,8 +739,8 @@ catalogs:
       specifier: ^15.5.13
       version: 15.5.13
     '@types/react-test-renderer':
-      specifier: ^17.0.2
-      version: 17.0.9
+      specifier: ^19.1.0
+      version: 19.1.0
     '@types/react-virtualized':
       specifier: ^9.22.3
       version: 9.22.3
@@ -20972,7 +20972,7 @@ importers:
         version: 19.2.3(@types/react@19.2.17)
       '@types/react-test-renderer':
         specifier: 'catalog:'
-        version: 17.0.9
+        version: 19.1.0
       chai:
         specifier: 'catalog:'
         version: 4.4.1
@@ -32224,8 +32224,8 @@ packages:
   '@types/react-syntax-highlighter@15.5.13':
     resolution: {integrity: sha512-uLGJ87j6Sz8UaBAooU0T6lWJ0dBmjZgN1PZTrj05TNql2/XpC6+4HhMT5syIdFUUt+FASfCeLLv4kBygNU+8qA==}
 
-  '@types/react-test-renderer@17.0.9':
-    resolution: {integrity: sha512-bOfxcu5oZ+KxvACScbkTwZ4eGCtZFTz4VZCOVAIfGbThxqiXSIGipKVG8ubaYBXquUSQROzNIUzviWdSnnAlzg==}
+  '@types/react-test-renderer@19.1.0':
+    resolution: {integrity: sha512-XD0WZrHqjNrxA/MaR9O22w/RNidWR9YZmBdRGI7wcnWGrv/3dA8wKCJ8m63Sn+tLJhcjmuhOi629N66W6kgWzQ==}
 
   '@types/react-virtualized@9.22.3':
     resolution: {integrity: sha512-UKRWeBIrECaKhE4O//TSFhlgwntMwyiEIOA7WZoVkr52Jahv0dH6YIOorqc358N2V3oKFclsq5XxPmx2PiYB5A==}
@@ -55021,7 +55021,7 @@ snapshots:
     dependencies:
       '@types/react': 19.2.17
 
-  '@types/react-test-renderer@17.0.9':
+  '@types/react-test-renderer@19.1.0':
     dependencies:
       '@types/react': 19.2.17
 
