@@ -148,7 +148,21 @@ export const GoogleMailSync = Operation.make({
     ),
     after: Schema.Union(Schema.Number, Schema.String).pipe(
       Schema.annotations({
-        description: 'Date to start syncing from, either a unix timestamp or yyyy-MM-dd string.',
+        description: 'Oldest bound of the range to sync (the horizon), a unix timestamp or yyyy-MM-dd string.',
+      }),
+      Schema.optional,
+    ),
+    before: Schema.Union(Schema.Number, Schema.String).pipe(
+      Schema.annotations({
+        description:
+          'Newest bound of the range to sync, a unix timestamp or yyyy-MM-dd string. Defaults to today; backfill passes the oldest-synced date to cap a backward walk.',
+      }),
+      Schema.optional,
+    ),
+    direction: Schema.Literal('forward', 'backward').pipe(
+      Schema.annotations({
+        description:
+          'Override the walk direction. Inferred from the cursor by default: no cursor → backward (initial, newest-first); a cursor → forward (incremental). Pass backward with `before` to backfill older gaps.',
       }),
       Schema.optional,
     ),

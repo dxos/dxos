@@ -203,13 +203,25 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
  * Advances the cursor to `maxKey` and stamps the run status. Called from the write commit so the
  * write and the cursor advance land together — the seam the single-transaction TODO below wraps.
  *
+ * Monotonic: the cursor is a *newest-seen* high-water mark, so it only ever moves forward. This is
+ * what makes direction-agnostic sync correct with one cursor: a forward (incremental) run raises it;
+ * an initial backward-from-today run sets it from its first (newest) page and later, older pages
+ * leave it untouched; a backfill run (older-than-cursor only) never moves it — it just fills gaps.
+ *
  * TODO(wittjosiah): Make the page write and this cursor advance atomic. Today they are separate
  *   stores (feed queue / space-db for {@link commit}, or two space-db mutations for
  *   {@link upsertCommit}) flushed together but not transactionally, so a crash between them can
  *   re-land a page (idempotency + the {@link layer} dedup set cover this until then). Once ECHO can
  *   commit the write and the cursor together, wrap both here and drop the dedup set.
  */
-const advanceCursor = (state: State, maxKey: number): void => Cursor.advance(state.cursor, state.formatCursor(maxKey));
+const advanceCursor = (state: State, maxKey: number): void => {
+  if (maxKey > Cursor.parseKey(state.cursor.value)) {
+    Cursor.advance(state.cursor, state.formatCursor(maxKey));
+  } else {
+    // Older-than-cursor page (backward/backfill): record the run, leave the high-water mark in place.
+    Cursor.advance(state.cursor);
+  }
+};
 
 
 /**
@@ -353,19 +365,25 @@ export const upsertCommit =
     });
 
 /**
- * Reusable dedup stage: drops items already reflected by the cursor — provider key below the run's
- * high-water cursor (`key < cursorKey`) or foreign id already committed (`dedupSet`). Reads the run
- * state from {@link Service}; provider-agnostic via the `getForeignId` / `getKey` accessors.
+ * Reusable dedup stage: drops items already committed (`dedupSet`), and — for a *forward* run — items
+ * at/below the run's high-water cursor (`key < cursorKey`), a cheap shortcut to skip the already-synced
+ * tail when resuming forwards. A *backward* run (initial backward-from-today or backfill) deliberately
+ * fetches keys below the cursor, so it must NOT apply that shortcut and relies on `dedupSet` alone.
+ * Reads the run state from {@link Service}; provider-agnostic via the `getForeignId` / `getKey` accessors.
  */
 export const dedupStage = <In>(
   id: string,
   getForeignId: (item: In) => string,
   getKey: (item: In) => number,
+  { direction = 'forward' }: { direction?: 'forward' | 'backward' } = {},
 ): Stage.Stage<In, In, never, Service> =>
   Stage.map(id, (item: In) =>
     Effect.gen(function* () {
       const { cursorKey, dedupSet } = yield* Service;
-      if (getKey(item) < cursorKey || dedupSet.has(getForeignId(item))) {
+      if (dedupSet.has(getForeignId(item))) {
+        return undefined;
+      }
+      if (direction === 'forward' && getKey(item) < cursorKey) {
         return undefined;
       }
       return item;

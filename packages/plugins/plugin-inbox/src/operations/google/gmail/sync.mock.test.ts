@@ -98,4 +98,59 @@ describe('runGmailSync against a mock Gmail API', () => {
     expect(afterRerun.length).toBe(feedMessages.length);
     expect((await db.query(Filter.type(Person.Person)).run()).length).toBe(people.length);
   });
+
+  test('initial backward, incremental forward, and backfill (cursor stays put)', { timeout: 30_000 }, async ({
+    expect,
+  }) => {
+    const now = new Date();
+    const day = (ago: number) => format(subDays(now, ago), 'yyyy-MM-dd');
+    // Three disjoint date bands (distinct ids via idPrefix), oldest → newest: older, mid, recent.
+    const mid = generateGmailDataset({ count: 10, seed: 1, start: subDays(now, 13), end: subDays(now, 8), idPrefix: 'mid' });
+    const recent = generateGmailDataset({ count: 8, seed: 2, start: subDays(now, 5), end: subDays(now, 2), idPrefix: 'new' });
+    const older = generateGmailDataset({ count: 6, seed: 3, start: subDays(now, 25), end: subDays(now, 20), idPrefix: 'old' });
+    const union = (...datasets: (typeof mid)[]) => ({ labels: mid.labels, messages: datasets.flatMap((d) => d.messages) });
+    const maxKey = (dataset: typeof mid) => Math.max(...dataset.messages.map((message) => Number(message.internalDate)));
+
+    const { db, mailbox, binding } = await seedMailboxBinding(builder);
+    const cursorKey = () => Number.parseInt(binding.cursor.target?.value ?? '0', 10);
+    const feedIds = async () => {
+      const messages = await db.queryFeed(mailbox.feed.target!, Filter.type(Message.Message)).run();
+      return messages.flatMap((message) =>
+        Obj.getMeta(message)
+          .keys.filter((key) => key.source === GMAIL_SOURCE)
+          .map((key) => key.id),
+      );
+    };
+
+    // 1) Initial: no cursor → backward from today down to the horizon (after). Only `mid` is available.
+    const r1 = await EffectEx.runPromise(
+      runGmailSync({ binding: Ref.make(binding), after: day(14) }).pipe(Effect.provide(inboxSyncTestServices(db, mid))),
+    );
+    expect(r1.newMessages).toBe(mid.messages.length);
+    expect(cursorKey()).toBe(maxKey(mid)); // cursor set to the newest synced.
+
+    // 2) Incremental: cursor present → forward from the cursor. A newer band has arrived; only it syncs.
+    const r2 = await EffectEx.runPromise(
+      runGmailSync({ binding: Ref.make(binding), after: day(14) }).pipe(
+        Effect.provide(inboxSyncTestServices(db, union(mid, recent))),
+      ),
+    );
+    expect(r2.newMessages).toBe(recent.messages.length);
+    expect(cursorKey()).toBe(maxKey(recent)); // cursor advanced to the newest.
+
+    // 3) Backfill: explicit backward over an older window (below the cursor). Fills gaps; cursor unchanged.
+    const cursorBeforeBackfill = cursorKey();
+    const r3 = await EffectEx.runPromise(
+      runGmailSync({ binding: Ref.make(binding), direction: 'backward', before: day(14), after: day(30) }).pipe(
+        Effect.provide(inboxSyncTestServices(db, union(mid, recent, older))),
+      ),
+    );
+    expect(r3.newMessages).toBe(older.messages.length);
+    expect(cursorKey()).toBe(cursorBeforeBackfill); // backfill does NOT move the monotonic cursor.
+
+    // All three bands landed exactly once.
+    const ids = await feedIds();
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.length).toBe(mid.messages.length + recent.messages.length + older.messages.length);
+  });
 });

@@ -23,6 +23,8 @@ export interface GenerateGmailDatasetOptions {
   /** `internalDate` window. Defaults to [now − 90 days, now]. */
   start?: Date;
   end?: Date;
+  /** Prefix for message + thread ids, so disjoint datasets (e.g. date bands) don't collide. Defaults to `msg`. */
+  idPrefix?: string;
 }
 
 const SYSTEM_LABELS: readonly GoogleMail.Label[] = [
@@ -43,6 +45,7 @@ export const generateGmailDataset = (options: GenerateGmailDatasetOptions = {}):
   const senderCount = Math.max(1, options.senders ?? Math.ceil(count / 5));
   const end = options.end ?? new Date();
   const start = options.start ?? subDays(end, 90);
+  const idPrefix = options.idPrefix ?? 'msg';
   random.seed(options.seed ?? 42);
 
   const customLabels: GoogleMail.Label[] = (options.labels ?? ['Work', 'Personal', 'Receipts', 'Travel']).map(
@@ -54,7 +57,7 @@ export const generateGmailDataset = (options: GenerateGmailDatasetOptions = {}):
     name: random.person.fullName(),
     email: random.internet.email(),
   }));
-  const threadIds = Array.from({ length: threadCount }, (_, index) => `thread-${index}`);
+  const threadIds = Array.from({ length: threadCount }, (_, index) => `${idPrefix}-thread-${index}`);
 
   const startMs = start.getTime();
   const endMs = end.getTime();
@@ -70,7 +73,7 @@ export const generateGmailDataset = (options: GenerateGmailDatasetOptions = {}):
     const labelIds = ['INBOX', ...(random.number.int({ min: 0, max: 1 }) ? [random.helpers.arrayElement(customLabels).id] : [])];
 
     return {
-      id: `msg-${index}`,
+      id: `${idPrefix}-${index}`,
       threadId,
       labelIds,
       snippet: body.slice(0, 100),

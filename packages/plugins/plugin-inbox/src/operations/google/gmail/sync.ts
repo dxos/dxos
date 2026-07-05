@@ -44,10 +44,17 @@ type DateChunk = {
   readonly end: Date;
 };
 
+/** Which end of the [start, end) range the date-walk begins from. */
+export type SyncDirection = 'forward' | 'backward';
+
 type DateRangeConfig = {
-  readonly startDate: Date;
-  readonly endDate: Date;
+  /** Inclusive-ish lower bound (oldest) of the range to sync. */
+  readonly start: Date;
+  /** Exclusive upper bound (newest) of the range to sync. */
+  readonly end: Date;
   readonly chunkDays: number;
+  /** `forward` walks oldest→newest windows (incremental resume); `backward` walks newest→oldest (initial/backfill). */
+  readonly direction: SyncDirection;
 };
 
 const STREAMING_CONFIG = {
@@ -85,12 +92,23 @@ export const runGmailSync = ({
   // restricts to that folder. See `fetchMessagesForDateRange` for how `'all'` maps to the query.
   label = 'all',
   after = format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+  before,
+  direction,
   restrictedMode = false,
 }: {
   binding: Ref.Ref<SyncBinding.SyncBinding>;
   userId?: string;
   label?: string;
+  /** Lower (oldest) bound of the range to sync — unix ms or yyyy-MM-dd. Defaults to 30 days ago. */
   after?: string | number;
+  /** Upper (newest) bound of the range — unix ms or yyyy-MM-dd. Defaults to today. Backfill passes the oldest-synced date here to cap a backward walk. */
+  before?: string | number;
+  /**
+   * Override the walk direction. Default is inferred from the cursor: no cursor → `backward` (initial
+   * sync, newest-first from today); a cursor → `forward` (incremental, from the cursor). Pass
+   * `backward` explicitly (with `before` = oldest-synced) to backfill older gaps.
+   */
+  direction?: SyncDirection;
   restrictedMode?: boolean;
 }): Effect.Effect<
   { newMessages: number },
@@ -114,16 +132,39 @@ export const runGmailSync = ({
       return { newMessages: 0 };
     }
 
-    const normalizedAfter = typeof after === 'number' ? format(new Date(after), 'yyyy-MM-dd') : after;
+    const toDate = (value: string | number): Date => (typeof value === 'number' ? new Date(value) : new Date(value));
     const targetOptions = readBindingOptions(binding);
-    // `syncBackDays` overrides the default window start when there is no cursor yet.
-    const fallbackAfter =
-      targetOptions.syncBackDays !== undefined
-        ? format(subDays(new Date(), targetOptions.syncBackDays), 'yyyy-MM-dd')
-        : normalizedAfter;
     const cursor = yield* Database.load(binding.cursor);
     const cursorKey = Cursor.parseKey(cursor.value);
-    log('syncing gmail', { mailbox: Obj.getURI(mailbox), userId, cursorKey, restrictedMode });
+
+    // Range + direction. Mode is inferred from the cursor unless `direction` overrides it:
+    //  - no cursor  → initial: backward from today (`before`) down to the horizon (`after`/syncBackDays).
+    //  - cursor     → incremental: forward from the cursor up to today.
+    //  - backward + `before` = oldest-synced → backfill older gaps (never advances the monotonic cursor).
+    const resolvedDirection: SyncDirection = direction ?? (cursorKey > 0 ? 'forward' : 'backward');
+    // `syncBackDays` overrides the default window start (the oldest we reach on a fresh/backward sync).
+    const horizon =
+      targetOptions.syncBackDays !== undefined ? subDays(new Date(), targetOptions.syncBackDays) : toDate(after);
+    const upperBound = before !== undefined ? toDate(before) : addDays(new Date(), 1);
+    // Forward resumes from the cursor (else the horizon); backward covers [horizon, upperBound).
+    const rangeStart = resolvedDirection === 'forward' && cursorKey > 0 ? new Date(cursorKey) : horizon;
+    let rangeEnd = upperBound;
+    // Restricted mode limits work to a single leading window (plus `Stream.take` on message count).
+    if (restrictedMode) {
+      if (resolvedDirection === 'forward') {
+        rangeEnd = addDays(rangeStart, STREAMING_CONFIG.dateChunkDays);
+      }
+    }
+    const start = resolvedDirection === 'backward' && restrictedMode ? subDays(rangeEnd, STREAMING_CONFIG.dateChunkDays) : rangeStart;
+    log('syncing gmail', {
+      mailbox: Obj.getURI(mailbox),
+      userId,
+      cursorKey,
+      direction: resolvedDirection,
+      start: format(start, 'yyyy-MM-dd'),
+      end: format(rangeEnd, 'yyyy-MM-dd'),
+      restrictedMode,
+    });
 
     const feed = yield* Database.load(mailbox.feed);
     // Resolve the child tag index so provider-label tags can be applied synchronously during commit.
@@ -163,11 +204,20 @@ export const runGmailSync = ({
     // fetch → dedup → decode → map → extract-contacts → (optional) on-arrival extractors →
     // record-threads → commit each page. The SyncBinding layer advances the binding cursor per page.
     const stats: SyncBinding.Stats = { newMessages: 0 };
-    yield* gmailSource(userId, label, cursorKey, fallbackAfter, restrictedMode, targetOptions.filter).pipe(
+    yield* gmailSource({
+      userId,
+      label,
+      direction: resolvedDirection,
+      start,
+      end: rangeEnd,
+      restricted: restrictedMode,
+      searchFilter: targetOptions.filter,
+    }).pipe(
       SyncBinding.dedupStage<GoogleMail.Message>(
         'dedup',
         (message) => message.id,
         (message) => Number.parseInt(message.internalDate),
+        { direction: resolvedDirection },
       ),
       decodeBodyStage,
       // HTML→markdown (turndown) intentionally disabled: it was a measurable share of sync CPU and is
@@ -195,7 +245,7 @@ export const runGmailSync = ({
   }).pipe(Effect.withSpan('gmail-sync'));
 
 export default InboxOperation.GoogleMailSync.pipe(
-  Operation.withHandler(({ binding: bindingRef, userId, label, after, restrictedMode }) =>
+  Operation.withHandler(({ binding: bindingRef, userId, label, after, before, direction, restrictedMode }) =>
     Effect.gen(function* () {
       const bindingObj = bindingRef.target;
       if (!bindingObj || !Obj.getDatabase(bindingObj)) {
@@ -211,7 +261,7 @@ export default InboxOperation.GoogleMailSync.pipe(
       activeSyncs.add(bindingObj.id);
       const connectionRef = Ref.make(Relation.getSource(bindingObj));
 
-      return yield* runGmailSync({ binding: bindingRef, userId, label, after, restrictedMode }).pipe(
+      return yield* runGmailSync({ binding: bindingRef, userId, label, after, before, direction, restrictedMode }).pipe(
         // Provide the Live Gmail API (real HTTP + connection credentials) and the contact resolver; a
         // test provides `GoogleMailApi.mock(...)` + `InboxResolver` over this same seam instead.
         Effect.provide(
@@ -258,67 +308,77 @@ const decodeBodyStage: Stage.Stage<GoogleMail.Message, DecodedMessage, never, ne
   (message: GoogleMail.Message) => Effect.sync(() => decodeBody(message) ?? undefined),
 );
 
+type GmailSourceConfig = {
+  readonly userId: string;
+  readonly label: string;
+  readonly direction: SyncDirection;
+  /** Full [start, end) range to cover; the walk order within it is set by `direction`. */
+  readonly start: Date;
+  readonly end: Date;
+  readonly restricted: boolean;
+  readonly searchFilter?: string;
+};
+
 /**
- * Streams Gmail messages forward from the cursor: resume at the cursor's `internalDate` (else the
- * `fallbackAfter` window start), then date-windowed id fetch → per-message fetch.
+ * Streams Gmail message ids over the [start, end) range in `direction` order (forward = oldest→newest
+ * windows for incremental resume; backward = newest→oldest for initial/backfill), then fetches each
+ * full message. Direction only changes the *order* windows are visited; both cover the same range.
  */
-const gmailSource = (
-  userId: string,
-  label: string,
-  cursorKey: number,
-  fallbackAfter: string,
-  restricted: boolean,
-  searchFilter?: string,
-) =>
+const gmailSource = (config: GmailSourceConfig) =>
   // Resolve the API service once, then build the stream (id fetch → per-message fetch) against it.
   Stream.unwrap(
     Effect.gen(function* () {
       const api = yield* GoogleMailApi;
-      const startDate = cursorKey > 0 ? new Date(cursorKey) : new Date(fallbackAfter);
-      const config: DateRangeConfig = {
-        startDate,
-        endDate: restricted ? addDays(startDate, STREAMING_CONFIG.dateChunkDays + 1) : addDays(new Date(), 1),
+      const rangeConfig: DateRangeConfig = {
+        start: config.start,
+        end: config.end,
         chunkDays: STREAMING_CONFIG.dateChunkDays,
+        direction: config.direction,
       };
 
       const messageIds = Function.pipe(
-        generateDateRanges(config),
-        Stream.flatMap((dateChunk) => fetchMessagesForDateRange(api, userId, label, dateChunk, searchFilter), {
+        generateDateRanges(rangeConfig),
+        Stream.flatMap((dateChunk) => fetchMessagesForDateRange(api, config.userId, config.label, dateChunk, config.searchFilter), {
           concurrency: 1,
         }),
-        restricted ? Stream.take(STREAMING_CONFIG.restrictedMax) : Function.identity,
+        config.restricted ? Stream.take(STREAMING_CONFIG.restrictedMax) : Function.identity,
       );
 
       return messageIds.pipe(
-        Stream.mapEffect((messageId) => api.getMessage(userId, messageId).pipe(Effect.withSpan('gmail-sync.fetch.message')), {
-          concurrency: STREAMING_CONFIG.messageFetchConcurrency,
-        }),
+        Stream.mapEffect(
+          (messageId) => api.getMessage(config.userId, messageId).pipe(Effect.withSpan('gmail-sync.fetch.message')),
+          { concurrency: STREAMING_CONFIG.messageFetchConcurrency },
+        ),
       );
     }),
   );
 
+/**
+ * Emits contiguous `chunkDays`-wide date windows spanning [start, end). `forward` yields them
+ * oldest-first; `backward` yields them newest-first. Windows are contiguous (day-granular `after:`/
+ * `before:` is exclusive at the upper bound), so every day in the range is covered exactly once.
+ */
 const generateDateRanges = (config: DateRangeConfig): Stream.Stream<DateChunk> =>
-  Stream.unfoldChunkEffect(config.startDate, (currentStart) =>
+  Stream.unfoldChunkEffect(config.direction === 'forward' ? config.start : config.end, (position) =>
     Effect.gen(function* () {
-      if (currentStart >= config.endDate) {
+      if (config.direction === 'forward') {
+        if (position >= config.end) {
+          return Option.none();
+        }
+        const chunkEnd = addDays(position, config.chunkDays);
+        const end = chunkEnd > config.end ? config.end : chunkEnd;
+        const chunk: DateChunk = { start: position, end };
+        log('processing date chunk', { start: format(chunk.start, 'yyyy-MM-dd'), end: format(chunk.end, 'yyyy-MM-dd') });
+        return Option.some([Chunk.of(chunk), end]);
+      }
+      if (position <= config.start) {
         return Option.none();
       }
-
-      const chunkEnd = addDays(currentStart, config.chunkDays + 1);
-      const actualEnd = chunkEnd > config.endDate ? config.endDate : chunkEnd;
-
-      const chunk: DateChunk = {
-        start: currentStart,
-        end: actualEnd,
-      };
-
-      log('processing date chunk', {
-        start: format(chunk.start, 'yyyy-MM-dd'),
-        end: format(chunk.end, 'yyyy-MM-dd'),
-      });
-
-      const nextStart = addDays(actualEnd, 1);
-      return Option.some([Chunk.of(chunk), nextStart]);
+      const chunkStart = subDays(position, config.chunkDays);
+      const start = chunkStart < config.start ? config.start : chunkStart;
+      const chunk: DateChunk = { start, end: position };
+      log('processing date chunk', { start: format(chunk.start, 'yyyy-MM-dd'), end: format(chunk.end, 'yyyy-MM-dd') });
+      return Option.some([Chunk.of(chunk), start]);
     }),
   );
 
