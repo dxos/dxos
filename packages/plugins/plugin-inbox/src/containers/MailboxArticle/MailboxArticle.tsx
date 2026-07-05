@@ -8,7 +8,7 @@ import React, { type Ref, useCallback, useEffect, useMemo, useReducer, useRef, u
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { type Database, Filter, Obj, Query, Tag } from '@dxos/echo';
+import { type Database, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -182,7 +182,12 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   useEffect(() => setWindowSize(WINDOW), [subject.id]);
   const messages = useQuery(
     db,
-    feed ? Query.select(Filter.type(Message.Message)).from(feed).limit(windowSize) : Query.select(Filter.nothing()),
+    feed
+      ? // Order by the message date (not feed insertion order): a backward/backfill sync appends
+        // out of time order, so the newest-`windowSize` window must be selected by `created`, not
+        // position. The `order` clause routes this to the host indexer (see `isClientEvaluableFeedQuery`).
+        Query.select(Filter.type(Message.Message)).from(feed).orderBy(Order.property('created', 'desc')).limit(windowSize)
+      : Query.select(Filter.nothing()),
   );
 
   const handleLoadOlder = useCallback(() => {

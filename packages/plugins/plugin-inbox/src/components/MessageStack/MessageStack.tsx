@@ -121,6 +121,9 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
         return undefined;
       }
 
+      // `messages` arrives ordered newest-first (the feed query orders by `created` desc), and a `Map`
+      // preserves insertion order — so each conversation is keyed on first sight of its most-recent
+      // message, and the resulting tile order is threads-by-most-recent-message.
       const groups = new Map<string, Message.Message[]>();
       for (const message of messages ?? []) {
         const key = message.threadId ?? message.id;

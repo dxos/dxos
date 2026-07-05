@@ -818,7 +818,21 @@ const isClientEvaluableFeedQuery = (query: QueryAST.Query): boolean => {
   // `analyzeFeedQuery` (not `isSimpleSelectionQuery`) so a windowed feed query (`.limit(n)`) still
   // routes to the feed handle; the shared simple-query check treats a limit clause as non-simple.
   const analyzed = analyzeFeedQuery(query);
-  return analyzed != null && !filterContainsTextSearch(analyzed.filter);
+  // An `order` clause must run through the host indexer: the client feed path is a newest-by-position
+  // tail window and cannot honor an ordering (a feed may not be appended in the sort order, e.g. a
+  // backward/backfill sync). The indexer sorts + limits over the whole indexed feed.
+  return analyzed != null && !filterContainsTextSearch(analyzed.filter) && !queryContainsOrder(query);
+};
+
+/** Whether the query AST contains an `order` clause anywhere. */
+const queryContainsOrder = (query: QueryAST.Query): boolean => {
+  let ordered = false;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'order') {
+      ordered = true;
+    }
+  });
+  return ordered;
 };
 
 const filterContainsTextSearch = (filter: QueryAST.Filter): boolean => {
