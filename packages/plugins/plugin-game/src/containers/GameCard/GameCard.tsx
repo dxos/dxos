@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, type Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 
 import { type Game, GameCapabilities } from '#types';
