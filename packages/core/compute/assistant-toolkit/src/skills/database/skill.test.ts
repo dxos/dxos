@@ -77,6 +77,10 @@ describe('Database Skill', () => {
 
       const fromObject = yield* decode({ ...base, jsonSchema: PROJECT_JSON_SCHEMA });
       expect(fromObject.jsonSchema).toEqual(PROJECT_JSON_SCHEMA);
+
+      // A non-object payload is rejected at the boundary rather than reaching the handler.
+      const malformed = yield* Effect.either(decode({ ...base, jsonSchema: 'not a json object' }));
+      expect(malformed._tag).toBe('Left');
     }),
   );
 
@@ -98,8 +102,7 @@ describe('Database Skill', () => {
         ).run;
         const schemas = allTypes.filter((type) => Type.getTypename(type) === 'com.example.type.project');
         expect(schemas).toHaveLength(1);
-        const properties = JsonSchema.toJsonSchema(schemas[0]).properties ?? {};
-        expect(Object.keys(properties)).toEqual(expect.arrayContaining(['name', 'description', 'status']));
+        expectSchemaProperties(schemas[0], ['name', 'description', 'status']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -124,8 +127,7 @@ describe('Database Skill', () => {
         expect(schemas.length).toBeGreaterThanOrEqual(1);
         // Verify the schema was created with the declared fields, not merely that a type with the
         // typename exists — a malformed `jsonSchema` payload would still produce a bare type.
-        const properties = JsonSchema.toJsonSchema(schemas[0]).properties ?? {};
-        expect(Object.keys(properties)).toEqual(expect.arrayContaining(['name', 'description', 'status']));
+        expectSchemaProperties(schemas[0], ['name', 'description', 'status']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -590,3 +592,9 @@ describe('Database Skill', () => {
     { timeout: 60_000 },
   );
 });
+
+// Asserts that the type's JSON Schema declares (at least) the given property names.
+const expectSchemaProperties = (schema: Parameters<typeof JsonSchema.toJsonSchema>[0], expectedKeys: string[]) => {
+  const properties = JsonSchema.toJsonSchema(schema).properties ?? {};
+  expect(Object.keys(properties)).toEqual(expect.arrayContaining(expectedKeys));
+};
