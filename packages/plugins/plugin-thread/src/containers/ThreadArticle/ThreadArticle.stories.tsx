@@ -16,6 +16,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
+import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Thread as ThreadComponent } from '@dxos/react-ui-thread';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Thread } from '@dxos/types';
@@ -53,6 +54,7 @@ const meta = {
   component: ThreadComponent.Root as any,
   render: DefaultStory,
   decorators: [
+    withMosaic(),
     withLayout({ layout: 'column' }),
     // TODO(wittjosiah): This shouldn't depend on app framework (use withClientProvider instead).
     //  Currently this is required because MessageThread renders an object tile via a Surface.

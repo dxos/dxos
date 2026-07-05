@@ -19,6 +19,7 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 
@@ -43,6 +44,7 @@ const meta = {
   component: ChannelArticle,
   render: DefaultStory,
   decorators: [
+    withMosaic(),
     withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({

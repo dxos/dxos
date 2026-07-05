@@ -78,7 +78,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryArgs) =>
     <Mosaic.Root>
       <div className={mx('grid overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
         <Board.Root model={model}>
-          <Board.Content id='board' debug={debug} />
+          <Board.Content debug={debug} />
         </Board.Root>
 
         {debug && (

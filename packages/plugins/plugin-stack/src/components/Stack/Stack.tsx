@@ -122,11 +122,7 @@ const StackRoot = ({
     [id, eventHandler, viewport, attendableId, collapsed, onCollapse, onAdd, onMoveUp, onMoveDown, onDelete],
   );
 
-  return (
-    <StackContext.Provider value={value}>
-      <Mosaic.Root>{children}</Mosaic.Root>
-    </StackContext.Provider>
-  );
+  return <StackContext.Provider value={value}>{children}</StackContext.Provider>;
 };
 
 StackRoot.displayName = 'Stack.Root';
