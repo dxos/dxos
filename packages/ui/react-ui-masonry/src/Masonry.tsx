@@ -190,6 +190,10 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
               return (
                 <div
                   key={id}
+                  // Let the tile clamp its card: a card's own min-width must not exceed
+                  // the column, or a narrow (single-column, mobile) container overflows
+                  // and shows a horizontal scrollbar.
+                  className='[&>*]:min-w-0!'
                   ref={getTileRef(id)}
                   role='listitem'
                   style={{
