@@ -4,6 +4,16 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-07-05 — plugin-chess-com (operation handlers)
+
+- Operation handler files: `export default Op.pipe(Operation.withHandler(...), Operation.opaqueHandler)` as the default export — mirror `plugin-trip/src/operations/add-segment.ts`; no separate `const handler` alias.
+- `Effect.fn(function* (...) { ... }, Effect.provide(FetchHttpClient.layer))` — pass runtime layers as the 2nd `Effect.fn` arg, not an inner `.pipe(Effect.provide(...))` wrapping a nested `Effect.gen`.
+- Keep the handler body flat/linear (load → fetch → mutate → append → return); extract pure mapping into module-level helpers (`makeGameFromRemote`, `gameForeignId`) above the export.
+- Dedup existing feed items: `Feed.query(...).run.pipe(Effect.map(...), Effect.map(Array.filter(Predicate.isNotUndefined)), Effect.map(ids => new Set(ids)))` — use Effect `Array`/`Predicate`, not imperative loops over `Obj.getMeta`.
+- Colocate plugin domain constants + FK helpers on the type module (`ChessComAccount.CHESS_COM_SOURCE`, `ChessComAccount.getForeignKey` via `Obj.getKeys`) — not a separate `constants.ts`.
+- Factory objects for feed append: inline nested refs (`variant: Ref.make(Chess.make({...}))`); let `Feed.append` persist — don't pre-`Database.add` variant state in the handler.
+- HTTP/API base URLs belong in the service module that consumes them (`services/chess-com-api.ts`), not a shared constants file.
+
 ## 2026-07-03 — plugin-crm (CRM nav section + generic collection article)
 
 - Add a top-level nav section by contributing a group node via `AppNode.makeGroup({ id: Paths.GroupSegments.X, type: Paths.GroupTypes.X, label, space, position })` matched `AppNodeMatcher.whenSpace`, then child nodes matched `AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.X)`. New group ids/types are centrally declared in `@dxos/app-toolkit` `Paths.GroupSegments`/`GroupTypes` (ai/content/communications/crm/system) — add there, not per-plugin. Group auto-hides when it has no children.

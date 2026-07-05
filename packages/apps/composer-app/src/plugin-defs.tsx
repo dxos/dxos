@@ -16,6 +16,7 @@ import { BoardPlugin } from '@dxos/plugin-board/plugin';
 import { BookmarksPlugin } from '@dxos/plugin-bookmarks/plugin';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
+import { ChessComPlugin } from '@dxos/plugin-chess-com/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { CodePlugin } from '@dxos/plugin-code/plugin';
 import { CommentsPlugin } from '@dxos/plugin-comments/plugin';
@@ -189,6 +190,7 @@ export const getPlugins = ({
     BookmarksPlugin(),
     CallsPlugin(),
     ChessPlugin(),
+    ChessComPlugin(),
     CommentsPlugin(),
     ClientPlugin({
       config,

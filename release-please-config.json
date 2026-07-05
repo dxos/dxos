@@ -630,6 +630,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-chess-com/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-client/package.json",
           "jsonpath": "$.version"
         },

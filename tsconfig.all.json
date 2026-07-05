@@ -361,6 +361,9 @@
       "path": "packages/plugins/plugin-chess/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-chess-com/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-client/tsconfig.json"
     },
     {
