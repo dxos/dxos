@@ -40,6 +40,25 @@ export interface GoogleMailApiService {
   readonly trashMessage: Baked<typeof GoogleMail.trashMessage>;
 }
 
+/**
+ * An in-memory Gmail dataset a {@link GoogleMailApi.mock} serves — the labels and the full messages
+ * the sync would fetch. Build one with `generateGmailDataset` from `@dxos/plugin-inbox/testing`.
+ */
+export interface GmailDataset {
+  readonly labels: readonly GoogleMail.Label[];
+  /** Full messages, ordered ascending by `internalDate` (the mock paginates a date window over them). */
+  readonly messages: readonly GoogleMail.Message[];
+}
+
+/** Parses Gmail's `after:YYYY/MM/DD` / `before:YYYY/MM/DD` window (epoch-ms) from a list query. */
+const parseDateWindow = (query: string): { after?: number; before?: number } => {
+  const toMs = (value: string | undefined) => (value ? new Date(value.replace(/\//g, '-')).getTime() : undefined);
+  return {
+    after: toMs(query.match(/after:(\d{4}\/\d{2}\/\d{2})/)?.[1]),
+    before: toMs(query.match(/before:(\d{4}\/\d{2}\/\d{2})/)?.[1]),
+  };
+};
+
 export class GoogleMailApi extends Context.Tag('@dxos/plugin-inbox/GoogleMailApi')<
   GoogleMailApi,
   GoogleMailApiService
@@ -64,4 +83,44 @@ export class GoogleMailApi extends Context.Tag('@dxos/plugin-inbox/GoogleMailApi
       });
     }),
   );
+
+  /**
+   * Zero-dependency mock backed by an in-memory {@link GmailDataset} — for unit/benchmark tests that
+   * drive the real sync pipeline with no live account. `listMessages` honours the query's date window
+   * (`after:`/`before:`) plus `pageSize`/`pageToken` (an integer offset), so the sync's date-walk and
+   * pagination exercise realistically.
+   */
+  static readonly mock = (dataset: GmailDataset): Layer.Layer<GoogleMailApi> => {
+    const byId = new Map(dataset.messages.map((message) => [message.id, message]));
+    return Layer.succeed(
+      GoogleMailApi,
+      GoogleMailApi.of({
+        listLabels: () => Effect.succeed({ labels: dataset.labels }),
+        listMessages: (_userId, query, pageSize, pageToken) =>
+          Effect.sync(() => {
+            const { after, before } = parseDateWindow(query);
+            const matching = dataset.messages.filter((message) => {
+              const at = Number(message.internalDate);
+              return (after === undefined || at >= after) && (before === undefined || at < before);
+            });
+            const offset = pageToken ? Number.parseInt(pageToken, 10) : 0;
+            const page = matching.slice(offset, offset + pageSize);
+            const nextOffset = offset + page.length;
+            return {
+              resultSizeEstimate: matching.length,
+              messages: page.map((message) => ({ id: message.id, threadId: message.threadId })),
+              nextPageToken: nextOffset < matching.length ? String(nextOffset) : undefined,
+            };
+          }),
+        getMessage: (_userId, messageId) => {
+          const message = byId.get(messageId);
+          return message
+            ? Effect.succeed(message)
+            : Effect.die(new Error(`mock GoogleMailApi: message not in dataset: ${messageId}`));
+        },
+        sendMessage: () => Effect.die(new Error('mock GoogleMailApi: sendMessage not supported')),
+        trashMessage: () => Effect.die(new Error('mock GoogleMailApi: trashMessage not supported')),
+      }),
+    );
+  };
 }
