@@ -146,8 +146,8 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     const { width: contentWidth = 0 } = useResizeDetector({ targetRef: viewportRef });
     const columnCount = useColumnCount(contentWidth, columns, maxColumns, minColumnWidth, maxColumnWidth, gap);
 
-    // The grid fills the measured content box; columns stretch to fill (column count
-    // already honours `maxColumnWidth`), so no scrollbar/padding math is duplicated here.
+    // The grid fills the measured content box; the layout caps columns at
+    // `maxColumnWidth` and centres them, so no scrollbar/padding math is duplicated here.
     const gapPx = gap * remInPx;
     const ids = useMemo(() => items.map((item, index) => getId?.(item) ?? String(index)), [items, getId]);
     const { rects, columnWidth, height, getTileRef, nodes } = useMasonryLayout({
@@ -155,6 +155,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       columnCount,
       containerWidth: contentWidth,
       gapPx,
+      maxColumnWidthPx: maxColumnWidth * remInPx,
     });
     useFlip({ nodes, ids, rects, enabled: true });
 

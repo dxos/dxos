@@ -26,6 +26,20 @@ describe('layout', () => {
     expect(rects[1]).toMatchObject({ x: 55, y: 10, column: 1 }); // 0 + 1 * (45 + 10)
   });
 
+  test('caps column width and centres the leftover space', ({ expect }) => {
+    const { rects, columnWidth } = layout({
+      heights: [10, 10],
+      columnCount: 2,
+      containerWidth: 200,
+      gapPx: 10,
+      maxColumnWidthPx: 50,
+    });
+    expect(columnWidth).toBe(50); // capped below the 95 fill width
+    // usedWidth = 2 * 50 + 10 = 110; sideInset = (200 - 110) / 2 = 45.
+    expect(rects[0]).toMatchObject({ x: 45, column: 0 });
+    expect(rects[1]).toMatchObject({ x: 105, column: 1 }); // 45 + (50 + 10)
+  });
+
   test('stacks vertically in a single column with top and bottom perimeter gaps', ({ expect }) => {
     const { rects, height } = layout({ heights: [30, 20], columnCount: 1, containerWidth: 100, gapPx: 10 });
     expect(rects.map((rect) => rect.y)).toEqual([10, 50]); // 10 gap, then 10 + 30 + 10
