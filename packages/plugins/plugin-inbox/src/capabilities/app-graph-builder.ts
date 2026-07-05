@@ -10,7 +10,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { type Feed, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
+import { type Feed, Filter, Key, Obj, Order, Query, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -25,12 +25,7 @@ import { meta } from '#meta';
 import { InboxOperation } from '#types';
 import { Calendar, DraftMessage, Mailbox } from '#types';
 
-import {
-  MAILBOX_DRAFTS_NODE_DATA,
-  MAILBOX_DRAFTS_TYPE,
-  MAILBOXES_SECTION_TYPE,
-  type ThreadCompanionData,
-} from '../constants';
+import { MAILBOX_DRAFTS_NODE_DATA, MAILBOX_DRAFTS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
 import { getCalendarsPath, getDraftsId, getMailboxesPath, getMailboxesSectionId } from '../paths';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
@@ -320,8 +315,14 @@ export default Capability.makeModule(
           }
 
           const messageId = get(selectedId(matched.nodeId));
+          // Resolve the selected message via the host indexer, not the client feed's newest-by-position
+          // window: the mailbox list orders by date, so a selected message can be outside that window
+          // (making the companion blank). The list's messages are all indexed, so the indexer resolves
+          // them by id — the `orderBy` clause is what routes this to the host (see
+          // `isClientEvaluableFeedQuery`).
           const message = get(
-            db.query(Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed)).atom,
+            db.query(Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed).orderBy(Order.natural))
+              .atom,
           )[0];
           return Effect.succeed([
             AppNode.makeCompanion({
@@ -329,38 +330,6 @@ export default Capability.makeModule(
               label: ['message.label', { ns: meta.profile.key }],
               icon: 'ph--envelope-open--regular',
               data: message ?? 'message',
-            }),
-          ]);
-        },
-      }),
-
-      // Thread detail companion, parallel to `mailboxMessage`: derives the selected message's thread id
-      // and exposes a `linkedSegment('thread')` companion carrying `{ mailbox, threadId }` for the
-      // thread surface. Companion-only (no navigable path), since a thread has no ECHO object to resolve.
-      GraphBuilder.createExtension({
-        id: 'mailboxThread',
-        match: (node) =>
-          Mailbox.instanceOf(node.data) ? Option.some({ mailbox: node.data, nodeId: node.id }) : Option.none(),
-        connector: (matched, get) => {
-          const mailbox = matched.mailbox;
-          const db = Obj.getDatabase(mailbox);
-          const feed = mailbox.feed ? (get(mailbox.feed.atom) as Feed.Feed | undefined) : undefined;
-          if (!db || !feed) {
-            return Effect.succeed([]);
-          }
-
-          const messageId = get(selectedId(matched.nodeId));
-          const message = get(
-            db.query(Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed)).atom,
-          )[0];
-          return Effect.succeed([
-            AppNode.makeCompanion<ThreadCompanionData>({
-              id: linkedSegment('thread'),
-              label: ['thread.label', { ns: meta.profile.key }],
-              icon: 'ph--chats-circle--regular',
-              // Conversation key: the message's thread id, or its own id when unthreaded (a one-message
-              // conversation), matching `MessageStack`/`ThreadArticle` grouping.
-              data: { mailbox, threadId: message ? (message.threadId ?? message.id) : undefined },
             }),
           ]);
         },

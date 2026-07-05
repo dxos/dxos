@@ -242,8 +242,8 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
       if (!message || !db) {
         return;
       }
-      // Open the unified conversation view; the `mailboxThread` connector derives the thread from the selection.
-      void showItem({ contextId: id, selectionId: message.id, companion: linkedSegment('thread') });
+      // Open the message companion; `MessageArticle` renders the selected message's whole conversation.
+      void showItem({ contextId: id, selectionId: message.id, companion: linkedSegment('message') });
     },
     [db, id, sortedMessages, showItem],
   );
@@ -255,13 +255,13 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
       switch (action.type) {
         // A message click ('current') and a conversation click ('current-conversation') both open the
         // one unified conversation (thread) view — a single message is just a one-message conversation.
-        // Selecting the message lets the `mailboxThread` connector derive the conversation to render.
+        // Selecting the message opens the message companion, which renders the whole conversation.
         case 'current':
         case 'current-conversation': {
           const message = sortedMessages.find((message) => message.id === action.messageId);
           invariant(message);
           invariant(db);
-          void showItem({ contextId: id, selectionId: message.id, companion: linkedSegment('thread') });
+          void showItem({ contextId: id, selectionId: message.id, companion: linkedSegment('message') });
           break;
         }
 
