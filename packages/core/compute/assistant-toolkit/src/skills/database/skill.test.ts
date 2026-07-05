@@ -64,23 +64,19 @@ describe('Database Skill', () => {
   );
 
   it.effect(
-    'schema-add: decodes a stringified jsonSchema at the tool-call boundary',
+    'schema-add: requires jsonSchema to be an object',
     Effect.fnUntraced(function* ({ expect }) {
-      // Unconstrained tool parameters are sent to the LLM without a `type`, so some models serialize
-      // the `jsonSchema` argument as a JSON string. The tool-call boundary decodes the operation input,
-      // so decoding must yield an object whether the model passes a string or an object.
+      // The tool parameter is typed as an object so the model emits the JSON Schema as an object.
+      // An unconstrained parameter let some models emit a JSON-encoded string, which then corrupted
+      // the created type; a non-object is now rejected at the tool-call boundary.
       const decode = Schema.decodeUnknown(SchemaAdd.input);
       const base = { name: 'Project', typename: 'com.example.type.project' };
-
-      const fromString = yield* decode({ ...base, jsonSchema: JSON.stringify(PROJECT_JSON_SCHEMA) });
-      expect(fromString.jsonSchema).toEqual(PROJECT_JSON_SCHEMA);
 
       const fromObject = yield* decode({ ...base, jsonSchema: PROJECT_JSON_SCHEMA });
       expect(fromObject.jsonSchema).toEqual(PROJECT_JSON_SCHEMA);
 
-      // A non-object payload is rejected at the boundary rather than reaching the handler.
-      const malformed = yield* Effect.either(decode({ ...base, jsonSchema: 'not a json object' }));
-      expect(malformed._tag).toBe('Left');
+      const fromString = yield* Effect.either(decode({ ...base, jsonSchema: JSON.stringify(PROJECT_JSON_SCHEMA) }));
+      expect(fromString._tag).toBe('Left');
     }),
   );
 
@@ -88,14 +84,13 @@ describe('Database Skill', () => {
     'schema-add: creates a schema with the declared fields',
     Effect.fnUntraced(
       function* ({ expect }) {
-        // Decode through the operation input to mirror the tool-call boundary (a model may pass the schema
-        // as a JSON string), then run the handler and assert the created type carries the declared fields.
-        const input = yield* Schema.decodeUnknown(SchemaAdd.input)({
+        // Run the handler and assert the created type carries the declared fields, not merely that a
+        // type with the typename exists.
+        yield* Operation.invoke(SchemaAdd, {
           name: 'Project',
           typename: 'com.example.type.project',
-          jsonSchema: JSON.stringify(PROJECT_JSON_SCHEMA),
+          jsonSchema: PROJECT_JSON_SCHEMA,
         });
-        yield* Operation.invoke(SchemaAdd, input);
 
         const allTypes = yield* Database.query(
           Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
