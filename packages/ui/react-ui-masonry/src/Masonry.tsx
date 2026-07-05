@@ -30,8 +30,8 @@ type MasonryContextValue = {
   minColumnWidth: number;
   /** Maximum column width in rem. */
   maxColumnWidth: number;
-  /** Space between columns and rows in rem. */
-  gutter: number;
+  /** Space applied uniformly between tiles and around the grid perimeter, in rem. */
+  gap: number;
 };
 
 const MASONRY_NAME = 'Masonry';
@@ -58,7 +58,7 @@ const MasonryRoot = ({
   maxColumns = undefined,
   minColumnWidth = cardMinInlineSize,
   maxColumnWidth = cardMaxInlineSize,
-  gutter = 0.75,
+  gap = 0.75,
 }: MasonryRootProps) => (
   <MasonryProvider
     Tile={Tile!}
@@ -66,7 +66,7 @@ const MasonryRoot = ({
     maxColumns={maxColumns}
     minColumnWidth={minColumnWidth}
     maxColumnWidth={maxColumnWidth}
-    gutter={gutter}
+    gap={gap}
   >
     {children}
   </MasonryProvider>
@@ -87,14 +87,14 @@ type MasonryContentProps = ThemedClassName<
 >;
 
 const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
-  ({ children, scrollbars, centered, thin = true, padding = true, ...props }, forwardedRef) => {
+  ({ children, scrollbars, centered = true, thin = true, padding = true, ...props }, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement | null>(null);
     const composedRef = useComposedRefs(rootRef, forwardedRef);
     const { width = 0 } = useResizeDetector({ targetRef: rootRef });
 
     return (
       <ScrollArea.Root
-        {...composableProps(props, { classNames: 'pt-trim-md' })}
+        {...composableProps(props)}
         scrollbars={scrollbars}
         centered={centered}
         thin={thin}
@@ -133,25 +133,31 @@ type MasonryViewportProps<Item> = ThemedClassName<{
 
 const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any>>(
   ({ items, getId, ...props }, forwardedRef) => {
-    const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gutter } = useMasonryContext('Masonry.Viewport');
+    const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap } = useMasonryContext('Masonry.Viewport');
     const { width } = useMasonryContentContext('Masonry.Viewport');
     const remInPx = usePx(1);
-    const contentWidth = width - (scrollbar.md.size + scrollbar.md.padding);
-    const columnCount = useColumnCount(contentWidth, columns, maxColumns, minColumnWidth, maxColumnWidth, gutter);
+    // The ScrollArea.Viewport is centered+padded, so it reserves a symmetric gutter of
+    // (scroll-width + scroll-padding) on each side (the inline-end side splitting into
+    // padding + the scrollbar itself). Subtract both gutters to get the width available
+    // to the centered grid.
+    const contentWidth = width - 2 * (scrollbar.md.size + scrollbar.md.padding);
+    const columnCount = useColumnCount(contentWidth, columns, maxColumns, minColumnWidth, maxColumnWidth, gap);
 
     // Cap each column at `maxColumnWidth` and center the grid so it doesn't stretch
-    // to the far edge when the container is wider than the natural card width.
-    const gutterPx = gutter * remInPx;
-    const rawColumnWidth = (contentWidth - (columnCount - 1) * gutterPx) / columnCount;
+    // to the far edge when the container is wider than the natural card width. The
+    // gap surrounds every column, so `columnCount` columns consume `columnCount + 1`
+    // gaps across the grid width.
+    const gapPx = gap * remInPx;
+    const rawColumnWidth = (contentWidth - (columnCount + 1) * gapPx) / columnCount;
     const cappedColumnWidth = Math.min(rawColumnWidth, maxColumnWidth * remInPx);
-    const gridWidth = columnCount * cappedColumnWidth + (columnCount - 1) * gutterPx;
+    const gridWidth = columnCount * cappedColumnWidth + (columnCount + 1) * gapPx;
 
     const ids = useMemo(() => items.map((item, index) => getId?.(item) ?? String(index)), [items, getId]);
     const { rects, columnWidth, height, getTileRef, nodes } = useMasonryLayout({
       ids,
       columnCount,
       containerWidth: gridWidth,
-      gutterPx,
+      gapPx,
     });
     useFlip({ nodes, ids, rects, enabled: true });
 
@@ -168,8 +174,12 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       return null;
     }
 
+    // The viewport is the full-width scroll container; its centered+padded theme
+    // balances the scrollbar into symmetric inline gutters. The capped-width grid is
+    // an ordinary block child centered with `mx-auto`, so its left/right margins match
+    // and the scrollbar never eats into the tile area.
     return (
-      <ScrollArea.Viewport asChild>
+      <ScrollArea.Viewport>
         <div
           {...composableProps(props, {
             classNames: 'relative mx-auto',
@@ -220,7 +230,7 @@ const useColumnCount = (
   maxColumns: number | undefined,
   minColumnWidth: number,
   maxColumnWidth: number,
-  gutter: number,
+  gap: number,
 ) => {
   const remInPx = usePx(1);
   return useMemo(() => {
@@ -230,20 +240,20 @@ const useColumnCount = (
 
     const minColumnWidthPx = minColumnWidth * remInPx;
     const maxColumnWidthPx = maxColumnWidth * remInPx;
-    const gutterPx = gutter * remInPx;
+    const gapPx = gap * remInPx;
     if (width <= 0 || minColumnWidthPx <= 0) {
       return 1;
     }
 
-    // Each tile has paddingRight: gutter, so every slot (including the last) occupies
-    // (colWidth + gutterPx). The container therefore fits floor(containerWidth / (colWidth + gutterPx)) columns.
-    let cols = Math.floor(width / (minColumnWidthPx + gutterPx));
+    // The gap surrounds every column (outer edges plus interior splits), so N columns
+    // fit when N * colWidth + (N + 1) * gap <= width, i.e. N <= (width - gap) / (colWidth + gap).
+    let cols = Math.max(1, Math.floor((width - gapPx) / (minColumnWidthPx + gapPx)));
     if (maxColumnWidthPx > 0) {
-      const effectiveColWidth = width / cols - gutterPx;
+      const effectiveColWidth = (width - (cols + 1) * gapPx) / cols;
       if (effectiveColWidth > maxColumnWidthPx) {
         // Try to add columns to keep cards below maxColumnWidth, but never violate minColumnWidth.
-        const maxCols = Math.ceil(width / (maxColumnWidthPx + gutterPx));
-        if (width / maxCols - gutterPx >= minColumnWidthPx) {
+        const maxCols = Math.ceil((width - gapPx) / (maxColumnWidthPx + gapPx));
+        if ((width - (maxCols + 1) * gapPx) / maxCols >= minColumnWidthPx) {
           cols = maxCols;
         }
       }
@@ -251,7 +261,7 @@ const useColumnCount = (
 
     const clamped = maxColumns != null ? Math.min(cols, maxColumns) : cols;
     return Math.max(1, clamped);
-  }, [remInPx, width, columns, maxColumns, minColumnWidth, maxColumnWidth, gutter]);
+  }, [remInPx, width, columns, maxColumns, minColumnWidth, maxColumnWidth, gap]);
 };
 
 //

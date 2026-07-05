@@ -16,7 +16,7 @@ export type LayoutResult = {
   rects: Rect[];
   /** Width (px) shared by every column. */
   columnWidth: number;
-  /** Total content height (px), trailing gutter trimmed. */
+  /** Total content height (px), including the perimeter gap. */
   height: number;
 };
 
@@ -27,8 +27,8 @@ export type LayoutOptions = {
   columnCount: number;
   /** Available content width (px), already net of any scrollbar allowance. */
   containerWidth: number;
-  /** Space (px) between columns and between stacked tiles. */
-  gutterPx: number;
+  /** Space (px) applied uniformly between tiles and around the grid perimeter. */
+  gapPx: number;
 };
 
 /**
@@ -36,11 +36,16 @@ export type LayoutOptions = {
  * tile is placed in the currently shortest column (ties resolve to the lowest
  * index for stable ordering). Pure and synchronous so column balancing is unit
  * testable without a DOM.
+ *
+ * The gap is applied uniformly: `columnCount` columns consume
+ * `columnCount + 1` gaps horizontally (both outer edges plus the interior
+ * splits), and each column is padded by one gap at the top and bottom.
  */
-export const layout = ({ heights, columnCount, containerWidth, gutterPx }: LayoutOptions): LayoutResult => {
+export const layout = ({ heights, columnCount, containerWidth, gapPx }: LayoutOptions): LayoutResult => {
   const columns = Math.max(1, Math.floor(columnCount));
-  const columnWidth = (containerWidth - (columns - 1) * gutterPx) / columns;
-  const columnHeights = new Array<number>(columns).fill(0);
+  const columnWidth = (containerWidth - (columns + 1) * gapPx) / columns;
+  // Seed each column with the top gap so the first row clears the perimeter.
+  const columnHeights = new Array<number>(columns).fill(gapPx);
 
   const rects: Rect[] = heights.map((tileHeight) => {
     let target = 0;
@@ -51,15 +56,16 @@ export const layout = ({ heights, columnCount, containerWidth, gutterPx }: Layou
     }
 
     const rect: Rect = {
-      x: target * (columnWidth + gutterPx),
+      x: gapPx + target * (columnWidth + gapPx),
       y: columnHeights[target],
       column: target,
     };
-    columnHeights[target] += tileHeight + gutterPx;
+    columnHeights[target] += tileHeight + gapPx;
     return rect;
   });
 
+  // Each column already carries a trailing gap, which becomes the bottom perimeter.
   const tallest = columnHeights.reduce((max, value) => Math.max(max, value), 0);
-  const height = Math.max(0, tallest - gutterPx);
+  const height = heights.length === 0 ? 0 : tallest;
   return { rects, columnWidth, height };
 };
