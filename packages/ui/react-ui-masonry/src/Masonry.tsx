@@ -3,13 +3,12 @@
 //
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import React, { type ComponentType, type JSX, type PropsWithChildren, type Ref, useMemo, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
-import { composable, composableProps, scrollbar } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
 import { useFlip } from './useFlip';
@@ -37,13 +36,6 @@ type MasonryContextValue = {
 const MASONRY_NAME = 'Masonry';
 
 const [MasonryProvider, useMasonryContext] = createContext<MasonryContextValue>(MASONRY_NAME);
-
-/** Content-scoped context: measured width of the ScrollArea.Root, shared with Viewport. */
-type MasonryContentContextValue = {
-  width: number;
-};
-
-const [MasonryContentProvider, useMasonryContentContext] = createContext<MasonryContentContextValue>('Masonry.Content');
 
 //
 // Root
@@ -77,9 +69,10 @@ MasonryRoot.displayName = 'Masonry.Root';
 //
 // Content
 //
-// The outer wrapper: renders the ScrollArea.Root, measures available width,
-// and publishes that width via context for Masonry.Viewport to consume.
-// Style this layer (centered/thin/padding) to control the scroll container.
+// The outer wrapper: renders the ScrollArea.Root. Style this layer
+// (centered/thin/padding) to control the scroll container; the Viewport measures
+// its own content box, so scrollbar width and padding are accounted for whatever
+// density is configured here.
 //
 
 type MasonryContentProps = ThemedClassName<
@@ -87,24 +80,18 @@ type MasonryContentProps = ThemedClassName<
 >;
 
 const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
-  ({ children, scrollbars, centered = true, thin = true, padding = true, ...props }, forwardedRef) => {
-    const rootRef = useRef<HTMLDivElement | null>(null);
-    const composedRef = useComposedRefs(rootRef, forwardedRef);
-    const { width = 0 } = useResizeDetector({ targetRef: rootRef });
-
-    return (
-      <ScrollArea.Root
-        {...composableProps(props)}
-        scrollbars={scrollbars}
-        centered={centered}
-        thin={thin}
-        padding={padding}
-        ref={composedRef}
-      >
-        <MasonryContentProvider width={width}>{children}</MasonryContentProvider>
-      </ScrollArea.Root>
-    );
-  },
+  ({ children, scrollbars, centered = true, thin = true, padding = true, ...props }, forwardedRef) => (
+    <ScrollArea.Root
+      {...composableProps(props)}
+      scrollbars={scrollbars}
+      centered={centered}
+      thin={thin}
+      padding={padding}
+      ref={forwardedRef}
+    >
+      {children}
+    </ScrollArea.Root>
+  ),
 );
 
 MasonryContentInner.displayName = 'Masonry.Content';
@@ -134,13 +121,13 @@ type MasonryViewportProps<Item> = ThemedClassName<{
 const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any>>(
   ({ items, getId, ...props }, forwardedRef) => {
     const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap } = useMasonryContext('Masonry.Viewport');
-    const { width } = useMasonryContentContext('Masonry.Viewport');
     const remInPx = usePx(1);
-    // The ScrollArea.Viewport is centered+padded, so it reserves a symmetric gutter of
-    // (scroll-width + scroll-padding) on each side (the inline-end side splitting into
-    // padding + the scrollbar itself). Subtract both gutters to get the width available
-    // to the centered grid.
-    const contentWidth = width - 2 * (scrollbar.md.size + scrollbar.md.padding);
+    // Measure the viewport's own content box (net of padding and scrollbar) rather
+    // than deriving it from the root width, so the grid tracks the actual available
+    // width for any ScrollArea density (thin/scrollbars/padding) without duplicating
+    // the theme's gutter math.
+    const viewportRef = useRef<HTMLDivElement | null>(null);
+    const { width: contentWidth = 0 } = useResizeDetector({ targetRef: viewportRef });
     const columnCount = useColumnCount(contentWidth, columns, maxColumns, minColumnWidth, maxColumnWidth, gap);
 
     // Cap each column at `maxColumnWidth` and center the grid so it doesn't stretch
@@ -170,46 +157,45 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       tabbable: true,
     });
 
-    if (width <= 0) {
-      return null;
-    }
-
     // The viewport is the full-width scroll container; its centered+padded theme
     // balances the scrollbar into symmetric inline gutters. The capped-width grid is
     // an ordinary block child centered with `mx-auto`, so its left/right margins match
-    // and the scrollbar never eats into the tile area.
+    // and the scrollbar never eats into the tile area. The viewport always renders so
+    // it can be measured; tiles render once a width is known.
     return (
-      <ScrollArea.Viewport>
-        <div
-          {...composableProps(props, {
-            classNames: 'relative mx-auto',
-            style: { width: `${gridWidth}px`, height: `${height}px` },
-          })}
-          {...arrowNavigationAttrs}
-          role='list'
-          ref={forwardedRef}
-        >
-          {items.map((item, index) => {
-            const id = ids[index];
-            const rect = rects[index];
-            return (
-              <div
-                key={id}
-                ref={getTileRef(id)}
-                role='listitem'
-                style={{
-                  position: 'absolute',
-                  insetBlockStart: 0,
-                  insetInlineStart: 0,
-                  width: `${columnWidth}px`,
-                  transform: rect ? `translate(${rect.x}px, ${rect.y}px)` : undefined,
-                }}
-              >
-                <Tile index={index} data={item} />
-              </div>
-            );
-          })}
-        </div>
+      <ScrollArea.Viewport ref={viewportRef}>
+        {contentWidth > 0 && (
+          <div
+            {...composableProps(props, {
+              classNames: 'relative mx-auto',
+              style: { width: `${gridWidth}px`, height: `${height}px` },
+            })}
+            {...arrowNavigationAttrs}
+            role='list'
+            ref={forwardedRef}
+          >
+            {items.map((item, index) => {
+              const id = ids[index];
+              const rect = rects[index];
+              return (
+                <div
+                  key={id}
+                  ref={getTileRef(id)}
+                  role='listitem'
+                  style={{
+                    position: 'absolute',
+                    insetBlockStart: 0,
+                    insetInlineStart: 0,
+                    width: `${columnWidth}px`,
+                    transform: rect ? `translate(${rect.x}px, ${rect.y}px)` : undefined,
+                  }}
+                >
+                  <Tile index={index} data={item} />
+                </div>
+              );
+            })}
+          </div>
+        )}
       </ScrollArea.Viewport>
     );
   },
