@@ -4,9 +4,10 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { Operation, Skill } from '@dxos/compute';
-import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Scope, Tag, Type } from '@dxos/echo';
+import { Database, Entity, Feed, Filter, JsonSchema, Obj, Query, Ref, Relation, Scope, Tag, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
@@ -15,7 +16,7 @@ import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { DatabaseHandlers } from './operations';
-import { Query as DatabaseQueryOperation } from './operations/definitions';
+import { Query as DatabaseQueryOperation, SchemaAdd } from './operations/definitions';
 import DatabaseSkill from './skill';
 
 EntityId.dangerouslyDisableRandomness();
@@ -27,6 +28,19 @@ const TestLayer = AssistantTestLayer({
   tracing: 'pretty',
   aiServicePreset: 'edge-remote',
 });
+
+// A representative draft-07 JSON Schema as a model would emit for the `add-schema` tool.
+const PROJECT_JSON_SCHEMA = {
+  $schema: 'http://json-schema.org/draft-07/schema#',
+  type: 'object',
+  title: 'Project',
+  properties: {
+    name: { type: 'string' },
+    description: { type: 'string' },
+    status: { type: 'string' },
+  },
+  required: ['name'],
+};
 
 describe('Database Skill', () => {
   //
@@ -50,6 +64,49 @@ describe('Database Skill', () => {
   );
 
   it.effect(
+    'schema-add: decodes a stringified jsonSchema at the tool-call boundary',
+    Effect.fnUntraced(function* ({ expect }) {
+      // Unconstrained tool parameters are sent to the LLM without a `type`, so some models serialize
+      // the `jsonSchema` argument as a JSON string. The tool-call boundary decodes the operation input,
+      // so decoding must yield an object whether the model passes a string or an object.
+      const decode = Schema.decodeUnknown(SchemaAdd.input);
+      const base = { name: 'Project', typename: 'com.example.type.project' };
+
+      const fromString = yield* decode({ ...base, jsonSchema: JSON.stringify(PROJECT_JSON_SCHEMA) });
+      expect(fromString.jsonSchema).toEqual(PROJECT_JSON_SCHEMA);
+
+      const fromObject = yield* decode({ ...base, jsonSchema: PROJECT_JSON_SCHEMA });
+      expect(fromObject.jsonSchema).toEqual(PROJECT_JSON_SCHEMA);
+    }),
+  );
+
+  it.effect(
+    'schema-add: creates a schema with the declared fields',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        // Decode through the operation input to mirror the tool-call boundary (a model may pass the schema
+        // as a JSON string), then run the handler and assert the created type carries the declared fields.
+        const input = yield* Schema.decodeUnknown(SchemaAdd.input)({
+          name: 'Project',
+          typename: 'com.example.type.project',
+          jsonSchema: JSON.stringify(PROJECT_JSON_SCHEMA),
+        });
+        yield* Operation.invoke(SchemaAdd, input);
+
+        const allTypes = yield* Database.query(
+          Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
+        ).run;
+        const schemas = allTypes.filter((type) => Type.getTypename(type) === 'com.example.type.project');
+        expect(schemas).toHaveLength(1);
+        const properties = JsonSchema.toJsonSchema(schemas[0]).properties ?? {};
+        expect(Object.keys(properties)).toEqual(expect.arrayContaining(['name', 'description', 'status']));
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'schema-add: add a new schema',
     Effect.fnUntraced(
       function* (_) {
@@ -65,6 +122,10 @@ describe('Database Skill', () => {
         ).run;
         const schemas = allTypes.filter((t) => Type.getTypename(t) === 'com.example.type.project');
         expect(schemas.length).toBeGreaterThanOrEqual(1);
+        // Verify the schema was created with the declared fields, not merely that a type with the
+        // typename exists — a malformed `jsonSchema` payload would still produce a bare type.
+        const properties = JsonSchema.toJsonSchema(schemas[0]).properties ?? {};
+        expect(Object.keys(properties)).toEqual(expect.arrayContaining(['name', 'description', 'status']));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
