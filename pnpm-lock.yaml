@@ -9151,6 +9151,12 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
     devDependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/functions-runtime
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
