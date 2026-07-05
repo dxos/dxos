@@ -233,16 +233,23 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
     const feed = state.feed;
     invariant(feed, 'SyncBinding.commit requires a feed target');
     const { db } = yield* Database.Service;
-    yield* Effect.promise(async () => {
-      await db.appendToFeed(
-        feed,
-        units.map((unit) => unit.message),
-      );
-      // Yield a macrotask after the feed append so the browser can paint the just-appended messages
-      // before this page's space-db side effects (tag/contact/thread mutations) run. Otherwise the
-      // append and the side-effect reactive cascade execute as one uninterrupted synchronous burst
-      // and the messages never paint until the whole sync settles.
-      await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // The feed append (a queue write) commits first; the space-db mutations below follow. The queue
+    // and the space document are separate stores with no shared transaction, so a crash between them
+    // leaves the page in the feed with the cursor un-advanced — the next run re-fetches it and the
+    // feed-seeded dedup set drops it. Advancing the cursor before the append would instead lose
+    // messages. Each phase is its own span so the benchmark can attribute per-page commit cost.
+    yield* Effect.promise(() => db.appendToFeed(feed, units.map((unit) => unit.message))).pipe(
+      Effect.withSpan('sync.commit.appendToFeed', { attributes: { messages: units.length } }),
+    );
+
+    // Yield a macrotask after the feed append so the browser can paint the just-appended messages
+    // before this page's space-db side effects (tag/contact/thread mutations) run. Otherwise the
+    // append and the side-effect reactive cascade execute as one uninterrupted synchronous burst and
+    // the messages never paint until the whole sync settles.
+    yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 0)));
+
+    yield* Effect.sync(() => {
       // Apply every (message, tag) pair for the page in ONE `Obj.update` on the tag index (one
       // Automerge change + one reactive notification), not one per pair. The per-pair storm (a page's
       // worth of separate changes/notifications, ×25 pages/sec) would otherwise saturate the main
@@ -256,11 +263,17 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
         }
         Tagging.setBatch(tagEntries, { index: state.tagIndex });
       }
+    }).pipe(Effect.withSpan('sync.commit.tags'));
+
+    yield* Effect.sync(() => {
       for (const unit of units) {
         for (const object of unit.extractedObjects) {
           db.add(object);
         }
       }
+    }).pipe(Effect.withSpan('sync.commit.contacts'));
+
+    yield* Effect.sync(() => {
       // Invoke each DISTINCT side-effect function (by identity) once per page, passing every unit in
       // the page that attached it — not just the unit it came from. A stage that attaches one stable
       // closure to every unit (e.g. `EmailStage.recordThreads`) therefore gets a single batched call
@@ -280,6 +293,9 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
       for (const [sideEffect, sideEffectUnitList] of sideEffectUnits) {
         sideEffect(db, sideEffectUnitList);
       }
+    }).pipe(Effect.withSpan('sync.commit.sideEffects'));
+
+    yield* Effect.sync(() => {
       // Advance the cursor + run status in the same commit as the writes. (A run with no new messages
       // produces no commit, so `lastSyncAt` reflects the last page that landed rather than the last
       // attempt — acceptable, and avoids a separate write path.)
@@ -298,8 +314,8 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
         state.dedupSet.add(unit.foreignId);
       }
       state.stats.newMessages += units.length;
-    });
-  });
+    }).pipe(Effect.withSpan('sync.commit.advanceCursor'));
+  }).pipe(Effect.withSpan('sync.commit'));
 
 /** An item written by {@link upsertCommit}: an object to upsert into the space plus its cursor key. */
 export type UpsertUnit<T> = { readonly item: T; readonly foreignId: string; readonly key: number };
@@ -375,4 +391,5 @@ const seedDedupSet = (feed: Feed.Feed, foreignKeySource: string): Effect.Effect<
           ),
         ),
     ),
+    Effect.withSpan('sync.seedDedupSet', { attributes: { limit: DEDUP_SEED_TAIL } }),
   );

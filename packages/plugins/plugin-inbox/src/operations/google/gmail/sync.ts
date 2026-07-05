@@ -192,7 +192,7 @@ export const runGmailSync = ({
 
     log('gmail sync complete', { newMessages: stats.newMessages });
     return { newMessages: stats.newMessages };
-  });
+  }).pipe(Effect.withSpan('gmail-sync'));
 
 export default InboxOperation.GoogleMailSync.pipe(
   Operation.withHandler(({ binding: bindingRef, userId, label, after, restrictedMode }) =>
@@ -236,7 +236,7 @@ export default InboxOperation.GoogleMailSync.pipe(
 //   find-or-create Tag), rather than the imperative loop below.
 // Syncs the Gmail label dictionary to `Tag` objects (one per label, carrying the Gmail label-id as
 // a foreign key). Returns a `gmailLabelId -> Tag uri` map used to index messages by tag.
-const syncLabels = Effect.fn(function* (mailbox: Mailbox.Mailbox, userId: string) {
+const syncLabels = Effect.fn('gmail-sync.labels')(function* (mailbox: Mailbox.Mailbox, userId: string) {
   const api = yield* GoogleMailApi;
   const { labels } = yield* api.listLabels(userId);
   const labelMap = new Map<string, string>();
@@ -290,7 +290,7 @@ const gmailSource = (
       );
 
       return messageIds.pipe(
-        Stream.mapEffect((messageId) => api.getMessage(userId, messageId), {
+        Stream.mapEffect((messageId) => api.getMessage(userId, messageId).pipe(Effect.withSpan('gmail-sync.fetch.message')), {
           concurrency: STREAMING_CONFIG.messageFetchConcurrency,
         }),
       );
@@ -346,12 +346,9 @@ const fetchMessagesForDateRange = (
         pageToken: Option.getOrUndefined(state.pageToken),
       });
 
-      const { messages, nextPageToken } = yield* api.listMessages(
-        userId,
-        query,
-        STREAMING_CONFIG.maxResults,
-        Option.getOrUndefined(state.pageToken),
-      );
+      const { messages, nextPageToken } = yield* api
+        .listMessages(userId, query, STREAMING_CONFIG.maxResults, Option.getOrUndefined(state.pageToken))
+        .pipe(Effect.withSpan('gmail-sync.fetch.list'));
 
       log('fetched message IDs', {
         count: messages?.length ?? 0,
