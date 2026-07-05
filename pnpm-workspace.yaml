@@ -81,7 +81,7 @@ catalog:
   '@effect/cli': 0.75.2
   '@effect/cluster': 0.59.0
   '@effect/experimental': 0.60.0
-  '@effect/language-service': ^0.86.2
+  '@effect/language-service': ^0.86.4
   '@effect/opentelemetry': ^0.63.0
   '@effect/platform': 0.96.2
   '@effect/platform-browser': 0.76.0
