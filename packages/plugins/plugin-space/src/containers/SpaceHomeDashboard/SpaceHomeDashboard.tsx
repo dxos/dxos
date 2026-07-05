@@ -3,9 +3,9 @@
 //
 
 import { useAtomValue } from '@effect-atom/atom-react';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
+import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
 import { Collection, Filter, Obj, Query } from '@dxos/echo';
 import { type Space, useMembers, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
@@ -21,6 +21,7 @@ type SpaceHomeDashboardProps = {
   space?: Space;
   /** Stat cards to render, in order; defaults to all. */
   stats?: readonly SpaceStatId[];
+  onClose?: () => void;
 };
 
 /**
@@ -36,9 +37,8 @@ type SpaceHomeDashboardProps = {
  *  - Relations count: needs a relations query (Query.select over relation types).
  *  - Member activity / presence history: EDGE presence feed (only live viewers are exposed today).
  */
-export const SpaceHomeDashboard = ({ space, stats = STAT_IDS }: SpaceHomeDashboardProps) => {
+export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHomeDashboardProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const [range, setRange] = useState('all');
 
   const query = useMemo(() => Query.select(Filter.everything()), []);
   const members = useMembers(space?.key);
@@ -89,25 +89,19 @@ export const SpaceHomeDashboard = ({ space, stats = STAT_IDS }: SpaceHomeDashboa
   }
 
   return (
-    <Dashboard.Root range={range} onRangeChange={setRange}>
-      <div className='flex justify-center w-full'>
-        <Dashboard.Content classNames='w-full max-w-[40rem]'>
-          <div className='flex items-end justify-between'>
-            <h2 className='text-sm font-medium text-description'>{t('space-home.dashboard.heading')}</h2>
-          </div>
-          <Dashboard.Stats>
-            {stats.map((id) => (
-              <Dashboard.Stat key={id}>
-                <Dashboard.StatLabel>{t(`space-home.dashboard.${id}.label`)}</Dashboard.StatLabel>
-                <Dashboard.StatValue value={values[id]} />
-              </Dashboard.Stat>
-            ))}
-          </Dashboard.Stats>
-          {/* Smaller cells so a full year fits the 40rem home column without horizontal scroll. */}
-          <Dashboard.Activity classNames='[--dx-dashboard-cell:0.75rem]' data={activity} endDate={new Date()} />
-        </Dashboard.Content>
-      </div>
-    </Dashboard.Root>
+    <HomeSection.Root>
+      <HomeSection.Header title={t('space-home.dashboard.heading')} onClose={onClose} />
+      <Dashboard.Stats>
+        {stats.map((id) => (
+          <Dashboard.Stat key={id}>
+            <Dashboard.StatLabel>{t(`space-home.dashboard.${id}.label`)}</Dashboard.StatLabel>
+            <Dashboard.StatValue value={values[id]} />
+          </Dashboard.Stat>
+        ))}
+      </Dashboard.Stats>
+      {/* Smaller cells so a full year fits the 40rem home column without horizontal scroll. */}
+      <Dashboard.Activity classNames='[--dx-dashboard-cell:0.75rem]' data={activity} endDate={new Date()} />
+    </HomeSection.Root>
   );
 };
 

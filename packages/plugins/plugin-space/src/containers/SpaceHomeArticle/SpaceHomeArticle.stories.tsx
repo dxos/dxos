@@ -11,6 +11,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { useHomeVisibility } from '@dxos/app-toolkit/ui';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -59,17 +60,24 @@ const meta = {
         Capability.contributes(AppCapabilities.Translations, translations),
         // Registered types feed SpaceHomeRecent's type filter (normally via addSchemaModule).
         Capability.contributes(AppCapabilities.Schema, [Task, Note]),
-        // Home-content contributors normally wired by the plugin's react-surface capability.
+        // Home-content contributors normally wired by the plugin's react-surface capability,
+        // including the per-section visibility gate + close affordance.
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create({
             id: 'story.spaceHomeRecent',
             filter: Surface.makeFilter(SpaceHomeContent),
-            component: ({ data }) => <SpaceHomeRecent space={data.space} />,
+            component: ({ data }) => {
+              const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeRecent');
+              return visible ? <SpaceHomeRecent space={data.space} onClose={hide} /> : null;
+            },
           }),
           Surface.create({
             id: 'story.spaceHomeDashboard',
             filter: Surface.makeFilter(SpaceHomeContent),
-            component: ({ data }) => <SpaceHomeDashboard space={data.space} />,
+            component: ({ data }) => {
+              const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeDashboard');
+              return visible ? <SpaceHomeDashboard space={data.space} onClose={hide} /> : null;
+            },
           }),
         ]),
       ],

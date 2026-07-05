@@ -56,6 +56,7 @@ export const RoutineForm = ({ db, routine, readonly = false, onSave, onCancel }:
     () => ({ name: auto.name, description: auto.description }),
     [routine],
   );
+
   const handleValuesChanged = useCallback(
     (values: Partial<GeneralForm>) => {
       updateAuto((routine) => {

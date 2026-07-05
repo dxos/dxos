@@ -285,6 +285,9 @@ export const translations = [
         'repair-space.title': 'Repair Space',
         'repair-space.description': 'Run repair operations on the space.',
         'repair-space.label': 'Run repairs',
+        'reset-home.title': 'Reset home layout',
+        'reset-home.description': 'Restore all hidden sections on the space home page.',
+        'reset-home.label': 'Reset',
 
         'danger-zone.title': 'Danger Zone',
         'danger-zone.description': 'Destructive actions that cannot be undone.',
