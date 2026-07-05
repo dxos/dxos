@@ -70,6 +70,14 @@ op SyncGames
   output:
     appended: number
   effects: [http, echo:write]
+
+op ClearSyncedGames
+  desc: Replace the account games feed with a fresh empty feed, discarding synced games.
+  input:
+    account: Ref<ChessComAccount>
+  output:
+    removed: number
+  effects: [echo:write]
 ```
 
 ## Features

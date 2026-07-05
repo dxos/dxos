@@ -26,6 +26,8 @@ export const translations = [
         'plugin.name': 'Chess.com',
         'sync-games.button': 'Sync games',
         'sync-games-error.title': 'Failed to sync Chess.com games',
+        'clear-synced-games.label': 'Clear synced games',
+        'clear-synced-games-error.title': 'Failed to clear synced games',
         'empty-games.message': 'No games synced yet. Use Sync games to import your Chess.com archive.',
       },
     },

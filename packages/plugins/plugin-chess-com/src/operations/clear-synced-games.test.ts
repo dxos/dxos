@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, vi } from 'vitest';
 
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
@@ -49,7 +49,7 @@ const TestLayer = AssistantTestLayer({
   disableLlmMemoization: true,
 });
 
-describe('SyncGames', () => {
+describe('ClearSyncedGames', () => {
   beforeEach(() => {
     vi.stubGlobal(
       'fetch',
@@ -74,31 +74,43 @@ describe('SyncGames', () => {
   });
 
   it.effect(
-    'imports games and deduplicates on re-sync',
+    'removes synced games and chess state from the feed',
     Effect.fnUntraced(
       function* ({ expect }) {
         const account = yield* Database.add(ChessComAccount.makeAccount({ username: 'testuser' }));
         yield* Database.flush();
 
-        const first = yield* Operation.invoke(ChessComOperation.SyncGames, { account: Ref.make(account) });
-        expect(first.appended).toBe(1);
+        yield* Operation.invoke(ChessComOperation.SyncGames, { account: Ref.make(account) });
 
-        const echoFeed = yield* Database.load(account.games);
-        const gamesAfterFirst = yield* Feed.query(echoFeed, Filter.type(Game)).run;
-        expect(gamesAfterFirst).toHaveLength(1);
-        expect(gamesAfterFirst[0]?.name).toBe('alice vs bob');
+        const oldFeed = yield* Database.load(account.games);
+        expect(yield* Feed.query(oldFeed, Filter.type(Game)).run).toHaveLength(1);
+        expect(yield* Feed.query(oldFeed, Filter.type(Chess.State)).run).toHaveLength(1);
 
-        const chessStates = yield* Feed.query(echoFeed, Filter.type(Chess.State)).run;
-        expect(chessStates).toHaveLength(1);
+        const result = yield* Operation.invoke(ChessComOperation.ClearSyncedGames, { account: Ref.make(account) });
+        expect(result.removed).toBe(1);
 
-        const variant = yield* Database.load(gamesAfterFirst[0]!.variant);
-        expect(Obj.instanceOf(Chess.State, variant)).toBe(true);
+        const newFeed = yield* Database.load(account.games);
+        expect(newFeed.id).not.toBe(oldFeed.id);
+        expect(yield* Feed.query(newFeed, Filter.type(Game)).run).toHaveLength(0);
+        expect(yield* Feed.query(newFeed, Filter.type(Chess.State)).run).toHaveLength(0);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 
-        const second = yield* Operation.invoke(ChessComOperation.SyncGames, { account: Ref.make(account) });
-        expect(second.appended).toBe(0);
+  it.effect(
+    'allows re-sync after clear',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const account = yield* Database.add(ChessComAccount.makeAccount({ username: 'testuser' }));
+        yield* Database.flush();
 
-        const gamesAfterSecond = yield* Feed.query(echoFeed, Filter.type(Game)).run;
-        expect(gamesAfterSecond).toHaveLength(1);
+        yield* Operation.invoke(ChessComOperation.SyncGames, { account: Ref.make(account) });
+        yield* Operation.invoke(ChessComOperation.ClearSyncedGames, { account: Ref.make(account) });
+
+        const resync = yield* Operation.invoke(ChessComOperation.SyncGames, { account: Ref.make(account) });
+        expect(resync.appended).toBe(1);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

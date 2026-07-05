@@ -15,7 +15,7 @@ export default Config2.make({
       as interactive chess game cards.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-chess-com',
-    icon: { key: 'ph--chess-knight--regular', hue: 'green' },
+    icon: { key: 'ph--horse--regular', hue: 'green' },
     spec: 'PLUGIN.mdl',
     tags: ['game', 'integration'],
     dependsOn: ['org.dxos.plugin.chess', 'org.dxos.plugin.game'],

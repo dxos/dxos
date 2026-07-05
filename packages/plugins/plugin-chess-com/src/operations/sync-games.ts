@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Array from 'effect/Array';
 import * as Predicate from 'effect/Predicate';
 import * as Effect from 'effect/Effect';
@@ -13,13 +12,12 @@ import { invariant } from '@dxos/invariant';
 import { Chess } from '@dxos/plugin-chess/types';
 import { Game } from '@dxos/plugin-game/types';
 
-import { type RemoteGame, fetchAllGames, fetchPlayer } from '../services';
+import { ChessComHttpClientLayer, type RemoteGame, fetchAllGames, fetchPlayer } from '../services';
 import { ChessComAccount, ChessComOperation } from '../types';
 
 const gameForeignId = (uuid: string): string => `game/${uuid}`;
 
-const makeGameFromRemote = (remote: RemoteGame) =>
-  Obj.make(Game, {
+const makeGameFromRemote = (remote: RemoteGame): Game => Obj.make(Game, {
     name: `${remote.white.username} vs ${remote.black.username}`,
     players: [
       { role: 'white', name: remote.white.username },
@@ -27,7 +25,7 @@ const makeGameFromRemote = (remote: RemoteGame) =>
     ],
     variant: Ref.make(Chess.make({ pgn: remote.pgn, fen: remote.fen })),
     [Obj.Meta]: { keys: [{ source: ChessComAccount.CHESS_COM_SOURCE, id: gameForeignId(remote.uuid) }] },
-  });
+  })
 
 export default ChessComOperation.SyncGames.pipe(
   Operation.withHandler(
@@ -57,10 +55,14 @@ export default ChessComOperation.SyncGames.pipe(
         }
 
         const gameObjects = newGames.map(makeGameFromRemote);
-        yield* Feed.append(gamesFeed, gameObjects);
+        yield* Feed.append(
+          gamesFeed,
+          // TODO(dmaretskyi): `Feed.append` should auto-append unsaved refs.
+          gameObjects.flatMap((game) => [game, game.variant.target!]),
+        );
         return { appended: gameObjects.length };
       },
-      Effect.provide(FetchHttpClient.layer),
+      Effect.provide(ChessComHttpClientLayer),
     ),
   ),
   Operation.opaqueHandler,

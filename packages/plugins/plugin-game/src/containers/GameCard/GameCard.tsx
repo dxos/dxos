@@ -15,10 +15,7 @@ export type GameCardProps = AppSurface.ObjectCardProps<Game>;
 
 export const GameCard = ({ role, subject: game }: GameCardProps) => {
   const variants = useCapabilities(GameCapabilities.VariantProvider);
-  const ref = game.variant as Ref.Ref<Obj.Unknown>;
-  // Subscribe for re-renders; pass the live ref target down to variant components.
-  useObject(ref);
-  const variant = ref?.target as Obj.Unknown | undefined;
+  const [variant] = useObject(game.variant);
 
   if (!variant) {
     return null;

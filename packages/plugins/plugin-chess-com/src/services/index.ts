@@ -3,3 +3,4 @@
 //
 
 export * from './chess-com-api';
+export * from './proxy-http-client';

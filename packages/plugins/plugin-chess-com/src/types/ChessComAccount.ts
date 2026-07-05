@@ -45,7 +45,7 @@ export class Account extends Type.makeObject<Account>(DXN.make('org.dxos.type.ch
     games: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
   }).pipe(
     LabelAnnotation.set(['username']),
-    Annotation.IconAnnotation.set({ icon: 'ph--chess-knight--regular', hue: 'green' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--horse--regular', hue: 'green' }),
     FactoryAnnotation.set(((values) => makeAccount(values)) as FactoryFn),
   ),
 ) {}

@@ -13,6 +13,10 @@ import { Clipboard, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
+// #region DEBUG
+import { log } from '@dxos/log';
+// #endregion DEBUG
+
 export type DebugObjectPanelProps = Pick<
   AppSurface.ObjectArticleProps<Obj.Unknown, {}, Obj.Unknown>,
   'role' | 'companionTo'
@@ -25,10 +29,23 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
   const db = Obj.getDatabase(companionTo);
   const [selectedId, setSelectedId] = useState<EntityId | null>(null);
   const [depth, setDepth] = useState(0);
-  const [selectedObject] = useQuery(
-    db,
-    Query.select(Filter.id(selectedId ?? companionTo.id)).options({ deleted: 'include' }),
+  const selectionQuery = useMemo(
+    () =>
+      db
+        ? Query.select(Filter.id(selectedId ?? companionTo.id))
+            .options({ deleted: 'include' })
+            .from(db, { includeFeeds: true })
+        : Query.select(Filter.nothing()),
+    [db, selectedId, companionTo.id],
   );
+  const [selectedObject] = useQuery(db, selectionQuery);
+  // #region DEBUG
+  log('[DEBUG H1] debug object panel selection', {
+    selectedId: selectedId ?? companionTo.id,
+    found: Boolean(selectedObject),
+    typename: selectedObject ? Obj.getTypename(selectedObject) : undefined,
+  });
+  // #endregion DEBUG
   const refReplacer = useMemo(() => (db ? Json.createRefReplacer({ db, depth }) : undefined), [db, depth]);
 
   return (
