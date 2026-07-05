@@ -286,3 +286,49 @@ as the smallest change that should stop the crash, then re-measure with the new 
 (worker-side sync) are still needed. The `summary.heapMB` / `timing.upstreamMs` from the next run will
 tell us how much of the cost is main-thread pipeline vs commit vs Gmail latency, and confirm the
 execution context.
+
+## Benchmark harness results (2026-07-05, Stages 1–6)
+
+We built a repeatable, account-free benchmark (plan `zazzy-humming-blum`):
+- `GoogleMailApi` Context.Tag service (Live = real HTTP; `mock` = in-memory dataset honouring the
+  `after:`/`before:` window + pagination) — `services/google-mail-api.ts`.
+- `generateGmailDataset({ count, seed, start, end, ... })` deterministic generator — `testing/gmail-fixtures.ts`.
+- Real-ECHO-db unit test driving `runGmailSync` against the mock — `operations/google/gmail/sync.mock.test.ts`.
+- OTEL spans across the stack (`gmail-sync` root, `.labels`, `.fetch.list/.message`, and per-commit-phase
+  `sync.commit.{appendToFeed,paintYield,tags,contacts,sideEffects,advanceCursor}` + `seedDedupSet`),
+  captured by an in-memory harness — `testing/otel-harness.ts`.
+- Gated benchmark (`DX_BENCH=1 … sync.bench.test.ts`) that aggregates per-stage / per-message durations.
+
+**Confirmed LOCAL bottleneck (in-process harness).** Per-message ms by stage, n = 1000 / 3000 / 6000:
+
+| stage                       | n=1000 | n=3000 | n=6000 |
+|-----------------------------|-------:|-------:|-------:|
+| gmail-sync (root)           |   8.51 |  15.23 |  47.87 |
+| sync.commit                 |   8.09 |  14.99 |  47.57 |
+| **sync.commit.paintYield**  | **5.26** | **11.0** | **41.2** |
+| sync.commit.appendToFeed    |   1.12 |   1.46 |   2.32 |
+| sync.commit.tags            |   0.75 |   1.38 |   2.41 |
+| sync.commit.sideEffects     |   0.47 |   0.72 |   1.17 |
+| sync.commit.contacts        |   0.41 |   0.36 |   0.39 |
+| map-to-message / dedup / decode / fetch / extract-contacts | flat | flat | flat |
+
+The post-append macrotask yield (`paintYield`) dominates and is clearly **O(n²)** (~8× per-message for
+6× data). It absorbs the reactive/automerge cascade scheduled by the previous page's space-db
+mutations — re-serializing the growing space document, whose growth is driven by the **single**
+`TagIndex` and `ThreadIndex` objects that accumulate one entry per message and are `Obj.update`-d
+**every page** (≈ `2 × pages × O(doc)` = `O(n²/pageSize)`). The synchronous `tags`/`sideEffects`
+spans grow the same way but are an order of magnitude smaller than the async fallout in `paintYield`.
+Everything the earlier stages fixed (contacts cache, tag/thread batching, dedup, decode, fetch) is flat.
+
+**Fidelity caveat (unchanged).** This in-process harness does NOT reproduce the client→worker RPC /
+EDGE-replication contention that caused the real-app 18s `appendToFeed` — that needs the real app or a
+harness with a replication target. The local `appendToFeed` growth here (1.1→2.3 ms/msg) is mild; the
+real production stall lives in the replication channel and remains tracked as the TOP item above.
+
+**Stage 6 optimization — decision point.** The measured local fix targets the growing-single-doc index
+updates (reduce `O(n²/pageSize)`): options are (a) batch `TagIndex`/`ThreadIndex` writes across K pages
+(decouple index writes from the per-page feed append; feed stays incremental, indices re-apply
+idempotently on re-sync), (b) larger commit pages (bounded by the ≤15 atomic-queue-insert invariant),
+or (c) an ECHO-level change so per-message index data isn't a single re-serialized doc. Each carries a
+UX/crash-consistency trade-off, and none addresses the production worker/EDGE cost — so the direction
+is a checkpoint rather than an autopilot change.

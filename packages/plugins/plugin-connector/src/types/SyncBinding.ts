@@ -246,8 +246,11 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
     // Yield a macrotask after the feed append so the browser can paint the just-appended messages
     // before this page's space-db side effects (tag/contact/thread mutations) run. Otherwise the
     // append and the side-effect reactive cascade execute as one uninterrupted synchronous burst and
-    // the messages never paint until the whole sync settles.
-    yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    // the messages never paint until the whole sync settles. This yield also absorbs the reactive
+    // cascade scheduled by the previous page's mutations, so its span captures that cost.
+    yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 0))).pipe(
+      Effect.withSpan('sync.commit.paintYield'),
+    );
 
     yield* Effect.sync(() => {
       // Apply every (message, tag) pair for the page in ONE `Obj.update` on the tag index (one
