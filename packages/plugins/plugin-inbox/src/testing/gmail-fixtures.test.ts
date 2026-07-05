@@ -28,8 +28,11 @@ describe('generateGmailDataset + GoogleMailApi.mock', () => {
   });
 
   test('is deterministic for a fixed seed', ({ expect }) => {
-    const first = generateGmailDataset({ count: 10, seed: 7 });
-    const second = generateGmailDataset({ count: 10, seed: 7 });
+    // Pin the window too: with the default window anchored to `new Date()`, two calls a moment apart
+    // would produce different internalDates.
+    const window = { start: new Date('2026-01-01T00:00:00Z'), end: new Date('2026-02-01T00:00:00Z') };
+    const first = generateGmailDataset({ count: 10, seed: 7, ...window });
+    const second = generateGmailDataset({ count: 10, seed: 7, ...window });
     expect(second.messages).toEqual(first.messages);
   });
 
