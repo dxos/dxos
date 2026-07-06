@@ -52,7 +52,9 @@ export const allOf = <TFilters extends ReadonlyArray<Surface.Filter<any>>>(
   if (filters.length === 0) {
     throw new Error('AppSurface.allOf requires at least one filter');
   }
-  const rolesPerFilter = filters.map((filter) => new Set(filter.bindings.map((binding: Surface.Binding) => binding.role)));
+  const rolesPerFilter = filters.map(
+    (filter) => new Set(filter.bindings.map((binding: Surface.Binding) => binding.role)),
+  );
   const [firstRoles, ...restRoles] = rolesPerFilter;
   for (const roles of restRoles) {
     if (roles.size !== firstRoles.size) {
@@ -180,7 +182,9 @@ export const subject: {
 export const snapshot = <TToken extends Role.Role<{ subject?: any }>, S extends Type.Obj<any>>(
   token: TToken,
   schema: S,
-): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Obj.Snapshot<Type.InstanceType<S>> }> => {
+): Surface.Filter<
+  Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Obj.Snapshot<Type.InstanceType<S>> }
+> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
