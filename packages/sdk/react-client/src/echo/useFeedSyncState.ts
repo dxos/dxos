@@ -20,15 +20,15 @@ export type FeedSyncState = {
 export type FeedSyncStateMap = Record<SpaceId, FeedSyncState>;
 
 /**
- * Polls queue replication state per space.
+ * Polls feed replication state per space.
  */
 export const useFeedSyncState = (pollIntervalMs = DEFAULT_POLL_INTERVAL_MS): FeedSyncStateMap => {
   const client = useClient();
   const [feedSyncState, setFeedSyncState] = useState<FeedSyncStateMap>({});
 
   useEffect(() => {
-    const queueService = client.services.services.QueueService;
-    if (!queueService) {
+    const feedService = client.services.services.QueueService;
+    if (!feedService) {
       return;
     }
 
@@ -39,7 +39,7 @@ export const useFeedSyncState = (pollIntervalMs = DEFAULT_POLL_INTERVAL_MS): Fee
       const entries = await Promise.all(
         spaces.map(async (space) => {
           try {
-            const response = await queueService.getSyncState({ spaceId: space.id });
+            const response = await feedService.getSyncState({ spaceId: space.id });
             const state = (response.namespaces ?? []).reduce<FeedSyncState>(
               (acc, entry) => {
                 acc.pending += Number(entry.blocksToPull ?? 0) + Number(entry.blocksToPush ?? 0);

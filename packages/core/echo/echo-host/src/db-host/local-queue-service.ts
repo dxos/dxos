@@ -30,6 +30,9 @@ import type { SqlTransaction } from '@dxos/sql-sqlite';
 /**
  * Writes queue data to a local FeedStore.
  */
+// TODO(queue-to-feed-migration): retains "Queue" naming — implements `FeedProtocol.QueueService`,
+// the wire RPC interface; renaming this class would decouple it from the interface it implements.
+// Deferred to Phase 6 (QueueFactory removal), which renames the RPC contract and this impl together.
 export class LocalQueueServiceImpl implements QueueService {
   #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   #feedStore: FeedStore;

@@ -169,7 +169,7 @@ export type EchoDatabaseProps = {
   graph: HypergraphImpl;
   dataService: DataService;
   queryService: QueryService;
-  queueService?: FeedProtocol.QueueService;
+  feedService?: FeedProtocol.QueueService;
   spaceId: SpaceId;
 
   /**
@@ -211,7 +211,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Backend for feed operations. Set on construction and refreshed on reconnect.
    */
-  #queueService: FeedProtocol.QueueService | undefined;
+  #feedService: FeedProtocol.QueueService | undefined;
 
   /**
    * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
@@ -225,7 +225,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this._reactiveSchemaQuery = params.reactiveSchemaQuery ?? true;
     this._preloadSchemaOnOpen = params.preloadSchemaOnOpen ?? true;
     this._hypergraph = params.graph;
-    this.#queueService = params.queueService;
+    this.#feedService = params.feedService;
 
     this._entityManager = new EntityManager({
       graph: params.graph,
@@ -531,7 +531,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   queryFeed(feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<any> {
-    const feedUri = Feed.getQueueUri(feed);
+    const feedUri = Feed.getFeedUri(feed);
     if (!feedUri) {
       throw new Error('Unable to query feed: make sure feed is stored in the database');
     }
@@ -543,8 +543,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * @internal
    * Sets or refreshes the feed backend service (e.g. after reconnection).
    */
-  _setQueueService(service: FeedProtocol.QueueService | undefined): void {
-    this.#queueService = service;
+  _setFeedService(service: FeedProtocol.QueueService | undefined): void {
+    this.#feedService = service;
   }
 
   /**
@@ -553,13 +553,13 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * Returns `undefined` only when no service is connected.
    */
   _getOrCreateFeedHandle(feedUri: EID.EID, namespace?: string): FeedHandle {
-    assertState(this.#queueService, 'Queue service not connected');
+    assertState(this.#feedService, 'Feed service not connected');
     const existing = this.#feeds.get(feedUri);
     if (existing) {
       return existing;
     }
     const handle = new FeedHandle(
-      this.#queueService,
+      this.#feedService,
       this.graph.createRefResolver({ context: { space: this.spaceId, feed: feedUri } }),
       feedUri,
       this,
@@ -586,7 +586,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   #getFeedHandle(feed: Feed.Feed): FeedHandle {
-    const feedUri = Feed.getQueueUri(feed);
+    const feedUri = Feed.getFeedUri(feed);
     invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
     const handle = this._getOrCreateFeedHandle(feedUri, feed.namespace);
     handle.setParentEntity(feed as Obj.Unknown);
@@ -737,15 +737,15 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   _updateServices({
     dataService,
     queryService,
-    queueService,
+    feedService,
   }: {
     dataService: DataService;
     queryService: QueryService;
-    queueService?: FeedProtocol.QueueService;
+    feedService?: FeedProtocol.QueueService;
   }): void {
     this._entityManager._updateServices({ dataService, queryService });
-    if (queueService !== undefined) {
-      this.#queueService = queueService;
+    if (feedService !== undefined) {
+      this.#feedService = feedService;
     }
   }
 

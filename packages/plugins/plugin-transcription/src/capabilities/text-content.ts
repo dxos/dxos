@@ -19,7 +19,7 @@ export default Capability.makeModule(
         const space = getSpace(transcript);
         const members = space?.members.get().map((member) => member.identity) ?? [];
         const feed = await transcript.feed.load();
-        const feedDXN = feed ? Feed.getQueueUri(feed) : undefined;
+        const feedDXN = feed ? Feed.getFeedUri(feed) : undefined;
         if (!space || !feedDXN) {
           return undefined;
         }

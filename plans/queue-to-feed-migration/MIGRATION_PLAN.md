@@ -6,11 +6,12 @@
 - **Phase 2 COMPLETE**: Migrated `AiConversation` and `AiContextBinder` to use `Feed` object and `feedRuntime` instead of `Queue`.
 - **Phase 3 COMPLETE** (PR #11483): Migrated `TriggerDispatcher` to `Feed.FeedService`; renamed the `'queue'` trigger kind (spec, event, helpers, cursor key) to `'feed'`. `Trigger.specQueue` was removed; `Trigger.QueueSpec`/`TriggerEvent.QueueEvent` are now `Trigger.FeedSpec`/`TriggerEvent.FeedEvent`; spec storage changed from a queue DXN string to `Ref.Ref(Feed.Feed)`.
 - **Phase 4 COMPLETE** (this PR #11484): All in-process consumers of the deprecated `QueueService` Effect tag have been migrated; the tag itself has been deleted.
+- **Phase 5 COMPLETE** (partial — see "Phase 5 COMPLETE" section below for what was renamed vs. deferred): Renamed remaining in-process, source-level `Queue`→`Feed` naming (`Feed.getQueueUri`→`getFeedUri`, `echo-client`/`proxy-db` service field names, `plugin-routine` trigger CLI files) that does not touch the wire/RPC protocol or persisted data. The RPC contract, `LocalQueueServiceImpl`, `QueueDataSource`'s persisted `sourceName`, and `space.queues`/`QueueFactory` itself remain unrenamed — deferred to Phase 6.
 
 The Effect `Context.Tag` `@dxos/functions/QueueService` (formerly defined in `packages/core/echo/echo-db/src/effect-queue-service.ts`) has been **removed from the codebase**. Remaining `QueueService` references are confined to:
 
 - the RPC data-plane (`@dxos/protocols/FeedProtocol`, `@dxos/protocols/FunctionProtocol`, `EdgeFunctionEnv`),
-- the imperative `QueueFactory` / `QueueImpl` / `LocalQueueServiceImpl` implementations in `@dxos/echo-db` and `@dxos/echo-pipeline`,
+- the imperative `QueueImpl` (`LocalQueueServiceImpl`) / `QueueDataSource` implementations in `@dxos/echo-host` (formerly split across `@dxos/echo-db` and `@dxos/echo-pipeline`, since consolidated),
 - the SDK RPC bridges in `@dxos/client*`,
 - the Cloudflare worker runtime (`@dxos/functions-runtime-cloudflare`).
 
@@ -107,42 +108,35 @@ After Phase 4, `rg -l QueueService packages` returns only files in the following
 | Group                                         | Files                                                                                                                                                                                            | Why it stays                                                                                                                                     |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | RPC protocol (data plane)                     | `packages/core/protocols/src/{FeedProtocol,FunctionProtocol}.ts`, `packages/core/protocols/src/edge/EdgeFunctionEnv.ts`, `packages/core/protocols/src/proto/dxos/client/queue.proto`, `…/gen/**` | `FeedProtocol.QueueService` is the RPC interface; it is the data plane, not the deprecated Effect tag.                                           |
-| `QueueFactory` / `QueueImpl` (imperative API) | `packages/core/echo/echo-db/src/queue/{queue,queue-factory,queue-service,stub}.ts`, `packages/core/echo/echo-db/src/client/echo-client.ts`                                                       | Backs the imperative `space.queues.*` API still consumed in stories, tests, and the Cloudflare runtime. Replacing this requires Phase 5 (below). |
-| Local queue service (echo-pipeline)           | `packages/core/echo/echo-pipeline/src/db-host/{echo-host,local-queue-service,queue-service.test,stub}.ts`                                                                                        | Data-plane RPC implementation.                                                                                                                   |
-| SDK bridges                                   | `packages/sdk/client/src/client/client.ts`, `packages/sdk/client-protocol/src/service.ts`, `packages/sdk/client-services/src/packlets/services/service-host.ts`                                  | Plumb the RPC service across the worker boundary.                                                                                                |
+| `QueueImpl` / `QueueDataSource` (data plane)  | `packages/core/echo/echo-host/src/db-host/{local-queue-service,queue-data-source,queue-service.test}.ts`, `packages/core/echo/echo-host/src/db-host/echo-host.ts`                               | `LocalQueueServiceImpl` implements `FeedProtocol.QueueService` (the RPC interface) directly; `QueueDataSource.sourceName = 'queue'` and the `queueId`/`queueNamespace` columns it writes are persisted in local SQLite index tables (`index-core/src/{index-tracker,indexes/entity-meta-index}.ts`). Renaming requires a local index-store migration and is folded into Phase 6. |
+| SDK bridges                                   | `packages/sdk/client-protocol/src/service.ts`, `packages/sdk/client-services/src/packlets/services/service-host.ts`                                                                              | Reference the RPC service registry key `dxos.client.services.QueueService` directly; plumb the RPC service across the worker boundary.           |
 | Cloudflare worker runtime                     | `packages/core/compute/functions-runtime-cloudflare/src/{functions-client,internal/queue-service-impl,internal/service-container}.ts`, `…/README.md`                                             | Separate runtime; its `QueuesAPI` (`queryQueue`/`insertIntoQueue`) is the surface used by `plugin-script` templates.                             |
 | Documentation / fixtures                      | `packages/core/echo/echo/AUDIT.md`, `packages/plugins/plugin-assistant/src/testing/data/trace-timeline.dx.json`                                                                                  | Doc/historical fixture.                                                                                                                          |
 
-## Phase 5 (separate effort) — Imperative `space.queues` and `Queue` class
+Note: the paths in the previous version of this table (`echo-db/src/queue/*`, `echo-pipeline/src/db-host/*`) are stale — `echo-db` and `echo-pipeline` were consolidated; the data-plane implementation now lives under `packages/core/echo/echo-host/src/db-host/`.
 
-These sites use the imperative `QueueFactory` API (`space.queues.get`, `space.queues.create`, `queue.append`, `queue.queryObjects`) directly. They are independent of the (now-deleted) Effect tag; migrating them to `Feed`-based APIs is a follow-up effort scoped per plugin/test.
+## Phase 5 COMPLETE — Source-level `Queue`→`Feed` renames
 
-### Plugin templates (Cloudflare worker)
+Renamed in-process, source-level "Queue" naming that means "Feed" (TS identifiers, comments, filenames) to `Feed` terminology, without touching any wire/RPC contract or persisted data. By the time this phase started, most of the imperative `space.queues`/`QueueFactory` call sites listed in the original Phase 5 plan below had already been migrated to the `Feed`/`Scope.feed` API by other work (the plan was stale) — the files (`plugin-feed/*.stories.tsx`, `curate-magazine.test.ts`, `sdk/client/src/tests/spaces.test.ts`, `build-exemplar-space.node.test.ts`, `echo-db/src/testing/queue.test.ts`, `echo-atom/src/query-atom.test.ts`) no longer exist at those paths and no longer use an imperative `Queue` class.
 
-The Cloudflare `QueuesAPI` (`space.queues.queryQueue(dxn)` / `space.queues.insertIntoQueue(dxn, items)`) is a different shape from the in-process `QueueFactory`; migrating these requires either exposing `Feed.runQuery`/`Feed.append` in the worker runtime or wrapping the existing API.
+### What was renamed
 
-- `packages/plugins/plugin-script/src/templates/discord.ts`
-- `packages/plugins/plugin-script/src/templates/gmail.ts`
+- `packages/core/echo/echo/src/Feed.ts`: `Feed.getQueueUri()` → `Feed.getFeedUri()`, plus doc comments; updated all ~26 call sites across `echo`, `echo-client`, `index-core`, `devtools/cli`, and several plugins (`plugin-assistant`, `plugin-bluesky`, `plugin-debug`, `plugin-inbox`, `plugin-magazine`, `plugin-meeting`, `plugin-script`, `plugin-transcription`, `react-ui-form`, `stories-assistant`, `sdk/client-e2e`, `functions-testing`, `assistant-toolkit`), including renaming local variables (`queueDxn`/`transcriptQueueDxn`/`feedQueueDXN`) and error-message text that said "queue" where "feed" was meant.
+- `packages/core/echo/echo-client/src/client/echo-client.ts` and `packages/core/echo/echo-client/src/proxy-db/database.ts`: renamed the in-process `queueService`/`_queuesService`/`#queueService` fields, params, and `_setQueueService` method to `feedService`/`_feedService`/`_setFeedService`. These wrap `FeedProtocol.QueueService` (the RPC type itself is unchanged) — only the local field/param names changed. Updated call sites in `sdk/client/src/client/client.ts`, `core/compute/functions/src/protocol/protocol.ts`, and `echo-client/src/testing/echo-test-builder.ts`. Also renamed the equivalent local variable in `sdk/react-client/src/echo/useFeedSyncState.ts`.
+- `packages/plugins/plugin-routine/src/commands/trigger/{create,update}/queue.ts` → renamed to `feed.ts`; the exported `queue` command const renamed to `feed` (the CLI subcommand name was already `'feed'` from Phase 3 — only the file/export name lagged). Updated the two `index.ts` files that import them.
 
-### In-process imperative call sites
+### What was deferred (with TODOs left in place)
 
-- `packages/plugins/plugin-space/src/commands/queue/query.ts:44`
-- `packages/plugins/plugin-feed/src/containers/MagazineArticle/MagazineArticle.stories.tsx`
-- `packages/plugins/plugin-feed/src/operations/curate-magazine.test.ts`
-- `packages/plugins/plugin-pipeline/src/containers/PipelineArticle/PipelineArticle.stories.tsx`
-- `packages/plugins/plugin-meeting/src/capabilities/app-graph-builder.ts`
-- `packages/plugins/plugin-markdown/src/containers/MarkdownArticle/MarkdownArticle.stories.tsx`
-- `packages/plugins/plugin-inbox/src/operations/google/gmail/sync-e2e.test.ts`
-- `packages/plugins/plugin-assistant/src/containers/AgentArticle/AgentArticle.stories.tsx`
-- `packages/stories/stories-assistant/src/stories/Chat.stories.tsx`
-- `packages/sdk/client/src/tests/spaces.test.ts`
-- `packages/apps/composer-app/scripts/build-exemplar-space.node.test.ts`
-- `packages/core/compute/functions-testing/src/testing/util.ts`
-- `packages/core/echo/echo-db/src/testing/queue.test.ts` (tests the `Queue` class itself; keep until the class is removed)
-- `packages/core/echo/echo-atom/src/query-atom.test.ts` — tests `AtomQuery.make` against a `Queue` directly; migration requires `AtomQuery` to accept a `Feed.Feed` as well.
+- `packages/devtools/devtools/src/panels/echo/QueuesPanel/QueuesPanel.tsx` — kept the `QueuesPanel` name. `FeedsPanel` already names the unrelated hypercore feed-pipeline devtools panel (`packages/devtools/devtools/src/panels/echo/FeedsPanel/`), so renaming would collide; the panel itself is also currently stubbed pending a `Feed.Feed`-aware rewrite. TODO comment left at the component declaration.
+- `packages/core/echo/echo-host/src/db-host/local-queue-service.ts` (`LocalQueueServiceImpl`) — kept the class name because it `implements FeedProtocol.QueueService`, the wire RPC interface; renaming the class would decouple it from the interface name. TODO left pointing at Phase 6.
+- `packages/core/echo/echo-host/src/db-host/queue-data-source.ts` (`QueueDataSource.sourceName = 'queue'`) — kept because `sourceName` is persisted as a column value in the local `indexCursor`/`objectMeta` SQLite tables. TODO left pointing at the persisted schema.
+- `space.queues` itself and the `QueueFactory`/`QueueImpl`/`FeedProtocol.QueueService` RPC contract were **not** touched — per the audit above, they are the RPC/data-plane layer, explicitly out of scope for this phase; see Phase 6.
+- `packages/plugins/plugin-space/src/commands/queue/{query.ts,util.ts,index.ts}` — left untouched. This defines a user-facing CLI command group (`queue query`); renaming it changes CLI surface/muscle-memory for users, which is a different kind of compatibility concern than the source-level renames in scope here. Not touched, no TODO added (out of this phase's explicit scope, not a deferred decision).
 
-Each is independent and can be migrated as a separate, small PR.
+### Verification note
+
+`moon` (build/test task runner) could not run in this environment: its toolchain plugin download from `github.com/moonrepo/plugins` was blocked with a 403 by the sandbox's egress policy. Verification was instead done via `tsc --noEmit` on each touched package's `tsconfig.json` (pre-existing, unrelated "Cannot find module" errors remain from unbuilt/un-codegen'd dependencies — confirmed identical on files untouched by this change) plus exhaustive `rg` call-site audits for every renamed symbol.
 
 ## Phase 6 — `QueueFactory` removal
 
-Once Phase 5 lands, the imperative `QueueFactory` exposed on `Space` (`space.queues`) can be replaced by a `Feed`-shaped surface. At that point the underlying `QueueImpl` / `LocalQueueServiceImpl` / `FeedProtocol.QueueService` RPC contract can be renamed to use `Feed`/`feed` terminology consistently (and `KEY_QUEUE_POSITION` migrated with a data migration if desired).
+Once `space.queues` callers are fully on `Feed`-based APIs, the imperative `QueueFactory` exposed on `Space` (`space.queues`) can be replaced by a `Feed`-shaped surface. At that point the underlying `QueueImpl` / `LocalQueueServiceImpl` / `FeedProtocol.QueueService` RPC contract can be renamed to use `Feed`/`feed` terminology consistently (including `QueueDataSource`, its persisted `sourceName`/`queueId`/`queueNamespace` columns, and `KEY_QUEUE_POSITION`), with a local index-store data migration.

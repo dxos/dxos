@@ -130,7 +130,7 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
       }
       const targetEid = EID.tryParse(queueTarget);
       const feed = feeds.find((feed) => {
-        const feedEid = Feed.getQueueUri(feed);
+        const feedEid = Feed.getFeedUri(feed);
         return feedEid != null && targetEid != null && EID.equals(feedEid, targetEid);
       });
       return feed ? Ref.fromURI(Entity.getURI(feed)) : undefined;
@@ -179,13 +179,13 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
     const handleUpdate = useCallback(
       (values: any) => {
         const targetValue = values.target;
-        let queueDxn: EID.EID | undefined;
+        let feedDxn: EID.EID | undefined;
 
         if (Ref.isRef(targetValue)) {
           const feedUri = targetValue.uri;
           const feed = feeds.find((feed) => Obj.getURI(feed) === feedUri);
           if (feed) {
-            queueDxn = Feed.getQueueUri(feed);
+            feedDxn = Feed.getFeedUri(feed);
           }
         }
 
@@ -197,7 +197,7 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
             ? Query.select(Filter.type(EID.isEID(values.query) ? (values.query as EID.EID) : DXN.make(values.query)))
                 .ast
             : JSON.parse(JSON.stringify(values.query));
-        onQueryChanged?.(query, queueDxn);
+        onQueryChanged?.(query, feedDxn);
       },
       [onQueryChanged, mode, feeds],
     );

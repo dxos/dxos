@@ -31,6 +31,9 @@ export type QueueDataSourceOptions = {
   feedNamespaces?: string[];
 };
 
+// TODO(queue-to-feed-migration): retains "Queue" naming — `sourceName` below is persisted as a
+// column value in the local `indexCursor`/`objectMeta` SQLite tables (see index-tracker.ts,
+// indexes/entity-meta-index.ts); renaming it requires a local index-store migration.
 export class QueueDataSource implements IndexDataSource {
   readonly sourceName = 'queue';
 
