@@ -9,6 +9,9 @@ name: Deploy Apps
 # apps are unversioned and just deploy. There are no separate release workflows; that logic is the
 # production-only `release` job below. See docs/design/app-release-spec.md.
 #
+# The `plan` job resolves the environment + which jobs run into named booleans, so every other job's `if:`
+# is a plain `needs.plan.outputs.<flag> == 'true'` instead of an inline boolean soup.
+#
 # "What's deployed where" is tracked by per-app floating git tags `<app>/<environment>` (non-main). No
 # GitHub Environments.
 
@@ -17,8 +20,8 @@ on:
     branches:
       - main
       # TEMP(remove before merge): exercise the pipeline end-to-end on this release branch (deploys labs;
-      # tauri stays skipped since it keys off the dispatch environment). Push is the only pre-merge test
-      # path — a new workflow isn't workflow_dispatch-able until it lands on main.
+      # tauri stays skipped since it's a push, not a dispatch). Push is the only pre-merge test path — a new
+      # workflow isn't workflow_dispatch-able until it lands on main.
       - claude/hopeful-jennings-bd7969
   workflow_dispatch:
     inputs:
@@ -53,15 +56,61 @@ permissions:
   contents: write # Commit the Composer version bump to main + push version / deploy pointer tags.
 
 jobs:
+  # Resolve the run into named booleans so downstream `if:` conditions stay readable. Outputs:
+  #   env      — resolved environment (main | labs | staging | production).
+  #   app      — app to deploy, or `all`.
+  #   release  — cut a versioned Composer release (production + Composer in the set).
+  #   bundle   — build the shared Composer bundle (Composer + a labs/staging/production env).
+  #   tauri    — signed native build (bundle + a manual dispatch, i.e. not a branch push).
+  plan:
+    if: github.repository == 'dxos/dxos'
+    runs-on: ubuntu-latest
+    outputs:
+      env: ${{ steps.plan.outputs.env }}
+      app: ${{ steps.plan.outputs.app }}
+      release: ${{ steps.plan.outputs.release }}
+      bundle: ${{ steps.plan.outputs.bundle }}
+      tauri: ${{ steps.plan.outputs.tauri }}
+    steps:
+      - id: plan
+        env:
+          IN_ENV: ${{ inputs.environment }}
+          IN_APP: ${{ inputs.app }}
+          REF_NAME: ${{ github.ref_name }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          # Resolve the environment: the dispatch input, else `main` on main and `labs` on any other push.
+          env="$IN_ENV"
+          if [ -z "$env" ]; then if [ "$REF_NAME" = main ]; then env=main; else env=labs; fi; fi
+          app="${IN_APP:-all}"
+
+          # Does Composer participate? (drives release / bundle / tauri).
+          composer=false; if [ "$app" = all ] || [ "$app" = composer ]; then composer=true; fi
+          # labs/staging/production get the shared Composer bundle + native build; main/other do not.
+          named=false; case "$env" in labs | staging | production) named=true ;; esac
+          # Manual dispatch vs a branch push (gates the signed native build).
+          dispatched=false; if [ "$EVENT" = workflow_dispatch ]; then dispatched=true; fi
+
+          release=false; if [ "$env" = production ] && [ "$composer" = true ]; then release=true; fi
+          bundle=false;  if [ "$named" = true ] && [ "$composer" = true ]; then bundle=true; fi
+          tauri=false;   if [ "$named" = true ] && [ "$composer" = true ] && [ "$dispatched" = true ]; then tauri=true; fi
+
+          {
+            echo "env=$env"
+            echo "app=$app"
+            echo "release=$release"
+            echo "bundle=$bundle"
+            echo "tauri=$tauri"
+          } >> "$GITHUB_OUTPUT"
+          echo "plan → env=$env app=$app composer=$composer | release=$release bundle=$bundle tauri=$tauri"
+
   # PRODUCTION ONLY — cut a versioned Composer release: bump composer-app/crx, record it on main, tag
-  # composer-v<x>. Skipped for main/labs/staging (their deploys carry no version bump). The bumped commit
-  # is what the rest of the run builds + deploys (via needs.release.outputs.sha).
+  # composer-v<x>. The bumped commit is what the rest of the run builds + deploys (needs.release.outputs.sha).
+  # No `Setup` step: the container image ships node + git, and the bump/sync-versions scripts use only Node
+  # built-ins (no dependency install needed).
   release:
-    # Production, and only when Composer is in the deploy set — a single-app deploy of docs/etc. to
-    # production is a hotfix and must NOT cut a Composer release.
-    if: >-
-      github.repository == 'dxos/dxos' && inputs.environment == 'production' &&
-      ((inputs.app || 'all') == 'all' || (inputs.app || 'all') == 'composer')
+    needs: [plan]
+    if: needs.plan.outputs.release == 'true'
     runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -78,9 +127,6 @@ jobs:
         with:
           fetch-depth: 0
           ref: main # A production release always cuts from main.
-
-      - name: Setup
-        uses: ./.github/actions/setup
 
       # composer-app + composer-crx share the desktop/extension version line; bump-composer-version.mjs bumps
       # both in lockstep and prints the new version. sync-versions.mjs then stamps the derived files.
@@ -104,14 +150,10 @@ jobs:
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   # Build Composer's web bundle ONCE and share it as an artifact so the web deploy + native (Tauri) jobs
-  # don't each rebuild it. Runs where a native build co-runs (labs/staging/production) or the labs test-push.
+  # don't each rebuild it.
   build-bundle:
-    needs: [release]
-    if: >-
-      !cancelled() && needs.release.result != 'failure' && github.repository == 'dxos/dxos' &&
-      ((inputs.app || 'all') == 'all' || (inputs.app || 'all') == 'composer') &&
-      (inputs.environment == 'labs' || inputs.environment == 'staging' || inputs.environment == 'production'
-       || (github.event_name == 'push' && github.ref_name != 'main'))
+    needs: [plan, release]
+    if: ${{ !cancelled() && needs.release.result != 'failure' && needs.plan.outputs.bundle == 'true' }}
     runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -120,7 +162,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 90
     env:
-      DEPLOY_ENV: ${{ inputs.environment || (github.ref_name == 'main' && 'main' || 'labs') }}
+      DEPLOY_ENV: ${{ needs.plan.outputs.env }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -165,11 +207,9 @@ jobs:
           retention-days: 1
 
   deploy:
-    needs: [release, build-bundle]
-    # Run when the prep jobs succeeded or were skipped (main / static-only); skip only on a failure.
-    if: >-
-      !cancelled() && needs.release.result != 'failure' && needs.build-bundle.result != 'failure' &&
-      github.repository == 'dxos/dxos'
+    needs: [plan, release, build-bundle]
+    # Run once the prep jobs succeeded or were skipped (main / static-only); skip only on a failure.
+    if: ${{ !cancelled() && needs.plan.result == 'success' && needs.release.result != 'failure' && needs.build-bundle.result != 'failure' }}
     runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -178,9 +218,8 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 90
     env:
-      # Dispatch → the chosen env. Push → `main` (rolling) for main, else `labs` (the TEMP branch trigger).
-      DEPLOY_ENV: ${{ inputs.environment || (github.ref_name == 'main' && 'main' || 'labs') }}
-      DEPLOY_APP: ${{ inputs.app || 'all' }}
+      DEPLOY_ENV: ${{ needs.plan.outputs.env }}
+      DEPLOY_APP: ${{ needs.plan.outputs.app }}
       DEPLOY_REF: ${{ needs.release.outputs.sha || github.sha }}
     steps:
       - name: Checkout
@@ -253,14 +292,10 @@ jobs:
   # too costly). CrabNebula channel is derived from the environment inside the reusable workflow; iOS → App
   # Store Connect happens on `labs` only. On production it builds the bumped release commit.
   tauri:
-    needs: [release, build-bundle]
-    if: >-
-      !cancelled() && needs.release.result != 'failure' && needs.build-bundle.result == 'success' &&
-      github.repository == 'dxos/dxos' &&
-      ((inputs.app || 'all') == 'all' || (inputs.app || 'all') == 'composer') &&
-      (inputs.environment == 'labs' || inputs.environment == 'staging' || inputs.environment == 'production')
+    needs: [plan, release, build-bundle]
+    if: ${{ !cancelled() && needs.release.result != 'failure' && needs.build-bundle.result == 'success' && needs.plan.outputs.tauri == 'true' }}
     uses: ./.github/workflows/publish-tauri.yaml
     with:
-      environment: ${{ inputs.environment }}
+      environment: ${{ needs.plan.outputs.env }}
       ref: ${{ needs.release.outputs.sha || github.sha }}
     secrets: inherit
