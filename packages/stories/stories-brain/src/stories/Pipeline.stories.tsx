@@ -34,7 +34,7 @@ const SAMPLE_CONTENT = trim`
   - Socrates was a Greek philosopher.
   - Plato was his student.
   - Aristotle was his student.
-  - Socrates is a man.
+  - Socrates was a man.
   - All men are mortal.
 `;
 

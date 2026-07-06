@@ -5,7 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { type Parser } from '@dxos/nlp';
-import { IconButton, Panel, type ThemedClassName, Toolbar, useThemeContext } from '@dxos/react-ui';
+import { IconButton, Input, Panel, type ThemedClassName, Toolbar, useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
@@ -34,21 +34,31 @@ export type DocumentEditorProps = ThemedClassName<{
 export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onRun }: DocumentEditorProps) => {
   const { themeMode } = useThemeContext();
   const [text, setText] = useState(initialValue);
+  const [underline, setUnderline] = useState(false);
   const extensions = useMemo(
     () => [
       createBasicExtensions({ lineWrapping: true }),
       createThemeExtensions({ themeMode }),
       createMarkdownExtensions(),
       decorateMarkdown(),
-      ...(parse ? [pos({ parse, popover: true })] : []),
+      // The popover is always available; the underline is toolbar-switchable.
+      ...(parse ? [pos({ parse, popover: true, underline })] : []),
     ],
-    [themeMode, parse],
+    [themeMode, parse, underline],
   );
 
   return (
     <Panel.Root classNames={classNames}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
+          {parse && (
+            <Input.Root>
+              <div className='flex items-center gap-2'>
+                <Input.Switch checked={underline} onCheckedChange={(checked) => setUnderline(checked === true)} />
+                <Input.Label classNames='text-sm text-description'>POS</Input.Label>
+              </div>
+            </Input.Root>
+          )}
           <div role='none' className='grow' />
           <IconButton
             icon={busy ? 'ph--spinner-gap--regular' : 'ph--play--regular'}
