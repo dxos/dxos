@@ -39,7 +39,7 @@ Two fixed/lockstep groups, plus deploy-only apps:
 
 - **Group A — Core/SDK** (fixed lockstep) 🔄 — core + common + sdk + ui + devtools + reflect, versioned together on one shared line (continues from `0.9.0`). The three storybook apps (`storybook-react` / `-lit` / `-solid`) ride this line too (private — versioned but not published). ~150 packages.
 - **Group B — Plugins + CLI** (fixed lockstep) 🔄 — all `@dxos/plugin-*` (81) + `@dxos/cli` share one version line and **publish to npm** under it. Plugins are **no longer independently versioned**. 82 packages.
-- **Apps deploy, never publish** ✅ / 🔄 — every `private: true` app (Composer `composer-app` / `composer-crx` / `composer-dxos-org`, `docs`, `todomvc`, `tasks`, `testbench-app`) deploys via its own pipeline and **never** triggers an npm publish. **Apps are not in Changesets at all** (they're `ignore`d) — Composer is versioned by its release workflow, the rest are unversioned. Full model: [`app-release-spec.md`](./app-release-spec.md).
+- **Apps deploy, never publish** ✅ / 🔄 — every `private: true` app (Composer `composer-app` / `composer-crx` / `composer-dxos-org`, `docs`, `todomvc`, `tasks`, `testbench-app`) deploys via its own pipeline and **never** triggers an npm publish. **Apps are not in Changesets at all** (they're `ignore`d) — Composer is versioned by its release workflow, the rest are unversioned. Full model: the [App deploys](#app-deploys-) section (§6).
 
 **Independent version numbers, coupled release timing.** The two groups carry independent version *lines* (a Group B-only changeset bumps B alone), but they share **one** "Version Packages" PR — merging it drains *all* pending changesets, so whatever core + plugin bumps are queued publish in the same merge. Releasing one group while the other has pending changesets is **not** a goal pre-split: independent release *cadence* arrives with the Phase 4 repo split (plugins move to their own repo, with their own trunk + Version PR), **not** via per-group release branches.
 
@@ -129,24 +129,34 @@ Per-commit unreleased code is served by pkg.pr.new (Section 7), **not** by publi
 - `main` keeps publishing `@latest` via its "Version Packages" PR (above). The two channels are independent and need no cross-branch sync.
 - **Apps-split simplification:** once applications move to the separate repo, the only npm action here is "publish packages" — no app-deployment-vs-package-publish distinction to encode.
 
-### App deploys — four environments 🔄
+### App deploys 🔄
 
-The old four deploy environments are preserved, but **environment is a deploy parameter, not a git branch** (the long-lived `production`/`staging`/`labs`/`dev` branches are retired). The deployable apps are listed in `.github/workflows/scripts/apps.mjs` (Composer, docs, storybook, …); each app's target environments (and Worker name / output dir) are derived from its `wrangler.jsonc`. `deploy-apps.yml` + `scripts/{bundle,deploy}-env.mjs` deploy any app to any environment via `wrangler deploy` (Workers Static Assets), one Worker per environment (`production` = bare name, others = `<worker>-<env>`). **Deploy never publishes to npm.**
+Apps (Composer, docs, storybook, todomvc, tasks, testbench) **deploy, never publish** — they build from workspace source, are **not in Changesets** (`ignore`d), and never touch npm. Deploy is fully decoupled from package publishing: if Composer were in a publish group, cutting a build would publish all 81 plugins pinning possibly-unreleased core. So Composer versions on its own line (bumped by its release path below); docs/examples are unversioned.
 
-| Env | Trigger | Notes |
-| --- | --- | --- |
-| **main** | automatic on push to `main` | continuous deploy |
-| **labs** | manual `workflow_dispatch` | ad-hoc test deploys (was the `labs` branch) |
-| **staging** | manual `workflow_dispatch` | pre-release; build sees `DX_ENVIRONMENT=staging` |
-| **production** | **manual, deliberate** | **Deploy Apps → `production`**: deploys all apps and cuts the versioned Composer release (bump + commit to main + tag) in its production-only `release` job — decoupled from npm publishing. See `app-release-spec.md`. |
+**One workflow, `deploy-apps.yml`.** The deployable apps are listed in `.github/workflows/scripts/apps.mjs` (a package dir each); everything else — Worker name, bundle task, output dir, target environments — is derived from that app's committed `wrangler.jsonc` (there is no separate manifest). A `plan` job resolves the run into named booleans (env, which jobs run) so the other jobs' `if:` stay readable. Environment is a **deploy parameter, not a git branch** (the long-lived `production`/`staging`/`labs`/`dev` branches are retired); the app set follows the env, with an optional `app` input to narrow to one app (a hotfix):
 
-**Tracking what's on each environment** (the one thing branches gave for free): each deploy force-updates a floating **`env/<name>` git tag** (`env/labs` / `env/staging` / `env/production`; `main` tracks the `main` env), so `git rev-parse env/production` / `git diff env/staging..env/production` show what's live. This replaces "look at the branch tip." No GitHub Environments are used — human gating is the "Version Packages" PR merge that triggers the release (and thus the production deploy).
+| Env | Trigger | Apps | Notes |
+| --- | --- | --- | --- |
+| **main** | auto on push to `main` | all main-enabled | rolling preview |
+| **labs** | manual dispatch | composer | prerelease Tauri build |
+| **staging** | manual dispatch | composer + docs | prerelease Tauri build |
+| **production** | manual dispatch | all | cuts the versioned Composer release (below) |
 
-Open item: production fires on an *npm* publish; deploying a Composer-only change to production without an npm release needs either riding the next release or a `composer-app` release-tag trigger (parked).
+**Cloudflare Workers Static Assets** (Pages is deprecated). `deploy-env.mjs` runs `wrangler deploy --config <app>/wrangler.jsonc --env <env>`; one Worker per env (`production` = the bare name that carries the custom domain, others `<name>-<env>`). Composer isn't pure-static — its `_worker.js` (R2 feedback-logs, RSS + OTel proxies) is the Worker `main` with assets bound + `run_worker_first: ["/api/*"]`; the rest are assets-only.
+
+**Composer production release** — the only path that advances Composer's version (it isn't in Changesets): a production deploy's `release` job bumps `composer-app`/`crx` by the dispatch `bump` input, commits to `main`, tags `composer-v<x>`, and the rest of the run builds + deploys that commit (web + desktop + iOS). A single non-Composer app deploy to production (e.g. a docs hotfix) skips the release job; docs/example apps are unversioned and just deploy + move their pointer tag.
+
+**Desktop / mobile** run in `publish-tauri.yaml` (CrabNebula) for labs/staging/production (not `main` — a signed build per push is too costly): production → the clean version on the primary CN channel; labs/staging → a per-commit prerelease on that env's channel; iOS → TestFlight on `labs` only.
+
+**Tracking what's deployed where** (what branches gave for free): per-app floating **`<app>/<env>` git tags** (non-`main`), force-updated on each deploy — e.g. `git diff composer/staging..composer/production`. No GitHub Environments; human gating is the deliberate dispatch.
+
+**Build-sharing (implemented).** Composer's web bundle is built **once** by a `build-bundle` prep job and shared via artifact: the web `deploy` job and the native Tauri jobs download it and skip rebuilding (`bundle-env.mjs` skips an already-populated output dir; Tauri's `beforeBuildCommand` is empty and it embeds the artifact, falling back to `moon run` only on a standalone dispatch). Web-side validated green on labs (`Using prebuilt bundle for composer … skipping`); the signed native path proves out on a manual labs dispatch. Remote-cache policy: the prep job may use the Depot cache on `main`; full clean build on labs/staging/production (a stale/corrupt cache entry must never reach a user-facing deploy — reliability, not security).
+
+**Cloudflare-side setup (human, not agent-doable).** Before production is live: give `CLOUDFLARE_API_TOKEN` **Workers Scripts: Edit**; create each `composer-<env>` Worker's R2 bucket + `SIGNOZ_INGESTION_KEY` secret; attach the custom domains to the production Workers, moving them off the Pages projects (deploy the Workers first, then switch the domains — no gap); disable docs' Cloudflare git auto-build once the Actions deploy is verified; then retire the Pages projects. Still on Pages as a separate follow-up: `preview-deploy.yml` (per-PR previews via branch-alias URLs).
 
 ## 7. Cross-repo development ⬜
 
-When the `ui`/`plugins`/`cli`/`composer` repo is split out, it consumes **unreleased** `dxos` core through three tiers. The same tiers apply to `edge` today. The full agent decision guide lives in [`agents/instructions/cross-repo-development.md`](../../agents/instructions/cross-repo-development.md); the summary:
+When the `ui`/`plugins`/`cli`/`composer` repo is split out, it consumes **unreleased** `dxos` core through three tiers (the same tiers apply to `edge` today). This section doubles as the **agent guide** for developing against unreleased cross-repo code — a **follow-up**, relevant once `edge` integration or the repo split actually starts:
 
 | Tier | Mechanism | Use | Committed? |
 | --- | --- | --- | --- |
@@ -191,7 +201,7 @@ Ordering is load-bearing: Phase 1's npm floor is Tier 1 of the contract; Phase 2
 
 ### Phase 1 — Prerequisites (low-risk, reversible) 🔄
 
-1. ⬜ **Enable "require linear history" + merge queue on `main`** (repo settings; CI already handles `merge_group`). **Parked — privileged GitHub admin action; see the parked-steps runbook.**
+1. ⬜ **Enable "require linear history" + merge queue on `main`** (repo settings; CI already handles `merge_group`). **Parked — privileged GitHub admin action (human).** Other human-gated one-way doors: retire the long-lived `production`/`staging`/`labs`/`dev` branches (back up tips first) after the first Changesets release proves the pipeline, and the Cloudflare-side deploy setup (see [App deploys](#app-deploys-) § Cloudflare-side setup).
 2. ✅ **Generate the membership manifest** — `tools/toolbox/src/toolbox.ts::updateChangesets()` emits `.changeset/config.json` (the two fixed groups) from the workspace/project graph on `pnpm install`. Cross-checked against `scripts/check-publish-config.mjs` (non-private + `publishConfig.access: public`).
 3. ✅ **De-risk Changesets × pnpm-catalog locally** (executed 2026-06-29; see findings below).
 4. ✅ **`scripts/check-changeset.mjs`** (advisory; drives the `changeset-reminder` job in **Check**): detects PRs touching publishable source without a `.changeset/*.md` and posts a sticky reminder comment (never blocks); a change needing no release omits the changeset. Implements the [changeset authoring guide](../../agents/instructions/changesets.md).
@@ -231,7 +241,7 @@ Exit: a real release ships via the Version-Packages PR (Group A lockstep + Group
 2. Tier-2 bot: bumps SHA-pinned pkg.pr.new URLs in the consumer.
 3. A "no local overrides" shared CI guard (`scripts/check-no-local-overrides.mjs`, to be added when `edge` lands — removed as unused for now); pilot in `edge`.
 4. Cross-repo DAG enforcement (Section 8.7): generate the package → repo ownership map; add `check-package-cycles.mjs --cross-repo` (union dxos+edge graphs via the `edge-tests.yml` dual-checkout) as a required PR check + scheduled job; add the layer-direction lint; wire the release-toposort backstop.
-5. Per-tier runbooks in `docs/` plus the `agents/instructions/cross-repo-development.md` guide.
+5. Per-tier runbooks in `docs/` (the tier guide is §7 above).
 
 Exit: `edge-tests.yml` green on the relocated script; a Tier-2 bump PR green on edge; the override guard fails a committed `file:` override; the cross-repo cycle check runs in CI.
 

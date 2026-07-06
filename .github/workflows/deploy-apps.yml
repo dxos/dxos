@@ -9,7 +9,7 @@ name: Deploy Apps
 # Production additionally cuts a versioned Composer release (bump composer-app/crx, commit to main, tag
 # composer-v<x>) — the ONLY path that advances Composer's version (Composer is not in Changesets). The other
 # apps are unversioned and just deploy. There are no separate release workflows; that logic is the
-# production-only `release` job below. See docs/design/app-release-spec.md.
+# production-only `release` job below. See the App deploys section of docs/design/release-spec.md.
 #
 # The `plan` job resolves the environment + which jobs run into named booleans, so every other job's `if:`
 # is a plain `needs.plan.outputs.<flag> == 'true'` instead of an inline boolean soup.
