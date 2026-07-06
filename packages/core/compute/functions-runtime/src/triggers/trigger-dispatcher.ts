@@ -671,7 +671,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         Query.select(Filter.type(Trigger.Trigger)).debugLabel('TriggerDispatcher.fetchTriggers'),
       ).run;
       // The local dispatcher only runs triggers that are not explicitly routed to edge.
-      return objects.filter((t) => t.computeEnvironment !== 'edge');
+      return objects.filter((t) => !t.remote);
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
 
   private _startNaturalTimeProcessing = (): Effect.Effect<void> =>

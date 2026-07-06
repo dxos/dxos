@@ -18,8 +18,9 @@ export default Config2.make({
 
       Routines are configured in their own article and surfaced on a per-object "Routines" companion
       that lists the routines connected to each object. A per-space TriggerDispatcher manages
-      execution: running locally in the browser when computeEnvironment is "local", or delegating to
-      the DXOS edge for server-side reliability; the space settings page chooses the runtime location.
+      execution: running each trigger locally in the browser, or delegating it to the DXOS edge for
+      server-side reliability when the trigger's "remote" flag is set; the space settings page toggles
+      trigger execution for the whole space.
 
       Operation handlers and skills contributed by any plugin in the application are
       automatically merged and made available to every space's OperationRegistry, so new

@@ -39,13 +39,14 @@ const MS_HOURS = 60 * MS_MINUTES;
 
 export const Unit: Record<string, UnitFormat> = {
   // General.
-  Percent: createFormat({ symbol: '%', quotient: 1 / 100, precision: 2 }),
-  Thousand: createFormat({ symbol: 'k', quotient: 1_000, precision: 2 }),
+  Percent: createFormat({ symbol: '%', quotient: 1 / 100, precision: 1 }),
+  Thousand: createFormat({ symbol: 'k', quotient: 1_000, precision: 1 }),
+  Million: createFormat({ symbol: 'M', quotient: 1_000_000, precision: 1 }),
 
   // Bytes (note KB vs KiB).
-  Gigabyte: createFormat({ symbol: 'GB', quotient: 1_000 * 1_000 * 1_000, precision: 2 }),
-  Megabyte: createFormat({ symbol: 'MB', quotient: 1_000 * 1_000, precision: 2 }),
-  Kilobyte: createFormat({ symbol: 'KB', quotient: 1_000, precision: 2 }),
+  Gigabyte: createFormat({ symbol: 'GB', quotient: 1_000 * 1_000 * 1_000, precision: 1 }),
+  Megabyte: createFormat({ symbol: 'MB', quotient: 1_000 * 1_000, precision: 1 }),
+  Kilobyte: createFormat({ symbol: 'KB', quotient: 1_000, precision: 1 }),
   Byte: createFormat({ symbol: 'B', quotient: 1 }),
 
   // Time.
