@@ -88,8 +88,8 @@ jobs:
         with:
           version: pnpm changeset:version
           publish: pnpm changeset:publish
-          commit: 'chore: version packages'
-          title: 'chore: version packages'
+          commit: 'Version packages'
+          title: 'Version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.
