@@ -8,6 +8,7 @@ import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
 import { isNonNullable } from '@dxos/util';
 
@@ -72,11 +73,11 @@ export class CallManager extends Resource {
     return (state.call.users ?? [])
       .map((user: UserState) => (user.tracks?.audioEnabled ? user.tracks?.audio : undefined))
       .filter(isNonNullable)
-      .map((track: string) => state.media.pulledAudioTracks[track as EncodedTrackName]?.track)
+      .map((track: string) => state.media.pulledAudioTracks[track as EncodedTrackName])
       .filter(isNonNullable);
   });
   private readonly _videoStreamAtomFamily = Atom.family<EncodedTrackName, Atom.Atom<MediaStream | undefined>>((name) =>
-    Atom.make((get) => get(this._stateAtom).media.pulledVideoStreams[name]?.stream),
+    Atom.make((get) => get(this._stateAtom).media.pulledVideoStreams[name]),
   );
   private readonly _activityAtomFamily = Atom.family<string, Atom.Atom<ActivityState | undefined>>((key) =>
     Atom.make((get) => get(this._stateAtom).call.activities?.[key]),
@@ -272,11 +273,18 @@ export class CallManager extends Resource {
     this._swarmSynchronizer.setJoined(true);
     await this._swarmSynchronizer.join();
 
+    // Share one RealtimeKit meeting across participants: reuse the id a peer already advertised, else the
+    // edge mints one below. Coordinated via the swarm (roomId maps 1:1 to a RealtimeKit meeting id).
+    const meetingId = await this._swarmSynchronizer.resolveMeetingId(roomId);
     const transport = new RealtimeKitTransport({
       roomId,
       deviceKey,
+      meetingId,
       joiner: this._roomJoiner,
       createMeeting: this._createMeeting,
+      // Advertise as soon as the edge join returns (before the SFU connect) so a concurrently-joining peer
+      // converges on this meeting rather than minting its own.
+      onMeetingResolved: (id) => this._swarmSynchronizer.advertiseMeetingId(id),
     });
     await this._mediaManager.join(transport);
 
@@ -302,12 +310,19 @@ export class CallManager extends Resource {
   }
 
   private _onCallStateUpdated(state: CallState): void {
-    const tracksToPull = state.users
-      ?.filter((user) => user.joined && user.id !== state.self!.id)
-      ?.flatMap((user) => [user.tracks?.video, user.tracks?.audio, user.tracks?.screenshare])
-      .filter(isNonNullable);
-    this._mediaManager._schedulePullTracks(tracksToPull as EncodedTrackName[]);
-
+    const remoteUsers = state.users?.filter((user) => user.joined && user.id !== state.self?.id);
+    log.info('rtk swarm tracks', {
+      users: remoteUsers?.map((user) => ({
+        peer: user.id?.slice(0, 12),
+        video: user.tracks?.video?.slice(0, 20),
+        videoEnabled: user.tracks?.videoEnabled,
+        audioEnabled: user.tracks?.audioEnabled,
+        screenshareEnabled: user.tracks?.screenshareEnabled,
+      })),
+    });
+    // Remote tracks are pulled event-driven by `MediaManager` (from transport roster changes), not from the
+    // swarm. The swarm stays the source of truth for presence/metadata; the UI resolves cached streams by the
+    // names advertised here.
     this.callStateUpdated.emit(state);
     this._updateState();
   }

@@ -19,11 +19,20 @@ const makeAudioTrack = (): MediaStreamTrack => {
   return audioContext.createMediaStreamDestination().stream.getAudioTracks()[0];
 };
 
+const makeVideoTrack = (): MediaStreamTrack => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 16;
+  canvas.height = 16;
+  return canvas.captureStream(1).getVideoTracks()[0];
+};
+
 class FakeMeeting implements RealtimeKitMeeting {
   public enabledAudio?: MediaStreamTrack;
   public enabledVideo?: MediaStreamTrack;
   public left = false;
   public remote: RealtimeKitRemoteParticipant[] = [];
+  /** Track surfaced on `self.screenShareTracks.video` once screenshare is enabled. */
+  public screenShareVideoTrack?: MediaStreamTrack;
 
   public readonly self = {
     enableAudio: async (track?: MediaStreamTrack) => {
@@ -38,13 +47,20 @@ class FakeMeeting implements RealtimeKitMeeting {
     disableVideo: () => {
       this.enabledVideo = undefined;
     },
+    enableScreenShare: async () => {
+      this.self.screenShareTracks = { video: this.screenShareVideoTrack };
+    },
+    disableScreenShare: async () => {
+      this.self.screenShareTracks = undefined;
+    },
+    screenShareTracks: undefined as { audio?: MediaStreamTrack; video?: MediaStreamTrack } | undefined,
   };
 
   getRemoteParticipants(): RealtimeKitRemoteParticipant[] {
     return this.remote;
   }
 
-  onParticipantsChanged(): () => void {
+  onMediaChanged(): () => void {
     return () => {};
   }
 
@@ -100,33 +116,63 @@ describe('RealtimeKitTransport', () => {
     await transport.close();
   });
 
-  test('pullTrack resolves a remote track by device key from the roster', async ({ expect }) => {
-    const remoteTrack = makeAudioTrack();
+  test('getRemoteTracks snapshots the roster with swarm-encodable descriptors', async ({ expect }) => {
+    const audioTrack = makeAudioTrack();
+    const videoTrack = makeVideoTrack();
     const meeting = new FakeMeeting();
-    meeting.remote = [{ customParticipantId: 'peer-device', audioTrack: remoteTrack }];
+    meeting.remote = [{ customParticipantId: 'peer-device', audioTrack, videoTrack }];
 
     const transport = makeTransport(meeting);
     await transport.open();
 
-    const resolved = await transport.pullTrack({
-      ctx: Context.default(),
-      trackData: { sessionId: 'peer-device', trackName: 'audio', mid: 'audio', location: 'remote' },
-    });
-    expect(resolved).toBe(remoteTrack);
+    // Descriptor mirrors `pushTrack`'s return (`mid == kind`) so it encodes to the same name the publisher
+    // advertised in the swarm — letting the UI resolve this track by that name.
+    expect(transport.getRemoteTracks()).toEqual(
+      expect.arrayContaining([
+        {
+          trackData: { location: 'remote', sessionId: 'peer-device', trackName: 'video', mid: 'video' },
+          track: videoTrack,
+        },
+        {
+          trackData: { location: 'remote', sessionId: 'peer-device', trackName: 'audio', mid: 'audio' },
+          track: audioTrack,
+        },
+      ]),
+    );
 
     await transport.close();
   });
 
-  test('pullTrack returns undefined when the participant has not joined yet (retryable)', async ({ expect }) => {
+  test('getRemoteTracks is empty until participants join', async ({ expect }) => {
     const meeting = new FakeMeeting();
     const transport = makeTransport(meeting);
     await transport.open();
 
-    const resolved = await transport.pullTrack({
-      ctx: Context.default(),
-      trackData: { sessionId: 'absent-device', trackName: 'audio', mid: 'audio', location: 'remote' },
-    });
-    expect(resolved).toBeUndefined();
+    expect(transport.getRemoteTracks()).toEqual([]);
+
+    await transport.close();
+  });
+
+  test('setScreenShareEnabled uses RealtimeKit screenshare and returns a screenshare descriptor', async ({
+    expect,
+  }) => {
+    const screenTrack = makeVideoTrack();
+    const meeting = new FakeMeeting();
+    meeting.screenShareVideoTrack = screenTrack;
+    const transport = makeTransport(meeting);
+    await transport.open();
+
+    // Enable: distinct `screenshare` descriptor (not the camera `video`) + the locally-captured track.
+    const { descriptor, localTrack } = await transport.setScreenShareEnabled(true);
+    expect(descriptor).toMatchObject({ sessionId: 'my-device', trackName: 'screenshare', mid: 'screenshare' });
+    expect(localTrack).toBe(screenTrack);
+    expect(meeting.self.screenShareTracks?.video).toBe(screenTrack);
+    // Screenshare must not touch the camera slot.
+    expect(meeting.enabledVideo).toBeUndefined();
+
+    const off = await transport.setScreenShareEnabled(false);
+    expect(off).toEqual({});
+    expect(meeting.self.screenShareTracks).toBeUndefined();
 
     await transport.close();
   });

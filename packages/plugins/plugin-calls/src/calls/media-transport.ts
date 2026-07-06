@@ -6,6 +6,13 @@ import { type Context } from '@dxos/context';
 
 import { type TrackObject } from './types';
 
+/** A remote track currently available in the transport's roster, with the descriptor the swarm advertises. */
+export type RemoteTrack = {
+  /** `{ sessionId: deviceKey, trackName: kind, mid: kind }` — encodes to the same name the publisher advertises. */
+  trackData: TrackObject;
+  track: MediaStreamTrack;
+};
+
 /** A transcription segment produced natively by the transport (e.g. RealtimeKit's on-network ASR). */
 export type TranscriptEvent = {
   /** Speaker's participant id (== DXOS device key / swarm `UserState.id`). */
@@ -45,8 +52,28 @@ export interface MediaTransport {
     encodings?: RTCRtpEncodingParameters[];
   }): Promise<TrackObject | undefined>;
 
-  /** Resolve a remote track referenced by `trackData` into a playable `MediaStreamTrack`. */
-  pullTrack(options: { ctx: Context; trackData: TrackObject }): Promise<MediaStreamTrack | undefined>;
+  /**
+   * Toggle screenshare. Screenshare is a distinct producer from the camera, and RealtimeKit captures the
+   * display itself, so it does not go through {@link pushTrack}. On enable, returns the swarm descriptor to
+   * advertise (a `screenshare`-kinded {@link TrackObject}) and the locally-captured track for the sharer's own
+   * self-view; on disable, returns an empty result.
+   */
+  setScreenShareEnabled(enabled: boolean): Promise<{ descriptor?: TrackObject; localTrack?: MediaStreamTrack }>;
+
+  /**
+   * Snapshot every remote track currently available in the transport's roster. Called only in response to a
+   * {@link subscribeMediaChanges} event (never speculatively), so a returned track is one the transport has
+   * actually delivered — `MediaManager` caches these and the UI resolves them by the swarm-advertised name.
+   */
+  getRemoteTracks(): RemoteTrack[];
+
+  /**
+   * Subscribe to changes in remote media: a participant joining/leaving or enabling/disabling/replacing their
+   * audio, video, or screenshare track. The callback carries no payload — it means "the roster changed, call
+   * {@link getRemoteTracks} again" — because a transport (e.g. RealtimeKit) swaps the underlying
+   * `MediaStreamTrack` while its swarm-advertised descriptor stays fixed. Returns an unsubscribe.
+   */
+  subscribeMediaChanges(callback: () => void): () => void;
 
   /**
    * Subscribe to native transcription events, if the transport provides them. Returns an unsubscribe.

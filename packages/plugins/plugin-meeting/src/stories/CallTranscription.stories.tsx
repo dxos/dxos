@@ -41,7 +41,8 @@ import { Meeting } from '../types';
 // http://localhost:8787/. CALLS_URL only backs the direct `/transcribe` endpoint (unused by native
 // meeting transcription).
 //
-const EDGE_URL = 'https://edge.dxos.workers.dev/';
+const LOCAL = true;
+const EDGE_URL = LOCAL ? 'http://localhost:8787/' : 'https://edge.dxos.workers.dev/';
 const CALLS_URL = 'https://calls-service.dxos.workers.dev';
 
 type StoryArgs = {};
@@ -162,11 +163,6 @@ const meta = {
             runtime: {
               services: {
                 edge: { url: EDGE_URL },
-                // `EdgeServiceName.Calls` / `.Transcription` values; the calls-service worker serves both.
-                edgeServices: [
-                  { name: 'calls', endpoint: CALLS_URL },
-                  { name: 'transcription', endpoint: CALLS_URL },
-                ],
               },
             },
           }),

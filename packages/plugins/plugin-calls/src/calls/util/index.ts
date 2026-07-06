@@ -3,4 +3,3 @@
 //
 
 export * from './media';
-export * from './stub-media-streams';

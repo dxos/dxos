@@ -4,7 +4,7 @@
 
 import md5Hex from 'md5-hex';
 
-import { DeferredTask, Event, scheduleTaskInterval, synchronized } from '@dxos/async';
+import { DeferredTask, Event, scheduleTaskInterval, sleep, synchronized } from '@dxos/async';
 import { type Identity } from '@dxos/client/halo';
 import { Context, Resource } from '@dxos/context';
 import { generateName } from '@dxos/display-name';
@@ -56,6 +56,20 @@ export type CallSwarmSynchronizerProps = { networkService: NetworkService };
  * Period for peer to reconnect to the call swarm gracefully if connection was lost abruptly.
  */
 const DISCONNECTED_ABRUPT_TIMEOUT = 10_000; // [ms]
+
+/**
+ * Swarm activity key under which the room's RealtimeKit meeting id is advertised. The first joiner mints
+ * the meeting and advertises it here (CRDT last-write-wins); late joiners read it to share one session.
+ */
+const MEETING_ACTIVITY_KEY = 'dxos.org/plugin-calls/realtimekit-meeting';
+
+/**
+ * When another peer is present but has not advertised a meeting id yet (concurrent first-join), poll this
+ * many times at this interval before minting our own — long enough for the creator's early advertisement
+ * to arrive, short enough not to stall a real first joiner materially.
+ */
+const MEETING_RESOLVE_ATTEMPTS = 6;
+const MEETING_RESOLVE_INTERVAL = 400; // [ms]
 
 /**
  * Sends and receives state to/from Swarm network.
@@ -221,6 +235,52 @@ export class CallSwarmSynchronizer extends Resource {
     const topic = getTopic(roomId);
     const swarm = await this._networkService.querySwarm({ topic });
     return swarm.peers ?? [];
+  }
+
+  /**
+   * Resolve the RealtimeKit meeting id for the room so all participants share one SFU session. Returns an
+   * id already advertised by a peer, or `undefined` to signal this peer should mint one. When other peers
+   * are present but none has advertised yet (a concurrent first-join), polls briefly to let the creator
+   * publish before we mint a competing meeting. A lone joiner returns immediately (no added latency).
+   */
+  async resolveMeetingId(roomId: string): Promise<string | undefined> {
+    for (let attempt = 0; attempt < MEETING_RESOLVE_ATTEMPTS; attempt++) {
+      const peers = await this.querySwarm(roomId);
+      const advertised = this.#readAdvertisedMeetingId(peers);
+      const others = peers.filter((peer) => peer.peerKey !== this._deviceKey).length;
+      log.info('resolveMeetingId', { roomId, attempt, others, advertised });
+      if (advertised) {
+        return advertised;
+      }
+      if (others === 0) {
+        return undefined;
+      }
+      await sleep(MEETING_RESOLVE_INTERVAL);
+    }
+    return undefined;
+  }
+
+  /** Advertise the room's RealtimeKit meeting id via the swarm so late joiners converge on it. */
+  advertiseMeetingId(meetingId: string): void {
+    log.info('advertiseMeetingId', { meetingId });
+    this.setActivity(MEETING_ACTIVITY_KEY, { meetingId });
+  }
+
+  #readAdvertisedMeetingId(peers: SwarmResponse['peers']): string | undefined {
+    for (const peer of peers ?? []) {
+      if (!peer.state) {
+        continue;
+      }
+      try {
+        const meetingId = codec.decode(peer.state).activities?.[MEETING_ACTIVITY_KEY]?.payload?.meetingId;
+        if (typeof meetingId === 'string' && meetingId.length > 0) {
+          return meetingId;
+        }
+      } catch (err) {
+        log.warn('failed to decode peer state during meeting id query', { err });
+      }
+    }
+    return undefined;
   }
 
   /**

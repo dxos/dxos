@@ -55,16 +55,13 @@ const getCallStatusTable = (state?: GlobalState): TableProps['rows'] => {
   const users = state.call.users
     .filter((user) => user.id !== self!.id)
     .map((user) => {
+      // A track is "ok" when it is present in the pulled cache: the event-driven sync only caches live remote
+      // tracks and drops them when the peer leaves, so presence alone means it is currently playable.
       const isOk = {
-        audio:
-          user.tracks?.audio &&
-          state.media.pulledAudioTracks[user.tracks?.audio as EncodedTrackName]?.ctx.disposed === false,
-        video:
-          user.tracks?.video &&
-          state.media.pulledVideoStreams[user.tracks?.video as EncodedTrackName]?.ctx.disposed === false,
+        audio: user.tracks?.audio && !!state.media.pulledAudioTracks[user.tracks?.audio as EncodedTrackName],
+        video: user.tracks?.video && !!state.media.pulledVideoStreams[user.tracks?.video as EncodedTrackName],
         screenshare:
-          user.tracks?.screenshare &&
-          state.media.pulledVideoStreams[user.tracks?.screenshare as EncodedTrackName]?.ctx.disposed === false,
+          user.tracks?.screenshare && !!state.media.pulledVideoStreams[user.tracks?.screenshare as EncodedTrackName],
       };
 
       return {
