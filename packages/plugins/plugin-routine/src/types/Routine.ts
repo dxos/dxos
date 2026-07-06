@@ -7,14 +7,11 @@
 import * as Schema from 'effect/Schema';
 
 import { Instructions, Runnable, Trigger } from '@dxos/compute';
-// Operation is imported so TypeScript can name Operation.PersistentOperation in the emitted .d.ts
-// (Runnable is an alias for Operation.PersistentOperation, so Routine's class type references it).
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { Operation } from '@dxos/compute';
+import type { Operation } from '@dxos/compute';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
-import { runInstructionsRef } from '../util/run-instructions';
+import { runInstructionsRef } from '../util';
 
 const Kinds = ['runnable', 'instructions'] as const;
 export const Kind = Schema.Literal(...Kinds);
@@ -74,8 +71,11 @@ export const instanceOf = (value: unknown): value is Routine => Obj.instanceOf(R
 export const instructionsRef = (routine: Pick<Routine, 'spec'>): Ref.Ref<Instructions.Instructions> | undefined =>
   routine.spec?.kind === 'instructions' ? routine.spec.instructions : undefined;
 
+// Return type de-aliased to `Operation.PersistentOperation` (what `Runnable.Runnable` aliases) so this
+// exported symbol's declaration names it directly — the reference that lets `tsc` emit the module's
+// `.d.ts` (avoids TS2742) without keeping an otherwise-unused `Operation` import.
 /** The Operation (runnable) ref of an operation-action routine, or undefined for an instructions action. */
-export const runnableRef = (routine: Pick<Routine, 'spec'>): Ref.Ref<Runnable.Runnable> | undefined =>
+export const runnableRef = (routine: Pick<Routine, 'spec'>): Ref.Ref<Operation.PersistentOperation> | undefined =>
   routine.spec?.kind === 'runnable' ? routine.spec.runnable : undefined;
 
 /** New routines default to local compute unless a template explicitly overrides it. */

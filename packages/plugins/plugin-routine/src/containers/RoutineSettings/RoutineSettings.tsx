@@ -25,8 +25,8 @@ export const RoutineSettings = ({ space }: RoutineSettingsProps) => {
   const selected = properties.computeEnvironment ?? 'local';
 
   const handleUpdate = (option: ComputeEnvironment) => {
-    changeProperties((draft) => {
-      draft.computeEnvironment = option;
+    changeProperties((current) => {
+      current.computeEnvironment = option;
     });
   };
 

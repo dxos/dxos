@@ -45,7 +45,6 @@ describe('Routine', () => {
   test('make preserves an explicit trigger computeEnvironment override', ({ expect }) => {
     const trigger = Trigger.make({ computeEnvironment: 'edge' });
     const routine = Routine.make({ name: 'R', trigger });
-
     expect(routine.triggers[0]?.target?.computeEnvironment).toBe('edge');
   });
 

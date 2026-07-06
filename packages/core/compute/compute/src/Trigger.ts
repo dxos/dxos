@@ -173,15 +173,23 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
   Schema.Struct({
     /**
      * Runnable (operation or workflow) to invoke.
+     * Wired programmatically (see `Routine.wireTriggers`); not user-editable, so hidden from forms.
      */
-    runnable: Schema.optional(Ref.Ref(Runnable.Runnable).annotations({ title: 'Runnable' })),
+    runnable: Ref.Ref(Runnable.Runnable).pipe(
+      Schema.annotations({ title: 'Runnable' }),
+      Annotation.FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
+
     spec: Schema.optional(Spec),
+
     enabled: Schema.optional(Schema.Boolean),
 
     /**
      * Overrides the space-level compute environment for this trigger.
      * When unset, the space's computeEnvironment setting applies.
      */
+    // TODO(burdon): Rename remote (default/undefined is local).
     computeEnvironment: ComputeEnvironment.pipe(Schema.annotations({ title: 'Runs On' }), Schema.optional),
 
     concurrency: Schema.Number.pipe(
