@@ -39,3 +39,13 @@ export const SectionOrderAnnotation = Annotation.make({
   id: 'org.dxos.space.sectionOrder',
   schema: Schema.Record({ key: Schema.String, value: Schema.Array(Ref.Ref(Obj.Unknown)) }),
 });
+
+/**
+ * Per-space visibility of Home content sections, keyed by contributor name. Stored on
+ * `space.properties` so it replicates across the user's devices. An absent/`undefined` entry
+ * means the section is visible (default on); `false` hides it.
+ */
+export const HomeVisibilityAnnotation = Annotation.make({
+  id: 'org.dxos.space.homeVisibility',
+  schema: Schema.Record({ key: Schema.String, value: Schema.Boolean }),
+});

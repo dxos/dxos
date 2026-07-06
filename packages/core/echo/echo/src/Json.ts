@@ -47,6 +47,7 @@ const toJson = (obj: Obj.Any): unknown => (typeof (obj as any).toJSON === 'funct
  * Note: ECHO objects' `toJSON` runs before the replacer is invoked, so by the time we see a
  * value refs are already encoded as `{ "/": "dxn:..." }`.
  */
+// TODO(dmaretskyi): is this used anywhere?
 export const createRefReplacer = ({ db, depth = 1 }: CreateRefReplacerOptions): JsonReplacer => {
   // Per-object hop count. Set when we return an object (via ref resolution or pass-through) so
   // the child callbacks (which carry that object as `this`) can read it.

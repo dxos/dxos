@@ -4,6 +4,24 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-07-03 — plugin-crm (CRM nav section + generic collection article)
+
+- Add a top-level nav section by contributing a group node via `AppNode.makeGroup({ id: Paths.GroupSegments.X, type: Paths.GroupTypes.X, label, space, position })` matched `AppNodeMatcher.whenSpace`, then child nodes matched `AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.X)`. New group ids/types are centrally declared in `@dxos/app-toolkit` `Paths.GroupSegments`/`GroupTypes` (ai/content/communications/crm/system) — add there, not per-plugin. Group auto-hides when it has no children.
+- A "plain folder that opens an article" node = `Node.make({ data: <registered Type entity>, properties: { selectable: true, space, label: AppNode.getDynamicLabel('typename.label', typename, {count:2}), icon } })`. `node.data` flows to the article surface as `data.subject`; `node.properties` → `data.properties`. Opening a Type-subject node hits plugin-space's generic `typeCollection` surface (filter `AppSurface.subject(Article, Type.isType)` → `TypeCollectionArticle`) UNLESS a narrower surface at `Position.first` matches — scope your override by typename and set `position: Position.first` to win (Surfaces resolve first-match by Position within a role bucket; see `SurfaceManager`).
+- Resolve the registry copy of a static schema for reliable icon/hue annotations: `space.db.graph.registry.list().filter(Type.isType).find(t => Type.getTypename(t)===typename)` — raw imported schema classes don't carry annotations reliably (same caveat as plugin-space `createSchemaNode`/`TypeSection`).
+- `Organization`/`Person` are ECHO types from `@dxos/types` (`org.dxos.type.organization`/`.person`), registered as schema by plugin-space (also plugin-preview). Query objects with `Filter.type(Type.getURI(type))`.
+- Generic type-collection article with a layout switch: `Panel.Toolbar` holds a `ToggleGroup type='single'` (`@dxos/react-ui`, from `components/Button/ToggleGroup`) of `ToggleGroupIconItem`; Cards view reuses the header-card masonry (`Masonry.Root/Content/Viewport` + `Focus.Item`/`Card.*` tiles, mirror plugin-space `TypeCollectionArticle`); Table view is `DynamicTable` (`@dxos/react-ui-table`) — pass `type={Type entity}` + `rows={objects}` + `onRowClick`, it derives columns from the schema (no persisted View needed).
+- Nav connector nodes don't need a NavigationPathResolver (they're built by the connector like the Database section nodes); object links use `Paths.getObjectPathFromObject` resolved by plugin-space's existing resolver. Only `TypeSection` inline-listed object CHILDREN need `createTypeSectionPathResolver`.
+- Story for a container using capability hooks (useQuery/useOperationInvoker/useSelection): mirror `TypeCollectionArticle.stories.tsx` — `withPluginManager({ capabilities:[Capability.contributes(AppCapabilities.Translations, translations)], plugins:[...corePlugins(), StorybookPlugin({}), PreviewPlugin(), ClientPlugin({ types, onClientInitialized })] })` + `withLayout({layout:'fullscreen'})`. Needs devDeps `@dxos/plugin-client`, `@dxos/plugin-preview`, `@dxos/plugin-testing`, `@storybook/react-vite` + the `storybook`/`ts-test-storybook` moon tags.
+- New workspace deps: add `workspace:*` to package.json AND a matching `references` entry in tsconfig.json by hand (postinstall ref-sync is skipped), then `pnpm install --no-frozen-lockfile`. New internal barrel (`#containers`) needs both a package.json `imports` alias and a `--entryPoint=src/containers/index.ts` in moon.yml.
+
+## 2026-07-01 — plugin-space SpaceHome stories
+
+- `Surface.create` ids are DOT-separated and every segment must be camelCase (`story.spaceHomeRecent`); slashes or hyphens throw `Invalid surface id` at runtime (renders as a story error, not a build error).
+- `ClientPlugin({ types })` (testing) registers types with ECHO but does NOT contribute `AppCapabilities.Schema` — containers that build filters from `useCapabilities(AppCapabilities.Schema)` (e.g. `SpaceHomeRecent`) render empty in stories unless you add `Capability.contributes(AppCapabilities.Schema, [Task, Note])` to `withPluginManager` capabilities.
+- Translation keys are linted by `@dxos/rules(translation-key-format)`: the final segment needs a known suffix (`.label`, `.heading`, …) — `foo.range.all` fails, `foo.range-all.label` passes.
+- To story a shell article that delegates to a Surface role token (e.g. `SpaceHomeArticle` → `SpaceHomeContent`), contribute the child surfaces inline in the story's `withPluginManager({ capabilities })` instead of loading the whole plugin.
+
 ## 2026-06-30 — storybook cwd + settings-container story pattern
 
 - Storybook globs `packages/plugins/*/src/**/*.stories.tsx` relative to the CWD's repo root (`tools/storybook-react/.storybook/main.ts` → `rootDir`). Run `moon run storybook-react:serve` from INSIDE the worktree dir, never `cd` into the main repo first — doing so globs main's packages and your new worktree story files silently never appear in `/index.json` (story shows "Couldn't find story matching …"). Verify inclusion via `curl -s localhost:PORT/index.json`.
@@ -41,6 +59,12 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 - WRITES must route through `manager.set` (not `registry.set(atom,...)`) so the `local` backend's `persist` fires — direct `registry.set` updates the atom but never touches localStorage. Added private `_writeSort(value)` helper used by `setSort`/`clearSort`/`saveView`.
 - `useTableModel` gets the manager from context via NEW `useViewStateManagerOptional()` (added beside `useViewStateManager` in `ViewStateProvider.tsx`; returns `undefined` instead of throwing) so isolated stories/tests with no `ViewStateProvider` fall back to the ephemeral atom. App wraps tables under `AttentionPlugin`'s `ViewStateProvider`, so the manager is present in-app.
 - effect-atom GC gotcha for testing `local`-backed view state in node: a Writable atom with NO active subscriber is reset to its INITIAL value when unmounted, so `registry.set(atom, v)` then a later `registry.get(atom)` (across async/microtasks) reads the initial, not `v`. In the browser this is invisible because the table stays mounted (subscription chain keeps the atom alive) AND the `local` backend re-seeds the atom's INITIAL value from localStorage on a fresh mount. Node has no `localStorage` (`safeLocalStorage()`→undefined) so `local` degrades to ephemeral and the value is lost. To test persistence, inject a fake `Storage` (`new LocalBackend({ registry, storage })`, fakeStorage map mirrors `react-ui-attention/src/view-state/backends.test.ts`) and simulate reload with a FRESH registry+manager+model over the same storage+table object — the fresh atom seeds its initial from storage and survives GC. Same-manager cross-instance reads still GC-fail; don't test that way.
+
+## 2026-06-29 — plugin-ibkr (Instrument research)
+
+- External I/O (IBKR Flex, SEC EDGAR): containers invoke ops via `OperationInvoker`; operation handlers call `service:*` / SEC client — never import HTTP clients from `src/containers/` or `src/components/`.
+- TradingView chart embeds are presentation-only third-party widgets; plugin UI derives `tradingViewSymbol` locally from Instrument static fields / `Obj.Meta.keys`.
+- SEC EDGAR fundamentals: sole UI entry is `op:GetInstrumentFundamentals`; no API key; User-Agent set in `SEC_EDGAR_USER_AGENT`.
 
 ## 2026-06-27 — plugin-space TypeCollectionArticle (card-content annotation)
 

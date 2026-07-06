@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-ibkr",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "DXOS plugin that connects Interactive Brokers (Flex Web Service) and exposes portfolio/trades to the assistant.",
   "homepage": "https://dxos.org",
@@ -18,6 +18,11 @@
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
       "default": "./dist/lib/neutral/capabilities/index.mjs"
+    },
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/neutral/components/index.mjs"
     },
     "#containers": {
       "source": "./src/containers/index.ts",
@@ -89,6 +94,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-table": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",

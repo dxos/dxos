@@ -22,6 +22,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
+import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -51,6 +52,7 @@ const meta: Meta<typeof StackArticle> = {
   component: StackArticle,
   render: DefaultStory,
   decorators: [
+    withMosaic(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],

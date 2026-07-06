@@ -82,7 +82,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root role={role}>
-        <Panel.Toolbar classNames='dx-container' asChild>
+        <Panel.Toolbar asChild classNames='dx-container'>
           <Menu.Toolbar />
         </Panel.Toolbar>
         <Panel.Content classNames='dx-container flex flex-col'>

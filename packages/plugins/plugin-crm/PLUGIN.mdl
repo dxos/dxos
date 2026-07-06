@@ -323,6 +323,19 @@ feat F-8: Configuration Surface (deferred)
   req F-8.3: No API keys are required to run v1.
 ```
 
+```mdl
+feat F-9: CRM Navigation Section
+  desc: >
+    A top-level "CRM" group in the nav tree surfaces the space's Organizations
+    and People as plain nodes. Selecting a node opens a generic collection
+    article that lists every object of the type, with a toolbar toggle between
+    a card (masonry) layout and a schema-derived table.
+  req F-9.1: A CRM group node (Paths.GroupTypes.crm) is contributed per space and hidden when it has no children.
+  req F-9.2: Organizations and People nodes appear under the group only when the space contains objects of that type, mirroring the Database section's natural type folders.
+  req F-9.3: Selecting a node opens CollectionArticle for the type; a react-surface scoped to Organization/Person takes precedence over the generic type-collection article.
+  req F-9.4: CollectionArticle offers a Cards (masonry) and Table (DynamicTable) layout switch; selecting an item opens it as a sibling plank.
+```
+
 ## Acceptance
 
 ```mdl
@@ -497,7 +510,7 @@ Three layers:
 
 ### Out of scope for v1
 
-- UI surfaces (no react-surface, no article/object view, no settings panel).
+- Settings panel (no CrmSettings surface).
 - `CrmSettings` ECHO type (planned; see F-8).
 - Any ResearchSource implementation, including LinkedIn.
 - API-keyed search providers (Tavily, Brave, Google CSE, Clearbit, etc.).
