@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { Entity, Feed, Filter, Obj, Query, Ref, Relation, Scope } from '@dxos/echo';
+import { Entity, Feed, Filter, Obj, Order, Query, Ref, Relation, Scope } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EID } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
@@ -61,7 +61,7 @@ describe('feeds', () => {
       // (echo://spaceId/itemId) without feed routing info, a local object DXN + feed
       // context is the correct way to resolve them.
       const resolved = await peer.client.graph
-        .createRefResolver({ context: { space: db.spaceId, feed: Feed.getQueueUri(feed)! } })
+        .createRefResolver({ context: { space: db.spaceId, feed: Feed.getFeedUri(feed)! } })
         .resolve(EID.make({ entityId: obj.id }), { source: 'network' })
         .wait();
       expect(resolved?.id).toEqual(obj.id);
@@ -292,7 +292,9 @@ describe('feeds', () => {
   });
 
   describe('Windowed query', () => {
-    test('one-shot `.limit(n)` returns the newest N (tail window), ascending', async ({ expect }) => {
+    test('one-shot `Order.natural(desc).limit(n)` returns the newest N (tail window), newest-first', async ({
+      expect,
+    }) => {
       await using peer = await builder.createPeer({
         types: [Feed.Feed, TestSchema.Person],
         assignQueuePositions: true,
@@ -307,10 +309,12 @@ describe('feeds', () => {
         Obj.make(TestSchema.Person, { name: 'd' }),
       ]);
 
-      const scope = Scope.feed(Feed.getQueueUri(feed)!);
-      const window = await db.query(Query.select(Filter.type(TestSchema.Person)).from(scope).limit(2)).run();
-      // Newest two (appended last), returned in ascending (append) order.
-      expect(window.map((obj) => (obj as TestSchema.Person).name)).toEqual(['c', 'd']);
+      const scope = Scope.feed(Feed.getFeedUri(feed)!);
+      const window = await db
+        .query(Query.select(Filter.type(TestSchema.Person)).from(scope).orderBy(Order.natural('desc')).limit(2))
+        .run();
+      // Newest two (appended last), returned newest-first (natural desc).
+      expect(window.map((obj) => (obj as TestSchema.Person).name)).toEqual(['d', 'c']);
 
       // No limit ⇒ the whole feed (unchanged behavior).
       const all = await db.query(Query.select(Filter.type(TestSchema.Person)).from(scope)).run();
@@ -331,9 +335,9 @@ describe('feeds', () => {
         Obj.make(TestSchema.Person, { name: 'c' }),
       ]);
 
-      const scope = Scope.feed(Feed.getQueueUri(feed)!);
+      const scope = Scope.feed(Feed.getFeedUri(feed)!);
 
-      const narrow = db.query(Query.select(Filter.type(TestSchema.Person)).from(scope).limit(2));
+      const narrow = db.query(Query.select(Filter.type(TestSchema.Person)).from(scope).orderBy(Order.natural('desc')).limit(2));
       const narrowCalled = new Event();
       const narrowOnce = narrowCalled.waitForCount(1);
       const narrowSub = narrow.subscribe(() => narrowCalled.emit(), { fire: true });
@@ -342,7 +346,7 @@ describe('feeds', () => {
       narrowSub();
 
       // A wider window (the "load older" case) surfaces the older items too.
-      const wide = db.query(Query.select(Filter.type(TestSchema.Person)).from(scope).limit(10));
+      const wide = db.query(Query.select(Filter.type(TestSchema.Person)).from(scope).orderBy(Order.natural('desc')).limit(10));
       const wideCalled = new Event();
       const wideOnce = wideCalled.waitForCount(1);
       const wideSub = wide.subscribe(() => wideCalled.emit(), { fire: true });
@@ -366,11 +370,16 @@ describe('feeds', () => {
       );
 
       const window = await db
-        .query(Query.select(Filter.type(TestSchema.Person)).from(Scope.feed(Feed.getQueueUri(feed)!)).limit(25))
+        .query(
+          Query.select(Filter.type(TestSchema.Person))
+            .from(Scope.feed(Feed.getFeedUri(feed)!))
+            .orderBy(Order.natural('desc'))
+            .limit(25),
+        )
         .run();
-      // Newest 25 (p35..p59), ascending by append order.
+      // Newest 25 (p59..p35), newest-first (natural desc).
       expect(window.map((obj) => (obj as TestSchema.Person).name)).toEqual(
-        Array.from({ length: 25 }, (_, index) => `p${total - 25 + index}`),
+        Array.from({ length: 25 }, (_, index) => `p${total - 1 - index}`),
       );
     });
   });
@@ -402,4 +411,4 @@ describe('feeds', () => {
  * Queries a feed through the database with a feed scope — the canonical non-Effect feed query.
  */
 const queryFeed = (db: EchoDatabase, feed: Feed.Feed, filter: Filter.Any) =>
-  db.query(Query.select(filter).from(Scope.feed(Feed.getQueueUri(feed)!)));
+  db.query(Query.select(filter).from(Scope.feed(Feed.getFeedUri(feed)!)));

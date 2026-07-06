@@ -90,6 +90,8 @@ export class QueryPlanner {
         return this._generateOrderClause(query, context);
       case 'limit':
         return this._generateLimitClause(query, context);
+      case 'skip':
+        return this._generateSkipClause(query, context);
       case 'from':
         return this._generateFromClause(query, context);
       default:
@@ -711,6 +713,16 @@ export class QueryPlanner {
     ]);
   }
 
+  private _generateSkipClause(query: QueryAST.QuerySkipClause, context: GenerationContext): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.query, context).steps,
+      {
+        _tag: 'SkipStep',
+        skip: query.skip,
+      },
+    ]);
+  }
+
   // After complete plan is built, inspect it from the end:
   //   - Walk backwards until hitting an object set changer.
   //   - If an order step is found, skip.
@@ -747,10 +759,10 @@ export class QueryPlanner {
       }
     }
 
-    // Find the position to insert the order step (before any limit steps).
+    // Find the position to insert the order step (before any trailing limit/skip steps).
     let insertIndex = processedPlan.steps.length;
     for (let i = processedPlan.steps.length - 1; i >= 0; i--) {
-      if (processedPlan.steps[i]._tag === 'LimitStep') {
+      if (processedPlan.steps[i]._tag === 'LimitStep' || processedPlan.steps[i]._tag === 'SkipStep') {
         insertIndex = i;
       } else {
         break;
@@ -760,7 +772,7 @@ export class QueryPlanner {
     const newSteps = [...processedPlan.steps];
     newSteps.splice(insertIndex, 0, {
       _tag: 'OrderStep',
-      order: [Order.natural.ast],
+      order: [Order.natural().ast],
     });
 
     return QueryPlan.Plan.make(newSteps);

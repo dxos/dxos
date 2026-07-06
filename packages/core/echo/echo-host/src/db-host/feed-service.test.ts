@@ -14,7 +14,7 @@ import { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { LocalQueueServiceImpl } from './local-queue-service';
+import { LocalFeedServiceImpl } from './local-feed-service';
 
 const TestLayer = SqlTransaction.layer.pipe(
   Layer.provideMerge(
@@ -24,31 +24,31 @@ const TestLayer = SqlTransaction.layer.pipe(
   ),
 );
 
-describe('LocalQueueServiceImpl', () => {
+describe('LocalFeedServiceImpl', () => {
   it.effect('should insert and query items', () =>
     Effect.gen(function* () {
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
       const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
-      const service = new LocalQueueServiceImpl(runtime, feedStore);
+      const service = new LocalFeedServiceImpl(runtime, feedStore);
       yield* feedStore.migrate();
 
       const spaceId = SpaceId.random();
-      const queueId = EntityId.random();
+      const feedId = EntityId.random();
       const object1 = { id: 'obj1', data: 'test1' };
       const object2 = { id: 'obj2', data: 'test2' };
 
       yield* Effect.promise(() =>
-        service.insertIntoQueue({
+        service.insertIntoFeed({
           subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
-          queueId,
+          feedId,
           objects: [object1, object2].map((obj) => JSON.stringify(obj)),
         }),
       );
 
       const result = yield* Effect.promise(() =>
-        service.queryQueue({
-          query: { spaceId, queueIds: [queueId] },
+        service.queryFeed({
+          query: { spaceId, feedIds: [feedId] },
         }),
       );
       expect(JSON.parse(result.objects![0])).toMatchObject(object1);
@@ -60,34 +60,34 @@ describe('LocalQueueServiceImpl', () => {
     Effect.gen(function* () {
       const runtime = Effect.succeed(yield* Effect.runtime<any>());
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
-      const service = new LocalQueueServiceImpl(runtime, feedStore);
+      const service = new LocalFeedServiceImpl(runtime, feedStore);
       yield* feedStore.migrate();
 
       const spaceId = SpaceId.random();
-      const queueId = EntityId.random();
+      const feedId = EntityId.random();
       const object1Id = EntityId.random();
       const object1 = { id: object1Id, data: 'test1' };
 
       yield* Effect.promise(() =>
-        service.insertIntoQueue({
+        service.insertIntoFeed({
           subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
-          queueId,
+          feedId,
           objects: [JSON.stringify(object1)],
         }),
       );
       yield* Effect.promise(() =>
-        service.deleteFromQueue({
+        service.deleteFromFeed({
           subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
-          queueId,
+          feedId,
           objectIds: [object1Id],
         }),
       );
 
       const result = yield* Effect.promise(() =>
-        service.queryQueue({
-          query: { spaceId, queueIds: [queueId] },
+        service.queryFeed({
+          query: { spaceId, feedIds: [feedId] },
         }),
       );
       expect(result.objects).toHaveLength(2);
@@ -100,25 +100,25 @@ describe('LocalQueueServiceImpl', () => {
       const runtime = Effect.succeed(yield* Effect.runtime<any>());
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
       yield* feedStore.migrate();
-      const service = new LocalQueueServiceImpl(runtime, feedStore);
+      const service = new LocalFeedServiceImpl(runtime, feedStore);
       const spaceId = 'space-1' as SpaceId;
-      const queueId = EntityId.random();
+      const feedId = EntityId.random();
 
       // Insert 10 items
       const items = Array.from({ length: 10 }, (_, i) => ({ id: `obj${i}`, data: `test${i}` }));
       yield* Effect.promise(() =>
-        service.insertIntoQueue({
+        service.insertIntoFeed({
           subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
-          queueId,
+          feedId,
           objects: items.map((item) => JSON.stringify(item)),
         }),
       );
 
       // Query first 5
       const page1 = yield* Effect.promise(() =>
-        service.queryQueue({
-          query: { spaceId, queueIds: [queueId], limit: 5 },
+        service.queryFeed({
+          query: { spaceId, feedIds: [feedId], limit: 5 },
         }),
       );
       expect(page1.objects).toHaveLength(5);
@@ -128,10 +128,10 @@ describe('LocalQueueServiceImpl', () => {
 
       // Query next 5
       const page2 = yield* Effect.promise(() =>
-        service.queryQueue({
+        service.queryFeed({
           query: {
             spaceId,
-            queueIds: [queueId],
+            feedIds: [feedId],
             limit: 5,
             after: page1.nextCursor!,
           },
@@ -143,35 +143,81 @@ describe('LocalQueueServiceImpl', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('should support reverse (newest-first) bounded tail reads', () =>
+  it.effect('should support reverse pagination with before cursors', () =>
     Effect.gen(function* () {
       const runtime = Effect.succeed(yield* Effect.runtime<any>());
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
       yield* feedStore.migrate();
-      const service = new LocalQueueServiceImpl(runtime, feedStore);
-      const spaceId = 'space-1' as SpaceId;
-      const queueId = EntityId.random();
+      const service = new LocalFeedServiceImpl(runtime, feedStore);
+      const spaceId = 'space-2' as SpaceId;
+      const feedId = EntityId.random();
 
       const items = Array.from({ length: 10 }, (_, i) => ({ id: `obj${i}`, data: `test${i}` }));
       yield* Effect.promise(() =>
-        service.insertIntoQueue({
+        service.insertIntoFeed({
           subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
-          queueId,
+          feedId,
           objects: items.map((item) => JSON.stringify(item)),
         }),
       );
 
-      // Reverse + limit yields the most recently appended items, newest first.
-      const tail = yield* Effect.promise(() =>
-        service.queryQueue({
-          query: { spaceId, queueIds: [queueId], limit: 3, reverse: true },
+      // Head page: newest 3, reverse order.
+      const head = yield* Effect.promise(() =>
+        service.queryFeed({
+          query: { spaceId, feedIds: [feedId], reverse: true, limit: 3 },
         }),
       );
-      expect(tail.objects).toHaveLength(3);
-      expect(JSON.parse(tail.objects![0])).toMatchObject(items[9]);
-      expect(JSON.parse(tail.objects![1])).toMatchObject(items[8]);
-      expect(JSON.parse(tail.objects![2])).toMatchObject(items[7]);
+      expect(head.objects!.map((o) => JSON.parse(o).id)).toEqual(['obj9', 'obj8', 'obj7']);
+      expect(head.hasMore).toBe(true);
+      expect(head.prevCursor).toBeTruthy();
+
+      // Walk older via `before`.
+      const older = yield* Effect.promise(() =>
+        service.queryFeed({
+          query: { spaceId, feedIds: [feedId], reverse: true, before: head.prevCursor!, limit: 3 },
+        }),
+      );
+      expect(older.objects!.map((o) => JSON.parse(o).id)).toEqual(['obj6', 'obj5', 'obj4']);
+      expect(older.hasMore).toBe(true);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('should pass tombstone blocks through paginated reads', () =>
+    Effect.gen(function* () {
+      const runtime = Effect.succeed(yield* Effect.runtime<any>());
+      const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
+      yield* feedStore.migrate();
+      const service = new LocalFeedServiceImpl(runtime, feedStore);
+      const spaceId = 'space-3' as SpaceId;
+      const feedId = EntityId.random();
+      const objectId = EntityId.random();
+
+      yield* Effect.promise(() =>
+        service.insertIntoFeed({
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
+          spaceId,
+          feedId,
+          objects: [JSON.stringify({ id: objectId, data: 'test' })],
+        }),
+      );
+      yield* Effect.promise(() =>
+        service.deleteFromFeed({
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
+          spaceId,
+          feedId,
+          objectIds: [objectId],
+        }),
+      );
+
+      const head = yield* Effect.promise(() =>
+        service.queryFeed({
+          query: { spaceId, feedIds: [feedId], reverse: true, limit: 10 },
+        }),
+      );
+      expect(head.objects).toHaveLength(2);
+      expect(JSON.parse(head.objects![0])).toMatchObject({ 'id': objectId, '@deleted': true });
+      expect(JSON.parse(head.objects![1])).toMatchObject({ id: objectId, data: 'test' });
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -179,16 +225,16 @@ describe('LocalQueueServiceImpl', () => {
     Effect.gen(function* () {
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: false });
       const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
-      const service = new LocalQueueServiceImpl(runtime, feedStore);
+      const service = new LocalFeedServiceImpl(runtime, feedStore);
       yield* feedStore.migrate();
 
       const spaceId = SpaceId.random();
-      const queueId = EntityId.random();
+      const feedId = EntityId.random();
       yield* Effect.promise(() =>
-        service.insertIntoQueue({
+        service.insertIntoFeed({
           subspaceTag: FeedProtocol.WellKnownNamespaces.data,
           spaceId,
-          queueId,
+          feedId,
           objects: [JSON.stringify({ id: 'obj1', data: 'test1' })],
         }),
       );

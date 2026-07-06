@@ -3,16 +3,16 @@
 //
 
 export {
-  type DeleteFromQueueRequest,
+  type DeleteFromFeedRequest,
+  type FeedNamespaceSyncState,
+  type FeedQuery,
+  type FeedService,
   type GetSyncStateRequest,
   type GetSyncStateResponse,
-  type InsertIntoQueueRequest,
-  type QueryQueueRequest,
-  type QueueQueryResult as QueryResult,
-  type QueueNamespaceSyncState,
-  type QueueQuery,
-  type QueueService,
-  type SyncQueueRequest,
+  type InsertIntoFeedRequest,
+  type QueryFeedRequest,
+  type FeedQueryResult as QueryResult,
+  type SyncFeedRequest,
 } from './proto/gen/dxos/client/services.js';
 
 export const KEY_QUEUE_POSITION = 'org.dxos.key.queue-position';
@@ -147,15 +147,23 @@ export const QueryRequest = Schema.Struct({
   unpositionedOnly: Schema.optional(Schema.Boolean),
 
   /**
+   * Get blocks strictly preceding this cursor (exclusive).
+   *
+   * Must not be used with `position` or `unpositionedOnly`. Can combine with `cursor` to bound a range.
+   */
+  before: Schema.optional(FeedCursor),
+
+  /**
+   * Read blocks newest-first (descending insertion order) instead of the default oldest-first.
+   *
+   * Only valid in cursor mode (with `cursor` and/or `before`); not valid with `position`/`unpositionedOnly`.
+   */
+  reverse: Schema.optional(Schema.Boolean),
+
+  /**
    * Maximum number of blocks to return.
    */
   limit: Schema.optional(Schema.Number),
-
-  /**
-   * Return blocks in reverse (newest-first) order. Combined with `limit`, yields a bounded tail read
-   * of the most recently appended blocks.
-   */
-  reverse: Schema.optional(Schema.Boolean),
 });
 export interface QueryRequest extends Schema.Schema.Type<typeof QueryRequest> {}
 
@@ -169,9 +177,15 @@ export const QueryResponse = Schema.Struct({
   requestId: Schema.optional(Schema.String),
 
   /**
-   * Cursor to continue reading from this result boundary.
+   * Cursor to continue reading from this result boundary (toward newer blocks / `after`).
    */
   nextCursor: FeedCursor,
+
+  /**
+   * Cursor to continue reading toward older blocks (pass as `before`).
+   * Set whenever the result page is non-empty.
+   */
+  prevCursor: Schema.optional(FeedCursor),
 
   /**
    * Indicates whether more matching blocks are available.

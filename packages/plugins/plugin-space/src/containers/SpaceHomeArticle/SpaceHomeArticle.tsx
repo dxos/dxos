@@ -24,7 +24,7 @@ export type SpaceHomeArticleProps = AppSurface.SpaceArticleProps;
 
 /**
  * Per-space Home article shell. Owns only the chrome: a toolbar sourced from graph actions
- * contributed with `disposition: 'toolbar'` (e.g. Start tour / Hide Welcome from plugin-support),
+ * contributed with `disposition: 'toolbar'` (e.g. Start / Hide Welcome from plugin-support),
  * and a Column layout that delegates its body to surface contributors:
  *
  * - `space-home-content`: scrollable region (Welcome panel, recent-objects masonry, starter prompts).

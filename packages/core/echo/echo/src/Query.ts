@@ -144,6 +144,14 @@ export interface Query<T> {
   'limit'(limit: number): Query<T>;
 
   /**
+   * Skip a number of results (offset). Combined with `orderBy` and `limit`, expresses a windowed
+   * (paginated) read.
+   * @param skip - Number of leading results to skip.
+   * @returns Query for the remaining results.
+   */
+  'skip'(skip: number): Query<T>;
+
+  /**
    * Query from selected databases only.
    *
    * Example:
@@ -342,6 +350,14 @@ class QueryClass implements Any {
     });
   }
 
+  'skip'(skip: number): Any {
+    return new QueryClass({
+      type: 'skip',
+      query: this.ast,
+      skip,
+    });
+  }
+
   'from'(
     ...args:
       | [
@@ -463,10 +479,10 @@ class QueryClass implements Any {
 
     const feedItems = items as Feed.Feed[];
     const feedScopes = feedItems.map((feed) => {
-      const uri = Feed.getQueueUri(feed);
+      const uri = Feed.getFeedUri(feed);
       if (!uri) {
         throw new TypeError(
-          `Query.from() expects persisted Feed objects with a queue URI; got feed without a space (id=${Obj.getURI(feed)}).`,
+          `Query.from() expects persisted Feed objects with a feed URI; got feed without a space (id=${Obj.getURI(feed)}).`,
         );
       }
       return { _tag: 'feed' as const, feedUri: String(uri) };

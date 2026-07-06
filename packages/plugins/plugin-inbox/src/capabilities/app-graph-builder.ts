@@ -318,11 +318,14 @@ export default Capability.makeModule(
           // Resolve the selected message via the host indexer, not the client feed's newest-by-position
           // window: the mailbox list orders by date, so a selected message can be outside that window
           // (making the companion blank). The list's messages are all indexed, so the indexer resolves
-          // them by id — the `orderBy` clause is what routes this to the host (see
-          // `isClientEvaluableFeedQuery`).
+          // them by id — a content `orderBy` (not `natural`) is what routes this to the host (see
+          // `queryContainsContentOrder` in `isClientEvaluableFeedQuery`).
           const message = get(
-            db.query(Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed).orderBy(Order.natural))
-              .atom,
+            db.query(
+              Query.select(messageId ? Filter.id(messageId) : Filter.nothing())
+                .from(feed)
+                .orderBy(Order.property('created', 'desc')),
+            ).atom,
           )[0];
           return Effect.succeed([
             AppNode.makeCompanion({

@@ -360,8 +360,8 @@ export class SpacesServiceImpl implements SpacesService {
    * Populate a freshly-created space with the objects and feed messages described in a {@link SerializedSpace}.
    *
    * Objects are written directly into the space's automerge root document as inline
-   * {@link EntityStructure} entries; feed messages are appended to the appropriate queue
-   * via {@link EchoHost.queuesService}.
+   * {@link EntityStructure} entries; feed messages are appended to the appropriate feed
+   * via {@link EchoHost.feedService}.
    */
   private async _hydrateSpaceFromSerialized(
     space: DataSpace,
@@ -387,9 +387,9 @@ export class SpacesServiceImpl implements SpacesService {
       const namespace =
         feed.namespace === 'trace' ? FeedProtocol.WellKnownNamespaces.trace : FeedProtocol.WellKnownNamespaces.data;
       try {
-        await this._echoHost.queuesService.insertIntoQueue({
+        await this._echoHost.feedService.insertIntoFeed({
           spaceId: space.id,
-          queueId: feed.feedObjectId,
+          feedId: feed.feedObjectId,
           subspaceTag: namespace,
           objects: feed.messages.map((message) => JSON.stringify(message)),
         });

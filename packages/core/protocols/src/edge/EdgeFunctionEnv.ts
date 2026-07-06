@@ -93,15 +93,15 @@ export interface DataService {
 export interface QueueService {
   queryQueue: (
     ctx: TraceContext,
-    request: FeedProtocol.QueryQueueRequest,
+    request: FeedProtocol.QueryFeedRequest,
   ) => Promise<RpcResult<FeedProtocol.QueryResult>>;
   insertIntoQueue: (
     ctx: TraceContext,
-    request: FeedProtocol.InsertIntoQueueRequest,
+    request: FeedProtocol.InsertIntoFeedRequest,
   ) => Promise<RpcResult<RpcDisposable>>;
   deleteFromQueue: (
     ctx: TraceContext,
-    request: FeedProtocol.DeleteFromQueueRequest,
+    request: FeedProtocol.DeleteFromFeedRequest,
   ) => Promise<RpcResult<RpcDisposable>>;
 }
 

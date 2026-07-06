@@ -342,8 +342,10 @@ export type OrderDirection = Schema.Schema.Type<typeof OrderDirection>;
 
 const Order_ = Schema.Union(
   Schema.Struct({
-    // How database wants to order them (in practice - by id).
+    // How the database wants to order them by default. For non-feed sources this is by id;
+    // for feed sources this is insertion order, so `desc` gives newest-first head reads.
     kind: Schema.Literal('natural'),
+    direction: OrderDirection,
   }),
   Schema.Struct({
     kind: Schema.Literal('property'),
@@ -404,6 +406,19 @@ const QueryLimitClause_ = Schema.Struct({
 export interface QueryLimitClause extends Schema.Schema.Type<typeof QueryLimitClause_> {}
 export const QueryLimitClause: Schema.Schema<QueryLimitClause> = QueryLimitClause_;
 
+/**
+ * Skip a number of results (offset). Combined with `limit` and a `natural` order, this expresses
+ * a windowed (paginated) read without any feed-specific query surface.
+ */
+const QuerySkipClause_ = Schema.Struct({
+  type: Schema.Literal('skip'),
+  query: Schema.suspend(() => Query),
+  skip: Schema.Number,
+});
+
+export interface QuerySkipClause extends Schema.Schema.Type<typeof QuerySkipClause_> {}
+export const QuerySkipClause: Schema.Schema<QuerySkipClause> = QuerySkipClause_;
+
 export const QueryFromClause_ = Schema.Struct({
   type: Schema.Literal('from'),
   query: Schema.suspend(() => Query),
@@ -432,6 +447,7 @@ const Query_ = Schema.Union(
   QueryOrderClause,
   QueryOptionsClause,
   QueryLimitClause,
+  QuerySkipClause,
   QueryFromClause,
 ).annotations({ identifier: 'org.dxos.schema.query' });
 
@@ -511,6 +527,7 @@ export const visit = (query: Query, visitor: (node: Query) => void) => {
     }),
     Match.when({ type: 'order' }, ({ query }) => visit(query, visitor)),
     Match.when({ type: 'limit' }, ({ query }) => visit(query, visitor)),
+    Match.when({ type: 'skip' }, ({ query }) => visit(query, visitor)),
     Match.when({ type: 'from' }, (node) => {
       visit(node.query, visitor);
       if (node.from._tag === 'query') {
@@ -537,6 +554,7 @@ export const map = (query: Query, mapper: (node: Query) => Query): Query => {
     Match.when({ type: 'options' }, (node) => ({ ...node, query: map(node.query, mapper) })),
     Match.when({ type: 'order' }, (node) => ({ ...node, query: map(node.query, mapper) })),
     Match.when({ type: 'limit' }, (node) => ({ ...node, query: map(node.query, mapper) })),
+    Match.when({ type: 'skip' }, (node) => ({ ...node, query: map(node.query, mapper) })),
     Match.when({ type: 'from' }, (node) => ({
       ...node,
       query: map(node.query, mapper),
@@ -570,6 +588,7 @@ export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
     ),
     Match.when({ type: 'order' }, ({ query }) => fold(query, reducer)),
     Match.when({ type: 'limit' }, ({ query }) => fold(query, reducer)),
+    Match.when({ type: 'skip' }, ({ query }) => fold(query, reducer)),
     Match.when({ type: 'from' }, (node) => {
       const results = fold(node.query, reducer);
       if (node.from._tag === 'query') {

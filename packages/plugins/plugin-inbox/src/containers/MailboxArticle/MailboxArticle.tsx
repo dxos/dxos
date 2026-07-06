@@ -29,8 +29,6 @@ import { POPOVER_SAVE_FILTER } from '../../constants';
 import { matchesFilter, sortByCreated } from '../../util';
 import { InitializeMailbox, InitializeMailboxAction } from './InitializeMailbox';
 
-/** Initial mailbox window: the newest N messages are loaded; extended on scroll-to-end (see `handleLoadOlder`). */
-const WINDOW = 100;
 
 /** Debounce (ms) for the tag/thread index subscription bumps, coalescing a burst of sync commits into one render. */
 const INDEX_BUMP_DEBOUNCE = 200;
@@ -41,6 +39,9 @@ export type MailboxArticleProps = AppSurface.ObjectArticleProps<
     filter?: string;
   }
 >;
+
+/** Messages per page for the lazily-loaded message window. */
+const MAILBOX_PAGE_SIZE = 10;
 
 export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { invokePromise } = useOperationInvoker();
@@ -175,21 +176,29 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     setFilter(filter);
   }, [filterText, builder]);
 
-  // Messages. Bounded to the newest `windowSize` (a tail window over the feed) so the data handed to
-  // React — and the per-render derived maps — stay bounded as the feed grows during sync; the oldest
-  // fall out of the window. "Load older" (`handleLoadOlder`) extends the window on scroll-to-end.
-  // Windowed pagination over the feed. `usePagination` owns the window and holds the prior results
-  // across a window change, so growing the window never blanks the list (which would reset scroll).
-  // Order by the message date (not feed insertion order): a backward/backfill sync appends out of time
-  // order, so the newest-window must be selected by `created`, not position. The `order` clause routes
-  // this to the host indexer (see `isClientEvaluableFeedQuery`).
-  const { objects: messages, loadMore: handleLoadOlder } = usePagination(
+  // Messages. Lazily loaded, newest-first: the initial page renders immediately and older messages
+  // load as the user scrolls (see MessageStack's `pagination` wiring), rather than fetching the whole
+  // feed up front. Ordered by message date (`created`), not feed insertion order — a backward/backfill
+  // sync appends out of time order, so the window must be selected by date. `Order.property` is a
+  // content order (not `natural`), which routes this query to the host indexer (see
+  // `isClientEvaluableFeedQuery`), so the newest-by-date window is correct regardless of append order.
+  const {
+    items: messages,
+    getNext,
+    getPrevious,
+    hasMore,
+    isLoading: messagesLoading,
+    atHead,
+    jumpToHead,
+  } = usePagination(
     db,
-    (limit) =>
-      feed
-        ? Query.select(Filter.type(Message.Message)).from(feed).orderBy(Order.property('created', 'desc')).limit(limit)
-        : Query.select(Filter.nothing()),
-    { pageSize: WINDOW },
+    feed
+      ? Query.select(Filter.type(Message.Message)).from(feed).orderBy(Order.property('created', 'desc')).limit(MAILBOX_PAGE_SIZE)
+      : Query.select(Filter.nothing()).limit(MAILBOX_PAGE_SIZE),
+  );
+  const pagination = useMemo(
+    () => ({ getNext, getPrevious, hasMore, isLoading: messagesLoading, atHead, jumpToHead }),
+    [getNext, getPrevious, hasMore, messagesLoading, atHead, jumpToHead],
   );
 
   // Feed/queue queries don't yet support text-search and complex filter combinations,
@@ -345,8 +354,8 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
             starredIds={starredIds}
             threadCounts={threadCounts}
             conversations={settings.conversations}
+            pagination={feed ? pagination : undefined}
             onAction={handleAction}
-            onEndReached={handleLoadOlder}
           />
         )}
       </Panel.Content>

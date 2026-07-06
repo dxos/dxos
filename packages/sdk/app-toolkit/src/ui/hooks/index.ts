@@ -4,6 +4,7 @@
 
 export * from './useAppGraph';
 export * from './useActiveSpace';
+export * from './useHomeVisibility';
 export * from './useLayout';
 export * from './useObjectMenuItems';
 export * from './useSchemaFilter';

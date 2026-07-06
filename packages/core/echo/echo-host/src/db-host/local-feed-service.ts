@@ -16,88 +16,84 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import {
-  type DeleteFromQueueRequest,
+  type DeleteFromFeedRequest,
+  type FeedQueryResult,
+  type FeedService,
   type GetSyncStateRequest,
   type GetSyncStateResponse,
-  type InsertIntoQueueRequest,
-  type QueryQueueRequest,
-  type QueueQueryResult,
-  type QueueService,
-  type SyncQueueRequest,
+  type InsertIntoFeedRequest,
+  type QueryFeedRequest,
+  type SyncFeedRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 
 /**
- * Writes queue data to a local FeedStore.
+ * Writes feed data to a local FeedStore.
  */
-export class LocalQueueServiceImpl implements QueueService {
+export class LocalFeedServiceImpl implements FeedService {
   #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   #feedStore: FeedStore;
-  #syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>;
+  #syncFeed?: (ctx: Context, request: SyncFeedRequest) => Promise<void>;
   #getSyncState?: (ctx: Context, request: GetSyncStateRequest) => Promise<GetSyncStateResponse>;
 
   constructor(
     runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>,
     feedStore: FeedStore,
     options?: {
-      syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>;
+      syncFeed?: (ctx: Context, request: SyncFeedRequest) => Promise<void>;
       getSyncState?: (ctx: Context, request: GetSyncStateRequest) => Promise<GetSyncStateResponse>;
     },
   ) {
     this.#runtime = runtime;
     this.#feedStore = feedStore;
-    this.#syncQueue = options?.syncQueue;
+    this.#syncFeed = options?.syncFeed;
     this.#getSyncState = options?.getSyncState;
   }
 
-  queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
+  queryFeed(request: QueryFeedRequest): Promise<FeedQueryResult> {
     const { query } = request;
     invariant(query, 'query is required');
-    const { spaceId, queueIds } = query;
+    const { spaceId, feedIds } = query;
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
-        const cursor = query.after ? parseInt(query.after) : -1;
         const result = yield* this.#feedStore.query({
           requestId: crypto.randomUUID(),
-          feedNamespace: request.query.queuesNamespace || FeedProtocol.WellKnownNamespaces.data,
+          feedNamespace: request.query.feedNamespace || FeedProtocol.WellKnownNamespaces.data,
           spaceId: spaceId! as SpaceId,
-          query: { feedIds: queueIds ?? [] },
-          position: cursor,
-          limit: query.limit,
+          query: { feedIds: feedIds ?? [] },
+          cursor: query.after ? FeedProtocol.FeedCursor.make(query.after) : undefined,
+          before: query.before ? FeedProtocol.FeedCursor.make(query.before) : undefined,
           reverse: query.reverse,
+          limit: query.limit,
         });
 
         const objects = result.blocks.map((block: FeedProtocol.Block) =>
           JSON.stringify(EchoFeedCodec.decode(block.data, block.position ?? undefined) as ObjectJSON),
         );
 
-        const lastBlock = result.blocks[result.blocks.length - 1];
-        const nextCursor = lastBlock && lastBlock.position != null ? String(lastBlock.position) : null;
-
-        return Function.identity<QueueQueryResult>({
+        return Function.identity<FeedQueryResult>({
           objects,
-
-          // TODO(dmaretskyi): This is wrong, fix later - cursors should come directly from the feed.
-          nextCursor: nextCursor?.toString() ?? '',
-          prevCursor: '',
+          nextCursor: result.nextCursor,
+          prevCursor: result.prevCursor ?? '',
+          hasMore: result.hasMore,
         });
       }),
     );
   }
 
-  insertIntoQueue(request: InsertIntoQueueRequest): Promise<void> {
-    const { subspaceTag, spaceId, queueId, objects } = request;
+  insertIntoFeed(request: InsertIntoFeedRequest): Promise<void> {
+    const { subspaceTag, spaceId, feedId, objects } = request;
     const feedNamespace = subspaceTag ?? FeedProtocol.WellKnownNamespaces.data;
     assertArgument(
       FeedProtocol.isWellKnownNamespace(feedNamespace),
       'request.subspaceTag',
-      'expected a well-known queue namespace',
+      'expected a well-known feed namespace',
     );
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
         const messages = (objects ?? []).map((encoded) => ({
           spaceId: spaceId,
-          feedId: queueId!,
+          feedId: feedId!,
           feedNamespace,
           data: EchoFeedCodec.encode(JSON.parse(encoded) as ObjectJSON),
         }));
@@ -107,19 +103,19 @@ export class LocalQueueServiceImpl implements QueueService {
     );
   }
 
-  deleteFromQueue(request: DeleteFromQueueRequest): Promise<void> {
-    const { subspaceTag, spaceId, queueId, objectIds } = request;
+  deleteFromFeed(request: DeleteFromFeedRequest): Promise<void> {
+    const { subspaceTag, spaceId, feedId, objectIds } = request;
     const feedNamespace = subspaceTag ?? FeedProtocol.WellKnownNamespaces.data;
     assertArgument(
       FeedProtocol.isWellKnownNamespace(feedNamespace),
       'request.subspaceTag',
-      'expected a well-known queue namespace',
+      'expected a well-known feed namespace',
     );
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
         const messages = objectIds!.map((id) => ({
           spaceId: spaceId,
-          feedId: queueId!,
+          feedId: feedId!,
           feedNamespace,
           data: EchoFeedCodec.encode({ id, '@deleted': true }),
         }));
@@ -129,8 +125,8 @@ export class LocalQueueServiceImpl implements QueueService {
     );
   }
 
-  async syncQueue(request: SyncQueueRequest, options?: RequestOptions): Promise<void> {
-    await this.#syncQueue?.(options?.ctx ?? Context.default(), request);
+  async syncFeed(request: SyncFeedRequest, options?: RequestOptions): Promise<void> {
+    await this.#syncFeed?.(options?.ctx ?? Context.default(), request);
   }
 
   getSyncState(request: GetSyncStateRequest, options?: RequestOptions): Promise<GetSyncStateResponse> {

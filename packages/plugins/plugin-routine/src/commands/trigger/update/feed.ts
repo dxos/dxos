@@ -19,7 +19,7 @@ import { EID, type EntityId } from '@dxos/keys';
 import { Enabled, Feed, Input, TriggerId } from '../options';
 import { printTrigger, promptForSchemaInput, selectFeed, selectFunction, selectTrigger } from '../util';
 
-export const queue = Command.make(
+export const feed = Command.make(
   'feed',
   {
     spaceId: Common.spaceId.pipe(Options.optional),

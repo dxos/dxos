@@ -13,9 +13,16 @@ import React, {
 } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
+import { type PaginationResult } from '@dxos/react-client/echo';
 import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import {
+  Focus,
+  Mosaic,
+  type MosaicTileProps,
+  useMosaicContainer,
+  useVirtualizerPagination,
+} from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
 
 import { useGmailTags } from '#hooks';
@@ -72,49 +79,23 @@ export type MessageStackProps = {
    * resident. Falls back to the group size when absent.
    */
   threadCounts?: Record<string, number>;
+  /**
+   * When `messages` is a lazily-loaded window (see `usePagination`), drives loading more older
+   * messages as the user scrolls toward the loaded end (via `useVirtualizerPagination`).
+   */
+  pagination?: Omit<PaginationResult<unknown>, 'items'>;
   onAction?: MessageStackActionHandler;
-  /** Fired when the viewport scrolls near the bottom — used to page in older messages (extend the window). */
-  onEndReached?: () => void;
 };
-
-/** Distance (px) from the bottom of the viewport at which `onEndReached` fires. */
-const END_REACHED_THRESHOLD = 400;
 
 /**
  * Card-based message stack component using mosaic layout.
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
   (
-    {
-      messages,
-      tags,
-      currentId,
-      selectedIds,
-      starredIds,
-      conversations,
-      threadCounts,
-      onAction,
-      onEndReached,
-      ...props
-    },
+    { messages, tags, currentId, selectedIds, starredIds, conversations, threadCounts, pagination, onAction, ...props },
     forwardedRef,
   ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
-
-    // Page in older messages when the user nears the bottom of the (newest-first) stack. The window
-    // bounds the loaded data; `Mosaic.VirtualStack` already virtualizes the DOM.
-    useEffect(() => {
-      if (!viewport || !onEndReached) {
-        return;
-      }
-      const handleScroll = () => {
-        if (viewport.scrollTop + viewport.clientHeight >= viewport.scrollHeight - END_REACHED_THRESHOLD) {
-          onEndReached();
-        }
-      };
-      viewport.addEventListener('scroll', handleScroll, { passive: true });
-      return () => viewport.removeEventListener('scroll', handleScroll);
-    }, [viewport, onEndReached]);
 
     const conversationGroups = useMemo(() => {
       if (!conversations) {
@@ -229,6 +210,19 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
       }
     }, []);
 
+    const getItemId = useCallback((item: any) => item.conversationId ?? item.message?.id, []);
+
+    // Requests the next (older) page once the visible range approaches the loaded end, or the
+    // previous (newer) page once it approaches the loaded start, and preserves scroll position
+    // across the resulting `items` change (see `useVirtualizerPagination`). `pagination.getNext`/
+    // `getPrevious` are single-flight and a no-op once exhausted/at the head, so triggering them
+    // on every virtualizer change while near either edge is safe.
+    const { onChange: handleVirtualizerChange } = useVirtualizerPagination({
+      items,
+      getId: getItemId,
+      pagination,
+    });
+
     return (
       <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
@@ -251,6 +245,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
                 getScrollElement={() => viewport}
                 estimateSize={() => 150}
                 gap={4}
+                onChange={handleVirtualizerChange}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
