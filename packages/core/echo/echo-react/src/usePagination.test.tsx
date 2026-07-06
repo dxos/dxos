@@ -177,11 +177,12 @@ describe('usePagination', () => {
 
   test('getNext past maxWindowSize does not transiently undershoot the window size', async () => {
     // Regression test: reading the query's synchronous `.results` immediately upon subscribing
-    // (previously via `subscribe(cb, { fire: true })`) reflected whatever the shared `FeedWindow`
-    // had buffered *before* its async fetch extended to cover a newly advanced `skip` -- e.g.
-    // going from `{skip:0,limit:10}` to `{skip:5,limit:10}` synchronously sliced only the already
-    // -buffered 10 items, undershooting to 5 until the fetch resolved and corrected it back to 10.
-    // That transient shrink was visible as a jump under the virtualizer on every eviction step.
+    // (previously via `subscribe(cb, { fire: true })`) reflected whatever the underlying
+    // `QueryResult` had buffered *before* its async re-query resolved for a newly advanced `skip`
+    // -- e.g. going from `{skip:0,limit:10}` to `{skip:5,limit:10}` synchronously sliced only the
+    // previous range's 10 items, undershooting to 5 until the new range's fetch resolved and
+    // corrected it back to 10. That transient shrink was visible as a jump under the virtualizer
+    // on every eviction step.
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const feed = db.add(Feed.make({ name: 'windowed' }));

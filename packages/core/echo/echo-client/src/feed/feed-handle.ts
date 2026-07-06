@@ -17,7 +17,6 @@ import { type FeedProtocol } from '@dxos/protocols';
 import { type DatabaseImpl } from '../proxy-db';
 import { QueryResultCache, QueryResultImpl } from '../query';
 import { FeedQueryContext } from './feed-query-context';
-import { FeedWindow } from './feed-window';
 
 const TRACE_FEED_LOAD = false;
 
@@ -128,15 +127,6 @@ export class FeedHandle {
   private _refreshId = 0;
   private _loadObjectsPromise: Promise<Entity.Unknown[]> | undefined;
 
-  /**
-   * Shared sliding window for windowed (natural-desc + limit) queries against this feed.
-   * Lazily created; shared by all windowed queries since only one contiguous range is
-   * meaningfully tracked at a time (see {@link FeedWindow}).
-   */
-  private _window: FeedWindow | undefined;
-  private _windowPollingHandlers = 0;
-  private _windowPollingInterval: NodeJS.Timeout | null = null;
-
   // Shares one QueryResult instance (and its subscription) across repeated calls with the same
   // serialized query against this feed.
   readonly #queryResultCache = new QueryResultCache();
@@ -195,7 +185,6 @@ export class FeedHandle {
       this._objectCache.set(item.id, item);
     }
     this.updated.emit();
-    this._window?.notifyAppended(items);
 
     const encoded = items.map((item) => JSON.stringify(Entity.toJSON(item)));
 
@@ -222,7 +211,6 @@ export class FeedHandle {
       this._objectCache.delete(id);
     }
     this.updated.emit();
-    this._window?.notifyDeleted(ids);
 
     try {
       await this._service.deleteFromFeed({
@@ -292,63 +280,6 @@ export class FeedHandle {
         return [];
       }
     });
-  }
-
-  /**
-   * One-shot cursor-bounded page read, used by {@link FeedWindow} to extend or poll a window
-   * without loading the whole feed.
-   */
-  async fetchPage(opts: {
-    after?: string;
-    before?: string;
-    reverse?: boolean;
-    limit?: number;
-  }): Promise<{ objects: string[]; nextCursor?: string; prevCursor?: string; hasMore?: boolean }> {
-    const { objects, nextCursor, prevCursor, hasMore } = await this._service.queryFeed({
-      query: {
-        feedNamespace: this._namespace,
-        spaceId: this._spaceId,
-        feedIds: [this._feedId],
-        after: opts.after,
-        before: opts.before,
-        reverse: opts.reverse,
-        limit: opts.limit,
-      },
-    });
-    return { objects: objects ?? [], nextCursor, prevCursor, hasMore };
-  }
-
-  /**
-   * Returns the shared sliding window for windowed queries against this feed, creating it on
-   * first access.
-   */
-  getOrCreateWindow(): FeedWindow {
-    this._window ??= new FeedWindow(this);
-    return this._window;
-  }
-
-  /**
-   * Begins periodic polling of the shared window's live head. Distinct from {@link beginPolling}
-   * (which drives the legacy full-feed refresh) so windowed and unwindowed queries against the
-   * same feed do not force each other onto the expensive full-refetch path.
-   */
-  beginWindowPolling(): () => void {
-    if (this._windowPollingHandlers++ === 0) {
-      const poll = async () => {
-        await this._window?.pollHead();
-        if (this._windowPollingHandlers > 0 && !this._ctx.disposed) {
-          this._windowPollingInterval = setTimeout(poll, POLLING_INTERVAL);
-        }
-      };
-      queueMicrotask(poll);
-    }
-
-    return () => {
-      if (--this._windowPollingHandlers === 0 && this._windowPollingInterval) {
-        clearTimeout(this._windowPollingInterval);
-        this._windowPollingInterval = null;
-      }
-    };
   }
 
   async hydrateObject(obj: ObjectJSON): Promise<Entity.Unknown> {
@@ -436,12 +367,6 @@ export class FeedHandle {
       clearTimeout(this._pollingInterval);
       this._pollingInterval = null;
     }
-    this._windowPollingHandlers = 0;
-    if (this._windowPollingInterval) {
-      clearTimeout(this._windowPollingInterval);
-      this._windowPollingInterval = null;
-    }
-    this._window?.dispose();
     await this._ctx.dispose();
     await this._refreshTask.join();
   }

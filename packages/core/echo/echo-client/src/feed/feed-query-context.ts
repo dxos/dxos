@@ -15,17 +15,6 @@ import { log } from '@dxos/log';
 
 import { type QueryContext, isSimpleFeedWindowQuery } from '../query';
 import { type FeedHandle } from './feed-handle';
-import { type FeedWindow } from './feed-window';
-
-/**
- * A feed-scoped query is windowed (lazily loaded via {@link FeedWindow}) when it orders by
- * natural-descending (newest-first) and carries a limit -- exactly the shape `usePagination`
- * produces. Any other order (or no limit) falls back to filtering/sorting/slicing the fully
- * fetched feed in memory, matching the host indexer's reasoning that content-based reorders need
- * the full candidate set before slicing.
- */
-const isWindowedSelection = (order: readonly QueryAST.Order[] | undefined, limit: number | undefined): boolean =>
-  limit !== undefined && order?.length === 1 && order[0].kind === 'natural' && order[0].direction === 'desc';
 
 export class FeedQueryContext implements QueryContext {
   readonly #feed: FeedHandle;
@@ -55,15 +44,6 @@ export class FeedQueryContext implements QueryContext {
     }
     const { filter, order, skip = 0, limit } = trivial;
 
-    if (isWindowedSelection(order, limit)) {
-      const window = this.#feed.getOrCreateWindow();
-      await window.setRange(skip, limit!);
-      return window
-        .getSlice(skip, limit!)
-        .filter((entry) => filterMatchObjectJSON(filter, entry.json))
-        .map((entry) => ({ id: entry.id, result: entry.entity }));
-    }
-
     const objects = await Function.pipe(
       await this.#feed.fetchObjectsJSON(),
       Array.filter((obj) => filterMatchObjectJSON(filter, obj)),
@@ -81,9 +61,9 @@ export class FeedQueryContext implements QueryContext {
     );
 
     const filtered = objects.filter((object): object is Entity.Unknown => object !== undefined);
-    const windowed = applyOrderSkipLimit(filtered, order, skip, limit);
+    const paged = applyOrderSkipLimit(filtered, order, skip, limit);
 
-    return windowed.map((object) => ({
+    return paged.map((object) => ({
       id: object.id,
       result: object,
     }));
@@ -94,16 +74,6 @@ export class FeedQueryContext implements QueryContext {
    */
   start(): void {
     this.#runCtx = this.#parentCtx.derive();
-
-    if (isWindowedSelection(this.#order, this.#limit)) {
-      const window = this.#feed.getOrCreateWindow();
-      this.#runCtx.onDispose(this.#feed.beginWindowPolling());
-      window.updated.on(this.#runCtx, () => this.changed.emit());
-      void window.setRange(this.#skip, this.#limit!).then(() => {
-        this.changed.emit();
-      });
-      return;
-    }
 
     this.#runCtx.onDispose(this.#feed.beginPolling());
     this.#feed.updated.on(this.#runCtx, () => {
@@ -140,21 +110,14 @@ export class FeedQueryContext implements QueryContext {
   getResults(): QueryResult.EntityEntry[] {
     invariant(this.#filter);
 
-    if (isWindowedSelection(this.#order, this.#limit)) {
-      const window = this.#feed.getOrCreateWindow();
-      const slice = window.getSlice(this.#skip, this.#limit!);
-      const filtered = slice.filter((entry) => filterMatchObjectJSON(this.#filter!, entry.json));
-      return filtered.map((entry) => ({ id: entry.id, result: entry.entity }));
-    }
-
     const filtered = Function.pipe(
       this.#feed.getObjectsSync(),
       // TODO(dmaretskyi): We end-up marshaling objects from JSON and back.
       Array.filter((obj) => filterMatchObjectJSON(this.#filter!, Entity.toJSON(obj))),
     );
-    const windowed = applyOrderSkipLimit(filtered, this.#order, this.#skip, this.#limit);
+    const paged = applyOrderSkipLimit(filtered, this.#order, this.#skip, this.#limit);
 
-    return windowed.map((object) => ({
+    return paged.map((object) => ({
       id: object.id,
       result: object,
     }));
@@ -162,11 +125,19 @@ export class FeedQueryContext implements QueryContext {
 }
 
 /**
- * Applies order/skip/limit over an already-filtered, in-memory list of entities for the
- * non-windowed (fallback) path. `natural` order means feed/insertion order here (the order
- * `getObjectsSync()`/`fetchObjectsJSON()` already return objects in) rather than the by-id
- * ordering used elsewhere in the query engine -- feed object ids are not sequential, so
- * insertion order is the only sensible reading of "natural" for a feed.
+ * Applies order/skip/limit over the feed's already-filtered, fully-fetched in-memory item list.
+ * `natural` order means feed/insertion order here (the order `getObjectsSync()`/`fetchObjectsJSON()`
+ * already return objects in) rather than the by-id ordering used elsewhere in the query engine --
+ * feed object ids are not sequential, so insertion order is the only sensible reading of "natural"
+ * for a feed.
+ *
+ * TODO(dxos): This always fetches and decodes the entire feed before slicing, for every
+ * ordering including natural-desc -- a prior version of this path had a `FeedWindow` that made
+ * natural-desc reads truly lazy (bounded cursor fetches), but it was reverted because a
+ * partial-laziness story (fast for one ordering, a full decode for every other) wasn't judged
+ * worth the complexity. Revisit as a general, index-backed keyset-pagination feature covering all
+ * orderings uniformly (see `EntityMetaIndex`/`QueryExecutor` -- content-based ordering has the same
+ * full-scan-then-sort limitation there today) rather than re-adding a feed-only special case.
  */
 const applyOrderSkipLimit = (
   entities: Entity.Unknown[],

@@ -113,9 +113,8 @@ const createPaginationStore = <Q extends Query.Any, O extends Entity.Entity<Quer
     // Only refreshes `items` (via `notify`) when the data genuinely changes later -- `isLoading`/
     // `pending` are resolved separately below, since `QueryResultImpl` only re-emits `changed` on
     // an actual recompute difference, and this callback would never fire at all if the requested
-    // range turns out to already be fully buffered (e.g. the shared `FeedWindow` already covers
-    // it) -- ending the same "stuck pending forever" bug this store previously worked around with
-    // an explicit `.run()`.
+    // range's recomputed result happens to already match the cached one -- ending the same "stuck
+    // pending forever" bug this store previously worked around with an explicit `.run()`.
     innerUnsubscribe = nextQueryResult.subscribe(() => {
       notify();
     });
@@ -193,14 +192,22 @@ const createPaginationStore = <Q extends Query.Any, O extends Entity.Entity<Quer
 };
 
 /**
- * Wraps a query with page management for windowed (paginated) reads. The query's own `.limit(n)`
- * clause is the page size -- the hook manages which page is loaded by rewriting `skip`/`limit` on
- * top of it; the query must not carry its own `.skip()`.
+ * Wraps a query with page management for paginated reads. The query's own `.limit(n)` clause is
+ * the page size -- the hook manages which page is loaded by rewriting `skip`/`limit` on top of
+ * it; the query must not carry its own `.skip()`.
  *
- * The query's `.orderBy(...)` is otherwise untouched. For lazily-loaded feeds, pass
- * `Order.natural('desc')` (see `@dxos/echo`'s `Feed`/`Order` modules) to get true windowed
- * loading -- other combinations still page correctly but fetch/sort in memory rather than
- * lazily (see `FeedQueryContext`).
+ * The query's `.orderBy(...)` is otherwise untouched, and applies to any query the underlying
+ * `Database.Queryable` supports -- e.g. `Order.natural('desc')` for feed insertion order.
+ *
+ * TODO(dxos): For feed-scoped queries, every range change re-fetches and decodes the *entire*
+ * underlying feed before slicing out the requested page, regardless of ordering -- this hook only
+ * bounds what's held/rendered (via `maxWindowSize` eviction), not what's fetched. A previous
+ * version special-cased `Order.natural('desc')` with a cursor-based `FeedWindow` that made only
+ * that ordering truly lazy; it was reverted because partial laziness (fast for one ordering, a
+ * full decode for every other) wasn't worth the added complexity on its own. Revisit as a general,
+ * index-backed keyset-pagination feature covering all orderings uniformly, once the host index
+ * (`EntityMetaIndex`/`QueryExecutor`) supports ordered range reads -- see `FeedQueryContext`'s
+ * `applyOrderSkipLimit` for where the current full-decode path lives.
  *
  * Backed by its own `useSyncExternalStore`-managed store per query identity, rather than
  * delegating to `useQuery`: a pagination-only range change (new `skip`/`limit`) produces a brand
