@@ -15,12 +15,12 @@ import { TagIndex } from '@dxos/schema';
 import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
 
 import { GMAIL_SOURCE } from '../constants';
-import { type GmailDataset, GoogleMailApi } from '../services';
+import { type GmailDataset, GoogleMailApi, type JmapDataset, JmapMailApi } from '../services';
 import { Mailbox, ThreadIndex } from '../types';
 
-// Shared harness for the mock-Gmail sync tests (unit + OTEL + benchmark): a real ECHO db seeded with
-// a mailbox binding, plus the ambient services `runGmailSync` requires. Not exported from
-// `@dxos/plugin-inbox/testing` — it pulls app-framework/compute, so it stays a local test helper.
+// Shared harness for the mock-provider sync tests (unit + OTEL + benchmark): a real ECHO db seeded
+// with a mailbox binding, plus the ambient services `runGmailSync`/`runJmapSync` require. Not exported
+// from `@dxos/plugin-inbox/testing` — it pulls app-framework/compute, so it stays a local test helper.
 
 /** The ECHO types the sync writes: messages, contacts, tags, thread/tag indices, binding + cursor. */
 export const SYNC_TEST_TYPES = [
@@ -38,25 +38,27 @@ export const SYNC_TEST_TYPES = [
 ];
 
 /** Seeds a mailbox binding (Connection → Mailbox) with its feed, tag index, and cursor. */
-export const seedMailboxBinding = async (builder: EchoTestBuilder) => {
+export const seedMailboxBinding = async (
+  builder: EchoTestBuilder,
+  { source = GMAIL_SOURCE, connectorId = 'gmail' }: { source?: string; connectorId?: string } = {},
+) => {
   const { db } = await builder.createDatabase({ types: SYNC_TEST_TYPES });
   const mailbox = db.add(Mailbox.make({ name: 'Test' }));
-  const accessToken = db.add(AccessToken.make({ source: GMAIL_SOURCE, token: 'token' }));
-  const connection = db.add(Connection.make({ connectorId: 'gmail', accessToken: Ref.make(accessToken) }));
+  const accessToken = db.add(AccessToken.make({ source, token: 'token' }));
+  const connection = db.add(Connection.make({ connectorId, accessToken: Ref.make(accessToken) }));
   const binding = db.add(SyncBinding.make({ [Relation.Source]: connection, [Relation.Target]: mailbox }));
   await db.flush({ indexes: true });
   return { db, mailbox, binding };
 };
 
 /**
- * The ambient services `runGmailSync` requires, backed by a mock Gmail API + a real db. The seeded
- * mailbox has no on-arrival extractors, so the `onArrivalExtractors` stage short-circuits and never
- * touches `Capability`/`Operation` — they are provided (empty manager, unavailable invoker) only to
- * satisfy the requirement channel.
+ * The db + resolver + operation ambient services shared by both providers' mock-sync tests. The
+ * seeded mailbox has no on-arrival extractors, so the `onArrivalExtractors` stage short-circuits and
+ * never touches `Capability`/`Operation` — they are provided (empty manager, unavailable invoker)
+ * only to satisfy the requirement channel.
  */
-export const inboxSyncTestServices = (db: Database.Database, dataset: GmailDataset) =>
+const ambientSyncServices = (db: Database.Database) =>
   Layer.mergeAll(
-    GoogleMailApi.mock(dataset),
     Database.layer(db),
     InboxResolver.Live.pipe(Layer.provide(Database.layer(db))),
     Layer.succeed(
@@ -70,3 +72,11 @@ export const inboxSyncTestServices = (db: Database.Database, dataset: GmailDatas
       invokePromise: async () => ({ error: new Error('Operation.Service unused') }),
     }),
   );
+
+/** The ambient services `runGmailSync` requires, backed by a mock Gmail API + a real db. */
+export const inboxSyncTestServices = (db: Database.Database, dataset: GmailDataset) =>
+  Layer.mergeAll(GoogleMailApi.mock(dataset), ambientSyncServices(db));
+
+/** The ambient services `runJmapSync` requires, backed by a mock JMAP API + a real db. */
+export const inboxJmapSyncTestServices = (db: Database.Database, dataset: JmapDataset) =>
+  Layer.mergeAll(JmapMailApi.mock(dataset), ambientSyncServices(db));

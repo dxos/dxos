@@ -207,6 +207,32 @@ export const JmapSync = Operation.make({
     binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
       description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
     }),
+    after: Schema.Union(Schema.Number, Schema.String).pipe(
+      Schema.annotations({
+        description: 'Oldest bound of the range to sync (the horizon), a unix timestamp or ISO string.',
+      }),
+      Schema.optional,
+    ),
+    before: Schema.Union(Schema.Number, Schema.String).pipe(
+      Schema.annotations({
+        description:
+          'Newest bound of the range to sync, a unix timestamp or ISO string. Defaults to today; backfill passes the oldest-synced date to cap a backward walk.',
+      }),
+      Schema.optional,
+    ),
+    direction: Schema.Literal('forward', 'backward').pipe(
+      Schema.annotations({
+        description:
+          'Override the walk direction. Inferred from the cursor by default: no cursor → backward (initial, newest-first); a cursor → forward (incremental). Pass backward with `before` to backfill older gaps.',
+      }),
+      Schema.optional,
+    ),
+    restrictedMode: Schema.Boolean.pipe(
+      Schema.annotations({
+        description: 'Use restricted mode to limit to a small leading window of the newest messages.',
+      }),
+      Schema.optional,
+    ),
   }),
   output: Schema.Struct({
     newMessages: Schema.Number,

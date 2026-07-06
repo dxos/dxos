@@ -33,7 +33,7 @@ import { GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
 import { GoogleApiError } from '../../../errors';
 import { GoogleCredentials, GoogleMailApi, type GoogleMailApiService } from '../../../services';
-import { EmailStage } from '../../../sync';
+import { EmailStage, type SyncDirection, resolveSyncWindow } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
 import { readBindingOptions } from '../../../util';
 import { parseFromHeader } from '../../util';
@@ -43,9 +43,6 @@ type DateChunk = {
   readonly start: Date;
   readonly end: Date;
 };
-
-/** Which end of the [start, end) range the date-walk begins from. */
-export type SyncDirection = 'forward' | 'backward';
 
 type DateRangeConfig = {
   /** Inclusive-ish lower bound (oldest) of the range to sync. */
@@ -132,22 +129,18 @@ export const runGmailSync = ({
       return { newMessages: 0 };
     }
 
-    const toDate = (value: string | number): Date => (typeof value === 'number' ? new Date(value) : new Date(value));
     const targetOptions = readBindingOptions(binding);
     const cursor = yield* Database.load(binding.cursor);
     const cursorKey = Cursor.parseKey(cursor.value);
 
-    // Range + direction. Mode is inferred from the cursor unless `direction` overrides it:
-    //  - no cursor  → initial: backward from today (`before`) down to the horizon (`after`/syncBackDays).
-    //  - cursor     → incremental: forward from the cursor up to today.
-    //  - backward + `before` = oldest-synced → backfill older gaps (never advances the monotonic cursor).
-    const resolvedDirection: SyncDirection = direction ?? (cursorKey > 0 ? 'forward' : 'backward');
-    // `syncBackDays` overrides the default window start (the oldest we reach on a fresh/backward sync).
-    const horizon =
-      targetOptions.syncBackDays !== undefined ? subDays(new Date(), targetOptions.syncBackDays) : toDate(after);
-    const upperBound = before !== undefined ? toDate(before) : addDays(new Date(), 1);
-    // Forward resumes from the cursor (else the horizon); backward covers [horizon, upperBound).
-    const rangeStart = resolvedDirection === 'forward' && cursorKey > 0 ? new Date(cursorKey) : horizon;
+    // Range + direction (shared resolver, so JMAP and future providers behave identically): no cursor →
+    // backward initial from today to the horizon; cursor → forward incremental; `direction: backward` +
+    // `before` = oldest-synced → backfill older gaps (never advances the monotonic cursor).
+    const {
+      direction: resolvedDirection,
+      start: rangeStart,
+      end: upperBound,
+    } = resolveSyncWindow({ cursorKey, now: new Date(), after, before, direction, syncBackDays: targetOptions.syncBackDays });
     let rangeEnd = upperBound;
     // Restricted mode limits work to a single leading window (plus `Stream.take` on message count).
     if (restrictedMode) {
