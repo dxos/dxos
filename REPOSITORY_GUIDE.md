@@ -165,7 +165,7 @@ Full design (versioning policy, publish groups, cross-repo contract): [`.github/
 
 ## Releasing
 
-Everything runs in GitHub Actions — nobody runs `changeset` / `pnpm publish` / `git tag` on a laptop. The *why* is in [`.github/RELEASE-SPEC.md`](./.github/RELEASE-SPEC.md); how to write a changeset is in the [authoring guide](./agents/instructions/changesets.md).
+Everything runs in GitHub Actions — nobody runs `changeset` / `pnpm publish` / `git tag` on a laptop. The _why_ is in [`.github/RELEASE-SPEC.md`](./.github/RELEASE-SPEC.md); how to write a changeset is in the [authoring guide](./agents/instructions/changesets.md).
 
 Packages ship as two lockstep groups — **A: Core/SDK** (`@dxos/echo`, `@dxos/client`, …) and **B: Plugins + CLI** (`@dxos/plugin-*`, `@dxos/cli`). Naming one member in a changeset bumps its whole group, and both share one "Version Packages" PR. **Apps are not in a group — they deploy, never publish.**
 
@@ -177,12 +177,12 @@ Packages ship as two lockstep groups — **A: Core/SDK** (`@dxos/echo`, `@dxos/c
 
 **Deploy apps.** One entry point: the **Deploy Apps** workflow (`deploy-apps.yml`) — pick an environment and the app set follows. Deploys go to Cloudflare Workers Static Assets, decoupled from npm; "what's deployed where" is tracked by floating `<app>/<env>` git tags. Deployable apps are listed in [`.github/workflows/scripts/apps.mjs`](./.github/workflows/scripts/apps.mjs); everything else — Worker name, bundle task, output dir, target environments — derives from each app's `wrangler.jsonc`.
 
-| Env | Trigger | Apps | Notes |
-| --- | --- | --- | --- |
-| **main** | auto on push to `main` | all `main`-enabled | rolling preview; no native build |
-| **labs** | manual → `labs` | composer | prerelease Tauri build; iOS → TestFlight |
-| **staging** | manual → `staging` | composer + docs | prerelease Tauri build |
-| **production** | manual → `production` | all | cuts a versioned Composer release |
+| Env            | Trigger                | Apps               | Notes                                    |
+| -------------- | ---------------------- | ------------------ | ---------------------------------------- |
+| **main**       | auto on push to `main` | all `main`-enabled | rolling preview; no native build         |
+| **labs**       | manual → `labs`        | composer           | prerelease Tauri build; iOS → TestFlight |
+| **staging**    | manual → `staging`     | composer + docs    | prerelease Tauri build                   |
+| **production** | manual → `production`  | all                | cuts a versioned Composer release        |
 
 **Composer is the only versioned app.** A **production** deploy also cuts its release: the `release` job bumps `composer-app`/`crx` by the dispatch's `bump` input, commits to `main`, tags `composer-v<x>`, then builds + deploys that commit (web + desktop + iOS via `deploy-tauri.yaml`, CrabNebula). This is the only path that advances Composer's version — it is not a Changesets package.
 

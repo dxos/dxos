@@ -6,10 +6,10 @@
   "compatibility_date": "2024-11-01",
   "assets": {
     "directory": "./out/todomvc",
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
   },
   "env": {
     "production": { "name": "todomvc" },
-    "main": { "name": "todomvc-main" }
-  }
+    "main": { "name": "todomvc-main" },
+  },
 }

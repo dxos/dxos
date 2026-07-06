@@ -2,7 +2,7 @@
 
 How to decide whether a PR needs a changeset, and how to write one. Full release design: [`.github/RELEASE-SPEC.md`](../../.github/RELEASE-SPEC.md).
 
-**The rule:** add a `.changeset/*.md` when — and only when — the change is worth a **changelog entry**, i.e. consumer-relevant (behavior, public API, types, a fix, a perf change, or a consumer-visible dependency bump). The code ships with the next release either way; the changeset decides whether it's *recorded* in the changelog (and contributes a version bump). Not changelog-relevant → omit it, and **never add an empty changeset** to silence the reminder. CI's `changeset-reminder` (in **Check**) posts an advisory sticky comment when a PR touches publishable source without one — a nudge, never a blocker.
+**The rule:** add a `.changeset/*.md` when — and only when — the change is worth a **changelog entry**, i.e. consumer-relevant (behavior, public API, types, a fix, a perf change, or a consumer-visible dependency bump). The code ships with the next release either way; the changeset decides whether it's _recorded_ in the changelog (and contributes a version bump). Not changelog-relevant → omit it, and **never add an empty changeset** to silence the reminder. CI's `changeset-reminder` (in **Check**) posts an advisory sticky comment when a PR touches publishable source without one — a nudge, never a blocker.
 
 ## Do I need one?
 
@@ -23,12 +23,12 @@ Name **one package you changed**. Groups A and B are `fixed` lockstep groups, so
 
 Standard semver, the same rules pre- and post-1.0:
 
-| Change | Pre-1.0 (`0.x`) | Post-1.0 |
-| --- | --- | --- |
-| Bug fix / perf / observable internal | `patch` (`0.9.0 → 0.9.1`) | `patch` |
-| Backwards-compatible feature | `minor` (`0.9.0 → 0.10.0`) | `minor` |
-| **Breaking change** | `minor` (`0.9.0 → 0.10.0`) — at `0.x`, breaking rides the minor | `major` |
-| Deliberate `1.0.0` cut | `major` | — |
+| Change                               | Pre-1.0 (`0.x`)                                                 | Post-1.0 |
+| ------------------------------------ | --------------------------------------------------------------- | -------- |
+| Bug fix / perf / observable internal | `patch` (`0.9.0 → 0.9.1`)                                       | `patch`  |
+| Backwards-compatible feature         | `minor` (`0.9.0 → 0.10.0`)                                      | `minor`  |
+| **Breaking change**                  | `minor` (`0.9.0 → 0.10.0`) — at `0.x`, breaking rides the minor | `major`  |
+| Deliberate `1.0.0` cut               | `major`                                                         | —        |
 
 A `minor` does **not** cascade the group to `1.0.0` (the tooling keeps standard semver at every version — mechanics live in the spec). Note breaking changes in the **body** so they reach the changelog.
 
@@ -38,19 +38,21 @@ A `minor` does **not** cascade the group to `1.0.0` (the tooling keeps standard 
 
 ```md
 ---
-"@dxos/echo": patch
+'@dxos/echo': patch
 ---
+
 Fix subscription leak in the query handler.
 ```
 
 ✅ `Add streaming variant of Query.run().` &nbsp;&nbsp; ❌ `refactored stuff` / `addresses review comments` / `WIP`
 
-Packages from *different* groups in one PR → one line each (each still bumps its whole group):
+Packages from _different_ groups in one PR → one line each (each still bumps its whole group):
 
 ```md
 ---
-"@dxos/echo": minor
-"@dxos/plugin-markdown": patch
+'@dxos/echo': minor
+'@dxos/plugin-markdown': patch
 ---
+
 Add streaming query API and surface it in the markdown plugin.
 ```

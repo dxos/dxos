@@ -1,6 +1,6 @@
 # Release & Change Management
 
-The design of DXOS release and change management: how packages are versioned and published, how apps deploy, and how a future downstream repo will consume unreleased core. Sections 1–5 describe the system as built; [§6 Future plan](#6-future-plan) covers what is designed but not yet implemented. The runbook — which button to press — is the [Releasing](../REPOSITORY_GUIDE.md#releasing) section of the repository guide; changeset authoring is [`agents/instructions/changesets.md`](../agents/instructions/changesets.md). This spec is the *why*.
+The design of DXOS release and change management: how packages are versioned and published, how apps deploy, and how a future downstream repo will consume unreleased core. Sections 1–5 describe the system as built; [§6 Future plan](#6-future-plan) covers what is designed but not yet implemented. The runbook — which button to press — is the [Releasing](../REPOSITORY_GUIDE.md#releasing) section of the repository guide; changeset authoring is [`agents/instructions/changesets.md`](../agents/instructions/changesets.md). This spec is the _why_.
 
 ## 1. Goals
 
@@ -20,11 +20,11 @@ Two fixed/lockstep groups plus deploy-only apps:
 - **Group B — Plugins + CLI** — every `@dxos/plugin-*` + `@dxos/cli` on a second line, published under it.
 - **Apps** — every `private` app (composer-app/crx/dxos-org, docs, todomvc, tasks, testbench, and the storybook apps `storybook-react`/`-lit`/`-solid`) deploys and never publishes. They are **not in Changesets** (`ignore`d): Composer is versioned by its deploy release (§5), the rest are unversioned.
 
-**Independent numbers, coupled timing.** The groups carry independent version lines (a Group B-only changeset bumps B alone) but share **one** "Version Packages" PR — merging it drains all pending changesets. Independent release *cadence* comes later, when plugins move to their own repo with their own trunk + Version PR (§6), not via per-group release branches.
+**Independent numbers, coupled timing.** The groups carry independent version lines (a Group B-only changeset bumps B alone) but share **one** "Version Packages" PR — merging it drains all pending changesets. Independent release _cadence_ comes later, when plugins move to their own repo with their own trunk + Version PR (§6), not via per-group release branches.
 
 **Deploy ≠ publish — why Composer isn't in a publish group.** If it were, cutting a Composer build would publish all 81 plugins, and those plugins pin core versions that may not be released yet. So Composer versions on its own private line, and app deploys (`deploy-apps.yml`) are fully decoupled from the Changesets publish pipeline. This is a hard requirement: deploying an app must never publish a package.
 
-**Membership is generated.** `fixed` matches package *names*, which share no common prefix — so each group is an enumerated list built from the pnpm project graph by `updateChangesets()` (not a filesystem scan, which would sweep in `@fixture/*` test fixtures). It regenerates on local `pnpm install` (`postinstall`, skipped in CI) and is committed; the **Check** workflow's `check-publish-config` step independently verifies every group member is publishable. Only Group B is a clean glob (`@dxos/plugin-*`). Membership shifts with a one-line generator change when the repo splits (§6).
+**Membership is generated.** `fixed` matches package _names_, which share no common prefix — so each group is an enumerated list built from the pnpm project graph by `updateChangesets()` (not a filesystem scan, which would sweep in `@fixture/*` test fixtures). It regenerates on local `pnpm install` (`postinstall`, skipped in CI) and is committed; the **Check** workflow's `check-publish-config` step independently verifies every group member is publishable. Only Group B is a clean glob (`@dxos/plugin-*`). Membership shifts with a one-line generator change when the repo splits (§6).
 
 **Catalog.** The catalog's `@dxos/*` self-references (`@dxos/client`, `@dxos/echo`, `@dxos/wa-sqlite`) violate the "in-repo deps must be `workspace:*`" rule. Removing them makes every internal edge `workspace:*` (Changesets-native) and avoids the maturing `--enable-pnpm-catalog` flag. (`workspace:` / `catalog:` tokens rewrite to concrete versions at pack time — none leak into a published tarball.) `@dxos/wa-sqlite` is assessed separately (may be a genuine external publish).
 
@@ -54,7 +54,7 @@ The flag and the patch cover **different regimes** — pre-1.0 a minor is out of
 
 ## 4. Branch model — trunk on `main`
 
-- A single long-lived `main`: squash-only PRs + "require linear history" ruleset + merge queue (CI handles `merge_group`). No long-lived release or environment branches. *(Enabling the ruleset + merge queue and deleting the old branches are privileged human actions — see §5 pending setup.)*
+- A single long-lived `main`: squash-only PRs + "require linear history" ruleset + merge queue (CI handles `merge_group`). No long-lived release or environment branches. _(Enabling the ruleset + merge queue and deleting the old branches are privileged human actions — see §5 pending setup.)_
 - Releases land as the squashed "Version Packages" PR plus a tag — no cross-branch merges.
 - Pre-releases publish as `@next` **snapshot releases** — manually triggered, no `pre` mode, no long-lived branch.
 - Apps deploy from `main` and tags, decoupled from package versions.
@@ -93,26 +93,26 @@ Not yet implemented — relevant once `edge` integration or the repo split start
 
 A downstream repo (`edge` today; the future `composer` repo) consumes **unreleased** `dxos` core through three tiers:
 
-| Tier | Mechanism | Use | Committed? |
-| --- | --- | --- | --- |
-| **1 — Stable floor** | npm `@latest` (or deliberate `@next`) | Default deps; what ships to users | yes (pinned range) |
-| **2 — Continuous** | pkg.pr.new SHA-pinned URL | Land on `main` against an upstream change not yet released | yes (re-pin to a release later; perishable) |
-| **3 — Local dev** | `link-packages.mjs` (tarball + `pnpm.overrides`) | Editing both repos at once on one machine | never (CI guard rejects `file:`) |
+| Tier                 | Mechanism                                        | Use                                                        | Committed?                                  |
+| -------------------- | ------------------------------------------------ | ---------------------------------------------------------- | ------------------------------------------- |
+| **1 — Stable floor** | npm `@latest` (or deliberate `@next`)            | Default deps; what ships to users                          | yes (pinned range)                          |
+| **2 — Continuous**   | pkg.pr.new SHA-pinned URL                        | Land on `main` against an upstream change not yet released | yes (re-pin to a release later; perishable) |
+| **3 — Local dev**    | `link-packages.mjs` (tarball + `pnpm.overrides`) | Editing both repos at once on one machine                  | never (CI guard rejects `file:`)            |
 
 Decision: editing two repos locally → Tier 3, unlink before committing; need `main` to build against an unreleased upstream change → Tier 2, re-pin to a real release when upstream releases (pkg.pr.new artifacts expire ~1–6 months); cutting/preparing a release → Tier 1. Enablement: generalize `link-packages.mjs` from `edge/scripts/` into `dxos` and forbid its `--commit` path in CI; add a Tier-2 bot that bumps SHA-pinned pkg.pr.new URLs; validate on `edge` (`edge-tests.yml`).
 
 ### Dependency & cycle policy
 
-Grounded in industry practice (Rush subspaces, Go's import-cycle ban, *SWE at Google* on diamond deps, Cargo publish semantics). Today `dxos`↔`edge` is one-way (`edge` → `dxos`, all-private), so no cycle exists yet.
+Grounded in industry practice (Rush subspaces, Go's import-cycle ban, _SWE at Google_ on diamond deps, Cargo publish semantics). Today `dxos`↔`edge` is one-way (`edge` → `dxos`, all-private), so no cycle exists yet.
 
-1. **The global package graph (union of all repos) MUST be a DAG.** The unit is the published *package*, not the repo; no package may transitively depend on itself.
-2. **Repo-level reference cycles are ALLOWED** — A may depend into B while B depends into A, provided no individual *package* cycle exists. This lets repos keep coarse, natural boundaries.
+1. **The global package graph (union of all repos) MUST be a DAG.** The unit is the published _package_, not the repo; no package may transitively depend on itself.
+2. **Repo-level reference cycles are ALLOWED** — A may depend into B while B depends into A, provided no individual _package_ cycle exists. This lets repos keep coarse, natural boundaries.
 3. **Package-level cycles are FORBIDDEN, even through published versions** — they forfeit atomic change and cause confusing version ripple. Break them by extracting shared definitions downward.
-4. **Shared definitions go in a leaf contract/schema package** at the bottom of the stack (the proto/IDL pattern), depended on by both sides — never sideways. For DXOS that is `@dxos/protocols` / schema / `*-types`. Caveat: `@dxos/protocols` is *near*-leaf but not pure; a cross-repo contract package must be genuinely low-level (or carry its commons as leaves). *Worked example:* moving schema into `edge`, publishing it, and having `dxos` core depend on it is fine — iff that package doesn't transitively depend back on `dxos` core.
+4. **Shared definitions go in a leaf contract/schema package** at the bottom of the stack (the proto/IDL pattern), depended on by both sides — never sideways. For DXOS that is `@dxos/protocols` / schema / `*-types`. Caveat: `@dxos/protocols` is _near_-leaf but not pure; a cross-repo contract package must be genuinely low-level (or carry its commons as leaves). _Worked example:_ moving schema into `edge`, publishing it, and having `dxos` core depend on it is fine — iff that package doesn't transitively depend back on `dxos` core.
 5. **Committed cross-repo edges use pinned published versions only** (Tier 1/2); Tier 3 is dev-only.
 6. **Contain the cross-repo diamond:** single-version policy for shared third-party deps + `peerDependencies` for shared contract packages + automated bumps (Renovate/Dependabot).
 7. **Enforcement** — across repos there is no workspace, so the DAG must be enforced explicitly: **(a)** a generated package→repo ownership map + a `check-package-cycles.mjs --cross-repo` mode that unions every repo's `@dxos/*` edges (reusing `edge-tests.yml`'s dual-checkout) and fails on any multi-node SCC — a required PR check + scheduled drift job; **(b)** a cheap layer-direction lint (`contracts < core < edge/app`) failing on upward/sideways edges; **(c)** a release-toposort backstop that fails if a cycle slipped through.
-8. **Bias toward not splitting** — per *SWE at Google*, prefer source-control problems over dependency-management ones; every cut edge is a versioning cost paid every release.
+8. **Bias toward not splitting** — per _SWE at Google_, prefer source-control problems over dependency-management ones; every cut edge is a versioning cost paid every release.
 
 ### Repo split
 
@@ -123,13 +123,13 @@ Only after the cross-repo contract is proven on `edge`. The history extraction i
 
 The `sdk/app-*` packages + `shell` are the plugin-SDK layer (not storybook back-edges) — moving them collapses most of the cut. Genuine back-edges to clean first:
 
-| Back-edge | Fix |
-| --- | --- |
-| `@dxos/schema`, `@dxos/types` — react-ui *devDep* for demo stories | Delete/inline the story; drop the devDep |
-| `@dxos/react-client` — react-ui `ErrorBoundary` in a test decorator | Swap to `@dxos/react-error-boundary` (Repo-A common) |
-| `@dxos/keyboard` — story-only | Move story to Repo B `stories-ui` |
-| `@dxos/storybook-utils` — react-ui *peerDep* | Move to Repo B |
+| Back-edge                                                                                             | Fix                                                   |
+| ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `@dxos/schema`, `@dxos/types` — react-ui _devDep_ for demo stories                                    | Delete/inline the story; drop the devDep              |
+| `@dxos/react-client` — react-ui `ErrorBoundary` in a test decorator                                   | Swap to `@dxos/react-error-boundary` (Repo-A common)  |
+| `@dxos/keyboard` — story-only                                                                         | Move story to Repo B `stories-ui`                     |
+| `@dxos/storybook-utils` — react-ui _peerDep_                                                          | Move to Repo B                                        |
 | `assistant-e2e`/`assistant-evals` (private); `assistant-toolkit` (plugin imports in `*.test.ts` only) | Move e2e/evals + the toolkit's plugin tests to Repo B |
-| `@dxos/blade-runner` — `@dxos/plugin-script` | Default to Repo B (or sever the dep) |
+| `@dxos/blade-runner` — `@dxos/plugin-script`                                                          | Default to Repo B (or sever the dep)                  |
 
 Sequence (CI green throughout): (1) cleanup PR in Repo A removing back-edges; (2) `check-cycles.mjs` + `check-package-cycles.mjs` confirm acyclic; (3) tag `pre-split`; (4) `git filter-repo` the Repo-B path set into the new repo + bootstrap its workspace / catalog subset / `.moon` / CI / Changesets / `link-packages.mjs`; (5) delete moved dirs from Repo A (globs, tsconfig paths, the `app-framework` `DEFAULT_PACKAGES` allowlist); (6) publish Repo A `0.10.0`; Repo B switches its catalog floor from a pkg.pr.new SHA to an npm range. No compat shims. Also resolve the duplicate `reflect/introspect*` vs `core/compute/introspect*`.

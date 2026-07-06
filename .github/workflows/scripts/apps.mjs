@@ -14,11 +14,10 @@
 // composer-dxos-org, edge) that are deliberately not part of this deploy pipeline. Add an app by adding its
 // directory here. Consumed by bundle-env.mjs, deploy-env.mjs, and deploy-apps.yml.
 
+import JSON5 from 'json5';
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
-
-import JSON5 from 'json5';
 
 export const APP_DIRS = [
   'packages/apps/composer-app',
@@ -43,10 +42,7 @@ export const resolveApps = (root, { environment, only = 'all' } = {}) =>
       outDir: join(dir, config.assets.directory),
       environments: Object.keys(config.env ?? {}),
     };
-  }).filter(
-    (app) =>
-      (!environment || app.environments.includes(environment)) && (only === 'all' || only === app.name),
-  );
+  }).filter((app) => (!environment || app.environments.includes(environment)) && (only === 'all' || only === app.name));
 
 // CLI: `apps.mjs <environment> [app|all]` prints the resolved app names, one per line.
 if (import.meta.url === `file://${process.argv[1]}`) {

@@ -19,7 +19,7 @@
     // Unmatched routes return index.html (client-side router owns them)...
     "not_found_handling": "single-page-application",
     // ...except /api/*, which must reach the Worker before the SPA fallback swallows it.
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": ["/api/*"],
   },
   // Per-env Workers (name = the deployed Worker; production = the bare name that carries the custom domain,
   // others suffixed). Bindings are NOT inherited, so each env repeats them. Cloudflare-side: each Worker
@@ -28,22 +28,22 @@
     "production": {
       "name": "composer",
       "vars": { "ENVIRONMENT": "production", "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud" },
-      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs" }]
+      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs" }],
     },
     "staging": {
       "name": "composer-staging",
       "vars": { "ENVIRONMENT": "staging", "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud" },
-      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-preview" }]
+      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-preview" }],
     },
     "labs": {
       "name": "composer-labs",
       "vars": { "ENVIRONMENT": "labs", "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud" },
-      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }]
+      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
     },
     "main": {
       "name": "composer-main",
       "vars": { "ENVIRONMENT": "main", "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud" },
-      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }]
-    }
-  }
+      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
+    },
+  },
 }

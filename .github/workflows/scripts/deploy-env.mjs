@@ -43,10 +43,9 @@ for (const { name, outDir, wranglerConfig } of apps) {
     writeFileSync(join(root, outDir, '.assetsignore'), '_worker.js\n');
   }
 
-  execFileSync(
-    'pnpm',
-    ['exec', 'wrangler', 'deploy', '--config', join(root, wranglerConfig), '--env', environment],
-    { stdio: 'inherit', env: { ...process.env, DX_ENVIRONMENT: environment } },
-  );
+  execFileSync('pnpm', ['exec', 'wrangler', 'deploy', '--config', join(root, wranglerConfig), '--env', environment], {
+    stdio: 'inherit',
+    env: { ...process.env, DX_ENVIRONMENT: environment },
+  });
   console.log('::endgroup::');
 }

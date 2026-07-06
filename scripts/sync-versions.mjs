@@ -19,11 +19,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const CHECK = process.argv.includes('--check');
 
 // Each version.ts tracks the version of the package directory it lives in.
-const VERSION_TS = [
-  'packages/sdk/client',
-  'packages/sdk/client-services',
-  'packages/devtools/cli',
-].map((pkgDir) => ({
+const VERSION_TS = ['packages/sdk/client', 'packages/sdk/client-services', 'packages/devtools/cli'].map((pkgDir) => ({
   versionFile: join(ROOT, pkgDir, 'src/version.ts'),
   packageFile: join(ROOT, pkgDir, 'package.json'),
 }));
