@@ -194,9 +194,12 @@ export class Toolbox {
   }
 
   /**
-   * Generates `.changeset/config.json` with the two fixed lockstep PUBLISH groups derived from the
+   * Generates `.changeset/config.json` with the two fixed lockstep VERSION groups derived from the
    * workspace graph:
-   * - Group A — published core/SDK (+ the published storybook *libraries*).
+   * - Group A — published core/SDK, plus every other versioned private `@dxos` package (internal
+   *   tooling/tests, e.g. `@dxos/toolbox`, the `vite-plugin-*`s, the `*-e2e` suites). The private members
+   *   version in lockstep with core but never publish (`privatePackages.tag: false`), so their versions
+   *   stay in sync rather than drifting. Version-less private packages have nothing to sync and are left out.
    * - Group B — every `@dxos/plugin-*` and `@dxos/cli`.
    *
    * Apps are NOT in Changesets at all — they're in `ignore` (Composer app/crx/dxos-org, docs, todomvc,
@@ -238,9 +241,14 @@ export class Toolbox {
       if (name.startsWith('@dxos/plugin-') || name === '@dxos/cli') {
         groupB.push(name);
       } else if (!project.private) {
+        groupA.push(name); // Published core/SDK.
+      } else if (project.version) {
+        // Private but versioned — ride Group A so its version stays in lockstep with core; `privatePackages`
+        // (below) versions it without publishing. Version-less private packages have nothing to keep in
+        // sync, so they stay out of both groups. (Non-@dxos packages never reach here — the graph is
+        // filtered to @dxos/@braneframe, so fixtures/templates are already excluded.)
         groupA.push(name);
       }
-      // Remaining private packages are internal tooling — excluded from both publish groups.
     }
     groupA.sort();
     groupB.sort();
@@ -256,13 +264,16 @@ export class Toolbox {
       // dev deps stay `workspace:*`; intra-repo peerDependencies use `workspace:^` (caret) so an in-range
       // minor does not force a major on the dependent.
       bumpVersionsWithWorkspaceProtocolOnly: true,
-      // Two lockstep publish groups: [A] core/SDK, [B] plugins + cli. Apps are unversioned (see `ignore`).
+      // Two lockstep version groups: [A] published core/SDK + all other versioned private @dxos packages
+      // (internal tooling/tests — versioned in sync with core but not published), [B] plugins + cli. Apps
+      // are unversioned (see `ignore`).
       fixed: [groupA, groupB],
       linked: [],
       // Apps are deploy-only — versioned by their own workflows (Composer) or not at all (docs/examples/
       // storybook). Changesets neither versions nor ripple-bumps them.
       ignore: apps,
-      // Version private members of the fixed groups (e.g. published-private libs) without publishing.
+      // Version private members of the fixed groups (the internal @dxos packages in Group A, plus any
+      // published-private libs) in lockstep with the group, but never tag/publish them.
       privatePackages: { version: true, tag: false },
       // @next ships as snapshot releases (manual `changeset version --snapshot next`); calculated base
       // version + commit suffix yields e.g. `0.10.0-next-<commit>`.
