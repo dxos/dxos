@@ -8,7 +8,8 @@
  * - `Default` renders the seeded doc with the live record button and reactive POS colouring of committed text.
  * - `Recording` seeds finalized + interim pending text (no mic); confirming the block colours the inserted words.
  * - `PosExtensionPlugin` contributes `pos({ parse })` via `MarkdownCapabilities.ExtensionProvider`.
- * - Uses the LLM-based `parseText` tagger over the edge AI service, so the story needs edge credentials.
+ * - The `ai` option selects the parser: LLM-based `parseText` over the edge AI service (needs edge
+ *   credentials; the story default) vs. the offline `stubParse` tagger (no AI key).
  * - Wires the same full plugin manager + shared `DefaultStory`/`SAMPLE_CONTENT`/`StoryGraphPlugin` harness as MarkdownTranscription.
  */
 
@@ -20,6 +21,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
 import { type Parser, parseText } from '@dxos/nlp';
+import { stubParse } from '@dxos/nlp/testing';
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
 import { pos } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
@@ -43,25 +45,32 @@ const SAMPLE_CONTENT = trim`
 const llmParse: Parser = (text) =>
   parseText(text).pipe(Effect.provide(Layer.fresh(AiServiceTestingPreset('edge-remote'))), Effect.runPromise);
 
+type PosExtensionOptions = {
+  /** Tag with the LLM parser (edge AI, needs credentials); false uses the offline stub tagger. */
+  ai?: boolean;
+};
+
 /**
  * Story-only plugin contributing the part-of-speech decoration extension to every Markdown editor,
  * the same channel TranscriptionPlugin uses for its pending-text extension. Reactive mode parses
  * committed document text (including transcript text confirmed into the doc) and colours each word
- * by its Universal POS tag via the LLM parser.
+ * by its Universal POS tag. The parser is selected per instantiation via {@link PosExtensionOptions}.
  */
-const PosExtensionPlugin = Plugin.define(
+const PosExtensionPlugin = Plugin.define<PosExtensionOptions>(
   Plugin.makeMeta({
     key: DXN.make('org.dxos.plugin.transcription.story.pos'),
     name: 'POS Decoration',
   }),
 ).pipe(
-  Plugin.addModule({
+  Plugin.addModule(({ ai }: PosExtensionOptions) => ({
     id: 'pos-markdown',
     activatesOn: MarkdownEvents.SetupExtensions,
     activate: Effect.fnUntraced(function* () {
-      return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [() => pos({ parse: llmParse })]);
+      return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
+        () => pos({ parse: ai ? llmParse : stubParse }),
+      ]);
     }),
-  }),
+  })),
   Plugin.make,
 );
 
@@ -69,7 +78,7 @@ const meta = {
   title: 'stories/stories-brain/PosTranscription',
   render: DefaultStory,
   decorators: createMarkdownStoryDecorators({
-    extraPlugins: [PosExtensionPlugin()],
+    extraPlugins: [PosExtensionPlugin({ ai: true })],
     seed: ({ personalSpace: space }) =>
       Effect.gen(function* () {
         space.db.add(Markdown.make({ name: 'Transcription', content: SAMPLE_CONTENT }));
