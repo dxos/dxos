@@ -78,6 +78,9 @@ jobs:
       - name: Check for import cycles
         run: pnpm run check-cycles
 
+      - name: Check public packages don't depend on private packages
+        run: pnpm run check-public-dependencies
+
       - name: Check publish config
         run: pnpm run check-publish-config
 
