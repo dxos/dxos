@@ -26,6 +26,10 @@ describe('Role.make', () => {
   test('throws on single-segment NSID', ({ expect }) => {
     expect(() => Role.make('article' as any)).toThrow();
   });
+
+  test('throws on two-segment NSID (below the three-segment minimum)', ({ expect }) => {
+    expect(() => Role.make('org.article' as any)).toThrow();
+  });
 });
 
 describe('role token typing', () => {
