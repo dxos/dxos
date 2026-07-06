@@ -5,14 +5,16 @@
 import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
 /**
- * How the selected block is sourced and rendered.
+ * How the body is rendered.
+ *   - `html`:     the raw email HTML, rendered in a sandboxed iframe (the default for messages).
  *   - `enriched`: the enriched (second) text block, decorated via the markdown extensions.
- *   - `markdown`: the plain (first) text block, decorated via the markdown extensions.
- *   - `plain`:    the plain (first) text block, shown verbatim with no markdown parsing.
+ *   - `markdown`: the body converted to markdown in-memory, decorated via the markdown extensions.
+ *   - `plain`:    the body as text, shown verbatim with no markdown parsing.
  */
-export type ViewMode = 'enriched' | 'markdown' | 'plain';
+export type ViewMode = 'html' | 'enriched' | 'markdown' | 'plain';
 
 export const VIEW_MODE_ICONS: Record<ViewMode, string> = {
+  html: 'ph--browser--regular',
   enriched: 'ph--article--regular',
   markdown: 'ph--markdown-logo--regular',
   plain: 'ph--text-t--regular',

@@ -11,6 +11,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Tag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import { normalizeText } from '@dxos/markdown';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Card, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -23,6 +24,7 @@ import { InboxCapabilities, Mailbox, Starred } from '#types';
 import { useExtractedObjects, useMessageTags } from '../../hooks';
 import { formatDateTime } from '../../util';
 import { Header } from '../Header';
+import { HtmlViewer } from '../HtmlViewer';
 import { MarkdownViewer } from '../MarkdownViewer';
 import { Row } from '../Row';
 import { type ViewMode } from '../ViewMode';
@@ -72,12 +74,19 @@ const NOT_STARRED = Atom.make(false);
 type MessageRootProps = PropsWithChildren<
   Omit<MessageContextValue, 'viewMode' | 'setViewMode'> & {
     viewMode?: ViewMode;
+    /**
+     * Controlled view-mode setter. When provided the component is controlled — the caller owns the
+     * `viewMode` state (e.g. MessageArticle shares one mode across the toolbar and every message body,
+     * which render in separate roots). Omit for standalone self-managed usage.
+     */
+    setViewMode?: (mode: ViewMode) => void;
   }
 >;
 
 const MessageRoot = ({
   children,
   viewMode: viewModeProp = 'markdown',
+  setViewMode: setViewModeProp,
   onOpen,
   onReply,
   onReplyAll,
@@ -85,7 +94,9 @@ const MessageRoot = ({
   onDelete,
   ...props
 }: MessageRootProps) => {
-  const [viewMode, setViewMode] = useState(viewModeProp);
+  const [internalViewMode, setInternalViewMode] = useState(viewModeProp);
+  const viewMode = setViewModeProp ? viewModeProp : internalViewMode;
+  const setViewMode = setViewModeProp ?? setInternalViewMode;
 
   return (
     <MessageContextProvider
@@ -289,7 +300,7 @@ const MESSAGE_CONTENT_NAME = 'Message.Content';
 type MessageBodyProps = ThemedClassName;
 
 const MessageBody = ({ classNames }: MessageBodyProps) => {
-  const { message, viewMode } = useMessageContext(MESSAGE_CONTENT_NAME);
+  const { message, mailbox, viewMode } = useMessageContext(MESSAGE_CONTENT_NAME);
   // Settings capability is optional — the Message component can be rendered in contexts (e.g.,
   // standalone storybook) where plugin-inbox isn't fully installed. Fall back to safe defaults.
   const settingsAtoms = useCapabilities(InboxCapabilities.Settings);
@@ -297,16 +308,35 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   const settings = useAtomValue(settingsAtom ?? FALLBACK_SETTINGS_ATOM);
   const loadRemoteImages = settings.loadRemoteImages ?? false;
 
-  // Enriched view shows the second (enriched) block; markdown and plain views show the first block.
-  const content = useMemo(() => {
+  // Person-to-person mail carries Gmail's "Personal" category tag (persisted into the mailbox tag
+  // index during label sync); used to decide how aggressively the HTML view restyles the body.
+  const db = getSpace(mailbox ?? message)?.db;
+  const personalTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Mailbox.GMAIL_PERSONAL_TAG_KEY]))[0];
+  const isPersonal = useMemo(
+    () => !!(mailbox && personalTag && Mailbox.getTagsForMessage(mailbox, message).includes(Mailbox.tagUri(personalTag))),
+    [mailbox, message, personalTag],
+  );
+
+  // With HTML→markdown disabled at sync time, the first text block holds the email's raw HTML.
+  const raw = useMemo(() => {
     const textBlocks = message.blocks.filter((block) => 'text' in block);
     return (viewMode === 'enriched' ? textBlocks[1]?.text : textBlocks[0]?.text) || '';
   }, [message.blocks, viewMode]);
 
+  // Markdown/plain views convert the HTML to markdown in-memory (memoized) rather than persisting a
+  // derived copy at sync time. Skipped for the HTML view, which renders `raw` directly.
+  const markdownContent = useMemo(() => (viewMode === 'html' ? '' : normalizeText(raw)), [raw, viewMode]);
+
+  if (viewMode === 'html') {
+    return (
+      <HtmlViewer classNames={classNames} html={raw} loadRemoteImages={loadRemoteImages} isPersonal={isPersonal} />
+    );
+  }
+
   return (
     <MarkdownViewer
       classNames={classNames}
-      content={content}
+      content={markdownContent}
       markdown={viewMode !== 'plain'}
       loadRemoteImages={loadRemoteImages}
       slots={{ content: { className: 'mx-4!' } }}

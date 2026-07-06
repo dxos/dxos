@@ -50,12 +50,6 @@ export const useMessageActions = ({
 }: UseMessageToolbarActionsProps) => {
   const extractorActions = useExtractorActions(message);
 
-  // The enriched option is only offered when the message carries a non-empty enriched (second) block.
-  const enrichedAvailable = (() => {
-    const textBlocks = message.blocks.filter((block) => 'text' in block);
-    return textBlocks.length > 1 && !!textBlocks[1]?.text;
-  })();
-
   return useMenuBuilder(
     (get) =>
       MenuBuilder.make()
@@ -66,7 +60,8 @@ export const useMessageActions = ({
             ns: meta.profile.key,
             viewMode,
             setViewMode,
-            modes: enrichedAvailable ? ['enriched', 'markdown', 'plain'] : ['markdown', 'plain'],
+            // Default HTML view; markdown/plain are computed in-memory by the body component.
+            modes: ['html', 'markdown', 'plain'],
           }),
         )
         .subgraph((b) =>
@@ -152,7 +147,6 @@ export const useMessageActions = ({
       viewMode,
       setViewMode,
       loadRemoteImages,
-      enrichedAvailable,
       extractorActions,
       onToggleLoadImages,
       onOpen,

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useReducer } from 'react';
+import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -13,7 +13,7 @@ import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { Panel, ScrollArea } from '@dxos/react-ui';
 import { type Message as MessageType } from '@dxos/types';
 
-import { Message, type MessageHeaderProps, type MessageLike, type ViewMode } from '#components';
+import { Message, type MessageHeaderProps, type ViewMode } from '#components';
 import { useActorContact } from '#hooks';
 import { InboxOperation, Mailbox, ThreadIndex } from '#types';
 
@@ -26,10 +26,8 @@ export type MessageArticleProps = AppSurface.ObjectArticleProps<
   }
 >;
 
-const viewModeFor = (message: MessageLike): ViewMode => {
-  const textBlocks = message.blocks.filter((block) => 'text' in block);
-  return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'markdown';
-};
+/** Messages default to rendering the raw email HTML; markdown/plain are opt-in toolbar views. */
+const DEFAULT_VIEW_MODE: ViewMode = 'html';
 
 /** Conversation key for a message — its provider thread id, or its own id when unthreaded. */
 const conversationKey = (message: MessageType.Message): string => message.threadId ?? message.id;
@@ -58,6 +56,10 @@ export const MessageArticle = ({
 
   const db = Obj.getDatabase(message);
   const sender = useActorContact(db, message.sender);
+
+  // View mode is owned here and shared (controlled) across the toolbar and every message body, which
+  // render in separate `Message.Root`s — so the toolbar's switch applies to all bodies.
+  const [viewMode, setViewMode] = useState<ViewMode>(DEFAULT_VIEW_MODE);
 
   // Conversation membership from the thread index; re-derive when the index changes (new members
   // arrive during sync). Falls back to the opened message alone when it isn't (yet) indexed — an
@@ -112,7 +114,8 @@ export const MessageArticle = ({
     <Panel.Root role={role} className='dx-document'>
       <Message.Root
         attendableId={toolbarAttendableId}
-        viewMode={viewModeFor(message)}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
         message={message}
         mailbox={mailbox}
         sender={sender}
@@ -132,7 +135,13 @@ export const MessageArticle = ({
             <div className='flex flex-col'>
               {messages.map((messageOrRef) => (
                 <div key={keyOf(messageOrRef)} className='border-be border-separator'>
-                  <ThreadMessageItem message={messageOrRef} mailbox={mailbox} onContactCreate={handleContactCreate} />
+                  <ThreadMessageItem
+                    message={messageOrRef}
+                    mailbox={mailbox}
+                    viewMode={viewMode}
+                    setViewMode={setViewMode}
+                    onContactCreate={handleContactCreate}
+                  />
                 </div>
               ))}
             </div>
@@ -157,23 +166,26 @@ export const MessageArticle = ({
 const ThreadMessageItem = ({
   message: messageOrRef,
   mailbox,
+  viewMode,
+  setViewMode,
   onContactCreate,
 }: {
   message: MessageOrRef;
   mailbox?: Mailbox.Mailbox;
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
   onContactCreate: NonNullable<MessageHeaderProps['onContactCreate']>;
 }) => {
   const [message] = useObject(messageOrRef);
   const db = mailbox ? Obj.getDatabase(mailbox) : undefined;
   const sender = useActorContact(db, message?.sender);
-  const viewMode = useMemo<ViewMode>(() => (message ? viewModeFor(message) : 'markdown'), [message]);
 
   if (!message) {
     return null;
   }
 
   return (
-    <Message.Root viewMode={viewMode} message={message} mailbox={mailbox} sender={sender}>
+    <Message.Root viewMode={viewMode} setViewMode={setViewMode} message={message} mailbox={mailbox} sender={sender}>
       <Message.Header onContactCreate={onContactCreate} />
       <Message.Body />
     </Message.Root>

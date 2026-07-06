@@ -184,6 +184,7 @@
     "@effect/experimental": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "date-fns": "catalog:",
+    "dompurify": "catalog:",
     "js-yaml": "catalog:"
   },
   "devDependencies": {

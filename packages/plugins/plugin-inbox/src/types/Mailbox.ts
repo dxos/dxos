@@ -20,6 +20,13 @@ import * as ThreadIndex from './ThreadIndex';
 export const GMAIL_TAG_SOURCE = 'com.google.gmail.label';
 
 /**
+ * Foreign key of the Gmail "Personal" category tag (the Primary inbox category). Persisted during
+ * label sync like any other Gmail label; used to tell person-to-person mail from bulk/marketing when
+ * deciding how aggressively to restyle a message body (see the HTML viewer).
+ */
+export const GMAIL_PERSONAL_TAG_KEY = { source: GMAIL_TAG_SOURCE, id: 'CATEGORY_PERSONAL' } as const;
+
+/**
  * Foreign-key source for JMAP provider folders (mailboxes). A JMAP mailbox maps to a {@link Tag}
  * object carrying a foreign key `{ source: JMAP_TAG_SOURCE, id: <jmap-mailbox-id> }`; mirrors
  * {@link GMAIL_TAG_SOURCE}.
