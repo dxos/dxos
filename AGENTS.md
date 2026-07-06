@@ -15,7 +15,7 @@
 - To add a new dependency, run `pnpm add --filter "<project>" --save-catalog "<package>"`.
 - **IMPORTANT**: Any `@dxos` package that lives within this repo must be added with the `workspace:` protocol, never from the catalog. The catalog is only for external (non-workspace) packages.
   - **Regular `dependencies` / `devDependencies` → `workspace:*`.**
-  - **`peerDependencies` → `workspace:^`** (caret, not `*`). This is load-bearing: with `workspace:*` (an exact pin) a peer's minor bump reads as out-of-range and forces a *major* on the dependent, cascading the whole fixed group to `1.0.0`. The caret keeps minors in range. See `agents/instructions/changesets.md`.
+  - **`peerDependencies` → `workspace:^`** (caret, not `*`) — a `*` pin reads as out-of-range on any bump and would cascade the fixed group to a spurious major. Do not "simplify" it to `*`. Why it matters: `docs/design/release-spec.md`.
 
 ## Build, Test, Lint Commands
 
