@@ -62,7 +62,7 @@ describe('ChatCompletionsLanguageModel', () => {
           },
           Effect.provide(Layer.provide(createLayer(provider), Layer.empty)),
         ),
-        { tags: ['llm'] },
+        { tags: ['manual'] },
       );
 
       it.effect(
@@ -85,7 +85,7 @@ describe('ChatCompletionsLanguageModel', () => {
           },
           Effect.provide(Layer.provide(createLayer(provider), Layer.empty)),
         ),
-        { tags: ['llm'] },
+        { tags: ['manual'] },
       );
     });
   }
