@@ -18,6 +18,8 @@ import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
+import JSON5 from 'json5';
+
 export const APP_DIRS = [
   'packages/apps/composer-app',
   'docs',
@@ -27,52 +29,12 @@ export const APP_DIRS = [
   'packages/apps/testbench-app',
 ];
 
-// Strip `//` and `/* */` comments that fall outside string literals, so a wrangler.jsonc parses as JSON.
-// String contents are copied verbatim (so `https://…` inside a value is safe). Configs use no trailing commas.
-const stripJsonc = (src) => {
-  let out = '';
-  for (let i = 0; i < src.length; ) {
-    const c = src[i];
-    const d = src[i + 1];
-    if (c === '"') {
-      out += c;
-      i++;
-      while (i < src.length) {
-        if (src[i] === '\\') {
-          out += src[i] + (src[i + 1] ?? '');
-          i += 2;
-          continue;
-        }
-        out += src[i];
-        if (src[i] === '"') {
-          i++;
-          break;
-        }
-        i++;
-      }
-      continue;
-    }
-    if (c === '/' && d === '/') {
-      while (i < src.length && src[i] !== '\n') i++;
-      continue;
-    }
-    if (c === '/' && d === '*') {
-      i += 2;
-      while (i < src.length && !(src[i] === '*' && src[i + 1] === '/')) i++;
-      i += 2;
-      continue;
-    }
-    out += c;
-    i++;
-  }
-  return out;
-};
-
 // Resolve the deployable apps, optionally filtered by environment and/or a single app name.
 export const resolveApps = (root, { environment, only = 'all' } = {}) =>
   APP_DIRS.map((dir) => {
     const wranglerConfig = join(dir, 'wrangler.jsonc');
-    const config = JSON.parse(stripJsonc(readFileSync(join(root, wranglerConfig), 'utf8')));
+    // JSON5 parses wrangler.jsonc's comments (and trailing commas) — no hand-rolled stripping.
+    const config = JSON5.parse(readFileSync(join(root, wranglerConfig), 'utf8'));
     return {
       name: config.name,
       dir,

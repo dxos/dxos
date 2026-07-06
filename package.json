@@ -135,6 +135,7 @@
     "husky": "catalog:",
     "jsdom": "catalog:",
     "jsdom-global": "catalog:",
+    "json5": "catalog:",
     "json-stringify-safe": "catalog:",
     "knip": "catalog:",
     "loupe": "catalog:",
