@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Database, Feed, Filter, Obj, Order, Query } from '@dxos/echo';
@@ -335,4 +335,74 @@ describe('usePagination', () => {
       .limit(5);
     expect(() => renderHook(() => usePagination(db, query))).toThrow(/manages \.skip\(\)/);
   });
+
+  // An indexed (host) source resolves a range after a round-trip, so a fresh QueryResult starts
+  // empty and fills later — unlike a feed query, which resolves synchronously. This exercises that
+  // path with a controllable source: the window must not flash to empty while a page loads, and
+  // paging must not stall on the transient empty range.
+  test('async source: holds the window while a page loads (no flash) and keeps paging', async () => {
+    const source = new ControlledQueryable();
+    const query = Query.select(Filter.type(TestSchema.Person)).limit(3);
+    // Test-only: the mock implements just the QueryResult surface usePagination reads (`results` +
+    // `subscribe`); the cast bridges to the full Queryable type at this boundary.
+    const { result } = renderHook(() => usePagination(source as unknown as Database.Queryable, query));
+
+    // Initial range in flight — nothing delivered yet.
+    await waitFor(() => expect(result.current.isLoading).toBe(true));
+    expect(result.current.items).toHaveLength(0);
+
+    // First page arrives (full ⇒ hasMore).
+    const page1 = ['a', 'b', 'c'].map((name) => Obj.make(TestSchema.Person, { name }));
+    act(() => source.latest!.deliver(page1));
+    await waitFor(() => expect(result.current.items).toHaveLength(3));
+    expect(result.current.hasMore).toBe(true);
+    expect(result.current.isLoading).toBe(false);
+
+    // getNext requests a larger range; while it loads the previous window is HELD (no flash to
+    // empty) and hasMore stays true so the virtualizer keeps paging.
+    act(() => result.current.getNext());
+    expect(result.current.items.map((person) => person.name)).toEqual(['a', 'b', 'c']);
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.hasMore).toBe(true);
+
+    // The larger page arrives and supersedes the held window.
+    const page2 = ['a', 'b', 'c', 'd', 'e', 'f'].map((name) => Obj.make(TestSchema.Person, { name }));
+    act(() => source.latest!.deliver(page2));
+    await waitFor(() => expect(result.current.items).toHaveLength(6));
+    expect(result.current.isLoading).toBe(false);
+  });
 });
+
+/** A single query result that starts empty and delivers on demand (mimics an async/indexed source). */
+class ControlledResult {
+  #objects: any[] = [];
+  readonly #callbacks = new Set<() => void>();
+  get results(): any[] {
+    return this.#objects;
+  }
+  subscribe(callback?: () => void): () => void {
+    if (callback) {
+      this.#callbacks.add(callback);
+    }
+    return () => {
+      if (callback) {
+        this.#callbacks.delete(callback);
+      }
+    };
+  }
+  deliver(objects: any[]): void {
+    this.#objects = objects;
+    for (const callback of this.#callbacks) {
+      callback();
+    }
+  }
+}
+
+/** A controllable `Queryable`: each `query()` opens a fresh {@link ControlledResult}. */
+class ControlledQueryable {
+  latest: ControlledResult | undefined;
+  query(): ControlledResult {
+    this.latest = new ControlledResult();
+    return this.latest;
+  }
+}
