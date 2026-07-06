@@ -244,12 +244,12 @@ const deployFunction = async (
 };
 
 const checkEmails = async (feed: Feed.Feed, space: Space) => {
-  const queueDXN = Feed.getQueueUri(feed);
-  if (!queueDXN) {
+  const feedUri = Feed.getFeedUri(feed);
+  if (!feedUri) {
     console.log('No feed found for mailbox');
     return [];
   }
-  const messages = await space.db.query(Query.select(Filter.type(Message.Message)).from(Scope.feed(queueDXN))).run();
+  const messages = await space.db.query(Query.select(Filter.type(Message.Message)).from(Scope.feed(feedUri))).run();
   console.log(`Messages in mailbox: ${messages.length}`);
   return messages;
 };
@@ -268,9 +268,9 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
   while (true) {
     try {
       const traceFeed = space.properties.invocationTraceFeed?.target;
-      const traceQueueDXN = traceFeed ? Feed.getQueueUri(traceFeed) : undefined;
-      const invocations = traceQueueDXN
-        ? await space.db.query(Query.select(Filter.everything()).from(Scope.feed(traceQueueDXN))).run()
+      const traceFeedUri = traceFeed ? Feed.getFeedUri(traceFeed) : undefined;
+      const invocations = traceFeedUri
+        ? await space.db.query(Query.select(Filter.everything()).from(Scope.feed(traceFeedUri))).run()
         : [];
 
       for (const invocation of invocations) {

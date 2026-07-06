@@ -113,7 +113,7 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
           const feed = space?.properties.invocationTraceFeed?.target;
-          const feedDXN = feed ? Feed.getQueueUri(feed) : undefined;
+          const feedDXN = feed ? Feed.getFeedUri(feed) : undefined;
           // TODO(wittjosiah): Support invocation filtering for prompts.
           const target = Obj.instanceOf(Instructions.Instructions, data.companionTo) ? undefined : data.companionTo;
 

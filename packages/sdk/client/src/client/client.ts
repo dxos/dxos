@@ -476,7 +476,7 @@ export class Client {
     this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
       queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
-      queueService: this._services.services.QueueService ?? raise(new Error('QueueService not available')),
+      feedService: this._services.services.FeedService ?? raise(new Error('FeedService not available')),
     });
     log('client._open: opening echo client...');
     await this._echoClient.open(ctx);
