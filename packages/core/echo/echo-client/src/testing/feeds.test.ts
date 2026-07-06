@@ -384,10 +384,12 @@ describe('feeds', () => {
     });
 
     // Content-ordered (non-`natural`) feed paging — the mailbox's path (order by a message field, not
-    // insertion order). Must page correctly on the feed path (`applyOrderSkipLimit` sorts by the
-    // property + slices); routing these to the host indexer instead returned empty windows, which
-    // manifested as the list flashing to the top and paging stopping after a page or two.
-    test('content-ordered `.orderBy(property).skip().limit()` windows at scale', async ({ expect }) => {
+    // insertion order). A content order routes to the host indexer, which sorts + slices the indexed
+    // feed and returns only the requested window (the client never decodes the whole feed). The
+    // indexer resolves after indexing, so this waits for `updateIndexes()`; `usePagination` handles
+    // that latency in-app. Guards the skip+limit propagation fix — a slid window (`skip > 0`) must
+    // return the full page, not `limit - skip`. `total` stays within one indexing pass.
+    test('content-ordered `.orderBy(property).skip().limit()` windows via the indexer', async ({ expect }) => {
       await using peer = await builder.createPeer({
         types: [Feed.Feed, TestSchema.Person],
         assignQueuePositions: true,
@@ -395,7 +397,7 @@ describe('feeds', () => {
       const db = await peer.createDatabase();
       const feed = db.add(Feed.make({ name: 'people' }));
 
-      const total = 60;
+      const total = 40;
       const names = Array.from({ length: total }, (_, index) => `p${String(index).padStart(2, '0')}`);
       // Append in an order distinct from name order (odds then evens) so a correct result must sort by
       // the `name` property, not rely on insertion order — mimics an out-of-order/backfill sync.
@@ -404,6 +406,7 @@ describe('feeds', () => {
         feed,
         shuffled.map((name) => Obj.make(TestSchema.Person, { name })),
       );
+      await db.updateIndexes();
 
       const scope = Scope.feed(Feed.getFeedUri(feed)!);
       const page = (skip: number, limit: number) =>
@@ -418,7 +421,7 @@ describe('feeds', () => {
           .run()
           .then((rows) => rows.map((obj) => (obj as TestSchema.Person).name));
 
-      const expectedDesc = [...names].reverse(); // p59..p00 by name desc.
+      const expectedDesc = [...names].reverse(); // p39..p00 by name desc.
       // Grow-limit paging (what usePagination does before it slides): each window is the newest-by-name prefix.
       for (const limit of [10, 20, 30, 40]) {
         expect(await page(0, limit)).toEqual(expectedDesc.slice(0, limit));

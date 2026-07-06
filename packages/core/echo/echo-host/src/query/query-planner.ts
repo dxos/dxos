@@ -827,6 +827,10 @@ export class QueryPlanner {
 
     let selectStepIndex = -1;
     let orderStepIndex = -1;
+    // A `skip` (offset) between the select/order and the limit shifts the window: the select/order
+    // must retain `skip + limit` results so `limit` survive after the skip. Ignoring it (propagating
+    // the bare `limit`) truncates to the top `limit` *before* the skip, yielding `limit - skip`.
+    let skipValue = 0;
     for (let i = 0; i < limitStepIndex; i++) {
       const step = processedSteps[i];
       if (step._tag === 'SelectStep') {
@@ -834,6 +838,9 @@ export class QueryPlanner {
       }
       if (step._tag === 'OrderStep') {
         orderStepIndex = i;
+      }
+      if (step._tag === 'SkipStep') {
+        skipValue += step.skip;
       }
       if (BLOCKERS.has(step._tag)) {
         // Found a blocker after the select/order step - can't propagate.
@@ -871,12 +878,15 @@ export class QueryPlanner {
     // Create a mutable copy of steps to modify.
     const newSteps = [...processedSteps];
 
+    // The select/order caps to `skip + limit` so a following skip still leaves `limit` results.
+    const propagatedLimit = limitValue + skipValue;
+
     // Propagate the limit to the SelectStep if found.
     if (selectStepIndex !== -1) {
       const selectStep = newSteps[selectStepIndex] as QueryPlan.SelectStep;
       newSteps[selectStepIndex] = {
         ...selectStep,
-        limit: limitValue,
+        limit: propagatedLimit,
       };
     }
 
@@ -885,12 +895,16 @@ export class QueryPlanner {
       const orderStep = newSteps[orderStepIndex] as QueryPlan.OrderStep;
       newSteps[orderStepIndex] = {
         ...orderStep,
-        limit: limitValue,
+        limit: propagatedLimit,
       };
     }
 
-    // Remove the LimitStep since limit is now propagated.
-    newSteps.splice(limitStepIndex, 1);
+    // Remove the LimitStep only when there is no skip — the propagated cap then equals the limit and
+    // fully enforces it. With a skip the propagated cap is `skip + limit`, so the LimitStep must stay
+    // to trim the post-skip result back to `limit`.
+    if (skipValue === 0) {
+      newSteps.splice(limitStepIndex, 1);
+    }
 
     return QueryPlan.Plan.make(newSteps);
   }

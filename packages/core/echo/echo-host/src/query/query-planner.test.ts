@@ -1254,6 +1254,23 @@ describe('QueryPlanner', () => {
     `);
   });
 
+  test('ordered, skipped, and limited results: skip is added to the propagated cap; the limit step is kept', () => {
+    const query = Query.select(Filter.type(TestSchema.Task))
+      .orderBy(Order.property('title', 'asc'))
+      .skip(5)
+      .limit(10);
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+
+    // The OrderStep caps to skip(5) + limit(10) = 15 so that 10 survive the skip (propagating a bare
+    // 10 would truncate before the skip and yield only 5). Both the skip and the limit steps remain
+    // to trim the top-15 back to the [5, 15) window.
+    const orderStep = plan.steps.find((step) => step._tag === 'OrderStep');
+    expect(orderStep?._tag === 'OrderStep' && orderStep.limit).toBe(15);
+    expect(plan.steps.some((step) => step._tag === 'SkipStep' && step.skip === 5)).toBe(true);
+    expect(plan.steps.some((step) => step._tag === 'LimitStep' && step.limit === 10)).toBe(true);
+  });
+
   test('union of limited queries', () => {
     const query = Query.all(
       Query.select(Filter.type(TestSchema.Person)).limit(5),

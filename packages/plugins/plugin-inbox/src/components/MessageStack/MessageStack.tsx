@@ -7,7 +7,6 @@ import React, {
   type MouseEvent,
   forwardRef,
   useCallback,
-  useEffect,
   useMemo,
   useState,
 } from 'react';

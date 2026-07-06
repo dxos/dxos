@@ -811,12 +811,29 @@ const isQueryScoped = (query: QueryAST.Query): boolean => {
 };
 
 /**
- * Whether a feed-scoped query can be evaluated client-side against fetched queue items.
- * Index-only queries (e.g. full-text search) must instead run through the host indexer.
+ * Whether a feed-scoped query can be evaluated client-side against fetched queue items. Index-only
+ * queries (full-text search, or a content ordering) must instead run through the host indexer.
  */
 const isClientEvaluableFeedQuery = (query: QueryAST.Query): boolean => {
   const simple = isSimpleFeedWindowQuery(query);
-  return simple != null && !filterContainsTextSearch(simple.filter);
+  return simple != null && !filterContainsTextSearch(simple.filter) && !queryContainsContentOrder(query);
+};
+
+/**
+ * Whether the query orders by content (a non-`natural` order, e.g. `Order.property('created')`). The
+ * client feed path can only honor `natural` (insertion) order against the fetched queue; a content
+ * ordering runs through the host indexer, which sorts + slices the indexed feed and returns only the
+ * requested window — so the client never decodes the whole feed. The indexer resolves a range
+ * asynchronously, which `usePagination` tolerates (holds the window while it loads).
+ */
+const queryContainsContentOrder = (query: QueryAST.Query): boolean => {
+  let contentOrder = false;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'order' && node.order.some((order) => order.kind !== 'natural')) {
+      contentOrder = true;
+    }
+  });
+  return contentOrder;
 };
 
 const filterContainsTextSearch = (filter: QueryAST.Filter): boolean => {

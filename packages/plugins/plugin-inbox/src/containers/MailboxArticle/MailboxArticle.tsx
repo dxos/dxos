@@ -178,10 +178,10 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
 
   // Messages, newest-first by message date. Ordered by `created` (not feed insertion order): a
   // backward/backfill sync appends out of time order, so the window must be selected by date. This
-  // content order runs on the feed path, which sorts by the property and applies skip/limit
-  // (`FeedQueryContext`/`applyOrderSkipLimit`) — correct regardless of append order. The window bounds
-  // what's rendered (via the virtualizer); the feed is currently fetched in full to sort (lazy
-  // date-ordered fetch needs index keyset support, tracked as a follow-up).
+  // content order routes to the host indexer (see `queryContainsContentOrder`), which sorts + slices
+  // the indexed feed and returns only the requested window — so the client never decodes the whole
+  // feed. The indexer resolves a range asynchronously; `usePagination` holds the window across that
+  // latency (no flash) and the virtualizer trigger can be tuned to hide it.
   const {
     items: messages,
     getNext,
