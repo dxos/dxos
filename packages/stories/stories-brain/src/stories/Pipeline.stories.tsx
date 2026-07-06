@@ -31,10 +31,6 @@ import { trim } from '@dxos/util';
 import { DocumentEditor, FactViewer, PipelinePanel, type StageInfo } from '../components';
 
 const SAMPLE_CONTENT = trim`
-  # RDF
-
-  - The quick brown fox jumps over the lazy dog.
-
   - Socrates was a Greek philosopher.
   - Plato was his student.
   - Aristotle was his student.
@@ -80,8 +76,8 @@ const DefaultStory = (_: StoryArgs) => {
   return (
     <div className='dx-container grid grid-cols-[1fr_1fr_1fr] gap-2'>
       <DocumentEditor initialValue={SAMPLE_CONTENT} parse={stubParse} busy={busy} onRun={handleRun} />
-      <FactViewer facts={facts} />
       <PipelinePanel stages={STAGES} active={active} output={output} />
+      <FactViewer facts={facts} />
     </div>
   );
 };

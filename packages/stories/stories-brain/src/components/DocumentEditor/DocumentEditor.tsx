@@ -40,7 +40,7 @@ export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onR
       createThemeExtensions({ themeMode }),
       createMarkdownExtensions(),
       decorateMarkdown(),
-      ...(parse ? [pos({ parse })] : []),
+      ...(parse ? [pos({ parse, popover: true })] : []),
     ],
     [themeMode, parse],
   );
@@ -59,7 +59,7 @@ export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onR
           />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content asChild>
+      <Panel.Content>
         <Editor.Root>
           <Editor.View value={text} onChange={setText} extensions={extensions} />
         </Editor.Root>

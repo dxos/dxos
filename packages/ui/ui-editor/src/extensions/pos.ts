@@ -3,7 +3,7 @@
 //
 
 import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
-import { Decoration, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { Decoration, EditorView, ViewPlugin, type ViewUpdate, hoverTooltip } from '@codemirror/view';
 
 import { debounce } from '@dxos/async';
 import { type Document, type Upos, sourceHash } from '@dxos/nlp';
@@ -109,6 +109,7 @@ const POS_HUE: Partial<Record<Upos, string>> = {
   PART: 'neutral',
 };
 
+/** Colored underline per UPOS tag (stale dimming lives in the always-on base theme). */
 export const posTheme = (): Extension =>
   EditorView.theme({
     '.cm-pos': {
@@ -122,10 +123,115 @@ export const posTheme = (): Extension =>
         },
       ]),
     ),
-    '.cm-pos-stale': {
-      opacity: '0.4',
-    },
   });
+
+// Stale dimming must apply even when the underline theme is disabled (e.g. popover-only mode), so a
+// diverged span never presents confident decorations.
+const staleTheme = EditorView.theme({
+  '.cm-pos-stale': {
+    opacity: '0.4',
+  },
+});
+
+/** Human-readable UPOS names (https://universaldependencies.org/u/pos/), shown in the hover popover. */
+const UPOS_LABEL: Record<Upos, string> = {
+  ADJ: 'adjective',
+  ADP: 'adposition',
+  ADV: 'adverb',
+  AUX: 'auxiliary',
+  CCONJ: 'coordinating conjunction',
+  DET: 'determiner',
+  INTJ: 'interjection',
+  NOUN: 'noun',
+  NUM: 'numeral',
+  PART: 'particle',
+  PRON: 'pronoun',
+  PROPN: 'proper noun',
+  PUNCT: 'punctuation',
+  SCONJ: 'subordinating conjunction',
+  SYM: 'symbol',
+  VERB: 'verb',
+  X: 'other',
+};
+
+export type PosToken = {
+  from: number;
+  to: number;
+  upos: Upos;
+  stale: boolean;
+};
+
+/** Resolve the analyzed token covering an absolute document position, if any. */
+export const posTokenAt = (state: EditorState, position: number): PosToken | undefined => {
+  const spans = state.field(posAnalysisField, false) ?? [];
+  for (const span of spans) {
+    if (position < span.from || position > span.to) {
+      continue;
+    }
+    for (const sentence of span.document.sentences) {
+      for (const token of sentence.tokens) {
+        const from = span.from + token.start;
+        const to = span.from + token.end;
+        if (position >= from && position < to && to <= state.doc.length) {
+          return { from, to, upos: token.upos, stale: span.stale };
+        }
+      }
+    }
+  }
+  return undefined;
+};
+
+const popoverTheme = EditorView.theme({
+  '.cm-pos-popover': {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '2px 6px',
+  },
+  '.cm-pos-swatch': {
+    width: '8px',
+    height: '8px',
+    borderRadius: '2px',
+    flexShrink: '0',
+  },
+  '.cm-pos-popover-tag': {
+    fontWeight: '600',
+  },
+  '.cm-pos-popover-label': {
+    opacity: '0.7',
+  },
+});
+
+/** Hover popover naming the part of speech of the token under the pointer. */
+export const posPopover = (): Extension => [
+  hoverTooltip((view, position) => {
+    const token = posTokenAt(view.state, position);
+    if (!token) {
+      return null;
+    }
+    return {
+      pos: token.from,
+      end: token.to,
+      above: true,
+      create: () => {
+        const dom = document.createElement('div');
+        dom.className = 'cm-pos-popover';
+        const swatch = document.createElement('span');
+        swatch.className = 'cm-pos-swatch';
+        swatch.style.background = `var(--color-${POS_HUE[token.upos] ?? 'neutral'}-500)`;
+        const tag = document.createElement('span');
+        tag.className = 'cm-pos-popover-tag';
+        tag.textContent = token.upos;
+        const label = document.createElement('span');
+        label.className = 'cm-pos-popover-label';
+        label.textContent = UPOS_LABEL[token.upos];
+        dom.append(swatch, tag, label);
+        return { dom };
+      },
+    };
+  }),
+  popoverTheme,
+];
 
 /** A span has diverged when the current text under its (mapped) range no longer matches its hash. */
 export const spanDiverged = (docText: string, span: { from: number; to: number; sourceHash: string }): boolean =>
@@ -136,6 +242,10 @@ export type PosOptions = {
   parse?: (text: string) => Promise<Document>;
   /** Idle debounce before reactive parsing (ms). */
   debounceMs?: number;
+  /** Colored underline per UPOS tag (default true). */
+  underline?: boolean;
+  /** Hover popover naming the part of speech (default false). */
+  popover?: boolean;
 };
 
 /**
@@ -200,14 +310,22 @@ const reactiveDriver = (parse: NonNullable<PosOptions['parse']>, debounceMs: num
 
 /**
  * Part-of-speech decoration extension.
- * Renders per-word UPOS marks from analysis state held in a span-oriented state field.
- * State can be set externally via `setAnalysis`/`clearAnalysis`,
- * or — when `options.parse` is supplied — self-driven on idle (reactive mode).
+ * Renders per-word UPOS marks from analysis state held in a span-oriented state field, with
+ * independently switchable presentations: a colored underline per tag ({@link posTheme}) and a
+ * hover popover naming the part of speech ({@link posPopover}). State can be set externally via
+ * `setAnalysis`/`clearAnalysis`, or — when `options.parse` is supplied — self-driven on idle
+ * (reactive mode).
  */
-export const pos = (options: PosOptions = {}): Extension => {
-  const extensions: Extension[] = [posAnalysisField, posDecorations, posTheme()];
-  if (options.parse) {
-    extensions.push(reactiveDriver(options.parse, options.debounceMs ?? 500));
+export const pos = ({ parse, debounceMs = 500, underline = true, popover = false }: PosOptions = {}): Extension => {
+  const extensions: Extension[] = [posAnalysisField, posDecorations, staleTheme];
+  if (underline) {
+    extensions.push(posTheme());
+  }
+  if (popover) {
+    extensions.push(posPopover());
+  }
+  if (parse) {
+    extensions.push(reactiveDriver(parse, debounceMs));
   }
 
   return extensions;
