@@ -24,12 +24,15 @@ tasks:
   tauri-ios-build:
     deps:
       - bundle
-  # Downloads the macOS ollama sidecar embedded in the desktop app. cache: false so it always runs (no
-  # declared outputs for moon to restore, so a "cached" skip would leave the sidecar missing).
+  # Downloads the pinned macOS ollama runtime + triple-named sidecars embedded in the desktop app. Cacheable:
+  # keyed on the fetch script (which pins the version + SHA-256), with the downloaded sidecar dir as the
+  # output — so a cache hit restores it instead of re-downloading the (large) runtime.
   fetch-ollama:
     command: node scripts/fetch-ollama.mjs
-    options:
-      cache: false
+    inputs:
+      - scripts/fetch-ollama.mjs
+    outputs:
+      - src-tauri/sidecar
   compile:
     deps:
       - prebuild
