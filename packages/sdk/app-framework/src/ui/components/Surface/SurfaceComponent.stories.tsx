@@ -17,7 +17,7 @@ import { withPluginManager } from '../../../testing';
 import { usePluginManager } from '../PluginManager';
 import { SurfaceComponent, useSurfaces } from './SurfaceComponent';
 import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug';
-import { create } from './types';
+import { create, makeFilter } from './types';
 
 const ItemRole = Role.make<{ id: string }>('org.dxos.test.role.item');
 
@@ -86,7 +86,7 @@ const DefaultStory = () => {
       interface: Capabilities.ReactSurface,
       implementation: create({
         id,
-        filter: Role.makeFilter(ItemRole, (data) => data.id === id),
+        filter: makeFilter(ItemRole, (data) => data.id === id),
         component: () => <TestComponent id={id} styles={styles} />,
       }),
     });
@@ -104,7 +104,7 @@ const DefaultStory = () => {
       interface: Capabilities.ReactSurface,
       implementation: create({
         id: 'error',
-        filter: Role.makeFilter(ItemRole, (data) => data.id === 'error'),
+        filter: makeFilter(ItemRole, (data) => data.id === 'error'),
         component: ErrorComponent,
       }),
     });

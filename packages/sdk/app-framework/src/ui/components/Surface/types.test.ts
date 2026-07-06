@@ -9,12 +9,24 @@ import { Position } from '@dxos/util';
 import * as Role from '../../../common/Role';
 import { type CapabilityManager } from '../../../core';
 import { isSurfaceAvailable } from './SurfaceComponent';
-import { create } from './types';
+import { type Filter, create, isFilter, makeFilter } from './types';
+
+describe('isFilter', () => {
+  test('distinguishes filter objects from predicate functions', ({ expect }) => {
+    const filter: Filter<Record<string, any>> = {
+      bindings: [{ role: 'org.dxos.test.role.r', guard: () => true }],
+    };
+    expect(isFilter(filter)).toBe(true);
+    expect(isFilter(() => true)).toBe(false);
+    expect(isFilter({})).toBe(false);
+    expect(isFilter(null)).toBe(false);
+  });
+});
 
 describe('create', () => {
   test('expands a single-binding filter into a role string', ({ expect }) => {
     const token = Role.make<Record<string, any>>('org.dxos.test.role.article');
-    const filter = Role.makeFilter(token, (data) => data.subject === 'ok');
+    const filter = makeFilter(token, (data) => data.subject === 'ok');
     const def = create({ id: 'typedSingle', filter, component: () => null });
     expect(def.role).toBe('org.dxos.test.role.article');
     expect(def.filter!({ subject: 'ok' }, 'org.dxos.test.role.article')).toBe(true);
@@ -24,7 +36,7 @@ describe('create', () => {
   test('expands a multi-binding filter into a role array with role-scoped guards', ({ expect }) => {
     const tokenA = Role.make<Record<string, any>>('org.dxos.test.role.article');
     const tokenB = Role.make<Record<string, any>>('org.dxos.test.role.section');
-    const filter: Role.Filter<Record<string, any>> = {
+    const filter: Filter<Record<string, any>> = {
       bindings: [
         { role: tokenA.role, guard: (data) => (data as any).subject === 'a' },
         { role: tokenB.role, guard: (data) => (data as any).subject === 's' },
@@ -44,7 +56,7 @@ describe('create', () => {
 
   test('passes position through untouched', ({ expect }) => {
     const token = Role.make<Record<string, any>>('org.dxos.test.role.r');
-    const filter: Role.Filter<Record<string, any>> = { bindings: [{ role: token.role, guard: () => true }] };
+    const filter: Filter<Record<string, any>> = { bindings: [{ role: token.role, guard: () => true }] };
     const def = create({ id: 'pos', filter, component: () => null, position: Position.last });
     expect(def.position).toBe(Position.last);
   });

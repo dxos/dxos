@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Role } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { IconButton } from '@dxos/react-ui';
@@ -75,7 +74,7 @@ export default Capability.makeModule(() =>
       Capabilities.ReactSurface,
       Surface.create({
         id: 'org.dxos.test.generator.main',
-        filter: Role.makeFilter(PlaygroundRoles.Primary),
+        filter: Surface.makeFilter(PlaygroundRoles.Primary),
         component: Main,
       }),
     ),

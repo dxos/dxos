@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
@@ -44,24 +43,24 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'video.player',
         filter: AppSurface.oneOf(
-          Role.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'player')),
-          Role.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'player')),
+          Surface.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'player')),
+          Surface.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'player')),
         ),
         component: ({ data }) => <VideoSection subject={data.subject} attendableId={data.attendableId} />,
       }),
       Surface.create({
         id: 'video.transcript',
         filter: AppSurface.oneOf(
-          Role.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'transcript')),
-          Role.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'transcript')),
+          Surface.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'transcript')),
+          Surface.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'transcript')),
         ),
         component: ({ data }) => <TranscriptSection subject={data.subject} attendableId={data.attendableId} />,
       }),
       Surface.create({
         id: 'video.summary',
         filter: AppSurface.oneOf(
-          Role.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'summary')),
-          Role.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'summary')),
+          Surface.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'summary')),
+          Surface.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'summary')),
         ),
         component: ({ data }) => <SummarySection subject={data.subject} attendableId={data.attendableId} />,
       }),

@@ -28,18 +28,6 @@ describe('Role.make', () => {
   });
 });
 
-describe('Role.isFilter', () => {
-  test('distinguishes filter objects from predicate functions', ({ expect }) => {
-    const filter: Role.Filter<Record<string, any>> = {
-      bindings: [{ role: 'org.dxos.test.role.r', guard: () => true }],
-    };
-    expect(Role.isFilter(filter)).toBe(true);
-    expect(Role.isFilter(() => true)).toBe(false);
-    expect(Role.isFilter({})).toBe(false);
-    expect(Role.isFilter(null)).toBe(false);
-  });
-});
-
 describe('role token typing', () => {
   test('make preserves TData through token use-sites', ({ expect }) => {
     // Type-level smoke test: if TS compiles, we're fine.

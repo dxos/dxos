@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DXN, Format, type Obj, Type } from '@dxos/echo';
@@ -38,7 +37,7 @@ export const capabilities: Capability.Any[] = [
     Capabilities.ReactSurface,
     Surface.create({
       id: 'pluginDefault',
-      filter: Role.makeFilter(AppSurface.CardContent),
+      filter: Surface.makeFilter(AppSurface.CardContent),
       position: Position.last,
       component: ({ data }) => (
         <Card.Body>

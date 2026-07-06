@@ -6,7 +6,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { Role } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
@@ -44,7 +43,7 @@ const TestExtension = Capability.contributes(
   Capabilities.ReactSurface,
   Surface.create({
     id: 'storyArticle',
-    filter: Role.makeFilter(AppSurface.Article),
+    filter: Surface.makeFilter(AppSurface.Article),
     component: ({ data: { subject } }) =>
       subject ? (
         <Syntax.Root data={subject}>

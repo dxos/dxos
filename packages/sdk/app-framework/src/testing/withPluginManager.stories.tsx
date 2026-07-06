@@ -36,7 +36,7 @@ const meta = {
           Capabilities.ReactSurface,
           Surface.create({
             id: 'test',
-            filter: Role.makeFilter(MainRole),
+            filter: Surface.makeFilter(MainRole),
             component: ({ role }) => <span>{JSON.stringify({ role })}</span>,
           }),
         ),

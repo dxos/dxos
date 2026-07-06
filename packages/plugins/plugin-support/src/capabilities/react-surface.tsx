@@ -7,7 +7,6 @@ import * as Option from 'effect/Option';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Role } from '@dxos/app-framework';
 import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -51,23 +50,23 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'spaceHomeWelcome',
-        filter: Role.makeFilter(SpaceHomeContent),
+        filter: Surface.makeFilter(SpaceHomeContent),
         position: Position.first,
         component: ({ data }) => <SpaceHomeWelcome space={data.space} />,
       }),
       Surface.create({
         id: 'feedback',
-        filter: Role.makeFilter(AppSurface.deckCompanion('help')),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('help')),
         component: () => <FeedbackPanel />,
       }),
       Surface.create({
         id: 'discord',
-        filter: Role.makeFilter(AppSurface.deckCompanion('discord')),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('discord')),
         component: () => <DiscordPanel />,
       }),
       Surface.create({
         id: 'helpMenu',
-        filter: Role.makeFilter(AppSurface.StatusIndicator),
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
         position: Position.last,
         component: () => <HelpMenu />,
       }),
@@ -85,12 +84,12 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'hints',
-        filter: Role.makeFilter(Hints),
+        filter: Surface.makeFilter(Hints),
         component: () => <ShortcutsHints />,
       }),
       Surface.create({
         id: 'keyshortcuts',
-        filter: Role.makeFilter(Keyshortcuts),
+        filter: Surface.makeFilter(Keyshortcuts),
         component: () => <ShortcutsList />,
       }),
       Surface.create({

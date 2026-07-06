@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Obj } from '@dxos/echo';
@@ -22,7 +21,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'document',
         position: Position.first,
-        filter: Role.makeFilter(
+        filter: Surface.makeFilter(
           AppSurface.Article,
           (data): data is AppSurface.ArticleData<{ type: typeof meta.profile.key; object: Markdown.Document }> =>
             !!data.subject &&
@@ -37,7 +36,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'collection',
         position: Position.first,
-        filter: Role.makeFilter(
+        filter: Surface.makeFilter(
           AppSurface.Article,
           (data): data is AppSurface.ArticleData<{ type: typeof meta.profile.key; object: Collection.Collection }> =>
             !!data.subject &&

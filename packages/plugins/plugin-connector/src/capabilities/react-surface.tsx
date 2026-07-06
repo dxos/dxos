@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import React, { type ComponentProps, useMemo } from 'react';
 
-import { Capabilities, Capability, Role } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { SchemaEx } from '@dxos/effect';
@@ -48,7 +48,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'connectorAuth',
-        filter: Role.makeFilter(ConnectorAuth, (data) => Array.isArray(data.connectorIds)),
+        filter: Surface.makeFilter(ConnectorAuth, (data) => Array.isArray(data.connectorIds)),
         component: ({ data }) => {
           const space = useActiveSpace();
           if (!space || data.connectorIds.length === 0) {

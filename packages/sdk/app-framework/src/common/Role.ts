@@ -5,7 +5,6 @@
 // @import-as-namespace
 
 import type { DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
 
 /**
  * A typed role token. Carries a role NSID for runtime dispatch plus a phantom
@@ -23,36 +22,9 @@ export type Role<TData> = {
 };
 
 /**
- * One entry in a {@link Filter} — a role NSID plus the guard that validates the
- * data shape when the Surface dispatcher is matching that role.
- */
-export type Binding = {
-  readonly role: string;
-  readonly guard: (data: unknown) => boolean;
-};
-
-/**
- * Typed filter binding for `Surface.create`. Combines one or more `(role, guard)`
- * pairs so a provider can register against multiple roles while keeping the
- * role and its data shape in a single expression.
- */
-export type Filter<TData> = {
-  readonly bindings: ReadonlyArray<Binding>;
-  /** Covariant phantom; never accessed at runtime. */
-  readonly _phantom?: TData;
-};
-
-/**
  * Narrow data type carried by a role token.
  */
 export type Data<T> = T extends Role<infer D> ? D : never;
-
-/**
- * Runtime guard for {@link Filter}. Distinguishes new-style filter bindings from
- * legacy predicate filters.
- */
-export const isFilter = (value: unknown): value is Filter<any> =>
-  typeof value === 'object' && value !== null && Array.isArray((value as { bindings?: unknown }).bindings);
 
 /**
  * Mints a typed role token. The NSID is validated at compile time via
@@ -79,29 +51,4 @@ export const make: {
     );
   }
   return { role: nsid };
-};
-
-/**
- * Creates a {@link Filter} from a role token and an optional guard.
- *
- * When `guard` is omitted the filter matches any data at the token's role
- * (role-only dispatch). Pass a guard to add runtime data-shape validation on
- * top of the role match.
- *
- * This is the framework-level primitive; `@dxos/app-toolkit` builds richer
- * domain-aware helpers (ECHO schema checks, literal matching, etc.) on top of it.
- */
-export const makeFilter = <TData>(token: Role<TData>, guard?: (data: TData) => boolean): Filter<TData> => {
-  const boundGuard =
-    guard == null
-      ? () => true
-      : (data: unknown): boolean => {
-          try {
-            return guard(data as TData);
-          } catch (err) {
-            log.catch(err);
-            return false;
-          }
-        };
-  return { bindings: [{ role: token.role, guard: boundGuard }] };
 };

@@ -16,10 +16,14 @@ import {
   useSurfaceProfilerStats,
 } from './SurfaceProfilerContext';
 import {
+  type Binding as SurfaceBindingType,
   type Definition as SurfaceDefinition,
+  type Filter as SurfaceFilterType,
   type TypedProps as SurfaceTypedProps,
   create as createSurface,
   createWeb as createWebSurface,
+  isFilter as isFilterFn,
+  makeFilter as makeFilterFn,
 } from './types';
 
 export namespace Surface {
@@ -32,6 +36,11 @@ export namespace Surface {
 
   export const Surface = SurfaceComponent;
   export const isAvailable = isSurfaceAvailable;
+
+  export type Binding = SurfaceBindingType;
+  export type Filter<TData> = SurfaceFilterType<TData>;
+  export const makeFilter = makeFilterFn;
+  export const isFilter = isFilterFn;
 
   export type TypedProps<TToken extends Role.Role<any>> = SurfaceTypedProps<TToken>;
 

@@ -4,9 +4,62 @@
 
 import type { FC, PropsWithChildren, ReactNode } from 'react';
 
+import { log } from '@dxos/log';
 import type { MakeOptional, Position } from '@dxos/util';
 
 import * as Role from '../../../common/Role';
+
+/**
+ * One entry in a {@link Filter} — a role NSID plus the guard that validates the
+ * data shape when the Surface dispatcher is matching that role.
+ */
+export type Binding = {
+  readonly role: string;
+  readonly guard: (data: unknown) => boolean;
+};
+
+/**
+ * Typed filter binding for {@link create}. Combines one or more `(role, guard)`
+ * pairs so a provider can register against multiple roles while keeping the
+ * role and its data shape in a single expression.
+ */
+export type Filter<TData> = {
+  readonly bindings: ReadonlyArray<Binding>;
+  /** Covariant phantom; never accessed at runtime. */
+  readonly _phantom?: TData;
+};
+
+/**
+ * Runtime guard for {@link Filter}. Distinguishes new-style filter bindings from
+ * legacy predicate filters.
+ */
+export const isFilter = (value: unknown): value is Filter<any> =>
+  typeof value === 'object' && value !== null && Array.isArray((value as { bindings?: unknown }).bindings);
+
+/**
+ * Creates a {@link Filter} from a role token and an optional guard.
+ *
+ * When `guard` is omitted the filter matches any data at the token's role
+ * (role-only dispatch). Pass a guard to add runtime data-shape validation on
+ * top of the role match.
+ *
+ * This is the framework-level primitive; `@dxos/app-toolkit` builds richer
+ * domain-aware helpers (ECHO schema checks, literal matching, etc.) on top of it.
+ */
+export const makeFilter = <TData>(token: Role.Role<TData>, guard?: (data: TData) => boolean): Filter<TData> => {
+  const boundGuard =
+    guard == null
+      ? () => true
+      : (data: unknown): boolean => {
+          try {
+            return guard(data as TData);
+          } catch (err) {
+            log.catch(err);
+            return false;
+          }
+        };
+  return { bindings: [{ role: token.role, guard: boundGuard }] };
+};
 
 /**
  * Typed Surface consumer props — carries the role/data-shape contract via a
@@ -104,7 +157,7 @@ export type ComponentFunction<T extends Record<string, any> = Record<string, any
  *
  * The optional `filter` receives the consumer-supplied `role` as its second
  * argument so a single definition can encode role-specific guards (used by the
- * {@link Role.Filter}-based `create` overload).
+ * {@link Filter}-based `create` overload).
  *
  * @internal The `role` field is populated by the framework from the filter
  *   bindings and is not authored directly.
@@ -147,7 +200,7 @@ export type Definition<T extends Record<string, any> = any> = ReactDefinition<T>
  */
 export type TypedReactDefinition<T extends Record<string, any> = any> = Readonly<{
   id: string;
-  filter: Role.Filter<T>;
+  filter: Filter<T>;
   component: ComponentFunction<T>;
   position?: Position.Position;
 }>;
@@ -157,13 +210,13 @@ export type TypedReactDefinition<T extends Record<string, any> = any> = Readonly
  */
 export type TypedWebComponentDefinition<T extends Record<string, any> = any> = Readonly<{
   id: string;
-  filter: Role.Filter<T>;
+  filter: Filter<T>;
   tagName: string;
   position?: Position.Position;
 }>;
 
 const expandBindings = <T extends Record<string, any>>(
-  filter: Role.Filter<T>,
+  filter: Filter<T>,
 ): { role: string | string[]; guard: (data: Record<string, unknown>, role?: string) => data is T } => {
   const bindings = filter.bindings;
   const roles = Array.from(new Set(bindings.map((binding) => binding.role)));

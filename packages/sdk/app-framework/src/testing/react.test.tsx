@@ -28,7 +28,7 @@ const TestPlugin = Plugin.define(testMeta).pipe(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create<{ message: string }>({
             id: 'greeting',
-            filter: Role.makeFilter(GreetingRole),
+            filter: Surface.makeFilter(GreetingRole),
             component: ({ data }) => <span data-testid='greeting'>hello {data.message}</span>,
           }),
         ]),

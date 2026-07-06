@@ -18,7 +18,7 @@ import { render } from '../../../testing/react';
 import { SurfaceComponent, useSurfaces } from './SurfaceComponent';
 import { setSurfaceDebug } from './SurfaceDebug';
 import { surfaceMetrics } from './SurfaceMetrics';
-import { type Definition, create } from './types';
+import { type Definition, create, makeFilter } from './types';
 
 // Flush the metrics store's rAF-batched notification (the actual signal it uses), not a fixed delay.
 const flushMetrics = () =>
@@ -40,8 +40,8 @@ const TestPlugin = Plugin.define(testMeta).pipe(
     activate: () =>
       Effect.succeed(
         Capability.contributes(Capabilities.ReactSurface, [
-          create({ id: 'alpha', filter: Role.makeFilter(RoleA), component: () => <span data-testid='a' /> }),
-          create({ id: 'beta', filter: Role.makeFilter(RoleB), component: () => <span data-testid='b' /> }),
+          create({ id: 'alpha', filter: makeFilter(RoleA), component: () => <span data-testid='a' /> }),
+          create({ id: 'beta', filter: makeFilter(RoleB), component: () => <span data-testid='b' /> }),
         ]),
       ),
   }),
@@ -90,7 +90,7 @@ describe('SurfaceComponent per-role subscription', () => {
       harness.manager.capabilities.contribute({
         module: 'late',
         interface: Capabilities.ReactSurface,
-        implementation: create({ id: 'beta2', filter: Role.makeFilter(RoleB, () => false), component: () => null }),
+        implementation: create({ id: 'beta2', filter: makeFilter(RoleB, () => false), component: () => null }),
       });
     });
 
@@ -121,7 +121,7 @@ describe('SurfaceComponent per-role subscription', () => {
           interface: Capabilities.ReactSurface,
           implementation: create({
             id: `beta${i}`,
-            filter: Role.makeFilter(RoleB, () => false),
+            filter: makeFilter(RoleB, () => false),
             component: () => null,
           }),
         });
@@ -175,7 +175,7 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
             Capabilities.ReactSurface,
             roles.flatMap((role, ri) =>
               Array.from({ length: SURFACES_PER_ROLE }, (_, si) =>
-                create({ id: `r${ri}s${si}`, filter: Role.makeFilter(role), component: () => <span /> }),
+                create({ id: `r${ri}s${si}`, filter: makeFilter(role), component: () => <span /> }),
               ),
             ),
           ),
@@ -209,7 +209,7 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
             interface: Capabilities.ReactSurface,
             implementation: create({
               id: `extra${round}`,
-              filter: Role.makeFilter(role, () => false),
+              filter: makeFilter(role, () => false),
               component: () => null,
             }),
           });

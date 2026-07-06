@@ -6,6 +6,7 @@ import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 
 import { Role } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
 import { Entity, Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
@@ -18,7 +19,7 @@ import { AppCapabilities } from '../../app-framework';
 //
 
 type TokenData<T> = T extends Role.Role<infer D> ? D : never;
-type FilterData<F> = F extends Role.Filter<infer D> ? D : never;
+type FilterData<F> = F extends Surface.Filter<infer D> ? D : never;
 type UnionToIntersection<U> = (U extends any ? (arg: U) => void : never) extends (arg: infer I) => void ? I : never;
 type IsAny<T> = 0 extends 1 & T ? true : false;
 
@@ -33,9 +34,9 @@ type IsAny<T> = 0 extends 1 & T ? true : false;
  * Use this when a single component should render for multiple roles — replaces
  * the legacy `role: ['article', 'section']` array.
  */
-export const oneOf = <TFilters extends ReadonlyArray<Role.Filter<any>>>(
+export const oneOf = <TFilters extends ReadonlyArray<Surface.Filter<any>>>(
   ...filters: TFilters
-): Role.Filter<FilterData<TFilters[number]>> => {
+): Surface.Filter<FilterData<TFilters[number]>> => {
   const bindings = filters.flatMap((filter) => filter.bindings);
   return { bindings };
 };
@@ -45,13 +46,13 @@ export const oneOf = <TFilters extends ReadonlyArray<Role.Filter<any>>>(
  * of roles (throws otherwise); for each role the guards are combined with `&&`.
  * The resulting data type is the intersection.
  */
-export const allOf = <TFilters extends ReadonlyArray<Role.Filter<any>>>(
+export const allOf = <TFilters extends ReadonlyArray<Surface.Filter<any>>>(
   ...filters: TFilters
-): Role.Filter<UnionToIntersection<FilterData<TFilters[number]>>> => {
+): Surface.Filter<UnionToIntersection<FilterData<TFilters[number]>>> => {
   if (filters.length === 0) {
     throw new Error('AppSurface.allOf requires at least one filter');
   }
-  const rolesPerFilter = filters.map((filter) => new Set(filter.bindings.map((binding: Role.Binding) => binding.role)));
+  const rolesPerFilter = filters.map((filter) => new Set(filter.bindings.map((binding: Surface.Binding) => binding.role)));
   const [firstRoles, ...restRoles] = rolesPerFilter;
   for (const roles of restRoles) {
     if (roles.size !== firstRoles.size) {
@@ -63,12 +64,12 @@ export const allOf = <TFilters extends ReadonlyArray<Role.Filter<any>>>(
       }
     }
   }
-  const bindings: Role.Binding[] = Array.from(firstRoles).map((role) => ({
+  const bindings: Surface.Binding[] = Array.from(firstRoles).map((role) => ({
     role,
     guard: (data: unknown) =>
       filters.every((filter) =>
         // Within a single filter, same-role bindings compose disjunctively (ANY match passes).
-        filter.bindings.some((entry: Role.Binding) => entry.role === role && entry.guard(data)),
+        filter.bindings.some((entry: Surface.Binding) => entry.role === role && entry.guard(data)),
       ),
   }));
   return { bindings };
@@ -83,24 +84,24 @@ export const allOf = <TFilters extends ReadonlyArray<Role.Filter<any>>>(
  *
  * An optional `predicate` narrows on the rest of the data — most useful for
  * surfaces that distinguish variants by a flag (e.g. `editable`, `compact`)
- * without having to hand-roll a fully typed `Role.Filter`.
+ * without having to hand-roll a fully typed `Surface.Filter`.
  */
 export const object: {
   <TToken extends Role.Role<{ subject?: any }>, S extends Type.AnyEntity>(
     token: TToken,
     schema: S,
     predicate?: (data: NonNullable<TokenData<TToken>>) => boolean,
-  ): Role.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Type.InstanceType<S> }>;
+  ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Type.InstanceType<S> }>;
   <TToken extends Role.Role<{ subject?: any }>, S extends Type.AnyEntity[]>(
     token: TToken,
     schemas: [...S],
     predicate?: (data: NonNullable<TokenData<TToken>>) => boolean,
-  ): Role.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Type.InstanceType<S[number]> }>;
+  ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Type.InstanceType<S[number]> }>;
 } = (
   token: Role.Role<any>,
   schemaOrSchemas: Type.AnyEntity | Type.AnyEntity[],
   predicate?: (data: any) => boolean,
-): Role.Filter<any> => {
+): Surface.Filter<any> => {
   const schemas = (Array.isArray(schemaOrSchemas) ? schemaOrSchemas : [schemaOrSchemas]) as Array<
     Type.AnyObj | Type.AnyRelation
   >;
@@ -120,7 +121,7 @@ export const object: {
     }
     return predicate ? predicate(data) : true;
   };
-  return Role.makeFilter(token, guard);
+  return Surface.makeFilter(token, guard);
 };
 
 /**
@@ -132,7 +133,7 @@ export const object: {
 export const literal = <TToken extends Role.Role<{ subject?: any }>, T extends string | null>(
   token: TToken,
   value: T,
-): Role.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: T }> => {
+): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: T }> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
@@ -157,12 +158,12 @@ export const subject: {
   <TToken extends Role.Role<{ subject?: any }>, T>(
     token: TToken,
     check: (value: unknown) => value is T,
-  ): Role.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: T }>;
+  ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: T }>;
   <TToken extends Role.Role<{ subject?: any }>>(
     token: TToken,
     check: (value: unknown) => boolean,
-  ): Role.Filter<NonNullable<TokenData<TToken>>>;
-} = (token: Role.Role<any>, check: (value: unknown) => boolean): Role.Filter<any> => {
+  ): Surface.Filter<NonNullable<TokenData<TToken>>>;
+} = (token: Role.Role<any>, check: (value: unknown) => boolean): Surface.Filter<any> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
@@ -179,7 +180,7 @@ export const subject: {
 export const snapshot = <TToken extends Role.Role<{ subject?: any }>, S extends Type.Obj<any>>(
   token: TToken,
   schema: S,
-): Role.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Obj.Snapshot<Type.InstanceType<S>> }> => {
+): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Obj.Snapshot<Type.InstanceType<S>> }> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
@@ -195,20 +196,20 @@ export const snapshot = <TToken extends Role.Role<{ subject?: any }>, S extends 
  * {@link allOf} and {@link object} to express "article displaying X whose companion is Y".
  */
 export const companion: {
-  <TToken extends Role.Role<any>>(token: TToken): Role.Filter<{ companionTo: Obj.Any }>;
+  <TToken extends Role.Role<any>>(token: TToken): Surface.Filter<{ companionTo: Obj.Any }>;
   <TToken extends Role.Role<any>, S extends Type.AnyEntity>(
     token: TToken,
     schema: S,
-  ): Role.Filter<{ companionTo: Type.InstanceType<S> }>;
-  <TToken extends Role.Role<any>, T extends string>(token: TToken, value: T): Role.Filter<{ companionTo: T }>;
+  ): Surface.Filter<{ companionTo: Type.InstanceType<S> }>;
+  <TToken extends Role.Role<any>, T extends string>(token: TToken, value: T): Surface.Filter<{ companionTo: T }>;
   <TToken extends Role.Role<any>, T>(
     token: TToken,
     guard: (value: unknown) => value is T,
-  ): Role.Filter<{ companionTo: T }>;
+  ): Surface.Filter<{ companionTo: T }>;
 } = (
   token: Role.Role<any>,
   schemaOrValueOrGuard?: Type.AnyEntity | string | ((value: unknown) => boolean),
-): Role.Filter<any> => {
+): Surface.Filter<any> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
@@ -331,7 +332,7 @@ export type SettingsProps<T extends {}, Props extends {} = {}> = {
  * filter matches any settings subject (used by the generic default settings
  * surface); pass a `prefix` to match a single plugin's settings.
  */
-export const settings = (token: Role.Role<any>, prefix?: string): Role.Filter<SettingsData> => {
+export const settings = (token: Role.Role<any>, prefix?: string): Surface.Filter<SettingsData> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
@@ -508,7 +509,7 @@ export type ComponentProps<Component extends string = string, ComponentProps ext
 export const component = <ComponentProps = any, Component extends string = string>(
   token: Role.Role<DialogData>,
   id: Component,
-): Role.Filter<DialogData<Component, ComponentProps>> => {
+): Surface.Filter<DialogData<Component, ComponentProps>> => {
   const guard = (data: unknown): boolean => {
     return typeof data === 'object' && data !== null && (data as { component?: unknown }).component === id;
   };
@@ -549,16 +550,16 @@ export type FormInputData = {
 export const FormInput: Role.Role<FormInputData> = Role.make('org.dxos.role.formInput');
 
 /** Filter FormInput surfaces by a typed data predicate. */
-export const formInput = (predicate: (data: FormInputData) => boolean): Role.Filter<FormInputData> =>
-  Role.makeFilter(FormInput, predicate);
+export const formInput = (predicate: (data: FormInputData) => boolean): Surface.Filter<FormInputData> =>
+  Surface.makeFilter(FormInput, predicate);
 
 /** Filter FormInput surfaces by a predicate on the field's AST (`fieldPropertyAst`). */
-export const formInputByField = (predicate: (ast: SchemaAST.AST) => boolean): Role.Filter<FormInputData> =>
-  Role.makeFilter(FormInput, (data) => data.fieldPropertyAst != null && predicate(data.fieldPropertyAst));
+export const formInputByField = (predicate: (ast: SchemaAST.AST) => boolean): Surface.Filter<FormInputData> =>
+  Surface.makeFilter(FormInput, (data) => data.fieldPropertyAst != null && predicate(data.fieldPropertyAst));
 
 /** Filter FormInput surfaces by a predicate on the schema's root AST. */
-export const formInputBySchema = (predicate: (ast: SchemaAST.AST) => boolean): Role.Filter<FormInputData> =>
-  Role.makeFilter(FormInput, (data) => predicate(data.schema.ast));
+export const formInputBySchema = (predicate: (ast: SchemaAST.AST) => boolean): Surface.Filter<FormInputData> =>
+  Surface.makeFilter(FormInput, (data) => predicate(data.schema.ast));
 
 /** Surface data for navtree-item-end role. */
 export type NavtreeItemEndData<Subject = unknown> = {
@@ -634,7 +635,7 @@ export type DocumentTitleProps<Subject = unknown, Props extends {} = {}> = Docum
 /**
  * Spy filter: logs the filter's bindings and data to the console.
  */
-export const spyFilter = <TData>(label: string, filter: Role.Filter<TData>): Role.Filter<TData> => ({
+export const spyFilter = <TData>(label: string, filter: Surface.Filter<TData>): Surface.Filter<TData> => ({
   bindings: filter.bindings.map((binding) => ({
     role: binding.role,
     guard: (data: unknown) => {

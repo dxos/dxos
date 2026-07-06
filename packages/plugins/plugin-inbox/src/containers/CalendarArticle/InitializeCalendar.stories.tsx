@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capabilities, Capability, Plugin, Role } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
@@ -41,7 +41,7 @@ const MockAuthSurfacePlugin = Plugin.define(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create({
             id: 'mockConnectorAuth',
-            filter: Role.makeFilter(ConnectorAuth),
+            filter: Surface.makeFilter(ConnectorAuth),
             component: ({ data }) => (
               <div className='text-description'>
                 Mock auth surface for{' '}
