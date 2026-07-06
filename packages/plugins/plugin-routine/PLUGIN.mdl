@@ -10,8 +10,9 @@ pipelines connecting ECHO objects to persistent compute functions.
 Triggers listen for ECHO mutations, timer schedules, incoming feeds (email, webhook),
 or data subscriptions and invoke `PersistentOperation` handlers when their conditions
 fire. Each trigger carries optional structured input and is dispatched by a
-per-space `TriggerDispatcher` that runs locally in the browser or is delegated to
-the DXOS edge when the space `computeEnvironment` is `edge`.
+per-space `TriggerDispatcher` that runs locally in the browser, or is delegated to
+the DXOS edge when the trigger's `remote` flag is set. A space-wide
+`triggersDisabled` flag acts as a kill-switch that stops local dispatch entirely.
 
 The plugin integrates with the `@dxos/compute` operation registry and the
 `@dxos/functions-runtime` execution layer. Skill, operation-handler, and
@@ -237,16 +238,20 @@ feat F-1: Trigger Management
 feat F-2: Trigger Dispatch
 
   req F-2.1:
-    when: space.properties.computeEnvironment === "local"
+    when: space.properties.triggersDisabled is unset or false
     then: TriggerDispatcher starts for that space
 
   req F-2.2:
-    when: space.properties.computeEnvironment === "edge" or "disabled"
+    when: space.properties.triggersDisabled === true
     then: TriggerDispatcher stops for that space
 
   req F-2.3:
-    when: computeEnvironment changes
+    when: triggersDisabled changes
     then: any in-flight dispatcher transition is cancelled before the new one starts
+
+  req F-2.3a:
+    when: trigger.remote === true
+    then: the local TriggerDispatcher skips the trigger (it runs on the edge instead)
 
   req F-2.4:
     when: trigger spec.kind === "timer" and enabled === true
@@ -265,15 +270,15 @@ feat F-2: Trigger Dispatch
 feat F-3: Force Run and Cursor Reset
 
   req F-3.1:
-    when: timer trigger is enabled and computeEnvironment !== "disabled"
+    when: timer trigger is enabled and space.properties.triggersDisabled !== true
     then: user can force-run the trigger immediately from AutomationPanel
 
   req F-3.2:
-    when: computeEnvironment === "local"
+    when: trigger.remote !== true
     then: force-run invokes TriggerDispatcher.invokeTrigger directly in-process
 
   req F-3.3:
-    when: computeEnvironment === "edge"
+    when: trigger.remote === true
     then: force-run calls FunctionsServiceClient.forceRunCronTrigger via HTTP
 
   req F-3.4:
@@ -369,7 +374,7 @@ test T-4: Enable/disable toggle
 
 ```mdl
 test T-5: Force run timer trigger (local)
-  given: timer trigger enabled, computeEnvironment = "local"
+  given: timer trigger enabled, trigger.remote unset
   when: user clicks the force-run button
   then:
     - TriggerDispatcher.invokeTrigger called with a TimerEvent
@@ -377,9 +382,9 @@ test T-5: Force run timer trigger (local)
 ```
 
 ```mdl
-test T-6: Dispatcher lifecycle on environment change
-  given: space computeEnvironment = "local", dispatcher running
-  when: space.properties.computeEnvironment changes to "edge"
+test T-6: Dispatcher lifecycle on kill-switch change
+  given: space triggersDisabled unset, dispatcher running
+  when: space.properties.triggersDisabled changes to true
   then:
     - in-flight transition fiber interrupted
     - TriggerDispatcher.stop() called for that space
@@ -387,7 +392,7 @@ test T-6: Dispatcher lifecycle on environment change
 
 ```mdl
 test T-7: CreateTriggerFromTemplate with timer
-  given: db contains Script "daily-summary", computeEnvironment = "local"
+  given: db contains Script "daily-summary", space triggersDisabled unset
   when: op:CreateTriggerFromTemplate invoked with template={type:"timer",cron:"0 8 * * *"}, scriptName="daily-summary"
   then:
     - Trigger created with spec.kind === "timer", spec.cron === "0 8 * * *"

@@ -663,7 +663,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
     const feeds = await db.query(Filter.type(Feed.Feed)).run();
     for (const feed of feeds) {
-      const feedDXN = Feed.getQueueUri(feed);
+      const feedDXN = Feed.getFeedUri(feed);
       if (!feedDXN) {
         continue;
       }

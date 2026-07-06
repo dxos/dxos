@@ -54,7 +54,7 @@ const DefaultStory = (props: MasonryRootProps) => {
 
   return (
     <Masonry.Root {...props} Tile={StoryItem}>
-      <Masonry.Content centered>
+      <Masonry.Content>
         <Masonry.Viewport items={people} getId={(person) => person.id} />
       </Masonry.Content>
     </Masonry.Root>

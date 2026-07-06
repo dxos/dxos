@@ -59,7 +59,6 @@ export type FormRootProps<T extends AnyProperties = AnyProperties> = Merge<
   Omit<NaturalFormFieldSetProps<T>, 'schema' | 'path'>
 >;
 
-// `variant` (from FormContextValue) flows through `...props` into the context for all parts to read.
 export const FormRoot = <T extends AnyProperties = AnyProperties>({
   children,
   schema,

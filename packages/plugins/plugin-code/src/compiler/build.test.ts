@@ -22,7 +22,7 @@ export const main = (): void => {
 main();
 `;
 
-describe.concurrent('compileEntry', { tags: ['compiler'] }, () => {
+describe.concurrent('compileEntry', { tags: ['manual'] }, () => {
   test('emits JS for the hello-world scaffold', async ({ expect }) => {
     resetCompiler();
     const files: LoadedFile[] = [{ path: 'src/hello.ts', content: HELLO_SOURCE }];
@@ -132,7 +132,7 @@ describe.concurrent('executeScript', () => {
   });
 });
 
-describe('compile + execute round-trip', { tags: ['compiler'] }, () => {
+describe('compile + execute round-trip', { tags: ['manual'] }, () => {
   test('hello-world scaffold prints "Hello, World!"', async ({ expect }) => {
     const files: LoadedFile[] = [{ path: 'src/hello.ts', content: HELLO_SOURCE }];
     const build = await compileEntry(files);

@@ -5,13 +5,13 @@
 import { RuntimeServiceError } from '@dxos/errors';
 import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
 
-export class QueueServiceImpl implements FeedProtocol.QueueService {
+export class FeedServiceImpl implements FeedProtocol.FeedService {
   constructor(
     protected _ctx: EdgeFunctionEnv.TraceContext,
     private readonly _queueService: EdgeFunctionEnv.QueueService,
   ) {}
 
-  async queryQueue(request: FeedProtocol.QueryQueueRequest): Promise<FeedProtocol.QueryResult> {
+  async queryFeed(request: FeedProtocol.QueryFeedRequest): Promise<FeedProtocol.QueryResult> {
     try {
       using result = await this._queueService.queryQueue(this._ctx, request);
       // Copy to avoid hanging RPC stub (Workers RPC lifecycle).
@@ -23,44 +23,44 @@ export class QueueServiceImpl implements FeedProtocol.QueueService {
     } catch (error) {
       const { query } = request;
       throw RuntimeServiceError.wrap({
-        message: 'Queue query failed.',
+        message: 'Feed query failed.',
         context: {
-          subspaceTag: query?.queuesNamespace,
+          subspaceTag: query?.feedNamespace,
           spaceId: query?.spaceId,
-          queueId: query?.queueIds?.[0],
+          feedId: query?.feedIds?.[0],
         },
         ifTypeDiffers: true,
       })(error);
     }
   }
 
-  async insertIntoQueue(request: FeedProtocol.InsertIntoQueueRequest): Promise<void> {
+  async insertIntoFeed(request: FeedProtocol.InsertIntoFeedRequest): Promise<void> {
     try {
       using _ = await this._queueService.insertIntoQueue(this._ctx, request);
     } catch (error) {
-      const { subspaceTag, spaceId, queueId } = request;
+      const { subspaceTag, spaceId, feedId } = request;
       throw RuntimeServiceError.wrap({
-        message: 'Queue append failed.',
-        context: { subspaceTag, spaceId, queueId },
+        message: 'Feed append failed.',
+        context: { subspaceTag, spaceId, feedId },
         ifTypeDiffers: true,
       })(error);
     }
   }
 
-  async deleteFromQueue(request: FeedProtocol.DeleteFromQueueRequest): Promise<void> {
+  async deleteFromFeed(request: FeedProtocol.DeleteFromFeedRequest): Promise<void> {
     try {
       using _ = await this._queueService.deleteFromQueue(this._ctx, request);
     } catch (error) {
-      const { subspaceTag, spaceId, queueId } = request;
+      const { subspaceTag, spaceId, feedId } = request;
       throw RuntimeServiceError.wrap({
-        message: 'Queue delete failed.',
-        context: { subspaceTag, spaceId, queueId },
+        message: 'Feed delete failed.',
+        context: { subspaceTag, spaceId, feedId },
         ifTypeDiffers: true,
       })(error);
     }
   }
 
-  async syncQueue(_: FeedProtocol.SyncQueueRequest): Promise<void> {
+  async syncFeed(_: FeedProtocol.SyncFeedRequest): Promise<void> {
     // No-op in Cloudflare runtime.
   }
 
