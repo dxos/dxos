@@ -5,13 +5,13 @@ package dxos.client.services;
 import "google/protobuf/empty.proto";
 
 
-message QueueQuery {
+message FeedQuery {
   string space_id = 1;
 
-  optional string queues_namespace = 2;
+  optional string feed_namespace = 2;
 
   /// Queries the whole space if missing.
-  repeated string queue_ids = 3;
+  repeated string feed_ids = 3;
 
   /// Filter items after this cursor. Exclusive.
   optional string after = 4;
@@ -28,11 +28,11 @@ message QueueQuery {
   optional int32 limit = 8;
   optional bool reverse = 9;
 
-  // TODO(dmaretskyi): Remove this field -- raw queues dont index object IDs anymore.
+  // TODO(dmaretskyi): Remove this field -- raw feeds dont index object IDs anymore.
   repeated string object_ids = 100;
 }
 
-message QueueQueryResult {
+message FeedQueryResult {
   /// JSON-encoded object payloads. Each entry is a serialized ObjectJSON.
   /// We use JSON strings instead of google.protobuf.Struct because Struct
   /// coerces `undefined` to `null`, corrupting optional fields.
@@ -47,29 +47,29 @@ message QueueQueryResult {
   optional bool has_more = 4;
 }
 
-message QueryQueueRequest {
-  QueueQuery query = 1;
+message QueryFeedRequest {
+  FeedQuery query = 1;
 }
 
-message InsertIntoQueueRequest {
+message InsertIntoFeedRequest {
   string subspace_tag = 1;
   string space_id = 2;
-  string queue_id = 3;
+  string feed_id = 3;
   /// JSON-encoded object payloads. Each entry is a serialized ObjectJSON.
   repeated string objects = 4;
 }
 
-message DeleteFromQueueRequest {
+message DeleteFromFeedRequest {
   string subspace_tag = 1;
   string space_id = 2;
-  string queue_id = 3;
+  string feed_id = 3;
   repeated string object_ids = 4;
 }
 
-message SyncQueueRequest {
+message SyncFeedRequest {
   string subspace_tag = 1;
   string space_id = 2;
-  string queue_id = 3;
+  string feed_id = 3;
   /// Whether to push local changes to the server. Defaults to true.
   optional bool should_push = 4;
   /// Whether to pull remote changes from the server. Defaults to true.
@@ -82,7 +82,7 @@ message GetSyncStateRequest {
   repeated string namespaces = 2;
 }
 
-message QueueNamespaceSyncState {
+message FeedNamespaceSyncState {
   string namespace = 1;
   /// Blocks still to pull from remote. 0 when caught up.
   int64 blocks_to_pull = 2;
@@ -93,13 +93,13 @@ message QueueNamespaceSyncState {
 }
 
 message GetSyncStateResponse {
-  repeated QueueNamespaceSyncState namespaces = 1;
+  repeated FeedNamespaceSyncState namespaces = 1;
 }
 
-service QueueService {
-  rpc QueryQueue(QueryQueueRequest) returns (QueueQueryResult);
-  rpc InsertIntoQueue(InsertIntoQueueRequest) returns (google.protobuf.Empty);
-  rpc DeleteFromQueue(DeleteFromQueueRequest) returns (google.protobuf.Empty);
-  rpc SyncQueue(SyncQueueRequest) returns (google.protobuf.Empty);
+service FeedService {
+  rpc QueryFeed(QueryFeedRequest) returns (FeedQueryResult);
+  rpc InsertIntoFeed(InsertIntoFeedRequest) returns (google.protobuf.Empty);
+  rpc DeleteFromFeed(DeleteFromFeedRequest) returns (google.protobuf.Empty);
+  rpc SyncFeed(SyncFeedRequest) returns (google.protobuf.Empty);
   rpc GetSyncState(GetSyncStateRequest) returns (GetSyncStateResponse);
 }

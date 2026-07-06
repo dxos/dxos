@@ -630,6 +630,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-chess-com/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-client/package.json",
           "jsonpath": "$.version"
         },
@@ -1226,6 +1231,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-components/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-dashboard/package.json",
           "jsonpath": "$.version"
         },
         {

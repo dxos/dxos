@@ -6,7 +6,8 @@ import React, { useCallback, useState } from 'react';
 
 import { Surface, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { Filter, Obj } from '@dxos/echo';
-import { Connection, ConnectorAuth } from '@dxos/plugin-connector';
+import { Connection } from '@dxos/plugin-connector';
+import { ConnectorAuth } from '@dxos/plugin-connector/components';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 

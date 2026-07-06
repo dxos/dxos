@@ -42,11 +42,11 @@ export class FeedHandle {
     try {
       TRACE_FEED_LOAD &&
         log.info('feed refresh begin', { currentObjects: this._objects.length, refreshId: thisRefreshId });
-      const { objects } = await this._service.queryQueue({
+      const { objects } = await this._service.queryFeed({
         query: {
-          queuesNamespace: this._namespace,
+          feedNamespace: this._namespace,
           spaceId: this._spaceId,
-          queueIds: [this._feedId],
+          feedIds: [this._feedId],
         },
       });
       TRACE_FEED_LOAD && log.info('items fetched', { refreshId: thisRefreshId, count: objects?.length ?? 0 });
@@ -142,7 +142,7 @@ export class FeedHandle {
   readonly #queryResultCache = new QueryResultCache();
 
   constructor(
-    private readonly _service: FeedProtocol.QueueService,
+    private readonly _service: FeedProtocol.FeedService,
     private readonly _refResolver: Ref.Resolver,
     private readonly _echoUri: EID.EID,
     private readonly _database: DatabaseImpl,
@@ -201,10 +201,10 @@ export class FeedHandle {
 
     try {
       for (let i = 0; i < encoded.length; i += FEED_APPEND_BATCH_SIZE) {
-        await this._service.insertIntoQueue({
+        await this._service.insertIntoFeed({
           subspaceTag: this._namespace,
           spaceId: this._spaceId,
-          queueId: this._feedId,
+          feedId: this._feedId,
           objects: encoded.slice(i, i + FEED_APPEND_BATCH_SIZE),
         });
       }
@@ -225,10 +225,10 @@ export class FeedHandle {
     this._window?.notifyDeleted(ids);
 
     try {
-      await this._service.deleteFromQueue({
+      await this._service.deleteFromFeed({
         subspaceTag: this._namespace,
         spaceId: this._spaceId,
-        queueId: this._feedId,
+        feedId: this._feedId,
         objectIds: ids,
       });
     } catch (err) {
@@ -254,10 +254,10 @@ export class FeedHandle {
     shouldPush = true,
     shouldPull = true,
   }: { shouldPush?: boolean; shouldPull?: boolean } = {}): Promise<void> {
-    await this._service.syncQueue({
+    await this._service.syncFeed({
       subspaceTag: this._namespace,
       spaceId: this._spaceId,
-      queueId: this._feedId,
+      feedId: this._feedId,
       shouldPush,
       shouldPull,
     });
@@ -277,11 +277,11 @@ export class FeedHandle {
   }
 
   async fetchObjectsJSON(): Promise<ObjectJSON[]> {
-    const { objects } = await this._service.queryQueue({
+    const { objects } = await this._service.queryFeed({
       query: {
-        queuesNamespace: this._namespace,
+        feedNamespace: this._namespace,
         spaceId: this._spaceId,
-        queueIds: [this._feedId],
+        feedIds: [this._feedId],
       },
     });
     return (objects ?? []).flatMap((encoded) => {

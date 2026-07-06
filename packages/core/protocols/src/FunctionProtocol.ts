@@ -76,7 +76,7 @@ export interface Context {
      * Queue service.
      * Available if the function is invoked in context of a space.
      */
-    queueService?: FeedProtocol.QueueService;
+    queueService?: FeedProtocol.FeedService;
 
     /**
      * Functions service.

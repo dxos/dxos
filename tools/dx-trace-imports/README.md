@@ -1,6 +1,6 @@
 # @dxos/dx-trace-imports
 
-Traces static import chains from an entry module to a target package, file, or glob pattern using [madge](https://github.com/pahen/madge).
+Traces static import chains from an entry module to a target package, file, or glob pattern by parsing sources with SWC, resolving `package.json` `imports`/`exports` (including `#`-prefixed import maps), and following transitive dependencies through workspace `@dxos/*` packages.
 
 ## Usage
 
@@ -17,7 +17,7 @@ dx-trace-imports (--from <entry.ts> | --export <subpath>) --to <package-or-patte
   - A relative or absolute file path (e.g. `./src/foo.ts`).
   - A glob pattern matched against package names, paths, and external specifiers (e.g. `*.pcss`, `@dxos/react-ui*`).
 - `--max-chains <n>`: Stop after this many chains (default: `10`).
-- `--conditions <list>`: Comma-separated package.json export conditions (default: `workerd,worker,node`). Pass `""` to clear.
+- `--conditions <list>`: Comma-separated package.json export conditions (default: `workerd,worker,node`). Pass `""` to clear. Include `source` to trace TypeScript sources instead of compiled output.
 - `--packages-only`: Strip filenames, render package-to-package chains, and dedupe.
 - `--fail-on <present|missing>`: Exit non-zero when chains are present (`present`) or absent (`missing`). Useful for CI verification.
 

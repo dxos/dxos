@@ -10,3 +10,4 @@ export * from './SyncStatus';
 // TODO(wittjosiah): Remove.
 export { RENAME_POPOVER } from '../constants';
 export type { RenameCallback, RenameSubject } from '../containers/RenamePopover';
+export * from '../types/surface';

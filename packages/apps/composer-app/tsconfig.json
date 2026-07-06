@@ -241,6 +241,9 @@
       "path": "../../plugins/plugin-chess"
     },
     {
+      "path": "../../plugins/plugin-chess-com"
+    },
+    {
       "path": "../../plugins/plugin-client"
     },
     {

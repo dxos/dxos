@@ -479,10 +479,10 @@ class QueryClass implements Any {
 
     const feedItems = items as Feed.Feed[];
     const feedScopes = feedItems.map((feed) => {
-      const uri = Feed.getQueueUri(feed);
+      const uri = Feed.getFeedUri(feed);
       if (!uri) {
         throw new TypeError(
-          `Query.from() expects persisted Feed objects with a queue URI; got feed without a space (id=${Obj.getURI(feed)}).`,
+          `Query.from() expects persisted Feed objects with a feed URI; got feed without a space (id=${Obj.getURI(feed)}).`,
         );
       }
       return { _tag: 'feed' as const, feedUri: String(uri) };

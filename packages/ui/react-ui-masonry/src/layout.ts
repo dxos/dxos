@@ -16,7 +16,7 @@ export type LayoutResult = {
   rects: Rect[];
   /** Width (px) shared by every column. */
   columnWidth: number;
-  /** Total content height (px), trailing gutter trimmed. */
+  /** Total content height (px), including the perimeter gap. */
   height: number;
 };
 
@@ -27,8 +27,10 @@ export type LayoutOptions = {
   columnCount: number;
   /** Available content width (px), already net of any scrollbar allowance. */
   containerWidth: number;
-  /** Space (px) between columns and between stacked tiles. */
-  gutterPx: number;
+  /** Space (px) between tiles and, vertically, around the grid perimeter. */
+  gapPx: number;
+  /** Optional cap on column width (px); leftover width centers the columns. */
+  maxColumnWidthPx?: number;
 };
 
 /**
@@ -36,11 +38,31 @@ export type LayoutOptions = {
  * tile is placed in the currently shortest column (ties resolve to the lowest
  * index for stable ordering). Pure and synchronous so column balancing is unit
  * testable without a DOM.
+ *
+ * Columns are separated by a single gap. They stretch to fill `containerWidth`
+ * unless `maxColumnWidthPx` caps them narrower, in which case the leftover width
+ * is split evenly so the grid stays centred (the outer margin grows beyond the
+ * gap). The base left/right perimeter is owned by the scroll container (via its
+ * `--gutter`); the layout adds the centring offset plus the top/bottom perimeter.
  */
-export const layout = ({ heights, columnCount, containerWidth, gutterPx }: LayoutOptions): LayoutResult => {
+export const layout = ({
+  heights,
+  columnCount,
+  containerWidth,
+  gapPx,
+  maxColumnWidthPx,
+}: LayoutOptions): LayoutResult => {
   const columns = Math.max(1, Math.floor(columnCount));
-  const columnWidth = (containerWidth - (columns - 1) * gutterPx) / columns;
-  const columnHeights = new Array<number>(columns).fill(0);
+  const fillColumnWidth = (containerWidth - (columns - 1) * gapPx) / columns;
+  const columnWidth =
+    maxColumnWidthPx && maxColumnWidthPx > 0 ? Math.min(fillColumnWidth, maxColumnWidthPx) : fillColumnWidth;
+
+  // Centre the (possibly capped) columns within the container.
+  const usedWidth = columns * columnWidth + (columns - 1) * gapPx;
+  const sideInset = Math.max(0, (containerWidth - usedWidth) / 2);
+
+  // Seed each column with the top gap so the first row clears the perimeter.
+  const columnHeights = new Array<number>(columns).fill(gapPx);
 
   const rects: Rect[] = heights.map((tileHeight) => {
     let target = 0;
@@ -51,15 +73,16 @@ export const layout = ({ heights, columnCount, containerWidth, gutterPx }: Layou
     }
 
     const rect: Rect = {
-      x: target * (columnWidth + gutterPx),
+      x: sideInset + target * (columnWidth + gapPx),
       y: columnHeights[target],
       column: target,
     };
-    columnHeights[target] += tileHeight + gutterPx;
+    columnHeights[target] += tileHeight + gapPx;
     return rect;
   });
 
+  // Each column already carries a trailing gap, which becomes the bottom perimeter.
   const tallest = columnHeights.reduce((max, value) => Math.max(max, value), 0);
-  const height = Math.max(0, tallest - gutterPx);
+  const height = heights.length === 0 ? 0 : tallest;
   return { rects, columnWidth, height };
 };

@@ -12,7 +12,7 @@ import { type ModuleProps } from './types';
 
 export const InvocationsModule = ({ space }: ModuleProps) => {
   const feed = space?.properties.invocationTraceFeed?.target;
-  const feedDXN = feed ? Feed.getQueueUri(feed) : undefined;
+  const feedDXN = feed ? Feed.getFeedUri(feed) : undefined;
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>

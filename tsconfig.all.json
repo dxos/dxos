@@ -361,6 +361,9 @@
       "path": "packages/plugins/plugin-chess/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-chess-com/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-client/tsconfig.json"
     },
     {
@@ -719,6 +722,9 @@
     },
     {
       "path": "packages/ui/react-ui-components/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-dashboard/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-dnd/tsconfig.json"

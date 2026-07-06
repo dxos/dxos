@@ -153,6 +153,8 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
     await Promise.all(repairs.map((repair) => repair({ space, isDefault: AppSpace.isPersonalSpace(space) })));
   }, [space, repairs]);
 
+  const handleResetHome = useCallback(() => AppSpace.resetHomeVisibility(space), [space]);
+
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   // Wired to an onClick handler: must resolve (never reject) so it can't trigger an unhandled rejection.
   const handleDelete = useCallback(async () => {
@@ -228,6 +230,9 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
             </Form.Row>
             <Form.Row label={t('repair-space.title')} description={t('repair-space.description')}>
               <Button onClick={handleRepair}>{t('repair-space.label')}</Button>
+            </Form.Row>
+            <Form.Row label={t('reset-home.title')} description={t('reset-home.description')}>
+              <Button onClick={handleResetHome}>{t('reset-home.label')}</Button>
             </Form.Row>
           </Form.Section>
 

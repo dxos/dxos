@@ -841,20 +841,20 @@ describe('Feed', () => {
         yield* Feed.append(traceFeed, [Obj.make(TestSchema.Person, { name: 'trace-item' })]);
       }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
 
-      const traceResult = await peer.host.queuesService.queryQueue({
+      const traceResult = await peer.host.feedService.queryFeed({
         query: {
           spaceId: db.spaceId,
-          queueIds: [traceFeed.id],
-          queuesNamespace: FeedProtocol.WellKnownNamespaces.trace,
+          feedIds: [traceFeed.id],
+          feedNamespace: FeedProtocol.WellKnownNamespaces.trace,
         },
       });
       expect(traceResult.objects?.length).toBe(1);
 
-      const dataResult = await peer.host.queuesService.queryQueue({
+      const dataResult = await peer.host.feedService.queryFeed({
         query: {
           spaceId: db.spaceId,
-          queueIds: [traceFeed.id],
-          queuesNamespace: FeedProtocol.WellKnownNamespaces.data,
+          feedIds: [traceFeed.id],
+          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
         },
       });
       expect(dataResult.objects?.length).toBe(0);

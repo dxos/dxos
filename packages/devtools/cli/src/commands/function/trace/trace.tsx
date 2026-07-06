@@ -56,7 +56,7 @@ export const trace = Command.make(
       } else {
         log.info('trace: found invocationTraceFeed', {
           spaceId: db.spaceId,
-          feed: Feed.getQueueUri(traceFeed)?.toString(),
+          feed: Feed.getFeedUri(traceFeed)?.toString(),
         });
       }
 

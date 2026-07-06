@@ -786,14 +786,14 @@ describe('Query', () => {
       await db.appendToFeed(feed, [contactV1, contactV2]);
 
       const both = await db
-        .query(Query.select(Filter.type(DXN.make('com.example.type.person'))).from(Scope.feed(Feed.getQueueUri(feed)!)))
+        .query(Query.select(Filter.type(DXN.make('com.example.type.person'))).from(Scope.feed(Feed.getFeedUri(feed)!)))
         .run();
       expect(both).toHaveLength(2);
 
       const v1 = await db
         .query(
           Query.select(Filter.type(DXN.make('com.example.type.person', '0.1.0'))).from(
-            Scope.feed(Feed.getQueueUri(feed)!),
+            Scope.feed(Feed.getFeedUri(feed)!),
           ),
         )
         .run();
@@ -802,7 +802,7 @@ describe('Query', () => {
       const v2 = await db
         .query(
           Query.select(Filter.type(DXN.make('com.example.type.person', '0.2.0'))).from(
-            Scope.feed(Feed.getQueueUri(feed)!),
+            Scope.feed(Feed.getFeedUri(feed)!),
           ),
         )
         .run();
@@ -822,7 +822,7 @@ describe('Query', () => {
       const obj: TestSchema.Task = await db
         .query(
           Query.select(Filter.type(TestSchema.Task, { title: 'Queue type selector task' })).from([
-            Scope.feed(Feed.getQueueUri(feed)!),
+            Scope.feed(Feed.getFeedUri(feed)!),
           ]),
         )
         .first();
@@ -880,7 +880,7 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
               ...bothSpaces.map((spaceId) => Scope.space({ id: spaceId })),
-              Scope.feed(Feed.getQueueUri(feed1)!),
+              Scope.feed(Feed.getFeedUri(feed1)!),
             ]),
           )
           .run();
@@ -894,7 +894,7 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
               ...bothSpaces.map((spaceId) => Scope.space({ id: spaceId })),
-              Scope.feed(Feed.getQueueUri(feed2)!),
+              Scope.feed(Feed.getFeedUri(feed2)!),
             ]),
           )
           .run();
@@ -908,8 +908,8 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
               ...bothSpaces.map((spaceId) => Scope.space({ id: spaceId })),
-              Scope.feed(Feed.getQueueUri(feed1)!),
-              Scope.feed(Feed.getQueueUri(feed2)!),
+              Scope.feed(Feed.getFeedUri(feed1)!),
+              Scope.feed(Feed.getFeedUri(feed2)!),
             ]),
           )
           .run();
@@ -1031,7 +1031,7 @@ describe('Query', () => {
       const db = await peer.createDatabase();
       // Feed queues use EID (echo://spaceId/queueId), not a DXN with ':trace:'.
       const feed = db.add(Feed.make({}));
-      expect(Feed.getQueueUri(feed)!).toMatch(/^echo:\/\//);
+      expect(Feed.getFeedUri(feed)!).toMatch(/^echo:\/\//);
 
       const traceTask = Obj.make(TestSchema.Task, { title: 'Trace Task' });
       await db.appendToFeed(feed, [traceTask]);
@@ -2206,7 +2206,7 @@ describe('Query', () => {
       {
         const objects = await db
           .query(
-            Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([Scope.feed(Feed.getQueueUri(feed)!)]),
+            Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([Scope.feed(Feed.getFeedUri(feed)!)]),
           )
           .run();
         expect(objects).toHaveLength(1);
@@ -2216,7 +2216,7 @@ describe('Query', () => {
       // Search for React.
       {
         const objects = await db
-          .query(Query.select(Filter.text('React', { type: 'full-text' })).from([Scope.feed(Feed.getQueueUri(feed)!)]))
+          .query(Query.select(Filter.text('React', { type: 'full-text' })).from([Scope.feed(Feed.getFeedUri(feed)!)]))
           .run();
         expect(objects).toHaveLength(1);
         expect((objects[0] as TestSchema.Task).title).toEqual('Getting Started with React');
@@ -2226,7 +2226,7 @@ describe('Query', () => {
       {
         const objects = await db
           .query(
-            Query.select(Filter.text('JavaScript', { type: 'full-text' })).from([Scope.feed(Feed.getQueueUri(feed)!)]),
+            Query.select(Filter.text('JavaScript', { type: 'full-text' })).from([Scope.feed(Feed.getFeedUri(feed)!)]),
           )
           .run();
         expect(objects).toHaveLength(0);
@@ -2276,7 +2276,7 @@ describe('Query', () => {
 
       const obj: TestSchema.Task = await db
         .query(
-          Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([Scope.feed(Feed.getQueueUri(feed)!)]),
+          Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([Scope.feed(Feed.getFeedUri(feed)!)]),
         )
         .first();
       expect(obj).toBeDefined();
