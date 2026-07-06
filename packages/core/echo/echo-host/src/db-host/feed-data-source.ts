@@ -16,7 +16,7 @@ import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 
-export type QueueDataSourceOptions = {
+export type FeedDataSourceOptions = {
   feedStore: FeedStore;
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   /**
@@ -31,10 +31,10 @@ export type QueueDataSourceOptions = {
   feedNamespaces?: string[];
 };
 
-// TODO(queue-to-feed-migration): retains "Queue" naming — `sourceName` below is persisted as a
-// column value in the local `indexCursor`/`objectMeta` SQLite tables (see index-tracker.ts,
-// indexes/entity-meta-index.ts); renaming it requires a local index-store migration.
-export class QueueDataSource implements IndexDataSource {
+export class FeedDataSource implements IndexDataSource {
+  // TODO(queue-to-feed-migration): retains "queue" naming — persisted as a column value in the
+  // local `indexCursor`/`objectMeta` SQLite tables (see index-tracker.ts, indexes/entity-meta-index.ts);
+  // renaming it requires a local index-store migration.
   readonly sourceName = 'queue';
 
   /**
@@ -45,7 +45,7 @@ export class QueueDataSource implements IndexDataSource {
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _getSpaceIds: () => SpaceId[];
 
-  constructor(options: QueueDataSourceOptions) {
+  constructor(options: FeedDataSourceOptions) {
     this._feedStore = options.feedStore;
     this._runtime = options.runtime;
     this._getSpaceIds = options.getSpaceIds;
@@ -159,6 +159,6 @@ export class QueueDataSource implements IndexDataSource {
       }
 
       return { objects, cursors: updatedCursors };
-    }).pipe(RuntimeProvider.provide(this._runtime), Effect.withSpan('QueueDataSource.getChangedObjects'), Effect.orDie);
+    }).pipe(RuntimeProvider.provide(this._runtime), Effect.withSpan('FeedDataSource.getChangedObjects'), Effect.orDie);
   }
 }

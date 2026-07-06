@@ -38,10 +38,10 @@ import {
 import { AutomergeDataSource } from './automerge-data-source';
 import { DataServiceImpl } from './data-service';
 import { type DatabaseRoot } from './database-root';
+import { FeedDataSource } from './feed-data-source';
 import { hintFromIndexingResult } from './invalidation-hint';
 import { LocalQueueServiceImpl } from './local-queue-service';
 import { QueryServiceImpl } from './query-service';
-import { QueueDataSource } from './queue-data-source';
 import { SpaceStateManager } from './space-state-manager';
 
 export type EchoHostProps = {
@@ -90,7 +90,7 @@ export class EchoHost extends Resource {
   private readonly _indexEngine: IndexEngine;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   private readonly _feedStore: FeedStore;
-  private readonly _queueDataSource: QueueDataSource;
+  private readonly _feedDataSource: FeedDataSource;
 
   private _updateIndexes!: DeferredTask;
 
@@ -122,7 +122,7 @@ export class EchoHost extends Resource {
     this._automergeDataSource = new AutomergeDataSource(this._automergeHost);
 
     this._feedStore = new FeedStore({ assignPositions: assignQueuePositions, localActorId: crypto.randomUUID() });
-    this._queueDataSource = new QueueDataSource({
+    this._feedDataSource = new FeedDataSource({
       feedStore: this._feedStore,
       runtime: this._runtime,
       getSpaceIds: () => this._spaceStateManager.spaceIds,
@@ -443,7 +443,7 @@ export class EchoHost extends Resource {
       {
         performance.mark('indexEngine.update.queue:start');
         const result = await this._indexEngine
-          .update(this._ctx, this._queueDataSource, { spaceId: null, limit: 50 })
+          .update(this._ctx, this._feedDataSource, { spaceId: null, limit: 50 })
           .pipe(RuntimeProvider.runPromise(this._runtime));
         _mergeInto(combinedResult, result);
         performance.measure('Index Queues', {
