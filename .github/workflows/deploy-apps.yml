@@ -64,7 +64,7 @@ jobs:
       ((inputs.app || 'all') == 'all' || (inputs.app || 'all') == 'composer') &&
       (inputs.environment == 'labs' || inputs.environment == 'staging' || inputs.environment == 'production'
        || (github.event_name == 'push' && github.ref_name != 'main'))
-    runs-on: ubuntu-24.04-4
+    runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
@@ -101,12 +101,11 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      # Build only (SKIP_DEPLOY) — the artifact is deployed by `deploy` and embedded by the tauri jobs.
+      # Build only — the artifact is deployed by `deploy` and embedded by the tauri jobs.
       - name: Build Composer bundle
-        run: .github/workflows/scripts/deploy-env.sh "$DEPLOY_ENV" composer
+        run: .github/workflows/scripts/bundle-env.sh "$DEPLOY_ENV" composer
         env:
           NODE_ENV: production
-          SKIP_DEPLOY: '1'
 
       - name: Upload Composer bundle
         uses: actions/upload-artifact@v4
@@ -121,7 +120,7 @@ jobs:
     # Run when build-bundle succeeded (consume the artifact) OR was skipped (main / static-only — build
     # normally); skip only if build-bundle failed.
     if: ${{ !cancelled() && needs.build-bundle.result != 'failure' && github.repository == 'dxos/dxos' }}
-    runs-on: ubuntu-24.04-4
+    runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
@@ -165,8 +164,8 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      # Consume the prebuilt Composer bundle when the prep job produced one (labs/staging/production);
-      # `deploy-env.sh` then skips rebuilding composer (PREBUILT_APPS below).
+      # Consume the prebuilt Composer bundle when the prep job produced one (labs/staging/production) —
+      # populating out/composer means bundle-env.sh reuses it instead of rebuilding.
       - name: Download Composer bundle
         if: needs.build-bundle.result == 'success'
         uses: actions/download-artifact@v4
@@ -174,11 +173,17 @@ jobs:
           name: composer-bundle
           path: packages/apps/composer-app/out/composer
 
-      - name: Deploy
+      # Build any app not already present (bundle-env.sh skips populated output dirs, e.g. the downloaded
+      # composer bundle), then deploy them all.
+      - name: Bundle apps
+        run: .github/workflows/scripts/bundle-env.sh "$DEPLOY_ENV" "$DEPLOY_APP"
+        env:
+          NODE_ENV: production
+
+      - name: Deploy apps
         run: .github/workflows/scripts/deploy-env.sh "$DEPLOY_ENV" "$DEPLOY_APP"
         env:
           NODE_ENV: production
-          PREBUILT_APPS: ${{ needs.build-bundle.result == 'success' && 'composer' || '' }}
 
       # Per-app floating pointer to the SHA currently deployed for this app+environment — the
       # branch-pointer replacement (e.g. `git diff composer/staging..composer/production`). `main` is the
