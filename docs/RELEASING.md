@@ -14,9 +14,12 @@ Naming one member in a changeset bumps the whole group. **Apps are not in a publ
 
 The groups carry independent version numbers but **release together**: the single "Version Packages" PR drains all pending changesets, so queued core + plugin bumps publish in the same merge. Independent release *timing* is deferred to a future repo split (plugins → their own repo + trunk + Version PR), not per-group branches.
 
-> **Pre-1.0 rule: every changeset is `patch`.** While the groups are `0.x`, a `minor` escalates the whole
-> group straight to `1.0.0` (a Changesets fixed-group behavior). Reserve `minor`/`major` for the deliberate
-> `1.0.0` cut.
+> **Versioning is standard semver at every version.** At `0.x`, breaking changes ride the **minor**
+> (`0.9.0 → 0.10.0`) and `major` is reserved for the deliberate `1.0.0` cut. A `minor` does **not** cascade
+> the group to `1.0.0` — the old Changesets fixed-group misbehavior is fixed by the release setup (the
+> `workspace:^` peers + flag + `assemble-release-plan` patch; see
+> [`release-spec.md`](design/release-spec.md)). Pick the bump level per the
+> [authoring guide](../agents/instructions/changesets.md).
 
 ## Stable release → npm `@latest`
 

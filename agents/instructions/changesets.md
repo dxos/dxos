@@ -33,26 +33,7 @@ Use **standard semver** — the same rules pre- and post-1.0:
 | **Breaking change** | `minor` (`0.9.0 → 0.10.0`) — the `0.x` convention: breaking rides the minor | `major` |
 | Deliberate `1.0.0` cut | `major` (`0.9.x → 1.0.0`) | — |
 
-A `minor` **no longer cascades the whole group to `1.0.0`** — that was a Changesets misbehavior (a peer-dependent's bump was force-escalated to `major`), fixed by the setup below. So at `0.x`, put breaking changes in the **minor** and reserve `major` for the intentional `1.0.0` cut. Note breaking changes in the changeset **body** so they land in the changelog.
-
-### Why Changesets is patched
-
-Correct semver here depends on three things working together (all already configured — don't undo them):
-
-- **`peerDependencies` use `workspace:^`**, not `workspace:*` (regular deps stay `workspace:*`). A caret range means an in-range minor of a peer isn't read as breaking; an exact pin (`workspace:*`) would be.
-- **`onlyUpdatePeerDependentsWhenOutOfRange: true`** in `.changeset/config.json` — only escalate a peer-dependent when the dependency actually leaves its range (the default escalates on *any* non-patch change).
-- **A local patch of `@changesets/assemble-release-plan`** (`patches/@changesets__assemble-release-plan@6.0.10.patch`) — when a peer change *is* out of range, the dependent escalates to `minor` below `1.0.0` (the `0.x` rule) instead of `major`. Without it, a `0.x` breaking peer change still jumps to `1.0.0`.
-
-**The flag and the patch are independent code paths that cover *different version regimes* — you need both, and neither depends on the other.** In `assemble-release-plan`, the flag is passed into `shouldBumpMajor()` (it decides *whether* a peer-dependent is force-bumped); the patch edits the line *inside* the branch `shouldBumpMajor()` guards (it decides the bump *type*, `major` → `0.x ? minor : major`). They divide as:
-
-| Regime | Peer caret range | What happens | Load-bearing piece |
-| --- | --- | --- | --- |
-| **Pre-1.0** | `^0.9` **excludes** `0.10` | a `minor` is *out of range* → `shouldBumpMajor` is true regardless of the flag → the patched branch runs → `minor` (not `1.0.0`) | **the patch** (the flag is effectively inert here) |
-| **≥1.0** | `^1.2` **includes** `1.3` | a `minor` is *in range* → the flag makes `shouldBumpMajor` false → the dependent isn't force-bumped at all | **the flag** (the patch's branch is never reached) |
-
-Without the flag the cascade *reappears at 1.x* (dependents forced to `2.0.0` on every minor); without the patch it stays broken pre-1.0. `workspace:^` is what makes "in range" mean the right thing in each regime.
-
-Together these make `changeset` behave like plain semver at every version (`patch→patch`, `minor→minor`, `major→major`). If you upgrade the `@changesets/*` packages, re-verify/re-create the patch — pnpm fails loudly on install if it no longer applies. The patch targets the CommonJS build (`dist/*.cjs.js`) that the `@changesets/cli` (CommonJS) loads; the `.esm.js` copy is intentionally left unpatched because the CLI never loads it. Verify it's actually applied after an install: `@changesets/cli` must symlink to the `_patch_hash=…` variant of `@changesets/assemble-release-plan` in `node_modules/.pnpm`, and its `dist/*.cjs.js` line ~227 should carry the `// DXOS patch` comment (the plain, un-suffixed copy stays unpatched — that's expected).
+At `0.x`, put breaking changes in the **minor** and reserve `major` for the intentional `1.0.0` cut. A `minor` does **not** cascade the whole group to `1.0.0` — the release tooling is configured to keep standard semver at every version, so just pick the level from the table and don't worry about the mechanics (how/why it's set up lives in [`docs/design/release-spec.md`](../../docs/design/release-spec.md)). Note breaking changes in the changeset **body** so they land in the changelog.
 
 ## What to write in the body
 
