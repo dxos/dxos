@@ -38,6 +38,8 @@ const SAMPLE_CONTENT = trim`
   - Aristotle was his student.
   - Socrates is a man.
   - All men are mortal.
+
+  - We've been tracking GOOGL, which just hit $500
 `;
 
 // LLM-backed Parser: tags via `parseText` against the edge AI service (same preset the sibling
@@ -87,7 +89,7 @@ const createPosStoryDecorators = (options: PosExtensionOptions) =>
   });
 
 const meta = {
-  title: 'stories/stories-brain/PosTranscription',
+  title: 'stories/stories-brain/POS',
   render: DefaultStory,
   parameters: {
     layout: 'fullscreen',
