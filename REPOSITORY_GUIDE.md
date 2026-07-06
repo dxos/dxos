@@ -185,7 +185,7 @@ Packages ship as two lockstep groups — **A: Core/SDK** (`@dxos/echo`, `@dxos/c
 | **staging** | manual → `staging` | composer + docs | prerelease Tauri build |
 | **production** | manual → `production` | all | cuts a versioned Composer release |
 
-**Composer is the only versioned app.** A **production** deploy also cuts its release: the `release` job bumps `composer-app`/`crx` by the dispatch's `bump` input, commits to `main`, tags `composer-v<x>`, then builds + deploys that commit (web + desktop + iOS via `build-tauri.yaml`, CrabNebula). This is the only path that advances Composer's version — it is not a Changesets package.
+**Composer is the only versioned app.** A **production** deploy also cuts its release: the `release` job bumps `composer-app`/`crx` by the dispatch's `bump` input, commits to `main`, tags `composer-v<x>`, then builds + deploys that commit (web + desktop + iOS via `deploy-tauri.yaml`, CrabNebula). This is the only path that advances Composer's version — it is not a Changesets package.
 
 **Triggering a deploy with `gh`.** The `workflow_dispatch` inputs are `environment` (`labs` \| `staging` \| `production`, default `labs`), `app` (`all` default, or one of `composer` / `docs` / `storybook` / `todomvc` / `tasks` / `testbench`), and `bump` (`patch` \| `minor` \| `major`, used only by the production Composer release). `--ref` selects the commit to deploy — it defaults to `main`, and also determines which version of the workflow runs.
 
