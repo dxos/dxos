@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { Panel, ScrollArea } from '@dxos/react-ui';
+import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { type Message as MessageType } from '@dxos/types';
 
 import { Message, type MessageHeaderProps, type ViewMode } from '#components';
@@ -34,7 +34,7 @@ const conversationKey = (message: MessageType.Message): string => message.thread
 
 type MessageOrRef = MessageType.Message | Ref.Ref<MessageType.Message>;
 
-const keyOf = (message: MessageOrRef): string => (Ref.isRef(message) ? String(message.uri) : message.id);
+const keyOf = (message: MessageOrRef): string => (Ref.isRef(message) ? String(message.uri) : Obj.getURI(message));
 
 /**
  * Message/conversation detail view. Given the opened message, renders every message in its
@@ -60,18 +60,8 @@ export const MessageArticle = ({
   // View mode is owned here and shared (controlled) across the toolbar and every message body, which
   // render in separate `Message.Root`s — so the toolbar's switch applies to all bodies.
   const [viewMode, setViewMode] = useState<ViewMode>(DEFAULT_VIEW_MODE);
-
-  // Conversation membership from the thread index; re-derive when the index changes (new members
-  // arrive during sync). Falls back to the opened message alone when it isn't (yet) indexed — an
-  // unthreaded message is never indexed, so it is always a one-message conversation.
-  const threadIndex = mailbox?.threads?.target;
-  const [threadTick, bumpThread] = useReducer((tick: number) => tick + 1, 0);
-  useEffect(() => (threadIndex ? Obj.subscribe(threadIndex, bumpThread) : undefined), [threadIndex]);
-  const messages = useMemo<MessageOrRef[]>(() => {
-    const refs = threadIndex ? ThreadIndex.bind(threadIndex).messages(conversationKey(message)) : [];
-    return refs.length > 0 ? [...refs] : [message];
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [threadIndex, message, threadTick]);
+  const [threadIndex] = useObject(mailbox?.threads, 'index');
+  const messages = threadIndex?.[conversationKey(message)] ?? [];
 
   const { invokePromise } = useOperationInvoker();
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
@@ -157,11 +147,6 @@ export const MessageArticle = ({
  * the leaf — the parent holds only messages/refs, not resolved objects. `useObject` dereferences the
  * ref via its loading atom and re-renders when it loads, returning a snapshot the message components
  * render directly.
- *
- * TODO(wittjosiah): Render the live reactive object instead of the snapshot once
- *   `Obj.getReactiveOrUndefined` resolves feed objects. It currently reconstitutes only space-db
- *   objects (via `db.getObjectById`, which doesn't cover queue items), so feed messages have no live
- *   form to forward and the components must accept the snapshot.
  */
 const ThreadMessageItem = ({
   message: messageOrRef,
