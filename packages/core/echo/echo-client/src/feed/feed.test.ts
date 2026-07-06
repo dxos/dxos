@@ -695,15 +695,17 @@ describe('Feed', () => {
         }
       }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
 
-      // `queryQueue` is async -- `spy.mock.results[i].value` on a plain `vi.spyOn` would be the
+      // `queryFeed` is async -- `spy.mock.results[i].value` on a plain `vi.spyOn` would be the
       // (unresolved) Promise, not the awaited payload, so capture resolved responses explicitly.
-      const original = peer.host.queuesService.queryQueue.bind(peer.host.queuesService);
+      const original = peer.host.feedService.queryFeed.bind(peer.host.feedService);
       const resolvedResponses: FeedProtocol.QueryResult[] = [];
-      const spy = vi.spyOn(peer.host.queuesService, 'queryQueue').mockImplementation(async (request) => {
-        const response = await original(request);
-        resolvedResponses.push(response);
-        return response;
-      });
+      const spy = vi
+        .spyOn(peer.host.feedService, 'queryFeed')
+        .mockImplementation(async (request: FeedProtocol.QueryFeedRequest) => {
+          const response = await original(request);
+          resolvedResponses.push(response);
+          return response;
+        });
 
       const query = Query.select(Filter.type(TestSchema.Person))
         .from(feed)
@@ -755,7 +757,7 @@ describe('Feed', () => {
         }
       }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
 
-      const spy = vi.spyOn(peer.host.queuesService, 'queryQueue');
+      const spy = vi.spyOn(peer.host.feedService, 'queryFeed');
 
       // No orderBy/limit -- this is the legacy full-feed path, kept intentionally distinct from
       // the windowed path above so its (documented) unbounded-load behavior doesn't regress

@@ -304,11 +304,11 @@ export class FeedHandle {
     reverse?: boolean;
     limit?: number;
   }): Promise<{ objects: string[]; nextCursor?: string; prevCursor?: string; hasMore?: boolean }> {
-    const { objects, nextCursor, prevCursor, hasMore } = await this._service.queryQueue({
+    const { objects, nextCursor, prevCursor, hasMore } = await this._service.queryFeed({
       query: {
-        queuesNamespace: this._namespace,
+        feedNamespace: this._namespace,
         spaceId: this._spaceId,
-        queueIds: [this._feedId],
+        feedIds: [this._feedId],
         after: opts.after,
         before: opts.before,
         reverse: opts.reverse,
