@@ -229,7 +229,7 @@ Exit: a real release ships via the Version-Packages PR (Group A lockstep + Group
 
 1. Generalize `link-packages.mjs` into `dxos` (today only in `edge/scripts/`); forbid its `--commit` path in CI; point `edge-tests.yml` at the dxos-owned copy.
 2. Tier-2 bot: bumps SHA-pinned pkg.pr.new URLs in the consumer.
-3. `scripts/check-no-local-overrides.mjs` (shared CI guard); pilot in `edge`.
+3. A "no local overrides" shared CI guard (`scripts/check-no-local-overrides.mjs`, to be added when `edge` lands — removed as unused for now); pilot in `edge`.
 4. Cross-repo DAG enforcement (Section 8.7): generate the package → repo ownership map; add `check-package-cycles.mjs --cross-repo` (union dxos+edge graphs via the `edge-tests.yml` dual-checkout) as a required PR check + scheduled job; add the layer-direction lint; wire the release-toposort backstop.
 5. Per-tier runbooks in `docs/` plus the `agents/instructions/cross-repo-development.md` guide.
 

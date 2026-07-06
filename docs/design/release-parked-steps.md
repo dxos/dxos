@@ -73,11 +73,12 @@ CrabNebula paths can't be exercised locally).
 
 ## 5. Phase 3 proof against the `edge` repo
 
-The cross-repo tooling is written but can only be exercised with `edge` checked out:
+The cross-repo tooling can only be exercised with `edge` checked out, so it was removed as unused (YAGNI) —
+re-add when `edge` becomes the second repo:
 
-- Wire `scripts/check-cross-repo-cycles.mjs` into `edge-tests.yml` (reuse its dxos+edge dual-checkout):
-  `node scripts/check-cross-repo-cycles.mjs "$DXOS_ROOT" "$EDGE_ROOT"`. Add as a required check + a scheduled job.
-- Pilot `scripts/check-no-local-overrides.mjs` in `edge` CI.
+- Add a cross-repo cycle check (a `scripts/check-cross-repo-cycles.mjs` taking `$DXOS_ROOT` `$EDGE_ROOT`)
+  wired into `edge-tests.yml` (reuse its dxos+edge dual-checkout) as a required check + a scheduled job.
+- Add a "no local overrides" CI guard (a `scripts/check-no-local-overrides.mjs`) and pilot it in `edge` CI.
 - Generalize `edge/scripts/link-packages.mjs` into this repo's `scripts/` (Tier 3); point `edge-tests.yml`
   at the dxos-owned copy; forbid its `--commit` path.
 - Add the Tier-2 pkg.pr.new bump bot and the layer-direction lint (cheap defense-in-depth).
@@ -112,4 +113,4 @@ Edit** on the account (Pages-only tokens won't deploy Workers).
 ## Remaining smaller wiring (not blocking, no human gate)
 
 - `check-changeset` is wired into **Check** as the advisory `changeset-reminder` job. Still to add: `sync-versions --check` as a Check step.
-- Wire `check-cross-repo-cycles.mjs` once `edge` is the second repo.
+- Add + wire the cross-repo cycle check once `edge` is the second repo (removed as unused for now).
