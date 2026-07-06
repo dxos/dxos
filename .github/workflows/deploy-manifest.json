@@ -11,7 +11,7 @@
     "outDir": "docs/dist",
     "worker": "docs",
     "notFoundHandling": "404-page",
-    "environments": ["main", "production"]
+    "environments": ["main", "staging", "production"]
   },
   "storybook": {
     "bundleTask": "storybook-react:bundle",

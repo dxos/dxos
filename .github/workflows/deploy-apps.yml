@@ -4,15 +4,17 @@ name: Deploy Apps
 # npm publishing — never runs changeset publish. Apps + their environments are declared in
 # deploy-manifest.json (generic; not Composer-specific).
 #
-# Environments & triggers:
-#   main       — automatic on every push to main.
-#   labs       — manual (workflow_dispatch); ad-hoc test deploys.
-#   staging    — manual (workflow_dispatch); pre-release (DX_ENVIRONMENT=staging build hook).
-#   production — via the app release workflows (release-composer.yml / release-app.yml, workflow_call).
-#                Not a manual option here, so an arbitrary ref can't reach production casually.
+# Environments & triggers. The app set for each env is derived from deploy-manifest.json's `environments`:
+#   main       — automatic on every push to main; all main-enabled apps.
+#   labs       — manual (workflow_dispatch); composer only.
+#   staging    — manual (workflow_dispatch); composer + docs.
+#   production — manual (workflow_dispatch); all apps. Also invoked per-app via workflow_call from the
+#                release workflows (release-composer / release-app) for versioned releases.
 #
-# "What's deployed where" is tracked by per-app floating git tags `<app>/<environment>` pushed below (the
-# branch-pointer replacement). Human gating is the deliberate release dispatch. No GitHub Environments.
+# The manual dispatch takes only `environment` (default labs) — no app/ref inputs (pick the commit via the
+# "Use workflow from" branch/tag selector). workflow_call keeps `app`/`ref` for the release workflows.
+# "What's deployed where" is tracked by per-app floating git tags `<app>/<environment>` (pushed for the
+# single-app workflow_call deploys the release workflows do). No GitHub Environments.
 
 on:
   push:
@@ -26,18 +28,12 @@ on:
   workflow_dispatch:
     inputs:
       environment:
+        # The app set is derived from the environment (deploy-manifest.json): labs → composer,
+        # staging → composer + docs, production → all. Choose the commit via the branch/tag selector.
         description: Target environment
         type: choice
-        options: [labs, staging, main]
+        options: [labs, staging, production]
         default: labs
-      app:
-        description: Manifest app key, or "all"
-        type: string
-        default: all
-      ref:
-        description: Git ref to deploy (default the triggering commit)
-        type: string
-        default: ''
   workflow_call:
     inputs:
       environment:
@@ -65,7 +61,7 @@ jobs:
   build-bundle:
     if: >-
       github.repository == 'dxos/dxos' &&
-      (inputs.app == 'all' || inputs.app == 'composer' || github.event_name == 'push') &&
+      ((inputs.app || 'all') == 'all' || (inputs.app || 'all') == 'composer') &&
       (inputs.environment == 'labs' || inputs.environment == 'staging' || inputs.environment == 'production'
        || (github.event_name == 'push' && github.ref_name != 'main'))
     runs-on: ubuntu-24.04-4
@@ -202,7 +198,7 @@ jobs:
     needs: [build-bundle]
     if: >-
       github.repository == 'dxos/dxos' &&
-      (inputs.app == 'all' || inputs.app == 'composer') &&
+      ((inputs.app || 'all') == 'all' || (inputs.app || 'all') == 'composer') &&
       (inputs.environment == 'labs' || inputs.environment == 'staging' || inputs.environment == 'production')
     uses: ./.github/workflows/publish-tauri.yaml
     with:
