@@ -29,9 +29,14 @@ const PersonSchema = Schema.Struct({
       generator: 'person.fullName',
       probability: 1,
     }),
+    Annotation.RdfPredicate.set('https://schema.org/name'),
     Schema.optional,
   ),
-  preferredName: Schema.String.pipe(Schema.annotations({ title: 'Preferred Name' }), Schema.optional),
+  preferredName: Schema.String.pipe(
+    Schema.annotations({ title: 'Preferred Name' }),
+    Annotation.RdfPredicate.set('https://schema.org/alternateName'),
+    Schema.optional,
+  ),
   nickname: Schema.String.pipe(Schema.annotations({ title: 'Nickname' }), Schema.optional),
   // TODO(wittjosiah): Format.URL. Support ref?
   image: Schema.String.pipe(
@@ -46,10 +51,19 @@ const PersonSchema = Schema.Struct({
       title: 'Employer',
       description: 'Current employer',
     }),
+    Annotation.RdfPredicate.set('https://schema.org/memberOf'),
     Schema.optional,
   ),
-  jobTitle: Schema.String.pipe(Schema.annotations({ title: 'Job Title' }), Schema.optional),
-  department: Schema.String.pipe(Schema.annotations({ title: 'Department' }), Schema.optional),
+  jobTitle: Schema.String.pipe(
+    Schema.annotations({ title: 'Job Title' }),
+    Annotation.RdfPredicate.set('https://schema.org/jobTitle'),
+    Schema.optional,
+  ),
+  department: Schema.String.pipe(
+    Schema.annotations({ title: 'Department' }),
+    Annotation.RdfPredicate.set('https://schema.org/department'),
+    Schema.optional,
+  ),
   notes: Schema.String.pipe(Schema.annotations({ title: 'Notes' }), Schema.optional),
   // TODO(burdon): Change to array of `handles`.
   emails: Schema.Array(

@@ -29,8 +29,12 @@ export class Message extends Type.makeObject<Message>(DXN.make('org.dxos.type.me
     created: Schema.String.pipe(
       Schema.annotations({ description: 'ISO date string when the message was sent.' }),
       GeneratorAnnotation.set('date.iso8601'),
+      Annotation.RdfPredicate.set('https://schema.org/dateCreated'),
     ),
-    sender: Actor.Actor.pipe(Schema.annotations({ description: 'Identity of the message sender.' })),
+    sender: Actor.Actor.pipe(
+      Schema.annotations({ description: 'Identity of the message sender.' }),
+      Annotation.RdfPredicate.set('https://schema.org/sender'),
+    ),
     blocks: Schema.Array(ContentBlock.Any).annotations({
       description: 'Contents of the message.',
       default: [],

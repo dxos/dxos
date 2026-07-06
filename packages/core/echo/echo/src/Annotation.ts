@@ -254,3 +254,11 @@ export const buildDictionary = (build: (dictionary: Types.Mutable<Dictionary>) =
   build(dictionary);
   return dictionary;
 };
+
+/**
+ * Annotations a schema field to a JSON-LD predicate.
+ */
+export const RdfPredicate = make({
+  id: 'org.dxos.annotation.rdfPredicate',
+  schema: Schema.String,
+});

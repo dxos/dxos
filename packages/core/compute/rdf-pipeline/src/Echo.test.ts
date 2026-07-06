@@ -43,19 +43,19 @@ describe('Echo JSON-LD', () => {
             "text": "Hello from ACME!",
           },
         ],
-        "created": "2026-07-06T22:33:16.580Z",
-        "properties": {
-          "subject": "Meeting tomorrow",
-          "to": [
-            "bob@example.com",
-          ],
-        },
-        "sender": {
+        "https://schema.org/dateCreated": "2026-07-06T22:47:25.528Z",
+        "https://schema.org/sender": {
           "contact": {
             "@id": "echo:/01JGFJJZ00G0WKQSJGMAKCNT88",
           },
           "email": "alice@acme.com",
           "name": "Alice Smith",
+        },
+        "properties": {
+          "subject": "Meeting tomorrow",
+          "to": [
+            "bob@example.com",
+          ],
         },
       }
     `);
@@ -102,19 +102,19 @@ describe('Echo JSON-LD', () => {
                 "text": "Hello from ACME!",
               },
             ],
-            "created": "2026-07-06T22:33:16.580Z",
-            "properties": {
-              "subject": "Meeting tomorrow",
-              "to": [
-                "bob@example.com",
-              ],
-            },
-            "sender": {
+            "https://schema.org/dateCreated": "2026-07-06T22:47:25.528Z",
+            "https://schema.org/sender": {
               "contact": {
                 "@id": "echo:/01JGFJJZ00G0WKQSJGMAKCNT88",
               },
               "email": "alice@acme.com",
               "name": "Alice Smith",
+            },
+            "properties": {
+              "subject": "Meeting tomorrow",
+              "to": [
+                "bob@example.com",
+              ],
             },
           },
         ],

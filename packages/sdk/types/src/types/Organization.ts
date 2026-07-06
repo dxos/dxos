@@ -30,6 +30,7 @@ const OrganizationSchema = Schema.Struct({
       generator: 'company.name',
       probability: 1,
     }),
+    Annotation.RdfPredicate.set('https://schema.org/name'),
     Schema.optional,
   ),
   description: Schema.String.pipe(
@@ -38,6 +39,7 @@ const OrganizationSchema = Schema.Struct({
       generator: 'lorem.paragraphs',
       args: [{ min: 1, max: 3 }],
     }),
+    Annotation.RdfPredicate.set('https://schema.org/description'),
     Schema.optional,
   ),
   // TODO(wittjosiah): Remove (change to relation).
@@ -66,6 +68,7 @@ const OrganizationSchema = Schema.Struct({
   website: Format.URL.pipe(
     Schema.annotations({ title: 'Website' }),
     GeneratorAnnotation.set('internet.url'),
+    Annotation.RdfPredicate.set('https://schema.org/url'),
     Schema.optional,
   ),
 });

@@ -5,8 +5,10 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as SchemaAST from 'effect/SchemaAST';
 
-import { Entity, Obj } from '@dxos/echo';
+import { Annotation, Entity, Obj, Type } from '@dxos/echo';
 import type * as EntityModule from '@dxos/echo/Entity';
 import type * as RefModule from '@dxos/echo/Ref';
 
@@ -33,8 +35,42 @@ const DEFAULT_CONTEXT: Record<string, string> = {
   type: '@type',
 };
 
+/** Annotation-based RDF predicate map for one type: field name → predicate URI. */
+type PredicateMap = ReadonlyMap<string, string>;
+
+/** Build a field→predicate map by reading {@link Annotation.RdfPredicate} from each property. */
+const buildPredicateMap = (typeEntity: Type.AnyEntity): PredicateMap => {
+  const schema = Type.getSchema(typeEntity);
+  const map = new Map<string, string>();
+  for (const prop of SchemaAST.getPropertySignatures(schema.ast)) {
+    const predicate = Annotation.RdfPredicate.getFromAst(prop.type);
+    if (Option.isSome(predicate)) {
+      map.set(String(prop.name), predicate.value);
+    }
+  }
+  return map;
+};
+
+/** Rename top-level keys that have a predicate annotation. */
+const applyPredicates = (
+  obj: Record<string, unknown>,
+  predicates: PredicateMap | undefined,
+): Record<string, unknown> => {
+  if (!predicates) {
+    return obj;
+  }
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    result[predicates.get(key) ?? key] = value;
+  }
+  return result;
+};
+
 /** Convert an entity JSON document to a JSON-LD node (no `@context`). */
-export const jsonToJsonLdNode = (json: EntityModule.JSON | Obj.JSON): JsonLdNode => {
+export const jsonToJsonLdNode = (
+  json: EntityModule.JSON | Obj.JSON,
+  predicates?: PredicateMap,
+): JsonLdNode => {
   const { id, '@type': type, '@meta': _meta, ...rest } = json as Record<string, unknown> & {
     id: string;
     '@type'?: unknown;
@@ -43,7 +79,7 @@ export const jsonToJsonLdNode = (json: EntityModule.JSON | Obj.JSON): JsonLdNode
   return {
     '@id': `echo:/${id}`,
     ...(type !== undefined ? { '@type': String(type) } : {}),
-    ...rewriteRefs(rest),
+    ...applyPredicates(rewriteRefs(rest) as Record<string, unknown>, predicates),
   };
 };
 
@@ -52,6 +88,24 @@ export const jsonToJsonLd = (json: EntityModule.JSON | Obj.JSON): JsonLdDocument
   '@context': DEFAULT_CONTEXT,
   ...jsonToJsonLdNode(json),
 });
+
+/** Derive a predicate map for a live entity using its attached type schema. */
+const predicatesForEntity = (() => {
+  const cache = new Map<string, PredicateMap>();
+  return (entity: EntityModule.Unknown | EntityModule.Snapshot): PredicateMap | undefined => {
+    const typeEntity = Entity.getType(entity);
+    if (!typeEntity) {
+      return undefined;
+    }
+    const uri = Type.getURI(typeEntity).toString();
+    let map = cache.get(uri);
+    if (!map) {
+      map = buildPredicateMap(typeEntity);
+      cache.set(uri, map);
+    }
+    return map;
+  };
+})();
 
 /**
  * Recursively converts ECHO reference objects `{ "/": "echo:/..." }` to JSON-LD
@@ -74,15 +128,19 @@ const rewriteRefs = (value: unknown): unknown => {
 };
 
 /** Convert a live entity to a standalone JSON-LD document (includes `@context`). */
-export const entityToJsonLd = (entity: EntityModule.Unknown | EntityModule.Snapshot): JsonLdDocument =>
-  jsonToJsonLd(Entity.toJSON(entity));
+export const entityToJsonLd = (
+  entity: EntityModule.Unknown | EntityModule.Snapshot,
+): JsonLdDocument => ({
+  '@context': DEFAULT_CONTEXT,
+  ...jsonToJsonLdNode(Entity.toJSON(entity), predicatesForEntity(entity)),
+});
 
 /** Convert multiple entities to a JSON-LD graph document (single shared `@context`). */
 export const entitiesToJsonLd = (
   entities: readonly (EntityModule.Unknown | EntityModule.Snapshot)[],
 ): { readonly '@context': Record<string, string>; readonly '@graph': JsonLdNode[] } => ({
   '@context': DEFAULT_CONTEXT,
-  '@graph': entities.map((entity) => jsonToJsonLdNode(Entity.toJSON(entity))),
+  '@graph': entities.map((entity) => jsonToJsonLdNode(Entity.toJSON(entity), predicatesForEntity(entity))),
 });
 
 /** Parse JSON-LD into entity JSON suitable for {@link Obj.fromJSON}. */
