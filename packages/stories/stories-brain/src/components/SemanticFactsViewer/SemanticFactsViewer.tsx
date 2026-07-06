@@ -4,10 +4,10 @@
 
 import React, { useMemo, useState } from 'react';
 
+import { type Type, buildFactGraph, factSourceFromFacts } from '@dxos/pipeline-rdf';
 import { Icon, IconButton, Input, Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-graph';
 import { Empty, Listbox } from '@dxos/react-ui-list';
-import { type Type, buildFactGraph, factSourceFromFacts } from '@dxos/semantic-index';
 import { mx } from '@dxos/ui-theme';
 
 import { Group, factualityColor, formatDate, formatTerm, graphToTreeNode, groupFacts, termKey } from '../util';

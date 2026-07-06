@@ -820,3 +820,4 @@ trustPolicyExclude:
   - semver@6.3.1
   - semver@5.7.2
   - ua-parser-js@1.0.41
+  - graphql@15.10.2

@@ -7,15 +7,21 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Stream from 'effect/Stream';
 import { readFileSync } from 'node:fs';
+
+import { Pipeline } from '@dxos/pipeline';
 
 import { SemanticIndexError } from './errors';
 import {
   DEFAULT_EXTRACTION_RULES,
+  type DocumentFacts,
   type ExtractDocument,
   SemanticPipeline,
   buildExtractionPrompt,
   extractFacts,
+  extractFactsStage,
+  indexFactsStage,
   normalizeEntityId,
 } from './SemanticPipeline';
 import { SemanticStore } from './SemanticStore';
@@ -85,6 +91,63 @@ describe('SemanticPipeline', () => {
     expect(extended).toContain(`${DEFAULT_EXTRACTION_RULES.length + 1}. Treat @handles as people.`);
     expect(extended).toContain(DEFAULT_EXTRACTION_RULES[0]);
   });
+
+  it.effect(
+    'composes extractFactsStage as a pipeline stage without a store',
+    Effect.fnUntraced(
+      function* () {
+        const collected: DocumentFacts[] = [];
+        yield* Stream.fromIterable([
+          { text: "I think I'm probably going to Paris next week", source: 'editor:input', author: 'Alice' },
+        ]).pipe(extractFactsStage(), Pipeline.run({ sink: (out) => Effect.sync(() => collected.push(out)) }));
+        yield* Effect.sync(() => {
+          if (collected.length !== 1) {
+            throw new Error(`expected 1 stage output, got ${collected.length}`);
+          }
+          const [{ doc, facts }] = collected;
+          if (doc.source !== 'editor:input') {
+            throw new Error('document not passed through');
+          }
+          if (facts.length !== 1 || facts[0].assertion.predicate !== 'travelsTo') {
+            throw new Error('facts not derived');
+          }
+        });
+      },
+      Effect.provide(queuedAiService([LLM_OUTPUT])),
+    ),
+  );
+
+  it.effect(
+    'indexFactsStage persists facts and drops cursor-unchanged documents from the stream',
+    Effect.fnUntraced(function* () {
+      const doc = { text: 'going to Paris', source: 'dxn:q:s1', author: 'Alice' };
+      const runOnce = () =>
+        Effect.gen(function* () {
+          const collected: DocumentFacts[] = [];
+          yield* Stream.fromIterable([doc]).pipe(
+            indexFactsStage(),
+            Pipeline.run({ sink: (out) => Effect.sync(() => collected.push(out)) }),
+          );
+          return collected;
+        });
+
+      const first = yield* runOnce();
+      const second = yield* runOnce(); // Unchanged source → skipped and dropped.
+      const store = yield* SemanticStore;
+      const persisted = yield* store.query({ predicate: 'travelsTo' });
+      yield* Effect.sync(() => {
+        if (first.length !== 1 || first[0].facts.length !== 1) {
+          throw new Error(`first run should index one document: ${JSON.stringify(first)}`);
+        }
+        if (second.length !== 0) {
+          throw new Error(`unchanged re-ingest should emit nothing, got ${second.length}`);
+        }
+        if (persisted.length !== 1) {
+          throw new Error(`expected 1 persisted fact, got ${persisted.length}`);
+        }
+      });
+    }, Effect.provide(TestLayer)),
+  );
 
   it.effect(
     'extracts the Alice fact and persists it',

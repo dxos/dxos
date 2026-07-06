@@ -111,14 +111,20 @@ const POS_HUE: Partial<Record<Upos, string>> = {
 
 export const posTheme = (): Extension =>
   EditorView.theme({
-    '.cm-pos': { borderRadius: '0.125rem' },
+    '.cm-pos': {
+      borderRadius: '0.125rem',
+    },
     ...Object.fromEntries(
       Object.entries(POS_HUE).map(([upos, hue]) => [
         `.cm-pos-${upos}`,
-        { borderBottom: `2px solid var(--color-${hue}-500)` },
+        {
+          borderBottom: `2px solid var(--color-${hue}-500)`,
+        },
       ]),
     ),
-    '.cm-pos-stale': { opacity: '0.4' },
+    '.cm-pos-stale': {
+      opacity: '0.4',
+    },
   });
 
 /** A span has diverged when the current text under its (mapped) range no longer matches its hash. */
@@ -193,14 +199,16 @@ const reactiveDriver = (parse: NonNullable<PosOptions['parse']>, debounceMs: num
 };
 
 /**
- * Part-of-speech decoration extension. Renders per-word UPOS marks from analysis state held in a
- * span-oriented state field. State can be set externally via `setAnalysis`/`clearAnalysis`, or — when
- * `options.parse` is supplied — self-driven on idle (reactive mode).
+ * Part-of-speech decoration extension.
+ * Renders per-word UPOS marks from analysis state held in a span-oriented state field.
+ * State can be set externally via `setAnalysis`/`clearAnalysis`,
+ * or — when `options.parse` is supplied — self-driven on idle (reactive mode).
  */
 export const pos = (options: PosOptions = {}): Extension => {
   const extensions: Extension[] = [posAnalysisField, posDecorations, posTheme()];
   if (options.parse) {
     extensions.push(reactiveDriver(options.parse, options.debounceMs ?? 500));
   }
+
   return extensions;
 };

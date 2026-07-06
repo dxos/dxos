@@ -5,8 +5,8 @@
 import { assembleDocument } from './align';
 import { type Document, type RawSentence, type Upos } from './Document';
 
-// Closed-class lexicon: small, deterministic, language-is-English assumption (the stub is a demo
-// fallback, not the production tagger). Lowercased keys.
+// Closed-class lexicon: small, deterministic, language-is-English assumption
+// (the stub is a demo fallback, not the production tagger). Lowercased keys.
 const LEXICON: Record<string, Upos> = {
   the: 'DET',
   a: 'DET',
@@ -58,7 +58,9 @@ const LEXICON: Record<string, Upos> = {
 
 const WORD_RE = /[A-Za-z]+(?:'[A-Za-z]+)?|[0-9]+|[.!?,;:]/g;
 
-/** Tag one token by lexicon → number → suffix heuristic → capitalization. `initial` = sentence start. */
+/**
+ * Fake tags one token by lexicon → number → suffix heuristic → capitalization. `initial` = sentence start.
+ */
 const tagWord = (raw: string, initial: boolean): Upos => {
   if (/^[.!?,;:]$/.test(raw)) {
     return 'PUNCT';
@@ -100,9 +102,11 @@ export const stubTag = (text: string): RawSentence[] => {
       initial = true;
     }
   }
+
   if (tokens.length > 0) {
     sentences.push({ tokens });
   }
+
   return sentences;
 };
 

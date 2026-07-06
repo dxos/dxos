@@ -5,7 +5,7 @@
 import type * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
-import { SemanticStore } from '@dxos/semantic-index';
+import { SemanticStore } from '@dxos/pipeline-rdf';
 
 import { AgentRegistry } from './AgentRegistry';
 import { type StageError } from './errors';

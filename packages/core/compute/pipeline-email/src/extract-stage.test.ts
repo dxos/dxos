@@ -10,9 +10,9 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 import { Pipeline } from '@dxos/pipeline';
+import { SemanticPipeline, SemanticStore, type Type } from '@dxos/pipeline-rdf';
+import { mockAiService } from '@dxos/pipeline-rdf/testing';
 import { captureSink } from '@dxos/pipeline/testing';
-import { SemanticPipeline, SemanticStore, type Type } from '@dxos/semantic-index';
-import { mockAiService } from '@dxos/semantic-index/testing';
 import { Message } from '@dxos/types';
 
 import { type FactIndexer, extractFactsStage } from './extract-stage';

@@ -24,11 +24,16 @@ import { trim } from '@dxos/util';
 
 import { DefaultStory, createMarkdownStoryDecorators } from './testing';
 
-export const SAMPLE_CONTENT = trim`
-  # Transcription
+const SAMPLE_CONTENT = trim`
+  # RDF
 
-  Place the cursor here, then click the microphone in the toolbar to start recording.
+  - The quick brown fox jumps over the lazy dog.
 
+  - Socrates was a Greek philosopher.
+  - Plato was his student.
+  - Aristotle was his student.
+  - Socrates is a man.
+  - All men are mortal.
 `;
 
 /**
@@ -58,10 +63,10 @@ const meta = {
   render: DefaultStory,
   decorators: createMarkdownStoryDecorators({
     extraPlugins: [PosExtensionPlugin()],
-    seed: ({ personalSpace }) =>
+    seed: ({ personalSpace: space }) =>
       Effect.gen(function* () {
-        personalSpace.db.add(Markdown.make({ name: 'Transcription', content: SAMPLE_CONTENT }));
-        yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+        space.db.add(Markdown.make({ name: 'Transcription', content: SAMPLE_CONTENT }));
+        yield* Effect.promise(() => space.db.flush({ indexes: true }));
       }),
   }),
   parameters: {

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
-import { SemanticStore } from '@dxos/semantic-index';
+import { SemanticStore } from '@dxos/pipeline-rdf';
 
 import { AgentRegistry } from './AgentRegistry';
 import { run } from './Crawler';

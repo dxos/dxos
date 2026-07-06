@@ -12,7 +12,7 @@ import * as Effect from 'effect/Effect';
 import { readFileSync } from 'node:fs';
 import { expect } from 'vitest';
 
-import { SemanticStore } from '@dxos/semantic-index';
+import { SemanticStore } from '@dxos/pipeline-rdf';
 
 import { AgentRegistry } from './AgentRegistry';
 import { run } from './Crawler';
@@ -24,7 +24,7 @@ import { StateStore } from './StateStore';
 import { type Fixture, TestLayer } from './testing';
 import type * as Type from './types';
 
-const FIXTURE_URL = new URL('../../semantic-index/src/testing/discord-messages.json', import.meta.url);
+const FIXTURE_URL = new URL('../../pipeline-rdf/src/testing/discord-messages.json', import.meta.url);
 const fixture: Fixture = JSON.parse(readFileSync(FIXTURE_URL, 'utf8'));
 
 const heading = (text: string) => `\n\x1b[1m${text}\x1b[0m`;

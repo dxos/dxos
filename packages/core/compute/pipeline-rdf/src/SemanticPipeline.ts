@@ -4,8 +4,10 @@
 
 import * as Clock from 'effect/Clock';
 import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
 
 import { type AiService } from '@dxos/ai';
+import { Pipeline, Stage } from '@dxos/pipeline';
 
 import { SemanticIndexError } from './errors';
 import { chunk } from './internal/stages/chunk';
@@ -106,32 +108,64 @@ export const extractFacts = (
 ): Effect.Effect<Fact[], SemanticIndexError, AiService.AiService> =>
   Effect.forEach(docs, (doc) => extractDocFacts(doc, options)).pipe(Effect.map((arrays) => arrays.flat()));
 
+/** Output of the fact stages: the source document together with the facts derived from it. */
+export type DocumentFacts = {
+  readonly doc: ExtractDocument;
+  readonly facts: readonly Fact[];
+};
+
+/**
+ * Pure extraction stage: derives {@link Fact}s per document via {@link extractDocFacts} without
+ * touching the {@link SemanticStore} or any cursor — only an {@link AiService} in context.
+ */
+export const extractFactsStage = (
+  options?: ExtractOptions,
+): Stage.Stage<ExtractDocument, DocumentFacts, SemanticIndexError, AiService.AiService> =>
+  Stage.map('extract-facts', (doc: ExtractDocument) =>
+    extractDocFacts(doc, options).pipe(Effect.map((facts) => ({ doc, facts }))),
+  );
+
+/**
+ * Indexing stage: extract → link (slug) → persist into the {@link SemanticStore}, building the fact
+ * database subsequent stages can query from context. Incremental: a document whose content hash
+ * matches the stored cursor is skipped entirely (no LLM call, no duplicate facts) and dropped from
+ * the stream. A CHANGED source currently appends new competing facts (append-only model) and
+ * advances the cursor; deleting/superseding the prior facts from that source is deferred (v1).
+ */
+export const indexFactsStage = (
+  options?: ExtractOptions,
+): Stage.Stage<ExtractDocument, DocumentFacts, SemanticIndexError, SemanticStore | AiService.AiService> =>
+  Stage.map('index-facts', (doc: ExtractDocument) =>
+    Effect.gen(function* () {
+      const store = yield* SemanticStore;
+      const hash = hashText(doc.text);
+      const prev = yield* store.cursor(doc.source);
+      if (prev === hash) {
+        // Source is unchanged — skip extraction to avoid LLM work and duplicate facts.
+        return undefined;
+      }
+      const facts = yield* extractDocFacts(doc, options);
+      yield* store.putFacts(facts);
+      yield* store.setCursor(doc.source, hash);
+      return { doc, facts };
+    }),
+  );
+
 export const SemanticPipeline = {
   /**
-   * Extract → link (slug) → persist for each document. Incremental: documents whose content hash
-   * matches the stored cursor are skipped entirely (no LLM call, no duplicate facts).
-   * A CHANGED source currently appends new competing facts (append-only model) and advances
-   * the cursor. Deleting/superseding the prior facts from that source is deferred (v1).
+   * Batch convenience over {@link indexFactsStage}: streams the documents through the indexing
+   * stage and collects every persisted fact. Documents are processed in order with back pressure.
    */
   run: (
     docs: readonly ExtractDocument[],
     options?: ExtractOptions,
   ): Effect.Effect<Fact[], SemanticIndexError, SemanticStore | AiService.AiService> =>
     Effect.gen(function* () {
-      const store = yield* SemanticStore;
       const allFacts: Fact[] = [];
-      for (const doc of docs) {
-        const hash = hashText(doc.text);
-        const prev = yield* store.cursor(doc.source);
-        if (prev === hash) {
-          // Source is unchanged — skip extraction to avoid LLM work and duplicate facts.
-          continue;
-        }
-        const docFacts = yield* extractDocFacts(doc, options);
-        yield* store.putFacts(docFacts);
-        yield* store.setCursor(doc.source, hash);
-        allFacts.push(...docFacts);
-      }
+      yield* Stream.fromIterable(docs).pipe(
+        indexFactsStage(options),
+        Pipeline.run({ sink: ({ facts }) => Effect.sync(() => allFacts.push(...facts)) }),
+      );
       return allFacts;
     }),
 };

@@ -38,7 +38,7 @@
       "path": "../../core/compute/nlp"
     },
     {
-      "path": "../../core/compute/semantic-index"
+      "path": "../../core/compute/pipeline-rdf"
     },
     {
       "path": "../../core/echo/echo"

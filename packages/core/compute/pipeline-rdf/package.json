@@ -1,8 +1,8 @@
 {
-  "name": "@dxos/semantic-index",
+  "name": "@dxos/pipeline-rdf",
   "version": "0.10.0",
   "private": true,
-  "description": "Semantic index: extracts attributed propositions from text and answers SPARQL queries over them.",
+  "description": "Pipeline stages that extract attributed propositions from text into an RDF fact store and answer SPARQL queries over them.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -39,6 +39,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/pipeline": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "@effect/ai": "catalog:",
     "@effect/sql": "catalog:",
