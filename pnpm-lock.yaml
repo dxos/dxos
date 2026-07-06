@@ -1140,6 +1140,9 @@ catalogs:
     extensionless:
       specifier: ^1.9.9
       version: 1.9.9
+    eyereasoner:
+      specifier: 21.1.10
+      version: 21.1.10
     fast-check:
       specifier: ^3.19.0
       version: 3.23.2
@@ -5908,6 +5911,52 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
 
+  packages/core/compute/rdf-pipeline:
+    dependencies:
+      '@comunica/query-sparql-rdfjs':
+        specifier: 'catalog:'
+        version: 5.2.3
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../echo/echo
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../echo/echo-protocol
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      eyereasoner:
+        specifier: 'catalog:'
+        version: 21.1.10(@rdfjs/types@2.0.1)
+      n3:
+        specifier: 'catalog:'
+        version: 2.1.0
+    devDependencies:
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../../sdk/types
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 0.29.0(effect@3.21.4)(vitest@4.1.8)
+      '@types/n3':
+        specifier: 'catalog:'
+        version: 1.26.1
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.8(patch_hash=a7bf6a3d21c2bc782d60d0f0f916d76f304c0eb6fbf2827e8d981408c7b5120e)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.8)(@vitest/coverage-v8@4.1.8)(@vitest/ui@4.1.8)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
   packages/core/compute/semantic-index:
     dependencies:
       '@comunica/query-sparql-rdfjs':
@@ -7427,10 +7476,10 @@ importers:
         version: 1.6.3
       '@opentui/core':
         specifier: 'catalog:'
-        version: 0.1.61(stage-js@1.0.0-alpha.17)(typescript@6.0.3)(web-tree-sitter@0.25.10)
+        version: 0.1.61(stage-js@1.0.0-alpha.17)(typescript@6.0.3)(web-tree-sitter@0.25.10(@types/emscripten@1.41.5))
       '@opentui/solid':
         specifier: 'catalog:'
-        version: 0.1.61(solid-js@1.9.11)(stage-js@1.0.0-alpha.17)(typescript@6.0.3)(web-tree-sitter@0.25.10)
+        version: 0.1.61(solid-js@1.9.11)(stage-js@1.0.0-alpha.17)(typescript@6.0.3)(web-tree-sitter@0.25.10(@types/emscripten@1.41.5))
       effect:
         specifier: 3.21.4
         version: 3.21.4
@@ -7448,7 +7497,7 @@ importers:
         version: 1.0.0-alpha.17
       web-tree-sitter:
         specifier: 'catalog:'
-        version: 0.25.10
+        version: 0.25.10(@types/emscripten@1.41.5)
       wtfnode:
         specifier: 'catalog:'
         version: 0.10.0
@@ -32162,6 +32211,9 @@ packages:
   '@types/draco3d@1.4.10':
     resolution: {integrity: sha512-AX22jp8Y7wwaBgAixaSvkoG4M/+PlAcm3Qs4OW8yT9DM4xUpWKeFhLueTAyZF39pviAdcDdeJoACapiAceqNcw==}
 
+  '@types/emscripten@1.41.5':
+    resolution: {integrity: sha512-cMQm7pxu6BxtHyqJ7mQZ2kXWV5SLmugybFdHCBbJ5eHzOo6VhBckEgAT3//rP5FwPHNPeEiq4SmQ5ucBwsOo4Q==}
+
   '@types/eslint-scope@3.7.7':
     resolution: {integrity: sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg==}
 
@@ -36082,6 +36134,13 @@ packages:
     resolution: {integrity: sha512-GDhU9ntwuKyGXdZBUgTIe+vXnWj0fppUEtMDL0+idd5Sta8TGpHssn/eusA9mrPr9qNDym6SxAYZjNvCn/9RBg==}
     engines: {node: '>= 10.17.0'}
     hasBin: true
+
+  eyereasoner@21.1.10:
+    resolution: {integrity: sha512-3tl0t574rTvVOpbPr7CAUNKY5dHIHYM/TyVN7/JLd1uBMmBIwodZWnMw2AA5NgJyJSLDMhLkRKbZWAliE7smEA==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+    peerDependencies:
+      '@rdfjs/types': ^1.1.0
 
   falafel@2.2.5:
     resolution: {integrity: sha512-HuC1qF9iTnHDnML9YZAdCDQwT0yKl/U55K4XSUXqGAA2GLoafFgWRqdAbhWJxXaYD4pyoVxAJ8wH670jMpI9DQ==}
@@ -41973,6 +42032,10 @@ packages:
 
   svgpath@2.6.0:
     resolution: {integrity: sha512-OIWR6bKzXvdXYyO4DK/UWa1VA1JeKq8E+0ug2DG98Y/vOmMpfZNj+TIG988HjfYSqtcy/hFOtZq/n/j5GSESNg==}
+
+  swipl-wasm@7.0.10:
+    resolution: {integrity: sha512-eyM2Dq39tYM7lFNnT76CdhklTmmzp84FGzuJehWeBiuQSJBbFs75aoT2dbAE9zd5AFR2WXQPdM8Sey3nOjQvDA==}
+    hasBin: true
 
   swr@2.3.6:
     resolution: {integrity: sha512-wfHRmHWk/isGNMwlLGlZX5Gzz/uTgo0o2IRuTMcf4CPuPFJZlq0rDaKUx+ozB5nBOReNV1kiOyzMfj+MBMikLw==}
@@ -51044,12 +51107,12 @@ snapshots:
 
   '@opentui/core-win32-x64@0.1.61': {}
 
-  '@opentui/core@0.1.61(stage-js@1.0.0-alpha.17)(typescript@6.0.3)(web-tree-sitter@0.25.10)':
+  '@opentui/core@0.1.61(stage-js@1.0.0-alpha.17)(typescript@6.0.3)(web-tree-sitter@0.25.10(@types/emscripten@1.41.5))':
     dependencies:
       bun-ffi-structs: 0.1.2(typescript@6.0.3)
       diff: 8.0.3
       jimp: 1.6.0
-      web-tree-sitter: 0.25.10
+      web-tree-sitter: 0.25.10(@types/emscripten@1.41.5)
       yoga-layout: 3.2.1
     optionalDependencies:
       '@dimforge/rapier2d-simd-compat': 0.17.3
@@ -51066,11 +51129,11 @@ snapshots:
       - stage-js
       - typescript
 
-  '@opentui/solid@0.1.61(solid-js@1.9.11)(stage-js@1.0.0-alpha.17)(typescript@6.0.3)(web-tree-sitter@0.25.10)':
+  '@opentui/solid@0.1.61(solid-js@1.9.11)(stage-js@1.0.0-alpha.17)(typescript@6.0.3)(web-tree-sitter@0.25.10(@types/emscripten@1.41.5))':
     dependencies:
       '@babel/core': 7.28.0
       '@babel/preset-typescript': 7.27.1(@babel/core@7.28.0)
-      '@opentui/core': 0.1.61(stage-js@1.0.0-alpha.17)(typescript@6.0.3)(web-tree-sitter@0.25.10)
+      '@opentui/core': 0.1.61(stage-js@1.0.0-alpha.17)(typescript@6.0.3)(web-tree-sitter@0.25.10(@types/emscripten@1.41.5))
       babel-plugin-module-resolver: 5.0.2
       babel-preset-solid: 1.9.9(@babel/core@7.28.0)(solid-js@1.9.11)
       s-js: 0.4.9
@@ -54951,6 +55014,8 @@ snapshots:
   '@types/dom-speech-recognition@0.0.6': {}
 
   '@types/draco3d@1.4.10': {}
+
+  '@types/emscripten@1.41.5': {}
 
   '@types/eslint-scope@3.7.7':
     dependencies:
@@ -59912,6 +59977,12 @@ snapshots:
       '@types/yauzl': 2.10.3
     transitivePeerDependencies:
       - supports-color
+
+  eyereasoner@21.1.10(@rdfjs/types@2.0.1):
+    dependencies:
+      '@rdfjs/types': 2.0.1
+      n3: 2.1.0
+      swipl-wasm: 7.0.10
 
   falafel@2.2.5:
     dependencies:
@@ -67639,6 +67710,10 @@ snapshots:
 
   svgpath@2.6.0: {}
 
+  swipl-wasm@7.0.10:
+    dependencies:
+      '@types/emscripten': 1.41.5
+
   swr@2.3.6(react@19.2.7):
     dependencies:
       dequal: 2.0.3
@@ -69072,7 +69147,9 @@ snapshots:
 
   web-streams-polyfill@3.2.1: {}
 
-  web-tree-sitter@0.25.10: {}
+  web-tree-sitter@0.25.10(@types/emscripten@1.41.5):
+    optionalDependencies:
+      '@types/emscripten': 1.41.5
 
   web-vitals@5.1.0: {}
 

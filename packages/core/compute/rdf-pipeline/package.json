@@ -1,0 +1,58 @@
+{
+  "name": "@dxos/rdf-pipeline",
+  "version": "0.1.0",
+  "private": true,
+  "description": "RDF graph pipeline: SPARQL stages, N3 reasoning, and ECHO entity conversion.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "default": "./dist/lib/neutral/testing/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@comunica/query-sparql-rdfjs": "catalog:",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "eyereasoner": "catalog:",
+    "n3": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/types": "workspace:*",
+    "@effect/vitest": "catalog:",
+    "@types/n3": "catalog:",
+    "effect": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "beast": {}
+}

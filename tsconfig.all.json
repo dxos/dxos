@@ -223,6 +223,9 @@
       "path": "packages/core/compute/pipeline-transcription/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/rdf-pipeline/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/semantic-index/tsconfig.json"
     },
     {
