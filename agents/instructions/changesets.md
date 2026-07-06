@@ -4,8 +4,6 @@ How to decide whether a PR needs a changeset, and how to write one. Full release
 
 **The rule:** add a `.changeset/*.md` when — and only when — the change is worth a **changelog entry**, i.e. consumer-relevant (behavior, public API, types, a fix, a perf change, or a consumer-visible dependency bump). The code ships with the next release either way; the changeset decides whether it's *recorded* in the changelog (and contributes a version bump). Not changelog-relevant → omit it, and **never add an empty changeset** to silence the reminder. CI's `changeset-reminder` (in **Check**) posts an advisory sticky comment when a PR touches publishable source without one — a nudge, never a blocker.
 
-> Overlap: the legacy conventional-commit PR-title gate runs alongside this until the first Changesets `@latest` release lands, then is removed.
-
 ## Do I need one?
 
 1. Changed a package that **publishes to npm** (Group A or B — below) in a way a consumer can observe? → **yes.**
