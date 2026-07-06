@@ -7,17 +7,19 @@
  *
  * - `Default` renders the seeded doc with the live record button and reactive POS colouring of committed text.
  * - `Recording` seeds finalized + interim pending text (no mic); confirming the block colours the inserted words.
- * - `PosExtensionPlugin` contributes `pos({ parse: stubParse })` via `MarkdownCapabilities.ExtensionProvider`.
- * - Uses the offline `stubParse` tagger, so the story needs no AI key.
+ * - `PosExtensionPlugin` contributes `pos({ parse })` via `MarkdownCapabilities.ExtensionProvider`.
+ * - Uses the LLM-based `parseText` tagger over the edge AI service, so the story needs edge credentials.
  * - Wires the same full plugin manager + shared `DefaultStory`/`SAMPLE_CONTENT`/`StoryGraphPlugin` harness as MarkdownTranscription.
  */
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
-import { stubParse } from '@dxos/nlp';
+import { type Parser, parseText } from '@dxos/nlp';
 import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
 import { pos } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
@@ -36,11 +38,16 @@ const SAMPLE_CONTENT = trim`
   - All men are mortal.
 `;
 
+// LLM-backed Parser: tags via `parseText` against the edge AI service (same preset the sibling
+// crawler story uses). `Layer.fresh` scopes one client per parse call.
+const llmParse: Parser = (text) =>
+  parseText(text).pipe(Effect.provide(Layer.fresh(AiServiceTestingPreset('edge-remote'))), Effect.runPromise);
+
 /**
  * Story-only plugin contributing the part-of-speech decoration extension to every Markdown editor,
  * the same channel TranscriptionPlugin uses for its pending-text extension. Reactive mode parses
  * committed document text (including transcript text confirmed into the doc) and colours each word
- * by its Universal POS tag. Uses the offline `stubParse` tagger so the story needs no AI key.
+ * by its Universal POS tag via the LLM parser.
  */
 const PosExtensionPlugin = Plugin.define(
   Plugin.makeMeta({
@@ -52,7 +59,7 @@ const PosExtensionPlugin = Plugin.define(
     id: 'pos-markdown',
     activatesOn: MarkdownEvents.SetupExtensions,
     activate: Effect.fnUntraced(function* () {
-      return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [() => pos({ parse: stubParse })]);
+      return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [() => pos({ parse: llmParse })]);
     }),
   }),
   Plugin.make,

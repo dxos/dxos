@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { assembleDocument } from './align';
-import { type Document, type RawSentence, type Upos } from './Document';
+import { assembleDocument } from '../align';
+import { type Document, type RawSentence, type Upos } from '../Document';
 
 // Closed-class lexicon: small, deterministic, language-is-English assumption
 // (the stub is a demo fallback, not the production tagger). Lowercased keys.
