@@ -21,7 +21,7 @@ export type EchoClientProps = {};
 export type ConnectToServiceProps = {
   dataService: DataService;
   queryService: QueryService;
-  queueService?: FeedProtocol.QueueService;
+  feedService?: FeedProtocol.FeedService;
 };
 
 export type ConstructDatabaseProps = {
@@ -62,7 +62,7 @@ export class EchoClient extends Resource {
 
   private _dataService: DataService | undefined = undefined;
   private _queryService: QueryService | undefined = undefined;
-  private _queuesService: FeedProtocol.QueueService | undefined = undefined;
+  private _feedService: FeedProtocol.FeedService | undefined = undefined;
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
@@ -86,11 +86,11 @@ export class EchoClient extends Resource {
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService, queueService }: ConnectToServiceProps): this {
+  connectToService({ dataService, queryService, feedService }: ConnectToServiceProps): this {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = dataService;
     this._queryService = queryService;
-    this._queuesService = queueService;
+    this._feedService = feedService;
     return this;
   }
 
@@ -98,7 +98,7 @@ export class EchoClient extends Resource {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = undefined;
     this._queryService = undefined;
-    this._queuesService = undefined;
+    this._feedService = undefined;
   }
 
   protected override async _open(ctx: Context): Promise<void> {
@@ -143,7 +143,7 @@ export class EchoClient extends Resource {
     const db = new DatabaseImpl({
       dataService: this._dataService!,
       queryService: this._queryService!,
-      queueService: this._queuesService,
+      feedService: this._feedService,
       graph: this._graph,
       spaceId,
       reactiveSchemaQuery,
@@ -172,16 +172,16 @@ export class EchoClient extends Resource {
   _updateServices({
     dataService,
     queryService,
-    queueService,
+    feedService,
   }: {
     dataService: DataService;
     queryService: QueryService;
-    queueService?: FeedProtocol.QueueService;
+    feedService?: FeedProtocol.FeedService;
   }): void {
     log('updating service references');
     this._dataService = dataService;
     this._queryService = queryService;
-    this._queuesService = queueService;
+    this._feedService = feedService;
 
     // Update IndexQuerySourceProvider with new service.
     if (this._indexQuerySourceProvider) {
@@ -199,7 +199,7 @@ export class EchoClient extends Resource {
 
     // Update all databases with new services.
     for (const db of this._databases.values()) {
-      db._updateServices({ dataService, queryService, queueService });
+      db._updateServices({ dataService, queryService, feedService });
     }
   }
 

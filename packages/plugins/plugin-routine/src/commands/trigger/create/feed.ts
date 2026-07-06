@@ -20,7 +20,7 @@ import { EID } from '@dxos/keys';
 import { Enabled, Feed, Input } from '../options';
 import { printTrigger, promptForSchemaInput, selectFeed, selectFunction } from '../util';
 
-export const queue = Command.make(
+export const feed = Command.make(
   'feed',
   {
     spaceId: Common.spaceId.pipe(Options.optional),

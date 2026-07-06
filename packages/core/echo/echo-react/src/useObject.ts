@@ -162,17 +162,22 @@ export const useObject: {
 /**
  * Internal hook for subscribing to an Echo object or Ref.
  */
-const useObjectValue = <T extends Obj.Unknown>(objOrRef: T | Ref.Ref<T> | undefined): Obj.Snapshot<T> | undefined => {
+const useObjectValue = <T extends Obj.Unknown | Obj.Snapshot>(
+  objOrRef: T | Ref.Ref<T> | undefined,
+): T extends Obj.Snapshot ? T : Obj.Snapshot<T & Obj.Unknown> | undefined => {
   const atom = useMemo(() => {
     if (objOrRef == null) {
-      return Atom.make<Obj.Snapshot<T> | undefined>(() => undefined);
+      return Atom.make<Obj.Snapshot<T & Obj.Unknown> | undefined>(() => undefined);
     }
     if (Ref.isRef(objOrRef)) {
       return Obj.atom(objOrRef);
     }
-    return Obj.atom(objOrRef);
+    if (Obj.isSnapshot(objOrRef)) {
+      return Atom.make<T>(() => objOrRef);
+    }
+    return Obj.atom(objOrRef as T & Obj.Unknown);
   }, [objOrRef]);
-  return useAtomValue(atom) as Obj.Snapshot<T> | undefined;
+  return useAtomValue(atom as any);
 };
 
 /**
@@ -194,7 +199,7 @@ const useRefLoad = <T extends Obj.Unknown>(objOrRef: T | Ref.Ref<T> | undefined)
 /**
  * Internal hook for subscribing to a specific property of an Echo object.
  */
-const useObjectProperty = <T extends Obj.Unknown, K extends keyof T>(
+const useObjectProperty = <T extends Obj.Unknown | Obj.Snapshot, K extends keyof T>(
   obj: T | undefined,
   property: K,
 ): T[K] | undefined => {
@@ -202,7 +207,10 @@ const useObjectProperty = <T extends Obj.Unknown, K extends keyof T>(
     if (obj == null) {
       return Atom.make<T[K] | undefined>(() => undefined);
     }
-    return Obj.atomProperty(obj, property);
+    if (Obj.isSnapshot(obj)) {
+      return Atom.make<T[K]>(() => obj[property]);
+    }
+    return Obj.atomProperty(obj as T & Obj.Unknown, property);
   }, [obj, property]);
   return useAtomValue(atom);
 };

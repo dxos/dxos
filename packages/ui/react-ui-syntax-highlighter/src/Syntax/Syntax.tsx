@@ -4,7 +4,7 @@
 
 import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { JSONPath } from 'jsonpath-plus';
-import React, { type PropsWithChildren, forwardRef, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Input, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -31,6 +31,9 @@ type SyntaxContextValue = {
   setFilterText: (text: string) => void;
   filterError: Error | null;
   replacer?: JsonReplacer;
+  // Expansion depth (JSON mode); consumed by a `getReplacer` factory, edited via `Syntax.Depth`.
+  depth: number;
+  setDepth: (depth: number) => void;
 };
 
 type ScopedProps<P> = P & { __scopeSyntax?: Scope };
@@ -56,6 +59,16 @@ type SyntaxRootProps = PropsWithChildren<{
    * this package free of any domain-specific knowledge.
    */
   replacer?: JsonReplacer;
+  /**
+   * Depth-parametrized replacer, re-evaluated as the `Syntax.Depth` control changes. Takes
+   * precedence over `replacer`. The consumer owns any domain knowledge (e.g. how depth maps to
+   * ref resolution), so this package stays domain-free.
+   */
+  getReplacer?: (depth: number) => JsonReplacer | undefined;
+  /** Initial expansion depth for `Syntax.Depth` / `getReplacer`. */
+  defaultDepth?: number;
+  /** Notified when the depth changes (via `Syntax.Depth`). */
+  onDepthChange?: (depth: number) => void;
 }>;
 
 /**
@@ -65,10 +78,24 @@ type SyntaxRootProps = PropsWithChildren<{
  * presence, not value.
  */
 const SyntaxRoot = (props: ScopedProps<SyntaxRootProps>) => {
-  const { __scopeSyntax, children, language, source, replacer } = props;
+  const { __scopeSyntax, children, language, source, replacer, getReplacer, defaultDepth = 0, onDepthChange } = props;
   const isJson = 'data' in props;
   const data = props.data;
   const [filterText, setFilterText] = useState('');
+  const [depth, setDepthState] = useState(defaultDepth);
+  const setDepth = useCallback(
+    (next: number) => {
+      setDepthState(next);
+      onDepthChange?.(next);
+    },
+    [onDepthChange],
+  );
+
+  // `getReplacer` (depth-parametrized) takes precedence over the static `replacer`.
+  const effectiveReplacer = useMemo(
+    () => (getReplacer ? getReplacer(depth) : replacer),
+    [getReplacer, replacer, depth],
+  );
 
   const { filteredData, filterError } = useMemo<{ filteredData: any; filterError: Error | null }>(() => {
     if (!isJson || !filterText.trim().length) {
@@ -92,7 +119,9 @@ const SyntaxRoot = (props: ScopedProps<SyntaxRootProps>) => {
       filterText={filterText}
       setFilterText={setFilterText}
       filterError={filterError}
-      replacer={replacer}
+      replacer={effectiveReplacer}
+      depth={depth}
+      setDepth={setDepth}
     >
       {children}
     </SyntaxProvider>
@@ -154,6 +183,41 @@ const SyntaxFilter = forwardRef<HTMLInputElement, ScopedProps<SyntaxFilterProps>
 );
 
 SyntaxFilter.displayName = SYNTAX_FILTER_NAME;
+
+//
+// Depth
+//
+
+const SYNTAX_DEPTH_NAME = 'Syntax.Depth';
+
+type SyntaxDepthProps = ComposableProps;
+
+/**
+ * Numeric expansion-depth control bound to `Syntax.Root`'s depth state. Meaningful when the Root is
+ * given a `getReplacer` that consumes depth (e.g. to resolve references N levels deep).
+ */
+const SyntaxDepth = forwardRef<HTMLInputElement, ScopedProps<SyntaxDepthProps>>(
+  ({ __scopeSyntax, classNames }, forwardedRef) => {
+    const { depth, setDepth } = useSyntaxContext(SYNTAX_DEPTH_NAME, __scopeSyntax);
+    return (
+      <Input.Root>
+        <Input.TextInput
+          classNames={['p-1 px-2 font-mono', classNames]}
+          variant='subdued'
+          type='number'
+          min={0}
+          step={1}
+          aria-label='Depth'
+          value={depth}
+          onChange={(event) => setDepth(Math.max(0, Number(event.target.value) || 0))}
+          ref={forwardedRef}
+        />
+      </Input.Root>
+    );
+  },
+);
+
+SyntaxDepth.displayName = SYNTAX_DEPTH_NAME;
 
 //
 // Viewport
@@ -220,10 +284,18 @@ export const Syntax = {
   Root: SyntaxRoot,
   Content: SyntaxContent,
   Filter: SyntaxFilter,
+  Depth: SyntaxDepth,
   Viewport: SyntaxViewport,
   Code: SyntaxCode,
 };
 
 export { createSyntaxScope };
 
-export type { SyntaxCodeProps, SyntaxContentProps, SyntaxFilterProps, SyntaxRootProps, SyntaxViewportProps };
+export type {
+  SyntaxCodeProps,
+  SyntaxContentProps,
+  SyntaxDepthProps,
+  SyntaxFilterProps,
+  SyntaxRootProps,
+  SyntaxViewportProps,
+};

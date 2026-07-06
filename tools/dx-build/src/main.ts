@@ -12,6 +12,34 @@ import ts from 'typescript';
 const VERBOSE = false,
   USE_TSGO = process.env.DX_USE_TSC !== '1';
 
+/** Matches TypeScript diagnostic file paths, including `../` segments and multi-part extensions. */
+const DIAGNOSTIC_FILE = String.raw`[\w./-]+\.[A-Za-z0-9]+(?:\.[A-Za-z0-9]+)*`;
+
+const ANSI = String.raw`\x1B\[[0-9;]*m`;
+
+const ansiGap = String.raw`(?:${ANSI})*`;
+
+/**
+ * Rewrite compiler diagnostic paths from package-relative to repo-relative so moon/IDE output
+ * is clickable from the monorepo root. Handles classic `(line,col):`, pretty `:line:col -`,
+ * related-location lines, summary footers, and ANSI color codes from pretty mode.
+ */
+const rewriteDiagnosticPaths = (output: string, cwd: string, gitRoot: string): string => {
+  const toRepoPath = (filePath: string): string => relative(gitRoot, resolve(cwd, filePath));
+
+  const classic = new RegExp(String.raw`^(${DIAGNOSTIC_FILE})\((\d+),(\d+)\):`, 'gm');
+  const pretty = new RegExp(
+    String.raw`^(\s*)${ansiGap}(${DIAGNOSTIC_FILE})${ansiGap}:${ansiGap}(\d+)${ansiGap}:${ansiGap}(\d+)${ansiGap} -`,
+    'gm',
+  );
+  const summary = new RegExp(String.raw`starting at: ${ansiGap}(${DIAGNOSTIC_FILE})${ansiGap}:(\d+)`, 'g');
+
+  return output
+    .replace(classic, (_, filePath, line, col) => `${toRepoPath(filePath)}(${line},${col}):`)
+    .replace(pretty, (_, indent, filePath, line, col) => `${indent}${toRepoPath(filePath)}:${line}:${col} -`)
+    .replace(summary, (_, filePath, line) => `starting at: ${toRepoPath(filePath)}:${line}`);
+};
+
 const main = async () => {
   // Find and parse tsconfig.json.
   const tsconfigPath = ts.findConfigFile(process.cwd(), ts.sys.fileExists, 'tsconfig.json');
@@ -84,24 +112,20 @@ const main = async () => {
   VERBOSE && console.log(`Running ${compiler}...`);
   const tsc = spawnSync(compiler, [], { encoding: 'utf-8' });
 
-  // Process output to prepend repo root to relative paths.
   const cwd = process.cwd();
-  const relativePathRegex = /^([a-zA-Z0-9_\-./]+\.[a-zA-Z0-9]+)(\(\d+,\d+\):)/gm;
-
-  const gitRoot = spawnSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf-8' }).stdout.trim();
+  const gitRootResult = spawnSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf-8' });
+  const gitRoot = gitRootResult.stdout?.trim();
+  if (!gitRoot) {
+    console.error('Failed to determine git root.');
+    process.exit(1);
+  }
 
   if (tsc.stdout) {
-    const processedStdout = tsc.stdout.replace(relativePathRegex, (match, filePath, location) => {
-      return `${relative(gitRoot, resolve(cwd, filePath))}${location}`;
-    });
-    process.stdout.write(processedStdout);
+    process.stdout.write(rewriteDiagnosticPaths(tsc.stdout, cwd, gitRoot));
   }
 
   if (tsc.stderr) {
-    const processedStderr = tsc.stderr.replace(relativePathRegex, (match, filePath, location) => {
-      return `${resolve(cwd, filePath)}${location}`;
-    });
-    process.stderr.write(processedStderr);
+    process.stderr.write(rewriteDiagnosticPaths(tsc.stderr, cwd, gitRoot));
   }
 
   VERBOSE && console.log(`${compiler} exited with status ${tsc.status}`);

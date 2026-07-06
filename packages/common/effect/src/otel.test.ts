@@ -34,7 +34,7 @@ const sdk = new NodeSDK({
 
 // and add a processor to export log record
 const loggerProvider = new LoggerProvider({
-  processors: [new SimpleLogRecordProcessor(new ConsoleLogRecordExporter())],
+  processors: [new SimpleLogRecordProcessor({ exporter: new ConsoleLogRecordExporter() })],
   resource,
 });
 logs.setGlobalLoggerProvider(loggerProvider);

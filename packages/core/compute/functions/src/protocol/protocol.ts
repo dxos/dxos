@@ -162,7 +162,7 @@ class FunctionContext extends Resource {
       this.client = new EchoClient().connectToService({
         dataService: context.services.dataService,
         queryService: context.services.queryService,
-        queueService: context.services.queueService,
+        feedService: context.services.queueService,
       });
     }
   }

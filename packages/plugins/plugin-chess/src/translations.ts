@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Chess } from '#types';
+import { Chess, ChessPositionIndex, PlayerReview } from '#types';
 
 export const translations = [
   {
@@ -21,10 +21,28 @@ export const translations = [
         'rename-object.label': 'Rename chess game',
         'delete-object.label': 'Delete chess game',
       },
+      [Type.getTypename(PlayerReview.Review)]: {
+        'typename.label': 'Player review',
+        'typename.label_zero': 'Player reviews',
+        'typename.label_one': 'Player review',
+        'typename.label_other': 'Player reviews',
+        'object-name.placeholder': 'Player review',
+        'add-object.label': 'Add player review',
+        'rename-object.label': 'Rename player review',
+        'delete-object.label': 'Delete player review',
+      },
+      [Type.getTypename(ChessPositionIndex.PositionIndex)]: {
+        'typename.label': 'Position index',
+        'typename.label_zero': 'Position indexes',
+        'typename.label_one': 'Position index',
+        'typename.label_other': 'Position indexes',
+      },
       [meta.profile.key]: {
         'plugin.name': 'Chess',
         'new-game.button': 'New game',
         'delete-game.label': 'Delete',
+        'rebuild-position-index.button': 'Rebuild index',
+        'rebuild-position-index-error.title': 'Failed to rebuild position index',
         'game.checkmate.label': 'Checkmate',
         'game.stalemate.label': 'Stalemate',
         'game.draw.label': 'Draw',

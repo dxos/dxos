@@ -75,6 +75,6 @@ describe('AiRequest.Request (ollama gpt-oss:20b)', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 120_000, tags: ['llm'] },
+    { timeout: 120_000, tags: ['manual'] },
   );
 });

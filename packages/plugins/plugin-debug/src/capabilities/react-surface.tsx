@@ -463,7 +463,7 @@ export default Capability.makeModule(
           }
 
           const feed = space.properties.invocationTraceFeed?.target;
-          const feedDXN = feed ? Feed.getQueueUri(feed) : undefined;
+          const feedDXN = feed ? Feed.getFeedUri(feed) : undefined;
           return <InvocationTraceContainer db={space.db} feedDXN={feedDXN} detailAxis='block' />;
         },
       }),
