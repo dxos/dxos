@@ -38,18 +38,29 @@ const SAMPLE_CONTENT = trim`
   - All men are mortal.
 `;
 
-const STAGES: StageInfo[] = [{ id: 'extract-facts', description: 'LLM proposition extraction (pipeline-rdf)' }];
+const STAGES: StageInfo[] = [
+  {
+    id: 'extract-facts',
+    description: 'LLM proposition extraction (pipeline-rdf)',
+    enabled: true,
+  },
+];
 
 type StoryArgs = {};
 
 const DefaultStory = (_: StoryArgs) => {
+  const [stages, setStages] = useState<StageInfo[]>(STAGES);
   const [facts, setFacts] = useState<Type.Fact[]>([]);
   const [output, setOutput] = useState<unknown>();
   const [active, setActive] = useState<string | undefined>(undefined);
   const [busy, setBusy] = useState(false);
 
-  // Stream the document through the extraction stage; the sink collects per-document results.
+  // Stream the document through the enabled stages; the sink collects per-document results.
   const handleRun = (text: string) => {
+    if (!stages.some((stage) => stage.id === 'extract-facts' && stage.enabled)) {
+      setOutput({ skipped: 'no stages enabled' });
+      return;
+    }
     setBusy(true);
     setActive('extract-facts');
     const program = Effect.gen(function* () {
@@ -76,7 +87,7 @@ const DefaultStory = (_: StoryArgs) => {
   return (
     <div className='dx-container grid grid-cols-[1fr_1fr_1fr] gap-2'>
       <DocumentEditor initialValue={SAMPLE_CONTENT} parse={stubParse} busy={busy} onRun={handleRun} />
-      <PipelinePanel stages={STAGES} active={active} output={output} />
+      <PipelinePanel stages={stages} onStagesChanged={setStages} active={active} output={output} />
       <FactViewer facts={facts} />
     </div>
   );
