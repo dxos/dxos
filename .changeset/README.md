@@ -13,12 +13,15 @@ changeset is not required for chores). See the authoring guide:
 
 Releases run in GitHub Actions, never locally (see [`docs/RELEASING.md`](../docs/RELEASING.md)):
 
-- **`@latest`** — every push to `main` has `publish-all.yml` maintain a "Version Packages" PR; **merging
-  that PR** publishes the bumped packages (npm OIDC + provenance). npm publishing lives in `publish-all.yml`
-  because the OIDC trusted publisher is bound to that workflow filename.
-- **`@next`** — run the **Release (next)** workflow (`release-next.yml`, manual `workflow_dispatch`). It cuts
-  a **snapshot release** (`changeset version --snapshot next` → `changeset publish --tag next`); there is no
-  `pre` mode and no long-lived `next` branch.
+- **`@latest`** (stable) — **published only when a human merges the "Version Packages" PR**, not on push.
+  On each push to `main`, `publish-all.yml` just keeps that PR up to date (draining pending changesets into
+  version bumps + changelog entries) — it publishes nothing. Merging the PR is the release: that run does
+  the npm publish (OIDC + provenance). (npm publishing lives in `publish-all.yml` because the OIDC trusted
+  publisher is bound to that workflow filename.)
+- **`@next`** (pre-release) — **published only when someone manually runs the "Release (next)" workflow**
+  (`release-next.yml`, `workflow_dispatch`). It cuts a throwaway **snapshot release** (`changeset version
+  --snapshot next` → `changeset publish --tag next`) — no `pre` mode, no long-lived `next` branch, and it
+  never touches `@latest`.
 
 Apps (Composer, docs, examples) **deploy** on their own cadence via the app workflows and never publish to
 npm — deploy is fully decoupled from this changeset flow.
