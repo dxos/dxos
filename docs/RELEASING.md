@@ -89,9 +89,10 @@ desktop + iOS). This is the only path that advances Composer's version. No npm p
 
 ## Desktop & mobile (Tauri / CrabNebula)
 
-Native builds run in **`publish-tauri.yaml`** (CrabNebula `cn`), a **reusable workflow** invoked by
-`deploy-apps.yml` in the same run as the Composer deploy, for `labs`/`staging`/`production` (also directly via
-`workflow_dispatch`). The version comes from `composer-app`'s `package.json`:
+Native builds run in **`build-tauri.yaml`** (CrabNebula `cn`), a **reusable workflow** invoked only by
+`deploy-apps.yml` (its `tauri` job) in the same run as the Composer deploy, for `labs`/`staging`/`production`
+— not standalone (to run it, dispatch Deploy Apps with `app=composer`). The version comes from
+`composer-app`'s `package.json`:
 
 - **production** → the clean version bumped by the `release` job on the **primary** CN channel — the primary
   desktop release channel.

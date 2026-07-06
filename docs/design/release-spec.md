@@ -146,7 +146,7 @@ Apps (Composer, docs, storybook, todomvc, tasks, testbench) **deploy, never publ
 
 **Composer production release** — the only path that advances Composer's version (it isn't in Changesets): a production deploy's `release` job bumps `composer-app`/`crx` by the dispatch `bump` input, commits to `main`, tags `composer-v<x>`, and the rest of the run builds + deploys that commit (web + desktop + iOS). A single non-Composer app deploy to production (e.g. a docs hotfix) skips the release job; docs/example apps are unversioned and just deploy + move their pointer tag.
 
-**Desktop / mobile** run in `publish-tauri.yaml` (CrabNebula) for labs/staging/production (not `main` — a signed build per push is too costly): production → the clean version on the primary CN channel; labs/staging → a per-commit prerelease on that env's channel; iOS → TestFlight on `labs` only.
+**Desktop / mobile** run in `build-tauri.yaml` (CrabNebula) for labs/staging/production (not `main` — a signed build per push is too costly): production → the clean version on the primary CN channel; labs/staging → a per-commit prerelease on that env's channel; iOS → TestFlight on `labs` only.
 
 **Tracking what's deployed where** (what branches gave for free): per-app floating **`<app>/<env>` git tags** (non-`main`), force-updated on each deploy — e.g. `git diff composer/staging..composer/production`. No GitHub Environments; human gating is the deliberate dispatch.
 

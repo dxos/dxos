@@ -292,7 +292,7 @@ jobs:
   tauri:
     needs: [plan, release, build-bundle]
     if: ${{ !cancelled() && needs.release.result != 'failure' && needs.build-bundle.result == 'success' && needs.plan.outputs.tauri == 'true' }}
-    uses: ./.github/workflows/publish-tauri.yaml
+    uses: ./.github/workflows/build-tauri.yaml
     with:
       environment: ${{ needs.plan.outputs.env }}
       ref: ${{ needs.release.outputs.sha || github.sha }}

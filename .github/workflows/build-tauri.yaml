@@ -1,8 +1,10 @@
 name: Composer Tauri Release
 
-# Reusable: invoked by deploy-apps.yml for the labs/staging/production environments (runs alongside the
-# Composer web deploy), or manually via workflow_dispatch. The CrabNebula channel is derived from the
-# `environment` input — no branch triggers — and the desktop version comes from composer-app's package.json.
+# Reusable workflow — invoked only by deploy-apps.yml (its `tauri` job) for the labs/staging/production
+# environments, alongside the Composer web deploy. Not standalone (no workflow_dispatch): to run it, dispatch
+# Deploy Apps with app=composer. Multi-job/multi-runner (ubuntu draft/publish + macOS desktop + macOS iOS),
+# so it's a reusable workflow, not a composite action. The CrabNebula channel is derived from the
+# `environment` input; the desktop version comes from composer-app's package.json.
 on:
   workflow_call:
     inputs:
@@ -10,17 +12,6 @@ on:
         description: Target environment (labs | staging | production).
         type: string
         required: true
-      ref:
-        description: Git ref to build (default the triggering commit).
-        type: string
-        default: ''
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: Target environment.
-        type: choice
-        options: [labs, staging, production]
-        default: labs
       ref:
         description: Git ref to build (default the triggering commit).
         type: string
@@ -236,8 +227,8 @@ jobs:
       - name: Export DX_POSTHOG_API_KEY for Tauri bundle
         run: echo "DX_POSTHOG_API_KEY=$COMPOSER_APP_POSTHOG_API_KEY" >> $GITHUB_ENV
 
-      # Reuse the web bundle built once by deploy-apps.yml's build-bundle job (when called from there).
-      # Absent on standalone workflow_dispatch — the build step falls back to moon in that case.
+      # Reuse the web bundle built once by deploy-apps.yml's build-bundle job. Normally always present (the
+      # tauri job only runs when build-bundle succeeded); the moon fallback below is defensive.
       - name: Download Composer bundle
         continue-on-error: true
         uses: actions/download-artifact@v4
@@ -254,7 +245,7 @@ jobs:
             echo "Using prebuilt Composer bundle — tauri build bare (no moon)."
             ( cd packages/apps/composer-app && node scripts/fetch-ollama.mjs && pnpm exec tauri build )
           else
-            echo "No prebuilt bundle (standalone dispatch) — building via moon."
+            echo "No prebuilt bundle (unexpected) — falling back to moon."
             moon run composer-app:tauri-build
           fi
         env:
@@ -387,7 +378,7 @@ jobs:
             echo "Using prebuilt Composer bundle — tauri ios build bare (no moon)."
             ( cd packages/apps/composer-app && pnpm exec tauri ios build --export-method=app-store-connect )
           else
-            echo "No prebuilt bundle (standalone dispatch) — building via moon."
+            echo "No prebuilt bundle (unexpected) — falling back to moon."
             moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
           fi
         env:
