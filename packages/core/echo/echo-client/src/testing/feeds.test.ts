@@ -382,6 +382,50 @@ describe('feeds', () => {
         Array.from({ length: 25 }, (_, index) => `p${total - 1 - index}`),
       );
     });
+
+    // Content-ordered (non-`natural`) feed paging — the mailbox's path (order by a message field, not
+    // insertion order). Must page correctly on the feed path (`applyOrderSkipLimit` sorts by the
+    // property + slices); routing these to the host indexer instead returned empty windows, which
+    // manifested as the list flashing to the top and paging stopping after a page or two.
+    test('content-ordered `.orderBy(property).skip().limit()` windows at scale', async ({ expect }) => {
+      await using peer = await builder.createPeer({
+        types: [Feed.Feed, TestSchema.Person],
+        assignQueuePositions: true,
+      });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      const total = 60;
+      const names = Array.from({ length: total }, (_, index) => `p${String(index).padStart(2, '0')}`);
+      // Append in an order distinct from name order (odds then evens) so a correct result must sort by
+      // the `name` property, not rely on insertion order — mimics an out-of-order/backfill sync.
+      const shuffled = [...names.filter((_, index) => index % 2 === 1), ...names.filter((_, index) => index % 2 === 0)];
+      await db.appendToFeed(
+        feed,
+        shuffled.map((name) => Obj.make(TestSchema.Person, { name })),
+      );
+
+      const scope = Scope.feed(Feed.getFeedUri(feed)!);
+      const page = (skip: number, limit: number) =>
+        db
+          .query(
+            Query.select(Filter.type(TestSchema.Person))
+              .from(scope)
+              .orderBy(Order.property('name', 'desc'))
+              .skip(skip)
+              .limit(limit),
+          )
+          .run()
+          .then((rows) => rows.map((obj) => (obj as TestSchema.Person).name));
+
+      const expectedDesc = [...names].reverse(); // p59..p00 by name desc.
+      // Grow-limit paging (what usePagination does before it slides): each window is the newest-by-name prefix.
+      for (const limit of [10, 20, 30, 40]) {
+        expect(await page(0, limit)).toEqual(expectedDesc.slice(0, limit));
+      }
+      // Slide window (skip advances once usePagination hits maxWindowSize): the next content-ordered slice.
+      expect(await page(10, 30)).toEqual(expectedDesc.slice(10, 40));
+    });
   });
 
   describe('Durability', () => {

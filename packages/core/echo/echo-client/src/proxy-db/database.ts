@@ -816,23 +816,7 @@ const isQueryScoped = (query: QueryAST.Query): boolean => {
  */
 const isClientEvaluableFeedQuery = (query: QueryAST.Query): boolean => {
   const simple = isSimpleFeedWindowQuery(query);
-  return simple != null && !filterContainsTextSearch(simple.filter) && !queryContainsContentOrder(query);
-};
-
-/**
- * Whether the query orders by content (a non-`natural` order, e.g. `Order.property('created')`). The
- * client feed path is a newest-by-position tail and can only honor `natural` (insertion) order; a
- * content ordering must run through the host indexer, which sorts + limits over the indexed feed
- * (a feed is not necessarily appended in the sort order — e.g. a backward/backfill sync).
- */
-const queryContainsContentOrder = (query: QueryAST.Query): boolean => {
-  let contentOrder = false;
-  QueryAST.visit(query, (node) => {
-    if (node.type === 'order' && node.order.some((order) => order.kind !== 'natural')) {
-      contentOrder = true;
-    }
-  });
-  return contentOrder;
+  return simple != null && !filterContainsTextSearch(simple.filter);
 };
 
 const filterContainsTextSearch = (filter: QueryAST.Filter): boolean => {

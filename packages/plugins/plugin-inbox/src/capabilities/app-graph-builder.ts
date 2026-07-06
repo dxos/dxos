@@ -10,7 +10,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { type Feed, Filter, Key, Obj, Order, Query, Ref, Type } from '@dxos/echo';
+import { type Feed, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -315,17 +315,11 @@ export default Capability.makeModule(
           }
 
           const messageId = get(selectedId(matched.nodeId));
-          // Resolve the selected message via the host indexer, not the client feed's newest-by-position
-          // window: the mailbox list orders by date, so a selected message can be outside that window
-          // (making the companion blank). The list's messages are all indexed, so the indexer resolves
-          // them by id — a content `orderBy` (not `natural`) is what routes this to the host (see
-          // `queryContainsContentOrder` in `isClientEvaluableFeedQuery`).
+          // Resolve the selected message by id against the whole feed (a bare feed query fetches all
+          // items and matches by id), so a message outside the list's rendered window still resolves
+          // — otherwise the companion would blank for a selection scrolled out of view.
           const message = get(
-            db.query(
-              Query.select(messageId ? Filter.id(messageId) : Filter.nothing())
-                .from(feed)
-                .orderBy(Order.property('created', 'desc')),
-            ).atom,
+            db.query(Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed)).atom,
           )[0];
           return Effect.succeed([
             AppNode.makeCompanion({

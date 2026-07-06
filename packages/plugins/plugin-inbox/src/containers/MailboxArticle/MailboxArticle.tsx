@@ -176,12 +176,12 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     setFilter(filter);
   }, [filterText, builder]);
 
-  // Messages. Lazily loaded, newest-first: the initial page renders immediately and older messages
-  // load as the user scrolls (see MessageStack's `pagination` wiring), rather than fetching the whole
-  // feed up front. Ordered by message date (`created`), not feed insertion order — a backward/backfill
-  // sync appends out of time order, so the window must be selected by date. `Order.property` is a
-  // content order (not `natural`), which routes this query to the host indexer (see
-  // `isClientEvaluableFeedQuery`), so the newest-by-date window is correct regardless of append order.
+  // Messages, newest-first by message date. Ordered by `created` (not feed insertion order): a
+  // backward/backfill sync appends out of time order, so the window must be selected by date. This
+  // content order runs on the feed path, which sorts by the property and applies skip/limit
+  // (`FeedQueryContext`/`applyOrderSkipLimit`) — correct regardless of append order. The window bounds
+  // what's rendered (via the virtualizer); the feed is currently fetched in full to sort (lazy
+  // date-ordered fetch needs index keyset support, tracked as a follow-up).
   const {
     items: messages,
     getNext,
