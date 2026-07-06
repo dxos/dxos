@@ -81,6 +81,11 @@ jobs:
       - name: Check publish config
         run: pnpm run check-publish-config
 
+      - name: Check version files in sync
+        # version.ts (DXOS_VERSION) + tauri.conf.json are derived from their package versions by
+        # sync-versions.mjs during release; fail the PR if a committed copy drifts out of sync.
+        run: node scripts/sync-versions.mjs --check
+
       - name: Check package.json paths
         run: pnpm run pkg-lint
 
