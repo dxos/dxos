@@ -12,13 +12,14 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ColorStyles, getHashStyles, mx } from '@dxos/ui-theme';
 
 import { Capabilities } from '../../../common';
+import * as Role from '../../../common/Role';
 import { withPluginManager } from '../../../testing';
 import { usePluginManager } from '../PluginManager';
 import { SurfaceComponent, useSurfaces } from './SurfaceComponent';
 import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug';
-import { create, makeFilter, makeType } from './types';
+import { create, makeFilter } from './types';
 
-const ItemRole = makeType<{ id: string }>('org.dxos.test.role.item');
+const ItemRole = Role.make<{ id: string }>('org.dxos.test.role.item');
 
 type TestComponentProps = {
   id: string;

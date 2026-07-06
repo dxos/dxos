@@ -8,11 +8,12 @@ import React from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { Capabilities } from '../common';
+import * as Role from '../common/Role';
 import { Capability } from '../core';
 import { Surface } from '../ui';
 import { withPluginManager } from './withPluginManager';
 
-const MainRole = Surface.makeType<Record<string, never>>('org.dxos.test.role.main');
+const MainRole = Role.make<Record<string, never>>('org.dxos.test.role.main');
 
 const DefaultStory = () => {
   console.log('Render');
