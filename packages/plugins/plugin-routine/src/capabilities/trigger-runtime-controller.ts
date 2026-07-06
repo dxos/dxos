@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { type ComputeEnvironment } from '@dxos/client-protocol';
 import { ServiceResolver } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
@@ -18,30 +17,28 @@ import { type Space } from '@dxos/react-client/echo';
 //
 // Capability Module
 //
-// Watches `space.properties.computeEnvironment` for every space and toggles
+// Watches `space.properties.triggersDisabled` for every space and toggles
 // the per-space {@link TriggerDispatcher} accordingly:
 //
-//   - `local`              → `dispatcher.start()`
-//   - `edge` / `disabled`  → `dispatcher.stop()`
+//   - disabled (`true`)        → `dispatcher.stop()`
+//   - enabled (unset/`false`)  → `dispatcher.start()`
 //
-// Replaces the in-line watcher that used to live inside the removed
-// `compute-runtime.ts` per-space layer. The dispatcher itself is now
-// contributed unconditionally via `TriggerDispatcherSpec` in `layer-specs.ts`,
-// so this capability is only responsible for driving its lifecycle.
+// Per-trigger local/edge routing is handled by the trigger's `remote` flag
+// (the dispatcher skips remote triggers); this space-wide flag is only the
+// kill-switch for local execution. The dispatcher itself is contributed
+// unconditionally via `TriggerDispatcherSpec` in `layer-specs.ts`, so this
+// capability is only responsible for driving its lifecycle.
 //
-
-/** Trigger execution location the dispatcher should run locally. */
-const LOCAL_ENVIRONMENT: ComputeEnvironment = 'local';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* Capability.get(ClientCapabilities.Client);
     const runtime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
 
-    /** Per-space property-subscription unsubscribe, last-seen environment, and in-flight transition fiber. */
+    /** Per-space property-subscription unsubscribe, last-seen disabled state, and in-flight transition fiber. */
     type Tracker = {
       unsubscribe: () => void;
-      lastEnvironment?: ComputeEnvironment;
+      lastDisabled?: boolean;
       inFlight?: Fiber.RuntimeFiber<unknown, unknown>;
     };
     const trackers = new Map<SpaceId, Tracker>();
@@ -49,31 +46,31 @@ export default Capability.makeModule(
     /**
      * Resolve the per-space `TriggerDispatcher` from the process-manager
      * runtime and invoke `start()` / `stop()` according to the requested
-     * environment. Returns a fiber so the caller can cancel a pending
+     * disabled state. Returns a fiber so the caller can cancel a pending
      * transition when a new one supersedes it.
      */
-    const transition = (spaceId: SpaceId, environment: ComputeEnvironment) =>
+    const transition = (spaceId: SpaceId, disabled: boolean) =>
       runtime.runFork(
         Effect.gen(function* () {
           const dispatcher = yield* TriggerDispatcher;
-          yield* environment === LOCAL_ENVIRONMENT ? dispatcher.start() : dispatcher.stop();
+          yield* disabled ? dispatcher.stop() : dispatcher.start();
         }).pipe(
           Effect.provide(ServiceResolver.provide({ space: spaceId }, TriggerDispatcher)),
           Effect.tapErrorCause((cause) =>
-            Effect.sync(() => log.warn('trigger dispatcher transition failed', { spaceId, environment, cause })),
+            Effect.sync(() => log.warn('trigger dispatcher transition failed', { spaceId, disabled, cause })),
           ),
         ),
       );
 
-    const apply = (tracker: Tracker, spaceId: SpaceId, environment: ComputeEnvironment): void => {
-      if (tracker.lastEnvironment === environment) {
+    const apply = (tracker: Tracker, spaceId: SpaceId, disabled: boolean): void => {
+      if (tracker.lastDisabled === disabled) {
         return;
       }
-      tracker.lastEnvironment = environment;
+      tracker.lastDisabled = disabled;
       if (tracker.inFlight) {
         runtime.runFork(Fiber.interrupt(tracker.inFlight));
       }
-      tracker.inFlight = transition(spaceId, environment);
+      tracker.inFlight = transition(spaceId, disabled);
     };
 
     const install = (space: Space): void => {
@@ -94,9 +91,9 @@ export default Capability.makeModule(
           if (trackers.get(space.id) !== tracker) {
             return;
           }
-          const readEnvironment = (): ComputeEnvironment => space.properties.computeEnvironment ?? LOCAL_ENVIRONMENT;
-          tracker.unsubscribe = Obj.subscribe(space.properties, () => apply(tracker, space.id, readEnvironment()));
-          apply(tracker, space.id, readEnvironment());
+          const readDisabled = (): boolean => space.properties.triggersDisabled ?? false;
+          tracker.unsubscribe = Obj.subscribe(space.properties, () => apply(tracker, space.id, readDisabled()));
+          apply(tracker, space.id, readDisabled());
         })
         .catch((err) => log.catch(err));
     };
