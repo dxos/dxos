@@ -14,7 +14,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { useRelatedObjects } from '#hooks';
 import { meta } from '#meta';
-import { Prompts } from '#types';
+import { Prompts } from '#components';
 
 export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);

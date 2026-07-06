@@ -55,10 +55,10 @@ import {
   Settings,
   SPACE_HOME_NODE_TYPE,
   SpaceCapabilities,
-  SpaceHomeContent,
   type TypeInputOptions,
   TypeInputOptionsAnnotationId,
 } from '#types';
+import { SpaceHomeContent } from '#components';
 
 import {
   CREATE_OBJECT_DIALOG,

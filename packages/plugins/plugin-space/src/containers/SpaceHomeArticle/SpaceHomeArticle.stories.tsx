@@ -21,7 +21,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { SpaceHomeDashboard, SpaceHomeRecent } from '#containers';
 import { translations } from '#translations';
-import { SpaceHomeContent } from '#types';
+import { SpaceHomeContent } from '#components';
 
 import { SpaceHomeArticle } from './SpaceHomeArticle';
 

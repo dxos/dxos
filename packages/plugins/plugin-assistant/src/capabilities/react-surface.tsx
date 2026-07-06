@@ -15,10 +15,11 @@ import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { SpaceHomeContent, SpaceHomePinBottom } from '@dxos/plugin-space';
+import { SpaceHomeContent, SpaceHomePinBottom } from '@dxos/plugin-space/components';
 import { Panel } from '@dxos/react-ui';
 import { Position } from '@dxos/util';
 
+import { ChatSurface } from '#components';
 import {
   AgentArticle,
   AgentProperties,
@@ -34,7 +35,7 @@ import {
   TriggerStatus,
 } from '#containers';
 import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
-import { type Assistant, ChatSurface } from '#types';
+import { type Assistant } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
