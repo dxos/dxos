@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Atom from '@effect-atom/atom/Atom';
 import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
@@ -259,21 +260,15 @@ export const getOrCreateThreadIndex = (mailbox: Mailbox, db: Database.Database):
 };
 
 /**
- * Message count per thread id from the conversation index — authoritative regardless of which
- * messages are currently loaded into memory (used for conversation-tile counts).
+ * Per-thread message-count atom family over a conversation index. Each atom yields the authoritative
+ * count for one thread id (from the {@link ThreadIndex}, independent of which messages are loaded), so
+ * a consumer subscribes only to the thread it renders and re-renders only when that thread's count
+ * changes — no whole-index `Object.keys` scan and no cross-thread render coupling. Derived from the
+ * index object's reactive atom; reads a single key off the snapshot (no auto-vivify).
  */
-export const buildThreadCounts = (mailbox: Mailbox | Obj.Snapshot<Mailbox>): Record<string, number> => {
-  const counts: Record<string, number> = {};
-  const index = mailbox.threads?.target?.index;
-  if (!index) {
-    return counts;
-  }
-  // Read the index record once (O(n)). Going through `ThreadIndex.bind(...).messages(threadId)` per
-  // thread would re-run `Object.keys(index)` on the reactive proxy for every thread (O(n²)), which
-  // dominates render time as the conversation count grows during sync. Keys from `Object.keys` exist,
-  // so indexing them does not auto-vivify.
-  for (const threadId of Object.keys(index)) {
-    counts[threadId] = index[threadId]?.length ?? 0;
-  }
-  return counts;
+export const makeThreadCountFamily = (
+  threadIndex: ThreadIndex.ThreadIndex,
+): ((threadId: string) => Atom.Atom<number>) => {
+  const objectAtom = Obj.atom(threadIndex);
+  return Atom.family((threadId: string) => Atom.make((get) => get(objectAtom).index?.[threadId]?.length ?? 0));
 };

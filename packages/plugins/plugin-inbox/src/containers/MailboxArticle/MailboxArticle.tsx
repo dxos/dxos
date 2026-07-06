@@ -134,16 +134,10 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   // commits coalesces into one render; the derivations then memoize off the resulting tick (keeping
   // them off the render-hot path even though `mailbox` identity is stable across in-place mutations).
   const [tagTick, bumpTags] = useReducer((tick: number) => tick + 1, 0);
-  const [threadTick, bumpThreads] = useReducer((tick: number) => tick + 1, 0);
   const debouncedBumpTags = useDebouncedBump(bumpTags);
-  const debouncedBumpThreads = useDebouncedBump(bumpThreads);
   const tagIndex = mailbox.tags?.target;
   useEffect(() => (tagIndex ? Obj.subscribe(tagIndex, debouncedBumpTags) : undefined), [tagIndex, debouncedBumpTags]);
   const threadIndex = mailbox.threads?.target;
-  useEffect(
-    () => (threadIndex ? Obj.subscribe(threadIndex, debouncedBumpThreads) : undefined),
-    [threadIndex, debouncedBumpThreads],
-  );
 
   // `messageTagUris` is the raw tag-uri index (used for client-side filtering, same id space as the
   // query); `messageTagsMap` resolves those uris to label/hue chips for rendering.
@@ -164,8 +158,12 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
   const starredIds = useMemo(() => Starred.getStarredIds(mailbox, starredUri), [mailbox, starredUri, tagTick]);
 
-  // Conversation counts drive the per-tile message count, derived from the thread index.
-  const threadCounts = useMemo(() => Mailbox.buildThreadCounts(mailbox), [mailbox, threadTick]);
+  // Per-thread count atom family: each conversation tile subscribes to only its own thread's count
+  // and re-renders only when that count changes (no whole-index scan, no cross-thread coupling).
+  const threadCountAtom = useMemo(
+    () => (threadIndex ? Mailbox.makeThreadCountFamily(threadIndex) : undefined),
+    [threadIndex],
+  );
 
   // Filter.
   const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
@@ -353,7 +351,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
             currentId={currentId}
             tags={messageTagsMap}
             starredIds={starredIds}
-            threadCounts={threadCounts}
+            threadCountAtom={threadCountAtom}
             conversations={settings.conversations}
             pagination={feed ? pagination : undefined}
             onAction={handleAction}

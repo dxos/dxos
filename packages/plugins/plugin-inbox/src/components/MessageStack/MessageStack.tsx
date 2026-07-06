@@ -2,11 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
+import * as Atom from '@effect-atom/atom/Atom';
 import React, {
   type KeyboardEvent,
   type MouseEvent,
+  createContext,
   forwardRef,
   useCallback,
+  useContext,
   useMemo,
   useState,
 } from 'react';
@@ -29,6 +33,14 @@ import { useGmailTags } from '#hooks';
 import { getMessageProps } from '../../util';
 import { Row } from '../Row';
 import { Tile } from '../Tile';
+
+/** Per-thread message-count atom family; a conversation tile subscribes to just its own thread. */
+export type ThreadCountFamily = (threadId: string) => Atom.Atom<number>;
+
+/** Fallback when no family is provided (no thread index): tiles fall back to their loaded group size. */
+const ZERO_ATOM = Atom.make(() => 0);
+const defaultThreadCountFamily: ThreadCountFamily = () => ZERO_ATOM;
+const ThreadCountContext = createContext<ThreadCountFamily>(defaultThreadCountFamily);
 
 export type MessageStackAction =
   | { type: 'current'; messageId: string }
@@ -73,11 +85,12 @@ export type MessageStackProps = {
    */
   conversations?: boolean;
   /**
-   * Authoritative message count per conversation (thread id → count), from the mailbox's thread index.
-   * Preferred over the loaded-window group size, which can undercount when not all thread members are
-   * resident. Falls back to the group size when absent.
+   * Per-thread message-count atom family. Each conversation tile subscribes to only its own thread's
+   * authoritative count (from the mailbox thread index), so it reflects the full thread size — not the
+   * loaded-window group, which undercounts when members aren't resident — and re-renders only when
+   * that count changes. Absent → tiles fall back to their loaded group size.
    */
-  threadCounts?: Record<string, number>;
+  threadCountAtom?: ThreadCountFamily;
   /**
    * When `messages` is a lazily-loaded window (see `usePagination`), drives loading more older
    * messages as the user scrolls toward the loaded end (via `useVirtualizerPagination`).
@@ -91,7 +104,7 @@ export type MessageStackProps = {
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
   (
-    { messages, tags, currentId, selectedIds, starredIds, conversations, threadCounts, pagination, onAction, ...props },
+    { messages, tags, currentId, selectedIds, starredIds, conversations, threadCountAtom, pagination, onAction, ...props },
     forwardedRef,
   ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
@@ -129,8 +142,8 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
           conversationId,
           messages: conversationMessages,
           tags,
-          // Authoritative count from the thread index; the loaded group is only the resident members.
-          count: threadCounts?.[conversationId] ?? conversationMessages.length,
+          // The tile reads its authoritative count from the thread-count atom family (context) so it
+          // subscribes to only its own thread — the count is not baked into the item here.
           // Conversations show the latest message; star reflects/toggles that message.
           starred: starredIds?.has(conversationMessages[0]?.id),
           onAction,
@@ -143,7 +156,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
         starred: starredIds?.has(message.id),
         onAction,
       }));
-    }, [conversationGroups, messages, tags, starredIds, threadCounts, onAction]);
+    }, [conversationGroups, messages, tags, starredIds, onAction]);
 
     // In conversation view, the incoming `currentId` is a message ID (set when a
     // specific message becomes selected), but the tiles are keyed by conversation ID.
@@ -223,6 +236,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
     });
 
     return (
+      <ThreadCountContext.Provider value={threadCountAtom ?? defaultThreadCountFamily}>
       <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
@@ -250,6 +264,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
           </ScrollArea.Root>
         </Mosaic.Container>
       </Focus.Group>
+      </ThreadCountContext.Provider>
     );
   },
 );
@@ -343,8 +358,6 @@ type ConversationTileData = {
   conversationId: string;
   messages: Message.Message[];
   tags?: MessageTagsIndex;
-  /** Total messages in the conversation (from the thread index); may exceed the rendered preview. */
-  count?: number;
   starred?: boolean;
   onAction?: MessageStackActionHandler;
 };
@@ -353,9 +366,12 @@ type ConversationTileProps = Pick<MosaicTileProps<ConversationTileData>, 'data' 
 
 const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
   ({ data, location, current }, forwardedRef) => {
-    const { conversationId, messages, count, starred, onAction } = data;
+    const { conversationId, messages, starred, onAction } = data;
     const latest = messages[0];
-    const messageCount = count ?? messages.length;
+    // Subscribe to just this thread's authoritative count (re-renders only when it changes); fall back
+    // to the loaded group size when the thread isn't indexed (family yields 0).
+    const count = useAtomValue(useContext(ThreadCountContext)(conversationId));
+    const messageCount = count || messages.length;
     const { subject } = getMessageProps(latest, new Date());
     const { setCurrentId, setSelected } = useMosaicContainer('ConversationTile');
 

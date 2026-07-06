@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Registry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
@@ -97,13 +98,15 @@ describe('Mailbox threads', () => {
 
     expect(index.threadIds()).toEqual(['thread-a']);
     expect(index.messages('thread-a')).toHaveLength(2);
-    expect(Mailbox.buildThreadCounts(mailbox)).toEqual({ 'thread-a': 2 });
+    // The per-thread count atom reflects the index (a fresh registry reads the current snapshot).
+    const threadCount = Mailbox.makeThreadCountFamily(mailbox.threads!.target!);
+    expect(Registry.make().get(threadCount('thread-a'))).toBe(2);
 
     // Removing prunes the entry when the thread empties.
     index.remove('thread-a', first.id);
     index.remove('thread-a', second.id);
     expect(index.threadIds()).toEqual([]);
-    expect(Mailbox.buildThreadCounts(mailbox)).toEqual({});
+    expect(Registry.make().get(threadCount('thread-a'))).toBe(0);
   });
 
   test('addBatch commits a page in one transaction, including new threads created mid-batch', async ({ expect }) => {
