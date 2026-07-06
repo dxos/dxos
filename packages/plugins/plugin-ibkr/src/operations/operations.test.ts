@@ -2,24 +2,27 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { configuredCredentialsLayer } from '@dxos/functions';
 
 import { CUSIP_SOURCE, IBKR_SOURCE, TRADINGVIEW_SOURCE, tickerSource } from '../constants';
-import { Ibkr } from '../types';
+import { Ibkr, IbkrOperation } from '../types';
 import GetInstrumentFundamentalsHandler from './get-instrument-fundamentals';
 import GetPortfolioHandler from './get-portfolio';
 import GetTradesHandler from './get-trades';
 import ImportPortfolioReportHandler from './import-portfolio';
 import MaterializeInstrumentHandler from './materialize-instrument';
 import SyncPortfolioReportHandler from './sync-portfolio';
+import SyncLotsHandler from './sync-lots';
 
 const xml = readFileSync(fileURLToPath(new URL('../services/__fixtures__/flex-report.xml', import.meta.url)), 'utf8');
 const tickersFixture = readFileSync(
@@ -33,6 +36,7 @@ const factsFixture = readFileSync(
 const credentials = [{ service: IBKR_SOURCE, apiKey: 'test-token', account: 'TEST-QID' }];
 const originalFetch = globalThis.fetch;
 
+// TODO(dmaretskyi): convert this suite to the style that uses composer test harness.
 describe('IBKR operations', () => {
   let builder: EchoTestBuilder;
 
@@ -137,6 +141,58 @@ describe('IBKR operations', () => {
     );
   });
 
+  test('SyncLots materializes tax lots from the portfolio feed as child Lot objects', async ({ expect }) => {
+    const { db } = await builder.createDatabase({
+      types: [Feed.Feed, Ibkr.Report, Ibkr.Portfolio, Ibkr.Instrument, Ibkr.Lot],
+    });
+    const portfolio = Ibkr.makePortfolio();
+    db.add(portfolio);
+    const feed = portfolio.feed.target!;
+    await EffectEx.runPromise(
+      Feed.append(feed, [Obj.make(Ibkr.Report, { xml, fetchedAt: new Date().toISOString() })]).pipe(
+        Effect.provide(Database.layer(db)),
+      ),
+    );
+
+    const first = await runSyncLots({ account: Ref.make(portfolio) }, db);
+    expect(first).toMatchObject({ synced: 4, created: 4, updated: 0, removed: 0 });
+
+    const lots = await db
+      .query(Filter.and(Filter.type(Ibkr.Lot), Filter.childOf(portfolio, { transitive: false })))
+      .run();
+    expect(lots).toHaveLength(4);
+    expect(lots.every((lot) => Obj.getParent(lot)?.id === portfolio.id)).toBe(true);
+
+    const second = await runSyncLots({ account: Ref.make(portfolio) }, db);
+    expect(second).toMatchObject({ synced: 4, created: 0, updated: 4, removed: 0 });
+  });
+
+  test('SyncLots syncs lots from a specific report when report is provided', async ({ expect }) => {
+    const { db } = await builder.createDatabase({
+      types: [Feed.Feed, Ibkr.Report, Ibkr.Portfolio, Ibkr.Instrument, Ibkr.Lot],
+    });
+    const portfolio = Ibkr.makePortfolio();
+    db.add(portfolio);
+    const feed = portfolio.feed.target!;
+    const olderReport = Obj.make(Ibkr.Report, { xml, fetchedAt: '2026-01-01T06:00:00.000Z' });
+    const newerReport = Obj.make(Ibkr.Report, {
+      xml: xml.replace('ACME', 'OTHER'),
+      fetchedAt: '2026-06-01T06:00:00.000Z',
+    });
+    await EffectEx.runPromise(
+      Feed.append(feed, [olderReport, newerReport]).pipe(Effect.provide(Database.layer(db))),
+    );
+
+    const result = await runSyncLots({ account: Ref.make(portfolio), report: Ref.make(olderReport) }, db);
+    expect(result.synced).toBe(4);
+
+    const lots = await db
+      .query(Filter.and(Filter.type(Ibkr.Lot), Filter.childOf(portfolio, { transitive: false })))
+      .run();
+    expect(lots.some((lot) => lot.symbol === 'ACME')).toBe(true);
+    expect(lots.some((lot) => lot.symbol === 'OTHER')).toBe(false);
+  });
+
   test('SyncPortfolioReport fails clearly when the credential is missing', ({ expect }) =>
     builder
       .createDatabase({ types: [Feed.Feed, Ibkr.Report] })
@@ -225,4 +281,26 @@ const run = <T>(
       any,
       never
     >,
+  );
+
+const runSyncLots = (
+  input: { account: Ref.Ref<Ibkr.Portfolio>; report?: Ref.Ref<Ibkr.Report> },
+  db: Database.Database,
+) =>
+  run(
+    SyncLotsHandler.handler(input).pipe(
+      Effect.provideService(Operation.Service, {
+        invoke: (operation, invokeInput) => {
+          if (operation === IbkrOperation.MaterializeInstrument) {
+            return MaterializeInstrumentHandler.handler(
+              invokeInput as Parameters<typeof MaterializeInstrumentHandler.handler>[0],
+            ).pipe(Effect.provide(Database.layer(db)));
+          }
+          return Effect.die('Unexpected operation');
+        },
+        schedule: () => Effect.void,
+        invokePromise: async () => ({ error: new Error('Not available') }),
+      } as Context.Tag.Service<typeof Operation.Service>),
+    ),
+    db,
   );

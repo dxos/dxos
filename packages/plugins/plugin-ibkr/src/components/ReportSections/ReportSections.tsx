@@ -15,8 +15,8 @@ export type ReportSectionsProps = {
   positions: readonly Ibkr.Position[];
   trades: readonly Ibkr.Trade[];
   cash: readonly Ibkr.Cash[];
-  openLots: readonly Ibkr.Lot[];
-  closedLots: readonly Ibkr.Lot[];
+  openLots: readonly Ibkr.LotSnapshot[];
+  closedLots: readonly Ibkr.LotSnapshot[];
 };
 
 type Section = {

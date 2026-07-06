@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { Surface, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { Connection } from '@dxos/plugin-connector';
 import { ConnectorAuth } from '@dxos/plugin-connector/components';
 import { useQuery } from '@dxos/react-client/echo';
@@ -28,7 +28,8 @@ export type PortfolioSyncActionProps = {
  * `SyncBinding`, so the connection is detected space-wide by `connectorId`: when
  * none exists we render the connector's auth Surface (a "Connect Interactive
  * Brokers" button); once connected we render a Sync `IconButton` that invokes
- * {@link SyncPortfolioReport} for the Portfolio's space.
+ * {@link SyncPortfolioReport} for the Portfolio's space, then {@link SyncLots} from the latest
+ * stored report (lots sync runs even when the fetch fails).
  */
 export const PortfolioSyncAction = ({ subject }: PortfolioSyncActionProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -42,11 +43,16 @@ export const PortfolioSyncAction = ({ subject }: PortfolioSyncActionProps) => {
   const handleSync = useCallback(async () => {
     setSyncing(true);
     try {
-      await invokePromise(IbkrOperation.SyncPortfolioReport, {}, { spaceId: db?.spaceId });
+      try {
+        await invokePromise(IbkrOperation.SyncPortfolioReport, {}, { spaceId: db?.spaceId });
+      } catch {
+        // Report fetch is best-effort; lots sync from the latest stored report even when fetch fails.
+      }
+      await invokePromise(IbkrOperation.SyncLots, { account: Ref.make(subject) }, { spaceId: db?.spaceId });
     } finally {
       setSyncing(false);
     }
-  }, [invokePromise, db]);
+  }, [invokePromise, db, subject]);
 
   if (connection) {
     return (
