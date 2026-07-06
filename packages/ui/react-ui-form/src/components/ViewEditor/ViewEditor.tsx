@@ -107,7 +107,7 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
       projectionModel,
     ]);
 
-    const queueTarget = Match.value(view.query.ast).pipe(
+    const feedTarget = Match.value(view.query.ast).pipe(
       Match.when({ type: 'from' }, ({ from }) => {
         if (from._tag !== 'scope') {
           return undefined;
@@ -125,16 +125,16 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
     const feeds = useQuery(db, Filter.type(Feed.Feed));
 
     const targetRef = useMemo(() => {
-      if (!queueTarget) {
+      if (!feedTarget) {
         return undefined;
       }
-      const targetEid = EID.tryParse(queueTarget);
+      const targetEid = EID.tryParse(feedTarget);
       const feed = feeds.find((feed) => {
         const feedEid = Feed.getFeedUri(feed);
         return feedEid != null && targetEid != null && EID.equals(feedEid, targetEid);
       });
       return feed ? Ref.fromURI(Entity.getURI(feed)) : undefined;
-    }, [queueTarget, feeds]);
+    }, [feedTarget, feeds]);
 
     const viewSchema = useMemo(() => {
       const base = Schema.Struct({

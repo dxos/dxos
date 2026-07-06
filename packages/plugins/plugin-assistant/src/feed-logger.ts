@@ -15,7 +15,7 @@ import { InvocationOutcome } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
 
-export class QueueLogger implements SequenceLogger {
+export class FeedLogger implements SequenceLogger {
   private _space: Space;
   private _invocationTraceFeed: Feed.Feed;
   private _feedServiceLayer: Layer.Layer<Database.Service>;
