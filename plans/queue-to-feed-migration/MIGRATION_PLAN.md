@@ -7,6 +7,7 @@
 - **Phase 3 COMPLETE** (PR #11483): Migrated `TriggerDispatcher` to `Feed.FeedService`; renamed the `'queue'` trigger kind (spec, event, helpers, cursor key) to `'feed'`. `Trigger.specQueue` was removed; `Trigger.QueueSpec`/`TriggerEvent.QueueEvent` are now `Trigger.FeedSpec`/`TriggerEvent.FeedEvent`; spec storage changed from a queue DXN string to `Ref.Ref(Feed.Feed)`.
 - **Phase 4 COMPLETE** (this PR #11484): All in-process consumers of the deprecated `QueueService` Effect tag have been migrated; the tag itself has been deleted.
 - **Phase 5 COMPLETE** (partial — see "Phase 5 COMPLETE" section below for what was renamed vs. deferred): Renamed remaining in-process, source-level `Queue`→`Feed` naming (`Feed.getQueueUri`→`getFeedUri`, `echo-client`/`proxy-db` service field names, `plugin-routine` trigger CLI files) that does not touch the wire/RPC protocol or persisted data. The RPC contract, `LocalQueueServiceImpl`, `QueueDataSource`'s persisted `sourceName`, and `space.queues`/`QueueFactory` itself remain unrenamed — deferred to Phase 6.
+- **Phase 6 COMPLETE** (see "Phase 6 COMPLETE" section below): Renamed the RPC/protobuf contract itself — `FeedProtocol.QueueService` → `FeedService`, all its RPCs/messages/fields, and every TS-level call site down through the SDK bridges, `echo-host`, and the Cloudflare worker runtime — explicitly authorized by the PR reviewer. `QueueDataSource`'s persisted `sourceName`/`queueId`/`queueNamespace` columns and `KEY_QUEUE_POSITION` remain unrenamed (persisted data; still require a data migration).
 
 The Effect `Context.Tag` `@dxos/functions/QueueService` (formerly defined in `packages/core/echo/echo-db/src/effect-queue-service.ts`) has been **removed from the codebase**. Remaining `QueueService` references are confined to:
 
@@ -137,6 +138,55 @@ Renamed in-process, source-level "Queue" naming that means "Feed" (TS identifier
 
 `moon` (build/test task runner) could not run in this environment: its toolchain plugin download from `github.com/moonrepo/plugins` was blocked with a 403 by the sandbox's egress policy. Verification was instead done via `tsc --noEmit` on each touched package's `tsconfig.json` (pre-existing, unrelated "Cannot find module" errors remain from unbuilt/un-codegen'd dependencies — confirmed identical on files untouched by this change) plus exhaustive `rg` call-site audits for every renamed symbol.
 
-## Phase 6 — `QueueFactory` removal
+## Phase 6 COMPLETE — RPC/protobuf contract rename
 
-Once `space.queues` callers are fully on `Feed`-based APIs, the imperative `QueueFactory` exposed on `Space` (`space.queues`) can be replaced by a `Feed`-shaped surface. At that point the underlying `QueueImpl` / `LocalQueueServiceImpl` / `FeedProtocol.QueueService` RPC contract can be renamed to use `Feed`/`feed` terminology consistently (including `QueueDataSource`, its persisted `sourceName`/`queueId`/`queueNamespace` columns, and `KEY_QUEUE_POSITION`), with a local index-store data migration.
+Renamed the RPC/wire-protocol layer itself (`FeedProtocol.QueueService` → `FeedService` and everything under it), explicitly authorized by the PR reviewer ("`FeedProtocol.QueueService` seems safe to rename", "`client.services.services.QueueService` is safe to rename", "you can rename protobuf definitions"). This is safe within this monorepo because client and host are built from the same generated code — protobuf binary encoding keys fields by number, not name, so renaming proto message/field/service *names* does not break wire compatibility here.
+
+### Proto source
+
+- `packages/core/protocols/src/proto/dxos/client/queue.proto` → `feed.proto` (no other proto file imported it by path; codegen scans the directory).
+- `service QueueService` → `FeedService`; RPCs `QueryQueue`→`QueryFeed`, `InsertIntoQueue`→`InsertIntoFeed`, `DeleteFromQueue`→`DeleteFromFeed`, `SyncQueue`→`SyncFeed` (`GetSyncState` unchanged).
+- Messages: `QueueQuery`→`FeedQuery`, `QueueQueryResult`→`FeedQueryResult`, `QueryQueueRequest`→`QueryFeedRequest`, `InsertIntoQueueRequest`→`InsertIntoFeedRequest`, `DeleteFromQueueRequest`→`DeleteFromFeedRequest`, `SyncQueueRequest`→`SyncFeedRequest`, `QueueNamespaceSyncState`→`FeedNamespaceSyncState`.
+- Fields: `queues_namespace`→`feed_namespace`, `queue_ids`→`feed_ids`, `queue_id`→`feed_id` (across `FeedQuery`, `InsertIntoFeedRequest`, `DeleteFromFeedRequest`, `SyncFeedRequest`).
+
+### Hand-written wrapper and call sites
+
+- `packages/core/protocols/src/FeedProtocol.ts`: re-export list renamed to the new generated names (`FeedService`, `FeedQuery`, `QueryFeedRequest`, `InsertIntoFeedRequest`, `DeleteFromFeedRequest`, `SyncFeedRequest`, `FeedNamespaceSyncState`, `FeedQueryResult as QueryResult`). No back-compat aliases kept.
+- `packages/sdk/client-protocol/src/service.ts`: `ClientServices.QueueService` → `FeedService`; registry lookup key `dxos.client.services.QueueService` → `dxos.client.services.FeedService`.
+- `packages/sdk/client-services/src/packlets/services/service-host.ts`: `QueueService: ... echoHost.queuesService` → `FeedService: ... echoHost.feedService`.
+- `packages/core/echo/echo-host/src/db-host/echo-host.ts`: `EchoHost.queuesService` getter (and backing `_queuesService` field, type `FeedProtocol.QueueService`) → `feedService`/`_feedService`/`FeedProtocol.FeedService`; `EchoHostProps.syncQueue` → `syncFeed` (type `SyncFeedRequest`).
+- `packages/core/echo/echo-host/src/db-host/local-queue-service.ts` → renamed file to `local-feed-service.ts`; class `LocalQueueServiceImpl` → `LocalFeedServiceImpl`, now implementing `FeedProtocol.FeedService` with methods `queryFeed`/`insertIntoFeed`/`deleteFromFeed`/`syncFeed`/`getSyncState`. The old TODO deferring this rename to "Phase 6" is removed since this **is** Phase 6.
+- `packages/core/echo/echo-host/src/db-host/stub.ts`: `QueueServiceStub` → `FeedServiceStub`, same method renames.
+- `packages/core/echo/echo-host/src/db-host/queue-service.test.ts` → renamed to `feed-service.test.ts`, updated to the new class/method/field names.
+- `packages/core/protocols/src/FunctionProtocol.ts`: `Context.services.queueService` field **type** changed to `FeedProtocol.FeedService` (field name kept — it mirrors `queryService`/`dataService` naming and is not itself part of the wire contract).
+- `packages/core/protocols/src/edge/EdgeFunctionEnv.ts`: `QueueService` interface's method signatures now reference `FeedProtocol.QueryFeedRequest`/`InsertIntoFeedRequest`/`DeleteFromFeedRequest` (its own interface name and method names — `queryQueue`/`insertIntoQueue`/`deleteFromQueue` — are **kept**: this is Cloudflare's own binding surface, a separate interface from `FeedProtocol.FeedService`).
+- `packages/core/compute/functions-runtime-cloudflare/src/internal/queue-service-impl.ts` → renamed to `feed-service-impl.ts`; class `QueueServiceImpl` → `FeedServiceImpl`, now implementing `FeedProtocol.FeedService` (methods `queryFeed`/`insertIntoFeed`/`deleteFromFeed`/`syncFeed`); its constructor still takes an `EdgeFunctionEnv.QueueService` (kept name) and calls that instance's `queryQueue`/`insertIntoQueue`/`deleteFromQueue` methods (kept, separate interface).
+- `packages/core/compute/functions-runtime-cloudflare/src/internal/service-container.ts`: `createServices()` return type's `queueService` field re-typed to `FeedProtocol.FeedService`; internal `queryQueue`/`insertIntoQueue` convenience methods on `ServiceContainer` itself kept their names (deliberately out of scope, per exclusion below) but updated their request field names (`queueIds`→`feedIds`, added `feedId`) to match the renamed proto shape.
+- `packages/sdk/client/src/client/client.ts`, `packages/sdk/react-client/src/echo/useFeedSyncState.ts`: `client.services.services.QueueService` → `.FeedService`.
+- `packages/core/echo/echo-client/{proxy-db/database.ts,feed/feed-handle.ts,client/echo-client.ts}`: `FeedProtocol.QueueService` type → `FeedProtocol.FeedService` (field names were already `feedService`/`_feedService` from Phase 5); `FeedHandle`'s RPC calls renamed `queryQueue`→`queryFeed`, `insertIntoQueue`→`insertIntoFeed`, `deleteFromQueue`→`deleteFromFeed`, `syncQueue`→`syncFeed`, with request fields `queuesNamespace`→`feedNamespace`, `queueIds`→`feedIds`, `queueId`→`feedId`.
+- `packages/sdk/client-services/src/packlets/services/service-context.ts`: `EchoHostProps.syncQueue` callback key → `syncFeed`.
+- `packages/sdk/client-services/src/packlets/spaces/spaces-service.ts`, `.../space-export/serialized-space-writer.ts`: call sites updated to `echoHost.feedService.insertIntoFeed(...)`/`.queryFeed(...)` with renamed request fields; local helper `collectQueueMessages` → `collectFeedMessages`.
+- `packages/core/echo/echo-client/src/testing/echo-test-builder.ts`, `.../feed/feed.test.ts`: `_echoHost.queuesService` → `.feedService`; `queryQueue`/request fields updated in the test that reads trace-namespace feed items directly via the service.
+- `packages/core/mesh/edge-client/src/edge-http-client.ts`: `EdgeHttpClient.queryQueue`'s `query` parameter type `FeedProtocol.QueueQuery` → `FeedProtocol.FeedQuery`, and its `query.queueIds` access → `query.feedIds`. The method name itself, the other queue methods (`insertIntoQueue`/`deleteFromQueue`), and the REST URL paths (`/spaces/.../queue/...`) were **not** touched — this client talks to a deployed EDGE HTTP server over REST, a different wire boundary than the in-monorepo protobuf RPC, and was not part of the reviewer's authorization.
+- `packages/core/compute/functions-runtime-cloudflare/README.md`: prose mention of the protobuf-based `QueueService` implementation updated to `FeedService`; the `EdgeFunctionEnv.QueueService` binding-name mention left as-is.
+
+### Left unchanged (explicitly out of scope)
+
+- `KEY_QUEUE_POSITION = 'org.dxos.key.queue-position'` in `FeedProtocol.ts` — persisted string in existing feed item meta.
+- `FeedDataSource.sourceName = 'queue'` in `echo-host/src/db-host/feed-data-source.ts` — persisted SQLite column value.
+- `queueId`/`queueNamespace` columns and identifiers in `index-core/src/indexes/entity-meta-index.ts`, `index-tracker.ts`, and their downstream consumers (`echo-host/src/query/query-executor.ts`, `db-host/invalidation-hint.ts`, `echo-client/src/query/working-set-executor.ts`, related tests) — actual on-disk SQL column/index names; renaming requires a schema migration.
+- `packages/devtools/devtools/src/panels/echo/QueuesPanel/` — left as-is (naming collision with `FeedsPanel`).
+- `packages/plugins/plugin-space/src/commands/queue/*` and `plugin-script` templates' `space.queues`/`QueueFactory`/`QueuesAPI` (`queryQueue`/`insertIntoQueue` method names on that separate, deliberately out-of-scope surface) — user-facing CLI/API surface, not the RPC contract.
+- `EdgeService.QUEUE_REPLICATOR` in `edge/edge.ts` — a distinct route-registration constant, not mentioned by the reviewer.
+- `EdgeFunctionEnv.QueueService` interface name and its `queryQueue`/`insertIntoQueue`/`deleteFromQueue` method names, and the `QUEUE_SERVICE` env binding key — Cloudflare's own binding surface, explicitly kept distinct from `FeedProtocol.FeedService`.
+- `packages/core/mesh/edge-client`'s REST method names and URL paths (`queryQueue`/`insertIntoQueue`/`deleteFromQueue`, `/queue/...`) — talks to a deployed external EDGE server, a different wire boundary.
+
+### Verification limitation
+
+**Codegen could not be run in this sandbox**: the generated TS bindings (`packages/core/protocols/src/proto/gen/**`) are build-generated via moon's `prebuild`/`build-protobuf` task, which is gated behind a toolchain-plugin download that hits a network egress policy 403 here, and the generated files are not checked into git. Consequently `moon run :build`/`:test` could not be run either. Verification was instead done via:
+
+1. An exhaustive `rg`/`grep` sweep, repo-wide, for every old symbol name (`QueueService`, `QueueQuery`, `QueryQueueRequest`, `InsertIntoQueueRequest`, `DeleteFromQueueRequest`, `SyncQueueRequest`, `QueueQueryResult`, `QueueNamespaceSyncState`, `LocalQueueServiceImpl`, `queuesService`) confirming zero dangling references outside the explicitly-excluded files above.
+2. `oxlint` on every changed file (clean, 0 errors/warnings after fixing three `perfectionist/sort-named-imports`/`sort-named-exports` nits).
+3. Manual cross-checking of every renamed request/response shape against `FeedProtocol.ts`'s hand-written types and the new `feed.proto` field names.
+
+This should be re-verified with a real `moon run :build` / `:test` once codegen can run (e.g. in CI), since the generated bindings themselves were never regenerated or type-checked in this pass.

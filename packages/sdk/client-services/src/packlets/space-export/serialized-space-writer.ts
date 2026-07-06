@@ -201,7 +201,7 @@ const exportFeedData = async (space: DataSpace, echoHost: EchoHost, objects: Obj
     const namespace = (obj as any).namespace === 'trace' ? 'trace' : 'data';
 
     try {
-      const messages = await collectQueueMessages(echoHost, spaceId, obj.id, namespace);
+      const messages = await collectFeedMessages(echoHost, spaceId, obj.id, namespace);
       if (messages.length > 0) {
         feeds.push({
           feedObjectId: obj.id,
@@ -217,23 +217,23 @@ const exportFeedData = async (space: DataSpace, echoHost: EchoHost, objects: Obj
   return feeds;
 };
 
-const collectQueueMessages = async (
+const collectFeedMessages = async (
   echoHost: EchoHost,
   spaceId: SpaceId,
-  queueId: EntityId,
+  feedId: EntityId,
   namespace: string,
 ): Promise<Obj.JSON[]> => {
-  const queuesNamespace =
+  const feedNamespace =
     namespace === 'trace' ? FeedProtocol.WellKnownNamespaces.trace : FeedProtocol.WellKnownNamespaces.data;
 
   const messages: Obj.JSON[] = [];
   let cursor: string | undefined;
   while (true) {
-    const result = await echoHost.queuesService.queryQueue({
+    const result = await echoHost.feedService.queryFeed({
       query: {
         spaceId,
-        queueIds: [queueId],
-        queuesNamespace,
+        feedIds: [feedId],
+        feedNamespace,
         after: cursor,
       },
     });

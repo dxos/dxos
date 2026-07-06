@@ -169,7 +169,7 @@ export type EchoDatabaseProps = {
   graph: HypergraphImpl;
   dataService: DataService;
   queryService: QueryService;
-  feedService?: FeedProtocol.QueueService;
+  feedService?: FeedProtocol.FeedService;
   spaceId: SpaceId;
 
   /**
@@ -211,7 +211,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Backend for feed operations. Set on construction and refreshed on reconnect.
    */
-  #feedService: FeedProtocol.QueueService | undefined;
+  #feedService: FeedProtocol.FeedService | undefined;
 
   /**
    * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
@@ -543,7 +543,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * @internal
    * Sets or refreshes the feed backend service (e.g. after reconnection).
    */
-  _setFeedService(service: FeedProtocol.QueueService | undefined): void {
+  _setFeedService(service: FeedProtocol.FeedService | undefined): void {
     this.#feedService = service;
   }
 
@@ -741,7 +741,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }: {
     dataService: DataService;
     queryService: QueryService;
-    feedService?: FeedProtocol.QueueService;
+    feedService?: FeedProtocol.FeedService;
   }): void {
     this._entityManager._updateServices({ dataService, queryService });
     if (feedService !== undefined) {

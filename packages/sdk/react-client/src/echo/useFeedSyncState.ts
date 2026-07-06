@@ -27,7 +27,7 @@ export const useFeedSyncState = (pollIntervalMs = DEFAULT_POLL_INTERVAL_MS): Fee
   const [feedSyncState, setFeedSyncState] = useState<FeedSyncStateMap>({});
 
   useEffect(() => {
-    const feedService = client.services.services.QueueService;
+    const feedService = client.services.services.FeedService;
     if (!feedService) {
       return;
     }

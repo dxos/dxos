@@ -21,7 +21,7 @@ export type EchoClientProps = {};
 export type ConnectToServiceProps = {
   dataService: DataService;
   queryService: QueryService;
-  feedService?: FeedProtocol.QueueService;
+  feedService?: FeedProtocol.FeedService;
 };
 
 export type ConstructDatabaseProps = {
@@ -62,7 +62,7 @@ export class EchoClient extends Resource {
 
   private _dataService: DataService | undefined = undefined;
   private _queryService: QueryService | undefined = undefined;
-  private _feedService: FeedProtocol.QueueService | undefined = undefined;
+  private _feedService: FeedProtocol.FeedService | undefined = undefined;
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
@@ -176,7 +176,7 @@ export class EchoClient extends Resource {
   }: {
     dataService: DataService;
     queryService: QueryService;
-    feedService?: FeedProtocol.QueueService;
+    feedService?: FeedProtocol.FeedService;
   }): void {
     log('updating service references');
     this._dataService = dataService;

@@ -19,7 +19,7 @@ import { type FeedProtocol } from '@dxos/protocols';
 import type {
   GetSyncStateRequest,
   GetSyncStateResponse,
-  SyncQueueRequest,
+  SyncFeedRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
@@ -40,7 +40,7 @@ import { DataServiceImpl } from './data-service';
 import { type DatabaseRoot } from './database-root';
 import { FeedDataSource } from './feed-data-source';
 import { hintFromIndexingResult } from './invalidation-hint';
-import { LocalQueueServiceImpl } from './local-queue-service';
+import { LocalFeedServiceImpl } from './local-feed-service';
 import { QueryServiceImpl } from './query-service';
 import { SpaceStateManager } from './space-state-manager';
 
@@ -57,12 +57,12 @@ export type EchoHostProps = {
   assignQueuePositions?: boolean;
 
   /**
-   * Callback to run blocking queue sync.
+   * Callback to run blocking feed sync.
    */
-  syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>;
+  syncFeed?: (ctx: Context, request: SyncFeedRequest) => Promise<void>;
 
   /**
-   * Callback to read queue sync backlog per namespace.
+   * Callback to read feed sync backlog per namespace.
    */
   getSyncState?: (ctx: Context, request: GetSyncStateRequest) => Promise<GetSyncStateResponse>;
 
@@ -94,7 +94,7 @@ export class EchoHost extends Resource {
 
   private _updateIndexes!: DeferredTask;
 
-  private _queuesService: FeedProtocol.QueueService;
+  private _feedService: FeedProtocol.FeedService;
 
   private _indexesUpToDate = false;
 
@@ -103,7 +103,7 @@ export class EchoHost extends Resource {
     getSpaceKeyByRootDocumentId,
     runtime,
     assignQueuePositions = false,
-    syncQueue,
+    syncFeed,
     getSyncState,
     useSubduction,
   }: EchoHostProps) {
@@ -127,7 +127,7 @@ export class EchoHost extends Resource {
       runtime: this._runtime,
       getSpaceIds: () => this._spaceStateManager.spaceIds,
     });
-    this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore, { syncQueue, getSyncState });
+    this._feedService = new LocalFeedServiceImpl(runtime, this._feedStore, { syncFeed, getSyncState });
 
     // SQLite-based index engine for all queries.
     this._indexEngine = new IndexEngine();
@@ -200,8 +200,8 @@ export class EchoHost extends Resource {
     return this._dataService;
   }
 
-  get queuesService(): FeedProtocol.QueueService {
-    return this._queuesService;
+  get feedService(): FeedProtocol.FeedService {
+    return this._feedService;
   }
 
   get roots(): ReadonlyMap<DocumentId, DatabaseRoot> {
