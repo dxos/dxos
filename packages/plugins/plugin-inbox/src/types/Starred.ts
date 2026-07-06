@@ -31,7 +31,8 @@ export const getStarredIds = (container: StarContainer, starredUri: string | und
 /** Toggle the starred tag on a member object, provisioning the container's tag index on first use. */
 export const toggleStarred = async (
   container: Obj.Any & StarContainer,
-  object: Obj.Any,
+  // Member is tagged via the container's index (keyed by id), so an immutable snapshot works too.
+  object: Obj.Any | Obj.Snapshot<Obj.Any>,
   db: Database.Database,
 ): Promise<void> => {
   // Lazily provision the tag index for containers created before the `tags` field existed.

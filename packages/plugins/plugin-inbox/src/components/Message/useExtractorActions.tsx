@@ -8,10 +8,10 @@ import { Capabilities } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
-import { type Message } from '@dxos/types';
 
 import { isAiServiceUnavailable } from '../../operations/extractor/ai-gate';
 import { InboxCapabilities, InboxOperation } from '../../types';
+import { type MessageLike } from './Message';
 
 export type ExtractorMenuItem = {
   id: string;
@@ -27,7 +27,7 @@ const RUN_ALL_ID = 'run-all';
  * operation with that extractor's id. When two or more extractors are listed, a synthetic
  * "Run all" item is prepended that invokes every extractor in parallel and logs aggregated results.
  */
-export const useExtractorActions = (message: Message.Message): ExtractorMenuItem[] => {
+export const useExtractorActions = (message: MessageLike): ExtractorMenuItem[] => {
   const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
   // Use the plural form so this hook is safe in contexts without a registered operation invoker (e.g. isolated stories).
   const [invoker] = useCapabilities(Capabilities.OperationInvoker);

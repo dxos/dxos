@@ -16,6 +16,9 @@ import { ExtractedFrom } from '../types';
  * The list updates reactively as new extractions land (via `ExtractMessage` dispatcher) or
  * existing extractions are deleted.
  */
-export const useExtractedObjects = (db: Database.Database | undefined, message: Message.Message): Obj.Any[] => {
+export const useExtractedObjects = (
+  db: Database.Database | undefined,
+  message: Message.Message | Obj.Snapshot<Message.Message>,
+): Obj.Any[] => {
   return useQuery(db, Query.select(Filter.id(message.id)).targetOf(ExtractedFrom.ExtractedFrom).source()) as Obj.Any[];
 };

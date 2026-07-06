@@ -223,8 +223,10 @@ export const buildMessageTagsIndex = (mailbox: Mailbox | Obj.Snapshot<Mailbox>):
 };
 
 /** Returns the tag uris currently applied to a single message. */
-export const getTagsForMessage = (mailbox: Mailbox, message: Message.Message): string[] =>
-  Tagging.get(message, { index: mailbox.tags.target });
+export const getTagsForMessage = (
+  mailbox: Mailbox,
+  message: Message.Message | Obj.Snapshot<Message.Message>,
+): string[] => Tagging.get(message, { index: mailbox.tags.target });
 
 //
 // Conversation (thread) index API.

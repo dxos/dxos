@@ -32,12 +32,19 @@ import { useMessageActions } from './useToolbar';
 // Context
 //
 
+/**
+ * A message as either a live database/queue object or an immutable snapshot (e.g. a feed message
+ * resolved via `useObject`, which cannot be reconstituted to a live object — see MessageArticle).
+ * The Message components read fields present on both and route mutating actions accordingly.
+ */
+export type MessageLike = MessageType.Message | Obj.Snapshot<MessageType.Message>;
+
 // TODO(burdon): Create pattern for 1-up.
 type MessageContextValue = {
   attendableId?: string;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
-  message: MessageType.Message;
+  message: MessageLike;
   /** Owning mailbox; enables starring (the message's tag association lives in the mailbox's tag index). */
   mailbox?: Mailbox.Mailbox;
   sender: EID.EID | undefined;

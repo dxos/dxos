@@ -561,7 +561,9 @@ export const ExtractMessage = Operation.make({
   meta: { key: makeKey('extractMessage'), name: 'Extract Message' },
   services: [Capability.Service, AiService.AiService, Database.Service],
   input: Schema.Struct({
-    source: Obj.Unknown,
+    // Live object or an immutable snapshot (feed messages resolve to snapshots); the handler
+    // re-resolves the live proxy by id when available and reads only `source.id` otherwise.
+    source: Schema.Any,
     extractorId: Schema.optional(Schema.String),
   }),
   output: Schema.Struct({

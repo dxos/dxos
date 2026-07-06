@@ -13,7 +13,7 @@ import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { Panel, ScrollArea } from '@dxos/react-ui';
 import { type Message as MessageType } from '@dxos/types';
 
-import { Message, type MessageHeaderProps, type ViewMode } from '#components';
+import { Message, type MessageHeaderProps, type MessageLike, type ViewMode } from '#components';
 import { useActorContact } from '#hooks';
 import { InboxOperation, Mailbox, ThreadIndex } from '#types';
 
@@ -26,7 +26,7 @@ export type MessageArticleProps = AppSurface.ObjectArticleProps<
   }
 >;
 
-const viewModeFor = (message: MessageType.Message): ViewMode => {
+const viewModeFor = (message: MessageLike): ViewMode => {
   const textBlocks = message.blocks.filter((block) => 'text' in block);
   return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'markdown';
 };
@@ -145,9 +145,14 @@ export const MessageArticle = ({
 
 /**
  * A single message within the conversation stack. Owns its own subscription so reactivity is pushed to
- * the leaf — the parent holds only messages/refs, not resolved live objects. Accepts a message or a
- * ref: `useObject` drives re-renders (and dereferences a ref), and `Obj.getReactiveOrUndefined` yields
- * the live reactive instance the message components render.
+ * the leaf — the parent holds only messages/refs, not resolved objects. `useObject` dereferences the
+ * ref via its loading atom and re-renders when it loads, returning a snapshot the message components
+ * render directly.
+ *
+ * TODO(wittjosiah): Render the live reactive object instead of the snapshot once
+ *   `Obj.getReactiveOrUndefined` resolves feed objects. It currently reconstitutes only space-db
+ *   objects (via `db.getObjectById`, which doesn't cover queue items), so feed messages have no live
+ *   form to forward and the components must accept the snapshot.
  */
 const ThreadMessageItem = ({
   message: messageOrRef,
@@ -158,16 +163,12 @@ const ThreadMessageItem = ({
   mailbox?: Mailbox.Mailbox;
   onContactCreate: NonNullable<MessageHeaderProps['onContactCreate']>;
 }) => {
-  // Subscribe so the component re-renders when a ref's target loads. Queue (feed) messages are the
-  // live objects `Message.Root` renders; `.target` gives that live instance directly (they are not
-  // reconstituted by `getReactiveOrUndefined`, which is for space-db objects).
-  const [loaded] = useObject(messageOrRef);
-  const message = Ref.isRef(messageOrRef) ? messageOrRef.target : messageOrRef;
-  const db = message ? Obj.getDatabase(message) : undefined;
+  const [message] = useObject(messageOrRef);
+  const db = mailbox ? Obj.getDatabase(mailbox) : undefined;
   const sender = useActorContact(db, message?.sender);
   const viewMode = useMemo<ViewMode>(() => (message ? viewModeFor(message) : 'markdown'), [message]);
 
-  if (!message || (Ref.isRef(messageOrRef) && !loaded)) {
+  if (!message) {
     return null;
   }
 
