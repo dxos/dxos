@@ -45,55 +45,81 @@ const decodeHtmlEntities = (text: string | undefined): string | undefined => {
  */
 export type MappedMessage = { message: Message.Message; labelIds: readonly string[] };
 
+/** A Gmail message with its body decoded to a UTF-8 string (HTML or plaintext, not yet normalized). */
+export type DecodedMessage = { raw: GoogleMail.Message; body: string };
+
 /**
- * Maps Gmail message to ECHO message object.
+ * Selects and base64-decodes the message body (HTML preferred, then plaintext) to a UTF-8 string.
+ * Returns `null` when the message carries no body. Pure and Gmail-specific; the HTML→markdown
+ * normalization is a separate step so it can be shared across providers.
+ */
+export const decodeBody = (message: GoogleMail.Message): DecodedMessage | null => {
+  const data = message.payload.body?.data ?? getPart(message, 'text/html') ?? getPart(message, 'text/plain');
+  if (!data) {
+    return null;
+  }
+  return { raw: message, body: Buffer.from(data, 'base64').toString('utf-8') };
+};
+
+/**
+ * Builds an ECHO message from a decoded (already body-normalized) Gmail message and an optional
+ * resolved sender contact. Pure — contact resolution is done by the caller so this composes into a
+ * pipeline stage without a `Resolver` requirement.
+ */
+export const mapToMessage = (decoded: DecodedMessage, contact: Person.Person | undefined): MappedMessage => {
+  const { raw, body } = decoded;
+  const created = new Date(parseInt(raw.internalDate)).toISOString();
+
+  const fromHeader = raw.payload.headers.find(({ name }) => name === 'From');
+  const from = fromHeader && parseFromHeader(fromHeader.value);
+  // TODO(wittjosiah): This comparison should be done via foreignId probably.
+  const sender = { ...from, ...(contact ? { contact: Ref.make(contact) } : {}) };
+
+  const echoMessage = Obj.make(Message.Message, {
+    [Obj.Meta]: {
+      keys: [{ id: raw.id, source: GMAIL_SOURCE }],
+    },
+
+    created,
+    sender,
+    threadId: raw.threadId,
+
+    properties: {
+      threadId: raw.threadId,
+      snippet: decodeHtmlEntities(raw.snippet),
+      subject: decodeHtmlEntities(raw.payload.headers.find(({ name }) => name === 'Subject')?.value),
+      messageId: raw.payload.headers.find(({ name }) => name === 'Message-ID')?.value,
+      references: raw.payload.headers.find(({ name }) => name === 'References')?.value,
+      to: raw.payload.headers.find(({ name }) => name === 'To')?.value,
+      cc: raw.payload.headers.find(({ name }) => name === 'Cc')?.value,
+    },
+
+    blocks: [
+      {
+        _tag: 'text',
+        text: body,
+      },
+    ],
+  });
+
+  return { message: echoMessage, labelIds: raw.labelIds ?? [] };
+};
+
+/**
+ * Maps a Gmail message to an ECHO message object, resolving the sender against existing contacts.
+ * Composes {@link decodeBody} → `normalizeText` → {@link mapToMessage}. Returns `null` when the
+ * message has no body.
  */
 export const mapMessage: (message: GoogleMail.Message) => Effect.Effect<MappedMessage | null, never, Resolver> =
   Effect.fnUntraced(function* (message) {
-    const created = new Date(parseInt(message.internalDate)).toISOString();
-
-    const data = message.payload.body?.data ?? getPart(message, 'text/html') ?? getPart(message, 'text/plain');
-    const fromHeader = message.payload.headers.find(({ name }) => name === 'From');
-    const from = fromHeader && parseFromHeader(fromHeader.value);
-
-    const contact = from && (yield* resolve(Person.Person, { email: from.email }));
-
-    // Skip the message if content or sender is missing.
-    // TODO(wittjosiah): This comparison should be done via foreignId probably.
-    const sender = { ...from, ...(contact ? { contact: Ref.make(contact) } : {}) };
-    if (!sender || !data) {
+    const decoded = decodeBody(message);
+    if (!decoded) {
       return null;
     }
 
-    // Normalize text.
-    const text = normalizeText(Buffer.from(data, 'base64').toString('utf-8'));
+    const fromHeader = message.payload.headers.find(({ name }) => name === 'From');
+    const from = fromHeader && parseFromHeader(fromHeader.value);
+    const contact = from ? yield* resolve(Person.Person, { email: from.email }) : undefined;
 
-    const echoMessage = Obj.make(Message.Message, {
-      [Obj.Meta]: {
-        keys: [{ id: message.id, source: GMAIL_SOURCE }],
-      },
-
-      created,
-      sender,
-      threadId: message.threadId,
-
-      properties: {
-        threadId: message.threadId,
-        snippet: decodeHtmlEntities(message.snippet),
-        subject: decodeHtmlEntities(message.payload.headers.find(({ name }) => name === 'Subject')?.value),
-        messageId: message.payload.headers.find(({ name }) => name === 'Message-ID')?.value,
-        references: message.payload.headers.find(({ name }) => name === 'References')?.value,
-        to: message.payload.headers.find(({ name }) => name === 'To')?.value,
-        cc: message.payload.headers.find(({ name }) => name === 'Cc')?.value,
-      },
-
-      blocks: [
-        {
-          _tag: 'text',
-          text,
-        },
-      ],
-    });
-
-    return { message: echoMessage, labelIds: message.labelIds ?? [] };
+    return mapToMessage({ ...decoded, body: normalizeText(decoded.body) }, contact ?? undefined);
   });

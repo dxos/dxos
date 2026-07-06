@@ -18,8 +18,9 @@ import * as Otel from '../../src/extensions/otel';
 import { type Observability, addExtension, initialize, make } from '../../src/observability';
 import { identityProvider } from '../../src/providers/client-observability';
 
-// Dev-only: gated behind the `tracing-e2e` tag, which the default VITEST_TAGS_FILTER
-// excludes (see .moon/tasks/tag-ts-test.yml) — never runs in CI or plain `moon :test`.
+// Dev-only: the suite runs only when the DX_OTEL_*/DX_TELEMETRY_TAG env vars are set
+// (`describe.runIf` below) — without them it reports as skipped, so it is inert in CI
+// and plain `moon :test` regardless of the active VITEST_TAGS_FILTER expression.
 // It boots two Clients against an EDGE worker and emits spans to a real SigNoz
 // ingestion endpoint. There are no assertions on trace structure — this is a manual
 // smoke for eyeballing the resulting trace tree in SigNoz.
@@ -29,7 +30,7 @@ import { identityProvider } from '../../src/providers/client-observability';
 //      `EDGE_DEV_OTLP=1 pnpm run dev` in packages/services/edge (dev-OTLP opt-in makes
 //      the tail-logger export local spans to SigNoz).
 //   2. dxos repo:
-//      VITEST_TAGS_FILTER=tracing-e2e \
+//      VITEST_TAGS_FILTER=manual \
 //      DX_EDGE_URL=http://localhost:8787 \
 //      DX_OTEL_ENDPOINT=https://ingest.eu.signoz.cloud:443 \
 //      DX_OTEL_HEADERS='signoz-ingestion-key: <KEY>' \
@@ -38,10 +39,16 @@ import { identityProvider } from '../../src/providers/client-observability';
 //
 // NOTE: `--tagsFilter` appended after `--` does NOT reach vitest (the moon task wraps
 // vitest in `bash -c`, so appended args become bash positionals) — the VITEST_TAGS_FILTER
-// env var is the only working selector. Omit DX_EDGE_URL to target edge-main.
-// In SigNoz, filter spans with `ctx.tag = '<DX_TELEMETRY_TAG>'`.
+// env var is the only working selector; `=manual` just narrows the run to this suite.
+// Omit DX_EDGE_URL to target edge-main. In SigNoz, filter spans with
+// `ctx.tag = '<DX_TELEMETRY_TAG>'`.
 
 const EDGE_URL = process.env.DX_EDGE_URL ?? 'https://edge-main.dxos.workers.dev';
+
+// All three are required for span export; without them the suite is skipped.
+const TRACING_ENV_PRESENT = Boolean(
+  process.env.DX_TELEMETRY_TAG && process.env.DX_OTEL_ENDPOINT && process.env.DX_OTEL_HEADERS,
+);
 
 const createEdgeConfig = () =>
   new Config({
@@ -83,102 +90,106 @@ const initTracing = (config: Config): Promise<Observability> =>
     EffectEx.runAndForwardErrors,
   );
 
-describe('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0, tags: ['tracing-e2e'] }, () => {
-  test('host + guest complete a DELEGATED space invitation via edge-main (tagged for SigNoz)', async ({ expect }) => {
-    const clientTag = process.env.DX_TELEMETRY_TAG;
-    expect(clientTag, 'DX_TELEMETRY_TAG must be set').toBeTruthy();
-    expect(process.env.DX_OTEL_ENDPOINT, 'DX_OTEL_ENDPOINT must be set').toBeTruthy();
-    expect(process.env.DX_OTEL_HEADERS, 'DX_OTEL_HEADERS must be set').toBeTruthy();
+describe.runIf(TRACING_ENV_PRESENT)(
+  'tracing invitation e2e (dev-only)',
+  { timeout: 300_000, retry: 0, tags: ['manual'] },
+  () => {
+    test('host + guest complete a DELEGATED space invitation via edge-main (tagged for SigNoz)', async ({ expect }) => {
+      const clientTag = process.env.DX_TELEMETRY_TAG;
+      expect(clientTag, 'DX_TELEMETRY_TAG must be set').toBeTruthy();
+      expect(process.env.DX_OTEL_ENDPOINT, 'DX_OTEL_ENDPOINT must be set').toBeTruthy();
+      expect(process.env.DX_OTEL_HEADERS, 'DX_OTEL_HEADERS must be set').toBeTruthy();
 
-    console.log(`### starting tracing-e2e run: client.tag=${clientTag} edge=${EDGE_URL}`);
+      console.log(`### starting tracing-e2e run: client.tag=${clientTag} edge=${EDGE_URL}`);
 
-    const hostConfig = createEdgeConfig();
-    const guestConfig = createEdgeConfig();
+      const hostConfig = createEdgeConfig();
+      const guestConfig = createEdgeConfig();
 
-    // Single observability instance — Node tracer provider is process-global.
-    const observability = await initTracing(hostConfig);
+      // Single observability instance — Node tracer provider is process-global.
+      const observability = await initTracing(hostConfig);
 
-    // Use memory transport for peer-to-peer ONLY to dodge the known node-datachannel
-    // SIGSEGV when two WebRTC stacks run in the same process
-    // (see packages/sdk/client/src/services/local-client-services.ts line 86).
-    // Signaling is intentionally NOT overridden: service-host builds EdgeSignalManager
-    // from edgeFeatures.signaling=true → real edge signaling is in use.
-    const mkServices = (config: Config) =>
-      new LocalClientServices({
-        config,
-        transportFactory: MemoryTransportFactory,
-      });
+      // Use memory transport for peer-to-peer ONLY to dodge the known node-datachannel
+      // SIGSEGV when two WebRTC stacks run in the same process
+      // (see packages/sdk/client/src/services/local-client-services.ts line 86).
+      // Signaling is intentionally NOT overridden: service-host builds EdgeSignalManager
+      // from edgeFeatures.signaling=true → real edge signaling is in use.
+      const mkServices = (config: Config) =>
+        new LocalClientServices({
+          config,
+          transportFactory: MemoryTransportFactory,
+        });
 
-    const host = new Client({ config: hostConfig, services: mkServices(hostConfig) });
-    const guest = new Client({ config: guestConfig, services: mkServices(guestConfig) });
-    try {
-      await host.initialize();
-      await guest.initialize();
+      const host = new Client({ config: hostConfig, services: mkServices(hostConfig) });
+      const guest = new Client({ config: guestConfig, services: mkServices(guestConfig) });
+      try {
+        await host.initialize();
+        await guest.initialize();
 
-      await host.halo.createIdentity({ displayName: 'tracing-e2e-host' });
-      await guest.halo.createIdentity({ displayName: 'tracing-e2e-guest' });
+        await host.halo.createIdentity({ displayName: 'tracing-e2e-host' });
+        await guest.halo.createIdentity({ displayName: 'tracing-e2e-guest' });
 
-      // Subscribe identity stream → stamp `did` (+ `deviceKey`/`deviceProfile`) on every span.
-      await EffectEx.runAndForwardErrors(observability.addDataProvider(identityProvider(host.services.services)));
-      await EffectEx.runAndForwardErrors(observability.addDataProvider(identityProvider(guest.services.services)));
+        // Subscribe identity stream → stamp `did` (+ `deviceKey`/`deviceProfile`) on every span.
+        await EffectEx.runAndForwardErrors(observability.addDataProvider(identityProvider(host.services.services)));
+        await EffectEx.runAndForwardErrors(observability.addDataProvider(identityProvider(guest.services.services)));
 
-      // Create edge agent on host so the space can be admitted by edge when a
-      // DELEGATED invitation arrives.
-      console.log('### host: creating edge agent');
-      await host.services.services.EdgeAgentService!.createAgent(undefined, { timeout: 15_000 });
-      console.log('### host: edge agent created; waiting for HALO feed sync');
-      await sleep(15_000);
+        // Create edge agent on host so the space can be admitted by edge when a
+        // DELEGATED invitation arrives.
+        console.log('### host: creating edge agent');
+        await host.services.services.EdgeAgentService!.createAgent(undefined, { timeout: 15_000 });
+        console.log('### host: edge agent created; waiting for HALO feed sync');
+        await sleep(15_000);
 
-      console.log('### host: creating space');
-      const space = await host.spaces.create();
-      await space.waitUntilReady();
-      await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
-      log.info('host space ready', { spaceId: space.id });
+        console.log('### host: creating space');
+        const space = await host.spaces.create();
+        await space.waitUntilReady();
+        await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
+        log.info('host space ready', { spaceId: space.id });
 
-      console.log('### host: waiting for edge to catch up with the space');
-      // Pragmatic sleep instead of polling getSyncState — we don't need a strict sync
-      // guarantee for the test (trace capture is the point, not admission success).
-      await sleep(10_000);
+        console.log('### host: waiting for edge to catch up with the space');
+        // Pragmatic sleep instead of polling getSyncState — we don't need a strict sync
+        // guarantee for the test (trace capture is the point, not admission success).
+        await sleep(10_000);
 
-      console.log('### host → guest: DELEGATED invitation + join');
-      const [hostResult, guestResult] = await Promise.all(
-        performInvitation({
-          host: space,
-          guest: guest.spaces,
-          options: {
-            type: Invitation.Type.DELEGATED,
-            authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
-            multiUse: false,
-          },
-        }),
-      );
+        console.log('### host → guest: DELEGATED invitation + join');
+        const [hostResult, guestResult] = await Promise.all(
+          performInvitation({
+            host: space,
+            guest: guest.spaces,
+            options: {
+              type: Invitation.Type.DELEGATED,
+              authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+              multiUse: false,
+            },
+          }),
+        );
 
-      // Invitation may end in SUCCESS or a non-success state depending on edge agent trust.
-      // The purpose of this test is trace structure, not invitation outcome.
-      log.info('invitation result', {
-        hostState: hostResult.invitation?.state,
-        guestState: guestResult.invitation?.state,
-        hostError: hostResult.error?.message,
-        guestError: guestResult.error?.message,
-      });
+        // Invitation may end in SUCCESS or a non-success state depending on edge agent trust.
+        // The purpose of this test is trace structure, not invitation outcome.
+        log.info('invitation result', {
+          hostState: hostResult.invitation?.state,
+          guestState: guestResult.invitation?.state,
+          hostError: hostResult.error?.message,
+          guestError: guestResult.error?.message,
+        });
 
-      // Let edge return trailing WS/HTTP frames so their spans land in the same export batch.
-      await sleep(8_000);
-    } finally {
-      // BatchSpanProcessor defers export by 5s; flush explicitly before teardown.
-      await EffectEx.runAndForwardErrors(observability.flush());
+        // Let edge return trailing WS/HTTP frames so their spans land in the same export batch.
+        await sleep(8_000);
+      } finally {
+        // BatchSpanProcessor defers export by 5s; flush explicitly before teardown.
+        await EffectEx.runAndForwardErrors(observability.flush());
 
-      // `Client.destroy()` can block on in-flight edge replication; cap it so the
-      // test doesn't hang if the worker is still finishing a sync round.
-      const destroyWithTimeout = (client: Client, label: string) =>
-        Promise.race([
-          client.destroy().catch((err: Error) => log.catch(err)),
-          sleep(15_000).then(() => log.warn(`${label}.destroy() timed out; leaking`)),
-        ]);
-      await Promise.all([destroyWithTimeout(host, 'host'), destroyWithTimeout(guest, 'guest')]);
-      await EffectEx.runAndForwardErrors(observability.close());
-    }
+        // `Client.destroy()` can block on in-flight edge replication; cap it so the
+        // test doesn't hang if the worker is still finishing a sync round.
+        const destroyWithTimeout = (client: Client, label: string) =>
+          Promise.race([
+            client.destroy().catch((err: Error) => log.catch(err)),
+            sleep(15_000).then(() => log.warn(`${label}.destroy() timed out; leaking`)),
+          ]);
+        await Promise.all([destroyWithTimeout(host, 'host'), destroyWithTimeout(guest, 'guest')]);
+        await EffectEx.runAndForwardErrors(observability.close());
+      }
 
-    console.log(`### done — SigNoz filter: ctx.tag = '${clientTag}'`);
-  });
-});
+      console.log(`### done — SigNoz filter: ctx.tag = '${clientTag}'`);
+    });
+  },
+);

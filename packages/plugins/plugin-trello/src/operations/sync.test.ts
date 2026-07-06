@@ -11,7 +11,7 @@ import { EffectEx } from '@dxos/effect';
 import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
-import { AccessToken } from '@dxos/types';
+import { AccessToken, Cursor } from '@dxos/types';
 
 import { TRELLO_SOURCE } from '../constants';
 import { TrelloApi } from '../services';
@@ -37,6 +37,7 @@ describe('reconcileBoardCards (pull)', () => {
     graph.registry.add([
       AccessToken.AccessToken,
       Connection.Connection,
+      Cursor.Cursor,
       SyncBinding.SyncBinding,
       Kanban.Kanban,
       Expando.Expando,
@@ -343,6 +344,7 @@ describe('pushBoardCards (push)', () => {
     graph.registry.add([
       AccessToken.AccessToken,
       Connection.Connection,
+      Cursor.Cursor,
       SyncBinding.SyncBinding,
       Kanban.Kanban,
       Expando.Expando,

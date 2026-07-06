@@ -15,6 +15,7 @@ export { Message } from './Message';
 export type {
   MessageAuthorNameProps,
   MessageBodyProps,
+  MessageGroupProps,
   MessageHeadingProps,
   MessageRootProps,
   MessageTextboxProps,

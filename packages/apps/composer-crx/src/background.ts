@@ -7,18 +7,18 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
-import { createThumbnail } from './actions';
-import { focusOrOpenComposerTab } from './bridge';
 import {
   PAGE_ACTION_DELIVER_MESSAGE_TYPE,
   PAGE_ACTION_RUN_MESSAGE_TYPE,
   PAGE_ACTIONS_READY_MESSAGE_TYPE,
+  createThumbnail,
   decodeDeliverPayload,
   deliverPickedSnapshot,
+  focusOrOpenComposerTab,
+  installSearchProxy,
   refreshRegistry,
   runPageAction,
-} from './page-actions';
-import { installSearchProxy } from './proxy';
+} from './core';
 
 const NOTIFY_ICON = 'assets/img/icon-128.png';
 

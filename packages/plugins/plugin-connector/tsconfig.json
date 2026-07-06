@@ -58,6 +58,9 @@
       "path": "../../core/compute/operation"
     },
     {
+      "path": "../../core/compute/pipeline"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
