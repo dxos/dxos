@@ -23413,9 +23413,9 @@ importers:
 
   tools/dx-trace-imports:
     dependencies:
-      madge:
-        specifier: 'catalog:'
-        version: 8.0.0(typescript@6.0.3)
+      '@swc/core':
+        specifier: 1.15.43
+        version: 1.15.43(@swc/helpers@0.5.17)
       picomatch:
         specifier: 'catalog:'
         version: 2.3.1

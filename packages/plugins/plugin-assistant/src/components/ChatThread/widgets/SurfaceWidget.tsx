@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { log } from '@dxos/log';
 import { type XmlWidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 
-import { ChatSurface } from '#types';
+import { ChatSurface } from '#components';
 
 /**
  * Renders an agent-requested UI surface (the `<surface>` content block) by dispatching to a
