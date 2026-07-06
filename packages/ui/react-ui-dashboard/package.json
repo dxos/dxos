@@ -1,7 +1,6 @@
 {
   "name": "@dxos/react-ui-dashboard",
   "version": "0.9.0",
-  "private": true,
   "description": "Dashboard components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -11,6 +10,9 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
+  "publishConfig": {
+    "access": "public"
+  },
   "sideEffects": false,
   "type": "module",
   "exports": {
