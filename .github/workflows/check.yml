@@ -218,7 +218,7 @@ jobs:
       NODE_VERSION: ${{ matrix.node-version }}
       # Opt in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
       # while still excluding the heavier opt-in tag families.
-      VITEST_TAGS_FILTER: '!llm && !sync && !sync-e2e && !functions-e2e && !tracing-e2e && !compiler && !manual'
+      VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
       VITEST_ENV: 'node'
       VITEST_COVERAGE: ${{ secrets.CODECOV_TOKEN != '' && 'true' || 'false' }}
       VITEST_XML_REPORT: 'true'
