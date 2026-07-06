@@ -241,7 +241,7 @@ const collectFeedMessages = async (
       try {
         return [JSON.parse(encoded) as Obj.JSON];
       } catch (err) {
-        log.verbose('queue object JSON parse failed; object ignored', { encoded, error: err });
+        log.verbose('feed object JSON parse failed; object ignored', { encoded, error: err });
         return [];
       }
     });
