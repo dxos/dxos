@@ -240,21 +240,17 @@ export const usePagination = <
   const innerAstKey = JSON.stringify(innerAst);
   const maxWindowSize = options?.maxWindowSize ?? pageSize * 10;
 
-  // Identifies "what" is being shown (filter/order/page size/resource); a new store -- and thus a
-  // reset to empty -- is only built when this changes. `resource` is also a direct `useMemo`
-  // dependency below so a reference change (a different `Database`/`Feed` instance) still rebuilds
-  // the store even on the rare chance it doesn't otherwise change this string (matching `useQuery`,
-  // which likewise keys its memo on `resource` directly rather than just its truthiness).
-  const identityKey = `${resource ? '1' : '0'}:${innerAstKey}:${pageSize}`;
-
+  // A new store -- and thus a reset to empty -- is only built when "what" is being shown changes:
+  // filter/order (`innerAstKey`), page size, or `resource` (matching `useQuery`, which likewise
+  // keys its memo on `resource` directly rather than just its truthiness).
   const store = useMemo(
     () => createPaginationStore<Q, O>(resource, innerAst, pageSize, maxWindowSize),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [resource, identityKey],
+    [resource, innerAstKey, pageSize],
   );
-  // `maxWindowSize` deliberately isn't part of `identityKey` (a caller passing a literal default
-  // each render shouldn't reset the window), but a genuine change should still take effect
-  // immediately rather than only on the next unrelated identity change.
+  // `maxWindowSize` deliberately isn't part of the store's `useMemo` deps above (a caller passing
+  // a literal default each render shouldn't reset the window), but a genuine change should still
+  // take effect immediately rather than only on the next unrelated identity change.
   store.setMaxWindowSize(maxWindowSize);
 
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot);
