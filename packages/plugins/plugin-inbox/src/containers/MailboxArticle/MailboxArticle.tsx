@@ -161,25 +161,16 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   // Messages.
   // Lazily loaded, newest-first: the initial page renders immediately and older messages load as
   // the user scrolls (see MessageStack's `pagination` wiring below), rather than fetching the
-  // whole feed up front.
-  const {
-    items: messages,
-    getNext,
-    getPrevious,
-    hasMore,
-    isLoading: messagesLoading,
-    atHead,
-    jumpToHead,
-  } = usePagination(
+  // whole feed up front. `pagination` is passed straight through to `MessageStack` rather than
+  // destructured -- `usePagination` already returns a stable object, so rebuilding one here would
+  // only reintroduce the instability it avoids.
+  const pagination = usePagination(
     db,
     feed
       ? Query.select(Filter.type(Message.Message)).from(feed).orderBy(Order.natural('desc')).limit(MAILBOX_PAGE_SIZE)
       : Query.select(Filter.nothing()).limit(MAILBOX_PAGE_SIZE),
   );
-  const pagination = useMemo(
-    () => ({ getNext, getPrevious, hasMore, isLoading: messagesLoading, atHead, jumpToHead }),
-    [getNext, getPrevious, hasMore, messagesLoading, atHead, jumpToHead],
-  );
+  const messages = pagination.items;
 
   // Feed/queue queries don't yet support text-search and complex filter combinations,
   // so query Messages by type only and apply the parsed filter client-side.

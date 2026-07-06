@@ -247,13 +247,19 @@ export const usePagination = <
 
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot);
 
-  return {
-    items: snapshot.items,
-    getNext: store.getNext,
-    getPrevious: store.getPrevious,
-    hasMore: snapshot.items.length >= snapshot.limit,
-    isLoading: snapshot.isLoading,
-    atHead: snapshot.skip === 0,
-    jumpToHead: store.jumpToHead,
-  };
+  // Stable across renders that don't change `snapshot` (`store`'s own methods are already stable
+  // per store identity) -- callers can pass this straight through to a memoized child (e.g. a
+  // virtualizer's pagination callbacks) without re-destructuring and re-bundling it themselves.
+  return useMemo(
+    () => ({
+      items: snapshot.items,
+      getNext: store.getNext,
+      getPrevious: store.getPrevious,
+      hasMore: snapshot.items.length >= snapshot.limit,
+      isLoading: snapshot.isLoading,
+      atHead: snapshot.skip === 0,
+      jumpToHead: store.jumpToHead,
+    }),
+    [snapshot, store],
+  );
 };

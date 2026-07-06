@@ -67,9 +67,11 @@ export type MessageStackProps = {
   conversations?: boolean;
   /**
    * When `messages` is a lazily-loaded window (see `usePagination`), drives loading more
-   * older messages as the user scrolls toward the loaded end.
+   * older messages as the user scrolls toward the loaded end. Accepts `usePagination`'s full
+   * result directly (its `items` field is unused here) so callers can pass it through without
+   * destructuring and re-bundling it themselves, which would defeat its referential stability.
    */
-  pagination?: Omit<PaginationResult<unknown>, 'items'>;
+  pagination?: PaginationResult<unknown>;
   onAction?: MessageStackActionHandler;
 };
 
