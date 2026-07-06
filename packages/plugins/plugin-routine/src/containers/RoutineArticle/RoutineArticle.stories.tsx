@@ -29,21 +29,21 @@ const types = [Routine.Routine, Trigger.Trigger, Instructions.Instructions, Feed
 const seedSkills = (space: Space) => {
   space.db.add(
     Skill.make({
-      key: 'example.com/skill/research',
+      key: 'com.example.skill.research',
       name: 'Research',
       description: 'Research an organization.',
     }),
   );
   space.db.add(
     Skill.make({
-      key: 'example.com/skill/summarize',
+      key: 'com.example.skill.summarize',
       name: 'Summarize',
       description: 'Summarize the selected content.',
     }),
   );
   space.db.add(
     Skill.make({
-      key: 'example.com/skill/translate',
+      key: 'com.example.skill.translate',
       name: 'Translate',
       description: 'Translate text to another language.',
     }),

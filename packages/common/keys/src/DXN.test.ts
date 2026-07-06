@@ -45,6 +45,9 @@ describe('DXN.Name', () => {
       // No dots — single segment.
       // @ts-expect-error
       DXN.make('unknown');
+      // One dot — two segments, below the three-segment minimum.
+      // @ts-expect-error
+      DXN.make('a.b');
       // Hyphen in the FINAL segment.
       // @ts-expect-error
       DXN.make('com.example.type.registry-entry');
