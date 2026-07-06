@@ -21,8 +21,8 @@ import GetPortfolioHandler from './get-portfolio';
 import GetTradesHandler from './get-trades';
 import ImportPortfolioReportHandler from './import-portfolio';
 import MaterializeInstrumentHandler from './materialize-instrument';
-import SyncPortfolioReportHandler from './sync-portfolio';
 import SyncLotsHandler from './sync-lots';
+import SyncPortfolioReportHandler from './sync-portfolio';
 
 const xml = readFileSync(fileURLToPath(new URL('../services/__fixtures__/flex-report.xml', import.meta.url)), 'utf8');
 const tickersFixture = readFileSync(
@@ -179,9 +179,7 @@ describe('IBKR operations', () => {
       xml: xml.replace('ACME', 'OTHER'),
       fetchedAt: '2026-06-01T06:00:00.000Z',
     });
-    await EffectEx.runPromise(
-      Feed.append(feed, [olderReport, newerReport]).pipe(Effect.provide(Database.layer(db))),
-    );
+    await EffectEx.runPromise(Feed.append(feed, [olderReport, newerReport]).pipe(Effect.provide(Database.layer(db))));
 
     const result = await runSyncLots({ account: Ref.make(portfolio), report: Ref.make(olderReport) }, db);
     expect(result.synced).toBe(4);
