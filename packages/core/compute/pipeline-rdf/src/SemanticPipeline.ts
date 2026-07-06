@@ -67,6 +67,7 @@ export const extractDocFacts = (
         if (!isGrounded(candidate.subject) || !isGrounded(candidate.object)) {
           continue;
         }
+
         const fact: Fact = {
           id: factId(doc.source, hash, index++),
           assertion: {

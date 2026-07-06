@@ -5,9 +5,9 @@
 /**
  * MarkdownTranscription plus a part-of-speech decoration extension: each word is coloured by its UPOS tag.
  *
- * - `Default` renders the seeded doc with the live record button and reactive POS colouring of committed text,
+ * - `Mock` renders the seeded doc with the live record button and reactive POS colouring of committed text,
  *   tagged by the offline `stubParse` tagger (no AI key needed).
- * - `Llm` is the same story tagged by the LLM-based `parseText` over the edge AI service (needs edge credentials).
+ * - `LLM` is the same story tagged by the LLM-based `parseText` over the edge AI service (needs edge credentials).
  * - `PosExtensionPlugin` contributes `pos({ parse })` via `MarkdownCapabilities.ExtensionProvider`; its `ai`
  *   option selects the parser per instantiation.
  * - Wires the same full plugin manager + shared `DefaultStory`/`SAMPLE_CONTENT`/`StoryGraphPlugin` harness as MarkdownTranscription.
@@ -99,10 +99,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Mock: Story = {
   decorators: createPosStoryDecorators({ ai: false }),
 };
 
-export const Llm: Story = {
+export const LLM: Story = {
   decorators: createPosStoryDecorators({ ai: true }),
 };
