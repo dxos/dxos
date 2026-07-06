@@ -33,9 +33,6 @@ const RECURRING_KINDS = ['hourly', 'daily', 'weekly', 'monthly', 'custom'] as co
 // `enabled` is extended onto every spec form so it renders inline with the kind's fields.
 const EnabledForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('enabled', 'computeEnvironment'));
 
-// `computeEnvironment` is surfaced as a separate top-level field alongside the spec form.
-const ComputeEnvironmentForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('computeEnvironment'));
-
 // Scoped trigger form, modeled as a top-level discriminated union (one member per pluggable variant) so the
 // Form renders the chosen kind's fields as one flat field set (no nested, bordered sub-fieldset). The kind
 // itself is chosen by `TriggerKindPicker` (a radio-card list) rather than a select. The feed field carries
@@ -189,13 +186,11 @@ export const TriggerEditor = ({ classNames, db, routine, trigger, readonly }: Tr
   const { t } = useTranslation(meta.profile.key);
   const {
     defaultValues,
-    defaultComputeEnvironment,
     fieldMap,
     kind,
     resetNonce,
     handleClose,
     handleValuesChanged,
-    handleComputeEnvironmentChanged,
   } = useTriggerForm(routine, trigger);
 
   // TODO(burdon): Not persistent; need to memo
@@ -351,6 +346,7 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
       const spec = triggerFormSpec(values);
       setKind(spec.kind);
       const enabled = values.enabled === true;
+      const computeEnvironment = values.computeEnvironment;
       // Edit the spec and `enabled` on the trigger; `computeEnvironment` is handled by its own form below.
       // The trigger's `function` and `input` (including the instructions binding and any operation-specific
       // bindings like `{ magazine }`) are wired once by `Routine.make`, so they are not re-derived here.
@@ -361,6 +357,7 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
           // (mirrors commands/trigger/update/subscription.ts).
           trigger.spec = spec as typeof trigger.spec;
           trigger.enabled = enabled;
+          trigger.computeEnvironment = computeEnvironment;
         });
       } else {
         // Defensive: the draft normally carries an owned trigger already (see `Routine.make`). If absent,
@@ -378,26 +375,12 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
     [routine, trigger],
   );
 
-  const handleComputeEnvironmentChanged = useCallback(
-    (values: Partial<Schema.Schema.Type<typeof ComputeEnvironmentForm>>) => {
-      if (!trigger) {
-        return;
-      }
-      Obj.update(trigger, (trigger) => {
-        trigger.computeEnvironment = values.computeEnvironment;
-      });
-    },
-    [trigger],
-  );
-
   return {
     defaultValues,
-    defaultComputeEnvironment,
     fieldMap,
     kind,
     resetNonce,
     handleClose,
     handleValuesChanged,
-    handleComputeEnvironmentChanged,
   };
 };
