@@ -341,7 +341,7 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
       setKind(spec.kind);
       const enabled = values.enabled === true;
       const computeEnvironment = values.computeEnvironment;
-      // Edit the spec and `enabled` on the trigger; `computeEnvironment` is handled by its own form below.
+      // Edit the spec, `enabled`, and `computeEnvironment` on the trigger directly from the form values.
       // The trigger's `function` and `input` (including the instructions binding and any operation-specific
       // bindings like `{ magazine }`) are wired once by `Routine.make`, so they are not re-derived here.
       if (trigger) {
@@ -356,7 +356,7 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
       } else {
         // Defensive: the draft normally carries an owned trigger already (see `Routine.make`). If absent,
         // create one in memory and attach it to the routine graph — nothing is persisted until save.
-        const created = Trigger.make({ spec, enabled, computeEnvironment: 'local' });
+        const created = Trigger.make({ spec, enabled, computeEnvironment: computeEnvironment ?? 'local' });
         Obj.setParent(created, routine);
         Obj.update(routine, (routine) => {
           routine.triggers.push(Ref.make(created));
