@@ -67,8 +67,8 @@ const syncLotsFromReport = Effect.fn(function* (portfolio: Ibkr.Portfolio, repor
 
     const match = existingByKey.get(foreignId);
     if (match) {
-      Obj.update(match, (lot) => {
-        Object.assign(lot, fields);
+      Obj.update(match, (match) => {
+        Object.assign(match, fields);
       });
       updated++;
     } else {
