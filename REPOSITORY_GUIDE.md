@@ -187,6 +187,31 @@ Packages ship as two lockstep groups — **A: Core/SDK** (`@dxos/echo`, `@dxos/c
 
 **Composer is the only versioned app.** A **production** deploy also cuts its release: the `release` job bumps `composer-app`/`crx` by the dispatch's `bump` input, commits to `main`, tags `composer-v<x>`, then builds + deploys that commit (web + desktop + iOS via `build-tauri.yaml`, CrabNebula). This is the only path that advances Composer's version — it is not a Changesets package.
 
+**Triggering a deploy with `gh`.** The `workflow_dispatch` inputs are `environment` (`labs` \| `staging` \| `production`, default `labs`), `app` (`all` default, or one of `composer` / `docs` / `storybook` / `todomvc` / `tasks` / `testbench`), and `bump` (`patch` \| `minor` \| `major`, used only by the production Composer release). `--ref` selects the commit to deploy — it defaults to `main`, and also determines which version of the workflow runs.
+
+```bash
+# Composer → labs (the default env). `app` defaults to `all`, which for labs is just composer.
+gh workflow run deploy-apps.yml -f environment=labs
+
+# Composer + docs → staging.
+gh workflow run deploy-apps.yml -f environment=staging
+
+# Full production deploy AND cut a Composer release with a minor version bump.
+gh workflow run deploy-apps.yml -f environment=production -f bump=minor
+
+# Hotfix a single app to production (no Composer release; only that app's pointer tag moves).
+gh workflow run deploy-apps.yml -f environment=production -f app=docs
+
+# Deploy a specific tag/commit instead of main's HEAD (e.g. re-deploy a prior Composer release).
+gh workflow run deploy-apps.yml --ref composer-v1.4.0 -f environment=production
+
+# Watch the run you just started.
+gh run list --workflow=deploy-apps.yml --limit 1
+gh run watch
+```
+
+Handy as aliases — e.g. `gh alias set deploy-labs 'workflow run deploy-apps.yml -f environment=labs'`, then just `gh deploy-labs`.
+
 ## Dependencies
 
 Packages can be locked to a particular version as required by updating `pnpm.overrides` in `package.json`.
