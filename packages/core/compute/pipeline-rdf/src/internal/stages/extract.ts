@@ -52,7 +52,9 @@ For each proposition output: subject, predicate (a short verb phrase), object, o
  */
 export const DEFAULT_EXTRACTION_RULES: readonly string[] = [
   'Capture uncertainty in factuality ("probably" => PR+, "might" => PS+).',
-  'Keep prepositions and particles that bind to the verb in the predicate, not the object: passive voice "X was created by Y" => predicate "was created by", object "Y" (just the agent). Likewise "moved to", "depends on", "reported by".',
+  'Keep prepositions and particles that bind to the verb in the predicate, not the object: passive voice "X was created by Y" => predicate "created by", object "Y" (just the agent). Likewise "moved to", "depends on", "reported by".',
+  'Use the exact predicate "is-a" for class membership: "Socrates is a man" => subject "Socrates", predicate "is-a", object "man". Never use bare "is" or "was" as the membership predicate.',
+  'Keep every predicate in timeless present form and express tense through validFrom/validTo instead: "Alice worked at Acme until 2020" => predicate "works at" with validTo set from the stated end. Past tense alone — without an explicit date or an end cue such as "until", "former", or "no longer" — does NOT set validTo.',
   'The object must be a single concrete entity (a person, project, org, place, or thing) or a literal value — never a raw id, snowflake, URL, or channel reference. Drop the proposition if the only object would be such an opaque token.',
   'Emit a proposition only when BOTH its subject and object are concrete and named. If either would be an unresolved pronoun (we/it/they/this/that) or otherwise unknown, omit the proposition entirely — never output "unknown" as a subject or object.',
   'Do not extract facts from questions or requests: an interrogative or tag question ("… right?", "does X have Y?", "should we …?") asks for information and asserts nothing. Skip it unless the author also states a proposition they commit to.',

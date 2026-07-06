@@ -84,6 +84,12 @@ describe('SemanticPipeline', () => {
     const prompt = buildExtractionPrompt();
     // The default set rejects questions (the immediate case driving this rule).
     expect(prompt).toContain('Do not extract facts from questions');
+    // Class membership uses the distinguished `is-a` predicate (rdf:type-like), never bare "is"/"was".
+    expect(prompt).toContain('Use the exact predicate "is-a" for class membership');
+    // Predicates are atemporal: tense flows into valid-time, and past tense alone does not end a fact.
+    expect(prompt).toContain('timeless present form');
+    expect(prompt).toContain('does NOT set validTo');
+    expect(prompt).not.toContain('predicate "was created by"');
 
     const extended = buildExtractionPrompt({ rules: ['Treat @handles as people.'] });
     expect(extended).toContain('Treat @handles as people.');
