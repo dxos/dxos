@@ -99,7 +99,7 @@ const syncLotsFromReport = Effect.fn(function* (portfolio: Ibkr.Portfolio, repor
 });
 
 const lotForeignId = (lot: Ibkr.LotSnapshot): string =>
-  lot.sold
+  lot.sold !== undefined && lot.sold !== ''
     ? `closed/${lot.symbol}/${lot.acquired ?? ''}/${lot.sold}/${lot.quantity}`
     : `open/${lot.symbol}/${lot.acquired ?? ''}/${lot.quantity}`;
 

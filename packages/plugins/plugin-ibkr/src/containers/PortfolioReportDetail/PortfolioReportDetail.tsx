@@ -7,6 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { ReportSections } from '../../components';
@@ -59,6 +60,8 @@ export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioR
         { account: Ref.make(companionTo), report: Ref.make(subject) },
         { spaceId: db?.spaceId },
       );
+    } catch (error) {
+      log.catch(error);
     } finally {
       setSyncingLots(false);
     }

@@ -6,6 +6,7 @@ import React, { useCallback, useState } from 'react';
 
 import { Surface, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { Connection, ConnectorAuth } from '@dxos/plugin-connector';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
@@ -44,10 +45,15 @@ export const PortfolioSyncAction = ({ subject }: PortfolioSyncActionProps) => {
     try {
       try {
         await invokePromise(IbkrOperation.SyncPortfolioReport, {}, { spaceId: db?.spaceId });
-      } catch {
+      } catch (error) {
         // Report fetch is best-effort; lots sync from the latest stored report even when fetch fails.
+        log.catch(error);
       }
-      await invokePromise(IbkrOperation.SyncLots, { account: Ref.make(subject) }, { spaceId: db?.spaceId });
+      try {
+        await invokePromise(IbkrOperation.SyncLots, { account: Ref.make(subject) }, { spaceId: db?.spaceId });
+      } catch (error) {
+        log.catch(error);
+      }
     } finally {
       setSyncing(false);
     }
