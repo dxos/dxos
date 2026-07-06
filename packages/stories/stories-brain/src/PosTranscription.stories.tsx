@@ -5,11 +5,11 @@
 /**
  * MarkdownTranscription plus a part-of-speech decoration extension: each word is coloured by its UPOS tag.
  *
- * - `Default` renders the seeded doc with the live record button and reactive POS colouring of committed text.
- * - `Recording` seeds finalized + interim pending text (no mic); confirming the block colours the inserted words.
- * - `PosExtensionPlugin` contributes `pos({ parse })` via `MarkdownCapabilities.ExtensionProvider`.
- * - The `ai` option selects the parser: LLM-based `parseText` over the edge AI service (needs edge
- *   credentials; the story default) vs. the offline `stubParse` tagger (no AI key).
+ * - `Default` renders the seeded doc with the live record button and reactive POS colouring of committed text,
+ *   tagged by the offline `stubParse` tagger (no AI key needed).
+ * - `Llm` is the same story tagged by the LLM-based `parseText` over the edge AI service (needs edge credentials).
+ * - `PosExtensionPlugin` contributes `pos({ parse })` via `MarkdownCapabilities.ExtensionProvider`; its `ai`
+ *   option selects the parser per instantiation.
  * - Wires the same full plugin manager + shared `DefaultStory`/`SAMPLE_CONTENT`/`StoryGraphPlugin` harness as MarkdownTranscription.
  */
 
@@ -74,17 +74,21 @@ const PosExtensionPlugin = Plugin.define<PosExtensionOptions>(
   Plugin.make,
 );
 
-const meta = {
-  title: 'stories/stories-brain/PosTranscription',
-  render: DefaultStory,
-  decorators: createMarkdownStoryDecorators({
-    extraPlugins: [PosExtensionPlugin({ ai: true })],
+// Decorators are per-story (not on meta) so each variant mounts its own plugin manager with the
+// plugin instantiated for its parser; meta+story decorators would nest two harnesses.
+const createPosStoryDecorators = (options: PosExtensionOptions) =>
+  createMarkdownStoryDecorators({
+    extraPlugins: [PosExtensionPlugin(options)],
     seed: ({ personalSpace: space }) =>
       Effect.gen(function* () {
         space.db.add(Markdown.make({ name: 'Transcription', content: SAMPLE_CONTENT }));
         yield* Effect.promise(() => space.db.flush({ indexes: true }));
       }),
-  }),
+  });
+
+const meta = {
+  title: 'stories/stories-brain/PosTranscription',
+  render: DefaultStory,
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
@@ -95,4 +99,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  decorators: createPosStoryDecorators({ ai: false }),
+};
+
+export const Llm: Story = {
+  decorators: createPosStoryDecorators({ ai: true }),
+};
