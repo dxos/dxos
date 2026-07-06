@@ -23,12 +23,20 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        # The app set is derived from the environment (deploy-manifest.json): labs → composer,
-        # staging → composer + docs, production → all. Choose the commit via the branch/tag selector.
+        # Defaults the app set (deploy-manifest.json): labs → composer, staging → composer + docs,
+        # production → all. Choose the commit via the branch/tag selector.
         description: Target environment
         type: choice
         options: [labs, staging, production]
         default: labs
+      app:
+        # Optional — deploy a single app instead of the whole environment (e.g. a docs hotfix to
+        # production); still tagged per-app. `all` (default) deploys every app the environment targets.
+        # (GitHub requires a choice default to be a listed option, hence `all` is the first entry.)
+        description: App to deploy (default `all` = the whole environment)
+        type: choice
+        options: [all, composer, docs, storybook, todomvc, tasks, testbench]
+        default: all
       bump:
         # Only used by the production `release` job (the Composer version bump); ignored otherwise.
         description: Composer version bump — production only
@@ -49,7 +57,11 @@ jobs:
   # composer-v<x>. Skipped for main/labs/staging (their deploys carry no version bump). The bumped commit
   # is what the rest of the run builds + deploys (via needs.release.outputs.sha).
   release:
-    if: github.repository == 'dxos/dxos' && inputs.environment == 'production'
+    # Production, and only when Composer is in the deploy set — a single-app deploy of docs/etc. to
+    # production is a hotfix and must NOT cut a Composer release.
+    if: >-
+      github.repository == 'dxos/dxos' && inputs.environment == 'production' &&
+      ((inputs.app || 'all') == 'all' || (inputs.app || 'all') == 'composer')
     runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -108,6 +120,7 @@ jobs:
     needs: [release]
     if: >-
       !cancelled() && needs.release.result != 'failure' && github.repository == 'dxos/dxos' &&
+      ((inputs.app || 'all') == 'all' || (inputs.app || 'all') == 'composer') &&
       (inputs.environment == 'labs' || inputs.environment == 'staging' || inputs.environment == 'production'
        || (github.event_name == 'push' && github.ref_name != 'main'))
     runs-on: depot-ubuntu-24.04-4
@@ -178,6 +191,7 @@ jobs:
     env:
       # Dispatch → the chosen env. Push → `main` (rolling) for main, else `labs` (the TEMP branch trigger).
       DEPLOY_ENV: ${{ inputs.environment || (github.ref_name == 'main' && 'main' || 'labs') }}
+      DEPLOY_APP: ${{ inputs.app || 'all' }}
       DEPLOY_REF: ${{ needs.release.outputs.sha || github.sha }}
     steps:
       - name: Checkout
@@ -218,27 +232,29 @@ jobs:
           name: composer-bundle
           path: packages/apps/composer-app/out/composer
 
-      # Build any app not already present (bundle-env.mjs skips populated output dirs), then deploy them all.
+      # Build any selected app not already present (bundle-env.mjs skips populated output dirs), then deploy.
+      # DEPLOY_APP defaults to `all` (the whole environment); a single app narrows it (e.g. a docs hotfix).
       - name: Bundle apps
-        run: .github/workflows/scripts/bundle-env.mjs "$DEPLOY_ENV"
+        run: .github/workflows/scripts/bundle-env.mjs "$DEPLOY_ENV" "$DEPLOY_APP"
         env:
           NODE_ENV: production
 
       - name: Deploy apps
-        run: .github/workflows/scripts/deploy-env.mjs "$DEPLOY_ENV"
+        run: .github/workflows/scripts/deploy-env.mjs "$DEPLOY_ENV" "$DEPLOY_APP"
         env:
           NODE_ENV: production
 
       # Floating pointer to the SHA deployed for each app+env (the branch-pointer replacement). `main` is the
-      # branch tip (auto-deployed on push) so it carries no tag; every other env tags each app it deployed.
+      # branch tip (auto-deployed on push) so it carries no tag; every other env tags each app it deployed —
+      # per-app even for `all`, so an individual redeploy (hotfix) moves only that app's tag.
       - name: Update deploy pointer tags
         if: env.DEPLOY_ENV != 'main'
         run: |
           for app in $(node -e '
             const m = require("./.github/workflows/deploy-manifest.json");
-            const env = process.argv[1];
-            console.log(Object.entries(m).filter(([n, c]) => n !== "//" && c.environments?.includes(env)).map(([n]) => n).join(" "));
-          ' "$DEPLOY_ENV"); do
+            const [env, only] = process.argv.slice(1);
+            console.log(Object.entries(m).filter(([n, c]) => n !== "//" && c.environments?.includes(env) && (only === "all" || only === n)).map(([n]) => n).join(" "));
+          ' "$DEPLOY_ENV" "$DEPLOY_APP"); do
             tag="${app}/${DEPLOY_ENV}"
             git tag -f "$tag" "$DEPLOY_REF"
             git push -f origin "refs/tags/$tag"
@@ -252,6 +268,7 @@ jobs:
     if: >-
       !cancelled() && needs.release.result != 'failure' && needs.build-bundle.result == 'success' &&
       github.repository == 'dxos/dxos' &&
+      ((inputs.app || 'all') == 'all' || (inputs.app || 'all') == 'composer') &&
       (inputs.environment == 'labs' || inputs.environment == 'staging' || inputs.environment == 'production')
     uses: ./.github/workflows/publish-tauri.yaml
     with:

@@ -64,10 +64,12 @@ Changesets**, and never publish to npm. Deployable apps + their environments are
 `docs/production`), force-updated on each deploy — the branch-pointer replacement. `main` is the branch tip.
 No GitHub Environments.
 
-The one entry point is **Deploy Apps** — the app set is derived from the environment, so you only pick the
-environment (no per-app choice):
+The one entry point is **Deploy Apps** — you pick the **environment** and the app set follows. The optional
+**app** input (default `all`) narrows to a single app for an individual (re)deploy or hotfix (e.g. push just
+docs to production); pointer tags are per-app either way. A single non-Composer app deploy skips the
+Composer release job.
 
-| Env | Trigger | Apps | Notes |
+| Env | Trigger | Apps (default `all`) | Notes |
 | --- | --- | --- | --- |
 | **main** | automatic on push to `main` | all `main`-enabled apps | rolling preview |
 | **labs** | manual (**Deploy Apps** → `labs`) | composer | prerelease Tauri build |
