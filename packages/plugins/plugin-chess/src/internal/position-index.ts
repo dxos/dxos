@@ -35,14 +35,21 @@ export const positionsForSide = ({
   side: ChessPositionIndex.Side;
 }): string[] => {
   const probe = new ChessJS();
-  if (pgn) {
-    probe.loadPgn(pgn);
-  } else if (fen) {
-    probe.load(fen);
+  const chess = new ChessJS();
+  try {
+    if (pgn) {
+      probe.loadPgn(pgn);
+    } else if (fen) {
+      // A FEN-only game has no move history to replay, so index from the supplied position itself.
+      probe.load(fen);
+      chess.load(fen);
+    }
+  } catch {
+    // chess.js throws on malformed PGN/FEN; a single bad record must not abort the rebuild.
+    return [];
   }
 
   const moves = probe.history().slice(0, OPENING_PLY_LIMIT);
-  const chess = new ChessJS();
   const turn = sideToTurn(side);
   const fens: string[] = [];
 
@@ -61,18 +68,12 @@ export const positionsForSide = ({
 };
 
 /** Resolves which side the reviewed player played in a game, if any. */
-export const playerSideInGame = (
-  review: PlayerReview.Review,
-  game: Game,
-): ChessPositionIndex.Side | undefined => {
+export const playerSideInGame = (review: PlayerReview.Review, game: Game): ChessPositionIndex.Side | undefined => {
   for (const player of game.players ?? []) {
     if (review.playerIdentity && player.identity === review.playerIdentity) {
       return player.role === 'black' ? 'black' : 'white';
     }
-    if (
-      review.playerName &&
-      player.name?.trim().toLowerCase() === review.playerName.trim().toLowerCase()
-    ) {
+    if (review.playerName && player.name?.trim().toLowerCase() === review.playerName.trim().toLowerCase()) {
       return player.role === 'black' ? 'black' : 'white';
     }
   }

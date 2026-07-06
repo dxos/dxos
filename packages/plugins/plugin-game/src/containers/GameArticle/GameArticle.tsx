@@ -8,10 +8,9 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, type Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { useTranslation } from '@dxos/react-ui';
-
 // #region DEBUG
 import { log } from '@dxos/log';
+import { useTranslation } from '@dxos/react-ui';
 // #endregion DEBUG
 
 import { meta } from '#meta';

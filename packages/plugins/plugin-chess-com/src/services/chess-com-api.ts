@@ -14,13 +14,15 @@ import * as ChessComAccount from '../types/ChessComAccount';
 /** Base URL for the Chess.com Published (JSON) API. */
 const CHESS_COM_API_BASE = 'https://api.chess.com/pub';
 
+/** Upper bound on a single chess.com request; archives are fetched sequentially, so a hung request would otherwise stall the whole sync. */
+const REQUEST_TIMEOUT = '30 seconds';
 
 const ChessComGamePlayer = Schema.Struct({
-  rating: Schema.Number,
-  result: Schema.String,
+  'rating': Schema.Number,
+  'result': Schema.String,
   '@id': Schema.String,
-  username: Schema.String,
-  uuid: Schema.String,
+  'username': Schema.String,
+  'uuid': Schema.String,
 });
 
 const ChessComGame = Schema.Struct({
@@ -48,19 +50,19 @@ const ChessComArchivesResponse = Schema.Struct({
 });
 
 const ChessComPlayer = Schema.Struct({
-  player_id: Schema.Number,
+  'player_id': Schema.Number,
   '@id': Schema.String,
-  url: Schema.String,
-  username: Schema.String,
-  followers: Schema.Number,
-  country: Schema.optional(Schema.String),
-  last_online: Schema.optional(Schema.Number),
-  joined: Schema.optional(Schema.Number),
-  status: Schema.optional(Schema.String),
-  is_streamer: Schema.optional(Schema.Boolean),
-  verified: Schema.optional(Schema.Boolean),
-  league: Schema.optional(Schema.String),
-  streaming_platforms: Schema.optional(Schema.Array(Schema.String)),
+  'url': Schema.String,
+  'username': Schema.String,
+  'followers': Schema.Number,
+  'country': Schema.optional(Schema.String),
+  'last_online': Schema.optional(Schema.Number),
+  'joined': Schema.optional(Schema.Number),
+  'status': Schema.optional(Schema.String),
+  'is_streamer': Schema.optional(Schema.Boolean),
+  'verified': Schema.optional(Schema.Boolean),
+  'league': Schema.optional(Schema.String),
+  'streaming_platforms': Schema.optional(Schema.Array(Schema.String)),
 });
 
 export type RemoteGame = Schema.Schema.Type<typeof ChessComGame>;
@@ -80,6 +82,7 @@ const getJson = <A, I>(
     return yield* HttpClientResponse.schemaBodyJson(schema)(response);
   }).pipe(
     Effect.scoped,
+    Effect.timeout(REQUEST_TIMEOUT),
     Effect.mapError((cause) =>
       cause instanceof ChessComNotFoundError || cause instanceof ChessComRequestError
         ? cause

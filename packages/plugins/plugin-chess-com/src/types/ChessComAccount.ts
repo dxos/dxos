@@ -15,7 +15,6 @@ export const CHESS_COM_SOURCE = 'chess.com';
 
 export const getForeignKey = (obj: Obj.Unknown): string | undefined => Obj.getKeys(obj, CHESS_COM_SOURCE).at(0)?.id;
 
-
 /** Normalises a Chess.com username for API calls and foreign keys. */
 export const normalizeUsername = (username: string): string => username.trim().toLowerCase();
 
@@ -39,8 +38,10 @@ export class Account extends Type.makeObject<Account>(DXN.make('org.dxos.type.ch
     isStreamer: Schema.Boolean.pipe(FormInputAnnotation.set(false), Schema.optional),
     verified: Schema.Boolean.pipe(FormInputAnnotation.set(false), Schema.optional),
     league: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-    streamingPlatforms: Schema.mutable(Schema.Array(Schema.String))
-      .pipe(FormInputAnnotation.set(false), Schema.optional),
+    streamingPlatforms: Schema.mutable(Schema.Array(Schema.String)).pipe(
+      FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
     /** Backing queue of synced {@link org.dxos.type.game} objects. */
     games: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
   }).pipe(
@@ -66,9 +67,7 @@ export type AccountProfile = Pick<
 >;
 
 /** Creates a ChessComAccount with a child games feed and account foreign key. */
-export const makeAccount = (
-  props: Omit<Obj.MakeProps<typeof Account>, 'games'> & { username: string },
-): Account => {
+export const makeAccount = (props: Omit<Obj.MakeProps<typeof Account>, 'games'> & { username: string }): Account => {
   const gamesFeed = Feed.make();
   const username = normalizeUsername(props.username);
   const account = Obj.make(Account, {
@@ -83,8 +82,11 @@ export const makeAccount = (
 
 /** Applies player profile fields from the chess.com API onto an account. */
 export const applyProfile = (account: Account, profile: AccountProfile): void => {
+  // The API omits optional fields (e.g. country, league) on some responses; skipping undefined
+  // values preserves previously-synced data instead of overwriting it with undefined.
+  const defined = Object.fromEntries(Object.entries(profile).filter(([, value]) => value !== undefined));
   Obj.update(account, (account) => {
-    Object.assign(account, profile);
+    Object.assign(account, defined);
   });
 };
 

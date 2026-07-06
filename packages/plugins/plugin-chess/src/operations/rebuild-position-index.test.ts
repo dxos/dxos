@@ -38,11 +38,14 @@ describe('position-index', () => {
       side: 'white',
     });
     expect(fens.length).toBeGreaterThan(1);
-    expect(fens[0]).toBe(positionIndexInternal.normalizeFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'));
+    expect(fens[0]).toBe(
+      positionIndexInternal.normalizeFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'),
+    );
   });
 
   test('indexes only the first 10 full moves', () => {
-    const tenMoves = '1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 d6 8. c3 O-O 9. h3 Na5 10. Bc2 c5 *';
+    const tenMoves =
+      '1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 d6 8. c3 O-O 9. h3 Na5 10. Bc2 c5 *';
     const longer = `${tenMoves.slice(0, -2)} 11. d4 cxd4 12. cxd4 *`;
 
     const limited = positionIndexInternal.positionsForSide({ pgn: longer, side: 'white' });
@@ -78,9 +81,7 @@ describe('RebuildPositionIndex', () => {
         const index = yield* Database.load(review.positionIndex);
         const whiteKeys = Object.keys(index.index.white);
         expect(whiteKeys.length).toBeGreaterThan(0);
-        const startKey = positionIndexInternal.normalizeFen(
-          'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-        );
+        const startKey = positionIndexInternal.normalizeFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
         expect(index.index.white[startKey]?.games).toHaveLength(1);
       },
       Effect.provide(TestLayer),
