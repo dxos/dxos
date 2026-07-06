@@ -131,7 +131,7 @@ Per-commit unreleased code is served by pkg.pr.new (Section 7), **not** by publi
 
 ### App deploys — four environments 🔄
 
-The old four deploy environments are preserved, but **environment is a deploy parameter, not a git branch** (the long-lived `production`/`staging`/`labs`/`dev` branches are retired). Apps + the environments each targets are declared in `.github/workflows/deploy-manifest.json` (generic — Composer, docs, storybook, …); `deploy-apps.yml` + `scripts/deploy-env.mjs` deploy any app to any environment via `wrangler deploy` (Workers Static Assets), one Worker per environment (`production` = bare name, others = `<worker>-<env>`). **Deploy never publishes to npm.**
+The old four deploy environments are preserved, but **environment is a deploy parameter, not a git branch** (the long-lived `production`/`staging`/`labs`/`dev` branches are retired). The deployable apps are listed in `.github/workflows/scripts/apps.mjs` (Composer, docs, storybook, …); each app's target environments (and Worker name / output dir) are derived from its `wrangler.jsonc`. `deploy-apps.yml` + `scripts/{bundle,deploy}-env.mjs` deploy any app to any environment via `wrangler deploy` (Workers Static Assets), one Worker per environment (`production` = bare name, others = `<worker>-<env>`). **Deploy never publishes to npm.**
 
 | Env | Trigger | Notes |
 | --- | --- | --- |

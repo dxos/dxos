@@ -1,8 +1,10 @@
 name: Deploy Apps
 
-# Single workflow for all app deploys. The app set is derived from the target environment
-# (deploy-manifest.json `environments`): main → all main-enabled apps (auto on push); labs → composer;
-# staging → composer + docs; production → all. Fully decoupled from npm publishing.
+# Single workflow for all app deploys. The deployable apps are listed in scripts/apps.mjs (a package dir
+# per app); everything else — Worker name, bundle task, output dir, and which environments it targets — is
+# derived from that app's `wrangler.jsonc`. The app set for an env follows its config's `env.*` sections:
+# main → all main-enabled apps (auto on push); labs → composer; staging → composer + docs; production → all.
+# Fully decoupled from npm publishing.
 #
 # Production additionally cuts a versioned Composer release (bump composer-app/crx, commit to main, tag
 # composer-v<x>) — the ONLY path that advances Composer's version (Composer is not in Changesets). The other
@@ -26,8 +28,8 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        # Defaults the app set (deploy-manifest.json): labs → composer, staging → composer + docs,
-        # production → all. Choose the commit via the branch/tag selector.
+        # Defaults the app set (each app's wrangler.jsonc `env.*`): labs → composer, staging → composer +
+        # docs, production → all. Choose the commit via the branch/tag selector.
         description: Target environment
         type: choice
         options: [labs, staging, production]
@@ -278,11 +280,7 @@ jobs:
       - name: Update deploy pointer tags
         if: env.DEPLOY_ENV != 'main'
         run: |
-          for app in $(node -e '
-            const m = require("./.github/workflows/deploy-manifest.json");
-            const [env, only] = process.argv.slice(1);
-            console.log(Object.entries(m).filter(([n, c]) => n !== "//" && c.environments?.includes(env) && (only === "all" || only === n)).map(([n]) => n).join(" "));
-          ' "$DEPLOY_ENV" "$DEPLOY_APP"); do
+          for app in $(.github/workflows/scripts/apps.mjs "$DEPLOY_ENV" "$DEPLOY_APP"); do
             tag="${app}/${DEPLOY_ENV}"
             git tag -f "$tag" "$DEPLOY_REF"
             git push -f origin "refs/tags/$tag"

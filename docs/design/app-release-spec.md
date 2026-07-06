@@ -129,8 +129,9 @@ the natural source for Composer's notes is the plugin changesets/changelog delta
 
 - **`release.yml`:** remove the `deploy-production` job (production is no longer gated on / triggered by an
   npm publish). Package publishing keeps its own flow; it no longer deploys anything.
-- **`deploy-apps.yml` is the single entry point** (there are no separate release workflows). The app set is
-  derived from the environment (`deploy-manifest.json`): main → all (auto on push), labs → composer,
+- **`deploy-apps.yml` is the single entry point** (there are no separate release workflows). The deployable
+  apps are listed in `scripts/apps.mjs`; each app's target environments (and Worker name / output dir) come
+  from its `wrangler.jsonc`, so the app set per env is: main → all (auto on push), labs → composer,
   staging → composer + docs, production → all. Per-app pointer tags `<app>/<env>` (non-main) replace the
   single `env/<env>` tag.
 - **Production cuts the versioned Composer release inside `deploy-apps.yml`** — a production-only `release`

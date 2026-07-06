@@ -56,9 +56,10 @@ unreleased changes — independent of the `@latest`/`@next` npm channels and not
 ## Deploy apps (no npm publish)
 
 App deploys are **fully decoupled from publishing** — apps build from workspace source, are **not in
-Changesets**, and never publish to npm. Deployable apps + their environments are declared in
-[`deploy-manifest.json`](../.github/workflows/deploy-manifest.json); all deploys run through
-**`deploy-apps.yml`**. Full model: [`docs/design/app-release-spec.md`](design/app-release-spec.md).
+Changesets**, and never publish to npm. The deployable apps are listed in
+[`scripts/apps.mjs`](../.github/workflows/scripts/apps.mjs) (a package dir each); everything else — Worker
+name, bundle task, output dir, and target environments — is derived from that app's `wrangler.jsonc`. All
+deploys run through **`deploy-apps.yml`**. Full model: [`docs/design/app-release-spec.md`](design/app-release-spec.md).
 
 "What's deployed where" is tracked by per-app floating git tags **`<app>/<env>`** (e.g. `composer/production`,
 `docs/production`), force-updated on each deploy — the branch-pointer replacement. `main` is the branch tip.

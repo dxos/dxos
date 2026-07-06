@@ -1,0 +1,14 @@
+{
+  // Cloudflare Workers (Static Assets) config for the Storybook site — assets-only (no Worker script).
+  // Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
+  "name": "storybook",
+  "compatibility_date": "2024-11-01",
+  "assets": {
+    "directory": "./out/storybook-react",
+    "not_found_handling": "single-page-application"
+  },
+  "env": {
+    "production": { "name": "storybook" },
+    "main": { "name": "storybook-main" }
+  }
+}
