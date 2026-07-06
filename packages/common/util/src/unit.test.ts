@@ -2,12 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, it } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { Unit } from './unit';
 
 describe('url', () => {
-  it('duration', ({ expect }) => {
+  test('magnitudes', ({ expect }) => {
+    expect(Unit.Thousand(42_154, 1).toString()).toBe('42.2k');
+    expect(Unit.Million(36_200_000, 1).toString()).toBe('36.2M');
+  });
+
+  test('duration', ({ expect }) => {
     const tests: [number, string][] = [
       [0, '0ms'],
       [1, '1ms'],

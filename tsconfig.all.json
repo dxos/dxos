@@ -724,6 +724,9 @@
       "path": "packages/ui/react-ui-components/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-dashboard/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-dnd/tsconfig.json"
     },
     {

@@ -9,13 +9,9 @@ import { ObjectsTree } from '@dxos/devtools';
 import { type Entity, Filter, Json, Obj, Query } from '@dxos/echo';
 import type { EntityId } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
-import { Clipboard, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Clipboard, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
-
-// #region DEBUG
-import { log } from '@dxos/log';
-// #endregion DEBUG
 
 export type DebugObjectPanelProps = Pick<
   AppSurface.ObjectArticleProps<Obj.Unknown, {}, Obj.Unknown>,
@@ -28,7 +24,7 @@ export type DebugObjectPanelProps = Pick<
 export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugObjectPanelProps) => {
   const db = Obj.getDatabase(companionTo);
   const [selectedId, setSelectedId] = useState<EntityId | null>(null);
-  const [depth, setDepth] = useState(0);
+  // Include feeds so that feed-backed objects (e.g. synced games) resolve in the selection query.
   const selectionQuery = useMemo(
     () =>
       db
@@ -39,14 +35,6 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
     [db, selectedId, companionTo.id],
   );
   const [selectedObject] = useQuery(db, selectionQuery);
-  // #region DEBUG
-  log('[DEBUG H1] debug object panel selection', {
-    selectedId: selectedId ?? companionTo.id,
-    found: Boolean(selectedObject),
-    typename: selectedObject ? Obj.getTypename(selectedObject) : undefined,
-  });
-  // #endregion DEBUG
-  const refReplacer = useMemo(() => (db ? Json.createRefReplacer({ db, depth }) : undefined), [db, depth]);
 
   return (
     <Clipboard.Provider>
@@ -69,22 +57,15 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
             )}
-            <Syntax.Root data={selectedObject} replacer={refReplacer}>
+            <Syntax.Root
+              data={selectedObject}
+              getReplacer={(depth) => (db ? Json.createRefReplacer({ db, depth }) : undefined)}
+            >
               <Panel.Root>
                 <Panel.Toolbar asChild>
                   <Toolbar.Root classNames='grid grid-cols-[1fr_3rem]'>
                     <Syntax.Filter />
-                    <Input.Root>
-                      <Input.TextInput
-                        variant='subdued'
-                        type='number'
-                        min={0}
-                        step={1}
-                        aria-label='Ref depth'
-                        value={depth}
-                        onChange={(event) => setDepth(Math.max(0, Number(event.target.value) || 0))}
-                      />
-                    </Input.Root>
+                    <Syntax.Depth />
                   </Toolbar.Root>
                 </Panel.Toolbar>
                 <Panel.Content asChild>
