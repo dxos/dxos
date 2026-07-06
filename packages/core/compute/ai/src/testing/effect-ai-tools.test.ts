@@ -41,7 +41,7 @@ describe('effect AI tool calls', () => {
       ),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
-    { tags: ['llm'] },
+    { tags: ['manual'] },
   );
 
   const parts = ['`---`', '`+++`', '`@@`'];
@@ -88,6 +88,6 @@ describe('effect AI tool calls', () => {
       ),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
-    { tags: ['llm'] },
+    { tags: ['manual'] },
   );
 });

@@ -346,7 +346,14 @@ See: `plugin-chess/src/types/Chess.ts`
 
 Operation definitions use `Operation.make()` with meta, input/output schemas, and services. Handlers use `Operation.withHandler()` with Effect generators. The barrel exports definitions and a lazy `OperationHandlerSet`.
 
-See: `plugin-chess/src/operations/`
+Handler file shape (mirror `plugin-trip/src/operations/add-segment.ts`):
+
+- Default-export the piped handler: `export default Op.pipe(Operation.withHandler(...), Operation.opaqueHandler)`.
+- Pass runtime layers as the 2nd arg to `Effect.fn` (e.g. `Effect.provide(FetchHttpClient.layer)`), not an inner nested `Effect.gen` + `.pipe(Effect.provide(...))`.
+- Keep the handler body linear; put pure mapping in module-level helpers above the export.
+- Dedup/query transforms: prefer `Feed.query(...).run.pipe(Effect.map(...))` chains with Effect `Array`/`Predicate` over imperative loops.
+
+See: `plugin-chess/src/operations/`, `plugin-trip/src/operations/add-segment.ts`, `plugin-chess-com/src/operations/sync-games.ts`
 
 ## Plugin Definition
 
