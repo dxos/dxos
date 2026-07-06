@@ -9,6 +9,9 @@
 // job), which runs this and then `scripts/sync-versions.mjs` to stamp the derived files (version.ts,
 // tauri.conf.json).
 //
+// Deliberately uses plain arithmetic (no `semver` dependency): Composer's version is always a clean X.Y.Z,
+// so this is identical to `semver.inc`, and it keeps the `release` job dependency-free (no pnpm install).
+//
 // Usage: bump-composer-version.mjs <patch|minor|major>   (default: patch)
 
 import { readFileSync, writeFileSync } from 'node:fs';
