@@ -114,7 +114,7 @@ Grounded in industry practice (Rush subspaces, Go's import-cycle ban, *SWE at Go
 7. **Enforcement** — across repos there is no workspace, so the DAG must be enforced explicitly: **(a)** a generated package→repo ownership map + a `check-package-cycles.mjs --cross-repo` mode that unions every repo's `@dxos/*` edges (reusing `edge-tests.yml`'s dual-checkout) and fails on any multi-node SCC — a required PR check + scheduled drift job; **(b)** a cheap layer-direction lint (`contracts < core < edge/app`) failing on upward/sideways edges; **(c)** a release-toposort backstop that fails if a cycle slipped through.
 8. **Bias toward not splitting** — per *SWE at Google*, prefer source-control problems over dependency-management ones; every cut edge is a versioning cost paid every release.
 
-### Repo split (one-way door)
+### Repo split
 
 Only after the cross-repo contract is proven on `edge`. The history extraction is irreversible.
 
@@ -133,9 +133,3 @@ The `sdk/app-*` packages + `shell` are the plugin-SDK layer (not storybook back-
 | `@dxos/blade-runner` — `@dxos/plugin-script` | Default to Repo B (or sever the dep) |
 
 Sequence (CI green throughout): (1) cleanup PR in Repo A removing back-edges; (2) `check-cycles.mjs` + `check-package-cycles.mjs` confirm acyclic; (3) tag `pre-split`; (4) `git filter-repo` the Repo-B path set into the new repo + bootstrap its workspace / catalog subset / `.moon` / CI / Changesets / `link-packages.mjs`; (5) delete moved dirs from Repo A (globs, tsconfig paths, the `app-framework` `DEFAULT_PACKAGES` allowlist); (6) publish Repo A `0.10.0`; Repo B switches its catalog floor from a pkg.pr.new SHA to an npm range. No compat shims. Also resolve the duplicate `reflect/introspect*` vs `core/compute/introspect*`.
-
-## 7. Risks / one-way doors
-
-- **Changesets × pnpm catalog** — the main tooling unknown; fallback is removing `@dxos/*` from the catalog (see §2).
-- **One-way doors** — any real `@latest` publish, branch deletion (back up tips), and the repo-split history extraction (tag `pre-split`).
-- **Cross-repo diamond / version skew** — created by splitting; mitigated by the single-version + contract-package policy (§6).
