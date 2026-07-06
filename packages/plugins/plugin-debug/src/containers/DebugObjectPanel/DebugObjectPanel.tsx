@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ObjectsTree } from '@dxos/devtools';
@@ -24,10 +24,17 @@ export type DebugObjectPanelProps = Pick<
 export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugObjectPanelProps) => {
   const db = Obj.getDatabase(companionTo);
   const [selectedId, setSelectedId] = useState<EntityId | null>(null);
-  const [selectedObject] = useQuery(
-    db,
-    Query.select(Filter.id(selectedId ?? companionTo.id)).options({ deleted: 'include' }),
+  // Include feeds so that feed-backed objects (e.g. synced games) resolve in the selection query.
+  const selectionQuery = useMemo(
+    () =>
+      db
+        ? Query.select(Filter.id(selectedId ?? companionTo.id))
+            .options({ deleted: 'include' })
+            .from(db, { includeFeeds: true })
+        : Query.select(Filter.nothing()),
+    [db, selectedId, companionTo.id],
   );
+  const [selectedObject] = useQuery(db, selectionQuery);
 
   return (
     <Clipboard.Provider>

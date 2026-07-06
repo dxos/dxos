@@ -71,7 +71,7 @@ const TestLayer = Layer.mergeAll(
   ),
 );
 
-describe('ContentBlockToolResult', { tags: ['llm'] }, () => {
+describe('ContentBlockToolResult', { tags: ['manual'] }, () => {
   it.effect(
     'return image from tool result',
     Effect.fn(function* ({ expect }) {

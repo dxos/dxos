@@ -2541,6 +2541,9 @@ importers:
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../../plugins/plugin-chess
+      '@dxos/plugin-chess-com':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-chess-com
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
@@ -9148,6 +9151,109 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
     devDependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/functions-runtime
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
+      '@dxos/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
+      '@types/react':
+        specifier: ~19.2.17
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.17)
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ~19.2.7
+        version: 19.2.7(react@19.2.7)
+      vite:
+        specifier: '>=8.0.16'
+        version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
+  packages/plugins/plugin-chess-com:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/plugin-chess':
+        specifier: workspace:*
+        version: link:../plugin-chess
+      '@dxos/plugin-game':
+        specifier: workspace:*
+        version: link:../plugin-game
+      '@dxos/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui-masonry':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-masonry
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect/platform':
+        specifier: 'catalog:'
+        version: 0.96.2(effect@3.21.4)
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
+    devDependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/functions-runtime
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing

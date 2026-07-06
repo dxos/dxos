@@ -206,7 +206,11 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
             return null;
           }
 
-          const object = get(space.db.query(Filter.id(objectId)).atom).at(0);
+          // Feed-only objects (e.g. games appended via Feed.append) are not in the Automerge graph;
+          // includeAllFeeds scope resolves them from feed queues by id.
+          const object = get(
+            space.db.query(Query.select(Filter.id(objectId)).from(space.db, { includeFeeds: true })).atom,
+          ).at(0);
           if (!object) {
             return null;
           }
