@@ -109,7 +109,7 @@ user → supervisor.onInput → AiSession turn
 - **Slice 2 — assistant-toolkit, `AssistantTestLayer` + memoized AI.**
   - `DelegateTask` creates a `Plan` `Task` and schedules `AgentPrompt`.
   - Child Routine completes; `Task` transitions to `done` with result; supervisor folds it in.
-- **Slice 3 — plugin-assistant, live AI (`agentTest`/`.node.test.ts`, `tags: ['llm']`).**
+- **Slice 3 — plugin-assistant, live AI (`agentTest`/`.node.test.ts`, `tags: ['manual']`).**
   - User converses with the main agent; it delegates, finishes, and proactively reports.
 
 ## Surfacing (Slice 3, low new code)
