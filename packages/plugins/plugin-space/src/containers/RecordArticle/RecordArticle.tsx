@@ -12,9 +12,9 @@ import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
+import { Prompts } from '#components';
 import { useRelatedObjects } from '#hooks';
 import { meta } from '#meta';
-import { Prompts } from '#types';
 
 export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);

@@ -3,23 +3,21 @@
 //
 
 import React, { type ChangeEvent, useEffect, useState } from 'react';
-import browser from 'webextension-polyfill';
 
 import { Composer, DXOSHorizontalType } from '@dxos/brand';
 import { SpaceId } from '@dxos/keys';
 import { Input, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 
-import { DEFAULT_COMPOSER_URLS, getComposerUrls, setComposerUrls } from '../../bridge/urls';
-import { DEVELOPER_MODE_PROP, SPACE_ID_PROP, SPACE_MODE_PROP, getProp } from '../../config';
+import {
+  DEFAULT_COMPOSER_URLS,
+  DeveloperMode,
+  SpaceId as SpaceIdConfig,
+  SpaceMode,
+  getComposerUrls,
+  setComposerUrls,
+} from '../../core';
 import { translationKey } from '../../translations';
-
-// TODO(burdon): Use subgrid.
-const styles = {
-  headerGrid: 'grid grid-cols-[8rem_2fr_1fr_8rem] p-4 overflow-hidden',
-  propertiesGrid:
-    'grid grid-cols-[8rem_1fr_1fr_8rem] p-4 overflow-hidden items-center [&_label]:m-0 [&_label]:text-base',
-};
 
 export type OptionsProps = {};
 
@@ -38,14 +36,14 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
 
   useEffect(() => {
     void (async () => {
-      setDeveloperMode(Boolean(await getProp(DEVELOPER_MODE_PROP)));
+      setDeveloperMode(await DeveloperMode.get());
     })();
   }, []);
 
   useEffect(() => {
     void (async () => {
-      const stored = await getProp(SPACE_ID_PROP);
-      if (SpaceId.isValid(stored)) {
+      const stored = await SpaceIdConfig.get();
+      if (stored && SpaceId.isValid(stored)) {
         setSpaceId(stored);
       }
     })();
@@ -53,20 +51,25 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
 
   const handleDeveloperModeChange = async (checked: boolean | 'indeterminate') => {
     const next = checked === 'indeterminate' ? false : Boolean(checked);
-    await browser.storage.sync.set({ [DEVELOPER_MODE_PROP]: next });
+    await DeveloperMode.set(next);
     setDeveloperMode(next);
   };
 
   const handleSpaceModeChange = async (checked: boolean | 'indeterminate') => {
     const next = checked === 'indeterminate' ? false : Boolean(checked);
-    await browser.storage.sync.set({ [SPACE_MODE_PROP]: next });
+    await SpaceMode.set(next);
     setSpaceMode(next);
   };
 
   const handleSpaceIdChange = async (ev: ChangeEvent<HTMLInputElement>) => {
     const next = ev.target.value;
-    await browser.storage.sync.set({ [SPACE_ID_PROP]: next });
+    // Reflect typing immediately, but persist only a valid (or cleared) id so the stored value stays
+    // consistent with the validated read path — a partial/malformed id would otherwise silently
+    // vanish on reload.
     setSpaceId(next);
+    if (next === '' || SpaceId.isValid(next)) {
+      await SpaceIdConfig.set(next);
+    }
   };
 
   // One match pattern per line; blank lines ignored. An empty editor restores the defaults so a
@@ -84,11 +87,11 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
   return (
     <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
       <ScrollArea.Viewport>
-        <div className={styles.headerGrid}>
-          <a href='https://dxos.org/composer' target='_blank' rel='noreferrer' className='flex justify-end -me-4'>
+        <div className='grid grid-cols-[8rem_2fr_1fr_8rem] p-4 overflow-hidden'>
+          <a href='https://dxos.org/composer' target='_blank' rel='noreferrer'>
             <Composer className='w-[8rem] h-[8rem]' />
           </a>
-          <div className='flex flex-col justify-end'>
+          <div className='flex flex-col justify-end -ml-2'>
             <h1 className='text-[64px] poiret-one-regular'>{t('composer.title')}</h1>
           </div>
           <div className='flex flex-col justify-start items-end'>
@@ -106,47 +109,49 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
           </div>
         </div>
 
-        <div className={styles.propertiesGrid}>
-          <div />
-          <Input.Root>
-            <Input.Label>{t('settings.dev-mode.label')}</Input.Label>
-            <div className='text-end'>
-              <Input.Switch checked={developerMode} onCheckedChange={handleDeveloperModeChange} />
-            </div>
-          </Input.Root>
-        </div>
-        <div className={styles.propertiesGrid}>
-          <div />
-          <Input.Root>
-            <Input.Label>{t('settings.space-mode.label')}</Input.Label>
-            <div className='text-end'>
-              <Input.Switch checked={spaceMode} onCheckedChange={handleSpaceModeChange} />
-            </div>
-          </Input.Root>
-        </div>
-        <div className={styles.propertiesGrid}>
-          <div />
-          <Input.Root>
-            <Input.Label>{t('settings.space-id.label')}</Input.Label>
-            <div className='text-end'>
-              <Input.TextInput value={spaceId ?? ''} onChange={handleSpaceIdChange} />
-            </div>
-          </Input.Root>
-        </div>
-        <div className={styles.propertiesGrid}>
-          <div />
-          <Input.Root>
-            <Input.Label classNames='self-start'>{t('settings.composer-urls.label')}</Input.Label>
-            <div className='text-end'>
-              <Input.TextArea
-                rows={4}
-                placeholder={DEFAULT_COMPOSER_URLS.join('\n')}
-                value={composerUrls}
-                onChange={handleComposerUrlsChange}
-                classNames='font-mono text-sm'
-              />
-            </div>
-          </Input.Root>
+        <div className='grid grid-cols-[8rem_1fr_1fr_8rem] p-4 overflow-hidden'>
+          <div className='col-span-full grid grid-cols-subgrid p-4 items-center'>
+            <div />
+            <Input.Root>
+              <Input.Label>{t('settings.dev-mode.label')}</Input.Label>
+              <div className='text-end'>
+                <Input.Switch checked={developerMode} onCheckedChange={handleDeveloperModeChange} />
+              </div>
+            </Input.Root>
+          </div>
+          <div className='col-span-full grid grid-cols-subgrid p-4 items-center'>
+            <div />
+            <Input.Root>
+              <Input.Label>{t('settings.space-mode.label')}</Input.Label>
+              <div className='text-end'>
+                <Input.Switch checked={spaceMode} onCheckedChange={handleSpaceModeChange} />
+              </div>
+            </Input.Root>
+          </div>
+          <div className='col-span-full grid grid-cols-subgrid p-4 items-center'>
+            <div />
+            <Input.Root>
+              <Input.Label>{t('settings.space-id.label')}</Input.Label>
+              <div className='text-end'>
+                <Input.TextInput value={spaceId ?? ''} onChange={handleSpaceIdChange} />
+              </div>
+            </Input.Root>
+          </div>
+          <div className='col-span-full grid grid-cols-subgrid p-4 items-center'>
+            <div />
+            <Input.Root>
+              <Input.Label classNames='self-start'>{t('settings.composer-urls.label')}</Input.Label>
+              <div className='text-end'>
+                <Input.TextArea
+                  rows={4}
+                  placeholder={DEFAULT_COMPOSER_URLS.join('\n')}
+                  value={composerUrls}
+                  onChange={handleComposerUrlsChange}
+                  classNames='font-mono text-sm'
+                />
+              </div>
+            </Input.Root>
+          </div>
         </div>
       </ScrollArea.Viewport>
     </ScrollArea.Root>

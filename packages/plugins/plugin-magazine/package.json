@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-magazine",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Magazine plugin for RSS and open protocol subscriptions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

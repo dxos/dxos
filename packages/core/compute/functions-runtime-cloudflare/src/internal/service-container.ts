@@ -9,8 +9,8 @@ import { type QueryService as QueryServiceProto } from '@dxos/protocols/proto/dx
 import { type DataService as DataServiceProto } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { DataServiceImpl } from './data-service-impl';
+import { FeedServiceImpl } from './feed-service-impl';
 import { QueryServiceImpl } from './query-service-impl';
-import { QueueServiceImpl } from './queue-service-impl';
 
 /**
  * TODO: make this implement DataService and QueryService to unify API over edge and web backend
@@ -38,12 +38,12 @@ export class ServiceContainer {
   async createServices(): Promise<{
     dataService: DataServiceProto;
     queryService: QueryServiceProto;
-    queueService: FeedProtocol.QueueService;
+    queueService: FeedProtocol.FeedService;
     functionsAiService: EdgeFunctionEnv.FunctionsAiService;
   }> {
     const dataService = new DataServiceImpl(this._executionContext, this._dataService);
     const queryService = new QueryServiceImpl(this._executionContext, this._dataService);
-    const queueService = new QueueServiceImpl(this._executionContext, this._queueService);
+    const queueService = new FeedServiceImpl(this._executionContext, this._queueService);
 
     return {
       dataService,
@@ -62,7 +62,7 @@ export class ServiceContainer {
     const result = await this._queueService.queryQueue(this._executionContext, {
       query: {
         spaceId,
-        queueIds: [queueId],
+        feedIds: [queueId],
       },
     });
 
@@ -83,7 +83,7 @@ export class ServiceContainer {
     await this._queueService.insertIntoQueue(this._executionContext, {
       subspaceTag: 'data',
       spaceId,
-      queueId,
+      feedId: queueId,
       objects: objects.map((obj) => JSON.stringify(obj)),
     });
   }

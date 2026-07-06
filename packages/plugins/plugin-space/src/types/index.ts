@@ -5,5 +5,6 @@
 export * from './capabilities';
 export * from './events';
 export * from './form';
-export * from './surface';
+// TODO(dmaretskyi): This is pulling in UI deps under workerd.
+// export * from './surface';
 export * from './types';

@@ -12,7 +12,7 @@ import { AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
 import { Hints, Keyshortcuts } from '@dxos/plugin-deck';
-import { SpaceHomeContent } from '@dxos/plugin-space';
+import { SpaceHomeContent } from '@dxos/plugin-space/components';
 import { useClient } from '@dxos/react-client';
 import { useObject } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';

@@ -30,10 +30,8 @@ import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector';
 // A recurring trigger fires on a cron, so the one-time `once` kind is not offered here.
 const RECURRING_KINDS = ['hourly', 'daily', 'weekly', 'monthly', 'custom'] as const satisfies readonly ScheduleKind[];
 
-// The `enabled` toggle is a field of the Trigger object (sibling of `spec`), not of any spec variant. It is
-// reused from the Trigger schema (rather than redeclared) and extended onto every form member so the editor
-// surfaces it once a kind is chosen; the value is written back to `trigger.enabled`, not the spec.
-const EnabledForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('enabled'));
+// `enabled` is extended onto every spec form so it renders inline with the kind's fields.
+const EnabledForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('enabled', 'remote'));
 
 // Scoped trigger form, modeled as a top-level discriminated union (one member per pluggable variant) so the
 // Form renders the chosen kind's fields as one flat field set (no nested, bordered sub-fieldset). The kind
@@ -186,50 +184,51 @@ export type TriggerEditorProps = ThemedClassName<{
 
 export const TriggerEditor = ({ classNames, db, routine, trigger, readonly }: TriggerEditorProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { defaultValues, fieldMap, kind, resetNonce, handleClose, handleValuesChanged } = useTriggerForm(
-    routine,
-    trigger,
-  );
+  const { defaultValues, fieldMap, kind, reset, handleValuesChanged } = useTriggerForm(routine, trigger);
 
-  // TODO(burdon): Not persistent; need to memo
   return (
-    <Form.Root
-      // Remount when the bound trigger changes (picks up its spec) or on reset (reverts to the picker).
-      key={`${trigger?.id ?? 'new'}:${resetNonce}`}
-      schema={TriggerForm}
-      db={db}
-      readonly={readonly}
-      fieldMap={fieldMap}
-      defaultValues={defaultValues}
-      onValuesChanged={handleValuesChanged}
-    >
-      <Form.Content classNames={mx(kind && 'pb-2 bg-card-surface border border-separator rounded-xs', classNames)}>
-        {/* TODO(burdon): Generalize indented section for discriminated unions. */}
-        {(kind && (
-          <>
-            <div className='flex items-center'>
-              <Input.Root>
-                <Input.Label classNames='pl-2 grow truncate'>{t(`trigger-kind.${kind}.label`)}</Input.Label>
-              </Input.Root>
-              {!readonly && (
-                <IconButton
-                  iconOnly
-                  variant='ghost'
-                  square
-                  icon='ph--x--regular'
-                  label={t('trigger-kind.clear.label')}
-                  onClick={handleClose}
-                />
-              )}
-            </div>
-            <Form.FieldSet classNames='px-2' />
-          </>
-        )) || <Form.FieldSet />}
+    <>
+      <Form.Root
+        // Remount when the bound trigger changes or its spec kind changes (including reset to no kind),
+        // so the uncontrolled form re-reads `defaultValues`; stable while editing fields within a kind.
+        key={`${trigger?.id ?? 'new'}:${trigger?.spec?.kind ?? 'none'}`}
+        schema={TriggerForm}
+        db={db}
+        readonly={readonly}
+        fieldMap={fieldMap}
+        defaultValues={defaultValues}
+        onValuesChanged={handleValuesChanged}
+      >
+        {/* TODO(burdon): Generalize Form handling (indented section) for discriminated unions. */}
+        <Form.Content classNames={mx(kind && 'pb-2 bg-card-surface border border-separator rounded-xs', classNames)}>
+          {kind ? (
+            <>
+              <div className='flex items-center'>
+                <Input.Root>
+                  <Input.Label classNames='pl-2 grow truncate'>{t(`trigger-kind.${kind}.label`)}</Input.Label>
+                </Input.Root>
+                {!readonly && (
+                  <IconButton
+                    variant='ghost'
+                    icon='ph--x--regular'
+                    iconOnly
+                    square
+                    label={t('trigger-kind.clear.label')}
+                    onClick={reset}
+                  />
+                )}
+              </div>
+              <Form.FieldSet classNames='px-2' />
+            </>
+          ) : (
+            <Form.FieldSet />
+          )}
 
-        {/* Email triggers have no configuration; surface an explanatory note instead of an empty body. */}
-        {kind === 'email' && <p className='px-2 text-sm text-description'>{t('trigger-kind.email-note.message')}</p>}
-      </Form.Content>
-    </Form.Root>
+          {/* Currently, email triggers have no configuration; surface an explanatory note instead of an empty body. */}
+          {kind === 'email' && <p className='px-2 text-sm text-description'>{t('trigger-kind.email-note.message')}</p>}
+        </Form.Content>
+      </Form.Root>
+    </>
   );
 };
 
@@ -301,22 +300,25 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
     [methodOptions],
   );
 
-  // Bumping this remounts the uncontrolled Form so it re-reads `defaultValues` (used to revert to the picker).
-  const [resetNonce, setResetNonce] = useState(0);
-  // Read per trigger identity / reset; a trigger with no spec yet starts with no kind (shows the picker).
-  // `enabled` is a Trigger-level field, seeded alongside the spec-derived variant values.
+  // Seed from the trigger's current spec/enabled; a trigger with no spec starts with no kind (picker).
+  // Depend on `spec`/`enabled` (not just `trigger` identity) so an in-place clear/change recomputes the
+  // seed — the Form re-reads it on remount (keyed by `spec.kind`), reverting to the picker on reset.
   const defaultValues = useMemo<Partial<TriggerFormValues>>(
-    () => ({ ...triggerFormValues(trigger?.spec), enabled: trigger?.enabled }),
-    [trigger, resetNonce],
+    () => ({
+      ...triggerFormValues(trigger?.spec),
+      enabled: trigger?.enabled,
+      remote: trigger?.remote,
+    }),
+    [trigger, trigger?.spec, trigger?.enabled, trigger?.remote],
   );
 
   // Mirror the active kind: gates the variant picker (shown only while unset) and the variant-specific notes.
   const [kind, setKind] = useState<TriggerKind | undefined>(() => triggerFormValues(trigger?.spec).kind);
 
-  // Revert the kind selection: clear the trigger's spec and remount the Form so the picker reappears.
-  const handleClose = useCallback(() => {
+  // Revert the kind selection: clear the trigger's spec. Clearing changes `spec.kind`, which is part of
+  // the Form's `key`, so the form remounts and re-reads `defaultValues` (picker reappears) — no nonce needed.
+  const reset = useCallback(() => {
     setKind(undefined);
-    setResetNonce((nonce) => nonce + 1);
     if (trigger) {
       Obj.update(trigger, (trigger) => {
         trigger.spec = undefined;
@@ -334,9 +336,10 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
       const spec = triggerFormSpec(values);
       setKind(spec.kind);
       const enabled = values.enabled === true;
-      // Edit the spec and `enabled` on the trigger; the trigger's `function` and `input` (including the
-      // instructions binding and any operation-specific bindings like `{ magazine }`) are wired once by
-      // `Routine.make`, so they are not re-derived here.
+      const remote = values.remote;
+      // Edit the spec, `enabled`, and `remote` on the trigger directly from the form values.
+      // The trigger's `function` and `input` (including the instructions binding and any operation-specific
+      // bindings like `{ magazine }`) are wired once by `Routine.make`, so they are not re-derived here.
       if (trigger) {
         Obj.update(trigger, (trigger) => {
           // The subscription spec's QueryAST is deeply readonly while the live ECHO draft's `spec` is mutable;
@@ -344,11 +347,12 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
           // (mirrors commands/trigger/update/subscription.ts).
           trigger.spec = spec as typeof trigger.spec;
           trigger.enabled = enabled;
+          trigger.remote = remote;
         });
       } else {
         // Defensive: the draft normally carries an owned trigger already (see `Routine.make`). If absent,
         // create one in memory and attach it to the routine graph — nothing is persisted until save.
-        const created = Trigger.make({ spec, enabled });
+        const created = Trigger.make({ spec, enabled, remote });
         Obj.setParent(created, routine);
         Obj.update(routine, (routine) => {
           routine.triggers.push(Ref.make(created));
@@ -361,5 +365,11 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
     [routine, trigger],
   );
 
-  return { defaultValues, fieldMap, kind, resetNonce, handleClose, handleValuesChanged };
+  return {
+    defaultValues,
+    fieldMap,
+    kind,
+    reset,
+    handleValuesChanged,
+  };
 };

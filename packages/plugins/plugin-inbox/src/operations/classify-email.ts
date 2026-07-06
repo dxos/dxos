@@ -99,7 +99,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
         }
 
         const feed = mailbox.feed!.target as Feed.Feed;
-        log.info('found feed via mailbox', { mailboxId: mailbox.id, feedDxn: Feed.getQueueUri(feed)?.toString() });
+        log.info('found feed via mailbox', { mailboxId: mailbox.id, feedDxn: Feed.getFeedUri(feed)?.toString() });
 
         const relation = Relation.make(HasSubject.HasSubject, {
           [Relation.Source]: selectedTag,

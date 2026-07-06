@@ -234,7 +234,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'devtoolsOverview',
-        filter: Surface.makeFilter(AppSurface.deckCompanion('devtools')),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('devtoolsOverview')),
         component: () => <DevtoolsOverviewContainer />,
       }),
       Surface.create({
@@ -463,7 +463,7 @@ export default Capability.makeModule(
           }
 
           const feed = space.properties.invocationTraceFeed?.target;
-          const feedDXN = feed ? Feed.getQueueUri(feed) : undefined;
+          const feedDXN = feed ? Feed.getFeedUri(feed) : undefined;
           return <InvocationTraceContainer db={space.db} feedDXN={feedDXN} detailAxis='block' />;
         },
       }),

@@ -15,6 +15,7 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type Connection, SyncBinding } from '@dxos/plugin-connector';
 import { Subscription } from '@dxos/plugin-magazine';
+import { Cursor } from '@dxos/types';
 
 import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants';
 import { BlueskyApi } from '../services';
@@ -25,6 +26,7 @@ const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTar
     Effect.fnUntraced(function* ({ binding: bindingRef }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
       const binding = yield* Database.load(bindingRef);
+      const cursor = yield* Database.load(binding.cursor);
       const connection = Relation.getSource(binding);
       const db = Obj.getDatabase(binding);
       if (!db) {
@@ -34,7 +36,7 @@ const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTar
       // The credentials layer loads the connection's access token, validates
       // the handle, and resolves the user's PDS once. Public XRPC reads
       // (e.g. `getAuthorFeed`) only need HttpClient and ignore the layer.
-      return yield* syncBinding({ client, binding, connection, db }).pipe(
+      return yield* syncBinding({ client, binding, cursor, connection, db }).pipe(
         Effect.provide(BlueskyApi.Credentials.fromConnection(Ref.make(connection), client)),
         Effect.provide(FetchHttpClient.layer),
       );
@@ -47,11 +49,13 @@ export default handler;
 const syncBinding = ({
   client,
   binding,
+  cursor,
   connection,
   db,
 }: {
   client: Client;
   binding: SyncBinding.SyncBinding;
+  cursor: Cursor.Cursor;
   connection: Connection.Connection;
   db: Database.Database;
 }) =>
@@ -78,7 +82,7 @@ const syncBinding = ({
     // custom feeds are algorithmic so we cap conservatively. Both honour
     // an explicit `binding.options.maxPages` override, clamped to the
     // hard safety cap.
-    const lastSeen = binding.cursor;
+    const lastSeen = cursor.value;
     const maxPages = resolveMaxPages(remoteId, binding.options as { maxPages?: number } | undefined);
     const collected: BlueskyApi.FeedViewPost[] = [];
     let pageCursor: string | undefined;
@@ -108,16 +112,13 @@ const syncBinding = ({
 
     if (collected.length === 0) {
       // Still record a successful run so the UI shows recent activity.
-      Relation.update(binding, (binding) => {
-        binding.lastSyncAt = new Date().toISOString();
-        binding.lastError = undefined;
-      });
+      Cursor.advance(cursor);
       return { appended: 0 };
     }
 
     const echoFeed = subscriptionFeed.feed?.target;
     invariant(echoFeed, 'Subscription.Feed missing backing ECHO feed');
-    invariant(EchoFeed.getQueueUri(echoFeed), 'ECHO feed not stored in a space');
+    invariant(EchoFeed.getFeedUri(echoFeed), 'ECHO feed not stored in a space');
     const space = client.spaces.get(db.spaceId);
     invariant(space, 'space not found');
 
@@ -134,21 +135,13 @@ const syncBinding = ({
       });
     }
 
-    Relation.update(binding, (binding) => {
-      // Track the newest post URI so the next sync stops there.
-      binding.cursor = newestUri;
-      binding.lastSyncAt = new Date().toISOString();
-      binding.lastError = undefined;
-    });
+    // Track the newest post URI so the next sync stops there.
+    Cursor.advance(cursor, newestUri);
 
     return { appended: postObjects.length };
   }).pipe(
     Effect.tapError((error) =>
-      Effect.sync(() =>
-        Relation.update(binding, (binding) => {
-          binding.lastError = error instanceof Error ? error.message : String(error);
-        }),
-      ),
+      Effect.sync(() => Cursor.recordError(cursor, error instanceof Error ? error.message : String(error))),
     ),
   );
 

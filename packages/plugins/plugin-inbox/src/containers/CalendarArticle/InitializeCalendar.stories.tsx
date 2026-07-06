@@ -14,7 +14,7 @@ import { Feed, Filter, Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { ConnectorAuth } from '@dxos/plugin-connector';
+import { ConnectorAuth } from '@dxos/plugin-connector/components';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';

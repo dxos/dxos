@@ -165,10 +165,23 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
   Schema.Struct({
     /**
      * Runnable (operation or workflow) to invoke.
+     * Wired programmatically (see `Routine.wireTriggers`); not user-editable, so hidden from forms.
      */
-    runnable: Schema.optional(Ref.Ref(Runnable.Runnable).annotations({ title: 'Runnable' })),
+    runnable: Ref.Ref(Runnable.Runnable).pipe(
+      Schema.annotations({ title: 'Runnable' }),
+      Annotation.FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
+
     spec: Schema.optional(Spec),
+
     enabled: Schema.optional(Schema.Boolean),
+
+    /**
+     * Runs this trigger on the edge rather than locally.
+     * When unset, the trigger runs locally on the client.
+     */
+    remote: Schema.Boolean.pipe(Schema.annotations({ title: 'Remote' }), Schema.optional),
 
     concurrency: Schema.Number.pipe(
       Schema.annotations({

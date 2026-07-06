@@ -241,6 +241,9 @@
       "path": "../../plugins/plugin-chess"
     },
     {
+      "path": "../../plugins/plugin-chess-com"
+    },
+    {
       "path": "../../plugins/plugin-client"
     },
     {
@@ -284,6 +287,9 @@
     },
     {
       "path": "../../plugins/plugin-file"
+    },
+    {
+      "path": "../../plugins/plugin-freeq"
     },
     {
       "path": "../../plugins/plugin-gallery"

@@ -13,7 +13,7 @@ import { Database, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SyncBinding } from '@dxos/plugin-connector';
-import { Project, Task } from '@dxos/types';
+import { Cursor, Project, Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -464,6 +464,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
       const outcome = yield* Effect.either(
         Effect.gen(function* () {
           const binding = yield* Database.load(bindingRef);
+          const cursor = yield* Database.load(binding.cursor);
           const remoteId = binding.remoteId;
           if (!remoteId) {
             return yield* Effect.dieMessage('SyncBinding has no remoteId; cannot resolve a Linear team.');
@@ -555,16 +556,12 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
             }),
           );
 
-          // Record per-binding sync status. Both branches write through
-          // `Relation.update` so the change is batched on the binding relation.
-          Relation.update(binding, (binding) => {
-            if (syncResult._tag === 'Right') {
-              binding.lastSyncAt = new Date().toISOString();
-              binding.lastError = undefined;
-            } else {
-              binding.lastError = formatLinearSyncFailure(syncResult.left);
-            }
-          });
+          // Record per-binding sync status on the cursor object.
+          if (syncResult._tag === 'Right') {
+            Cursor.advance(cursor);
+          } else {
+            Cursor.recordError(cursor, formatLinearSyncFailure(syncResult.left));
+          }
 
           if (syncResult._tag === 'Left') {
             log.warn('linear sync: binding failed', { error: syncResult.left });

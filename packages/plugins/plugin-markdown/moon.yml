@@ -35,10 +35,11 @@ tasks:
       pnpm exec dx-trace-imports
       --export ./plugin
       --to "@dxos/react-ui"
-      --conditions source,workerd,worker,node
+      --conditions workerd,worker,node
       --fail-on present
     deps:
       - dx-trace-imports:compile
+      - compile
     inputs:
       - tsconfig.json
       - '@group(production)'

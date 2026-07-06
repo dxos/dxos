@@ -15,6 +15,7 @@ import { BlueskyPlugin } from '@dxos/plugin-bluesky/plugin';
 import { BoardPlugin } from '@dxos/plugin-board/plugin';
 import { BookmarksPlugin } from '@dxos/plugin-bookmarks/plugin';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
+import { ChessComPlugin } from '@dxos/plugin-chess-com/plugin';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { CodePlugin } from '@dxos/plugin-code/plugin';
@@ -31,6 +32,7 @@ import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
 import { DuffelPlugin } from '@dxos/plugin-duffel/plugin';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
 import { FilePlugin } from '@dxos/plugin-file/plugin';
+import { FreeqPlugin } from '@dxos/plugin-freeq/plugin';
 import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
 import { GeneratorPlugin } from '@dxos/plugin-generator/plugin';
@@ -188,6 +190,7 @@ export const getPlugins = ({
     BookmarksPlugin(),
     CallsPlugin(),
     ChessPlugin(),
+    ChessComPlugin(),
     CommentsPlugin(),
     ClientPlugin({
       config,
@@ -275,6 +278,7 @@ export const getPlugins = ({
 
     // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
     BlueskyPlugin(),
+    FreeqPlugin(),
     GalleryPlugin(),
     GitHubPlugin(),
     IrohBeaconPlugin(),

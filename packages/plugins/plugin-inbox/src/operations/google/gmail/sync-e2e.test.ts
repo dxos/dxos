@@ -21,7 +21,7 @@ import { log } from '@dxos/log';
 import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AccessToken, Message } from '@dxos/types';
+import { AccessToken, Cursor, Message } from '@dxos/types';
 
 import { GMAIL_CONNECTOR_ID } from '../../../constants';
 import { Mailbox } from '../../../types';
@@ -177,6 +177,7 @@ const setup = async () => {
       Mailbox.Mailbox,
       AccessToken.AccessToken,
       Connection.Connection,
+      Cursor.Cursor,
       SyncBinding.SyncBinding,
       Operation.PersistentOperation,
       Trigger.Trigger,
@@ -243,12 +244,12 @@ const deployFunction = async (
 };
 
 const checkEmails = async (feed: Feed.Feed, space: Space) => {
-  const queueDXN = Feed.getQueueUri(feed);
-  if (!queueDXN) {
+  const feedUri = Feed.getFeedUri(feed);
+  if (!feedUri) {
     console.log('No feed found for mailbox');
     return [];
   }
-  const messages = await space.db.query(Query.select(Filter.type(Message.Message)).from(Scope.feed(queueDXN))).run();
+  const messages = await space.db.query(Query.select(Filter.type(Message.Message)).from(Scope.feed(feedUri))).run();
   console.log(`Messages in mailbox: ${messages.length}`);
   return messages;
 };
@@ -267,9 +268,9 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
   while (true) {
     try {
       const traceFeed = space.properties.invocationTraceFeed?.target;
-      const traceQueueDXN = traceFeed ? Feed.getQueueUri(traceFeed) : undefined;
-      const invocations = traceQueueDXN
-        ? await space.db.query(Query.select(Filter.everything()).from(Scope.feed(traceQueueDXN))).run()
+      const traceFeedUri = traceFeed ? Feed.getFeedUri(traceFeed) : undefined;
+      const invocations = traceFeedUri
+        ? await space.db.query(Query.select(Filter.everything()).from(Scope.feed(traceFeedUri))).run()
         : [];
 
       for (const invocation of invocations) {

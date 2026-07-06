@@ -12,6 +12,7 @@ import { SchemaEx } from '@dxos/effect';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 
 import { ConnectorAuthButton } from '#components';
+import { ConnectorAuth } from '#components';
 import {
   ConnectionArticle,
   ConnectionSettingsArticle,
@@ -19,7 +20,7 @@ import {
   CustomTokenDialog,
   SyncTargetsDialog,
 } from '#containers';
-import { Connection, Connector, ConnectorAnnotationId, ConnectorAuth, SyncBinding } from '#types';
+import { Connection, Connector, ConnectorAnnotationId, SyncBinding } from '#types';
 
 import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
 

@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { type Operation } from '@dxos/compute';
 import { type Obj, Ref } from '@dxos/echo';
-import { ConnectorAuth } from '@dxos/plugin-connector';
+import { ConnectorAuth } from '@dxos/plugin-connector/components';
 import { IconButton } from '@dxos/react-ui';
 
 import { useTargetSync } from './useTargetConnection';

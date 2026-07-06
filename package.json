@@ -1,6 +1,6 @@
 {
   "name": "@dxos/dxos",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "A decentralized alternative to the commercial cloud for privacy preserving software.",
   "homepage": "https://dxos.org",
@@ -23,6 +23,7 @@
     "changeset:version": "changeset version && node scripts/sync-versions.mjs && pnpm install --lockfile-only",
     "check-changeset": "node scripts/check-changeset.mjs",
     "check-cycles": "node scripts/check-cycles.mjs",
+    "check-public-dependencies": "node scripts/check-public-dependencies.mjs",
     "check-publish-config": "node scripts/check-publish-config.mjs",
     "create-worktree": "./scripts/create-worktree",
     "format": "oxfmt",

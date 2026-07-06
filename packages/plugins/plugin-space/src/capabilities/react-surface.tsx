@@ -9,7 +9,7 @@ import React, { type ComponentProps, useCallback } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppAnnotation } from '@dxos/app-toolkit';
-import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
+import { AppSurface, useActiveSpace, useHomeVisibility, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
@@ -19,6 +19,7 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { ViewAnnotation } from '@dxos/schema';
 import { Position } from '@dxos/util';
 
+import { SpaceHomeContent } from '#components';
 import {
   CollectionArticle,
   CollectionSection,
@@ -38,6 +39,7 @@ import {
   SchemaContainer,
   SmallPresenceLive,
   SpaceHomeArticle,
+  SpaceHomeDashboard,
   SpaceHomeRecent,
   SpacePresence,
   SpaceSettings,
@@ -54,7 +56,6 @@ import {
   Settings,
   SPACE_HOME_NODE_TYPE,
   SpaceCapabilities,
-  SpaceHomeContent,
   type TypeInputOptions,
   TypeInputOptionsAnnotationId,
 } from '#types';
@@ -84,7 +85,18 @@ export default Capability.makeModule(
       Surface.create({
         id: 'spaceHomeRecent',
         filter: Surface.makeFilter(SpaceHomeContent),
-        component: ({ data }) => <SpaceHomeRecent space={data.space} />,
+        component: ({ data }) => {
+          const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeRecent');
+          return visible ? <SpaceHomeRecent space={data.space} onClose={hide} /> : null;
+        },
+      }),
+      Surface.create({
+        id: 'spaceHomeDashboard',
+        filter: Surface.makeFilter(SpaceHomeContent),
+        component: ({ data }) => {
+          const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeDashboard');
+          return visible ? <SpaceHomeDashboard space={data.space} onClose={hide} /> : null;
+        },
       }),
       Surface.create({
         id: 'collectionFallback',
