@@ -1,29 +1,24 @@
 name: Deploy Apps
 
-# Deploys apps (Composer, docs, storybook, …) to Cloudflare Workers Static Assets, per environment. FULLY decoupled from
-# npm publishing — never runs changeset publish. Apps + their environments are declared in
-# deploy-manifest.json (generic; not Composer-specific).
+# Single workflow for all app deploys. The app set is derived from the target environment
+# (deploy-manifest.json `environments`): main → all main-enabled apps (auto on push); labs → composer;
+# staging → composer + docs; production → all. Fully decoupled from npm publishing.
 #
-# Environments & triggers. The app set for each env is derived from deploy-manifest.json's `environments`:
-#   main       — automatic on every push to main; all main-enabled apps.
-#   labs       — manual (workflow_dispatch); composer only.
-#   staging    — manual (workflow_dispatch); composer + docs.
-#   production — manual (workflow_dispatch); all apps. Also invoked per-app via workflow_call from the
-#                release workflows (release-composer / release-app) for versioned releases.
+# Production additionally cuts a versioned Composer release (bump composer-app/crx, commit to main, tag
+# composer-v<x>) — the ONLY path that advances Composer's version (Composer is not in Changesets). The other
+# apps are unversioned and just deploy. There are no separate release workflows; that logic is the
+# production-only `release` job below. See docs/design/app-release-spec.md.
 #
-# The manual dispatch takes only `environment` (default labs) — no app/ref inputs (pick the commit via the
-# "Use workflow from" branch/tag selector). workflow_call keeps `app`/`ref` for the release workflows.
-# "What's deployed where" is tracked by per-app floating git tags `<app>/<environment>` (pushed for the
-# single-app workflow_call deploys the release workflows do). No GitHub Environments.
+# "What's deployed where" is tracked by per-app floating git tags `<app>/<environment>` (non-main). No
+# GitHub Environments.
 
 on:
   push:
     branches:
       - main
-      # TEMP(remove before merge): exercise deploy-env.mjs end-to-end on this release branch. A non-main
-      # push resolves DEPLOY_ENV to `labs` (see below), so this deploys only labs-enabled apps and the
-      # tauri job stays skipped (it keys off the empty `inputs.environment`). New workflows aren't
-      # workflow_dispatch-able until they land on main, so a push trigger is the only pre-merge test path.
+      # TEMP(remove before merge): exercise the pipeline end-to-end on this release branch (deploys labs;
+      # tauri stays skipped since it keys off the dispatch environment). Push is the only pre-merge test
+      # path — a new workflow isn't workflow_dispatch-able until it lands on main.
       - claude/hopeful-jennings-bd7969
   workflow_dispatch:
     inputs:
@@ -34,17 +29,12 @@ on:
         type: choice
         options: [labs, staging, production]
         default: labs
-  workflow_call:
-    inputs:
-      environment:
-        type: string
-        required: true
-      app:
-        type: string
-        default: all
-      ref:
-        type: string
-        default: ''
+      bump:
+        # Only used by the production `release` job (the Composer version bump); ignored otherwise.
+        description: Composer version bump — production only
+        type: choice
+        options: [patch, minor, major]
+        default: patch
 
 concurrency:
   # One in-flight deploy per environment.
@@ -52,16 +42,72 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write # Push the floating `env/<environment>` deploy pointer tag (labs/staging/production).
+  contents: write # Commit the Composer version bump to main + push version / deploy pointer tags.
 
 jobs:
+  # PRODUCTION ONLY — cut a versioned Composer release: bump composer-app/crx, record it on main, tag
+  # composer-v<x>. Skipped for main/labs/staging (their deploys carry no version bump). The bumped commit
+  # is what the rest of the run builds + deploys (via needs.release.outputs.sha).
+  release:
+    if: github.repository == 'dxos/dxos' && inputs.environment == 'production'
+    runs-on: depot-ubuntu-24.04-4
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+      version: ${{ steps.bump.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: main # A production release always cuts from main.
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      # composer-app + composer-crx share the desktop/extension version line; bump both in lockstep. Plain
+      # semver bump (Composer is not in Changesets) — a targeted version-line edit to keep the diff minimal.
+      - name: Bump version
+        id: bump
+        run: |
+          next=$(node -e '
+            const fs = require("fs");
+            const bump = process.argv[1];
+            const cur = JSON.parse(fs.readFileSync("packages/apps/composer-app/package.json", "utf8")).version;
+            const [maj, min, pat] = cur.split("-")[0].split(".").map(Number);
+            const next = bump === "major" ? `${maj + 1}.0.0` : bump === "minor" ? `${maj}.${min + 1}.0` : `${maj}.${min}.${pat + 1}`;
+            for (const p of ["composer-app", "composer-crx"]) {
+              const f = "packages/apps/" + p + "/package.json";
+              fs.writeFileSync(f, fs.readFileSync(f, "utf8").replace(/^(  "version": ")[^"]*(",)$/m, `$1${next}$2`));
+            }
+            process.stdout.write(next);
+          ' "${{ inputs.bump }}")
+          node scripts/sync-versions.mjs
+          echo "version=$next" >> "$GITHUB_OUTPUT"
+          echo "Composer -> $next"
+
+      - name: Commit + tag on main
+        id: commit
+        run: |
+          git config user.name 'dxos-bot'
+          git config user.email 'bot@dxos.org'
+          git add -A
+          git commit -m "chore(composer): release v${{ steps.bump.outputs.version }}"
+          git tag "composer-v${{ steps.bump.outputs.version }}"
+          git push --follow-tags origin HEAD:main
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
   # Build Composer's web bundle ONCE and share it as an artifact so the web deploy + native (Tauri) jobs
-  # don't each rebuild it. Runs only where a native build co-runs (labs/staging/production, or the labs
-  # test-push) — `main` and static apps get no benefit and skip this. See docs/design/deploy-build-sharing.md.
+  # don't each rebuild it. Runs where a native build co-runs (labs/staging/production) or the labs test-push.
   build-bundle:
+    needs: [release]
     if: >-
-      github.repository == 'dxos/dxos' &&
-      ((inputs.app || 'all') == 'all' || (inputs.app || 'all') == 'composer') &&
+      !cancelled() && needs.release.result != 'failure' && github.repository == 'dxos/dxos' &&
       (inputs.environment == 'labs' || inputs.environment == 'staging' || inputs.environment == 'production'
        || (github.event_name == 'push' && github.ref_name != 'main'))
     runs-on: depot-ubuntu-24.04-4
@@ -79,7 +125,8 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
-          ref: ${{ inputs.ref || github.sha }}
+          # On production, the bumped release commit; otherwise the triggering commit.
+          ref: ${{ needs.release.outputs.sha || github.sha }}
 
       - name: Set environment variables (Cloudflare creds, PostHog, …)
         run: .github/workflows/scripts/populate-env.sh "$DEPLOY_ENV" >> $GITHUB_ENV
@@ -116,10 +163,11 @@ jobs:
           retention-days: 1
 
   deploy:
-    needs: [build-bundle]
-    # Run when build-bundle succeeded (consume the artifact) OR was skipped (main / static-only — build
-    # normally); skip only if build-bundle failed.
-    if: ${{ !cancelled() && needs.build-bundle.result != 'failure' && github.repository == 'dxos/dxos' }}
+    needs: [release, build-bundle]
+    # Run when the prep jobs succeeded or were skipped (main / static-only); skip only on a failure.
+    if: >-
+      !cancelled() && needs.release.result != 'failure' && needs.build-bundle.result != 'failure' &&
+      github.repository == 'dxos/dxos'
     runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -128,20 +176,19 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 90
     env:
-      # Dispatch/call → the chosen env. Push → `main` deploys the rolling main env; any other pushed
-      # branch → `labs` (the TEMP release-branch test trigger above; harmless once that branch is removed).
+      # Dispatch → the chosen env. Push → `main` (rolling) for main, else `labs` (the TEMP branch trigger).
       DEPLOY_ENV: ${{ inputs.environment || (github.ref_name == 'main' && 'main' || 'labs') }}
-      DEPLOY_APP: ${{ inputs.app || 'all' }}
+      DEPLOY_REF: ${{ needs.release.outputs.sha || github.sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
           lfs: true
-          ref: ${{ inputs.ref || github.sha }}
+          ref: ${{ needs.release.outputs.sha || github.sha }}
 
       # Select the env file by the DEPLOY environment (not the git branch) — environment is a deploy
-      # parameter now, so a production deploy running from `main` must still read env/production.
+      # parameter, so a production deploy running from main must still read env/production.
       - name: Set environment variables (Cloudflare creds, PostHog, …)
         run: .github/workflows/scripts/populate-env.sh "$DEPLOY_ENV" >> $GITHUB_ENV
         env:
@@ -156,16 +203,14 @@ jobs:
           COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID }}
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
           DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
-          # Referenced by the env files (DX_IPDATA_API_KEY / IPFS_API_SECRET); populate-env.sh runs under
-          # `set -u`, so these must be present or it aborts on an unbound variable.
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
 
       - name: Setup
         uses: ./.github/actions/setup
 
-      # Consume the prebuilt Composer bundle when the prep job produced one (labs/staging/production) —
-      # populating out/composer means bundle-env.mjs reuses it instead of rebuilding.
+      # Reuse the prebuilt Composer bundle when the prep job produced one — populating out/composer means
+      # bundle-env.mjs reuses it instead of rebuilding.
       - name: Download Composer bundle
         if: needs.build-bundle.result == 'success'
         uses: actions/download-artifact@v4
@@ -173,40 +218,43 @@ jobs:
           name: composer-bundle
           path: packages/apps/composer-app/out/composer
 
-      # Build any app not already present (bundle-env.mjs skips populated output dirs, e.g. the downloaded
-      # composer bundle), then deploy them all.
+      # Build any app not already present (bundle-env.mjs skips populated output dirs), then deploy them all.
       - name: Bundle apps
-        run: .github/workflows/scripts/bundle-env.mjs "$DEPLOY_ENV" "$DEPLOY_APP"
+        run: .github/workflows/scripts/bundle-env.mjs "$DEPLOY_ENV"
         env:
           NODE_ENV: production
 
       - name: Deploy apps
-        run: .github/workflows/scripts/deploy-env.mjs "$DEPLOY_ENV" "$DEPLOY_APP"
+        run: .github/workflows/scripts/deploy-env.mjs "$DEPLOY_ENV"
         env:
           NODE_ENV: production
 
-      # Per-app floating pointer to the SHA currently deployed for this app+environment — the
-      # branch-pointer replacement (e.g. `git diff composer/staging..composer/production`). `main` is the
-      # branch tip (auto-deployed on every push) so no tag there; also skipped for the `all` fan-out.
-      - name: Update deploy pointer tag
-        if: env.DEPLOY_ENV != 'main' && env.DEPLOY_APP != 'all'
+      # Floating pointer to the SHA deployed for each app+env (the branch-pointer replacement). `main` is the
+      # branch tip (auto-deployed on push) so it carries no tag; every other env tags each app it deployed.
+      - name: Update deploy pointer tags
+        if: env.DEPLOY_ENV != 'main'
         run: |
-          tag="${DEPLOY_APP}/${DEPLOY_ENV}"
-          git tag -f "$tag" "${{ inputs.ref || github.sha }}"
-          git push -f origin "refs/tags/$tag"
+          for app in $(node -e '
+            const m = require("./.github/workflows/deploy-manifest.json");
+            const env = process.argv[1];
+            console.log(Object.entries(m).filter(([n, c]) => n !== "//" && c.environments?.includes(env)).map(([n]) => n).join(" "));
+          ' "$DEPLOY_ENV"); do
+            tag="${app}/${DEPLOY_ENV}"
+            git tag -f "$tag" "$DEPLOY_REF"
+            git push -f origin "refs/tags/$tag"
+          done
 
-  # Desktop/mobile build runs in the same run as the Composer web deploy, for the named environments
-  # (not `main` — a signed build per main push is too costly). CrabNebula channel is derived from the
-  # environment inside the reusable workflow. iOS → App Store Connect happens on `labs` only (see it).
+  # Desktop/mobile build for Composer, for the named environments (not `main` — a signed build per push is
+  # too costly). CrabNebula channel is derived from the environment inside the reusable workflow; iOS → App
+  # Store Connect happens on `labs` only. On production it builds the bumped release commit.
   tauri:
-    # Wait for the shared bundle (build-bundle's `if` covers exactly these envs, so it always runs here).
-    needs: [build-bundle]
+    needs: [release, build-bundle]
     if: >-
+      !cancelled() && needs.release.result != 'failure' && needs.build-bundle.result == 'success' &&
       github.repository == 'dxos/dxos' &&
-      ((inputs.app || 'all') == 'all' || (inputs.app || 'all') == 'composer') &&
       (inputs.environment == 'labs' || inputs.environment == 'staging' || inputs.environment == 'production')
     uses: ./.github/workflows/publish-tauri.yaml
     with:
       environment: ${{ inputs.environment }}
-      ref: ${{ inputs.ref || '' }}
+      ref: ${{ needs.release.outputs.sha || github.sha }}
     secrets: inherit

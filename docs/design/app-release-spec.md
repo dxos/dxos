@@ -129,12 +129,14 @@ the natural source for Composer's notes is the plugin changesets/changelog delta
 
 - **`release.yml`:** remove the `deploy-production` job (production is no longer gated on / triggered by an
   npm publish). Package publishing keeps its own flow; it no longer deploys anything.
-- **`deploy-apps.yml`:** keep `main` auto-deploy; drop `production` from the generic path; drop the single
-  `env/<env>` tag in favor of per-app pointer tags. Add `todomvc` / `tasks` / `testbench-app` to
-  `deploy-manifest.json` (`main` + `production`).
-- **New workflows:** `release-composer` (bump + full Tauri + commit-back + tags), and a `release-app`
-  (docs + example apps: deploy + pointer tag, no bump) — or one parameterized workflow. (Implementation
-  choice; behavior is per this spec.)
+- **`deploy-apps.yml` is the single entry point** (there are no separate release workflows). The app set is
+  derived from the environment (`deploy-manifest.json`): main → all (auto on push), labs → composer,
+  staging → composer + docs, production → all. Per-app pointer tags `<app>/<env>` (non-main) replace the
+  single `env/<env>` tag.
+- **Production cuts the versioned Composer release inside `deploy-apps.yml`** — a production-only `release`
+  job bumps `composer-app`/`crx` (by the dispatch `bump` input), commits to `main`, tags `composer-v<x>`,
+  and the rest of the run builds + deploys that commit. This folds in what were once separate
+  `release-composer` / `release-app` workflows; the unversioned apps just deploy (no bump).
 - **`publish-tauri.yaml`:** invoked by the Composer release for `labs`/`staging`/`production`; version
   derived per this spec (prerelease `-<sha>` for labs/staging; the bumped version for production) rather
   than from CrabNebula channel state.
@@ -148,10 +150,10 @@ the natural source for Composer's notes is the plugin changesets/changelog delta
    release model* (see the note below); done in parallel because Pages is deprecated.
 2. **Changesets:** `ignore` the app packages, remove `storybook-*` from Group A; drop `version` from the
    unversioned apps.
-3. **Release workflows:** `release-composer` (bump + full Tauri + commit-back + tags) and `release-app`
-   (docs + examples: deploy + pointer tag, no bump); restructure `deploy-apps.yml` (main auto + per-app
-   production dispatch) + per-app pointer tags; wire `publish-tauri` to the prerelease/production version
-   scheme (desktop primary channel = production; iOS TestFlight = labs).
+3. **`deploy-apps.yml` as the single entry point:** env-derived app set; production-only `release` job
+   (bump + commit-back + tags) folded in (no separate `release-composer` / `release-app`); per-app pointer
+   tags; wire `publish-tauri` to the prerelease/production version scheme (desktop primary channel =
+   production; iOS TestFlight = labs).
 4. Remove `release.yml`'s `deploy-production`; reconcile `release-spec.md` / `RELEASING.md`.
 
 ## Related work — Cloudflare Pages → Workers (not part of this spec)

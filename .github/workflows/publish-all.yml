@@ -6,7 +6,7 @@ name: Publish
 #
 # This filename is load-bearing: npm's OIDC trusted publisher is configured against `publish-all.yml`, so
 # the actual `changeset publish` MUST run from this workflow (a different filename fails OIDC). Apps deploy
-# via deploy-apps.yml + the release-composer / release-app workflows, never here.
+# via deploy-apps.yml (which also cuts the versioned Composer production release), never here.
 
 on:
   push:

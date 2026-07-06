@@ -138,7 +138,7 @@ The old four deploy environments are preserved, but **environment is a deploy pa
 | **main** | automatic on push to `main` | continuous deploy |
 | **labs** | manual `workflow_dispatch` | ad-hoc test deploys (was the `labs` branch) |
 | **staging** | manual `workflow_dispatch` | pre-release; build sees `DX_ENVIRONMENT=staging` |
-| **production** | **manual, deliberate** | via **Release Composer** (versioned) or **Release App** (docs/examples) — decoupled from npm publishing; not reachable by an arbitrary ref. See `app-release-spec.md`. |
+| **production** | **manual, deliberate** | **Deploy Apps → `production`**: deploys all apps and cuts the versioned Composer release (bump + commit to main + tag) in its production-only `release` job — decoupled from npm publishing. See `app-release-spec.md`. |
 
 **Tracking what's on each environment** (the one thing branches gave for free): each deploy force-updates a floating **`env/<name>` git tag** (`env/labs` / `env/staging` / `env/production`; `main` tracks the `main` env), so `git rev-parse env/production` / `git diff env/staging..env/production` show what's live. This replaces "look at the branch tip." No GitHub Environments are used — human gating is the "Version Packages" PR merge that triggers the release (and thus the production deploy).
 

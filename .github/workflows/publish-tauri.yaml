@@ -77,8 +77,8 @@ jobs:
       - name: Compute Tauri version
         id: bump-version
         run: |
-          # composer-app/package.json is the source of truth for the version: bumped by release-composer
-          # for a production release, current otherwise. Production ships the clean version to the primary
+          # composer-app/package.json is the source of truth for the version: bumped by deploy-apps' release
+          # job for a production release, current otherwise. Production ships the clean version to the primary
           # CrabNebula channel; labs/staging get a unique per-commit prerelease tagged with the env name
           # (which selects its channel).
           BASE=$(jq -r '.version' packages/apps/composer-app/package.json)
