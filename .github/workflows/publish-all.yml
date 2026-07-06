@@ -1,25 +1,29 @@
 name: Publish
 
-# npm publishing for Group A (core/SDK) and Group B (plugins + cli). Maintains the Changesets "Version
-# Packages" PR on every push to main; merging that PR publishes the bumped packages to npm @latest with
-# provenance. The human gate is merging the PR — nobody runs changeset/publish locally.
+# npm publishing for Group A (core/SDK) and Group B (plugins + cli). This filename is load-bearing: npm's
+# OIDC trusted publisher is configured against `publish-all.yml`, so every `changeset publish` MUST run from
+# here (a different filename fails OIDC). Two flows, by trigger:
 #
-# This filename is load-bearing: npm's OIDC trusted publisher is configured against `publish-all.yml`, so
-# the actual `changeset publish` MUST run from this workflow (a different filename fails OIDC). Apps deploy
-# via deploy-apps.yml (which also cuts the versioned Composer production release), never here.
+#   - push to main (automatic → @latest): maintain the Changesets "Version Packages" PR; merging that PR
+#     (a push with the versions bumped and no changesets left) publishes the bumped packages to npm @latest
+#     with provenance. The human gate is merging the PR — nobody runs changeset/publish locally.
+#   - manual workflow_dispatch (→ @next): cut a SNAPSHOT pre-release — `changeset version --snapshot next`
+#     then `changeset publish --tag next`. Ephemeral versions, no commit, no git tags, no `pre` mode.
+#
+# Apps deploy via deploy-apps.yml (which also cuts the versioned Composer production release), never here.
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch: {} # On-demand publish without waiting for the next push.
+  workflow_dispatch: {} # Manual dispatch = a @next snapshot pre-release (pick the commit via the ref selector).
 
 concurrency:
   group: publish-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
-  contents: write # Create the Version Packages PR + git tags.
+  contents: write # Create the Version Packages PR + git tags (@latest flow).
   pull-requests: write # Maintain the Version Packages PR.
   id-token: write # npm trusted-publisher OIDC + provenance.
 
@@ -56,6 +60,15 @@ jobs:
           cache-scope: publish
           verify-integrity: 'true'
 
+      # @next (dispatch): stamp ephemeral snapshot versions for packages with pending changesets, then
+      # mirror them into version.ts / tauri.conf.json — before the build, so it builds the snapshot version.
+      # No commit, no lockfile rewrite; the bump is throwaway.
+      - name: Version (snapshot)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          pnpm exec changeset version --snapshot next
+          node scripts/sync-versions.mjs
+
       - name: Build
         run: moon run :build
         env:
@@ -67,10 +80,10 @@ jobs:
         env:
           NODE_ENV: production
 
-      # When changesets exist, maintains/updates the "Version Packages" PR. When that PR is merged
-      # (versions bumped, no changesets remain), runs the publish command instead.
-      - name: Version PR or publish
-        id: changesets
+      # @latest (push): when changesets exist, maintains/updates the "Version Packages" PR; when that PR is
+      # merged (versions bumped, no changesets remain), runs the publish command instead.
+      - name: Version PR or publish (@latest)
+        if: github.event_name == 'push'
         uses: changesets/action@v1
         with:
           version: pnpm changeset:version
@@ -79,4 +92,12 @@ jobs:
           title: 'chore: version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.
+
+      # @next (dispatch): publish the snapshot versions under the `next` dist-tag. --no-git-tag: snapshots
+      # are ephemeral and never tagged. No-op when no changesets are pending.
+      - name: Publish @next (snapshot)
+        if: github.event_name == 'workflow_dispatch'
+        run: pnpm exec changeset publish --tag next --no-git-tag
+        env:
           NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.

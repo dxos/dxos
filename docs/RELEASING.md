@@ -29,8 +29,8 @@ The groups carry independent version numbers but **release together**: the singl
 3. **Human gate: merge the "Version Packages" PR.** The merge triggers `publish-all.yml` to publish the
    bumped packages to npm `@latest` (OIDC + provenance) and push tags.
 
-That's the whole loop: add changesets → merge the Version PR. (An on-demand `workflow_dispatch` on
-`publish-all.yml` also exists.)
+That's the whole loop: add changesets → merge the Version PR. (A manual `workflow_dispatch` on
+`publish-all.yml` cuts a `@next` snapshot instead — see below.)
 
 > **Why `publish-all.yml`?** npm's OIDC trusted publisher is bound to that workflow filename, so the actual
 > `changeset publish` must run from it — publishing from any other file is rejected by npm's OIDC.
@@ -39,10 +39,14 @@ That's the whole loop: add changesets → merge the Version PR. (An on-demand `w
 
 `@next` ships as **snapshot releases** — no Changesets `pre` mode, no `.changeset/pre.json`, no long-lived branch.
 
-1. **Human gate: run the workflow.** Actions → **Release (next)** → Run workflow (optionally pass a `ref`).
-2. **`release-next.yml`** runs `changeset version --snapshot next` (ephemeral versions like
-   `0.9.1-next-<datetime>` for packages with pending changesets — a fixed group snapshots together) and
-   `changeset publish --tag next --no-git-tag`. Nothing is committed; no git tags. No-op when no changesets are pending.
+1. **Human gate: run the workflow.** Actions → **Publish** → Run workflow (pick the ref via the branch/tag
+   selector). A manual `workflow_dispatch` on `publish-all.yml` is the `@next` path (push to `main` is `@latest`).
+2. It runs `changeset version --snapshot next` (ephemeral versions like `0.9.1-next-<datetime>` for packages
+   with pending changesets — a fixed group snapshots together) then `changeset publish --tag next
+   --no-git-tag`. Nothing is committed; no git tags. No-op when no changesets are pending.
+
+Publishing lives in `publish-all.yml` for both channels because npm's OIDC trusted publisher is bound to
+that filename; the **trigger** selects the channel (push → `@latest`, manual dispatch → `@next`).
 
 Snapshots are throwaway and never touch `@latest`. This repo does not use `pre` mode at all —
 `publish-all.yml` fails fast if a stray `pre.json` ever appears.

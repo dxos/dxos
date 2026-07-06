@@ -36,8 +36,9 @@ CI already handles `merge_group`, so enabling the queue is safe. Reversible.
 2. `publish-all.yml` opens the **"Version Packages" PR**. Review it: confirm Group A bumps together, Group B
    together, apps are untouched, `version.ts` + `tauri.conf.json` stamped.
 3. **Merge it** → publishes `@latest` (OIDC + provenance). Verify the packages on npm.
-4. Confirm `@next` publishes: run the **Release (next)** workflow (`workflow_dispatch`) — it cuts a
-   snapshot release (`changeset version --snapshot next` → `changeset publish --tag next --no-git-tag`).
+4. Confirm `@next` publishes: manually dispatch the **Publish** workflow (`publish-all.yml`,
+   `workflow_dispatch`) — it cuts a snapshot release (`changeset version --snapshot next` → `changeset
+   publish --tag next --no-git-tag`).
    No `pre` mode, no `.changeset/pre.json`, no branch to establish.
 
 **One-way door:** the first real `@latest` publish. Do not delete the old pipeline until this is green.
