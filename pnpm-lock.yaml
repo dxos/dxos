@@ -19200,6 +19200,9 @@ importers:
       '@dxos/nlp':
         specifier: workspace:*
         version: link:../../core/compute/nlp
+      '@dxos/pipeline':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-rdf

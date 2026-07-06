@@ -38,6 +38,9 @@
       "path": "../../core/compute/nlp"
     },
     {
+      "path": "../../core/compute/pipeline"
+    },
+    {
       "path": "../../core/compute/pipeline-rdf"
     },
     {

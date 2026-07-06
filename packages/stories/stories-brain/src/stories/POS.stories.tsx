@@ -26,7 +26,7 @@ import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-mar
 import { pos } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
-import { DefaultStory, createMarkdownStoryDecorators } from './testing';
+import { DefaultStory, createMarkdownStoryDecorators } from '../testing';
 
 const SAMPLE_CONTENT = trim`
   # RDF
@@ -89,7 +89,7 @@ const createPosStoryDecorators = (options: PosExtensionOptions) =>
   });
 
 const meta = {
-  title: 'stories/stories-brain/POS',
+  title: 'stories/stories-brain/stories/POS',
   render: DefaultStory,
   parameters: {
     layout: 'fullscreen',

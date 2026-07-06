@@ -14,7 +14,7 @@ import { Group, factualityColor, formatDate, formatTerm, graphToTreeNode, groupF
 
 type View = 'list' | 'graph';
 
-export type SemanticFactsViewerProps = ThemedClassName<{
+export type FactViewerProps = ThemedClassName<{
   facts: Type.Fact[];
   /** Context entity id; scopes the list and roots the graph. */
   context?: string;
@@ -25,7 +25,7 @@ export type SemanticFactsViewerProps = ThemedClassName<{
  * conflicts highlighted) and a **graph** (tidy tree rooted at the context entity, exploring the fact
  * graph). A `context` entity scopes the list and roots the graph. Pure/presentational.
  */
-export const SemanticFactsViewer = ({ classNames, facts, context }: SemanticFactsViewerProps) => {
+export const FactViewer = ({ classNames, facts, context }: FactViewerProps) => {
   const [filter, setFilter] = useState('');
   const [view, setView] = useState<View>('list');
   const scoped = useMemo(
