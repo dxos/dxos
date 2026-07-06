@@ -83,12 +83,12 @@ The cross-repo tooling is written but can only be exercised with `edge` checked 
 
 ## 6. Deploy environments setup (Cloudflare)
 
-The four-environment deploy flow (`deploy-apps.yml`, `deploy-manifest.json`, `scripts/deploy-env.sh`) is
+The four-environment deploy flow (`deploy-apps.yml`, `deploy-manifest.json`, `scripts/deploy-env.mjs`) is
 implemented on **Cloudflare Workers Static Assets** but needs platform configuration the agent can't do.
 No GitHub Environments are used — "what's deployed where" is tracked by the floating `<app>/<env>` git
 tags, and human gating is the deliberate release dispatch.
 
-`deploy-env.sh` runs `wrangler deploy` against a generated `wrangler.deploy.json` per app, using one Worker
+`deploy-env.mjs` runs `wrangler deploy` against a generated `wrangler.deploy.json` per app, using one Worker
 per environment: `production` → the bare `worker` name from the manifest (e.g. `composer`), every other env
 → `<worker>-<env>` (e.g. `composer-labs`). The API token (`CLOUDFLARE_API_TOKEN`) needs **Workers Scripts:
 Edit** on the account (Pages-only tokens won't deploy Workers).

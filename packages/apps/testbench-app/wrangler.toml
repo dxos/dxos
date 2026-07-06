@@ -1,6 +1,6 @@
 #
 # Cloudflare Workers (Static Assets) config for testbench — assets-only (no Worker script).
-# Deployed by .github/workflows/scripts/deploy-env.sh via `wrangler deploy --config <this> --env <env>`.
+# Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
 #
 
 name = "testbench"

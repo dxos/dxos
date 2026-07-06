@@ -47,11 +47,11 @@ Bundle built **once** (prep job); three consumers fan out in parallel. Concurren
    - **Conditional:** only needed for `labs`/`staging`/`production` (where the native jobs co-run). On
      `main` and for static-only apps (docs, …) there's no native counterpart, so no prep job / no sharing —
      the `deploy` job builds directly. Guard the job `if:` accordingly and handle the skipped-`needs` case.
-2. **`deploy-env.sh` — skip-build mode.** New env var (e.g. `PREBUILT_APPS="composer"`): for a listed app,
+2. **`deploy-env.mjs` — skip-build mode.** New env var (e.g. `PREBUILT_APPS="composer"`): for a listed app,
    skip `moon run "$task"` (the `out/<app>` dir is already populated from the artifact). Other apps in the
    same run still build normally.
 3. **`deploy` job.** `needs: build-bundle`; download `composer-bundle` into `out/composer` when present, set
-   `PREBUILT_APPS=composer`, then `deploy-env.sh` as today (wrangler deploy consumes the prebuilt dir,
+   `PREBUILT_APPS=composer`, then `deploy-env.mjs` as today (wrangler deploy consumes the prebuilt dir,
    including `_worker.js`).
 4. **`publish-tauri.yaml` — consume the artifact, run `tauri build` bare (no moon).**
    - Download `composer-bundle` into `out/composer` **if present**; run `node scripts/fetch-ollama.mjs`

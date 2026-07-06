@@ -162,7 +162,7 @@ since **Pages is deprecated** (April 2025; recommended target is **Workers Stati
 Sites* is also deprecated), the app deploys are migrated from `wrangler pages deploy` to Workers Static
 Assets. ([migration guide](https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/))
 
-**Repo-side (done):** `deploy-env.sh` now runs `wrangler deploy` against a generated `wrangler.deploy.json`
+**Repo-side (done):** `deploy-env.mjs` now runs `wrangler deploy` against a generated `wrangler.deploy.json`
 (assets-only Worker). Pages aliased envs under one project via `--branch`; Workers uses **one Worker per
 environment** — `production` → the bare Worker name (`composer`), other envs → `<worker>-<env>`
 (`composer-labs`). The manifest gained `worker` (base name) and `notFoundHandling` (`single-page-application`

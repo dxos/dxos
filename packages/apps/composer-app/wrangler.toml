@@ -5,9 +5,9 @@
 # are served via the `ASSETS` binding, and `/api/*` runs the Worker first (feedback-logs, RSS proxy,
 # OTel -> SigNoz proxy) while every other route is asset-first with SPA fallback to index.html.
 #
-# Deployed by .github/workflows/scripts/deploy-env.sh via `wrangler deploy --config <this> --env <env>`.
+# Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
 # `_worker.js` is emitted inside the asset dir (the still-on-Pages preview build also consumes it there),
-# so it is kept out of the asset upload with a generated `.assetsignore` (written by deploy-env.sh).
+# so it is kept out of the asset upload with a generated `.assetsignore` (written by deploy-env.mjs).
 #
 # Local dev: `moon run composer-app:bundle && wrangler dev` (uses the default/top-level bindings below).
 #
