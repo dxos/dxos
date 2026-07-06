@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
@@ -26,7 +27,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'meetingCompanion',
-        filter: Surface.makeFilter(
+        filter: Role.makeFilter(
           AppSurface.Article,
           (data) =>
             (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
@@ -41,7 +42,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'drafts',
-        filter: Surface.makeFilter(AppSurface.Article, (data) => {
+        filter: Role.makeFilter(AppSurface.Article, (data) => {
           const mailbox = data.properties?.mailbox;
           const lastSegment = data.attendableId.split('/').pop();
           return (

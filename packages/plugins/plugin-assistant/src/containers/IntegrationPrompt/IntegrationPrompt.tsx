@@ -6,8 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Connector, type ConnectorEntry } from '@dxos/plugin-connector';
-import { ConnectorAuth } from '@dxos/plugin-connector/components';
+import { Connector, ConnectorAuth, type ConnectorEntry } from '@dxos/plugin-connector';
 import { Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';

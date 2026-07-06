@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { NotFound } from '@dxos/app-toolkit';
 import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
@@ -21,18 +22,18 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'home',
-        filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === Node.RootId),
+        filter: Role.makeFilter(AppSurface.Article, (data) => data.attendableId === Node.RootId),
         component: () => <Home />,
       }),
       Surface.create({
         id: 'notFound',
-        filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === NotFound.NOT_FOUND_PATH),
+        filter: Role.makeFilter(AppSurface.Article, (data) => data.attendableId === NotFound.NOT_FOUND_PATH),
         component: () => <NotFoundArticle />,
       }),
       Surface.create({
         id: 'navBranch',
         position: Position.last,
-        filter: Surface.makeFilter(
+        filter: Role.makeFilter(
           AppSurface.Article,
           (data) => ALLOWED_DISPOSITIONS.includes(data.properties?.disposition) || data.properties?.role === 'branch',
         ),

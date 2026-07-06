@@ -9,6 +9,7 @@ import { describe, test } from 'vitest';
 import { DXN } from '@dxos/keys';
 
 import { ActivationEvents, Capabilities } from '../common';
+import * as Role from '../common/Role';
 import { Capability, Plugin } from '../core';
 import { Surface } from '../ui';
 import { createTestApp } from './harness';
@@ -16,7 +17,7 @@ import { render, renderSurface } from './react';
 
 const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.reactHarness'), name: 'ReactHarnessTest' });
 
-const GreetingRole = Surface.makeType<{ message: string }>('org.dxos.test.role.greeting');
+const GreetingRole = Role.make<{ message: string }>('org.dxos.test.role.greeting');
 
 const TestPlugin = Plugin.define(testMeta).pipe(
   Plugin.addModule({
@@ -27,7 +28,7 @@ const TestPlugin = Plugin.define(testMeta).pipe(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create<{ message: string }>({
             id: 'greeting',
-            filter: Surface.makeFilter(GreetingRole),
+            filter: Role.makeFilter(GreetingRole),
             component: ({ data }) => <span data-testid='greeting'>hello {data.message}</span>,
           }),
         ]),

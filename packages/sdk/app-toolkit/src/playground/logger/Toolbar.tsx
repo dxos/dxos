@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { Role } from '@dxos/app-framework';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Button } from '@dxos/react-ui';
 
@@ -24,7 +25,7 @@ export default Capability.makeModule(() =>
       Capabilities.ReactSurface,
       Surface.create({
         id: 'org.dxos.test.logger.action',
-        filter: Surface.makeFilter(PlaygroundRoles.Toolbar),
+        filter: Role.makeFilter(PlaygroundRoles.Toolbar),
         component: Logger,
       }),
     ),

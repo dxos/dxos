@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { Role } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -65,7 +66,7 @@ const meta = {
           Capabilities.ReactSurface,
           Surface.create({
             id: 'test',
-            filter: Surface.makeFilter(AppSurface.CardContent),
+            filter: Role.makeFilter(AppSurface.CardContent),
             component: ({ role }) => <span>{JSON.stringify({ role })}</span>,
           }),
         ),

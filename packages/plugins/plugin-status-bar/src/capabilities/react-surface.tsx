@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { StatusBar, StatusBarFooter, VersionInfo } from '@dxos/plugin-deck';
 
@@ -16,17 +17,17 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'statusBar',
-        filter: Surface.makeFilter(StatusBar),
+        filter: Role.makeFilter(StatusBar),
         component: () => <StatusBarPanel />,
       }),
       Surface.create({
         id: 'statusBarFooter',
-        filter: Surface.makeFilter(StatusBarFooter),
+        filter: Role.makeFilter(StatusBarFooter),
         component: () => <StatusBarActions />,
       }),
       Surface.create({
         id: 'versionInfo',
-        filter: Surface.makeFilter(VersionInfo),
+        filter: Role.makeFilter(VersionInfo),
         component: () => <VersionNumber />,
       }),
     ]),

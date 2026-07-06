@@ -7,12 +7,13 @@ import * as Option from 'effect/Option';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { Role } from '@dxos/app-framework';
 import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
 import { Hints, Keyshortcuts } from '@dxos/plugin-deck';
-import { SpaceHomeContent } from '@dxos/plugin-space/components';
+import { SpaceHomeContent } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { useObject } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
@@ -50,23 +51,23 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'spaceHomeWelcome',
-        filter: Surface.makeFilter(SpaceHomeContent),
+        filter: Role.makeFilter(SpaceHomeContent),
         position: Position.first,
         component: ({ data }) => <SpaceHomeWelcome space={data.space} />,
       }),
       Surface.create({
         id: 'feedback',
-        filter: Surface.makeFilter(AppSurface.deckCompanion('help')),
+        filter: Role.makeFilter(AppSurface.deckCompanion('help')),
         component: () => <FeedbackPanel />,
       }),
       Surface.create({
         id: 'discord',
-        filter: Surface.makeFilter(AppSurface.deckCompanion('discord')),
+        filter: Role.makeFilter(AppSurface.deckCompanion('discord')),
         component: () => <DiscordPanel />,
       }),
       Surface.create({
         id: 'helpMenu',
-        filter: Surface.makeFilter(AppSurface.StatusIndicator),
+        filter: Role.makeFilter(AppSurface.StatusIndicator),
         position: Position.last,
         component: () => <HelpMenu />,
       }),
@@ -84,12 +85,12 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'hints',
-        filter: Surface.makeFilter(Hints),
+        filter: Role.makeFilter(Hints),
         component: () => <ShortcutsHints />,
       }),
       Surface.create({
         id: 'keyshortcuts',
-        filter: Surface.makeFilter(Keyshortcuts),
+        filter: Role.makeFilter(Keyshortcuts),
         component: () => <ShortcutsList />,
       }),
       Surface.create({

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capabilities, Capability, Role } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
@@ -19,9 +19,9 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { SpaceHomeContent } from '#components';
 import { SpaceHomeDashboard, SpaceHomeRecent } from '#containers';
 import { translations } from '#translations';
+import { SpaceHomeContent } from '#types';
 
 import { SpaceHomeArticle } from './SpaceHomeArticle';
 
@@ -65,7 +65,7 @@ const meta = {
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create({
             id: 'story.spaceHomeRecent',
-            filter: Surface.makeFilter(SpaceHomeContent),
+            filter: Role.makeFilter(SpaceHomeContent),
             component: ({ data }) => {
               const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeRecent');
               return visible ? <SpaceHomeRecent space={data.space} onClose={hide} /> : null;
@@ -73,7 +73,7 @@ const meta = {
           }),
           Surface.create({
             id: 'story.spaceHomeDashboard',
-            filter: Surface.makeFilter(SpaceHomeContent),
+            filter: Role.makeFilter(SpaceHomeContent),
             component: ({ data }) => {
               const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeDashboard');
               return visible ? <SpaceHomeDashboard space={data.space} onClose={hide} /> : null;

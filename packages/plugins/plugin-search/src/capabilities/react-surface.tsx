@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import React, { type ComponentProps } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { isSpace } from '@dxos/react-client/echo';
@@ -36,7 +37,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: `${SEARCH_DIALOG}.searchInput`,
-        filter: Surface.makeFilter(AppSurface.SearchInput),
+        filter: Role.makeFilter(AppSurface.SearchInput),
         component: () => {
           const space = useActiveSpace();
           if (!space) {

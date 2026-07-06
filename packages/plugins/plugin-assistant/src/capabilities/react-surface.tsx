@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import React, { type ComponentProps, useEffect } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capabilities, Capability, Role } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/ui';
 import { Agent, Chat, Plan } from '@dxos/assistant-toolkit';
@@ -15,11 +15,10 @@ import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { SpaceHomeContent, SpaceHomePinBottom } from '@dxos/plugin-space/components';
+import { SpaceHomeContent, SpaceHomePinBottom } from '@dxos/plugin-space';
 import { Panel } from '@dxos/react-ui';
 import { Position } from '@dxos/util';
 
-import { ChatSurface } from '#components';
 import {
   AgentArticle,
   AgentProperties,
@@ -35,7 +34,7 @@ import {
   TriggerStatus,
 } from '#containers';
 import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
-import { type Assistant } from '#types';
+import { type Assistant, ChatSurface } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -50,12 +49,12 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'spaceHomePrompt',
-        filter: Surface.makeFilter(SpaceHomePinBottom),
+        filter: Role.makeFilter(SpaceHomePinBottom),
         component: ({ data }) => <SpaceHomePrompt space={data.space} />,
       }),
       Surface.create({
         id: 'spaceHomeSuggestions',
-        filter: Surface.makeFilter(SpaceHomeContent),
+        filter: Role.makeFilter(SpaceHomeContent),
         position: Position.last,
         component: ({ data }) => {
           const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeSuggestions');
@@ -87,7 +86,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'companionChat',
-        filter: Surface.makeFilter(
+        filter: Role.makeFilter(
           AppSurface.Article,
           (data) =>
             Obj.isObject(data.companionTo) && (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === null),
@@ -141,7 +140,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'trace',
-        filter: Surface.makeFilter(AppSurface.deckCompanion('trace')),
+        filter: Role.makeFilter(AppSurface.deckCompanion('trace')),
         component: () => {
           const space = useActiveSpace();
           useEffect(() => {
@@ -157,7 +156,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'integrationPrompt',
-        filter: Surface.makeFilter(ChatSurface, (data) => data.role === 'integration-prompt'),
+        filter: Role.makeFilter(ChatSurface, (data) => data.role === 'integration-prompt'),
         component: ({ data }) => {
           // `data.data` is model-supplied JSON (untyped); narrow `service` before use.
           const service = typeof data.data?.service === 'string' ? data.data.service : undefined;
@@ -166,7 +165,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'triggerStatus',
-        filter: Surface.makeFilter(AppSurface.StatusIndicator),
+        filter: Role.makeFilter(AppSurface.StatusIndicator),
         component: () => {
           const space = useActiveSpace();
           if (!space) {

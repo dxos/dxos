@@ -11,13 +11,14 @@ import { DXN } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
 import { ActivationEvents, Capabilities } from '../../../common';
+import * as Role from '../../../common/Role';
 import { Capability, Plugin } from '../../../core';
 import { createTestApp } from '../../../testing/harness';
 import { render } from '../../../testing/react';
 import { SurfaceComponent, useSurfaces } from './SurfaceComponent';
 import { setSurfaceDebug } from './SurfaceDebug';
 import { surfaceMetrics } from './SurfaceMetrics';
-import { type Definition, create, makeFilter, makeType } from './types';
+import { type Definition, create } from './types';
 
 // Flush the metrics store's rAF-batched notification (the actual signal it uses), not a fixed delay.
 const flushMetrics = () =>
@@ -27,8 +28,8 @@ const flushMetrics = () =>
     );
   });
 
-const RoleA = makeType<Record<string, unknown>>('org.dxos.test.role.alpha');
-const RoleB = makeType<Record<string, unknown>>('org.dxos.test.role.beta');
+const RoleA = Role.make<Record<string, unknown>>('org.dxos.test.role.alpha');
+const RoleB = Role.make<Record<string, unknown>>('org.dxos.test.role.beta');
 
 const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.surfacePerf'), name: 'SurfacePerfTest' });
 
@@ -39,8 +40,8 @@ const TestPlugin = Plugin.define(testMeta).pipe(
     activate: () =>
       Effect.succeed(
         Capability.contributes(Capabilities.ReactSurface, [
-          create({ id: 'alpha', filter: makeFilter(RoleA), component: () => <span data-testid='a' /> }),
-          create({ id: 'beta', filter: makeFilter(RoleB), component: () => <span data-testid='b' /> }),
+          create({ id: 'alpha', filter: Role.makeFilter(RoleA), component: () => <span data-testid='a' /> }),
+          create({ id: 'beta', filter: Role.makeFilter(RoleB), component: () => <span data-testid='b' /> }),
         ]),
       ),
   }),
@@ -89,7 +90,7 @@ describe('SurfaceComponent per-role subscription', () => {
       harness.manager.capabilities.contribute({
         module: 'late',
         interface: Capabilities.ReactSurface,
-        implementation: create({ id: 'beta2', filter: makeFilter(RoleB, () => false), component: () => null }),
+        implementation: create({ id: 'beta2', filter: Role.makeFilter(RoleB, () => false), component: () => null }),
       });
     });
 
@@ -120,7 +121,7 @@ describe('SurfaceComponent per-role subscription', () => {
           interface: Capabilities.ReactSurface,
           implementation: create({
             id: `beta${i}`,
-            filter: makeFilter(RoleB, () => false),
+            filter: Role.makeFilter(RoleB, () => false),
             component: () => null,
           }),
         });
@@ -160,7 +161,7 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
   const ROUNDS = ROLE_COUNT; // one contribution per role.
 
   const roles = Array.from({ length: ROLE_COUNT }, (_, i) =>
-    makeType<Record<string, unknown>>(`org.dxos.test.role.r${i}`),
+    Role.make<Record<string, unknown>>(`org.dxos.test.role.r${i}`),
   );
 
   const benchMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.surfaceBench'), name: 'SurfaceBenchTest' });
@@ -174,7 +175,7 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
             Capabilities.ReactSurface,
             roles.flatMap((role, ri) =>
               Array.from({ length: SURFACES_PER_ROLE }, (_, si) =>
-                create({ id: `r${ri}s${si}`, filter: makeFilter(role), component: () => <span /> }),
+                create({ id: `r${ri}s${si}`, filter: Role.makeFilter(role), component: () => <span /> }),
               ),
             ),
           ),
@@ -208,7 +209,7 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
             interface: Capabilities.ReactSurface,
             implementation: create({
               id: `extra${round}`,
-              filter: makeFilter(role, () => false),
+              filter: Role.makeFilter(role, () => false),
               component: () => null,
             }),
           });

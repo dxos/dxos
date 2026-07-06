@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { Role } from '@dxos/app-framework';
 import { Surface, useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { Button } from '@dxos/react-ui';
@@ -55,7 +56,7 @@ export default Capability.makeModule(() =>
       Capabilities.ReactSurface,
       Surface.create({
         id: 'org.dxos.test.generator.toolbar',
-        filter: Surface.makeFilter(PlaygroundRoles.Toolbar),
+        filter: Role.makeFilter(PlaygroundRoles.Toolbar),
         component: Toolbar,
       }),
     ),

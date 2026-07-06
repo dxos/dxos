@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import React, { type ComponentProps, useCallback } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capabilities, Capability, Role } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace, useHomeVisibility, useTypeOptions } from '@dxos/app-toolkit/ui';
@@ -19,7 +19,6 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { ViewAnnotation } from '@dxos/schema';
 import { Position } from '@dxos/util';
 
-import { SpaceHomeContent } from '#components';
 import {
   CollectionArticle,
   CollectionSection,
@@ -56,6 +55,7 @@ import {
   Settings,
   SPACE_HOME_NODE_TYPE,
   SpaceCapabilities,
+  SpaceHomeContent,
   type TypeInputOptions,
   TypeInputOptionsAnnotationId,
 } from '#types';
@@ -84,7 +84,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'spaceHomeRecent',
-        filter: Surface.makeFilter(SpaceHomeContent),
+        filter: Role.makeFilter(SpaceHomeContent),
         component: ({ data }) => {
           const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeRecent');
           return visible ? <SpaceHomeRecent space={data.space} onClose={hide} /> : null;
@@ -92,7 +92,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'spaceHomeDashboard',
-        filter: Surface.makeFilter(SpaceHomeContent),
+        filter: Role.makeFilter(SpaceHomeContent),
         component: ({ data }) => {
           const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeDashboard');
           return visible ? <SpaceHomeDashboard space={data.space} onClose={hide} /> : null;
@@ -317,7 +317,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'objectProperties',
-        filter: Surface.makeFilter(AppSurface.ObjectProperties, (data) => {
+        filter: Role.makeFilter(AppSurface.ObjectProperties, (data) => {
           if (!Obj.isObject(data.subject)) {
             return false;
           }
@@ -363,7 +363,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'navtreePresenceFallback',
         position: Position.last,
-        filter: Surface.makeFilter(AppSurface.NavtreeItemEnd),
+        filter: Role.makeFilter(AppSurface.NavtreeItemEnd),
         component: ({ data }) => <SmallPresenceLive id={data.id} open={data.open} />,
       }),
       // TODO(wittjosiah): Broken?
@@ -399,7 +399,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'syncStatus',
-        filter: Surface.makeFilter(AppSurface.StatusIndicator),
+        filter: Role.makeFilter(AppSurface.StatusIndicator),
         component: () => <SyncStatus />,
       }),
     ]);

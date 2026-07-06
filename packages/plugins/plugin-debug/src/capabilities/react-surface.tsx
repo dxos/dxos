@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { Role } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppAnnotation, AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
@@ -234,12 +235,12 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'devtoolsOverview',
-        filter: Surface.makeFilter(AppSurface.deckCompanion('devtoolsOverview')),
+        filter: Role.makeFilter(AppSurface.deckCompanion('devtoolsOverview')),
         component: () => <DevtoolsOverviewContainer />,
       }),
       Surface.create({
         id: 'spaceObjects',
-        filter: Surface.makeFilter(AppSurface.deckCompanion('spaceObjects')),
+        filter: Role.makeFilter(AppSurface.deckCompanion('spaceObjects')),
         component: () => {
           const space = useActiveSpace();
           const { invokePromise } = useOperationInvoker();
@@ -254,7 +255,7 @@ export default Capability.makeModule(
 
       Surface.create({
         id: 'debugStatus',
-        filter: Surface.makeFilter(AppSurface.StatusIndicator),
+        filter: Role.makeFilter(AppSurface.StatusIndicator),
         position: Position.first,
         component: () => <DebugStatus />,
       }),

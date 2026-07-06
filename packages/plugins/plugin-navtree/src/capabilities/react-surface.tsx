@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import React, { type ComponentProps } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Node } from '@dxos/plugin-graph';
@@ -24,21 +25,21 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'navigation',
-        filter: Surface.makeFilter(AppSurface.Navigation),
+        filter: Role.makeFilter(AppSurface.Navigation),
         component: ({ data, ref }) => (
           <NavTreeContainer tab={data.current} popoverAnchorId={data.popoverAnchorId} ref={ref} />
         ),
       }),
       Surface.create({
         id: 'documentTitle',
-        filter: Surface.makeFilter(AppSurface.DocumentTitle),
+        filter: Role.makeFilter(AppSurface.DocumentTitle),
         component: ({ data }) => (
           <NavTreeDocumentTitle node={Node.isGraphNode(data.subject) ? data.subject : undefined} />
         ),
       }),
       Surface.create({
         id: 'searchInput',
-        filter: Surface.makeFilter(AppSurface.SearchInput),
+        filter: Role.makeFilter(AppSurface.SearchInput),
         position: Position.last,
         component: () => <CommandsTrigger />,
       }),

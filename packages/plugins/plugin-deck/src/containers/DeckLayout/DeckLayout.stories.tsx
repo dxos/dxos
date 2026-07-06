@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import React, { forwardRef, useMemo } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { Role } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
@@ -169,14 +170,14 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create({
             id: 'storyNavigation',
-            filter: Surface.makeFilter(AppSurface.Navigation),
+            filter: Role.makeFilter(AppSurface.Navigation),
             component: ({ data, ref }) => (
               <NavContainer current={data.current} ref={ref as React.Ref<HTMLDivElement>} />
             ),
           }),
           Surface.create({
             id: 'storyArticle',
-            filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo == null),
+            filter: Role.makeFilter(AppSurface.Article, (data) => data.companionTo == null),
             component: ({ data }) => {
               const subject = (data as any)?.subject;
               const attendableId = (data as any)?.attendableId as string | undefined;
@@ -203,7 +204,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           }),
           Surface.create({
             id: 'storyArticleCompanion',
-            filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
+            filter: Role.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
             component: ({ data: { subject, companionTo, properties, variant } }) => {
               if (companionTo == null) {
                 return <Loading />;

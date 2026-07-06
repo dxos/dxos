@@ -12,6 +12,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { Role } from '@dxos/app-framework';
 import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';
@@ -56,7 +57,7 @@ export default Capability.makeModule(() =>
       // component (not the filter) so the atom subscription triggers re-renders.
       Surface.create({
         id: 'sampleStatus',
-        filter: Surface.makeFilter(AppSurface.StatusIndicator),
+        filter: Role.makeFilter(AppSurface.StatusIndicator),
         component: () => {
           const settings = useAtomCapability(SampleCapabilities.Settings);
           return settings.showStatusIndicator !== false ? <SampleStatusIndicator /> : null;
@@ -83,7 +84,7 @@ export default Capability.makeModule(() =>
       // and what the deck consumer uses via AppSurface.deckCompanion('samplePanel').
       Surface.create({
         id: 'deckCompanion',
-        filter: Surface.makeFilter(AppSurface.deckCompanion('samplePanel')),
+        filter: Role.makeFilter(AppSurface.deckCompanion('samplePanel')),
         component: () => {
           const space = useActiveSpace();
           if (!space) {

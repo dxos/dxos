@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { Role } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
@@ -37,7 +38,7 @@ export default Capability.makeModule(() =>
       Capabilities.ReactSurface,
       Surface.create({
         id: 'org.dxos.test.debug.main',
-        filter: Surface.makeFilter(PlaygroundRoles.Secondary),
+        filter: Role.makeFilter(PlaygroundRoles.Secondary),
         component: Debug,
       }),
     ),
