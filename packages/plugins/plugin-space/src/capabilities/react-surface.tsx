@@ -19,6 +19,7 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { ViewAnnotation } from '@dxos/schema';
 import { Position } from '@dxos/util';
 
+import { SpaceHomeContent } from '#components';
 import {
   CollectionArticle,
   CollectionSection,
@@ -58,7 +59,6 @@ import {
   type TypeInputOptions,
   TypeInputOptionsAnnotationId,
 } from '#types';
-import { SpaceHomeContent } from '#components';
 
 import {
   CREATE_OBJECT_DIALOG,

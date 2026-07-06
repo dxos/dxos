@@ -8,7 +8,6 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { buildImportGraph } from './build-graph.ts';
-import { resolvePackageExport } from './package-resolution.ts';
 import {
   EXTERNAL_PREFIX,
   type Matcher,
@@ -21,6 +20,7 @@ import {
   normalizeFsPath,
   packageNameFromPath,
 } from './matcher.ts';
+import { resolvePackageExport } from './package-resolution.ts';
 
 export interface TraceImportsOptions {
   /** Absolute or relative entry file to start the crawl from. */
@@ -86,7 +86,11 @@ const prettifyStep = (step: string, absWorkingDir: string, color: boolean): stri
 /**
  * Resolve the package label used for `--packages-only` rendering.
  */
-const packageLabel = (step: string, absWorkingDir: string, resolveWorkspacePackage: WorkspacePackageResolver): string => {
+const packageLabel = (
+  step: string,
+  absWorkingDir: string,
+  resolveWorkspacePackage: WorkspacePackageResolver,
+): string => {
   if (isExternalKey(step)) {
     const specifier = externalSpecifierOf(step);
     const pkg = packageNameFromPath(`node_modules/${specifier}`);

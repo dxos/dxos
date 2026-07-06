@@ -17,8 +17,8 @@ import {
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 
-import { meta } from '#meta';
 import { SpaceHomeContent, SpaceHomePinBottom } from '#components';
+import { meta } from '#meta';
 
 export type SpaceHomeArticleProps = AppSurface.SpaceArticleProps;
 
