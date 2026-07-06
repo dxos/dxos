@@ -13,7 +13,7 @@ import { meta } from '#meta';
 import * as Settings from './Settings';
 
 /**
- * Descriptor for a registered {@link Blob.Backend} storage option, surfaced in the file plugin's
+ * Descriptor for a registered `BlobBackend` storage option, surfaced in the file plugin's
  * settings UI. Actual upload/read logic lives in the Blob backend registered on the Hypergraph
  * under `storage` (see `client.graph.registerBlobBackend`) — this type carries no behavior.
  */

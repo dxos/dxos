@@ -4,6 +4,7 @@
 
 import { Context } from '@dxos/context';
 import { Blob } from '@dxos/echo';
+import { type BlobBackend } from '@dxos/echo-protocol';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 
@@ -24,11 +25,11 @@ const parseSha256Uri = (uri: string): string => {
  * the edge is unreachable; there is no local cache.
  *
  * TODO(wittjosiah): Add a local cache (e.g. via `@dxos/random-access-storage`, keyed by content
- * hash) so reads/writes don't always round-trip to the edge. Blocked on `Blob.Backend` gaining a
+ * hash) so reads/writes don't always round-trip to the edge. Blocked on `BlobBackend` gaining a
  * `remove` and GC/refcounting for content-addressed blobs — without that, a local cache has no way
  * to know when a cached entry is safe to evict once its owning Blob object is deleted.
  */
-export const createEdgeBlobBackend = ({ edgeClient }: CreateEdgeBlobBackendOptions): Blob.Backend => ({
+export const createEdgeBlobBackend = ({ edgeClient }: CreateEdgeBlobBackendOptions): BlobBackend => ({
   schemes: [Blob.Scheme.sha256],
 
   put: async ({ data, contentType, contentHash }) => {

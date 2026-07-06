@@ -3,9 +3,9 @@
 //
 
 import { type CleanupFn } from '@dxos/async';
+import { type BlobBackend } from '@dxos/echo-protocol';
 import { type URI } from '@dxos/keys';
 
-import type * as Blob from './Blob';
 import type * as Database from './Database';
 import type * as Entity from './Entity';
 import type * as Key from './Key';
@@ -83,7 +83,7 @@ export interface Hypergraph extends Database.Queryable {
    *   `Blob.fromBytes`'s `storage` option is omitted.
    * @returns A cleanup function that unregisters the backend.
    */
-  registerBlobBackend(name: string, backend: Blob.Backend, options?: { default?: boolean }): CleanupFn;
+  registerBlobBackend(name: string, backend: BlobBackend, options?: { default?: boolean }): CleanupFn;
 
   /**
    * Storage name `Blob.fromBytes` uses when its `storage` option is omitted. Starts as `'inline'`;

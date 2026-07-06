@@ -8,7 +8,7 @@ FilePlugin enables DXOS Composer to store and preview binary files — images, v
 A File object's `data` field is a reference to a `Blob` ECHO object (defined in `@dxos/echo`), which abstracts where the
 bytes actually live and how they're read. Uploads are routed through a pluggable storage system: the built-in `inline`
 storage embeds bytes on the Blob object itself, while external storage (e.g. WNFS, edge) can be contributed by other
-plugins by registering a `Blob.Backend` on the ECHO Hypergraph. `Blob.url`/`Blob.read` resolve a renderable URL or raw
+plugins by registering a `BlobBackend` on the ECHO Hypergraph. `Blob.url`/`Blob.read` resolve a renderable URL or raw
 bytes uniformly regardless of backend, so the File schema and preview surfaces stay backend-agnostic without a
 dedicated URL-resolver capability.
 
@@ -42,7 +42,7 @@ type File
 type BackendDescriptor
   desc: |
     UI-facing descriptor for a registered storage option. Carries no upload/read behavior itself —
-    that lives in the matching `Blob.Backend` registered on the ECHO Hypergraph under `storage`.
+    that lives in the matching `BlobBackend` registered on the ECHO Hypergraph under `storage`.
   fields:
     id: string                # stable backend id (e.g. 'inline', 'wnfs', 'edge'); used as the settings key
     name: string               # display label shown in settings
@@ -182,17 +182,17 @@ feat F-2: Backend capability system
 
   req F-2.2: The inline BackendDescriptor MUST always be registered by FilePlugin
     itself, mapping to Blob's built-in 'inline' storage (bytes embedded on the
-    Blob object; no separate Blob.Backend registration needed).
+    Blob object; no separate BlobBackend registration needed).
 
   req F-2.3: The active backend is determined by Settings.backend. If the
     configured id is absent or unrecognised, the inline backend is used.
 
   req F-2.4: A BackendDescriptor's `storage` names the Blob storage used by
     File.fromBytes; the actual upload/read/getUrl implementation lives in a
-    separate `Blob.Backend` registered on the ECHO Hypergraph (via
+    separate `BlobBackend` registered on the ECHO Hypergraph (via
     `client.graph.registerBlobBackend`), typically by the same plugin that
     contributes the descriptor (e.g. plugin-wnfs, or `@dxos/client` itself for
-    'edge'). FilePlugin's descriptor and the Hypergraph's Blob.Backend registry
+    'edge'). FilePlugin's descriptor and the Hypergraph's BlobBackend registry
     are independent — a descriptor with no matching registered backend fails at
     upload time with a `backend-not-registered` error, not at settings-selection time.
 ```
@@ -288,9 +288,9 @@ test T-6: Backend fallback to inline
 ```
 
 ```mdl
-test T-7: External blob resolved via a registered Blob.Backend's getUrl
+test T-7: External blob resolved via a registered BlobBackend's getUrl
   given: a File whose data Ref resolves to a Blob with data._tag === 'external' and a
-    Blob.Backend registered on the ECHO Hypergraph that resolves the Blob's URI scheme
+    BlobBackend registered on the ECHO Hypergraph that resolves the Blob's URI scheme
     and implements getUrl
   when: FileArticle is rendered
   then:
@@ -302,7 +302,7 @@ test T-7: External blob resolved via a registered Blob.Backend's getUrl
 ```mdl
 test T-8: External blob without getUrl falls back to reading bytes
   given: a File whose data Ref resolves to an external Blob whose registered
-    Blob.Backend implements get but not getUrl
+    BlobBackend implements get but not getUrl
   when: FileArticle is rendered
   then:
     - Blob.url resolves None

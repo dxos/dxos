@@ -5,18 +5,8 @@
 import { type CleanupFn, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import {
-  type Blob,
-  type Database,
-  type Entity,
-  Feed,
-  Filter,
-  type Hypergraph,
-  Query,
-  Ref,
-  type Registry,
-  Type,
-} from '@dxos/echo';
+import { type Database, type Entity, Feed, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
+import { type BlobBackend } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   type RefResolverRequest,
@@ -176,7 +166,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return this.#blobManager;
   }
 
-  registerBlobBackend(name: string, backend: Blob.Backend, options?: { default?: boolean }): CleanupFn {
+  registerBlobBackend(name: string, backend: BlobBackend, options?: { default?: boolean }): CleanupFn {
     return this.#blobManager.registerBackend(name, backend, options);
   }
 

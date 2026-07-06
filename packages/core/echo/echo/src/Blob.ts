@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { DXN, type SpaceId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
 import * as Database from './Database';
@@ -25,7 +25,7 @@ export const InlineData = Schema.TaggedStruct('inline', {
 });
 
 /**
- * External blob data: bytes stored by a registered {@link Backend}, addressed by `uri`.
+ * External blob data: bytes stored by a registered blob backend, addressed by `uri`.
  */
 export const ExternalData = Schema.TaggedStruct('external', {
   /**
@@ -82,47 +82,14 @@ export const Storage = { inline: 'inline', edge: 'edge' } as const;
 export type Storage = (typeof Storage)[keyof typeof Storage];
 
 /**
- * URI schemes claimed by core backends via {@link Backend.schemes}. `sha256` marks a URI whose
- * remainder is a hex-encoded SHA-256 content digest (e.g. `sha256:<hex>`, produced by the edge
- * backend) — named for what the identifier *is*, not which backend wrote it, so any backend or
- * cache that can resolve a content hash may claim it. Extensions (e.g. plugin-wnfs) define their
- * own schemes in their own package.
+ * URI schemes claimed by core backends (see `BlobBackend.schemes` in `@dxos/echo-protocol`).
+ * `sha256` marks a URI whose remainder is a hex-encoded SHA-256 content digest (e.g. `sha256:<hex>`,
+ * produced by the edge backend) — named for what the identifier *is*, not which backend wrote it,
+ * so any backend or cache that can resolve a content hash may claim it. Extensions (e.g.
+ * plugin-wnfs) define their own schemes in their own package.
  */
 export const Scheme = { sha256: 'sha256' } as const;
 export type Scheme = (typeof Scheme)[keyof typeof Scheme];
-
-//
-// Backend
-//
-
-export interface PutRequest {
-  spaceId: SpaceId;
-  data: Uint8Array;
-  contentType?: string;
-  /** sha256 hex digest, computed by the manager. The backend does not verify it. */
-  contentHash: string;
-  /** For path-addressed extension backends. */
-  name?: string;
-}
-
-export interface PutResponse {
-  /** URI locating the stored bytes; must use a scheme the backend resolves. */
-  uri: string;
-}
-
-/**
- * Implemented by pluggable blob storage backends and registered on the Hypergraph via
- * `registerBlobBackend`.
- */
-export interface Backend {
-  /** URI schemes this backend resolves at read time (edge: `[Scheme.sha256]`; wnfs: `['wnfs']`). */
-  readonly schemes: readonly string[];
-  put(request: PutRequest): Promise<PutResponse>;
-  /** `undefined` means the URI was not found. Rejects on transport failure (e.g. offline). */
-  get(request: { spaceId: SpaceId; uri: string }): Promise<Uint8Array | undefined>;
-  has(request: { spaceId: SpaceId; uri: string }): Promise<boolean>;
-  getUrl?(request: { spaceId: SpaceId; uri: string; contentType?: string }): Promise<string | undefined>;
-}
 
 //
 // Factory
@@ -142,7 +109,7 @@ export const inlineData = (bytes: Uint8Array): BlobData => ({ _tag: 'inline', by
 
 /**
  * Creates an external {@link BlobData} variant that references bytes held by a registered backend.
- * @param uri - Backend-scoped URI, e.g. as returned by a {@link Backend.put} call.
+ * @param uri - Backend-scoped URI, e.g. as returned by a `BlobBackend.put` call.
  */
 export const externalData = (uri: string): BlobData => ({ _tag: 'external', uri });
 

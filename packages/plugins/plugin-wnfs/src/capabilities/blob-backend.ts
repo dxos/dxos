@@ -7,7 +7,7 @@ import type { Blockstore } from 'interface-blockstore';
 
 import { Capability } from '@dxos/app-framework';
 import { type Client } from '@dxos/client';
-import { type Blob } from '@dxos/echo';
+import { type BlobBackend } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -31,11 +31,7 @@ interface CreateWnfsBlobBackendOptions {
  * both are logged and reported as a miss (`undefined`) rather than risk rethrowing on the common
  * missing-file path.
  */
-export const createWnfsBlobBackend = ({
-  client,
-  blockstore,
-  instances,
-}: CreateWnfsBlobBackendOptions): Blob.Backend => {
+export const createWnfsBlobBackend = ({ client, blockstore, instances }: CreateWnfsBlobBackendOptions): BlobBackend => {
   const readBytes = async (spaceId: SpaceId, uri: string) => {
     const space = client.spaces.get(spaceId);
     if (!space) {

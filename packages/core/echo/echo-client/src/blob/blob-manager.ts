@@ -4,6 +4,7 @@
 
 import { type CleanupFn } from '@dxos/async';
 import { Blob, Err } from '@dxos/echo';
+import { type BlobBackend } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
 
 const BASE64_CHUNK_SIZE = 0x8000;
@@ -30,7 +31,7 @@ const bytesToBase64 = (bytes: Uint8Array): string => {
 
 interface RegisteredBackend {
   readonly name: string;
-  readonly backend: Blob.Backend;
+  readonly backend: BlobBackend;
 }
 
 /**
@@ -57,7 +58,7 @@ export class BlobManager {
    * read-time dispatch. Throws if another backend already claims one of those schemes. Returns a
    * cleanup function that unregisters it.
    */
-  registerBackend(name: string, backend: Blob.Backend, options?: { default?: boolean }): CleanupFn {
+  registerBackend(name: string, backend: BlobBackend, options?: { default?: boolean }): CleanupFn {
     for (const scheme of backend.schemes) {
       if (this.#backendsByScheme.has(scheme)) {
         throw new Error(`Blob scheme already registered by another backend: ${scheme}`);
