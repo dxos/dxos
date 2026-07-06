@@ -14,14 +14,6 @@ import { OptionsAnnotationId } from '@dxos/echo/Format';
 import * as Runnable from './Runnable';
 
 /**
- * Where a trigger is executed.
- * *local* - trigger is executed on the client.
- * *edge* - trigger is executed on the edge.
- */
-export const ComputeEnvironment = Schema.Literal('local', 'edge').annotations({ title: 'Compute' });
-export type ComputeEnvironment = Schema.Schema.Type<typeof ComputeEnvironment>;
-
-/**
  * Type discriminator for TriggerType.
  * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
@@ -186,11 +178,10 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
     enabled: Schema.optional(Schema.Boolean),
 
     /**
-     * Overrides the space-level compute environment for this trigger.
-     * When unset, the space's computeEnvironment setting applies.
+     * Runs this trigger on the edge rather than locally.
+     * When unset, the trigger runs locally on the client.
      */
-    // TODO(burdon): Rename remote (default/undefined is local).
-    computeEnvironment: ComputeEnvironment.pipe(Schema.annotations({ title: 'Runs On' }), Schema.optional),
+    remote: Schema.Boolean.pipe(Schema.annotations({ title: 'Remote' }), Schema.optional),
 
     concurrency: Schema.Number.pipe(
       Schema.annotations({
