@@ -176,13 +176,9 @@ describe('usePagination', () => {
   });
 
   test('getNext past maxWindowSize does not transiently undershoot the window size', async () => {
-    // Regression test: reading the query's synchronous `.results` immediately upon subscribing
-    // (previously via `subscribe(cb, { fire: true })`) reflected whatever the underlying
-    // `QueryResult` had buffered *before* its async re-query resolved for a newly advanced `skip`
-    // -- e.g. going from `{skip:0,limit:10}` to `{skip:5,limit:10}` synchronously sliced only the
-    // previous range's 10 items, undershooting to 5 until the new range's fetch resolved and
-    // corrected it back to 10. That transient shrink was visible as a jump under the virtualizer
-    // on every eviction step.
+    // Advancing `skip` (e.g. `{skip:0,limit:10}` -> `{skip:5,limit:10}`) must never render fewer
+    // than `limit` items in between: the new range's query result can only overwrite the previous
+    // range's once it has actually resolved, otherwise the virtualizer sees a transient shrink.
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const feed = db.add(Feed.make({ name: 'windowed' }));
@@ -267,11 +263,9 @@ describe('usePagination', () => {
   });
 
   test('items never regresses to empty across a getNext transition (no scroll-jump regression)', async () => {
-    // Regression test for a bug where `usePagination` delegated to the generic `useQuery`
-    // hook: every `getNext` produced a brand new query AST, and `useQuery`'s AST-keyed
-    // subscription started that new query from an empty snapshot before its async load resolved
-    // -- flashing `items` to `[]` on every page load, which collapsed the virtualizer and snapped
-    // scroll position back to the top in the real app.
+    // Every `getNext` produces a brand new query AST (a new skip/limit); `items` must keep showing
+    // the previous range's results until the new range's first real result arrives, since a flash
+    // to `[]` on every page load collapses the virtualizer and snaps scroll position to the top.
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const feed = db.add(Feed.make({ name: 'windowed' }));
