@@ -143,46 +143,6 @@ describe('LocalFeedServiceImpl', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('should support reverse pagination with before cursors', () =>
-    Effect.gen(function* () {
-      const runtime = Effect.succeed(yield* Effect.runtime<any>());
-      const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
-      yield* feedStore.migrate();
-      const service = new LocalFeedServiceImpl(runtime, feedStore);
-      const spaceId = 'space-2' as SpaceId;
-      const feedId = EntityId.random();
-
-      const items = Array.from({ length: 10 }, (_, i) => ({ id: `obj${i}`, data: `test${i}` }));
-      yield* Effect.promise(() =>
-        service.insertIntoFeed({
-          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
-          spaceId,
-          feedId,
-          objects: items.map((item) => JSON.stringify(item)),
-        }),
-      );
-
-      // Head page: newest 3, reverse order.
-      const head = yield* Effect.promise(() =>
-        service.queryFeed({
-          query: { spaceId, feedIds: [feedId], reverse: true, limit: 3 },
-        }),
-      );
-      expect(head.objects!.map((o) => JSON.parse(o).id)).toEqual(['obj9', 'obj8', 'obj7']);
-      expect(head.hasMore).toBe(true);
-      expect(head.prevCursor).toBeTruthy();
-
-      // Walk older via `before`.
-      const older = yield* Effect.promise(() =>
-        service.queryFeed({
-          query: { spaceId, feedIds: [feedId], reverse: true, before: head.prevCursor!, limit: 3 },
-        }),
-      );
-      expect(older.objects!.map((o) => JSON.parse(o).id)).toEqual(['obj6', 'obj5', 'obj4']);
-      expect(older.hasMore).toBe(true);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
   it.effect('should pass tombstone blocks through paginated reads', () =>
     Effect.gen(function* () {
       const runtime = Effect.succeed(yield* Effect.runtime<any>());
@@ -212,12 +172,12 @@ describe('LocalFeedServiceImpl', () => {
 
       const head = yield* Effect.promise(() =>
         service.queryFeed({
-          query: { spaceId, feedIds: [feedId], reverse: true, limit: 10 },
+          query: { spaceId, feedIds: [feedId], limit: 10 },
         }),
       );
       expect(head.objects).toHaveLength(2);
-      expect(JSON.parse(head.objects![0])).toMatchObject({ 'id': objectId, '@deleted': true });
-      expect(JSON.parse(head.objects![1])).toMatchObject({ id: objectId, data: 'test' });
+      expect(JSON.parse(head.objects![0])).toMatchObject({ id: objectId, data: 'test' });
+      expect(JSON.parse(head.objects![1])).toMatchObject({ 'id': objectId, '@deleted': true });
     }).pipe(Effect.provide(TestLayer)),
   );
 

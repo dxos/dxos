@@ -62,8 +62,6 @@ export class LocalFeedServiceImpl implements FeedService {
           spaceId: spaceId! as SpaceId,
           query: { feedIds: feedIds ?? [] },
           cursor: query.after ? FeedProtocol.FeedCursor.make(query.after) : undefined,
-          before: query.before ? FeedProtocol.FeedCursor.make(query.before) : undefined,
-          reverse: query.reverse,
           limit: query.limit,
         });
 
@@ -74,8 +72,7 @@ export class LocalFeedServiceImpl implements FeedService {
         return Function.identity<FeedQueryResult>({
           objects,
           nextCursor: result.nextCursor,
-          prevCursor: result.prevCursor ?? '',
-          hasMore: result.hasMore,
+          prevCursor: '',
         });
       }),
     );
