@@ -16,15 +16,15 @@ Optimize for **stability, less process, more flexibility, agent-followability**:
 
 Two fixed/lockstep groups plus deploy-only apps:
 
-- **Group A — Core/SDK** (~150 packages) — core + common + sdk + ui + devtools + reflect on one shared line (currently `0.9.x`). The storybook apps (`storybook-react`/`-lit`/`-solid`) ride this line (private — versioned, not published).
-- **Group B — Plugins + CLI** (82 packages) — all `@dxos/plugin-*` (81) + `@dxos/cli` on a second line, published under it.
-- **Apps** — every `private` app (composer-app/crx/dxos-org, docs, todomvc, tasks, testbench) deploys and never publishes. They are **not in Changesets** (`ignore`d): Composer is versioned by its deploy release (§5), the rest are unversioned.
+- **Group A — Core/SDK** — core + common + sdk + ui + devtools + reflect on one shared line (currently `0.9.x`), published to npm. A few private members (e.g. the storybook helper libraries) are versioned on this line but not published (`tag: false`).
+- **Group B — Plugins + CLI** — every `@dxos/plugin-*` + `@dxos/cli` on a second line, published under it.
+- **Apps** — every `private` app (composer-app/crx/dxos-org, docs, todomvc, tasks, testbench, and the storybook apps `storybook-react`/`-lit`/`-solid`) deploys and never publishes. They are **not in Changesets** (`ignore`d): Composer is versioned by its deploy release (§5), the rest are unversioned.
 
 **Independent numbers, coupled timing.** The groups carry independent version lines (a Group B-only changeset bumps B alone) but share **one** "Version Packages" PR — merging it drains all pending changesets. Independent release *cadence* comes later, when plugins move to their own repo with their own trunk + Version PR (§6), not via per-group release branches.
 
 **Deploy ≠ publish — why Composer isn't in a publish group.** If it were, cutting a Composer build would publish all 81 plugins, and those plugins pin core versions that may not be released yet. So Composer versions on its own private line, and app deploys (`deploy-apps.yml`) are fully decoupled from the Changesets publish pipeline. This is a hard requirement: deploying an app must never publish a package.
 
-**Membership is generated.** `fixed` matches package *names*, which share no common prefix — so each group is an enumerated list built from the pnpm project graph by `updateChangesets()` (not a filesystem scan, which would sweep in `@fixture/*` test fixtures), cross-checked against `scripts/check-publish-config.mjs`; CI asserts the generated config is in sync. Only Group B is a clean glob (`@dxos/plugin-*`). Membership shifts with a one-line generator change when the repo splits (§6).
+**Membership is generated.** `fixed` matches package *names*, which share no common prefix — so each group is an enumerated list built from the pnpm project graph by `updateChangesets()` (not a filesystem scan, which would sweep in `@fixture/*` test fixtures). It regenerates on local `pnpm install` (`postinstall`, skipped in CI) and is committed; the **Check** workflow's `check-publish-config` step independently verifies every group member is publishable. Only Group B is a clean glob (`@dxos/plugin-*`). Membership shifts with a one-line generator change when the repo splits (§6).
 
 **Catalog.** The catalog's `@dxos/*` self-references (`@dxos/client`, `@dxos/echo`, `@dxos/wa-sqlite`) violate the "in-repo deps must be `workspace:*`" rule. Removing them makes every internal edge `workspace:*` (Changesets-native) and avoids the maturing `--enable-pnpm-catalog` flag. (`workspace:` / `catalog:` tokens rewrite to concrete versions at pack time — none leak into a published tarball.) `@dxos/wa-sqlite` is assessed separately (may be a genuine external publish).
 
@@ -32,7 +32,7 @@ Two fixed/lockstep groups plus deploy-only apps:
 
 `.changeset/config.json` is **generated** by the toolbox (`updateChangesets()`) from the workspace/project graph on `pnpm install` — that file is the source of truth. The non-default settings that carry design intent:
 
-- **`fixed`** — the two enumerated lockstep groups (A: core/SDK + storybook; B: `@dxos/plugin-*` + `@dxos/cli`), regenerated from the graph. `fixed` (not `linked`) because it bumps and publishes all members together every release; `linked` would only sync packages that changed — not what the core/SDK surface wants.
+- **`fixed`** — the two enumerated lockstep groups (A: core/SDK; B: `@dxos/plugin-*` + `@dxos/cli`), regenerated from the graph. `fixed` (not `linked`) because it bumps and publishes all members together every release; `linked` would only sync packages that changed — not what the core/SDK surface wants.
 - **`privatePackages: { version: true, tag: false }`** — version private group members (storybook, Composer) but never tag or publish them; deploy-only apps get no changeset, so never bump.
 - **`snapshot`** — the `@next` template (calculated base version + commit suffix, e.g. `0.10.0-next-<commit>`).
 - **`bumpVersionsWithWorkspaceProtocolOnly`** and **`onlyUpdatePeerDependentsWhenOutOfRange`** — part of the semver-cascade fix (below).
