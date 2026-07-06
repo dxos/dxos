@@ -7,7 +7,14 @@ import * as Predicate from 'effect/Predicate';
 import { DeferredTask, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Database, Entity, type Feed, Obj, type Query, type Ref } from '@dxos/echo';
-import { type ObjectJSON, ParentId, SelfURIId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
+import {
+  ChangeId,
+  type ObjectJSON,
+  ParentId,
+  SelfURIId,
+  assertObjectModel,
+  setRefResolverOnData,
+} from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
@@ -89,12 +96,16 @@ export class FeedHandle {
 
       for (const obj of decodedObjects) {
         this._objectCache.set(obj.id, obj);
+        this.#installFeedChange(obj);
       }
 
-      changed = objectSetChanged(this._objects, decodedObjects);
+      // Collapse append-only edits: a changed item appears as multiple blocks with the same id;
+      // keep the latest so queries observe the current value.
+      const currentObjects = dedupeByIdKeepLast(decodedObjects);
+      changed = objectSetChanged(this._objects, currentObjects);
 
       TRACE_FEED_LOAD && log.info('feed refresh', { changed, objects: objects?.length ?? 0, refreshId: thisRefreshId });
-      this._objects = decodedObjects;
+      this._objects = currentObjects;
     } catch (err) {
       // TODO(dmaretskyi): This task occasionally fails with "The database connection is not open" error in tests -- some issue with teardown ordering.
       //                   We should find the root cause and fix it instead of muting the error.
@@ -130,6 +141,11 @@ export class FeedHandle {
   // Shares one QueryResult instance (and its subscription) across repeated calls with the same
   // serialized query against this feed.
   readonly #queryResultCache = new QueryResultCache();
+
+  // Feed items are append-only, so mutating one (via `Obj.update`) persists a new entry with the
+  // same id. `#pendingWrites` lets reads/sync wait for those fire-and-forget appends (triggered by
+  // the synchronous `Obj.update`) to reach the queue.
+  readonly #pendingWrites = new Set<Promise<void>>();
 
   constructor(
     private readonly _service: FeedProtocol.QueueService,
@@ -177,10 +193,12 @@ export class FeedHandle {
       if (this._parentEntity) {
         defineHiddenProperty(item, ParentId, this._parentEntity);
       }
+      this.#installFeedChange(item);
     }
 
-    // Optimistic update.
-    this._objects = [...this._objects, ...items];
+    // Optimistic update. Feeds are append-only, so a changed item is stored as a new block with the
+    // same id; collapse by id (keeping the latest) so the local view mirrors the persisted queue.
+    this._objects = dedupeByIdKeepLast([...this._objects, ...items]);
     for (const item of items) {
       this._objectCache.set(item.id, item);
     }
@@ -201,6 +219,44 @@ export class FeedHandle {
       log.catch(err);
       this._error = err as Error;
       this.updated.emit();
+    }
+  }
+
+  /**
+   * Persists mutations to a feed item made through the standard `Obj.update` API.
+   *
+   * Feed items are decoded as plain (non-reactive) objects with no change handler, so `Obj.update`
+   * would otherwise mutate them in place without persisting. Installing a `ChangeId` handler makes
+   * `Obj.update` also append a new entry with the same id (feeds are append-only; reads collapse
+   * entries by id, keeping the latest). The append is fire-and-forget because `Obj.update` is
+   * synchronous; it is tracked in {@link #pendingWrites} so reads and sync can wait for it to reach
+   * the queue. Idempotent; skips objects that already carry a change handler (e.g. reactive objects).
+   */
+  #installFeedChange(item: Entity.Unknown): void {
+    // Only objects support `Obj.update`; feeds hold objects (relations use `Relation.update`).
+    if (!Obj.isObject(item) || Reflect.get(item, ChangeId) !== undefined) {
+      return;
+    }
+    defineHiddenProperty(item, ChangeId, (mutate: (target: Obj.Unknown) => void) => {
+      mutate(item);
+      // `append` only reads the item and touches hidden metadata + the local set, so it does not
+      // re-enter this handler — no mutate→append→mutate loop.
+      this.#trackWrite(this.append([item]));
+    });
+  }
+
+  #trackWrite(promise: Promise<void>): void {
+    this.#pendingWrites.add(promise);
+    void promise.finally(() => this.#pendingWrites.delete(promise));
+  }
+
+  /**
+   * Waits for fire-and-forget appends (from `Obj.update` on feed items) to reach the queue, so a
+   * subsequent read or sync observes them. Loops because draining may schedule further writes.
+   */
+  async #drainPendingWrites(): Promise<void> {
+    while (this.#pendingWrites.size > 0) {
+      await Promise.all([...this.#pendingWrites]);
     }
   }
 
@@ -242,6 +298,10 @@ export class FeedHandle {
     shouldPush = true,
     shouldPull = true,
   }: { shouldPush?: boolean; shouldPull?: boolean } = {}): Promise<void> {
+    if (shouldPush) {
+      // Flush fire-and-forget appends from `Obj.update` on feed items so they are pushed.
+      await this.#drainPendingWrites();
+    }
     await this._service.syncQueue({
       subspaceTag: this._namespace,
       spaceId: this._spaceId,
@@ -265,6 +325,8 @@ export class FeedHandle {
   }
 
   async fetchObjectsJSON(): Promise<ObjectJSON[]> {
+    // Ensure fire-and-forget appends from `Obj.update` on feed items have landed before reading.
+    await this.#drainPendingWrites();
     const { objects } = await this._service.queryQueue({
       query: {
         queuesNamespace: this._namespace,
@@ -272,7 +334,7 @@ export class FeedHandle {
         queueIds: [this._feedId],
       },
     });
-    return (objects ?? []).flatMap((encoded) => {
+    const parsed = (objects ?? []).flatMap((encoded) => {
       try {
         return [JSON.parse(encoded) as ObjectJSON];
       } catch (err) {
@@ -280,6 +342,9 @@ export class FeedHandle {
         return [];
       }
     });
+    // Collapse append-only edits: a changed item is stored as a new block with the same id, so keep
+    // the latest block per id to expose the current value.
+    return dedupeByIdKeepLast(parsed);
   }
 
   async hydrateObject(obj: ObjectJSON): Promise<Entity.Unknown> {
@@ -290,6 +355,7 @@ export class FeedHandle {
       database: this._database,
       parent: this._parentEntity,
     });
+    this.#installFeedChange(decoded);
     return decoded;
   }
 
@@ -371,6 +437,20 @@ export class FeedHandle {
     await this._refreshTask.join();
   }
 }
+
+/**
+ * Collapses entries by id, keeping the last occurrence for each id.
+ * Feeds are append-only logs, so a changed item is persisted as a new entry with the same id as the
+ * original; the latest entry is the current value. Insertion order of each id's first appearance is
+ * preserved.
+ */
+const dedupeByIdKeepLast = <T extends { id: string }>(items: T[]): T[] => {
+  const byId = new Map<string, T>();
+  for (const item of items) {
+    byId.set(item.id, item);
+  }
+  return Array.from(byId.values());
+};
 
 const objectSetChanged = (before: Entity.Unknown[], after: Entity.Unknown[]) => {
   if (before.length !== after.length) {

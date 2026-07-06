@@ -7,7 +7,7 @@ import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Event } from '@dxos/async';
+import { Event, Trigger } from '@dxos/async';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
@@ -263,6 +263,81 @@ describe('Feed', () => {
       const results = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
       expect(results).toHaveLength(1);
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+  });
+
+  describe('change', () => {
+    test('Obj.update on a feed item persists a new version with the same id', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const testLayer = Database.layer(db);
+
+      let feed!: Feed.Feed;
+      let itemId!: string;
+      await Effect.gen(function* () {
+        feed = yield* Database.add(Feed.make({ name: 'editable' }));
+
+        const alice = Obj.make(TestSchema.Person, { name: 'alice', age: 30 });
+        yield* Feed.append(feed, [alice]);
+
+        const [queried] = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
+        itemId = queried.id;
+
+        // Mutating a feed item through the standard API persists a new entry with the same id.
+        Obj.update(queried, (item) => {
+          item.name = 'alice-updated';
+          item.age = 31;
+        });
+
+        // Re-query resolves to the latest version (entries collapse by id, keeping the latest).
+        const results = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
+        expect(results).toHaveLength(1);
+        expect(results[0].id).toBe(itemId);
+        expect(results[0].name).toBe('alice-updated');
+        expect(results[0].age).toBe(31);
+      }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+
+      // Both the original and the updated block are persisted to the queue (append-only log).
+      const feeds = await peer.host.getAllFeedsForSpace(db.spaceId);
+      const blocks =
+        feeds.find((entry) => entry.feedId === feed.id && entry.feedNamespace === FeedProtocol.WellKnownNamespaces.data)
+          ?.blocks ?? [];
+      expect(blocks.length).toBe(2);
+    });
+
+    test('query.subscribe reflects a changed feed item', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const testLayer = Database.layer(db);
+
+      await Effect.gen(function* () {
+        const feed = yield* Database.add(Feed.make({ name: 'reactive-change' }));
+
+        const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+        yield* Feed.append(feed, [alice]);
+
+        const [queried] = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
+
+        const queryResult = yield* Feed.query(feed, Filter.type(TestSchema.Person));
+        const updated = new Trigger();
+        const unsubscribe = queryResult.subscribe(
+          () => {
+            if (queryResult.results.some((person) => person.name === 'alice-updated')) {
+              updated.wake();
+            }
+          },
+          { fire: true },
+        );
+
+        Obj.update(queried, (item) => {
+          item.name = 'alice-updated';
+        });
+
+        yield* Effect.promise(() => updated.wait());
+        expect(queryResult.results).toHaveLength(1);
+        expect(queryResult.results[0].name).toBe('alice-updated');
+        unsubscribe();
+      }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+    });
   });
 
   // TODO(wittjosiah): Implement when queue retention is supported.
