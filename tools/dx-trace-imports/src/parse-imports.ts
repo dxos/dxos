@@ -30,6 +30,21 @@ const stringLiteralValue = (value: unknown): string | null => {
 const isRequireCallee = (callee: Record<string, unknown> | null): boolean =>
   callee?.type === 'Identifier' && callee.value === 'require';
 
+const isTypeOnlySpecifier = (specifier: unknown): boolean => asRecord(specifier)?.isTypeOnly === true;
+
+/**
+ * A declaration carries no runtime edge when it is an `import type` / `export type`, or when
+ * every named specifier is individually `type`-marked (`import { type A } from 'x'`) and thus
+ * fully elided at compile time. Side-effect imports (`import 'x'`, empty specifiers) are kept.
+ */
+const isEntirelyTypeOnly = (node: Record<string, unknown>): boolean => {
+  if (node.typeOnly === true) {
+    return true;
+  }
+  const specifiers = node.specifiers;
+  return Array.isArray(specifiers) && specifiers.length > 0 && specifiers.every(isTypeOnlySpecifier);
+};
+
 const collectSpecifiers = (value: unknown, out: Set<string>): void => {
   if (Array.isArray(value)) {
     for (const child of value) {
@@ -44,12 +59,12 @@ const collectSpecifiers = (value: unknown, out: Set<string>): void => {
   }
 
   switch (node.type) {
-    // Static import / re-export edges. `import type` / `export type` carry no runtime edge,
-    // and none of their children hold executable code, so stop descending here.
+    // Static import / re-export edges. Type-only declarations carry no runtime edge, and none
+    // of these nodes' children hold executable code, so stop descending here.
     case 'ImportDeclaration':
     case 'ExportAllDeclaration':
     case 'ExportNamedDeclaration': {
-      if (node.typeOnly) {
+      if (isEntirelyTypeOnly(node)) {
         return;
       }
       const source = stringLiteralValue(node.source);
