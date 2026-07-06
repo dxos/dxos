@@ -13,7 +13,7 @@ const VERBOSE = false,
   USE_TSGO = process.env.DX_USE_TSC !== '1';
 
 /** Matches TypeScript diagnostic file paths, including `../` segments and multi-part extensions. */
-const DIAGNOSTIC_FILE = String.raw`(?:(?:\.\./)*[\w./-]+|\./[\w./-]+|[\w./-]+)\.(?:[A-Za-z0-9]+)(?:\.[A-Za-z0-9]+)*`;
+const DIAGNOSTIC_FILE = String.raw`[\w./-]+\.[A-Za-z0-9]+(?:\.[A-Za-z0-9]+)*`;
 
 const ANSI = String.raw`\x1B\[[0-9;]*m`;
 
@@ -113,7 +113,12 @@ const main = async () => {
   const tsc = spawnSync(compiler, [], { encoding: 'utf-8' });
 
   const cwd = process.cwd();
-  const gitRoot = spawnSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf-8' }).stdout.trim();
+  const gitRootResult = spawnSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf-8' });
+  const gitRoot = gitRootResult.stdout?.trim();
+  if (!gitRoot) {
+    console.error('Failed to determine git root.');
+    process.exit(1);
+  }
 
   if (tsc.stdout) {
     process.stdout.write(rewriteDiagnosticPaths(tsc.stdout, cwd, gitRoot));

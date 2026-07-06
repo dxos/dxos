@@ -1,6 +1,6 @@
 # @dxos/dx-trace-imports
 
-Traces static import chains from an entry module to a target package, file, or glob pattern using [madge](https://github.com/pahen/madge), then resolves `package.json` `imports`/`exports` (including `#`-prefixed import maps) and follows transitive dependencies through workspace `@dxos/*` packages.
+Traces static import chains from an entry module to a target package, file, or glob pattern by parsing sources with SWC, resolving `package.json` `imports`/`exports` (including `#`-prefixed import maps), and following transitive dependencies through workspace `@dxos/*` packages.
 
 ## Usage
 

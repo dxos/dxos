@@ -22,22 +22,18 @@ const readJsonFile = <T>(filePath: string): T | null => {
 
 /**
  * Resolve a conditional export/import entry against the given conditions, following
- * nested condition maps and falling back to `default`/`import`. Returns `null` when no
- * branch applies so callers can try other resolution strategies.
+ * nested condition maps. Mirrors Node's resolution order: object keys are checked in
+ * source order (not `conditions` order), since package authors rely on key order to
+ * rank overlapping conditions (e.g. `node` before `default`).
  */
 const tryResolveConditionalEntry = (entry: ConditionalEntry, conditions: readonly string[]): string | null => {
   if (typeof entry === 'string') {
     return entry;
   }
-  for (const condition of conditions) {
-    const value = entry[condition];
-    if (value !== undefined) {
-      return tryResolveConditionalEntry(value, conditions);
+  for (const key of Object.keys(entry)) {
+    if (key === 'default' || key === 'import' || conditions.includes(key)) {
+      return tryResolveConditionalEntry(entry[key], conditions);
     }
-  }
-  const fallback = entry.default ?? entry.import;
-  if (fallback !== undefined) {
-    return tryResolveConditionalEntry(fallback, conditions);
   }
   return null;
 };
