@@ -82,26 +82,15 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      # composer-app + composer-crx share the desktop/extension version line; bump both in lockstep. Plain
-      # semver bump (Composer is not in Changesets) — a targeted version-line edit to keep the diff minimal.
+      # composer-app + composer-crx share the desktop/extension version line; bump-composer-version.mjs bumps
+      # both in lockstep and prints the new version. sync-versions.mjs then stamps the derived files.
       - name: Bump version
         id: bump
         run: |
-          next=$(node -e '
-            const fs = require("fs");
-            const bump = process.argv[1];
-            const cur = JSON.parse(fs.readFileSync("packages/apps/composer-app/package.json", "utf8")).version;
-            const [maj, min, pat] = cur.split("-")[0].split(".").map(Number);
-            const next = bump === "major" ? `${maj + 1}.0.0` : bump === "minor" ? `${maj}.${min + 1}.0` : `${maj}.${min}.${pat + 1}`;
-            for (const p of ["composer-app", "composer-crx"]) {
-              const f = "packages/apps/" + p + "/package.json";
-              fs.writeFileSync(f, fs.readFileSync(f, "utf8").replace(/^(  "version": ")[^"]*(",)$/m, `$1${next}$2`));
-            }
-            process.stdout.write(next);
-          ' "${{ inputs.bump }}")
+          version=$(.github/workflows/scripts/bump-composer-version.mjs "${{ inputs.bump }}")
           node scripts/sync-versions.mjs
-          echo "version=$next" >> "$GITHUB_OUTPUT"
-          echo "Composer -> $next"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Composer -> $version"
 
       - name: Commit + tag on main
         id: commit
