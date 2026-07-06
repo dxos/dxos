@@ -18,20 +18,30 @@ import * as Otel from '../../src/extensions/otel';
 import { type Observability, addExtension, initialize, make } from '../../src/observability';
 import { identityProvider } from '../../src/providers/client-observability';
 
-// Dev-only: this suite is permanently skipped in CI. It boots two Clients against
-// the real edge-main worker and emits spans to a real SigNoz ingestion endpoint.
-// There are no assertions on trace structure — this is a manual smoke for eyeballing
-// the resulting trace tree in SigNoz. Run locally with:
+// Dev-only: gated behind the `tracing-e2e` tag, which the default VITEST_TAGS_FILTER
+// excludes (see .moon/tasks/tag-ts-test.yml) — never runs in CI or plain `moon :test`.
+// It boots two Clients against an EDGE worker and emits spans to a real SigNoz
+// ingestion endpoint. There are no assertions on trace structure — this is a manual
+// smoke for eyeballing the resulting trace tree in SigNoz.
 //
-// DX_OTEL_ENDPOINT=https://ingest.eu.signoz.cloud:443 \
-// DX_OTEL_HEADERS='signoz-ingestion-key:<YOUR_SIGNOZ_INGESTION_KEY>' \
-// DX_TELEMETRY_TAG=tracing-e2e-$(uuidgen) \
-//   moon run observability:test -- --run --tagsFilter=tracing-e2e test/e2e/tracing-invitation.test.ts
+// Run against a LOCAL dev edge (recommended):
+//   1. edge repo: `node scripts/dev-setup.mjs` once, then
+//      `EDGE_DEV_OTLP=1 pnpm run dev` in packages/services/edge (dev-OTLP opt-in makes
+//      the tail-logger export local spans to SigNoz).
+//   2. dxos repo:
+//      VITEST_TAGS_FILTER=tracing-e2e \
+//      DX_EDGE_URL=http://localhost:8787 \
+//      DX_OTEL_ENDPOINT=https://ingest.eu.signoz.cloud:443 \
+//      DX_OTEL_HEADERS='signoz-ingestion-key: <KEY>' \
+//      DX_TELEMETRY_TAG=tracing-e2e-$(uuidgen) \
+//        moon run observability:test
 //
-// ...and flip `describe.skip` to `describe` below.
+// NOTE: `--tagsFilter` appended after `--` does NOT reach vitest (the moon task wraps
+// vitest in `bash -c`, so appended args become bash positionals) — the VITEST_TAGS_FILTER
+// env var is the only working selector. Omit DX_EDGE_URL to target edge-main.
+// In SigNoz, filter spans with `ctx.tag = '<DX_TELEMETRY_TAG>'`.
 
-const LOCAL = false;
-const EDGE_URL = LOCAL ? 'http://localhost:8787' : 'https://edge-main.dxos.workers.dev';
+const EDGE_URL = process.env.DX_EDGE_URL ?? 'https://edge-main.dxos.workers.dev';
 
 const createEdgeConfig = () =>
   new Config({
@@ -73,7 +83,7 @@ const initTracing = (config: Config): Promise<Observability> =>
     EffectEx.runAndForwardErrors,
   );
 
-describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0, tags: ['tracing-e2e'] }, () => {
+describe('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0, tags: ['tracing-e2e'] }, () => {
   test('host + guest complete a DELEGATED space invitation via edge-main (tagged for SigNoz)', async ({ expect }) => {
     const clientTag = process.env.DX_TELEMETRY_TAG;
     expect(clientTag, 'DX_TELEMETRY_TAG must be set').toBeTruthy();
