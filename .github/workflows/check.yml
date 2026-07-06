@@ -84,6 +84,9 @@ jobs:
       - name: Check publish config
         run: pnpm run check-publish-config
 
+      - name: Check public packages are published
+        run: pnpm run check-packages-published
+
       - name: Check version files in sync
         # version.ts (DXOS_VERSION) + tauri.conf.json are derived from their package versions by
         # sync-versions.mjs during release; fail the PR if a committed copy drifts out of sync.
