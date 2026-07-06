@@ -11,7 +11,7 @@ import { translations } from '#translations';
 import { RegistrySettings } from './RegistrySettings';
 
 const meta = {
-  title: 'plugins/plugin-registry/RegistrySettings',
+  title: 'plugins/plugin-registry/components/RegistrySettings',
   component: RegistrySettings,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
