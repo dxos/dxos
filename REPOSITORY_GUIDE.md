@@ -156,8 +156,7 @@ The filter consists of a series of filename pattern/level tuples separated by co
 
 DXOS is **trunk-based**: `main` is the only long-lived integration branch.
 
-- Features are developed on branches prefixed with the author's nickname, e.g. `alice/some-feature` (external contributors fork and PR from their fork).
-- Branches merge to `main` via PRs; the **Check** workflow (build, test, lint, fmt) must pass.
+- Work happens on feature branches that merge to `main` via PRs; the **Check** workflow (build, test, lint, fmt) must pass. External contributors fork and PR from their fork.
 - Feature branches are **squashed** on merge, keeping `main` linear.
 - Consumer-relevant changes carry a `.changeset/*.md` — see the [changeset authoring guide](./agents/instructions/changesets.md). (There is no longer a CI-enforced conventional-commit PR-title check; conventional PR titles remain a documented convention — see the PR Naming Convention in `AGENTS.md`.)
 - `labs` / `staging` / `production` are **deploy environments**, not long-lived branches — you deploy a chosen commit to one via the Deploy Apps workflow, and "what's deployed where" is tracked by floating `<app>/<environment>` git tags.
