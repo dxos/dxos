@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { Game, GameVariantMismatchError, loadGame } from '@dxos/plugin-game/types';
 
 import * as positionIndexInternal from '../internal/position-index';
-import { Chess, ChessOperation, ChessPositionIndex, PlayerReview } from '../types';
+import { Chess, ChessOperation, ChessPositionIndex } from '../types';
 
 export default ChessOperation.RebuildPositionIndex.pipe(
   Operation.withHandler(
