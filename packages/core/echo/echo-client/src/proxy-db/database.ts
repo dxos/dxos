@@ -812,29 +812,36 @@ const isQueryScoped = (query: QueryAST.Query): boolean => {
 
 /**
  * Whether a feed-scoped query can be evaluated client-side against fetched queue items. Index-only
- * queries (full-text search, or a content ordering) must instead run through the host indexer.
+ * queries (e.g. full-text search) must instead run through the host indexer.
  */
 const isClientEvaluableFeedQuery = (query: QueryAST.Query): boolean => {
   const simple = isSimpleFeedWindowQuery(query);
-  return simple != null && !filterContainsTextSearch(simple.filter) && !queryContainsContentOrder(query);
+  // TODO(dxos): Route content-ordered feed queries (e.g. `Order.property('created')`) to the host
+  //   indexer instead of the client feed path, by appending `&& !queryContainsContentOrder(query)`
+  //   here (and uncommenting the helper below). The indexer sorts + slices the indexed feed and
+  //   returns only the requested window, so the client never decodes the whole feed — the reason to
+  //   want it. Disabled for now: the indexer's per-range round-trip + indexing latency makes paging
+  //   noticeably slower than the feed path's in-memory full-fetch + sort. Re-enable once indexed
+  //   ordered range reads are fast enough (the skip+limit propagation they need is already fixed in
+  //   `query-planner`, and `usePagination` already tolerates the async delivery).
+  return simple != null && !filterContainsTextSearch(simple.filter);
 };
 
-/**
- * Whether the query orders by content (a non-`natural` order, e.g. `Order.property('created')`). The
- * client feed path can only honor `natural` (insertion) order against the fetched queue; a content
- * ordering runs through the host indexer, which sorts + slices the indexed feed and returns only the
- * requested window — so the client never decodes the whole feed. The indexer resolves a range
- * asynchronously, which `usePagination` tolerates (holds the window while it loads).
- */
-const queryContainsContentOrder = (query: QueryAST.Query): boolean => {
-  let contentOrder = false;
-  QueryAST.visit(query, (node) => {
-    if (node.type === 'order' && node.order.some((order) => order.kind !== 'natural')) {
-      contentOrder = true;
-    }
-  });
-  return contentOrder;
-};
+// TODO(dxos): See `isClientEvaluableFeedQuery` above — re-enable together with the routing clause.
+// /**
+//  * Whether the query orders by content (a non-`natural` order, e.g. `Order.property('created')`).
+//  * A content ordering can't be honored by the newest-by-position client feed path, so it runs
+//  * through the host indexer, which sorts + slices the indexed feed and returns only the window.
+//  */
+// const queryContainsContentOrder = (query: QueryAST.Query): boolean => {
+//   let contentOrder = false;
+//   QueryAST.visit(query, (node) => {
+//     if (node.type === 'order' && node.order.some((order) => order.kind !== 'natural')) {
+//       contentOrder = true;
+//     }
+//   });
+//   return contentOrder;
+// };
 
 const filterContainsTextSearch = (filter: QueryAST.Filter): boolean => {
   if (filter.type === 'text-search') {

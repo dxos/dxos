@@ -384,12 +384,14 @@ describe('feeds', () => {
     });
 
     // Content-ordered (non-`natural`) feed paging — the mailbox's path (order by a message field, not
-    // insertion order). A content order routes to the host indexer, which sorts + slices the indexed
-    // feed and returns only the requested window (the client never decodes the whole feed). The
-    // indexer resolves after indexing, so this waits for `updateIndexes()`; `usePagination` handles
-    // that latency in-app. Guards the skip+limit propagation fix — a slid window (`skip > 0`) must
-    // return the full page, not `limit - skip`. `total` stays within one indexing pass.
-    test('content-ordered `.orderBy(property).skip().limit()` windows via the indexer', async ({ expect }) => {
+    // insertion order). Must return correct windows on whichever path `isClientEvaluableFeedQuery`
+    // selects: the client feed path today (full-fetch + sort + slice), or the host indexer if content-
+    // order routing is re-enabled. Guards the skip+limit propagation fix — a slid window (`skip > 0`)
+    // must return the full page, not `limit - skip`. `updateIndexes()` keeps it valid for the indexer
+    // path; `total` stays within one indexing pass.
+    test('content-ordered `.orderBy(property).skip().limit()` returns correct windows (skip+limit)', async ({
+      expect,
+    }) => {
       await using peer = await builder.createPeer({
         types: [Feed.Feed, TestSchema.Person],
         assignQueuePositions: true,
