@@ -206,7 +206,7 @@ export class Toolbox {
    * tasks, testbench-app, and the storybook *apps*). They deploy via their own workflows and never publish;
    * Composer is versioned by its release workflow, the rest are unversioned. Keeping them out of Changesets
    * means one authoring flow (only packages get changesets) and no version-skipping (app cadence never
-   * advances package versions). See docs/design/app-release-spec.md.
+   * advances package versions). See .github/RELEASE-SPEC.md.
    *
    * Membership is an enumerated list because Changesets `fixed` matches package names, which share no
    * common prefix across core/SDK.

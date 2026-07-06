@@ -1,6 +1,6 @@
 # Changesets — Authoring Guide for Agents
 
-How to decide whether a PR needs a changeset, and how to write one. Full release design: [`docs/design/release-spec.md`](../../docs/design/release-spec.md).
+How to decide whether a PR needs a changeset, and how to write one. Full release design: [`.github/RELEASE-SPEC.md`](../../.github/RELEASE-SPEC.md).
 
 **The rule:** add a `.changeset/*.md` when — and only when — the change is worth a **changelog entry**, i.e. consumer-relevant (behavior, public API, types, a fix, a perf change, or a consumer-visible dependency bump). The code ships with the next release either way; the changeset decides whether it's *recorded* in the changelog (and contributes a version bump). Not changelog-relevant → omit it, and **never add an empty changeset** to silence the reminder. CI's `changeset-reminder` (in **Check**) posts an advisory sticky comment when a PR touches publishable source without one — a nudge, never a blocker.
 

@@ -162,11 +162,11 @@ DXOS is **trunk-based**: `main` is the only long-lived integration branch.
 - Consumer-relevant changes carry a `.changeset/*.md` — see the [changeset authoring guide](./agents/instructions/changesets.md). (There is no longer a conventional-commit PR-title requirement, though the legacy title check runs in parallel until the first Changesets release lands.)
 - `labs` / `staging` / `production` are **deploy environments**, not long-lived branches — you deploy a chosen commit to one via the Deploy Apps workflow, and "what's deployed where" is tracked by floating `<app>/<environment>` git tags.
 
-Full design (versioning policy, publish groups, cross-repo contract): [`docs/design/release-spec.md`](./docs/design/release-spec.md).
+Full design (versioning policy, publish groups, cross-repo contract): [`.github/RELEASE-SPEC.md`](./.github/RELEASE-SPEC.md).
 
 ## Releasing
 
-Everything runs in GitHub Actions — nobody runs `changeset` / `pnpm publish` / `git tag` on a laptop. The *why* is in [`docs/design/release-spec.md`](./docs/design/release-spec.md); how to write a changeset is in the [authoring guide](./agents/instructions/changesets.md).
+Everything runs in GitHub Actions — nobody runs `changeset` / `pnpm publish` / `git tag` on a laptop. The *why* is in [`.github/RELEASE-SPEC.md`](./.github/RELEASE-SPEC.md); how to write a changeset is in the [authoring guide](./agents/instructions/changesets.md).
 
 Packages ship as two lockstep groups — **A: Core/SDK** (`@dxos/echo`, `@dxos/client`, …) and **B: Plugins + CLI** (`@dxos/plugin-*`, `@dxos/cli`). Naming one member in a changeset bumps its whole group, and both share one "Version Packages" PR. **Apps are not in a group — they deploy, never publish.**
 

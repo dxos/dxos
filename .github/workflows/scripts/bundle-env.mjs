@@ -9,7 +9,7 @@
 //
 // An app whose output dir is already populated is skipped: that is how a bundle built once and shared via
 // artifact is reused (the build-sharing fan-out downloads it into the output dir before this runs, so no
-// rebuild — see the App deploys section of docs/design/release-spec.md).
+// rebuild — see the App deploys section of .github/RELEASE-SPEC.md).
 //
 // Usage: bundle-env.mjs <environment> [app|all]
 
