@@ -5,6 +5,8 @@
   // Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
   // `_worker.js` lives in the asset dir (the still-on-Pages preview build also consumes it there), so it is
   // kept out of the asset upload with a generated `.assetsignore`. Bindings match what `_worker.ts` reads.
+  // Local dev: `moon run composer-app:bundle && wrangler dev` (uses the default bindings below).
+  // Tail production logs: `wrangler tail composer`.
   "name": "composer",
   "main": "./out/composer/_worker.js",
   "compatibility_date": "2024-04-05",
