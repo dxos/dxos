@@ -21,17 +21,16 @@ for (const file of files) {
     continue;
   }
 
-  packagesByName.set(pkg.name, { file, private: !!pkg.private });
+  packagesByName.set(pkg.name, { file, private: !!pkg.private, pkg });
 }
 
 const errors = [];
 
-for (const [name, { file, private: isPrivate }] of packagesByName) {
+for (const [name, { file, private: isPrivate, pkg }] of packagesByName) {
   if (isPrivate) {
     continue;
   }
 
-  const pkg = JSON.parse(readFileSync(file, 'utf8'));
   const dependencyFields = ['dependencies', 'peerDependencies', 'optionalDependencies'];
 
   for (const field of dependencyFields) {
