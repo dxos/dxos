@@ -24,7 +24,7 @@ eval "$(proto activate zsh --config-mode all)"
 
 ## Monorepo workspace
 
-This monorepo repository is built with [`pnpm`](https://pnpm.io) and [`moon`](https://moonrepo.dev), with [`release-please`](https://github.com/googleapis/release-please) for release automation.
+This monorepo repository is built with [`pnpm`](https://pnpm.io) and [`moon`](https://moonrepo.dev), with [Changesets](https://github.com/changesets/changesets) for release automation (see [Releasing](#releasing)).
 
 Setup:
 
@@ -154,32 +154,23 @@ The filter consists of a series of filename pattern/level tuples separated by co
 
 ## Branches
 
-> **In transition.** The release & change-management model in this section and in [Publishing](#publishing) / [Workflow](#workflow) below (release-please, conventional-commit PR titles, the `rc-*` / `production` / `staging` branch flow, and per-branch npm publishing) is being replaced. The target design — Changesets, trunk-based `main`, deliberate human-gated pre-releases, app/package version decoupling, and a three-tier cross-repo contract with a dependency-cycle policy — is specified in [`docs/design/release-spec.md`](./docs/design/release-spec.md) (which also covers cross-repo development, as a follow-up section). The descriptions below reflect the **current** model until that migration lands.
+DXOS is **trunk-based**: `main` is the only long-lived integration branch.
 
-- In general, features are developed on feature branches starting with the author's nickname e.g.: `alice/some-feature`.
-- Features merge to `main` via PRs and checks like `pnpm test` and `pnpm lint` must pass.
-- PRs have to be [titled conventionally](https://www.conventionalcommits.org/en/v1.0.0/).
-- The default branch for development is `main`, if you are contributing this is where you make PRs to.
-- Feature branches within the repo are prefixed with the contributors username.
-- External contributors may contribute by forking the repo and sending PRs from their fork.
-- All feature branches are squashed when being merged to `main`.
-- When preparing a new release, a release candidate is cut from `main` using a Github action, these branches are prefixed with `rc-`.
-- On `rc-` branches Release Please runs and calculates what the next version should be.
-- Any further bug fixes merged to the `rc-` branch will also be pushed to `main`.
-- Once the Release Please PR is merged and the release is tagged, the `rc-` branch is merged into `main` and `production` before the branch is deleted.
-- The workflow for hotfixes is identical except it starts by branching from `production` and the branch is prefixed with `hotfix-`.
-- The current workflow for `staging` is force pushing any branch there as needed, the expectation is that this would generally be only be done from `rc-` or `hotfix-` branches.
+- Features are developed on branches prefixed with the author's nickname, e.g. `alice/some-feature` (external contributors fork and PR from their fork).
+- Branches merge to `main` via PRs; the **Check** workflow (build, test, lint, fmt) must pass.
+- Feature branches are **squashed** on merge, keeping `main` linear.
+- Consumer-relevant changes carry a `.changeset/*.md` — see the [changeset authoring guide](./agents/instructions/changesets.md). (There is no longer a conventional-commit PR-title requirement, though the legacy title check runs in parallel until the first Changesets release lands.)
+- `labs` / `staging` / `production` are **deploy environments**, not long-lived branches — you deploy a chosen commit to one via the Deploy Apps workflow, and "what's deployed where" is tracked by floating `<app>/<environment>` git tags.
 
-## Publishing
+Full design (versioning policy, publish groups, cross-repo contract): [`docs/design/release-spec.md`](./docs/design/release-spec.md).
 
-- All merges to `main` automatically publish apps to dev environment and publish npm packages under the `main` tag.
-- All merges to `staging` automatically publish apps to staging environment and publish npm packages under the `next` tag.
-- All merges to `production` automatically publish apps to production environment and publish npm packages under the `latest` tag.
+## Releasing
 
-### Apps
+Full runbook: [`docs/RELEASING.md`](./docs/RELEASING.md). Everything runs in GitHub Actions — nobody runs `changeset` / `pnpm publish` / `git tag` on a laptop.
 
-The apps published are defined in [`.github/workflows/scripts/apps.sh`](https://github.com/dxos/dxos/blob/main/.github/workflows/scripts/apps.sh).
-In order to include a new app in the publish loop it needs to be added to the `APPS` list in this file.
+**Packages (npm) — Changesets.** Pushes to `main` maintain a "Version Packages" PR; merging it publishes the bumped packages to `@latest` (`publish-all.yml`, OIDC + provenance). A manual dispatch of the same workflow cuts a `@next` snapshot instead. Packages ship as two lockstep groups — Core/SDK and Plugins+CLI — plus continuous per-commit previews to [pkg.pr.new](https://pkg.pr.new).
+
+**Apps — deploy, never publish.** Apps deploy to Cloudflare Workers Static Assets (and Tauri for Composer desktop/iOS) via `deploy-apps.yml`, fully decoupled from npm. The deployable apps are listed in [`.github/workflows/scripts/apps.mjs`](./.github/workflows/scripts/apps.mjs) (`APP_DIRS`); everything else — Worker name, bundle task, output dir, target environments — is derived from each app's `wrangler.jsonc`. Add an app by adding its directory there.
 
 ## Dependencies
 
@@ -192,27 +183,6 @@ Examples:
 ## CI
 
 See [CI docs](./.github/workflows/README.md).
-
-## Branch Diagram
-
-![release flow diagram](./docs/content/design/diagrams/release-flow.drawio.svg)
-
-Based on [this post from nvie.com](https://nvie.com/posts/a-successful-git-branching-model/).
-
-## Workflow:
-
-- merge release candidates and hot fixes w/ `git merge --no-ff`
-- merge feature branches by squashing
-- staging is force pushed to from other branches
-- main/production maintain history
-
-| branch       | purpose                                                                               |
-| :----------- | :------------------------------------------------------------------------------------ |
-| `main`       | the only feature integration branch                                                   |
-| `production` | reflects what code is in production (npm, docs sites, apps, etc) e.g. `docs.dxos.org` |
-| `staging`    | reflects what code is in staging `docs.staging.dxos.org`                              |
-| `rc-*`       | release branches created from main and to merge with `production` or `stating`        |
-| `hotfix-*`   | a hotfix branch created from `production` and destined for `production`               |
 
 ## Patching third-party repos
 
