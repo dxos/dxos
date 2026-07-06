@@ -140,7 +140,7 @@ Renamed in-process, source-level "Queue" naming that means "Feed" (TS identifier
 
 ## Phase 6 COMPLETE — RPC/protobuf contract rename
 
-Renamed the RPC/wire-protocol layer itself (`FeedProtocol.QueueService` → `FeedService` and everything under it), explicitly authorized by the PR reviewer ("`FeedProtocol.QueueService` seems safe to rename", "`client.services.services.QueueService` is safe to rename", "you can rename protobuf definitions"). This is safe within this monorepo because client and host are built from the same generated code — protobuf binary encoding keys fields by number, not name, so renaming proto message/field/service *names* does not break wire compatibility here.
+Renamed the RPC/wire-protocol layer itself (`FeedProtocol.QueueService` → `FeedService` and everything under it), explicitly authorized by the PR reviewer ("`FeedProtocol.QueueService` seems safe to rename", "`client.services.services.QueueService` is safe to rename", "you can rename protobuf definitions"). This is safe within this monorepo because client and host are built from the same generated code — protobuf binary encoding keys fields by number, not name, so renaming proto message/field/service _names_ does not break wire compatibility here.
 
 ### Proto source
 
