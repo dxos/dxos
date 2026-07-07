@@ -100,15 +100,15 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
     // Mirrors the meeting graph action: publish the meeting activity so `handle-payload` binds the feed
     // and enables the manager; native segments then arrive via `CallManager.transcript`.
     const feed = transcript.feed.target;
-    const queueDxn = feed && Feed.getQueueUri(feed);
-    if (!queueDxn) {
-      log.warn('transcript feed has no queue DXN');
+    const feedUri = feed && Feed.getFeedUri(feed);
+    if (!feedUri) {
+      log.warn('transcript feed has no feed URI');
       return;
     }
     const next = !transcribing;
     callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
       meetingId: roomId,
-      transcriptDxn: queueDxn.toString(),
+      transcriptDxn: feedUri.toString(),
       transcriptionEnabled: next,
     });
     setTranscribing(next);
