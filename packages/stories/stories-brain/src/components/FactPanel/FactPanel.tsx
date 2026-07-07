@@ -29,9 +29,9 @@ export const FactPanel = ({ classNames, facts }: FactPanelProps) => {
   const predicates = useMemo(() => predicatesFromFacts(facts), [facts]);
 
   return (
-    <div role='none' className={mx('grid grid-rows-[2fr_1fr] gap-2 min-h-0', classNames)}>
+    <div role='none' className={mx('grid grid-rows-[1fr_1fr] gap-2 min-h-0', classNames)}>
       <FactViewer facts={facts} context={context} predicate={predicate} />
-      <div className='grid grid-cols-[1fr_1fr]'>
+      <div className='grid grid-cols-[1fr_1fr] min-h-0'>
         <EntityList entities={entities} selected={context} onSelect={setContext} />
         <PredicateList predicates={predicates} selected={predicate} onSelect={setPredicate} />
       </div>

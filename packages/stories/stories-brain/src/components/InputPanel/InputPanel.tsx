@@ -105,17 +105,21 @@ export const InputPanel = ({
   const [count, setCount] = useState(defaultDatasetCount);
   const [transcript, setTranscript] = useState('');
 
+  // The effective dataset — falls back to the first when `datasetId` hasn't caught up (e.g. datasets
+  // loaded after mount). Both the Select display and the emitted payload use this, so they can't desync.
+  const dataset = datasets.find((item) => item.id === datasetId) ?? datasets[0];
+
   // Report the active tab's input so the pipeline column can run it (the run trigger lives there).
   useEffect(() => {
     switch (mode) {
       case 'document':
         return onInput?.({ mode: 'document', text });
       case 'dataset':
-        return onInput?.({ mode: 'dataset', datasetId });
+        return onInput?.({ mode: 'dataset', datasetId: dataset?.id ?? '' });
       case 'record':
         return onInput?.({ mode: 'record', transcript: transcript || sampleTranscript });
     }
-  }, [mode, text, datasetId, transcript, sampleTranscript, onInput]);
+  }, [mode, text, dataset, transcript, sampleTranscript, onInput]);
 
   const extensions = useMemo(
     () => [
@@ -127,8 +131,6 @@ export const InputPanel = ({
     ],
     [themeMode, parse, underline],
   );
-
-  const dataset = datasets.find((item) => item.id === datasetId) ?? datasets[0];
 
   return (
     <Panel.Root classNames={classNames}>
