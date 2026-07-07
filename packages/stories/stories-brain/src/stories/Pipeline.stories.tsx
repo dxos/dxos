@@ -503,14 +503,15 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Default: hosted DXOS edge (Claude Haiku).
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    ai: {
+      preset: 'edge-remote',
+      model: 'claude-haiku-3-opus-latest',
+    },
+  },
+};
 
-// Runs the LLM stages against a local Ollama instance with Llama 3.2 3B. Prerequisites:
-//   ollama pull llama3.2:3b
-//   OLLAMA_ORIGINS="*" ollama serve   # CORS, so the browser storybook can reach localhost:11434
-// RDF fact extraction runs on Llama; the email summarize stage still targets Claude (its model is
-// fixed in pipeline-email), so summaries are empty under Ollama until that stage is parameterized.
 export const Ollama: Story = {
   args: {
     ai: {

@@ -4,78 +4,81 @@
 
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
+import { writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, test } from 'vitest';
 
 import { Provider } from '@dxos/ai';
-import { OllamaAiServiceLayer } from '@dxos/ai/testing';
+import { type AiServicePreset, AiServiceTestingPreset } from '@dxos/ai/testing';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Pipeline } from '@dxos/pipeline';
 import { captureSink, instrument, renderBenchmark, runBenchmark } from '@dxos/pipeline/testing';
 
 import { type DocumentFacts, extractFactsStage } from '../stages';
-import { type ExtractDocument } from '../types';
+import { EVAL_DOCS, scoreAccuracy } from './multi-model.corpus';
 
-// Compares pipeline-rdf fact extraction across local models over a fixed sample corpus (no email
-// parsing / no dataset — unlike pipeline-email's email-extraction.bench). Opt-in (needs a running
-// Ollama with the models pulled), so CI and bare checkouts skip:
+// Compares pipeline-rdf fact extraction across models over the fixed gold corpus (multi-model.corpus),
+// scoring accuracy (precision/recall/F1 against the expected facts) alongside raw counts. Three local
+// models (via Ollama) are pitched against three edge Claude tiers (haiku < sonnet < opus). Opt-in
+// (needs a running Ollama with the models pulled AND edge credentials for the Claude tiers):
 //   RDF_BENCH=1 moon run pipeline-rdf:test -- src/testing/multi-model.bench.test.ts
-// Instrument feeds per-stage counters (extract.in/out/errors); the evaluator derives domain metrics
-// (facts per doc, extraction success rate, predicate/entity diversity) from the captured facts.
+// Env: BENCH_ONLY=llama,haiku (filter variants by name substring); BENCH_LIMIT=10 (first N docs);
+//      BENCH_OUT=/path/results.json (results document; defaults to the package root).
 const ENABLED = !!process.env.RDF_BENCH;
 
-// Models to compare (Ollama DXNs). Override the set via BENCH_MODELS (comma-separated DXNs).
-const BENCH_MODELS = (
-  process.env.BENCH_MODELS ??
-  [
-    'com.meta.model.llama-3-2-3b.instruct',
-    'com.alibaba.model.qwen-2-5-7b.instruct',
-    'com.google.model.gemma-4-12b.default',
-  ].join(',')
-)
-  .split(',')
-  .map((model) => model.trim())
-  .filter(Boolean);
+type Variant = { readonly name: string; readonly model: string; readonly preset: AiServicePreset };
 
-// A fixed, varied corpus: each sentence carries one or two obvious propositions spanning distinct
-// predicate shapes (membership, employment, temporal, dependency, location) so the comparison
-// exercises more than a single relation type.
-const DOCS: readonly ExtractDocument[] = [
-  { text: 'Alice works at Acme.', source: 'doc-1' },
-  { text: 'Bob manages the Orion project.', source: 'doc-2' },
-  { text: 'Carol reports to Dave.', source: 'doc-3' },
-  { text: 'Socrates is a Greek philosopher.', source: 'doc-4' },
-  { text: 'Plato was a student of Socrates.', source: 'doc-5' },
-  { text: 'Acme acquired Initech in 2021.', source: 'doc-6' },
-  { text: 'Dave lives in Berlin.', source: 'doc-7' },
-  { text: 'The Orion project depends on the Titan library.', source: 'doc-8' },
-  { text: 'Eve founded Globex.', source: 'doc-9' },
-  { text: 'The Q3 board meeting is scheduled for 2026-07-15.', source: 'doc-10' },
+// Local models (Ollama) vs edge Claude tiers of increasing power.
+const ALL_VARIANTS: readonly Variant[] = [
+  { name: 'llama-3.2-3b', model: 'com.meta.model.llama-3-2-3b.instruct', preset: 'ollama' },
+  { name: 'qwen-2.5-7b', model: 'com.alibaba.model.qwen-2-5-7b.instruct', preset: 'ollama' },
+  { name: 'gemma-4-12b', model: 'com.google.model.gemma-4-12b.default', preset: 'ollama' },
+  { name: 'claude-haiku', model: 'com.anthropic.model.claude-haiku-4-5.default', preset: 'edge-remote' },
+  { name: 'claude-sonnet', model: 'com.anthropic.model.claude-sonnet-4-6.default', preset: 'edge-remote' },
+  { name: 'claude-opus', model: 'com.anthropic.model.claude-opus-4-8.default', preset: 'edge-remote' },
 ];
 
-describe.skipIf(!ENABLED)('pipeline-rdf multi-model extraction benchmark (Ollama gated)', () => {
+const ONLY = process.env.BENCH_ONLY?.split(',')
+  .map((name) => name.trim())
+  .filter(Boolean);
+const VARIANTS = ONLY?.length
+  ? ALL_VARIANTS.filter((variant) => ONLY.some((name) => variant.name.includes(name)))
+  : ALL_VARIANTS;
+
+const LIMIT = process.env.BENCH_LIMIT ? Number(process.env.BENCH_LIMIT) : EVAL_DOCS.length;
+// Extraction inputs (gold `expected` stripped); scoring re-associates by `doc.source`.
+const DOCS = EVAL_DOCS.slice(0, LIMIT).map(({ expected: _expected, ...doc }) => doc);
+
+const OUT_PATH = process.env.BENCH_OUT ?? fileURLToPath(new URL('../../bench-results.json', import.meta.url));
+
+describe.skipIf(!ENABLED)('pipeline-rdf multi-model extraction benchmark (Ollama + edge gated)', () => {
   test(
-    'compares fact extraction across models',
+    'scores fact extraction accuracy across local and edge models',
     async ({ expect }) => {
-      const variants = BENCH_MODELS.map((model) => ({ name: modelLabel(model), config: { model } }));
+      const variants = VARIANTS.map((variant) => ({
+        name: variant.name,
+        config: { model: variant.model, preset: variant.preset },
+      }));
 
       const result = await EffectEx.runPromise(
         runBenchmark({
           variants,
-          // Stream the corpus through the instrumented extraction stage under the variant's model.
-          // pipeline-rdf degrades a failed extraction to no facts, so a weak model yields a low
-          // facts-per-doc rather than aborting the run. `strict: false` skips the generateObject
-          // attempt local models reliably fail, making each doc a single generation.
-          program: ({ model }) => {
+          // Stream the corpus through the instrumented extraction stage under the variant's model and
+          // AI backend. pipeline-rdf degrades a failed extraction to no facts, so a weak model yields
+          // low accuracy rather than aborting. Local models get `strict: false` (they reliably fail
+          // the structured generateObject attempt); edge models keep the strict path.
+          program: ({ model, preset }) => {
             const { sink, items } = captureSink<DocumentFacts>();
+            const provider = preset === 'ollama' ? Provider.ollama.id : Provider.edge.id;
             return Stream.fromIterable(DOCS)
               .pipe(
-                instrument('extract', extractFactsStage({ model, provider: Provider.ollama.id, strict: false })),
+                instrument('extract', extractFactsStage({ model, provider, strict: preset !== 'ollama' })),
                 Pipeline.run({ sink }),
               )
-              .pipe(Effect.provide(OllamaAiServiceLayer), Effect.as(items));
+              .pipe(Effect.provide(AiServiceTestingPreset(preset)), Effect.as(items));
           },
-          // Domain metrics from the captured per-document facts.
+          // Raw counts + accuracy (precision/recall/F1) against the gold facts.
           evaluate: (_config, docs) => {
             const allFacts = docs.flatMap((entry) => [...entry.facts]);
             const withFacts = docs.filter((entry) => entry.facts.length > 0).length;
@@ -87,6 +90,7 @@ describe.skipIf(!ENABLED)('pipeline-rdf multi-model extraction benchmark (Ollama
                 ),
               ),
             );
+            const accuracy = scoreAccuracy(docs);
             return Effect.succeed({
               'docs': docs.length,
               'facts': allFacts.length,
@@ -94,19 +98,29 @@ describe.skipIf(!ENABLED)('pipeline-rdf multi-model extraction benchmark (Ollama
               'success.rate': docs.length ? round(withFacts / docs.length) : 0,
               'distinct.predicates': predicates.size,
               'distinct.entities': entities.size,
+              'precision': round(accuracy.precision),
+              'recall': round(accuracy.recall),
+              'f1': round(accuracy.f1),
+              'matched': accuracy.matched,
             });
           },
         }),
       );
 
-      const table = renderBenchmark(result);
-      log.info(`pipeline-rdf multi-model benchmark (${DOCS.length} docs)\n${table}`);
+      log.info(`pipeline-rdf multi-model benchmark (${DOCS.length} docs)\n${renderBenchmark(result)}`);
+
+      const report = {
+        generatedAt: new Date().toISOString(),
+        corpusSize: DOCS.length,
+        variants: result.variants,
+      };
+      writeFileSync(OUT_PATH, JSON.stringify(report, null, 2));
+      log.info(`wrote benchmark results to ${OUT_PATH}`);
 
       expect(result.variants.length).toBe(variants.length);
-      // A variant may error mid-run (recorded as an `error` row with a partial `extract.in`) — that
-      // is a benchmark result about the model, not a test failure. Require only that at least one
-      // model completed, and that every model which did NOT error processed the whole corpus (a
-      // model producing zero facts still counts as a completed, comparable run).
+      // A variant may error mid-run (recorded as an `error` row) — that is a benchmark result about
+      // the model/backend, not a test failure. Require only that at least one variant completed, and
+      // that every variant which did NOT error processed the whole corpus.
       const succeeded = result.variants.filter((variant) => variant.metrics.error === undefined);
       expect(succeeded.length).toBeGreaterThan(0);
       for (const variant of succeeded) {
@@ -114,12 +128,9 @@ describe.skipIf(!ENABLED)('pipeline-rdf multi-model extraction benchmark (Ollama
         expect(variant.metrics['extract.out']).toBe(DOCS.length);
       }
     },
-    // Up to two LLM calls per doc per model; budget generously for slower/larger models.
-    Math.max(5 * 60_000, BENCH_MODELS.length * DOCS.length * 30_000),
+    // Up to two LLM calls per doc per variant; budget generously for slower/larger models.
+    Math.max(10 * 60_000, VARIANTS.length * DOCS.length * 30_000),
   );
 });
-
-// Short display label from a model DXN, e.g. `com.openai.model.gpt-oss-20b.default` -> `gpt-oss-20b`.
-const modelLabel = (model: string): string => model.split('.').at(-2) ?? model;
 
 const round = (value: number): number => Math.round(value * 100) / 100;
