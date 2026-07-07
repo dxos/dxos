@@ -18,6 +18,11 @@
       "default": "./dist/lib/neutral/index.mjs",
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts"
+    },
+    "./testing": {
+      "default": "./dist/lib/neutral/testing/index.mjs",
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",

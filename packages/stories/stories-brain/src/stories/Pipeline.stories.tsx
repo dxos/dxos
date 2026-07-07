@@ -33,6 +33,7 @@ import { EffectEx } from '@dxos/effect';
 import { stubParse } from '@dxos/nlp/testing';
 import { Pipeline } from '@dxos/pipeline';
 import { EmailPipeline, type FactIndexer, Thread } from '@dxos/pipeline-email';
+import { loadEnronMessages } from '@dxos/pipeline-email/testing';
 import { type DocumentFacts, type RDF, extractFactsStage, normalizeFactsStage } from '@dxos/pipeline-rdf';
 import {
   type CommitFn,
@@ -47,6 +48,7 @@ import { trim } from '@dxos/util';
 import {
   type EchoObjectItem,
   type InputDataset,
+  type InputDatasetMessage,
   InputPanel,
   type InputPayload,
   type OutputDetail,
@@ -101,18 +103,18 @@ const SAMPLE_EMAILS: Message.Message[] = [
   ),
 ];
 
-const DATASETS: InputDataset[] = [
-  {
-    id: 'sample-inbox',
-    label: 'Sample inbox',
-    messages: SAMPLE_EMAILS.map((message) => ({
-      id: message.id,
-      from: message.sender.email ?? 'unknown',
-      subject: String(message.properties?.subject ?? ''),
-      preview: Message.extractText(message),
-    })),
-  },
-];
+const toPreview = (message: Message.Message): InputDatasetMessage => ({
+  id: message.id,
+  from: message.sender.email ?? 'unknown',
+  subject: String(message.properties?.subject ?? ''),
+  preview: Message.extractText(message),
+});
+
+const SAMPLE_DATASET: InputDataset = {
+  id: 'sample-inbox',
+  label: 'Sample inbox',
+  messages: SAMPLE_EMAILS.map(toPreview),
+};
 
 const PIPELINES: PipelineInfo[] = [
   {
@@ -154,6 +156,9 @@ const DefaultStory = (_: StoryArgs) => {
   const [stats, setStats] = useState<StatItem[]>([]);
   const [details, setDetails] = useState<OutputDetail[]>([]);
   const [busy, setBusy] = useState(false);
+  // The messages the email pipeline runs over: the inline sample inbox until Enron is loaded.
+  const [emails, setEmails] = useState<Message.Message[]>(SAMPLE_EMAILS);
+  const [datasets, setDatasets] = useState<InputDataset[]>([SAMPLE_DATASET]);
 
   // Live view of the ECHO objects the pipelines materialize (email creates Person/Org/Thread;
   // transcription links the seeded entities). Reactive: updates as stages persist to the space.
@@ -211,7 +216,7 @@ const DefaultStory = (_: StoryArgs) => {
         return messageFacts;
       });
 
-    const program = EmailPipeline.run(SAMPLE_EMAILS, {
+    const program = EmailPipeline.run(emails, {
       db: space.db,
       indexFacts,
       ownerEmail: OWNER_EMAIL,
@@ -231,7 +236,20 @@ const DefaultStory = (_: StoryArgs) => {
         { id: 'threads', label: 'Threads', content: <ThreadList result={result} /> },
       ]);
     });
-  }, [space]);
+  }, [space, emails]);
+
+  // Load the first `count` Enron messages from the dataset parquet (over HTTP) and make them the
+  // email pipeline's input; the Dataset tab preview updates to the loaded messages.
+  const handleLoadDataset = useCallback((count: number) => {
+    setBusy(true);
+    void loadEnronMessages({ count })
+      .then((loaded) => {
+        setEmails(loaded);
+        setDatasets([{ id: 'enron', label: `Enron (${loaded.length})`, messages: loaded.map(toPreview) }]);
+      })
+      .catch(() => {})
+      .finally(() => setBusy(false));
+  }, []);
 
   const runTranscription = useCallback(
     (text: string) => {
@@ -304,9 +322,10 @@ const DefaultStory = (_: StoryArgs) => {
       <InputPanel
         initialDocument={SAMPLE_CONTENT}
         parse={stubParse}
-        datasets={DATASETS}
+        datasets={datasets}
         sampleTranscript={SAMPLE_TRANSCRIPT}
         busy={busy}
+        onLoadDataset={handleLoadDataset}
         onRun={handleRun}
       />
       <PipelinePanel pipelines={PIPELINES} selected={pipelineId} onSelect={setPipelineId} busy={busy} />

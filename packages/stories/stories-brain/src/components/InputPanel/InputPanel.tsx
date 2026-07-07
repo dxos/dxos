@@ -52,6 +52,10 @@ export type InputPanelProps = ThemedClassName<{
   sampleTranscript?: string;
   /** Disables the run trigger and swaps its icon while a pipeline run is in flight. */
   busy?: boolean;
+  /** Default message count for the Dataset tab's loader. */
+  defaultDatasetCount?: number;
+  /** Load the first N messages of a remote dataset (e.g. Enron) into the Dataset tab. */
+  onLoadDataset?: (count: number) => void;
   /** Run trigger; receives the current input for the active tab. */
   onRun?: (payload: InputPayload) => void;
 }>;
@@ -68,6 +72,8 @@ export const InputPanel = ({
   datasets = [],
   sampleTranscript = '',
   busy,
+  defaultDatasetCount = 100,
+  onLoadDataset,
   onRun,
 }: InputPanelProps) => {
   const { themeMode } = useThemeContext();
@@ -75,6 +81,7 @@ export const InputPanel = ({
   const [text, setText] = useState(initialDocument);
   const [underline, setUnderline] = useState(false);
   const [datasetId, setDatasetId] = useState(datasets[0]?.id ?? '');
+  const [count, setCount] = useState(defaultDatasetCount);
   const [transcript, setTranscript] = useState('');
 
   const extensions = useMemo(
@@ -117,7 +124,7 @@ export const InputPanel = ({
           <div role='none' className='grow' />
           {mode === 'document' && parse && (
             <Input.Root>
-              <div className='flex items-center gap-2'>
+              <div className='flex items-center gap-2 px-2'>
                 <Input.Switch checked={underline} onCheckedChange={(checked) => setUnderline(checked === true)} />
                 <Input.Label classNames='text-sm text-description'>POS</Input.Label>
               </div>
@@ -141,7 +148,7 @@ export const InputPanel = ({
 
         {mode === 'dataset' && (
           <div className='flex flex-col min-h-0 h-full'>
-            <div className='p-2'>
+            <div className='flex items-center gap-2 p-2'>
               <Select.Root value={datasetId} onValueChange={setDatasetId}>
                 <Select.TriggerButton placeholder='Dataset' />
                 <Select.Portal>
@@ -157,6 +164,23 @@ export const InputPanel = ({
                   </Select.Content>
                 </Select.Portal>
               </Select.Root>
+              {onLoadDataset && (
+                <>
+                  <div role='none' className='grow' />
+                  <Input.Root>
+                    <Input.TextInput
+                      type='number'
+                      min={1}
+                      value={String(count)}
+                      onChange={(event) => setCount(Math.max(1, Number(event.target.value) || 1))}
+                      classNames='w-20'
+                    />
+                  </Input.Root>
+                  <Button disabled={busy} onClick={() => onLoadDataset(count)}>
+                    Load Enron
+                  </Button>
+                </>
+              )}
             </div>
             <ScrollArea.Root padding classNames='min-h-0 grow'>
               <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
