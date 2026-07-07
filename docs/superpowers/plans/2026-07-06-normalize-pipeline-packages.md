@@ -1,4 +1,4 @@
-# Normalize pipeline-* package layout — Plan
+# Normalize pipeline-\* package layout — Plan
 
 > **For agentic workers:** Execute task-by-task; each package is an independently verifiable phase. Steps use checkbox (`- [ ]`) syntax.
 
@@ -29,6 +29,7 @@ src/
 ## Export-surface rule (important nuance)
 
 `types/` gets a barrel in all three, but HOW it is re-exported from `index.ts` preserves each package's current contract:
+
 - **pipeline-rdf:** already `export * as Type from './types'` (consumers use `Type.Fact`). Keep as-is.
 - **pipeline-email:** `types/` (`Thread`) is currently NOT re-exported from root; no external consumer imports it. Keep it out of root (or add `export * as Type` only if a consumer needs it — none today). Do not introduce a breaking change.
 - **pipeline-transcription:** consumers import types **top-level** (`Stage`, `TranscriptEvent`, `CommitFn`, `TelemetryEvent`, `EntityLookup`, `StageWrite`, …). The `types/` barrel must be re-exported **top-level** (`export * from './types'`), NOT under a `Type` namespace — a namespace would break `plugin-transcription`/`react-ui-transcription`.
