@@ -26,18 +26,38 @@ export type ExtractDocument = {
 
 export const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
-/** One extracted fact as the model emits it (entities are surface strings; linking happens later). */
+// Optional enrichment field: models routinely emit `null` (not omission) for "not present", so
+// accept null as absent. A plain `Schema.optional(String)` rejects null and would discard the whole
+// fact over an empty date/quote.
+const OptionalString = Schema.optionalWith(Schema.String, { nullable: true });
+
+// Soft enum: keep the known values, coerce anything else (a model's stray value like "Person", or a
+// null) to absent. A bad enrichment value must not discard an otherwise-valid fact.
+const Nature = Schema.optional(
+  Schema.transform(Schema.Unknown, Schema.UndefinedOr(Schema.Literal('epistemic', 'aleatory')), {
+    strict: false,
+    decode: (value) => (value === 'epistemic' || value === 'aleatory' ? value : undefined),
+    encode: (value) => value,
+  }),
+);
+
+/**
+ * One extracted fact as the model emits it (entities are surface strings; linking happens later).
+ * Only subject/predicate/object/factuality/polarity are required; enrichment fields tolerate the
+ * `null`s and stray enum values local models commonly produce so a single bad field never drops the
+ * whole fact.
+ */
 export const ExtractedFact = Schema.Struct({
   subject: Schema.String,
   predicate: Schema.String,
   object: Schema.String,
-  validFrom: Schema.optional(Schema.String),
-  validTo: Schema.optional(Schema.String),
+  validFrom: OptionalString,
+  validTo: OptionalString,
   factuality: Factuality,
   polarity: Schema.Literal('+', '-', '?'),
-  confidence: Schema.optional(Schema.Number),
-  nature: Schema.optional(Schema.Literal('epistemic', 'aleatory')),
-  quote: Schema.optional(Schema.String),
+  confidence: Schema.optionalWith(Schema.Number, { nullable: true }),
+  nature: Nature,
+  quote: OptionalString,
 });
 
 /** Flat LLM payload (entities are surface strings; linking happens in the pipeline). */
