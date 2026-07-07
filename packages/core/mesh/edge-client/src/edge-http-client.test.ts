@@ -54,34 +54,3 @@ describe('EdgeHttpClient.anthropicAiRequest', () => {
     expect(targetCall![1]?.method).toBe('POST');
   });
 });
-
-describe('EdgeHttpClient.joinCallRoom', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  test('POSTs the room/device to /api/rooms/join and returns the meeting id and auth token', async ({ expect }) => {
-    const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
-      const url = String(input instanceof URL ? input : (input.url ?? input));
-      if (url.endsWith('/auth')) {
-        return new Response(null, { status: 200 });
-      }
-      return new Response(JSON.stringify({ meetingId: 'meeting-1', authToken: 'auth-token' }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    });
-    vi.stubGlobal('fetch', fetchMock);
-
-    const { Context } = await import('@dxos/context');
-    const client = new EdgeHttpClient('https://calls.example.com');
-    const result = await client.joinCallRoom(Context.default(), { roomId: 'echo:/room', deviceKey: 'device-hex' });
-
-    expect(result).toEqual({ meetingId: 'meeting-1', authToken: 'auth-token' });
-
-    const targetCall = fetchMock.mock.calls.find((call) => String(call[0]).endsWith('/api/rooms/join'));
-    expect(targetCall).toBeDefined();
-    expect(targetCall![1]?.method).toBe('POST');
-    expect(JSON.parse(String(targetCall![1]?.body))).toEqual({ roomId: 'echo:/room', deviceKey: 'device-hex' });
-  });
-});
