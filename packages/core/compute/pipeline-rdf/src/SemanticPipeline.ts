@@ -19,8 +19,8 @@ import { type Fact } from './types';
 
 export {
   DEFAULT_EXTRACTION_RULES,
-  buildExtractionPrompt,
   ExtractedFact,
+  buildExtractionPrompt,
   parseExtractPayload,
 } from './internal/stages/extract';
 export type { ExtractDocument, ExtractOptions } from './internal/stages/extract';
