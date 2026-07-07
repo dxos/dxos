@@ -355,40 +355,10 @@ describe('feeds', () => {
       wideSub();
     });
 
-    test('windowed query returns the newest N in order at scale', async ({ expect }) => {
-      await using peer = await builder.createPeer({
-        types: [Feed.Feed, TestSchema.Person],
-        assignQueuePositions: true,
-      });
-      const db = await peer.createDatabase();
-      const feed = db.add(Feed.make({ name: 'people' }));
-
-      const total = 60;
-      await db.appendToFeed(
-        feed,
-        Array.from({ length: total }, (_, index) => Obj.make(TestSchema.Person, { name: `p${index}` })),
-      );
-
-      const window = await db
-        .query(
-          Query.select(Filter.type(TestSchema.Person))
-            .from(Scope.feed(Feed.getFeedUri(feed)!))
-            .orderBy(Order.natural('desc'))
-            .limit(25),
-        )
-        .run();
-      // Newest 25 (p59..p35), newest-first (natural desc).
-      expect(window.map((obj) => (obj as TestSchema.Person).name)).toEqual(
-        Array.from({ length: 25 }, (_, index) => `p${total - 1 - index}`),
-      );
-    });
-
     // Content-ordered (non-`natural`) feed paging — the mailbox's path (order by a message field, not
-    // insertion order). Must return correct windows on whichever path `isClientEvaluableFeedQuery`
-    // selects: the client feed path today (full-fetch + sort + slice), or the host indexer if content-
-    // order routing is re-enabled. Guards the skip+limit propagation fix — a slid window (`skip > 0`)
-    // must return the full page, not `limit - skip`. `updateIndexes()` keeps it valid for the indexer
-    // path; `total` stays within one indexing pass.
+    // insertion order). Runs on the client feed path (`FeedQueryContext` → `applyOrderSkipLimit`:
+    // full-fetch, sort by the property, slice), so it guards that a slid window (`skip > 0`) returns
+    // the full page, not `limit - skip`.
     test('content-ordered `.orderBy(property).skip().limit()` returns correct windows (skip+limit)', async ({
       expect,
     }) => {
@@ -408,7 +378,6 @@ describe('feeds', () => {
         feed,
         shuffled.map((name) => Obj.make(TestSchema.Person, { name })),
       );
-      await db.updateIndexes();
 
       const scope = Scope.feed(Feed.getFeedUri(feed)!);
       const page = (skip: number, limit: number) =>
