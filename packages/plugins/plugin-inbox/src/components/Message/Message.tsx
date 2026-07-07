@@ -17,7 +17,7 @@ import { Card, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
-import { type Actor, type Message as MessageType } from '@dxos/types';
+import { type Actor } from '@dxos/types';
 
 import { InboxCapabilities, Mailbox, Starred } from '#types';
 
@@ -34,19 +34,12 @@ import { useMessageActions } from './useToolbar';
 // Context
 //
 
-/**
- * A message as either a live database/queue object or an immutable snapshot (e.g. a feed message
- * resolved via `useObject`, which cannot be reconstituted to a live object — see MessageArticle).
- * The Message components read fields present on both and route mutating actions accordingly.
- */
-export type MessageLike = MessageType.Message | Obj.Snapshot<MessageType.Message>;
-
 // TODO(burdon): Create pattern for 1-up.
 type MessageContextValue = {
   attendableId?: string;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
-  message: MessageLike;
+  message: Mailbox.MessageLike;
   /** Owning mailbox; enables starring (the message's tag association lives in the mailbox's tag index). */
   mailbox?: Mailbox.Mailbox;
   sender: EID.EID | undefined;

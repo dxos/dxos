@@ -5,7 +5,6 @@
 import { useMemo } from 'react';
 
 import { Obj, Tag } from '@dxos/echo';
-import { type Message } from '@dxos/types';
 import { getHashStyles } from '@dxos/ui-theme';
 
 import { type MessageStackTag } from '#components';
@@ -18,7 +17,7 @@ import { GoogleMail } from '../apis';
  */
 export const useMessageTags = (
   mailboxes: Mailbox.Mailbox[],
-  message: Message.Message | Obj.Snapshot<Message.Message>,
+  message: Mailbox.MessageLike,
   tagObjects: Tag.Tag[],
 ) => {
   const tagByUri = new Map(tagObjects.map((tag) => [Obj.getURI(tag).toString(), tag]));

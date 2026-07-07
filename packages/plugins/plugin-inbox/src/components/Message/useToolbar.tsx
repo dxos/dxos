@@ -6,10 +6,10 @@ import { type Graph, type Node } from '@dxos/app-graph';
 import { MenuBuilder, graphActions, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
+import { Mailbox } from '#types';
 
 import { deleteAction, openGroup } from '../Toolbar';
 import { type ViewMode, viewModeGroup } from '../ViewMode';
-import { type MessageLike } from './Message';
 import { useExtractorActions } from './useExtractorActions';
 
 /** Contributed actions opt into the toolbar via `disposition: 'toolbar'` (vs context-menu-only). */
@@ -20,7 +20,7 @@ export type UseMessageToolbarActionsProps = {
   graph?: Graph.ReadableGraph;
   /** Graph node id of the message (its URI / attendableId); contributed actions hang off this. */
   nodeId?: string;
-  message: MessageLike;
+  message: Mailbox.MessageLike;
   /** Whether remote images are currently loaded inline. */
   loadRemoteImages: boolean;
   viewMode: ViewMode;

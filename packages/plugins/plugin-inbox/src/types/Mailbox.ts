@@ -230,11 +230,16 @@ export const buildMessageTagsIndex = (mailbox: Mailbox | Obj.Snapshot<Mailbox>):
   return index;
 };
 
+/**
+ * A message as either a live database/queue object or an immutable snapshot (e.g. a feed message
+ * resolved via `useObject`, which cannot be reconstituted to a live object). Components and hooks
+ * that only read message fields (not mutate them) accept this instead of the live type.
+ */
+export type MessageLike = Message.Message | Obj.Snapshot<Message.Message>;
+
 /** Returns the tag uris currently applied to a single message. */
-export const getTagsForMessage = (
-  mailbox: Mailbox,
-  message: Message.Message | Obj.Snapshot<Message.Message>,
-): string[] => Tagging.get(message, { index: mailbox.tags.target });
+export const getTagsForMessage = (mailbox: Mailbox, message: MessageLike): string[] =>
+  Tagging.get(message, { index: mailbox.tags.target });
 
 //
 // Conversation (thread) index API.
@@ -266,9 +271,22 @@ export const getOrCreateThreadIndex = (mailbox: Mailbox, db: Database.Database):
  * changes — no whole-index `Object.keys` scan and no cross-thread render coupling. Derived from the
  * index object's reactive atom; reads a single key off the snapshot (no auto-vivify).
  */
-export const makeThreadCountFamily = (
-  threadIndex: ThreadIndex.ThreadIndex,
-): ((threadId: string) => Atom.Atom<number>) => {
-  const objectAtom = Obj.atom(threadIndex);
-  return Atom.family((threadId: string) => Atom.make((get) => get(objectAtom).index?.[threadId]?.length ?? 0));
-};
+export const threadCountAtom = Atom.family(([mailbox, threadId]: readonly [Mailbox, string]) =>
+  Atom.make((get) => {
+    if (!mailbox.threads) {
+      return 0;
+    }
+
+    const threadIndex = get(Obj.atomReactive(mailbox.threads));
+    if (!threadIndex) {
+      return 0;
+    }
+
+    const index = Obj.atomProperty(threadIndex, 'index');
+    if (!index) {
+      return 0;
+    }
+
+    return get(index)?.[threadId]?.length ?? 0;
+  }),
+);
