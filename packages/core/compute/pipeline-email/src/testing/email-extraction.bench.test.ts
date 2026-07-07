@@ -18,7 +18,7 @@ import { Pipeline } from '@dxos/pipeline';
 import { type DocumentFacts, extractFactsStage } from '@dxos/pipeline-rdf';
 import { captureSink, instrument, renderBenchmark, runBenchmark } from '@dxos/pipeline/testing';
 
-import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../facts';
+import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../stages/facts';
 import { emailToMessage } from './email-fixtures';
 import { parquetSource } from './parquet';
 

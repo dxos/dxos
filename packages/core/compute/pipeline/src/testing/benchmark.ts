@@ -56,11 +56,18 @@ export const runBenchmark = <Config, Output, E, R>(
       const metrics = makeMetrics();
       const layer = Layer.succeed(Metrics, metrics);
       const row = yield* Effect.gen(function* () {
+        const heapBefore = heapUsedBytes();
         const [duration, output] = yield* Effect.timed(options.program(variant.config));
+        const heapAfter = heapUsedBytes();
         const domain = options.evaluate ? yield* options.evaluate(variant.config, output) : {};
         const snapshot = yield* metrics.snapshot;
         return {
           'total.ms': Math.round(Duration.toMillis(duration)),
+          // Heap growth across the run (Node only; approximate — subject to GC, and for out-of-process
+          // model back-ends like Ollama it reflects harness overhead, not the model's own memory).
+          ...(heapBefore !== undefined && heapAfter !== undefined
+            ? { 'heap.mb': Math.round(((heapAfter - heapBefore) / (1024 * 1024)) * 100) / 100 }
+            : {}),
           ...snapshot,
           ...domain,
         } satisfies MetricsSnapshot;
@@ -82,6 +89,12 @@ export const runBenchmark = <Config, Output, E, R>(
     }
     return { variants };
   });
+
+/** Node process heap usage in bytes, or `undefined` off Node (browser) so the metric is simply omitted. */
+const heapUsedBytes = (): number | undefined =>
+  typeof process !== 'undefined' && typeof process.memoryUsage === 'function'
+    ? process.memoryUsage().heapUsed
+    : undefined;
 
 const format = (value: MetricValue | undefined): string =>
   value === undefined ? '' : typeof value === 'number' ? String(Math.round(value * 100) / 100) : value;

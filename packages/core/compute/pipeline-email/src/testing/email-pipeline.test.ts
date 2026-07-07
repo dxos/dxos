@@ -24,20 +24,20 @@ import { EffectEx } from '@dxos/effect';
 import { extractContact } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-import { SemanticPipeline, SemanticStore } from '@dxos/pipeline-rdf';
+import { FactPipeline, FactStore } from '@dxos/pipeline-rdf';
 import { Metrics, captureSink, instrument, makeMetrics } from '@dxos/pipeline/testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { buildDigest, narrateDigest, renderDigest } from '../digest';
-import { type FactIndexer, extractFactsStage } from '../extract-stage';
-import { buildEntityIndex, reconcileFactEntities } from '../fact-index';
-import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../facts';
-import { commitmentLedger } from '../ledger';
-import { type Summarizer } from '../prompts';
-import { buildRollups } from '../rollups';
-import { buildThreads } from '../threads';
-import { clusterThreads, materializeTopics, summarizeTopics } from '../topics';
+import { buildDigest, narrateDigest, renderDigest } from '../corpus/digest';
+import { commitmentLedger } from '../corpus/ledger';
+import { type Summarizer } from '../corpus/prompts';
+import { buildRollups } from '../corpus/rollups';
+import { clusterThreads, materializeTopics, summarizeTopics } from '../corpus/topics';
+import { buildEntityIndex, reconcileFactEntities } from '../internal/fact-index';
+import { buildThreads } from '../internal/threads';
+import { type FactIndexer, extractFactsStage } from '../stages/extract-facts';
+import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../stages/facts';
 import { Thread, Topic } from '../types';
 import { emailToMessage } from './email-fixtures';
 import { parquetSource } from './parquet';
@@ -243,7 +243,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
 
   // In-memory fact substrate for this run; shares the Ollama-backed AiService the extraction resolves
   // its model through (pipeline-rdf's ExtractOptions carries the model + provider).
-  const factRuntime = ManagedRuntime.make(SemanticStore.layerMemory.pipe(Layer.provideMerge(OllamaAiServiceLayer)));
+  const factRuntime = ManagedRuntime.make(FactStore.layerMemory.pipe(Layer.provideMerge(OllamaAiServiceLayer)));
 
   let builder: EchoTestBuilder;
   let db: Database.Database;
@@ -302,7 +302,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
       const indexFacts: FactIndexer = (message) => {
         indexedMessageCount += 1;
         return factRuntime.runPromise(
-          SemanticPipeline.run([messageToDocument(message)], {
+          FactPipeline.run([messageToDocument(message)], {
             ...EMAIL_EXTRACT_OPTIONS,
             model: MODEL,
             provider: Provider.ollama.id,
@@ -368,7 +368,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
       expect(indexedMessageCount).toBe(items.length);
       const facts = await factRuntime.runPromise(
         Effect.gen(function* () {
-          const store = yield* SemanticStore;
+          const store = yield* FactStore;
           return yield* store.query({});
         }),
       );
@@ -424,7 +424,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
       // Commitment ledger over the advisory fact store: rows (if any) must be grounded in a fact.
       const commitments = await factRuntime.runPromise(
         Effect.gen(function* () {
-          const store = yield* SemanticStore;
+          const store = yield* FactStore;
           return yield* commitmentLedger(store);
         }),
       );

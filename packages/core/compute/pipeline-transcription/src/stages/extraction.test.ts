@@ -9,7 +9,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Organization } from '@dxos/types';
 
-import { makeDatabaseLookup } from '../lookup';
+import { makeDatabaseLookup } from '../types/lookup';
 import { extractProperNouns, makeExtractionStage } from './extraction';
 
 describe('extraction', () => {

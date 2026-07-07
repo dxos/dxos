@@ -16,7 +16,7 @@ const ALICE_FACT: Fact = {
     validFrom: '2026-06-12',
     quote: "I think I'm probably going to Paris next week",
   },
-  valence: { factuality: 'PR+', polarity: '+', confidence: 0.6, nature: 'epistemic' },
+  factuality: { value: 'PR+', polarity: '+', confidence: 0.6, nature: 'epistemic' },
   attribution: {
     agent: 'alice',
     source: 'dxn:queue:...:msg-1',
@@ -37,7 +37,7 @@ describe('Fact schema', () => {
 
   test('rejects an invalid factuality value', ({ expect }) => {
     expect(() =>
-      Schema.decodeUnknownSync(Fact)({ ...ALICE_FACT, valence: { ...ALICE_FACT.valence, factuality: 'NOPE' } }),
+      Schema.decodeUnknownSync(Fact)({ ...ALICE_FACT, factuality: { ...ALICE_FACT.factuality, value: 'NOPE' } }),
     ).toThrow();
   });
 });

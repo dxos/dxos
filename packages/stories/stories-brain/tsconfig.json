@@ -41,7 +41,13 @@
       "path": "../../core/compute/pipeline"
     },
     {
+      "path": "../../core/compute/pipeline-email"
+    },
+    {
       "path": "../../core/compute/pipeline-rdf"
+    },
+    {
+      "path": "../../core/compute/pipeline-transcription"
     },
     {
       "path": "../../core/echo/echo"
@@ -81,6 +87,9 @@
     },
     {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"
