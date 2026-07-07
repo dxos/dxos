@@ -286,24 +286,6 @@ export const getSyncState = (feed: Feed): Effect.Effect<SyncState, never, Databa
   );
 
 /**
- * One-shot bounded tail read: the most recently appended `limit` objects, newest first. Reads only
- * the tail (via a reverse queue query) instead of decoding the whole feed — for callers that only
- * need recent items, e.g. seeding a sync dedup set.
- *
- * @example
- * ```ts
- * const latest = yield* Feed.readLatest(feed, { limit: 256 });
- * ```
- */
-export const readLatest = (
-  feed: Feed,
-  options: { limit: number },
-): Effect.Effect<Obj.Unknown[], never, Database.Service> =>
-  Database.Service.pipe(
-    Effect.flatMap(({ db }) => Effect.promise(() => db.readFeedLatest(feed, options.limit))),
-  ).pipe(Effect.withSpan('Feed.readLatest'));
-
-/**
  * Creates a cursor for iterating over feed items.
  * Currently stubbed — cursor operations are not yet implemented.
  *

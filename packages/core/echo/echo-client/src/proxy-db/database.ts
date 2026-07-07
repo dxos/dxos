@@ -539,11 +539,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._queryFeed(feedUri, query);
   }
 
-  async readFeedLatest(feed: Feed.Feed, limit: number): Promise<Obj.Unknown[]> {
-    // Queue items are hydrated as generic entities; a feed holds objects (not relations), so the
-    // downcast is sound at this boundary.
-    return (await this.#getFeedHandle(feed).fetchLatestObjects(limit)) as Obj.Unknown[];
-  }
 
   /**
    * @internal

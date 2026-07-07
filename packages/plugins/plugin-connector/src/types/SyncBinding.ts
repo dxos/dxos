@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Database, DXN, Feed, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Obj, Order, Query, Ref, Relation, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { invariant } from '@dxos/invariant';
 import { Stage } from '@dxos/pipeline';
@@ -391,17 +391,19 @@ export const dedupStage = <In>(
   );
 
 /**
- * Bound on the dedup seed's tail read. The set only needs feed messages whose key is at/after the
- * cursor high-water: the last committed page plus at most one crash-orphaned page (append and
- * cursor-advance flush per page, so a crash leaves ≤1 un-cursored page). Everything older is dropped
- * by {@link dedupStage}'s `key < cursorKey` check, so a bounded newest-N tail read suffices. Sized
+ * Bound on the dedup seed. The set only needs feed messages whose key is at/after the cursor
+ * high-water: the last committed page plus at most one crash-orphaned page (append and cursor-advance
+ * flush per page, so a crash leaves ≤1 un-cursored page). Everything older is dropped by
+ * {@link dedupStage}'s `key < cursorKey` check, so the newest N (by insertion order) suffice. Sized
  * with generous headroom over any provider's commit page size.
  */
 const DEDUP_SEED_TAIL = 500;
 
-/** Seeds the dedup set of recently-committed foreign ids from the feed tail (see {@link DEDUP_SEED_TAIL}). */
+/** Seeds the dedup set of recently-committed foreign ids from the newest {@link DEDUP_SEED_TAIL} feed items. */
 const seedDedupSet = (feed: Feed.Feed, foreignKeySource: string): Effect.Effect<Set<string>, never, Database.Service> =>
-  Feed.readLatest(feed, { limit: DEDUP_SEED_TAIL }).pipe(
+  // `Order.natural('desc')` + `limit` selects the newest N by insertion order (a limited feed query
+  // still decodes the whole feed to apply the limit — a query-engine limitation tracked separately).
+  Feed.query(feed, Query.select(Filter.everything()).orderBy(Order.natural('desc')).limit(DEDUP_SEED_TAIL)).run.pipe(
     Effect.map(
       (items) =>
         new Set(

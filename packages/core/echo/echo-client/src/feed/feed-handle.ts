@@ -282,34 +282,6 @@ export class FeedHandle {
     });
   }
 
-  /**
-   * Bounded newest-first tail read: the most recently appended `limit` objects, hydrated. Reads the
-   * tail via the transport's reverse+limit cursor mode instead of decoding the whole feed — used to
-   * seed sync dedup (see `SyncBinding.seedDedupSet`).
-   */
-  async fetchLatestObjects(limit: number): Promise<Entity.Unknown[]> {
-    const { objects } = await this._service.queryFeed({
-      query: {
-        feedNamespace: this._namespace,
-        spaceId: this._spaceId,
-        feedIds: [this._feedId],
-        reverse: true,
-        limit,
-      },
-    });
-    const hydrated = await Promise.all(
-      (objects ?? []).map(async (encoded) => {
-        try {
-          return await this.hydrateObject(JSON.parse(encoded) as ObjectJSON);
-        } catch (err) {
-          log.verbose('feed object hydration failed; object skipped', { error: err });
-          return undefined;
-        }
-      }),
-    );
-    return hydrated.filter((object): object is Entity.Unknown => object !== undefined);
-  }
-
   async hydrateObject(obj: ObjectJSON): Promise<Entity.Unknown> {
     invariant(EntityId.isValid(obj.id), 'object missing valid id');
     const decoded = await Obj.fromJSON(obj, {
