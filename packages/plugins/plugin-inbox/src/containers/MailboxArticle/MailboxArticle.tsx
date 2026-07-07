@@ -8,10 +8,10 @@ import React, { type Ref, useCallback, useEffect, useMemo, useReducer, useRef, u
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { type Database, Filter, Obj, Query, Tag } from '@dxos/echo';
+import { type Database, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, usePagination, useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
@@ -36,6 +36,9 @@ export type MailboxArticleProps = AppSurface.ObjectArticleProps<
     filter?: string;
   }
 >;
+
+/** Messages per page for the lazily-loaded message window. */
+const MAILBOX_PAGE_SIZE = 10;
 
 export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { invokePromise } = useOperationInvoker();
@@ -156,10 +159,18 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   }, [filterText, builder]);
 
   // Messages.
-  const messages = useQuery(
+  // Lazily loaded, newest-first: the initial page renders immediately and older messages load as
+  // the user scrolls (see MessageStack's `pagination` wiring below), rather than fetching the
+  // whole feed up front. `pagination` is passed straight through to `MessageStack` rather than
+  // destructured -- `usePagination` already returns a stable object, so rebuilding one here would
+  // only reintroduce the instability it avoids.
+  const pagination = usePagination(
     db,
-    feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
+    feed
+      ? Query.select(Filter.type(Message.Message)).from(feed).orderBy(Order.natural('desc')).limit(MAILBOX_PAGE_SIZE)
+      : Query.select(Filter.nothing()).limit(MAILBOX_PAGE_SIZE),
   );
+  const messages = pagination.items;
 
   // Feed/queue queries don't yet support text-search and complex filter combinations,
   // so query Messages by type only and apply the parsed filter client-side.
@@ -314,6 +325,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
             tags={messageTagsMap}
             starredIds={starredIds}
             conversations={settings.conversations}
+            pagination={feed ? pagination : undefined}
             onAction={handleAction}
           />
         )}

@@ -113,7 +113,7 @@ export const prettyQuery = (query: QueryAST.Query): string => {
     case 'order': {
       const orders = query.order.map((o) => {
         if (o.kind === 'natural') {
-          return 'Order.natural()';
+          return `Order.natural(${JSON.stringify(o.direction)})`;
         } else if (o.kind === 'rank') {
           return `Order.rank(${JSON.stringify(o.direction)})`;
         } else if (o.kind === 'timestamp') {
@@ -158,5 +158,7 @@ export const prettyQuery = (query: QueryAST.Query): string => {
     }
     case 'limit':
       return `${prettyQuery(query.query)}.limit(${query.limit})`;
+    case 'skip':
+      return `${prettyQuery(query.query)}.skip(${query.skip})`;
   }
 };

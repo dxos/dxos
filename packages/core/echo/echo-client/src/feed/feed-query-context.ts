@@ -13,7 +13,7 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type QueryContext, isSimpleSelectionQuery } from '../query';
+import { type QueryContext, isSimpleFeedWindowQuery } from '../query';
 import { type FeedHandle } from './feed-handle';
 
 export class FeedQueryContext implements QueryContext {
@@ -23,6 +23,9 @@ export class FeedQueryContext implements QueryContext {
 
   // Extracted from query.
   #filter?: QueryAST.Filter = undefined;
+  #order?: readonly QueryAST.Order[] = undefined;
+  #skip = 0;
+  #limit?: number = undefined;
 
   readonly changed = new Event();
 
@@ -35,11 +38,11 @@ export class FeedQueryContext implements QueryContext {
    * One-shot run.
    */
   async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry[]> {
-    const trivial = isSimpleSelectionQuery(query);
+    const trivial = isSimpleFeedWindowQuery(query);
     if (!trivial) {
       throw new Error('Query not supported.');
     }
-    const { filter } = trivial;
+    const { filter, order, skip = 0, limit } = trivial;
 
     const objects = await Function.pipe(
       await this.#feed.fetchObjectsJSON(),
@@ -57,12 +60,13 @@ export class FeedQueryContext implements QueryContext {
       (_) => Promise.all(_),
     );
 
-    return objects
-      .filter((object): object is Entity.Unknown => object !== undefined)
-      .map((object) => ({
-        id: object.id,
-        result: object,
-      }));
+    const filtered = objects.filter((object): object is Entity.Unknown => object !== undefined);
+    const paged = applyOrderSkipLimit(filtered, order, skip, limit);
+
+    return paged.map((object) => ({
+      id: object.id,
+      result: object,
+    }));
   }
 
   /**
@@ -70,6 +74,7 @@ export class FeedQueryContext implements QueryContext {
    */
   start(): void {
     this.#runCtx = this.#parentCtx.derive();
+
     this.#runCtx.onDispose(this.#feed.beginPolling());
     this.#feed.updated.on(this.#runCtx, () => {
       this.changed.emit();
@@ -88,12 +93,14 @@ export class FeedQueryContext implements QueryContext {
    * Update the filter (for reactive queries).
    */
   update(query: QueryAST.Query): void {
-    const trivial = isSimpleSelectionQuery(query);
+    const trivial = isSimpleFeedWindowQuery(query);
     if (!trivial) {
       throw new Error('Query not supported.');
     }
-    const { filter } = trivial;
-    this.#filter = filter;
+    this.#filter = trivial.filter;
+    this.#order = trivial.order;
+    this.#skip = trivial.skip ?? 0;
+    this.#limit = trivial.limit;
     this.changed.emit();
   }
 
@@ -103,14 +110,105 @@ export class FeedQueryContext implements QueryContext {
   getResults(): QueryResult.EntityEntry[] {
     invariant(this.#filter);
 
-    return Function.pipe(
+    const filtered = Function.pipe(
       this.#feed.getObjectsSync(),
       // TODO(dmaretskyi): We end-up marshaling objects from JSON and back.
       Array.filter((obj) => filterMatchObjectJSON(this.#filter!, Entity.toJSON(obj))),
-      Array.map((object) => ({
-        id: object.id,
-        result: object,
-      })),
     );
+    const paged = applyOrderSkipLimit(filtered, this.#order, this.#skip, this.#limit);
+
+    return paged.map((object) => ({
+      id: object.id,
+      result: object,
+    }));
   }
 }
+
+/**
+ * Applies order/skip/limit over the feed's already-filtered, fully-fetched in-memory item list.
+ * `natural` order means feed/insertion order here (the order `getObjectsSync()`/`fetchObjectsJSON()`
+ * already return objects in) rather than the by-id ordering used elsewhere in the query engine --
+ * feed object ids are not sequential, so insertion order is the only sensible reading of "natural"
+ * for a feed.
+ *
+ * TODO(wittjosiah): Always fetches and decodes the entire feed before slicing, for every
+ * ordering. Needs index-backed keyset pagination (`EntityMetaIndex`/`QueryExecutor` have the same
+ * full-scan-then-sort limitation for content-based ordering) to bound this by page size instead.
+ */
+const applyOrderSkipLimit = (
+  entities: Entity.Unknown[],
+  order: readonly QueryAST.Order[] | undefined,
+  skip: number | undefined,
+  limit: number | undefined,
+): Entity.Unknown[] => {
+  let ordered = entities;
+  if (order && order.length > 0) {
+    // `natural` needs each element's original array position (it has no content to compare), so
+    // sort (entity, index) pairs rather than bare entities.
+    const indexed = entities.map((entity, index) => ({ entity, index }));
+    indexed.sort((a, b) => compareByOrders(a.entity, a.index, b.entity, b.index, order));
+    ordered = indexed.map((item) => item.entity);
+  }
+  const start = skip ?? 0;
+  return limit !== undefined ? ordered.slice(start, start + limit) : ordered.slice(start);
+};
+
+const compareByOrders = (
+  a: Entity.Unknown,
+  aIndex: number,
+  b: Entity.Unknown,
+  bIndex: number,
+  orders: readonly QueryAST.Order[],
+): number => {
+  for (const order of orders) {
+    const comparison = compareByOrder(a, aIndex, b, bIndex, order);
+    if (comparison !== 0) {
+      return comparison;
+    }
+  }
+  return 0;
+};
+
+const compareByOrder = (
+  a: Entity.Unknown,
+  aIndex: number,
+  b: Entity.Unknown,
+  bIndex: number,
+  order: QueryAST.Order,
+): number => {
+  switch (order.kind) {
+    case 'natural':
+      // Feed/insertion order is the entities' position in the already-ordered source array.
+      return order.direction === 'desc' ? bIndex - aIndex : aIndex - bIndex;
+    case 'rank':
+      // No relevance rank available outside indexer-backed text search; treat as equal.
+      return 0;
+    case 'timestamp': {
+      const aValue = (order.field === 'updatedAt' ? Entity.getMeta(a).updatedAt : Entity.getMeta(a).createdAt) ?? 0;
+      const bValue = (order.field === 'updatedAt' ? Entity.getMeta(b).updatedAt : Entity.getMeta(b).createdAt) ?? 0;
+      const comparison = aValue - bValue;
+      return order.direction === 'desc' ? -comparison : comparison;
+    }
+    case 'property': {
+      // `order.property` is an arbitrary runtime-supplied path with no static type -- Entity
+      // proxies support dynamic property access, but the type system has no way to express that.
+      const aValue = (a as unknown as Record<string, unknown>)[order.property];
+      const bValue = (b as unknown as Record<string, unknown>)[order.property];
+      const comparison =
+        aValue == null && bValue == null
+          ? 0
+          : aValue == null
+            ? -1
+            : bValue == null
+              ? 1
+              : aValue < bValue
+                ? -1
+                : aValue > bValue
+                  ? 1
+                  : 0;
+      return order.direction === 'desc' ? -comparison : comparison;
+    }
+    default:
+      return 0;
+  }
+};

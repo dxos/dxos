@@ -55,6 +55,12 @@ const filterContainsChildOf = (filter: QueryAST.Filter): boolean => {
 /**
  * Extracts the filter and options from a query.
  * Supports Select(...), Options(Select(...)), and From(Select(...)) queries.
+ *
+ * Deliberately returns `null` for queries carrying `order`/`skip`/`limit` clauses -- callers
+ * (e.g. `GraphQueryContext`) use that as the signal that this query has semantics (windowing,
+ * ordering) they cannot contribute to, and defer entirely to the SQL-backed/feed sources that
+ * can. Feed-scoped windowed reads use {@link isSimpleFeedWindowQuery} instead, which is a
+ * separate function precisely so it does not change this contract for other callers.
  */
 export const isSimpleSelectionQuery = (
   query: QueryAST.Query,
@@ -83,6 +89,72 @@ export const isSimpleSelectionQuery = (
         options: maybeFilter.options,
         hasQueues: hasQueues || false,
       };
+    }
+    case 'select': {
+      if (filterContainsTimestamp(query.filter) || filterContainsChildOf(query.filter)) {
+        return null;
+      }
+      return { filter: query.filter, options: undefined };
+    }
+    default: {
+      return null;
+    }
+  }
+};
+
+/**
+ * Extracts the filter, options, and windowing clauses (order/skip/limit) from a feed-scoped
+ * query. Used only for feed routing/execution ({@link FeedQueryContext}, `isClientEvaluableFeedQuery`)
+ * -- see {@link isSimpleSelectionQuery} for why this is a separate function rather than an
+ * extension of it.
+ */
+export const isSimpleFeedWindowQuery = (
+  query: QueryAST.Query,
+): {
+  filter: QueryAST.Filter;
+  options?: QueryAST.QueryOptions;
+  hasQueues?: boolean;
+  order?: readonly QueryAST.Order[];
+  skip?: number;
+  limit?: number;
+} | null => {
+  switch (query.type) {
+    case 'options': {
+      const inner = isSimpleFeedWindowQuery(query.query);
+      if (!inner) {
+        return null;
+      }
+      return { ...inner, options: query.options };
+    }
+    case 'from': {
+      const inner = isSimpleFeedWindowQuery(query.query);
+      if (!inner) {
+        return null;
+      }
+      const hasQueues =
+        (query.from._tag === 'scope' && query.from.scopes.some((s) => s._tag === 'feed')) || inner.hasQueues;
+      return { ...inner, hasQueues: hasQueues || false };
+    }
+    case 'order': {
+      const inner = isSimpleFeedWindowQuery(query.query);
+      if (!inner) {
+        return null;
+      }
+      return { ...inner, order: query.order };
+    }
+    case 'skip': {
+      const inner = isSimpleFeedWindowQuery(query.query);
+      if (!inner) {
+        return null;
+      }
+      return { ...inner, skip: query.skip };
+    }
+    case 'limit': {
+      const inner = isSimpleFeedWindowQuery(query.query);
+      if (!inner) {
+        return null;
+      }
+      return { ...inner, limit: query.limit };
     }
     case 'select': {
       if (filterContainsTimestamp(query.filter) || filterContainsChildOf(query.filter)) {

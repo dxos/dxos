@@ -5,9 +5,16 @@
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
+import { type PaginationResult } from '@dxos/react-client/echo';
 import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import {
+  Focus,
+  Mosaic,
+  type MosaicTileProps,
+  useMosaicContainer,
+  useVirtualizerPagination,
+} from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
 
 import { useGmailTags } from '#hooks';
@@ -58,6 +65,13 @@ export type MessageStackProps = {
    * conversations.
    */
   conversations?: boolean;
+  /**
+   * When `messages` is a lazily-loaded window (see `usePagination`), drives loading more
+   * older messages as the user scrolls toward the loaded end. Accepts `usePagination`'s full
+   * result directly (its `items` field is unused here) so callers can pass it through without
+   * destructuring and re-bundling it themselves, which would defeat its referential stability.
+   */
+  pagination?: PaginationResult<unknown>;
   onAction?: MessageStackActionHandler;
 };
 
@@ -65,7 +79,10 @@ export type MessageStackProps = {
  * Card-based message stack component using mosaic layout.
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
-  ({ messages, tags, currentId, selectedIds, starredIds, conversations, onAction, ...props }, forwardedRef) => {
+  (
+    { messages, tags, currentId, selectedIds, starredIds, conversations, pagination, onAction, ...props },
+    forwardedRef,
+  ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
     const conversationGroups = useMemo(() => {
@@ -176,6 +193,19 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
       }
     }, []);
 
+    const getItemId = useCallback((item: any) => item.conversationId ?? item.message?.id, []);
+
+    // Requests the next (older) page once the visible range approaches the loaded end, or the
+    // previous (newer) page once it approaches the loaded start, and preserves scroll position
+    // across the resulting `items` change (see `useVirtualizerPagination`). `pagination.getNext`/
+    // `getPrevious` are single-flight and a no-op once exhausted/at the head, so triggering them
+    // on every virtualizer change while near either edge is safe.
+    const { onChange: handleVirtualizerChange } = useVirtualizerPagination({
+      items,
+      getId: getItemId,
+      pagination,
+    });
+
     return (
       <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
@@ -198,6 +228,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
                 getScrollElement={() => viewport}
                 estimateSize={() => 150}
                 gap={4}
+                onChange={handleVirtualizerChange}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
