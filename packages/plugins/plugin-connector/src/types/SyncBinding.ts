@@ -145,14 +145,16 @@ export type CommitUnit = {
   readonly key: number;
   /** Tag URIs to apply to the message after it is appended (provider labels/folders). */
   readonly tagUris: readonly string[];
-  /**
-   * Deferred writes run inside the commit's flush — e.g. `db.add` an extracted contact, or record
-   * thread membership — so stages record them here rather than writing directly and stay idempotent.
-   * `commit()` calls each *distinct* function (by identity) once per page with every unit that
-   * attached it, so a run-scoped closure reused across units is batched into a single call.
-   */
-  readonly commitEffects?: readonly ((db: Database.Database, units: readonly CommitUnit[]) => void)[];
+  /** Deferred writes, each run (and traced) on its own span inside the commit flush — see {@link CommitEffect}. */
+  readonly commitEffects?: readonly CommitEffect[];
 };
+
+/**
+ * A deferred commit write recorded on a {@link CommitUnit} by a stage (which stays idempotent) and run
+ * inside the commit flush. `commit` invokes each *distinct* function (by identity) once with every unit
+ * that attached it, so a run-scoped closure reused across units batches into one call.
+ */
+export type CommitEffect = (units: readonly CommitUnit[]) => Effect.Effect<void, never, Database.Service>;
 
 /** Effect Requirements tag carrying the per-run {@link State}. */
 export class Service extends Context.Tag('@dxos/plugin-connector/SyncBinding')<Service, State>() {}
@@ -216,16 +218,71 @@ const advanceCursor = (state: State, maxKey: number): void => {
 };
 
 
+/** Appends the page's messages to the feed — the durable write that must precede the space-db mutations. */
+const appendMessages = Effect.fn('sync.commit.appendToFeed')(function* (feed: Feed.Feed, units: readonly CommitUnit[]) {
+  yield* Feed.append(
+    feed,
+    units.map((unit) => unit.message),
+  );
+});
+
+// TODO(wittjosiah): Remove — bound the reactive cascade instead of forcing a paint gap per page.
+// Yields a macrotask so the browser paints the just-appended messages before this page's space-db
+// mutations run; otherwise the append + reactive cascade run as one synchronous burst that blocks paint.
+const paintYield = Effect.fn('sync.commit.paintYield')(function* () {
+  yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 0)));
+});
+
+/** Applies every (message, tag) pair for the page in one `Obj.update` on the tag index (not one per pair). */
+const applyTags = Effect.fn('sync.commit.tags')(function* (state: State, units: readonly CommitUnit[]) {
+  if (!state.tagIndex) {
+    return;
+  }
+  const tagEntries: { object: Obj.Any; tagId: string }[] = [];
+  for (const unit of units) {
+    for (const uri of unit.tagUris) {
+      tagEntries.push({ object: unit.message, tagId: uri });
+    }
+  }
+  Tagging.setBatch(tagEntries, { index: state.tagIndex });
+});
+
+/** Runs each distinct commit effect once with all the units that attached it (identity-batched). */
+const runCommitEffects = Effect.fn('sync.commit.commitEffects')(function* (units: readonly CommitUnit[]) {
+  const byEffect = new Map<CommitEffect, CommitUnit[]>();
+  for (const unit of units) {
+    for (const effect of unit.commitEffects ?? []) {
+      const existing = byEffect.get(effect);
+      if (existing) {
+        existing.push(unit);
+      } else {
+        byEffect.set(effect, [unit]);
+      }
+    }
+  }
+  for (const [effect, unitsForEffect] of byEffect) {
+    yield* effect(unitsForEffect);
+  }
+});
+
+/** Advances the cursor to the page's high-water key and records the units as committed. */
+const recordCommitted = Effect.fn('sync.commit.advanceCursor')(function* (state: State, units: readonly CommitUnit[]) {
+  advanceCursor(state, Math.max(...units.map((unit) => unit.key)));
+  for (const unit of units) {
+    state.dedupSet.add(unit.foreignId);
+  }
+  state.stats.newMessages += units.length;
+});
+
 /**
  * Commits one page of pipeline output — the single place non-idempotent writes happen. Use as the
- * `Pipeline.run` sink after `Stream.grouped(pageSize)` (which also emits the trailing partial page,
- * so no separate flush is needed).
+ * `Pipeline.run` sink after `Stream.grouped(pageSize)` (which also emits the trailing partial page).
  *
- * Order matters for crash recovery: the feed append (a queue write) commits first, then the space-db
- * mutations (tags, commit effects, cursor advance) commit together in one `flush`. The queue and the space
- * document are separate stores with no shared transaction, so a crash between the two leaves the page
- * in the feed with the cursor un-advanced — the next run re-fetches it and the feed-seeded dedup set
- * drops it. Advancing the cursor before the append would instead lose messages.
+ * The feed append runs first, then the space-db mutations; the two stores share no transaction, so a
+ * crash between them leaves the page in the feed with the cursor un-advanced — the next run re-fetches
+ * it and the feed-seeded dedup set drops it (advancing first would lose messages). No mid-run flush:
+ * the feed append is separately durable and the caller flushes once at the end (per-page flushes were
+ * O(n²) over a run), so a crash only loses this run's in-memory cursor advance + space mutations.
  */
 export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never, Service | Database.Service> =>
   Effect.gen(function* () {
@@ -236,81 +293,12 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
     const state = yield* Service;
     const feed = state.feed;
     invariant(feed, 'SyncBinding.commit requires a feed target');
-    const { db } = yield* Database.Service;
 
-    // The feed append (a queue write) commits first; the space-db mutations below follow. The queue
-    // and the space document are separate stores with no shared transaction, so a crash between them
-    // leaves the page in the feed with the cursor un-advanced — the next run re-fetches it and the
-    // feed-seeded dedup set drops it. Advancing the cursor before the append would instead lose
-    // messages. Each phase is its own span so the benchmark can attribute per-page commit cost.
-    yield* Effect.promise(() => db.appendToFeed(feed, units.map((unit) => unit.message))).pipe(
-      Effect.withSpan('sync.commit.appendToFeed', { attributes: { messages: units.length } }),
-    );
-
-    // Yield a macrotask after the feed append so the browser can paint the just-appended messages
-    // before this page's space-db mutations (tags + commit effects) run. Otherwise the append and the
-    // mutations' reactive cascade execute as one uninterrupted synchronous burst and the messages
-    // never paint until the whole sync settles. This yield also absorbs the reactive cascade scheduled
-    // by the previous page's mutations, so its span captures that cost.
-    yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 0))).pipe(
-      Effect.withSpan('sync.commit.paintYield'),
-    );
-
-    yield* Effect.sync(() => {
-      // Apply every (message, tag) pair for the page in ONE `Obj.update` on the tag index (one
-      // Automerge change + one reactive notification), not one per pair. The per-pair storm (a page's
-      // worth of separate changes/notifications, ×25 pages/sec) would otherwise saturate the main
-      // thread and freeze the UI mid-sync.
-      if (state.tagIndex) {
-        const tagEntries: { object: Obj.Any; tagId: string }[] = [];
-        for (const unit of units) {
-          for (const uri of unit.tagUris) {
-            tagEntries.push({ object: unit.message, tagId: uri });
-          }
-        }
-        Tagging.setBatch(tagEntries, { index: state.tagIndex });
-      }
-    }).pipe(Effect.withSpan('sync.commit.tags'));
-
-    yield* Effect.sync(() => {
-      // Group the page's commit effects by function identity and call each once with all its units,
-      // so a run-scoped closure reused across units (e.g. thread recording) runs as a single call.
-      const effectUnits = new Map<(db: Database.Database, units: readonly CommitUnit[]) => void, CommitUnit[]>();
-      for (const unit of units) {
-        for (const effect of unit.commitEffects ?? []) {
-          const existing = effectUnits.get(effect);
-          if (existing) {
-            existing.push(unit);
-          } else {
-            effectUnits.set(effect, [unit]);
-          }
-        }
-      }
-      for (const [effect, unitsForEffect] of effectUnits) {
-        effect(db, unitsForEffect);
-      }
-    }).pipe(Effect.withSpan('sync.commit.commitEffects'));
-
-    yield* Effect.sync(() => {
-      // Advance the cursor + run status in the same commit as the writes. (A run with no new messages
-      // produces no commit, so `lastSyncAt` reflects the last page that landed rather than the last
-      // attempt — acceptable, and avoids a separate write path.)
-      advanceCursor(state, Math.max(...units.map((unit) => unit.key)));
-      // No mid-run flush. Nothing within the run needs persisted/indexed space-db state: the feed
-      // append is separately durable per page, dedup uses the feed-seeded + in-memory set, the contact
-      // lookup is cached in memory (no per-message db query), and the UI observes tag/thread mutations
-      // via in-memory reactivity. Re-serializing the ever-growing space doc every few pages was the
-      // dominant per-page cost (O(doc) per flush → O(n²) over a run); the caller flushes once, with
-      // indexes, at the end of the run instead.
-      //
-      // Trade-off: a crash mid-run loses this run's in-memory cursor advance + space mutations. The
-      // messages are still durable in the feed, so the next run re-fetches from the last persisted
-      // cursor and re-applies commit effects idempotently (feed dedup drops the already-appended pages).
-      for (const unit of units) {
-        state.dedupSet.add(unit.foreignId);
-      }
-      state.stats.newMessages += units.length;
-    }).pipe(Effect.withSpan('sync.commit.advanceCursor'));
+    yield* appendMessages(feed, units);
+    yield* paintYield();
+    yield* applyTags(state, units);
+    yield* runCommitEffects(units);
+    yield* recordCommitted(state, units);
   }).pipe(Effect.withSpan('sync.commit'));
 
 /** An item written by {@link upsertCommit}: an object to upsert into the space plus its cursor key. */

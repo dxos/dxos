@@ -72,7 +72,13 @@ export const extractContacts = (): Stage.Stage<Mapped, SyncBinding.CommitUnit, n
         key: mapped.key,
         tagUris: mapped.tagUris,
         // Defer the write to commit (the stage stays idempotent) — add the extracted contact there.
-        commitEffects: contact ? [() => db.add(contact)] : undefined,
+        commitEffects: contact
+          ? [
+              Effect.fn('sync.commit.addContact')(function* () {
+                yield* Database.add(contact);
+              }),
+            ]
+          : undefined,
       };
     }),
   );
@@ -96,15 +102,17 @@ export const recordThreads = (threadIndex: ThreadIndex.ThreadIndex) => {
   // One accessor for the whole run so its thread-id snapshot is taken once (not per page) — see
   // `ThreadIndex.bind`. The `recordThreads` factory is called once per pipeline run.
   const accessor = ThreadIndex.bind(threadIndex);
-  const record = (_db: Database.Database, units: readonly SyncBinding.CommitUnit[]): void => {
+  const record: SyncBinding.CommitEffect = Effect.fn('sync.commit.recordThreads')(function* (
+    units: readonly SyncBinding.CommitUnit[],
+  ) {
     const entries = units.flatMap((unit) => {
       const message = unit.message;
       return Obj.instanceOf(Message.Message, message) && message.threadId
         ? [{ threadId: message.threadId, message }]
         : [];
     });
-    accessor.addBatch(entries);
-  };
+    yield* Effect.sync(() => accessor.addBatch(entries));
+  });
 
   return <In extends SyncBinding.CommitUnit, E, R>(self: Stream.Stream<In, E, R>): Stream.Stream<In, E, R> =>
     Stage.map('record-threads', (unit: In) =>

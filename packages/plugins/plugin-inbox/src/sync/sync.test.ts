@@ -182,9 +182,10 @@ describe('sync pipeline harness', () => {
     // A single stable reference — the same shape `EmailStage.recordThreads` attaches to every unit
     // in a run — so `commit` must invoke it once per page with every unit that attached it, not once
     // per unit.
-    const commitEffect = (_db: Database.Database, units: readonly SyncBinding.CommitUnit[]): void => {
-      calls.push(units);
-    };
+    const commitEffect: SyncBinding.CommitEffect = (units) =>
+      Effect.sync(() => {
+        calls.push(units);
+      });
 
     const makeUnit = (raw: Raw): SyncBinding.CommitUnit => ({
       message: Obj.make(Message.Message, {
