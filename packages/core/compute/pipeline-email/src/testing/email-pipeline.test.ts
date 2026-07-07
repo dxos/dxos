@@ -29,7 +29,7 @@ import { captureSink } from '@dxos/pipeline/testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../facts';
+import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../stages/facts';
 import { buildEntityIndex, reconcileFactEntities } from '../internal/fact-index';
 import { buildThreads } from '../internal/threads';
 import { type FactIndexer, extractFactsStage } from '../stages/extract-facts';

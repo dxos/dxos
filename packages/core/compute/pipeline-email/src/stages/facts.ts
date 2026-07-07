@@ -13,7 +13,9 @@ export const EMAIL_EXTRACTION_RULES: readonly string[] = [
   'Attribute first-person statements ("I will…", "we can…") to the message sender as subject.',
 ];
 
-export const EMAIL_EXTRACT_OPTIONS: ExtractOptions = { rules: EMAIL_EXTRACTION_RULES };
+export const EMAIL_EXTRACT_OPTIONS: ExtractOptions = {
+  rules: EMAIL_EXTRACTION_RULES,
+};
 
 // Stable per-message identifier used as the fact `source` and the incremental cursor key. Prefer the
 // RFC message-id header (present in the Enron dataset); fall back to sender+timestamp so every message
@@ -23,6 +25,7 @@ export const messageSource = (message: Message.Message): string => {
   if (typeof messageId === 'string' && messageId.length > 0) {
     return messageId;
   }
+
   return `${message.sender.email ?? 'unknown'}:${message.created}`;
 };
 

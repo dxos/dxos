@@ -5,7 +5,7 @@
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { messageSource } from '../facts';
+import { messageSource } from '../stages/facts';
 import { Thread, type ThreadState } from '../types';
 import { deriveThreadId } from './threading';
 

@@ -3,7 +3,7 @@
 //
 
 export * from './context';
-export * from './summarize';
 export * from './extract-contacts';
-export * from './stats';
 export * from './extract-facts';
+export * from './stats';
+export * from './summarize';
