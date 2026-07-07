@@ -44,6 +44,6 @@ export const Default: Story = {
 export const Running: Story = {
   args: {
     stages: STAGES,
-    active: 'extract-facts',
+    busy: true,
   },
 };

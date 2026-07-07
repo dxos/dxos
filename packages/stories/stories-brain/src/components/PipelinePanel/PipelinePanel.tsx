@@ -21,8 +21,8 @@ export type PipelinePanelProps = ThemedClassName<{
   stages: StageInfo[];
   /** Controlled update: fired on checkbox toggle and drag reorder. */
   onStagesChanged?: (stages: StageInfo[]) => void;
-  /** Id of the stage currently executing. */
-  active?: string;
+  /** Whether the pipeline is currently running (drives the toolbar spinner). */
+  busy?: boolean;
   /** Latest pipeline output (rendered as JSON). */
   output?: unknown;
 }>;
@@ -35,7 +35,7 @@ const isStage = (value: unknown): value is StageInfo =>
  * checkbox and re-orderable by dragging — and the raw output of the latest run. Variants will
  * replace the output view with live per-stage progress and typed results.
  */
-export const PipelinePanel = ({ classNames, stages, onStagesChanged, active, output }: PipelinePanelProps) => {
+export const PipelinePanel = ({ classNames, stages, onStagesChanged, busy, output }: PipelinePanelProps) => {
   const handleToggle = useCallback(
     (id: string, enabled: boolean) =>
       onStagesChanged?.(stages.map((stage) => (stage.id === id ? { ...stage, enabled } : stage))),
@@ -56,6 +56,8 @@ export const PipelinePanel = ({ classNames, stages, onStagesChanged, active, out
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.Text>Pipeline</Toolbar.Text>
+          <div role='none' className='grow' />
+          {busy && <Icon icon='ph--spinner-gap--regular' size={4} classNames='animate-spin' />}
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
@@ -77,7 +79,7 @@ export const PipelinePanel = ({ classNames, stages, onStagesChanged, active, out
                       id={stage.id}
                       item={stage}
                       hover
-                      classNames='grid grid-cols-[var(--dx-rail-item)_var(--dx-rail-item)_1fr_var(--dx-rail-item)] items-center gap-1 px-1 py-1'
+                      classNames='grid grid-cols-[var(--dx-rail-item)_var(--dx-rail-item)_1fr] items-center gap-1 px-1 py-1'
                     >
                       <OrderedList.DragHandle />
                       <Input.Root>
@@ -93,9 +95,6 @@ export const PipelinePanel = ({ classNames, stages, onStagesChanged, active, out
                           <span className='text-sm text-description truncate'>{stage.description}</span>
                         )}
                       </div>
-                      {stage.id === active && (
-                        <Icon icon='ph--spinner-gap--regular' size={4} classNames='animate-spin' />
-                      )}
                     </OrderedList.Item>
                   ))}
                 </OrderedList.Content>
