@@ -10,11 +10,16 @@ set -e
 # Run `moon run pipeline-email:pull-models`. Override the set with a space-separated MODELS env var:
 #   MODELS="llama3.2:3b qwen2.5:7b" moon run pipeline-email:pull-models
 
-# Space-separated Ollama tags. DXN mapping (Model.ts):
+# Ollama tags, one per line. DXN mapping (Model.ts):
 #   llama3.2:3b -> com.meta.model.llama-3-2-3b.instruct
 #   qwen2.5:7b  -> com.alibaba.model.qwen-2-5-7b.instruct
 #   gemma4:12b  -> com.google.model.gemma-4-12b.default
-MODELS="${MODELS:-llama3.2:3b qwen2.5:7b gemma4:12b}"
+MODELS="${MODELS:-$(cat <<'EOF'
+llama3.2:3b
+qwen2.5:7b
+gemma4:12b
+EOF
+)}"
 
 if ! command -v ollama >/dev/null 2>&1; then
   echo "Error: 'ollama' not found on PATH. Install from https://ollama.com then re-run." >&2
