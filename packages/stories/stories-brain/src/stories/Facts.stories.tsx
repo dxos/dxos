@@ -22,8 +22,6 @@ import {
   run,
 } from '@dxos/crawler';
 import { EffectEx } from '@dxos/effect';
-import { discordSourceLayer } from '@dxos/plugin-discord';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   SemanticPipeline,
   SemanticStore,
@@ -31,7 +29,9 @@ import {
   buildSparql,
   generateQuery,
   parseSparqlToQuery,
-} from '@dxos/semantic-index';
+} from '@dxos/pipeline-rdf';
+import { discordSourceLayer } from '@dxos/plugin-discord';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import {
   type CrawlAction,
@@ -39,11 +39,11 @@ import {
   CrawlPanel,
   DEFAULT_SPARQL,
   EntityList,
+  FactViewer,
   QueryPanel,
-  SemanticFactsViewer,
   entitiesFromFacts,
   initialOptions,
-} from './components';
+} from '../components';
 
 const CRAWL_STAGES: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
 
@@ -67,7 +67,7 @@ type StoryArgs = {};
  * Drive the crawler from the browser: enter a Discord bot token + options, list the channels the bot
  * can read, choose one, crawl it through the pipeline (edge LLM extraction), view the facts, and
  * scope them by the entities mentioned (third column). Composed from {@link CrawlPanel},
- * {@link SemanticFactsViewer} and {@link EntityList}.
+ * {@link FactViewer} and {@link EntityList}.
  */
 const DefaultStory = (_: StoryArgs) => {
   const [options, setOptions] = useState<CrawlOptions>(initialOptions);
@@ -268,7 +268,7 @@ const DefaultStory = (_: StoryArgs) => {
           onReset={handleResetQuery}
         />
       </div>
-      <SemanticFactsViewer facts={facts} context={context} />
+      <FactViewer facts={facts} context={context} />
       <EntityList entities={entities} selected={context} onSelect={setContext} />
     </div>
   );
@@ -299,7 +299,7 @@ const SAMPLE_FACTS: Type.Fact[] = [
 
 /**
  * No crawl: seed an in-memory {@link SemanticStore} with a hand-authored Alice/Bob corpus, read the
- * facts back through it, and navigate by entity. Reuses {@link SemanticFactsViewer} and
+ * facts back through it, and navigate by entity. Reuses {@link FactViewer} and
  * {@link EntityList} to show the columns are independent of the Discord pipeline.
  */
 const InMemoryStory = (_: StoryArgs) => {
@@ -333,14 +333,14 @@ const InMemoryStory = (_: StoryArgs) => {
 
   return (
     <div className='dx-container grid grid-cols-2 gap-2'>
-      <SemanticFactsViewer facts={facts} context={context} />
+      <FactViewer facts={facts} context={context} />
       <EntityList entities={entities} selected={context} onSelect={setContext} />
     </div>
   );
 };
 
 const meta = {
-  title: 'stories/stories-brain/SemanticFactsCrawler',
+  title: 'stories/stories-brain/stories/Facts',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
 } satisfies Meta<typeof DefaultStory>;

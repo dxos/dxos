@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ExtractDocument, type ExtractOptions } from '@dxos/semantic-index';
+import { type ExtractDocument, type ExtractOptions } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
-// Email-specific extraction guidance appended after the semantic-index DEFAULT_EXTRACTION_RULES.
+// Email-specific extraction guidance appended after the pipeline-rdf DEFAULT_EXTRACTION_RULES.
 // Kept atomic so the two rule sets compose without forking the base prompt.
 export const EMAIL_EXTRACTION_RULES: readonly string[] = [
   'Treat a request or promise as a commitment: "please send X by Friday" => subject (the owner), predicate "owes"/"will send", object X, validTo the deadline.',

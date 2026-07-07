@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { SemanticIndexError } from './index';
 
-describe('semantic-index scaffold', () => {
+describe('pipeline-rdf scaffold', () => {
   test('package imports', ({ expect }) => {
     const error = new SemanticIndexError({ message: 'x' });
     expect(error).toBeInstanceOf(SemanticIndexError);

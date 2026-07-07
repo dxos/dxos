@@ -34,7 +34,7 @@
     "@dxos/ai": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/semantic-index": "workspace:*",
+    "@dxos/pipeline-rdf": "workspace:*",
     "@effect/ai": "catalog:"
   },
   "devDependencies": {

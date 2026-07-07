@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Stage } from '@dxos/pipeline';
-import { type Type } from '@dxos/semantic-index';
+import { type Type } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
 // Extract + persist one message's facts, returning them. The store/AI-bound work is a Promise closure

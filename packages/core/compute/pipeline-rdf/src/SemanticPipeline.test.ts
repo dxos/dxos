@@ -7,19 +7,27 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Stream from 'effect/Stream';
 import { readFileSync } from 'node:fs';
+
+import { Pipeline } from '@dxos/pipeline';
 
 import { SemanticIndexError } from './errors';
 import {
   DEFAULT_EXTRACTION_RULES,
+  type DocumentFacts,
   type ExtractDocument,
   SemanticPipeline,
   buildExtractionPrompt,
   extractFacts,
+  extractFactsStage,
+  indexFactsStage,
   normalizeEntityId,
+  normalizeFactsStage,
 } from './SemanticPipeline';
 import { SemanticStore } from './SemanticStore';
 import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing';
+import { type Fact } from './types';
 
 // Discord channel fixture (snapshot of `plugin-discord:generate-fixtures`) as extraction documents.
 type FixtureMessage = {
@@ -78,6 +86,14 @@ describe('SemanticPipeline', () => {
     const prompt = buildExtractionPrompt();
     // The default set rejects questions (the immediate case driving this rule).
     expect(prompt).toContain('Do not extract facts from questions');
+    // Class membership uses the distinguished `is-a` predicate (rdf:type-like), never bare "is"/"was".
+    expect(prompt).toContain('Use the exact predicate "is-a" for class membership');
+    // Predicates are atemporal: tense flows into valid-time, and past tense alone does not end a fact.
+    expect(prompt).toContain('timeless present form');
+    expect(prompt).toContain('does NOT set validTo');
+    expect(prompt).not.toContain('predicate "was created by"');
+    // Anti-synonym bias: the model reuses predicates rather than inventing variants.
+    expect(prompt).toContain('reuse the SAME predicate');
 
     const extended = buildExtractionPrompt({ rules: ['Treat @handles as people.'] });
     expect(extended).toContain('Treat @handles as people.');
@@ -85,6 +101,86 @@ describe('SemanticPipeline', () => {
     expect(extended).toContain(`${DEFAULT_EXTRACTION_RULES.length + 1}. Treat @handles as people.`);
     expect(extended).toContain(DEFAULT_EXTRACTION_RULES[0]);
   });
+
+  it.effect(
+    'composes extractFactsStage as a pipeline stage without a store',
+    Effect.fnUntraced(
+      function* () {
+        const collected: DocumentFacts[] = [];
+        yield* Stream.fromIterable([
+          { text: "I think I'm probably going to Paris next week", source: 'editor:input', author: 'Alice' },
+        ]).pipe(extractFactsStage(), Pipeline.run({ sink: (out) => Effect.sync(() => collected.push(out)) }));
+        yield* Effect.sync(() => {
+          if (collected.length !== 1) {
+            throw new Error(`expected 1 stage output, got ${collected.length}`);
+          }
+          const [{ doc, facts }] = collected;
+          if (doc.source !== 'editor:input') {
+            throw new Error('document not passed through');
+          }
+          if (facts.length !== 1 || facts[0].assertion.predicate !== 'travelsTo') {
+            throw new Error('facts not derived');
+          }
+        });
+      },
+      Effect.provide(queuedAiService([LLM_OUTPUT])),
+    ),
+  );
+
+  it.effect(
+    'indexFactsStage persists facts and drops cursor-unchanged documents from the stream',
+    Effect.fnUntraced(function* () {
+      const doc = { text: 'going to Paris', source: 'dxn:q:s1', author: 'Alice' };
+      const runOnce = () =>
+        Effect.gen(function* () {
+          const collected: DocumentFacts[] = [];
+          yield* Stream.fromIterable([doc]).pipe(
+            indexFactsStage(),
+            Pipeline.run({ sink: (out) => Effect.sync(() => collected.push(out)) }),
+          );
+          return collected;
+        });
+
+      const first = yield* runOnce();
+      const second = yield* runOnce(); // Unchanged source → skipped and dropped.
+      const store = yield* SemanticStore;
+      const persisted = yield* store.query({ predicate: 'travelsTo' });
+      yield* Effect.sync(() => {
+        if (first.length !== 1 || first[0].facts.length !== 1) {
+          throw new Error(`first run should index one document: ${JSON.stringify(first)}`);
+        }
+        if (second.length !== 0) {
+          throw new Error(`unchanged re-ingest should emit nothing, got ${second.length}`);
+        }
+        if (persisted.length !== 1) {
+          throw new Error(`expected 1 persisted fact, got ${persisted.length}`);
+        }
+      });
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'normalizeFactsStage canonicalizes synonyms by relation key and passes others through',
+    Effect.fnUntraced(function* () {
+      // 'worked for' must match the table's 'works for' via relation-key normalization (inflection
+      // and auxiliaries collapse); 'is-a' has no mapping and keeps its surface form.
+      const input: DocumentFacts = {
+        doc: { text: 'irrelevant', source: 'test:doc' },
+        facts: [testFact('worked for'), testFact('Employed By'), testFact('is-a')],
+      };
+      const collected: DocumentFacts[] = [];
+      yield* Stream.fromIterable([input]).pipe(
+        normalizeFactsStage({ synonyms: { 'works for': 'works at', 'employed by': 'works at' } }),
+        Pipeline.run({ sink: (out) => Effect.sync(() => collected.push(out)) }),
+      );
+      yield* Effect.sync(() => {
+        const predicates = collected[0].facts.map((fact) => fact.assertion.predicate);
+        if (predicates.join('|') !== 'works at|works at|is-a') {
+          throw new Error(`unexpected predicates: ${predicates.join('|')}`);
+        }
+      });
+    }),
+  );
 
   it.effect(
     'extracts the Alice fact and persists it',
@@ -336,4 +432,19 @@ describe('SemanticPipeline', () => {
       }).pipe(Effect.provide(layer));
     }),
   );
+});
+
+/** Minimal grounded fact for stage-level tests; only the predicate varies. */
+const testFact = (predicate: string): Fact => ({
+  id: `test:doc#hash#${predicate}`,
+  assertion: {
+    subject: { entity: 'alice', label: 'Alice' },
+    predicate,
+    object: { entity: 'acme', label: 'Acme' },
+  },
+  valence: { factuality: 'CT+', polarity: '+' },
+  attribution: { source: 'test:doc', generatedAtTime: '2026-01-01T00:00:00.000Z' },
+  recordedAt: '2026-01-01T00:00:00.000Z',
+  extractor: { id: 'test', model: 'test', version: '1' },
+  sourceHash: 'deadbeef',
 });

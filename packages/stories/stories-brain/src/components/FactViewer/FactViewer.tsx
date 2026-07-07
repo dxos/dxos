@@ -4,17 +4,17 @@
 
 import React, { useMemo, useState } from 'react';
 
+import { type Type, buildFactGraph, factSourceFromFacts } from '@dxos/pipeline-rdf';
 import { Icon, IconButton, Input, Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-graph';
 import { Empty, Listbox } from '@dxos/react-ui-list';
-import { type Type, buildFactGraph, factSourceFromFacts } from '@dxos/semantic-index';
 import { mx } from '@dxos/ui-theme';
 
 import { Group, factualityColor, formatDate, formatTerm, graphToTreeNode, groupFacts, termKey } from '../util';
 
 type View = 'list' | 'graph';
 
-export type SemanticFactsViewerProps = ThemedClassName<{
+export type FactViewerProps = ThemedClassName<{
   facts: Type.Fact[];
   /** Context entity id; scopes the list and roots the graph. */
   context?: string;
@@ -25,7 +25,7 @@ export type SemanticFactsViewerProps = ThemedClassName<{
  * conflicts highlighted) and a **graph** (tidy tree rooted at the context entity, exploring the fact
  * graph). A `context` entity scopes the list and roots the graph. Pure/presentational.
  */
-export const SemanticFactsViewer = ({ classNames, facts, context }: SemanticFactsViewerProps) => {
+export const FactViewer = ({ classNames, facts, context }: FactViewerProps) => {
   const [filter, setFilter] = useState('');
   const [view, setView] = useState<View>('list');
   const scoped = useMemo(

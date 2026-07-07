@@ -24,8 +24,8 @@ import { EffectEx } from '@dxos/effect';
 import { extractContact } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
+import { SemanticPipeline, SemanticStore } from '@dxos/pipeline-rdf';
 import { captureSink } from '@dxos/pipeline/testing';
-import { SemanticPipeline, SemanticStore } from '@dxos/semantic-index';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -233,7 +233,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
   const runtime = ManagedRuntime.make(modelLayer.pipe(Layer.orDie));
 
   // In-memory fact substrate for this run; shares the Ollama-backed AiService the extraction resolves
-  // its model through (semantic-index's ExtractOptions carries the model + provider).
+  // its model through (pipeline-rdf's ExtractOptions carries the model + provider).
   const factRuntime = ManagedRuntime.make(SemanticStore.layerMemory.pipe(Layer.provideMerge(OllamaAiServiceLayer)));
 
   let builder: EchoTestBuilder;
@@ -286,7 +286,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
       const context: Context.Tag.Service<typeof Ctx> = { summarize, db, stats };
 
       // Index each message into the fact substrate. The model + provider ride on ExtractOptions so
-      // semantic-index resolves the Ollama model (its default is Anthropic); a failed extraction
+      // pipeline-rdf resolves the Ollama model (its default is Anthropic); a failed extraction
       // degrades to no facts in `extractFactsStage`, so the run stays green.
       const indexFacts: FactIndexer = (message) =>
         factRuntime.runPromise(
