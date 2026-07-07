@@ -17,7 +17,12 @@ import { hashText } from './internal/stages/reconcile';
 import { SemanticStore } from './SemanticStore';
 import { type Fact } from './types';
 
-export { DEFAULT_EXTRACTION_RULES, buildExtractionPrompt } from './internal/stages/extract';
+export {
+  DEFAULT_EXTRACTION_RULES,
+  ExtractedFact,
+  buildExtractionPrompt,
+  parseExtractPayload,
+} from './internal/stages/extract';
 export type { ExtractDocument, ExtractOptions } from './internal/stages/extract';
 
 // PROVISIONAL v1 entity resolution: distinct surface forms that normalize identically will merge,

@@ -3,13 +3,16 @@
 //
 
 import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { type AiModelNotAvailableError, AiService } from '@dxos/ai';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { SemanticIndexError } from '../../errors';
 import { Factuality } from '../../types';
@@ -23,22 +26,43 @@ export type ExtractDocument = {
 
 export const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
+// Optional enrichment field: models routinely emit `null` (not omission) for "not present", so
+// accept null as absent. A plain `Schema.optional(String)` rejects null and would discard the whole
+// fact over an empty date/quote.
+const OptionalString = Schema.optionalWith(Schema.String, { nullable: true });
+
+// Soft enum: keep the known values, coerce anything else (a model's stray value like "Person", or a
+// null) to absent. A bad enrichment value must not discard an otherwise-valid fact.
+const Nature = Schema.optional(
+  Schema.transform(Schema.Unknown, Schema.UndefinedOr(Schema.Literal('epistemic', 'aleatory')), {
+    strict: false,
+    decode: (value) => (value === 'epistemic' || value === 'aleatory' ? value : undefined),
+    encode: (value) => value,
+  }),
+);
+
+/**
+ * One extracted fact as the model emits it (entities are surface strings; linking happens later).
+ * Only subject/predicate/object/factuality/polarity are required; enrichment fields tolerate the
+ * `null`s and stray enum values local models commonly produce so a single bad field never drops the
+ * whole fact.
+ */
+export const ExtractedFact = Schema.Struct({
+  subject: Schema.String,
+  predicate: Schema.String,
+  object: Schema.String,
+  validFrom: OptionalString,
+  validTo: OptionalString,
+  factuality: Factuality,
+  polarity: Schema.Literal('+', '-', '?'),
+  confidence: Schema.optionalWith(Schema.Number, { nullable: true }),
+  nature: Nature,
+  quote: OptionalString,
+});
+
 /** Flat LLM payload (entities are surface strings; linking happens in the pipeline). */
 export const ExtractPayload = Schema.Struct({
-  facts: Schema.Array(
-    Schema.Struct({
-      subject: Schema.String,
-      predicate: Schema.String,
-      object: Schema.String,
-      validFrom: Schema.optional(Schema.String),
-      validTo: Schema.optional(Schema.String),
-      factuality: Factuality,
-      polarity: Schema.Literal('+', '-', '?'),
-      confidence: Schema.optional(Schema.Number),
-      nature: Schema.optional(Schema.Literal('epistemic', 'aleatory')),
-      quote: Schema.optional(Schema.String),
-    }),
-  ),
+  facts: Schema.Array(ExtractedFact),
 });
 export interface ExtractPayload extends Schema.Schema.Type<typeof ExtractPayload> {}
 
@@ -68,6 +92,13 @@ export type ExtractOptions = {
   readonly model?: string;
   /** Provider DXN for model resolution (e.g. `Provider.ollama.id`) when the model is not served by the default provider. */
   readonly provider?: string;
+  /**
+   * Attempt strict `generateObject` before the lenient `generateText` + salvage path. Strong hosted
+   * models honor the schema, but local providers (Ollama) reliably fail structured output there, so
+   * the strict call is pure wasted latency — pass `false` for those to make each chunk a single
+   * generation. Defaults to `true`.
+   */
+  readonly strict?: boolean;
 };
 
 /** Compose the system prompt from the base instruction and the (default + caller) rules. */
@@ -76,18 +107,117 @@ export const buildExtractionPrompt = (options?: ExtractOptions): string => {
   return `${BASE_PROMPT}\nRules:\n${rules.map((rule, index) => `${index + 1}. ${rule}`).join('\n')}`;
 };
 
-/** Run schema-constrained extraction for one chunk. */
+const decodeFact = Schema.decodeUnknownOption(ExtractedFact);
+
+// Top-level balanced `{...}` spans, in order. Brace-only (does not skip braces inside string
+// literals) — a best-effort tokenizer for salvage, not a JSON validator.
+const jsonObjectSpans = (raw: string): string[] => {
+  const spans: string[] = [];
+  let depth = 0;
+  let start = -1;
+  for (let index = 0; index < raw.length; index += 1) {
+    const char = raw[index];
+    if (char === '{') {
+      if (depth === 0) {
+        start = index;
+      }
+      depth += 1;
+    } else if (char === '}' && depth > 0) {
+      depth -= 1;
+      if (depth === 0 && start !== -1) {
+        spans.push(raw.slice(start, index + 1));
+        start = -1;
+      }
+    }
+  }
+  return spans;
+};
+
+/**
+ * Salvage an {@link ExtractPayload} from free model text. Local/reasoning models (e.g. gpt-oss via
+ * Ollama) wrap the JSON in prose that can itself contain braces (examples, code fences), so scan
+ * every top-level object and use the first one carrying a `facts` array — a greedy first-`{`-to-last-
+ * `}` match would span across stray braces and fail to parse. Entries that don't decode against
+ * {@link ExtractedFact} are dropped rather than failing the whole document.
+ */
+export const parseExtractPayload = (raw: string): ExtractPayload => {
+  for (const span of jsonObjectSpans(raw)) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(span);
+    } catch {
+      continue;
+    }
+    if (typeof parsed !== 'object' || parsed === null) {
+      continue;
+    }
+    const factsValue = Reflect.get(parsed, 'facts');
+    if (!Array.isArray(factsValue)) {
+      continue;
+    }
+    return {
+      facts: factsValue.flatMap((entry) =>
+        Option.match(decodeFact(entry), { onNone: () => [], onSome: (fact) => [fact] }),
+      ),
+    };
+  }
+  return { facts: [] };
+};
+
+/**
+ * Extract facts for one chunk. Optionally attempts strict `generateObject` first (strong hosted
+ * models honor the schema), then falls back to a lenient `generateText` + JSON-salvage path so
+ * schema-non-conforming models still yield facts instead of degrading the document to none. For a
+ * provider override (Ollama) the strict pass reliably fails and is skipped by default — see
+ * {@link ExtractOptions.strict} — so each chunk makes a single generation. Attempts are timed and
+ * logged so the strict/lenient latency split stays visible.
+ */
 export const extractChunk = (
   doc: ExtractDocument,
   options?: ExtractOptions,
 ): Effect.Effect<ExtractPayload, SemanticIndexError, AiService.AiService> =>
   Effect.gen(function* () {
     const context = `Author: ${doc.author ?? 'unknown'}\nDate: ${doc.date ?? 'unknown'}\nMessage:\n${doc.text}`;
-    const response = yield* LanguageModel.generateObject({
-      schema: ExtractPayload,
-      prompt: `${buildExtractionPrompt(options)}\n\n${context}`,
+    const prompt = `${buildExtractionPrompt(options)}\n\n${context}`;
+    const lenient = Effect.timed(
+      LanguageModel.generateText({
+        prompt: `${prompt}\n\nRespond with ONLY a JSON object of the form {"facts": [ ... ]} — no prose, no markdown fences.`,
+      }).pipe(Effect.map((response) => parseExtractPayload(response.text))),
+    );
+
+    // Strong hosted models honor the schema; local providers (Ollama) reliably fail structured
+    // output, so callers targeting them pass `strict: false` to skip the wasted strict pass.
+    const useStrict = options?.strict ?? true;
+    if (!useStrict) {
+      const [lenientDuration, payload] = yield* lenient;
+      log('extract-facts: lenient', {
+        source: doc.source,
+        lenientMs: Math.round(Duration.toMillis(lenientDuration)),
+        facts: payload.facts.length,
+      });
+      return payload;
+    }
+
+    const [strictDuration, strict] = yield* Effect.timed(
+      LanguageModel.generateObject({ schema: ExtractPayload, prompt }).pipe(
+        Effect.map((response) => Option.some(response.value)),
+        Effect.catchAll(() => Effect.succeed(Option.none<ExtractPayload>())),
+      ),
+    );
+    const strictMs = Math.round(Duration.toMillis(strictDuration));
+    if (Option.isSome(strict)) {
+      log('extract-facts: strict', { source: doc.source, strictMs, facts: strict.value.facts.length });
+      return strict.value;
+    }
+    const [lenientDuration, payload] = yield* lenient;
+    // Strict validation failed and its whole generation was wasted; the lenient retry doubles latency.
+    log.warn('extract-facts: strict rejected, used lenient fallback', {
+      source: doc.source,
+      strictMs,
+      lenientMs: Math.round(Duration.toMillis(lenientDuration)),
+      facts: payload.facts.length,
     });
-    return response.value;
+    return payload;
   }).pipe(
     Effect.provide(modelLayer(options).pipe(Layer.orDie)),
     // Model-layer construction failure is a fatal wiring fault (defect); transient LLM failures
