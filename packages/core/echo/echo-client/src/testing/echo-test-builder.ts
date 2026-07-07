@@ -246,6 +246,11 @@ export class EchoTestPeer extends Resource {
 
     this._lastDatabaseSpaceKey = spaceKey;
     this._lastDatabaseRootUrl = root.url;
+    if (this._storagePath) {
+      await this.setStorageMetadata('lastDatabaseSpaceKey', spaceKey.toHex());
+      await this.setStorageMetadata('lastDatabaseRootUrl', root.url);
+    }
+
     return db;
   }
 
@@ -261,11 +266,31 @@ export class EchoTestPeer extends Resource {
     const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
     await db.setSpaceRoot(rootUrl);
     await db.open();
+
+    this._lastDatabaseSpaceKey = spaceKey;
+    this._lastDatabaseRootUrl = rootUrl;
+    if (this._storagePath) {
+      await this.setStorageMetadata('lastDatabaseSpaceKey', spaceKey.toHex());
+      await this.setStorageMetadata('lastDatabaseRootUrl', rootUrl);
+    }
+
     return db;
   }
 
   async openLastDatabase({ client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {}) {
-    return this.openDatabase(this._lastDatabaseSpaceKey!, this._lastDatabaseRootUrl!, {
+    if (this._storagePath && (!this._lastDatabaseSpaceKey || !this._lastDatabaseRootUrl)) {
+      const storedKeyHex = await this.getStorageMetadata('lastDatabaseSpaceKey');
+      const storedUrl = await this.getStorageMetadata('lastDatabaseRootUrl');
+      if (storedKeyHex && storedUrl) {
+        this._lastDatabaseSpaceKey = PublicKey.fromHex(storedKeyHex);
+        this._lastDatabaseRootUrl = storedUrl;
+      }
+    }
+    const spaceKey = this._lastDatabaseSpaceKey;
+    const rootUrl = this._lastDatabaseRootUrl;
+    invariant(spaceKey, 'lastDatabaseSpaceKey not set');
+    invariant(rootUrl, 'lastDatabaseRootUrl not set');
+    return this.openDatabase(spaceKey, rootUrl, {
       client,
       reactiveSchemaQuery,
       preloadSchemaOnOpen,
