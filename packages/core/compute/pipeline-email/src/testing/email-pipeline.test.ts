@@ -306,6 +306,8 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
             ...EMAIL_EXTRACT_OPTIONS,
             model: MODEL,
             provider: Provider.ollama.id,
+            // Ollama reliably fails strict generateObject; skip it and salvage from generateText.
+            strict: false,
           }),
         );
       };

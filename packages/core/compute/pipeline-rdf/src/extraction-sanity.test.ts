@@ -42,7 +42,7 @@ describe.skipIf(!ENABLED)('extraction sanity (Ollama gated)', () => {
     await EffectEx.runPromise(
       Stream.fromIterable(DOCS)
         .pipe(
-          instrument('extract', extractFactsStage({ model: MODEL, provider: Provider.ollama.id })),
+          instrument('extract', extractFactsStage({ model: MODEL, provider: Provider.ollama.id, strict: false })),
           Pipeline.run({ sink }),
         )
         .pipe(Effect.provide(Layer.merge(OllamaAiServiceLayer, Layer.succeed(Metrics, metrics)))),

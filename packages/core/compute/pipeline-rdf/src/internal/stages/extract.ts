@@ -92,6 +92,13 @@ export type ExtractOptions = {
   readonly model?: string;
   /** Provider DXN for model resolution (e.g. `Provider.ollama.id`) when the model is not served by the default provider. */
   readonly provider?: string;
+  /**
+   * Attempt strict `generateObject` before the lenient `generateText` + salvage path. Strong hosted
+   * models honor the schema, but local providers (Ollama) reliably fail structured output there, so
+   * the strict call is pure wasted latency — pass `false` for those to make each chunk a single
+   * generation. Defaults to `true`.
+   */
+  readonly strict?: boolean;
 };
 
 /** Compose the system prompt from the base instruction and the (default + caller) rules. */
@@ -158,11 +165,12 @@ export const parseExtractPayload = (raw: string): ExtractPayload => {
 };
 
 /**
- * Extract facts for one chunk. Strict `generateObject` first (strong models honor the schema), then
- * a lenient `generateText` + JSON-salvage fallback so schema-non-conforming models still yield facts
- * instead of degrading the document to none. Both attempts are timed and logged: a model that always
- * fails the strict pass pays for two full generations per chunk, and the `strictMs`/`lenientMs`
- * breakdown makes that cost visible (the dominant per-message latency in the email pipeline).
+ * Extract facts for one chunk. Optionally attempts strict `generateObject` first (strong hosted
+ * models honor the schema), then falls back to a lenient `generateText` + JSON-salvage path so
+ * schema-non-conforming models still yield facts instead of degrading the document to none. For a
+ * provider override (Ollama) the strict pass reliably fails and is skipped by default — see
+ * {@link ExtractOptions.strict} — so each chunk makes a single generation. Attempts are timed and
+ * logged so the strict/lenient latency split stays visible.
  */
 export const extractChunk = (
   doc: ExtractDocument,
@@ -171,6 +179,25 @@ export const extractChunk = (
   Effect.gen(function* () {
     const context = `Author: ${doc.author ?? 'unknown'}\nDate: ${doc.date ?? 'unknown'}\nMessage:\n${doc.text}`;
     const prompt = `${buildExtractionPrompt(options)}\n\n${context}`;
+    const lenient = Effect.timed(
+      LanguageModel.generateText({
+        prompt: `${prompt}\n\nRespond with ONLY a JSON object of the form {"facts": [ ... ]} — no prose, no markdown fences.`,
+      }).pipe(Effect.map((response) => parseExtractPayload(response.text))),
+    );
+
+    // Strong hosted models honor the schema; local providers (Ollama) reliably fail structured
+    // output, so callers targeting them pass `strict: false` to skip the wasted strict pass.
+    const useStrict = options?.strict ?? true;
+    if (!useStrict) {
+      const [lenientDuration, payload] = yield* lenient;
+      log('extract-facts: lenient', {
+        source: doc.source,
+        lenientMs: Math.round(Duration.toMillis(lenientDuration)),
+        facts: payload.facts.length,
+      });
+      return payload;
+    }
+
     const [strictDuration, strict] = yield* Effect.timed(
       LanguageModel.generateObject({ schema: ExtractPayload, prompt }).pipe(
         Effect.map((response) => Option.some(response.value)),
@@ -182,11 +209,7 @@ export const extractChunk = (
       log('extract-facts: strict', { source: doc.source, strictMs, facts: strict.value.facts.length });
       return strict.value;
     }
-    const [lenientDuration, payload] = yield* Effect.timed(
-      LanguageModel.generateText({
-        prompt: `${prompt}\n\nRespond with ONLY a JSON object of the form {"facts": [ ... ]} — no prose, no markdown fences.`,
-      }).pipe(Effect.map((response) => parseExtractPayload(response.text))),
-    );
+    const [lenientDuration, payload] = yield* lenient;
     // Strict validation failed and its whole generation was wasted; the lenient retry doubles latency.
     log.warn('extract-facts: strict rejected, used lenient fallback', {
       source: doc.source,

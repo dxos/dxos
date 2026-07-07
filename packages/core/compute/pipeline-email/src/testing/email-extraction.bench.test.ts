@@ -73,7 +73,7 @@ describe.skipIf(!HAS_DATASET)('email extraction benchmark (ROOT_DIR + Ollama gat
                 Stream.map(messageToDocument),
                 instrument(
                   'extract',
-                  extractFactsStage({ ...EMAIL_EXTRACT_OPTIONS, model, provider: Provider.ollama.id }),
+                  extractFactsStage({ ...EMAIL_EXTRACT_OPTIONS, model, provider: Provider.ollama.id, strict: false }),
                 ),
                 Pipeline.run({ sink }),
               )
