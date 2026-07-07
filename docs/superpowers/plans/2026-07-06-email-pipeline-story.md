@@ -31,13 +31,14 @@ All paths under `packages/stories/stories-brain/src/`.
 - `email-pipeline/fixtures.ts` — sample emails + recorded fixture LLM outputs for the `Fixture` variant.
 - `stories/EmailPipeline.stories.tsx` — composite story + variants + ECHO-space decorator.
 
-**Design note:** stage *logic* (`stages.ts`, backend-agnostic Effects) is separated from *view* (`components/*`), joined only in `registry.tsx`. This keeps stages unit-testable without React and views storybook-mountable without a pipeline.
+**Design note:** stage _logic_ (`stages.ts`, backend-agnostic Effects) is separated from _view_ (`components/*`), joined only in `registry.tsx`. This keeps stages unit-testable without React and views storybook-mountable without a pipeline.
 
 ---
 
 ## Task 1: Config & registry types
 
 **Files:**
+
 - Create: `packages/stories/stories-brain/src/email-pipeline/config.ts`
 
 - [ ] **Step 1: Write the config/types module**
@@ -116,6 +117,7 @@ git commit -m "feat(stories-brain): email-pipeline config and registry types"
 Each adapter is a `Stage` over a `Message` stream plus a typed result accumulated via a shared `EmailPipelineCtx`. Adapted from `pipeline-email/src/testing/email-pipeline.test.ts` (the node worked test), but with the summarize model call going through `AiService`/`LanguageModel` so it is backend-agnostic.
 
 **Files:**
+
 - Create: `packages/stories/stories-brain/src/email-pipeline/run.ts` (Ctx + result types; runner added in Task 3)
 - Create: `packages/stories/stories-brain/src/email-pipeline/stages.ts`
 - Test: `packages/stories/stories-brain/src/email-pipeline/stages.test.ts`
@@ -199,29 +201,31 @@ const parseSummary = (raw: string): Summary => {
 };
 
 /** Summarize via AiService/LanguageModel; append a summary block and record spam/keywords + result. */
-export const summarizeStage: Stage.Stage<Message.Message, Message.Message, never, EmailPipelineCtx | AiService.AiService> =
-  Stage.map('summarize', (message) =>
-    Effect.gen(function* () {
-      const ctx = yield* EmailPipelineCtx;
-      const text = Message.extractText(message);
-      const raw = yield* Effect.scoped(
-        LanguageModel.generateText({ prompt: `${SUMMARIZE_PROMPT}\n\n${text}` }),
-      ).pipe(
-        Effect.map((response) => response.text),
-        Effect.orElse(() => Effect.succeed('')),
-      );
-      const summary = parseSummary(raw);
-      const messageId = String(message.properties?.messageId ?? message.id);
-      ctx.summaries.push({ messageId, summary });
-      const summaryBlock: ContentBlock.Text = { _tag: 'text', text: summary.summary };
-      return Message.make({
-        created: message.created,
-        sender: message.sender,
-        blocks: [...message.blocks, summaryBlock],
-        properties: { ...message.properties, spam: summary.isSpam, keywords: summary.keywords },
-      });
-    }),
-  );
+export const summarizeStage: Stage.Stage<
+  Message.Message,
+  Message.Message,
+  never,
+  EmailPipelineCtx | AiService.AiService
+> = Stage.map('summarize', (message) =>
+  Effect.gen(function* () {
+    const ctx = yield* EmailPipelineCtx;
+    const text = Message.extractText(message);
+    const raw = yield* Effect.scoped(LanguageModel.generateText({ prompt: `${SUMMARIZE_PROMPT}\n\n${text}` })).pipe(
+      Effect.map((response) => response.text),
+      Effect.orElse(() => Effect.succeed('')),
+    );
+    const summary = parseSummary(raw);
+    const messageId = String(message.properties?.messageId ?? message.id);
+    ctx.summaries.push({ messageId, summary });
+    const summaryBlock: ContentBlock.Text = { _tag: 'text', text: summary.summary };
+    return Message.make({
+      created: message.created,
+      sender: message.sender,
+      blocks: [...message.blocks, summaryBlock],
+      properties: { ...message.properties, spam: summary.isSpam, keywords: summary.keywords },
+    });
+  }),
+);
 
 /** Extract a Person (+ Organization) from the sender and persist to the ECHO space; pass message through. */
 export const extractContactsStage: Stage.Stage<Message.Message, Message.Message, never, EmailPipelineCtx> = Stage.map(
@@ -286,7 +290,12 @@ describe('statsStage', () => {
     const stats = emptyStats();
     const ctx = Layer.succeed(EmailPipelineCtx, { db: {} as any, stats, summaries: [] });
     const messages = [
-      Message.make({ created: '2001-05-14T10:00:00.000Z', sender: { email: 'a@x.com' }, blocks: [], properties: { spam: true } }),
+      Message.make({
+        created: '2001-05-14T10:00:00.000Z',
+        sender: { email: 'a@x.com' },
+        blocks: [],
+        properties: { spam: true },
+      }),
       Message.make({ created: '2001-05-14T11:00:00.000Z', sender: { email: 'a@x.com' }, blocks: [] }),
     ];
     await Effect.runPromise(
@@ -316,6 +325,7 @@ git commit -m "feat(stories-brain): email pipeline stage adapters (summarize/con
 ## Task 3: `runPipeline` runner + AiService backend selection
 
 **Files:**
+
 - Modify: `packages/stories/stories-brain/src/email-pipeline/run.ts`
 - Test: `packages/stories/stories-brain/src/email-pipeline/run.test.ts`
 
@@ -447,7 +457,11 @@ describe('runPipeline', () => {
       ],
     };
     const messages = [
-      Message.make({ created: '2001-05-14T10:00:00.000Z', sender: { email: 'a@x.com' }, blocks: [{ _tag: 'text', text: 'hi' }] }),
+      Message.make({
+        created: '2001-05-14T10:00:00.000Z',
+        sender: { email: 'a@x.com' },
+        blocks: [{ _tag: 'text', text: 'hi' }],
+      }),
     ];
     const result = await runPipeline({
       messages,
@@ -508,7 +522,10 @@ import { Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/rea
 import { Empty } from '@dxos/react-ui-list';
 
 export type SummaryViewProps = ThemedClassName<{
-  summaries: ReadonlyArray<{ messageId: string; summary: { summary: string; isSpam: boolean; keywords: readonly string[] } }>;
+  summaries: ReadonlyArray<{
+    messageId: string;
+    summary: { summary: string; isSpam: boolean; keywords: readonly string[] };
+  }>;
 }>;
 
 export const SummaryView = ({ classNames, summaries }: SummaryViewProps) => (
@@ -523,14 +540,19 @@ export const SummaryView = ({ classNames, summaries }: SummaryViewProps) => (
         <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
           {summaries.length === 0 && <Empty label='No summaries.' />}
           {summaries.map(({ messageId, summary }) => (
-            <div key={messageId} className='flex flex-col gap-1 bg-card-surface border border-subdued-separator rounded-sm p-2'>
+            <div
+              key={messageId}
+              className='flex flex-col gap-1 bg-card-surface border border-subdued-separator rounded-sm p-2'
+            >
               <div className='flex items-center justify-between gap-2'>
                 <span className='text-sm'>{summary.summary || '(no summary)'}</span>
                 {summary.isSpam && <Tag hue='error'>spam</Tag>}
               </div>
               <div className='flex flex-wrap gap-1'>
                 {summary.keywords.map((keyword) => (
-                  <Tag key={keyword} hue='neutral'>{keyword}</Tag>
+                  <Tag key={keyword} hue='neutral'>
+                    {keyword}
+                  </Tag>
                 ))}
               </div>
             </div>
@@ -547,6 +569,7 @@ export const SummaryView = ({ classNames, summaries }: SummaryViewProps) => (
 ## Task 5: EmailList + DocumentEditor message binding + fixtures
 
 **Files:**
+
 - Create: `components/EmailList/{EmailList.tsx,EmailList.stories.tsx,index.ts}`
 - Create: `email-pipeline/fixtures.ts`
 - Modify: `components/DocumentEditor/DocumentEditor.tsx`
@@ -569,6 +592,7 @@ git commit -m "feat(stories-brain): email fixtures + EmailList"
 ## Task 6: PipelinePanel selection + StageOutput host + registry
 
 **Files:**
+
 - Modify: `components/PipelinePanel/PipelinePanel.tsx`
 - Create: `components/StageOutput/{StageOutput.tsx,index.ts}`
 - Create: `email-pipeline/registry.tsx`
@@ -597,6 +621,7 @@ git commit -m "feat(stories-brain): PipelinePanel selection + StageOutput regist
 ## Task 7: Composite EmailPipeline story + ECHO-space decorator + variants
 
 **Files:**
+
 - Create: `stories/EmailPipeline.stories.tsx`
 
 - [ ] **Step 1: Decorator** — reuse `createMarkdownStoryDecorators` (or a trimmed `withPluginManager` + `ClientPlugin`) registering types `Person`, `Organization`, `Thread` and seeding nothing; expose the space so the story's Run gets `space.db`.
