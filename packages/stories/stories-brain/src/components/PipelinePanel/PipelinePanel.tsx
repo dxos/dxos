@@ -45,13 +45,18 @@ export const PipelinePanel = ({ classNames, pipelines, selected, onSelect, busy 
         <Toolbar.Root>
           <Select.Root value={selected} onValueChange={onSelect}>
             <Select.TriggerButton placeholder='Pipeline' />
-            <Select.Content>
-              {pipelines.map((item) => (
-                <Select.Option key={item.id} value={item.id}>
-                  {item.label}
-                </Select.Option>
-              ))}
-            </Select.Content>
+            <Select.Portal>
+              <Select.Content>
+                <Select.Viewport>
+                  {pipelines.map((item) => (
+                    <Select.Option key={item.id} value={item.id}>
+                      {item.label}
+                    </Select.Option>
+                  ))}
+                </Select.Viewport>
+                <Select.Arrow />
+              </Select.Content>
+            </Select.Portal>
           </Select.Root>
           <div role='none' className='grow' />
           {busy && <Icon icon='ph--spinner-gap--regular' size={4} classNames='animate-spin' />}
