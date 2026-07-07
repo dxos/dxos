@@ -13,7 +13,7 @@ import isEqual from 'fast-deep-equal';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { Filter, type Obj, Query, type Type } from '@dxos/echo';
+import { Filter, Obj, Query, type Type } from '@dxos/echo';
 import { EchoHost } from '@dxos/echo-host';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -322,7 +322,7 @@ export const createDataAssertion = ({
 
   return {
     seed: async (db: EchoDatabase) => {
-      seedObjects = range(numObjects).map((idx) => db.add({ type: 'task', title: 'A', idx } as any));
+      seedObjects = range(numObjects).map((idx) => db.add(Obj.make(TestSchema.Expando, { type: 'task', title: 'A', idx })));
       await db.flush();
     },
     waitForReplication: (db: EchoDatabase) => {

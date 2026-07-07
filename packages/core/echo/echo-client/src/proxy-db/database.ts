@@ -467,6 +467,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   private _addObject<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     if (!isEchoObject(obj)) {
+      if (!isProxy(obj) && !Entity.isEntity(obj)) {
+        throw new TypeError('db.add expects a reactive ECHO object. Plain objects must be created using Obj.make(Type, props).');
+      }
+
       const typeEntity = Entity.getType(obj);
       if (typeEntity != null) {
         const isPersisted = Type.getDatabase(typeEntity) != null;

@@ -7,7 +7,7 @@ import * as Predicate from 'effect/Predicate';
 import { DeferredTask, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Database, Entity, type Feed, Obj, type Query, type Ref } from '@dxos/echo';
-import { type ObjectJSON, ParentId, SelfURIId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
+import { type ObjectJSON, ParentId, SelfURIId, assertObjectModel, isProxy, setRefResolverOnData } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
@@ -169,6 +169,11 @@ export class FeedHandle {
    * Insert into feed with optimistic update.
    */
   async append(items: Entity.Unknown[]): Promise<void> {
+    for (const item of items) {
+      if (!isProxy(item) && !Entity.isEntity(item)) {
+        throw new TypeError('feed.append expects reactive ECHO objects. Plain objects must be created using Obj.make(Type, props).');
+      }
+    }
     items.forEach((item) => assertObjectModel(item));
 
     for (const item of items) {
