@@ -11,9 +11,8 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { type ContentBlock, Organization, Person } from '@dxos/types';
 
-import { PipelineRuntime } from './PipelineRuntime';
+import { TranscriptionPipeline } from './pipeline';
 import { type CommitFn } from './PipelineRuntime';
-import { makeCorrectionStage, makeExtractionStage } from './stages';
 import { makeDatabaseLookup } from './types/lookup';
 import { TranscriptEvent } from './types/transcript-event';
 
@@ -56,9 +55,8 @@ describe('pipeline integration (correction + extraction)', () => {
       });
 
     await EffectEx.runPromise(
-      PipelineRuntime.run({
+      TranscriptionPipeline.run({
         source,
-        stages: [makeCorrectionStage(), makeExtractionStage()],
         lookup: makeDatabaseLookup(db),
         commit,
       }),

@@ -15,7 +15,7 @@ import { Pipeline } from '@dxos/pipeline';
 import { SemanticIndexError } from './errors';
 import { FactStore } from './fact-store';
 import { DEFAULT_EXTRACTION_RULES, type ExtractDocument, buildExtractionPrompt } from './internal/stages/extract';
-import { SemanticPipeline } from './pipeline';
+import { FactPipeline } from './pipeline';
 import {
   type DocumentFacts,
   extractFacts,
@@ -79,7 +79,7 @@ const FailingLayer = FactStore.layer.pipe(
   Layer.provideMerge(failingAiService()),
 );
 
-describe('SemanticPipeline', () => {
+describe('FactPipeline', () => {
   it('composes extraction rules, appending caller rules after the defaults', ({ expect }) => {
     const prompt = buildExtractionPrompt();
     // The default set rejects questions (the immediate case driving this rule).
@@ -183,7 +183,7 @@ describe('SemanticPipeline', () => {
   it.effect(
     'extracts the Alice fact and persists it',
     Effect.fnUntraced(function* () {
-      yield* SemanticPipeline.run([
+      yield* FactPipeline.run([
         {
           text: "I think I'm probably going to Paris next week",
           source: 'dxn:q:m1',
@@ -235,7 +235,7 @@ describe('SemanticPipeline', () => {
   it.effect(
     'surfaces a SemanticIndexError when extraction fails',
     Effect.fnUntraced(function* () {
-      const error = yield* SemanticPipeline.run([{ text: 'anything', source: 'dxn:q:m1' }]).pipe(Effect.flip);
+      const error = yield* FactPipeline.run([{ text: 'anything', source: 'dxn:q:m1' }]).pipe(Effect.flip);
       yield* Effect.sync(() => {
         if (!(error instanceof SemanticIndexError)) {
           throw new Error(`expected SemanticIndexError, got ${String(error)}`);
@@ -260,9 +260,9 @@ describe('SemanticPipeline', () => {
           sql<{ n: number }>`SELECT COUNT(*) AS n FROM triples`.pipe(Effect.map((rows) => rows[0].n));
 
         const doc = { text: 'going to Paris', source: 'dxn:q:m9', author: 'Alice', date: '2026-06-06T00:00:00.000Z' };
-        yield* SemanticPipeline.run([doc]);
+        yield* FactPipeline.run([doc]);
         const afterFirst = yield* triplesCount();
-        yield* SemanticPipeline.run([doc]); // unchanged → skipped.
+        yield* FactPipeline.run([doc]); // unchanged → skipped.
         const afterSecond = yield* triplesCount();
         yield* Effect.sync(() => {
           if (ai.calls() !== 1) {
@@ -273,7 +273,7 @@ describe('SemanticPipeline', () => {
           }
         });
 
-        yield* SemanticPipeline.run([{ ...doc, text: 'going to Rome instead' }]); // changed → re-extract.
+        yield* FactPipeline.run([{ ...doc, text: 'going to Rome instead' }]); // changed → re-extract.
         yield* Effect.sync(() => {
           if (ai.calls() !== 2) {
             throw new Error(`expected 2 LLM calls after change, got ${ai.calls()}`);
@@ -391,7 +391,7 @@ describe('SemanticPipeline', () => {
       const layer = FactStore.layerMemory.pipe(Layer.provideMerge(ai.layer));
       yield* Effect.gen(function* () {
         const docs = loadDiscordDocs();
-        yield* SemanticPipeline.run(docs);
+        yield* FactPipeline.run(docs);
         const store = yield* FactStore;
 
         // Structured query (builds + runs SPARQL) and the raw SELECT path used by the story's NL→SPARQL query.

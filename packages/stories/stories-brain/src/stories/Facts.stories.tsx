@@ -22,14 +22,7 @@ import {
   run,
 } from '@dxos/crawler';
 import { EffectEx } from '@dxos/effect';
-import {
-  FactStore,
-  SemanticPipeline,
-  type Type,
-  buildSparql,
-  generateQuery,
-  parseSparqlToQuery,
-} from '@dxos/pipeline-rdf';
+import { FactStore, FactPipeline, type Type, buildSparql, generateQuery, parseSparqlToQuery } from '@dxos/pipeline-rdf';
 import { discordSourceLayer } from '@dxos/plugin-discord';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -191,7 +184,7 @@ const DefaultStory = (_: StoryArgs) => {
       }
       const results = await getStore().runPromise(
         Effect.gen(function* () {
-          yield* SemanticPipeline.run([{ text, source: `file:${name}` }]);
+          yield* FactPipeline.run([{ text, source: `file:${name}` }]);
           const store = yield* FactStore;
           return yield* store.query({});
         }).pipe(Effect.provide(Layer.fresh(AiServiceTestingPreset('edge-remote')))),

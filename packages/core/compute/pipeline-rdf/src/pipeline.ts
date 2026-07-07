@@ -14,7 +14,7 @@ import { type ExtractDocument, type ExtractOptions } from './internal/stages/ext
 import { indexFactsStage } from './stages';
 import { type Fact } from './types';
 
-export const SemanticPipeline = {
+export const FactPipeline = {
   /**
    * Batch convenience over {@link indexFactsStage}: streams the documents through the indexing
    * stage and collects every persisted fact. Documents are processed in order with back pressure.

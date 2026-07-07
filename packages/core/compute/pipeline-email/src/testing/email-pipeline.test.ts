@@ -24,7 +24,7 @@ import { EffectEx } from '@dxos/effect';
 import { extractContact } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-import { FactStore, SemanticPipeline } from '@dxos/pipeline-rdf';
+import { FactPipeline, FactStore } from '@dxos/pipeline-rdf';
 import { Metrics, captureSink, instrument, makeMetrics } from '@dxos/pipeline/testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -302,7 +302,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
       const indexFacts: FactIndexer = (message) => {
         indexedMessageCount += 1;
         return factRuntime.runPromise(
-          SemanticPipeline.run([messageToDocument(message)], {
+          FactPipeline.run([messageToDocument(message)], {
             ...EMAIL_EXTRACT_OPTIONS,
             model: MODEL,
             provider: Provider.ollama.id,

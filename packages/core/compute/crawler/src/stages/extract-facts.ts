@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { SemanticPipeline } from '@dxos/pipeline-rdf';
+import { FactPipeline } from '@dxos/pipeline-rdf';
 
 import { AgentRegistry, identifiersForUser, labelForUser } from '../AgentRegistry';
 import { StageError } from '../errors';
@@ -39,7 +39,7 @@ export const makeExtractFactsStage = (options?: ExtractFactsOptions): Stage => {
             }
             const registry = yield* AgentRegistry;
             const agent = yield* registry.resolve(identifiersForUser(message.author), labelForUser(message.author));
-            yield* SemanticPipeline.run(
+            yield* FactPipeline.run(
               [
                 {
                   text: message.text,
