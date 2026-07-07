@@ -92,8 +92,10 @@ export type StageDef = {
 export type RunState = {
   readonly messages: readonly Message.Message[];
   readonly results: Partial<Record<StageId, unknown>>;
-  readonly active?: StageId;
+  /** Whole-pipeline running flag (drives PipelinePanel's toolbar spinner; no per-stage indicator). */
+  readonly busy?: boolean;
 };
+// NOTE: config.ts (Task 1) currently has `active?: StageId` here — Task 6 must change it to `busy?: boolean`.
 
 export type { Stage };
 ```
@@ -373,58 +375,48 @@ export type RunResult = {
 
 /**
  * Compose the enabled stages in config order, stream the messages through, and provide the merged
- * layer (AiService + FactStore.layerMemory + Ctx). `onActive` advances the active-stage indicator.
- * ECHO writes go through the `db` on `EmailPipelineCtx` (provided by the caller's space).
+ * layer (AiService + FactStore.layerMemory + Ctx). The running indicator is whole-pipeline `busy`,
+ * managed by the caller around this promise (see PipelinePanel `busy` — there is NO per-stage active
+ * indicator). ECHO writes go through the `db` on `EmailPipelineCtx` (provided by the caller's space).
  */
 export const runPipeline = ({
   messages,
   config,
   db,
   fixtureLayer,
-  onActive,
 }: {
   messages: readonly Message.Message[];
   config: PipelineConfig;
   db: import('@dxos/echo').Database.Database;
   fixtureLayer?: Layer.Layer<AiService.AiService>;
-  onActive?: (id: StageId | undefined) => void;
 }): Promise<RunResult> => {
   const enabled = new Set(config.stages.filter((stage) => stage.enabled).map((stage) => stage.id));
   const stats = emptyStats();
   const summaries: Array<{ messageId: string; summary: Summary }> = [];
   const ctx = Layer.succeed(EmailPipelineCtx, { db, stats, summaries });
 
-  const tap = (id: StageId): Stage.Stage<Message.Message, Message.Message> =>
-    Stage.map(`active:${id}`, (message) => Effect.sync(() => (onActive?.(id), message)));
-
   let stream: Stream.Stream<Message.Message, any, any> = Stream.fromIterable(messages);
   if (enabled.has('summarize')) {
-    stream = stream.pipe(tap('summarize'), summarizeStage);
+    stream = stream.pipe(summarizeStage);
   }
   if (enabled.has('extract-contacts')) {
-    stream = stream.pipe(tap('extract-contacts'), extractContactsStage);
+    stream = stream.pipe(extractContactsStage);
   }
   if (enabled.has('stats')) {
-    stream = stream.pipe(tap('stats'), statsStage);
+    stream = stream.pipe(statsStage);
   }
-  // extract-facts persists into FactStore; convert each message to an ExtractDocument first.
-  if (enabled.has('extract-facts')) {
-    stream = stream.pipe(
-      tap('extract-facts'),
-      Stage.map('to-doc-facts', (message) =>
-        // messageToDocument lives in pipeline-email; import it in fixtures/run as noted in Task 5.
-        Effect.succeed(message),
-      ),
-    );
-  }
+  // extract-facts persists into FactStore; convert each message to an ExtractDocument first
+  // (messageToDocument lives in pipeline-email — import it here).
 
   const program = stream.pipe(
     Pipeline.run({ sink: () => Effect.void }),
     Effect.provide(Layer.mergeAll(ctx, aiServiceLayer(config.backend, fixtureLayer), FactStore.layerMemory)),
-    Effect.ensuring(Effect.sync(() => onActive?.(undefined))),
   );
 
-  return Effect.runPromise(program as Effect.Effect<void, never, never>).then(() => ({ summaries, stats }));
+  // Use EffectEx.runPromise (repo lint rule: no bare Effect.runPromise). Do NOT cast the error
+  // channel to silence it — map/catch the stages' domain errors (e.g. SemanticIndexError) so the
+  // program's E is discharged honestly before running.
+  return EffectEx.runPromise(program).then(() => ({ summaries, stats }));
 };
 ```
 
@@ -626,7 +618,7 @@ git commit -m "feat(stories-brain): PipelinePanel selection + StageOutput regist
 
 - [ ] **Step 1: Decorator** — reuse `createMarkdownStoryDecorators` (or a trimmed `withPluginManager` + `ClientPlugin`) registering types `Person`, `Organization`, `Thread` and seeding nothing; expose the space so the story's Run gets `space.db`.
 
-- [ ] **Step 2: Story component** — three columns: `EmailList` + `DocumentEditor` (left, bound to selected message text via `withMessageText`), `PipelinePanel` (middle, `selected`/`onSelect`, stages from the variant config), `StageOutput` (right, `stageId={selected}` `result={runState.results[selected]}`). Run trigger calls `runPipeline({ messages, config, db, fixtureLayer, onActive })` and stores results keyed by stage id; `onActive` drives the panel spinner.
+- [ ] **Step 2: Story component** — three columns: `EmailList` + `DocumentEditor` (left, bound to selected message text via `withMessageText`), `PipelinePanel` (middle, `selected`/`onSelect`, `busy`, stages from the variant config), `StageOutput` (right, `stageId={selected}` `result={runState.results[selected]}`). Run trigger sets `busy=true`, calls `runPipeline({ messages, config, db, fixtureLayer })`, stores results keyed by stage id, and clears `busy` in `finally`. The panel's toolbar spinner shows while `busy` (whole-pipeline; no per-stage indicator).
 
 - [ ] **Step 3: Variants** —
   - `AllEdge`: `{ backend: 'edge', stages: all 6 enabled }`.
@@ -655,7 +647,7 @@ Wait until `curl -sf http://localhost:9019/index.json` returns.
 
 - [ ] **Step 2: Playwright-drive the `Fixture` variant.**
 
-Navigate to `iframe.html?id=stories-stories-brain-stories-emailpipeline--fixture&viewMode=story`. Assert: email list renders; selecting an email populates the editor; clicking Run advances the active spinner and populates `results`; selecting each enabled stage shows its output view (facts, topics, echo objects, summaries, stats) with no console errors. Screenshot to `temp/email-pipeline.png`.
+Navigate to `iframe.html?id=stories-stories-brain-stories-emailpipeline--fixture&viewMode=story`. Assert: email list renders; selecting an email populates the editor; clicking Run shows the toolbar busy spinner and populates `results`; selecting each enabled stage shows its output view (facts, topics, echo objects, summaries, stats) with no console errors. Screenshot to `temp/email-pipeline.png`.
 
 - [ ] **Step 3: Confirm component stories render** (SummaryView/StatsView/TopicsView/EchoObjectsView/EmailList) via `index.json` ids; no console errors.
 
