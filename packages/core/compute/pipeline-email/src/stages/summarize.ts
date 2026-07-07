@@ -51,8 +51,11 @@ export const summarizeStage: Stage.Stage<
     const text = Message.extractText(message);
     // Resolve the LanguageModel layer locally from AiService so `LanguageModel` is discharged and the
     // stage's requirement correctly reduces to `EmailPipelineCtx | AiService.AiService`.
+    // Bound the LLM call: `orElse` only recovers failures, so without a timeout a hung/slow provider
+    // would block the stage indefinitely. On timeout the effect fails, then `orElse` degrades to ''.
     const raw = yield* LanguageModel.generateText({ prompt: `${SUMMARIZE_PROMPT}\n\n${text}` }).pipe(
       Effect.provide(AiService.model(SUMMARIZE_MODEL).pipe(Layer.orDie)),
+      Effect.timeout('30 seconds'),
       Effect.map((response) => response.text),
       Effect.orElse(() => Effect.succeed('')),
     );
@@ -60,7 +63,10 @@ export const summarizeStage: Stage.Stage<
     const messageId = String(message.properties?.messageId ?? message.id);
     ctx.summaries.push({ messageId, summary });
     const summaryBlock: ContentBlock.Text = { _tag: 'text', text: summary.summary };
+    // Preserve the original id: `Message.make` mints a fresh one when omitted, which would break the
+    // `message.id` fallback used for `messageId` downstream.
     return Message.make({
+      id: message.id,
       created: message.created,
       sender: message.sender,
       blocks: [...message.blocks, summaryBlock],

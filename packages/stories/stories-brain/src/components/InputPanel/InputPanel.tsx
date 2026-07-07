@@ -34,7 +34,7 @@ export type InputDatasetMessage = {
   id: string;
   from: string;
   subject: string;
-  preview: string;
+  body: string;
 };
 
 /** A named input dataset (e.g. a sample inbox) the user can feed to the pipeline. */
@@ -46,11 +46,24 @@ export type InputDataset = {
 
 /** The current input handed to the pipeline when the user runs it. */
 export type InputPayload =
-  | { mode: 'document'; text: string }
-  | { mode: 'dataset'; datasetId: string }
-  | { mode: 'record'; transcript: string };
+  | {
+      mode: 'document';
+      text: string;
+    }
+  | {
+      mode: 'dataset';
+      datasetId: string;
+    }
+  | {
+      mode: 'record';
+      transcript: string;
+    };
 
 export type InputPanelProps = ThemedClassName<{
+  /** The active input tab (controlled, so the parent can keep it in sync with the selected pipeline). */
+  mode: InputMode;
+  /** Switch the active input tab. */
+  onModeChange: (mode: InputMode) => void;
   /** Initial markdown for the Document tab (component owns subsequent edits). */
   initialDocument?: string;
   /** POS tagger wired into the Document editor's `pos` decoration; omit to disable. */
@@ -76,6 +89,8 @@ export type InputPanelProps = ThemedClassName<{
  */
 export const InputPanel = ({
   classNames,
+  mode,
+  onModeChange,
   initialDocument = '',
   parse,
   datasets = [],
@@ -86,7 +101,6 @@ export const InputPanel = ({
   onInput,
 }: InputPanelProps) => {
   const { themeMode } = useThemeContext();
-  const [mode, setMode] = useState<InputMode>('document');
   const [text, setText] = useState(initialDocument);
   const [underline, setUnderline] = useState(false);
   const [datasetId, setDatasetId] = useState(datasets[0]?.id ?? '');
@@ -122,13 +136,13 @@ export const InputPanel = ({
     <Panel.Root classNames={classNames}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Button variant={mode === 'document' ? 'primary' : 'ghost'} onClick={() => setMode('document')}>
+          <Button variant={mode === 'document' ? 'primary' : 'ghost'} onClick={() => onModeChange('document')}>
             Document
           </Button>
-          <Button variant={mode === 'dataset' ? 'primary' : 'ghost'} onClick={() => setMode('dataset')}>
+          <Button variant={mode === 'dataset' ? 'primary' : 'ghost'} onClick={() => onModeChange('dataset')}>
             Dataset
           </Button>
-          <Button variant={mode === 'record' ? 'primary' : 'ghost'} onClick={() => setMode('record')}>
+          <Button variant={mode === 'record' ? 'primary' : 'ghost'} onClick={() => onModeChange('record')}>
             Record
           </Button>
           <div role='none' className='grow' />
@@ -153,7 +167,7 @@ export const InputPanel = ({
           <Panel.Root>
             <Panel.Toolbar asChild>
               <Toolbar.Root>
-                <Select.Root value={datasetId} onValueChange={setDatasetId}>
+                <Select.Root value={dataset?.id ?? ''} onValueChange={setDatasetId}>
                   <Select.TriggerButton placeholder='Dataset' />
                   <Select.Portal>
                     <Select.Content>
@@ -170,7 +184,7 @@ export const InputPanel = ({
                 </Select.Root>
                 {onLoadDataset && (
                   <>
-                    <div role='none' className='grow' />
+                    <Toolbar.Separator />
                     <Input.Root>
                       <Input.TextInput
                         type='number'
@@ -198,9 +212,9 @@ export const InputPanel = ({
                         key={message.id}
                         className='flex flex-col min-w-0 bg-card-surface border border-subdued-separator rounded-sm px-3 py-2'
                       >
-                        <span className='font-medium truncate'>{message.subject}</span>
-                        <span className='text-sm text-description truncate'>{message.from}</span>
-                        <span className='text-sm truncate'>{message.preview}</span>
+                        <div className='font-medium truncate'>{message.subject}</div>
+                        <div className='text-sm text-description truncate'>{message.from}</div>
+                        <div className='text-sm line-clamp-3'>{message.body}</div>
                       </div>
                     ))
                   )}
@@ -211,15 +225,12 @@ export const InputPanel = ({
         )}
 
         {mode === 'record' && (
-          <div className='flex flex-col gap-3 p-3 h-full'>
+          <Toolbar.Root>
             <IconButton
               icon={transcript ? 'ph--microphone-slash--regular' : 'ph--microphone--regular'}
               label={transcript ? 'Clear recording' : 'Record'}
               onClick={() => setTranscript((current) => (current ? '' : sampleTranscript))}
             />
-            <span className='text-sm text-description'>
-              {transcript ? 'Captured transcript (sample):' : 'Tap the mic to capture a sample transcript.'}
-            </span>
             {transcript && (
               <div
                 className={mx(
@@ -229,7 +240,7 @@ export const InputPanel = ({
                 {transcript}
               </div>
             )}
-          </div>
+          </Toolbar.Root>
         )}
       </Panel.Content>
     </Panel.Root>

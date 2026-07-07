@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { afterAll, describe, test } from 'vitest';
 
@@ -11,7 +10,7 @@ import { FactStore, type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
 
 import { commitmentLedger } from './ledger';
 
-const runtime = ManagedRuntime.make(FactStore.layerMemory.pipe(Layer.provideMerge(Layer.empty)));
+const runtime = ManagedRuntime.make(FactStore.layerMemory);
 
 describe('commitmentLedger', () => {
   afterAll(async () => {

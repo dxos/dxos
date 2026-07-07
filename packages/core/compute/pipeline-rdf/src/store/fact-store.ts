@@ -19,8 +19,6 @@ import { querySqlite } from '../internal/sparql/query-sqlite';
 import { migrate } from '../internal/sqlite/schema';
 import { type Fact } from '../types';
 
-export { type SemanticQuery } from '../internal/sparql/query-builder';
-
 export interface FactStoreApi {
   /** Reify and persist facts as RDF triples (idempotent appends; no write-time merge). */
   readonly putFacts: (facts: readonly Fact[]) => Effect.Effect<void, SemanticIndexError>;

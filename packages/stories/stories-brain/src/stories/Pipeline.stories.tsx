@@ -52,6 +52,7 @@ import {
   type EchoObjectItem,
   type InputDataset,
   type InputDatasetMessage,
+  type InputMode,
   InputPanel,
   type InputPayload,
   type OutputDetail,
@@ -89,7 +90,7 @@ const toPreview = (message: Message.Message): InputDatasetMessage => ({
   id: message.id,
   from: message.sender.email ?? 'unknown',
   subject: String(message.properties?.subject ?? ''),
-  preview: Message.extractText(message),
+  body: Message.extractText(message),
 });
 
 // The only dataset offered; its messages are empty until loaded on demand from the Enron parquet.
@@ -125,6 +126,11 @@ const PIPELINES: PipelineInfo[] = [
     ],
   },
 ];
+
+// The input tab and the pipeline are two views of one selection: each input feeds its natural
+// pipeline, so selecting either keeps the other in sync and the active input always drives the run.
+const PIPELINE_FOR_MODE: Record<InputMode, string> = { document: 'rdf', dataset: 'email', record: 'transcription' };
+const MODE_FOR_PIPELINE: Record<string, InputMode> = { rdf: 'document', email: 'dataset', transcription: 'record' };
 
 type StoryArgs = {};
 
@@ -322,6 +328,8 @@ const DefaultStory = (_: StoryArgs) => {
   return (
     <div className='dx-container grid grid-cols-3 gap-2'>
       <InputPanel
+        mode={MODE_FOR_PIPELINE[pipelineId] ?? 'document'}
+        onModeChange={(next) => setPipelineId(PIPELINE_FOR_MODE[next])}
         initialDocument={SAMPLE_CONTENT}
         parse={stubParse}
         datasets={datasets}
