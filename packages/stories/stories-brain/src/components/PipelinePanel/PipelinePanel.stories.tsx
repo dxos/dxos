@@ -3,32 +3,27 @@
 //
 
 /**
- * Placeholder pipeline column: stages are toggleable (checkbox) and re-orderable (drag handle),
- * with the latest raw output below. `Default` is interactive; `Running` marks a stage active.
+ * Pipeline column: a fixed, read-only list of the composed stages (configured by the story) with the
+ * latest raw output below. `Default` shows an idle pipeline with output; `Running` shows the toolbar
+ * busy spinner. Disabled stages render dimmed.
  */
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { PipelinePanel, type PipelinePanelProps, type StageInfo } from './PipelinePanel';
+import { PipelinePanel, type StageInfo } from './PipelinePanel';
 
 const STAGES: StageInfo[] = [
   { id: 'extract-facts', description: 'LLM proposition extraction (pipeline-rdf)', enabled: true },
   { id: 'index-facts', description: 'Persist facts into the semantic store', enabled: false },
 ];
 
-const DefaultStory = (props: PipelinePanelProps) => {
-  const [stages, setStages] = useState<StageInfo[]>(props.stages);
-  return <PipelinePanel {...props} stages={stages} onStagesChanged={setStages} />;
-};
-
 const meta = {
   title: 'stories/stories-brain/components/PipelinePanel',
-  render: DefaultStory,
+  component: PipelinePanel,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
-} satisfies Meta<typeof DefaultStory>;
+} satisfies Meta<typeof PipelinePanel>;
 
 export default meta;
 

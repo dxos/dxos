@@ -61,14 +61,13 @@ const STAGES: StageInfo[] = [
 type StoryArgs = {};
 
 const DefaultStory = (_: StoryArgs) => {
-  const [stages, setStages] = useState<StageInfo[]>(STAGES);
   const [facts, setFacts] = useState<Type.Fact[]>([]);
   const [output, setOutput] = useState<unknown>();
   const [busy, setBusy] = useState(false);
 
   // Stream the document through the enabled stages; the sink collects per-document results.
   const handleRun = (text: string) => {
-    const enabled = (id: string) => stages.some((stage) => stage.id === id && stage.enabled);
+    const enabled = (id: string) => STAGES.some((stage) => stage.id === id && stage.enabled);
     if (!enabled('extract-facts')) {
       setOutput({ skipped: 'extract-facts disabled' });
       return;
@@ -102,7 +101,7 @@ const DefaultStory = (_: StoryArgs) => {
   return (
     <div className='dx-container grid grid-cols-[1fr_1fr_1fr] gap-2'>
       <DocumentEditor initialValue={SAMPLE_CONTENT} parse={stubParse} busy={busy} onRun={handleRun} />
-      <PipelinePanel stages={stages} onStagesChanged={setStages} busy={busy} output={output} />
+      <PipelinePanel stages={STAGES} busy={busy} output={output} />
       <FactViewer facts={facts} />
     </div>
   );
