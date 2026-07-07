@@ -3,3 +3,4 @@
 //
 
 export * from './stages';
+export * from './corpus';

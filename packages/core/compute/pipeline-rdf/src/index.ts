@@ -13,5 +13,10 @@ export * from './nl-to-query';
 export { buildSparql } from './internal/sparql/query-builder';
 export { normalizePredicate } from './internal/sparql/normalize-predicate';
 export { parseSparqlToQuery } from './internal/sparql/sparql-to-query';
-export { DEFAULT_EXTRACTION_RULES, buildExtractionPrompt } from './internal/stages/extract';
+export {
+  DEFAULT_EXTRACTION_RULES,
+  ExtractedFact,
+  buildExtractionPrompt,
+  parseExtractPayload,
+} from './internal/stages/extract';
 export type { ExtractDocument, ExtractOptions } from './internal/stages/extract';

@@ -46,8 +46,11 @@ export const buildThreads = (messages: readonly Message.Message[], options: Buil
   for (const [threadId, bucket] of buckets) {
     const ordered = [...bucket].sort((a, b) => a.created.localeCompare(b.created));
     const last = ordered[ordered.length - 1];
-    const lastFromOwner = last.sender.email === options.ownerEmail;
-    const participants = [...new Set(ordered.flatMap((m) => (m.sender.email ? [m.sender.email] : [])))];
+    // Email addresses are case-insensitive, so compare and dedup on a lowercased form; otherwise
+    // mixed-case senders split into distinct participants and can misclassify awaiting-mine/theirs.
+    const owner = options.ownerEmail.toLowerCase();
+    const lastFromOwner = last.sender.email?.toLowerCase() === owner;
+    const participants = [...new Set(ordered.flatMap((m) => (m.sender.email ? [m.sender.email.toLowerCase()] : [])))];
     const summaries = ordered.flatMap((m) =>
       typeof m.properties?.summary === 'string' && m.properties.summary.length > 0 ? [m.properties.summary] : [],
     );
