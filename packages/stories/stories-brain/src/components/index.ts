@@ -3,7 +3,9 @@
 //
 
 export * from './CrawlPanel';
+export * from './DocumentEditor';
 export * from './EntityList';
+export * from './FactViewer';
+export * from './PipelinePanel';
 export * from './QueryPanel';
-export * from './SemanticFactsViewer';
 export * from './util';

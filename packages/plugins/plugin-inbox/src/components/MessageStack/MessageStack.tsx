@@ -92,10 +92,12 @@ export type MessageStackProps = {
    */
   threadCountAtom?: ThreadCountFamily;
   /**
-   * When `messages` is a lazily-loaded window (see `usePagination`), drives loading more older
-   * messages as the user scrolls toward the loaded end (via `useVirtualizerPagination`).
+   * When `messages` is a lazily-loaded window (see `usePagination`), drives loading more
+   * older messages as the user scrolls toward the loaded end. Accepts `usePagination`'s full
+   * result directly (its `items` field is unused here) so callers can pass it through without
+   * destructuring and re-bundling it themselves, which would defeat its referential stability.
    */
-  pagination?: Omit<PaginationResult<unknown>, 'items'>;
+  pagination?: PaginationResult<unknown>;
   onAction?: MessageStackActionHandler;
 };
 
@@ -104,7 +106,18 @@ export type MessageStackProps = {
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
   (
-    { messages, tags, currentId, selectedIds, starredIds, conversations, threadCountAtom, pagination, onAction, ...props },
+    {
+      messages,
+      tags,
+      currentId,
+      selectedIds,
+      starredIds,
+      conversations,
+      threadCountAtom,
+      pagination,
+      onAction,
+      ...props
+    },
     forwardedRef,
   ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);

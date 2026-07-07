@@ -1,14 +1,16 @@
 ---
 id: org.dxos.plugin.file
 name: FilePlugin
-version: 0.1.0
+version: 0.2.0
 ---
 
 FilePlugin enables DXOS Composer to store and preview binary files — images, videos, and PDFs — as first-class ECHO objects.
-Uploaded bytes are routed through a pluggable backend system: the built-in `inline` backend serialises the file directly
-onto the ECHO document, while external backends (e.g. WNFS) can be contributed by other plugins.
-A URL-resolver capability lets external-storage backends convert opaque storage URIs into renderable blob, data, or HTTP URLs
-at view time, keeping the ECHO object schema backend-agnostic.
+A File object's `data` field is a reference to a `Blob` ECHO object (defined in `@dxos/echo`), which abstracts where the
+bytes actually live and how they're read. Uploads are routed through a pluggable storage system: the built-in `inline`
+storage embeds bytes on the Blob object itself, while external storage (e.g. WNFS, edge) can be contributed by other
+plugins by registering a `BlobBackend` on the ECHO Hypergraph. `Blob.url`/`Blob.read` resolve a renderable URL or raw
+bytes uniformly regardless of backend, so the File schema and preview surfaces stay backend-agnostic without a
+dedicated URL-resolver capability.
 
 ## Extensions
 
@@ -26,54 +28,32 @@ Each extension is defined in the Appendix or resolved via its URI.
 ## Types
 
 ```mdl
-type FileDataInline
-  desc: File bytes stored directly on the ECHO object.
-  fields:
-    _tag: 'inline'
-    bytes: Uint8Array
-```
-
-```mdl
-type FileDataExternal
-  desc: File bytes stored outside ECHO; referenced by URL.
-  fields:
-    _tag: 'external'
-    url: string
-    cid?: string             # optional content-addressed identifier
-```
-
-```mdl
-type FileData
-  desc: Discriminated union of inline and external storage.
-  literals: FileDataInline | FileDataExternal
-```
-
-```mdl
 type File
-  desc: ECHO object (typename dxos.org.type.file) representing an uploaded binary asset.
+  desc: ECHO object (typename org.dxos.type.file, version 0.2.0) representing an uploaded binary asset.
   fields:
     name?: string
     type: string             # MIME type
     size: number             # byte count
-    data: FileData
+    data: Ref<Blob>          # reference to a Blob object (org.dxos.type.blob, defined in @dxos/echo)
     timestamp?: string       # ISO 8601 upload time
 ```
 
 ```mdl
-type UploadResult
-  desc: Normalised return value from a Backend.upload call.
+type BackendDescriptor
+  desc: |
+    UI-facing descriptor for a registered storage option. Carries no upload/read behavior itself —
+    that lives in the matching `BlobBackend` registered on the ECHO Hypergraph under `storage`.
   fields:
-    name: string
-    type: string
-    size: number
-    data: FileData
+    name: string               # display label shown in settings
+    description?: string       # description shown next to the backend in settings
+    storage: string             # Blob.fromBytes's `storage` option; also the settings key (e.g. 'inline', 'wnfs', 'edge')
 ```
 
 ```mdl
 type Settings
   desc: Per-user plugin settings stored in the ECHO space.
   fields:
-    backend?: string         # active backend id; defaults to 'inline'
+    backend?: string         # active backend's storage name; defaults to 'inline'
 ```
 
 ## Components
@@ -86,7 +66,7 @@ component FilePreview
     all other types fall back to a download link.
   props:
     type: string             # MIME type
-    url: string              # renderable blob:, data:, or http(s): URL
+    url: string              # renderable data:, blob:, or http(s): URL
   layout: |
     ┌──────────────────────────────┐
     │  <img> / <video> / <iframe>  │
@@ -118,7 +98,7 @@ component FileSettings
     ┌──────────────────────────────┐
     │  Storage backend: [select ▼] │
     │  (one row per registered     │
-    │   backend with description)  │
+    │   BackendDescriptor)         │
     └──────────────────────────────┘
 ```
 
@@ -126,9 +106,11 @@ component FileSettings
 component FileArticle
   desc: |
     Full-viewport article container rendered for article, section, and slide
-    roles. Resolves a renderable URL from the File object via inline blob
-    conversion or registered UrlResolver capabilities, then delegates to
-    FilePreview. Shows an empty state while the URL is resolving.
+    roles. Loads the File's referenced Blob and resolves a renderable URL via
+    Blob.url; if the backend has no getUrl, falls back to Blob.read and
+    constructs a blob: object URL (revoked on unmount). Delegates to
+    FilePreview. Shows an empty state while the URL is resolving or if the
+    File is not attached to a database.
   props:
     role: AppSurface.Role
     subject: File
@@ -147,17 +129,20 @@ component FileArticle
 op Create
   key: org.dxos.plugin.file.operation.create
   desc: |
-    Validates a browser File object (MIME type and size), routes the upload to the
-    active Backend capability, and constructs a File ECHO object from the result.
-    Does not add the object to the space — callers do that separately.
+    Validates a browser File object's MIME type, resolves the active
+    BackendDescriptor, and composes File.fromBytes (which hashes/uploads the
+    bytes via the Blob API and adds the resulting Blob to the database) to
+    construct a File ECHO object. Does not add the File object itself to the
+    space — callers do that separately.
   input:
     file: BrowserFile        # browser File (globalThis.File)
     db: Database
   output: { object: File }
   errors:
     UnsupportedFileTypeError: MIME type is not image/*, video/*, or application/pdf
-    FileTooLargeError: file exceeds the 4 MB inline limit
-    NoBackendError: no Backend capability is registered
+    FileTooLargeError: file exceeds the 4 MB inline limit (only possible when the
+      resolved backend's storage is 'inline'; other backends scale beyond it)
+    NoBackendError: no BackendDescriptor capability is registered
 ```
 
 ## Features
@@ -168,47 +153,57 @@ feat F-1: File upload
   req F-1.1: Accepted MIME types MUST be image/* (jpg, jpeg, png, gif, webp, svg),
     video/* (mp4, webm, mov), and application/pdf only.
 
-  req F-1.2: Maximum upload size MUST be 4 MB for the inline backend.
+  req F-1.2: Maximum upload size MUST be 4 MB when the resolved backend's storage
+    is 'inline'. Other backends (e.g. edge, wnfs) are not subject to this cap.
 
   req F-1.3:
     when: user submits the Create Object form with a valid file
     then:
       - op:Create is invoked with the selected file and active database
       - the resulting File object is added to the space via SpaceOperation.AddObject
-      - FileUploader capability returns metadata to the caller (name, type, url/cid)
+      - FileUploader capability returns metadata to the caller (name, type, and a
+        renderable url resolved via Blob.url, if one is available)
 
   req F-1.4:
     when: file MIME type is not accepted
     then: UnsupportedFileTypeError returned; no ECHO write occurs
 
   req F-1.5:
-    when: file size exceeds the limit
+    when: file size exceeds the limit and the resolved backend's storage is 'inline'
     then: FileTooLargeError returned; no ECHO write occurs
 ```
 
 ```mdl
 feat F-2: Backend capability system
 
-  req F-2.1: Any plugin may contribute a Backend capability. Multiple backends
-    may be registered simultaneously.
+  req F-2.1: Any plugin may contribute a BackendDescriptor capability. Multiple
+    descriptors may be registered simultaneously.
 
-  req F-2.2: The inline backend MUST always be registered by FilePlugin itself.
-    It serialises bytes directly onto the ECHO object.
+  req F-2.2: The inline BackendDescriptor MUST always be registered by FilePlugin
+    itself, mapping to Blob's built-in 'inline' storage (bytes embedded on the
+    Blob object; no separate BlobBackend registration needed).
 
   req F-2.3: The active backend is determined by Settings.backend. If the
     configured id is absent or unrecognised, the inline backend is used.
 
-  req F-2.4: A UrlResolver capability allows external backends to convert an
-    opaque storage URI (e.g. wnfs://…) into a renderable URL at view time.
-    FileArticle iterates registered resolvers and uses the first that matches.
+  req F-2.4: A BackendDescriptor's `storage` names the Blob storage used by
+    File.fromBytes; the actual upload/read/getUrl implementation lives in a
+    separate `BlobBackend` registered on the ECHO Hypergraph (via
+    `client.graph.registerBlobBackend`), typically by the same plugin that
+    contributes the descriptor (e.g. plugin-wnfs, or `@dxos/client` itself for
+    'edge'). FilePlugin's descriptor and the Hypergraph's BlobBackend registry
+    are independent — a descriptor with no matching registered backend fails at
+    upload time with a `backend-not-registered` error, not at settings-selection time.
 ```
 
 ```mdl
 feat F-3: File preview
 
-  req F-3.1: FileArticle MUST resolve a renderable URL before rendering
-    FilePreview. For inline files a blob: URL is created from the stored bytes
-    and revoked on unmount.
+  req F-3.1: FileArticle MUST resolve a renderable URL via Blob.url before
+    rendering FilePreview. For inline files this is always a data: URL
+    (constructed synchronously from the stored bytes, no Blob.read needed). For
+    external files with no registered getUrl, FileArticle falls back to
+    Blob.read and constructs a blob: URL, revoked on unmount.
 
   req F-3.2: FilePreview MUST render the appropriate element for each MIME class:
     image/* → <img>, video/* → <video controls>, application/pdf → <iframe>,
@@ -222,14 +217,16 @@ feat F-3: File preview
 feat F-4: Markdown integration
 
   req F-4.1: A Markdown extension contributed at MarkdownEvents.SetupExtensions
-    MUST allow files to be embedded in Markdown documents as inline attachments.
+    MUST allow files to be embedded in Markdown documents as inline attachments,
+    resolving each embedded File's Blob URL the same way as FileArticle (Blob.url,
+    falling back to Blob.read + blob: URL).
 ```
 
 ```mdl
 feat F-5: Settings
 
-  req F-5.1: The Settings panel MUST list all registered backends with their
-    id, display name, and optional description.
+  req F-5.1: The Settings panel MUST list all registered BackendDescriptor
+    capabilities with their id, display name, and optional description.
 
   req F-5.2: Selecting a backend MUST persist the choice to Settings.backend
     via the SettingsAtom capability.
@@ -239,17 +236,17 @@ feat F-5: Settings
 
 ```mdl
 test T-1: Upload image inline
-  given: only the inline backend is registered
+  given: only the inline BackendDescriptor is registered
   when: user uploads a 1 MB PNG via the Create Object form
   then:
-    - op:Create returns a File with data._tag === 'inline'
+    - op:Create returns a File whose data Ref resolves to a Blob with data._tag === 'inline'
     - File.type === 'image/png', File.size === byte count
     - File is added to the space
 ```
 
 ```mdl
 test T-2: Reject oversized file
-  given: inline backend registered, 4 MB limit
+  given: inline backend selected, 4 MB limit
   when: user uploads a 5 MB JPEG
   then:
     - FileTooLargeError is returned
@@ -268,41 +265,53 @@ test T-3: Reject unsupported MIME type
 
 ```mdl
 test T-4: Preview inline image
-  given: a File with data._tag === 'inline' and type === 'image/png'
+  given: a File whose data Ref resolves to a Blob with data._tag === 'inline' and type === 'image/png'
   when: FileArticle is rendered
   then:
-    - a blob: URL is created from File.data.bytes
+    - Blob.url resolves a data: URL synchronously from the Blob's bytes (no Blob.read call)
     - FilePreview renders an <img> element with that URL
-    - the blob: URL is revoked on unmount
 ```
 
 ```mdl
 test T-5: Preview PDF
-  given: a File with type === 'application/pdf' and a resolved HTTP URL
+  given: a File with type === 'application/pdf' and a Blob resolved to an HTTP or data URL
   when: FilePreview is rendered
   then: an <iframe> element is rendered with the file URL as src
 ```
 
 ```mdl
 test T-6: Backend fallback to inline
-  given: Settings.backend is 'wnfs' but no WNFS backend is registered
+  given: Settings.backend is 'wnfs' but no BackendDescriptor with storage 'wnfs' is registered
   when: op:Create is invoked
   then: the inline backend is used and the file is stored inline
 ```
 
 ```mdl
-test T-7: External URL resolved by UrlResolver
-  given: a File with data._tag === 'external' and data.url === 'wnfs://cid/file.jpg'
-  and: a UrlResolver capability registered that handles 'wnfs://' URIs
+test T-7: External blob resolved via a registered BlobBackend's getUrl
+  given: a File whose data Ref resolves to a Blob with data._tag === 'external' and a
+    BlobBackend registered on the ECHO Hypergraph that resolves the Blob's URI scheme
+    and implements getUrl
   when: FileArticle is rendered
   then:
-    - UrlResolver.resolve is called with the wnfs:// URL
+    - Blob.url calls the registered backend's getUrl and resolves Some(url)
     - FilePreview receives the resolved renderable URL
+    - Blob.read is never called
 ```
 
 ```mdl
-test T-8: No backend error
-  given: no Backend capability is registered
+test T-8: External blob without getUrl falls back to reading bytes
+  given: a File whose data Ref resolves to an external Blob whose registered
+    BlobBackend implements get but not getUrl
+  when: FileArticle is rendered
+  then:
+    - Blob.url resolves None
+    - Blob.read is called to fetch the bytes
+    - a blob: object URL is created from the bytes and revoked on unmount
+```
+
+```mdl
+test T-9: No backend error
+  given: no BackendDescriptor capability is registered
   when: op:Create is invoked
   then: NoBackendError is returned
 ```

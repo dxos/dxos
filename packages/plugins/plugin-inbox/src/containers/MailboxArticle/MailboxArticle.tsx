@@ -181,24 +181,16 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   // TODO(wittjosiah): Move this to the host indexer for bounded-memory paging (fetch only the window, not
   //   the whole feed) — see the TODO in `isClientEvaluableFeedQuery`; blocked on indexed ordered
   //   range reads being fast enough.
-  const {
-    items: messages,
-    getNext,
-    getPrevious,
-    hasMore,
-    isLoading: messagesLoading,
-    atHead,
-    jumpToHead,
-  } = usePagination(
+  // `pagination` is passed straight through to `MessageStack` rather than destructured --
+  // `usePagination` already returns a stable object, so rebuilding one here would only reintroduce
+  // the instability it avoids.
+  const pagination = usePagination(
     db,
     feed
       ? Query.select(Filter.type(Message.Message)).from(feed).orderBy(Order.property('created', 'desc')).limit(MAILBOX_PAGE_SIZE)
       : Query.select(Filter.nothing()).limit(MAILBOX_PAGE_SIZE),
   );
-  const pagination = useMemo(
-    () => ({ getNext, getPrevious, hasMore, isLoading: messagesLoading, atHead, jumpToHead }),
-    [getNext, getPrevious, hasMore, messagesLoading, atHead, jumpToHead],
-  );
+  const messages = pagination.items;
 
   // Feed/queue queries don't yet support text-search and complex filter combinations,
   // so query Messages by type only and apply the parsed filter client-side.

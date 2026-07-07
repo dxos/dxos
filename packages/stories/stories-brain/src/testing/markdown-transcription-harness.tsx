@@ -152,9 +152,8 @@ export const DefaultStory = ({ seed }: StoryArgs) => {
   }, [seed, attendableId, editorViews]);
 
   const data = useMemo(() => ({ subject: doc, attendableId: attendableId ?? 'story' }), [doc, attendableId]);
-
-  if (!doc) {
-    return <Loading data={{ doc: !!doc }} />;
+  if (!data.subject) {
+    return <Loading />;
   }
 
   return (

@@ -131,13 +131,9 @@ export class FeedQueryContext implements QueryContext {
  * feed object ids are not sequential, so insertion order is the only sensible reading of "natural"
  * for a feed.
  *
- * TODO(wittjosiah): This always fetches and decodes the entire feed before slicing, for every
- * ordering including natural-desc -- a prior version of this path had a `FeedWindow` that made
- * natural-desc reads truly lazy (bounded cursor fetches), but it was reverted because a
- * partial-laziness story (fast for one ordering, a full decode for every other) wasn't judged
- * worth the complexity. Revisit as a general, index-backed keyset-pagination feature covering all
- * orderings uniformly (see `EntityMetaIndex`/`QueryExecutor` -- content-based ordering has the same
- * full-scan-then-sort limitation there today) rather than re-adding a feed-only special case.
+ * TODO(wittjosiah): Always fetches and decodes the entire feed before slicing, for every
+ * ordering. Needs index-backed keyset pagination (`EntityMetaIndex`/`QueryExecutor` have the same
+ * full-scan-then-sort limitation for content-based ordering) to bound this by page size instead.
  */
 const applyOrderSkipLimit = (
   entities: Entity.Unknown[],
