@@ -13,7 +13,7 @@ export type SemanticQuery = {
   readonly entity?: string;
   /** Provenance source DXN. */
   readonly source?: string;
-  /** Lower bound (inclusive) on valence confidence. */
+  /** Lower bound (inclusive) on factuality confidence. */
   readonly minConfidence?: number;
 };
 

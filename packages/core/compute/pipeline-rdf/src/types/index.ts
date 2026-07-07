@@ -6,4 +6,4 @@ export * from './Assertion';
 export * from './Attribution';
 export * from './Entity';
 export * from './Fact';
-export * from './Valence';
+export * from './Factuality';

@@ -6,12 +6,12 @@ import * as Schema from 'effect/Schema';
 
 import { Assertion } from './Assertion';
 import { Attribution } from './Attribution';
-import { Valence } from './Valence';
+import { Factuality } from './Factuality';
 
 export const Fact = Schema.Struct({
   id: Schema.String,
   assertion: Assertion,
-  valence: Valence,
+  factuality: Factuality,
   attribution: Attribution,
   /** ISO transaction time. */
   recordedAt: Schema.String,

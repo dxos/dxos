@@ -123,7 +123,7 @@ const cellClassNames =
   'bg-input-surface border border-subdued-separator rounded-sm px-2 py-0.5 font-medium whitespace-nowrap truncate';
 
 const FactRow = ({ fact, conflicting }: { fact: Type.Fact; conflicting: boolean }) => {
-  const { assertion, valence, attribution } = fact;
+  const { assertion, factuality, attribution } = fact;
   return (
     <Listbox.Item
       id={fact.id}
@@ -141,10 +141,10 @@ const FactRow = ({ fact, conflicting }: { fact: Type.Fact; conflicting: boolean 
         </div>
 
         <div className='flex items-center justify-end gap-2 shrink-0'>
-          {valence.confidence != null && (
-            <span className='text-xs text-subdued'>{Math.round(valence.confidence * 100)}%</span>
+          {factuality.confidence != null && (
+            <span className='text-xs text-subdued'>{Math.round(factuality.confidence * 100)}%</span>
           )}
-          <Tag hue={factualityColor(valence.factuality)}>{valence.factuality}</Tag>
+          <Tag hue={factualityColor(factuality.value)}>{factuality.value}</Tag>
         </div>
       </div>
 

@@ -17,7 +17,7 @@ const fact = (subjectLabel: string, objectLabel: string): Type.Fact => ({
     predicate: 'works at',
     object: { entity: normalizeEntityId(objectLabel), label: objectLabel },
   },
-  valence: { factuality: 'CT+', polarity: '+' },
+  factuality: { value: 'CT+', polarity: '+' },
   attribution: { source: 'dxn:queue:m1', generatedAtTime: '2001-05-14T10:00:00.000Z' },
   recordedAt: '2001-05-14T10:00:00.000Z',
   extractor: { id: 'default', model: 'test', version: '1' },

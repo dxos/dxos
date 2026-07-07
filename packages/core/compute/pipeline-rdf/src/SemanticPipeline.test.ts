@@ -199,8 +199,8 @@ describe('SemanticPipeline', () => {
         if (facts.length !== 1) {
           throw new Error(`expected 1 fact, got ${facts.length}`);
         }
-        if (facts[0].valence.factuality !== 'PR+') {
-          throw new Error('valence not extracted');
+        if (facts[0].factuality.value !== 'PR+') {
+          throw new Error('factuality not extracted');
         }
         if (facts[0].attribution.source !== 'dxn:q:m1') {
           throw new Error('attribution source lost');
@@ -313,8 +313,8 @@ describe('SemanticPipeline', () => {
           if (fact.assertion.predicate !== 'travelsTo') {
             throw new Error('predicate not extracted');
           }
-          if (fact.valence.factuality !== 'PR+') {
-            throw new Error('valence not extracted');
+          if (fact.factuality.value !== 'PR+') {
+            throw new Error('factuality not extracted');
           }
           if (fact.attribution.source !== 'editor:input') {
             throw new Error('attribution source lost');
@@ -442,7 +442,7 @@ const testFact = (predicate: string): Fact => ({
     predicate,
     object: { entity: 'acme', label: 'Acme' },
   },
-  valence: { factuality: 'CT+', polarity: '+' },
+  factuality: { value: 'CT+', polarity: '+' },
   attribution: { source: 'test:doc', generatedAtTime: '2026-01-01T00:00:00.000Z' },
   recordedAt: '2026-01-01T00:00:00.000Z',
   extractor: { id: 'test', model: 'test', version: '1' },

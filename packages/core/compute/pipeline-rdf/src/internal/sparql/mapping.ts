@@ -40,8 +40,8 @@ export const factToTriples = (fact: Fact): Quad[] => {
     quad(node, sx('subject'), termToObject(fact.assertion.subject), g),
     quad(node, sx('predicate'), str(fact.assertion.predicate), g),
     quad(node, sx('object'), termToObject(fact.assertion.object), g),
-    quad(node, sx('factuality'), str(fact.valence.factuality), g),
-    quad(node, sx('polarity'), str(fact.valence.polarity), g),
+    quad(node, sx('factuality'), str(fact.factuality.value), g),
+    quad(node, sx('polarity'), str(fact.factuality.polarity), g),
     quad(node, prov('wasDerivedFrom'), str(fact.attribution.source), g),
     quad(node, prov('generatedAtTime'), str(fact.attribution.generatedAtTime), g),
     quad(node, sx('recordedAt'), str(fact.recordedAt), g),
@@ -53,11 +53,11 @@ export const factToTriples = (fact: Fact): Quad[] => {
   if (fact.attribution.agent) {
     triples.push(quad(node, prov('wasAttributedTo'), entityIri(fact.attribution.agent), g));
   }
-  if (fact.valence.confidence !== undefined) {
-    triples.push(quad(node, sx('confidence'), str(String(fact.valence.confidence)), g));
+  if (fact.factuality.confidence !== undefined) {
+    triples.push(quad(node, sx('confidence'), str(String(fact.factuality.confidence)), g));
   }
-  if (fact.valence.nature) {
-    triples.push(quad(node, sx('nature'), str(fact.valence.nature), g));
+  if (fact.factuality.nature) {
+    triples.push(quad(node, sx('nature'), str(fact.factuality.nature), g));
   }
   if (fact.assertion.validFrom) {
     triples.push(quad(node, sx('validFrom'), str(fact.assertion.validFrom), g));
@@ -126,8 +126,8 @@ export const triplesToFacts = (quads: Quad[]): Fact[] => {
         ...(one('validTo') !== undefined ? { validTo: one('validTo') } : {}),
         ...(one('quote') !== undefined ? { quote: one('quote') } : {}),
       },
-      valence: {
-        factuality: one('factuality'),
+      factuality: {
+        value: one('factuality'),
         polarity: one('polarity'),
         ...(one('confidence') !== undefined ? { confidence: Number(one('confidence')) } : {}),
         ...(one('nature') !== undefined ? { nature: one('nature') } : {}),

@@ -148,7 +148,9 @@ export const humanize = (value: string): string =>
 export const formatDate = (iso: string): string => iso.slice(0, 10);
 
 /** Map FactBank factuality to a real react-ui palette member. */
-export const factualityColor = (factuality: Type.Factuality): NeutralPalette | ChromaticPalette | MessageValence => {
+export const factualityColor = (
+  factuality: Type.FactualityValue,
+): NeutralPalette | ChromaticPalette | MessageValence => {
   switch (factuality) {
     case 'CT+':
       return 'emerald';

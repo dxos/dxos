@@ -68,7 +68,7 @@ describe('extractFactsStage', () => {
     // Extraction always produces an entity-ref Term (never a literal), so `label` is present here.
     expect('entity' in object).toBe(true);
     expect('entity' in object && object.label).toBe('Q2 report');
-    expect(facts[0].valence.factuality).toBe('CT+');
+    expect(facts[0].factuality.value).toBe('CT+');
     expect(facts[0].attribution.source).toBe('<m-1@enron.com>');
   });
 });

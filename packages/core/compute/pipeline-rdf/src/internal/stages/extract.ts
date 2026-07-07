@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { SemanticIndexError } from '../../errors';
-import { Factuality } from '../../types';
+import { FactualityValue } from '../../types';
 
 export type ExtractDocument = {
   readonly text: string;
@@ -32,7 +32,7 @@ export const ExtractPayload = Schema.Struct({
       object: Schema.String,
       validFrom: Schema.optional(Schema.String),
       validTo: Schema.optional(Schema.String),
-      factuality: Factuality,
+      factuality: FactualityValue,
       polarity: Schema.Literal('+', '-', '?'),
       confidence: Schema.optional(Schema.Number),
       nature: Schema.optional(Schema.Literal('epistemic', 'aleatory')),

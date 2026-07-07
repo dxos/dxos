@@ -12,7 +12,7 @@ import { type Fact } from './types';
 
 const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
   assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'paris' } },
-  valence: { factuality: 'PR+', polarity: '+', confidence: 0.6 },
+  factuality: { value: 'PR+', polarity: '+', confidence: 0.6 },
   attribution: { agent: 'alice', source: 'dxn:q:m1', generatedAtTime: '2026-06-06T00:00:00.000Z' },
   recordedAt: '2026-06-06T12:00:00.000Z',
   extractor: { id: 'default', model: 'm', version: '1' },
@@ -33,8 +33,8 @@ describe('SemanticStore', () => {
         if (facts.length !== 1 || facts[0].assertion.predicate !== 'travelsTo') {
           throw new Error('query failed');
         }
-        if (facts[0].valence.factuality !== 'PR+') {
-          throw new Error('valence lost');
+        if (facts[0].factuality.value !== 'PR+') {
+          throw new Error('factuality lost');
         }
       });
     }, Effect.provide(TestLayer)),
@@ -141,7 +141,7 @@ describe('SemanticStore', () => {
         mk({ id: 'f1' }), // alice travelsTo paris, conf 0.6, source dxn:q:m1
         mk({
           id: 'f2',
-          valence: { factuality: 'PS+', polarity: '+', confidence: 0.3 },
+          factuality: { value: 'PS+', polarity: '+', confidence: 0.3 },
           attribution: { agent: 'bob', source: 'dxn:q:m2', generatedAtTime: '2026-06-07T00:00:00.000Z' },
         }),
       ]);
@@ -157,7 +157,7 @@ describe('SemanticStore', () => {
         if (bySource.length !== 1) {
           throw new Error(`source expected 1, got ${bySource.length}`);
         }
-        if (confident.length !== 1 || confident[0].valence.confidence !== 0.6) {
+        if (confident.length !== 1 || confident[0].factuality.confidence !== 0.6) {
           throw new Error(`minConfidence expected 1 (0.6), got ${confident.length}`);
         }
       });

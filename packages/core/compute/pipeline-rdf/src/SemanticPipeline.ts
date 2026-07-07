@@ -79,8 +79,8 @@ export const extractDocFacts = (
             ...(candidate.validTo ? { validTo: candidate.validTo } : {}),
             ...(candidate.quote ? { quote: candidate.quote } : {}),
           },
-          valence: {
-            factuality: candidate.factuality,
+          factuality: {
+            value: candidate.factuality,
             polarity: candidate.polarity,
             ...(candidate.confidence !== undefined ? { confidence: candidate.confidence } : {}),
             ...(candidate.nature ? { nature: candidate.nature } : {}),

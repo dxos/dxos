@@ -10,7 +10,7 @@ import { type Fact } from './types';
 const mk = (id: string, subject: string, predicate: string, object: string): Fact => ({
   id,
   assertion: { subject: { entity: subject }, predicate, object: { entity: object } },
-  valence: { factuality: 'CT+', polarity: '+' },
+  factuality: { value: 'CT+', polarity: '+' },
   attribution: { source: `test:${id}`, generatedAtTime: '2026-06-30T00:00:00.000Z' },
   recordedAt: '2026-06-30T00:00:00.000Z',
   extractor: { id: 'test', model: 'test', version: '1' },

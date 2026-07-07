@@ -282,7 +282,7 @@ const sampleFact = (id: string, subject: string, predicate: string, object: stri
     predicate,
     object: { entity: object, label: object === 'dxos' ? 'DXOS' : object },
   },
-  valence: { factuality: 'CT+', polarity: '+', confidence },
+  factuality: { value: 'CT+', polarity: '+', confidence },
   attribution: { source: `sample:${id}`, generatedAtTime: '2026-06-29T00:00:00.000Z' },
   recordedAt: '2026-06-29T00:00:00.000Z',
   extractor: { id: 'sample', model: 'sample', version: '1' },
