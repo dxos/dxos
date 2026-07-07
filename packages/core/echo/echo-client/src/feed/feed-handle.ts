@@ -304,8 +304,10 @@ export class FeedHandle {
     return this._objects;
   }
 
-  getCachedObjectById(id: EntityId): Entity.Unknown | undefined {
-    return this._objectCache.get(id);
+  getCachedObjectById<T extends Entity.Unknown = Entity.Unknown>(id: EntityId): T | undefined {
+    // Feed entries may be objects or relations; callers narrow via the generic, mirroring
+    // DatabaseImpl.getObjectById. The cache holds fully-decoded entities keyed by id.
+    return this._objectCache.get(id) as T | undefined;
   }
 
   /**

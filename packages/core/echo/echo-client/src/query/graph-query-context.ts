@@ -439,14 +439,12 @@ export class SpaceQuerySource implements QuerySource {
 
   private _mapItemToResult(item: WorkingSetItem): QueryResult.EntityEntry<Obj.Unknown> {
     // Feed items are not addressable via getObjectById (they live in the queue, not the space
-    // document set), so fall back to the feed handle's fetched objects.
+    // document set), so fall back to the feed handle's fetched entities. Feeds hold both objects
+    // and relations, so this must not filter to objects only.
     let result = this._database.getObjectById<Obj.Unknown>(item.objectId, { deleted: true });
     if (!result && item.queueId) {
       const feedUri = EID.make({ spaceId: this.spaceId, entityId: item.queueId });
-      const feedEntity = this._database._tryGetFeedHandle(feedUri)?.getCachedObjectById(item.objectId);
-      if (feedEntity && Obj.isObject(feedEntity)) {
-        result = feedEntity;
-      }
+      result = this._database._tryGetFeedHandle(feedUri)?.getCachedObjectById<Obj.Unknown>(item.objectId);
     }
     return {
       id: item.objectId,
