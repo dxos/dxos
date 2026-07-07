@@ -59,8 +59,7 @@ describe('runGmailSync OTEL tracing', () => {
       'sync.commit',
       'sync.commit.appendToFeed',
       'sync.commit.tags',
-      'sync.commit.contacts',
-      'sync.commit.sideEffects',
+      'sync.commit.commitEffects',
       'sync.commit.advanceCursor',
     ]) {
       expect(names, `missing span: ${expected}`).toContain(expected);

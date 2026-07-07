@@ -127,7 +127,6 @@ const mapEventStage: Stage.Stage<GoogleCalendar.Event, SyncBinding.CommitUnit, n
               foreignId: event.id,
               key: event.updated ? Date.parse(event.updated) : 0,
               tagUris: [],
-              extractedObjects: [],
             }
           : undefined,
       ),

@@ -175,14 +175,14 @@ describe('sync pipeline harness', () => {
     expect(cursorOf(binding)).toBe('50');
   });
 
-  test('commit batches identical sideEffects (by identity) into one call per page', async ({ expect }) => {
+  test('commit batches identical commit effects (by identity) into one call per page', async ({ expect }) => {
     const { db, feed, tagIndex, binding } = await setup();
 
     const calls: (readonly SyncBinding.CommitUnit[])[] = [];
     // A single stable reference — the same shape `EmailStage.recordThreads` attaches to every unit
     // in a run — so `commit` must invoke it once per page with every unit that attached it, not once
     // per unit.
-    const sideEffect = (_db: Database.Database, units: readonly SyncBinding.CommitUnit[]): void => {
+    const commitEffect = (_db: Database.Database, units: readonly SyncBinding.CommitUnit[]): void => {
       calls.push(units);
     };
 
@@ -196,8 +196,7 @@ describe('sync pipeline harness', () => {
       foreignId: raw.id,
       key: raw.key,
       tagUris: [],
-      extractedObjects: [],
-      sideEffects: [sideEffect],
+      commitEffects: [commitEffect],
     });
 
     const stats: SyncBinding.Stats = { newMessages: 0 };
@@ -214,7 +213,7 @@ describe('sync pipeline harness', () => {
     expect(calls[0].map((unit) => unit.foreignId)).toEqual(['m1', 'm2']);
   });
 
-  test('recordThreads populates the thread index via the commit side-effect', async ({ expect }) => {
+  test('recordThreads populates the thread index via the commit effect', async ({ expect }) => {
     const { db, feed, tagIndex, binding } = await setup();
     const threadIndex = db.add(ThreadIndex.make());
     await db.flush({ indexes: true });

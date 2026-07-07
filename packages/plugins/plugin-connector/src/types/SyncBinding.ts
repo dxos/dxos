@@ -145,21 +145,13 @@ export type CommitUnit = {
   readonly key: number;
   /** Tag URIs to apply to the message after it is appended (provider labels/folders). */
   readonly tagUris: readonly string[];
-  /** Objects extracted from the message (e.g. contacts) that the commit should `db.add`. */
-  readonly extractedObjects: readonly Obj.Any[];
   /**
-   * Provider-supplied deferred writes run inside the commit's flush, after the feed append. The
-   * generic seam for aggregated side effects a stage records but must not perform itself (pipeline
-   * stages stay idempotent) — e.g. recording thread membership. Kept domain-agnostic so no
-   * provider-specific concept leaks into this shared type.
-   *
-   * `commit()` invokes each *distinct* function reference at most once per page, passing every unit
-   * in the page that attached it (not just the unit it came from) — so a stage that attaches one
-   * stable closure to every unit gets a single batched call per page instead of one call per unit.
-   * Identity, not structural equality, determines "distinct": a stage must reuse the same closure
-   * reference across units in a run to be batched (see `EmailStage.recordThreads`).
+   * Deferred writes run inside the commit's flush — e.g. `db.add` an extracted contact, or record
+   * thread membership — so stages record them here rather than writing directly and stay idempotent.
+   * `commit()` calls each *distinct* function (by identity) once per page with every unit that
+   * attached it, so a run-scoped closure reused across units is batched into a single call.
    */
-  readonly sideEffects?: readonly ((db: Database.Database, units: readonly CommitUnit[]) => void)[];
+  readonly commitEffects?: readonly ((db: Database.Database, units: readonly CommitUnit[]) => void)[];
 };
 
 /** Effect Requirements tag carrying the per-run {@link State}. */
@@ -230,7 +222,7 @@ const advanceCursor = (state: State, maxKey: number): void => {
  * so no separate flush is needed).
  *
  * Order matters for crash recovery: the feed append (a queue write) commits first, then the space-db
- * mutations (tags, contacts, side effects, cursor advance) commit together in one `flush`. The queue and the space
+ * mutations (tags, commit effects, cursor advance) commit together in one `flush`. The queue and the space
  * document are separate stores with no shared transaction, so a crash between the two leaves the page
  * in the feed with the cursor un-advanced — the next run re-fetches it and the feed-seeded dedup set
  * drops it. Advancing the cursor before the append would instead lose messages.
@@ -256,10 +248,10 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
     );
 
     // Yield a macrotask after the feed append so the browser can paint the just-appended messages
-    // before this page's space-db side effects (tag/contact/thread mutations) run. Otherwise the
-    // append and the side-effect reactive cascade execute as one uninterrupted synchronous burst and
-    // the messages never paint until the whole sync settles. This yield also absorbs the reactive
-    // cascade scheduled by the previous page's mutations, so its span captures that cost.
+    // before this page's space-db mutations (tags + commit effects) run. Otherwise the append and the
+    // mutations' reactive cascade execute as one uninterrupted synchronous burst and the messages
+    // never paint until the whole sync settles. This yield also absorbs the reactive cascade scheduled
+    // by the previous page's mutations, so its span captures that cost.
     yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 0))).pipe(
       Effect.withSpan('sync.commit.paintYield'),
     );
@@ -281,34 +273,23 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
     }).pipe(Effect.withSpan('sync.commit.tags'));
 
     yield* Effect.sync(() => {
+      // Group the page's commit effects by function identity and call each once with all its units,
+      // so a run-scoped closure reused across units (e.g. thread recording) runs as a single call.
+      const effectUnits = new Map<(db: Database.Database, units: readonly CommitUnit[]) => void, CommitUnit[]>();
       for (const unit of units) {
-        for (const object of unit.extractedObjects) {
-          db.add(object);
-        }
-      }
-    }).pipe(Effect.withSpan('sync.commit.contacts'));
-
-    yield* Effect.sync(() => {
-      // Invoke each DISTINCT side-effect function (by identity) once per page, passing every unit in
-      // the page that attached it — not just the unit it came from. A stage that attaches one stable
-      // closure to every unit (e.g. `EmailStage.recordThreads`) therefore gets a single batched call
-      // per page instead of one call per unit, so e.g. a thread-index update is one `Obj.update` per
-      // page rather than one per message.
-      const sideEffectUnits = new Map<(db: Database.Database, units: readonly CommitUnit[]) => void, CommitUnit[]>();
-      for (const unit of units) {
-        for (const sideEffect of unit.sideEffects ?? []) {
-          const existing = sideEffectUnits.get(sideEffect);
+        for (const effect of unit.commitEffects ?? []) {
+          const existing = effectUnits.get(effect);
           if (existing) {
             existing.push(unit);
           } else {
-            sideEffectUnits.set(sideEffect, [unit]);
+            effectUnits.set(effect, [unit]);
           }
         }
       }
-      for (const [sideEffect, sideEffectUnitList] of sideEffectUnits) {
-        sideEffect(db, sideEffectUnitList);
+      for (const [effect, unitsForEffect] of effectUnits) {
+        effect(db, unitsForEffect);
       }
-    }).pipe(Effect.withSpan('sync.commit.sideEffects'));
+    }).pipe(Effect.withSpan('sync.commit.commitEffects'));
 
     yield* Effect.sync(() => {
       // Advance the cursor + run status in the same commit as the writes. (A run with no new messages
@@ -324,7 +305,7 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
       //
       // Trade-off: a crash mid-run loses this run's in-memory cursor advance + space mutations. The
       // messages are still durable in the feed, so the next run re-fetches from the last persisted
-      // cursor and re-applies side effects idempotently (feed dedup drops the already-appended pages).
+      // cursor and re-applies commit effects idempotently (feed dedup drops the already-appended pages).
       for (const unit of units) {
         state.dedupSet.add(unit.foreignId);
       }

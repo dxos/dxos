@@ -44,9 +44,9 @@ export type Mapped = {
 };
 
 /**
- * Builds a Person (+ Organization link by domain) from the message sender, producing the object for
- * the commit step to `db.add` (it writes nothing itself). A stage factory: call it once per pipeline
- * run so its {@link ContactLookup} is scoped to that run.
+ * Builds a Person (+ Organization link by domain) from the message sender, deferring the `db.add` to
+ * the commit step as a {@link SyncBinding.CommitUnit} commit effect (the stage writes nothing itself).
+ * A stage factory: call it once per pipeline run so its {@link ContactLookup} is scoped to that run.
  *
  * Dedups against both the space (contacts present before the run) and contacts created earlier in the
  * same run (the lookup is maintained as each is built, since a not-yet-committed contact wouldn't show
@@ -71,7 +71,8 @@ export const extractContacts = (): Stage.Stage<Mapped, SyncBinding.CommitUnit, n
         foreignId: mapped.foreignId,
         key: mapped.key,
         tagUris: mapped.tagUris,
-        extractedObjects: contact ? [contact] : [],
+        // Defer the write to commit (the stage stays idempotent) — add the extracted contact there.
+        commitEffects: contact ? [() => db.add(contact)] : undefined,
       };
     }),
   );
@@ -79,14 +80,14 @@ export const extractContacts = (): Stage.Stage<Mapped, SyncBinding.CommitUnit, n
 
 /**
  * Records each message's thread membership into the mailbox's {@link ThreadIndex}. The stage stays
- * idempotent — it only aggregates the write as a deferred `sideEffect` on the {@link SyncBinding.CommitUnit};
+ * idempotent — it only aggregates the write as a deferred commit effect on the {@link SyncBinding.CommitUnit};
  * the actual index mutation runs inside `SyncBinding.commit`'s flush, alongside the feed append (so a
  * crash never leaves the index referencing an uncommitted message). Messages without a provider
  * `threadId` pass through unchanged.
  *
  * The closure attached per unit (`record`) is created once per call to `recordThreads(threadIndex)` —
  * once per pipeline run — and the same reference is reused for every unit. `SyncBinding.commit`
- * dedupes `sideEffects` by function identity, so this reuse is what turns a page's worth of
+ * dedupes commit effects by function identity, so this reuse is what turns a page's worth of
  * thread-membership writes into a single {@link ThreadIndex.Accessor.addBatch} call instead of one
  * `add` per message; without a stable reference, each unit would get its own one-off closure and
  * every add would still pay the batch's `Object.keys` scan individually.
@@ -114,7 +115,7 @@ export const recordThreads = (threadIndex: ThreadIndex.ThreadIndex) => {
         }
         return {
           ...unit,
-          sideEffects: [...(unit.sideEffects ?? []), record],
+          commitEffects: [...(unit.commitEffects ?? []), record],
         };
       }),
     )(self);
