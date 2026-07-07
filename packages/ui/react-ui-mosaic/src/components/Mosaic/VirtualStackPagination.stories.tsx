@@ -236,67 +236,63 @@ const FeedPaginationStory = () => {
     <Mosaic.Root>
       <Panel.Root>
         <Panel.Toolbar asChild>
-          <div className='flex flex-col'>
-            <Toolbar.Root>
-              <div className='shrink-0' style={{ inlineSize: '6rem' }}>
-                <Input.Root>
-                  <Input.TextInput
-                    type='number'
-                    min={1}
-                    value={addCount}
-                    onChange={(event) => setAddCount(event.target.valueAsNumber || 0)}
-                    classNames='is-full'
-                  />
-                </Input.Root>
-              </div>
-              <Button onClick={handleAdd} classNames='shrink-0'>
-                Add
-              </Button>
-              <Button onClick={handleReset} classNames='shrink-0'>
-                Reset
-              </Button>
-              <Select.Root
-                value={sortField}
-                onValueChange={(value) => setSortField(value === 'number' || value === 'word' ? value : 'natural')}
-              >
-                <Toolbar.Button asChild>
-                  <Select.TriggerButton classNames='shrink-0' />
-                </Toolbar.Button>
-                <Select.Portal>
-                  <Select.Content>
-                    <Select.Viewport>
-                      <Select.Option value='natural'>Natural</Select.Option>
-                      <Select.Option value='number'>Number</Select.Option>
-                      <Select.Option value='word'>Word</Select.Option>
-                    </Select.Viewport>
-                    <Select.Arrow />
-                  </Select.Content>
-                </Select.Portal>
-              </Select.Root>
-              <Select.Root value={direction} onValueChange={(value) => setDirection(value === 'asc' ? 'asc' : 'desc')}>
-                <Toolbar.Button asChild>
-                  <Select.TriggerButton classNames='shrink-0' />
-                </Toolbar.Button>
-                <Select.Portal>
-                  <Select.Content>
-                    <Select.Viewport>
-                      <Select.Option value='asc'>Ascending</Select.Option>
-                      <Select.Option value='desc'>Descending</Select.Option>
-                    </Select.Viewport>
-                    <Select.Arrow />
-                  </Select.Content>
-                </Select.Portal>
-              </Select.Root>
-            </Toolbar.Root>
-            <Toolbar.Root>
-              <div className='grow truncate'>
-                {items.length} loaded of {total}
-                {!atHead && ' · detached'}
-                {isLoading && ' · loading…'}
-                {!hasMore && ' · end'}
-              </div>
-            </Toolbar.Root>
-          </div>
+          <Toolbar.Root>
+            <div className='shrink-0' style={{ inlineSize: '6rem' }}>
+              <Input.Root>
+                <Input.TextInput
+                  type='number'
+                  min={1}
+                  value={addCount}
+                  onChange={(event) => setAddCount(event.target.valueAsNumber || 0)}
+                  classNames='is-full'
+                />
+              </Input.Root>
+            </div>
+            <Button onClick={handleAdd} classNames='shrink-0'>
+              Add
+            </Button>
+            <Button onClick={handleReset} classNames='shrink-0'>
+              Reset
+            </Button>
+            <Select.Root
+              value={sortField}
+              onValueChange={(value) => setSortField(value === 'number' || value === 'word' ? value : 'natural')}
+            >
+              <Toolbar.Button asChild>
+                <Select.TriggerButton classNames='shrink-0' />
+              </Toolbar.Button>
+              <Select.Portal>
+                <Select.Content>
+                  <Select.Viewport>
+                    <Select.Option value='natural'>Natural</Select.Option>
+                    <Select.Option value='number'>Number</Select.Option>
+                    <Select.Option value='word'>Word</Select.Option>
+                  </Select.Viewport>
+                  <Select.Arrow />
+                </Select.Content>
+              </Select.Portal>
+            </Select.Root>
+            <Select.Root value={direction} onValueChange={(value) => setDirection(value === 'asc' ? 'asc' : 'desc')}>
+              <Toolbar.Button asChild>
+                <Select.TriggerButton classNames='shrink-0' />
+              </Toolbar.Button>
+              <Select.Portal>
+                <Select.Content>
+                  <Select.Viewport>
+                    <Select.Option value='asc'>Ascending</Select.Option>
+                    <Select.Option value='desc'>Descending</Select.Option>
+                  </Select.Viewport>
+                  <Select.Arrow />
+                </Select.Content>
+              </Select.Portal>
+            </Select.Root>
+            <div className='grow text-end truncate whitespace-nowrap'>
+              {items.length} loaded of {total}
+              {!atHead && ' · detached'}
+              {isLoading && ' · loading…'}
+              {!hasMore && ' · end'}
+            </div>
+          </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>
           <Mosaic.Container asChild eventHandler={{ id: 'virtual-stack-feed-pagination', canDrop: () => false }}>
