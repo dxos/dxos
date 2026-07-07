@@ -59,6 +59,15 @@ export const useVirtualizerPagination = <TItem = any>({
   const virtualizerRef = useRef<Virtualizer<any, any> | null>(null);
   const anchorRef = useRef<{ id: string; offsetFromTop: number } | null>(null);
   const prevItemsRef = useRef(items);
+  // Set right before the anchor-restoring `scrollToOffset` call below, consumed by the `onChange`
+  // it triggers (the resulting native `scroll` event fires asynchronously, so this can't be
+  // cleared synchronously after the call -- it has to survive until `onChange` actually observes
+  // it). Without this, restoring the anchor after a page-load can itself land within the
+  // next/previous-page threshold (the restore is only as accurate as the estimated size of
+  // not-yet-measured newly-revealed rows), and the resulting `onChange` would request another page
+  // as a side effect of our own correction rather than real user scrolling -- cascading into
+  // repeated loads/corrections while scrolling quickly.
+  const restoringRef = useRef(false);
 
   // Snapshot the anchor the moment `items` is about to change, during render rather than inside
   // `onChange` or an effect. `@tanstack/react-virtual` calls `onChange` synchronously as part of
@@ -85,6 +94,10 @@ export const useVirtualizerPagination = <TItem = any>({
   const onChange = useCallback(
     (virtualizer: Virtualizer<any, any>) => {
       virtualizerRef.current = virtualizer;
+      if (restoringRef.current) {
+        restoringRef.current = false;
+        return;
+      }
       const virtualItems = virtualizer.getVirtualItems();
       const firstVisible = virtualItems.at(0);
       const lastVisible = virtualItems.at(-1);
@@ -116,6 +129,7 @@ export const useVirtualizerPagination = <TItem = any>({
     }
     const target = offset[0] - anchor.offsetFromTop;
     if (target !== virtualizer.scrollOffset) {
+      restoringRef.current = true;
       virtualizer.scrollToOffset(target, { align: 'start' });
     }
   }, [items, getId]);
