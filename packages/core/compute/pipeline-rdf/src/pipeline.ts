@@ -9,9 +9,9 @@ import { type AiService } from '@dxos/ai';
 import { Pipeline } from '@dxos/pipeline';
 
 import { type SemanticIndexError } from './errors';
-import { FactStore } from './fact-store';
-import { type ExtractDocument, type ExtractOptions } from './internal/stages/extract';
 import { indexFactsStage } from './stages';
+import { FactStore } from './store';
+import { type ExtractDocument, type ExtractOptions } from './types';
 import { type Fact } from './types';
 
 export const FactPipeline = {

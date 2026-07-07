@@ -22,7 +22,7 @@ import {
   run,
 } from '@dxos/crawler';
 import { EffectEx } from '@dxos/effect';
-import { FactPipeline, FactStore, type Type, buildSparql, generateQuery, parseSparqlToQuery } from '@dxos/pipeline-rdf';
+import { FactPipeline, FactStore, type RDF, buildSparql, generateQuery, parseSparqlToQuery } from '@dxos/pipeline-rdf';
 import { discordSourceLayer } from '@dxos/plugin-discord';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -67,7 +67,7 @@ const DefaultStory = (_: StoryArgs) => {
   const [question, setQuestion] = useState('');
   const [query, setQuery] = useState(DEFAULT_SPARQL);
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
-  const [facts, setFacts] = useState<Type.Fact[]>([]);
+  const [facts, setFacts] = useState<RDF.Fact[]>([]);
   const [context, setContext] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState<CrawlAction | null>(null);
@@ -93,7 +93,7 @@ const DefaultStory = (_: StoryArgs) => {
     const rawFacts = localStorage.getItem(FACTS_STORAGE_KEY);
     if (rawFacts) {
       try {
-        const saved: Type.Fact[] = JSON.parse(rawFacts);
+        const saved: RDF.Fact[] = JSON.parse(rawFacts);
         void getStore()
           .runPromise(FactStore.pipe(Effect.flatMap((store) => store.putFacts(saved))))
           .then(() => setFacts(saved));
@@ -268,7 +268,7 @@ const DefaultStory = (_: StoryArgs) => {
 };
 
 // A small hand-authored Alice/Bob corpus exercised by the in-memory variant.
-const sampleFact = (id: string, subject: string, predicate: string, object: string, confidence: number): Type.Fact => ({
+const sampleFact = (id: string, subject: string, predicate: string, object: string, confidence: number): RDF.Fact => ({
   id,
   assertion: {
     subject: { entity: subject, label: subject === 'dxos' ? 'DXOS' : subject },
@@ -282,7 +282,7 @@ const sampleFact = (id: string, subject: string, predicate: string, object: stri
   sourceHash: id,
 });
 
-const SAMPLE_FACTS: Type.Fact[] = [
+const SAMPLE_FACTS: RDF.Fact[] = [
   sampleFact('s1', 'alice', 'works at', 'dxos', 0.95),
   sampleFact('s2', 'alice', 'met', 'bob', 0.8),
   sampleFact('s3', 'bob', 'works at', 'dxos', 0.9),
@@ -296,7 +296,7 @@ const SAMPLE_FACTS: Type.Fact[] = [
  * {@link EntityList} to show the columns are independent of the Discord pipeline.
  */
 const InMemoryStory = (_: StoryArgs) => {
-  const [facts, setFacts] = useState<Type.Fact[]>([]);
+  const [facts, setFacts] = useState<RDF.Fact[]>([]);
   const [context, setContext] = useState<string | undefined>(undefined);
 
   const entities = useMemo(() => entitiesFromFacts(facts), [facts]);

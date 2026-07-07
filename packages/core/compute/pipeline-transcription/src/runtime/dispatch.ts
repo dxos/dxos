@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Obj } from '@dxos/echo';
 import { type ContentBlock, type Transcript } from '@dxos/types';
 
+import { type StageWrite } from '../types';
 import { type CommitFn } from './PipelineRuntime';
-import { type StageWrite } from './types';
 
 /**
  * In-memory commit sink: records every {@link StageWrite} for assertions and testbench rendering.

@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
+import { makeCorrectionStage } from '../stages';
 import { captureCommit } from './dispatch';
 import { runLivePipeline } from './live';
-import { makeCorrectionStage } from './stages';
 
 describe('runLivePipeline', () => {
   test('drives per-block stages from pushed blocks and drains on end', async ({ expect }) => {

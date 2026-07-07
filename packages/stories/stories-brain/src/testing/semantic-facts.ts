@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Type } from '@dxos/pipeline-rdf';
+import { type RDF } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
 const extractor = {
@@ -26,7 +26,7 @@ export const SAMPLE_FACTS_TEXT = trim`
  * same subject + predicate, different objects/sources) plus a coherent pair (f3/f4).
  * Each `quote` corresponds to a sentence in {@link SAMPLE_FACTS_TEXT} (kept in sync manually).
  */
-export const SAMPLE_FACTS: Type.Fact[] = [
+export const SAMPLE_FACTS: RDF.Fact[] = [
   {
     id: 'f1',
     assertion: {
@@ -83,4 +83,4 @@ export const SAMPLE_FACTS: Type.Fact[] = [
     extractor,
     sourceHash: 'demo',
   },
-] satisfies Type.Fact[];
+] satisfies RDF.Fact[];

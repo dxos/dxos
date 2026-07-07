@@ -5,12 +5,12 @@
 import { describe, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
-import { Type, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
 import { Organization, Person } from '@dxos/types';
 
 import { buildEntityIndex, reconcileFactEntities } from './fact-index';
 
-const fact = (subjectLabel: string, objectLabel: string): Type.Fact => ({
+const fact = (subjectLabel: string, objectLabel: string): RDF.Fact => ({
   id: 'f1',
   assertion: {
     subject: { entity: normalizeEntityId(subjectLabel), label: subjectLabel },

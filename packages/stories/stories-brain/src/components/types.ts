@@ -2,19 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type FactGraph, type Type } from '@dxos/pipeline-rdf';
+import { type FactGraph, type RDF } from '@dxos/pipeline-rdf';
 import { type TreeNode } from '@dxos/react-ui-graph';
 import { type ChromaticPalette, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
 
 export type Group = {
   subject: string;
-  facts: Type.Fact[];
+  facts: RDF.Fact[];
   conflicted: boolean;
   conflictedIds: Set<string>;
 };
 
 /** Group facts by subject entity and flag predicate-level conflicts within each group. */
-export const groupFacts = (facts: Type.Fact[], filter: string): Group[] => {
+export const groupFacts = (facts: RDF.Fact[], filter: string): Group[] => {
   const needle = filter.trim().toLowerCase();
   const filtered = needle
     ? facts.filter((fact) => {
@@ -26,7 +26,7 @@ export const groupFacts = (facts: Type.Fact[], filter: string): Group[] => {
     : facts;
 
   // Group by the entity slug (so `DXOS`/`dxos` collapse) but remember a display label for the header.
-  const bySubject = new Map<string, Type.Fact[]>();
+  const bySubject = new Map<string, RDF.Fact[]>();
   const labelByKey = new Map<string, string>();
   for (const fact of filtered) {
     const key = termKey(fact.assertion.subject);
@@ -40,7 +40,7 @@ export const groupFacts = (facts: Type.Fact[], filter: string): Group[] => {
 
   return [...bySubject.entries()].map(([key, groupFactsList]) => {
     const subject = labelByKey.get(key) ?? key;
-    const byPredicate = new Map<string, Type.Fact[]>();
+    const byPredicate = new Map<string, RDF.Fact[]>();
     for (const fact of groupFactsList) {
       const list = byPredicate.get(fact.assertion.predicate) ?? [];
       list.push(fact);
@@ -67,10 +67,10 @@ export const groupFacts = (facts: Type.Fact[], filter: string): Group[] => {
 };
 
 /** The join/grouping key: the entity slug (or literal). Casing variants collapse to one key. */
-export const termKey = (term: Type.Term): string => ('entity' in term ? term.entity : term.literal);
+export const termKey = (term: RDF.Term): string => ('entity' in term ? term.entity : term.literal);
 
 /** Display form: the preserved surface label, else a prettified slug; literals render verbatim. */
-export const formatTerm = (term: Type.Term): string =>
+export const formatTerm = (term: RDF.Term): string =>
   'entity' in term ? (term.label ?? humanize(term.entity)) : term.literal;
 
 export type EntityItem = {
@@ -85,9 +85,9 @@ export type EntityItem = {
  * Distinct entities mentioned across the facts (subject + object entity terms), deduped by id with a
  * display label and occurrence count, busiest first. Literal terms are not entities and are skipped.
  */
-export const entitiesFromFacts = (facts: Type.Fact[]): EntityItem[] => {
+export const entitiesFromFacts = (facts: RDF.Fact[]): EntityItem[] => {
   const byId = new Map<string, EntityItem>();
-  const add = (term: Type.Term) => {
+  const add = (term: RDF.Term) => {
     if (!('entity' in term)) {
       return;
     }
@@ -113,7 +113,7 @@ export type PredicateItem = {
 };
 
 /** Distinct predicates across the facts with occurrence counts, busiest first. */
-export const predicatesFromFacts = (facts: Type.Fact[]): PredicateItem[] => {
+export const predicatesFromFacts = (facts: RDF.Fact[]): PredicateItem[] => {
   const byPredicate = new Map<string, number>();
   for (const fact of facts) {
     const { predicate } = fact.assertion;
@@ -168,7 +168,7 @@ export const formatDate = (iso: string): string => iso.slice(0, 10);
 
 /** Map FactBank factuality to a real react-ui palette member. */
 export const factualityColor = (
-  factuality: Type.FactualityValue,
+  factuality: RDF.FactualityValue,
 ): NeutralPalette | ChromaticPalette | MessageValence => {
   switch (factuality) {
     case 'CT+':

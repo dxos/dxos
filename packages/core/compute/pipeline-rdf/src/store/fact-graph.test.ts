@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { type Fact } from '../types';
 import { buildFactGraph, factSourceFromFacts } from './fact-graph';
-import { type Fact } from './types';
 
 const mk = (id: string, subject: string, predicate: string, object: string): Fact => ({
   id,

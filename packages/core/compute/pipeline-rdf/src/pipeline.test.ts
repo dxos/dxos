@@ -13,8 +13,7 @@ import { readFileSync } from 'node:fs';
 import { Pipeline } from '@dxos/pipeline';
 
 import { SemanticIndexError } from './errors';
-import { FactStore } from './fact-store';
-import { DEFAULT_EXTRACTION_RULES, type ExtractDocument, buildExtractionPrompt } from './internal/stages/extract';
+import { DEFAULT_EXTRACTION_RULES, buildExtractionPrompt } from './internal/stages/extract';
 import { FactPipeline } from './pipeline';
 import {
   type DocumentFacts,
@@ -24,7 +23,9 @@ import {
   normalizeEntityId,
   normalizeFactsStage,
 } from './stages';
+import { FactStore } from './store';
 import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing';
+import { type ExtractDocument } from './types';
 import { type Fact } from './types';
 
 // Discord channel fixture (snapshot of `plugin-discord:generate-fixtures`) as extraction documents.

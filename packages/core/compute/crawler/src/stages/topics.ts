@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { FactStore, type SemanticIndexError, type SemanticQuery, type Type as SemanticType } from '@dxos/pipeline-rdf';
+import { FactStore, type SemanticIndexError, type SemanticQuery, type RDF as SemanticType } from '@dxos/pipeline-rdf';
 
 /** A topic discussed across the corpus, ranked by reach (distinct agents) then volume. */
 export type Topic = {

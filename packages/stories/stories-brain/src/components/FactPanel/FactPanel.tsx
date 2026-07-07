@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { type Type } from '@dxos/pipeline-rdf';
+import { type RDF } from '@dxos/pipeline-rdf';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -14,7 +14,7 @@ import { PredicateList } from '../PredicateList';
 import { entitiesFromFacts, predicatesFromFacts } from '../types';
 
 export type FactPanelProps = ThemedClassName<{
-  facts: Type.Fact[];
+  facts: RDF.Fact[];
 }>;
 
 /**

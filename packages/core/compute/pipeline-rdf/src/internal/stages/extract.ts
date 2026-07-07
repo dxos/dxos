@@ -15,14 +15,7 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { SemanticIndexError } from '../../errors';
-import { FactualityValue } from '../../types';
-
-export type ExtractDocument = {
-  readonly text: string;
-  readonly source: string;
-  readonly author?: string;
-  readonly date?: string;
-};
+import { type ExtractDocument, type ExtractOptions, FactualityValue } from '../../types';
 
 export const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -84,22 +77,6 @@ export const DEFAULT_EXTRACTION_RULES: readonly string[] = [
   'Emit a proposition only when BOTH its subject and object are concrete and named. If either would be an unresolved pronoun (we/it/they/this/that) or otherwise unknown, omit the proposition entirely — never output "unknown" as a subject or object.',
   'Do not extract facts from questions or requests: an interrogative or tag question ("… right?", "does X have Y?", "should we …?") asks for information and asserts nothing. Skip it unless the author also states a proposition they commit to.',
 ];
-
-export type ExtractOptions = {
-  /** Extra extraction rules appended after {@link DEFAULT_EXTRACTION_RULES}. */
-  readonly rules?: readonly string[];
-  /** Model DXN to extract with. Defaults to {@link DEFAULT_MODEL}. */
-  readonly model?: string;
-  /** Provider DXN for model resolution (e.g. `Provider.ollama.id`) when the model is not served by the default provider. */
-  readonly provider?: string;
-  /**
-   * Attempt strict `generateObject` before the lenient `generateText` + salvage path. Strong hosted
-   * models honor the schema, but local providers (Ollama) reliably fail structured output there, so
-   * the strict call is pure wasted latency — pass `false` for those to make each chunk a single
-   * generation. Defaults to `true`.
-   */
-  readonly strict?: boolean;
-};
 
 /** Compose the system prompt from the base instruction and the (default + caller) rules. */
 export const buildExtractionPrompt = (options?: ExtractOptions): string => {

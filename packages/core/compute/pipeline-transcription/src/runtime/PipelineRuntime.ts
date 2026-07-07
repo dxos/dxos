@@ -13,7 +13,6 @@ import { log } from '@dxos/log';
 import { Pipeline, Stage as PipelineStage } from '@dxos/pipeline';
 import { type ContentBlock } from '@dxos/types';
 
-import { resolveModel } from './model-routing';
 import {
   type EntityLookup,
   type Stage,
@@ -21,7 +20,8 @@ import {
   type StageContext,
   type StageWrite,
   type TranscriptEvent,
-} from './types';
+} from '../types';
+import { resolveModel } from './model-routing';
 
 /** Upper bound on retained blocks; bounds memory for long sessions (stages slice their own window). */
 const MAX_WINDOW = 128;

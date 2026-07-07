@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { type Type, buildFactGraph, factSourceFromFacts } from '@dxos/pipeline-rdf';
+import { type RDF, buildFactGraph, factSourceFromFacts } from '@dxos/pipeline-rdf';
 import { Icon, IconButton, Input, Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-graph';
 import { Empty, Listbox } from '@dxos/react-ui-list';
@@ -15,7 +15,7 @@ import { Group, factualityColor, formatDate, formatTerm, graphToTreeNode, groupF
 type View = 'list' | 'graph';
 
 export type FactViewerProps = ThemedClassName<{
-  facts: Type.Fact[];
+  facts: RDF.Fact[];
   /** Context entity id; scopes the list and roots the graph. */
   context?: string;
   /** Predicate filter; when set, only facts with this predicate are shown. */
@@ -127,7 +127,7 @@ const SubjectGroup = ({ group }: { group: Group }) => (
 const cellClassNames =
   'bg-input-surface border border-subdued-separator rounded-sm px-2 py-0.5 font-medium whitespace-nowrap truncate';
 
-const FactRow = ({ fact, conflicting }: { fact: Type.Fact; conflicting: boolean }) => {
+const FactRow = ({ fact, conflicting }: { fact: RDF.Fact; conflicting: boolean }) => {
   const { assertion, factuality, attribution } = fact;
   return (
     <Listbox.Item

@@ -10,9 +10,9 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { trim } from '@dxos/util';
 
-import { SemanticIndexError } from './errors';
-import { type SemanticQuery } from './internal/sparql/query-builder';
-import { DEFAULT_MODEL } from './internal/stages/extract';
+import { SemanticIndexError } from '../../errors';
+import { DEFAULT_MODEL } from '../stages/extract';
+import { type SemanticQuery } from './query-builder';
 
 const QueryShape = Schema.Struct({
   subjectEntity: Schema.optional(Schema.String),

@@ -13,8 +13,8 @@ import { log } from '@dxos/log';
 import { Pipeline } from '@dxos/pipeline';
 import { captureSink, instrument, renderBenchmark, runBenchmark } from '@dxos/pipeline/testing';
 
-import { type ExtractDocument } from '../internal/stages/extract';
 import { type DocumentFacts, extractFactsStage } from '../stages';
+import { type ExtractDocument } from '../types';
 
 // Compares pipeline-rdf fact extraction across local models over a fixed sample corpus (no email
 // parsing / no dataset — unlike pipeline-email's email-extraction.bench). Opt-in (needs a running

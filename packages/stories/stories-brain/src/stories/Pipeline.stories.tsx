@@ -39,7 +39,7 @@ import { EffectEx } from '@dxos/effect';
 import { stubParse } from '@dxos/nlp/testing';
 import { Pipeline } from '@dxos/pipeline';
 import { EmailPipeline, type FactIndexer, Thread } from '@dxos/pipeline-email';
-import { type DocumentFacts, type Type, extractFactsStage, normalizeFactsStage } from '@dxos/pipeline-rdf';
+import { type DocumentFacts, type RDF, extractFactsStage, normalizeFactsStage } from '@dxos/pipeline-rdf';
 import {
   type CommitFn,
   TranscriptEvent,
@@ -127,7 +127,7 @@ type StoryArgs = {};
 const DefaultStory = (_: StoryArgs) => {
   const [space] = useSpaces();
   const [pipelineId, setPipelineId] = useState(PIPELINES[0].id);
-  const [facts, setFacts] = useState<Type.Fact[]>([]);
+  const [facts, setFacts] = useState<RDF.Fact[]>([]);
   const [busy, setBusy] = useState(false);
 
   // Live view of the ECHO objects the pipelines materialize (email creates Person/Org/Thread;
@@ -162,7 +162,7 @@ const DefaultStory = (_: StoryArgs) => {
       return Promise.resolve();
     }
     const aiLayer = Layer.fresh(AiServiceTestingPreset('edge-remote'));
-    const collected: Type.Fact[] = [];
+    const collected: RDF.Fact[] = [];
     // Extract facts per message via the RDF stage, collecting them for the Facts tab (persistence to a
     // FactStore is exercised elsewhere; the story only needs the extracted facts to display).
     const indexFacts: FactIndexer = (message) =>

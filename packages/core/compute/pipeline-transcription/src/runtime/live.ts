@@ -9,8 +9,8 @@ import * as Stream from 'effect/Stream';
 import { EffectEx } from '@dxos/effect';
 import { type ContentBlock } from '@dxos/types';
 
+import { TranscriptEvent } from '../types';
 import { PipelineRuntime, type RunOptions } from './PipelineRuntime';
-import { TranscriptEvent } from './types';
 
 /**
  * Imperative handle to a running pipeline fed by a live ASR source. The source pushes events as they

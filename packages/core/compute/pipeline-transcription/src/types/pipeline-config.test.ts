@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/echo';
 
-import { resolveModel } from '../model-routing';
+import { resolveModel } from '../runtime';
 import { makeCorrectionStage } from '../stages';
 import { DEFAULT_STAGE_MODEL, findPreset } from './pipeline-config';
 

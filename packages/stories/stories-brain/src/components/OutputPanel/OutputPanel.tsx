@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { type Type } from '@dxos/pipeline-rdf';
+import { type RDF } from '@dxos/pipeline-rdf';
 import { Button, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 
 import { type EchoObjectItem, EchoObjectsList } from '../EchoObjectsList';
@@ -13,7 +13,7 @@ import { FactPanel } from '../FactPanel';
 type OutputTab = 'facts' | 'objects';
 
 export type OutputPanelProps = ThemedClassName<{
-  facts: Type.Fact[];
+  facts: RDF.Fact[];
   objects: EchoObjectItem[];
 }>;
 

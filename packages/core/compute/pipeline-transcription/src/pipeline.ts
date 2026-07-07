@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { PipelineRuntime, type RunOptions } from './PipelineRuntime';
+import { PipelineRuntime, type RunOptions } from './runtime';
 import { makeCorrectionStage, makeExtractionStage, makeSummarizationStage } from './stages';
 import { type Stage } from './types';
 

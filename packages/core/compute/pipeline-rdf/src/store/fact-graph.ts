@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Fact, type Term } from './types';
+import { type Fact, type Term } from '../types';
 
 /**
  * Read abstraction the graph builder traverses: facts in which an entity appears as **subject or

@@ -14,8 +14,8 @@ import { log } from '@dxos/log';
 import { Pipeline } from '@dxos/pipeline';
 import { Metrics, captureSink, instrument, makeMetrics } from '@dxos/pipeline/testing';
 
-import { type ExtractDocument } from '../internal/stages/extract';
 import { type DocumentFacts, extractFactsStage } from '../stages';
+import { type ExtractDocument } from '../types';
 
 // Minimal control for the extraction pipeline: run ONE model over a handful of trivial one-sentence
 // documents — no email parsing, no chunking, no model swaps — to isolate LLM/adapter behaviour and

@@ -12,7 +12,7 @@ import { EffectEx } from '@dxos/effect';
 import { type ContentBlock, Organization, Person } from '@dxos/types';
 
 import { TranscriptionPipeline } from './pipeline';
-import { type CommitFn } from './PipelineRuntime';
+import { type CommitFn } from './runtime';
 import { makeDatabaseLookup } from './types/lookup';
 import { TranscriptEvent } from './types/transcript-event';
 

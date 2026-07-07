@@ -10,8 +10,9 @@ import { Stage } from '@dxos/pipeline';
 
 import { type SemanticIndexError } from '../errors';
 import { chunk } from '../internal/stages/chunk';
-import { DEFAULT_MODEL, type ExtractDocument, type ExtractOptions, extractChunk } from '../internal/stages/extract';
+import { DEFAULT_MODEL, extractChunk } from '../internal/stages/extract';
 import { hashText } from '../internal/stages/reconcile';
+import { type ExtractDocument, type ExtractOptions } from '../types';
 import { type Fact } from '../types';
 
 // PROVISIONAL v1 entity resolution: distinct surface forms that normalize identically will merge,

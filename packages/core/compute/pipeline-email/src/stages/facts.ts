@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ExtractDocument, type ExtractOptions } from '@dxos/pipeline-rdf';
+import { type RDF } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
 // Email-specific extraction guidance appended after the pipeline-rdf DEFAULT_EXTRACTION_RULES.
@@ -13,7 +13,7 @@ export const EMAIL_EXTRACTION_RULES: readonly string[] = [
   'Attribute first-person statements ("I will…", "we can…") to the message sender as subject.',
 ];
 
-export const EMAIL_EXTRACT_OPTIONS: ExtractOptions = {
+export const EMAIL_EXTRACT_OPTIONS: RDF.ExtractOptions = {
   rules: EMAIL_EXTRACTION_RULES,
 };
 
@@ -29,7 +29,7 @@ export const messageSource = (message: Message.Message): string => {
   return `${message.sender.email ?? 'unknown'}:${message.created}`;
 };
 
-export const messageToDocument = (message: Message.Message): ExtractDocument => ({
+export const messageToDocument = (message: Message.Message): RDF.ExtractDocument => ({
   text: Message.extractText(message),
   source: messageSource(message),
   ...(message.sender.email ? { author: message.sender.email } : {}),

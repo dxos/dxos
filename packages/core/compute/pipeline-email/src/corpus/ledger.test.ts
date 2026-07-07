@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { afterAll, describe, test } from 'vitest';
 
-import { FactStore, type Type, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { FactStore, type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
 
 import { commitmentLedger } from './ledger';
 
@@ -60,7 +60,7 @@ const fact = (
   predicate: string,
   object: string,
   extra?: { validTo?: string; confidence?: number },
-): Type.Fact => ({
+): RDF.Fact => ({
   id,
   assertion: {
     subject: { entity: normalizeEntityId(subject), label: subject },
@@ -79,7 +79,7 @@ const fact = (
   sourceHash: `h-${id}`,
 });
 
-const FACTS: Type.Fact[] = [
+const FACTS: RDF.Fact[] = [
   fact('m1', 'alice@enron.com', 'will send', 'Q2 report', { validTo: '2001-05-18' }),
   fact('m2', 'bob@enron.com', 'owes', 'budget confirmation'),
   fact('m3', 'alice@enron.com', 'works at', 'Enron'),

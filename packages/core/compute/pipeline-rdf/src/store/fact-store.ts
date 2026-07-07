@@ -8,18 +8,18 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { type Quad } from 'n3';
 
-import { SemanticIndexError } from './errors';
-import { insertQuadsMemory, makeMemorySource } from './internal/source/memory-source';
-import { insertQuads, makeSqliteSource } from './internal/source/sqlite-source';
-import { makeEngine, selectTriples } from './internal/sparql/engine';
-import { factToTriples, triplesToFacts } from './internal/sparql/mapping';
-import { type SemanticQuery } from './internal/sparql/query-builder';
-import { queryMemory } from './internal/sparql/query-memory';
-import { querySqlite } from './internal/sparql/query-sqlite';
-import { migrate } from './internal/sqlite/schema';
-import { type Fact } from './types';
+import { SemanticIndexError } from '../errors';
+import { insertQuadsMemory, makeMemorySource } from '../internal/source/memory-source';
+import { insertQuads, makeSqliteSource } from '../internal/source/sqlite-source';
+import { makeEngine, selectTriples } from '../internal/sparql/engine';
+import { factToTriples, triplesToFacts } from '../internal/sparql/mapping';
+import { type SemanticQuery } from '../internal/sparql/query-builder';
+import { queryMemory } from '../internal/sparql/query-memory';
+import { querySqlite } from '../internal/sparql/query-sqlite';
+import { migrate } from '../internal/sqlite/schema';
+import { type Fact } from '../types';
 
-export { type SemanticQuery } from './internal/sparql/query-builder';
+export { type SemanticQuery } from '../internal/sparql/query-builder';
 
 export interface FactStoreApi {
   /** Reify and persist facts as RDF triples (idempotent appends; no write-time merge). */
