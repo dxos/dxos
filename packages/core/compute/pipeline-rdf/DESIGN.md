@@ -1,4 +1,4 @@
-# @dxos/semantic-index — Design
+# @dxos/pipeline-rdf — Design
 
 Extracts attributed propositions from text and answers SPARQL queries over them. The
 semantic graph lives **outside ECHO** (it references ECHO objects by DXN) and runs in the

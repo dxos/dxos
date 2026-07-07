@@ -10,7 +10,7 @@ const HEADER = `//
 // Copyright 2026 DXOS.org
 //
 
-import { type Type } from '@dxos/semantic-index';
+import { type Type } from '@dxos/pipeline-rdf';
 `;
 
 /**

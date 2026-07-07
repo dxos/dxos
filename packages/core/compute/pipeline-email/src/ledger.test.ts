@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { afterAll, describe, test } from 'vitest';
 
-import { SemanticStore, type Type, normalizeEntityId } from '@dxos/semantic-index';
+import { SemanticStore, type Type, normalizeEntityId } from '@dxos/pipeline-rdf';
 
 import { commitmentLedger } from './ledger';
 

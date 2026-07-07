@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
 import { AiService } from '@dxos/ai';
-import { SemanticStore } from '@dxos/semantic-index';
+import { SemanticStore } from '@dxos/pipeline-rdf';
 
 import { AgentRegistry } from '../AgentRegistry';
 import { type Page, Source, type SourceApi, type ThreadRef } from '../Source';

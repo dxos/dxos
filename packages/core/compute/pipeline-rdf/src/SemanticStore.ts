@@ -51,10 +51,7 @@ const makeSelect = (source: Parameters<typeof selectTriples>[1]): SemanticStoreA
   return (sparql) => selectTriples(getEngine(), source, sparql).pipe(Effect.flatMap(reassemble));
 };
 
-export class SemanticStore extends Context.Tag('@dxos/semantic-index/SemanticStore')<
-  SemanticStore,
-  SemanticStoreApi
->() {
+export class SemanticStore extends Context.Tag('@dxos/pipeline-rdf/SemanticStore')<SemanticStore, SemanticStoreApi>() {
   static layer: Layer.Layer<SemanticStore, never, SqlClient.SqlClient> = Layer.scoped(
     SemanticStore,
     Effect.gen(function* () {

@@ -7,7 +7,7 @@ import { trim } from '@dxos/util';
 /**
  * User-editable prompts for the LLM-assisted corpus algorithms. Every slot has a default; callers
  * override any subset via {@link mergePrompts}, so the discovery algorithms stay configurable
- * without forking the pipeline. (Extraction rules are configured separately, via semantic-index
+ * without forking the pipeline. (Extraction rules are configured separately, via pipeline-rdf
  * `ExtractOptions.rules`.)
  */
 export type EmailPrompts = {

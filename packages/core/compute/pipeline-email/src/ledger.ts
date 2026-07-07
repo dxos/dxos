@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type SemanticIndexError, type SemanticStoreApi, type Type } from '@dxos/semantic-index';
+import { type SemanticIndexError, type SemanticStoreApi, type Type } from '@dxos/pipeline-rdf';
 
 /**
  * Predicates treated as commitments (spec §3③ commitment ledger). Editable: extraction phrasing

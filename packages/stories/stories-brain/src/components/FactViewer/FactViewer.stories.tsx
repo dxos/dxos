@@ -7,7 +7,7 @@
  *
  * - `Default` passes `DEMO_FACTS` (includes an Alice→Paris/Rome conflict and a coherent Q3-meeting pair).
  * - `Empty` passes `[]` to show the empty state.
- * - Renders `SemanticFactsViewer`, which groups facts by subject, flags predicate-level conflicts, and filters.
+ * - Renders `FactViewer`, which groups facts by subject, flags predicate-level conflicts, and filters.
  * - Minimal decorators (`withTheme` + `withLayout`); purely presentational.
  */
 
@@ -17,12 +17,12 @@ import React from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { SAMPLE_FACTS } from '../../testing';
-import { SemanticFactsViewer, type SemanticFactsViewerProps } from './SemanticFactsViewer';
+import { FactViewer, type FactViewerProps } from './FactViewer';
 
-const DefaultStory = (props: SemanticFactsViewerProps) => <SemanticFactsViewer {...props} />;
+const DefaultStory = (props: FactViewerProps) => <FactViewer {...props} />;
 
 const meta = {
-  title: 'stories/stories-brain/SemanticFactsViewer',
+  title: 'stories/stories-brain/components/FactViewer',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof DefaultStory>;

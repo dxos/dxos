@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
-import { Type, normalizeEntityId } from '@dxos/semantic-index';
+import { Type, normalizeEntityId } from '@dxos/pipeline-rdf';
 import { Organization, Person } from '@dxos/types';
 
 import { buildEntityIndex, reconcileFactEntities } from './fact-index';

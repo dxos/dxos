@@ -1,7 +1,7 @@
 # @dxos/pipeline-email — Design
 
 Agentic-inbox discovery over an email corpus, built on `@dxos/pipeline` (streaming stages) and
-`@dxos/semantic-index` (advisory fact graph). Master spec:
+`@dxos/pipeline-rdf` (advisory fact graph). Master spec:
 [`docs/superpowers/specs/2026-07-03-agentic-inbox-discovery-design.md`](../../../../docs/superpowers/specs/2026-07-03-agentic-inbox-discovery-design.md).
 
 **Canonicality rule (spec §4):** ECHO objects are canonical; the fact graph is tentative, advisory
