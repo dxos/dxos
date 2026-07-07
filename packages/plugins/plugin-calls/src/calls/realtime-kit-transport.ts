@@ -3,7 +3,6 @@
 //
 
 import { type Context, Resource } from '@dxos/context';
-import { log } from '@dxos/log';
 
 import { type RoomJoiner } from './edge-room-joiner';
 import { type MediaTransport, type RemoteTrack, type TranscriptEvent } from './media-transport';
@@ -119,7 +118,6 @@ export class RealtimeKitTransport extends Resource implements MediaTransport {
     // rather than minting a second meeting.
     this._options.onMeetingResolved?.(meetingId);
     this.#meeting = await this._options.createMeeting(authToken);
-    log('realtimekit meeting opened', { meetingId });
   }
 
   protected override async _close(): Promise<void> {
@@ -142,7 +140,6 @@ export class RealtimeKitTransport extends Resource implements MediaTransport {
     // `encodings` is ignored.
     if (!options.track) {
       const kind = options.previousTrack?.trackName as TrackKind | undefined;
-      log.info('rtk pushTrack disable', { kind });
       if (kind === 'audio') {
         await meeting.self.disableAudio();
       } else if (kind === 'video') {
@@ -152,11 +149,6 @@ export class RealtimeKitTransport extends Resource implements MediaTransport {
     }
 
     const kind: TrackKind = options.track.kind === 'audio' ? 'audio' : 'video';
-    log.info('rtk pushTrack enable', {
-      kind,
-      track: options.track.id?.slice(0, 8),
-      readyState: options.track.readyState,
-    });
     if (kind === 'audio') {
       await meeting.self.enableAudio(options.track);
     } else {
@@ -173,13 +165,11 @@ export class RealtimeKitTransport extends Resource implements MediaTransport {
       return {};
     }
     if (!enabled) {
-      log.info('rtk screenshare disable');
       await meeting.self.disableScreenShare();
       return {};
     }
     // RealtimeKit captures the display itself. Return the `screenshare`-kinded descriptor (so the swarm name
     // matches what `getRemoteTracks` produces for remotes) and the local track for the sharer's self-view.
-    log.info('rtk screenshare enable');
     await meeting.self.enableScreenShare();
     return {
       descriptor: {
@@ -215,13 +205,6 @@ export class RealtimeKitTransport extends Resource implements MediaTransport {
       add('audio', participant.audioTrack);
       add('screenshare', participant.screenShareTracks?.video);
     }
-    log.info('rtk remote tracks', {
-      tracks: tracks.map((remote) => ({
-        peer: remote.trackData.sessionId?.slice(0, 12),
-        kind: remote.trackData.trackName,
-        track: remote.track.id?.slice(0, 8),
-      })),
-    });
     return tracks;
   }
 
@@ -273,31 +256,18 @@ export const createRealtimeKitMeetingFactory =
         const joined = meeting.participants.joined;
         const mediaEvents = ['videoUpdate', 'audioUpdate', 'screenShareUpdate'] as const;
         type JoinedParticipant = ReturnType<typeof joined.toArray>[number];
-        const notify = () => {
-          log.info('rtk media changed', {
-            roster: joined.toArray().map((participant) => ({
-              peer: participant.customParticipantId?.slice(0, 12),
-              videoEnabled: participant.videoEnabled,
-              hasVideo: !!participant.videoTrack,
-              audioEnabled: participant.audioEnabled,
-              hasAudio: !!participant.audioTrack,
-              screenShare: !!participant.screenShareTracks?.video,
-            })),
-          });
-          callback();
-        };
         const attach = (participant: JoinedParticipant) =>
-          mediaEvents.forEach((event) => participant.on(event, notify));
+          mediaEvents.forEach((event) => participant.on(event, callback));
         const detach = (participant: JoinedParticipant) =>
-          mediaEvents.forEach((event) => participant.off(event, notify));
+          mediaEvents.forEach((event) => participant.off(event, callback));
         joined.toArray().forEach(attach);
         const onJoined = (participant: JoinedParticipant) => {
           attach(participant);
-          notify();
+          callback();
         };
         const onLeft = (participant: JoinedParticipant) => {
           detach(participant);
-          notify();
+          callback();
         };
         joined.on('participantJoined', onJoined);
         joined.on('participantLeft', onLeft);

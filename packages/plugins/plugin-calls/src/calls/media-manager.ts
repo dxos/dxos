@@ -114,7 +114,6 @@ export class MediaManager extends Resource {
   }
 
   async turnVideoOn(): Promise<void> {
-    log.info('rtk local video on');
     // Acquire the camera before mutating state: if `getUserMedia` is slow or rejects (camera busy/denied),
     // the previous self-view keeps rendering and `videoEnabled` stays false, rather than blanking the tile
     // and leaving inconsistent state (the source of "toggle makes video disappear").
@@ -130,7 +129,6 @@ export class MediaManager extends Resource {
   }
 
   async turnVideoOff(): Promise<void> {
-    log.info('rtk local video off');
     this._state.videoTrack?.stop();
     this._state.videoTrack = undefined;
     // Drop the self-view stream so the tile blanks rather than freezing on the last camera frame; the
@@ -172,7 +170,6 @@ export class MediaManager extends Resource {
   }
 
   async turnScreenshareOn(): Promise<void> {
-    log.info('rtk local screenshare on');
     const peer = this._state.peer;
     if (!peer) {
       return;
@@ -189,7 +186,6 @@ export class MediaManager extends Resource {
   }
 
   async turnScreenshareOff(): Promise<void> {
-    log.info('rtk local screenshare off');
     await this._state.peer?.setScreenShareEnabled(false);
     this._state.pushedScreenshareTrack = undefined;
     this._state.screenshareTrack = undefined;
@@ -244,10 +240,6 @@ export class MediaManager extends Resource {
     this._state.pulledAudioTracks = pulledAudioTracks;
 
     if (changed) {
-      log.info('rtk synced remote tracks', {
-        video: Object.keys(pulledVideoStreams).map((name) => name.slice(0, 20)),
-        audio: Object.keys(pulledAudioTracks).map((name) => name.slice(0, 20)),
-      });
       this.stateUpdated.emit(this._state);
     }
   }

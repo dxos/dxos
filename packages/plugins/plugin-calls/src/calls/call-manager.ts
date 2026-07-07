@@ -8,7 +8,6 @@ import { Event, synchronized } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
 import { isNonNullable } from '@dxos/util';
 
@@ -310,16 +309,6 @@ export class CallManager extends Resource {
   }
 
   private _onCallStateUpdated(state: CallState): void {
-    const remoteUsers = state.users?.filter((user) => user.joined && user.id !== state.self?.id);
-    log.info('rtk swarm tracks', {
-      users: remoteUsers?.map((user) => ({
-        peer: user.id?.slice(0, 12),
-        video: user.tracks?.video?.slice(0, 20),
-        videoEnabled: user.tracks?.videoEnabled,
-        audioEnabled: user.tracks?.audioEnabled,
-        screenshareEnabled: user.tracks?.screenshareEnabled,
-      })),
-    });
     // Remote tracks are pulled event-driven by `MediaManager` (from transport roster changes), not from the
     // swarm. The swarm stays the source of truth for presence/metadata; the UI resolves cached streams by the
     // names advertised here.
