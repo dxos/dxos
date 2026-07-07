@@ -42,9 +42,6 @@ message FeedQueryResult {
   string next_cursor = 2;
 
   string prev_cursor = 3;
-
-  /// Whether more matching items are available in the direction of this query.
-  optional bool has_more = 4;
 }
 
 message QueryFeedRequest {
