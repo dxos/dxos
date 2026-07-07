@@ -11,10 +11,10 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { type ContentBlock, Organization, Person } from '@dxos/types';
 
-import { makeDatabaseLookup } from './types/lookup';
 import { PipelineRuntime } from './PipelineRuntime';
 import { type CommitFn } from './PipelineRuntime';
 import { makeCorrectionStage, makeExtractionStage } from './stages';
+import { makeDatabaseLookup } from './types/lookup';
 import { TranscriptEvent } from './types/transcript-event';
 
 // Reproduces the Pipeline testbench path: correction + extraction through the runtime, asserting that
