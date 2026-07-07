@@ -180,7 +180,10 @@ const DefaultStory = ({ ai }: StoryArgs) => {
       const startedMs = Date.now();
       const collected: DocumentFacts[] = [];
       const program = Effect.gen(function* () {
-        yield* Stream.fromIterable([{ text, source: 'editor:document' }]).pipe(
+        // Extract one proposition per line/sentence rather than the whole document in a single call:
+        // weaker local models (e.g. llama3.2) emit malformed JSON for multi-sentence prompts, so
+        // per-proposition inputs are what make them extract cleanly (matching the benchmark corpus).
+        yield* Stream.fromIterable(toDocs(text)).pipe(
           extractFactsStage(extractOptions),
           normalizeFactsStage({ synonyms: SYNONYMS }),
           Pipeline.run({
@@ -378,6 +381,15 @@ const DefaultStory = ({ ai }: StoryArgs) => {
     </div>
   );
 };
+
+// Split document text into per-proposition extraction inputs, on newlines or sentence boundaries, so
+// each LLM call sees a single sentence (weaker local models mangle multi-sentence prompts).
+const toDocs = (text: string): { readonly text: string; readonly source: string }[] =>
+  text
+    .split(/\n+|(?<=[.!?])\s+/)
+    .map((part) => part.replace(/^\s*[-*]\s*/, '').trim())
+    .filter((part) => part.length > 0)
+    .map((part, index) => ({ text: part, source: `doc-${index}` }));
 
 const factEntities = (fact: RDF.Fact): string[] =>
   [fact.assertion.subject, fact.assertion.object].flatMap((term) => ('entity' in term ? [term.entity] : []));
