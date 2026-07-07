@@ -133,5 +133,4 @@ export const digestHex = (uri: string): string => hexFromDigest(decode(uri));
 /**
  * Computes the lowercase hex SHA-256 digest of `bytes`.
  */
-export const digestHexFromBytes = async (bytes: Uint8Array): Promise<string> =>
-  hexFromDigest(await digestBytes(bytes));
+export const digestHexFromBytes = async (bytes: Uint8Array): Promise<string> => hexFromDigest(await digestBytes(bytes));

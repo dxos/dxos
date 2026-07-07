@@ -4,9 +4,10 @@
 
 import { type CleanupFn } from '@dxos/async';
 import { Blob, Err } from '@dxos/echo';
-import { digestHexFromBytes } from './ni-uri';
 import { type BlobBackend } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
+
+import { digestHexFromBytes } from './ni-uri';
 
 const BASE64_CHUNK_SIZE = 0x8000;
 

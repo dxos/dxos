@@ -7,10 +7,10 @@ import * as Option from 'effect/Option';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Blob, Database, Err } from '@dxos/echo';
-import { fromDigestHex } from './ni-uri';
 import { EffectEx } from '@dxos/effect';
 
 import { EchoTestBuilder } from '../testing';
+import { fromDigestHex } from './ni-uri';
 
 describe('Blob', () => {
   let builder: EchoTestBuilder;

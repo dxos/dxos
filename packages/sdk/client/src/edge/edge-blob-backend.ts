@@ -4,8 +4,8 @@
 
 import { Context } from '@dxos/context';
 import { Blob } from '@dxos/echo';
-import { type BlobBackend } from '@dxos/echo-protocol';
 import { digestHex, fromDigestHex } from '@dxos/echo-client/internal';
+import { type BlobBackend } from '@dxos/echo-protocol';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 
