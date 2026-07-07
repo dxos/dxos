@@ -7,7 +7,7 @@ import React from 'react';
 import { Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Empty, Listbox } from '@dxos/react-ui-list';
 
-import { type PredicateItem } from '../util';
+import { type PredicateItem } from '../types';
 
 export type PredicateListProps = ThemedClassName<{
   predicates: PredicateItem[];

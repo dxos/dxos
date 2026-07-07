@@ -10,7 +10,7 @@ import { Tree } from '@dxos/react-ui-graph';
 import { Empty, Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
-import { Group, factualityColor, formatDate, formatTerm, graphToTreeNode, groupFacts, termKey } from '../util';
+import { Group, factualityColor, formatDate, formatTerm, graphToTreeNode, groupFacts, termKey } from '../types';
 
 type View = 'list' | 'graph';
 

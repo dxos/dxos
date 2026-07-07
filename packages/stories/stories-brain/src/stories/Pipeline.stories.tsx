@@ -111,11 +111,11 @@ const DefaultStory = (_: StoryArgs) => {
   };
 
   return (
-    <div className='dx-container grid grid-cols-[1fr_1fr_1fr_1fr] gap-2'>
+    <div className='dx-container grid grid-cols-3 gap-2'>
       <DocumentEditor initialValue={SAMPLE_CONTENT} parse={stubParse} busy={busy} onRun={handleRun} />
       <PipelinePanel stages={STAGES} busy={busy} output={output} />
-      <FactViewer facts={facts} context={context} />
-      <div role='none' className='grid grid-rows-2 gap-2 min-h-0'>
+      <div role='none' className='grid grid-rows-3 gap-2 min-h-0'>
+        <FactViewer facts={facts} context={context} />
         <EntityList entities={entities} selected={context} onSelect={setContext} />
         <PredicateList predicates={predicates} />
       </div>
