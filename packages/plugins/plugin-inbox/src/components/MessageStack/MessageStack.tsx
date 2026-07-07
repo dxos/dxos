@@ -250,33 +250,33 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
 
     return (
       <ThreadCountContext.Provider value={threadCountAtom ?? defaultThreadCountFamily}>
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
-        <Mosaic.Container
-          asChild
-          withFocus
-          currentId={effectiveCurrentId}
-          onCurrentChange={handleCurrentChange}
-          selectedIds={effectiveSelectedIds}
-          onSelectionChange={handleSelectionChange}
-        >
-          <ScrollArea.Root padding centered thin>
-            <ScrollArea.Viewport ref={setViewport}>
-              {/* The two tile components carry different data shapes (message vs conversation), which the
+        <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+          <Mosaic.Container
+            asChild
+            withFocus
+            currentId={effectiveCurrentId}
+            onCurrentChange={handleCurrentChange}
+            selectedIds={effectiveSelectedIds}
+            onSelectionChange={handleSelectionChange}
+          >
+            <ScrollArea.Root padding centered thin>
+              <ScrollArea.Viewport ref={setViewport}>
+                {/* The two tile components carry different data shapes (message vs conversation), which the
                   single-typed Mosaic `Tile`/`items` generics can't express — hence the casts at this boundary. */}
-              <Mosaic.VirtualStack
-                Tile={conversations ? (ConversationTile as any) : MessageTile}
-                items={items as any}
-                draggable={false}
-                getId={(item: any) => item.conversationId ?? item.message?.id}
-                getScrollElement={() => viewport}
-                estimateSize={() => 150}
-                gap={4}
-                onChange={handleVirtualizerChange}
-              />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Mosaic.Container>
-      </Focus.Group>
+                <Mosaic.VirtualStack
+                  Tile={conversations ? (ConversationTile as any) : MessageTile}
+                  items={items as any}
+                  draggable={false}
+                  getId={(item: any) => item.conversationId ?? item.message?.id}
+                  getScrollElement={() => viewport}
+                  estimateSize={() => 150}
+                  gap={4}
+                  onChange={handleVirtualizerChange}
+                />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Mosaic.Container>
+        </Focus.Group>
       </ThreadCountContext.Provider>
     );
   },

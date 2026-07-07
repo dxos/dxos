@@ -3,6 +3,7 @@
 //
 
 import { Registry } from '@effect-atom/atom-react';
+import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
@@ -99,7 +100,7 @@ describe('Mailbox threads', () => {
     expect(index.threadIds()).toEqual(['thread-a']);
     expect(index.messages('thread-a')).toHaveLength(2);
     // The per-thread count atom reflects the index (a fresh registry reads the current snapshot).
-    const threadCount = Mailbox.makeThreadCountFamily(mailbox.threads!.target!);
+    const threadCount = (threadId: string) => Mailbox.threadCountAtom(Data.tuple(mailbox, threadId));
     expect(Registry.make().get(threadCount('thread-a'))).toBe(2);
 
     // Removing prunes the entry when the thread empties.

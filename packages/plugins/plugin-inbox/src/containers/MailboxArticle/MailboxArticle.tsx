@@ -3,7 +3,8 @@
 //
 
 import { useAtomSet } from '@effect-atom/atom-react';
-import React, { type Ref, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import * as Data from 'effect/Data';
+import React, { type Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -28,7 +29,6 @@ import { InboxCapabilities, Mailbox, Starred } from '#types';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { matchesFilter, sortByCreated } from '../../util';
 import { InitializeMailbox, InitializeMailboxAction } from './InitializeMailbox';
-
 
 /** Debounce (ms) for the tag/thread index subscription bumps, coalescing a burst of sync commits into one render. */
 const INDEX_BUMP_DEBOUNCE = 200;
@@ -127,21 +127,11 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   );
 
   const tagMap = useTags(db);
-
-  // `mailbox.tags` (tag index) and `mailbox.threads` (thread index) are mutated in place by tagging
-  // and sync, which `useQuery` doesn't observe — so subscribe to each index directly and re-derive
-  // on change. The subscription bumps are debounced (INDEX_BUMP_DEBOUNCE) so a burst of sync-chunk
-  // commits coalesces into one render; the derivations then memoize off the resulting tick (keeping
-  // them off the render-hot path even though `mailbox` identity is stable across in-place mutations).
-  const [tagTick, bumpTags] = useReducer((tick: number) => tick + 1, 0);
-  const debouncedBumpTags = useDebouncedBump(bumpTags);
-  const tagIndex = mailbox.tags?.target;
-  useEffect(() => (tagIndex ? Obj.subscribe(tagIndex, debouncedBumpTags) : undefined), [tagIndex, debouncedBumpTags]);
-  const threadIndex = mailbox.threads?.target;
+  const [tagIndex] = useObject(mailbox.tags);
 
   // `messageTagUris` is the raw tag-uri index (used for client-side filtering, same id space as the
   // query); `messageTagsMap` resolves those uris to label/hue chips for rendering.
-  const messageTagUris = useMemo(() => Mailbox.buildMessageTagsIndex(mailbox), [mailbox, tagTick]);
+  const messageTagUris = useMemo(() => Mailbox.buildMessageTagsIndex(mailbox), [mailbox, tagIndex]);
   const messageTagsMap = useMemo(() => {
     const map: Record<string, { id: string; label: string; hue?: string }[]> = {};
     for (const [messageId, uris] of Object.entries(messageTagUris)) {
@@ -156,13 +146,13 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   // Starred messages drive the per-tile star toggle; starred state also lives under the tag index.
   const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
-  const starredIds = useMemo(() => Starred.getStarredIds(mailbox, starredUri), [mailbox, starredUri, tagTick]);
+  const starredIds = useMemo(() => Starred.getStarredIds(mailbox, starredUri), [mailbox, starredUri, tagIndex]);
 
   // Per-thread count atom family: each conversation tile subscribes to only its own thread's count
   // and re-renders only when that count changes (no whole-index scan, no cross-thread coupling).
-  const threadCountAtom = useMemo(
-    () => (threadIndex ? Mailbox.makeThreadCountFamily(threadIndex) : undefined),
-    [threadIndex],
+  const threadCountAtom = useCallback(
+    (threadId: string) => Mailbox.threadCountAtom(Data.tuple(subject, threadId)),
+    [subject],
   );
 
   // Filter.
@@ -187,7 +177,10 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   const pagination = usePagination(
     db,
     feed
-      ? Query.select(Filter.type(Message.Message)).from(feed).orderBy(Order.property('created', 'desc')).limit(MAILBOX_PAGE_SIZE)
+      ? Query.select(Filter.type(Message.Message))
+          .from(feed)
+          .orderBy(Order.property('created', 'desc'))
+          .limit(MAILBOX_PAGE_SIZE)
       : Query.select(Filter.nothing()).limit(MAILBOX_PAGE_SIZE),
   );
   const messages = pagination.items;
