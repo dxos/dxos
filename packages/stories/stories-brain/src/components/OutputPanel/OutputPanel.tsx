@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode, useMemo, useState } from 'react';
+import React, { Fragment, type ReactNode, useMemo, useState } from 'react';
 
 import { type RDF } from '@dxos/pipeline-rdf';
 import { Button, Panel, ScrollArea, type ThemedClassName, Toolbar } from '@dxos/react-ui';
@@ -65,9 +65,7 @@ export const OutputPanel = ({ classNames, facts, objects, stats = [], details = 
         {active === 'facts' && <FactPanel facts={facts} classNames='h-full' />}
         {active === 'objects' && <EchoObjectsList objects={objects} classNames='h-full' />}
         {active === 'stats' && <StatsView stats={stats} />}
-        {details.map((detail) =>
-          active === detail.id ? <React.Fragment key={detail.id}>{detail.content}</React.Fragment> : null,
-        )}
+        {details.map((detail) => (active === detail.id ? <Fragment key={detail.id}>{detail.content}</Fragment> : null))}
       </Panel.Content>
     </Panel.Root>
   );

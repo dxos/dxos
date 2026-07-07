@@ -7,7 +7,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { type Parser } from '@dxos/nlp';
 import {
   Button,
-  IconButton,
   Input,
   Panel,
   ScrollArea,
@@ -25,7 +24,6 @@ import {
   decorateMarkdown,
   pos,
 } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
 
 export type InputMode = 'document' | 'dataset' | 'record';
 
@@ -156,10 +154,10 @@ export const InputPanel = ({
           )}
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='min-h-0'>
+      <Panel.Content>
         {mode === 'document' && (
           <Editor.Root>
-            <Editor.View value={text} onChange={setText} extensions={extensions} />
+            <Editor.View classNames='p-2' value={text} onChange={setText} extensions={extensions} />
           </Editor.Root>
         )}
 
@@ -225,22 +223,24 @@ export const InputPanel = ({
         )}
 
         {mode === 'record' && (
-          <Toolbar.Root>
-            <IconButton
-              icon={transcript ? 'ph--microphone-slash--regular' : 'ph--microphone--regular'}
-              label={transcript ? 'Clear recording' : 'Record'}
-              onClick={() => setTranscript((current) => (current ? '' : sampleTranscript))}
-            />
-            {transcript && (
-              <div
-                className={mx(
-                  'whitespace-pre-wrap text-sm bg-card-surface border border-subdued-separator rounded-sm p-2',
-                )}
-              >
-                {transcript}
-              </div>
-            )}
-          </Toolbar.Root>
+          <Panel.Root>
+            <Panel.Toolbar asChild>
+              <Toolbar.Root>
+                <Toolbar.IconButton
+                  icon={transcript ? 'ph--microphone-slash--regular' : 'ph--microphone--regular'}
+                  label={transcript ? 'Clear recording' : 'Record'}
+                  onClick={() => setTranscript((current) => (current ? '' : sampleTranscript))}
+                />
+              </Toolbar.Root>
+            </Panel.Toolbar>
+            <Panel.Content>
+              {transcript && (
+                <Editor.Root>
+                  <Editor.View classNames='p-2' value={transcript} extensions={extensions} />
+                </Editor.Root>
+              )}
+            </Panel.Content>
+          </Panel.Root>
         )}
       </Panel.Content>
     </Panel.Root>
