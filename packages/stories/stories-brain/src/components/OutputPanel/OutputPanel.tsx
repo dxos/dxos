@@ -61,7 +61,7 @@ export const OutputPanel = ({ classNames, facts, objects, stats = [], details = 
           ))}
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='min-h-0'>
+      <Panel.Content>
         {active === 'facts' && <FactPanel facts={facts} classNames='h-full' />}
         {active === 'objects' && <EchoObjectsList objects={objects} classNames='h-full' />}
         {active === 'stats' && <StatsView stats={stats} />}

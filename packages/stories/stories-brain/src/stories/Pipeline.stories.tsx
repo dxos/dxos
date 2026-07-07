@@ -171,10 +171,12 @@ const DefaultStory = (_: StoryArgs) => {
         extractFactsStage(),
         normalizeFactsStage({ synonyms: SYNONYMS }),
         Pipeline.run({
+          // Stream facts to the viewer as each document is emitted, rather than only at completion.
           sink: (out) =>
             Effect.sync(() => {
               collected.push(out);
               setProcessed((value) => value + 1);
+              setFacts((prev) => [...prev, ...out.facts]);
             }),
         }),
       );
@@ -183,8 +185,6 @@ const DefaultStory = (_: StoryArgs) => {
     const { promise, interrupt } = runInterruptible(program);
     interruptRef.current = interrupt;
     return promise.then((extracted) => {
-      setFacts(extracted);
-      setDetails([]);
       setStats([
         { label: 'Facts', value: extracted.length },
         { label: 'Entities', value: new Set(extracted.flatMap(factEntities)).size },
@@ -212,6 +212,8 @@ const DefaultStory = (_: StoryArgs) => {
       ).then((messageFacts) => {
         collected.push(...messageFacts);
         setProcessed((value) => value + 1);
+        // Stream this message's facts to the viewer as it is processed, not only at the end.
+        setFacts((prev) => [...prev, ...messageFacts]);
         return messageFacts;
       });
 
@@ -225,7 +227,6 @@ const DefaultStory = (_: StoryArgs) => {
     const { promise, interrupt } = runInterruptible(program);
     interruptRef.current = interrupt;
     return promise.then((result) => {
-      setFacts(collected);
       setStats([
         { label: 'Messages', value: result.stats.total },
         { label: 'Threads', value: result.threads.length },
@@ -305,9 +306,13 @@ const DefaultStory = (_: StoryArgs) => {
     [space],
   );
 
-  // Start the selected pipeline over the current input; the processed counter resets first.
+  // Start the selected pipeline over the current input; reset the live views so facts/objects stream
+  // in fresh as the run proceeds (rather than appearing only at completion).
   const handleStart = useCallback(() => {
     setProcessed(0);
+    setFacts([]);
+    setStats([]);
+    setDetails([]);
     setRunning(true);
     const documentText = input.mode === 'document' ? input.text : SAMPLE_CONTENT;
     const transcript = input.mode === 'record' ? input.transcript : documentText;
