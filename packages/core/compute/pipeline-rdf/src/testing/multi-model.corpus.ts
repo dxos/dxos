@@ -91,12 +91,13 @@ export type Accuracy = {
 
 const EXPECTED_BY_SOURCE = new Map(EVAL_DOCS.map((entry) => [entry.source, entry.expected]));
 
-// Loose surface-string match: lowercase, trim, collapse whitespace, drop trailing punctuation.
+// Loose surface-string match: lowercase, trim, collapse whitespace AND hyphens (so "is-a" ≈ "is a"),
+// drop trailing punctuation.
 const normalize = (value: string): string =>
   value
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, ' ')
+    .replace(/[-\s]+/g, ' ')
     .replace(/[.,;:!?]+$/, '');
 
 const termLabel = (term: Assertion['subject']): string =>

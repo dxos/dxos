@@ -339,7 +339,9 @@ const DefaultStory = ({ ai }: StoryArgs) => {
     const run =
       pipelineId === 'rdf' ? runRdf(documentText) : pipelineId === 'email' ? runEmail() : runTranscription(transcript);
     void run
-      .catch(() => {})
+      // Surface a failed run in the Stats tab rather than silently doing nothing (e.g. an unreachable
+      // backend or a model whose output could not be parsed).
+      .catch((error) => setStats([{ label: 'Error', value: error instanceof Error ? error.message : String(error) }]))
       .finally(() => {
         setRunning(false);
         interruptRef.current = null;
