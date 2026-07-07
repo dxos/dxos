@@ -12,7 +12,7 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
-import { dbg, log } from '@dxos/log';
+import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import {
   QueryReactivity,
@@ -329,7 +329,6 @@ export class IndexQuerySource implements QuerySource {
 
     const resultsWithNoSchema = results.filter((_) => _.result && !Entity.getType(_.result));
     if (resultsWithNoSchema.length > 0) {
-      dbg(resultsWithNoSchema);
       log.warn('unable to resolve schema for queried objects', {
         count: resultsWithNoSchema.length,
         types: Array.dedupe(results.map((_) => _.result && Entity.getTypeURI(_.result)?.toString())),

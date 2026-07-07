@@ -754,13 +754,13 @@ describe('Integration tests', () => {
     }
   });
 
-  test('db.add and db.appendToFeed throw when adding plain objects', async () => {
+  test('db.add and db.appendToFeed throw when adding plain objects', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
 
     const plainObj = { name: 'john' };
     // Cast to any to bypass static type-checking and verify runtime validation.
-    expect(() => db.add(plainObj as any)).to.throw(TypeError);
+    expect(() => db.add(plainObj as any)).toThrow(TypeError);
 
     const feed = db.add(Feed.make({ name: 'people' }));
     await db.flush();

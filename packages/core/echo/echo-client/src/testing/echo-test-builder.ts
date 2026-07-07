@@ -322,7 +322,9 @@ export const createDataAssertion = ({
 
   return {
     seed: async (db: EchoDatabase) => {
-      seedObjects = range(numObjects).map((idx) => db.add(Obj.make(TestSchema.Expando, { type: 'task', title: 'A', idx })));
+      seedObjects = range(numObjects).map((idx) =>
+        db.add(Obj.make(TestSchema.Expando, { type: 'task', title: 'A', idx })),
+      );
       await db.flush();
     },
     waitForReplication: (db: EchoDatabase) => {

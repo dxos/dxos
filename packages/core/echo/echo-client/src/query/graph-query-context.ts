@@ -18,7 +18,12 @@ import { prohibitSignalActions } from '../guarded-scope';
 import { type DatabaseImpl } from '../proxy-db';
 import { type QueryContext } from './query-context';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
-import { type WorkingSetDataProvider, type WorkingSetFeedItem, type WorkingSetItem, WorkingSetQueryExecutor } from './working-set-executor';
+import {
+  type WorkingSetDataProvider,
+  type WorkingSetFeedItem,
+  type WorkingSetItem,
+  WorkingSetQueryExecutor,
+} from './working-set-executor';
 
 export type GraphQueryContextProps = {
   // TODO(dmaretskyi): Make async.
@@ -392,7 +397,8 @@ export class SpaceQuerySource implements QuerySource {
         this._ctx.onDispose(handle.beginPolling());
         handle.updated.on(this._ctx, () => this._onUpdate());
       } catch (err) {
-        // Feed service not connected yet.
+        // Feed service not connected yet; index-only queries still resolve via the host executor.
+        log.verbose('feed handle setup failed during update', { feedUri, error: err });
       }
     }
 
@@ -437,10 +443,7 @@ export class SpaceQuerySource implements QuerySource {
     let result = this._database.getObjectById<Obj.Unknown>(item.objectId, { deleted: true });
     if (!result && item.queueId) {
       const feedUri = EID.make({ spaceId: this.spaceId, entityId: item.queueId });
-      const feedEntity = this._database
-        ._tryGetFeedHandle(feedUri)
-        ?.getObjectsSync()
-        .find((entity) => entity.id === item.objectId);
+      const feedEntity = this._database._tryGetFeedHandle(feedUri)?.getCachedObjectById(item.objectId);
       if (feedEntity && Obj.isObject(feedEntity)) {
         result = feedEntity;
       }

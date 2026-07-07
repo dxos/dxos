@@ -19,20 +19,8 @@ describe('Feed query pagination', () => {
     await builder.close();
   });
 
-  const setupFeedWithTasks = async (titles: string[]) => {
-    const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
-    const db = await peer.createDatabase();
-    const feed = db.add(Feed.make({ name: 'pagination-feed' }));
-
-    for (const title of titles) {
-      await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title })]);
-    }
-
-    return { db, feed, feedUri: Feed.getFeedUri(feed)! };
-  };
-
   test('limit restricts feed-scoped results (from feed)', async ({ expect }) => {
-    const { db, feed } = await setupFeedWithTasks(['A', 'B', 'C', 'D', 'E']);
+    const { db, feed } = await setupFeedWithTasks(builder, ['A', 'B', 'C', 'D', 'E']);
 
     const results = await db.query(Query.select(Filter.type(TestSchema.Task)).limit(2).from(feed)).run();
 
@@ -40,18 +28,16 @@ describe('Feed query pagination', () => {
   });
 
   test('limit restricts feed-scoped results (Scope.feed)', async ({ expect }) => {
-    const { db, feedUri } = await setupFeedWithTasks(['A', 'B', 'C', 'D', 'E']);
+    const { db, feedUri } = await setupFeedWithTasks(builder, ['A', 'B', 'C', 'D', 'E']);
 
-    const results = await db
-      .query(Query.select(Filter.type(TestSchema.Task)).limit(3).from(Scope.feed(feedUri)))
-      .run();
+    const results = await db.query(Query.select(Filter.type(TestSchema.Task)).limit(3).from(Scope.feed(feedUri))).run();
 
     expect(results).toHaveLength(3);
   });
 
   test('skip offsets feed-scoped results', async ({ expect }) => {
     const titles = ['first', 'second', 'third', 'fourth', 'fifth'];
-    const { db, feed } = await setupFeedWithTasks(titles);
+    const { db, feed } = await setupFeedWithTasks(builder, titles);
 
     const all = await db.query(Query.select(Filter.type(TestSchema.Task)).from(feed)).run();
     const skipped = await db
@@ -65,7 +51,7 @@ describe('Feed query pagination', () => {
 
   test('skip + limit returns a window in insertion order', async ({ expect }) => {
     const titles = ['a', 'b', 'c', 'd', 'e', 'f'];
-    const { db, feed } = await setupFeedWithTasks(titles);
+    const { db, feed } = await setupFeedWithTasks(builder, titles);
 
     const window = await db
       .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural()).skip(1).limit(3).from(feed))
@@ -77,7 +63,7 @@ describe('Feed query pagination', () => {
 
   test('orderBy natural preserves append order', async ({ expect }) => {
     const titles = ['one', 'two', 'three'];
-    const { db, feed } = await setupFeedWithTasks(titles);
+    const { db, feed } = await setupFeedWithTasks(builder, titles);
 
     const results = await db
       .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural()).from(feed))
@@ -88,7 +74,7 @@ describe('Feed query pagination', () => {
 
   test('orderBy natural desc reverses append order', async ({ expect }) => {
     const titles = ['one', 'two', 'three'];
-    const { db, feed } = await setupFeedWithTasks(titles);
+    const { db, feed } = await setupFeedWithTasks(builder, titles);
 
     const results = await db
       .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural('desc')).from(feed))
@@ -98,15 +84,10 @@ describe('Feed query pagination', () => {
   });
 
   test('orderBy property with limit on feed scope', async ({ expect }) => {
-    const { db, feed } = await setupFeedWithTasks(['charlie', 'alpha', 'bravo']);
+    const { db, feed } = await setupFeedWithTasks(builder, ['charlie', 'alpha', 'bravo']);
 
     const results = await db
-      .query(
-        Query.select(Filter.type(TestSchema.Task))
-          .orderBy(Order.property('title', 'asc'))
-          .limit(2)
-          .from(feed),
-      )
+      .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'asc')).limit(2).from(feed))
       .run();
 
     expect(results).toHaveLength(2);
@@ -114,7 +95,7 @@ describe('Feed query pagination', () => {
   });
 
   test('limit larger than feed size returns all items', async ({ expect }) => {
-    const { db, feed } = await setupFeedWithTasks(['only']);
+    const { db, feed } = await setupFeedWithTasks(builder, ['only']);
 
     const results = await db.query(Query.select(Filter.type(TestSchema.Task)).limit(100).from(feed)).run();
 
@@ -122,7 +103,7 @@ describe('Feed query pagination', () => {
   });
 
   test('skip beyond feed size returns empty', async ({ expect }) => {
-    const { db, feed } = await setupFeedWithTasks(['a', 'b']);
+    const { db, feed } = await setupFeedWithTasks(builder, ['a', 'b']);
 
     const results = await db
       .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural()).skip(10).from(feed))
@@ -173,6 +154,18 @@ describe('Feed query pagination', () => {
       .run();
 
     expect(results).toHaveLength(2);
-    expect(results.every((obj) => (obj as TestSchema.Task).title.startsWith('feed-'))).toBe(true);
+    expect(results.every((obj) => ((obj as TestSchema.Task).title ?? '').startsWith('feed-'))).toBe(true);
   });
 });
+
+const setupFeedWithTasks = async (builder: EchoTestBuilder, titles: string[]) => {
+  const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+  const db = await peer.createDatabase();
+  const feed = db.add(Feed.make({ name: 'pagination-feed' }));
+
+  for (const title of titles) {
+    await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title })]);
+  }
+
+  return { db, feed, feedUri: Feed.getFeedUri(feed)! };
+};

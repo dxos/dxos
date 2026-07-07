@@ -300,21 +300,19 @@ The `LayerContext.conversation` field is fed from the spawn `environment.convers
 `LayerSpec.make`'s factory must return `Layer<Provides, never, Requires>` — the error channel is `never`, so the layer body cannot use typed `Effect.fail` to signal "this context is invalid". Use `Effect.die(new ServiceNotAvailableError(tag.key))` inside the `Layer.scoped` body when a required `LayerContext` field is missing:
 
 ```ts
-LayerSpec.make(
-  { affinity: 'process', requires: [Database.Service], provides: [AiContext.Service] },
-  (context) =>
-    Layer.scoped(
-      AiContext.Service,
-      Effect.gen(function* () {
-        if (!context.conversation) {
-          return yield* Effect.die(new ServiceNotAvailableError(AiContext.Service.key));
-        }
-        const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
-        const runtime = yield* Effect.runtime<Database.Service>();
-        const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-        return { binder };
-      }),
-    ),
+LayerSpec.make({ affinity: 'process', requires: [Database.Service], provides: [AiContext.Service] }, (context) =>
+  Layer.scoped(
+    AiContext.Service,
+    Effect.gen(function* () {
+      if (!context.conversation) {
+        return yield* Effect.die(new ServiceNotAvailableError(AiContext.Service.key));
+      }
+      const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
+      const runtime = yield* Effect.runtime<Database.Service>();
+      const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+      return { binder };
+    }),
+  ),
 );
 ```
 

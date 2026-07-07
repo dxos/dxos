@@ -11,6 +11,7 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
+import { invariant } from '@dxos/invariant';
 import { DXN, EID } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
@@ -206,13 +207,12 @@ export const query: {
   <F extends Filter.Any>(
     filter: F,
   ): (feed: Feed) => QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
-} = Function.dual(2, (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
-  Database.query(
-    (Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter)).from(
-      Scope.feed(getFeedUri(feed)!.toString()),
-    ),
-  ),
-);
+} = Function.dual(2, (feed: Feed, queryOrFilter: Query.Any | Filter.Any) => {
+  const feedUri = getFeedUri(feed);
+  invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
+  const query = Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter);
+  return Database.query(query.from(Scope.feed(feedUri.toString())));
+});
 
 /**
  * Syncs the feed with the server.

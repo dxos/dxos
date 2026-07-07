@@ -10,11 +10,11 @@ Remove parallel feed-query implementations and route all feed reads through the 
 
 Three overlapping paths serve feed queries:
 
-| Path | Location | Behavior |
-|------|----------|----------|
-| `Feed.FeedService` | `@dxos/echo/Feed.ts` | Deprecated Effect tag; unused except vestigial test wiring |
-| `DatabaseImpl._queryFeed` | `echo-client/proxy-db/database.ts` | Intercepts `Scope.feed` queries and dispatches to `FeedHandle.query` when client-evaluable |
-| `FeedQueryContext` | `echo-client/feed/feed-query-context.ts` | In-memory fetch + filter + order/skip/limit over polled queue JSON |
+| Path                      | Location                                 | Behavior                                                                                   |
+| ------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `Feed.FeedService`        | `@dxos/echo/Feed.ts`                     | Deprecated Effect tag; unused except vestigial test wiring                                 |
+| `DatabaseImpl._queryFeed` | `echo-client/proxy-db/database.ts`       | Intercepts `Scope.feed` queries and dispatches to `FeedHandle.query` when client-evaluable |
+| `FeedQueryContext`        | `echo-client/feed/feed-query-context.ts` | In-memory fetch + filter + order/skip/limit over polled queue JSON                         |
 
 Space queries use `DatabaseImpl._query` → `Hypergraph.query` → working-set executor (client) or SQL indexer (host). Feed scopes are already supported in both executors (`FeedScope` in query plan).
 

@@ -7,7 +7,14 @@ import * as Predicate from 'effect/Predicate';
 import { DeferredTask, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, type Feed, Obj, type Ref } from '@dxos/echo';
-import { type ObjectJSON, ParentId, SelfURIId, assertObjectModel, isProxy, setRefResolverOnData } from '@dxos/echo/internal';
+import {
+  type ObjectJSON,
+  ParentId,
+  SelfURIId,
+  assertObjectModel,
+  isProxy,
+  setRefResolverOnData,
+} from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
@@ -125,8 +132,6 @@ export class FeedHandle {
   private _refreshId = 0;
   private _loadObjectsPromise: Promise<Entity.Unknown[]> | undefined;
 
-
-
   constructor(
     private readonly _service: FeedProtocol.FeedService,
     private readonly _refResolver: Ref.Resolver,
@@ -171,7 +176,9 @@ export class FeedHandle {
   async append(items: Entity.Unknown[]): Promise<void> {
     for (const item of items) {
       if (!isProxy(item) && !Entity.isEntity(item)) {
-        throw new TypeError('feed.append expects reactive ECHO objects. Plain objects must be created using Obj.make(Type, props).');
+        throw new TypeError(
+          'feed.append expects reactive ECHO objects. Plain objects must be created using Obj.make(Type, props).',
+        );
       }
     }
     items.forEach((item) => assertObjectModel(item));
@@ -229,8 +236,6 @@ export class FeedHandle {
       this.updated.emit();
     }
   }
-
-
 
   async sync({
     shouldPush = true,
