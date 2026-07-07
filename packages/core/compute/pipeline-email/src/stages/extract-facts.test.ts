@@ -15,8 +15,8 @@ import { mockAiService } from '@dxos/pipeline-rdf/testing';
 import { captureSink } from '@dxos/pipeline/testing';
 import { Message } from '@dxos/types';
 
-import { type FactIndexer, extractFactsStage } from './extract-stage';
-import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from './facts';
+import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../facts';
+import { type FactIndexer, extractFactsStage } from './extract-facts';
 
 // One fact per message from the mock LLM; proves the stage persists into the store.
 const LLM_OUTPUT = {

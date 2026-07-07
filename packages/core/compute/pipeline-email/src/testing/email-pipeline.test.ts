@@ -29,10 +29,10 @@ import { captureSink } from '@dxos/pipeline/testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { type FactIndexer, extractFactsStage } from '../extract-stage';
-import { buildEntityIndex, reconcileFactEntities } from '../fact-index';
 import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../facts';
-import { buildThreads } from '../threads';
+import { buildEntityIndex, reconcileFactEntities } from '../internal/fact-index';
+import { buildThreads } from '../internal/threads';
+import { type FactIndexer, extractFactsStage } from '../stages/extract-facts';
 import { Thread } from '../types';
 import { emailToMessage } from './email-fixtures';
 import { parquetSource } from './parquet';

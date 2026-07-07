@@ -11,7 +11,8 @@ import { EffectEx } from '@dxos/effect';
 import { Pipeline } from '@dxos/pipeline';
 import { Message } from '@dxos/types';
 
-import { EmailPipelineCtx, emptyStats, statsStage } from './stages';
+import { EmailPipelineCtx, emptyStats } from './context';
+import { statsStage } from './stats';
 
 describe('statsStage', () => {
   test('tallies senders and spam across the stream', async ({ expect }) => {

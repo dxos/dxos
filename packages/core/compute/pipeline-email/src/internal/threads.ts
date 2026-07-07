@@ -5,9 +5,9 @@
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { messageSource } from './facts';
+import { messageSource } from '../facts';
+import { Thread, type ThreadState } from '../types';
 import { deriveThreadId } from './threading';
-import { Thread, type ThreadState } from './types';
 
 const DEFAULT_STALE_PERIOD_MS = 14 * 24 * 60 * 60 * 1000;
 
