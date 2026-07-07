@@ -17,15 +17,15 @@ export class QueryServiceImpl implements QueryService {
   ) {}
 
   execQuery(request: QueryRequest): Stream<QueryResponse> {
-    log.info('execQuery', { request });
+    log('execQuery', { request });
 
     return Stream.fromPromise<QueryResponse>(
       (async () => {
         try {
           this._queryCount++;
-          log.info('begin query', { request });
+          log.verbose('begin query', { request });
           using queryResponse = await this._dataService.execQuery(this._executionContext, request);
-          log.info('query response', { resultCount: queryResponse.results?.length });
+          log.verbose('query response', { resultCount: queryResponse.results?.length });
           return structuredClone(queryResponse);
         } catch (error) {
           log.error('query failed', { err: error });
