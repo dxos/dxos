@@ -43,7 +43,7 @@ Examples:
 
 /**
  * Translate a natural-language question into a structured {@link SemanticQuery}, grounded in the fact
- * ontology. Pair with {@link SemanticStoreApi.query} (which runs in the browser, unlike raw SPARQL).
+ * ontology. Pair with {@link FactStoreApi.query} (which runs in the browser, unlike raw SPARQL).
  */
 export const generateQuery = (
   question: string,

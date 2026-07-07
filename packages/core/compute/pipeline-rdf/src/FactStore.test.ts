@@ -7,7 +7,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { SemanticStore } from './SemanticStore';
+import { FactStore } from './FactStore';
 import { type Fact } from './types';
 
 const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
@@ -20,13 +20,13 @@ const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
   ...over,
 });
 
-const TestLayer = SemanticStore.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })));
+const TestLayer = FactStore.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })));
 
-describe('SemanticStore', () => {
+describe('FactStore', () => {
   it.effect(
     'stores and queries the Alice fact by subject entity',
     Effect.fnUntraced(function* () {
-      const store = yield* SemanticStore;
+      const store = yield* FactStore;
       yield* store.putFacts([mk({ id: 'f1' })]);
       const facts = yield* store.query({ subjectEntity: 'alice' });
       yield* Effect.sync(() => {
@@ -43,7 +43,7 @@ describe('SemanticStore', () => {
   it.effect(
     'keeps conflicting facts about the same subject/predicate',
     Effect.fnUntraced(function* () {
-      const store = yield* SemanticStore;
+      const store = yield* FactStore;
       yield* store.putFacts([
         mk({ id: 'f1' }),
         mk({
@@ -64,7 +64,7 @@ describe('SemanticStore', () => {
   it.effect(
     'matches a predicate by its normalized relation key (case/inflection)',
     Effect.fnUntraced(function* () {
-      const store = yield* SemanticStore;
+      const store = yield* FactStore;
       yield* store.putFacts([
         mk({
           id: 'f1',
@@ -84,7 +84,7 @@ describe('SemanticStore', () => {
   it.effect(
     'query with no filters returns all facts',
     Effect.fnUntraced(function* () {
-      const store = yield* SemanticStore;
+      const store = yield* FactStore;
       yield* store.putFacts([mk({ id: 'f1' })]);
       const facts = yield* store.query({});
       yield* Effect.sync(() => {
@@ -98,7 +98,7 @@ describe('SemanticStore', () => {
   it.effect(
     'cursor round-trips',
     Effect.fnUntraced(function* () {
-      const store = yield* SemanticStore;
+      const store = yield* FactStore;
       yield* store.setCursor('dxn:q:m1', 'hashA');
       const a = yield* store.cursor('dxn:q:m1');
       yield* store.setCursor('dxn:q:m1', 'hashB');
@@ -114,7 +114,7 @@ describe('SemanticStore', () => {
   it.effect(
     'clear removes all facts and cursors',
     Effect.fnUntraced(function* () {
-      const store = yield* SemanticStore;
+      const store = yield* FactStore;
       yield* store.putFacts([mk({ id: 'f1' })]);
       yield* store.setCursor('dxn:q:m1', 'hashA');
 
@@ -136,7 +136,7 @@ describe('SemanticStore', () => {
   it.effect(
     'filters by entity (object position), source, and minConfidence',
     Effect.fnUntraced(function* () {
-      const store = yield* SemanticStore;
+      const store = yield* FactStore;
       yield* store.putFacts([
         mk({ id: 'f1' }), // alice travelsTo paris, conf 0.6, source dxn:q:m1
         mk({

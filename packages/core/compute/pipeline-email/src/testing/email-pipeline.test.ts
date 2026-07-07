@@ -24,7 +24,7 @@ import { EffectEx } from '@dxos/effect';
 import { extractContact } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-import { SemanticPipeline, SemanticStore } from '@dxos/pipeline-rdf';
+import { FactStore, SemanticPipeline } from '@dxos/pipeline-rdf';
 import { captureSink } from '@dxos/pipeline/testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -234,7 +234,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
 
   // In-memory fact substrate for this run; shares the Ollama-backed AiService the extraction resolves
   // its model through (pipeline-rdf's ExtractOptions carries the model + provider).
-  const factRuntime = ManagedRuntime.make(SemanticStore.layerMemory.pipe(Layer.provideMerge(OllamaAiServiceLayer)));
+  const factRuntime = ManagedRuntime.make(FactStore.layerMemory.pipe(Layer.provideMerge(OllamaAiServiceLayer)));
 
   let builder: EchoTestBuilder;
   let db: Database.Database;
@@ -341,7 +341,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
       // extract-stage.test.ts (mockAiService). Assert only that the substrate is queryable.
       const facts = await factRuntime.runPromise(
         Effect.gen(function* () {
-          const store = yield* SemanticStore;
+          const store = yield* FactStore;
           return yield* store.query({});
         }),
       );

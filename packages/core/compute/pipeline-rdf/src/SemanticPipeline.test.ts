@@ -13,6 +13,7 @@ import { readFileSync } from 'node:fs';
 import { Pipeline } from '@dxos/pipeline';
 
 import { SemanticIndexError } from './errors';
+import { FactStore } from './FactStore';
 import {
   DEFAULT_EXTRACTION_RULES,
   type DocumentFacts,
@@ -25,7 +26,6 @@ import {
   normalizeEntityId,
   normalizeFactsStage,
 } from './SemanticPipeline';
-import { SemanticStore } from './SemanticStore';
 import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing';
 import { type Fact } from './types';
 
@@ -71,12 +71,12 @@ const LLM_OUTPUT = {
   ],
 };
 
-const TestLayer = SemanticStore.layer.pipe(
+const TestLayer = FactStore.layer.pipe(
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
   Layer.provideMerge(mockAiService(LLM_OUTPUT)),
 );
 
-const FailingLayer = SemanticStore.layer.pipe(
+const FailingLayer = FactStore.layer.pipe(
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
   Layer.provideMerge(failingAiService()),
 );
@@ -143,7 +143,7 @@ describe('SemanticPipeline', () => {
 
       const first = yield* runOnce();
       const second = yield* runOnce(); // Unchanged source → skipped and dropped.
-      const store = yield* SemanticStore;
+      const store = yield* FactStore;
       const persisted = yield* store.query({ predicate: 'travelsTo' });
       yield* Effect.sync(() => {
         if (first.length !== 1 || first[0].facts.length !== 1) {
@@ -193,7 +193,7 @@ describe('SemanticPipeline', () => {
           date: '2026-06-06T00:00:00.000Z',
         },
       ]);
-      const store = yield* SemanticStore;
+      const store = yield* FactStore;
       const facts = yield* store.query({ predicate: 'travelsTo' });
       yield* Effect.sync(() => {
         if (facts.length !== 1) {
@@ -252,7 +252,7 @@ describe('SemanticPipeline', () => {
       const ai = countingAiService({
         facts: [{ subject: 'Alice', predicate: 'travelsTo', object: 'Paris', factuality: 'PR+', polarity: '+' }],
       });
-      const layer = SemanticStore.layer.pipe(
+      const layer = FactStore.layer.pipe(
         Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
         Layer.provideMerge(ai.layer),
       );
@@ -289,7 +289,7 @@ describe('SemanticPipeline', () => {
     'extractFacts derives facts with only an AiService (no store)',
     Effect.fnUntraced(
       function* () {
-        // Layer provides ONLY AiService — no SemanticStore / SqlClient — proving derivation is store-free.
+        // Layer provides ONLY AiService — no FactStore / SqlClient — proving derivation is store-free.
         const facts = yield* extractFacts([
           {
             text: "I think I'm probably going to Paris next week",
@@ -390,11 +390,11 @@ describe('SemanticPipeline', () => {
         facts: [{ subject: 'Composer', predicate: 'discussedIn', object: 'Discord', factuality: 'CT+', polarity: '+' }],
       });
       // In-memory (browser/test) store layer — no SQLite.
-      const layer = SemanticStore.layerMemory.pipe(Layer.provideMerge(ai.layer));
+      const layer = FactStore.layerMemory.pipe(Layer.provideMerge(ai.layer));
       yield* Effect.gen(function* () {
         const docs = loadDiscordDocs();
         yield* SemanticPipeline.run(docs);
-        const store = yield* SemanticStore;
+        const store = yield* FactStore;
 
         // Structured query (builds + runs SPARQL) and the raw SELECT path used by the story's NL→SPARQL query.
         const byEntity = yield* store.query({ entity: 'composer' });

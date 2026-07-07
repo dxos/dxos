@@ -10,11 +10,11 @@ import { type AiService } from '@dxos/ai';
 import { Pipeline, Stage } from '@dxos/pipeline';
 
 import { SemanticIndexError } from './errors';
+import { FactStore } from './FactStore';
 import { normalizePredicate } from './internal/sparql/normalize-predicate';
 import { chunk } from './internal/stages/chunk';
 import { DEFAULT_MODEL, type ExtractDocument, type ExtractOptions, extractChunk } from './internal/stages/extract';
 import { hashText } from './internal/stages/reconcile';
-import { SemanticStore } from './SemanticStore';
 import { type Fact } from './types';
 
 export { DEFAULT_EXTRACTION_RULES, buildExtractionPrompt } from './internal/stages/extract';
@@ -46,7 +46,7 @@ const isGrounded = (label: string) => {
 
 /**
  * Extract → link (slug) facts for a single document. Pure derivation: chunk → LLM extract → map to
- * {@link Fact}; touches neither the {@link SemanticStore} nor any cursor, so it can generate facts
+ * {@link Fact}; touches neither the {@link FactStore} nor any cursor, so it can generate facts
  * from a raw document with only an {@link AiService} in context (e.g. a UI preview).
  */
 export const extractDocFacts = (
@@ -118,7 +118,7 @@ export type DocumentFacts = {
 
 /**
  * Pure extraction stage: derives {@link Fact}s per document via {@link extractDocFacts} without
- * touching the {@link SemanticStore} or any cursor — only an {@link AiService} in context.
+ * touching the {@link FactStore} or any cursor — only an {@link AiService} in context.
  */
 export const extractFactsStage = (
   options?: ExtractOptions,
@@ -128,7 +128,7 @@ export const extractFactsStage = (
   );
 
 /**
- * Indexing stage: extract → link (slug) → persist into the {@link SemanticStore}, building the fact
+ * Indexing stage: extract → link (slug) → persist into the {@link FactStore}, building the fact
  * database subsequent stages can query from context. Incremental: a document whose content hash
  * matches the stored cursor is skipped entirely (no LLM call, no duplicate facts) and dropped from
  * the stream. A CHANGED source currently appends new competing facts (append-only model) and
@@ -136,10 +136,10 @@ export const extractFactsStage = (
  */
 export const indexFactsStage = (
   options?: ExtractOptions,
-): Stage.Stage<ExtractDocument, DocumentFacts, SemanticIndexError, SemanticStore | AiService.AiService> =>
+): Stage.Stage<ExtractDocument, DocumentFacts, SemanticIndexError, FactStore | AiService.AiService> =>
   Stage.map('index-facts', (doc: ExtractDocument) =>
     Effect.gen(function* () {
-      const store = yield* SemanticStore;
+      const store = yield* FactStore;
       const hash = hashText(doc.text);
       const prev = yield* store.cursor(doc.source);
       if (prev === hash) {
@@ -191,7 +191,7 @@ export const SemanticPipeline = {
   run: (
     docs: readonly ExtractDocument[],
     options?: ExtractOptions,
-  ): Effect.Effect<Fact[], SemanticIndexError, SemanticStore | AiService.AiService> =>
+  ): Effect.Effect<Fact[], SemanticIndexError, FactStore | AiService.AiService> =>
     Effect.gen(function* () {
       const allFacts: Fact[] = [];
       yield* Stream.fromIterable(docs).pipe(

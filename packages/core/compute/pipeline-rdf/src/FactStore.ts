@@ -21,7 +21,7 @@ import { type Fact } from './types';
 
 export { type SemanticQuery } from './internal/sparql/query-builder';
 
-export interface SemanticStoreApi {
+export interface FactStoreApi {
   /** Reify and persist facts as RDF triples (idempotent appends; no write-time merge). */
   readonly putFacts: (facts: readonly Fact[]) => Effect.Effect<void, SemanticIndexError>;
   /** Run a structured query over the stored facts via SPARQL and reassemble matching Facts. */
@@ -45,40 +45,40 @@ const reassemble = (quads: Quad[]): Effect.Effect<Fact[], SemanticIndexError> =>
 
 // Raw SPARQL execution via Comunica. The engine is constructed lazily so persist-only flows never
 // pay for it — and so the memory layer can avoid it entirely (Comunica does not run in the browser).
-const makeSelect = (source: Parameters<typeof selectTriples>[1]): SemanticStoreApi['select'] => {
+const makeSelect = (source: Parameters<typeof selectTriples>[1]): FactStoreApi['select'] => {
   let engine: ReturnType<typeof makeEngine> | undefined;
   const getEngine = () => (engine ??= makeEngine());
   return (sparql) => selectTriples(getEngine(), source, sparql).pipe(Effect.flatMap(reassemble));
 };
 
-export class SemanticStore extends Context.Tag('@dxos/pipeline-rdf/SemanticStore')<SemanticStore, SemanticStoreApi>() {
-  static layer: Layer.Layer<SemanticStore, never, SqlClient.SqlClient> = Layer.scoped(
-    SemanticStore,
+export class FactStore extends Context.Tag('@dxos/pipeline-rdf/FactStore')<FactStore, FactStoreApi>() {
+  static layer: Layer.Layer<FactStore, never, SqlClient.SqlClient> = Layer.scoped(
+    FactStore,
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       // Schema creation is a fatal store-construction failure (not a recoverable per-operation error), so die here.
       yield* migrate().pipe(Effect.orDie);
       const source = makeSqliteSource(sql);
 
-      const putFacts: SemanticStoreApi['putFacts'] = (facts) =>
+      const putFacts: FactStoreApi['putFacts'] = (facts) =>
         insertQuads(sql, facts.flatMap(factToTriples)).pipe(
           Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to persist facts', cause })),
         );
 
-      const cursor: SemanticStoreApi['cursor'] = (src) =>
+      const cursor: FactStoreApi['cursor'] = (src) =>
         sql<{ hash: string }>`SELECT hash FROM cursors WHERE source = ${src}`.pipe(
           Effect.map((rows) => rows[0]?.hash),
           Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to read cursor', cause })),
         );
 
-      const setCursor: SemanticStoreApi['setCursor'] = (src, hash) =>
+      const setCursor: FactStoreApi['setCursor'] = (src, hash) =>
         sql`INSERT INTO cursors (source, hash) VALUES (${src}, ${hash})
             ON CONFLICT(source) DO UPDATE SET hash = ${hash}`.pipe(
           Effect.asVoid,
           Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to write cursor', cause })),
         );
 
-      const clear: SemanticStoreApi['clear'] = () =>
+      const clear: FactStoreApi['clear'] = () =>
         Effect.gen(function* () {
           yield* sql`DELETE FROM triples`;
           yield* sql`DELETE FROM entities`;
@@ -91,7 +91,7 @@ export class SemanticStore extends Context.Tag('@dxos/pipeline-rdf/SemanticStore
       // Structured query runs directly over the `triples` table (no SPARQL engine), so the SQLite
       // path works everywhere (browser worker / node / CF DO) — Comunica does not bundle for browser
       // or Workers. `select` (raw SPARQL via Comunica) stays for node-only callers/tests.
-      const query: SemanticStoreApi['query'] = (q) => querySqlite(sql, q);
+      const query: FactStoreApi['query'] = (q) => querySqlite(sql, q);
 
       return { putFacts, cursor, setCursor, query, select: makeSelect(source), clear };
     }),
@@ -102,23 +102,23 @@ export class SemanticStore extends Context.Tag('@dxos/pipeline-rdf/SemanticStore
    * run directly over the store (no SPARQL engine), so the browser path avoids Comunica entirely;
    * `select` (raw SPARQL) still uses Comunica and so is server-side only.
    */
-  static layerMemory: Layer.Layer<SemanticStore> = Layer.sync(SemanticStore, () => {
+  static layerMemory: Layer.Layer<FactStore> = Layer.sync(FactStore, () => {
     const source = makeMemorySource();
     const cursors = new Map<string, string>();
 
-    const putFacts: SemanticStoreApi['putFacts'] = (facts) =>
+    const putFacts: FactStoreApi['putFacts'] = (facts) =>
       Effect.sync(() => insertQuadsMemory(source, facts.flatMap(factToTriples)));
 
-    const cursor: SemanticStoreApi['cursor'] = (src) => Effect.sync(() => cursors.get(src));
-    const setCursor: SemanticStoreApi['setCursor'] = (src, hash) => Effect.sync(() => void cursors.set(src, hash));
+    const cursor: FactStoreApi['cursor'] = (src) => Effect.sync(() => cursors.get(src));
+    const setCursor: FactStoreApi['setCursor'] = (src, hash) => Effect.sync(() => void cursors.set(src, hash));
 
-    const query: SemanticStoreApi['query'] = (q) =>
+    const query: FactStoreApi['query'] = (q) =>
       Effect.try({
         try: () => queryMemory(source, q),
         catch: (cause) => new SemanticIndexError({ message: 'Failed to query facts', cause }),
       });
 
-    const clear: SemanticStoreApi['clear'] = () =>
+    const clear: FactStoreApi['clear'] = () =>
       Effect.sync(() => {
         source.removeQuads(source.getQuads(null, null, null, null));
         cursors.clear();

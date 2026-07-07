@@ -21,9 +21,9 @@ Six `@dxos/pipeline` stages over a `Message` stream, in order:
 1. **summarize** — LLM summary + spam flag appended to the message (needs `AiService`).
 2. **extract-contacts** — `@dxos/extractor-lib` `extractContact` → `Person` / `Organization` ECHO objects (needs `AiService` + ECHO `Database`).
 3. **stats** — pure-JS running tallies (senders, recipients, spam count).
-4. **extract-facts** — `pipeline-rdf` `extractFactsStage` → semantic facts in `SemanticStore` (needs `AiService` + `SemanticStore`).
+4. **extract-facts** — `pipeline-rdf` `extractFactsStage` → semantic facts in `FactStore` (needs `AiService` + `FactStore`).
 5. **threads** — `buildThreads` → `Thread` ECHO objects (needs ECHO `Database`).
-6. **topics** — crawler `extractTopics` over the accumulated facts → `TopicReport` (needs `SemanticStore`).
+6. **topics** — crawler `extractTopics` over the accumulated facts → `TopicReport` (needs `FactStore`).
 
 ## Key decisions (from brainstorming)
 
@@ -39,7 +39,7 @@ Six `@dxos/pipeline` stages over a `Message` stream, in order:
   `Thread` into a `ClientPlugin` space, shown in an ECHO-objects view.
 - **Config (Q5):** **Variant-driven.** Each story export is a pipeline configuration (Storybook args);
   the panel displays config read-only. Interactive per-stage editing is deferred.
-- **SemanticStore:** in-memory (`SemanticStore.layerMemory`) in the browser (no `better-sqlite3`).
+- **FactStore:** in-memory (`FactStore.layerMemory`) in the browser (no `better-sqlite3`).
 
 ## Architecture
 
@@ -79,14 +79,14 @@ self-contained (chosen over a central `switch`).
 
 Stage → view mapping:
 
-| Stage | OutputView | Status |
-| --- | --- | --- |
-| summarize | `SummaryView` (text + summary + spam flag) | new |
-| extract-contacts | `EchoObjectsView` (Person/Org) | new |
-| stats | `StatsView` (tallies) | new |
-| extract-facts | `FactViewer` + `EntityList` (fact-entities) | exist |
-| threads | `EchoObjectsView` (Thread) | new |
-| topics | `TopicsView` (`TopicReport`) | new |
+| Stage            | OutputView                                  | Status |
+| ---------------- | ------------------------------------------- | ------ |
+| summarize        | `SummaryView` (text + summary + spam flag)  | new    |
+| extract-contacts | `EchoObjectsView` (Person/Org)              | new    |
+| stats            | `StatsView` (tallies)                       | new    |
+| extract-facts    | `FactViewer` + `EntityList` (fact-entities) | exist  |
+| threads          | `EchoObjectsView` (Thread)                  | new    |
+| topics           | `TopicsView` (`TopicReport`)                | new    |
 
 ### Execution — `runPipeline`
 
@@ -96,7 +96,7 @@ A helper that, on Run:
 2. Composes them into a `@dxos/pipeline` stream from the selected message(s).
 3. Provides one merged layer: the config-selected `AiService`
    (`AiServiceTestingPreset('edge-remote')`, an Ollama preset, or a queued mock for fixture mode) +
-   `SemanticStore.layerMemory` + the ECHO space `Database`.
+   `FactStore.layerMemory` + the ECHO space `Database`.
 4. Uses `Stream.tap` between stages to advance the active-stage indicator (same pattern as the current
    Pipeline story).
 5. Accumulates each stage's result into per-stage state keyed by stage id (React state), which the
@@ -160,5 +160,5 @@ New story: `stories/EmailPipeline.stories.tsx`.
 ## Deferred (not in this design)
 
 - Interactive per-stage config editing (forms) — variants only for now.
-- `plugin-brain` productization (companion over the *current* document/email, real persistence).
+- `plugin-brain` productization (companion over the _current_ document/email, real persistence).
 - Predicate canonicalization strategy and the `valence`→`factuality` follow-ons tracked separately.

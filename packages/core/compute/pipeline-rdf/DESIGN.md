@@ -63,7 +63,7 @@ independently without re-extracting. Three layers, by increasing cost and contex
 ## Storage & query engine
 
 One SPARQL path: **Comunica (`@comunica/query-sparql-rdfjs`)** runs over a swappable RDF/JS
-`Source`. `SemanticStore.query` → `buildSparql` → Comunica → `Source.match()` in every
+`Source`. `FactStore.query` → `buildSparql` → Comunica → `Source.match()` in every
 configuration below; only the backend differs.
 
 | Config                 | Source                                              | Persistence | Platform          |

@@ -23,8 +23,8 @@ import {
 } from '@dxos/crawler';
 import { EffectEx } from '@dxos/effect';
 import {
+  FactStore,
   SemanticPipeline,
-  SemanticStore,
   type Type,
   buildSparql,
   generateQuery,
@@ -47,7 +47,7 @@ import {
 
 const CRAWL_STAGES: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
 
-const makeStore = () => ManagedRuntime.make(SemanticStore.layerMemory);
+const makeStore = () => ManagedRuntime.make(FactStore.layerMemory);
 
 // Browser persistence: the semantic store runs in-memory (OPFS SQLite is worker-only, so it can't run
 // on the storybook main thread), and the extracted facts are snapshotted to localStorage —
@@ -102,7 +102,7 @@ const DefaultStory = (_: StoryArgs) => {
       try {
         const saved: Type.Fact[] = JSON.parse(rawFacts);
         void getStore()
-          .runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.putFacts(saved))))
+          .runPromise(FactStore.pipe(Effect.flatMap((store) => store.putFacts(saved))))
           .then(() => setFacts(saved));
       } catch {
         // Ignore a malformed snapshot.
@@ -143,7 +143,7 @@ const DefaultStory = (_: StoryArgs) => {
     }
 
     void guard('crawl', async () => {
-      // Per-crawl frontier + agents + edge LLM; the SemanticStore comes from the persistent runtime so
+      // Per-crawl frontier + agents + edge LLM; the FactStore comes from the persistent runtime so
       // facts accumulate across crawls. `Layer.fresh` on the AI layer is REQUIRED: the Discord source
       // provides a CORS-proxy FetchHttpClient.Fetch, and Effect memoizes the shared FetchHttpClient
       // layer — without fresh, the edge-AI client inherits the proxy and routes LLM calls through
@@ -162,7 +162,7 @@ const DefaultStory = (_: StoryArgs) => {
           );
           const registry = yield* AgentRegistry;
           const crawled = yield* registry.list();
-          const store = yield* SemanticStore;
+          const store = yield* FactStore;
           const extracted = yield* store.query({});
           // Every message is observed by the agent-profile stage, so the summed counts == messages seen.
           const messages = crawled.reduce((total, agent) => total + agent.messageCount, 0);
@@ -181,7 +181,7 @@ const DefaultStory = (_: StoryArgs) => {
   };
 
   // Process a loaded text/markdown file through the pipeline (no Discord, no agent resolution) and
-  // refresh the facts from the store. Uses a fresh edge-AI layer for extraction; the SemanticStore
+  // refresh the facts from the store. Uses a fresh edge-AI layer for extraction; the FactStore
   // comes from the persistent runtime so file facts accumulate alongside crawled ones.
   const handleLoadFile = (name: string, text: string) =>
     void guard('file', async () => {
@@ -192,7 +192,7 @@ const DefaultStory = (_: StoryArgs) => {
       const results = await getStore().runPromise(
         Effect.gen(function* () {
           yield* SemanticPipeline.run([{ text, source: `file:${name}` }]);
-          const store = yield* SemanticStore;
+          const store = yield* FactStore;
           return yield* store.query({});
         }).pipe(Effect.provide(Layer.fresh(AiServiceTestingPreset('edge-remote')))),
       );
@@ -204,7 +204,7 @@ const DefaultStory = (_: StoryArgs) => {
   // Clear the persisted facts (store + snapshot) and the current context.
   const handleReset = () =>
     void guard('reset', async () => {
-      await getStore().runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.clear())));
+      await getStore().runPromise(FactStore.pipe(Effect.flatMap((store) => store.clear())));
       localStorage.removeItem(FACTS_STORAGE_KEY);
       setFacts([]);
       setContext(undefined);
@@ -226,7 +226,7 @@ const DefaultStory = (_: StoryArgs) => {
   const handleRunSparql = () =>
     void guard('sparql', async () => {
       const parsed = parseSparqlToQuery(query);
-      const results = await getStore().runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.query(parsed))));
+      const results = await getStore().runPromise(FactStore.pipe(Effect.flatMap((store) => store.query(parsed))));
       setFacts(results);
       setStatus(`SPARQL → ${results.length} fact(s)`);
     });
@@ -235,7 +235,7 @@ const DefaultStory = (_: StoryArgs) => {
   const handleResetQuery = () =>
     void guard('sparql', async () => {
       setQuery(DEFAULT_SPARQL);
-      const results = await getStore().runPromise(SemanticStore.pipe(Effect.flatMap((store) => store.query({}))));
+      const results = await getStore().runPromise(FactStore.pipe(Effect.flatMap((store) => store.query({}))));
       setFacts(results);
       setStatus(`Reset · ${results.length} fact(s)`);
     });
@@ -298,7 +298,7 @@ const SAMPLE_FACTS: Type.Fact[] = [
 ];
 
 /**
- * No crawl: seed an in-memory {@link SemanticStore} with a hand-authored Alice/Bob corpus, read the
+ * No crawl: seed an in-memory {@link FactStore} with a hand-authored Alice/Bob corpus, read the
  * facts back through it, and navigate by entity. Reuses {@link FactViewer} and
  * {@link EntityList} to show the columns are independent of the Discord pipeline.
  */
@@ -323,7 +323,7 @@ const InMemoryStory = (_: StoryArgs) => {
     void getStore()
       .runPromise(
         Effect.gen(function* () {
-          const store = yield* SemanticStore;
+          const store = yield* FactStore;
           yield* store.putFacts(SAMPLE_FACTS);
           return yield* store.query({});
         }),

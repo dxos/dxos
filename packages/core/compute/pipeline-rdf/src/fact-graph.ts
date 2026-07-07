@@ -7,7 +7,7 @@ import { type Fact, type Term } from './types';
 /**
  * Read abstraction the graph builder traverses: facts in which an entity appears as **subject or
  * object**. Decoupled from the store so the builder stays pure and unit-testable; back it with
- * `SemanticStore.query({ entity })` results or {@link factSourceFromFacts} over an in-memory set.
+ * `FactStore.query({ entity })` results or {@link factSourceFromFacts} over an in-memory set.
  */
 export type FactSource = {
   readonly factsForEntity: (entityId: string) => readonly Fact[];
