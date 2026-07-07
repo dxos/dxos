@@ -295,6 +295,29 @@ describe('buildSpanTree', () => {
     expect(stillOpen.children[0].events).toHaveLength(1);
   });
 
+  test('a span superseded by a later same-pid begin event is force-closed too', ({ expect }) => {
+    // The first begin never gets an end (interleaved B1 B2 E1 pattern, §15) — `openSpans` only
+    // tracks the second span once it supersedes the first, so the sweep must reach both.
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'agent-1' },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {});
+          yield* Trace.write(AgentRequestBegin, {});
+          yield* Trace.write(AgentRequestEnd, { status: 'success' });
+        }),
+      ),
+    );
+    const tree = buildSpanTree(messages, { now: 1 + DEFAULT_SPAN_TIMEOUT_MS });
+    expect(tree.children).toHaveLength(2);
+    const [superseded, current] = tree.children;
+    expect(superseded.events).toHaveLength(2);
+    expect(superseded.events[1].type).toBe(AgentRequestEnd.key);
+    expect(superseded.events[1].data).toMatchObject({ status: 'interrupted' });
+    expect(current.events).toHaveLength(2);
+    expect(current.events[1].data).toMatchObject({ status: 'success' });
+  });
+
   test('a completed span is unaffected by the timeout', ({ expect }) => {
     const messages = collectTraceEvents(
       withMeta(

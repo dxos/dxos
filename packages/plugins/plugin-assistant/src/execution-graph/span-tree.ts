@@ -156,6 +156,12 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
   // a sibling's released lane instead of forking off its parent.
   const lastSpanByPid = new Map<string, MutableSpan>();
 
+  // Every span ever opened, including ones later superseded by a same-pid begin event before
+  // getting an end event (§15 "interleaved same-pid begin/end pairs"). `openSpans` only tracks
+  // the *current* span per pid, so a superseded span — which will never receive an end event —
+  // would otherwise be unreachable by the timeout sweep below.
+  const allSpans: MutableSpan[] = [];
+
   let spanCounter = 0;
   const allocSpanId = (pid: string): string => {
     const id = `${pid}#${spanCounter}`;
@@ -188,6 +194,7 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
       span.events.push(event);
       noteTimestamp(span, event.timestamp);
       parent.children.push(span);
+      allSpans.push(span);
       // The new span supersedes any previously-open span for this pid.
       openSpans.set(pid, span);
       lastSpanByPid.set(pid, span);
@@ -220,13 +227,18 @@ export const buildSpanTree = (messages: readonly Trace.Message[], options: Build
   }
 
   // Force-close spans the runtime never reported the end of (crash, dropped connection, etc.) —
-  // otherwise they stay open forever and the UI renders them as stuck mid-flight. Skipped when
-  // `now` isn't supplied so callers that don't care about wall-clock staleness are unaffected.
+  // otherwise they stay open forever and the UI renders them as stuck mid-flight. Walks every
+  // span ever opened (not just `openSpans`) so a span superseded by a later same-pid begin event
+  // — which never receives its own end event — is force-closed too. Skipped when `now` isn't
+  // supplied so callers that don't care about wall-clock staleness are unaffected.
   if (options.now !== undefined) {
     const now = options.now;
     const spanTimeoutMs = options.spanTimeoutMs ?? DEFAULT_SPAN_TIMEOUT_MS;
-    for (const span of openSpans.values()) {
+    for (const span of allSpans) {
       const lastEvent = span.events[span.events.length - 1]!;
+      if (isSpanEndEvent(lastEvent)) {
+        continue;
+      }
       const timeoutAt = lastEvent.timestamp + spanTimeoutMs;
       if (now < timeoutAt) {
         continue;

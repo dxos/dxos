@@ -78,8 +78,8 @@ Optional input via `activeProcesses` (defaults to `[]`). Fields the builder read
 - `TracePanel`'s `getExecutionGraph` defaults `eventLimit = 300`
   (`TracePanel.tsx#L153`).
 - The cap targets `Timeline` rendering cost, not memory; see §11 for what it bounds.
-- `buildSpanTree` defaults `spanTimeoutMs = DEFAULT_SPAN_TIMEOUT_MS` (20 minutes) and
-  `now = Date.now()`; see §5.4 for the force-close behavior these gate.
+- `buildSpanTree` defaults `spanTimeoutMs = DEFAULT_SPAN_TIMEOUT_MS` (20 minutes); `now` has
+  no default and force-closing is skipped unless a caller passes it. See §5.4.
 
 ## 3. Outputs
 
@@ -232,9 +232,15 @@ across runs that share inputs. Test: `span-tree.test.ts#L120`.
 
 ### 5.4 Timeout-based force-close
 
-Runs after the linear scan, before children are sorted. Any span still in `openSpans`
-(no end event was ever recorded) whose **last** event is older than `now - spanTimeoutMs`
-is force-closed with a synthetic end event appended to `span.events`:
+Runs after the linear scan, before children are sorted, over `allSpans` — every span ever
+opened, not just the ones still in `openSpans`. This matters because a span superseded by a
+later same-pid begin event (§15 "interleaved same-pid begin/end pairs") is removed from
+`openSpans` but never receives an end event either; walking `allSpans` and checking each
+span's own last event (rather than map membership) reaches it too.
+
+Skipped entirely when `options.now` is omitted (see below). Otherwise, any span whose **last**
+event is not itself an end event (`isSpanEndEvent`) and is older than `now - spanTimeoutMs` is
+force-closed with a synthetic end event appended to `span.events`:
 
 - Span opened by `AgentRequestBegin` → synthetic `AgentRequestEnd` with
   `{ status: 'interrupted', error: SPAN_TIMEOUT_MESSAGE }`.
@@ -254,9 +260,12 @@ forever. Appending a synthetic end event makes it indistinguishable downstream f
 span that completed normally, except for the `outcome: 'failure'` / `status: 'interrupted'`
 result and the `SPAN_TIMEOUT_MESSAGE` text surfaced by `presentEvent` (§4.1).
 
-Both `spanTimeoutMs` (default `DEFAULT_SPAN_TIMEOUT_MS` = 20 minutes) and `now` (default
-`Date.now()`) are caller-configurable via `BuildSpanTreeOptions` — tests pass an explicit
-`now` for determinism (`span-tree.test.ts`, "force-closed" tests).
+`spanTimeoutMs` defaults to `DEFAULT_SPAN_TIMEOUT_MS` (20 minutes) when `now` is provided.
+`now` has **no default** — force-closing only runs when a caller explicitly passes it, so
+deterministic callers (tests, `TracePanel.stories.tsx`'s fixture snapshot) that pass fixture
+timestamps unrelated to wall-clock time are unaffected unless they opt in. `TracePanel` opts
+in by ticking a `now` state every 60s (`TracePanel.tsx`); `span-tree.test.ts`'s "force-closed"
+tests pass an explicit `now` for determinism.
 
 Only spans with **zero** events never happen (a span always has at least its begin
 event), so `span.events[span.events.length - 1]` is always defined when force-closing.
@@ -651,7 +660,9 @@ Each entry: **scenario → expected output → rationale**.
   spans per pid. If a process emits `B1 B2 E1 E2` interleaved, the second `B2`
   orphans the still-open `B1` (no `E1` ever closes the first span). The first
   span receives only its begin event; the second receives `B2 E1 E2`.
-  Outcome: incorrect. Not currently supported.
+  Outcome: incorrect. Not currently supported. `B1` is at least reachable by the
+  §5.4 timeout sweep (via `allSpans`) so it eventually force-closes rather than
+  hanging forever — but the interleaving itself is still not modeled correctly.
 - **Event types beyond `presentEvent`**: silently dropped from the commit
   stream but retained in `spanTree.events`. Consumers wanting the full event
   stream must read `spanTree`. Examples: `OperationInput`, `OperationOutput`,
@@ -671,7 +682,7 @@ Each entry: **scenario → expected output → rationale**.
 | ------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------- |
 | `buildSpanTree`                                         | `packages/plugins/plugin-assistant/src/execution-graph/span-tree.ts`         | L112        |
 | `applyEventLimit`                                       | same                                                                         | L211        |
-| `makeTimeoutEndEvent` / `DEFAULT_SPAN_TIMEOUT_MS`        | same                                                                         | L252 / L13  |
+| `makeTimeoutEndEvent` / `DEFAULT_SPAN_TIMEOUT_MS`       | same                                                                         | L252 / L13  |
 | `ROOT_SPAN_ID`                                          | same                                                                         | L12         |
 | `BEGIN_EVENT_TYPES`/`END_EVENT_TYPES`                   | same                                                                         | L47         |
 | `walkSpanTree`/`flattenSpanTree`                        | same                                                                         | L245        |
