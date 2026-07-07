@@ -22,7 +22,7 @@ import {
   run,
 } from '@dxos/crawler';
 import { EffectEx } from '@dxos/effect';
-import { FactStore, FactPipeline, type Type, buildSparql, generateQuery, parseSparqlToQuery } from '@dxos/pipeline-rdf';
+import { FactPipeline, FactStore, type Type, buildSparql, generateQuery, parseSparqlToQuery } from '@dxos/pipeline-rdf';
 import { discordSourceLayer } from '@dxos/plugin-discord';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { SemanticIndexError } from './index';
+import { SemanticIndexError } from '../index';
 
 describe('pipeline-rdf scaffold', () => {
   test('package imports', ({ expect }) => {

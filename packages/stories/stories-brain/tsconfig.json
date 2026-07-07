@@ -47,6 +47,9 @@
       "path": "../../core/compute/pipeline-rdf"
     },
     {
+      "path": "../../core/compute/pipeline-transcription"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

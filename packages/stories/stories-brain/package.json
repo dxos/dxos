@@ -26,6 +26,7 @@
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-email": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/pipeline-transcription": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-discord": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",

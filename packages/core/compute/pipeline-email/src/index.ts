@@ -5,3 +5,4 @@
 export * from './corpus';
 export * from './pipeline';
 export * from './stages';
+export * from './types';

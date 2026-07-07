@@ -19212,6 +19212,9 @@ importers:
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-rdf
+      '@dxos/pipeline-transcription':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline-transcription
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
