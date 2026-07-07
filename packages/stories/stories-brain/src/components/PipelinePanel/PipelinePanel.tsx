@@ -27,8 +27,8 @@ export type PipelinePanelProps = ThemedClassName<{
   output?: unknown;
 }>;
 
-const isStage = (value: any): value is StageInfo =>
-  !!value && typeof value === 'object' && typeof value.id === 'string';
+const isStage = (value: unknown): value is StageInfo =>
+  typeof value === 'object' && value !== null && 'id' in value && typeof value.id === 'string';
 
 /**
  * Pipeline column (placeholder): the composed stages in execution order — each toggleable via a

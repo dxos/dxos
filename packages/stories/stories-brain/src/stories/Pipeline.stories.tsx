@@ -79,8 +79,12 @@ const DefaultStory = (_: StoryArgs) => {
     const program = Effect.gen(function* () {
       const collected: DocumentFacts[] = [];
       const extracted = Stream.fromIterable([{ text, source: 'editor:document' }]).pipe(extractFactsStage());
+      // Items reach the tap only after extraction, so the panel's active indicator advances with the stream.
       const normalized = enabled('normalize-predicates')
-        ? extracted.pipe(normalizeFactsStage({ synonyms: SYNONYMS }))
+        ? extracted.pipe(
+            Stream.tap(() => Effect.sync(() => setActive('normalize-predicates'))),
+            normalizeFactsStage({ synonyms: SYNONYMS }),
+          )
         : extracted;
       yield* normalized.pipe(Pipeline.run({ sink: (out) => Effect.sync(() => collected.push(out)) }));
       return collected;
