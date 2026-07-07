@@ -9,7 +9,13 @@ import { describe, test } from 'vitest';
 import { AgentRequestBegin, AgentRequestEnd } from '@dxos/assistant';
 import { Trace } from '@dxos/compute';
 
-import { ROOT_SPAN_ID, buildSpanTree, collectSpanTreeEventsCategorically, flattenSpanTree } from './span-tree';
+import {
+  DEFAULT_SPAN_TIMEOUT_MS,
+  ROOT_SPAN_ID,
+  buildSpanTree,
+  collectSpanTreeEventsCategorically,
+  flattenSpanTree,
+} from './span-tree';
 import { collectTraceEvents, withMeta } from './testing';
 
 const NoteEvent = Trace.EventType('note', {
@@ -245,6 +251,63 @@ describe('buildSpanTree', () => {
     expect(order[1].meta.pid).toBe('agent-1');
     expect(order[2].meta.pid).toBe('op-1');
     expect(order).toHaveLength(3);
+  });
+
+  test('an open operation span past the timeout is force-closed with a synthetic failure end', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta({ pid: 'op-1' }, Trace.write(Trace.OperationStart, { key: 'reply', name: 'Reply' })),
+    );
+    // The single event lands at timestamp 1; `now` is well past the default timeout.
+    const tree = buildSpanTree(messages, { now: 1 + DEFAULT_SPAN_TIMEOUT_MS });
+    expect(tree.children).toHaveLength(1);
+    const span = tree.children[0];
+    expect(span.events).toHaveLength(2);
+    expect(span.events[1].type).toBe(Trace.OperationEnd.key);
+    expect(span.events[1].data).toMatchObject({ key: 'reply', name: 'Reply', outcome: 'failure' });
+  });
+
+  test('an open agent request span past the timeout is force-closed as interrupted', ({ expect }) => {
+    const messages = collectTraceEvents(withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestBegin, {})));
+    const tree = buildSpanTree(messages, { now: 1 + DEFAULT_SPAN_TIMEOUT_MS });
+    const span = tree.children[0];
+    expect(span.events).toHaveLength(2);
+    expect(span.events[1].type).toBe(AgentRequestEnd.key);
+    expect(span.events[1].data).toMatchObject({ status: 'interrupted' });
+  });
+
+  test('an open span within the timeout window stays open', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta({ pid: 'op-1' }, Trace.write(Trace.OperationStart, { key: 'reply', name: 'Reply' })),
+    );
+    const tree = buildSpanTree(messages, { now: 1 + DEFAULT_SPAN_TIMEOUT_MS - 1 });
+    const span = tree.children[0];
+    expect(span.events).toHaveLength(1);
+  });
+
+  test('spanTimeoutMs is configurable', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta({ pid: 'op-1' }, Trace.write(Trace.OperationStart, { key: 'reply', name: 'Reply' })),
+    );
+    const closed = buildSpanTree(messages, { now: 100, spanTimeoutMs: 10 });
+    expect(closed.children[0].events).toHaveLength(2);
+
+    const stillOpen = buildSpanTree(messages, { now: 100, spanTimeoutMs: 1_000 });
+    expect(stillOpen.children[0].events).toHaveLength(1);
+  });
+
+  test('a completed span is unaffected by the timeout', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'op-1' },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.OperationStart, { key: 'reply', name: 'Reply' });
+          yield* Trace.write(Trace.OperationEnd, { key: 'reply', name: 'Reply', outcome: 'success' });
+        }),
+      ),
+    );
+    const tree = buildSpanTree(messages, { now: 1 + DEFAULT_SPAN_TIMEOUT_MS });
+    expect(tree.children[0].events).toHaveLength(2);
+    expect(tree.children[0].events[1].data).toMatchObject({ outcome: 'success' });
   });
 
   test('collectSpanTreeEventsCategorically emits begin, child subtrees, then remaining events', ({ expect }) => {

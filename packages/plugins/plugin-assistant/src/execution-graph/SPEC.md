@@ -25,7 +25,8 @@ Out of scope:
 - Filtering / search of commits.
 - Mutating, ack-ing, or replaying trace events.
 
-Inputs: `traceMessages: Trace.Message[]`, `activeProcesses?: Process.Info[]`, `eventLimit?: number`.
+Inputs: `traceMessages: Trace.Message[]`, `activeProcesses?: Process.Info[]`, `eventLimit?: number`,
+`spanTimeoutMs?: number`, `now?: number`.
 Output: `ExecutionGraph = { branches, commits, spanTree, details }`.
 
 ## 2. Inputs
@@ -77,6 +78,8 @@ Optional input via `activeProcesses` (defaults to `[]`). Fields the builder read
 - `TracePanel`'s `getExecutionGraph` defaults `eventLimit = 300`
   (`TracePanel.tsx#L153`).
 - The cap targets `Timeline` rendering cost, not memory; see §11 for what it bounds.
+- `buildSpanTree` defaults `spanTimeoutMs = DEFAULT_SPAN_TIMEOUT_MS` (20 minutes) and
+  `now = Date.now()`; see §5.4 for the force-close behavior these gate.
 
 ## 3. Outputs
 
@@ -226,6 +229,39 @@ retains span boundaries') and `#L159` (regression for parent-child preservation)
 
 Sibling spans are sorted by `firstTimestamp` ascending so output is deterministic
 across runs that share inputs. Test: `span-tree.test.ts#L120`.
+
+### 5.4 Timeout-based force-close
+
+Runs after the linear scan, before children are sorted. Any span still in `openSpans`
+(no end event was ever recorded) whose **last** event is older than `now - spanTimeoutMs`
+is force-closed with a synthetic end event appended to `span.events`:
+
+- Span opened by `AgentRequestBegin` → synthetic `AgentRequestEnd` with
+  `{ status: 'interrupted', error: SPAN_TIMEOUT_MESSAGE }`.
+- Span opened by `Trace.OperationStart` → synthetic `Trace.OperationEnd` with
+  `{ key, name, icon, outcome: 'failure', error: SPAN_TIMEOUT_MESSAGE }` (fields copied
+  from the begin event's payload).
+
+The synthetic event's `timestamp` is `lastEvent.timestamp + spanTimeoutMs` (the exact
+moment the span crossed the threshold), not `now` — this keeps the emitted commit's
+position stable across repeated `buildSpanTree` calls with an advancing `now`, rather
+than jumping forward on every recompute.
+
+Rationale: the runtime may fail to write the closing event (crash, dropped connection,
+process killed) — see DX-1080. Without this, `isCompletedSpan` never returns `true` for
+that span (§7), so it never collapses and keeps rendering with the "in progress" shimmer
+forever. Appending a synthetic end event makes it indistinguishable downstream from a
+span that completed normally, except for the `outcome: 'failure'` / `status: 'interrupted'`
+result and the `SPAN_TIMEOUT_MESSAGE` text surfaced by `presentEvent` (§4.1).
+
+Both `spanTimeoutMs` (default `DEFAULT_SPAN_TIMEOUT_MS` = 20 minutes) and `now` (default
+`Date.now()`) are caller-configurable via `BuildSpanTreeOptions` — tests pass an explicit
+`now` for determinism (`span-tree.test.ts`, "force-closed" tests).
+
+Only spans with **zero** events never happen (a span always has at least its begin
+event), so `span.events[span.events.length - 1]` is always defined when force-closing.
+Nested children of a force-closed span are evaluated independently — a still-active
+child is not force-closed just because its parent timed out.
 
 ## 6. Span branch assignment (`branchOf`)
 
@@ -582,6 +618,16 @@ Each entry: **scenario → expected output → rationale**.
     - Logged via `log('invalid trace event', …)` and dropped. The event still
       occupies a position in `spanTree.events`.
 
+18. **Span open longer than `spanTimeoutMs` with no end event** (DX-1080)
+    - Force-closed with a synthetic failure/interrupted end event (§5.4); becomes
+      `isCompletedSpan` and collapses/renders like a normal completed span instead of
+      hanging with the shimmer effect forever. Test: `span-tree.test.ts`
+      ("an open operation span past the timeout is force-closed…").
+
+19. **Span open but still within `spanTimeoutMs`**
+    - Left untouched — stays open and continues to render as in-progress. Test:
+      `span-tree.test.ts` ("an open span within the timeout window stays open").
+
 ## 14. Performance & complexity
 
 - `buildSpanTree`: O(E log E) for the chronological sort, O(E) for the linear
@@ -625,6 +671,7 @@ Each entry: **scenario → expected output → rationale**.
 | ------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------- |
 | `buildSpanTree`                                         | `packages/plugins/plugin-assistant/src/execution-graph/span-tree.ts`         | L112        |
 | `applyEventLimit`                                       | same                                                                         | L211        |
+| `makeTimeoutEndEvent` / `DEFAULT_SPAN_TIMEOUT_MS`        | same                                                                         | L252 / L13  |
 | `ROOT_SPAN_ID`                                          | same                                                                         | L12         |
 | `BEGIN_EVENT_TYPES`/`END_EVENT_TYPES`                   | same                                                                         | L47         |
 | `walkSpanTree`/`flattenSpanTree`                        | same                                                                         | L245        |
