@@ -291,7 +291,7 @@ A spec's `affinity` determines the slice it lives in and which fields of `LayerC
 | `space`       | Per space, reused across all processes in space | `space`                                  |
 | `process`     | Per spawned process                             | `space`, `conversation`, `process` (pid) |
 
-`conversation` and `process` are **process-affinity only** — a `space`-affinity factory cannot see them. If a service is keyed on `conversation` (e.g. `AiContext.Service`, `AiSession.Service`), it must be `process`-affinity even though it depends on space-affinity services like `Database.Service` and `Feed.FeedService`. The `LayerStack` initialises lower-affinity slices first, so process specs can require space services without issue.
+`conversation` and `process` are **process-affinity only** — a `space`-affinity factory cannot see them. If a service is keyed on `conversation` (e.g. `AiContext.Service`, `AiSession.Service`), it must be `process`-affinity even though it depends on space-affinity services like `Database.Service`. The `LayerStack` initialises lower-affinity slices first, so process specs can require space services without issue.
 
 The `LayerContext.conversation` field is fed from the spawn `environment.conversation`, which in turn comes from `Operation.invoke(..., { conversation })` or `Operation.withInvocationOptions({ conversation })`. Operations dispatched by `TriggerDispatcher` also inherit `space`/`conversation` from the parent spawn environment.
 
@@ -301,7 +301,7 @@ The `LayerContext.conversation` field is fed from the spawn `environment.convers
 
 ```ts
 LayerSpec.make(
-  { affinity: 'process', requires: [Database.Service, Feed.FeedService], provides: [AiContext.Service] },
+  { affinity: 'process', requires: [Database.Service], provides: [AiContext.Service] },
   (context) =>
     Layer.scoped(
       AiContext.Service,
@@ -310,7 +310,7 @@ LayerSpec.make(
           return yield* Effect.die(new ServiceNotAvailableError(AiContext.Service.key));
         }
         const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
-        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const runtime = yield* Effect.runtime<Database.Service>();
         const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
         return { binder };
       }),

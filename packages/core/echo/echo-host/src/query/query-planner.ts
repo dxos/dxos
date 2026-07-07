@@ -868,6 +868,20 @@ export class QueryPlanner {
       }
     }
 
+    // A SkipStep between a propagation target and the LimitStep drops items after the limit
+    // would be applied. Since the LimitStep is removed, the limit pushed into the earlier step
+    // must also cover the skipped prefix — otherwise `skip(k).limit(n)` yields only `n - k` items.
+    const skipBetween = (fromIndex: number): number => {
+      let total = 0;
+      for (let i = fromIndex + 1; i < limitStepIndex; i++) {
+        const step = processedSteps[i];
+        if (step._tag === 'SkipStep') {
+          total += step.skip;
+        }
+      }
+      return total;
+    };
+
     // Create a mutable copy of steps to modify.
     const newSteps = [...processedSteps];
 
@@ -876,7 +890,7 @@ export class QueryPlanner {
       const selectStep = newSteps[selectStepIndex] as QueryPlan.SelectStep;
       newSteps[selectStepIndex] = {
         ...selectStep,
-        limit: limitValue,
+        limit: limitValue + skipBetween(selectStepIndex),
       };
     }
 
@@ -885,7 +899,7 @@ export class QueryPlanner {
       const orderStep = newSteps[orderStepIndex] as QueryPlan.OrderStep;
       newSteps[orderStepIndex] = {
         ...orderStep,
-        limit: limitValue,
+        limit: limitValue + skipBetween(orderStepIndex),
       };
     }
 

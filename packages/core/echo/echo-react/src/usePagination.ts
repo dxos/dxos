@@ -94,9 +94,9 @@ const createPaginationStore = <Q extends Query.Any, O extends Entity.Entity<Quer
   // `QueryResult` with no subscribers -- matching how `useQuery` never reads `.results` until
   // its own `subscribe()` has already run.
   //
-  // TODO(wittjosiah): For feeds, this re-fetches/decodes the whole feed on every range change
-  // (see `FeedQueryContext.applyOrderSkipLimit`) -- only what's rendered is bounded, not what's
-  // fetched. Needs index-backed keyset pagination to fix properly.
+  // TODO(wittjosiah): For feeds, this re-fetches/decodes the whole feed on every range change --
+  // only what's rendered is bounded, not what's fetched. Needs index-backed keyset pagination to
+  // fix properly.
   const pointAtRange = () => {
     innerUnsubscribe?.();
     innerUnsubscribe = undefined;
