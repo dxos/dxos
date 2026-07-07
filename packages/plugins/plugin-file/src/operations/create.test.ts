@@ -14,7 +14,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { FilePlugin } from '#plugin';
-import { FileCapabilities, FileOperation, Settings } from '#types';
+import { FileCapabilities, FileOperation } from '#types';
 
 import { FileTooLargeError, UnsupportedFileTypeError } from './create';
 
@@ -67,7 +67,7 @@ describe('FileOperation.Create', () => {
     harness.capabilities.contribute({
       module: 'test',
       interface: FileCapabilities.Backend,
-      implementation: { id: 'mem', name: 'Mem', storage: 'mem' },
+      implementation: { name: 'Mem', storage: 'mem' },
     });
 
     try {
@@ -132,7 +132,7 @@ const setup = async () => {
   harness.capabilities.contribute({
     module: 'test',
     interface: FileCapabilities.Backend,
-    implementation: { id: Settings.DEFAULT_BACKEND_ID, name: 'Inline (ECHO)', storage: Blob.Storage.inline },
+    implementation: { name: 'Inline (ECHO)', storage: Blob.Storage.inline },
   });
 
   const { personalSpace } = await EffectEx.runAndForwardErrors(

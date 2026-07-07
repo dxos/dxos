@@ -44,17 +44,16 @@ type BackendDescriptor
     UI-facing descriptor for a registered storage option. Carries no upload/read behavior itself —
     that lives in the matching `BlobBackend` registered on the ECHO Hypergraph under `storage`.
   fields:
-    id: string                # stable backend id (e.g. 'inline', 'wnfs', 'edge'); used as the settings key
     name: string               # display label shown in settings
     description?: string       # description shown next to the backend in settings
-    storage: string             # Blob.fromBytes's `storage` option to use when this descriptor is selected
+    storage: string             # Blob.fromBytes's `storage` option; also the settings key (e.g. 'inline', 'wnfs', 'edge')
 ```
 
 ```mdl
 type Settings
   desc: Per-user plugin settings stored in the ECHO space.
   fields:
-    backend?: string         # active backend id; defaults to 'inline'
+    backend?: string         # active backend's storage name; defaults to 'inline'
 ```
 
 ## Components
@@ -282,7 +281,7 @@ test T-5: Preview PDF
 
 ```mdl
 test T-6: Backend fallback to inline
-  given: Settings.backend is 'wnfs' but no BackendDescriptor with id 'wnfs' is registered
+  given: Settings.backend is 'wnfs' but no BackendDescriptor with storage 'wnfs' is registered
   when: op:Create is invoked
   then: the inline backend is used and the file is stored inline
 ```

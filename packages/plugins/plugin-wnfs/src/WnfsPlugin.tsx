@@ -2,16 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client';
 
-import { BlobBackend, Blockstore } from '#capabilities';
+import { BlobBackend, Dependencies } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { WnfsCapabilities } from '#types';
+import { WnfsEvents } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -19,22 +17,14 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export const WnfsPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
-    id: 'blockstore',
+    id: 'dependencies',
     activatesOn: ClientEvents.ClientReady,
-    activate: Blockstore,
-  }),
-  Plugin.addModule({
-    id: 'instances',
-    activatesOn: ClientEvents.ClientReady,
-    activate: () =>
-      Effect.sync(() => {
-        const instances: WnfsCapabilities.Instances = {};
-        return Capability.contributes(WnfsCapabilities.Instances, instances);
-      }),
+    firesAfterActivation: [WnfsEvents.DependenciesReady],
+    activate: Dependencies,
   }),
   Plugin.addModule({
     id: 'blob-backend',
-    activatesOn: ClientEvents.ClientReady,
+    activatesOn: WnfsEvents.DependenciesReady,
     activate: BlobBackend,
   }),
   AppPlugin.addPluginAssetModule({

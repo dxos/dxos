@@ -20,12 +20,11 @@ export const FileSettings = ({ settings, onSettingsChange }: FileSettingsProps) 
   const client = useClient();
   const backends = useCapabilities(FileCapabilities.Backend);
   // No explicit choice defers to the Blob registry's own configured default (edge when
-  // configured, inline otherwise) — match by `storage`, not by the plugin's own default id, so
-  // the Select reflects what an upload will actually use.
-  const requested = settings.backend ? backends.find((b) => b.id === settings.backend) : undefined;
+  // configured, inline otherwise), so the Select reflects what an upload will actually use.
+  const requested = settings.backend ? backends.find((b) => b.storage === settings.backend) : undefined;
   const active = requested ?? backends.find((b) => b.storage === client.graph.defaultBlobStorage) ?? backends[0];
-  // Use the resolved backend id so the Select never shows a missing/stale value.
-  const activeId = active?.id ?? Settings.DEFAULT_BACKEND_ID;
+  // Use the resolved backend's storage name so the Select never shows a missing/stale value.
+  const activeStorage = active?.storage ?? Settings.DEFAULT_BACKEND_STORAGE;
 
   const handleChange = useCallback(
     (value: string) => onSettingsChange?.((current) => ({ ...current, backend: value })),
@@ -47,13 +46,13 @@ export const FileSettings = ({ settings, onSettingsChange }: FileSettingsProps) 
               label={t('settings.backend.label')}
               description={active?.description ?? t('settings.backend.description')}
             >
-              <Select.Root value={activeId} onValueChange={handleChange} disabled={!onSettingsChange}>
+              <Select.Root value={activeStorage} onValueChange={handleChange} disabled={!onSettingsChange}>
                 <Select.TriggerButton placeholder={t('settings.backend.placeholder')} />
                 <Select.Portal>
                   <Select.Content>
                     <Select.Viewport>
                       {backends.map((backend) => (
-                        <Select.Option key={backend.id} value={backend.id}>
+                        <Select.Option key={backend.storage} value={backend.storage}>
                           {backend.name}
                         </Select.Option>
                       ))}

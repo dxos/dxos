@@ -44,8 +44,8 @@ export class FileReadError extends Error {
 
 /**
  * Resolves the storage name to force for an upload:
- * - the id the user explicitly configured in Settings.backend, if it matches a registered
- *   {@link FileCapabilities.Backend} descriptor
+ * - the storage name the user explicitly configured in Settings.backend, if it matches a
+ *   registered {@link FileCapabilities.Backend} descriptor
  * - otherwise `undefined`, leaving `File.fromBytes`'s `storage` option unset so it falls through
  *   to the Blob registry's own configured default (edge when configured, inline otherwise)
  *   instead of hardcoding `inline`
@@ -65,7 +65,7 @@ export const resolveActiveStorage = Effect.gen(function* () {
   if (settingsAtomOpt._tag === 'Some' && registryOpt._tag === 'Some') {
     const settings = registryOpt.value.get(settingsAtomOpt.value) as Settings.Settings;
     if (settings.backend) {
-      const match = backends.find((b) => b.id === settings.backend);
+      const match = backends.find((b) => b.storage === settings.backend);
       if (match) {
         return match.storage;
       }

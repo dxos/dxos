@@ -10,7 +10,7 @@ WNFS provides a content-addressed, end-to-end encrypted private file system usin
 structure. Files are stored as IPLD blocks referenced by CID, replicated to a DXOS edge blob service, and
 cached locally in IndexedDB. The plugin registers a `BlobBackend` (schemes: `['wnfs']`) on the ECHO Hypergraph
 via `client.graph.registerBlobBackend`, and contributes a matching `FileCapabilities.Backend` descriptor
-(`{ id: 'wnfs', storage: 'wnfs' }`) so `plugin-file` — and any plugin built on it, e.g. `plugin-gallery` — can
+(`{ storage: 'wnfs' }`) so `plugin-file` — and any plugin built on it, e.g. `plugin-gallery` — can
 upload files and resolve `wnfs://` URIs uniformly via the core `Blob.fromBytes`/`Blob.url`/`Blob.read` API,
 without knowing the underlying storage layer. Uploads are scoped to a DXOS Space; the private forest root CID
 is persisted on the space's ECHO properties and updated atomically on every write.
