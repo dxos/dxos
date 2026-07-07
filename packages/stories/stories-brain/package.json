@@ -40,6 +40,7 @@
     "@dxos/react-ui-graph": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
