@@ -21,6 +21,7 @@
     "@dxos/crawler": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/extractor-lib": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/nlp": "workspace:*",
     "@dxos/pipeline": "workspace:*",
@@ -45,6 +46,7 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/ai": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

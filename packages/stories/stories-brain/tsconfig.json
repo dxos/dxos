@@ -35,6 +35,9 @@
       "path": "../../core/compute/crawler"
     },
     {
+      "path": "../../core/compute/extractor-lib"
+    },
+    {
       "path": "../../core/compute/nlp"
     },
     {
