@@ -11,26 +11,29 @@ import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 
-import { Operation, Trace } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { Operation } from '@dxos/compute';
+import { Database, Obj, Ref, Relation } from '@dxos/echo';
+import { type Resolver, resolve } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
+import { Pipeline, Stage } from '@dxos/pipeline';
 import { SyncBinding } from '@dxos/plugin-connector';
-import { Message } from '@dxos/types';
+import { Cursor, Person } from '@dxos/types';
 
 import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { JmapCredentials } from '../../../services';
+import { EmailStage } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
-import { appendBatchToFeed, collectForeignIds, readBindingOptions } from '../../../util';
-import { mapEmail } from './mapper';
+import { readBindingOptions } from '../../../util';
+import { type DecodedEmail, decodeBody, mapToMessage } from './mapper';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
-// Number of email ids to query per page and fetch concurrently — mirrors Gmail's STREAMING_CONFIG.
-const PAGE_SIZE = 50;
+// Number of email ids to query per page, emails fetched concurrently, and the commit page size.
+const QUERY_PAGE_SIZE = 50;
 const FETCH_CONCURRENCY = 5;
-const BATCH_SIZE = 10;
+const COMMIT_PAGE_SIZE = 10;
 const MAX_SCAN = 500;
 
 export default InboxOperation.JmapSync.pipe(
@@ -56,14 +59,81 @@ export default InboxOperation.JmapSync.pipe(
           return { newMessages: 0 };
         }
 
-        const total = yield* syncMailbox({ binding, mailbox });
+        const session = yield* Jmap.getSession;
+        const accountId = session.primaryAccounts[MAIL_ACCOUNT_CAPABILITY];
+        if (!accountId) {
+          log.warn('jmap sync: session has no mail account', { username: session.username });
+          return { newMessages: 0 };
+        }
+        const target: JmapMail.Target = { apiUrl: session.apiUrl, accountId };
+        log('jmap sync: session resolved', { apiUrl: session.apiUrl, accountId });
 
-        Relation.update(binding, (binding) => {
-          binding.lastSyncAt = new Date().toISOString();
-          binding.lastError = undefined;
-        });
+        const { db } = yield* Database.Service;
+        const feed = yield* Database.load(mailbox.feed);
+        const tagIndex = yield* Database.load(mailbox.tags);
 
-        return { newMessages: total };
+        // TODO(wittjosiah): Migrate this folder→Tag sync onto a pipeline too (source: folders; sink:
+        //   find-or-create Tag), rather than the imperative loop below.
+        // Build a folder-id → tag-uri map — mirrors Gmail's `syncLabels`.
+        const { list: folders } = yield* JmapMail.mailboxGet(target);
+        const folderTagMap = new Map<string, string>();
+        for (const folder of folders) {
+          const tag = yield* Effect.promise(() =>
+            Mailbox.findOrCreateJmapTag(db, { id: folder.id, name: folder.name }),
+          );
+          folderTagMap.set(folder.id, Mailbox.tagUri(tag));
+        }
+
+        // The cursor is the high-water `receivedAt` (epoch-ms) of the last committed email.
+        const cursor = yield* Database.load(binding.cursor);
+        const cursorKey = Cursor.parseKey(cursor.value);
+
+        // Resolve the sender contact, build the ECHO message, and resolve folder ids to tag URIs via
+        // the (JMAP-specific) folder map captured here.
+        const mapToMessageStage: Stage.Stage<DecodedEmail, EmailStage.Mapped, never, Resolver> = Stage.map(
+          'map-to-message',
+          (decoded: DecodedEmail) =>
+            Effect.gen(function* () {
+              const fromAddress = decoded.raw.from?.[0];
+              const contact = fromAddress ? yield* resolve(Person.Person, { email: fromAddress.email }) : undefined;
+              const mapped = mapToMessage(decoded, contact ?? undefined);
+              if (!mapped) {
+                return undefined;
+              }
+              const tagUris = mapped.mailboxIds.flatMap((folderId) => {
+                const uri = folderTagMap.get(folderId);
+                return uri ? [uri] : [];
+              });
+              return {
+                message: mapped.message,
+                foreignId: decoded.raw.id,
+                key: new Date(decoded.raw.receivedAt).getTime(),
+                tagUris,
+              };
+            }),
+        );
+
+        const stats: SyncBinding.Stats = { newMessages: 0 };
+        yield* jmapSource(target, folders, cursorKey, readBindingOptions(binding)).pipe(
+          SyncBinding.dedupStage<JmapMail.Email>(
+            'dedup',
+            (email) => email.id,
+            (email) => new Date(email.receivedAt).getTime(),
+          ),
+          decodeBodyStage,
+          EmailStage.htmlToMarkdown,
+          mapToMessageStage,
+          EmailStage.onArrivalExtractors(mailbox),
+          EmailStage.extractContacts,
+          Stream.grouped(COMMIT_PAGE_SIZE),
+          Pipeline.run({ sink: SyncBinding.commit }),
+          Effect.provide(
+            SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: JMAP_MESSAGE_SOURCE, cursorKey, stats }),
+          ),
+        );
+
+        log('jmap sync complete', { newMessages: stats.newMessages });
+        return { newMessages: stats.newMessages };
       }).pipe(
         Effect.provide(
           Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, JmapCredentials.fromConnection(connectionRef)),
@@ -74,128 +144,71 @@ export default InboxOperation.JmapSync.pipe(
   Operation.opaqueHandler,
 );
 
-const syncMailbox = ({ binding, mailbox }: { binding: SyncBinding.SyncBinding; mailbox: Mailbox.Mailbox }) =>
-  Effect.gen(function* () {
-    const session = yield* Jmap.getSession;
-    const accountId = session.primaryAccounts[MAIL_ACCOUNT_CAPABILITY];
-    if (!accountId) {
-      log.warn('jmap sync: session has no mail account', { username: session.username });
-      return 0;
-    }
-    const target: JmapMail.Target = { apiUrl: session.apiUrl, accountId };
-    log('jmap sync: session resolved', { apiUrl: session.apiUrl, accountId });
+/** JMAP-specific decode stage: extract the body text; drop emails with no body. */
+const decodeBodyStage: Stage.Stage<JmapMail.Email, DecodedEmail, never, never> = Stage.map(
+  'decode-body',
+  (email: JmapMail.Email) => Effect.sync(() => decodeBody(email) ?? undefined),
+);
 
-    const feed = yield* Database.load(mailbox.feed);
-    if (mailbox.tags) {
-      yield* Database.load(mailbox.tags);
-    }
+/**
+ * Streams JMAP emails from the cursor: build the query filter (Inbox scope + date window from the
+ * cursor or `syncBackDays` + optional user DSL), paginate ids (newest-first), then fetch each email.
+ */
+const jmapSource = (
+  target: JmapMail.Target,
+  folders: readonly JmapMail.Mailbox[],
+  cursorKey: number,
+  options: { syncBackDays?: number; filter?: string },
+) => {
+  const userFilter = options.filter
+    ? JmapMail.parseMailQuery(options.filter, {
+        now: new Date(),
+        resolveMailbox: (nameOrRole) => JmapMail.resolveMailboxByNameOrRole(folders, nameOrRole),
+      })
+    : Option.none<Jmap.Filter>();
+  // When the user filter already scopes a mailbox, skip the forced Inbox restriction.
+  const scopesMailbox = Option.match(userFilter, { onNone: () => false, onSome: JmapMail.filterScopesMailbox });
+  const inbox = folders.find((folder) => folder.role === 'inbox');
 
-    // Build a folder-id → tag-uri map and locate the Inbox — mirrors Gmail's `syncLabels`.
-    const db = Obj.getDatabase(mailbox);
-    const { list: folders } = yield* JmapMail.mailboxGet(target);
-    const folderTagMap = new Map<string, string>();
-    if (db) {
-      for (const folder of folders) {
-        const tag = yield* Effect.promise(() => Mailbox.findOrCreateJmapTag(db, { id: folder.id, name: folder.name }));
-        folderTagMap.set(folder.id, Mailbox.tagUri(tag));
-      }
-    }
-    const inbox = folders.find((folder) => folder.role === 'inbox');
-    log('jmap sync: folders resolved', { folders: folders.length, inboxId: inbox?.id });
+  const conditions: Jmap.Filter[] = [];
+  if (inbox && !scopesMailbox) {
+    conditions.push({ inMailbox: inbox.id });
+  }
+  if (cursorKey > 0) {
+    conditions.push({ after: new Date(cursorKey).toISOString() });
+  } else if (options.syncBackDays !== undefined) {
+    conditions.push({ after: subDays(new Date(), options.syncBackDays).toISOString() });
+  }
+  if (Option.isSome(userFilter)) {
+    conditions.push(userFilter.value);
+  }
+  const filter: Jmap.Filter | undefined =
+    conditions.length === 0 ? undefined : conditions.length === 1 ? conditions[0] : { operator: 'AND', conditions };
+  log('starting jmap sync', { cursorKey, hasFilter: filter !== undefined, conditions: conditions.length });
 
-    // Dedup set — same pattern as Gmail's `existingGmailIds`.
-    const objects = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-    const existingIds = collectForeignIds(objects, JMAP_MESSAGE_SOURCE, MAX_SCAN);
-
-    // Build the query filter: Inbox scope + optional date window + optional Gmail-like query DSL.
-    const options = readBindingOptions(binding);
-    const userFilter = options.filter
-      ? JmapMail.parseMailQuery(options.filter, {
-          now: new Date(),
-          resolveMailbox: (nameOrRole) => JmapMail.resolveMailboxByNameOrRole(folders, nameOrRole),
-        })
-      : Option.none<Jmap.Filter>();
-    // When the user filter already scopes a mailbox, skip the forced Inbox restriction.
-    const scopesMailbox = Option.match(userFilter, { onNone: () => false, onSome: JmapMail.filterScopesMailbox });
-
-    const conditions: Jmap.Filter[] = [];
-    if (inbox && !scopesMailbox) {
-      conditions.push({ inMailbox: inbox.id });
-    }
-    if (options.syncBackDays !== undefined) {
-      conditions.push({ after: subDays(new Date(), options.syncBackDays).toISOString() });
-    }
-    if (Option.isSome(userFilter)) {
-      conditions.push(userFilter.value);
-    }
-    const filter: Jmap.Filter | undefined =
-      conditions.length === 0 ? undefined : conditions.length === 1 ? conditions[0] : { operator: 'AND', conditions };
-
-    // Log only non-PII context: counts and a sanitized filter shape (not the raw user query string).
-    log('starting jmap sync', {
-      existingIds: existingIds.size,
-      hasFilter: filter !== undefined,
-      conditions: conditions.length,
-    });
-
-    // Stream pages of ids → concurrent email fetch → map → batch append.
-    // Mirrors Gmail's streamGmailMessagesToFeed structure: Stream.flatMap with concurrency
-    // decouples id-fetching from email-fetching so both pipeline stages run in parallel.
-    const count = yield* Stream.paginateChunkEffect(0, (position) =>
-      Effect.gen(function* () {
-        const { ids } = yield* JmapMail.emailQuery(target, {
-          filter,
-          sort: [{ property: 'receivedAt', isAscending: false }],
-          position,
-          limit: PAGE_SIZE,
-        });
-        log('jmap sync: queried page', { position, total: ids.length });
-        const next = ids.length < PAGE_SIZE ? Option.none<number>() : Option.some(position + ids.length);
-        return [Chunk.fromIterable(ids), next];
-      }),
-    ).pipe(
-      Stream.take(MAX_SCAN),
-      Stream.filter((id) => !existingIds.has(id)),
-      // Fetch each email concurrently — same concurrency as Gmail's messageFetchConcurrency.
-      Stream.flatMap(
-        (id) =>
-          Stream.fromEffect(
-            JmapMail.emailGet(target, [id]).pipe(
-              Effect.map(({ list }) => list[0]),
-              Effect.filterOrFail(Predicate.isNotNullable, () => new Error(`email ${id} not found`)),
-            ),
-          ).pipe(Stream.orElse(() => Stream.empty)),
-        { concurrency: FETCH_CONCURRENCY, bufferSize: 10 },
-      ),
-      Stream.mapEffect((email) => mapEmail(email)),
-      Stream.filter(Predicate.isNotNullable),
-      Stream.grouped(BATCH_SIZE),
-      Stream.mapEffect((batch) =>
-        Effect.gen(function* () {
-          const mapped = Chunk.toArray(batch);
-          const messages = mapped.map((m) => m.message);
-          log('jmap sync: appending batch', { count: messages.length });
-          yield* appendBatchToFeed(feed, mailbox, messages, (message) => {
-            const entry = mapped.find((m) => m.message === message);
-            return (
-              entry?.mailboxIds.flatMap((folderId) => {
-                const uri = folderTagMap.get(folderId);
-                return uri ? [uri] : [];
-              }) ?? []
-            );
-          });
-          return messages.length;
-        }),
-      ),
-      Stream.runFoldEffect(
-        0,
-        Effect.fnUntraced(function* (acc, n) {
-          yield* Trace.emitStatus(`Syncing messages: ${acc + n}`);
-          return acc + n;
-        }),
-      ),
-    );
-
-    log('jmap sync complete', { newMessages: count });
-    return count;
-  });
+  return Stream.paginateChunkEffect(0, (position: number) =>
+    Effect.gen(function* () {
+      const { ids } = yield* JmapMail.emailQuery(target, {
+        filter,
+        sort: [{ property: 'receivedAt', isAscending: false }],
+        position,
+        limit: QUERY_PAGE_SIZE,
+      });
+      log('jmap sync: queried page', { position, total: ids.length });
+      const next = ids.length < QUERY_PAGE_SIZE ? Option.none<number>() : Option.some(position + ids.length);
+      return [Chunk.fromIterable(ids), next];
+    }),
+  ).pipe(
+    Stream.take(MAX_SCAN),
+    Stream.flatMap(
+      (id) =>
+        Stream.fromEffect(
+          JmapMail.emailGet(target, [id]).pipe(
+            Effect.map(({ list }) => list[0]),
+            Effect.filterOrFail(Predicate.isNotNullable, () => new Error(`email ${id} not found`)),
+          ),
+        ).pipe(Stream.orElse(() => Stream.empty)),
+      { concurrency: FETCH_CONCURRENCY, bufferSize: 10 },
+    ),
+  );
+};

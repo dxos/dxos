@@ -4,6 +4,34 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-07-05 — plugin-chess-com (operation handlers)
+
+- Operation handler files: `export default Op.pipe(Operation.withHandler(...), Operation.opaqueHandler)` as the default export — mirror `plugin-trip/src/operations/add-segment.ts`; no separate `const handler` alias.
+- `Effect.fn(function* (...) { ... }, Effect.provide(FetchHttpClient.layer))` — pass runtime layers as the 2nd `Effect.fn` arg, not an inner `.pipe(Effect.provide(...))` wrapping a nested `Effect.gen`.
+- Keep the handler body flat/linear (load → fetch → mutate → append → return); extract pure mapping into module-level helpers (`makeGameFromRemote`, `gameForeignId`) above the export.
+- Dedup existing feed items: `Feed.query(...).run.pipe(Effect.map(...), Effect.map(Array.filter(Predicate.isNotUndefined)), Effect.map(ids => new Set(ids)))` — use Effect `Array`/`Predicate`, not imperative loops over `Obj.getMeta`.
+- Colocate plugin domain constants + FK helpers on the type module (`ChessComAccount.CHESS_COM_SOURCE`, `ChessComAccount.getForeignKey` via `Obj.getKeys`) — not a separate `constants.ts`.
+- Factory objects for feed append: inline nested refs (`variant: Ref.make(Chess.make({...}))`); let `Feed.append` persist — don't pre-`Database.add` variant state in the handler.
+- HTTP/API base URLs belong in the service module that consumes them (`services/chess-com-api.ts`), not a shared constants file.
+
+## 2026-07-03 — plugin-crm (CRM nav section + generic collection article)
+
+- Add a top-level nav section by contributing a group node via `AppNode.makeGroup({ id: Paths.GroupSegments.X, type: Paths.GroupTypes.X, label, space, position })` matched `AppNodeMatcher.whenSpace`, then child nodes matched `AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.X)`. New group ids/types are centrally declared in `@dxos/app-toolkit` `Paths.GroupSegments`/`GroupTypes` (ai/content/communications/crm/system) — add there, not per-plugin. Group auto-hides when it has no children.
+- A "plain folder that opens an article" node = `Node.make({ data: <registered Type entity>, properties: { selectable: true, space, label: AppNode.getDynamicLabel('typename.label', typename, {count:2}), icon } })`. `node.data` flows to the article surface as `data.subject`; `node.properties` → `data.properties`. Opening a Type-subject node hits plugin-space's generic `typeCollection` surface (filter `AppSurface.subject(Article, Type.isType)` → `TypeCollectionArticle`) UNLESS a narrower surface at `Position.first` matches — scope your override by typename and set `position: Position.first` to win (Surfaces resolve first-match by Position within a role bucket; see `SurfaceManager`).
+- Resolve the registry copy of a static schema for reliable icon/hue annotations: `space.db.graph.registry.list().filter(Type.isType).find(t => Type.getTypename(t)===typename)` — raw imported schema classes don't carry annotations reliably (same caveat as plugin-space `createSchemaNode`/`TypeSection`).
+- `Organization`/`Person` are ECHO types from `@dxos/types` (`org.dxos.type.organization`/`.person`), registered as schema by plugin-space (also plugin-preview). Query objects with `Filter.type(Type.getURI(type))`.
+- Generic type-collection article with a layout switch: `Panel.Toolbar` holds a `ToggleGroup type='single'` (`@dxos/react-ui`, from `components/Button/ToggleGroup`) of `ToggleGroupIconItem`; Cards view reuses the header-card masonry (`Masonry.Root/Content/Viewport` + `Focus.Item`/`Card.*` tiles, mirror plugin-space `TypeCollectionArticle`); Table view is `DynamicTable` (`@dxos/react-ui-table`) — pass `type={Type entity}` + `rows={objects}` + `onRowClick`, it derives columns from the schema (no persisted View needed).
+- Nav connector nodes don't need a NavigationPathResolver (they're built by the connector like the Database section nodes); object links use `Paths.getObjectPathFromObject` resolved by plugin-space's existing resolver. Only `TypeSection` inline-listed object CHILDREN need `createTypeSectionPathResolver`.
+- Story for a container using capability hooks (useQuery/useOperationInvoker/useSelection): mirror `TypeCollectionArticle.stories.tsx` — `withPluginManager({ capabilities:[Capability.contributes(AppCapabilities.Translations, translations)], plugins:[...corePlugins(), StorybookPlugin({}), PreviewPlugin(), ClientPlugin({ types, onClientInitialized })] })` + `withLayout({layout:'fullscreen'})`. Needs devDeps `@dxos/plugin-client`, `@dxos/plugin-preview`, `@dxos/plugin-testing`, `@storybook/react-vite` + the `storybook`/`ts-test-storybook` moon tags.
+- New workspace deps: add `workspace:*` to package.json AND a matching `references` entry in tsconfig.json by hand (postinstall ref-sync is skipped), then `pnpm install --no-frozen-lockfile`. New internal barrel (`#containers`) needs both a package.json `imports` alias and a `--entryPoint=src/containers/index.ts` in moon.yml.
+
+## 2026-07-01 — plugin-space SpaceHome stories
+
+- `Surface.create` ids are DOT-separated and every segment must be camelCase (`story.spaceHomeRecent`); slashes or hyphens throw `Invalid surface id` at runtime (renders as a story error, not a build error).
+- `ClientPlugin({ types })` (testing) registers types with ECHO but does NOT contribute `AppCapabilities.Schema` — containers that build filters from `useCapabilities(AppCapabilities.Schema)` (e.g. `SpaceHomeRecent`) render empty in stories unless you add `Capability.contributes(AppCapabilities.Schema, [Task, Note])` to `withPluginManager` capabilities.
+- Translation keys are linted by `@dxos/rules(translation-key-format)`: the final segment needs a known suffix (`.label`, `.heading`, …) — `foo.range.all` fails, `foo.range-all.label` passes.
+- To story a shell article that delegates to a Surface role token (e.g. `SpaceHomeArticle` → `SpaceHomeContent`), contribute the child surfaces inline in the story's `withPluginManager({ capabilities })` instead of loading the whole plugin.
+
 ## 2026-06-30 — storybook cwd + settings-container story pattern
 
 - Storybook globs `packages/plugins/*/src/**/*.stories.tsx` relative to the CWD's repo root (`tools/storybook-react/.storybook/main.ts` → `rootDir`). Run `moon run storybook-react:serve` from INSIDE the worktree dir, never `cd` into the main repo first — doing so globs main's packages and your new worktree story files silently never appear in `/index.json` (story shows "Couldn't find story matching …"). Verify inclusion via `curl -s localhost:PORT/index.json`.

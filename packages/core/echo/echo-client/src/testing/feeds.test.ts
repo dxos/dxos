@@ -61,7 +61,7 @@ describe('feeds', () => {
       // (echo://spaceId/itemId) without feed routing info, a local object DXN + feed
       // context is the correct way to resolve them.
       const resolved = await peer.client.graph
-        .createRefResolver({ context: { space: db.spaceId, feed: Feed.getQueueUri(feed)! } })
+        .createRefResolver({ context: { space: db.spaceId, feed: Feed.getFeedUri(feed)! } })
         .resolve(EID.make({ entityId: obj.id }), { source: 'network' })
         .wait();
       expect(resolved?.id).toEqual(obj.id);
@@ -318,4 +318,4 @@ describe('feeds', () => {
  * Queries a feed through the database with a feed scope — the canonical non-Effect feed query.
  */
 const queryFeed = (db: EchoDatabase, feed: Feed.Feed, filter: Filter.Any) =>
-  db.query(Query.select(filter).from(Scope.feed(Feed.getQueueUri(feed)!)));
+  db.query(Query.select(filter).from(Scope.feed(Feed.getFeedUri(feed)!)));

@@ -13,6 +13,7 @@
   ],
   "include": [
     "dx.config.ts",
+    "scripts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -74,6 +75,9 @@
     },
     {
       "path": "../../core/compute/functions-runtime"
+    },
+    {
+      "path": "../../core/compute/pipeline"
     },
     {
       "path": "../../core/echo/echo"

@@ -7,10 +7,6 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
-// Import specific `core/` submodules rather than the top-level barrel: this is the content
-// script injected into every page, so it deliberately avoids pulling in background-only weight
-// (e.g. `bridge/sender`'s tab APIs, the `image` edge-client action) via a barrel.
-import { DEVELOPER_MODE_PROP, getProp } from './config';
 import {
   PAGE_ACTION_DELIVER_MESSAGE_TYPE,
   PAGE_ACTION_EXTRACT_MESSAGE_TYPE,
@@ -45,6 +41,10 @@ import {
   decodeRenderAck,
   decodeRenderRequest,
 } from './core/proxy';
+// Import specific `core/` submodules rather than the top-level barrel: this is the content
+// script injected into every page, so it deliberately avoids pulling in background-only weight
+// (e.g. `bridge/sender`'s tab APIs, the `image` edge-client action) via a barrel.
+import { DeveloperMode } from './core/state';
 
 /**
  * Content script — loaded on every page at document_start. Hosts the DOM
@@ -283,7 +283,7 @@ const main = async () => {
 
     // When `developer-mode` is on, show the serialized JSON before delivery so
     // the user can inspect (and copy) the payload independently of Composer.
-    const debug = Boolean(await getProp(DEVELOPER_MODE_PROP));
+    const debug = await DeveloperMode.get();
     if (debug) {
       const confirmed = await showDebugPreview(picked.actionId, picked);
       if (!confirmed) {

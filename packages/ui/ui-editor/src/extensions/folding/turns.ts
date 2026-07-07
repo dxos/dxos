@@ -179,16 +179,19 @@ export const createTurnSource = (element: RegExp): TurnSource => {
 
     const turns: Turn[] = [];
     for (let index = 0; index < heads.length; index += 2) {
+      const headStart = heads[index];
       const headEnd = heads[index + 1];
-      const headLine = doc.lineAt(headEnd);
-      const from = headLine.to;
+      // Fold starts after the head's last line (so the whole head stays visible), but the gutter
+      // marker anchors to the head's first line so the toggle sits at the top of a multi-line head.
+      const from = doc.lineAt(headEnd).to;
+      const headLineFrom = doc.lineAt(headStart).from;
       const nextHeadStart = index + 2 < heads.length ? heads[index + 2] : doc.length;
       let to = nextHeadStart;
       while (to > from && /\s/.test(text[to - 1])) {
         to--;
       }
       if (to > from) {
-        turns.push({ from, to, headLineFrom: headLine.from });
+        turns.push({ from, to, headLineFrom });
       }
     }
     return turns;

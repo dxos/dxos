@@ -8,13 +8,13 @@ import * as Pipeline from '../Pipeline';
 
 /** In-memory sink capturing every emitted value for assertions. */
 export type CaptureSink<Out> = {
-  readonly sink: Pipeline.Sink<Out, unknown>;
+  readonly sink: Pipeline.Sink<Out>;
   readonly items: Out[];
 };
 
 export const captureSink = <Out>(): CaptureSink<Out> => {
   const items: Out[] = [];
-  const sink: Pipeline.Sink<Out, unknown> = (out) =>
+  const sink: Pipeline.Sink<Out> = (out) =>
     Effect.sync(() => {
       items.push(out);
     });

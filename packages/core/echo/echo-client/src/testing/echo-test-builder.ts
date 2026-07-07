@@ -156,7 +156,7 @@ export class EchoTestPeer extends Resource {
     this._echoClient.connectToService({
       dataService: this._echoHost.dataService,
       queryService: this._echoHost.queryService,
-      queueService: this._echoHost.queuesService,
+      feedService: this._echoHost.feedService,
     });
     await this._echoHost.open(ctx);
     await this._echoClient.open(ctx);
@@ -226,7 +226,7 @@ export class EchoTestPeer extends Resource {
     client.connectToService({
       dataService: this._echoHost.dataService,
       queryService: this._echoHost.queryService,
-      queueService: this._echoHost.queuesService,
+      feedService: this._echoHost.feedService,
     });
     await client.open();
     return client;

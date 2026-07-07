@@ -222,10 +222,10 @@ export class EdgeHttpClient extends BaseHttpClient {
     ctx: Context,
     subspaceTag: string,
     spaceId: SpaceId,
-    query: FeedProtocol.QueueQuery,
+    query: FeedProtocol.FeedQuery,
     args?: EdgeHttpCallArgs,
   ): Promise<EdgeQueryQueueResponse> {
-    const queueId = query.queueIds?.[0];
+    const queueId = query.feedIds?.[0];
     invariant(queueId, 'queueId required');
     return this._call(
       ctx,

@@ -217,10 +217,13 @@
       "path": "packages/core/compute/pipeline/tsconfig.json"
     },
     {
-      "path": "packages/core/compute/pipeline-transcription/tsconfig.json"
+      "path": "packages/core/compute/pipeline-email/tsconfig.json"
     },
     {
-      "path": "packages/core/compute/semantic-index/tsconfig.json"
+      "path": "packages/core/compute/pipeline-rdf/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/pipeline-transcription/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo/tsconfig.json"
@@ -358,6 +361,9 @@
       "path": "packages/plugins/plugin-chess/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-chess-com/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-client/tsconfig.json"
     },
     {
@@ -401,6 +407,9 @@
     },
     {
       "path": "packages/plugins/plugin-file/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-freeq/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-gallery/tsconfig.json"
@@ -713,6 +722,9 @@
     },
     {
       "path": "packages/ui/react-ui-components/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-dashboard/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-dnd/tsconfig.json"

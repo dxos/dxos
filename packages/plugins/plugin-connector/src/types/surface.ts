@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Role } from '@dxos/app-framework';
 import { type Obj, type Ref } from '@dxos/echo';
 
 /**
@@ -12,7 +12,7 @@ import { type Obj, type Ref } from '@dxos/echo';
  * "Connect X" entry per connector for creating a new connection. A single-element list renders a
  * plain connect button (no dropdown) when there is nothing to reuse.
  */
-export const ConnectorAuth: Surface.RoleToken<{
+export const ConnectorAuth: Role.Role<{
   connectorIds: readonly string[];
   existingTarget?: Ref.Ref<Obj.Unknown>;
-}> = Surface.makeType('org.dxos.plugin.connector.role.auth');
+}> = Role.make('org.dxos.plugin.connector.role.auth');

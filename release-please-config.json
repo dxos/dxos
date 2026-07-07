@@ -385,12 +385,17 @@
         },
         {
           "type": "json",
-          "path": "packages/core/compute/pipeline-transcription/package.json",
+          "path": "packages/core/compute/pipeline-email/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/core/compute/semantic-index/package.json",
+          "path": "packages/core/compute/pipeline-rdf/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/pipeline-transcription/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -625,6 +630,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-chess-com/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-client/package.json",
           "jsonpath": "$.version"
         },
@@ -696,6 +706,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-file/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-freeq/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1216,6 +1231,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-components/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-dashboard/package.json",
           "jsonpath": "$.version"
         },
         {

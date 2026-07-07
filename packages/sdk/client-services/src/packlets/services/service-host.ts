@@ -343,7 +343,7 @@ export class ClientServicesHost {
 
       DataService: this._serviceContext.echoHost.dataService,
       QueryService: this._serviceContext.echoHost.queryService,
-      QueueService: this._serviceContext.echoHost.queuesService,
+      FeedService: this._serviceContext.echoHost.feedService,
 
       NetworkService: new NetworkServiceImpl(
         this._serviceContext.networkManager,

@@ -2,27 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Role } from '@dxos/app-framework';
 
 /** Slot for the main status-bar container. */
-export const StatusBar: Surface.RoleToken<Record<string, unknown>> = Surface.makeType(
-  'org.dxos.plugin.statusBar.role.statusBar',
-);
+export const StatusBar: Role.Role<Record<string, unknown>> = Role.make('org.dxos.plugin.statusBar.role.statusBar');
 
 /** Slot for the status-bar footer region. */
-export const StatusBarFooter: Surface.RoleToken<Record<string, unknown>> = Surface.makeType(
-  'org.dxos.plugin.statusBar.role.footer',
-);
+export const StatusBarFooter: Role.Role<Record<string, unknown>> = Role.make('org.dxos.plugin.statusBar.role.footer');
 
 /** Slot for the version-info widget in the banner. */
-export const VersionInfo: Surface.RoleToken<Record<string, unknown>> = Surface.makeType(
-  'org.dxos.plugin.statusBar.role.versionInfo',
-);
+export const VersionInfo: Role.Role<Record<string, unknown>> = Role.make('org.dxos.plugin.statusBar.role.versionInfo');
 
 /** Slot for the keyboard-shortcuts hints overlay. */
-export const Hints: Surface.RoleToken<Record<string, unknown>> = Surface.makeType('org.dxos.plugin.support.role.hints');
+export const Hints: Role.Role<Record<string, unknown>> = Role.make('org.dxos.plugin.support.role.hints');
 
 /** Slot for the full keyboard-shortcuts list. */
-export const Keyshortcuts: Surface.RoleToken<Record<string, unknown>> = Surface.makeType(
-  'org.dxos.plugin.support.role.keyshortcuts',
-);
+export const Keyshortcuts: Role.Role<Record<string, unknown>> = Role.make('org.dxos.plugin.support.role.keyshortcuts');

@@ -174,7 +174,7 @@ export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(F
  *
  * Used internally by the feed service layer.
  */
-export const getQueueUri = (feed: Feed): EID.EID | undefined => EID.tryParse(Obj.getURI(feed));
+export const getFeedUri = (feed: Feed): EID.EID | undefined => EID.tryParse(Obj.getURI(feed));
 
 //
 // Operations
@@ -227,7 +227,7 @@ export const remove = (
  * Supports both data-first and data-last (curried) forms; the latter composes with `pipe`.
  *
  * In non-Effect code, query a feed directly through the database with a feed scope:
- * `db.query(Query.select(filter).from(Scope.feed(Feed.getQueueUri(feed))))`.
+ * `db.query(Query.select(filter).from(Scope.feed(Feed.getFeedUri(feed))))`.
  *
  * @example
  * ```ts
@@ -273,7 +273,7 @@ export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, nev
   );
 
 /**
- * Returns queue replication backlog for the feed's namespace.
+ * Returns the feed's replication backlog for its namespace.
  *
  * @example
  * ```ts
