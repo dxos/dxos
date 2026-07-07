@@ -143,8 +143,9 @@ export class WorkingSetQueryExecutor {
     const spaceScopes = step.scope.filter((scope): scope is QueryAST.SpaceScope => scope._tag === 'space');
     const feedScopes = step.scope.filter((scope): scope is QueryAST.FeedScope => scope._tag === 'feed');
 
+    const hasExplicitScopes = step.scope.length > 0;
     const scopeIncludesOurSpace =
-      spaceScopes.length === 0 ||
+      !hasExplicitScopes ||
       spaceScopes.some(
         // SpaceScope.spaceId is a plain string from the schema AST; SpaceId is a branded type
         // in this package. Both carry the same runtime value — the cast is the boundary.
@@ -516,6 +517,18 @@ export class WorkingSetQueryExecutor {
   private _compareByOrder(itemA: WorkingSetItem, itemB: WorkingSetItem, order: QueryAST.Order): number {
     switch (order.kind) {
       case 'natural': {
+        const posA = getQueuePosition(itemA);
+        const posB = getQueuePosition(itemB);
+        if (posA !== null && posB !== null) {
+          const comparison = posA - posB;
+          return order.direction === 'desc' ? -comparison : comparison;
+        }
+        if (posA === null && posB !== null) {
+          return 1;
+        }
+        if (posA !== null && posB === null) {
+          return -1;
+        }
         const comparison = itemA.objectId.localeCompare(itemB.objectId);
         return order.direction === 'desc' ? -comparison : comparison;
       }
@@ -641,4 +654,19 @@ const _valueReferencesAny = (value: unknown, targetIds: Set<EntityId>): boolean 
     return value.some((element) => _valueReferencesAny(element, targetIds));
   }
   return false;
+};
+
+const getQueuePosition = (item: WorkingSetItem): number | null => {
+  if (item.data && item.data['@meta'] && Array.isArray(item.data['@meta'].keys)) {
+    const key = item.data['@meta'].keys.find(
+      (k: any) => k && k.source === 'org.dxos.key.queue-position',
+    );
+    if (key && typeof key.id === 'string') {
+      const parsed = parseInt(key.id, 10);
+      if (!isNaN(parsed)) {
+        return parsed;
+      }
+    }
+  }
+  return null;
 };

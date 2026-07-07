@@ -12,11 +12,9 @@ import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 
 import { type DatabaseImpl } from '../proxy-db';
-import { QueryResultCache, QueryResultImpl } from '../query';
-import { FeedQueryContext } from './feed-query-context';
 
 const TRACE_FEED_LOAD = false;
 
@@ -83,6 +81,13 @@ export class FeedHandle {
         }),
       ).then((objects) => objects.filter(Predicate.isNotUndefined));
 
+      console.log('REFRESH DEBUG: decodedObjects count', decodedObjects.length);
+      if (decodedObjects.length > 0) {
+        console.log('REFRESH DEBUG: obj 0', JSON.stringify(decodedObjects[0]));
+        console.log('REFRESH DEBUG: obj 0 keys', JSON.stringify(Entity.getKeys(decodedObjects[0], FeedProtocol.KEY_QUEUE_POSITION)));
+        console.log('REFRESH DEBUG: obj 0 meta', JSON.stringify(Entity.getMeta(decodedObjects[0])));
+      }
+
       if (thisRefreshId !== this._refreshId) {
         return;
       }
@@ -96,6 +101,7 @@ export class FeedHandle {
       TRACE_FEED_LOAD && log.info('feed refresh', { changed, objects: objects?.length ?? 0, refreshId: thisRefreshId });
       this._objects = decodedObjects;
     } catch (err) {
+      console.error('REFRESH TASK ERROR:', err);
       // TODO(dmaretskyi): This task occasionally fails with "The database connection is not open" error in tests -- some issue with teardown ordering.
       //                   We should find the root cause and fix it instead of muting the error.
       if (!isSqliteNotOpenError(err)) {
@@ -127,9 +133,7 @@ export class FeedHandle {
   private _refreshId = 0;
   private _loadObjectsPromise: Promise<Entity.Unknown[]> | undefined;
 
-  // Shares one QueryResult instance (and its subscription) across repeated calls with the same
-  // serialized query against this feed.
-  readonly #queryResultCache = new QueryResultCache();
+
 
   constructor(
     private readonly _service: FeedProtocol.FeedService,
@@ -230,18 +234,7 @@ export class FeedHandle {
     }
   }
 
-  // Odd way to define method's types from a typedef.
-  declare query: Database.QueryFn;
-  static {
-    this.prototype.query = this.prototype._query;
-  }
 
-  private _query(query: Query.Any) {
-    return this.#queryResultCache.getOrCreate(
-      query,
-      () => new QueryResultImpl(new FeedQueryContext(this, this._ctx), query),
-    );
-  }
 
   async sync({
     shouldPush = true,
@@ -254,6 +247,10 @@ export class FeedHandle {
       shouldPush,
       shouldPull,
     });
+  }
+
+  async refresh(): Promise<void> {
+    await this._refreshTask.runBlocking();
   }
 
   async getSyncState(): Promise<Feed.SyncState> {

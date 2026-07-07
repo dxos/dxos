@@ -6,11 +6,11 @@ import * as Predicate from 'effect/Predicate';
 
 import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Obj, Query, type QueryResult } from '@dxos/echo';
+import { Obj, Query, type QueryResult, Feed } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
 import { QueryPlanner } from '@dxos/echo-host/query';
 import { QueryAST } from '@dxos/echo-protocol';
-import { type EntityId, type SpaceId } from '@dxos/keys';
+import { EID, type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
@@ -18,7 +18,7 @@ import { prohibitSignalActions } from '../guarded-scope';
 import { type DatabaseImpl } from '../proxy-db';
 import { type QueryContext } from './query-context';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
-import { type WorkingSetDataProvider, type WorkingSetItem, WorkingSetQueryExecutor } from './working-set-executor';
+import { type WorkingSetDataProvider, type WorkingSetItem, WorkingSetQueryExecutor, type WorkingSetFeedItem } from './working-set-executor';
 
 export type GraphQueryContextProps = {
   // TODO(dmaretskyi): Make async.
@@ -181,6 +181,27 @@ export class SpaceQuerySource implements QuerySource {
       allCores: () => _database.allObjectCores(),
       getCoreById: (id, load) => _database.getObjectCoreById(id, { load: load ?? false }),
       areStrongDepsSatisfied: (core) => _database.areStrongDepsSatisfied(core),
+      getFeedItems: (queueIds) => {
+        const feedItems: WorkingSetFeedItem[] = [];
+        for (const queueId of queueIds) {
+          const feedUri = EID.make({ spaceId: _database.spaceId, entityId: queueId });
+          const handle = _database._tryGetFeedHandle(feedUri);
+          if (handle) {
+            const objects = handle.getObjectsSync();
+            for (const obj of objects) {
+              feedItems.push({
+                objectId: obj.id,
+                spaceId: _database.spaceId,
+                queueId,
+                queueNamespace: (handle as any)._namespace ?? null,
+                // Coerce Entity.Unknown to Obj.Unknown because feed items are stored as generic Entity but are structurally objects.
+                data: Obj.toJSON(obj as Obj.Unknown),
+              });
+            }
+          }
+        }
+        return feedItems;
+      },
     };
     this._executor = new WorkingSetQueryExecutor(provider);
     this._planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
@@ -201,7 +222,7 @@ export class SpaceQuerySource implements QuerySource {
     void this._ctx.dispose().catch(() => {});
   }
 
-  private _onUpdate = (updateEvent: ItemsUpdatedEvent) => {
+  private _onUpdate = (updateEvent?: ItemsUpdatedEvent) => {
     if (!this._query) {
       return;
     }
@@ -209,6 +230,12 @@ export class SpaceQuerySource implements QuerySource {
     prohibitSignalActions(() => {
       // Results haven't been computed yet — no stale cache to invalidate.
       if (!this._results) {
+        return;
+      }
+
+      if (!updateEvent) {
+        this._results = undefined;
+        this.changed.emit();
         return;
       }
 
@@ -243,19 +270,35 @@ export class SpaceQuerySource implements QuerySource {
       return [];
     }
 
+    const feedUris = getFeedScopeUris(query);
+    for (const feedUri of feedUris) {
+      const feedObjectId = EID.getEntityId(feedUri);
+      const feed = feedObjectId ? this._database.getObjectById<Feed.Feed>(feedObjectId) : undefined;
+      try {
+        const handle = this._database._getOrCreateFeedHandle(feedUri, feed?.namespace);
+        await handle.refresh();
+      } catch (err) {
+        console.error('REFRESH ERROR:', err);
+      }
+    }
+
     const simple = isSimpleSelectionQuery(query);
 
     // For queries that contain traversals, unions, or set-difference nodes — structures that the
     // SQL-backed source cannot handle — try the working-set executor. If it can satisfy the query
     // entirely from in-memory cores, return those results; otherwise return empty.
+    console.log('SpaceQuerySource.run: query AST =', JSON.stringify(query));
+    console.log('SpaceQuerySource.run: requiresWorkingSetExecutor =', requiresWorkingSetExecutor(query));
     if (requiresWorkingSetExecutor(query)) {
       const executorResults = this._tryExecuteWithWorkingSet(query);
+      console.log('SpaceQuerySource.run: executorResults =', executorResults);
       if (executorResults !== null) {
         return executorResults.map((item) => this._mapItemToResult(item));
       }
       return [];
     }
 
+    console.log('SpaceQuerySource.run: simple.hasQueues =', simple?.hasQueues);
     // Simple path returned null for non-traversal reasons (limit, order, etc.) — the SQL-backed
     // source handles those entirely; this source has nothing to contribute.
     if (!simple || simple.hasQueues) {
@@ -337,6 +380,22 @@ export class SpaceQuerySource implements QuerySource {
 
     this._database._updateEvent.on(this._ctx, this._onUpdate);
 
+    const feedUris = getFeedScopeUris(query);
+    for (const feedUri of feedUris) {
+      const feedObjectId = EID.getEntityId(feedUri);
+      const feed = feedObjectId ? this._database.getObjectById<Feed.Feed>(feedObjectId) : undefined;
+      try {
+        const handle = this._database._getOrCreateFeedHandle(feedUri, feed?.namespace);
+        if (feed) {
+          handle.setParentEntity(feed as Obj.Unknown);
+        }
+        this._ctx.onDispose(handle.beginPolling());
+        handle.updated.on(this._ctx, () => this._onUpdate());
+      } catch (err) {
+        // Feed service not connected yet.
+      }
+    }
+
     this._results = undefined;
     this.changed.emit();
   }
@@ -373,9 +432,18 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   private _mapItemToResult(item: WorkingSetItem): QueryResult.EntityEntry<Obj.Unknown> {
+    // Coerce result type to any because getObjectById returns Obj.Any but we return Obj.Unknown.
+    let result: any = this._database.getObjectById(item.objectId, { deleted: true });
+    if (!result && item.queueId) {
+      const feedUri = EID.make({ spaceId: this.spaceId, entityId: item.queueId });
+      const handle = this._database._tryGetFeedHandle(feedUri);
+      if (handle) {
+        result = handle.getObjectsSync().find((obj) => obj.id === item.objectId);
+      }
+    }
     return {
       id: item.objectId,
-      result: this._database.getObjectById(item.objectId, { deleted: true }),
+      result: result!,
       match: { rank: 1 },
       resolution: {
         source: 'local',
@@ -391,18 +459,18 @@ export class SpaceQuerySource implements QuerySource {
       return false;
     }
 
-    // Disabled if the from clause has explicit scopes but none target spaces (e.g. registry-only).
+    // Disabled if the from clause has explicit scopes but none target spaces or feeds (e.g. registry-only).
     let hasExplicitNonEmptyScope = false;
-    let hasSpaceScope = false;
+    let hasSpaceOrFeedScope = false;
     QueryAST.visit(query, (node) => {
       if (node.type === 'from' && node.from._tag === 'scope' && node.from.scopes.length > 0) {
         hasExplicitNonEmptyScope = true;
-        if (node.from.scopes.some((s) => s._tag === 'space')) {
-          hasSpaceScope = true;
+        if (node.from.scopes.some((s) => s._tag === 'space' || s._tag === 'feed')) {
+          hasSpaceOrFeedScope = true;
         }
       }
     });
-    if (hasExplicitNonEmptyScope && !hasSpaceScope) {
+    if (hasExplicitNonEmptyScope && !hasSpaceOrFeedScope) {
       return false;
     }
 
@@ -480,6 +548,13 @@ const requiresWorkingSetExecutor = (query: QueryAST.Query): boolean => {
     if ((node.type === 'filter' || node.type === 'select') && _filterContainsChildOf(node.filter)) {
       found = true;
     }
+    if (node.type === 'from' && node.from._tag === 'scope') {
+      for (const scope of node.from.scopes) {
+        if (scope._tag === 'feed') {
+          found = true;
+        }
+      }
+    }
   });
   return found;
 };
@@ -500,4 +575,24 @@ const _filterContainsChildOf = (filter: QueryAST.Filter): boolean => {
     default:
       return false;
   }
+};
+
+/**
+ * Extracts the feed URIs from a query's feed scope (`Scope.feed(...)`), if present.
+ */
+const getFeedScopeUris = (query: QueryAST.Query): EID.EID[] => {
+  const feedUris: EID.EID[] = [];
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'from' && node.from._tag === 'scope') {
+      for (const scope of node.from.scopes) {
+        if (scope._tag === 'feed') {
+          const parsed = EID.tryParse(scope.feedUri);
+          if (parsed) {
+            feedUris.push(parsed);
+          }
+        }
+      }
+    }
+  });
+  return feedUris;
 };

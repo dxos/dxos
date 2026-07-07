@@ -78,6 +78,12 @@ describe('feeds', () => {
 
     {
       const objects = await queryFeed(db, feed, Filter.everything()).run();
+      console.log('TEST DEBUG: objects count', objects.length);
+      if (objects.length > 0) {
+        console.log('TEST DEBUG: obj 0', JSON.stringify(objects[0]));
+        console.log('TEST DEBUG: obj 0 keys', JSON.stringify(Entity.getKeys(objects[0])));
+        console.log('TEST DEBUG: obj 0 meta', JSON.stringify(Entity.getMeta(objects[0])));
+      }
       expect(objects).toHaveLength(2);
       expect(Entity.getKeys(objects[0], FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
       expect(Entity.getKeys(objects[1], FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
