@@ -3,6 +3,7 @@
 //
 
 import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
@@ -11,6 +12,7 @@ import * as Schema from 'effect/Schema';
 import { type AiModelNotAvailableError, AiService } from '@dxos/ai';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { SemanticIndexError } from '../../errors';
 import { Factuality } from '../../types';
@@ -138,7 +140,9 @@ export const parseExtractPayload = (raw: string): ExtractPayload => {
 /**
  * Extract facts for one chunk. Strict `generateObject` first (strong models honor the schema), then
  * a lenient `generateText` + JSON-salvage fallback so schema-non-conforming models still yield facts
- * instead of degrading the document to none.
+ * instead of degrading the document to none. Both attempts are timed and logged: a model that always
+ * fails the strict pass pays for two full generations per chunk, and the `strictMs`/`lenientMs`
+ * breakdown makes that cost visible (the dominant per-message latency in the email pipeline).
  */
 export const extractChunk = (
   doc: ExtractDocument,
@@ -147,14 +151,30 @@ export const extractChunk = (
   Effect.gen(function* () {
     const context = `Author: ${doc.author ?? 'unknown'}\nDate: ${doc.date ?? 'unknown'}\nMessage:\n${doc.text}`;
     const prompt = `${buildExtractionPrompt(options)}\n\n${context}`;
-    return yield* LanguageModel.generateObject({ schema: ExtractPayload, prompt }).pipe(
-      Effect.map((response) => response.value),
-      Effect.catchAll(() =>
-        LanguageModel.generateText({
-          prompt: `${prompt}\n\nRespond with ONLY a JSON object of the form {"facts": [ ... ]} — no prose, no markdown fences.`,
-        }).pipe(Effect.map((response) => parseExtractPayload(response.text))),
+    const [strictDuration, strict] = yield* Effect.timed(
+      LanguageModel.generateObject({ schema: ExtractPayload, prompt }).pipe(
+        Effect.map((response) => Option.some(response.value)),
+        Effect.catchAll(() => Effect.succeed(Option.none<ExtractPayload>())),
       ),
     );
+    const strictMs = Math.round(Duration.toMillis(strictDuration));
+    if (Option.isSome(strict)) {
+      log('extract-facts: strict', { source: doc.source, strictMs, facts: strict.value.facts.length });
+      return strict.value;
+    }
+    const [lenientDuration, payload] = yield* Effect.timed(
+      LanguageModel.generateText({
+        prompt: `${prompt}\n\nRespond with ONLY a JSON object of the form {"facts": [ ... ]} — no prose, no markdown fences.`,
+      }).pipe(Effect.map((response) => parseExtractPayload(response.text))),
+    );
+    // Strict validation failed and its whole generation was wasted; the lenient retry doubles latency.
+    log.warn('extract-facts: strict rejected, used lenient fallback', {
+      source: doc.source,
+      strictMs,
+      lenientMs: Math.round(Duration.toMillis(lenientDuration)),
+      facts: payload.facts.length,
+    });
+    return payload;
   }).pipe(
     Effect.provide(modelLayer(options).pipe(Layer.orDie)),
     // Model-layer construction failure is a fatal wiring fault (defect); transient LLM failures

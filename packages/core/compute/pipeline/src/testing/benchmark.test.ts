@@ -36,6 +36,7 @@ describe('benchmark framework', () => {
     expect(metrics['evens.in']).toBe(4);
     expect(metrics['evens.out']).toBe(2);
     expect(metrics['evens.errors'] ?? 0).toBe(0);
+    expect(typeof metrics['evens.ms']).toBe('number');
     expect(typeof metrics['total.ms']).toBe('number');
   });
 

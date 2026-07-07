@@ -25,7 +25,7 @@ import { extractContact } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { SemanticPipeline, SemanticStore } from '@dxos/pipeline-rdf';
-import { captureSink } from '@dxos/pipeline/testing';
+import { Metrics, captureSink, instrument, makeMetrics } from '@dxos/pipeline/testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -312,6 +312,10 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
         );
       };
 
+      // Per-stage timing: each LLM-bearing stage is instrumented so the run reports where the
+      // per-message latency goes (`extract-facts.ms` dominates — it makes up to two model calls per
+      // message, see extractChunk). One Metrics instance for the run, read back after it completes.
+      const metrics = makeMetrics();
       const { sink, items } = captureSink<Message.Message>();
       await EffectEx.runPromise(
         Effect.provide(
@@ -319,16 +323,21 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
             Stream.take(EMAIL_COUNT),
             Stream.map(emailToMessage),
             logStage('email.in'),
-            summarizeStage,
-            extractFactsStage(indexFacts),
-            extractStage,
-            statsStage,
+            instrument('summarize', summarizeStage),
+            instrument('extract-facts', extractFactsStage(indexFacts)),
+            instrument('extract-contact', extractStage),
+            instrument('stats', statsStage),
             logStage('email.out'),
             Pipeline.run({ sink }),
           ),
-          Layer.succeed(Ctx, context),
+          Layer.merge(Layer.succeed(Ctx, context), Layer.succeed(Metrics, metrics)),
         ),
       );
+
+      // Timing breakdown (ms is the summed per-stage latency; divide by the stage's `.out` count for
+      // the per-message average). Surfaced in the log and serialized with the run's results.
+      const timing = await EffectEx.runPromise(metrics.snapshot);
+      log.info('pipeline timing', timing);
 
       // The pipeline processes up to EMAIL_COUNT messages (fewer only if the dataset is smaller).
       expect(items.length).toBeGreaterThan(0);
@@ -453,6 +462,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
             commitments,
             rollups,
             digest: renderDigest(digest),
+            timing,
             stats: {
               total: stats.total,
               spam: stats.spam,
