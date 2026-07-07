@@ -95,7 +95,13 @@ describe('MediaManager transport seam', () => {
 
     // A media-change event (peer published video) populates the cache synchronously, keyed by the swarm name.
     fake.setRemoteTracks([{ trackData, track: videoTrack }]);
-    expect(pulledStream()?.getVideoTracks()[0]).toBe(videoTrack);
+    const stream = pulledStream();
+    expect(stream?.getVideoTracks()[0]).toBe(videoTrack);
+
+    // A later event with the same track reuses the same `MediaStream` — so the bound `<video>` never re-binds
+    // (no flicker). Reactivity relies on this reference stability.
+    fake.setRemoteTracks([{ trackData, track: videoTrack }]);
+    expect(pulledStream()).toBe(stream);
 
     // The peer leaving (empty roster) clears the cached stream.
     fake.setRemoteTracks([]);

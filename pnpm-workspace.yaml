@@ -46,8 +46,6 @@ catalog:
   '@ch-ui/tokens': 3.0.1
   '@cloudflare/ai-chat': ^0.0.6
   '@cloudflare/realtimekit': ^2.0.0
-  '@cloudflare/realtimekit-react': ^2.0.0
-  '@cloudflare/realtimekit-react-ui': ^2.0.0
   '@cloudflare/vitest-pool-workers': ^0.16.8
   '@cloudflare/workers-types': ^4.20260302.0
   '@codemirror/autocomplete': ^6.20.3

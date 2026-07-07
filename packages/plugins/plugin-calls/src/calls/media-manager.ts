@@ -103,10 +103,7 @@ export class MediaManager extends Resource {
   async leave(): Promise<void> {
     this._mediaChangeUnsubscribe?.();
     this._mediaChangeUnsubscribe = undefined;
-    // Detach remote tracks but never stop them: the transport owns them and stops them on participant-left.
-    Object.values(this._state.pulledVideoStreams).forEach((stream) =>
-      stream.getTracks().forEach((track) => stream.removeTrack(track)),
-    );
+    // Drop the pulled records; never stop the remote tracks (the transport owns them and stops them on close).
     await this._state.peer?.close();
     this._state.peer = undefined;
     this._state.pushedVideoTrack = undefined;
@@ -214,55 +211,42 @@ export class MediaManager extends Resource {
       return;
     }
 
-    const desiredVideo = new Map<EncodedTrackName, MediaStreamTrack>();
-    const desiredAudio = new Map<EncodedTrackName, MediaStreamTrack>();
+    // The transport's roster is the true state, so rebuild the pulled-media cache from it directly rather than
+    // diffing. Reuse the existing `MediaStream` wrapper whenever a peer's video track is unchanged: the UI binds
+    // `<video>.srcObject` to that object, so a fresh wrapper for the same track would needlessly re-bind and
+    // flicker the tile. Audio tracks are stored bare (played, not rendered).
+    const pulledVideoStreams: Record<EncodedTrackName, MediaStream> = {};
+    const pulledAudioTracks: Record<EncodedTrackName, MediaStreamTrack> = {};
+    let changed = false;
     for (const { trackData, track } of peer.getRemoteTracks()) {
-      // Camera and screenshare both render as video streams; audio plays as a bare track.
-      (trackData.trackName === 'audio' ? desiredAudio : desiredVideo).set(TrackNameCodec.encode(trackData), track);
-    }
-
-    let updated = false;
-
-    // Video (+ screenshare) streams: drop departed, add new, swap a replaced track in place (preserving the
-    // `MediaStream` identity so the UI updates live without a re-render).
-    for (const name of Object.keys(this._state.pulledVideoStreams) as EncodedTrackName[]) {
-      if (!desiredVideo.has(name)) {
-        const stream = this._state.pulledVideoStreams[name];
-        stream.getTracks().forEach((track) => stream.removeTrack(track));
-        delete this._state.pulledVideoStreams[name];
-        updated = true;
+      const name = TrackNameCodec.encode(trackData);
+      if (trackData.trackName === 'audio') {
+        pulledAudioTracks[name] = track;
+        changed ||= this._state.pulledAudioTracks[name] !== track;
+      } else {
+        const existing = this._state.pulledVideoStreams[name];
+        if (existing?.getVideoTracks()[0] === track) {
+          pulledVideoStreams[name] = existing;
+        } else {
+          pulledVideoStreams[name] = new MediaStream([track]);
+          changed = true;
+        }
       }
     }
-    for (const [name, track] of desiredVideo) {
-      const stream = this._state.pulledVideoStreams[name];
-      if (!stream) {
-        this._state.pulledVideoStreams[name] = new MediaStream([track]);
-        updated = true;
-      } else if (stream.getVideoTracks()[0] !== track) {
-        stream.getTracks().forEach((existing) => stream.removeTrack(existing));
-        stream.addTrack(track);
-        updated = true;
-      }
-    }
+    // Departed tracks (present before, gone now) are a change too; new/swapped tracks already set `changed`.
+    changed ||=
+      Object.keys(pulledVideoStreams).length !== Object.keys(this._state.pulledVideoStreams).length ||
+      Object.keys(pulledAudioTracks).length !== Object.keys(this._state.pulledAudioTracks).length;
 
-    // Audio tracks.
-    for (const name of Object.keys(this._state.pulledAudioTracks) as EncodedTrackName[]) {
-      if (!desiredAudio.has(name)) {
-        delete this._state.pulledAudioTracks[name];
-        updated = true;
-      }
-    }
-    for (const [name, track] of desiredAudio) {
-      if (this._state.pulledAudioTracks[name] !== track) {
-        this._state.pulledAudioTracks[name] = track;
-        updated = true;
-      }
-    }
+    // Never stop the departed tracks: the transport owns them (stops them on participant-left); dropping the
+    // old records lets their `MediaStream` wrappers be garbage-collected.
+    this._state.pulledVideoStreams = pulledVideoStreams;
+    this._state.pulledAudioTracks = pulledAudioTracks;
 
-    if (updated) {
+    if (changed) {
       log.info('rtk synced remote tracks', {
-        video: [...desiredVideo.keys()].map((name) => name.slice(0, 20)),
-        audio: [...desiredAudio.keys()].map((name) => name.slice(0, 20)),
+        video: Object.keys(pulledVideoStreams).map((name) => name.slice(0, 20)),
+        audio: Object.keys(pulledAudioTracks).map((name) => name.slice(0, 20)),
       });
       this.stateUpdated.emit(this._state);
     }

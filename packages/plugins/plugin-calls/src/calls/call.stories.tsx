@@ -91,7 +91,7 @@ const MeetingView = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-calls/experimental/RealtimeKitMeeting',
+  title: 'plugins/plugin-calls/Call',
   render: () => <MeetingView />,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
