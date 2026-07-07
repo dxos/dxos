@@ -26,10 +26,11 @@ export default Capability.makeModule(
       messageEnricher,
     }) => {
       const client = capabilities.get(ClientCapabilities.Client);
+      const managedFeeds = capabilities.get(TranscriptionCapabilities.ManagedFeeds);
       const transcriptionManager = new TranscriptionManagerImpl({
-        edgeClient: client.edge.http,
-        messageEnricher,
         registry,
+        managedFeeds,
+        messageEnricher,
       });
 
       const identity = client.halo.identity.get();

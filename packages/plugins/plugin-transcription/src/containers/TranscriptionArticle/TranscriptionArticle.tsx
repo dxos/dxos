@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { useAtomCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useMembers, useQuery } from '@dxos/react-client/echo';
@@ -14,6 +15,7 @@ import { Message, type Transcript } from '@dxos/types';
 
 import { useTranscriptionRecording } from '#hooks';
 import { meta } from '#meta';
+import { TranscriptionCapabilities } from '#types';
 
 export type TranscriptionArticleProps = AppSurface.ObjectArticleProps<Transcript.Transcript>;
 
@@ -29,22 +31,30 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
 
   // TODO(burdon): Remove if not mutable. E.g., finalized transcript.
   const { recording, toggleRecording } = useTranscriptionRecording(transcript);
-  const menuActions = useMenuBuilder(
-    () =>
-      MenuBuilder.make()
-        .action(
-          'toggle-recording',
-          {
-            label: [recording ? 'stop-recording.label' : 'start-recording.label', { ns: meta.profile.key }],
-            icon: recording ? 'ph--stop-circle--regular' : 'ph--microphone--regular',
-            disposition: 'toolbar',
-            testId: 'transcription.toggle-recording',
-          },
-          toggleRecording,
-        )
-        .build(),
-    [recording, toggleRecording],
-  );
+
+  // A meeting-managed transcript is written by an open TranscriptionManager (native RealtimeKit segments), so
+  // suppress the local recorder to avoid a second, per-client capture into the same feed. The standalone case
+  // (no manager bound to this feed) keeps the mic button.
+  const managedFeeds = useAtomCapability(TranscriptionCapabilities.ManagedFeeds);
+  const managed = !!feed && managedFeeds.has(Obj.getURI(feed));
+
+  const menuActions = useMenuBuilder(() => {
+    const builder = MenuBuilder.make();
+    return (
+      managed
+        ? builder
+        : builder.action(
+            'toggle-recording',
+            {
+              label: [recording ? 'stop-recording.label' : 'start-recording.label', { ns: meta.profile.key }],
+              icon: recording ? 'ph--stop-circle--regular' : 'ph--microphone--regular',
+              disposition: 'toolbar',
+              testId: 'transcription.toggle-recording',
+            },
+            toggleRecording,
+          )
+    ).build();
+  }, [managed, recording, toggleRecording]);
 
   return (
     <Panel.Root role={role}>

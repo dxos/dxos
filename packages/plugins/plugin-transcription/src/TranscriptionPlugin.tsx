@@ -10,6 +10,7 @@ import { Transcript } from '@dxos/types';
 import {
   AppGraphBuilder,
   EntityLookup,
+  ManagedFeeds,
   MarkdownExtension,
   OperationHandler,
   PipelineStatus,
@@ -51,6 +52,11 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
     id: 'recording-session',
     activatesOn: AppActivationEvents.SetupSettings,
     activate: RecordingSession,
+  }),
+  Plugin.addModule({
+    id: 'managed-feeds',
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: ManagedFeeds,
   }),
   Plugin.addModule({
     id: 'pipeline-status',

@@ -29,12 +29,11 @@ export type TranscriptMessageEnricher = (message: Message.Message) => Promise<Me
 export interface TranscriptionManager {
   readonly enabled: Atom.Atom<boolean>;
   setFeed(space: Space, feed: Feed.Feed): void;
-  setAudioTrack(track?: MediaStreamTrack): Promise<void>;
-  setRecording(recording?: boolean): void;
   setEnabled(enabled: boolean): Promise<void>;
   /**
-   * Append externally-produced transcript segments (e.g. RealtimeKit native transcription) directly to
-   * the feed, bypassing local audio capture. No-op unless enabled and a feed is set.
+   * Append transcript segments (e.g. RealtimeKit native transcription) to the bound feed, enriching them
+   * first when a message enricher is configured. No-op unless enabled and a feed is set. This is the only
+   * way segments enter the manager — it is a feed writer/sink, not an audio-capturing recorder.
    */
   addTranscript(segments: ContentBlock.Transcript[]): Promise<void>;
   open(): Promise<this>;
@@ -53,6 +52,15 @@ export const TranscriptionManagerProvider = Capability.make<TranscriptionManager
 
 export const Settings = Capability.make<Atom.Writable<SettingsModule.Settings>>(
   `${meta.profile.key}.capability.settings`,
+);
+
+/**
+ * Feed URIs currently written by an open {@link TranscriptionManager} (i.e. a joined meeting). The UI
+ * uses this to suppress its own local recorder for these transcripts, so meetings transcribe only via the
+ * manager (native segments) rather than a second, per-client local capture.
+ */
+export const ManagedFeeds = Capability.make<Atom.Writable<ReadonlySet<string>>>(
+  `${meta.profile.key}.capability.managed-feeds`,
 );
 
 /**

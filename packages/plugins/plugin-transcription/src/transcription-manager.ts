@@ -6,66 +6,50 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { synchronized } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Transcriber } from '@dxos/pipeline-transcription';
-import { type EdgeHttpClient } from '@dxos/react-edge-client';
-import { MediaStreamRecorder } from '@dxos/react-ui-transcription';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { type TranscriptionCapabilities } from '#types';
 
-/**
- * Length of the chunk in ms.
- */
-const RECORD_INTERVAL = 200;
-
-/**
- * Number of chunks to save before the user starts speaking.
- */
-const PREFIXED_CHUNKS_AMOUNT = 10;
-
-/**
- * Number of chunks to transcribe automatically after.
- * Combined should be mess than 25MB or whisper would fail.
- */
-const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
-
 export type TranscriptionManagerOptions = {
-  edgeClient: EdgeHttpClient;
   registry: Registry.Registry;
 
+  /** Feed URIs an open manager is writing to; the UI hides its local recorder for these. */
+  managedFeeds?: Atom.Writable<ReadonlySet<string>>;
+
   /**
-   * Enrich the message before it is written to the transcription feed.
+   * Enrich the message before it is written to the transcription feed (e.g. entity extraction).
    */
   messageEnricher?: TranscriptionCapabilities.TranscriptMessageEnricher;
 };
 
 /**
- * Manages transcription state for a meeting. Concrete implementation of the
- * {@link TranscriptionCapabilities.TranscriptionManager} service contract; consumers depend on the
+ * Writes transcript segments to a meeting's feed. It does **not** capture audio or run ASR — segments arrive
+ * via {@link addTranscript} (RealtimeKit native transcription, relayed by plugin-calls `CallManager.transcript`).
+ * Concrete implementation of {@link TranscriptionCapabilities.TranscriptionManager}; consumers depend on the
  * interface (via the `TranscriptionManagerProvider` capability), not this class.
+ *
+ * Responsibilities: the enabled flag, the feed binding, optional message enrichment, and — while open with a
+ * bound feed — advertising that feed in `managedFeeds` so the UI suppresses its own local recorder for it.
  */
 export class TranscriptionManagerImpl extends Resource implements TranscriptionCapabilities.TranscriptionManager {
-  private readonly _edgeClient: EdgeHttpClient;
-  private readonly _messageEnricher?: TranscriptionCapabilities.TranscriptMessageEnricher;
   private readonly _registry: Registry.Registry;
-  private _audioStreamTrack?: MediaStreamTrack = undefined;
+  private readonly _managedFeeds?: Atom.Writable<ReadonlySet<string>>;
+  private readonly _messageEnricher?: TranscriptionCapabilities.TranscriptMessageEnricher;
   private _identityDid?: string = undefined;
-  private _mediaRecorder?: MediaStreamRecorder = undefined;
-  private _transcriber?: Transcriber = undefined;
   private _feed?: Feed.Feed = undefined;
+  private _feedUri?: string = undefined;
   private _feedServiceLayer?: Layer.Layer<Database.Service> = undefined;
   private _enabledAtom = Atom.make(false);
 
   constructor(options: TranscriptionManagerOptions) {
     super();
-    this._edgeClient = options.edgeClient;
-    this._messageEnricher = options.messageEnricher;
     this._registry = options.registry;
+    this._managedFeeds = options.managedFeeds;
+    this._messageEnricher = options.messageEnricher;
   }
 
   get enabled(): Atom.Atom<boolean> {
@@ -77,8 +61,16 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
   }
 
   setFeed(space: Space, feed: Feed.Feed): this {
+    // Rebinding to a different feed: stop advertising the old one.
+    if (this._feedUri) {
+      this.#setManaged(this._feedUri, false);
+    }
     this._feed = feed;
     this._feedServiceLayer = Database.layer(space.db);
+    this._feedUri = Obj.getURI(feed);
+    if (this.isOpen) {
+      this.#setManaged(this._feedUri, true);
+    }
     return this;
   }
 
@@ -89,35 +81,16 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
     return this;
   }
 
-  setRecording(recording?: boolean): this {
-    if (!this.isOpen || !this.getEnabled()) {
-      return this;
-    }
-
-    if (recording) {
-      this._transcriber?.startChunksRecording();
-    } else {
-      this._transcriber?.stopChunksRecording();
-    }
-    return this;
-  }
-
   async setEnabled(enabled: boolean): Promise<void> {
     if (this.getEnabled() === enabled) {
       return;
     }
-
     this._registry.set(this._enabledAtom, enabled ?? false);
-    if (enabled) {
-      await this._maybeRestartTranscriber();
-    } else {
-      await this._stopTranscriber();
-    }
   }
 
   /**
-   * Appends externally-produced transcript segments (e.g. native RealtimeKit transcription) directly to
-   * the feed, bypassing the local Whisper transcriber. No-op unless transcription is enabled.
+   * Appends transcript segments (e.g. native RealtimeKit transcription) to the feed, enriching them first
+   * when a `messageEnricher` is configured. No-op unless transcription is enabled and a feed is set.
    */
   async addTranscript(segments: ContentBlock.Transcript[]): Promise<void> {
     if (!this.getEnabled()) {
@@ -126,55 +99,30 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
     await this._onSegments(segments);
   }
 
-  @synchronized
-  async setAudioTrack(track?: MediaStreamTrack): Promise<void> {
-    if (this._audioStreamTrack === track) {
-      return;
-    }
-
-    this._audioStreamTrack = track;
-    await this._maybeRestartTranscriber();
-  }
-
   protected override async _open(): Promise<void> {
-    await this._maybeRestartTranscriber();
+    // A feed set before open should still be advertised.
+    if (this._feedUri) {
+      this.#setManaged(this._feedUri, true);
+    }
   }
 
   protected override async _close(): Promise<void> {
-    await this._stopTranscriber();
+    if (this._feedUri) {
+      this.#setManaged(this._feedUri, false);
+    }
   }
 
-  private async _maybeRestartTranscriber(): Promise<void> {
-    if (!this._audioStreamTrack || !this.getEnabled() || !this.isOpen) {
+  #setManaged(uri: string, present: boolean): void {
+    if (!this._managedFeeds) {
       return;
     }
-
-    // Reinitialize transcriber if feed or media stream track has changed.
-    let needReinit = false;
-    if (this._audioStreamTrack !== this._mediaRecorder?.mediaStreamTrack) {
-      this._mediaRecorder = new MediaStreamRecorder({
-        mediaStreamTrack: this._audioStreamTrack,
-        config: { interval: RECORD_INTERVAL },
-      });
-      needReinit = true;
+    const current = this._registry.get(this._managedFeeds);
+    if (current.has(uri) === present) {
+      return;
     }
-    if (needReinit) {
-      await this._transcriber?.close();
-      this._transcriber = new Transcriber({
-        config: {
-          transcribeAfterChunksAmount: TRANSCRIBE_AFTER_CHUNKS_AMOUNT,
-          prefixBufferChunksAmount: PREFIXED_CHUNKS_AMOUNT,
-        },
-        recorder: this._mediaRecorder,
-        onSegments: (segments) => this._onSegments(segments),
-      });
-
-      await this._transcriber?.open();
-    }
-  }
-
-  private async _stopTranscriber(): Promise<void> {
-    await this._transcriber?.close();
+    const next = new Set(current);
+    present ? next.add(uri) : next.delete(uri);
+    this._registry.set(this._managedFeeds, next);
   }
 
   private async _onSegments(segments: ContentBlock.Transcript[]): Promise<void> {
