@@ -18,7 +18,6 @@ import * as Database from './Database';
 import type * as Entity from './Entity';
 import type * as Filter from './Filter';
 import * as internal from './internal';
-import * as queryInternal from './internal/Query';
 import * as Obj from './Obj';
 import * as Query from './Query';
 import type * as QueryResult from './QueryResult';
