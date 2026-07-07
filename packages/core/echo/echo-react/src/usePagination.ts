@@ -264,7 +264,7 @@ const createPaginationStore = <Q extends Query.Any, O extends Entity.Entity<Quer
  * The query's `.orderBy(...)` is otherwise untouched, and applies to any query the underlying
  * `Database.Queryable` supports -- e.g. `Order.natural('desc')` for feed insertion order.
  *
- * TODO(dxos): For feed-scoped queries, every range change re-fetches and decodes the *entire*
+ * TODO(wittjosiah): For feed-scoped queries, every range change re-fetches and decodes the *entire*
  * underlying feed before slicing out the requested page, regardless of ordering -- this hook only
  * bounds what's held/rendered (via `maxWindowSize` eviction), not what's fetched. A previous
  * version special-cased `Order.natural('desc')` with a cursor-based `FeedWindow` that made only

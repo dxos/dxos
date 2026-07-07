@@ -131,7 +131,7 @@ export class FeedQueryContext implements QueryContext {
  * feed object ids are not sequential, so insertion order is the only sensible reading of "natural"
  * for a feed.
  *
- * TODO(dxos): This always fetches and decodes the entire feed before slicing, for every
+ * TODO(wittjosiah): This always fetches and decodes the entire feed before slicing, for every
  * ordering including natural-desc -- a prior version of this path had a `FeedWindow` that made
  * natural-desc reads truly lazy (bounded cursor fetches), but it was reverted because a
  * partial-laziness story (fast for one ordering, a full decode for every other) wasn't judged

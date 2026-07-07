@@ -178,7 +178,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   // backward/backfill sync appends out of time order, so the window must be selected by date. This
   // content order currently runs on the client feed path (full-fetch + sort + slice); `usePagination`
   // and the virtualizer bound what's rendered, but the whole feed is fetched to sort it.
-  // TODO(dxos): Move this to the host indexer for bounded-memory paging (fetch only the window, not
+  // TODO(wittjosiah): Move this to the host indexer for bounded-memory paging (fetch only the window, not
   //   the whole feed) — see the TODO in `isClientEvaluableFeedQuery`; blocked on indexed ordered
   //   range reads being fast enough.
   const {

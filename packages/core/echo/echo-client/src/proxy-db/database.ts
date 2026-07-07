@@ -811,7 +811,7 @@ const isQueryScoped = (query: QueryAST.Query): boolean => {
  */
 const isClientEvaluableFeedQuery = (query: QueryAST.Query): boolean => {
   const simple = isSimpleFeedWindowQuery(query);
-  // TODO(dxos): Route content-ordered feed queries (e.g. `Order.property('created')`) to the host
+  // TODO(wittjosiah): Route content-ordered feed queries (e.g. `Order.property('created')`) to the host
   //   indexer instead of the client feed path, by appending `&& !queryContainsContentOrder(query)`
   //   here (and uncommenting the helper below). The indexer sorts + slices the indexed feed and
   //   returns only the requested window, so the client never decodes the whole feed — the reason to
@@ -822,7 +822,7 @@ const isClientEvaluableFeedQuery = (query: QueryAST.Query): boolean => {
   return simple != null && !filterContainsTextSearch(simple.filter);
 };
 
-// TODO(dxos): See `isClientEvaluableFeedQuery` above — re-enable together with the routing clause.
+// TODO(wittjosiah): See `isClientEvaluableFeedQuery` above — re-enable together with the routing clause.
 // /**
 //  * Whether the query orders by content (a non-`natural` order, e.g. `Order.property('created')`).
 //  * A content ordering can't be honored by the newest-by-position client feed path, so it runs
