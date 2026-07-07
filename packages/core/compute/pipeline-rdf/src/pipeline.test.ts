@@ -14,18 +14,16 @@ import { Pipeline } from '@dxos/pipeline';
 
 import { SemanticIndexError } from './errors';
 import { FactStore } from './FactStore';
+import { DEFAULT_EXTRACTION_RULES, type ExtractDocument, buildExtractionPrompt } from './internal/stages/extract';
+import { SemanticPipeline } from './SemanticPipeline';
 import {
-  DEFAULT_EXTRACTION_RULES,
   type DocumentFacts,
-  type ExtractDocument,
-  SemanticPipeline,
-  buildExtractionPrompt,
   extractFacts,
   extractFactsStage,
   indexFactsStage,
   normalizeEntityId,
   normalizeFactsStage,
-} from './SemanticPipeline';
+} from './stages';
 import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing';
 import { type Fact } from './types';
 
