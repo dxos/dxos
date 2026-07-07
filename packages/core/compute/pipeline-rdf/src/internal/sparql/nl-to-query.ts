@@ -52,11 +52,12 @@ export const generateQuery = (
   question: string,
 ): Effect.Effect<SemanticQuery, SemanticIndexError, AiService.AiService> =>
   Effect.gen(function* () {
-    const response = yield* LanguageModel.generateObject({
+    const { value } = yield* LanguageModel.generateObject({
       schema: QueryShape,
       prompt: `${PROMPT}\n\nQuestion: ${question}`,
     });
-    return response.value;
+
+    return value;
   }).pipe(
     Effect.provide(AiService.model(DEFAULT_MODEL).pipe(Layer.orDie)),
     Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to generate query', cause })),

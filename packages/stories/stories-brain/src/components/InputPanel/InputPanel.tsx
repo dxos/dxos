@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { type Parser } from '@dxos/nlp';
 import {
@@ -30,10 +30,19 @@ import { mx } from '@dxos/ui-theme';
 export type InputMode = 'document' | 'dataset' | 'record';
 
 /** A message preview row shown for a selected dataset. */
-export type InputDatasetMessage = { id: string; from: string; subject: string; preview: string };
+export type InputDatasetMessage = {
+  id: string;
+  from: string;
+  subject: string;
+  preview: string;
+};
 
 /** A named input dataset (e.g. a sample inbox) the user can feed to the pipeline. */
-export type InputDataset = { id: string; label: string; messages: InputDatasetMessage[] };
+export type InputDataset = {
+  id: string;
+  label: string;
+  messages: InputDatasetMessage[];
+};
 
 /** The current input handed to the pipeline when the user runs it. */
 export type InputPayload =
@@ -50,14 +59,14 @@ export type InputPanelProps = ThemedClassName<{
   datasets?: InputDataset[];
   /** Canned transcript the Record tab captures (real audio capture is out of scope for this harness). */
   sampleTranscript?: string;
-  /** Disables the run trigger and swaps its icon while a pipeline run is in flight. */
+  /** Disables the dataset loader while a run is in flight. */
   busy?: boolean;
   /** Default message count for the Dataset tab's loader. */
   defaultDatasetCount?: number;
   /** Load the first N messages of a remote dataset (e.g. Enron) into the Dataset tab. */
   onLoadDataset?: (count: number) => void;
-  /** Run trigger; receives the current input for the active tab. */
-  onRun?: (payload: InputPayload) => void;
+  /** Reports the current input (active tab + value) so the pipeline column can run it. */
+  onInput?: (payload: InputPayload) => void;
 }>;
 
 /**
@@ -74,7 +83,7 @@ export const InputPanel = ({
   busy,
   defaultDatasetCount = 100,
   onLoadDataset,
-  onRun,
+  onInput,
 }: InputPanelProps) => {
   const { themeMode } = useThemeContext();
   const [mode, setMode] = useState<InputMode>('document');
@@ -83,6 +92,18 @@ export const InputPanel = ({
   const [datasetId, setDatasetId] = useState(datasets[0]?.id ?? '');
   const [count, setCount] = useState(defaultDatasetCount);
   const [transcript, setTranscript] = useState('');
+
+  // Report the active tab's input so the pipeline column can run it (the run trigger lives there).
+  useEffect(() => {
+    switch (mode) {
+      case 'document':
+        return onInput?.({ mode: 'document', text });
+      case 'dataset':
+        return onInput?.({ mode: 'dataset', datasetId });
+      case 'record':
+        return onInput?.({ mode: 'record', transcript: transcript || sampleTranscript });
+    }
+  }, [mode, text, datasetId, transcript, sampleTranscript, onInput]);
 
   const extensions = useMemo(
     () => [
@@ -96,17 +117,6 @@ export const InputPanel = ({
   );
 
   const dataset = datasets.find((item) => item.id === datasetId) ?? datasets[0];
-
-  const handleRun = () => {
-    switch (mode) {
-      case 'document':
-        return onRun?.({ mode: 'document', text });
-      case 'dataset':
-        return dataset && onRun?.({ mode: 'dataset', datasetId: dataset.id });
-      case 'record':
-        return onRun?.({ mode: 'record', transcript: transcript || sampleTranscript });
-    }
-  };
 
   return (
     <Panel.Root classNames={classNames}>
@@ -130,13 +140,6 @@ export const InputPanel = ({
               </div>
             </Input.Root>
           )}
-          <IconButton
-            icon={busy ? 'ph--spinner-gap--regular' : 'ph--play--regular'}
-            iconOnly
-            label='Run pipeline'
-            disabled={busy || !onRun}
-            onClick={handleRun}
-          />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='min-h-0'>
@@ -147,60 +150,64 @@ export const InputPanel = ({
         )}
 
         {mode === 'dataset' && (
-          <div className='flex flex-col min-h-0 h-full'>
-            <div className='flex items-center gap-2 p-2'>
-              <Select.Root value={datasetId} onValueChange={setDatasetId}>
-                <Select.TriggerButton placeholder='Dataset' />
-                <Select.Portal>
-                  <Select.Content>
-                    <Select.Viewport>
-                      {datasets.map((item) => (
-                        <Select.Option key={item.id} value={item.id}>
-                          {item.label}
-                        </Select.Option>
-                      ))}
-                    </Select.Viewport>
-                    <Select.Arrow />
-                  </Select.Content>
-                </Select.Portal>
-              </Select.Root>
-              {onLoadDataset && (
-                <>
-                  <div role='none' className='grow' />
-                  <Input.Root>
-                    <Input.TextInput
-                      type='number'
-                      min={1}
-                      value={String(count)}
-                      onChange={(event) => setCount(Math.max(1, Number(event.target.value) || 1))}
-                      classNames='w-20'
-                    />
-                  </Input.Root>
-                  <Button disabled={busy} onClick={() => onLoadDataset(count)}>
-                    Load Enron
-                  </Button>
-                </>
-              )}
-            </div>
-            <ScrollArea.Root padding classNames='min-h-0 grow'>
-              <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
-                {!dataset || dataset.messages.length === 0 ? (
-                  <Empty label='No messages.' />
-                ) : (
-                  dataset.messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className='flex flex-col min-w-0 bg-card-surface border border-subdued-separator rounded-sm px-3 py-2'
-                    >
-                      <span className='font-medium truncate'>{message.subject}</span>
-                      <span className='text-sm text-description truncate'>{message.from}</span>
-                      <span className='text-sm truncate'>{message.preview}</span>
-                    </div>
-                  ))
+          <Panel.Root>
+            <Panel.Toolbar asChild>
+              <Toolbar.Root>
+                <Select.Root value={datasetId} onValueChange={setDatasetId}>
+                  <Select.TriggerButton placeholder='Dataset' />
+                  <Select.Portal>
+                    <Select.Content>
+                      <Select.Viewport>
+                        {datasets.map((item) => (
+                          <Select.Option key={item.id} value={item.id}>
+                            {item.label}
+                          </Select.Option>
+                        ))}
+                      </Select.Viewport>
+                      <Select.Arrow />
+                    </Select.Content>
+                  </Select.Portal>
+                </Select.Root>
+                {onLoadDataset && (
+                  <>
+                    <div role='none' className='grow' />
+                    <Input.Root>
+                      <Input.TextInput
+                        type='number'
+                        min={1}
+                        value={String(count)}
+                        onChange={(event) => setCount(Math.max(1, Number(event.target.value) || 1))}
+                        classNames='w-20'
+                      />
+                    </Input.Root>
+                    <Button disabled={busy} onClick={() => onLoadDataset(count)}>
+                      Load
+                    </Button>
+                  </>
                 )}
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </div>
+              </Toolbar.Root>
+            </Panel.Toolbar>
+            <Panel.Content asChild>
+              <ScrollArea.Root padding>
+                <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
+                  {!dataset || dataset.messages.length === 0 ? (
+                    <Empty label='No messages.' />
+                  ) : (
+                    dataset.messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className='flex flex-col min-w-0 bg-card-surface border border-subdued-separator rounded-sm px-3 py-2'
+                      >
+                        <span className='font-medium truncate'>{message.subject}</span>
+                        <span className='text-sm text-description truncate'>{message.from}</span>
+                        <span className='text-sm truncate'>{message.preview}</span>
+                      </div>
+                    ))
+                  )}
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Panel.Content>
+          </Panel.Root>
         )}
 
         {mode === 'record' && (

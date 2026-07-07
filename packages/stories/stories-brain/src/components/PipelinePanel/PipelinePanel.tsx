@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Icon, Panel, ScrollArea, Select, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { IconButton, Panel, ScrollArea, Select, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Empty } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
@@ -28,15 +28,31 @@ export type PipelinePanelProps = ThemedClassName<{
   /** Selected pipeline id. */
   selected: string;
   onSelect: (id: string) => void;
-  /** Whether the pipeline is currently running (drives the toolbar spinner). */
-  busy?: boolean;
+  /** Whether the pipeline is currently running (drives the start/stop toggle). */
+  running?: boolean;
+  /** Count of objects processed by the current/last run (reset when a run starts). */
+  processed?: number;
+  /** Start the selected pipeline over the current input. */
+  onStart?: () => void;
+  /** Interrupt the in-flight run. */
+  onStop?: () => void;
 }>;
 
 /**
- * Pipeline column: a toolbar picker selecting which pipeline runs, and the fixed, read-only list of
- * that pipeline's composed stages in execution order (disabled stages dimmed).
+ * Pipeline column: a toolbar picker selecting which pipeline runs, a start/stop toggle, a live count
+ * of objects processed, and the fixed, read-only list of the pipeline's composed stages in execution
+ * order (disabled stages dimmed).
  */
-export const PipelinePanel = ({ classNames, pipelines, selected, onSelect, busy }: PipelinePanelProps) => {
+export const PipelinePanel = ({
+  classNames,
+  pipelines,
+  selected,
+  onSelect,
+  running,
+  processed = 0,
+  onStart,
+  onStop,
+}: PipelinePanelProps) => {
   const pipeline = pipelines.find((item) => item.id === selected) ?? pipelines[0];
   const stages = pipeline?.stages ?? [];
   return (
@@ -59,7 +75,14 @@ export const PipelinePanel = ({ classNames, pipelines, selected, onSelect, busy 
             </Select.Portal>
           </Select.Root>
           <div role='none' className='grow' />
-          {busy && <Icon icon='ph--spinner-gap--regular' size={4} classNames='animate-spin' />}
+          <span className='text-sm text-description tabular-nums'>{processed} processed</span>
+          <IconButton
+            icon={running ? 'ph--stop--regular' : 'ph--play--regular'}
+            iconOnly
+            label={running ? 'Stop' : 'Start'}
+            disabled={running ? !onStop : !onStart}
+            onClick={() => (running ? onStop?.() : onStart?.())}
+          />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>

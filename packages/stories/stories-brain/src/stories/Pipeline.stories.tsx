@@ -22,10 +22,13 @@
  */
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Obj, Query } from '@dxos/echo';
@@ -82,27 +85,6 @@ const SYNONYMS: Record<string, string> = {
   'employed by': 'works at',
 };
 
-const makeEmail = (messageId: string, email: string, subject: string, text: string): Message.Message =>
-  Message.make({
-    created: '2026-07-01T10:00:00.000Z',
-    sender: { email },
-    blocks: [{ _tag: 'text', text }],
-    properties: { messageId, subject },
-  });
-
-// A small fixed inbox for the email pipeline. Two messages share a subject so they group into one
-// thread; the bodies carry obvious propositions to extract.
-const SAMPLE_EMAILS: Message.Message[] = [
-  makeEmail('<m-1@example.com>', OWNER_EMAIL, 'Q2 report', 'I will send the Q2 report to Bob by Friday.'),
-  makeEmail('<m-2@example.com>', 'bob@example.com', 'Q2 report', 'Thanks Alice, Acme is looking forward to it.'),
-  makeEmail(
-    '<m-3@example.com>',
-    'carol@globex.com',
-    'Intro',
-    'Carol from Globex here; Globex acquired Initech in 2021.',
-  ),
-];
-
 const toPreview = (message: Message.Message): InputDatasetMessage => ({
   id: message.id,
   from: message.sender.email ?? 'unknown',
@@ -110,11 +92,8 @@ const toPreview = (message: Message.Message): InputDatasetMessage => ({
   preview: Message.extractText(message),
 });
 
-const SAMPLE_DATASET: InputDataset = {
-  id: 'sample-inbox',
-  label: 'Sample inbox',
-  messages: SAMPLE_EMAILS.map(toPreview),
-};
+// The only dataset offered; its messages are empty until loaded on demand from the Enron parquet.
+const ENRON_DATASET: InputDataset = { id: 'enron', label: 'Enron', messages: [] };
 
 const PIPELINES: PipelineInfo[] = [
   {
@@ -155,10 +134,15 @@ const DefaultStory = (_: StoryArgs) => {
   const [facts, setFacts] = useState<RDF.Fact[]>([]);
   const [stats, setStats] = useState<StatItem[]>([]);
   const [details, setDetails] = useState<OutputDetail[]>([]);
-  const [busy, setBusy] = useState(false);
-  // The messages the email pipeline runs over: the inline sample inbox until Enron is loaded.
-  const [emails, setEmails] = useState<Message.Message[]>(SAMPLE_EMAILS);
-  const [datasets, setDatasets] = useState<InputDataset[]>([SAMPLE_DATASET]);
+  const [running, setRunning] = useState(false);
+  const [processed, setProcessed] = useState(0);
+  // Current input reported by the InputPanel (the run trigger lives in the pipeline column).
+  const [input, setInput] = useState<InputPayload>({ mode: 'document', text: SAMPLE_CONTENT });
+  // The messages the email pipeline runs over: empty until Enron is loaded (the only dataset).
+  const [emails, setEmails] = useState<Message.Message[]>([]);
+  const [datasets, setDatasets] = useState<InputDataset[]>([ENRON_DATASET]);
+  // Interrupts the in-flight run (Stop); set by whichever run is active.
+  const interruptRef = useRef<(() => void) | null>(null);
 
   // Live view of the ECHO objects the pipelines materialize (email creates Person/Org/Thread;
   // transcription links the seeded entities). Reactive: updates as stages persist to the space.
@@ -175,16 +159,24 @@ const DefaultStory = (_: StoryArgs) => {
   );
 
   const runRdf = useCallback((text: string) => {
+    const collected: DocumentFacts[] = [];
     const program = Effect.gen(function* () {
-      const collected: DocumentFacts[] = [];
       yield* Stream.fromIterable([{ text, source: 'editor:document' }]).pipe(
         extractFactsStage(),
         normalizeFactsStage({ synonyms: SYNONYMS }),
-        Pipeline.run({ sink: (out) => Effect.sync(() => collected.push(out)) }),
+        Pipeline.run({
+          sink: (out) =>
+            Effect.sync(() => {
+              collected.push(out);
+              setProcessed((value) => value + 1);
+            }),
+        }),
       );
       return collected.flatMap((item) => [...item.facts]);
     }).pipe(Effect.provide(Layer.fresh(AiServiceTestingPreset('edge-remote'))));
-    return EffectEx.runPromise(program).then((extracted) => {
+    const { promise, interrupt } = runInterruptible(program);
+    interruptRef.current = interrupt;
+    return promise.then((extracted) => {
       setFacts(extracted);
       setDetails([]);
       setStats([
@@ -213,6 +205,7 @@ const DefaultStory = (_: StoryArgs) => {
         }).pipe(Effect.provide(aiLayer)),
       ).then((messageFacts) => {
         collected.push(...messageFacts);
+        setProcessed((value) => value + 1);
         return messageFacts;
       });
 
@@ -223,7 +216,9 @@ const DefaultStory = (_: StoryArgs) => {
       now: new Date().toISOString(),
     }).pipe(Effect.provide(aiLayer));
 
-    return EffectEx.runPromise(program).then((result) => {
+    const { promise, interrupt } = runInterruptible(program);
+    interruptRef.current = interrupt;
+    return promise.then((result) => {
       setFacts(collected);
       setStats([
         { label: 'Messages', value: result.stats.total },
@@ -241,14 +236,14 @@ const DefaultStory = (_: StoryArgs) => {
   // Load the first `count` Enron messages from the dataset parquet (over HTTP) and make them the
   // email pipeline's input; the Dataset tab preview updates to the loaded messages.
   const handleLoadDataset = useCallback((count: number) => {
-    setBusy(true);
+    setRunning(true);
     void loadEnronMessages({ count })
       .then((loaded) => {
         setEmails(loaded);
         setDatasets([{ id: 'enron', label: `Enron (${loaded.length})`, messages: loaded.map(toPreview) }]);
       })
       .catch(() => {})
-      .finally(() => setBusy(false));
+      .finally(() => setRunning(false));
   }, []);
 
   const runTranscription = useCallback(
@@ -280,12 +275,15 @@ const DefaultStory = (_: StoryArgs) => {
               Object.assign(block, patch);
             }
           }
+          setProcessed((value) => value + 1);
         });
 
       setFacts([]);
-      return EffectEx.runPromise(
+      const { promise, interrupt } = runInterruptible(
         TranscriptionPipeline.run({ source, lookup: makeDatabaseLookup(space.db), commit }),
-      ).then(() => {
+      );
+      interruptRef.current = interrupt;
+      return promise.then(() => {
         const corrected = blocks.map((block) => block.corrected ?? block.text);
         const linked = corrected.filter((line) => /\]\(echo:/.test(line)).length;
         setStats([
@@ -301,21 +299,25 @@ const DefaultStory = (_: StoryArgs) => {
     [space],
   );
 
-  const handleRun = useCallback(
-    (payload: InputPayload) => {
-      setBusy(true);
-      const documentText = payload.mode === 'document' ? payload.text : SAMPLE_CONTENT;
-      const transcript = payload.mode === 'record' ? payload.transcript : documentText;
-      const run =
-        pipelineId === 'rdf'
-          ? runRdf(documentText)
-          : pipelineId === 'email'
-            ? runEmail()
-            : runTranscription(transcript);
-      void run.catch(() => {}).finally(() => setBusy(false));
-    },
-    [pipelineId, runRdf, runEmail, runTranscription],
-  );
+  // Start the selected pipeline over the current input; the processed counter resets first.
+  const handleStart = useCallback(() => {
+    setProcessed(0);
+    setRunning(true);
+    const documentText = input.mode === 'document' ? input.text : SAMPLE_CONTENT;
+    const transcript = input.mode === 'record' ? input.transcript : documentText;
+    const run =
+      pipelineId === 'rdf' ? runRdf(documentText) : pipelineId === 'email' ? runEmail() : runTranscription(transcript);
+    void run
+      .catch(() => {})
+      .finally(() => {
+        setRunning(false);
+        interruptRef.current = null;
+      });
+  }, [pipelineId, input, runRdf, runEmail, runTranscription]);
+
+  const handleStop = useCallback(() => {
+    interruptRef.current?.();
+  }, []);
 
   return (
     <div className='dx-container grid grid-cols-3 gap-2'>
@@ -324,11 +326,19 @@ const DefaultStory = (_: StoryArgs) => {
         parse={stubParse}
         datasets={datasets}
         sampleTranscript={SAMPLE_TRANSCRIPT}
-        busy={busy}
+        busy={running}
         onLoadDataset={handleLoadDataset}
-        onRun={handleRun}
+        onInput={setInput}
       />
-      <PipelinePanel pipelines={PIPELINES} selected={pipelineId} onSelect={setPipelineId} busy={busy} />
+      <PipelinePanel
+        pipelines={PIPELINES}
+        selected={pipelineId}
+        onSelect={setPipelineId}
+        running={running}
+        processed={processed}
+        onStart={handleStart}
+        onStop={handleStop}
+      />
       <OutputPanel facts={facts} objects={objects} stats={stats} details={details} />
     </div>
   );
@@ -336,6 +346,25 @@ const DefaultStory = (_: StoryArgs) => {
 
 const factEntities = (fact: RDF.Fact): string[] =>
   [fact.assertion.subject, fact.assertion.object].flatMap((term) => ('entity' in term ? [term.entity] : []));
+
+type Interruptible<A> = { readonly promise: Promise<A>; readonly interrupt: () => void };
+
+// Fork a fully-provided program so the run can be interrupted mid-flight (the Stop button): the
+// promise settles when the fiber completes, rejects on failure/interruption.
+const runInterruptible = <A, E>(program: Effect.Effect<A, E, never>): Interruptible<A> => {
+  const fiber = Effect.runFork(program);
+  const promise = new Promise<A>((resolve, reject) => {
+    fiber.addObserver((exit) =>
+      Exit.match(exit, { onSuccess: resolve, onFailure: (cause) => reject(Cause.squash(cause)) }),
+    );
+  });
+  return {
+    promise,
+    interrupt: () => {
+      void Effect.runFork(Fiber.interrupt(fiber));
+    },
+  };
+};
 
 const MessageList = ({
   result,
