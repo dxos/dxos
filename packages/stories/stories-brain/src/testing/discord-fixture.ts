@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ExtractDocument } from '@dxos/semantic-index';
+import { type ExtractDocument } from '@dxos/pipeline-rdf';
 
 type FixtureMessage = {
   'id': string;
@@ -14,7 +14,7 @@ type FixtureMessage = {
 
 /**
  * Parse a discord channel fixture (the JSON emitted by `moon run plugin-discord:generate-fixtures`)
- * into semantic-index extraction documents: one per message, text joined from its text blocks,
+ * into pipeline-rdf extraction documents: one per message, text joined from its text blocks,
  * attributed to the sender and sourced by the message's discord key.
  */
 export const parseDiscordFixture = (json: unknown): ExtractDocument[] => {

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { SemanticPipeline } from '@dxos/semantic-index';
+import { SemanticPipeline } from '@dxos/pipeline-rdf';
 
 import { AgentRegistry, identifiersForUser, labelForUser } from '../AgentRegistry';
 import { StageError } from '../errors';
@@ -19,7 +19,7 @@ export type ExtractFactsOptions = {
 
 /**
  * Per-message stage: resolve the author to a canonical agent, then run the message through the
- * semantic-index pipeline. The fact `source` is the message DXN and `author` is the agent's
+ * pipeline-rdf pipeline. The fact `source` is the message DXN and `author` is the agent's
  * canonical token, so every extracted fact is attributed to the resolved sender (not a raw name).
  * The pipeline's own per-source hash cursor makes re-ingest idempotent.
  */
