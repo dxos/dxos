@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import { type AiService } from '@dxos/ai';
 
 import { type SemanticIndexError } from '../../errors';
-import { type FactStore } from '../../FactStore';
+import { type FactStore } from '../../fact-store';
 import { type ExtractDocument } from '../../internal/stages/extract';
-import { SemanticPipeline } from '../../SemanticPipeline';
+import { SemanticPipeline } from '../../pipeline';
 import { type Fact } from '../../types';
 import { factsToModule } from './serialize';
 

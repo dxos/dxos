@@ -13,9 +13,9 @@ import { readFileSync } from 'node:fs';
 import { Pipeline } from '@dxos/pipeline';
 
 import { SemanticIndexError } from './errors';
-import { FactStore } from './FactStore';
+import { FactStore } from './fact-store';
 import { DEFAULT_EXTRACTION_RULES, type ExtractDocument, buildExtractionPrompt } from './internal/stages/extract';
-import { SemanticPipeline } from './SemanticPipeline';
+import { SemanticPipeline } from './pipeline';
 import {
   type DocumentFacts,
   extractFacts,

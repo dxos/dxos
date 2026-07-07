@@ -8,7 +8,7 @@ import { type AiService } from '@dxos/ai';
 import { Stage } from '@dxos/pipeline';
 
 import { type SemanticIndexError } from '../errors';
-import { FactStore } from '../FactStore';
+import { FactStore } from '../fact-store';
 import { type ExtractDocument, type ExtractOptions } from '../internal/stages/extract';
 import { hashText } from '../internal/stages/reconcile';
 import { type DocumentFacts, extractDocFacts } from './extract-facts';
