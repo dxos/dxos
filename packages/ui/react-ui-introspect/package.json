@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-introspect",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "React UI for browsing and invoking the introspect-mcp tool surface.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

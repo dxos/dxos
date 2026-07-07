@@ -5,7 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { AutomationTemplates, OperationHandler, SkillDefinition } from '#capabilities';
+import { AppGraphBuilder, AutomationTemplates, OperationHandler, ReactSurface, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { ProfileOf } from '#types';
@@ -17,6 +17,8 @@ export const CrmPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addSchemaModule({ schema: [ProfileOf.ProfileOf] }),
   Plugin.addModule({
     id: 'crm-automation-templates',

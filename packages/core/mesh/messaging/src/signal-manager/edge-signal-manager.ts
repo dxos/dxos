@@ -2,6 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+// DX-1059: this client is already DID-only — it never writes the deprecated `identity_key`
+// (proto field 2). The dual-read fallback that still gates removing that field lives on the
+// edge side (which relays peers from not-yet-migrated senders); nothing here needs it.
+
 import { Event, scheduleMicroTask } from '@dxos/async';
 import { type Context, Resource, cancelWithContext } from '@dxos/context';
 import { type EdgeConnection, EdgeIdentityChangedError, protocol } from '@dxos/edge-client';
@@ -66,11 +70,13 @@ export class EdgeSignalManager extends Resource implements SignalManager {
         peer,
         expected: {
           peerKey: this._edgeConnection.peerKey,
-          identityKey: this._edgeConnection.identityKey,
+          identityDid: this._edgeConnection.identityDid,
         },
       });
 
-      peer.identityKey = this._edgeConnection.identityKey;
+      // DX-1059: advertise only the identity DID; the client no longer sends the hex `identityKey`
+      // (edge derives the connection's identity from auth, not from this message body).
+      peer.identityDid = this._edgeConnection.identityDid;
       peer.peerKey = this._edgeConnection.peerKey;
     }
 
@@ -118,7 +124,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
         serviceId: EdgeService.SWARM,
         source: createMessageSource(topic, {
           peerKey: this._edgeConnection.peerKey,
-          identityKey: this._edgeConnection.identityKey,
+          identityDid: this._edgeConnection.identityDid,
         }),
         payload: { action: SwarmRequestAction.INFO, swarmKeys: [topic.toHex()] },
       }),
@@ -132,7 +138,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       // NOTE: Could only join swarm with the same peer info as the edge connection.
       log.warn('ignoring author on send request', {
         author: message.author,
-        expected: { peerKey: this._edgeConnection.peerKey, identityKey: this._edgeConnection.identityKey },
+        expected: { peerKey: this._edgeConnection.peerKey, identityDid: this._edgeConnection.identityDid },
       });
     }
 
@@ -223,8 +229,8 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   }
 
   private _matchSelfPeerInfo(peer: PeerInfo): boolean {
-    return (
-      peer && (peer.peerKey === this._edgeConnection.peerKey || peer.identityKey === this._edgeConnection.identityKey)
+    return Boolean(
+      peer && (peer.peerKey === this._edgeConnection.peerKey || peer.identityDid === this._edgeConnection.identityDid),
     );
   }
 
@@ -235,7 +241,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
         topic,
         peer: {
           peerKey: this._edgeConnection.peerKey,
-          identityKey: this._edgeConnection.identityKey,
+          identityDid: this._edgeConnection.identityDid,
           state: lastState,
         },
       });

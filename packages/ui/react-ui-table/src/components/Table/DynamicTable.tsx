@@ -9,7 +9,6 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { type JsonSchema, type Type } from '@dxos/echo';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
-import { mx } from '@dxos/ui-theme';
 
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model';
@@ -95,12 +94,14 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   }, [registry, model]);
 
   return (
-    <div className={mx('dx-expander grid', classNames)}>
-      <div className='grid min-h-0 overflow-hidden'>
-        <Table.Root ref={tableRef}>
-          <Table.Content model={model} presentation={presentation} ignoreAttention onRowClick={onRowClick} />
-        </Table.Root>
-      </div>
-    </div>
+    <Table.Root ref={tableRef}>
+      <Table.Content
+        classNames={classNames}
+        model={model}
+        presentation={presentation}
+        ignoreAttention
+        onRowClick={onRowClick}
+      />
+    </Table.Root>
   );
 };

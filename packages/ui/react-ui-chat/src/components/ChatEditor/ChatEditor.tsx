@@ -11,7 +11,10 @@ import {
   type BasicExtensionsOptions,
   type SubmitOptions,
   createBasicExtensions,
+  createMarkdownExtensions,
   createThemeExtensions,
+  decorateMarkdown,
+  formattingKeymap,
   submit,
   xmlFormatting,
 } from '@dxos/ui-editor';
@@ -25,29 +28,51 @@ export type ChatEditorProps = ThemedClassName<
   {
     extensions?: Extension;
     references?: ReferencesOptions;
+    /** Enable inline markdown formatting (decoration, syntax highlighting, and formatting shortcuts). */
+    markdown?: boolean;
   } & (SubmitOptions &
     Pick<UseTextEditorProps, 'id' | 'autoFocus'> &
     Pick<BasicExtensionsOptions, 'lineWrapping' | 'placeholder'>)
 >;
 
-export const useChatExtensions = ({ extensions, lineWrapping = false, placeholder, onSubmit }: ChatEditorProps) => {
+export const useChatExtensions = ({
+  extensions,
+  markdown = false,
+  lineWrapping = false,
+  placeholder,
+  onSubmit,
+}: ChatEditorProps) => {
   const { themeMode } = useThemeContext();
   return useMemo<Extension[]>(
     () =>
       [
-        createThemeExtensions({ themeMode }),
+        createThemeExtensions({ themeMode, syntaxHighlighting: markdown }),
         createBasicExtensions({ bracketMatching: false, lineWrapping, placeholder }),
         xmlFormatting(),
+        markdown && [createMarkdownExtensions(), decorateMarkdown(), formattingKeymap()],
         submit({ onSubmit }),
         extensions,
-      ].filter(isTruthy),
-    [themeMode, extensions, onSubmit],
+      ]
+        .flat()
+        .filter(isTruthy),
+    [themeMode, markdown, lineWrapping, placeholder, extensions, onSubmit],
   );
 };
 
 export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
-  ({ classNames, autoFocus, extensions: extensionsProp, lineWrapping = false, placeholder, onSubmit }, forwardRef) => {
-    const extensions = useChatExtensions({ extensions: extensionsProp, lineWrapping, placeholder, onSubmit });
+  (
+    {
+      classNames,
+      autoFocus,
+      extensions: extensionsProp,
+      markdown = false,
+      lineWrapping = false,
+      placeholder,
+      onSubmit,
+    },
+    forwardRef,
+  ) => {
+    const extensions = useChatExtensions({ extensions: extensionsProp, markdown, lineWrapping, placeholder, onSubmit });
 
     // TODO(burdon): Popover.
     return (

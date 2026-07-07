@@ -13,7 +13,7 @@ import { Database, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Channel, ContentBlock, Message } from '@dxos/types';
+import { Channel, ContentBlock, Cursor, Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -158,17 +158,20 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
         // supplies the credential for the Discord layer, the target is the
         // local Channel, and `remoteId` is the Discord channel id to pull.
         const bindingObj = yield* Database.load(bindingRef).pipe(Effect.provide(Database.layer(db)));
+        const cursor = yield* Database.load(bindingObj.cursor).pipe(Effect.provide(Database.layer(db)));
         const connection = Relation.getSource(bindingObj);
         const localRoot = Relation.getTarget(bindingObj);
         const remoteId = bindingObj.remoteId;
         invariant(remoteId, 'SyncBinding is missing a remoteId for Discord channel.');
         invariant(Channel.instanceOf(localRoot), 'SyncBinding target is not a Channel.');
 
+        // Captured on the success path so the cursor's value + run status advance in one atomic update.
+        let newestId: string | undefined;
         const outcome = yield* Effect.either(
           Effect.gen(function* () {
             const rest = yield* DiscordREST;
 
-            const initialAfter = computeInitialCursor(bindingObj.cursor, bindingObj.options);
+            const initialAfter = computeInitialCursor(cursor.value, bindingObj.options);
 
             // Drain message pagination. Discord returns newest-first within a
             // page even when paging by `after`; sort each page ascending so the
@@ -206,20 +209,14 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
             invariant(feed, 'Channel is not feed-backed');
             yield* Feed.append(feed, mapped);
 
-            const newestId = messages[messages.length - 1].id;
-            Relation.update(bindingObj, (bindingObj) => {
-              bindingObj.cursor = newestId;
-            });
+            newestId = messages[messages.length - 1].id;
 
             return { pulled: { added: mapped.length } };
           }).pipe(Effect.provide(Database.layer(db)), Effect.provide(makeDiscordLayer(Ref.make(connection)))),
         );
 
         if (outcome._tag === 'Right') {
-          Relation.update(bindingObj, (bindingObj) => {
-            bindingObj.lastSyncAt = new Date().toISOString();
-            bindingObj.lastError = undefined;
-          });
+          Cursor.advance(cursor, newestId);
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {
               id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
@@ -230,9 +227,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
           return outcome.right;
         } else {
           const message = formatDiscordSyncFailure(outcome.left);
-          Relation.update(bindingObj, (bindingObj) => {
-            bindingObj.lastError = message;
-          });
+          Cursor.recordError(cursor, message);
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {
               id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,

@@ -163,7 +163,7 @@ export class EdgeFeedReplicator extends Resource {
       ctx,
       buf.create(RouterMessageSchema, {
         source: {
-          identityKey: this._messenger.identityKey,
+          identityDid: this._messenger.identityDid,
           peerKey: this._messenger.peerKey,
         },
         serviceId: `${EdgeService.FEED_REPLICATOR}:${this._spaceId}`,

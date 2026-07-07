@@ -40,7 +40,7 @@ const useTestModel = <S extends Type.AnyObj>(schema: S, count: number) => {
   const { space } = useClientStory();
   const [object, setObject] = useState<Table.Table>();
 
-  const features = useMemo<TableFeatures>(
+  const features = useMemo<Partial<TableFeatures>>(
     () => ({ schemaEditable: false, dataEditable: true, selection: { enabled: false } }),
     [],
   );

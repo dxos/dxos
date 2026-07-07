@@ -3,7 +3,8 @@
 //
 
 export * from './Chat';
-export * from './Container';
 export * from './Options';
 export * from './PageActions';
+export * from './Root';
+export * from './Sidepanel';
 export * from './Thumbnail';

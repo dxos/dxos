@@ -22,6 +22,9 @@
       "path": "../../../tools/vite-plugin-shutdown"
     },
     {
+      "path": "../../common/crx-protocol"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -55,10 +58,16 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-chat"
+    },
+    {
       "path": "../../ui/react-ui-markdown"
     },
     {
       "path": "../../ui/ui"
+    },
+    {
+      "path": "../../ui/ui-editor"
     },
     {
       "path": "../../ui/ui-theme"

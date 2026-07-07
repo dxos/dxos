@@ -10,10 +10,11 @@ import * as Predicate from 'effect/Predicate';
 import { afterEach, beforeEach, vi } from 'vitest';
 
 import { Obj } from '@dxos/echo';
+import * as InboxResolver from '@dxos/extractor-lib';
 
 import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
-import { InboxResolver, JmapCredentials } from '../../../services';
+import { JmapCredentials } from '../../../services';
 import { mapEmail } from './mapper';
 
 const HOST = 'api.fastmail.com';

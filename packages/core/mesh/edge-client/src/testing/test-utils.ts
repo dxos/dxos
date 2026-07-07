@@ -106,7 +106,7 @@ const createResponseSender = (connection: () => WebSocketMuxer) => {
     void connection().send(
       buf.create(MessageSchema, {
         source: {
-          identityKey: recipient.identityKey,
+          identityDid: recipient.identityDid,
           peerKey: recipient.peerKey,
         },
         serviceId: request.serviceId!,

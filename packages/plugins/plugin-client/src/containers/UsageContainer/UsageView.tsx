@@ -6,9 +6,8 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type GetProfileUsageResponse, type MeteringLimit, type MeteringUsageItem } from '@dxos/protocols';
-import { IconButton, Message, Status, ToggleIconButton, useTranslation } from '@dxos/react-ui';
+import { Message, Status, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
-import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { meta } from '#meta';
 
@@ -214,9 +213,7 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
       <Form.Viewport scroll>
         <Form.Content>
           <Form.Section title={t('usage-section.title')} description={t('usage-section.description')}>
-            {state === 'loading' ? (
-              <Status indeterminate aria-label={t('usage-section.title')} />
-            ) : message ? (
+            {message ? (
               <Message.Root valence={message.valence}>
                 <Message.Title icon={message.icon}>{t(message.title)}</Message.Title>
                 <Message.Content>{t(message.description)}</Message.Content>
@@ -226,7 +223,7 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
             )}
           </Form.Section>
 
-          {state === 'ready' && data && (
+          {/* {state === 'ready' && data && (
             <Form.Section>
               <Form.Row
                 label={
@@ -246,9 +243,9 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
                 )}
               </Form.Row>
             </Form.Section>
-          )}
+          )} */}
 
-          {state === 'ready' && data && (
+          {/* {state === 'ready' && data && (
             <Form.Section>
               <Form.Row label={t('usage-raw-json.label')}>
                 <ToggleIconButton
@@ -262,7 +259,7 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
               </Form.Row>
               {rawExpanded && <JsonHighlighter data={data} testId='usage-raw-json' />}
             </Form.Section>
-          )}
+          )} */}
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

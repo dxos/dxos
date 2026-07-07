@@ -1,6 +1,6 @@
 {
   "name": "@dxos/stories-brain",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "Cross-cutting storybook stories for semantic facts (brain).",
   "homepage": "https://dxos.org",

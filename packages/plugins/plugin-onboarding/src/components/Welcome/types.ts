@@ -10,7 +10,6 @@ export enum WelcomeState {
   // TODO(wittjosiah): Remove this state once signups are auto-admitted.
   EMAIL_SENT = 1,
   LOGIN_SENT = 2,
-  SPACE_INVITATION = 3,
   WAITLIST_SUBMITTED = 4,
 }
 
@@ -45,10 +44,6 @@ export type WelcomeScreenProps = {
   onCreateAccountWithOAuth?: (args: { code: string; provider: string; loginHint?: string }) => MaybePromise<void>;
   /** Submit waitlist sign-up (no invitation code). */
   onJoinWaitlist?: (email: string) => MaybePromise<void>;
-
-  // Other.
-  onSpaceInvitation?: () => MaybePromise<void>;
-  onGoToLogin?: () => MaybePromise<void>;
 };
 
 export const validEmail = (email: string) => !!email.match(/.+@.+\..+/);

@@ -35,7 +35,7 @@ describe('WebSocketMuxerTest', () => {
 
 const textMessage = (message: string, source?: EdgeIdentity) =>
   protocol.createMessage(TextMessageSchema, {
-    source: source && { peerKey: source.peerKey, identityKey: source.identityKey },
+    source: source && { peerKey: source.peerKey, identityDid: source.identityDid },
     serviceId: 'test-service',
     payload: { message },
   });

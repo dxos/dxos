@@ -7,9 +7,9 @@ import { type Extension, type Range } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 /**
- * Lezer XML node names that represent the angle-bracket delimited portions of an element.
+ * Well-formed XML tag name (a stray `<` in prose — e.g. `a < b` — has none, so it stays undecorated).
  */
-const XML_TAG_NODES = new Set(['OpenTag', 'CloseTag', 'SelfClosingTag', 'MismatchedCloseTag']);
+const VALID_TAG_NAME = /^[A-Za-z_][\w.-]*$/;
 
 const xmlElementMark = Decoration.mark({ class: 'cm-xml-element' });
 const xmlTagMark = Decoration.mark({ class: 'cm-xml-tag' });
@@ -47,6 +47,17 @@ export const xmlFormatting = ({ skip }: XmlFormattingOptions = {}): Extension =>
     }
 
     const tagNameAt = (node: { from: number; to: number }) => text.slice(node.from, node.to);
+    // A tag is only decorated when its `TagName` child parses as a real name. This gates out the
+    // malformed elements Lezer synthesises from a stray `<` in prose, which would otherwise span
+    // to the next `>` and paint the intervening text with `cm-xml-element`/`cm-xml-tag`.
+    const tagNameOf = (tagNode: { getChild: (name: string) => { from: number; to: number } | null }) => {
+      const tagNameNode = tagNode.getChild('TagName');
+      if (!tagNameNode) {
+        return undefined;
+      }
+      const value = tagNameAt(tagNameNode);
+      return VALID_TAG_NAME.test(value) ? value : undefined;
+    };
 
     const tree = xmlLanguage.parser.parse(text);
     const ranges: Range<Decoration>[] = [];
@@ -54,33 +65,36 @@ export const xmlFormatting = ({ skip }: XmlFormattingOptions = {}): Extension =>
       enter: (node) => {
         const name = node.type.name;
         if (name === 'SelfClosingTag' && node.from < node.to) {
-          if (skipSet) {
-            const tagNameNode = node.node.getChild('TagName');
-            if (tagNameNode && skipSet.has(tagNameAt(tagNameNode))) {
-              return false;
-            }
+          const tagName = tagNameOf(node.node);
+          if (!tagName) {
+            return;
+          }
+          if (skipSet?.has(tagName)) {
+            return false;
           }
           // Self-closing tag is its own outer block and tag delimiter.
           ranges.push(xmlElementMark.range(node.from, node.to));
           ranges.push(xmlTagMark.range(node.from, node.to));
           return;
         }
-        if (XML_TAG_NODES.has(name) && node.from < node.to) {
-          ranges.push(xmlTagMark.range(node.from, node.to));
-          return;
-        }
         if (name === 'Element' && node.from < node.to) {
           const openTag = node.node.getChild('OpenTag');
-          if (openTag && skipSet) {
-            const tagNameNode = openTag.getChild('TagName');
-            if (tagNameNode && skipSet.has(tagNameAt(tagNameNode))) {
-              // Skip this element AND its descendants — another extension owns rendering.
-              return false;
-            }
+          // Require a real matching `CloseTag` (not `MismatchedCloseTag`) with a valid name: an
+          // unterminated or malformed element is left undecorated. Keep descending so any
+          // well-formed nested elements still get styled.
+          const closeTag = node.node.getChild('CloseTag');
+          const tagName = openTag ? tagNameOf(openTag) : undefined;
+          if (!openTag || !closeTag || !tagName) {
+            return;
           }
-          const closeTag = node.node.getChild('CloseTag') ?? node.node.getChild('MismatchedCloseTag');
+          if (skipSet?.has(tagName)) {
+            // Skip this element AND its descendants — another extension owns rendering.
+            return false;
+          }
           ranges.push(xmlElementMark.range(node.from, node.to));
-          if (openTag && closeTag && openTag.to < closeTag.from) {
+          ranges.push(xmlTagMark.range(openTag.from, openTag.to));
+          ranges.push(xmlTagMark.range(closeTag.from, closeTag.to));
+          if (openTag.to < closeTag.from) {
             ranges.push(xmlContentMark.range(openTag.to, closeTag.from));
           }
         }

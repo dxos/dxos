@@ -42,6 +42,7 @@ export const GroupSegments = {
   ai: 'ai',
   content: 'content',
   communications: 'communications',
+  crm: 'crm',
   system: 'system',
 } as const;
 
@@ -54,6 +55,7 @@ export const GroupTypes = {
   ai: 'org.dxos.navtree.group.ai',
   content: 'org.dxos.navtree.group.content',
   communications: 'org.dxos.navtree.group.communications',
+  crm: 'org.dxos.navtree.group.crm',
   system: 'org.dxos.navtree.group.system',
 } as const;
 

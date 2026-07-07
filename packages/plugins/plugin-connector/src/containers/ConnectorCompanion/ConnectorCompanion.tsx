@@ -66,6 +66,8 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
   }, [subject]);
   const [resolvedTarget] = useObject(target);
   const targetMissing = !resolvedTarget || Obj.isDeleted(resolvedTarget);
+  // Sync status lives on the binding's cursor object (0.2.0); resolve it to render last-run state.
+  const [cursor] = useObject(subject.cursor);
 
   const handleOpenConnection = useCallback(() => {
     if (!connection || !db) {
@@ -105,8 +107,8 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
     ? t('binding-source-missing.message')
     : targetMissing
       ? t('binding-target-missing.message')
-      : subject.lastSyncAt
-        ? `${t('last-sync.label')}: ${new Date(subject.lastSyncAt).toLocaleString()}`
+      : cursor?.lastRunAt
+        ? `${t('last-sync.label')}: ${new Date(cursor.lastRunAt).toLocaleString()}`
         : t('never-synced.label');
 
   return (
@@ -122,8 +124,8 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
                       label={t('sync-target.label')}
                       description={status}
                       validation={
-                        !targetMissing && !sourceMissing && subject.lastError ? (
-                          <span className='text-sm text-error-text'>{subject.lastError}</span>
+                        !targetMissing && !sourceMissing && cursor?.lastError ? (
+                          <span className='text-sm text-error-text'>{cursor.lastError}</span>
                         ) : undefined
                       }
                     >

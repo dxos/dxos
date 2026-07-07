@@ -31,6 +31,7 @@ export type BlockRenderer = (
 
 /**
  * Thread context passed to renderer.
+ * This enables the renderer to "stream" content into the widget state.
  */
 export class MessageThreadContext implements Pick<MarkdownStreamController, 'updateWidget'> {
   constructor(private readonly _widgetState?: XmlWidgetStateManager) {}
@@ -61,7 +62,11 @@ export class MessageThreadContext implements Pick<MarkdownStreamController, 'upd
  */
 export class MessageSyncer {
   private _threadId?: string;
+
+  /** Cumulative block index (across all completed blocks in all messages). */
   private _completed = 0;
+
+  /** Chars of the in-flight block (at index `_completed`) already appended. */
   private _trailing = 0;
 
   private readonly _context: MessageThreadContext;

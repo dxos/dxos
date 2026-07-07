@@ -182,7 +182,7 @@ export class FeedSyncer extends Resource {
       this.#edgeClient.onReconnected(async () => {
         log('feed sync edge reconnected', {
           peerKey: this.#edgeClient.peerKey,
-          identityKey: this.#edgeClient.identityKey,
+          identityDid: this.#edgeClient.identityDid,
         });
         if (this.#backgroundSync) {
           this.#resetSpacesToPoll();
@@ -401,7 +401,7 @@ export class FeedSyncer extends Resource {
           ctx,
           createBuf(MessageSchema, {
             source: {
-              identityKey: this.#edgeClient.identityKey,
+              identityDid: this.#edgeClient.identityDid,
               peerKey: this.#edgeClient.peerKey,
             },
             serviceId,

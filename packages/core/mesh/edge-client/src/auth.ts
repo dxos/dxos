@@ -16,7 +16,6 @@ import type { EdgeIdentity } from './edge-identity';
  */
 export const createDeviceEdgeIdentity = async (signer: Signer, key: PublicKey): Promise<EdgeIdentity> => {
   return {
-    identityKey: key.toHex(),
     identityDid: await createDidFromIdentityKey(key),
     peerKey: key.toHex(),
     presentCredentials: async ({ challenge }) => {
@@ -69,7 +68,6 @@ export const createChainEdgeIdentity = async (
         ];
 
   return {
-    identityKey: identityKey.toHex(),
     identityDid: await createDidFromIdentityKey(identityKey),
     peerKey: peerKey.toHex(),
     presentCredentials: async ({ challenge }) => {
@@ -128,10 +126,8 @@ export const createTestHaloEdgeIdentity = async (
 };
 
 export const createStubEdgeIdentity = (): EdgeIdentity => {
-  const identityKey = PublicKey.random();
   const deviceKey = PublicKey.random();
   return {
-    identityKey: identityKey.toHex(),
     // Random placeholder DID — the stub never authenticates or connects; a real identity replaces it.
     identityDid: IdentityDid.random(),
     peerKey: deviceKey.toHex(),

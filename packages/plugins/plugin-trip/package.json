@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-trip",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "DXOS Travel itinerary plugin",
   "homepage": "https://dxos.org",
@@ -105,6 +105,7 @@
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/extractor": "workspace:*",
+    "@dxos/extractor-lib": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",

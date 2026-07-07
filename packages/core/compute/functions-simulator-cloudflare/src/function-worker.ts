@@ -10,9 +10,6 @@ import { type EdgeEnvelope, type SerializedError } from '@dxos/protocols';
 export type InvokeResult =
   | {
       _kind: 'success';
-      /**
-       * The output of the function.
-       */
       result: unknown;
     }
   | {

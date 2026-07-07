@@ -14,7 +14,7 @@ import { InternalError } from '@dxos/errors';
 import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { Kanban } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
-import { AccessToken } from '@dxos/types';
+import { AccessToken, Cursor } from '@dxos/types';
 
 import { TRELLO_SOURCE } from '../constants';
 import { TrelloApi } from '../services';
@@ -163,6 +163,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     graph.registry.add([
       AccessToken.AccessToken,
       Connection.Connection,
+      Cursor.Cursor,
       SyncBinding.SyncBinding,
       Kanban.Kanban,
       Expando.Expando,
@@ -243,9 +244,9 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
       expect(boardAKanban.spec.kind === 'items' ? boardAKanban.spec.items.length : -1).toBe(1);
     }
 
-    // Sync stamped success on the binding.
-    expect(binding.lastSyncAt).toBeDefined();
-    expect(binding.lastError).toBeUndefined();
+    // Sync stamped success on the binding's cursor.
+    expect(binding.cursor.target?.lastRunAt).toBeDefined();
+    expect(binding.cursor.target?.lastError).toBeUndefined();
   });
 
   test('failing fetch on a board writes lastError on its binding', async ({ expect }) => {
@@ -279,14 +280,14 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     await syncTrelloBoardHandler
       .handler({ binding: Ref.make(bindingA) })
       .pipe(stubOperationService, Effect.provide(layer), EffectEx.runAndForwardErrors);
-    expect(bindingA.lastError).toBeUndefined();
-    expect(bindingA.lastSyncAt).toBeDefined();
+    expect(bindingA.cursor.target?.lastError).toBeUndefined();
+    expect(bindingA.cursor.target?.lastRunAt).toBeDefined();
 
-    // Board B fails — the sync handler fails and stamps the error on the binding.
+    // Board B fails — the sync handler fails and stamps the error on the cursor.
     await syncTrelloBoardHandler
       .handler({ binding: Ref.make(bindingB) })
       .pipe(stubOperationService, Effect.provide(layer), Effect.either, EffectEx.runAndForwardErrors);
-    expect(bindingB.lastError).toContain('boom');
-    expect(bindingB.lastSyncAt).toBeUndefined();
+    expect(bindingB.cursor.target?.lastError).toContain('boom');
+    expect(bindingB.cursor.target?.lastRunAt).toBeUndefined();
   });
 });

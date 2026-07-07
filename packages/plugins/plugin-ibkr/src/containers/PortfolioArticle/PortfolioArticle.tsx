@@ -15,6 +15,7 @@ import { Listbox } from '@dxos/react-ui-list';
 import { meta } from '../../meta';
 import { parseCash, parsePositions, parseTrades } from '../../services';
 import { Ibkr } from '../../types';
+import { PortfolioImportAction } from './PortfolioImportAction';
 import { PortfolioSyncAction } from './PortfolioSyncAction';
 
 export type PortfolioArticleProps = AppSurface.ObjectArticleProps<Ibkr.Portfolio>;
@@ -78,6 +79,7 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <PortfolioSyncAction subject={subject} />
+          <PortfolioImportAction subject={subject} />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>

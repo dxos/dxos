@@ -9,26 +9,28 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Credential } from '@dxos/compute';
-import { Operation, Trace } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { Operation } from '@dxos/compute';
+import { Database, Obj, Ref, Relation } from '@dxos/echo';
+import { type Resolver, resolve } from '@dxos/extractor';
+import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
+import { Pipeline, Stage } from '@dxos/pipeline';
 // Connection is referenced in the inferred type of this module's default export via
 // InboxOperation.GoogleMailSync's schema; the import lets TypeScript name it in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Connection, SyncBinding } from '@dxos/plugin-connector';
-import { Message } from '@dxos/types';
+import { Cursor, Person } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
-import { GoogleCredentials, InboxResolver } from '../../../services';
+import { GoogleCredentials } from '../../../services';
+import { EmailStage } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
-import { appendBatchToFeed, collectForeignIds, readBindingOptions } from '../../../util';
-import { mapMessage } from './mapper';
+import { readBindingOptions } from '../../../util';
+import { parseFromHeader } from '../../util';
+import { type DecodedMessage, decodeBody, mapToMessage } from './mapper';
 
 type DateChunk = {
   readonly start: Date;
@@ -44,70 +46,11 @@ type DateRangeConfig = {
 const STREAMING_CONFIG = {
   dateChunkDays: 7,
   messageFetchConcurrency: 5,
-  bufferSize: 10,
-  queueBatchSize: 10,
   maxResults: 500,
   restrictedMax: 20,
+  /** Commit page size — kept ≤ 15 so each `Feed.append` is a single atomic queue insert. */
+  pageSize: 10,
 } as const;
-
-const syncSingleMailbox = (input: {
-  binding: SyncBinding.SyncBinding;
-  mailbox: Mailbox.Mailbox;
-  userId: string;
-  defaultLabel: string;
-  defaultAfter: string;
-  restrictedMode: boolean;
-}) =>
-  Effect.gen(function* () {
-    const { binding, mailbox, userId, defaultLabel, defaultAfter, restrictedMode } = input;
-
-    log('syncing gmail', { mailbox: Obj.getURI(mailbox), userId, after: defaultAfter, restrictedMode });
-    const targetOptions = readBindingOptions(binding);
-    const after =
-      targetOptions.syncBackDays !== undefined
-        ? format(subDays(new Date(), targetOptions.syncBackDays), 'yyyy-MM-dd')
-        : defaultAfter;
-
-    const feed = yield* Database.load(mailbox.feed);
-    // Resolve the child tag index so provider-label tags can be applied synchronously below.
-    if (mailbox.tags) {
-      yield* Database.load(mailbox.tags);
-    }
-
-    const labelMap = yield* syncLabels(mailbox, userId).pipe(
-      Effect.catchAll((error) => {
-        log.catch(error);
-        return Effect.succeed(new Map<string, string>());
-      }),
-    );
-    log('synced labels', { count: labelMap.size });
-
-    const objects = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-    const lastMessage = objects.at(-1);
-    const existingGmailIds = collectForeignIds(objects, GMAIL_SOURCE, STREAMING_CONFIG.maxResults);
-
-    const startDate = lastMessage ? new Date(lastMessage.created) : new Date(after);
-    log('starting sync', {
-      startDate: format(startDate, 'yyyy-MM-dd'),
-      lastMessageId: lastMessage?.id,
-      existingGmailIds: existingGmailIds.size,
-      searchFilter: targetOptions.filter,
-    });
-
-    const newMessagesCount = yield* streamGmailMessagesToFeed(
-      startDate,
-      feed,
-      mailbox,
-      userId,
-      defaultLabel,
-      existingGmailIds,
-      restrictedMode,
-      labelMap,
-      targetOptions.filter,
-    );
-    log('sync complete', { newMessages: newMessagesCount });
-    return newMessagesCount;
-  });
 
 export default InboxOperation.GoogleMailSync.pipe(
   Operation.withHandler(
@@ -136,21 +79,73 @@ export default InboxOperation.GoogleMailSync.pipe(
             return { newMessages: 0 };
           }
 
-          const total = yield* syncSingleMailbox({
-            binding,
-            mailbox,
-            userId,
-            defaultLabel: label,
-            defaultAfter: normalizedAfter,
-            restrictedMode,
-          });
+          const targetOptions = readBindingOptions(binding);
+          // `syncBackDays` overrides the default window start when there is no cursor yet.
+          const fallbackAfter =
+            targetOptions.syncBackDays !== undefined
+              ? format(subDays(new Date(), targetOptions.syncBackDays), 'yyyy-MM-dd')
+              : normalizedAfter;
+          const cursor = yield* Database.load(binding.cursor);
+          const cursorKey = Cursor.parseKey(cursor.value);
+          log('syncing gmail', { mailbox: Obj.getURI(mailbox), userId, cursorKey, restrictedMode });
 
-          Relation.update(binding, (binding) => {
-            binding.lastSyncAt = new Date().toISOString();
-            binding.lastError = undefined;
-          });
+          const feed = yield* Database.load(mailbox.feed);
+          // Resolve the child tag index so provider-label tags can be applied synchronously during commit.
+          const tagIndex = yield* Database.load(mailbox.tags);
+          const labelMap = yield* syncLabels(mailbox, userId).pipe(
+            Effect.catchAll((error) => {
+              log.catch(error);
+              return Effect.succeed(new Map<string, string>());
+            }),
+          );
 
-          return { newMessages: total };
+          // Resolve the sender contact, build the ECHO message, and resolve label ids to tag URIs via
+          // the (Gmail-specific) label map captured here.
+          const mapToMessageStage: Stage.Stage<DecodedMessage, EmailStage.Mapped, never, Resolver> = Stage.map(
+            'map-to-message',
+            (decoded: DecodedMessage) =>
+              Effect.gen(function* () {
+                const fromHeader = decoded.raw.payload.headers.find(({ name }) => name === 'From');
+                const from = fromHeader ? parseFromHeader(fromHeader.value) : undefined;
+                const contact = from?.email ? yield* resolve(Person.Person, { email: from.email }) : undefined;
+                const mapped = mapToMessage(decoded, contact ?? undefined);
+                const tagUris = mapped.labelIds.flatMap((labelId) => {
+                  const uri = labelMap.get(labelId);
+                  return uri ? [uri] : [];
+                });
+                return {
+                  message: mapped.message,
+                  foreignId: decoded.raw.id,
+                  key: Number.parseInt(decoded.raw.internalDate),
+                  tagUris,
+                };
+              }),
+          );
+
+          // fetch → dedup → decode → html→markdown → map → extract-contacts → (optional) on-arrival
+          // extractors → commit each page. The SyncBinding layer advances the binding cursor per page
+          // (internally); fetch + `Resolver` requirements come from the layer stack below.
+          const stats: SyncBinding.Stats = { newMessages: 0 };
+          yield* gmailSource(userId, label, cursorKey, fallbackAfter, restrictedMode, targetOptions.filter).pipe(
+            SyncBinding.dedupStage<GoogleMail.Message>(
+              'dedup',
+              (message) => message.id,
+              (message) => Number.parseInt(message.internalDate),
+            ),
+            decodeBodyStage,
+            EmailStage.htmlToMarkdown,
+            mapToMessageStage,
+            EmailStage.onArrivalExtractors(mailbox),
+            EmailStage.extractContacts,
+            Stream.grouped(STREAMING_CONFIG.pageSize),
+            Pipeline.run({ sink: SyncBinding.commit }),
+            Effect.provide(
+              SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: GMAIL_SOURCE, cursorKey, stats }),
+            ),
+          );
+
+          log('gmail sync complete', { newMessages: stats.newMessages });
+          return { newMessages: stats.newMessages };
         }).pipe(
           Effect.provide(
             Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromConnection(connectionRef)),
@@ -158,11 +153,13 @@ export default InboxOperation.GoogleMailSync.pipe(
         );
       }),
   ),
-  // Erase the inferred handler type (which transitively references Capability.Service via
-  // appendBatchToFeed) so the default export is portably nameable in the emitted .d.ts (TS2883).
+  // Erase the inferred handler type (which transitively references Capability.Service via the sync
+  // module) so the default export is portably nameable in the emitted .d.ts (TS2883).
   Operation.opaqueHandler,
 );
 
+// TODO(wittjosiah): Migrate this label→Tag sync onto a pipeline too (source: labels; sink:
+//   find-or-create Tag), rather than the imperative loop below.
 // Syncs the Gmail label dictionary to `Tag` objects (one per label, carrying the Gmail label-id as
 // a foreign key). Returns a `gmailLabelId -> Tag uri` map used to index messages by tag.
 const syncLabels = Effect.fn(function* (mailbox: Mailbox.Mailbox, userId: string) {
@@ -179,6 +176,46 @@ const syncLabels = Effect.fn(function* (mailbox: Mailbox.Mailbox, userId: string
   }
   return labelMap;
 });
+
+/** Gmail-specific decode stage: base64-decode the body; drop messages with no body. */
+const decodeBodyStage: Stage.Stage<GoogleMail.Message, DecodedMessage, never, never> = Stage.map(
+  'decode-body',
+  (message: GoogleMail.Message) => Effect.sync(() => decodeBody(message) ?? undefined),
+);
+
+/**
+ * Streams Gmail messages forward from the cursor: resume at the cursor's `internalDate` (else the
+ * `fallbackAfter` window start), then date-windowed id fetch → per-message fetch.
+ */
+const gmailSource = (
+  userId: string,
+  label: string,
+  cursorKey: number,
+  fallbackAfter: string,
+  restricted: boolean,
+  searchFilter?: string,
+) => {
+  const startDate = cursorKey > 0 ? new Date(cursorKey) : new Date(fallbackAfter);
+  const config: DateRangeConfig = {
+    startDate,
+    endDate: restricted ? addDays(startDate, STREAMING_CONFIG.dateChunkDays + 1) : addDays(new Date(), 1),
+    chunkDays: STREAMING_CONFIG.dateChunkDays,
+  };
+
+  const messageIds = Function.pipe(
+    generateDateRanges(config),
+    Stream.flatMap((dateChunk) => fetchMessagesForDateRange(userId, label, dateChunk, searchFilter), {
+      concurrency: 1,
+    }),
+    restricted ? Stream.take(STREAMING_CONFIG.restrictedMax) : Function.identity,
+  );
+
+  return messageIds.pipe(
+    Stream.mapEffect((messageId) => GoogleMail.getMessage(userId, messageId), {
+      concurrency: STREAMING_CONFIG.messageFetchConcurrency,
+    }),
+  );
+};
 
 const generateDateRanges = (config: DateRangeConfig): Stream.Stream<DateChunk> =>
   Stream.unfoldChunkEffect(config.startDate, (currentStart) =>
@@ -231,7 +268,7 @@ const fetchMessagesForDateRange = (userId: string, label: string, dateChunk: Dat
         done: !nextPageToken,
       });
 
-      const messageIds = (messages ?? []).map((m) => m.id).reverse();
+      const messageIds = (messages ?? []).map((message) => message.id).reverse();
       const nextState = {
         pageToken: Option.fromNullable(nextPageToken),
         done: !nextPageToken,
@@ -240,76 +277,3 @@ const fetchMessagesForDateRange = (userId: string, label: string, dateChunk: Dat
       return Option.some([Chunk.fromIterable(messageIds), nextState]);
     }),
   );
-
-const streamGmailMessagesToFeed = Effect.fn(function* (
-  startDate: Date,
-  feed: Feed.Feed,
-  mailbox: Mailbox.Mailbox,
-  userId: string,
-  label: string,
-  existingGmailIds: Set<string>,
-  restricted: boolean,
-  labelMap: Map<string, string>,
-  searchFilter?: string,
-) {
-  const config: DateRangeConfig = {
-    startDate,
-    endDate: restricted ? addDays(startDate, STREAMING_CONFIG.dateChunkDays + 1) : addDays(new Date(), 1),
-    chunkDays: STREAMING_CONFIG.dateChunkDays,
-  };
-
-  const count = yield* Function.pipe(
-    generateDateRanges(config),
-    Stream.flatMap((dateChunk) => fetchMessagesForDateRange(userId, label, dateChunk, searchFilter), {
-      concurrency: 1,
-    }),
-    Stream.filter((messageId) => {
-      const isDuplicate = existingGmailIds.has(messageId);
-      if (isDuplicate) {
-        log('skipping duplicate message', { messageId });
-      }
-      return !isDuplicate;
-    }),
-    restricted ? Stream.take(STREAMING_CONFIG.restrictedMax) : Function.identity,
-    Stream.flatMap(
-      (messageId) =>
-        Effect.gen(function* () {
-          log('fetching message', { messageId });
-          return yield* GoogleMail.getMessage(userId, messageId);
-        }),
-      {
-        concurrency: STREAMING_CONFIG.messageFetchConcurrency,
-        bufferSize: STREAMING_CONFIG.bufferSize,
-      },
-    ),
-    Stream.mapEffect((message) => mapMessage(message)),
-    Stream.filter(Predicate.isNotNullable),
-    Stream.grouped(STREAMING_CONFIG.queueBatchSize),
-    Stream.mapEffect((batch) =>
-      Effect.gen(function* () {
-        const mapped = Chunk.toArray(batch);
-        const messages = mapped.map((m) => m.message);
-        log('appending batch to feed', { count: messages.length });
-        yield* appendBatchToFeed(feed, mailbox, messages, (message) => {
-          const entry = mapped.find((m) => m.message === message);
-          return (
-            entry?.labelIds.flatMap((labelId) => {
-              const uri = labelMap.get(labelId);
-              return uri ? [uri] : [];
-            }) ?? []
-          );
-        });
-        return messages.length;
-      }),
-    ),
-    Stream.runFoldEffect(
-      0,
-      Effect.fnUntraced(function* (acc, count) {
-        yield* Trace.emitStatus(`Syncing messages: ${acc + count}`);
-        return acc + count;
-      }),
-    ),
-  );
-
-  return count;
-});

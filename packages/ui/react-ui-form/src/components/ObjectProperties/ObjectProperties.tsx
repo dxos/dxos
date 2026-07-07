@@ -30,7 +30,13 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
     const meta = Obj.getMeta(object);
     // `meta.tags` already holds `Ref<Tag>`s (materialized by the database handler).
     const tags = [...meta.tags];
-    const values = useMemo(() => ({ [META_TAGS_KEY]: tags, ...object }), [object, tags]);
+    const values = useMemo(
+      () => ({
+        [META_TAGS_KEY]: tags,
+        ...object,
+      }),
+      [object, tags],
+    );
 
     // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
     // useType queries by the object's stored type URI, resolving both static and dynamic schemas.

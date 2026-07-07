@@ -15,11 +15,10 @@ import React, { StrictMode, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
-import { useApp } from '@dxos/app-framework/ui';
+import { EdgeRegistryPluginProvider, type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
+import { bootLoader, useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-// TODO(wittjosiah): Restore with EdgeRegistryPluginProvider below once edge ATProto registry is deployed.
-// import { EdgeHttpClient } from '@dxos/edge-client';
+import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
@@ -65,15 +64,12 @@ declare global {
   var downloadLogs: () => Promise<void>;
 }
 
-// `window.__bootLoader` is declared globally by `@dxos/app-framework/ui`
-// (alongside the React `Placeholder` that calls `dismiss()`).
-
 /**
  * Updates the native-DOM boot loader text. No-op once React has replaced #root.
  * The CSS animation in `index.html` keeps painting on the compositor thread
  * regardless of main-thread work, so this is purely textual feedback.
  */
-const bootStatus = (text: string) => window.__bootLoader?.status({ humanized: text });
+const bootStatus = (text: string) => bootLoader?.status({ humanized: text });
 
 // Stamp every (re-)evaluation of this module so we can tell Vite HMR reloads
 // from a true page boot. Dev-only — production has no HMR and the diagnostic
@@ -434,19 +430,19 @@ const main = async () => {
         // Pass `range` so the loader updates the existing line in place
         // ("Loading plugins (3/12)") instead of appending a fresh entry per
         // tick — keeps the visible log compact.
-        window.__bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
+        bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
         // The ring spans two phases — remote-plugin preload (0 → 50%) and
         // module activation (50 → 100%, driven from `Placeholder` once
         // React mounts). Splitting the range keeps it monotonic across
         // the boundary.
-        window.__bootLoader?.progress((loaded / total) * 0.5);
+        bootLoader?.progress((loaded / total) * 0.5);
       },
     }),
   );
 
   bootStatus('Starting Composer…');
   // Park the ring at 50% — preload done, activation about to take over.
-  window.__bootLoader?.progress(0.5);
+  bootLoader?.progress(0.5);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
@@ -454,10 +450,8 @@ const main = async () => {
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
 
-  // TODO(wittjosiah): Re-enable once edge ATProto registry is deployed (restore EdgeRegistryPluginProvider + EdgeHttpClient imports).
-  // const edgeUrl = config.values.runtime?.services?.edge?.url;
-  // const pluginRegistryProvider = edgeUrl ? new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
-  const pluginRegistryProvider = undefined;
+  const edgeUrl = config.values.runtime?.services?.edge?.url;
+  const pluginRegistryProvider = edgeUrl ? new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
 
   profiler?.mark('plugins:end');
   profiler?.measure('plugins-init', 'plugins:start', 'plugins:end');

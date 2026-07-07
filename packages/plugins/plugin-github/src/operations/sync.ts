@@ -13,7 +13,7 @@ import { Database, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SyncBinding } from '@dxos/plugin-connector';
-import { Organization, Person, Project, Task } from '@dxos/types';
+import { Cursor, Organization, Person, Project, Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -509,6 +509,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
         //   the OperationInvoker has a `databaseResolver`. Until then we derive the
         //   db from the binding's endpoints (which the caller preloads).
         const binding = yield* Database.load(bindingRef);
+        const cursor = yield* Database.load(binding.cursor);
         const project = Relation.getTarget(binding);
         const db = Relation.getDatabase(binding) ?? Obj.getDatabase(project);
         if (!db) {
@@ -651,12 +652,9 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
           ),
         );
 
-        // Write sync state onto the binding.
+        // Write sync state onto the binding's cursor.
         if (outcome._tag === 'Right') {
-          Relation.update(binding, (binding) => {
-            binding.lastSyncAt = new Date().toISOString();
-            binding.lastError = undefined;
-          });
+          Cursor.advance(cursor);
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {
               id: `${meta.profile.key}.sync-success.${bindingId}`,
@@ -667,9 +665,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
           return { pulled: outcome.right.pulled };
         } else {
           const message = formatGitHubSyncFailure(outcome.left);
-          Relation.update(binding, (binding) => {
-            binding.lastError = message;
-          });
+          Cursor.recordError(cursor, message);
           log.warn('github sync: binding failed', { error: outcome.left });
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {

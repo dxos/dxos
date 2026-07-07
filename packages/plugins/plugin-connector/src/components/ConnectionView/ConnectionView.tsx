@@ -168,6 +168,8 @@ const BindingRow = ({
     }
   }, [binding]);
   const [resolvedTarget] = useObject(target);
+  // Sync status lives on the binding's cursor object (0.2.0); resolve it to render last-run state.
+  const [cursor] = useObject(binding.cursor);
   const missing = !resolvedTarget || Obj.isDeleted(resolvedTarget);
   // Label precedence: explicit binding name → remote id → the target's own label → its type's
   // translated label (single-target connectors leave a binding without a name/remoteId, e.g.
@@ -184,8 +186,8 @@ const BindingRow = ({
 
   const status = missing
     ? t('binding-target-missing.message')
-    : binding.lastSyncAt
-      ? `${t('last-sync.label')}: ${new Date(binding.lastSyncAt).toLocaleString()}`
+    : cursor?.lastRunAt
+      ? `${t('last-sync.label')}: ${new Date(cursor.lastRunAt).toLocaleString()}`
       : t('never-synced.label');
 
   // Seed the options form from the binding's current options; SyncBinding is an ECHO relation,
@@ -205,7 +207,7 @@ const BindingRow = ({
       label={label}
       description={status}
       validation={
-        !missing && binding.lastError ? <span className='text-sm text-error-text'>{binding.lastError}</span> : undefined
+        !missing && cursor?.lastError ? <span className='text-sm text-error-text'>{cursor.lastError}</span> : undefined
       }
     >
       {missing ? <Button onClick={() => onRemove(binding)}>{t('remove-binding.label')}</Button> : undefined}

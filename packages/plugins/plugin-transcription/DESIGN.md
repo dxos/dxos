@@ -8,7 +8,7 @@ primitives live in peer packages.
 
 | Package                        | Role                                                                                         |
 | ------------------------------ | -------------------------------------------------------------------------------------------- |
-| `@dxos/transcription-pipeline` | Engine (env-agnostic): `Transcriber`, `runAsrPipeline`, `Stage`, `CommitFn`, `EntityLookup`. |
+| `@dxos/pipeline-transcription` | Engine (env-agnostic): `Transcriber`, `runAsrPipeline`, `Stage`, `CommitFn`, `EntityLookup`. |
 | `@dxos/react-ui-transcription` | Browser + React: `MediaStreamRecorder`, `createTranscriber`, hooks, `Transcription` view.    |
 | `@dxos/app-framework`          | Capability + plugin runtime (`Capability.make` / `contributes` / `get`).                     |
 | `@dxos/plugin-markdown`        | Editor surface the driver attaches to (`EditorViews`, pending-text decorations).             |

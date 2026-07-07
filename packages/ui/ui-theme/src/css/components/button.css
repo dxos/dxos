@@ -15,7 +15,7 @@
     /* The default variant inherits ambient valence colors when rendered inside a valence surface
      * (e.g. Message.Root, which sets --dx-valence-*); otherwise it falls back to the base input styling. */
     &[data-variant='default'] {
-      color: var(--dx-valence-text, inherit);
+      /* color: var(--dx-valence-text, inherit); */
       background: var(--dx-valence-bg, var(--color-input-bg));
     }
     /* Toggle / tab group: the selected item reads as standard text on a surface-relative fill (selected-surface

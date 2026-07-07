@@ -43,11 +43,11 @@ export const PortfolioProperties = ({ subject }: PortfolioPropertiesProps) => {
     }
     setPending(true);
     try {
-      createDailySyncTrigger(db, findSyncOperation(operations));
+      createDailySyncTrigger(db, subject, findSyncOperation(operations));
     } finally {
       setPending(false);
     }
-  }, [db, syncTrigger, operations, setSyncEnabled]);
+  }, [db, subject, syncTrigger, operations, setSyncEnabled]);
 
   return (
     <Form.Section>

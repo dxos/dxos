@@ -14,7 +14,7 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { OperationInvoker } from '@dxos/operation';
 import { Expando } from '@dxos/schema';
-import { AccessToken } from '@dxos/types';
+import { AccessToken, Cursor } from '@dxos/types';
 
 import {
   Connection,
@@ -76,7 +76,13 @@ describe('reconcileSyncBindings', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.add([Connection.Connection, SyncBinding.SyncBinding, AccessToken.AccessToken, Expando.Expando]);
+    graph.registry.add([
+      Connection.Connection,
+      Cursor.Cursor,
+      SyncBinding.SyncBinding,
+      AccessToken.AccessToken,
+      Expando.Expando,
+    ]);
     const token = db.add(Obj.make(AccessToken.AccessToken, { source: 'example.com', token: 'tok', account: 'me' }));
     const connection = db.add(
       Obj.make(Connection.Connection, { connectorId: 'example', accessToken: Ref.make(token) }),
@@ -136,15 +142,15 @@ describe('reconcileSyncBindings', () => {
   test('preserves an already-bound target (and its sync state) when re-selected', async ({ expect }) => {
     const { db, connection } = await setup();
     const obj = db.add(Obj.make(Expando.Expando, { name: 'kept' }));
-    const lastSyncAt = '2026-04-01T00:00:00.000Z';
+    const lastRunAt = '2026-04-01T00:00:00.000Z';
+    // Sync state lives on the binding's cursor object (0.2.0); seed it to verify reconcile preserves it.
     const existing = db.add(
       SyncBinding.make({
         [Relation.Source]: connection,
         [Relation.Target]: obj,
         remoteId: 'kept',
         name: 'Kept',
-        cursor: 'sentinel',
-        lastSyncAt,
+        cursor: { value: 'sentinel', lastRunAt },
       }),
     );
 
@@ -155,8 +161,8 @@ describe('reconcileSyncBindings', () => {
     const bindings = await queryBindings(db, connection);
     expect(bindings.length).toBe(1);
     expect(bindings[0].id).toBe(existing.id);
-    expect(bindings[0].cursor).toBe('sentinel');
-    expect(bindings[0].lastSyncAt).toBe(lastSyncAt);
+    expect(bindings[0].cursor.target?.value).toBe('sentinel');
+    expect(bindings[0].cursor.target?.lastRunAt).toBe(lastRunAt);
     expect(Relation.getTarget(bindings[0]).id).toBe(obj.id);
   });
 

@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { type Transcriber } from '@dxos/transcription-pipeline';
+import { type Transcriber } from '@dxos/pipeline-transcription';
 
 import { type CreateTranscriberOptions, createTranscriber } from '../capture';
 

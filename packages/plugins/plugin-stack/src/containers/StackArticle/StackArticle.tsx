@@ -3,7 +3,7 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useId, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -41,11 +41,14 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
     [collection],
   );
 
+  // Per-instance discriminator so the same collection opened in two planks doesn't collide in the Mosaic registry.
+  const instanceId = useId();
+
   // Reorder sections in place. Placeholder/tile drop locations are 1-based with half-step placeholders
   // between tiles, so the floor of the drop location is the destination array index (see Mosaic.Stack).
   const eventHandler = useMemo<MosaicEventHandler<StackSectionItem>>(
     () => ({
-      id: Obj.getURI(collection),
+      id: `${Obj.getURI(collection)}:${instanceId}`,
       canDrop: ({ source }) =>
         collection.objects.some((ref) => ref.target != null && Obj.getURI(ref.target) === source.id),
       onDrop: ({ source, target }) => {
@@ -68,7 +71,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
         });
       },
     }),
-    [collection, findIndex],
+    [collection, findIndex, instanceId],
   );
 
   const handleMoveUp = useCallback(

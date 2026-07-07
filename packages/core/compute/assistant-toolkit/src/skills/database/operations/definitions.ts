@@ -139,8 +139,11 @@ export const ObjectCreate = Operation.make({
     `,
   },
   input: Schema.Struct({
-    typename: Schema.String,
-    data: Schema.Any,
+    typename: Schema.String.annotations({
+      description: 'The typename of the object to create.',
+      examples: ['dxn:org.dxos.type.person'],
+    }),
+    properties: Schema.Record({ key: Schema.String, value: Schema.Any }),
   }),
   output: Schema.Unknown,
   services: [Database.Service],

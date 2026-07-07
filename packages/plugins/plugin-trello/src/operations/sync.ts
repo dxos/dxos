@@ -15,6 +15,7 @@ import { log } from '@dxos/log';
 import { SyncBinding } from '@dxos/plugin-connector';
 import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
+import { Cursor } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -516,6 +517,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
       // provided from the connection ref. `Database.load` is requirement-free
       // (the ref carries its own db), so this runs outside the layered body.
       const bound = yield* Database.load(binding);
+      const cursor = yield* Database.load(bound.cursor);
       const connection = Relation.getSource(bound);
 
       // Wrap the body in `Effect.either` so we can emit a toast on either path
@@ -548,8 +550,8 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
           // The trello-api functions return `Effect<T, HttpClientError | ParseError, HttpClient>`
           // with retry+timeout baked in. The HttpClient layer is provided at the
           // operation boundary below. Trello's cards endpoint doesn't support a
-          // delta cursor, so we full-fetch every sync and don't read/write
-          // `binding.cursor` here.
+          // delta cursor, so we full-fetch every sync and never advance the
+          // cursor's `value` (only its run status, below).
           const lists = yield* TrelloApi.fetchLists(boardId);
           const cards = yield* TrelloApi.fetchCards(boardId);
           const reconcileResult = yield* reconcileBoardCards(bound, kanban, remoteBoard, cards, lists);
@@ -565,24 +567,19 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
               }).pipe(Effect.map(() => undefined)),
           });
 
-          // Stamp success on the binding.
-          Relation.update(bound, (bound) => {
-            bound.lastSyncAt = new Date().toISOString();
-            bound.lastError = undefined;
-          });
+          // Stamp success on the binding's cursor.
+          Cursor.advance(cursor);
 
           return {
             pulled: reconcileResult,
             pushed: pushResult,
           };
         }).pipe(
-          // A failure mid-sync writes `lastError` on the binding then re-raises,
+          // A failure mid-sync writes `lastError` on the cursor then re-raises,
           // so the toast path still surfaces the crash.
           Effect.tapError((error) =>
             Effect.sync(() => {
-              Relation.update(bound, (bound) => {
-                bound.lastError = formatTrelloSyncFailure(error);
-              });
+              Cursor.recordError(cursor, formatTrelloSyncFailure(error));
             }),
           ),
           Effect.provide(Database.layer(db)),

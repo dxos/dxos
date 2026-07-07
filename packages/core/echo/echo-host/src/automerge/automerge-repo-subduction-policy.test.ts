@@ -820,13 +820,10 @@ describe.skipIf(process.env.CI)('SubductionPolicy', () => {
     //   1. `host.shareConfigChanged()` + `client.shareConfigChanged()`
     //      after the flip does not deliver the doc within 1.5s.
     //   2. `reconnectAdapters` (full peer-disconnected + peer-candidate
-    //      cycle on both sides) also does NOT deliver the doc — the
-    //      bridge does not retry a `lastSyncResult === 'all-failed'`
-    //      entry on connection-generation bumps.
-    //   3. A fresh local commit on the holder enqueues a new outbound
-    //      batch that sidesteps the stuck entry, so the now-allowing
-    //      policy finally lets the doc land.
-    test('authorizePut deny → allow recovers via fresh holder commit, not reconnect', { timeout: 20_000 }, async () => {
+    //      cycle on both sides) does deliver the doc — the connection-
+    //      generation bump re-drives the holder's stuck
+    //      `lastSyncResult === 'all-failed'` push.
+    test('authorizePut deny → allow recovers via reconnect', { timeout: 20_000 }, async () => {
       let allowPut = false;
       const { repos, adapters } = await createHostClientRepoTopology({
         subductionPolicies: {
@@ -859,21 +856,13 @@ describe.skipIf(process.env.CI)('SubductionPolicy', () => {
       await sleep(NEGATIVE_ASSERTION_DELAY_MS);
       expect(progress.peek().state).to.not.equal('ready');
 
-      // Reconnect alone also does not recover: the bridge does not retry an
-      // 'all-failed' entry on connection-generation bumps.
+      // Reconnect recovers: the connection-generation bump re-drives the
+      // holder's stuck 'all-failed' push, and the now-allowing policy lets
+      // it land.
       await reconnectAdapters(adapters);
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
-      expect(progress.peek().state).to.not.equal('ready');
-
-      // A fresh local commit on the holder enqueues a new outbound batch
-      // that sidesteps the stuck entry; the now-allowing policy lets it
-      // land, bringing the whole sedimentree (including 'gated-put') across.
-      handle.change((doc: any) => {
-        doc.text = 'after-flip';
-      });
       await expect
         .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 10_000 })
-        .toEqual('after-flip');
+        .toEqual('gated-put');
     });
 
     // Hypothesis: without `shareConfigChanged()`, recovery is left to

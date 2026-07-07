@@ -10,11 +10,12 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
+import * as InboxResolver from '@dxos/extractor-lib';
 import { credentialsLayerConfig } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 import { GoogleMail } from '../../../apis';
-import { GoogleCredentials, InboxResolver } from '../../../services';
+import { GoogleCredentials } from '../../../services';
 import { mapMessage } from './mapper';
 
 const TestLayer = Layer.mergeAll(

@@ -3,13 +3,13 @@
 //
 
 // Core types.
-import { accessoryHandlesPointerdownAttrs } from '@dxos/lit-grid';
+import { type DxGridPlane, accessoryHandlesPointerdownAttrs } from '@dxos/lit-grid';
 
 export type TableControl = 'checkbox' | 'switch';
 
 export type ControlData =
   | { type: 'checkbox'; rowIndex: number; header?: boolean }
-  | { type: 'switch'; colIndex: number; rowIndex: number };
+  | { type: 'switch'; colIndex: number; rowIndex: number; plane: DxGridPlane };
 
 type CommonRenderProps = {
   checked?: boolean;
@@ -61,11 +61,18 @@ export const CheckboxStory = ({
   return renderInput(BASE_CLASSES.checkbox, attrs, checked, disabled, true, 'table-selection');
 };
 
-export const SwitchStory = ({ colIndex, rowIndex, checked = false, disabled = false }: RenderSwitchProps): string => {
+export const SwitchStory = ({
+  colIndex,
+  rowIndex,
+  plane,
+  checked = false,
+  disabled = false,
+}: RenderSwitchProps): string => {
   const attrs = {
     [CONTROL_IDENTIFIERS.switch]: '',
     'data-row-index': rowIndex.toString(),
     'data-col-index': colIndex.toString(),
+    'data-plane': plane,
     ...accessoryHandlesPointerdownAttrs,
   };
 
@@ -89,6 +96,8 @@ export const tableControls = {
       type: 'switch',
       rowIndex: Number(el.getAttribute('data-row-index')),
       colIndex: Number(el.getAttribute('data-col-index')),
+      // The plane round-trips through a DOM attribute string written by the switch renderer.
+      plane: (el.getAttribute('data-plane') as DxGridPlane | null) ?? 'grid',
     }),
   },
 } as const;

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-meeting",
-  "version": "0.8.3",
+  "version": "0.10.0",
   "private": true,
   "description": "Meeting hub plugin for DXOS Composer",
   "homepage": "https://dxos.org",

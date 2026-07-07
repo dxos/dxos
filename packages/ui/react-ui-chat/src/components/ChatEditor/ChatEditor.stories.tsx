@@ -35,6 +35,14 @@ export const Default: Story = {
   },
 };
 
+export const Markdown: Story = {
+  args: {
+    classNames,
+    markdown: true,
+    placeholder: 'Type **markdown**...',
+  },
+};
+
 // TODO(burdon): Restore and reconcile with suggest/typeahead.
 export const WithSuggestions: Story = {
   args: {

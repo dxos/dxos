@@ -34,19 +34,18 @@ export type InvokeResult =
 export type FunctionDeployOptions = {
   name?: string;
   version: string;
-  /**
-   * Service-side function id in case this function is a re-upload of a previous version.
-   */
+
+  /** Service-side function id in case this function is a re-upload of a previous version. */
   functionId?: string;
+
   /** Owner identity DID (`did:halo:…`). Must equal the authenticated presenter DID. */
   ownerUri: string;
 
   runtime?: FunctionRuntimeKind;
 
-  /**
-   * Path of the entry point file in the assets table.
-   */
+  /** Path of the entry point file in the assets table. */
   entryPoint: string;
+
   assets: {
     // TODO(dmaretskyi): Allow passing strings and setting mime-type.
     [path: string]: Uint8Array;

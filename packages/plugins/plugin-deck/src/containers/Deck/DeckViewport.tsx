@@ -254,22 +254,20 @@ export const DeckMultiMode = () => {
   return (
     <div className='relative bg-deck-surface overflow-hidden'>
       <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
-      <Mosaic.Root>
-        <Mosaic.Container orientation='horizontal' classNames={['absolute inset-0', mainPaddingTransitions]}>
-          <ScrollArea.Root orientation='horizontal' classNames='size-full'>
-            <ScrollArea.Viewport ref={viewportRef}>
-              <Mosaic.Stack
-                orientation='horizontal'
-                classNames='h-full gap-(--main-spacing) px-(--main-spacing)'
-                getId={getPlankId}
-                items={active}
-                Tile={DeckPlankTile}
-                draggable={false}
-              />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Mosaic.Container>
-      </Mosaic.Root>
+      <Mosaic.Container orientation='horizontal' classNames={['absolute inset-0', mainPaddingTransitions]}>
+        <ScrollArea.Root orientation='horizontal' classNames='size-full'>
+          <ScrollArea.Viewport ref={viewportRef}>
+            <Mosaic.Stack
+              orientation='horizontal'
+              classNames='h-full gap-(--main-spacing) px-(--main-spacing)'
+              getId={getPlankId}
+              items={active}
+              Tile={DeckPlankTile}
+              draggable={false}
+            />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Mosaic.Container>
     </div>
   );
 };

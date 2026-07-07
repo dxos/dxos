@@ -286,6 +286,9 @@
       "path": "../../plugins/plugin-file"
     },
     {
+      "path": "../../plugins/plugin-freeq"
+    },
+    {
       "path": "../../plugins/plugin-gallery"
     },
     {

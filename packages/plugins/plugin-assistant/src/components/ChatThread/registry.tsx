@@ -208,7 +208,7 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
         if (block.disposition === 'synthetic') {
           return renderXMLBlock('synthetic', { content: block.text, pending: block.pending });
         } else {
-          return `\n<prompt>${block.text}</prompt>`;
+          return `\n<prompt>${block.text}</prompt>\n`;
         }
       } else {
         const text = block.text.trim();

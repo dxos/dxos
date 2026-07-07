@@ -28,7 +28,6 @@ export type EmailSpec = Schema.Schema.Type<typeof EmailSpec>;
 
 export const QueueSpec = Schema.Struct({
   kind: Schema.Literal('queue').annotations(kindLiteralAnnotations),
-
   // TODO(dmaretskyi): Change to a reference.
   queue: EID.Schema,
 });
@@ -113,8 +112,6 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
      */
     inputNodeId: Schema.optional(Schema.String.annotations({ title: 'Input Node ID' })),
 
-    // TODO(burdon): NO BOOLEAN PROPERTIES (enabld/disabled/paused, etc.)
-    //  Need lint rule; or agent rule to require PR review for "boolean" key word.
     enabled: Schema.optional(Schema.Boolean.annotations({ title: 'Enabled' })),
 
     spec: Schema.optional(Spec),

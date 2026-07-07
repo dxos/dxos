@@ -107,11 +107,11 @@ export const extractFacts = (
   Effect.forEach(docs, (doc) => extractDocFacts(doc, options)).pipe(Effect.map((arrays) => arrays.flat()));
 
 export const SemanticPipeline = {
-  /** Extract → link (slug) → persist for each document. Incremental: documents whose content hash
-   *  matches the stored cursor are skipped entirely (no LLM call, no duplicate facts).
-   *
-   *  A CHANGED source currently appends new competing facts (append-only model) and advances
-   *  the cursor. Deleting/superseding the prior facts from that source is deferred (v1).
+  /**
+   * Extract → link (slug) → persist for each document. Incremental: documents whose content hash
+   * matches the stored cursor are skipped entirely (no LLM call, no duplicate facts).
+   * A CHANGED source currently appends new competing facts (append-only model) and advances
+   * the cursor. Deleting/superseding the prior facts from that source is deferred (v1).
    */
   run: (
     docs: readonly ExtractDocument[],

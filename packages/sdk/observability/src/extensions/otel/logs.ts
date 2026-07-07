@@ -41,7 +41,7 @@ export class OtelLogs {
     });
     this._loggerProvider = new LoggerProvider({
       resource: this.options.resource,
-      processors: [new BatchLogRecordProcessor(logExporter)],
+      processors: [new BatchLogRecordProcessor({ exporter: logExporter })],
     });
   }
 

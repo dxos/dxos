@@ -172,10 +172,10 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 0 }: StoryArgs) =>
   }
 
   return (
-    <Mosaic.Root asChild debug={debug}>
+    <Mosaic.Root>
       <div className={mx('grid md:p-2 overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
         <Board.Root model={model}>
-          <Board.Content id='board' debug={debug} eventHandler={eventHandler} Tile={DefaultBoardColumn} />
+          <Board.Content debug={debug} eventHandler={eventHandler} Tile={DefaultBoardColumn} />
         </Board.Root>
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>

@@ -15,7 +15,7 @@ import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type Channel } from '@dxos/types';
 
-import { Chat } from '#components';
+import { MessageThread } from '#components';
 import { useMessages, useStatus } from '#hooks';
 import { meta } from '#meta';
 import { ThreadCapabilities, ThreadOperation, resolveProvider } from '#types';
@@ -118,7 +118,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
         </Panel.Content>
       ) : (
         <Panel.Content asChild>
-          <Chat
+          <MessageThread
             id={id}
             classNames='dx-document'
             identity={identity ?? undefined}

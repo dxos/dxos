@@ -33,7 +33,7 @@ describe('EchoEdgeReplicator', () => {
     client.setIdentity(await createEphemeralEdgeIdentity());
     await connectionOpen.waitForCount(1);
 
-    const forbidden = createForbiddenMessage({ identityKey: client.identityKey, peerKey: client.peerKey }, spaceId);
+    const forbidden = createForbiddenMessage({ identityDid: client.identityDid, peerKey: client.peerKey }, spaceId);
     await server.sendMessage(forbidden);
     await connectionOpen.waitForCount(1);
 

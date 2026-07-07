@@ -4,7 +4,7 @@
 
 Parse natural-language text into a structured, per-word representation (parts of speech) used to
 analyze the meaning/intention of user input and of transcripts. Built alongside
-`@dxos/transcription-pipeline` and `plugin-transcription`.
+`@dxos/pipeline-transcription` and `plugin-transcription`.
 
 Two decoupled parts:
 

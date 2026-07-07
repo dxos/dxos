@@ -1,6 +1,6 @@
 {
   "name": "@dxos/composer-app",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
@@ -74,6 +74,7 @@
     "@dxos/plugin-duffel": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-file": "workspace:*",
+    "@dxos/plugin-freeq": "workspace:*",
     "@dxos/plugin-gallery": "workspace:*",
     "@dxos/plugin-game": "workspace:*",
     "@dxos/plugin-generator": "workspace:*",

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-components",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Geneal purpose components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -20,6 +20,12 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./Spinner": {
+      "source": "./src/components/Spinner/index.ts",
+      "types": "./dist/types/src/components/Spinner/index.d.ts",
+      "browser": "./dist/lib/browser/components/Spinner/index.mjs",
+      "node": "./dist/lib/node-esm/components/Spinner/index.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",

@@ -22,7 +22,7 @@ export default Config2.make({
       Install the browser extension from the [Chrome Web Store](https://chromewebstore.google.com/detail/composer/ahkmmpagcinoehpnmdhoiohmmbikhnmj?pli=1).
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-crx',
-    icon: { key: 'ph--browser--regular', hue: 'orange' },
+    icon: { key: 'ph--puzzle-piece--regular', hue: 'orange' },
     // screenshots: [
     //   { dark: 'https://raw.githubusercontent.com/dxos/dxos/refs/heads/main/packages/plugins/plugin-crx/assets/images/' },
     // ],

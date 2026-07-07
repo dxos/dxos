@@ -21,7 +21,7 @@ import { log } from '@dxos/log';
 import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AccessToken, Message } from '@dxos/types';
+import { AccessToken, Cursor, Message } from '@dxos/types';
 
 import { GMAIL_CONNECTOR_ID } from '../../../constants';
 import { Mailbox } from '../../../types';
@@ -177,6 +177,7 @@ const setup = async () => {
       Mailbox.Mailbox,
       AccessToken.AccessToken,
       Connection.Connection,
+      Cursor.Cursor,
       SyncBinding.SyncBinding,
       Operation.PersistentOperation,
       Trigger.Trigger,

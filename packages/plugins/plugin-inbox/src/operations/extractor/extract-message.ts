@@ -8,8 +8,8 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { dispatch, fromExtractors } from '@dxos/extractor';
+import * as InboxResolver from '@dxos/extractor-lib';
 
-import { InboxResolver } from '../../services';
 import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox } from '../../types';
 
 /**

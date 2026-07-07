@@ -11,15 +11,24 @@ type ValueFormatProps = {
   format?: Format.TypeFormat | undefined;
   value: any;
   locale?: string | undefined;
+  /** Use compact notation for large currency values (>= 1 billion). */
+  compact?: boolean | undefined;
 };
 
 /**
- * Format value by type.
- * Used by Table, Sheet, etc.
+ * Format a typed value for display.
+ * Used by Table, Sheet, FundamentalsPanel, etc.
+ *
+ * @param type - The Echo TypeEnum of the value (Boolean, Number, String, Ref).
+ * @param format - Optional TypeFormat annotation (Percent, Currency, Date, etc.); falls back to scalar formatting when absent.
+ * @param value - The raw value to format.
+ * @param locale - BCP 47 locale tag passed to Intl formatters; defaults to the runtime locale.
+ * @param compact - When true, large currency values (>= 1 billion) use compact notation (e.g. "$1.23T").
+ *   Percent values are always formatted as a ratio (0.15 → "15%").
  */
 // TODO(burdon): Move to react-ui-form.
 // TODO(burdon): Formatting is different from kind format (e.g., percent is not a data format).
-export const formatForDisplay = ({ type, format, value, locale = undefined }: ValueFormatProps): string => {
+export const formatForDisplay = ({ type, format, value, locale = undefined, compact }: ValueFormatProps): string => {
   const formatScalar = (type: TypeEnum) => {
     switch (type) {
       case TypeEnum.Boolean:
@@ -52,10 +61,18 @@ export const formatForDisplay = ({ type, format, value, locale = undefined }: Va
       return formatScalar(TypeEnum.String);
     }
     case Format.TypeFormat.Percent: {
-      return `${(value as number) * 100}%`;
+      return new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 2 }).format(value as number);
     }
     case Format.TypeFormat.Currency: {
-      // TODO(burdon): Get from property annotation.
+      // TODO(burdon): Get currency from property annotation.
+      if (compact && Math.abs(value as number) >= 1_000_000_000) {
+        return new Intl.NumberFormat(locale, {
+          style: 'currency',
+          currency: 'USD',
+          notation: 'compact',
+          maximumFractionDigits: 2,
+        }).format(value as number);
+      }
       return (value as number).toLocaleString(locale, {
         style: 'currency',
         currency: 'USD',

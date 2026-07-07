@@ -14,7 +14,7 @@ import { ObjectCreate } from './definitions';
 
 export default ObjectCreate.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ typename, data }) {
+    Effect.fn(function* ({ typename, properties }) {
       const { db } = yield* Database.Service;
       const types = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()))
         .run;
@@ -26,7 +26,7 @@ export default ObjectCreate.pipe(
       const object = db.add(
         Obj.make(
           schema,
-          deepMapValues(data, (value, recurse) => {
+          deepMapValues(properties, (value, recurse) => {
             if (EncodedReference.isEncodedReference(value)) {
               return db.makeRef(EncodedReference.toURI(value));
             }

@@ -13,6 +13,7 @@
   ],
   "include": [
     "dx.config.ts",
+    "scripts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -67,10 +68,16 @@
       "path": "../../core/compute/extractor"
     },
     {
+      "path": "../../core/compute/extractor-lib"
+    },
+    {
       "path": "../../core/compute/functions"
     },
     {
       "path": "../../core/compute/functions-runtime"
+    },
+    {
+      "path": "../../core/compute/pipeline"
     },
     {
       "path": "../../core/echo/echo"

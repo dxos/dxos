@@ -7,10 +7,11 @@
 import { Capabilities, type CapabilityManager } from '@dxos/app-framework';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 
 import { Paths } from '../app';
 import { AppCapabilities } from '../app-framework';
+import * as AppAnnotation from './AppAnnotation';
 
 //
 // Personal and exemplar space tags.
@@ -115,4 +116,15 @@ export const getActiveSpaceId = (workspace?: string) => (workspace ? Paths.getSp
 export const getActiveSpace = (client: Client, capabilities: CapabilityManager.CapabilityManager) => {
   const spaceId = getActiveSpaceId(getActiveWorkspace(capabilities));
   return spaceId ? client.spaces.get(spaceId) : undefined;
+};
+
+//
+// Home content visibility.
+//
+
+/** Restore every Home content section for a space to visible, clearing all per-section overrides. */
+export const resetHomeVisibility = (space: Space): void => {
+  Obj.update(space.properties, (properties) => {
+    Annotation.set(properties, AppAnnotation.HomeVisibilityAnnotation, {});
+  });
 };

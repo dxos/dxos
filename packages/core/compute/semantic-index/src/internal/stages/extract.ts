@@ -7,7 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { AiService } from '@dxos/ai';
+import { type AiModelNotAvailableError, AiService } from '@dxos/ai';
+import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 
 import { SemanticIndexError } from '../../errors';
 import { Factuality } from '../../types';
@@ -59,6 +61,10 @@ export const DEFAULT_EXTRACTION_RULES: readonly string[] = [
 export type ExtractOptions = {
   /** Extra extraction rules appended after {@link DEFAULT_EXTRACTION_RULES}. */
   readonly rules?: readonly string[];
+  /** Model DXN to extract with. Defaults to {@link DEFAULT_MODEL}. */
+  readonly model?: string;
+  /** Provider DXN for model resolution (e.g. `Provider.ollama.id`) when the model is not served by the default provider. */
+  readonly provider?: string;
 };
 
 /** Compose the system prompt from the base instruction and the (default + caller) rules. */
@@ -80,8 +86,20 @@ export const extractChunk = (
     });
     return response.value;
   }).pipe(
+    Effect.provide(modelLayer(options).pipe(Layer.orDie)),
     // Model-layer construction failure is a fatal wiring fault (defect); transient LLM failures
     // (rate-limit/timeout) stay recoverable so callers can catchTag/retry.
-    Effect.provide(AiService.model(DEFAULT_MODEL).pipe(Layer.orDie)),
     Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to extract facts', cause })),
   );
+
+/** Resolve the `LanguageModel` layer for extraction, honoring a caller-supplied model/provider override. */
+const modelLayer = (
+  options?: ExtractOptions,
+): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService.AiService> => {
+  if (!options?.provider) {
+    return AiService.model(options?.model ?? DEFAULT_MODEL);
+  }
+  const provider = DXN.tryMake(options.provider);
+  invariant(provider, `Invalid provider DXN: ${options.provider}`);
+  return AiService.model(options.model ?? DEFAULT_MODEL, { provider });
+};

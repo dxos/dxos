@@ -3,10 +3,10 @@
 //
 
 import { Operation, Trigger } from '@dxos/compute';
-import { type Database, EID, Ref } from '@dxos/echo';
+import { type Database, EID, Obj, Ref } from '@dxos/echo';
 
 import { IBKR_SYNC_CRON } from './constants';
-import { IbkrOperation } from './types';
+import { type Ibkr, IbkrOperation } from './types';
 
 /** Stable string form of the sync operation's key, used to recognize its serialized record. */
 export const SYNC_OPERATION_KEY = String(IbkrOperation.SyncPortfolioReport.meta.key);
@@ -46,11 +46,20 @@ export const findSyncTrigger = (
  * that runs the {@link IbkrOperation.SyncPortfolioReport} operation. Reuses the passed serialized operation when
  * given, otherwise serializes a fresh one. The trigger is created enabled and is then toggled on/off
  * from the portfolio properties panel.
+ *
+ * The trigger and its serialized operation are parented to the owning {@link Ibkr.Portfolio} so they
+ * cascade-delete with it and stay grouped under the visible object rather than floating at space root.
  */
 export const createDailySyncTrigger = (
   db: Database.Database,
+  portfolio: Ibkr.Portfolio,
   operation?: Operation.PersistentOperation,
 ): Trigger.Trigger => {
   const op = operation ?? db.add(Operation.serialize(IbkrOperation.SyncPortfolioReport));
-  return db.add(Trigger.make({ enabled: true, spec: Trigger.specTimer(IBKR_SYNC_CRON), runnable: Ref.make(op) }));
+  Obj.setParent(op, portfolio);
+  const trigger = db.add(
+    Trigger.make({ enabled: true, spec: Trigger.specTimer(IBKR_SYNC_CRON), runnable: Ref.make(op) }),
+  );
+  Obj.setParent(trigger, portfolio);
+  return trigger;
 };

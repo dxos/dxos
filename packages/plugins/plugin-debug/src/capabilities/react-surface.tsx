@@ -234,7 +234,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'devtoolsOverview',
-        filter: Surface.makeFilter(AppSurface.deckCompanion('devtools')),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('devtoolsOverview')),
         component: () => <DevtoolsOverviewContainer />,
       }),
       Surface.create({

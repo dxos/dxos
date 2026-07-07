@@ -114,6 +114,31 @@ describe('SemanticPipeline', () => {
   );
 
   it.effect(
+    'accepts a model/provider override and still extracts (routing itself is proven by the gated pipeline-email test)',
+    Effect.fnUntraced(
+      function* () {
+        const facts = yield* extractFacts(
+          [
+            {
+              text: "I think I'm probably going to Paris next week",
+              source: 'editor:input',
+              author: 'Alice',
+              date: '2026-06-06T00:00:00.000Z',
+            },
+          ],
+          { model: 'com.openai.model.gpt-oss-20b.default', provider: 'dxn:org.dxos.provider.ollama' },
+        );
+        yield* Effect.sync(() => {
+          if (facts.length !== 1) {
+            throw new Error(`expected 1 fact, got ${facts.length}`);
+          }
+        });
+      },
+      Effect.provide(queuedAiService([LLM_OUTPUT])),
+    ),
+  );
+
+  it.effect(
     'surfaces a SemanticIndexError when extraction fails',
     Effect.fnUntraced(function* () {
       const error = yield* SemanticPipeline.run([{ text: 'anything', source: 'dxn:q:m1' }]).pipe(Effect.flip);

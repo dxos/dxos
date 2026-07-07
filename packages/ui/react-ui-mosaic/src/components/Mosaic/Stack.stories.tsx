@@ -36,7 +36,7 @@ const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
   const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   return (
-    <Mosaic.Root debug={props.debug}>
+    <Mosaic.Root>
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
@@ -51,6 +51,7 @@ const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
               autoScroll={viewport}
               eventHandler={{ id: 'test', canDrop: () => true }}
               debug={debugHandler}
+              placeholderDebug={props.debug}
             >
               <ScrollArea.Root orientation='vertical'>
                 <ScrollArea.Viewport ref={setViewport}>
@@ -77,7 +78,7 @@ const VirtualStackStory = (props: MosaicStackProps<Obj.Any>) => {
   const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   return (
-    <Mosaic.Root debug={props.debug}>
+    <Mosaic.Root>
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
@@ -91,6 +92,7 @@ const VirtualStackStory = (props: MosaicStackProps<Obj.Any>) => {
             autoScroll={viewport}
             eventHandler={{ id: 'test', canDrop: () => true }}
             debug={debugHandler}
+            placeholderDebug={props.debug}
           >
             <ScrollArea.Root orientation='vertical'>
               <ScrollArea.Viewport ref={setViewport}>

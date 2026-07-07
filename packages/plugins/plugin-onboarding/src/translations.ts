@@ -72,15 +72,6 @@ export const translations = [
         'recover-identity-button.label': 'Continue with a recovery code',
         'recover-identity-button.description': 'Recover your identity using a paper key.',
 
-        'space-invitation.title': 'You have been invited to a space',
-        'space-invitation.description':
-          "You're not currently logged in on this device, click the button below to create a new account and accept the invitation, or log in on this device before accepting the invitation.",
-        'join-space-button.label': 'Create account & accept invitation',
-        'go-to-login.title': 'Already have an account?',
-        'go-to-login.description':
-          'If you already have an account, log in before accepting the invitation with that account.',
-        'go-to-login-button.label': 'Go to login',
-
         'passkey-setup-toast.title': 'Setup a passkey',
         'passkey-setup-toast.description':
           'Setup a passkey to ensure you maintain access to your account and sign in on other devices.',

@@ -82,7 +82,7 @@ export const Image = ({
       // `dx-ring-pseudo` `::after`) painted on ancestors — most visibly,
       // the focus ring on a Card containing a Card.Poster.
       className={mx(
-        `relative flex w-full justify-center overflow-hidden transition-all duration-700 isolate`,
+        `relative shrink-0 flex w-full justify-center overflow-hidden transition-all duration-700 isolate`,
         classNames,
       )}
       style={{

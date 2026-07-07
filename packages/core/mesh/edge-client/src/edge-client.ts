@@ -43,7 +43,8 @@ export type MessengerConfig = {
 export interface EdgeConnection extends Required<Lifecycle> {
   statusChanged: Event<EdgeStatus>;
   get info(): any;
-  get identityKey(): string;
+  /** Identity DID (`did:halo:…`) of the connected identity. */
+  get identityDid(): string;
   get peerKey(): string;
   get isOpen(): boolean;
   get status(): EdgeStatus;
@@ -88,7 +89,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return {
       open: this.isOpen,
       status: this.status,
-      identity: this._identity.identityKey,
+      identity: this._identity.identityDid,
       device: this._identity.peerKey,
     };
   }
@@ -108,8 +109,8 @@ export class EdgeClient extends Resource implements EdgeConnection {
     };
   }
 
-  get identityKey() {
-    return this._identity.identityKey;
+  get identityDid() {
+    return this._identity.identityDid;
   }
 
   get peerKey() {
@@ -117,7 +118,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
   }
 
   setIdentity(identity: EdgeIdentity) {
-    if (identity.identityKey !== this._identity.identityKey || identity.peerKey !== this._identity.peerKey) {
+    if (identity.identityDid !== this._identity.identityDid || identity.peerKey !== this._identity.peerKey) {
       log('Edge identity changed', { identity, oldIdentity: this._identity });
       this._identity = identity;
       this._closeCurrentConnection(new EdgeIdentityChangedError());
@@ -139,9 +140,10 @@ export class EdgeClient extends Resource implements EdgeConnection {
       throw new EdgeConnectionClosedError();
     }
 
+    // DX-1059: sources are DID-only; validate against identityDid.
     if (
       message.source &&
-      (message.source.peerKey !== this._identity.peerKey || message.source.identityKey !== this.identityKey)
+      (message.source.peerKey !== this._identity.peerKey || message.source.identityDid !== this.identityDid)
     ) {
       throw new EdgeIdentityChangedError();
     }

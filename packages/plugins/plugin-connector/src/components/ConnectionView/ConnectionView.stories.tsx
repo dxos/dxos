@@ -15,7 +15,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Expando } from '@dxos/schema';
-import { AccessToken } from '@dxos/types';
+import { AccessToken, Cursor } from '@dxos/types';
 
 import { translations } from '#translations';
 import { Connection, SyncBinding } from '#types';
@@ -82,7 +82,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Connection.Connection, SyncBinding.SyncBinding, Expando.Expando],
+          types: [Connection.Connection, Cursor.Cursor, SyncBinding.SyncBinding, Expando.Expando],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
@@ -99,7 +99,7 @@ const meta = {
                 }),
               );
 
-              // A live binding carrying options + a recent sync timestamp.
+              // A live binding carrying options + a recent sync timestamp (on its cursor).
               const roadmap = space.db.add(Obj.make(Expando.Expando, { name: 'Product Roadmap' }));
               space.db.add(
                 SyncBinding.make({
@@ -107,12 +107,12 @@ const meta = {
                   [Relation.Target]: roadmap,
                   remoteId: 'board-1',
                   name: 'Product Roadmap',
-                  lastSyncAt: new Date().toISOString(),
                   options: { includeArchived: true, label: 'roadmap' },
+                  cursor: { lastRunAt: new Date().toISOString() },
                 }),
               );
 
-              // A live binding that has never synced and recorded an error.
+              // A live binding that has never synced and recorded an error (on its cursor).
               const engineering = space.db.add(Obj.make(Expando.Expando, { name: 'Engineering' }));
               space.db.add(
                 SyncBinding.make({
@@ -120,7 +120,7 @@ const meta = {
                   [Relation.Target]: engineering,
                   remoteId: 'board-2',
                   name: 'Engineering',
-                  lastError: 'Rate limited by remote service.',
+                  cursor: { lastError: 'Rate limited by remote service.' },
                 }),
               );
 

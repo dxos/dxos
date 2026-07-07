@@ -8,9 +8,9 @@ import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } fr
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { useAtomCapability, useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/ui';
 import { log } from '@dxos/log';
+import { linkEntities } from '@dxos/pipeline-transcription';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
-import { linkEntities } from '@dxos/transcription-pipeline';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
 
