@@ -15,6 +15,7 @@ import { PredicateList } from './PredicateList';
 const meta = {
   title: 'stories/stories-brain/components/PredicateList',
   component: PredicateList,
+  args: { onSelect: () => {} },
   decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof PredicateList>;
 

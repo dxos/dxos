@@ -18,24 +18,29 @@ export type FactViewerProps = ThemedClassName<{
   facts: Type.Fact[];
   /** Context entity id; scopes the list and roots the graph. */
   context?: string;
+  /** Predicate filter; when set, only facts with this predicate are shown. */
+  predicate?: string;
 }>;
 
 /**
  * Viewer for extracted semantic facts with two views: a grouped **list** (by subject entity, with
  * conflicts highlighted) and a **graph** (tidy tree rooted at the context entity, exploring the fact
- * graph). A `context` entity scopes the list and roots the graph. Pure/presentational.
+ * graph). A `context` entity scopes the list and roots the graph; a `predicate` further filters the
+ * list. Pure/presentational.
  */
-export const FactViewer = ({ classNames, facts, context }: FactViewerProps) => {
+export const FactViewer = ({ classNames, facts, context, predicate }: FactViewerProps) => {
   const [filter, setFilter] = useState('');
   const [view, setView] = useState<View>('list');
   const scoped = useMemo(
     () =>
-      context == null
-        ? facts
-        : facts.filter(
-            (fact) => termKey(fact.assertion.subject) === context || termKey(fact.assertion.object) === context,
-          ),
-    [facts, context],
+      facts.filter(
+        (fact) =>
+          (context == null ||
+            termKey(fact.assertion.subject) === context ||
+            termKey(fact.assertion.object) === context) &&
+          (predicate == null || fact.assertion.predicate === predicate),
+      ),
+    [facts, context, predicate],
   );
   const groups = useMemo(() => groupFacts(scoped, filter), [scoped, filter]);
   const graph = useMemo(

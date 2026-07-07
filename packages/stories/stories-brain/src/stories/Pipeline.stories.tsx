@@ -74,6 +74,7 @@ const DefaultStory = (_: StoryArgs) => {
   const [output, setOutput] = useState<unknown>();
   const [busy, setBusy] = useState(false);
   const [context, setContext] = useState<string | undefined>(undefined);
+  const [predicate, setPredicate] = useState<string | undefined>(undefined);
   const entities = useMemo(() => entitiesFromFacts(facts), [facts]);
   const predicates = useMemo(() => predicatesFromFacts(facts), [facts]);
 
@@ -114,10 +115,10 @@ const DefaultStory = (_: StoryArgs) => {
     <div className='dx-container grid grid-cols-3 gap-2'>
       <DocumentEditor initialValue={SAMPLE_CONTENT} parse={stubParse} busy={busy} onRun={handleRun} />
       <PipelinePanel stages={STAGES} busy={busy} output={output} />
-      <div role='none' className='grid grid-rows-3 gap-2 min-h-0'>
-        <FactViewer facts={facts} context={context} />
+      <div role='none' className='grid grid-rows-[2fr_1fr_1fr] gap-2 min-h-0'>
+        <FactViewer facts={facts} context={context} predicate={predicate} />
         <EntityList entities={entities} selected={context} onSelect={setContext} />
-        <PredicateList predicates={predicates} />
+        <PredicateList predicates={predicates} selected={predicate} onSelect={setPredicate} />
       </div>
     </div>
   );

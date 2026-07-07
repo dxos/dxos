@@ -53,14 +53,14 @@ export const PipelinePanel = ({ classNames, stages, busy, output }: PipelinePane
               {stage.description && <span className='text-sm text-description truncate'>{stage.description}</span>}
             </div>
           ))}
-          {output != null && (
+          {/* {output != null && (
             <>
               <h3 className='pt-2 text-sm text-description'>Output</h3>
               <pre className='bg-input-surface border border-subdued-separator rounded-sm p-2 text-xs overflow-x-auto'>
                 {JSON.stringify(output, null, 2)}
               </pre>
             </>
-          )}
+          )} */}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     </Panel.Content>
