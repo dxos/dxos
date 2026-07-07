@@ -34,6 +34,17 @@ describe('parseExtractPayload', () => {
     expect(facts[0].subject).toBe('Bob');
   });
 
+  test('skips stray braces / non-facts objects before the real payload', ({ expect }) => {
+    const raw = [
+      'Let me reason about a {placeholder} and consider {"note": "not the payload"}.',
+      '{"facts": [{"subject": "Carol", "predicate": "leads", "object": "Sales", "factuality": "CT+", "polarity": "+"}]}',
+      'Done thinking.',
+    ].join('\n');
+    const { facts } = parseExtractPayload(raw);
+    expect(facts).toHaveLength(1);
+    expect(facts[0].subject).toBe('Carol');
+  });
+
   test('returns no facts for output with no JSON object', ({ expect }) => {
     expect(parseExtractPayload('I could not find anything to extract.').facts).toHaveLength(0);
   });
