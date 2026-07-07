@@ -23,9 +23,11 @@ import {
   extractFactsStage,
   indexFactsStage,
   normalizeEntityId,
+  normalizeFactsStage,
 } from './SemanticPipeline';
 import { SemanticStore } from './SemanticStore';
 import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing';
+import { type Fact } from './types';
 
 // Discord channel fixture (snapshot of `plugin-discord:generate-fixtures`) as extraction documents.
 type FixtureMessage = {
@@ -90,6 +92,8 @@ describe('SemanticPipeline', () => {
     expect(prompt).toContain('timeless present form');
     expect(prompt).toContain('does NOT set validTo');
     expect(prompt).not.toContain('predicate "was created by"');
+    // Anti-synonym bias: the model reuses predicates rather than inventing variants.
+    expect(prompt).toContain('reuse the SAME predicate');
 
     const extended = buildExtractionPrompt({ rules: ['Treat @handles as people.'] });
     expect(extended).toContain('Treat @handles as people.');
@@ -153,6 +157,29 @@ describe('SemanticPipeline', () => {
         }
       });
     }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'normalizeFactsStage canonicalizes synonyms by relation key and passes others through',
+    Effect.fnUntraced(function* () {
+      // 'worked for' must match the table's 'works for' via relation-key normalization (inflection
+      // and auxiliaries collapse); 'is-a' has no mapping and keeps its surface form.
+      const input: DocumentFacts = {
+        doc: { text: 'irrelevant', source: 'test:doc' },
+        facts: [testFact('worked for'), testFact('Employed By'), testFact('is-a')],
+      };
+      const collected: DocumentFacts[] = [];
+      yield* Stream.fromIterable([input]).pipe(
+        normalizeFactsStage({ synonyms: { 'works for': 'works at', 'employed by': 'works at' } }),
+        Pipeline.run({ sink: (out) => Effect.sync(() => collected.push(out)) }),
+      );
+      yield* Effect.sync(() => {
+        const predicates = collected[0].facts.map((fact) => fact.assertion.predicate);
+        if (predicates.join('|') !== 'works at|works at|is-a') {
+          throw new Error(`unexpected predicates: ${predicates.join('|')}`);
+        }
+      });
+    }),
   );
 
   it.effect(
@@ -405,4 +432,19 @@ describe('SemanticPipeline', () => {
       }).pipe(Effect.provide(layer));
     }),
   );
+});
+
+/** Minimal grounded fact for stage-level tests; only the predicate varies. */
+const testFact = (predicate: string): Fact => ({
+  id: `test:doc#hash#${predicate}`,
+  assertion: {
+    subject: { entity: 'alice', label: 'Alice' },
+    predicate,
+    object: { entity: 'acme', label: 'Acme' },
+  },
+  valence: { factuality: 'CT+', polarity: '+' },
+  attribution: { source: 'test:doc', generatedAtTime: '2026-01-01T00:00:00.000Z' },
+  recordedAt: '2026-01-01T00:00:00.000Z',
+  extractor: { id: 'test', model: 'test', version: '1' },
+  sourceHash: 'deadbeef',
 });

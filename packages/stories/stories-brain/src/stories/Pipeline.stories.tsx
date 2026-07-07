@@ -24,7 +24,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { EffectEx } from '@dxos/effect';
 import { stubParse } from '@dxos/nlp/testing';
 import { Pipeline } from '@dxos/pipeline';
-import { type DocumentFacts, type Type, extractFactsStage } from '@dxos/pipeline-rdf';
+import { type DocumentFacts, type Type, extractFactsStage, normalizeFactsStage } from '@dxos/pipeline-rdf';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
@@ -36,12 +36,24 @@ const SAMPLE_CONTENT = trim`
   - Aristotle was his student.
   - Socrates was a man.
   - All men are mortal.
+  - Aristotle worked for the Lyceum.
 `;
+
+// Demo synonym table for the normalize stage (keys are relation-key normalized, so inflections match).
+const SYNONYMS: Record<string, string> = {
+  'works for': 'works at',
+  'employed by': 'works at',
+};
 
 const STAGES: StageInfo[] = [
   {
     id: 'extract-facts',
     description: 'LLM proposition extraction (pipeline-rdf)',
+    enabled: true,
+  },
+  {
+    id: 'normalize-predicates',
+    description: 'Canonicalize predicate synonyms',
     enabled: true,
   },
 ];
@@ -57,18 +69,20 @@ const DefaultStory = (_: StoryArgs) => {
 
   // Stream the document through the enabled stages; the sink collects per-document results.
   const handleRun = (text: string) => {
-    if (!stages.some((stage) => stage.id === 'extract-facts' && stage.enabled)) {
-      setOutput({ skipped: 'no stages enabled' });
+    const enabled = (id: string) => stages.some((stage) => stage.id === id && stage.enabled);
+    if (!enabled('extract-facts')) {
+      setOutput({ skipped: 'extract-facts disabled' });
       return;
     }
     setBusy(true);
     setActive('extract-facts');
     const program = Effect.gen(function* () {
       const collected: DocumentFacts[] = [];
-      yield* Stream.fromIterable([{ text, source: 'editor:document' }]).pipe(
-        extractFactsStage(),
-        Pipeline.run({ sink: (out) => Effect.sync(() => collected.push(out)) }),
-      );
+      const extracted = Stream.fromIterable([{ text, source: 'editor:document' }]).pipe(extractFactsStage());
+      const normalized = enabled('normalize-predicates')
+        ? extracted.pipe(normalizeFactsStage({ synonyms: SYNONYMS }))
+        : extracted;
+      yield* normalized.pipe(Pipeline.run({ sink: (out) => Effect.sync(() => collected.push(out)) }));
       return collected;
     }).pipe(Effect.provide(Layer.fresh(AiServiceTestingPreset('edge-remote'))));
 
