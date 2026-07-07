@@ -16,9 +16,10 @@ describe('Blob', () => {
   });
 
   test('external data schema roundtrip', ({ expect }) => {
-    const data = Blob.externalData('sha256:deadbeef');
+    const uri = 'ni:///sha-256;3q2-7w';
+    const data = Blob.externalData(uri);
     const decoded = Schema.decodeUnknownSync(Blob.BlobData)(data);
-    expect(decoded).toEqual({ _tag: 'external', uri: 'sha256:deadbeef' });
+    expect(decoded).toEqual({ _tag: 'external', uri });
   });
 
   test('rejects an unknown tag', ({ expect }) => {
@@ -39,6 +40,6 @@ describe('Blob', () => {
   });
 
   test('Scheme constants', ({ expect }) => {
-    expect(Blob.Scheme.sha256).toBe('sha256');
+    expect(Blob.Scheme.ni).toBe('ni');
   });
 });

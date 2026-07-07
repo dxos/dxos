@@ -29,10 +29,12 @@ export const InlineData = Schema.TaggedStruct('inline', {
  */
 export const ExternalData = Schema.TaggedStruct('external', {
   /**
-   * URI locating the bytes. The scheme selects the backend at read time (e.g. `sha256:<hex>` for
-   * the edge backend — a content-addressed digest, not a backend name — or `wnfs://…` for the
+   * URI locating the bytes. The scheme selects the backend at read time (e.g. `ni:///sha-256;…` for
+   * the edge backend — an RFC 6920 content digest, not a backend name — or `wnfs://…` for the
    * plugin-wnfs extension), resolved via the scheme→backend map built from `registerBlobBackend`
    * calls. Core code never parses or constructs backend-specific URIs beyond reading the scheme.
+   *
+   * @see {@link https://www.rfc-editor.org/rfc/rfc6920 RFC 6920} for the `ni:` URI format.
    */
   uri: Schema.String,
 });
@@ -75,7 +77,7 @@ export class Blob extends Type.makeObject<Blob>(DXN.make('org.dxos.type.blob', '
  * Distinct from {@link Scheme}: a storage name picks *where* to write, a URI scheme describes
  * *what the identifier is* at read time. They coincide for backends with no content-addressing
  * (e.g. wnfs uses `'wnfs'` for both), but the edge backend's storage name (`'edge'`) differs from
- * its URI scheme (`Scheme.sha256`) because the identifier it produces is a content hash, not an
+ * its URI scheme (`Scheme.ni`) because the identifier it produces is a content hash, not an
  * edge-specific address.
  */
 export const Storage = { inline: 'inline', edge: 'edge' } as const;
@@ -83,12 +85,18 @@ export type Storage = (typeof Storage)[keyof typeof Storage];
 
 /**
  * URI schemes claimed by core backends (see `BlobBackend.schemes` in `@dxos/echo-protocol`).
- * `sha256` marks a URI whose remainder is a hex-encoded SHA-256 content digest (e.g. `sha256:<hex>`,
- * produced by the edge backend) — named for what the identifier *is*, not which backend wrote it,
- * so any backend or cache that can resolve a content hash may claim it. Extensions (e.g.
- * plugin-wnfs) define their own schemes in their own package.
+ *
+ * `ni` marks an {@link https://www.rfc-editor.org/rfc/rfc6920 RFC 6920} Named Information URI whose
+ * authority is empty and whose path carries a registered hash-algorithm name plus a base64url-encoded
+ * digest (e.g. `ni:///sha-256;UyaQNQIUxQKgg1jVMKMbg1Yr8Rrb2Y3RaOx2N0mVJhc`, produced by the edge
+ * backend). The scheme names *what the identifier is* — a content digest over the complete blob —
+ * not which backend wrote it, so any backend or cache that can resolve that digest may claim it.
+ * The URI is an identity claim, not a retrievability promise; transport is selected by the registered
+ * backend at read time.
+ *
+ * Extensions (e.g. plugin-wnfs) define their own schemes in their own package.
  */
-export const Scheme = { sha256: 'sha256' } as const;
+export const Scheme = { ni: 'ni' } as const;
 export type Scheme = (typeof Scheme)[keyof typeof Scheme];
 
 //

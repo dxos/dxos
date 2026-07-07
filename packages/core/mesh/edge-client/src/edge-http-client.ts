@@ -264,7 +264,7 @@ export class EdgeHttpClient extends BaseHttpClient {
 
   /**
    * Builds the URL for the blob stored under `key`. `key` is URL-encoded for defense in depth —
-   * callers only ever pass a sha256 hex digest today, but this is a public client method.
+   * callers pass a lowercase hex SHA-256 digest (extracted from an `ni:` URI by the edge backend).
    */
   public getBlobUrl(key: string): URL {
     return new URL(`/api/file/${encodeURIComponent(key)}`, this.baseUrl);

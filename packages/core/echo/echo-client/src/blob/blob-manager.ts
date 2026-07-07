@@ -4,20 +4,11 @@
 
 import { type CleanupFn } from '@dxos/async';
 import { Blob, Err } from '@dxos/echo';
+import { digestHexFromBytes } from './ni-uri';
 import { type BlobBackend } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
 
 const BASE64_CHUNK_SIZE = 0x8000;
-
-const sha256Hex = async (data: Uint8Array): Promise<string> => {
-  // WebCrypto's `BufferSource` type requires an `ArrayBuffer`-backed view, while `Uint8Array` is
-  // generic over `ArrayBufferLike` (which also covers `SharedArrayBuffer`) — a real gap between
-  // the DOM lib types and the TS standard lib, not fixable by typing `data` differently.
-  const digest = await crypto.subtle.digest('SHA-256', data as BufferSource);
-  return Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('');
-};
 
 // `String.fromCharCode(...bytes)` blows the call stack / argument limit for large arrays, so the
 // bytes are base64-encoded in chunks.
@@ -135,7 +126,7 @@ export class BlobManager {
       throw new Err.BlobNotAvailableError({ backend: storage, key: '', reason: 'backend-not-registered' });
     }
 
-    const contentHash = await sha256Hex(data);
+    const contentHash = await digestHexFromBytes(data);
     let response: { uri: string };
     try {
       response = await registered.backend.put({ spaceId, data, contentType, contentHash });

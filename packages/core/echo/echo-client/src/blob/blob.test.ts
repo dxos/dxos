@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Blob, Database, Err } from '@dxos/echo';
+import { fromDigestHex } from './ni-uri';
 import { EffectEx } from '@dxos/effect';
 
 import { EchoTestBuilder } from '../testing';
@@ -81,6 +82,39 @@ describe('Blob', () => {
 
         const exists = yield* Blob.exists(blob);
         expect(exists).toBe(true);
+      }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+    } finally {
+      cleanup();
+    }
+  });
+
+  test('ni scheme roundtrip via a content-addressed backend', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Blob.Blob] });
+    const db = await peer.createDatabase();
+    const testLayer = Database.layer(db);
+
+    const store = new Map<string, Uint8Array>();
+    const cleanup = db.graph.registerBlobBackend('edge-test', {
+      schemes: [Blob.Scheme.ni],
+      put: async ({ data, contentHash }) => {
+        const uri = fromDigestHex(contentHash);
+        store.set(uri, data);
+        return { uri };
+      },
+      get: async ({ uri }) => store.get(uri),
+      has: async ({ uri }) => store.has(uri),
+    });
+
+    const bytes = new Uint8Array([9, 8, 7]);
+    try {
+      await Effect.gen(function* () {
+        const blob = yield* Blob.fromBytes(bytes, { storage: 'edge-test' });
+        expect(blob.data._tag).toBe('external');
+        expect(blob.data._tag === 'external' && blob.data.uri).toMatch(/^ni:\/\/\/sha-256;/);
+        yield* Database.add(blob);
+
+        const loaded = yield* Blob.read(blob);
+        expect(loaded).toEqual(bytes);
       }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
     } finally {
       cleanup();

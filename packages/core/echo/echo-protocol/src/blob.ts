@@ -8,7 +8,7 @@ export interface BlobPutRequest {
   spaceId: SpaceId;
   data: Uint8Array;
   contentType?: string;
-  /** sha256 hex digest, computed by the manager. The backend does not verify it. */
+  /** Lowercase hex SHA-256 digest of `data`, computed by the manager. The backend does not verify it. */
   contentHash: string;
   /** For path-addressed extension backends. */
   name?: string;
