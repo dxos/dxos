@@ -71,8 +71,10 @@ const HAS_DATASET = existsSync(join(ROOT_DIR, 'data'));
 // Local model served by Ollama (model DXN; its final NSID segment must be camelCase).
 const MODEL = process.env.OLLAMA_MODEL ?? 'com.openai.model.gpt-oss-20b.default';
 
-// Number of emails drawn from the head of the dataset for one run.
-const EMAIL_COUNT = 1;
+// Number of emails drawn from the head of the dataset for one run. Defaults to 50 so the gated run
+// spans multiple threads/senders and actually exercises the corpus-layer assertions (clustering,
+// rollups, digest); override via EMAIL_COUNT (e.g. EMAIL_COUNT=1) for fast local iteration.
+const EMAIL_COUNT = Number(process.env.EMAIL_COUNT ?? 50);
 
 const SUMMARIZE_PROMPT = trim`
   Summarize the following email in one sentence, decide whether it is spam, and list up to five keywords.
