@@ -3,3 +3,4 @@
 //
 
 export * from './facts';
+export * from './stages';

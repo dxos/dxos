@@ -11,13 +11,12 @@ import { EffectEx } from '@dxos/effect';
 import { Pipeline } from '@dxos/pipeline';
 import { Message } from '@dxos/types';
 
-import { EmailPipelineCtx, emptyStats } from './run';
-import { statsStage } from './stages';
+import { EmailPipelineCtx, emptyStats, statsStage } from './stages';
 
 describe('statsStage', () => {
   test('tallies senders and spam across the stream', async ({ expect }) => {
     const stats = emptyStats();
-    // Test-only stub: statsStage never touches `db`, so a real Database isn't needed here.
+    // Test-only stub: statsStage never touches `db`.
     const ctx = Layer.succeed(EmailPipelineCtx, { db: {} as any, stats, summaries: [] });
     const messages = [
       Message.make({

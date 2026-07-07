@@ -5800,6 +5800,15 @@ importers:
 
   packages/core/compute/pipeline-email:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../echo/echo
+      '@dxos/extractor-lib':
+        specifier: workspace:*
+        version: link:../extractor-lib
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
@@ -5812,34 +5821,25 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../../sdk/types
-      hyparquet:
-        specifier: 'catalog:'
-        version: 1.26.2
-    devDependencies:
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../ai
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../echo/echo
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../echo/echo-client
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../../common/effect
-      '@dxos/extractor-lib':
-        specifier: workspace:*
-        version: link:../extractor-lib
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
       '@effect/ai':
         specifier: 'catalog:'
         version: 0.36.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+      hyparquet:
+        specifier: 'catalog:'
+        version: 1.26.2
+    devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../echo/echo-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       effect:
         specifier: 3.21.4
         version: 3.21.4
@@ -19194,9 +19194,6 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/extractor-lib':
-        specifier: workspace:*
-        version: link:../../core/compute/extractor-lib
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -19206,6 +19203,9 @@ importers:
       '@dxos/pipeline':
         specifier: workspace:*
         version: link:../../core/compute/pipeline
+      '@dxos/pipeline-email':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline-email
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-rdf
@@ -19269,9 +19269,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/ai':
-        specifier: 'catalog:'
-        version: 0.36.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       effect:
         specifier: 3.21.4
         version: 3.21.4

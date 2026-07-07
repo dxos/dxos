@@ -35,13 +35,13 @@
       "path": "../../core/compute/crawler"
     },
     {
-      "path": "../../core/compute/extractor-lib"
-    },
-    {
       "path": "../../core/compute/nlp"
     },
     {
       "path": "../../core/compute/pipeline"
+    },
+    {
+      "path": "../../core/compute/pipeline-email"
     },
     {
       "path": "../../core/compute/pipeline-rdf"
