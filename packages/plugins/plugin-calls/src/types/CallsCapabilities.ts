@@ -9,7 +9,7 @@ import { type Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { type CallManager as CallManagerImpl, type CallState, type MediaState, type TranscriptEvent } from '../calls';
+import { type CallManager as CallManagerImpl, type CallState, type MediaState } from '../calls';
 
 export const Manager = Capability.make<CallManagerImpl>(`${meta.profile.key}.capability.call-manager`);
 
@@ -19,8 +19,6 @@ export type CallProperties = {
   onLeave: (roomId?: string) => Promise<void>;
   onCallStateUpdated: (callState: CallState) => Promise<void>;
   onMediaStateUpdated?: ([mediaState, isSpeaking]: [MediaState, boolean]) => Promise<void>;
-  /** Native transcription segment for this client's own speech (RealtimeKit on-network ASR). */
-  onTranscript?: (event: TranscriptEvent) => Promise<void> | void;
 };
 
 export const EventHandler = Capability.make<CallProperties>(`${meta.profile.key}.capability.call-extension`);

@@ -12,9 +12,9 @@ import { log } from '@dxos/log';
 import { CallsCapabilities } from '#types';
 
 /**
- * Bridges {@link CallManager} lifecycle/state/transcript events to every contributed
- * {@link CallsCapabilities.EventHandler} (e.g. plugin-meeting's transcription wiring). Handlers are
- * resolved lazily per event so contributors that activate after this module are still invoked.
+ * Bridges {@link CallManager} lifecycle/state events to every contributed
+ * {@link CallsCapabilities.EventHandler} (e.g. plugin-meeting's call wiring). Handlers are resolved
+ * lazily per event so contributors that activate after this module are still invoked.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -51,11 +51,6 @@ export default Capability.makeModule(
         manager.mediaStateUpdated.on(ctx, (state) => {
           for (const handler of handlers()) {
             dispatch(handler.onMediaStateUpdated?.(state));
-          }
-        });
-        manager.transcript.on(ctx, (event) => {
-          for (const handler of handlers()) {
-            dispatch(handler.onTranscript?.(event));
           }
         });
       }).pipe(Effect.provideService(Capability.Service, capabilities)),

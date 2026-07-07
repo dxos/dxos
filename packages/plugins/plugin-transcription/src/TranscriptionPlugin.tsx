@@ -18,7 +18,6 @@ import {
   RecordingSession,
   SkillDefinition,
   TextContent,
-  Transcriber,
   TranscriptionDriver,
   TranscriptionSettings,
 } from '#capabilities';
@@ -38,11 +37,6 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSettingsModule({ activate: TranscriptionSettings }),
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addReactContextModule({ activate: TranscriptionDriver }),
-  Plugin.addModule({
-    id: 'transcription',
-    activatesOn: AppActivationEvents.SetupAppGraph,
-    activate: Transcriber,
-  }),
   Plugin.addModule({
     id: 'entity-lookup',
     activatesOn: AppActivationEvents.SetupAppGraph,

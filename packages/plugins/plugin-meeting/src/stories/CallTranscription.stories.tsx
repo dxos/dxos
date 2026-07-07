@@ -98,7 +98,7 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
       return;
     }
     // Mirrors the meeting graph action: publish the meeting activity so `handle-payload` binds the feed
-    // and enables the manager; native segments then arrive via `CallManager.transcript`.
+    // and enables transcription; the call manager then writes its own native segments straight to that feed.
     const feed = transcript.feed.target;
     const feedUri = feed && Feed.getFeedUri(feed);
     if (!feedUri) {

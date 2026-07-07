@@ -35,10 +35,6 @@ const activeMeetingOrPlaceholderFamily = Atom.family((store: MeetingCapabilities
   Atom.make((get) => get(store.stateAtom).activeMeeting ?? ('meeting' as const)),
 );
 
-const transcriptionManagerFamily = Atom.family((store: MeetingCapabilities.MeetingStateStore) =>
-  Atom.make((get) => get(store.stateAtom).transcriptionManager),
-);
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
@@ -108,9 +104,8 @@ export default Capability.makeModule(
         type: Channel.Channel,
         actions: (channel, get) =>
           Effect.gen(function* () {
-            const store = yield* Capability.get(MeetingCapabilities.State);
-            const transcriptionManager = get(transcriptionManagerFamily(store));
-            const enabled = transcriptionManager ? get(transcriptionManager.enabled) : false;
+            const callManager = yield* Capability.get(CallsCapabilities.Manager);
+            const enabled = get(callManager.transcriptionEnabledAtom);
             return [
               {
                 id: 'action.startStopTranscription',

@@ -245,7 +245,11 @@ export class MediaManager extends Resource {
   }
 
   private async _pushTracks(): Promise<void> {
-    if (!this._state.peer?.isOpen) {
+    // Capture the peer for the whole operation. `leave()`/rejoin can swap `_state.peer` while we await the
+    // pushes below; without a stable reference we'd publish to (or reschedule against) a dead peer and write
+    // its stale descriptors over the new session — the "connected but can't push/pull" race.
+    const peer = this._state.peer;
+    if (!peer?.isOpen) {
       return;
     }
 
@@ -260,16 +264,24 @@ export class MediaManager extends Resource {
     let updated = false;
     const [pushVideoResult, pushAudioResult] = await Promise.all([
       this._maybePushTrack(
+        peer,
         this._state.videoEnabled ? this._state.videoTrack : undefined,
         this._state.pushedVideoTrack,
         [{ maxFramerate: MAX_WEB_CAM_FRAMERATE, maxBitrate: MAX_WEB_CAM_BITRATE }],
       ),
       this._maybePushTrack(
+        peer,
         this._state.audioEnabled ? this._state.audioTrack : undefined,
         this._state.pushedAudioTrack,
         [{ networkPriority: 'high' }],
       ),
     ]);
+
+    // The call ended or switched peers while pushing: discard this result rather than corrupt the new
+    // session's descriptors / reschedule against a dead peer. The new peer schedules its own push on join.
+    if (this._state.peer !== peer) {
+      return;
+    }
 
     if (pushVideoResult.track !== this._state.pushedVideoTrack) {
       this._state.pushedVideoTrack = pushVideoResult.track;
@@ -294,6 +306,7 @@ export class MediaManager extends Resource {
   }
 
   private async _maybePushTrack(
+    peer: MediaTransport,
     track?: MediaStreamTrack,
     previousTrack?: TrackObject,
     encodings?: RTCRtpEncodingParameters[],
@@ -305,7 +318,7 @@ export class MediaManager extends Resource {
     const ctx = this._ctx.derive();
     try {
       return {
-        track: await this._state.peer!.pushTrack({
+        track: await peer.pushTrack({
           ctx,
           track: track ?? null,
           previousTrack,

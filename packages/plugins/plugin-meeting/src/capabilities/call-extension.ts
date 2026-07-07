@@ -8,7 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type CallState, type TranscriptEvent } from '@dxos/plugin-calls';
+import { type CallState, type TranscriptMessageEnricher } from '@dxos/plugin-calls';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { TranscriptionCapabilities, TranscriptOperation } from '@dxos/plugin-transcription/types';
@@ -37,10 +37,10 @@ export default Capability.makeModule(
         invariant(identity);
 
         // Enrich native RealtimeKit segments with entity extraction (parity with the standalone
-        // TranscriptionArticle recorder) so meeting transcripts link known entities. Runs headless in the
-        // call-scoped manager; `EnrichMessage` needs the meeting space for its AiService/Database services.
+        // TranscriptionArticle recorder) so meeting transcripts link known entities. Runs headless inside
+        // CallManager's transcript sink; `EnrichMessage` needs the meeting space for its AiService/Database.
         const spaceId = channel ? getSpace(channel)?.id : undefined;
-        let messageEnricher: TranscriptionCapabilities.TranscriptMessageEnricher | undefined;
+        let messageEnricher: TranscriptMessageEnricher | undefined;
         if (spaceId) {
           const settings = capabilities.get(TranscriptionCapabilities.Settings);
           const registry = capabilities.get(Capabilities.AtomRegistry);
@@ -60,15 +60,18 @@ export default Capability.makeModule(
           };
         }
 
-        // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-        const transcriptionManager = await capabilities
-          .get(TranscriptionCapabilities.TranscriptionManagerProvider)({ messageEnricher })
-          .open();
-        store.updateState((current) => ({ ...current, transcriptionManager }));
+        capabilities.get(CallsCapabilities.Manager).setTranscriptEnricher(messageEnricher);
       },
       onLeave: async () => {
-        const { transcriptionManager } = store.state;
-        await transcriptionManager?.close();
+        // Stop advertising the transcript feed so the standalone article shows its mic button again.
+        const { transcriptFeedUri } = store.state;
+        if (transcriptFeedUri) {
+          const registry = capabilities.get(Capabilities.AtomRegistry);
+          const managedFeeds = capabilities.get(TranscriptionCapabilities.ManagedFeeds);
+          const next = new Set(registry.get(managedFeeds));
+          next.delete(transcriptFeedUri);
+          registry.set(managedFeeds, next);
+        }
         store.updateState(() => ({}));
       },
       onCallStateUpdated: async (callState: CallState) => {
@@ -81,19 +84,6 @@ export default Capability.makeModule(
 
         const payload: MeetingPayload = activity.payload;
         await invokePromise(MeetingOperation.HandlePayload, payload);
-      },
-      onTranscript: async (event: TranscriptEvent) => {
-        // Native RealtimeKit transcription: CallManager forwards only this client's own segments,
-        // so each is written to the shared feed exactly once (no central writer election needed).
-        const { transcriptionManager } = store.state;
-        await transcriptionManager?.addTranscript([
-          {
-            _tag: 'transcript',
-            started: event.started ?? new Date().toISOString(),
-            text: event.text,
-            pending: event.pending,
-          },
-        ]);
       },
     });
   }),
