@@ -592,7 +592,7 @@ git commit -m "feat(stories-brain): email fixtures + EmailList"
 
 - [ ] **Step 1: PipelinePanel** — add props `selected?: string` and `onSelect?: (id: string) => void`. On row click set selected; apply `selected` styling on the matching `OrderedList.Item` (`selected` prop already supported by the item). Keep checkbox + drag. Show each stage's backend/model text (read-only) when present in the `StageInfo` (extend `StageInfo` with optional `backend?`/`model?`).
 
-- [ ] **Step 2: `registry.tsx`** — export `STAGE_REGISTRY: Record<StageId, StageDef>` wiring each stage id to `{ label, description, usesAi, OutputView }`: summarize→SummaryView, extract-contacts→EchoObjectsView(Person/Org), stats→StatsView, extract-facts→FactViewer (+ EntityList below), threads→EchoObjectsView(Thread), topics→TopicsView. Each `OutputView` reads its slice from `props.result`.
+- [ ] **Step 2: `registry.tsx`** — export `STAGE_REGISTRY: Record<StageId, StageDef>` wiring each stage id to `{ label, description, usesAi, OutputView }`: summarize→SummaryView, extract-contacts→EchoObjectsView(Person/Org), stats→StatsView, extract-facts→FactViewer + EntityList + PredicateList (stacked; entities via `entitiesFromFacts`, predicates via `predicatesFromFacts`), threads→EchoObjectsView(Thread), topics→TopicsView. Each `OutputView` reads its slice from `props.result`. NOTE: `EntityList`, `FactViewer`, and `PredicateList` (+ `entitiesFromFacts`/`predicatesFromFacts` in `components/util`) already exist — reuse them; Task 4 does NOT rebuild them.
 
 - [ ] **Step 3: `StageOutput.tsx`** — props `{ stageId?: StageId; result: unknown }`. Look up `STAGE_REGISTRY[stageId]` and render its `OutputView` with `result`; render `Empty label='Select a stage.'` when none selected.
 
