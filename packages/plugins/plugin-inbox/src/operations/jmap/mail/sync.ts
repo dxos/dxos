@@ -165,7 +165,7 @@ export const runJmapSync = ({
 
     // Flush indexes once at the end of the run (per-page commits no longer flush — see
     // `SyncBinding.commit`) so cross-run dedup / contact resolution observe this run's writes.
-    yield* Effect.promise(() => db.flush({ indexes: true }));
+    yield* Database.flush({ indexes: true });
 
     log('jmap sync complete', { newMessages: stats.newMessages });
     return { newMessages: stats.newMessages };

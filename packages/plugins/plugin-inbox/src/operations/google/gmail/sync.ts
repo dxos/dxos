@@ -231,7 +231,7 @@ export const runGmailSync = ({
 
     // Flush indexes once, at the end of the run, so cross-run dedup / contact resolution observe this
     // run's writes (per-page commits no longer flush — see `SyncBinding.commit`).
-    yield* Effect.promise(() => db.flush({ indexes: true }));
+    yield* Database.flush({ indexes: true });
 
     log('gmail sync complete', { newMessages: stats.newMessages });
     return { newMessages: stats.newMessages };
