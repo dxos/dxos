@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type FactGraph, type Type } from '@dxos/pipeline-rdf';
 import { type TreeNode } from '@dxos/react-ui-graph';
-import { type FactGraph, type Type } from '@dxos/semantic-index';
 import { type ChromaticPalette, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
 
 export type Group = {

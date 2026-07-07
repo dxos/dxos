@@ -127,3 +127,27 @@ export const GetInstrumentFundamentals = Operation.make({
   output: Ibkr.FundamentalsSnapshot,
   services: [Database.Service],
 });
+
+/** Syncs tax lots from the portfolio's latest stored Flex report into persisted Lot objects. */
+export const SyncLots = Operation.make({
+  meta: {
+    key: makeKey('syncLots'),
+    name: 'Sync IBKR lots',
+    description: 'Materialize tax lots from the latest stored Flex report as child Lot objects on the portfolio.',
+    icon: 'ph--stack--regular',
+  },
+  input: Schema.Struct({
+    account: Ref.Ref(Ibkr.Portfolio),
+    report: Schema.optional(Ref.Ref(Ibkr.Report)).annotations({
+      description: 'When set, sync lots from this report instead of the latest feed snapshot.',
+    }),
+  }),
+  output: Schema.Struct({
+    synced: Schema.Number,
+    created: Schema.Number,
+    updated: Schema.Number,
+    removed: Schema.Number,
+  }),
+  types: [Ibkr.Lot, Ibkr.Instrument, Ibkr.Portfolio, Ibkr.Report],
+  services: [Database.Service, Operation.Service],
+});

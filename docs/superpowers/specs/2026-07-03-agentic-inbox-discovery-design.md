@@ -36,7 +36,7 @@ Five layers. Layers decouple through the **graph** (fact store + ECHO), not thro
                         └───────────────┬─────────────────────────────┘
                                         │ facts + refs
                         ┌───────────────▼─────────────────────────────┐
-                        │  2 THREAD layer  (windowed by threadId)     │
+                        │  2 THREAD layer  (grouped by threadId)      │
                         │    rolling summary, state machine,          │
                         │    consolidated Q/action items → Thread     │
                         └───────────────┬─────────────────────────────┘
@@ -64,7 +64,7 @@ Five layers. Layers decouple through the **graph** (fact store + ECHO), not thro
                                       SemanticStore; SPARQL + nl-to-query)
 ```
 
-**Production modes of a discovery aspect** — every aspect in the taxonomy (§3) is produced by exactly one of:
+**Production modes of a discovery aspect** — each aspect has a **primary** production mode, and where useful a secondary fallback (shown as e.g. `E/C`), drawn from:
 
 - **Extract** — an LLM extraction stage emits `Fact`s into the `SemanticStore` (subject–predicate–object + valence + attribution). Best for atomic propositions grounded in a span.
 - **Compute** — deterministic derivation over facts/messages (no LLM, or LLM-assisted but rule-driven), materialized as an ECHO entity. Best for state machines, clustering, ledgers, tallies.
@@ -74,7 +74,7 @@ This classification is a first-class output of the experiment: it tells us where
 
 ## 3. Discovery taxonomy
 
-Each aspect is tagged with its production mode **[E]**xtract / **[C]**ompute / **[Q]**uery and its primary output.
+Each aspect is tagged with its **primary** production mode **[E]**xtract / **[C]**ompute / **[Q]**uery (a secondary fallback may follow, e.g. `E/C`) and its primary output.
 
 ### ① Message layer — per-message
 
@@ -93,7 +93,7 @@ Each aspect is tagged with its production mode **[E]**xtract / **[C]**ompute / *
 | Attachment needing sub-extraction (invoice, contract)                                 | C    | dispatch to extractor sub-pipeline                         |
 | Sender/recipient/mention resolution to `Person`/`Organization`                        | C    | `Entity.ref` (reconcile)                                   |
 
-### ② Thread layer — grouped by `threadId` (windowed)
+### ② Thread layer — grouped by `threadId` (post-stream `buildThreads`)
 
 | Aspect                                                                     | Mode | Output                                  |
 | -------------------------------------------------------------------------- | ---- | --------------------------------------- |
@@ -224,7 +224,7 @@ Every `DraftResponse` carries `groundedIn: Fact[]` so a human (or auditor) can t
 ## 7. Package & code structure
 
 - `@dxos/pipeline-email` (existing) — grows the message/thread/corpus **stages** and the Enron test harness. Depends on `@dxos/semantic-index`.
-- Discovery stages are `Stage<In, Out, Ctx, E>` values; thread grouping uses `Stage.window` keyed by `threadId`; corpus synthesis is a separate pass/effect over the `SemanticStore` + ECHO.
+- Message-layer discovery stages are `Stage` values; thread grouping is a **post-stream compute** (`buildThreads`) keyed by `threadId` (not `Stage.window`, which is a sliding window, not a group-by); corpus synthesis is a separate pass/effect over the `SemanticStore` + ECHO.
 - ECHO entity types (§4.3) and `PermissionConfig` live in `pipeline-email/src/types` for now.
 - `CapabilityResolver` as an Effect service (Context.Tag + Layer), test-parametrizable.
 - Reuse `@dxos/extractor-lib` `extractContact` as one message-layer producer that reconciles into `Entity.ref`.
@@ -242,7 +242,7 @@ Every `DraftResponse` carries `groundedIn: Fact[]` so a human (or auditor) can t
 Full taxonomy is specced; implementation proceeds in slices, each independently testable:
 
 1. **Fact substrate wiring** — run the message stream through semantic-index extraction (email-tuned rules); reconcile entities to `Person`/`Organization`. Verdict input: which ① aspects are naturally facts.
-2. **Thread layer** — `Stage.window` by `threadId`; `Thread` entity with summary + state machine + consolidated Q/action items.
+2. **Thread layer** — post-stream `buildThreads` grouped by `threadId`; `Thread` entity with summary + state machine + consolidated Q/action items.
 3. **Corpus layer** — meta-thread clustering → `Topic`; commitment ledger via SPARQL; relationship rollups.
 4. **Capability model** — `PermissionConfig` scopes, `CapabilityResolver`, `AccessRequest` flow, audit.
 5. **Action layer** — `DraftResponse` grounded in facts; auto-respond/propose/abstain decision (§6); `ResearchTask` + sub-agent prompt.

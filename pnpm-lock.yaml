@@ -5307,9 +5307,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
-      '@dxos/semantic-index':
+      '@dxos/pipeline-rdf':
         specifier: workspace:*
-        version: link:../semantic-index
+        version: link:../pipeline-rdf
       '@effect/ai':
         specifier: 'catalog:'
         version: 0.36.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
@@ -5806,9 +5806,9 @@ importers:
       '@dxos/pipeline':
         specifier: workspace:*
         version: link:../pipeline
-      '@dxos/semantic-index':
+      '@dxos/pipeline-rdf':
         specifier: workspace:*
-        version: link:../semantic-index
+        version: link:../pipeline-rdf
       '@dxos/types':
         specifier: workspace:*
         version: link:../../../sdk/types
@@ -5846,6 +5846,76 @@ importers:
       hyparquet-writer:
         specifier: 'catalog:'
         version: 0.16.1
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.8(patch_hash=a7bf6a3d21c2bc782d60d0f0f916d76f304c0eb6fbf2827e8d981408c7b5120e)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.8)(@vitest/coverage-v8@4.1.8)(@vitest/ui@4.1.8)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
+  packages/core/compute/pipeline-rdf:
+    dependencies:
+      '@comunica/query-sparql-rdfjs':
+        specifier: 'catalog:'
+        version: 5.2.3
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/pipeline':
+        specifier: workspace:*
+        version: link:../pipeline
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../../common/sql-sqlite
+      '@effect/ai':
+        specifier: 'catalog:'
+        version: 0.36.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+      '@effect/sql':
+        specifier: 'catalog:'
+        version: 0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
+      asynciterator:
+        specifier: 'catalog:'
+        version: 3.9.0
+      n3:
+        specifier: 'catalog:'
+        version: 2.1.0
+      sparqljs:
+        specifier: 'catalog:'
+        version: 3.7.4
+    devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../echo/echo-client
+      '@effect/sql-sqlite-node':
+        specifier: 'catalog:'
+        version: 0.52.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 0.29.0(effect@3.21.4)(vitest@4.1.8)
+      '@types/n3':
+        specifier: 'catalog:'
+        version: 1.26.1
+      '@types/sparqljs':
+        specifier: 'catalog:'
+        version: 3.1.12
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
       vitest:
         specifier: 'catalog:'
         version: 4.1.8(patch_hash=a7bf6a3d21c2bc782d60d0f0f916d76f304c0eb6fbf2827e8d981408c7b5120e)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.8)(@vitest/coverage-v8@4.1.8)(@vitest/ui@4.1.8)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -5907,73 +5977,6 @@ importers:
       effect:
         specifier: 3.21.4
         version: 3.21.4
-
-  packages/core/compute/semantic-index:
-    dependencies:
-      '@comunica/query-sparql-rdfjs':
-        specifier: 'catalog:'
-        version: 5.2.3
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../ai
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../echo/echo
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../../common/effect
-      '@dxos/errors':
-        specifier: workspace:*
-        version: link:../../../common/errors
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
-      '@dxos/sql-sqlite':
-        specifier: workspace:*
-        version: link:../../../common/sql-sqlite
-      '@effect/ai':
-        specifier: 'catalog:'
-        version: 0.36.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
-      '@effect/sql':
-        specifier: 'catalog:'
-        version: 0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
-      asynciterator:
-        specifier: 'catalog:'
-        version: 3.9.0
-      n3:
-        specifier: 'catalog:'
-        version: 2.1.0
-      sparqljs:
-        specifier: 'catalog:'
-        version: 3.7.4
-    devDependencies:
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../echo/echo-client
-      '@effect/sql-sqlite-node':
-        specifier: 'catalog:'
-        version: 0.52.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
-      '@effect/vitest':
-        specifier: 'catalog:'
-        version: 0.29.0(effect@3.21.4)(vitest@4.1.8)
-      '@types/n3':
-        specifier: 'catalog:'
-        version: 1.26.1
-      '@types/sparqljs':
-        specifier: 'catalog:'
-        version: 3.1.12
-      effect:
-        specifier: 3.21.4
-        version: 3.21.4
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.8(patch_hash=a7bf6a3d21c2bc782d60d0f0f916d76f304c0eb6fbf2827e8d981408c7b5120e)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.8)(@vitest/coverage-v8@4.1.8)(@vitest/ui@4.1.8)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
   packages/core/echo/echo:
     dependencies:
@@ -19206,6 +19209,12 @@ importers:
       '@dxos/nlp':
         specifier: workspace:*
         version: link:../../core/compute/nlp
+      '@dxos/pipeline':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline
+      '@dxos/pipeline-rdf':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline-rdf
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
@@ -19251,9 +19260,6 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/semantic-index':
-        specifier: workspace:*
-        version: link:../../core/compute/semantic-index
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../../ui/ui-editor
@@ -48229,7 +48235,7 @@ snapshots:
       '@comunica/core': 4.5.0
       '@comunica/types': 4.5.0
       '@rdfjs/types': 2.0.1
-      htmlparser2: 10.0.0
+      htmlparser2: 10.1.0
       readable-stream: 4.7.0
 
   '@comunica/actor-rdf-parse-jsonld@4.5.0':
@@ -48268,7 +48274,7 @@ snapshots:
       '@comunica/types': 4.5.0
       '@jeswr/stream-to-string': 2.0.0
       '@rdfjs/types': 2.0.1
-      asynciterator: 3.9.0
+      asynciterator: 3.10.0
       readable-stream: 4.7.0
       shaclc-parse: 1.4.3
 
@@ -48903,7 +48909,7 @@ snapshots:
     dependencies:
       '@rdfjs/types': 2.0.1
       '@types/yargs': 17.0.35
-      asynciterator: 3.9.0
+      asynciterator: 3.10.0
       lru-cache: 10.4.3
       sparqlalgebrajs: 5.0.2
 
@@ -57118,7 +57124,7 @@ snapshots:
 
   asyncjoin@1.2.4:
     dependencies:
-      asynciterator: 3.9.0
+      asynciterator: 3.10.0
 
   asynckit@0.4.0: {}
 

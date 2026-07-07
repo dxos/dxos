@@ -3,7 +3,7 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { Type, normalizeEntityId } from '@dxos/semantic-index';
+import { Type, normalizeEntityId } from '@dxos/pipeline-rdf';
 import { Organization, Person } from '@dxos/types';
 
 // Surface forms (name + emails) under which a Person may be referenced in extracted facts.

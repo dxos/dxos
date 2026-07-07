@@ -158,6 +158,11 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
 // Stable ref.
 const atomEmpty = Atom.make(() => [] as const);
 
+// How often the graph re-checks for spans that timed out with no closing event.
+// Coarse-grained on purpose: `spanTimeoutMs` operates on a 20-minute scale, so there is no
+// benefit to re-deriving the graph more often than this just to catch the timeout crossing.
+const SPAN_TIMEOUT_CHECK_INTERVAL_MS = 60_000;
+
 type UseExecutionGraphOptions = {
   collapseCompletedSpans?: boolean;
   eventLimit?: number;
@@ -170,9 +175,19 @@ const useExecutionGraph = (
   const monitor = useCapability(Capabilities.ProcessMonitor);
   const processesAtom = monitor?.processTreeAtom ?? atomEmpty;
 
+  // Ticks periodically so spans that are still open purely because no new trace event has
+  // arrived (e.g. the runtime crashed before writing its `operationEnd`) eventually get
+  // force-closed by `buildExecutionGraph`'s `spanTimeoutMs` check, instead of staying stuck
+  // until unrelated trace activity happens to trigger a recompute.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), SPAN_TIMEOUT_CHECK_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, []);
+
   const atom = useMemo(
-    () => getExecutionGraph(space, processesAtom, { collapseCompletedSpans, eventLimit }),
-    [space, processesAtom, collapseCompletedSpans, eventLimit],
+    () => getExecutionGraph(space, processesAtom, { collapseCompletedSpans, eventLimit, now }),
+    [space, processesAtom, collapseCompletedSpans, eventLimit, now],
   );
 
   return useAtomValue(atom);
@@ -181,7 +196,7 @@ const useExecutionGraph = (
 const getExecutionGraph = (
   space: Space,
   processesAtom: Atom.Atom<readonly Process.Info[]>,
-  { collapseCompletedSpans = true, eventLimit = 100 }: UseExecutionGraphOptions = {},
+  { collapseCompletedSpans = true, eventLimit = 100, now }: UseExecutionGraphOptions & { now: number },
 ): Atom.Atom<ExecutionGraph> => {
   const traceMessages = getTraceMessagesAtom(space);
 
@@ -204,6 +219,7 @@ const getExecutionGraph = (
       activeProcesses: get(activeProcesses),
       collapseCompletedSpans,
       eventLimit,
+      now,
     }),
   );
 };

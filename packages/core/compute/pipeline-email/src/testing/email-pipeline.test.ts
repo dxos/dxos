@@ -24,16 +24,21 @@ import { EffectEx } from '@dxos/effect';
 import { extractContact } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-import { captureSink } from '@dxos/pipeline/testing';
-import { SemanticPipeline, SemanticStore } from '@dxos/semantic-index';
+import { SemanticPipeline, SemanticStore } from '@dxos/pipeline-rdf';
+import { Metrics, captureSink, instrument, makeMetrics } from '@dxos/pipeline/testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { buildDigest, narrateDigest, renderDigest } from '../digest';
 import { type FactIndexer, extractFactsStage } from '../extract-stage';
 import { buildEntityIndex, reconcileFactEntities } from '../fact-index';
 import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../facts';
+import { commitmentLedger } from '../ledger';
+import { type Summarizer } from '../prompts';
+import { buildRollups } from '../rollups';
 import { buildThreads } from '../threads';
-import { Thread } from '../types';
+import { clusterThreads, materializeTopics, summarizeTopics } from '../topics';
+import { Thread, Topic } from '../types';
 import { emailToMessage } from './email-fixtures';
 import { parquetSource } from './parquet';
 
@@ -50,22 +55,26 @@ const ROOT_DIR = process.env.ROOT_DIR ?? DEFAULT_ROOT_DIR;
 const RESULTS_FILE = fileURLToPath(new URL('../../data/results.json', import.meta.url));
 
 const TEST_ORGS = [
-  { name: 'DXOS', website: 'https://dxos.org' },
-  { name: 'Enron', website: 'https://enron.com' },
+  {
+    name: 'DXOS',
+    website: 'https://dxos.org',
+  },
+  {
+    name: 'Enron',
+    website: 'https://enron.com',
+  },
 ];
 
 // Gate on the dataset shard directory existing locally.
 const HAS_DATASET = existsSync(join(ROOT_DIR, 'data'));
 
-// Local model served by Ollama (model DXN; its final NSID segment must be camelCase). Override via
-// OLLAMA_MODEL. Defaults to gpt-oss-20b, which reliably emits schema-conforming structured output for
-// `generateObject`; run `moon run pipeline-email:setup` (or `ollama pull gpt-oss:20b`) to fetch it.
-// A weaker model (e.g. OLLAMA_MODEL=com.meta.model.llama-3-2-1b.instruct) may fail structured output
-// and fall back to an empty summary.
+// Local model served by Ollama (model DXN; its final NSID segment must be camelCase).
 const MODEL = process.env.OLLAMA_MODEL ?? 'com.openai.model.gpt-oss-20b.default';
 
-// Number of emails drawn from the head of the dataset for one run.
-const EMAIL_COUNT = 10;
+// Number of emails drawn from the head of the dataset for one run. Defaults to 50 so the gated run
+// spans multiple threads/senders and actually exercises the corpus-layer assertions (clustering,
+// rollups, digest); override via EMAIL_COUNT (e.g. EMAIL_COUNT=1) for fast local iteration.
+const EMAIL_COUNT = Number(process.env.EMAIL_COUNT ?? 50);
 
 const SUMMARIZE_PROMPT = trim`
   Summarize the following email in one sentence, decide whether it is spam, and list up to five keywords.
@@ -233,7 +242,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
   const runtime = ManagedRuntime.make(modelLayer.pipe(Layer.orDie));
 
   // In-memory fact substrate for this run; shares the Ollama-backed AiService the extraction resolves
-  // its model through (semantic-index's ExtractOptions carries the model + provider).
+  // its model through (pipeline-rdf's ExtractOptions carries the model + provider).
   const factRuntime = ManagedRuntime.make(SemanticStore.layerMemory.pipe(Layer.provideMerge(OllamaAiServiceLayer)));
 
   let builder: EchoTestBuilder;
@@ -241,7 +250,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
 
   beforeAll(async () => {
     builder = await new EchoTestBuilder().open();
-    ({ db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person, Thread] }));
+    ({ db } = await builder.createDatabase({ types: [Organization.Organization, Person.Person, Thread, Topic] }));
     // Seed a known Organization so domain-matching can link a sender's Person to it.
     for (const org of TEST_ORGS) {
       db.add(Obj.make(Organization.Organization, org));
@@ -286,17 +295,27 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
       const context: Context.Tag.Service<typeof Ctx> = { summarize, db, stats };
 
       // Index each message into the fact substrate. The model + provider ride on ExtractOptions so
-      // semantic-index resolves the Ollama model (its default is Anthropic); a failed extraction
-      // degrades to no facts in `extractFactsStage`, so the run stays green.
-      const indexFacts: FactIndexer = (message) =>
-        factRuntime.runPromise(
+      // pipeline-rdf resolves the Ollama model (its default is Anthropic); a failed extraction
+      // degrades to no facts in `extractFactsStage`, so the run stays green. The counter proves the
+      // stage actually invoked indexing (facts themselves are advisory — see the assertions below).
+      let indexedMessageCount = 0;
+      const indexFacts: FactIndexer = (message) => {
+        indexedMessageCount += 1;
+        return factRuntime.runPromise(
           SemanticPipeline.run([messageToDocument(message)], {
             ...EMAIL_EXTRACT_OPTIONS,
             model: MODEL,
             provider: Provider.ollama.id,
+            // Ollama reliably fails strict generateObject; skip it and salvage from generateText.
+            strict: false,
           }),
         );
+      };
 
+      // Per-stage timing: each LLM-bearing stage is instrumented so the run reports where the
+      // per-message latency goes (`extract-facts.ms` dominates — it makes up to two model calls per
+      // message, see extractChunk). One Metrics instance for the run, read back after it completes.
+      const metrics = makeMetrics();
       const { sink, items } = captureSink<Message.Message>();
       await EffectEx.runPromise(
         Effect.provide(
@@ -304,16 +323,21 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
             Stream.take(EMAIL_COUNT),
             Stream.map(emailToMessage),
             logStage('email.in'),
-            summarizeStage,
-            extractFactsStage(indexFacts),
-            extractStage,
-            statsStage,
+            instrument('summarize', summarizeStage),
+            instrument('extract-facts', extractFactsStage(indexFacts)),
+            instrument('extract-contact', extractStage),
+            instrument('stats', statsStage),
             logStage('email.out'),
             Pipeline.run({ sink }),
           ),
-          Layer.succeed(Ctx, context),
+          Layer.merge(Layer.succeed(Ctx, context), Layer.succeed(Metrics, metrics)),
         ),
       );
+
+      // Timing breakdown (ms is the summed per-stage latency; divide by the stage's `.out` count for
+      // the per-message average). Surfaced in the log and serialized with the run's results.
+      const timing = await EffectEx.runPromise(metrics.snapshot);
+      log.info('pipeline timing', timing);
 
       // The pipeline processes up to EMAIL_COUNT messages (fewer only if the dataset is smaller).
       expect(items.length).toBeGreaterThan(0);
@@ -339,13 +363,16 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
       // schema-conforming (the summarize stage sidesteps this with lenient `generateText`), so the
       // fact count is best-effort here — the deterministic proof of extraction lives in
       // extract-stage.test.ts (mockAiService). Assert only that the substrate is queryable.
+      // The extract-facts stage ran for every captured message (proves the wiring executed, even
+      // though the facts it produced are advisory and may be empty under a flaky model).
+      expect(indexedMessageCount).toBe(items.length);
       const facts = await factRuntime.runPromise(
         Effect.gen(function* () {
           const store = yield* SemanticStore;
           return yield* store.query({});
         }),
       );
-      expect(facts.length).toBeGreaterThanOrEqual(0);
+      expect(Array.isArray(facts)).toBe(true);
 
       // Reconcile advisory fact entities against the canonical ECHO Person/Organization objects the
       // pipeline created (slice-1 §9.1). Facts are sparse/flaky under gpt-oss, so the resolved count
@@ -357,10 +384,12 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
         const refs = reconcileFactEntities(fact, entityIndex);
         return refs.subject || refs.object ? [refs] : [];
       });
-      expect(resolved.length).toBeGreaterThanOrEqual(0);
+      expect(Array.isArray(resolved)).toBe(true);
 
-      // Threads are deterministic (grouped from the captured messages), so assert them strictly.
+      // Threads are deterministic (grouped from the captured messages), so assert them strictly: at
+      // least one thread is materialized and every stored thread references its messages.
       const threads = buildThreads(items, { ownerEmail: 'owner@dxos.org', now: new Date().toISOString() });
+      expect(threads.length).toBeGreaterThan(0);
       for (const thread of threads) {
         db.add(thread);
       }
@@ -368,6 +397,56 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
       const storedThreads = await db.query(Filter.type(Thread)).run();
       expect(storedThreads.length).toBe(threads.length);
       expect(storedThreads.every((thread) => thread.messageIds.length > 0)).toBe(true);
+
+      // Corpus layer (phase 3). Clustering is deterministic, so assert it strictly: every thread
+      // lands in exactly one topic. LLM enrichment (topic summaries, digest narrative) is advisory
+      // and degradable — proven deterministically in topics/digest unit tests.
+      const narrate: Summarizer = (prompt) =>
+        runtime.runPromise(
+          Effect.scoped(LanguageModel.generateText({ prompt })).pipe(
+            Effect.map((response) => response.text),
+            Effect.catchAllCause(() => Effect.succeed('')),
+          ),
+        );
+      const drafts = await summarizeTopics(clusterThreads(threads), narrate);
+      expect(drafts.length).toBeGreaterThan(0);
+      expect(drafts.flatMap((draft) => [...draft.threadIds]).sort()).toEqual(
+        threads.map((thread) => thread.threadId).sort(),
+      );
+      const topics = materializeTopics(drafts);
+      for (const topic of topics) {
+        db.add(topic);
+      }
+      await db.flush({ indexes: true });
+      const storedTopics = await db.query(Filter.type(Topic)).run();
+      expect(storedTopics.length).toBe(topics.length);
+
+      // Commitment ledger over the advisory fact store: rows (if any) must be grounded in a fact.
+      const commitments = await factRuntime.runPromise(
+        Effect.gen(function* () {
+          const store = yield* SemanticStore;
+          return yield* commitmentLedger(store);
+        }),
+      );
+      expect(commitments.every((commitment) => commitment.factId.length > 0 && commitment.source.length > 0)).toBe(
+        true,
+      );
+
+      // Rollups are deterministic: one per distinct sender among the processed messages.
+      const rollups = buildRollups(items);
+      const senders = new Set(
+        items.flatMap((message) => (message.sender.email ? [message.sender.email.toLowerCase()] : [])),
+      );
+      expect(rollups.length).toBe(senders.size);
+
+      // Digest skeleton is deterministic; the narrative is advisory (may be empty when degraded).
+      const digest = await narrateDigest(
+        buildDigest({ threads, topics: drafts, commitments, rollups }, { now: new Date().toISOString() }),
+        narrate,
+      );
+      expect(digest.threadCount).toBe(threads.length);
+      expect(digest.topicCount).toBe(drafts.length);
+      expect(typeof digest.narrative).toBe('string');
 
       // Serialize the run's outputs for inspection (git-ignored under ./data). `Obj.toJSON` is the
       // canonical ECHO serialization (encodes refs as DXNs).
@@ -379,6 +458,11 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
             messages: items.map((message) => Obj.toJSON(message)),
             organizations: organizations.map((organization) => Obj.toJSON(organization)),
             persons: persons.map((person) => Obj.toJSON(person)),
+            topics: storedTopics.map((topic) => Obj.toJSON(topic)),
+            commitments,
+            rollups,
+            digest: renderDigest(digest),
+            timing,
             stats: {
               total: stats.total,
               spam: stats.spam,
@@ -391,7 +475,9 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
         ),
       );
     },
-    // The LLM call per message dominates; give the whole run a generous budget.
-    5 * 60_000,
+    // LLM calls dominate and scale with EMAIL_COUNT: per message a summarize + an extraction (which
+    // may make a second lenient call), plus per-topic summaries and the digest narration. Budget
+    // ~45s/message over a 5-minute floor so larger demo runs (e.g. EMAIL_COUNT=50) don't time out.
+    Math.max(5 * 60_000, EMAIL_COUNT * 45_000),
   );
 });

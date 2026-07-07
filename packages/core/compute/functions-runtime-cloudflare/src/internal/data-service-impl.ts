@@ -56,11 +56,11 @@ export class DataServiceImpl implements DataServiceProto {
       );
 
     if (addIds) {
-      log.info('request documents', { count: addIds.length });
+      log.verbose('request documents', { count: addIds.length });
       // TODO(dmaretskyi): Batch.
       for (const documentId of addIds) {
         using document = await this._dataService.getDocument(this._executionContext, sub.spaceId, documentId);
-        log.info('document loaded', { documentId, spaceId: sub.spaceId, found: !!document });
+        log.verbose('document loaded', { documentId, spaceId: sub.spaceId, found: !!document });
         if (!document) {
           log.warn('not found', { documentId });
           continue;
