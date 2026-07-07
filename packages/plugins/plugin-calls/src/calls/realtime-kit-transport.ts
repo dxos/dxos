@@ -5,7 +5,7 @@
 import { type Context, Resource } from '@dxos/context';
 
 import { type RoomJoiner } from './edge-room-joiner';
-import { type MediaTransport, type RemoteTrack, type TranscriptEvent } from './media-transport';
+import { type MediaStats, type MediaTransport, type RemoteTrack, type TranscriptEvent } from './media-transport';
 import { type TrackObject } from './types';
 
 //
@@ -61,6 +61,8 @@ export interface RealtimeKitMeeting {
   onMediaChanged(callback: () => void): () => void;
   /** Subscribe to native transcription events; returns an unsubscribe. */
   onTranscript(callback: (transcript: RealtimeKitTranscript) => void): () => void;
+  /** WebRTC send-side stats for each locally-published track. */
+  getStats(): Promise<MediaStats>;
   leave(): Promise<void>;
 }
 
@@ -216,6 +218,10 @@ export class RealtimeKitTransport extends Resource implements MediaTransport {
     return meeting.onMediaChanged(callback);
   }
 
+  async getStats(): Promise<MediaStats> {
+    return (await this.#meeting?.getStats()) ?? { outbound: [] };
+  }
+
   subscribeTranscripts(callback: (event: TranscriptEvent) => void): () => void {
     const meeting = this.#meeting;
     if (!meeting) {
@@ -280,6 +286,20 @@ export const createRealtimeKitMeetingFactory =
       onTranscript: (callback) => {
         meeting.ai.on('transcript', callback);
         return () => meeting.ai.off('transcript', callback);
+      },
+      getStats: async () => {
+        // Only the local producers (our published camera/mic/screenshare) expose `getStats()` publicly;
+        // remote consumers are internal to RealtimeKit, so inbound stats are not collected here.
+        const outbound = await Promise.all(
+          meeting.self.producers.map(async (producer) => {
+            const stats: Record<string, unknown> = {};
+            (await producer.getStats()).forEach((entry, id) => {
+              stats[id] = entry;
+            });
+            return { kind: producer.kind, stats };
+          }),
+        );
+        return { outbound };
       },
       leave: () => meeting.leave(),
     };

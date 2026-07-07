@@ -2,15 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { truncateKey } from '@dxos/debug';
 import { Panel } from '@dxos/devtools';
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { type EncodedTrackName, type GlobalState } from '../../calls';
+import { type EncodedTrackName, type GlobalState, type MediaStats } from '../../calls';
 
 export type CallDebugPanelProps = ThemedClassName<{ state?: GlobalState }>;
 
@@ -26,6 +26,30 @@ export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
 
   const rows = useMemo(() => getCallStatusTable(state), [state?.call.users, state?.media.pulledAudioTracks]);
 
+  // Poll the transport's WebRTC send-side stats (~1s) only while the toggle is on and a session is live.
+  const [showStats, setShowStats] = useState(false);
+  const [stats, setStats] = useState<MediaStats>();
+  const peer = state?.media.peer;
+  useEffect(() => {
+    if (!showStats || !peer?.getStats) {
+      setStats(undefined);
+      return;
+    }
+    let active = true;
+    const poll = () => {
+      peer.getStats!().then(
+        (next) => active && setStats(next),
+        () => {},
+      );
+    };
+    poll();
+    const interval = setInterval(poll, 1_000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [showStats, peer]);
+
   return (
     <Panel
       id='meeting-status'
@@ -39,8 +63,15 @@ export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
       <div className='flex flex-col w-full text-xs'>
         <div className='flex items-center gap-2 items-center'>
           <IconButton icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />
+          <Input.Root>
+            <Input.Switch checked={showStats} onCheckedChange={setShowStats} />
+            <Input.Label>{t('show-webrtc-stats.label')}</Input.Label>
+          </Input.Root>
         </div>
         <Table rows={rows} />
+        {showStats && (
+          <pre className='mt-2 max-h-64 overflow-auto whitespace-pre-wrap'>{JSON.stringify(stats ?? {}, null, 2)}</pre>
+        )}
       </div>
     </Panel>
   );

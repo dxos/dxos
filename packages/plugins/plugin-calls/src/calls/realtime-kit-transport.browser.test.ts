@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 
-import { type TranscriptEvent } from './media-transport';
+import { type MediaStats, type TranscriptEvent } from './media-transport';
 import {
   type RealtimeKitMeeting,
   type RealtimeKitRemoteParticipant,
@@ -75,6 +75,12 @@ class FakeMeeting implements RealtimeKitMeeting {
 
   emitTranscript(transcript: RealtimeKitTranscript): void {
     this.#transcriptCallback?.(transcript);
+  }
+
+  public stats: MediaStats = { outbound: [] };
+
+  async getStats(): Promise<MediaStats> {
+    return this.stats;
   }
 
   async leave(): Promise<void> {
@@ -173,6 +179,17 @@ describe('RealtimeKitTransport', () => {
     const off = await transport.setScreenShareEnabled(false);
     expect(off).toEqual({});
     expect(meeting.self.screenShareTracks).toBeUndefined();
+
+    await transport.close();
+  });
+
+  test('getStats returns the meeting WebRTC stats', async ({ expect }) => {
+    const meeting = new FakeMeeting();
+    meeting.stats = { outbound: [{ kind: 'video', stats: { 'outbound-rtp-0': { bytesSent: 1000 } } }] };
+    const transport = makeTransport(meeting);
+    await transport.open();
+
+    expect(await transport.getStats()).toEqual(meeting.stats);
 
     await transport.close();
   });

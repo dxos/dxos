@@ -13,6 +13,16 @@ export type RemoteTrack = {
   track: MediaStreamTrack;
 };
 
+/** WebRTC stats for the live session, for the debug panel. */
+export type MediaStats = {
+  /**
+   * Per locally-published track (camera/mic/screenshare), the flattened `RTCStatsReport` for its send side —
+   * bitrate, framerate, resolution, packet loss, RTT, codec, etc. Inbound (per-peer receive) stats are not
+   * exposed by the RealtimeKit public API, so only the outbound side is reported.
+   */
+  outbound: Array<{ kind: string; stats: Record<string, unknown> }>;
+};
+
 /** A transcription segment produced natively by the transport (e.g. RealtimeKit's on-network ASR). */
 export type TranscriptEvent = {
   /** Speaker's participant id (== DXOS device key / swarm `UserState.id`). */
@@ -66,6 +76,9 @@ export interface MediaTransport {
    * actually delivered — `MediaManager` caches these and the UI resolves them by the swarm-advertised name.
    */
   getRemoteTracks(): RemoteTrack[];
+
+  /** Collect live WebRTC {@link MediaStats} for the debug panel, if the transport exposes them. */
+  getStats?(): Promise<MediaStats>;
 
   /**
    * Subscribe to changes in remote media: a participant joining/leaving or enabling/disabling/replacing their

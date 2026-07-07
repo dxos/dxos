@@ -21,6 +21,7 @@ export const translations = [
 
         'call-tab.label': 'Call',
         'meeting-status.title': 'Calls',
+        'show-webrtc-stats.label': 'WebRTC stats',
         'share-meeting-link.label': 'Share meeting',
 
         'icon-pin.label': 'Pin video',
