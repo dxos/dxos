@@ -10,6 +10,7 @@ import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/a
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import {
+  type Blob,
   Database,
   Entity,
   Feed,
@@ -601,6 +602,26 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       handle.setParentEntity(feed as Obj.Unknown);
     }
     return handle.query(query);
+  }
+
+  //
+  // Blobs.
+  //
+
+  async createBlob(bytes: Uint8Array, options?: { type?: string; storage?: string }): Promise<Blob.Blob> {
+    return this.graph.blobManager.createBlob(this.spaceId, bytes, options);
+  }
+
+  async readBlob(blob: Blob.Blob): Promise<Uint8Array> {
+    return this.graph.blobManager.readBlob(this.spaceId, blob);
+  }
+
+  async blobExists(blob: Blob.Blob): Promise<boolean> {
+    return this.graph.blobManager.blobExists(this.spaceId, blob);
+  }
+
+  async getBlobUrl(blob: Blob.Blob): Promise<string | undefined> {
+    return this.graph.blobManager.getBlobUrl(this.spaceId, blob);
   }
 
   async flush(opts?: Database.FlushOptions): Promise<void> {

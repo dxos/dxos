@@ -6,6 +6,7 @@ import React, { useCallback } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { useClient } from '@dxos/react-client';
 import { Select, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -16,10 +17,13 @@ export type FileSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 
 export const FileSettings = ({ settings, onSettingsChange }: FileSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const client = useClient();
   const backends = useCapabilities(FileCapabilities.Backend);
-  const requestedId = settings.backend ?? Settings.DEFAULT_BACKEND_ID;
-  const active =
-    backends.find((b) => b.id === requestedId) ?? backends.find((b) => b.id === Settings.DEFAULT_BACKEND_ID);
+  // No explicit choice defers to the Blob registry's own configured default (edge when
+  // configured, inline otherwise) — match by `storage`, not by the plugin's own default id, so
+  // the Select reflects what an upload will actually use.
+  const requested = settings.backend ? backends.find((b) => b.id === settings.backend) : undefined;
+  const active = requested ?? backends.find((b) => b.storage === client.graph.defaultBlobStorage) ?? backends[0];
   // Use the resolved backend id so the Select never shows a missing/stale value.
   const activeId = active?.id ?? Settings.DEFAULT_BACKEND_ID;
 

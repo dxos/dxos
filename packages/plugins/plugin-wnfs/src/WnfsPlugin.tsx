@@ -8,7 +8,7 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client';
 
-import { Backend, Blockstore, UrlResolver } from '#capabilities';
+import { BlobBackend, Blockstore } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { WnfsCapabilities } from '#types';
@@ -33,14 +33,9 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
       }),
   }),
   Plugin.addModule({
-    id: 'backend',
+    id: 'blob-backend',
     activatesOn: ClientEvents.ClientReady,
-    activate: Backend,
-  }),
-  Plugin.addModule({
-    id: 'url-resolver',
-    activatesOn: ClientEvents.ClientReady,
-    activate: UrlResolver,
+    activate: BlobBackend,
   }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
