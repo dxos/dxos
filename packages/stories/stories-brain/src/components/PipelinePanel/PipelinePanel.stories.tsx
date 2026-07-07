@@ -3,27 +3,47 @@
 //
 
 /**
- * Pipeline column: a fixed, read-only list of the composed stages (configured by the story) with the
- * latest raw output below. `Default` shows an idle pipeline with output; `Running` shows the toolbar
- * busy spinner. Disabled stages render dimmed.
+ * Pipeline column: a toolbar picker selects the pipeline; the body lists that pipeline's fixed,
+ * read-only stages (disabled stages dimmed). `Running` shows the toolbar busy spinner.
  */
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { PipelinePanel, type StageInfo } from './PipelinePanel';
+import { type PipelineInfo, PipelinePanel, type PipelinePanelProps } from './PipelinePanel';
 
-const STAGES: StageInfo[] = [
-  { id: 'extract-facts', description: 'LLM proposition extraction (pipeline-rdf)', enabled: true },
-  { id: 'index-facts', description: 'Persist facts into the semantic store', enabled: false },
+const PIPELINES: PipelineInfo[] = [
+  {
+    id: 'facts',
+    label: 'Facts (RDF)',
+    stages: [
+      { id: 'extract-facts', description: 'LLM proposition extraction (pipeline-rdf)', enabled: true },
+      { id: 'normalize-predicates', description: 'Canonicalize predicate synonyms', enabled: true },
+    ],
+  },
+  {
+    id: 'transcription',
+    label: 'Transcription',
+    stages: [
+      { id: 'correction', description: 'Correct transcript text', enabled: true },
+      { id: 'summarization', description: 'Summarize the transcript', enabled: true },
+      { id: 'extraction', description: 'Extract structured items', enabled: false },
+    ],
+  },
 ];
+
+const DefaultStory = (props: Omit<PipelinePanelProps, 'selected' | 'onSelect'>) => {
+  const [selected, setSelected] = useState(PIPELINES[0].id);
+  return <PipelinePanel {...props} selected={selected} onSelect={setSelected} />;
+};
 
 const meta = {
   title: 'stories/stories-brain/components/PipelinePanel',
-  component: PipelinePanel,
+  render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
-} satisfies Meta<typeof PipelinePanel>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
@@ -31,14 +51,13 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    stages: STAGES,
-    output: [{ source: 'editor:document', facts: 3 }],
+    pipelines: PIPELINES,
   },
 };
 
 export const Running: Story = {
   args: {
-    stages: STAGES,
+    pipelines: PIPELINES,
     busy: true,
   },
 };
