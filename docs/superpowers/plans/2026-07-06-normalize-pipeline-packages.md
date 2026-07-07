@@ -19,8 +19,10 @@ src/
   errors.ts
   index.ts         normalized ordering (see per-package notes — preserves existing symbol surface)
   pipeline.test.ts canonical test: assembles the package's stages and runs them via its pipeline API
-  internal/        private impl NOT in the public surface (barrel optional) — all three get one
+  internal/        private impl NOT in the public surface (NO barrel — deep-import within the package)
 ```
+
+**Barrels are only for the exported subpaths** — `types/`, `stages/`, and `testing/` each get an `index.ts` barrel. `internal/` does NOT get a barrel; in-package code deep-imports the specific internal module it needs.
 
 **`internal/` rule:** a module belongs in `internal/` iff it is (a) not re-exported from `index.ts` AND (b) not imported by any other package. Moving something there must not change the public surface — verified by the per-package consumer-build gate. pipeline-rdf already has `internal/`; email and transcription gain one.
 
@@ -55,7 +57,7 @@ Document this rule in each `index.ts` with a short comment so the divergence is 
 **Current:** stages in `stages.ts` (`summarizeStage`, `extractContactsStage`, `statsStage`, `EmailPipelineCtx`, `Summary`, `Stats`, `emptyStats`) + `extract-stage.ts` (`extractFactsStage` wrapper, `FactIndexer`). Also `facts.ts`, `fact-index.ts`, `threading.ts`, `threads.ts`. Has `types/` (`Thread`) + `testing/`. Tests: `stages.test.ts`, `extract-stage.test.ts`, `testing/email-pipeline.test.ts` (the assembly).
 
 - [ ] **Create `src/stages/`** and move stage files in (kebab): `stages/summarize.ts` (+ ctx/types or keep ctx in a `stages/context.ts`), `stages/extract-contacts.ts`, `stages/stats.ts`, `stages/extract-facts.ts` (from `extract-stage.ts`). `stages/index.ts` barrel. Move `stages.test.ts` → `stages/*.test.ts` next to each, or a single `stages/stages.test.ts`. Keep `facts.ts`/`fact-index.ts`/`threading.ts`/`threads.ts` at root (assembly/helpers) unless clearly a stage.
-- [ ] **`src/internal/`**: move genuinely-private helpers (not in `index.ts`, not imported cross-package) here with a barrel — e.g. `threading.ts` (thread-id/subject derivation) and any `fact-index.ts`/`threads.ts` internals that aren't part of the public surface. Update in-package imports (incl. tests) to the new paths. Verify the public surface is unchanged.
+- [ ] **`src/internal/`**: move genuinely-private helpers (not in `index.ts`, not imported cross-package) here (no barrel) — e.g. `threading.ts` (thread-id/subject derivation) and any `fact-index.ts`/`threads.ts` internals that aren't part of the public surface. Update in-package imports (incl. tests) to the new paths. Verify the public surface is unchanged.
 - [ ] **`index.ts`**: `export * from './facts'; export * from './stages';` (preserve current symbols). Keep `types/` out of root (no consumer needs it) — or add a comment noting it's intentionally internal.
 - [ ] **Add canonical `src/pipeline.test.ts`** that assembles the email stages (`summarizeStage`→`extractContactsStage`→`statsStage`→`extractFactsStage`) via `Pipeline.run` over a couple of fixture messages with a mock `AiService` + in-memory `EmailPipelineCtx` (mirror `pipeline-rdf`'s `pipeline.test.ts` shape). The existing `testing/email-pipeline.test.ts` (Enron/Ollama-gated) stays as the heavy integration test.
 - [ ] **Verify:** `moon run pipeline-email:build pipeline-email:test pipeline-email:lint` green; `moon run stories-brain:build` green. `pnpm format`.
@@ -68,7 +70,7 @@ Document this rule in each `index.ts` with a short comment so the divergence is 
 - [ ] **Create `src/types/`** and move the pure type/schema modules in: `types/transcript-event.ts` (from `TranscriptEvent.ts`), `types/stage.ts` (from `Stage.ts` — the `Stage` interface + `StageWrite`/`StageContext`/triggers), `types/lookup.ts`, `types/pipeline-config.ts` (from `PipelineConfig.ts`). `types/index.ts` barrel. Keep `PipelineRuntime.ts`, `model-routing.ts`, `dispatch.ts`, `live.ts`, `asr/`, `stages/` as assembly/runtime.
   - Kebab-rename the moved type files; keep exported symbol NAMES unchanged.
 - [ ] **`index.ts`**: re-export the `types/` barrel **top-level** (`export * from './types';`) so `Stage`/`TranscriptEvent`/`StageWrite`/etc. remain importable from the root (consumers depend on this). Add a comment: types are top-level (not a `Type` namespace) because consumers import them directly.
-- [ ] **`src/internal/`**: move genuinely-private modules (not re-exported from `index.ts`, not imported cross-package) here with a barrel — e.g. `asr/util.ts` and any non-exported helpers. Do NOT move exported runtime (`PipelineRuntime`, `model-routing` `resolveModel`, `dispatch` `CommitFn`/`makeEchoCommit`) — those are public. Verify the public surface is unchanged.
+- [ ] **`src/internal/`**: move genuinely-private modules (not re-exported from `index.ts`, not imported cross-package) here (no barrel) — e.g. `asr/util.ts` and any non-exported helpers. Do NOT move exported runtime (`PipelineRuntime`, `model-routing` `resolveModel`, `dispatch` `CommitFn`/`makeEchoCommit`) — those are public. Verify the public surface is unchanged.
 - [ ] **Rename** `pipeline-integration.test.ts` → `pipeline.test.ts` (git mv). It assembles stages via `PipelineRuntime.run` — the canonical test for this package (its pipeline API is `PipelineRuntime`, which sits on `@dxos/pipeline`).
 - [ ] **Verify:** `moon run pipeline-transcription:build pipeline-transcription:test pipeline-transcription:lint` green; then **consumer builds** `moon run plugin-transcription:build react-ui-transcription:build` green (public surface unchanged — this is the critical check). `pnpm format`.
 - [ ] **Commit:** `refactor(pipeline-transcription): types/ barrel and canonical pipeline.test.ts`.
