@@ -105,6 +105,25 @@ export const entitiesFromFacts = (facts: Type.Fact[]): EntityItem[] => {
   return [...byId.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 };
 
+export type PredicateItem = {
+  /** The predicate string (also the id). */
+  predicate: string;
+  /** Number of facts using this predicate. */
+  count: number;
+};
+
+/** Distinct predicates across the facts with occurrence counts, busiest first. */
+export const predicatesFromFacts = (facts: Type.Fact[]): PredicateItem[] => {
+  const byPredicate = new Map<string, number>();
+  for (const fact of facts) {
+    const { predicate } = fact.assertion;
+    byPredicate.set(predicate, (byPredicate.get(predicate) ?? 0) + 1);
+  }
+  return [...byPredicate.entries()]
+    .map(([predicate, count]) => ({ predicate, count }))
+    .sort((a, b) => b.count - a.count || a.predicate.localeCompare(b.predicate));
+};
+
 /**
  * Convert a {@link FactGraph} into a rooted {@link TreeNode} hierarchy for the tidy-tree renderer.
  * A fact graph is a general (cyclic) graph; the tidy tree needs a hierarchy, so this takes the BFS

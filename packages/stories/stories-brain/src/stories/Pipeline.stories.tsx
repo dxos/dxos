@@ -18,7 +18,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { EffectEx } from '@dxos/effect';
@@ -28,7 +28,16 @@ import { type DocumentFacts, type Type, extractFactsStage, normalizeFactsStage }
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
-import { DocumentEditor, FactViewer, PipelinePanel, type StageInfo } from '../components';
+import {
+  DocumentEditor,
+  EntityList,
+  FactViewer,
+  PipelinePanel,
+  PredicateList,
+  type StageInfo,
+  entitiesFromFacts,
+  predicatesFromFacts,
+} from '../components';
 
 const SAMPLE_CONTENT = trim`
   - Socrates was a Greek philosopher.
@@ -64,6 +73,9 @@ const DefaultStory = (_: StoryArgs) => {
   const [facts, setFacts] = useState<Type.Fact[]>([]);
   const [output, setOutput] = useState<unknown>();
   const [busy, setBusy] = useState(false);
+  const [context, setContext] = useState<string | undefined>(undefined);
+  const entities = useMemo(() => entitiesFromFacts(facts), [facts]);
+  const predicates = useMemo(() => predicatesFromFacts(facts), [facts]);
 
   // Stream the document through the enabled stages; the sink collects per-document results.
   const handleRun = (text: string) => {
@@ -99,10 +111,14 @@ const DefaultStory = (_: StoryArgs) => {
   };
 
   return (
-    <div className='dx-container grid grid-cols-[1fr_1fr_1fr] gap-2'>
+    <div className='dx-container grid grid-cols-[1fr_1fr_1fr_1fr] gap-2'>
       <DocumentEditor initialValue={SAMPLE_CONTENT} parse={stubParse} busy={busy} onRun={handleRun} />
       <PipelinePanel stages={STAGES} busy={busy} output={output} />
-      <FactViewer facts={facts} />
+      <FactViewer facts={facts} context={context} />
+      <div role='none' className='grid grid-rows-2 gap-2 min-h-0'>
+        <EntityList entities={entities} selected={context} onSelect={setContext} />
+        <PredicateList predicates={predicates} />
+      </div>
     </div>
   );
 };
