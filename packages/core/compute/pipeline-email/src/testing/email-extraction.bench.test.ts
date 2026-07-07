@@ -47,11 +47,6 @@ const BENCH_MODELS = (
 // per model); override via BENCH_COUNT for a heavier comparison.
 const BENCH_COUNT = Number(process.env.BENCH_COUNT ?? 10);
 
-// Short display label from a model DXN, e.g. `com.openai.model.gpt-oss-20b.default` -> `gpt-oss-20b`.
-const modelLabel = (model: string): string => model.split('.').at(-2) ?? model;
-
-const round = (value: number): number => Math.round(value * 100) / 100;
-
 describe.skipIf(!HAS_DATASET)('email extraction benchmark (ROOT_DIR + Ollama gated)', () => {
   test(
     'compares fact extraction across models',
@@ -117,3 +112,8 @@ describe.skipIf(!HAS_DATASET)('email extraction benchmark (ROOT_DIR + Ollama gat
     Math.max(5 * 60_000, BENCH_MODELS.length * BENCH_COUNT * 45_000),
   );
 });
+
+// Short display label from a model DXN, e.g. `com.openai.model.gpt-oss-20b.default` -> `gpt-oss-20b`.
+const modelLabel = (model: string): string => model.split('.').at(-2) ?? model;
+
+const round = (value: number): number => Math.round(value * 100) / 100;

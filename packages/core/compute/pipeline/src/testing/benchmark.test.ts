@@ -16,9 +16,13 @@ import { instrument } from './instrument';
 import { useMetrics } from './metrics';
 
 describe('benchmark framework', () => {
-  test('instrument records per-stage in/out/error counters', async ({ expect }) => {
-    // A stage that drops odds (out < in) so in/out differ observably.
-    const evens = Stage.map('evens', (n: number) => Effect.succeed(n % 2 === 0 ? n : undefined));
+  test('instrument records per-stage counters and latency, even when items are dropped', async ({ expect }) => {
+    // A drop stage (out < in): odds are filtered, kept evens sleep a known amount. Because a
+    // dropped input has no output to attribute, `evens.ms` must reflect only the two kept items'
+    // ~10ms each — a FIFO pairing would mis-attribute a dropped item's entry time instead.
+    const evens = Stage.map('evens', (n: number) =>
+      n % 2 === 0 ? Effect.sleep('10 millis').pipe(Effect.as(n)) : Effect.succeed(undefined),
+    );
 
     const result = await EffectEx.runPromise(
       runBenchmark({
@@ -36,7 +40,9 @@ describe('benchmark framework', () => {
     expect(metrics['evens.in']).toBe(4);
     expect(metrics['evens.out']).toBe(2);
     expect(metrics['evens.errors'] ?? 0).toBe(0);
-    expect(typeof metrics['evens.ms']).toBe('number');
+    // Two kept items sleeping ~10ms each; a generous lower bound avoids CI flakiness but still fails
+    // if latency were dropped or attributed to the wrong (instantaneous) entry.
+    expect(metrics['evens.ms']).toBeGreaterThanOrEqual(15);
     expect(typeof metrics['total.ms']).toBe('number');
   });
 

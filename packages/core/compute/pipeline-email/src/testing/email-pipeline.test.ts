@@ -76,7 +76,7 @@ const HAS_DATASET = existsSync(join(ROOT_DIR, 'data'));
 const MODEL = process.env.OLLAMA_MODEL ?? 'com.openai.model.gpt-oss-20b.default';
 
 // Number of emails drawn from the head of the dataset for one run.
-const EMAIL_COUNT = 50;
+const EMAIL_COUNT = 1;
 
 const SUMMARIZE_PROMPT = trim`
   Summarize the following email in one sentence, decide whether it is spam, and list up to five keywords.

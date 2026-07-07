@@ -39,7 +39,12 @@ export const makeMetrics = (): MetricsApi => {
   const values = new Map<string, MetricValue>();
   const addNumber = (name: string, by: number) => {
     const current = values.get(name);
-    values.set(name, (typeof current === 'number' ? current : 0) + by);
+    // A name used as both a string label (record) and a counter (inc/time) is a caller bug; fail
+    // loudly rather than silently discarding the label and counting from zero.
+    if (typeof current === 'string') {
+      throw new Error(`Metric '${name}' already holds a string label; cannot increment it.`);
+    }
+    values.set(name, (current ?? 0) + by);
   };
   const api: MetricsApi = {
     inc: (name, by = 1) => Effect.sync(() => addNumber(name, by)),

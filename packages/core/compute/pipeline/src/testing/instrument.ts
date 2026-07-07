@@ -16,24 +16,26 @@ import { Metrics, useMetrics } from './metrics';
  * `source.pipe(instrument('extract', s), …)`. The wrapped stage additionally requires `Metrics` in
  * its environment (provided at the edge by the benchmark runner).
  *
- * Latency is measured as the wall-clock between an item entering and leaving the stage. For a
- * sequential 1:1 stage (`Stage.map`, the common case) that is exactly the per-item processing time;
- * for reordering or fan-out stages the FIFO pairing is approximate but the sum stays a sensible
- * aggregate. Divide `${name}.ms` by `${name}.out` for the average.
+ * Latency is the wall-clock between the most recent input entering and an output leaving the stage.
+ * For a sequential stage (`Stage.map`, the common case) the item just emitted is the last one pulled
+ * in, so `${name}.ms` is the true per-item processing time — including drop/filter stages, whose
+ * discarded inputs simply never produce an output to attribute. It is only approximate for a stage
+ * that reorders or processes items concurrently (concurrency > 1), where the "most recent input" is
+ * no longer the one being emitted. Divide `${name}.ms` by `${name}.out` for the average.
  */
 export const instrument =
   <In, Out, E, R>(name: string, stage: Stage.Stage<In, Out, E, R>): Stage.Stage<In, Out, E, R | Metrics> =>
   (self) => {
-    // Entry timestamps, oldest first; each item leaving the stage is paired with the oldest still
-    // pending. Exact for a sequential 1:1 stage; approximate (but sum-preserving) otherwise.
-    const pending: number[] = [];
+    // Timestamp of the most recently ingested item. A sequential stage emits the item it last pulled,
+    // so pairing an output with this (rather than FIFO-oldest) stays correct when inputs are dropped.
+    let lastIn: number | undefined;
     return stage(
       self.pipe(
         Stream.tap(() =>
           Clock.currentTimeMillis.pipe(
             Effect.flatMap((now) =>
               useMetrics((metrics) => metrics.inc(`${name}.in`)).pipe(
-                Effect.zipRight(Effect.sync(() => void pending.push(now))),
+                Effect.zipRight(Effect.sync(() => void (lastIn = now))),
               ),
             ),
           ),
@@ -43,8 +45,7 @@ export const instrument =
       Stream.tap(() =>
         Clock.currentTimeMillis.pipe(
           Effect.flatMap((now) => {
-            const start = pending.shift();
-            const elapsed = start === undefined ? 0 : now - start;
+            const elapsed = lastIn === undefined ? 0 : now - lastIn;
             return useMetrics((metrics) => metrics.inc(`${name}.out`)).pipe(
               Effect.zipRight(useMetrics((metrics) => metrics.inc(`${name}.ms`, elapsed))),
             );

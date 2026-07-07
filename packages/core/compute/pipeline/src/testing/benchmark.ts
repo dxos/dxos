@@ -44,11 +44,12 @@ export type BenchmarkOptions<Config, Output, E, R> = {
  * Run a pipeline across variants (e.g. models) and collect a comparable metrics row per variant:
  * total wall-clock, per-stage {@link instrument} counters, and the evaluator's domain metrics. A
  * variant whose program or evaluator fails is recorded with an `error` (plus whatever metrics were
- * captured before it failed) rather than aborting the whole comparison.
+ * captured before it failed) rather than aborting the whole comparison; an interruption
+ * (cancellation) is re-raised so the whole run stops promptly.
  */
 export const runBenchmark = <Config, Output, E, R>(
   options: BenchmarkOptions<Config, Output, E, R>,
-): Effect.Effect<BenchmarkResult, never, Exclude<R, Metrics>> =>
+): Effect.Effect<BenchmarkResult, E, Exclude<R, Metrics>> =>
   Effect.gen(function* () {
     const variants: VariantResult[] = [];
     for (const variant of options.variants) {
@@ -66,11 +67,15 @@ export const runBenchmark = <Config, Output, E, R>(
       }).pipe(
         Effect.provide(layer),
         Effect.catchAllCause((cause) =>
-          metrics.snapshot.pipe(
-            Effect.map(
-              (snapshot) => ({ ...snapshot, error: Cause.pretty(cause).split('\n')[0] }) satisfies MetricsSnapshot,
-            ),
-          ),
+          // A cancelled benchmark must abort, not be recorded as an `error` row and iterated past;
+          // only genuine failures/defects degrade to a metrics row.
+          Cause.isInterruptedOnly(cause)
+            ? Effect.failCause(cause)
+            : metrics.snapshot.pipe(
+                Effect.map(
+                  (snapshot) => ({ ...snapshot, error: Cause.pretty(cause).split('\n')[0] }) satisfies MetricsSnapshot,
+                ),
+              ),
         ),
       );
       variants.push({ variant: variant.name, metrics: row });
