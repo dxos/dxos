@@ -4,8 +4,7 @@
 
 import { DXN } from '@dxos/echo';
 
-import { DEFAULT_STAGE_MODEL, type StageConfig } from './PipelineConfig';
-import { type Stage } from './Stage';
+import { DEFAULT_STAGE_MODEL, type Stage, type StageConfig } from './types';
 
 /**
  * Resolve the model for a stage invocation. Precedence: per-stage config override → the stage's own

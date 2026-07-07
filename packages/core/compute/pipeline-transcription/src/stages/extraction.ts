@@ -8,9 +8,9 @@ import { insertReferences } from '@dxos/assistant/extraction';
 import { type Ref } from '@dxos/echo';
 import { type ContentBlock } from '@dxos/types';
 
-import { type EntityLookup } from '../lookup';
-import { DEFAULT_STAGE_MODEL } from '../PipelineConfig';
-import { type BlockUpdate, type Stage, StageWrite } from '../Stage';
+import { type EntityLookup } from '../types/lookup';
+import { DEFAULT_STAGE_MODEL } from '../types/pipeline-config';
+import { type BlockUpdate, type Stage, StageWrite } from '../types/stage';
 
 export type ExtractionInput = { window: ContentBlock.Transcript[] };
 

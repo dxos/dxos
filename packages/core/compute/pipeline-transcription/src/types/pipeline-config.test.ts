@@ -6,9 +6,9 @@ import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/echo';
 
-import { resolveModel } from './model-routing';
-import { DEFAULT_STAGE_MODEL, findPreset } from './PipelineConfig';
-import { makeCorrectionStage } from './stages';
+import { resolveModel } from '../model-routing';
+import { makeCorrectionStage } from '../stages';
+import { DEFAULT_STAGE_MODEL, findPreset } from './pipeline-config';
 
 describe('PipelineConfig', () => {
   test('meeting preset enables the three real stages in order', ({ expect }) => {

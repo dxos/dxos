@@ -12,7 +12,7 @@ import { trace } from '@dxos/tracing';
 import { type ContentBlock } from '@dxos/types';
 
 import { type AudioChunk, type AudioRecorder } from './audio-recorder';
-import { mergeFloat64Arrays } from './util';
+import { mergeFloat64Arrays } from '../internal/asr-util';
 
 export type WhisperWord = {
   word: string;

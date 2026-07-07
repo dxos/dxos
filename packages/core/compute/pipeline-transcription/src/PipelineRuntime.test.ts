@@ -10,10 +10,9 @@ import { EffectEx } from '@dxos/effect';
 
 import { captureCommit } from './dispatch';
 import { PipelineRuntime, type TelemetryEvent } from './PipelineRuntime';
-import { type Stage, StageWrite } from './Stage';
 import { makeCorrectionStage, makeSummarizationStage } from './stages';
 import { SAMPLE_MEETING, scriptedSource } from './testing';
-import { TranscriptEvent } from './TranscriptEvent';
+import { type Stage, StageWrite, TranscriptEvent } from './types';
 
 describe('PipelineRuntime', () => {
   test('runs correction per block and summarizes on silence', async ({ expect }) => {

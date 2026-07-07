@@ -13,11 +13,15 @@ import { log } from '@dxos/log';
 import { Pipeline, Stage as PipelineStage } from '@dxos/pipeline';
 import { type ContentBlock } from '@dxos/types';
 
-import { type EntityLookup } from './lookup';
 import { resolveModel } from './model-routing';
-import { type StageConfig } from './PipelineConfig';
-import { type Stage, type StageContext, type StageWrite } from './Stage';
-import { type TranscriptEvent } from './TranscriptEvent';
+import {
+  type EntityLookup,
+  type Stage,
+  type StageConfig,
+  type StageContext,
+  type StageWrite,
+  type TranscriptEvent,
+} from './types';
 
 /** Upper bound on retained blocks; bounds memory for long sessions (stages slice their own window). */
 const MAX_WINDOW = 128;

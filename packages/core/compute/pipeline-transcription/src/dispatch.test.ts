@@ -10,7 +10,7 @@ import { EffectEx } from '@dxos/effect';
 import { type ContentBlock, Transcript } from '@dxos/types';
 
 import { makeEchoCommit } from './dispatch';
-import { StageWrite } from './Stage';
+import { StageWrite } from './types';
 
 describe('makeEchoCommit', () => {
   let builder: EchoTestBuilder;

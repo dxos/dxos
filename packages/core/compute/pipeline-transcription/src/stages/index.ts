@@ -4,7 +4,7 @@
 
 import { log } from '@dxos/log';
 
-import { type Stage } from '../Stage';
+import { type Stage } from '../types/stage';
 import { makeCorrectionStage } from './correction';
 import { makeDiarizationStage } from './diarization';
 import { makeExtractionStage } from './extraction';
