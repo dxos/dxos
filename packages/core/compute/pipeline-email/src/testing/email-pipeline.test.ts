@@ -55,8 +55,14 @@ const ROOT_DIR = process.env.ROOT_DIR ?? DEFAULT_ROOT_DIR;
 const RESULTS_FILE = fileURLToPath(new URL('../../data/results.json', import.meta.url));
 
 const TEST_ORGS = [
-  { name: 'DXOS', website: 'https://dxos.org' },
-  { name: 'Enron', website: 'https://enron.com' },
+  {
+    name: 'DXOS',
+    website: 'https://dxos.org',
+  },
+  {
+    name: 'Enron',
+    website: 'https://enron.com',
+  },
 ];
 
 // Gate on the dataset shard directory existing locally.
@@ -70,7 +76,7 @@ const HAS_DATASET = existsSync(join(ROOT_DIR, 'data'));
 const MODEL = process.env.OLLAMA_MODEL ?? 'com.openai.model.gpt-oss-20b.default';
 
 // Number of emails drawn from the head of the dataset for one run.
-const EMAIL_COUNT = 10;
+const EMAIL_COUNT = 50;
 
 const SUMMARIZE_PROMPT = trim`
   Summarize the following email in one sentence, decide whether it is spam, and list up to five keywords.
