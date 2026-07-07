@@ -30,6 +30,7 @@ import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
+import { Provider } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Obj, Query } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -132,10 +133,20 @@ const PIPELINES: PipelineInfo[] = [
 const PIPELINE_FOR_MODE: Record<InputMode, string> = { document: 'rdf', dataset: 'email', record: 'transcription' };
 const MODE_FOR_PIPELINE: Record<string, InputMode> = { rdf: 'document', email: 'dataset', transcription: 'record' };
 
-type StoryArgs = {};
+// Selects the AI backend the LLM stages run against: hosted DXOS edge (Claude) or a local Ollama
+// instance. For Ollama, `model` is the llama DXN and extraction runs in lenient (non-strict) mode,
+// since local models reliably fail structured `generateObject`.
+type AiConfig = { preset: 'edge-remote' | 'ollama'; model?: string };
 
-const DefaultStory = (_: StoryArgs) => {
+type StoryArgs = { ai: AiConfig };
+
+const DefaultStory = ({ ai }: StoryArgs) => {
   const [space] = useSpaces();
+  // Fact-extraction options for the active backend (undefined → pipeline-rdf's Claude/edge defaults).
+  const extractOptions = useMemo(
+    () => (ai.preset === 'ollama' ? { model: ai.model, provider: Provider.ollama.id, strict: false } : undefined),
+    [ai],
+  );
   const [pipelineId, setPipelineId] = useState(PIPELINES[0].id);
   const [facts, setFacts] = useState<RDF.Fact[]>([]);
   const [stats, setStats] = useState<StatItem[]>([]);
@@ -164,50 +175,53 @@ const DefaultStory = (_: StoryArgs) => {
     [people, organizations, threads],
   );
 
-  const runRdf = useCallback((text: string) => {
-    const startedMs = Date.now();
-    const collected: DocumentFacts[] = [];
-    const program = Effect.gen(function* () {
-      yield* Stream.fromIterable([{ text, source: 'editor:document' }]).pipe(
-        extractFactsStage(),
-        normalizeFactsStage({ synonyms: SYNONYMS }),
-        Pipeline.run({
-          // Stream facts to the viewer as each document is emitted, rather than only at completion.
-          sink: (out) =>
-            Effect.sync(() => {
-              collected.push(out);
-              setProcessed((value) => value + 1);
-              setFacts((prev) => [...prev, ...out.facts]);
-            }),
-        }),
-      );
-      return collected.flatMap((item) => [...item.facts]);
-    }).pipe(Effect.provide(Layer.fresh(AiServiceTestingPreset('edge-remote'))));
-    const { promise, interrupt } = runInterruptible(program);
-    interruptRef.current = interrupt;
-    return promise.then((extracted) => {
-      setStats([
-        { label: 'Facts', value: extracted.length },
-        { label: 'Entities', value: new Set(extracted.flatMap(factEntities)).size },
-        { label: 'Predicates', value: new Set(extracted.map((fact) => fact.assertion.predicate)).size },
-        ...rateStats(extracted.length, startedMs, 'facts'),
-      ]);
-    });
-  }, []);
+  const runRdf = useCallback(
+    (text: string) => {
+      const startedMs = Date.now();
+      const collected: DocumentFacts[] = [];
+      const program = Effect.gen(function* () {
+        yield* Stream.fromIterable([{ text, source: 'editor:document' }]).pipe(
+          extractFactsStage(extractOptions),
+          normalizeFactsStage({ synonyms: SYNONYMS }),
+          Pipeline.run({
+            // Stream facts to the viewer as each document is emitted, rather than only at completion.
+            sink: (out) =>
+              Effect.sync(() => {
+                collected.push(out);
+                setProcessed((value) => value + 1);
+                setFacts((prev) => [...prev, ...out.facts]);
+              }),
+          }),
+        );
+        return collected.flatMap((item) => [...item.facts]);
+      }).pipe(Effect.provide(Layer.fresh(AiServiceTestingPreset(ai.preset))));
+      const { promise, interrupt } = runInterruptible(program);
+      interruptRef.current = interrupt;
+      return promise.then((extracted) => {
+        setStats([
+          { label: 'Facts', value: extracted.length },
+          { label: 'Entities', value: new Set(extracted.flatMap(factEntities)).size },
+          { label: 'Predicates', value: new Set(extracted.map((fact) => fact.assertion.predicate)).size },
+          ...rateStats(extracted.length, startedMs, 'facts'),
+        ]);
+      });
+    },
+    [ai.preset, extractOptions],
+  );
 
   const runEmail = useCallback(() => {
     if (!space) {
       return Promise.resolve();
     }
     const startedMs = Date.now();
-    const aiLayer = Layer.fresh(AiServiceTestingPreset('edge-remote'));
+    const aiLayer = Layer.fresh(AiServiceTestingPreset(ai.preset));
     const collected: RDF.Fact[] = [];
     const indexFacts: FactIndexer = (message) =>
       EffectEx.runPromise(
         Effect.gen(function* () {
           const out: DocumentFacts[] = [];
           yield* Stream.fromIterable([{ text: Message.extractText(message), source: `email:${message.id}` }]).pipe(
-            extractFactsStage(),
+            extractFactsStage(extractOptions),
             Pipeline.run({ sink: (item) => Effect.sync(() => out.push(item)) }),
           );
           return out.flatMap((item) => [...item.facts]);
@@ -242,7 +256,7 @@ const DefaultStory = (_: StoryArgs) => {
         { id: 'threads', label: 'Threads', content: <ThreadList result={result} /> },
       ]);
     });
-  }, [space, emails]);
+  }, [space, emails, ai.preset, extractOptions]);
 
   // Load the first `count` Enron messages from the dataset parquet (over HTTP) and make them the
   // email pipeline's input; the Dataset tab preview updates to the loaded messages.
@@ -477,6 +491,9 @@ const meta = {
       name: 'Pipeline Story Graph',
     },
   }),
+  args: {
+    ai: { preset: 'edge-remote' },
+  },
   parameters: {
     controls: { disable: true },
   },
@@ -486,4 +503,19 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// Default: hosted DXOS edge (Claude Haiku).
 export const Default: Story = {};
+
+// Runs the LLM stages against a local Ollama instance with Llama 3.2 3B. Prerequisites:
+//   ollama pull llama3.2:3b
+//   OLLAMA_ORIGINS="*" ollama serve   # CORS, so the browser storybook can reach localhost:11434
+// RDF fact extraction runs on Llama; the email summarize stage still targets Claude (its model is
+// fixed in pipeline-email), so summaries are empty under Ollama until that stage is parameterized.
+export const Ollama: Story = {
+  args: {
+    ai: {
+      preset: 'ollama',
+      model: 'com.meta.model.llama-3-2-3b.instruct',
+    },
+  },
+};
