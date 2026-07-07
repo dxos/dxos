@@ -18,13 +18,15 @@ import * as Settings from './Settings';
  * under `storage` (see `client.graph.registerBlobBackend`) — this type carries no behavior.
  */
 export type Backend = {
-  /** Stable backend id (e.g. 'inline', 'wnfs'). Used as the settings key. */
-  readonly id: string;
   /** Display label shown in the settings UI. */
   readonly name: string;
   /** Description shown next to the backend in settings. */
   readonly description?: string;
-  /** `Blob.fromBytes`'s `storage` option to use when this backend is selected. */
+  /**
+   * `Blob.fromBytes`'s `storage` option to use when this backend is selected. Also the settings
+   * key identifying this backend — one `BlobBackend` is registered per storage name, so the two
+   * concepts always coincide.
+   */
   readonly storage: string;
 };
 
