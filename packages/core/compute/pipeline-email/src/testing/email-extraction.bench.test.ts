@@ -34,16 +34,12 @@ const HAS_DATASET = existsSync(join(ROOT_DIR, 'data'));
 // Where the benchmark's serialized comparison is written (git-ignored, under the package's ./data).
 const BENCH_FILE = fileURLToPath(new URL('../../data/benchmark.json', import.meta.url));
 
-// Models to compare (Ollama DXNs). Override via BENCH_MODELS (comma-separated). Defaults to the
-// three non-reasoning models pulled by `moon run pipeline-email:pull-models` (reasoning models are
-// excluded — their chain-of-thought breaks strict JSON and doubles latency).
-const BENCH_MODELS = (
-  process.env.BENCH_MODELS ??
-  'com.meta.model.llama-3-2-3b.instruct,com.alibaba.model.qwen-2-5-7b.instruct,com.google.model.gemma-4-12b.default'
-)
-  .split(',')
-  .map((model) => model.trim())
-  .filter(Boolean);
+// Models to compare (Ollama DXNs).
+const BENCH_MODELS = [
+  'com.meta.model.llama-3-2-3b.instruct',
+  'com.alibaba.model.qwen-2-5-7b.instruct',
+  'com.google.model.gemma-4-12b.default',
+];
 
 // Emails drawn from the head of the dataset per model. Kept modest by default (each is one LLM call
 // per model); override via BENCH_COUNT for a heavier comparison.

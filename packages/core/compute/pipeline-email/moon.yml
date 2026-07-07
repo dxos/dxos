@@ -4,12 +4,19 @@ tags:
   - ts-build
   - ts-test
 tasks:
-  # Provision everything the ROOT_DIR-gated tests need: the Enron dataset (setup.sh) and the
-  # benchmark models (via the pull-models dep).
+  # Provision everything the ROOT_DIR-gated tests need: the Enron dataset and the benchmark models.
   setup:
-    command: 'sh scripts/setup.sh'
+    command: 'true'
     deps:
+      - '~:pull-data'
       - '~:pull-models'
+    options:
+      runInCI: false
+      cache: false
+
+  # Checkout the Enron email dataset into ./data.
+  pull-data:
+    command: 'sh scripts/pull-data.sh'
     options:
       runInCI: false
       cache: false
