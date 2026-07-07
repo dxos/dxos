@@ -4,14 +4,17 @@
 
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
-import { type AiService } from '@dxos/ai';
+import { AiService } from '@dxos/ai';
 import { extractContact } from '@dxos/extractor-lib';
 import { Stage } from '@dxos/pipeline';
 import { ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { EmailPipelineCtx, type Summary } from './run';
+
+const SUMMARIZE_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
 const SUMMARIZE_PROMPT = trim`
   Summarize the following email in one sentence, decide whether it is spam, and list up to five keywords.
@@ -47,7 +50,10 @@ export const summarizeStage: Stage.Stage<
   Effect.gen(function* () {
     const ctx = yield* EmailPipelineCtx;
     const text = Message.extractText(message);
-    const raw = yield* Effect.scoped(LanguageModel.generateText({ prompt: `${SUMMARIZE_PROMPT}\n\n${text}` })).pipe(
+    // Resolve the LanguageModel layer locally from AiService so `LanguageModel` is discharged and the
+    // stage's requirement correctly reduces to `EmailPipelineCtx | AiService.AiService`.
+    const raw = yield* LanguageModel.generateText({ prompt: `${SUMMARIZE_PROMPT}\n\n${text}` }).pipe(
+      Effect.provide(AiService.model(SUMMARIZE_MODEL).pipe(Layer.orDie)),
       Effect.map((response) => response.text),
       Effect.orElse(() => Effect.succeed('')),
     );
