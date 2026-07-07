@@ -35,9 +35,11 @@ const HAS_DATASET = existsSync(join(ROOT_DIR, 'data'));
 const BENCH_FILE = fileURLToPath(new URL('../../data/benchmark.json', import.meta.url));
 
 // Models to compare (Ollama DXNs). Override via BENCH_MODELS (comma-separated). Defaults to the
-// reliable gpt-oss-20b against a smaller llama-3.2 that stresses the lenient-parse fallback.
+// three non-reasoning models pulled by `moon run pipeline-email:pull-models` (reasoning models are
+// excluded — their chain-of-thought breaks strict JSON and doubles latency).
 const BENCH_MODELS = (
-  process.env.BENCH_MODELS ?? 'com.openai.model.gpt-oss-20b.default,com.meta.model.llama-3-2-3b.instruct'
+  process.env.BENCH_MODELS ??
+  'com.meta.model.llama-3-2-3b.instruct,com.alibaba.model.qwen-2-5-7b.instruct,com.google.model.gemma-4-12b.default'
 )
   .split(',')
   .map((model) => model.trim())

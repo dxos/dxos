@@ -68,11 +68,7 @@ const TEST_ORGS = [
 // Gate on the dataset shard directory existing locally.
 const HAS_DATASET = existsSync(join(ROOT_DIR, 'data'));
 
-// Local model served by Ollama (model DXN; its final NSID segment must be camelCase). Override via
-// OLLAMA_MODEL. Defaults to gpt-oss-20b, which reliably emits schema-conforming structured output for
-// `generateObject`; run `moon run pipeline-email:setup` (or `ollama pull gpt-oss:20b`) to fetch it.
-// A weaker model (e.g. OLLAMA_MODEL=com.meta.model.llama-3-2-1b.instruct) may fail structured output
-// and fall back to an empty summary.
+// Local model served by Ollama (model DXN; its final NSID segment must be camelCase).
 const MODEL = process.env.OLLAMA_MODEL ?? 'com.openai.model.gpt-oss-20b.default';
 
 // Number of emails drawn from the head of the dataset for one run.

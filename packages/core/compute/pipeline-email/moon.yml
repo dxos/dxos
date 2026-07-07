@@ -11,6 +11,13 @@ tasks:
       runInCI: false
       cache: false
 
+  # Pull the non-reasoning Ollama models used by the extraction benchmark.
+  pull-models:
+    command: 'sh scripts/pull-models.sh'
+    options:
+      runInCI: false
+      cache: false
+
   compile:
     args:
       - '--entryPoint=src/index.ts'
