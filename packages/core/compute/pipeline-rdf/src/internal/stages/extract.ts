@@ -5,6 +5,7 @@
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { type AiModelNotAvailableError, AiService } from '@dxos/ai';
@@ -23,22 +24,23 @@ export type ExtractDocument = {
 
 export const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
+/** One extracted fact as the model emits it (entities are surface strings; linking happens later). */
+export const ExtractedFact = Schema.Struct({
+  subject: Schema.String,
+  predicate: Schema.String,
+  object: Schema.String,
+  validFrom: Schema.optional(Schema.String),
+  validTo: Schema.optional(Schema.String),
+  factuality: Factuality,
+  polarity: Schema.Literal('+', '-', '?'),
+  confidence: Schema.optional(Schema.Number),
+  nature: Schema.optional(Schema.Literal('epistemic', 'aleatory')),
+  quote: Schema.optional(Schema.String),
+});
+
 /** Flat LLM payload (entities are surface strings; linking happens in the pipeline). */
 export const ExtractPayload = Schema.Struct({
-  facts: Schema.Array(
-    Schema.Struct({
-      subject: Schema.String,
-      predicate: Schema.String,
-      object: Schema.String,
-      validFrom: Schema.optional(Schema.String),
-      validTo: Schema.optional(Schema.String),
-      factuality: Factuality,
-      polarity: Schema.Literal('+', '-', '?'),
-      confidence: Schema.optional(Schema.Number),
-      nature: Schema.optional(Schema.Literal('epistemic', 'aleatory')),
-      quote: Schema.optional(Schema.String),
-    }),
-  ),
+  facts: Schema.Array(ExtractedFact),
 });
 export interface ExtractPayload extends Schema.Schema.Type<typeof ExtractPayload> {}
 
@@ -76,18 +78,56 @@ export const buildExtractionPrompt = (options?: ExtractOptions): string => {
   return `${BASE_PROMPT}\nRules:\n${rules.map((rule, index) => `${index + 1}. ${rule}`).join('\n')}`;
 };
 
-/** Run schema-constrained extraction for one chunk. */
+const decodeFact = Schema.decodeUnknownOption(ExtractedFact);
+
+/**
+ * Salvage an {@link ExtractPayload} from free model text. Local/reasoning models (e.g. gpt-oss via
+ * Ollama) wrap the JSON in prose, so strict `generateObject` decode fails (MalformedOutput); this
+ * grabs the first balanced object, parses it, and keeps only entries that decode against
+ * {@link ExtractedFact}. Malformed entries are dropped rather than failing the whole document.
+ */
+export const parseExtractPayload = (raw: string): ExtractPayload => {
+  const match = raw.match(/\{[\s\S]*\}/);
+  if (!match) {
+    return { facts: [] };
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(match[0]);
+  } catch {
+    return { facts: [] };
+  }
+  if (typeof parsed !== 'object' || parsed === null) {
+    return { facts: [] };
+  }
+  const factsValue = Reflect.get(parsed, 'facts');
+  const rawFacts = Array.isArray(factsValue) ? factsValue : [];
+  const facts = rawFacts.flatMap((entry) =>
+    Option.match(decodeFact(entry), { onNone: () => [], onSome: (fact) => [fact] }),
+  );
+  return { facts };
+};
+
+/**
+ * Extract facts for one chunk. Strict `generateObject` first (strong models honor the schema), then
+ * a lenient `generateText` + JSON-salvage fallback so schema-non-conforming models still yield facts
+ * instead of degrading the document to none.
+ */
 export const extractChunk = (
   doc: ExtractDocument,
   options?: ExtractOptions,
 ): Effect.Effect<ExtractPayload, SemanticIndexError, AiService.AiService> =>
   Effect.gen(function* () {
     const context = `Author: ${doc.author ?? 'unknown'}\nDate: ${doc.date ?? 'unknown'}\nMessage:\n${doc.text}`;
-    const response = yield* LanguageModel.generateObject({
-      schema: ExtractPayload,
-      prompt: `${buildExtractionPrompt(options)}\n\n${context}`,
-    });
-    return response.value;
+    const prompt = `${buildExtractionPrompt(options)}\n\n${context}`;
+    return yield* LanguageModel.generateObject({ schema: ExtractPayload, prompt }).pipe(
+      Effect.map((response) => response.value),
+      Effect.catchAll(() =>
+        LanguageModel.generateText({
+          prompt: `${prompt}\n\nRespond with ONLY a JSON object of the form {"facts": [ ... ]} — no prose, no markdown fences.`,
+        }).pipe(Effect.map((response) => parseExtractPayload(response.text))),
+      ),
+    );
   }).pipe(
     Effect.provide(modelLayer(options).pipe(Layer.orDie)),
     // Model-layer construction failure is a fatal wiring fault (defect); transient LLM failures
