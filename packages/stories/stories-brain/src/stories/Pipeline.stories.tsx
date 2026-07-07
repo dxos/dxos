@@ -61,7 +61,7 @@ import {
   PipelinePanel,
   type StatItem,
 } from '../components';
-import { createMarkdownStoryDecorators } from '../testing/markdown-story-decorators';
+import { createMarkdownStoryDecorators } from '../testing';
 
 const OWNER_EMAIL = 'alice@example.com';
 
@@ -165,6 +165,7 @@ const DefaultStory = (_: StoryArgs) => {
   );
 
   const runRdf = useCallback((text: string) => {
+    const startedMs = Date.now();
     const collected: DocumentFacts[] = [];
     const program = Effect.gen(function* () {
       yield* Stream.fromIterable([{ text, source: 'editor:document' }]).pipe(
@@ -189,6 +190,7 @@ const DefaultStory = (_: StoryArgs) => {
         { label: 'Facts', value: extracted.length },
         { label: 'Entities', value: new Set(extracted.flatMap(factEntities)).size },
         { label: 'Predicates', value: new Set(extracted.map((fact) => fact.assertion.predicate)).size },
+        ...rateStats(extracted.length, startedMs, 'facts'),
       ]);
     });
   }, []);
@@ -197,6 +199,7 @@ const DefaultStory = (_: StoryArgs) => {
     if (!space) {
       return Promise.resolve();
     }
+    const startedMs = Date.now();
     const aiLayer = Layer.fresh(AiServiceTestingPreset('edge-remote'));
     const collected: RDF.Fact[] = [];
     const indexFacts: FactIndexer = (message) =>
@@ -232,6 +235,7 @@ const DefaultStory = (_: StoryArgs) => {
         { label: 'Threads', value: result.threads.length },
         { label: 'Spam', value: result.stats.spam },
         { label: 'Facts', value: collected.length },
+        ...rateStats(result.stats.total, startedMs, 'msg'),
       ]);
       setDetails([
         { id: 'messages', label: 'Messages', content: <MessageList result={result} /> },
@@ -258,6 +262,7 @@ const DefaultStory = (_: StoryArgs) => {
       if (!space) {
         return Promise.resolve();
       }
+      const startedMs = Date.now();
       const lines = text
         .split('\n')
         .map((line) => line.replace(/^\s*[-*]\s*/, '').trim())
@@ -297,6 +302,7 @@ const DefaultStory = (_: StoryArgs) => {
           { label: 'Blocks', value: blocks.length },
           { label: 'Linked blocks', value: linked },
           { label: 'Summary', value: summary ? 'yes' : 'no' },
+          ...rateStats(blocks.length, startedMs, 'blocks'),
         ]);
         setDetails([
           { id: 'transcript', label: 'Transcript', content: <TranscriptView lines={corrected} summary={summary} /> },
@@ -359,6 +365,17 @@ const DefaultStory = (_: StoryArgs) => {
 
 const factEntities = (fact: RDF.Fact): string[] =>
   [fact.assertion.subject, fact.assertion.object].flatMap((term) => ('entity' in term ? [term.entity] : []));
+
+const round = (value: number): number => Math.round(value * 100) / 100;
+
+// Elapsed wall-clock + throughput (items/s) for a run of `count` items since `startedMs`.
+const rateStats = (count: number, startedMs: number, unit: string): StatItem[] => {
+  const seconds = Math.max(1, Date.now() - startedMs) / 1000;
+  return [
+    { label: 'Elapsed (s)', value: round(seconds) },
+    { label: `Throughput (${unit}/s)`, value: round(count / seconds) },
+  ];
+};
 
 type Interruptible<A> = { readonly promise: Promise<A>; readonly interrupt: () => void };
 
@@ -448,13 +465,17 @@ const meta = {
     types: [Person.Person, Organization.Organization, Thread],
     // Seed a couple of entities so the transcription pipeline has something to link against and the
     // Objects tab is populated before the email pipeline runs.
-    seed: ({ personalSpace }) =>
+    seed: ({ personalSpace: space }) =>
       Effect.promise(async () => {
-        personalSpace.db.add(Obj.make(Organization.Organization, { name: 'Lyceum' }));
-        personalSpace.db.add(Obj.make(Person.Person, { fullName: 'Socrates' }));
-        await personalSpace.db.flush({ indexes: true });
+        // TODO(burdon): From const.
+        space.db.add(Obj.make(Organization.Organization, { name: 'Lyceum' }));
+        space.db.add(Obj.make(Person.Person, { fullName: 'Socrates' }));
+        await space.db.flush({ indexes: true });
       }),
-    graphPlugin: { key: 'org.dxos.plugin.stories.pipeline.storyGraph', name: 'Pipeline Story Graph' },
+    graphPlugin: {
+      key: 'org.dxos.plugin.stories.pipeline.storyGraph',
+      name: 'Pipeline Story Graph',
+    },
   }),
   parameters: {
     controls: { disable: true },
