@@ -17,10 +17,10 @@ import {
   type Stats,
   type Summary,
   emptyStats,
-  // extractContactsStage,
+  extractContactsStage,
   extractFactsStage,
   statsStage,
-  // summarizeStage,
+  summarizeStage,
 } from './stages';
 import { type Thread } from './types';
 
@@ -42,14 +42,14 @@ export type EmailPipelineResult = {
   readonly threads: Thread[];
 };
 
-/**
- * Default assembly of the email stages over a batch of messages: summarize → extract-contacts →
- * stats → extract-facts stream through with back pressure, then {@link buildThreads} groups the
- * collected messages into canonical threads. Contacts and threads are persisted to `db`; the fact
- * substrate is populated via `indexFacts`. Requires an `AiService` (summarize); the shared
- * {@link EmailPipelineCtx} is constructed and provided internally.
- */
 export const EmailPipeline = {
+  /**
+   * Default assembly of the email stages over a batch of messages: summarize → extract-contacts →
+   * stats → extract-facts stream through with back pressure, then {@link buildThreads} groups the
+   * collected messages into canonical threads. Contacts and threads are persisted to `db`; the fact
+   * substrate is populated via `indexFacts`. Requires an `AiService` (summarize); the shared
+   * {@link EmailPipelineCtx} is constructed and provided internally.
+   */
   run: (
     messages: readonly Message.Message[],
     options: EmailPipelineOptions,
@@ -59,31 +59,18 @@ export const EmailPipeline = {
       const summaries: Array<{ messageId: string; summary: Summary }> = [];
       const collected: Message.Message[] = [];
       yield* Stream.fromIterable(messages).pipe(
-        // TODO(burdon): Do orgs also; reconcile with plugin-inbox EmailStage.extractContacts.
-        // extractContactsStage,
-        // TODO(burdon): Move to sync pipeline? If not, where does it write to?
-        // summarizeStage,
-        extractFactsStage(options.indexFacts),
+        summarizeStage,
+        extractContactsStage,
         statsStage,
+        extractFactsStage(options.indexFacts),
         Pipeline.run({ sink: (message) => Effect.sync(() => collected.push(message)) }),
-        Effect.provideService(EmailPipelineCtx, {
-          db: options.db,
-          summaries,
-          stats,
-        }),
+        Effect.provideService(EmailPipelineCtx, { db: options.db, stats, summaries }),
       );
 
-      // TODO(burdon): Should be in a separate stage.
       const threads = buildThreads(collected, { ownerEmail: options.ownerEmail, now: options.now });
       for (const thread of threads) {
         options.db.add(thread);
       }
-
-      return {
-        messages: collected,
-        stats,
-        summaries,
-        threads,
-      };
+      return { messages: collected, stats, summaries, threads };
     }),
 };
