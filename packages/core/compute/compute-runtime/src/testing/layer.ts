@@ -6,7 +6,6 @@ import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as NodeFs from 'node:fs';
 
 import { Database, Feed, Type, View } from '@dxos/echo';
 import { type DatabaseImpl } from '@dxos/echo-client';
@@ -56,26 +55,16 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
       let db: DatabaseImpl | undefined;
 
       if (storagePath) {
-        const metaPath = storagePath + '.meta.json';
-        let testMetadata: { key: string; rootUrl: string } | undefined;
-        try {
-          testMetadata = JSON.parse(NodeFs.readFileSync(metaPath, 'utf-8'));
-        } catch {
-          testMetadata = undefined;
-        }
-        log('starting persistant test db', { storagePath, testMetadata });
-        if (!testMetadata) {
+        log('starting persistant test db', { storagePath });
+        const persistedSpaces = peer.host.spaces;
+        if (persistedSpaces.length === 0) {
           db = yield* Effect.promise(() => peer.createDatabase(key));
-
-          NodeFs.writeFileSync(metaPath, JSON.stringify({ key: key.toHex(), rootUrl: db.rootUrl }));
 
           if (onInit) {
             yield* onInit().pipe(Effect.provideService(Database.Service, Database.makeService(db)));
           }
         } else {
-          const resolvedKey = PublicKey.from(testMetadata.key);
-          const rootUrl = testMetadata.rootUrl;
-          db = yield* Effect.promise(() => peer.openDatabase(resolvedKey, rootUrl));
+          db = yield* Effect.promise(() => peer.openDatabase(key));
           // Rebuild index after reopening since in-memory SQLite is recreated.
           yield* Effect.promise(() => db!.flush());
         }

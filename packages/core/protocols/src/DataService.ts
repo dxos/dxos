@@ -1,6 +1,7 @@
 import { RpcGroup, Rpc, type RpcClient } from '@effect/rpc';
-import * as EchoPb from './proto/gen/dxos/echo/service';
 import * as Schema from 'effect/Schema';
+
+import * as EchoPb from './proto/gen/dxos/echo/service';
 
 export class Rpcs extends RpcGroup.make(
   Rpc.make('subscribe', {

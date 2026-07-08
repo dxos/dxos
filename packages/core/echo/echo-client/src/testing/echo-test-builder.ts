@@ -251,15 +251,22 @@ export class EchoTestPeer extends Resource {
 
   async openDatabase(
     spaceKey: PublicKey,
-    rootUrl: string,
+    rootUrl?: string,
     { client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {},
     // TODO(burdon): Return Promise<EchoDatabase>
   ) {
     // NOTE: Client closes the database when it is closed.
     const spaceId = await createIdFromSpaceKey(spaceKey);
-    await this.host.openSpaceRoot(this._ctx, spaceId, rootUrl as AutomergeUrl);
+    let resolvedRootUrl = rootUrl;
+    if (resolvedRootUrl) {
+      await this.host.updateSpaceRoot(this._ctx, spaceId, resolvedRootUrl as AutomergeUrl);
+    } else {
+      await this.host.openSpaceRoot(this._ctx, spaceId);
+      resolvedRootUrl = this.host.spaces.find((s) => s.spaceId === spaceId)?.rootDocUrl;
+      invariant(resolvedRootUrl, 'Root URL not found on host');
+    }
     const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
-    await db.setSpaceRoot(rootUrl);
+    await db.setSpaceRoot(resolvedRootUrl);
     await db.open();
     return db;
   }

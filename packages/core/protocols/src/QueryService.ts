@@ -1,7 +1,8 @@
 import { RpcGroup, Rpc, type RpcClient } from '@effect/rpc';
-import * as QueryPb from './proto/gen/dxos/echo/query';
-import * as IndexingPb from './proto/gen/dxos/echo/indexing';
 import * as Schema from 'effect/Schema';
+
+import * as IndexingPb from './proto/gen/dxos/echo/indexing';
+import * as QueryPb from './proto/gen/dxos/echo/query';
 
 export class Rpcs extends RpcGroup.make(
   Rpc.make('setConfig', {
