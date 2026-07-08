@@ -49,7 +49,8 @@ export const createDraftMessage = (options: CreateDraftOptions): Obj.MakeProps<t
 
   if (message && mode !== 'compose') {
     const originalSubject = message.properties?.subject ?? '';
-    const quotedBody = formatQuotedMessage(message);
+    // A provided body (e.g. an AI-generated reply) sits above the quoted original, per convention.
+    const quotedBody = body ? `${body}\n${formatQuotedMessage(message)}` : formatQuotedMessage(message);
 
     switch (mode) {
       case 'reply': {

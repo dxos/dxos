@@ -32,6 +32,8 @@ export type UseMessageToolbarActionsProps = {
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
+  /** Generates an AI reply draft grounded on thread context and known facts. */
+  onAiReply?: () => void;
 };
 
 export const useMessageActions = ({
@@ -47,6 +49,7 @@ export const useMessageActions = ({
   onReply,
   onReplyAll,
   onForward,
+  onAiReply,
 }: UseMessageToolbarActionsProps) => {
   const extractorActions = useExtractorActions(message);
 
@@ -118,6 +121,18 @@ export const useMessageActions = ({
                 onForward,
               )),
         )
+        .subgraph(
+          onAiReply &&
+            ((b) =>
+              b.action(
+                'ai-reply',
+                {
+                  label: ['message-toolbar-ai-reply.menu', { ns: meta.profile.key }],
+                  icon: 'ph--sparkle--regular',
+                },
+                onAiReply,
+              )),
+        )
         .separator()
         .subgraph((b) => {
           if (extractorActions.length > 0) {
@@ -159,6 +174,7 @@ export const useMessageActions = ({
       onReply,
       onReplyAll,
       onForward,
+      onAiReply,
       onDelete,
     ],
   );

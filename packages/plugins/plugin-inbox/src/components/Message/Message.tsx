@@ -45,6 +45,8 @@ type MessageContextValue = {
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
+  /** Generates an AI reply draft grounded on thread context and known facts. */
+  onAiReply?: () => void;
   onDelete?: () => void;
 };
 
@@ -75,6 +77,7 @@ const MessageRoot = ({
   onReply,
   onReplyAll,
   onForward,
+  onAiReply,
   onDelete,
   ...props
 }: MessageRootProps) => {
@@ -88,6 +91,7 @@ const MessageRoot = ({
       onReply={onReply}
       onReplyAll={onReplyAll}
       onForward={onForward}
+      onAiReply={onAiReply}
       onDelete={onDelete}
       {...props}
     >
@@ -105,7 +109,7 @@ MessageRoot.displayName = 'Message.Root';
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
 const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { attendableId, message, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward, onDelete } =
+  const { attendableId, message, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward, onAiReply, onDelete } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
 
   // Settings capability is optional (see MessageBody); fall back to safe defaults outside the plugin.
@@ -133,6 +137,7 @@ const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
     onReply,
     onReplyAll,
     onForward,
+    onAiReply,
     onDelete,
   });
 

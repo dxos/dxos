@@ -13,7 +13,7 @@ import { FactStore, type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { InboxOperation, Mailbox } from '../types';
+import { DraftMessage, InboxOperation, Mailbox } from '../types';
 
 const handler: Operation.WithHandler<typeof InboxOperation.GenerateReply> = InboxOperation.GenerateReply.pipe(
   Operation.withHandler(
@@ -67,9 +67,10 @@ const generatePrompt = (options: { thread: string; facts: string; sender: string
 /**
  * Drafts a grounded reply: gathers the message's thread (same normalized subject) from the mailbox
  * feed, looks up facts about the participants in the space fact store, and prompts the LLM for a
- * reply body. Fact lookup degrades to none on store failure — a reply can always be drafted; LLM
- * failure is a defect (a broken model configuration should surface loudly). Named export so the
- * flow is unit-testable without the operation runtime.
+ * reply body. Accepts either the message to reply to or a reply draft (resolved via `inReplyTo`).
+ * Fact lookup degrades to none on store failure — a reply can always be drafted; LLM failure is a
+ * defect (a broken model configuration should surface loudly). Named export so the flow is
+ * unit-testable without the operation runtime.
  */
 export const generateReply = (options: {
   readonly mailbox: Mailbox.Mailbox;
@@ -80,13 +81,27 @@ export const generateReply = (options: {
   FactStore | AiService.AiService | Database.Service
 > =>
   Effect.gen(function* () {
-    const { mailbox, message } = options;
+    const { mailbox } = options;
 
-    // Thread context: feed messages sharing the normalized subject, oldest first, bounded.
     const feed = yield* Database.load(mailbox.feed).pipe(Effect.orDie);
     const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run.pipe(
       Effect.orElseSucceed((): Message.Message[] => []),
     );
+
+    // A draft reply resolves to the feed message it replies to (via its threading header); a feed
+    // message is the reply target itself.
+    const message = DraftMessage.instanceOf(options.message)
+      ? messages.find(
+          (candidate) =>
+            candidate.properties?.messageId !== undefined &&
+            candidate.properties.messageId === options.message.properties?.inReplyTo,
+        )
+      : options.message;
+    if (!message) {
+      return { subject: replySubject(options.message.properties?.subject), body: '' };
+    }
+
+    // Thread context: feed messages sharing the normalized subject, oldest first, bounded.
     const subjectKey = normalizeSubject(message.properties?.subject);
     const thread = messages
       .filter((candidate) => normalizeSubject(candidate.properties?.subject) === subjectKey)

@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { type Message as MessageType } from '@dxos/types';
 
@@ -73,6 +73,20 @@ export const MessageArticle = ({
   const handleReplyAll = useCallback(() => openDraft('reply-all'), [openDraft]);
   const handleForward = useCallback(() => openDraft('forward'), [openDraft]);
 
+  // AI reply: generate a grounded body first (thread + facts), then open the reply draft prefilled.
+  // `spaceId` scopes the spawned operation so its space-affinity services (Database/FactStore) resolve.
+  const handleAiReply = useCallback(async () => {
+    if (!db || !mailbox) {
+      return;
+    }
+    const result = await invokePromise(
+      InboxOperation.GenerateReply,
+      { mailbox: Ref.make(mailbox), message },
+      { spaceId: db.spaceId },
+    );
+    void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply', message, mailbox, body: result?.data?.body });
+  }, [db, invokePromise, message, mailbox]);
+
   // Delete the message (draft locally; synced message is trashed on Gmail and removed from the feed).
   // NOTE: `spaceId` scopes the spawned operation process so its space-affinity services
   // (Database/Feed/Credentials) can materialize.
@@ -93,6 +107,7 @@ export const MessageArticle = ({
       onReply={handleReply}
       onReplyAll={handleReplyAll}
       onForward={handleForward}
+      onAiReply={mailbox ? handleAiReply : undefined}
       onDelete={mailbox ? handleDelete : undefined}
     >
       <ObjectArticle
