@@ -139,7 +139,8 @@ export class CallSwarmSynchronizer extends Resource {
 
   setActivity(key: string, payload: ActivityState['payload']): void {
     const lamportTimestamp = LamportTimestampCrdt.increment(
-      this._state.activities?.[key]?.lamportTimestamp ?? { id: this._deviceKey },
+      this._state.activities?.[key]?.lamportTimestamp,
+      this._deviceKey,
     );
     this._state.activities![key] = { lamportTimestamp, payload };
 
@@ -392,7 +393,7 @@ export class CallSwarmSynchronizer extends Resource {
       const lastActivity = LamportTimestampCrdt.getLastState(activities);
       if (
         lastActivity &&
-        lastActivity.lamportTimestamp!.version! > (this._state.activities![key]?.lamportTimestamp?.version ?? 0)
+        LamportTimestampCrdt.supersedes(lastActivity.lamportTimestamp, this._state.activities?.[key]?.lamportTimestamp)
       ) {
         this._state.activities![key] = lastActivity;
       }
@@ -431,9 +432,37 @@ class LamportTimestampCrdt {
     return sortedStates[0];
   }
 
-  static increment(timestamp: LamportTimestamp): LamportTimestamp {
+  /**
+   * Total order over activity writes: higher version wins; equal versions tie-break on the writer id
+   * (lexicographically smallest — the same order `getLastState` uses). Without the tie-break, two peers
+   * that wrote the same version concurrently (both writers start at 1) would each keep their own value
+   * forever and never converge — e.g. one peer's transcription toggle losing to the other's bare
+   * meeting selection on half the replicas.
+   */
+  static supersedes(candidate: LamportTimestamp | undefined, current: LamportTimestamp | undefined): boolean {
+    if (!candidate) {
+      return false;
+    }
+    if (!current) {
+      return true;
+    }
+    const candidateVersion = candidate.version ?? 0;
+    const currentVersion = current.version ?? 0;
+    if (candidateVersion !== currentVersion) {
+      return candidateVersion > currentVersion;
+    }
+    // Same writer at the same version is the same write echoed back, not a concurrent one.
+    if (!candidate.id || !current.id || candidate.id === current.id) {
+      return false;
+    }
+    return candidate.id.localeCompare(current.id) < 0;
+  }
+
+  static increment(timestamp: LamportTimestamp | undefined, writerId: string | undefined): LamportTimestamp {
     return {
-      ...(timestamp ?? {}),
+      // The incrementing peer is the author of the new write: keeping the previous writer's id would
+      // corrupt the equal-version tie-break (two distinct writers appearing as one).
+      id: writerId,
       version: (timestamp?.version ?? 0) + 1,
     };
   }

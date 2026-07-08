@@ -82,6 +82,56 @@ describe('CallSwarmSynchronizer', () => {
     await synchronizer.close();
   });
 
+  test('converges concurrent same-version writes via the writer-id tie-break', async ({ expect }) => {
+    // Losing side: our own v1 write yields to a concurrent v1 write from a smaller writer id.
+    {
+      const { network, synchronizer } = await setup();
+      synchronizer.setJoined(true);
+      await synchronizer.join();
+      synchronizer.advertiseMeetingId('M-local');
+      const reconciled = synchronizer.stateUpdated.waitForCount(1);
+      network.emitSwarmEvent({ swarmKey: ROOM_ID, peers: [peer('0'.repeat(64), 'M-tie-winner')] });
+      await reconciled;
+      expect(advertisedMeetingId(synchronizer)).toBe('M-tie-winner');
+      await synchronizer.close();
+    }
+    // Winning side: a concurrent v1 write from a larger writer id does not displace ours — both
+    // replicas settle on the same value.
+    {
+      const { network, synchronizer } = await setup();
+      synchronizer.setJoined(true);
+      await synchronizer.join();
+      synchronizer.advertiseMeetingId('M-local');
+      const reconciled = synchronizer.stateUpdated.waitForCount(1);
+      network.emitSwarmEvent({ swarmKey: ROOM_ID, peers: [peer('f'.repeat(64), 'M-tie-loser')] });
+      await reconciled;
+      expect(advertisedMeetingId(synchronizer)).toBe('M-local');
+      await synchronizer.close();
+    }
+  });
+
+  test('setActivity stamps the incrementing writer id', async ({ expect }) => {
+    const { network, synchronizer } = await setup();
+    synchronizer.setJoined(true);
+    await synchronizer.join();
+
+    // Adopt a remote v1 write, then overwrite it locally: the new write must carry OUR id at v2 —
+    // keeping the previous writer's id would corrupt the equal-version tie-break.
+    const reconciled = synchronizer.stateUpdated.waitForCount(1);
+    network.emitSwarmEvent({ swarmKey: ROOM_ID, peers: [peer('0'.repeat(64), 'M-remote')] });
+    await reconciled;
+    expect(advertisedMeetingId(synchronizer)).toBe('M-remote');
+
+    synchronizer.advertiseMeetingId('M-mine');
+    const timestamp = synchronizer._getState().activities?.[MEETING_ACTIVITY_KEY]?.lamportTimestamp;
+    expect(timestamp?.version).toBe(2);
+    expect(timestamp?.id).toBe(SELF_DEVICE.toHex());
+
+    synchronizer.setJoined(false);
+    await synchronizer.leave();
+    await synchronizer.close();
+  });
+
   test('resolveMeetingId ignores our own stale advertisement', async ({ expect }) => {
     const { network, synchronizer } = await setup();
 
@@ -141,21 +191,24 @@ const setup = async (): Promise<{ network: MockNetwork; synchronizer: CallSwarmS
 };
 
 /** Encodes a peer entry the way `_sendState` broadcasts it. */
-const peer = (deviceKey: PublicKey, meetingId?: string, version = 1) => ({
-  peerKey: deviceKey.toHex(),
-  connectionState: ConnectionState.CONNECTED,
-  state: codec.encode({
-    id: deviceKey.toHex(),
-    activities: meetingId
-      ? {
-          [MEETING_ACTIVITY_KEY]: buf.create(ActivitySchema, {
-            lamportTimestamp: { id: deviceKey.toHex(), version },
-            payload: { meetingId },
-          }),
-        }
-      : {},
-  }),
-});
+const peer = (key: PublicKey | string, meetingId?: string, version = 1) => {
+  const id = typeof key === 'string' ? key : key.toHex();
+  return {
+    peerKey: id,
+    connectionState: ConnectionState.CONNECTED,
+    state: codec.encode({
+      id,
+      activities: meetingId
+        ? {
+            [MEETING_ACTIVITY_KEY]: buf.create(ActivitySchema, {
+              lamportTimestamp: { id, version },
+              payload: { meetingId },
+            }),
+          }
+        : {},
+    }),
+  };
+};
 
 const advertisedMeetingId = (synchronizer: CallSwarmSynchronizer): unknown =>
   synchronizer._getState().activities?.[MEETING_ACTIVITY_KEY]?.payload?.meetingId;
