@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Runtime from 'effect/Runtime';
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
@@ -14,8 +15,9 @@ import {
   SpaceProperties,
   STATUS_TIMEOUT,
   clientServiceBundle,
+  runServiceCall,
+  subscribeStream,
 } from '@dxos/client-protocol';
-import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
@@ -32,7 +34,7 @@ import {
   RemoteServiceConnectionError,
   RemoteServiceConnectionTimeout,
 } from '@dxos/protocols';
-import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
@@ -54,6 +56,9 @@ export type ClientOptions = {
 
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
+
+  /** Effect runtime used by client components to run service-rpc effects. Defaults to the default runtime. */
+  runtime?: Runtime.Runtime<never>;
 
   /** ECHO schema. */
   types?: Type.AnyEntity[];
@@ -89,6 +94,9 @@ export class Client {
 
   private readonly _options: ClientOptions;
 
+  /** Effect runtime threaded to client components for running service-rpc effects. */
+  private readonly _effectRuntime: Runtime.Runtime<never>;
+
   /**
    * Unique id of the Client, local to the current peer.
    */
@@ -114,7 +122,7 @@ export class Client {
 
   private _ctx = new Context();
   private _config?: Config;
-  private _statusStream?: Stream<QueryStatusResponse>;
+  private _statusStreamCleanup?: () => void;
   private _statusTimeout?: NodeJS.Timeout;
   private _iframeManager?: IFrameManager;
   private _shellManager?: ShellManager;
@@ -139,6 +147,7 @@ export class Client {
     }
 
     this._options = options;
+    this._effectRuntime = options.runtime ?? Runtime.defaultRuntime;
 
     // TODO(wittjosiah): Reconcile this with @dxos/log loading config from localStorage.
     const filter = options.config?.get('runtime.client.log.filter');
@@ -342,7 +351,11 @@ export class Client {
     }
 
     {
-      await this._services?.services.QueryService?.reindex(undefined, { timeout: 30_000, ctx: this._ctx });
+      invariant(this._services, 'Client not initialized.');
+      await runServiceCall(this._effectRuntime, this._services.rpc.QueryService.reindex(undefined), {
+        timeout: 30_000,
+        label: 'QueryService.reindex',
+      });
     }
 
     log.info('Repair succeeded', { repairSummary });
@@ -484,9 +497,9 @@ export class Client {
     await this._echoClient.open(ctx);
     log('client._open: echo client opened');
 
-    const mesh = new MeshProxy(this._services);
-    const halo = new HaloProxy(this._services);
-    const spaces = new SpaceList(this._config, this._services, this._echoClient);
+    const mesh = new MeshProxy(this._services, this._effectRuntime);
+    const halo = new HaloProxy(this._services, this._effectRuntime);
+    const spaces = new SpaceList(this._config, this._services, this._echoClient, this._effectRuntime);
 
     const shell = this._shellManager
       ? new Shell({
@@ -533,26 +546,29 @@ export class Client {
       );
     }
 
-    invariant(this._services.services.SystemService, 'SystemService is not available.');
     log('client._open: subscribing to system status...');
-    this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 }, { ctx });
-    this._statusStream.subscribe(
-      async ({ status }) => {
-        log('client._open: status received', { status });
-        this._statusTimeout && clearTimeout(this._statusTimeout);
-        trigger.wake(undefined);
+    this._statusStreamCleanup = subscribeStream(
+      this._effectRuntime,
+      this._services.rpc.SystemService.queryStatus({ interval: 3_000 }),
+      {
+        onData: ({ status }) => {
+          log('client._open: status received', { status });
+          this._statusTimeout && clearTimeout(this._statusTimeout);
+          trigger.wake(undefined);
 
-        this._statusUpdate.emit(status);
-        this._statusTimeout = setTimeout(() => {
+          this._statusUpdate.emit(status);
+          this._statusTimeout = setTimeout(() => {
+            this._statusUpdate.emit(null);
+          }, STATUS_TIMEOUT);
+        },
+        onError: (err) => {
+          log('client._open: status error', { err });
+          trigger.wake(err);
           this._statusUpdate.emit(null);
-        }, STATUS_TIMEOUT);
-      },
-      (err) => {
-        log('client._open: status error', { err });
-        trigger.wake(err);
-        if (err) {
-          this._statusUpdate.emit(null);
-        }
+        },
+        onClose: () => {
+          trigger.wake(undefined);
+        },
       },
     );
 
@@ -631,7 +647,8 @@ export class Client {
   private async _close(): Promise<void> {
     log.verbose('client._close: closing...');
     this._statusTimeout && clearTimeout(this._statusTimeout);
-    await this._statusStream?.close();
+    this._statusStreamCleanup?.();
+    this._statusStreamCleanup = undefined;
     await this._runtime?.close(this._ctx);
     await this._echoClient.close(this._ctx);
     log.verbose('client._close: closing services...');
@@ -651,8 +668,13 @@ export class Client {
    * (e.g., HALO when SharedWorker is unavailable).
    */
   async resumeHostServices(): Promise<void> {
-    invariant(this.services.services.SystemService, 'SystemService is not available.');
-    await this.services.services.SystemService.updateStatus({ status: SystemStatus.ACTIVE }, { ctx: this._ctx });
+    await runServiceCall(
+      this._effectRuntime,
+      this.services.rpc.SystemService.updateStatus({ status: SystemStatus.ACTIVE }),
+      {
+        label: 'SystemService.updateStatus',
+      },
+    );
   }
 
   /**
@@ -668,8 +690,10 @@ export class Client {
 
     log('resetting...');
     this._resetting = true;
-    invariant(this._services?.services.SystemService, 'SystemService is not available.');
-    await this._services?.services.SystemService.reset(undefined, { ctx: this._ctx });
+    invariant(this._services, 'Client not initialized.');
+    await runServiceCall(this._effectRuntime, this._services.rpc.SystemService.reset(undefined), {
+      label: 'SystemService.reset',
+    });
     await this._close();
 
     // TODO(wittjosiah): Re-open after reset.
