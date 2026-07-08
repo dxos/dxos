@@ -13,7 +13,9 @@ import {
   type ClientServices,
   type ClientServicesProvider,
   ClientServicesProviderResource,
+  type ClientServicesRpc,
   clientServiceBundle,
+  makeRpcFromServices,
 } from '@dxos/client-protocol';
 import { type ClientServicesHost, type ClientServicesHostProps } from '@dxos/client-services';
 import { Config } from '@dxos/config';
@@ -135,6 +137,8 @@ const setupNetworking = async (
 @trace.resource({ annotation: ClientServicesProviderResource })
 export class LocalClientServices implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
+  // Derives the effect surface from the in-process host services (no wire hop).
+  private readonly _rpc: ClientServicesRpc = makeRpcFromServices(() => this.services);
   private readonly _ctx = new Context();
   private readonly _params: LocalClientServicesParams;
   private readonly _createOpfsWorker?: () => Worker;
@@ -174,6 +178,10 @@ export class LocalClientServices implements ClientServicesProvider {
 
   get descriptors(): ServiceBundle<ClientServices> {
     return clientServiceBundle;
+  }
+
+  get rpc() {
+    return this._rpc;
   }
 
   get services(): Partial<ClientServices> {

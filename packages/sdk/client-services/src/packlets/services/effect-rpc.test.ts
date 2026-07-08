@@ -4,11 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
+import * as Stream from 'effect/Stream';
 import { describe, onTestFinished, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
-import { ClientRpcServer, type ClientServices, makeClientServicesClient } from '@dxos/client-protocol';
+import {
+  ClientRpcServer,
+  type ClientServices,
+  type ClientServicesRpc,
+  makeClientServicesRpc,
+  makeServicesFromRpc,
+} from '@dxos/client-protocol';
 import { Stream as PbStream } from '@dxos/codec-protobuf/stream';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
@@ -130,12 +138,34 @@ describe('client services effect-rpc', () => {
 
     await expect(proxy.SystemService!.getConfig(undefined, { timeout: 100 })).rejects.toThrow(TimeoutError);
   });
+
+  test('effect-native rpc surface: unary and stream', async ({ expect }) => {
+    const rpc = await setupRpc(() => ({
+      SystemService: mockService<SystemService>({
+        getConfig: async () => ({ runtime: { client: { remoteSource: 'https://example.com' } } }),
+        queryStatus: () =>
+          new PbStream<QueryStatusResponse>(({ next, close }) => {
+            next({ status: SystemStatus.ACTIVE });
+            close();
+          }),
+      }),
+    }));
+
+    const config = await EffectEx.runPromise(rpc.SystemService.getConfig(undefined));
+    expect(config.runtime?.client?.remoteSource).toEqual('https://example.com');
+
+    const statuses = await EffectEx.runPromise(rpc.SystemService.queryStatus({}).pipe(Stream.runCollect));
+    expect([...statuses].map((update) => update.status)).toEqual([SystemStatus.ACTIVE]);
+  });
 });
 
 // Test mocks implement only the methods under test; the wire dispatches by method name.
 const mockService = <T>(partial: Partial<T>): T => partial as T;
 
-const setup = async (services: () => Partial<ClientServices>, options?: { onRequest?: () => Promise<void> }) => {
+const setupRpc = async (
+  services: () => Partial<ClientServices>,
+  options?: { onRequest?: () => Promise<void> },
+): Promise<ClientServicesRpc> => {
   const [proxyPort, serverPort] = createLinkedPorts();
 
   const server = new ClientRpcServer({ services, port: serverPort, onRequest: options?.onRequest });
@@ -144,7 +174,10 @@ const setup = async (services: () => Partial<ClientServices>, options?: { onRequ
 
   const scope = Effect.runSync(Scope.make());
   onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
-  const proxy = await EffectEx.runPromise(makeClientServicesClient(proxyPort).pipe(Scope.extend(scope)));
+  return EffectEx.runPromise(makeClientServicesRpc(proxyPort).pipe(Scope.extend(scope)));
+};
 
-  return proxy;
+const setup = async (services: () => Partial<ClientServices>, options?: { onRequest?: () => Promise<void> }) => {
+  const rpc = await setupRpc(services, options);
+  return makeServicesFromRpc(rpc, Runtime.defaultRuntime);
 };

@@ -42,6 +42,10 @@ export class WorkerClientServices implements ClientServicesProvider {
   @trace.info()
   private _isOpen = false;
 
+  get rpc() {
+    return this._services.rpc;
+  }
+
   private readonly _config: Config;
   private readonly _createWorker: () => SharedWorker;
   private readonly _logFilter: LogFilter[];

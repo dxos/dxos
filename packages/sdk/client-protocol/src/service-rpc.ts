@@ -60,7 +60,7 @@ export class ClientServicesRpcs extends RpcGroup.make().merge(
   DevtoolsHost.Rpcs,
 ) {}
 
-type ClientServicesRpc = RpcGroup.Rpcs<typeof ClientServicesRpcs>;
+type ClientServicesRpcUnion = RpcGroup.Rpcs<typeof ClientServicesRpcs>;
 
 const toError = (cause: unknown): Error => (cause instanceof Error ? cause : new Error(String(cause)));
 
@@ -128,7 +128,7 @@ export class ClientRpcServer {
 export const makeClientServicesHandlers = ({
   services,
   onRequest,
-}: Pick<ClientRpcServerParams, 'services' | 'onRequest'>): Layer.Layer<Rpc.ToHandler<ClientServicesRpc>> => {
+}: Pick<ClientRpcServerParams, 'services' | 'onRequest'>): Layer.Layer<Rpc.ToHandler<ClientServicesRpcUnion>> => {
   const gate = onRequest ? Effect.tryPromise({ try: onRequest, catch: toError }) : Effect.void;
 
   const handlers: Record<string, (payload: unknown) => unknown> = {};
@@ -175,64 +175,183 @@ export const makeClientServicesHandlers = ({
 //
 
 /**
- * Builds {@link ClientServices} proxies backed by an effect-rpc connection over an {@link RpcPort}.
+ * Effect-native client for all client services, inferred from the effect-rpc definitions.
+ * Nested by service key (e.g. `rpc.DataService.subscribe(req)` returns a `Stream`, unary methods
+ * return an `Effect`). Each service's `Client` type already nests its methods under the service key
+ * (the rpc tags are prefixed), so this is their intersection — cheaper for the type-checker than
+ * re-expanding the full merged {@link RpcClient.RpcClient} mapped type over all services.
+ */
+export interface ClientServicesRpc
+  extends
+    SystemService.Client,
+    NetworkService.Client,
+    LoggingService.Client,
+    IdentityService.Client,
+    InvitationsService.Client,
+    DevicesService.Client,
+    SpacesService.Client,
+    DataService.Client,
+    QueryService.Client,
+    FeedService.Client,
+    ContactsService.Client,
+    EdgeAgentService.Client,
+    DevtoolsHost.Client {}
+
+/**
+ * Builds the effect-native {@link ClientServicesRpc} over an {@link RpcPort}.
  * The returned scope owns the connection; closing it releases the transport.
  */
-export const makeClientServicesClient = (port: RpcPort): Effect.Effect<Partial<ClientServices>, never, Scope.Scope> =>
+export const makeClientServicesRpc = (port: RpcPort): Effect.Effect<ClientServicesRpc, never, Scope.Scope> =>
   Effect.gen(function* () {
     // Build the protocol in the ambient scope so the transport lives until the caller closes it.
     const protocol = yield* makeProtocolRpcPortClient(port);
-    const client = yield* RpcClient.make(ClientServicesRpcs, { disableTracing: true, flatten: true }).pipe(
+    const client = yield* RpcClient.make(ClientServicesRpcs, { disableTracing: true }).pipe(
       Effect.provideService(RpcClient.Protocol, protocol),
     );
-    const runtime = yield* Effect.runtime<never>();
-
-    // The flat client is invoked dynamically with tags from the protobuf-derived rpc groups,
-    // so the per-call types cannot be expressed statically.
-    const callRpc = client as unknown as (tag: string, payload: unknown) => unknown;
-
-    const services: Partial<Record<keyof ClientServices, Record<string, unknown>>> = {};
-    for (const [tag, rpc] of ClientServicesRpcs.requests) {
-      const [serviceKey, methodName] = parseTag(tag);
-      const service = (services[serviceKey] ??= {});
-      const hasPayload = !isVoidSchema(rpc.payloadSchema);
-
-      if (RpcSchema.isStreamSchema(rpc.successSchema)) {
-        service[methodName] = (request?: unknown) =>
-          streamToPbStream(
-            runtime,
-            callRpc(tag, hasPayload ? (request ?? {}) : undefined) as Stream.Stream<unknown, unknown>,
-          );
-      } else {
-        service[methodName] = (request?: unknown, options?: RequestOptions) => {
-          let call = callRpc(tag, hasPayload ? (request ?? {}) : undefined) as Effect.Effect<unknown, unknown>;
-          if (options?.timeout) {
-            call = call.pipe(
-              Effect.timeoutFail({
-                duration: options.timeout,
-                onTimeout: () =>
-                  new TimeoutError({ message: `RPC timeout: ${tag}`, context: { timeout: options.timeout } }),
-              }),
-            );
-          }
-          return Runtime.runPromiseExit(runtime)(call).then((exit) => {
-            if (Exit.isSuccess(exit)) {
-              return exit.value;
-            }
-            // Interruption means the connection closed underneath the call; surface the same
-            // RpcClosedError the protobuf rpc used so callers suppress shutdown races.
-            if (Cause.isInterruptedOnly(exit.cause)) {
-              throw new RpcClosedError();
-            }
-            // Rethrows the original failure so typed errors keep their identity across the RPC boundary.
-            throw EffectEx.causeToError(exit.cause);
-          });
-        };
-      }
-    }
-
-    return services as Partial<ClientServices>;
+    // The merged client is structurally the per-service intersection; the giant mapped type is
+    // narrowed to the cheaper {@link ClientServicesRpc} to keep the type-checker fast.
+    return client as unknown as ClientServicesRpc;
   });
+
+/**
+ * Runs a service-rpc call at a Promise boundary.
+ * Interruption (connection closed underneath the call) surfaces as {@link RpcClosedError} so
+ * callers can suppress shutdown races; other failures rethrow with their original identity.
+ */
+export const runServiceCall = <A>(
+  runtime: Runtime.Runtime<never>,
+  effect: Effect.Effect<A, any, never>,
+  options?: { timeout?: number; label?: string },
+): Promise<A> => {
+  const call = options?.timeout
+    ? effect.pipe(
+        Effect.timeoutFail({
+          duration: options.timeout,
+          onTimeout: () =>
+            new TimeoutError({
+              message: `RPC timeout: ${options.label ?? 'call'}`,
+              context: { timeout: options.timeout },
+            }),
+        }),
+      )
+    : effect;
+  return Runtime.runPromiseExit(runtime)(call).then((exit) => {
+    if (Exit.isSuccess(exit)) {
+      return exit.value;
+    }
+    if (Cause.isInterruptedOnly(exit.cause)) {
+      throw new RpcClosedError();
+    }
+    throw EffectEx.causeToError(exit.cause);
+  });
+};
+
+export type StreamSubscription<A> = {
+  onData: (value: A) => void;
+  onError?: (err: Error) => void;
+  onClose?: () => void;
+};
+
+/**
+ * Subscribes to a service-rpc stream with callback semantics matching the protobuf `Stream`.
+ * Returns a cleanup function that interrupts the underlying subscription; the fiber is a daemon
+ * so it survives being forked from a short-lived effect, and cleanup is the sole owner.
+ */
+export const subscribeStream = <A>(
+  runtime: Runtime.Runtime<never>,
+  stream: Stream.Stream<A, any, never>,
+  { onData, onError, onClose }: StreamSubscription<A>,
+): (() => void) => {
+  let done = false;
+  const finish = (err?: Error) => {
+    if (done) {
+      return;
+    }
+    done = true;
+    if (err) {
+      onError?.(err);
+    } else {
+      onClose?.();
+    }
+  };
+  const fiber = stream.pipe(
+    Stream.runForEach((value) => Effect.sync(() => onData(value))),
+    Effect.matchCause({
+      onFailure: (cause) => finish(Cause.isInterruptedOnly(cause) ? undefined : EffectEx.causeToError(cause)),
+      onSuccess: () => finish(),
+    }),
+    Runtime.runFork(runtime),
+  );
+  return () => {
+    done = true;
+    fiber.unsafeInterruptAsFork(fiber.id());
+  };
+};
+
+/**
+ * Derives the Promise/{@link PbStream} shaped {@link ClientServices} from an effect-native
+ * {@link ClientServicesRpc}. Retained for consumers not yet migrated to the effect surface.
+ */
+export const makeServicesFromRpc = (
+  rpc: ClientServicesRpc,
+  runtime: Runtime.Runtime<never>,
+): Partial<ClientServices> => {
+  // The rpc client is nested by service; methods are addressed dynamically from the rpc groups,
+  // so the per-method types cannot be expressed statically.
+  const rpcRecord = rpc as unknown as Record<string, Record<string, (...args: any[]) => unknown>>;
+  const services: Partial<Record<keyof ClientServices, Record<string, unknown>>> = {};
+  for (const [tag, rpcDef] of ClientServicesRpcs.requests) {
+    const [serviceKey, methodName] = parseTag(tag);
+    const service = (services[serviceKey] ??= {});
+    const hasPayload = !isVoidSchema(rpcDef.payloadSchema);
+    const invoke = (request?: unknown) => rpcRecord[serviceKey][methodName](hasPayload ? (request ?? {}) : undefined);
+
+    if (RpcSchema.isStreamSchema(rpcDef.successSchema)) {
+      service[methodName] = (request?: unknown) =>
+        streamToPbStream(runtime, invoke(request) as Stream.Stream<unknown, unknown>);
+    } else {
+      service[methodName] = (request?: unknown, options?: RequestOptions) =>
+        runServiceCall(runtime, invoke(request) as Effect.Effect<unknown, unknown, never>, {
+          timeout: options?.timeout,
+          label: tag,
+        });
+    }
+  }
+  return services as Partial<ClientServices>;
+};
+
+/**
+ * Builds an effect-native {@link ClientServicesRpc} from Promise/{@link PbStream} shaped
+ * {@link ClientServices} implementations, without a wire hop. Used by in-process providers
+ * (e.g. `LocalClientServices`) so their consumers use the same effect surface as remote proxies.
+ */
+export const makeRpcFromServices = (services: () => Partial<ClientServices>): ClientServicesRpc => {
+  const rpc: Record<string, Record<string, (...args: any[]) => unknown>> = {};
+  for (const [tag, rpcDef] of ClientServicesRpcs.requests) {
+    const [serviceKey, methodName] = parseTag(tag);
+    const service = (rpc[serviceKey] ??= {});
+    const resolveMethod = (): ((request: unknown) => unknown) => {
+      const impl = services()[serviceKey] as Record<string, unknown> | undefined;
+      if (!impl) {
+        throw new Error(`Service not available: ${serviceKey}`);
+      }
+      const method = impl[methodName];
+      if (typeof method !== 'function') {
+        throw new Error(`Method not available: ${tag}`);
+      }
+      return (method as (request: unknown) => unknown).bind(impl);
+    };
+
+    if (RpcSchema.isStreamSchema(rpcDef.successSchema)) {
+      service[methodName] = (request?: unknown) =>
+        pbStreamToStream(() => resolveMethod()(request) as PbStream<unknown>);
+    } else {
+      service[methodName] = (request?: unknown) =>
+        Effect.tryPromise({ try: async () => resolveMethod()(request), catch: toError });
+    }
+  }
+  return rpc as unknown as ClientServicesRpc;
+};
 
 //
 // Stream adapters.
