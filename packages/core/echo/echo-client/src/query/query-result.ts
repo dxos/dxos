@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { isNonNullable } from '@dxos/util';
 
-import { type QueryContext } from './query-context';
+import { type QueryContext, type SourceEntry } from './query-context';
 
 /**
  * Predicate based query.
@@ -201,11 +201,11 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
   }
 
   /**
-   * Turns flat, row-level entries into the query's public result shape. For a `groupBy` query
-   * (detected by the presence of `Entry.group`, which the query context sets uniformly across all
-   * entries or none), assembles `Group` values instead of deduped row objects.
+   * Turns flat, row-level source entries into the query's public result shape. For a `groupBy`
+   * query (detected by the internal `SourceEntry.group` annotation, which the query context sets
+   * uniformly across all entries or none), assembles `Group` values instead of deduped row objects.
    */
-  private _presentResults(entries: QueryResult.EntityEntry<T>[]): {
+  private _presentResults(entries: SourceEntry<T>[]): {
     objects: T[];
     entries: QueryResult.EntityEntry<T>[];
     grouped: boolean;
@@ -225,7 +225,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     return { objects: this._uniqueObjects(entries), entries, grouped: false };
   }
 
-  private _uniqueObjects(entries: QueryResult.EntityEntry<T>[]): T[] {
+  private _uniqueObjects(entries: SourceEntry<T>[]): T[] {
     const seen = new Set<unknown>();
     return entries
       .map(({ result }) => result)
@@ -286,7 +286,7 @@ type GroupResult = { key: Record<string, unknown>; count: number; values: unknow
  * grouping locally, after row objects have deduped/hydrated on the client.
  */
 const _assembleGroups = (
-  entries: QueryResult.EntityEntry<any>[],
+  entries: SourceEntry[],
 ): { groups: GroupResult[]; entries: QueryResult.Entry<GroupResult>[] } => {
   const seenIds = new Set<unknown>();
   const buckets = new Map<string, GroupResult>();

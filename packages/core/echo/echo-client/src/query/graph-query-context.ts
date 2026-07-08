@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
 import { type DatabaseImpl } from '../proxy-db';
-import { type QueryContext } from './query-context';
+import { type QueryContext, type SourceEntry } from './query-context';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
 import {
   type WorkingSetDataProvider,
@@ -48,12 +48,12 @@ export interface QuerySource {
   /**
    * Synchronous query.
    */
-  getResults(): QueryResult.EntityEntry[];
+  getResults(): SourceEntry[];
 
   /**
    * One-shot query.
    */
-  run(ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry[]>;
+  run(ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]>;
 
   /**
    * Set the filter and trigger continuous updates.
@@ -103,7 +103,7 @@ export class GraphQueryContext implements QueryContext {
     this._params.onStop();
   }
 
-  getResults(): QueryResult.EntityEntry[] {
+  getResults(): SourceEntry[] {
     // TODO: dedup by meta.key based on scope order (space results take precedence over registry).
     if (!this._query) {
       return [];
@@ -115,14 +115,14 @@ export class GraphQueryContext implements QueryContext {
     ctx: Context,
     query: QueryAST.Query,
     { timeout = 30_000 }: QueryResult.RunOptions = {},
-  ): Promise<QueryResult.EntityEntry[]> {
+  ): Promise<SourceEntry[]> {
     const runTasks = [...this._sources.values()].map(async (s) => {
       try {
         log('run query', {
           resolver: Object.getPrototypeOf(s).constructor.name,
           query: Query.pretty(Query.fromAst(query)),
         });
-        const results = await asyncTimeout<QueryResult.EntityEntry[]>(s.run(ctx, query), timeout);
+        const results = await asyncTimeout<SourceEntry[]>(s.run(ctx, query), timeout);
         log('run query results', {
           resolver: Object.getPrototypeOf(s).constructor.name,
           count: results.length,
@@ -173,7 +173,7 @@ export class SpaceQuerySource implements QuerySource {
 
   private _ctx: Context = new Context();
   private _query: QueryAST.Query | undefined = undefined;
-  private _results?: QueryResult.EntityEntry<Obj.Any>[] = undefined;
+  private _results?: SourceEntry<Obj.Any>[] = undefined;
   private readonly _executor: WorkingSetQueryExecutor;
   private readonly _planner: QueryPlanner;
 
@@ -266,7 +266,7 @@ export class SpaceQuerySource implements QuerySource {
     }
   };
 
-  async run(ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry<Obj.Unknown>[]> {
+  async run(ctx: Context, query: QueryAST.Query): Promise<SourceEntry<Obj.Unknown>[]> {
     if (!this._isValidSourceForQuery(query)) {
       return [];
     }
@@ -320,7 +320,7 @@ export class SpaceQuerySource implements QuerySource {
     results.push(...this._queryWorkingSet(filter, options));
 
     // Dedup
-    const map = new Map<string, QueryResult.EntityEntry<Obj.Unknown>>();
+    const map = new Map<string, SourceEntry<Obj.Unknown>>();
     for (const result of results) {
       map.set(result.id, result);
     }
@@ -328,7 +328,7 @@ export class SpaceQuerySource implements QuerySource {
     return [...map.values()];
   }
 
-  getResults(): QueryResult.EntityEntry<Obj.Unknown>[] {
+  getResults(): SourceEntry<Obj.Unknown>[] {
     if (!this._query) {
       return [];
     }
@@ -340,7 +340,7 @@ export class SpaceQuerySource implements QuerySource {
     return this._results!;
   }
 
-  private _computeResults(query: QueryAST.Query): QueryResult.EntityEntry<Obj.Unknown>[] {
+  private _computeResults(query: QueryAST.Query): SourceEntry<Obj.Unknown>[] {
     // For queries that contain traversals, unions, or set-difference nodes, the SQL-backed source
     // cannot handle them — use the working-set executor instead.
     if (requiresWorkingSetExecutor(query)) {
@@ -434,7 +434,7 @@ export class SpaceQuerySource implements QuerySource {
    * Maps working-set executor results, computing per-group counts once over the full set
    * (rather than per-item) so grouped queries report accurate counts.
    */
-  private _mapItemsToResults(items: WorkingSetItem[]): QueryResult.EntityEntry<Obj.Unknown>[] {
+  private _mapItemsToResults(items: WorkingSetItem[]): SourceEntry<Obj.Unknown>[] {
     const groupCounts = new Map<string, number>();
     for (const item of items) {
       if (item.groupKey === undefined) {
@@ -446,10 +446,7 @@ export class SpaceQuerySource implements QuerySource {
     return items.map((item) => this._mapItemToResult(item, groupCounts));
   }
 
-  private _mapItemToResult(
-    item: WorkingSetItem,
-    groupCounts?: Map<string, number>,
-  ): QueryResult.EntityEntry<Obj.Unknown> {
+  private _mapItemToResult(item: WorkingSetItem, groupCounts?: Map<string, number>): SourceEntry<Obj.Unknown> {
     // Feed items are not addressable via getObjectById (they live in the queue, not the space
     // document set), so fall back to the feed handle's fetched entities. Feeds hold both objects
     // and relations, so this must not filter to objects only.
