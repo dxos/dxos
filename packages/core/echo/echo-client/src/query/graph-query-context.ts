@@ -12,7 +12,6 @@ import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
-import { prohibitSignalActions } from '../guarded-scope';
 import { type DatabaseImpl } from '../proxy-db';
 import { type QueryContext } from './query-context';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
@@ -222,42 +221,40 @@ export class SpaceQuerySource implements QuerySource {
       return;
     }
 
-    prohibitSignalActions(() => {
-      // Results haven't been computed yet — no stale cache to invalidate.
-      if (!this._results) {
-        return;
-      }
+    // Results haven't been computed yet — no stale cache to invalidate.
+    if (!this._results) {
+      return;
+    }
 
-      if (!updateEvent) {
-        this._results = undefined;
-        this.changed.emit();
-        return;
-      }
+    if (!updateEvent) {
+      this._results = undefined;
+      this.changed.emit();
+      return;
+    }
 
-      // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
-      const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
-        // If any updated object was in previous results, invalidate.
-        if (this._results!.find((result) => result.id === objectId)) {
-          return true;
-        }
-
-        // For simple queries, use the lightweight filter check for the newly-updated object.
-        const trivial = isSimpleSelectionQuery(this._query!);
-        if (trivial && !trivial.hasQueues) {
-          const core = this._database._entityManager.getObjectCoreById(objectId, { load: false });
-          return core != null && this._filterCore(core, trivial.filter, trivial.options);
-        }
-
-        // For complex queries (handled by executor), conservatively invalidate on any update.
-        // The next getResults() call will recompute via the executor.
+    // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
+    const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
+      // If any updated object was in previous results, invalidate.
+      if (this._results!.find((result) => result.id === objectId)) {
         return true;
-      });
-
-      if (changed) {
-        this._results = undefined;
-        this.changed.emit();
       }
+
+      // For simple queries, use the lightweight filter check for the newly-updated object.
+      const trivial = isSimpleSelectionQuery(this._query!);
+      if (trivial && !trivial.hasQueues) {
+        const core = this._database._entityManager.getObjectCoreById(objectId, { load: false });
+        return core != null && this._filterCore(core, trivial.filter, trivial.options);
+      }
+
+      // For complex queries (handled by executor), conservatively invalidate on any update.
+      // The next getResults() call will recompute via the executor.
+      return true;
     });
+
+    if (changed) {
+      this._results = undefined;
+      this.changed.emit();
+    }
   };
 
   async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry<Obj.Unknown>[]> {
@@ -299,9 +296,7 @@ export class SpaceQuerySource implements QuerySource {
     }
 
     if (!this._results) {
-      prohibitSignalActions(() => {
-        this._results = this._computeResults(this._query!);
-      });
+      this._results = this._computeResults(this._query!);
     }
 
     return this._results!;
