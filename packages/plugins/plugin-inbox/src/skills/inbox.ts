@@ -17,7 +17,6 @@ const make = () =>
       operations: [
         InboxOperation.ClassifyEmail,
         InboxOperation.DraftEmail,
-        InboxOperation.GenerateReply,
         InboxOperation.ReadEmail,
         InboxOperation.GoogleMailSync,
         InboxOperation.ExtractMessage,

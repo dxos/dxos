@@ -41,4 +41,9 @@ export const extractFactsUnitStage = (extract: FactExtractor): Stage.Stage<Messa
 // NOTE(workaround): `message.created` is the incremental cursor key because ECHO's native feed
 // cursor is unimplemented (`Feed.cursor` is stubbed). Replace with the native queue sequence when
 // available.
-const keyOf = (message: Message.Message): number => Date.parse(message.created);
+const keyOf = (message: Message.Message): number => {
+  // Guard against an unparseable/missing `created`: NaN breaks monotonic comparisons (`NaN > key` is
+  // always false), which would silently skip or reprocess messages. Fall back to 0.
+  const key = Date.parse(message.created);
+  return Number.isNaN(key) ? 0 : key;
+};

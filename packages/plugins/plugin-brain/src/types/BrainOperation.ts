@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
 import { DXN } from '@dxos/echo';
-import { FactStore } from '@dxos/pipeline-rdf';
+import { FactStore, RDF } from '@dxos/pipeline-rdf';
 
 import { meta } from '../meta';
 
@@ -24,7 +24,7 @@ export const CompactFact = Schema.Struct({
   subject: Schema.String,
   predicate: Schema.String,
   object: Schema.String,
-  factuality: Schema.String,
+  factuality: RDF.FactualityValue,
   confidence: Schema.optional(Schema.Number),
   date: Schema.String,
   source: Schema.String,

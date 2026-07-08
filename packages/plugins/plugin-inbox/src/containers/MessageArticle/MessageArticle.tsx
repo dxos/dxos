@@ -8,6 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { type Message as MessageType } from '@dxos/types';
 
@@ -79,18 +80,25 @@ export const MessageArticle = ({
     if (!db || !mailbox) {
       return;
     }
-    const result = await invokePromise(
-      InboxOperation.GenerateReply,
-      { mailbox: Ref.make(mailbox), message },
-      { spaceId: db.spaceId },
-    );
-    void invokePromise(InboxOperation.DraftEmailAndOpen, {
-      db,
-      mode: 'reply',
-      message,
-      mailbox,
-      body: result?.data?.body,
-    });
+    try {
+      const result = await invokePromise(
+        InboxOperation.GenerateReply,
+        { mailbox: Ref.make(mailbox), message },
+        { spaceId: db.spaceId },
+      );
+      void invokePromise(InboxOperation.DraftEmailAndOpen, {
+        db,
+        mode: 'reply',
+        message,
+        mailbox,
+        body: result?.data?.body,
+      });
+    } catch (err) {
+      // Reply generation calls an LLM that can fail; fall back to opening an empty reply draft so the
+      // action never leaves the user without a draft (and never leaks an unhandled rejection).
+      log.catch(err);
+      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply', message, mailbox });
+    }
   }, [db, invokePromise, message, mailbox]);
 
   // Delete the message (draft locally; synced message is trashed on Gmail and removed from the feed).

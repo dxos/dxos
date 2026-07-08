@@ -104,7 +104,10 @@ export class FactStore extends Context.Tag('@dxos/pipeline-rdf/FactStore')<FactS
     const cursors = new Map<string, string>();
 
     const putFacts: FactStoreApi['putFacts'] = (facts) =>
-      Effect.sync(() => insertQuadsMemory(source, facts.flatMap(factToTriples)));
+      Effect.try({
+        try: () => insertQuadsMemory(source, facts.flatMap(factToTriples)),
+        catch: (cause) => new SemanticIndexError({ message: 'Failed to persist facts', cause }),
+      });
 
     const cursor: FactStoreApi['cursor'] = (src) => Effect.sync(() => cursors.get(src));
     const setCursor: FactStoreApi['setCursor'] = (src, hash) => Effect.sync(() => void cursors.set(src, hash));

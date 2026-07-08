@@ -23,6 +23,6 @@ describe('FactStoreRegistry', () => {
     const registry = makeFactStoreRegistry();
     const store = registry.forSpace('a');
     const facts = await EffectEx.runPromise(store.query({}));
-    expect(Array.isArray(facts)).toBe(true);
+    expect(facts).toHaveLength(0);
   });
 });
