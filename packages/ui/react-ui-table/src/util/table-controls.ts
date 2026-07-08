@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-// Core types.
 import { type DxGridPlane, accessoryHandlesPointerdownAttrs } from '@dxos/lit-grid';
 
 export type TableControl = 'checkbox' | 'switch';
@@ -25,8 +24,10 @@ export const CONTROL_IDENTIFIERS = {
 } as const;
 
 const BASE_CLASSES = {
-  checkbox: 'absolute inset-y-[.375rem] end-[.375rem] dx-checkbox',
-  switch: 'absolute inset-y-[.25rem] end-[.25rem] dx-checkbox--switch',
+  // TODO(burdon): Use block instead of absolute inset-0 bottom-px grid place-items-center.
+  block: 'absolute inset-0 bottom-px grid place-items-center',
+  checkbox: 'dx-checkbox',
+  switch: 'dx-checkbox--switch',
 } as const;
 
 const renderAttributes = (data: Record<string, string>) => {
@@ -43,10 +44,10 @@ const renderInput = (
   preventToggle = false,
   testId: string,
 ) => {
-  return `<input type="checkbox" class="${baseClass}" ${renderAttributes(attrs)} ${checked ? 'checked' : ''} ${preventToggle ? 'onclick="return false"' : ''} ${disabled ? 'disabled' : ''} data-testid="${testId}" data-dx-grid-action="accessory"/>`;
+  return `<div role="none" class="${BASE_CLASSES.block}"><input type="checkbox" class="${baseClass}" ${renderAttributes(attrs)} ${checked ? 'checked' : ''} ${preventToggle ? 'onclick="return false"' : ''} ${disabled ? 'disabled' : ''} data-testid="${testId}" data-dx-grid-action="accessory"/></div>`;
 };
 
-export const CheckboxStory = ({
+export const CheckboxComponent = ({
   rowIndex,
   header = false,
   checked = false,
@@ -61,7 +62,7 @@ export const CheckboxStory = ({
   return renderInput(BASE_CLASSES.checkbox, attrs, checked, disabled, true, 'table-selection');
 };
 
-export const SwitchStory = ({
+export const SwitchComponent = ({
   colIndex,
   rowIndex,
   plane,
@@ -82,7 +83,7 @@ export const SwitchStory = ({
 export const tableControls = {
   checkbox: {
     attr: CONTROL_IDENTIFIERS.checkbox,
-    render: CheckboxStory,
+    render: CheckboxComponent,
     getData: (el: HTMLElement): Extract<ControlData, { type: 'checkbox' }> => ({
       type: 'checkbox',
       rowIndex: Number(el.getAttribute('data-row-index')),
@@ -91,7 +92,7 @@ export const tableControls = {
   },
   switch: {
     attr: CONTROL_IDENTIFIERS.switch,
-    render: SwitchStory,
+    render: SwitchComponent,
     getData: (el: HTMLElement): Extract<ControlData, { type: 'switch' }> => ({
       type: 'switch',
       rowIndex: Number(el.getAttribute('data-row-index')),

@@ -20,6 +20,8 @@ type ButtonData =
   | { type: 'saveDraftRow'; rowIndex: number; disabled?: boolean }
   | { type: 'sort'; fieldId: string; direction?: 'asc' | 'desc' };
 
+const BLOCK = 'absolute top-0 bottom-px end-0 w-8 grid place-items-center';
+
 const createButton = ({
   attr,
   data,
@@ -39,7 +41,7 @@ const createButton = ({
     .map(([k, v]) => `${k}="${v}"`)
     .join(' ');
 
-  return `<button ${attr} data-testid="${testId}" class="dx-button w-6 aspect-square px-0.5 min-h-0" ${dataAttrs} ${disabled ? 'disabled' : ''} data-dx-grid-action="accessory"><svg data-size="4"><use href="/icons.svg#${icon}"/></svg></button>`;
+  return `<div role="none" class="${BLOCK}"><button ${attr} data-testid="${testId}" class="dx-button w-6 aspect-square px-0.5 min-h-0" ${dataAttrs} ${disabled ? 'disabled' : ''} data-dx-grid-action="accessory"><svg data-size="4"><use href="/icons.svg#${icon}"/></svg></button></div>`;
 };
 
 const addColumnButton = {
