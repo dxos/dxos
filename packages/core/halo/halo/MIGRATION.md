@@ -204,7 +204,7 @@ admitted as explicit `read`-level members, making that trust decision visible pe
 than ambient.
 
 **Capabilities at `pull` level.** EDGE may: store and forward ciphertext (the `CiphertextStore`
-role; sedimentree strata + commit-graph hashes, which stay outside the encryption envelope for
+role; Sedimentree strata + commit-graph hashes, which stay outside the encryption envelope for
 sync); relay membership ops (delegations/revocations/CGKA ops are signed, self-verifying
 events); serve set-reconciliation (RIBLT) exchanges. EDGE cannot: decrypt content, author or
 forge membership ops, or build plaintext indexes.

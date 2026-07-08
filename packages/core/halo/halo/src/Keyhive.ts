@@ -175,34 +175,52 @@ export class Service extends Context.Tag('@dxos/halo/Keyhive/Service')<
   }
 >() {}
 
+/**
+ * Issues a contact card for the local individual (requires {@link Service}).
+ */
 export const contactCard = Effect.gen(function* () {
   const service = yield* Service;
   return yield* service.contactCard();
 });
 
+/**
+ * Learns a remote principal from its contact card; returns its id (requires {@link Service}).
+ */
 export const receiveContactCard = (card: ContactCard) =>
   Effect.gen(function* () {
     const service = yield* Service;
     return yield* service.receiveContactCard(card);
   });
 
+/**
+ * Creates a group with the active individual as root admin (requires {@link Service}).
+ */
 export const createGroup = Effect.gen(function* () {
   const service = yield* Service;
   return yield* service.createGroup();
 });
 
+/**
+ * Delegates (attenuated) access to a known principal (requires {@link Service}).
+ */
 export const delegate = (opts: { group: PrincipalId; subject: PrincipalId; access: Access }) =>
   Effect.gen(function* () {
     const service = yield* Service;
     return yield* service.delegate(opts);
   });
 
+/**
+ * Revokes a member (requires {@link Service}).
+ */
 export const revoke = (opts: { group: PrincipalId; subject: PrincipalId }) =>
   Effect.gen(function* () {
     const service = yield* Service;
     return yield* service.revoke(opts);
   });
 
+/**
+ * Materializes current group membership from the DAG (requires {@link Service}).
+ */
 export const members = (group: PrincipalId) =>
   Effect.gen(function* () {
     const service = yield* Service;
