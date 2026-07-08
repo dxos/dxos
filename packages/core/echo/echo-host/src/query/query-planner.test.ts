@@ -1,8 +1,4 @@
 //
-// Copyright 2025 example.com
-//
-
-//
 // Copyright 2025 DXOS.org
 //
 
@@ -1300,6 +1296,20 @@ describe('QueryPlanner', () => {
         ],
       }
     `);
+  });
+
+  test('ordered, skipped, and limited results: skip is added to the propagated cap; the limit step is removed', () => {
+    const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'asc')).skip(5).limit(10);
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+
+    // The OrderStep caps to skip(5) + limit(10) = 15 so that 10 survive the skip (propagating a bare
+    // 10 would truncate before the skip and yield only 5). The SkipStep remains to trim the top-15
+    // back to the [5, 15) window; the LimitStep is redundant once the cap is propagated and is removed.
+    const orderStep = plan.steps.find((step) => step._tag === 'OrderStep');
+    expect(orderStep?._tag === 'OrderStep' && orderStep.limit).toBe(15);
+    expect(plan.steps.some((step) => step._tag === 'SkipStep' && step.skip === 5)).toBe(true);
+    expect(plan.steps.some((step) => step._tag === 'LimitStep')).toBe(false);
   });
 
   test('union of limited queries', () => {

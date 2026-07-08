@@ -6,8 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Obj, Ref } from '@dxos/echo';
 import { type Resolver, resolve } from '@dxos/extractor';
-import { normalizeText } from '@dxos/markdown';
-import { Message, Person } from '@dxos/types';
+import { ContentBlock, Message, Person } from '@dxos/types';
 
 import { type GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
@@ -45,35 +44,54 @@ const decodeHtmlEntities = (text: string | undefined): string | undefined => {
  */
 export type MappedMessage = { message: Message.Message; labelIds: readonly string[] };
 
-/** A Gmail message with its body decoded to a UTF-8 string (HTML or plaintext, not yet normalized). */
-export type DecodedMessage = { raw: GoogleMail.Message; body: string };
+/** A Gmail message with its raw HTML and/or plaintext body decoded to UTF-8 (no markdown processing). */
+export type DecodedMessage = { raw: GoogleMail.Message; html?: string; plain?: string };
 
 /**
- * Selects and base64-decodes the message body (HTML preferred, then plaintext) to a UTF-8 string.
- * Returns `null` when the message carries no body. Pure and Gmail-specific; the HTML→markdown
- * normalization is a separate step so it can be shared across providers.
+ * Base64-decodes the message's HTML and plaintext bodies (whichever the email carries) to UTF-8.
+ * Returns `null` when the message has neither. Pure and Gmail-specific; no HTML→markdown conversion —
+ * the markdown/plain views derive from these raw blocks in the component.
  */
 export const decodeBody = (message: GoogleMail.Message): DecodedMessage | null => {
-  const data = message.payload.body?.data ?? getPart(message, 'text/html') ?? getPart(message, 'text/plain');
-  if (!data) {
+  const decode = (data: string) => Buffer.from(data, 'base64').toString('utf-8');
+  const htmlData = getPart(message, 'text/html');
+  const plainData = getPart(message, 'text/plain');
+  // Single-part messages carry the body directly on `payload.body`; the Content-Type header says which.
+  const singleData = message.payload.parts?.length ? undefined : message.payload.body?.data;
+  const isPlain = /text\/plain/i.test(
+    message.payload.headers.find((header) => header.name.toLowerCase() === 'content-type')?.value ?? '',
+  );
+  const html = htmlData ? decode(htmlData) : singleData && !isPlain ? decode(singleData) : undefined;
+  const plain = plainData ? decode(plainData) : singleData && isPlain ? decode(singleData) : undefined;
+  if (html === undefined && plain === undefined) {
     return null;
   }
-  return { raw: message, body: Buffer.from(data, 'base64').toString('utf-8') };
+  return { raw: message, html, plain };
 };
 
 /**
- * Builds an ECHO message from a decoded (already body-normalized) Gmail message and an optional
- * resolved sender contact. Pure — contact resolution is done by the caller so this composes into a
- * pipeline stage without a `Resolver` requirement.
+ * Builds an ECHO message from a decoded Gmail message and an optional resolved sender contact. Pure —
+ * contact resolution is done by the caller so this composes into a pipeline stage without a `Resolver`
+ * requirement.
  */
 export const mapToMessage = (decoded: DecodedMessage, contact: Person.Person | undefined): MappedMessage => {
-  const { raw, body } = decoded;
+  const { raw, html, plain } = decoded;
   const created = new Date(parseInt(raw.internalDate)).toISOString();
 
   const fromHeader = raw.payload.headers.find(({ name }) => name === 'From');
   const from = fromHeader && parseFromHeader(fromHeader.value);
   // TODO(wittjosiah): This comparison should be done via foreignId probably.
   const sender = { ...from, ...(contact ? { contact: Ref.make(contact) } : {}) };
+
+  // Store the raw HTML and plaintext bodies as separately-typed blocks; the markdown view derives
+  // from the HTML in-component.
+  const blocks: ContentBlock.Text[] = [];
+  if (html !== undefined) {
+    blocks.push({ _tag: 'text', text: html, mimeType: 'text/html' });
+  }
+  if (plain !== undefined) {
+    blocks.push({ _tag: 'text', text: plain, mimeType: 'text/plain' });
+  }
 
   const echoMessage = Obj.make(Message.Message, {
     [Obj.Meta]: {
@@ -94,12 +112,7 @@ export const mapToMessage = (decoded: DecodedMessage, contact: Person.Person | u
       cc: raw.payload.headers.find(({ name }) => name === 'Cc')?.value,
     },
 
-    blocks: [
-      {
-        _tag: 'text',
-        text: body,
-      },
-    ],
+    blocks,
   });
 
   return { message: echoMessage, labelIds: raw.labelIds ?? [] };
@@ -107,8 +120,7 @@ export const mapToMessage = (decoded: DecodedMessage, contact: Person.Person | u
 
 /**
  * Maps a Gmail message to an ECHO message object, resolving the sender against existing contacts.
- * Composes {@link decodeBody} → `normalizeText` → {@link mapToMessage}. Returns `null` when the
- * message has no body.
+ * Composes {@link decodeBody} → {@link mapToMessage}. Returns `null` when the message has no body.
  */
 export const mapMessage: (message: GoogleMail.Message) => Effect.Effect<MappedMessage | null, never, Resolver> =
   Effect.fnUntraced(function* (message) {
@@ -121,5 +133,5 @@ export const mapMessage: (message: GoogleMail.Message) => Effect.Effect<MappedMe
     const from = fromHeader && parseFromHeader(fromHeader.value);
     const contact = from ? yield* resolve(Person.Person, { email: from.email }) : undefined;
 
-    return mapToMessage({ ...decoded, body: normalizeText(decoded.body) }, contact ?? undefined);
+    return mapToMessage(decoded, contact ?? undefined);
   });
