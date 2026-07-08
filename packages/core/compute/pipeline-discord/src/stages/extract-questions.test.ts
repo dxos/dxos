@@ -43,34 +43,28 @@ describe('detectQuestions', () => {
 describe('extractQuestionsStage', () => {
   it.effect(
     'replay over a crawled store extracts user questions idempotently',
-    Effect.fnUntraced(
-      function* () {
-        // First: the live crawl fills the message store (fixture channel + thread).
-        yield* DiscordPipeline.run(CONFIG);
+    Effect.fnUntraced(function* () {
+      // First: the live crawl fills the message store (fixture channel + thread).
+      yield* DiscordPipeline.run(CONFIG);
 
-        // Then: replay the stored messages through the question-extraction assembly.
-        const replay = replayStream().pipe(
-          extractQuestionsStage(),
-          Pipeline.run({ sink: () => Effect.void }),
-        );
-        yield* replay;
+      // Then: replay the stored messages through the question-extraction assembly.
+      const replay = replayStream().pipe(extractQuestionsStage(), Pipeline.run({ sink: () => Effect.void }));
+      yield* replay;
 
-        const store = yield* ExtractedQuestionStore;
-        const extracted = yield* store.list();
-        // The fixture has exactly one interrogative message (Alice's OPFS question, id 1000).
-        expect(extracted.length).toBe(1);
-        expect(extracted[0]).toMatchObject({
-          authorId: 'Alice',
-          targetId: 'chan-1',
-          messageId: '1000',
-          question: 'Should Composer use OPFS for local storage?',
-        });
+      const store = yield* ExtractedQuestionStore;
+      const extracted = yield* store.list();
+      // The fixture has exactly one interrogative message (Alice's OPFS question, id 1000).
+      expect(extracted.length).toBe(1);
+      expect(extracted[0]).toMatchObject({
+        authorId: 'Alice',
+        targetId: 'chan-1',
+        messageId: '1000',
+        question: 'Should Composer use OPFS for local storage?',
+      });
 
-        // Replaying again changes nothing (idempotent upsert).
-        yield* replay;
-        expect((yield* store.list()).length).toBe(1);
-      },
-      Effect.provide(TestLayer),
-    ),
+      // Replaying again changes nothing (idempotent upsert).
+      yield* replay;
+      expect((yield* store.list()).length).toBe(1);
+    }, Effect.provide(TestLayer)),
   );
 });

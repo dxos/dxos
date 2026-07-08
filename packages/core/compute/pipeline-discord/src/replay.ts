@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import { StateStore, type StateError, type Type } from '@dxos/crawler';
+import { type StateError, StateStore, type Type } from '@dxos/crawler';
 
 import { type StoreError } from './errors';
 import { MessageStore, type StoredMessage } from './stores';

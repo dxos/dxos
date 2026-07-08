@@ -91,7 +91,10 @@ const suite = (name: string, layer: Layer.Layer<StateStore>) =>
 
 describe('StateStore', () => {
   suite('memory', StateStore.layerMemory);
-  suite('sql', StateStore.layerSql.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie))));
+  suite(
+    'sql',
+    StateStore.layerSql.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie))),
+  );
 
   it.effect(
     'sql state survives a fresh layer over the same database',

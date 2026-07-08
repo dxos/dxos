@@ -10,7 +10,7 @@ import { FactStore } from '@dxos/pipeline-rdf';
 
 import { ExtractedQuestionStore, MessageStore, QuestionStore } from '../stores';
 
-export { THREADED_FIXTURE, deterministicAiService, fixtureSourceLayer, type Fixture } from '@dxos/crawler/testing';
+export { type Fixture, THREADED_FIXTURE, deterministicAiService, fixtureSourceLayer } from '@dxos/crawler/testing';
 
 /** Every pipeline store over ONE shared SqlClient (bind the client per environment). */
 export const storesLayer = <E>(

@@ -20,9 +20,9 @@ import {
   extractTopics,
   listFacts,
 } from '@dxos/crawler';
-import { Pipeline } from '@dxos/pipeline';
 import { coreLayer, deterministicAiService } from '@dxos/crawler/testing';
 import { EffectEx } from '@dxos/effect';
+import { Pipeline } from '@dxos/pipeline';
 
 import { discordSourceLayer, mapDiscordMessage, threadRefsOf } from './discord-source';
 

@@ -69,14 +69,14 @@ A single database with namespaced tables; one `SqlClient.SqlClient` layer bound 
 - Node/tests: `@effect/sql-sqlite-node` (already a `pipeline-rdf` devDep).
 - EDGE (deferred): Durable Object SQLite.
 
-| Table | Owner | Contents |
-|---|---|---|
-| `crawl_target` | `@dxos/crawler` `StateStore.layerSql` (new) | frontier: `id`, `channel_id`, `thread_id`, `parent_message_id`, `depth`, `position` (stack order), `status`, `cursor`, `last_run_at`, `last_error` |
-| `crawl_run` | `StateStore.layerSql` | single-row run status (`idle/running/paused/done/error`) |
-| `message` | `@dxos/pipeline-discord` `MessageStore` (new) | `id` (snowflake PK, upsert), `target_id`, `author_id`, `text`, `created_at`, `raw` (JSON) |
-| `agent`, `agent_identifier` | `@dxos/crawler` `AgentRegistry.layerSql` (new) | stable agent ids, multi-identifier, `sameAs` merges, message stats |
-| fact tables | `@dxos/pipeline-rdf` `FactStore.layer` | existing schema, unchanged |
-| `question` | `@dxos/pipeline-discord` `QuestionStore` (new) | `id`, `text`, `status` (`open/answered`), `answer`, `supporting_ids` (JSON: fact/message ids), `created_at`, `updated_at` |
+| Table                       | Owner                                          | Contents                                                                                                                                           |
+| --------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `crawl_target`              | `@dxos/crawler` `StateStore.layerSql` (new)    | frontier: `id`, `channel_id`, `thread_id`, `parent_message_id`, `depth`, `position` (stack order), `status`, `cursor`, `last_run_at`, `last_error` |
+| `crawl_run`                 | `StateStore.layerSql`                          | single-row run status (`idle/running/paused/done/error`)                                                                                           |
+| `message`                   | `@dxos/pipeline-discord` `MessageStore` (new)  | `id` (snowflake PK, upsert), `target_id`, `author_id`, `text`, `created_at`, `raw` (JSON)                                                          |
+| `agent`, `agent_identifier` | `@dxos/crawler` `AgentRegistry.layerSql` (new) | stable agent ids, multi-identifier, `sameAs` merges, message stats                                                                                 |
+| fact tables                 | `@dxos/pipeline-rdf` `FactStore.layer`         | existing schema, unchanged                                                                                                                         |
+| `question`                  | `@dxos/pipeline-discord` `QuestionStore` (new) | `id`, `text`, `status` (`open/answered`), `answer`, `supporting_ids` (JSON: fact/message ids), `created_at`, `updated_at`                          |
 
 Schema creation/migration follows `pipeline-rdf`'s existing pattern (idempotent `CREATE TABLE IF NOT EXISTS` at layer construction). Memory layers (`layerMemory`) remain for unit tests and demos.
 

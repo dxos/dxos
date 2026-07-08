@@ -70,5 +70,8 @@ const suite = (name: string, layer: Layer.Layer<AgentRegistry>) =>
 
 describe('AgentRegistry', () => {
   suite('memory', AgentRegistry.layerMemory);
-  suite('sql', AgentRegistry.layerSql.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie))));
+  suite(
+    'sql',
+    AgentRegistry.layerSql.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie))),
+  );
 });

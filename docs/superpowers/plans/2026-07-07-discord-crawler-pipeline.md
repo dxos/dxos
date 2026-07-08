@@ -11,6 +11,7 @@
 **Spec:** `docs/superpowers/specs/2026-07-07-discord-crawler-pipeline-design.md`
 
 **Conventions that apply to every task:**
+
 - Run all commands from the worktree root (`pwd` must be the worktree, not the main checkout).
 - Test files use `@effect/vitest` `describe`/`it.effect` with `Effect.fnUntraced` (match `Crawler.test.ts`).
 - The `DEPOT_TOKEN` moon warning is expected noise — ignore it.
@@ -73,6 +74,7 @@ packages/stories/stories-brain/src/
 The non-ECHO Cursor variant needs `value` (existing `cursor`), `lastRunAt`, `lastError` per target. `setCursor` becomes the success write seam (stamps `lastRunAt`, clears `lastError`) mirroring `Cursor.advance`.
 
 **Files:**
+
 - Modify: `packages/core/compute/crawler/src/types.ts`
 - Modify: `packages/core/compute/crawler/src/StateStore.ts`
 - Create: `packages/core/compute/crawler/src/StateStore.test.ts`
@@ -228,6 +230,7 @@ git commit -m "feat(crawler): per-target lastRunAt; setCursor becomes the Cursor
 SQLite-backed frontier: same behavior as memory, persisted via a shared `SqlClient`.
 
 **Files:**
+
 - Create: `packages/core/compute/crawler/src/internal/state-store-sql.ts`
 - Modify: `packages/core/compute/crawler/src/StateStore.ts` (add static layer)
 - Modify: `packages/core/compute/crawler/package.json`, `packages/core/compute/crawler/tsconfig.json`
@@ -263,30 +266,30 @@ describe('StateStore', () => {
 Also add one SQL-only persistence test inside the bottom `describe` (after the `suite` calls) — resume across a fresh layer over the same database file:
 
 ```ts
-  it.effect(
-    'sql state survives a fresh layer over the same database file',
-    Effect.fnUntraced(function* () {
-      const client = SqliteClient.layer({ filename: ':memory:' });
-      // Two StateStore layers over ONE client layer: the second sees the first's writes.
-      const shared = Layer.memoize(client);
-      yield* Effect.scoped(
-        Effect.gen(function* () {
-          const memoized = yield* shared;
-          yield* Effect.gen(function* () {
-            const store = yield* StateStore;
-            yield* store.pushTargets([{ id: 'chan-1', channelId: 'chan-1', depth: 0, status: 'pending' }]);
-            yield* store.setCursor('chan-1', '42');
-          }).pipe(Effect.provide(StateStore.layerSql.pipe(Layer.provide(memoized))));
+it.effect(
+  'sql state survives a fresh layer over the same database file',
+  Effect.fnUntraced(function* () {
+    const client = SqliteClient.layer({ filename: ':memory:' });
+    // Two StateStore layers over ONE client layer: the second sees the first's writes.
+    const shared = Layer.memoize(client);
+    yield* Effect.scoped(
+      Effect.gen(function* () {
+        const memoized = yield* shared;
+        yield* Effect.gen(function* () {
+          const store = yield* StateStore;
+          yield* store.pushTargets([{ id: 'chan-1', channelId: 'chan-1', depth: 0, status: 'pending' }]);
+          yield* store.setCursor('chan-1', '42');
+        }).pipe(Effect.provide(StateStore.layerSql.pipe(Layer.provide(memoized))));
 
-          yield* Effect.gen(function* () {
-            const store = yield* StateStore;
-            const [entry] = yield* store.listTargets();
-            expect(entry.cursor).toBe('42');
-          }).pipe(Effect.provide(StateStore.layerSql.pipe(Layer.provide(memoized))));
-        }),
-      );
-    }),
-  );
+        yield* Effect.gen(function* () {
+          const store = yield* StateStore;
+          const [entry] = yield* store.listTargets();
+          expect(entry.cursor).toBe('42');
+        }).pipe(Effect.provide(StateStore.layerSql.pipe(Layer.provide(memoized))));
+      }),
+    );
+  }),
+);
 ```
 
 - [ ] **Step 2.3: Run to verify failure**
@@ -466,6 +469,7 @@ git commit -m "feat(crawler): SQLite-backed StateStore layer over shared SqlClie
 ### Task 3: `AgentRegistry.layerSql`
 
 **Files:**
+
 - Create: `packages/core/compute/crawler/src/internal/agent-registry-sql.ts`
 - Modify: `packages/core/compute/crawler/src/AgentRegistry.ts`
 - Modify: `packages/core/compute/crawler/src/AgentRegistry.test.ts`
@@ -583,7 +587,9 @@ export const makeSql = (sql: SqlClient.SqlClient): AgentRegistryApi => {
   const identifiersOf = (agentId: string) =>
     sql<IdentifierRow>`SELECT * FROM agent_identifier WHERE agent_id = ${agentId} AND kind = 'identifier' ORDER BY rowid ASC`.pipe(
       Effect.map((rows) =>
-        rows.flatMap((row) => (row.namespace !== null && row.value !== null ? [{ namespace: row.namespace, value: row.value }] : [])),
+        rows.flatMap((row) =>
+          row.namespace !== null && row.value !== null ? [{ namespace: row.namespace, value: row.value }] : [],
+        ),
       ),
     );
 
@@ -696,7 +702,9 @@ export const makeSql = (sql: SqlClient.SqlClient): AgentRegistryApi => {
             }
             const drop = yield* agentRow(mergeId);
             if (!keep || !drop) {
-              return yield* Effect.fail(new StateError({ message: `merge: unknown agent ${!keep ? keepId : mergeId}` }));
+              return yield* Effect.fail(
+                new StateError({ message: `merge: unknown agent ${!keep ? keepId : mergeId}` }),
+              );
             }
             yield* sql`UPDATE agent SET
               label = COALESCE(label, ${drop.label}),
@@ -715,7 +723,9 @@ export const makeSql = (sql: SqlClient.SqlClient): AgentRegistryApi => {
         )
         .pipe(
           Effect.catchAll((error) =>
-            error instanceof StateError ? Effect.fail(error) : Effect.fail(new StateError({ message: 'Failed to merge agents', cause: error })),
+            error instanceof StateError
+              ? Effect.fail(error)
+              : Effect.fail(new StateError({ message: 'Failed to merge agents', cause: error })),
           ),
         ),
   };
@@ -754,6 +764,7 @@ git commit -m "feat(crawler): SQLite-backed AgentRegistry layer"
 The core refactor: `Crawler.stream` + `Crawler.commit` + `Crawler.summarize` replace `run`/`advance`; the bespoke `Stage` interface becomes `tapStage` over `@dxos/pipeline`; the two stages are rewritten; all call sites (tests, demo, stories-brain) update in this task — no shims.
 
 **Files:**
+
 - Modify: `packages/core/compute/crawler/package.json`, `tsconfig.json` (add `@dxos/pipeline`)
 - Rewrite: `packages/core/compute/crawler/src/Crawler.ts`
 - Rewrite: `packages/core/compute/crawler/src/Stage.ts`
@@ -1425,14 +1436,15 @@ import { extractFactsStage } from './stages/extract-facts';
 New crawl section inside the test body:
 
 ```ts
-        const config: Type.Config = { channels: [fixture.state.channelId], descendThreads: true };
-        const steps = yield* Ref.make(0);
-        yield* Crawler.stream(config, { steps }).pipe(
-          agentProfileStage(),
-          extractFactsStage(),
-          Pipeline.run({ sink: Crawler.commit }),
-        );
-        const summary = { ...(yield* Crawler.summarize()), steps: yield* Ref.get(steps) };
+const config: Type.Config = { channels: [fixture.state.channelId], descendThreads: true };
+const steps = yield * Ref.make(0);
+yield *
+  Crawler.stream(config, { steps }).pipe(
+    agentProfileStage(),
+    extractFactsStage(),
+    Pipeline.run({ sink: Crawler.commit }),
+  );
+const summary = { ...(yield * Crawler.summarize()), steps: yield * Ref.get(steps) };
 ```
 
 The `console.log` lines keep working (`summary.steps`, and replace the `status` interpolation with `summary.done ? 'done' : 'paused'` — `getRunStatus` is no longer set by the crawler; run-status management moves to `DiscordPipeline.run`). Remove the now-unused `StateStore` import if nothing else uses it.
@@ -1463,22 +1475,22 @@ import { Pipeline } from '@dxos/pipeline';
 3. In `handleCrawl`, replace the `run(...)` call inside `Effect.gen`:
 
 ```ts
-      const result = await getStore().runPromise(
-        Effect.gen(function* () {
-          yield* Crawler.stream({
-            channels: [options.channel],
-            descendThreads: options.descendThreads,
-            seed: { maxDays: options.maxDays },
-          }).pipe(agentProfileStage(), extractFactsStage(), Pipeline.run({ sink: Crawler.commit }));
-          const summary = yield* Crawler.summarize();
-          const registry = yield* AgentRegistry;
-          const crawled = yield* registry.list();
-          const store = yield* FactStore;
-          const extracted = yield* store.query({});
-          const messages = crawled.reduce((total, agent) => total + agent.messageCount, 0);
-          return { summary, messages, facts: extracted };
-        }).pipe(Effect.provide(perCrawl)),
-      );
+const result = await getStore().runPromise(
+  Effect.gen(function* () {
+    yield* Crawler.stream({
+      channels: [options.channel],
+      descendThreads: options.descendThreads,
+      seed: { maxDays: options.maxDays },
+    }).pipe(agentProfileStage(), extractFactsStage(), Pipeline.run({ sink: Crawler.commit }));
+    const summary = yield* Crawler.summarize();
+    const registry = yield* AgentRegistry;
+    const crawled = yield* registry.list();
+    const store = yield* FactStore;
+    const extracted = yield* store.query({});
+    const messages = crawled.reduce((total, agent) => total + agent.messageCount, 0);
+    return { summary, messages, facts: extracted };
+  }).pipe(Effect.provide(perCrawl)),
+);
 ```
 
 (The `perCrawl` layer and everything else stays as-is; `summary.errored` is still read by the status line below.)
@@ -1502,6 +1514,7 @@ git commit -m "refactor(crawler): stream-based crawl over @dxos/pipeline stages 
 ### Task 5: `@dxos/pipeline-discord` scaffold + `MessageStore`
 
 **Files:**
+
 - Create: `packages/core/compute/pipeline-discord/package.json`, `moon.yml`, `tsconfig.json`, `vitest.config.ts`
 - Create: `src/errors.ts`, `src/stores/message-store.ts`, `src/stores/index.ts`, `src/index.ts`, `src/testing/index.ts` (stub)
 - Test: `src/stores/message-store.test.ts`
@@ -1539,10 +1552,7 @@ git commit -m "refactor(crawler): stream-based crawl over @dxos/pipeline stages 
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
+  "files": ["dist", "src"],
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/crawler": "workspace:*",
@@ -1907,6 +1917,7 @@ git commit -m "feat(pipeline-discord): package scaffold + SQLite message store"
 ### Task 6: `QuestionStore`
 
 **Files:**
+
 - Create: `src/stores/question-store.ts`
 - Modify: `src/stores/index.ts` (add export)
 - Test: `src/stores/question-store.test.ts`
@@ -2129,7 +2140,13 @@ export class QuestionStore extends Context.Tag('@dxos/pipeline-discord/QuestionS
           const timestamp = yield* now;
           const question = byId.get(id);
           if (question) {
-            byId.set(id, { ...question, status: 'answered', answer, supportingIds: [...supportingIds], updatedAt: timestamp });
+            byId.set(id, {
+              ...question,
+              status: 'answered',
+              answer,
+              supportingIds: [...supportingIds],
+              updatedAt: timestamp,
+            });
           }
         }),
     };
@@ -2153,6 +2170,7 @@ git commit -m "feat(pipeline-discord): standing-question store"
 ### Task 7: `answerOpenQuestions` + `answerQuestionsStage`
 
 **Files:**
+
 - Create: `src/stages/answer-questions.ts`, `src/stages/index.ts`
 - Modify: `src/index.ts` (export stages)
 - Test: `src/stages/answer-questions.test.ts`
@@ -2209,8 +2227,7 @@ const fakeAi = (answer?: string): Layer.Layer<AiService.AiService> =>
       } as any),
   });
 
-const TestLayer = (answer?: string) =>
-  Layer.mergeAll(QuestionStore.layerMemory, FactStore.layerMemory, fakeAi(answer));
+const TestLayer = (answer?: string) => Layer.mergeAll(QuestionStore.layerMemory, FactStore.layerMemory, fakeAi(answer));
 
 describe('answerOpenQuestions', () => {
   it.effect(
@@ -2350,7 +2367,11 @@ export const answerOpenQuestions = (): Effect.Effect<
         if (!text) {
           return false;
         }
-        yield* questions.answer(question.id, text, facts.map((fact) => fact.id));
+        yield* questions.answer(
+          question.id,
+          text,
+          facts.map((fact) => fact.id),
+        );
         return true;
       });
       const ok = yield* attempt.pipe(
@@ -2405,6 +2426,7 @@ git commit -m "feat(pipeline-discord): question answering over the fact graph"
 ### Task 8: `persistMessageStage` + `DiscordPipeline.run` + end-to-end tests
 
 **Files:**
+
 - Create: `src/stages/persist-message.ts`
 - Create: `src/pipeline.ts`
 - Modify: `src/stages/index.ts`, `src/index.ts`, `src/testing/index.ts`
@@ -2430,7 +2452,7 @@ const toStored = (target: Type.Target, message: Type.Message): StoredMessage => 
   id: message.id,
   targetId: target.id,
   authorId: message.author.id,
-  ...(message.author.displayName ?? message.author.username
+  ...((message.author.displayName ?? message.author.username)
     ? { authorLabel: message.author.displayName ?? message.author.username }
     : {}),
   text: message.text,
@@ -2446,12 +2468,7 @@ const toStored = (target: Type.Target, message: Type.Message): StoredMessage => 
  * effect (agent stats, extraction, question answering) exactly-once. Non-message events pass
  * through untouched; a store failure is recorded on the target and the event continues.
  */
-export const persistMessageStage = (): Stage.Stage<
-  Type.Event,
-  Type.Event,
-  StateError,
-  MessageStore | StateStore
-> =>
+export const persistMessageStage = (): Stage.Stage<Type.Event, Type.Event, StateError, MessageStore | StateStore> =>
   Stage.map('persist-message', (event: Type.Event) =>
     event._tag !== 'Message'
       ? Effect.succeed(event)
@@ -2581,12 +2598,7 @@ import { FactStore } from '@dxos/pipeline-rdf';
 
 import { MessageStore, QuestionStore } from '../stores';
 
-export {
-  THREADED_FIXTURE,
-  deterministicAiService,
-  fixtureSourceLayer,
-  type Fixture,
-} from '@dxos/crawler/testing';
+export { THREADED_FIXTURE, deterministicAiService, fixtureSourceLayer, type Fixture } from '@dxos/crawler/testing';
 
 /** Every pipeline store over ONE shared SqlClient (bind the client per environment). */
 export const storesLayer = <E>(
@@ -2636,93 +2648,81 @@ const TestLayer = Layer.mergeAll(
 describe('DiscordPipeline', () => {
   it.effect(
     'crawls, persists messages, tracks agents, extracts facts, and reports done',
-    Effect.fnUntraced(
-      function* () {
-        const summary = yield* DiscordPipeline.run(CONFIG);
-        expect(summary.done).toBe(true);
-        expect(summary.errored).toBe(0);
-        expect(summary.steps).toBeGreaterThan(0);
+    Effect.fnUntraced(function* () {
+      const summary = yield* DiscordPipeline.run(CONFIG);
+      expect(summary.done).toBe(true);
+      expect(summary.errored).toBe(0);
+      expect(summary.steps).toBeGreaterThan(0);
 
-        const messages = yield* MessageStore;
-        expect(yield* messages.count()).toBe(4);
-        const channelMessages = yield* messages.listByTarget('chan-1');
-        expect(channelMessages.map((message) => message.id)).toEqual(['1000', '1001']);
+      const messages = yield* MessageStore;
+      expect(yield* messages.count()).toBe(4);
+      const channelMessages = yield* messages.listByTarget('chan-1');
+      expect(channelMessages.map((message) => message.id)).toEqual(['1000', '1001']);
 
-        const registry = yield* AgentRegistry;
-        const agents = yield* registry.list();
-        expect(agents.length).toBe(3);
+      const registry = yield* AgentRegistry;
+      const agents = yield* registry.list();
+      expect(agents.length).toBe(3);
 
-        const facts = yield* (yield* FactStore).query({});
-        expect(facts.length).toBeGreaterThan(0);
+      const facts = yield* (yield* FactStore).query({});
+      expect(facts.length).toBeGreaterThan(0);
 
-        const state = yield* StateStore;
-        expect(yield* state.getRunStatus()).toBe('done');
-      },
-      Effect.provide(TestLayer),
-    ),
+      const state = yield* StateStore;
+      expect(yield* state.getRunStatus()).toBe('done');
+    }, Effect.provide(TestLayer)),
   );
 
   it.effect(
     'pauses at maxSteps and resumes exactly-once over the same stores',
-    Effect.fnUntraced(
-      function* () {
-        const first = yield* DiscordPipeline.run(CONFIG, { maxSteps: 1 });
-        expect(first.done).toBe(false);
-        const state = yield* StateStore;
-        expect(yield* state.getRunStatus()).toBe('paused');
+    Effect.fnUntraced(function* () {
+      const first = yield* DiscordPipeline.run(CONFIG, { maxSteps: 1 });
+      expect(first.done).toBe(false);
+      const state = yield* StateStore;
+      expect(yield* state.getRunStatus()).toBe('paused');
 
-        const second = yield* DiscordPipeline.run(CONFIG);
-        expect(second.done).toBe(true);
+      const second = yield* DiscordPipeline.run(CONFIG);
+      expect(second.done).toBe(true);
 
-        const registry = yield* AgentRegistry;
-        const agents = yield* registry.list();
-        expect(agents.reduce((total, agent) => total + agent.messageCount, 0)).toBe(4);
-        expect(yield* (yield* MessageStore).count()).toBe(4);
-      },
-      Effect.provide(TestLayer),
-    ),
+      const registry = yield* AgentRegistry;
+      const agents = yield* registry.list();
+      expect(agents.reduce((total, agent) => total + agent.messageCount, 0)).toBe(4);
+      expect(yield* (yield* MessageStore).count()).toBe(4);
+    }, Effect.provide(TestLayer)),
   );
 
   it.effect(
     'replayed messages are dropped by the persist stage (exactly-once downstream)',
-    Effect.fnUntraced(
-      function* () {
-        yield* DiscordPipeline.run(CONFIG);
-        const factsBefore = (yield* (yield* FactStore).query({})).length;
-        const state = yield* StateStore;
-        // Simulate a resume-overlap: reopen the channel with a rolled-back durable cursor.
-        yield* state.setStatus('chan-1', 'active');
-        yield* state.setCursor('chan-1', '0');
+    Effect.fnUntraced(function* () {
+      yield* DiscordPipeline.run(CONFIG);
+      const factsBefore = (yield* (yield* FactStore).query({})).length;
+      const state = yield* StateStore;
+      // Simulate a resume-overlap: reopen the channel with a rolled-back durable cursor.
+      yield* state.setStatus('chan-1', 'active');
+      yield* state.setCursor('chan-1', '0');
 
-        const summary = yield* DiscordPipeline.run(CONFIG);
-        expect(summary.done).toBe(true);
+      const summary = yield* DiscordPipeline.run(CONFIG);
+      expect(summary.done).toBe(true);
 
-        // Refetched messages were dropped before agent stats: counts unchanged.
-        const registry = yield* AgentRegistry;
-        const agents = yield* registry.list();
-        expect(agents.reduce((total, agent) => total + agent.messageCount, 0)).toBe(4);
-        expect(yield* (yield* MessageStore).count()).toBe(4);
-        // Fact count also unchanged (nothing re-extracted).
-        const factsAfter = (yield* (yield* FactStore).query({})).length;
-        expect(factsAfter).toBe(factsBefore);
-      },
-      Effect.provide(TestLayer),
-    ),
+      // Refetched messages were dropped before agent stats: counts unchanged.
+      const registry = yield* AgentRegistry;
+      const agents = yield* registry.list();
+      expect(agents.reduce((total, agent) => total + agent.messageCount, 0)).toBe(4);
+      expect(yield* (yield* MessageStore).count()).toBe(4);
+      // Fact count also unchanged (nothing re-extracted).
+      const factsAfter = (yield* (yield* FactStore).query({})).length;
+      expect(factsAfter).toBe(factsBefore);
+    }, Effect.provide(TestLayer)),
   );
 
   it.effect(
     'attempts open questions at target end (deterministic model declines, question stays open)',
-    Effect.fnUntraced(
-      function* () {
-        const questions = yield* QuestionStore;
-        yield* questions.add('Who works on OPFS?', 'q-1');
-        yield* DiscordPipeline.run(CONFIG);
-        // The deterministic extractor never emits an `answer` field, so the question remains
-        // open — the answered path is covered by answer-questions.test.ts with a routing fake.
-        expect((yield* questions.get('q-1'))?.status).toBe('open');
-      },
-      Effect.provide(TestLayer),
-    ),
+    Effect.fnUntraced(function* () {
+      const questions = yield* QuestionStore;
+      yield* questions.add('Who works on OPFS?', 'q-1');
+      yield* DiscordPipeline.run(CONFIG);
+      // The deterministic extractor never emits an `answer` field, so the question remains
+      // open — the answered path is covered by answer-questions.test.ts with a routing fake.
+      expect((yield* questions.get('q-1'))?.status).toBe('open');
+    }, Effect.provide(TestLayer)),
   );
 });
 ```
@@ -2744,6 +2744,7 @@ git commit -m "feat(pipeline-discord): persist stage + DiscordPipeline.run assem
 ### Task 9: plugin-discord `CrawlDiscordChannels` operation
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-discord/package.json`, `tsconfig.json`
 - Modify: `src/services/discord-source.ts`, `src/services/index.ts`
 - Create: `src/services/crawl-stores.ts`
@@ -2900,9 +2901,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannel
         invariant(db, 'No database for connection ref — invoker did not provide Database.layer.');
 
         const ai = yield* AiService.AiService;
-        const sourceLayer = discordSourceLayerFromConnection(connection).pipe(
-          Layer.provide(Database.layer(db)),
-        );
+        const sourceLayer = discordSourceLayerFromConnection(connection).pipe(Layer.provide(Database.layer(db)));
 
         const program = Effect.gen(function* () {
           const store = yield* QuestionStore;
@@ -3017,6 +3016,7 @@ git commit -m "feat(plugin-discord): CrawlDiscordChannels operation over the cra
 ### Task 10: stories-brain demo — DiscordPipeline + questions
 
 **Files:**
+
 - Create: `packages/stories/stories-brain/src/components/QuestionsPanel/QuestionsPanel.tsx`, `QuestionsPanel.stories.tsx`, `index.ts`
 - Modify: `packages/stories/stories-brain/src/components/index.ts`
 - Modify: `packages/stories/stories-brain/src/stories/Facts.stories.tsx`
@@ -3186,44 +3186,41 @@ const makeStore = () => ManagedRuntime.make(storesLayer(SqliteClient.layerMemory
 3. Add question state + handlers inside `DefaultStory`:
 
 ```ts
-  const [questions, setQuestions] = useState<Question[]>([]);
+const [questions, setQuestions] = useState<Question[]>([]);
 
-  const refreshQuestions = async () => {
-    const listed = await getStore().runPromise(QuestionStore.pipe(Effect.flatMap((store) => store.list())));
-    setQuestions(listed);
-  };
+const refreshQuestions = async () => {
+  const listed = await getStore().runPromise(QuestionStore.pipe(Effect.flatMap((store) => store.list())));
+  setQuestions(listed);
+};
 
-  const handleAddQuestion = (text: string) =>
-    void guard('crawl', async () => {
-      await getStore().runPromise(QuestionStore.pipe(Effect.flatMap((store) => store.add(text))));
-      await refreshQuestions();
-    });
+const handleAddQuestion = (text: string) =>
+  void guard('crawl', async () => {
+    await getStore().runPromise(QuestionStore.pipe(Effect.flatMap((store) => store.add(text))));
+    await refreshQuestions();
+  });
 ```
 
 4. Replace `handleCrawl`'s program with the packaged assembly (the `perCrawl` layer keeps its existing `discordSourceLayer` + `Layer.fresh(AiServiceTestingPreset('edge-remote'))` contents, minus the now-runtime-owned `StateStore.layerMemory`/`AgentRegistry.layerMemory` entries):
 
 ```ts
-      const perCrawl = Layer.mergeAll(
-        discordSourceLayer(options.token),
-        Layer.fresh(AiServiceTestingPreset('edge-remote')),
-      );
-      const result = await getStore().runPromise(
-        Effect.gen(function* () {
-          const summary = yield* DiscordPipeline.run({
-            channels: [options.channel],
-            descendThreads: options.descendThreads,
-            seed: { maxDays: options.maxDays },
-          });
-          const registry = yield* AgentRegistry;
-          const crawled = yield* registry.list();
-          const store = yield* FactStore;
-          const extracted = yield* store.query({});
-          const stored = yield* (yield* MessageStore).count();
-          const messages = crawled.reduce((total, agent) => total + agent.messageCount, 0);
-          return { summary, messages, stored, facts: extracted };
-        }).pipe(Effect.provide(perCrawl)),
-      );
-      await refreshQuestions();
+const perCrawl = Layer.mergeAll(discordSourceLayer(options.token), Layer.fresh(AiServiceTestingPreset('edge-remote')));
+const result = await getStore().runPromise(
+  Effect.gen(function* () {
+    const summary = yield* DiscordPipeline.run({
+      channels: [options.channel],
+      descendThreads: options.descendThreads,
+      seed: { maxDays: options.maxDays },
+    });
+    const registry = yield* AgentRegistry;
+    const crawled = yield* registry.list();
+    const store = yield* FactStore;
+    const extracted = yield* store.query({});
+    const stored = yield* (yield* MessageStore).count();
+    const messages = crawled.reduce((total, agent) => total + agent.messageCount, 0);
+    return { summary, messages, stored, facts: extracted };
+  }).pipe(Effect.provide(perCrawl)),
+);
+await refreshQuestions();
 ```
 
 Update the status line to include `· ${result.stored} stored`.
@@ -3231,7 +3228,7 @@ Update the status line to include `· ${result.stored} stored`.
 5. Add the panel to the layout — change the left column `grid-rows-2` to `grid-rows-3` and render:
 
 ```tsx
-        <QuestionsPanel questions={questions} disabled={!!busy} onAdd={handleAddQuestion} />
+<QuestionsPanel questions={questions} disabled={!!busy} onAdd={handleAddQuestion} />
 ```
 
 6. `handleReset` additionally leaves questions intact (they're user intent, not derived state) — no change needed beyond what exists.
@@ -3262,6 +3259,7 @@ git commit -m "feat(stories-brain): drive the crawl demo through DiscordPipeline
 A second pipeline source: iterate the SQLite working set (no live Source, no token) and re-drive a different stage assembly. Targets come from the persisted frontier; messages from `MessageStore`.
 
 **Files:**
+
 - Create: `packages/core/compute/pipeline-discord/src/replay.ts`
 - Modify: `src/index.ts`
 - Test: covered by Task 13's pipeline test (replay + extraction end-to-end)
@@ -3361,6 +3359,7 @@ git commit -m "feat(pipeline-discord): replay stream over the stored message set
 Extract questions users asked in messages — (user × channel × message id × question) — deterministically (sentence-level `?` detection), persist them idempotently, and log each hit.
 
 **Files:**
+
 - Create: `src/stores/extracted-question-store.ts`
 - Create: `src/stages/extract-questions.ts`
 - Modify: `src/stores/index.ts`, `src/stages/index.ts`
@@ -3416,32 +3415,29 @@ describe('detectQuestions', () => {
 describe('extractQuestionsStage', () => {
   it.effect(
     'replay over a crawled store extracts user questions idempotently',
-    Effect.fnUntraced(
-      function* () {
-        // First: the live crawl fills the message store (fixture channel + thread).
-        yield* DiscordPipeline.run(CONFIG);
+    Effect.fnUntraced(function* () {
+      // First: the live crawl fills the message store (fixture channel + thread).
+      yield* DiscordPipeline.run(CONFIG);
 
-        // Then: replay the stored messages through the question-extraction assembly.
-        const replay = replayStream().pipe(extractQuestionsStage(), Pipeline.run({ sink: () => Effect.void }));
-        yield* replay;
+      // Then: replay the stored messages through the question-extraction assembly.
+      const replay = replayStream().pipe(extractQuestionsStage(), Pipeline.run({ sink: () => Effect.void }));
+      yield* replay;
 
-        const store = yield* ExtractedQuestionStore;
-        const extracted = yield* store.list();
-        // The fixture has exactly one interrogative message (Alice's OPFS question, id 1000).
-        expect(extracted.length).toBe(1);
-        expect(extracted[0]).toMatchObject({
-          authorId: 'Alice',
-          targetId: 'chan-1',
-          messageId: '1000',
-          question: 'Should Composer use OPFS for local storage?',
-        });
+      const store = yield* ExtractedQuestionStore;
+      const extracted = yield* store.list();
+      // The fixture has exactly one interrogative message (Alice's OPFS question, id 1000).
+      expect(extracted.length).toBe(1);
+      expect(extracted[0]).toMatchObject({
+        authorId: 'Alice',
+        targetId: 'chan-1',
+        messageId: '1000',
+        question: 'Should Composer use OPFS for local storage?',
+      });
 
-        // Replaying again changes nothing (idempotent upsert).
-        yield* replay;
-        expect((yield* store.list()).length).toBe(1);
-      },
-      Effect.provide(TestLayer),
-    ),
+      // Replaying again changes nothing (idempotent upsert).
+      yield* replay;
+      expect((yield* store.list()).length).toBe(1);
+    }, Effect.provide(TestLayer)),
   );
 });
 ```
@@ -3656,6 +3652,7 @@ git commit -m "feat(pipeline-discord): user-question extraction over live crawl 
 Two env-gated node scripts in plugin-discord, runnable as moon tasks. The crawl demo seeds real channels and fills a persistent SQLite file; the questions demo replays that file through the question-extraction pipeline and prints the (user × channel × message × question) table. Credentials come from `DISCORD_TOKEN` — never hardcode the token.
 
 **Files:**
+
 - Create: `packages/plugins/plugin-discord/src/testing/crawl-demo.test.ts`
 - Create: `packages/plugins/plugin-discord/src/testing/questions-demo.test.ts`
 - Modify: `packages/plugins/plugin-discord/moon.yml`
@@ -3719,7 +3716,9 @@ describe('crawl demo', () => {
 
       console.log(`\ndb:       ${dbPath}`);
       console.log(`channels: ${channels.join(', ')}`);
-      console.log(`steps:    ${result.summary.steps}  done: ${result.summary.done}  errored: ${result.summary.errored}`);
+      console.log(
+        `steps:    ${result.summary.steps}  done: ${result.summary.done}  errored: ${result.summary.errored}`,
+      );
       console.log(`messages: ${result.stored}`);
       console.log(`targets:  ${result.targets.map((target) => `${target.id}(${target.status})`).join(', ')}`);
       console.log(`agents:   ${result.agents.length}`);
@@ -3794,16 +3793,16 @@ describe('questions demo', () => {
 Add to `packages/plugins/plugin-discord/moon.yml` under `tasks:` (create the section if absent, mirroring `crawler/moon.yml`'s `demo` task):
 
 ```yaml
-  crawl-demo:
-    command: 'pnpm exec vitest run src/testing/crawl-demo.test.ts'
-    options:
-      runInCI: false
-      cache: false
-  questions-demo:
-    command: 'pnpm exec vitest run src/testing/questions-demo.test.ts'
-    options:
-      runInCI: false
-      cache: false
+crawl-demo:
+  command: 'pnpm exec vitest run src/testing/crawl-demo.test.ts'
+  options:
+    runInCI: false
+    cache: false
+questions-demo:
+  command: 'pnpm exec vitest run src/testing/questions-demo.test.ts'
+  options:
+    runInCI: false
+    cache: false
 ```
 
 - [ ] **Step 14.4: Run the demos live (requires `DISCORD_TOKEN`)**

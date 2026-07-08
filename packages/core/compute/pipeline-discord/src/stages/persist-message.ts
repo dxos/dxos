@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { StateStore, type StateError, type Type } from '@dxos/crawler';
+import { type StateError, StateStore, type Type } from '@dxos/crawler';
 import { Stage } from '@dxos/pipeline';
 
 import { MessageStore, type StoredMessage } from '../stores';
@@ -13,7 +13,7 @@ const toStored = (target: Type.Target, message: Type.Message): StoredMessage => 
   id: message.id,
   targetId: target.id,
   authorId: message.author.id,
-  ...(message.author.displayName ?? message.author.username
+  ...((message.author.displayName ?? message.author.username)
     ? { authorLabel: message.author.displayName ?? message.author.username }
     : {}),
   text: message.text,

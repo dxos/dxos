@@ -83,81 +83,79 @@ const initialCursor = (cursor: string | undefined, maxDays: number | undefined):
 const makeSource: Effect.Effect<SourceApi, never, DiscordREST> = Effect.gen(function* () {
   const rest = yield* DiscordREST;
 
-      const drain = (channelId: string, after: string) =>
-        Effect.gen(function* () {
-          const raw: MessageResponse[] = [];
-          let cursor = after;
-          while (true) {
-            const page = yield* rest.listMessages(channelId, { after: cursor, limit: MESSAGE_PAGE_LIMIT });
-            if (page.length === 0) {
-              break;
-            }
-            // Discord returns newest-first; sort ascending so the cursor advances monotonically.
-            const sorted = [...page].sort((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
-            raw.push(...sorted);
-            if (sorted.length < MESSAGE_PAGE_LIMIT) {
-              break;
-            }
-            cursor = sorted[sorted.length - 1].id;
-          }
-          return raw;
-        });
+  const drain = (channelId: string, after: string) =>
+    Effect.gen(function* () {
+      const raw: MessageResponse[] = [];
+      let cursor = after;
+      while (true) {
+        const page = yield* rest.listMessages(channelId, { after: cursor, limit: MESSAGE_PAGE_LIMIT });
+        if (page.length === 0) {
+          break;
+        }
+        // Discord returns newest-first; sort ascending so the cursor advances monotonically.
+        const sorted = [...page].sort((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
+        raw.push(...sorted);
+        if (sorted.length < MESSAGE_PAGE_LIMIT) {
+          break;
+        }
+        cursor = sorted[sorted.length - 1].id;
+      }
+      return raw;
+    });
 
-      const fetchMessages: SourceApi['fetchMessages'] = ({ channelId, threadId, cursor, maxDays }) =>
-        Effect.gen(function* () {
-          // Drain the thread when descending into one; otherwise the parent channel.
-          const raw = yield* drain(threadId ?? channelId, initialCursor(cursor, maxDays));
-          const messages = raw
-            .map(mapDiscordMessage)
-            .filter((message): message is Type.Message => message !== undefined);
-          return {
-            messages,
-            // Page.cursor is the newest id in this page, or undefined when nothing new was fetched.
-            cursor: raw.length > 0 ? raw[raw.length - 1].id : undefined,
-            threads: threadRefsOf(raw),
-          };
-        }).pipe(Effect.mapError((cause) => new CrawlError({ message: 'Failed to fetch Discord messages', cause })));
+  const fetchMessages: SourceApi['fetchMessages'] = ({ channelId, threadId, cursor, maxDays }) =>
+    Effect.gen(function* () {
+      // Drain the thread when descending into one; otherwise the parent channel.
+      const raw = yield* drain(threadId ?? channelId, initialCursor(cursor, maxDays));
+      const messages = raw.map(mapDiscordMessage).filter((message): message is Type.Message => message !== undefined);
+      return {
+        messages,
+        // Page.cursor is the newest id in this page, or undefined when nothing new was fetched.
+        cursor: raw.length > 0 ? raw[raw.length - 1].id : undefined,
+        threads: threadRefsOf(raw),
+      };
+    }).pipe(Effect.mapError((cause) => new CrawlError({ message: 'Failed to fetch Discord messages', cause })));
 
-      const listChannels: SourceApi['listChannels'] = () =>
-        Effect.gen(function* () {
-          const guilds: MyGuildResponse[] = [];
-          let after: string | undefined;
-          while (true) {
-            const guildPage = yield* rest.listMyGuilds(
-              after ? { limit: GUILD_PAGE_LIMIT, after } : { limit: GUILD_PAGE_LIMIT },
-            );
-            guilds.push(...guildPage);
-            if (guildPage.length < GUILD_PAGE_LIMIT) {
-              break;
-            }
-            after = guildPage[guildPage.length - 1].id;
-          }
+  const listChannels: SourceApi['listChannels'] = () =>
+    Effect.gen(function* () {
+      const guilds: MyGuildResponse[] = [];
+      let after: string | undefined;
+      while (true) {
+        const guildPage = yield* rest.listMyGuilds(
+          after ? { limit: GUILD_PAGE_LIMIT, after } : { limit: GUILD_PAGE_LIMIT },
+        );
+        guilds.push(...guildPage);
+        if (guildPage.length < GUILD_PAGE_LIMIT) {
+          break;
+        }
+        after = guildPage[guildPage.length - 1].id;
+      }
 
-          const perGuild = yield* Effect.forEach(
-            guilds,
-            (guild) =>
-              rest.listGuildChannels(guild.id).pipe(
-                Effect.map((channels) =>
-                  channels
-                    .filter((channel): channel is GuildChannelResponse => channel.type === 0 || channel.type === 5)
-                    .map((channel) => ({
-                      id: channel.id,
-                      name: channel.name ? `#${channel.name} — ${guild.name}` : `${channel.id} — ${guild.name}`,
-                      guildId: guild.id,
-                    })),
-                ),
-                // A guild the bot was removed from mid-call should not fail discovery of the rest.
-                Effect.catchAll((error) => {
-                  log.catch(error);
-                  return Effect.succeed([]);
-                }),
-              ),
-            { concurrency: 4 },
-          );
-          return perGuild.flat();
-        }).pipe(Effect.mapError((cause) => new CrawlError({ message: 'Failed to list Discord channels', cause })));
+      const perGuild = yield* Effect.forEach(
+        guilds,
+        (guild) =>
+          rest.listGuildChannels(guild.id).pipe(
+            Effect.map((channels) =>
+              channels
+                .filter((channel): channel is GuildChannelResponse => channel.type === 0 || channel.type === 5)
+                .map((channel) => ({
+                  id: channel.id,
+                  name: channel.name ? `#${channel.name} — ${guild.name}` : `${channel.id} — ${guild.name}`,
+                  guildId: guild.id,
+                })),
+            ),
+            // A guild the bot was removed from mid-call should not fail discovery of the rest.
+            Effect.catchAll((error) => {
+              log.catch(error);
+              return Effect.succeed([]);
+            }),
+          ),
+        { concurrency: 4 },
+      );
+      return perGuild.flat();
+    }).pipe(Effect.mapError((cause) => new CrawlError({ message: 'Failed to list Discord channels', cause })));
 
-      return { listChannels, fetchMessages };
+  return { listChannels, fetchMessages };
 });
 
 /**

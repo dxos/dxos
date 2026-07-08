@@ -17,8 +17,8 @@ import { DiscordPipeline, MessageStore, type Question, QuestionStore } from '@dx
 import { storesLayer } from '@dxos/pipeline-discord/testing';
 import { FactPipeline, FactStore, type RDF, buildSparql, generateQuery, parseSparqlToQuery } from '@dxos/pipeline-rdf';
 import { discordSourceLayer } from '@dxos/plugin-discord';
-import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
 import {
   type CrawlAction,

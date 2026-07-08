@@ -29,9 +29,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannel
         invariant(db, 'No database for connection ref — invoker did not provide Database.layer.');
 
         const ai = yield* AiService.AiService;
-        const sourceLayer = discordSourceLayerFromConnection(connection).pipe(
-          Layer.provide(Database.layer(db)),
-        );
+        const sourceLayer = discordSourceLayerFromConnection(connection).pipe(Layer.provide(Database.layer(db)));
 
         const program = Effect.gen(function* () {
           const store = yield* QuestionStore;
