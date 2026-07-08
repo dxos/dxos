@@ -8,6 +8,7 @@ export { type CreateClientServicesOptions, createClientServices } from './client
 export { IFrameManager } from './iframe-manager';
 export { LocalClientServices, type LocalClientServicesParams, fromHost } from './local-client-services';
 export { ClientServicesProxy } from './service-proxy';
+export { EffectClientServicesProxy } from './effect-service-proxy';
 export { Shell } from './shell';
 export { ShellManager } from './shell-manager';
 export { fromSocket } from './socket';
