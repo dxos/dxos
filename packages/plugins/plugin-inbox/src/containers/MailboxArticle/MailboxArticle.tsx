@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type Ref, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { Atom } from '@effect-atom/atom-react';
+import React, { type Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAtomCapability, useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -11,15 +12,22 @@ import { type Database, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
+import { type EntityId } from '@dxos/keys';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { MessageStack, type MessageStackActionHandler, useMailboxExtractorActions } from '#components';
+import {
+  MessageStack,
+  type MessageStackActionHandler,
+  type MessageTagsFamily,
+  useMailboxExtractorActions,
+} from '#components';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
 import { InboxCapabilities, Mailbox, Starred } from '#types';
@@ -54,26 +62,14 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   const tagMap = useTags(db);
   const feed = useResolveRef(mailbox.feed);
+  const tagIndex = useResolveRef(mailbox.tags);
+  // Per-message tag chips, as an atom family so each tile subscribes to only its own message's tags.
+  const tagsAtom = useMessageTagsAtomFamily(tagIndex, tagMap);
 
-  // Message-to-tags map, inverting the Mailbox tag index. NOT memoized: applyTag/removeTag mutate
-  // nested data under `mailbox.tags`, which a `[mailbox.tags]` dependency wouldn't observe.
-  const messageTagUris = Mailbox.buildMessageTagsIndex(mailbox);
-  const messageTagsMap: Record<string, { id: string; label: string; hue?: string }[]> = {};
-  for (const [messageId, uris] of Object.entries(messageTagUris)) {
-    messageTagsMap[messageId] = uris.flatMap((uri) => {
-      const tag = tagMap[uri];
-      return tag ? [{ id: uri, label: tag.label, hue: tag.hue }] : [];
-    });
-  }
-
-  // Starred messages drive the per-tile star toggle. Tagging mutates the child TagIndex in place,
-  // which `useQuery` doesn't observe, so subscribe to it directly and re-derive on change.
+  // Starred messages drive the per-tile star toggle; starred state also lives under the tag index.
   const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
   const starredUri = starredTag && Obj.getURI(starredTag).toString();
-  const tagIndex = mailbox.tags?.target;
-  const [, bumpStarred] = useReducer((tick: number) => tick + 1, 0);
-  useEffect(() => (tagIndex ? Obj.subscribe(tagIndex, bumpStarred) : undefined), [tagIndex]);
-  const starredIds = Starred.getStarredIds(mailbox, starredUri);
+  const starredAtom = useMemo(() => Starred.atom(tagIndex, starredUri), [tagIndex, starredUri]);
 
   // Filter.
   const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
@@ -238,8 +234,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             id={id}
             messages={messages}
             currentId={currentId}
-            tags={messageTagsMap}
-            starredIds={starredIds}
+            tagsAtom={tagsAtom}
+            starredAtom={starredAtom}
             conversations={settings.conversations}
             pagination={feed ? pagination : undefined}
             onAction={handleAction}
@@ -298,6 +294,29 @@ const MailboxFilter = ({
     </>
   );
 };
+
+const EMPTY_MESSAGE_TAGS_ATOM = Atom.make((): { id: string; label: string; hue?: string }[] => []);
+
+/**
+ * Per-message tag chip atom family over a TagIndex. Each atom yields resolved label/hue chips for one
+ * message id and re-renders only when that message's tags (or tag registry labels) change.
+ */
+const useMessageTagsAtomFamily = (tagIndex: TagIndex.TagIndex | undefined, tagMap: Tag.Map): MessageTagsFamily =>
+  useMemo(() => {
+    if (!tagIndex) {
+      return () => EMPTY_MESSAGE_TAGS_ATOM;
+    }
+    const urisFamily = TagIndex.atom(tagIndex);
+    return Atom.family((messageId: EntityId) =>
+      Atom.make((get) => {
+        const uris = get(urisFamily(messageId));
+        return uris.flatMap((uri) => {
+          const tag = tagMap[uri];
+          return tag ? [{ id: uri, label: tag.label, hue: tag.hue }] : [];
+        });
+      }),
+    );
+  }, [tagIndex, tagMap]);
 
 const useMailboxActions = (mailbox: Mailbox.Mailbox, sortDescending: AtomState<boolean>) => {
   const { invokePromise } = useOperationInvoker();
