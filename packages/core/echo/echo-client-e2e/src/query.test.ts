@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import {
+  Aggregate,
   Collection,
   Dataset,
   type Entity,
@@ -497,6 +498,87 @@ describe('Query', () => {
       expect(groups[2].values.map((obj) => obj.sentAt)).to.deep.equal([1500]);
     });
 
+    test('orders threads by a max aggregate, in both directions, independent of within-group order', async () => {
+      const { db } = await builder.createDatabase();
+      const makeMessage = (threadId: string, sentAt: number) => Obj.make(TestSchema.Expando, { threadId, sentAt });
+      // thread-a latest 2000, thread-b latest 4000, thread-c latest 1500.
+      db.add(makeMessage('thread-a', 1000));
+      db.add(makeMessage('thread-b', 3000));
+      db.add(makeMessage('thread-a', 2000));
+      db.add(makeMessage('thread-c', 1500));
+      db.add(makeMessage('thread-b', 4000));
+      await db.flush();
+
+      const grouped = Query.select(Filter.everything())
+        .orderBy(Order.property('sentAt', 'desc'))
+        .groupBy(GroupKey.property('threadId'))
+        .aggregate({ latest: Aggregate.max('sentAt') });
+
+      // Descending by latest message.
+      const desc = await db.query(grouped.orderBy(Order.aggregate('latest', 'desc'))).run();
+      expect(desc.map((group) => group.key.threadId)).to.deep.equal(['thread-b', 'thread-a', 'thread-c']);
+      expect(desc.map((group) => group.aggregates.latest)).to.deep.equal([4000, 2000, 1500]);
+      // Members stay newest-first regardless of the group sort direction.
+      expect(desc[0].values.map((obj) => obj.sentAt)).to.deep.equal([4000, 3000]);
+
+      // Ascending reverses threads by latest message (not by oldest message), members unchanged.
+      const asc = await db.query(grouped.orderBy(Order.aggregate('latest', 'asc'))).run();
+      expect(asc.map((group) => group.key.threadId)).to.deep.equal(['thread-c', 'thread-a', 'thread-b']);
+      expect(asc.map((group) => group.aggregates.latest)).to.deep.equal([1500, 2000, 4000]);
+      expect(asc[2].values.map((obj) => obj.sentAt)).to.deep.equal([4000, 3000]);
+    });
+
+    test('a min aggregate exposes the earliest member and can order groups', async () => {
+      const { db } = await builder.createDatabase();
+      const makeMessage = (threadId: string, sentAt: number) => Obj.make(TestSchema.Expando, { threadId, sentAt });
+      db.add(makeMessage('thread-a', 1000));
+      db.add(makeMessage('thread-a', 5000));
+      db.add(makeMessage('thread-b', 2000));
+      db.add(makeMessage('thread-b', 3000));
+      await db.flush();
+
+      const groups = await db
+        .query(
+          Query.select(Filter.everything())
+            .orderBy(Order.property('sentAt', 'desc'))
+            .groupBy(GroupKey.property('threadId'))
+            .aggregate({ earliest: Aggregate.min('sentAt') })
+            .orderBy(Order.aggregate('earliest', 'asc')),
+        )
+        .run();
+
+      // Ordered by each thread's earliest message: thread-a (1000) then thread-b (2000).
+      expect(groups.map((group) => group.key.threadId)).to.deep.equal(['thread-a', 'thread-b']);
+      expect(groups.map((group) => group.aggregates.earliest)).to.deep.equal([1000, 2000]);
+    });
+
+    test('aggregate ordering pages over whole groups (limit + skip)', async () => {
+      const { db } = await builder.createDatabase();
+      const makeMessage = (threadId: string, sentAt: number) => Obj.make(TestSchema.Expando, { threadId, sentAt });
+      // Four threads whose latest messages are a:100, b:400, c:300, d:200.
+      db.add(makeMessage('a', 50));
+      db.add(makeMessage('a', 100));
+      db.add(makeMessage('b', 400));
+      db.add(makeMessage('c', 300));
+      db.add(makeMessage('d', 200));
+      await db.flush();
+
+      const page = await db
+        .query(
+          Query.select(Filter.everything())
+            .orderBy(Order.property('sentAt', 'desc'))
+            .groupBy(GroupKey.property('threadId'))
+            .aggregate({ latest: Aggregate.max('sentAt') })
+            .orderBy(Order.aggregate('latest', 'desc'))
+            .skip(1)
+            .limit(2),
+        )
+        .run();
+
+      // Groups by latest desc = b(400), c(300), d(200), a(100); skip 1, take 2 → c, d.
+      expect(page.map((group) => group.key.threadId)).to.deep.equal(['c', 'd']);
+    });
+
     test('limit applies to the flat stream before grouping', async () => {
       const { db } = await builder.createDatabase();
       db.add(Obj.make(TestSchema.Expando, { category: 'a', rank: 1 }));
@@ -543,15 +625,20 @@ describe('Query', () => {
       expect(page.every((group) => group.count === 2 && group.values.length === 2)).to.be.true;
     });
 
-    test('a data clause (orderBy) stacked on top of groupBy throws at plan time', async () => {
+    test('a group-level orderBy after groupBy is a valid placement (only aggregate ordering is meaningful)', async () => {
       const { db } = await builder.createDatabase();
+      db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      db.add(Obj.make(TestSchema.Expando, { value: 2 }));
       await db.flush();
 
-      const grouped = Query.select(Filter.everything()).groupBy(GroupKey.property('value'));
-      // `.orderBy()` after `.groupBy()` typechecks (its element type is `Group`, so order by a Group
-      // key) but is invalid at runtime — groupBy must be the outermost data clause (only
-      // from/options/limit/skip may follow).
-      await expect(db.query(grouped.orderBy(Order.property('count', 'asc'))).run()).rejects.toThrow();
+      // `.orderBy()` after `.groupBy()` reorders whole groups; it must be the outermost data clause
+      // (only from/options/order/limit/skip may follow). A member-property order has no group-level
+      // meaning (there is no such property on a group), so it leaves the group order untouched
+      // rather than throwing — see the aggregate-ordering tests above for the meaningful form.
+      const groups = await db
+        .query(Query.select(Filter.everything()).groupBy(GroupKey.property('value')).orderBy(Order.property('count', 'asc')))
+        .run();
+      expect(groups.map((group) => group.key.value).sort()).to.deep.equal([1, 2]);
     });
 
     describe('reactivity', () => {
