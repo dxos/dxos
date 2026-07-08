@@ -152,6 +152,27 @@ export class QueryPlanner {
             ...this._generateDeletedHandlingSteps(context),
           ]);
         }
+        if (context.selectionInverted && isTrivialTypenameFilter(filter)) {
+          invariant(filter.typename !== null);
+          // Negated plain type filter (e.g. `Filter.not(Filter.type(Foo))`) — mirrors the trivial-OR
+          // handling below: select via an inverted TypeSelector when indexed, or a WildcardSelector
+          // when working from the in-memory set, then re-check the negation in the FilterStep.
+          const selector: QueryPlan.Selector = this._options.noIndexes
+            ? { _tag: 'WildcardSelector' }
+            : { _tag: 'TypeSelector', typename: [filter.typename], inverted: true };
+          return QueryPlan.Plan.make([
+            {
+              _tag: 'SelectStep',
+              scope: context.scope,
+              selector,
+            },
+            ...this._generateDeletedHandlingSteps(context),
+            {
+              _tag: 'FilterStep',
+              filter: { type: 'not', filter: { ...filter } },
+            },
+          ]);
+        }
         if (context.selectionInverted) {
           throw queryTooComplexError(context.originalQuery);
         }
@@ -423,11 +444,16 @@ export class QueryPlanner {
             return filter.typename;
           });
 
-          // When noIndexes is set, use WildcardSelector so all loaded cores are scanned;
-          // the type predicate is enforced by the FilterStep that already follows.
+          // When noIndexes is set, use WildcardSelector so all loaded cores are scanned; a WildcardSelector
+          // carries no inversion, so the FilterStep below must apply the negation instead of the selector.
           const orSelector: QueryPlan.Selector = this._options.noIndexes
             ? { _tag: 'WildcardSelector' }
             : { _tag: 'TypeSelector', typename: typenames, inverted: context.selectionInverted };
+          // The FilterStep re-checks the selector's predicate (it also disambiguates same-named schema
+          // versions the index doesn't distinguish), so it must encode the same inversion as the selector.
+          const orFilter: QueryAST.Filter = context.selectionInverted
+            ? { type: 'not', filter: { ...filter } }
+            : { ...filter };
           return QueryPlan.Plan.make([
             {
               _tag: 'SelectStep',
@@ -437,7 +463,7 @@ export class QueryPlanner {
             ...this._generateDeletedHandlingSteps(context),
             {
               _tag: 'FilterStep',
-              filter: { ...filter },
+              filter: orFilter,
             },
           ]);
         } else {

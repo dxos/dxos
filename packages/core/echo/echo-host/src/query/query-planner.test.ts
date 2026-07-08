@@ -925,12 +925,57 @@ describe('QueryPlanner', () => {
     `);
   });
 
-  // TODO(dmaretskyi): Implement this.
-  test.skip('select everything but the type', () => {
+  test('select everything but the type', () => {
     const query = Query.select(Filter.not(Filter.type(TestSchema.Person)));
 
     const plan = planner.createPlan(withSpaceIdOptions(query.ast));
-    expect(plan).toMatchInlineSnapshot();
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
+            "selector": {
+              "_tag": "TypeSelector",
+              "inverted": true,
+              "typename": [
+                "dxn:com.example.type.person:0.1.0",
+              ],
+            },
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "filter": {
+                "id": undefined,
+                "props": {},
+                "type": "object",
+                "typename": "dxn:com.example.type.person:0.1.0",
+              },
+              "type": "not",
+            },
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "direction": "asc",
+                "kind": "natural",
+              },
+            ],
+          },
+        ],
+      }
+    `);
   });
 
   test('select excluding multiple types', () => {
@@ -966,21 +1011,24 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterStep",
             "filter": {
-              "filters": [
-                {
-                  "id": undefined,
-                  "props": {},
-                  "type": "object",
-                  "typename": "dxn:com.example.type.organization:0.1.0",
-                },
-                {
-                  "id": undefined,
-                  "props": {},
-                  "type": "object",
-                  "typename": "dxn:com.example.type.person:0.1.0",
-                },
-              ],
-              "type": "or",
+              "filter": {
+                "filters": [
+                  {
+                    "id": undefined,
+                    "props": {},
+                    "type": "object",
+                    "typename": "dxn:com.example.type.organization:0.1.0",
+                  },
+                  {
+                    "id": undefined,
+                    "props": {},
+                    "type": "object",
+                    "typename": "dxn:com.example.type.person:0.1.0",
+                  },
+                ],
+                "type": "or",
+              },
+              "type": "not",
             },
           },
           {

@@ -143,7 +143,11 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
       this._handleQueryLifecycle();
     };
 
-    if (callback && opts?.fire) {
+    // Fire the initial event synchronously when authoritative results are already available: either
+    // a source can produce them synchronously, or this (cached/reused) result already computed them
+    // during a prior subscription. Only defer when an async-only query has no results yet (e.g. a
+    // fresh feed query served by the index), so subscribers don't observe a spurious empty snapshot.
+    if (callback && opts?.fire && (this._queryContext.isSynchronous() || this._objectCache !== undefined)) {
       try {
         callback(this);
       } catch (err) {
