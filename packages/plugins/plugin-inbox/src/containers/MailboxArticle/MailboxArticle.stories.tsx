@@ -115,11 +115,21 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// Both variants force the setting explicitly: the settings store persists across runs, so an
+// omitted value would inherit whatever a prior session wrote rather than the product default.
 export const Default: Story = {
   args: {
     count: 500,
-    // Force flat explicitly: the settings store persists across runs, so an omitted value would
-    // inherit whatever a prior session wrote (e.g. an earlier grouped variant) rather than the default.
+    // A thread pool comfortably larger than the page size (10 conversations) so scrolling
+    // exercises group-level pagination — with the default pool of 10 everything fits on one page.
+    threads: 100,
+    conversations: true,
+  },
+};
+
+export const Flat: Story = {
+  args: {
+    count: 500,
     conversations: false,
   },
 };

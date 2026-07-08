@@ -4,6 +4,14 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-07-08 — plugin-inbox (threaded mailbox via group-by query)
+
+- ECHO `Query...groupBy(GroupKey.property('threadId'))` returns `Query.Group<Pick<T,K>, T>` results (`{key, count, values}`); a following `.limit()`/`.skip()` pages over WHOLE groups, so `usePagination` composes directly with grouped queries (page size = groups per page). Group order = first occurrence of the key in the `orderBy`'d stream.
+- Missing/undefined/non-scalar group-key values all coerce to ONE `null`-key group (`GroupBy.coerceKeyComponent`) — split it client-side into singletons if per-item entries are wanted (mailbox: threadless messages become singleton conversations, re-interleaved by anchor date).
+- A union-typed query (`Query<T> | Query<Group<..>>` ternary on a mode flag) passes straight through `usePagination` without casts; discriminate items with a `'values' in entry` type predicate.
+- Mailbox testing builder `threads` option is the SIZE OF THE THREAD-ID POOL (default 10) — with conversation grouping that's 10 conversations TOTAL = exactly one page; grouped stories must seed `threads` >> page size or pagination appears broken.
+- `MessageStack` takes `items?: (Message.Message | MessageGroup)[]` (mixed allowed; `isMessageGroup` guard) and dispatches per-entry to MessageTile/ConversationTile via a single `StackTile` — kills the `Tile as any`/`items as any` casts a mode-switched `Tile` prop needed.
+
 ## 2026-07-05 — plugin-chess-com (operation handlers)
 
 - Operation handler files: `export default Op.pipe(Operation.withHandler(...), Operation.opaqueHandler)` as the default export — mirror `plugin-trip/src/operations/add-segment.ts`; no separate `const handler` alias.

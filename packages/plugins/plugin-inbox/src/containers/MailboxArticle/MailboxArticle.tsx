@@ -8,7 +8,7 @@ import React, { type Ref, useCallback, useEffect, useMemo, useRef, useState } fr
 import { useAtomCapability, useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { type Database, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
+import { type Database, Filter, GroupKey, Obj, Order, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -25,7 +25,9 @@ import { Message } from '@dxos/types';
 import {
   MessageStack,
   type MessageStackActionHandler,
+  type MessageStackItem,
   type MessageTagsFamily,
+  isMessageGroup,
   useMailboxExtractorActions,
 } from '#components';
 import { meta } from '#meta';
@@ -33,6 +35,7 @@ import { InboxOperation } from '#types';
 import { InboxCapabilities, Mailbox, Starred } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
+import { sortByCreated } from '../../util';
 import { InitializeMailbox, InitializeMailboxAction } from './InitializeMailbox';
 
 export type MailboxArticleProps = AppSurface.ObjectArticleProps<
@@ -80,25 +83,63 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     setFilter(filter);
   }, [filterText, builder]);
 
-  // Messages, newest-first by message date. Ordered by `created` (not feed insertion order): a
-  // backward/backfill sync appends out of time order, so the window must be selected by date. This
-  // content order currently runs on the client feed path (full-fetch + sort + slice); `usePagination`
-  // and the virtualizer bound what's rendered, but the whole feed is fetched to sort it.
+  // Whether messages are grouped into conversations (threads). On by default.
+  const conversations = settings.conversations ?? true;
+
+  // Messages, ordered by message date in the toolbar's sort direction (not feed insertion order): a
+  // backward/backfill sync appends out of time order, so the window must be selected by date. When
+  // conversation grouping is on, the query groups by `threadId` and `usePagination`'s limit/skip
+  // page over whole conversations. This content order currently runs on the client feed path
+  // (full-fetch + sort + slice); `usePagination` and the virtualizer bound what's rendered, but the
+  // whole feed is fetched to sort it.
   // TODO(wittjosiah): Move this to the host indexer for bounded-memory paging (fetch only the window,
   //   not the whole feed); blocked on indexed ordered range reads being fast enough.
   // `pagination` is passed straight through to `MessageStack` rather than destructured --
   // `usePagination` already returns a stable object, so rebuilding one here would only reintroduce
   // the instability it avoids.
+  const orderedQuery =
+    feed &&
+    Query.select(Filter.type(Message.Message))
+      .from(feed)
+      .orderBy(Order.property('created', sortDescending.value ? 'desc' : 'asc'));
   const pagination = usePagination(
     db,
-    feed
-      ? Query.select(Filter.type(Message.Message))
-          .from(feed)
-          .orderBy(Order.property('created', 'desc'))
-          .limit(MAILBOX_PAGE_SIZE)
+    orderedQuery
+      ? conversations
+        ? orderedQuery.groupBy(GroupKey.property('threadId')).limit(MAILBOX_PAGE_SIZE)
+        : orderedQuery.limit(MAILBOX_PAGE_SIZE)
       : Query.select(Filter.nothing()).limit(MAILBOX_PAGE_SIZE),
   );
-  const messages = pagination.items;
+
+  // Grouped-query results become conversation entries. Messages without a `threadId` all land in the
+  // group-by clause's single `null`-key group; they are split back into singleton conversations and
+  // re-interleaved by date (group order from the query follows each group's first occurrence in the
+  // date-ordered stream, so the anchor for a conversation is its newest message when descending and
+  // its oldest when ascending).
+  const items = useMemo<MessageStackItem[]>(() => {
+    const result: MessageStackItem[] = [];
+    for (const entry of pagination.items) {
+      if (!isThreadGroup(entry)) {
+        result.push(entry);
+        continue;
+      }
+      const { threadId } = entry.key;
+      if (threadId == null) {
+        result.push(...entry.values.map((message) => ({ id: message.id, messages: [message] })));
+      } else {
+        // Conversation tiles show the latest message first regardless of the mailbox sort direction.
+        result.push({ id: threadId, messages: [...entry.values].sort(sortByCreated('created', true)) });
+      }
+    }
+    const anchor = (item: MessageStackItem): string =>
+      isMessageGroup(item) ? item.messages[sortDescending.value ? 0 : item.messages.length - 1].created : item.created;
+    return result.sort((a, b) =>
+      sortDescending.value ? anchor(b).localeCompare(anchor(a)) : anchor(a).localeCompare(anchor(b)),
+    );
+  }, [pagination.items, sortDescending.value]);
+
+  // Flat message list backing keyboard navigation and message-id lookups in action handlers.
+  const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
 
   // Mark the mailbox as viewed when opened, advancing its `viewedAt` cursor so the navtree new-message
   // badge clears. Uses the live `subject` (not the `mailbox` snapshot) since this mutates, and is keyed on
@@ -232,11 +273,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         ) : (
           <MessageStack
             id={id}
-            messages={messages}
+            items={items}
             currentId={currentId}
             tagsAtom={tagsAtom}
             starredAtom={starredAtom}
-            conversations={settings.conversations}
             pagination={feed ? pagination : undefined}
             onAction={handleAction}
           />
@@ -294,6 +334,11 @@ const MailboxFilter = ({
     </>
   );
 };
+
+/** One thread's worth of results from the conversation-grouped message query. */
+type ThreadGroup = Query.Group<Pick<Message.Message, 'threadId'>, Message.Message>;
+
+const isThreadGroup = (entry: Message.Message | ThreadGroup): entry is ThreadGroup => 'values' in entry;
 
 const EMPTY_MESSAGE_TAGS_ATOM = Atom.make((): { id: string; label: string; hue?: string }[] => []);
 

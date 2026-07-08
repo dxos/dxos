@@ -5,7 +5,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Database, Feed, Filter, Obj, Order, Query } from '@dxos/echo';
+import { Database, Feed, Filter, GroupKey, Obj, Order, Query } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
@@ -306,6 +306,56 @@ describe('usePagination', () => {
     await waitFor(() => {
       expect(result.current.items.map((person) => person.name)).toEqual(['person-2', 'person-1', 'person-0']);
     });
+  });
+
+  test('pages over whole groups for a grouped query', async () => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'grouped' }));
+    // 8 people over 4 emails, appended round-robin so group members interleave in the stream.
+    for (let i = 0; i < 8; i++) {
+      await db.appendToFeed(feed, [
+        Obj.make(TestSchema.Person, { name: `person-${i}`, email: `group-${i % 4}@example.com` }),
+      ]);
+    }
+
+    const query = Query.select(Filter.type(TestSchema.Person))
+      .from(feed)
+      .orderBy(Order.natural('desc'))
+      .groupBy(GroupKey.property('email'))
+      .limit(2);
+    const { result } = renderHook(() => usePagination(db, query));
+
+    // Groups are ordered by first occurrence in the newest-first stream; the page size counts
+    // groups, not rows.
+    await waitFor(() => {
+      expect(result.current.items.map((group) => group.key.email)).toEqual([
+        'group-3@example.com',
+        'group-2@example.com',
+      ]);
+    });
+    expect(result.current.items.map((group) => group.values.map((person) => person.name))).toEqual([
+      ['person-7', 'person-3'],
+      ['person-6', 'person-2'],
+    ]);
+    expect(result.current.hasMore).toBe(true);
+
+    result.current.getNext();
+
+    await waitFor(() => {
+      expect(result.current.items.map((group) => group.key.email)).toEqual([
+        'group-3@example.com',
+        'group-2@example.com',
+        'group-1@example.com',
+        'group-0@example.com',
+      ]);
+    });
+    expect(result.current.items.map((group) => group.values.map((person) => person.name))).toEqual([
+      ['person-7', 'person-3'],
+      ['person-6', 'person-2'],
+      ['person-5', 'person-1'],
+      ['person-4', 'person-0'],
+    ]);
   });
 
   test('throws when the query does not carry a limit', async () => {

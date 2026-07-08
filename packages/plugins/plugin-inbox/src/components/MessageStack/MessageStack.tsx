@@ -45,6 +45,19 @@ export type MessageStackActionHandler = (action: MessageStackAction) => void;
  */
 export type MessageStackTag = { id: string; label: string; hue?: string };
 
+/** A conversation (email thread) rendered as one stack entry. */
+export type MessageGroup = {
+  /** Thread id, or the message id for singleton conversations without a thread. */
+  id: string;
+  /** Messages in the conversation, most recent first. */
+  messages: Message.Message[];
+};
+
+/** A stack entry: an individual message or a conversation group. Entries of both kinds may be mixed. */
+export type MessageStackItem = Message.Message | MessageGroup;
+
+export const isMessageGroup = (item: MessageStackItem): item is MessageGroup => 'messages' in item;
+
 /** Per-message tag chip atom family; each tile subscribes to just its own message's tags. */
 export type MessageTagsFamily = (messageId: string) => Atom.Atom<MessageStackTag[]>;
 
@@ -56,7 +69,8 @@ const NOT_STARRED_ATOM = Atom.make(() => false);
 
 export type MessageStackProps = {
   id: string;
-  messages?: Message.Message[];
+  /** Stack entries in display order: individual messages, conversation groups, or a mix. */
+  items?: MessageStackItem[];
   /** Per-message tag chip atom family; each tile subscribes to only its own message's tags. */
   tagsAtom?: MessageTagsFamily;
   currentId?: string;
@@ -64,12 +78,6 @@ export type MessageStackProps = {
   selectedIds?: ReadonlySet<string>;
   /** Per-message starred atom family; each tile subscribes to only its own star state. */
   starredAtom?: StarredFamily;
-  /**
-   * When true, messages are grouped into conversations by `threadId` (the email thread key) and only
-   * the most recent message per conversation is displayed. Messages without a `threadId` form singleton
-   * conversations.
-   */
-  conversations?: boolean;
   /**
    * When `messages` is a lazily-loaded window (see `usePagination`), drives loading more
    * older messages as the user scrolls toward the loaded end. Accepts `usePagination`'s full
@@ -84,92 +92,59 @@ export type MessageStackProps = {
  * Card-based message stack component using mosaic layout.
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
-  (
-    { messages, tagsAtom, currentId, selectedIds, starredAtom, conversations, pagination, onAction, ...props },
-    forwardedRef,
-  ) => {
+  ({ items, tagsAtom, currentId, selectedIds, starredAtom, pagination, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
-    const conversationGroups = useMemo(() => {
-      if (!conversations) {
-        return undefined;
-      }
+    const tileItems = useMemo(
+      () =>
+        items?.map(
+          (item): StackTileData =>
+            isMessageGroup(item)
+              ? {
+                  conversationId: item.id,
+                  messages: item.messages,
+                  // Conversations show the latest message; star reflects/toggles that message.
+                  starredAtom: starredAtom?.(item.messages[0]?.id),
+                  onAction,
+                }
+              : {
+                  message: item,
+                  tagsAtom: tagsAtom?.(item.id),
+                  starredAtom: starredAtom?.(item.id),
+                  onAction,
+                },
+        ),
+      [items, tagsAtom, starredAtom, onAction],
+    );
 
-      const groups = new Map<string, Message.Message[]>();
-      for (const message of messages ?? []) {
-        const key = message.threadId ?? message.id;
-        const group = groups.get(key);
-        if (group) {
-          group.push(message);
-        } else {
-          groups.set(key, [message]);
-        }
-      }
-
-      // Sort each group by created descending (most recent first).
-      for (const group of groups.values()) {
-        group.sort((a, b) => b.created.localeCompare(a.created));
-      }
-
-      return groups;
-    }, [messages, conversations]);
-
-    const items = useMemo(() => {
-      if (conversationGroups) {
-        return Array.from(conversationGroups.entries(), ([conversationId, conversationMessages]) => ({
-          conversationId,
-          messages: conversationMessages,
-          // Conversations show the latest message; star reflects/toggles that message.
-          starredAtom: starredAtom?.(conversationMessages[0]?.id),
-          onAction,
-        }));
-      }
-
-      return messages?.map((message) => ({
-        message,
-        tagsAtom: tagsAtom?.(message.id),
-        starredAtom: starredAtom?.(message.id),
-        onAction,
-      }));
-    }, [conversationGroups, messages, tagsAtom, starredAtom, onAction]);
-
-    // In conversation view, the incoming `currentId` is a message ID (set when a
-    // specific message becomes selected), but the tiles are keyed by conversation ID.
-    // Map the message ID up to its enclosing conversation so the tile actually lights
-    // up. Without this, `aria-current` is never set on a conversation tile and
-    // `dx-current`'s background never appears (especially visible when the
+    // The incoming `currentId` is a message ID (set when a specific message becomes selected),
+    // but conversation tiles are keyed by conversation ID. Map the message ID up to its enclosing
+    // conversation so the tile actually lights up. Without this, `aria-current` is never set on a
+    // conversation tile and `dx-current`'s background never appears (especially visible when the
     // Card has `border={false}` and no default surface).
-    const effectiveCurrentId = useMemo(() => {
-      if (!conversationGroups || !currentId) {
-        return currentId;
-      }
-      for (const [conversationId, conversationMessages] of conversationGroups) {
-        if (conversationId === currentId || conversationMessages.some((message) => message.id === currentId)) {
-          return conversationId;
-        }
-      }
-      return currentId;
-    }, [conversationGroups, currentId]);
-
-    // Tiles are keyed by conversation id in conversation mode, so map selected message ids up to their
-    // enclosing conversation — otherwise controlled `aria-selected`/`dx-selected` never matches.
-    const effectiveSelectedIds = useMemo(() => {
-      if (!conversationGroups || !selectedIds) {
-        return selectedIds;
-      }
-      const mapped = new Set<string>();
-      for (const selectedId of selectedIds) {
-        let resolved = selectedId;
-        for (const [conversationId, conversationMessages] of conversationGroups) {
-          if (conversationId === selectedId || conversationMessages.some((message) => message.id === selectedId)) {
-            resolved = conversationId;
-            break;
+    const resolveTileId = useCallback(
+      (id: string) => {
+        for (const item of items ?? []) {
+          if (isMessageGroup(item) && (item.id === id || item.messages.some((message) => message.id === id))) {
+            return item.id;
           }
         }
-        mapped.add(resolved);
-      }
-      return mapped;
-    }, [conversationGroups, selectedIds]);
+        return id;
+      },
+      [items],
+    );
+
+    const effectiveCurrentId = useMemo(
+      () => (currentId ? resolveTileId(currentId) : currentId),
+      [resolveTileId, currentId],
+    );
+
+    // Conversation tiles are keyed by conversation id, so map selected message ids up to their
+    // enclosing conversation — otherwise controlled `aria-selected`/`dx-selected` never matches.
+    const effectiveSelectedIds = useMemo(
+      () => (selectedIds ? new Set(Array.from(selectedIds, resolveTileId)) : selectedIds),
+      [resolveTileId, selectedIds],
+    );
 
     const handleCurrentChange = useCallback(
       (id: string | undefined) => {
@@ -197,7 +172,10 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
       }
     }, []);
 
-    const getItemId = useCallback((item: any) => item.conversationId ?? item.message?.id, []);
+    const getItemId = useCallback(
+      (item: StackTileData) => ('conversationId' in item ? item.conversationId : item.message.id),
+      [],
+    );
 
     // Requests the next (older) page once the visible range approaches the loaded end, or the
     // previous (newer) page once it approaches the loaded start, and preserves scroll position
@@ -205,7 +183,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
     // `getPrevious` are single-flight and a no-op once exhausted/at the head, so triggering them
     // on every virtualizer change while near either edge is safe.
     const { onChange: handleVirtualizerChange } = useVirtualizerPagination({
-      items,
+      items: tileItems,
       getId: getItemId,
       pagination,
     });
@@ -222,13 +200,11 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
         >
           <ScrollArea.Root padding centered thin>
             <ScrollArea.Viewport ref={setViewport}>
-              {/* The two tile components carry different data shapes (message vs conversation), which the
-                  single-typed Mosaic `Tile`/`items` generics can't express — hence the casts at this boundary. */}
               <Mosaic.VirtualStack
-                Tile={conversations ? (ConversationTile as any) : MessageTile}
-                items={items as any}
+                Tile={StackTile}
+                items={tileItems}
                 draggable={false}
-                getId={(item: any) => item.conversationId ?? item.message?.id}
+                getId={getItemId}
                 getScrollElement={() => viewport}
                 estimateSize={() => 150}
                 gap={4}
@@ -243,6 +219,25 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
 );
 
 MessageStack.displayName = 'MessageStack';
+
+//
+// StackTile
+//
+
+type StackTileData = MessageTileData | ConversationTileData;
+
+type StackTileProps = Pick<MosaicTileProps<StackTileData>, 'data' | 'location' | 'current'>;
+
+/** Dispatches on the entry kind: message entries render a message tile, groups a conversation tile. */
+const StackTile = forwardRef<HTMLDivElement, StackTileProps>(({ data, location, current }, forwardedRef) =>
+  'message' in data ? (
+    <MessageTile ref={forwardedRef} data={data} location={location} current={current} />
+  ) : (
+    <ConversationTile ref={forwardedRef} data={data} location={location} current={current} />
+  ),
+);
+
+StackTile.displayName = 'StackTile';
 
 //
 // MessageTile
