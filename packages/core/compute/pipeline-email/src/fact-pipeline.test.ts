@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { type RDF } from '@dxos/pipeline-rdf';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { EmailFactPipeline } from './fact-pipeline';
@@ -35,7 +34,7 @@ describe('email fact pipeline (facts-only assembly)', () => {
     const indexed: Message.Message[] = [];
     const indexFacts: FactIndexer = async (message) => {
       indexed.push(message);
-      return [] as RDF.Fact[];
+      return [];
     };
 
     const result = await EffectEx.runPromise(EmailFactPipeline.run(messages, { db, indexFacts }));
