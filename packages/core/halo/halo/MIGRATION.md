@@ -150,8 +150,8 @@ model (Keyhive is not published to npm; see the module comment for scope and omi
 `Keyhive.Service` interface mirrors the `keyhive_wasm` bindings so a WASM-backed layer can
 replace `layerMemory()` unchanged.
 
-**Can the existing HALO implementation be shimmed behind this API?** Mostly yes for the
-membership core; no for encryption. A `layerLegacy()` backed by `@dxos/credentials` +
+**Can the existing HALO implementation be shimmed behind this API?**
+Mostly yes for the membership core; no for encryption. A `layerLegacy()` backed by `@dxos/credentials` +
 `@dxos/client-services` would map:
 
 | Service operation    | Legacy backing                                          | Fidelity                                                                                                                                       |
