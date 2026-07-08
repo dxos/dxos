@@ -3,13 +3,14 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import type { EntityId, URI } from '@dxos/keys';
+import { type EntityId, PublicKey, SpaceId, type URI } from '@dxos/keys';
 import { visitValues } from '@dxos/util';
 
 import { type RawString } from './automerge';
 import type { ForeignKey } from './foreign-key';
 import { type EncodedReference, isEncodedReference } from './reference';
 import { type SpaceDocVersion } from './space-doc-version';
+import { createIdFromSpaceKey } from './space-id';
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -29,7 +30,19 @@ export interface DatabaseDirectory {
   version?: SpaceDocVersion;
 
   access?: {
-    spaceKey: string;
+    /**
+     * ID of the space that owns the document (multibase base-32 encoded).
+     */
+    spaceId?: string;
+
+    /**
+     * @deprecated Use {@link spaceId}. Still written alongside `spaceId` so older clients
+     * (and code paths that need the space public key, which cannot be recovered from the id)
+     * keep working.
+     *
+     * Space key of the owning space in hex format without the 0x prefix.
+     */
+    spaceKey?: string;
   };
   /**
    * Objects inlined in the current document.
@@ -53,6 +66,30 @@ export interface DatabaseDirectory {
 
 export const DatabaseDirectory = Object.freeze({
   /**
+   * @returns ID of the space that owns the document.
+   * Coalesces `access.spaceId` with the deprecated space key fields (`access.spaceKey`,
+   * `experimental_spaceKey`), deriving the id from the key for documents that predate `spaceId`.
+   */
+  getSpaceId: async (doc: DatabaseDirectory): Promise<SpaceId | null> => {
+    // String(...) to handle RawString.
+    const rawSpaceId = doc.access?.spaceId != null ? String(doc.access.spaceId) : null;
+    if (rawSpaceId != null) {
+      invariant(SpaceId.isValid(rawSpaceId), 'Invalid space ID');
+      return rawSpaceId;
+    }
+
+    const spaceKeyHex = DatabaseDirectory.getSpaceKey(doc);
+    if (spaceKeyHex == null) {
+      return null;
+    }
+
+    return createIdFromSpaceKey(PublicKey.fromHex(spaceKeyHex));
+  },
+
+  /**
+   * @deprecated Use {@link DatabaseDirectory.getSpaceId}. Only paths that require the space
+   * public key (which cannot be derived from the space id) should read the key.
+   *
    * @returns Space key in hex of the space that owns the document. In hex format. Without 0x prefix.
    */
   getSpaceKey: (doc: DatabaseDirectory): string | null => {
@@ -76,16 +113,22 @@ export const DatabaseDirectory = Object.freeze({
   },
 
   make: ({
+    spaceId,
     spaceKey,
     objects,
     links,
   }: {
-    spaceKey: string;
+    spaceId?: SpaceId;
+    /**
+     * @deprecated Provide {@link spaceId}. The key is still stamped for older clients.
+     */
+    spaceKey?: string;
     objects?: Record<string, EntityStructure>;
     links?: Record<string, RawString>;
   }): DatabaseDirectory => ({
     access: {
-      spaceKey,
+      ...(spaceId != null ? { spaceId } : {}),
+      ...(spaceKey != null ? { spaceKey } : {}),
     },
     objects: objects ?? {},
     links: links ?? {},

@@ -82,6 +82,8 @@ export class MigrationBuilder {
     const newState: DatabaseDirectory = {
       version: SpaceDocVersion.CURRENT,
       access: {
+        spaceId: this._space.id,
+        // spaceKey is deprecated but still written so older clients can resolve the owning space.
         spaceKey: this._space.key.toHex(),
       },
       objects: {
@@ -205,6 +207,8 @@ export class MigrationBuilder {
     this._newRoot = this._repo.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: {
+        spaceId: this._space.id,
+        // spaceKey is deprecated but still written so older clients can resolve the owning space.
         spaceKey: this._space.key.toHex(),
       },
       objects: this._rootDoc.objects,
@@ -233,6 +237,8 @@ export class MigrationBuilder {
     const newHandle = this._repo.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: {
+        spaceId: this._space.id,
+        // spaceKey is deprecated but still written so older clients can resolve the owning space.
         spaceKey: this._space.key.toHex(),
       },
       objects: {
