@@ -24,8 +24,6 @@ export const CONTROL_IDENTIFIERS = {
 } as const;
 
 const BASE_CLASSES = {
-  // TODO(burdon): Use block instead of absolute inset-0 bottom-px grid place-items-center.
-  block: 'absolute inset-0 bottom-px grid place-items-center',
   checkbox: 'dx-checkbox',
   switch: 'dx-checkbox--switch',
 } as const;
@@ -44,7 +42,7 @@ const renderInput = (
   preventToggle = false,
   testId: string,
 ) => {
-  return `<div role="none" class="${BASE_CLASSES.block}"><input type="checkbox" class="${baseClass}" ${renderAttributes(attrs)} ${checked ? 'checked' : ''} ${preventToggle ? 'onclick="return false"' : ''} ${disabled ? 'disabled' : ''} data-testid="${testId}" data-dx-grid-action="accessory"/></div>`;
+  return `<div role="none" class="dx-grid__cell__block"><input type="checkbox" class="${baseClass}" ${renderAttributes(attrs)} ${checked ? 'checked' : ''} ${preventToggle ? 'onclick="return false"' : ''} ${disabled ? 'disabled' : ''} data-testid="${testId}" data-dx-grid-action="accessory"/></div>`;
 };
 
 export const CheckboxComponent = ({

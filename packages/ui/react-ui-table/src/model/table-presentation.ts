@@ -206,14 +206,12 @@ export class TablePresentation<T extends TableRow = TableRow> {
       }
     }
 
-    const BLOCK = 'absolute top-0 bottom-px end-0 w-8 grid place-items-center';
-
     // References.
     if (props.format === Format.TypeFormat.Ref && props.referenceSchema) {
       const targetObj = SchemaEx.getValue(obj, field.path)?.target;
       if (targetObj) {
         const uri = Obj.getURI(targetObj);
-        cell.accessoryHtml = `<div role="none" class="${BLOCK}"><dx-anchor uri=${uri} class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
+        cell.accessoryHtml = `<div role="none" class="dx-grid__cell__block"><dx-anchor uri=${uri} class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
       }
     }
 
@@ -222,7 +220,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       const value = SchemaEx.getValue(obj, field.path);
       const href = typeof value === 'string' ? safeHttpUrl(value) : undefined;
       if (href) {
-        cell.accessoryHtml = `<div role="none" class="${BLOCK}"><a href="${escapeHtmlAttribute(href)}" target="_blank" rel="noopener noreferrer" class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--arrow-square-out--regular"/></a></div>`;
+        cell.accessoryHtml = `<div role="none" class="dx-grid__cell__block"><a href="${escapeHtmlAttribute(href)}" target="_blank" rel="noopener noreferrer" class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--arrow-square-out--regular"/></a></div>`;
       }
     }
 
@@ -538,8 +536,9 @@ export class TablePresentation<T extends TableRow = TableRow> {
         cells[toPlaneCellIndex({ col: 0, row })] = {
           value: '',
           readonly: true,
-          accessoryHtml: '<dx-icon icon="ph--plus--regular" class="contents"></dx-icon>',
-          className: mx('[&>div]:grid [&>div]:place-content-center', draftRows.length < 1 && 'dx-grid__row--cta__cell'),
+          accessoryHtml:
+            '<div role="none" class="dx-grid__cell__block"><dx-icon icon="ph--plus--regular" class="contents"></dx-icon></div>',
+          className: mx(draftRows.length < 1 && 'dx-grid__row--cta__cell'),
         };
       }
 
