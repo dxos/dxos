@@ -10,6 +10,11 @@
 //
 // DOM traversal APIs (`TreeWalker`, `Node.parentElement`) are untyped at the Text/Element boundary;
 // the casts below narrow those results and are the standard idiom for walking a known node kind.
+//
+// TODO(wittjosiah): The color primitives here (sRGB↔OKLCH conversion, CSS color parsing, contrast) are
+//   general-purpose and have no equivalent in our low-level UI packages today. Factor them out into a
+//   shared lower-level color utility (e.g. under react-ui-theme) so other surfaces can reuse them,
+//   leaving only the email-specific recoloring policy in this module.
 
 type RGBA = { r: number; g: number; b: number; a: number };
 type OKLCH = { l: number; c: number; h: number; a?: number };
