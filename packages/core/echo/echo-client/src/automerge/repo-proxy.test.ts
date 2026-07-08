@@ -445,7 +445,7 @@ const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runti
 
   const dataService = new DataServiceImpl({
     automergeHost: host,
-    spaceStateManager: new SpaceStateManager(),
+    spaceStateManager: new SpaceStateManager({ runtime }),
     updateIndexes: async () => {},
   });
 
