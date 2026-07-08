@@ -23,12 +23,12 @@ const makeMessage = (suffix: string, created: string) =>
     blocks: [{ _tag: 'text', text: `Message ${suffix}` }],
   });
 
-const makeFact = (source: string, id: string): RDF.Fact => ({
+const makeFact = (source: string, id: string, object = 'paris'): RDF.Fact => ({
   id,
   assertion: {
     subject: { entity: 'alice' },
     predicate: 'travelsTo',
-    object: { entity: 'paris' },
+    object: { entity: object },
   },
   factuality: { value: 'PR+', polarity: '+', confidence: 0.6, nature: 'epistemic' },
   attribution: {
@@ -41,9 +41,9 @@ const makeFact = (source: string, id: string): RDF.Fact => ({
   sourceHash: 'abc123',
 });
 
-// Deterministic extractor: one fact per message keyed off its stable source id (no LLM).
+// Deterministic extractor: one distinct fact per message keyed off its stable source id (no LLM).
 const stubExtract: FactExtractor = (message) =>
-  Promise.resolve([makeFact(messageSource(message), `fact-${message.id}`)]);
+  Promise.resolve([makeFact(messageSource(message), `fact-${message.id}`, `dest-${message.id}`)]);
 
 describe('runFactPipeline', () => {
   let builder: EchoTestBuilder;
@@ -85,8 +85,8 @@ describe('runFactPipeline', () => {
     }).pipe(Effect.provide(Database.layer(db)), Effect.provide(FactStore.layerMemory), EffectEx.runAndForwardErrors);
 
     expect(result.first.processed).toBe(2);
-    expect(result.first.facts).toBeGreaterThanOrEqual(2);
-    expect(result.storedFacts.length).toBeGreaterThan(0);
+    expect(result.first.facts).toBe(2);
+    expect(result.storedFacts.length).toBe(2);
     expect(Cursor.parseKey(result.cursorValue)).toBe(maxKey);
 
     // Re-run in the same store/session: cursor resume + non-empty store skips every message.

@@ -16,12 +16,12 @@ import { Cursor } from '@dxos/types';
 
 import * as FactCommit from './FactCommit';
 
-const makeFact = (id: string): RDF.Fact => ({
+const makeFact = (id: string, object = 'paris'): RDF.Fact => ({
   id,
   assertion: {
     subject: { entity: 'alice' },
     predicate: 'travelsTo',
-    object: { entity: 'paris' },
+    object: { entity: object },
     validFrom: '2026-06-12',
     quote: "I think I'm probably going to Paris next week",
   },
@@ -57,8 +57,8 @@ describe('FactCommit.factsCommit', () => {
   test('persists a page of facts and advances the cursor to the page max key', async ({ expect }) => {
     const { db, cursor, binding } = await setup();
     const page: Chunk.Chunk<FactUnit> = Chunk.fromIterable([
-      { facts: [makeFact('fact-1')], foreignId: 'm1', key: 100 },
-      { facts: [makeFact('fact-2')], foreignId: 'm2', key: 200 },
+      { facts: [makeFact('fact-1', 'paris')], foreignId: 'm1', key: 100 },
+      { facts: [makeFact('fact-2', 'london')], foreignId: 'm2', key: 200 },
     ]);
 
     const result = await Effect.gen(function* () {
@@ -76,7 +76,7 @@ describe('FactCommit.factsCommit', () => {
       EffectEx.runAndForwardErrors,
     );
 
-    expect(result.facts.length).toBeGreaterThanOrEqual(1);
+    expect(result.facts.length).toBe(2);
     expect(Cursor.parseKey(result.cursorValue)).toBe(200);
     expect(result.dedupSet.has('m1')).toBe(true);
     expect(result.dedupSet.has('m2')).toBe(true);
