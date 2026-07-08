@@ -827,10 +827,6 @@ export class QueryPlanner {
 
     let selectStepIndex = -1;
     let orderStepIndex = -1;
-    // A `skip` (offset) between the select/order and the limit shifts the window: the select/order
-    // must retain `skip + limit` results so `limit` survive after the skip. Ignoring it (propagating
-    // the bare `limit`) truncates to the top `limit` *before* the skip, yielding `limit - skip`.
-    let skipValue = 0;
     for (let i = 0; i < limitStepIndex; i++) {
       const step = processedSteps[i];
       if (step._tag === 'SelectStep') {
@@ -838,9 +834,6 @@ export class QueryPlanner {
       }
       if (step._tag === 'OrderStep') {
         orderStepIndex = i;
-      }
-      if (step._tag === 'SkipStep') {
-        skipValue += step.skip;
       }
       if (BLOCKERS.has(step._tag)) {
         // Found a blocker after the select/order step - can't propagate.
@@ -860,33 +853,51 @@ export class QueryPlanner {
       return QueryPlan.Plan.make(processedSteps);
     }
 
-    // A content-based reorder (by property value or system timestamp) needs the FULL candidate set
-    // before slicing — the index scan order does not match the requested order. Pushing the limit
-    // into the SelectStep would slice an arbitrary subset before sorting. Natural (by id) and rank
-    // (FTS scan already returns by rank) orders are consistent with the scan, so keep optimizing
-    // those.
+    // Pushing the limit into the SelectStep is only sound when the scan enumerates candidates in the
+    // requested order, so that the first N of the scan are the first N of the result. The scan runs
+    // in ascending natural order (by id / queue position). A content-based reorder (property or
+    // system timestamp) or a descending natural order does not match that scan order, so slicing at
+    // select time would keep the wrong N; those need the FULL candidate set and only the OrderStep
+    // may apply the limit. Ascending natural and rank (the FTS scan already returns by rank) stay
+    // consistent with the scan, so keep optimizing those.
     if (orderStepIndex !== -1) {
       const orderStep = processedSteps[orderStepIndex];
-      const reordersByContent =
+      const scanOrderMismatch =
         orderStep._tag === 'OrderStep' &&
-        orderStep.order.some((order) => order.kind === 'property' || order.kind === 'timestamp');
-      if (reordersByContent) {
+        orderStep.order.some(
+          (order) =>
+            order.kind === 'property' ||
+            order.kind === 'timestamp' ||
+            (order.kind === 'natural' && order.direction === 'desc'),
+        );
+      if (scanOrderMismatch) {
         selectStepIndex = -1;
       }
     }
 
+    // A SkipStep between a propagation target and the LimitStep drops items after the limit
+    // would be applied. Since the LimitStep is removed, the limit pushed into the earlier step
+    // must also cover the skipped prefix — otherwise `skip(k).limit(n)` yields only `n - k` items.
+    const skipBetween = (fromIndex: number): number => {
+      let total = 0;
+      for (let i = fromIndex + 1; i < limitStepIndex; i++) {
+        const step = processedSteps[i];
+        if (step._tag === 'SkipStep') {
+          total += step.skip;
+        }
+      }
+      return total;
+    };
+
     // Create a mutable copy of steps to modify.
     const newSteps = [...processedSteps];
-
-    // The select/order caps to `skip + limit` so a following skip still leaves `limit` results.
-    const propagatedLimit = limitValue + skipValue;
 
     // Propagate the limit to the SelectStep if found.
     if (selectStepIndex !== -1) {
       const selectStep = newSteps[selectStepIndex] as QueryPlan.SelectStep;
       newSteps[selectStepIndex] = {
         ...selectStep,
-        limit: propagatedLimit,
+        limit: limitValue + skipBetween(selectStepIndex),
       };
     }
 
@@ -895,16 +906,12 @@ export class QueryPlanner {
       const orderStep = newSteps[orderStepIndex] as QueryPlan.OrderStep;
       newSteps[orderStepIndex] = {
         ...orderStep,
-        limit: propagatedLimit,
+        limit: limitValue + skipBetween(orderStepIndex),
       };
     }
 
-    // Remove the LimitStep only when there is no skip — the propagated cap then equals the limit and
-    // fully enforces it. With a skip the propagated cap is `skip + limit`, so the LimitStep must stay
-    // to trim the post-skip result back to `limit`.
-    if (skipValue === 0) {
-      newSteps.splice(limitStepIndex, 1);
-    }
+    // Remove the LimitStep since limit is now propagated.
+    newSteps.splice(limitStepIndex, 1);
 
     return QueryPlan.Plan.make(newSteps);
   }

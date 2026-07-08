@@ -10,8 +10,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { type ExtractDocument } from '../../internal/stages/extract';
-import { SemanticStore } from '../../SemanticStore';
+import { FactStore } from '../../store';
+import { type ExtractDocument } from '../../types';
 import { queuedAiService } from '../index';
 import { generateFacts } from './generate-facts';
 
@@ -90,7 +90,7 @@ const STUB_PAYLOADS: readonly unknown[] = [
   },
 ];
 
-const TestLayer = SemanticStore.layer.pipe(
+const TestLayer = FactStore.layer.pipe(
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
   Layer.provideMerge(queuedAiService(STUB_PAYLOADS)),
 );
@@ -111,7 +111,7 @@ describe('generateFacts', () => {
         if (facts.length !== 4) {
           throw new Error(`expected 4 facts, got ${facts.length}`);
         }
-        for (const needle of ['travelsTo', 'Paris', 'Rome', 'PR+', 'CT+', 'satisfies Type.Fact[]']) {
+        for (const needle of ['travelsTo', 'Paris', 'Rome', 'PR+', 'CT+', 'satisfies RDF.Fact[]']) {
           if (!module.includes(needle)) {
             throw new Error(`generated module missing ${JSON.stringify(needle)}`);
           }

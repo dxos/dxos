@@ -45,7 +45,6 @@ export {
   isEchoObject,
   matchKeys,
 } from './echo-handler';
-export * from './guarded-scope';
 export * from './hypergraph';
 export * from './proxy-db';
 export * from './query';
