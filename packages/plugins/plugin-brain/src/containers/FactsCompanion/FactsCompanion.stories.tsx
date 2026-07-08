@@ -18,9 +18,8 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { BrainCapabilities, makeFactStoreRegistry } from '#types';
-
 import { translations } from '#translations';
+import { BrainCapabilities, makeFactStoreRegistry } from '#types';
 
 import { FactsCompanion } from './FactsCompanion';
 

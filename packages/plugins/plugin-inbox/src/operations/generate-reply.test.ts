@@ -10,10 +10,10 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
 import { Database, Obj } from '@dxos/echo';
+import { Feed } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { FactStore, type RDF } from '@dxos/pipeline-rdf';
-import { Feed } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
 import { Mailbox } from '../types';

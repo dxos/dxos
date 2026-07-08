@@ -42,4 +42,3 @@ export const MAILBOX_DRAFTS_TYPE = `${meta.profile.key}.drafts`;
  * Sentinel `data` value for the drafts folder graph node. Must be non-null so the nav tree can select it (`handleSelect` skips `!node.data`).
  */
 export const MAILBOX_DRAFTS_NODE_DATA = `${meta.profile.key}.drafts-folder` as const;
-

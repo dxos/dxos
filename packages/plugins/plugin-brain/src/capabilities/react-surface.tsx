@@ -10,8 +10,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 
-import { FactsCompanion } from '../containers';
 import { FACTS_NODE_DATA } from '../constants';
+import { FactsCompanion } from '../containers';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -22,13 +22,11 @@ export default Capability.makeModule(
         // the companioned object. The sentinel-subject clause keeps this from matching primary
         // object surfaces or other companions.
         filter: AppSurface.allOf(
-          AppSurface.subject(
-            AppSurface.Article,
-            (value): value is typeof FACTS_NODE_DATA => value === FACTS_NODE_DATA,
-          ),
+          AppSurface.subject(AppSurface.Article, (value): value is typeof FACTS_NODE_DATA => value === FACTS_NODE_DATA),
           AppSurface.companion(AppSurface.Article),
         ),
-        component: ({ data }) => (Obj.isObject(data.companionTo) ? <FactsCompanion subject={data.companionTo} /> : null),
+        component: ({ data }) =>
+          Obj.isObject(data.companionTo) ? <FactsCompanion subject={data.companionTo} /> : null,
       }),
     ]);
   }),

@@ -23,4 +23,3 @@ export const Settings = Capability.make<Atom.Writable<import('./Settings').Setti
 export const ObjectExtractor = Capability.make<import('@dxos/extractor').ObjectExtractor>(
   `${meta.profile.key}.capability.objectExtractor`,
 );
-

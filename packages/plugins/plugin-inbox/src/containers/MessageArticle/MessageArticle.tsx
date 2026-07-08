@@ -84,7 +84,13 @@ export const MessageArticle = ({
       { mailbox: Ref.make(mailbox), message },
       { spaceId: db.spaceId },
     );
-    void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply', message, mailbox, body: result?.data?.body });
+    void invokePromise(InboxOperation.DraftEmailAndOpen, {
+      db,
+      mode: 'reply',
+      message,
+      mailbox,
+      body: result?.data?.body,
+    });
   }, [db, invokePromise, message, mailbox]);
 
   // Delete the message (draft locally; synced message is trashed on Gmail and removed from the feed).

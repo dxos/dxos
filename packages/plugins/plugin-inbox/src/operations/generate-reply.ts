@@ -75,11 +75,7 @@ const generatePrompt = (options: { thread: string; facts: string; sender: string
 export const generateReply = (options: {
   readonly mailbox: Mailbox.Mailbox;
   readonly message: Message.Message;
-}): Effect.Effect<
-  { subject: string; body: string },
-  never,
-  FactStore | AiService.AiService | Database.Service
-> =>
+}): Effect.Effect<{ subject: string; body: string }, never, FactStore | AiService.AiService | Database.Service> =>
   Effect.gen(function* () {
     const { mailbox } = options;
 

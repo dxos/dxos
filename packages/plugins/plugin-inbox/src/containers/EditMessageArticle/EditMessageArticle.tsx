@@ -13,8 +13,8 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { ServiceResolver } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
-import { Panel } from '@dxos/react-ui';
 import { useQuery } from '@dxos/react-client/echo';
+import { Panel } from '@dxos/react-ui';
 import { type AssistantOptions, assistant } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type Message } from '@dxos/types';
@@ -93,15 +93,15 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
     );
     const body = result?.data?.body;
     if (body) {
-      Obj.update(subject, (draft) => {
-        const textBlock = draft.blocks.find((block) => block._tag === 'text');
+      Obj.update(subject, (subject) => {
+        const textBlock = subject.blocks.find((block) => block._tag === 'text');
         const existing = textBlock && 'text' in textBlock ? textBlock.text : '';
         const quoteMatch = REPLY_REGEXP.exec(existing);
         const next = quoteMatch ? `${body}\n\n${existing.slice(quoteMatch.index)}` : body;
         if (textBlock && 'text' in textBlock) {
           textBlock.text = next;
         } else {
-          draft.blocks.push({ _tag: 'text', text: next });
+          subject.blocks.push({ _tag: 'text', text: next });
         }
       });
       setGeneration((current) => current + 1);
