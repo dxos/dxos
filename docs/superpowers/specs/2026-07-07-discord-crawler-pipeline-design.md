@@ -1,7 +1,7 @@
 # Discord Crawl Pipeline (Crawler Phase 2)
 
 Date: 2026-07-07
-Status: Approved
+Status: Implemented (phase 2)
 Builds on: [`2026-06-29-crawler-design.md`](./2026-06-29-crawler-design.md) (phase 1, PR #12014), pipeline normalization (PR #12116).
 
 ## Context
