@@ -19,6 +19,7 @@ import * as Stream from 'effect/Stream';
 import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream as PbStream } from '@dxos/codec-protobuf/stream';
 import { EffectEx } from '@dxos/effect';
+import { RpcClosedError, TimeoutError } from '@dxos/protocols';
 import {
   ContactsService,
   DataService,
@@ -31,11 +32,9 @@ import {
   LoggingService,
   NetworkService,
   QueryService,
-  RpcClosedError,
   SpacesService,
   SystemService,
-  TimeoutError,
-} from '@dxos/protocols';
+} from '@dxos/protocols/rpc';
 import { type RpcPort, layerProtocolRpcPortServer, makeProtocolRpcPortClient } from '@dxos/rpc';
 
 import { type ClientServices } from './service';
