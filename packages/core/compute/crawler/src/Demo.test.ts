@@ -12,7 +12,7 @@ import * as Effect from 'effect/Effect';
 import { readFileSync } from 'node:fs';
 import { expect } from 'vitest';
 
-import { SemanticStore } from '@dxos/pipeline-rdf';
+import { FactStore } from '@dxos/pipeline-rdf';
 
 import { AgentRegistry } from './AgentRegistry';
 import { run } from './Crawler';
@@ -41,7 +41,7 @@ describe('demo', () => {
 
         const state = yield* StateStore;
         const registry = yield* AgentRegistry;
-        const store = yield* SemanticStore;
+        const store = yield* FactStore;
 
         const status = yield* state.getRunStatus();
         const agents = yield* registry.list();

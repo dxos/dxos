@@ -18,6 +18,11 @@
       "default": "./dist/lib/neutral/index.mjs",
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts"
+    },
+    "./testing": {
+      "default": "./dist/lib/neutral/testing/index.mjs",
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -26,21 +31,21 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/extractor-lib": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/ai": "catalog:",
     "hyparquet": "catalog:"
   },
   "devDependencies": {
-    "@dxos/ai": "workspace:*",
-    "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/extractor-lib": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect/ai": "catalog:",
     "effect": "catalog:",
     "hyparquet-writer": "catalog:",
     "vitest": "catalog:"

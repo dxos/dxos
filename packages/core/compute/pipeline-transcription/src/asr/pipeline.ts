@@ -4,8 +4,7 @@
 
 import { type ContentBlock } from '@dxos/types';
 
-import { type LivePipeline, runLivePipeline } from '../live';
-import { type RunOptions } from '../PipelineRuntime';
+import { type LivePipeline, type RunOptions, runLivePipeline } from '../runtime';
 import { type AudioRecorder } from './audio-recorder';
 import { SentenceBuffer } from './sentence-buffer';
 import { type TranscribeConfig, type TranscribeFn, Transcriber } from './transcriber';

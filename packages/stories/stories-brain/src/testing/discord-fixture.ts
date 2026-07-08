@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ExtractDocument } from '@dxos/pipeline-rdf';
+import { type RDF } from '@dxos/pipeline-rdf';
 
 type FixtureMessage = {
   'id': string;
@@ -17,10 +17,10 @@ type FixtureMessage = {
  * into pipeline-rdf extraction documents: one per message, text joined from its text blocks,
  * attributed to the sender and sourced by the message's discord key.
  */
-export const parseDiscordFixture = (json: unknown): ExtractDocument[] => {
+export const parseDiscordFixture = (json: unknown): RDF.ExtractDocument[] => {
   const messages = (json as { messages?: FixtureMessage[] })?.messages ?? [];
   return messages
-    .map((message): ExtractDocument => {
+    .map((message): RDF.ExtractDocument => {
       const text = (message.blocks ?? [])
         .filter((block) => block._tag === 'text' && block.text)
         .map((block) => block.text)

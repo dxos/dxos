@@ -15,7 +15,7 @@ const FACT: Fact = {
     object: { entity: 'paris' },
     validFrom: '2026-06-12',
   },
-  valence: { factuality: 'PR+', polarity: '+', confidence: 0.6, nature: 'epistemic' },
+  factuality: { value: 'PR+', polarity: '+', confidence: 0.6, nature: 'epistemic' },
   attribution: { agent: 'alice', source: 'dxn:queue:x:m1', generatedAtTime: '2026-06-06T00:00:00.000Z' },
   recordedAt: '2026-06-06T12:00:00.000Z',
   extractor: { id: 'default', model: 'm', version: '1' },

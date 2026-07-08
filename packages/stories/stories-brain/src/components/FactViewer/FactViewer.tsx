@@ -4,38 +4,43 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { type Type, buildFactGraph, factSourceFromFacts } from '@dxos/pipeline-rdf';
+import { type RDF, buildFactGraph, factSourceFromFacts } from '@dxos/pipeline-rdf';
 import { Icon, IconButton, Input, Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-graph';
 import { Empty, Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
-import { Group, factualityColor, formatDate, formatTerm, graphToTreeNode, groupFacts, termKey } from '../util';
+import { Group, factualityColor, formatDate, formatTerm, graphToTreeNode, groupFacts, termKey } from '../types';
 
 type View = 'list' | 'graph';
 
 export type FactViewerProps = ThemedClassName<{
-  facts: Type.Fact[];
+  facts: RDF.Fact[];
   /** Context entity id; scopes the list and roots the graph. */
   context?: string;
+  /** Predicate filter; when set, only facts with this predicate are shown. */
+  predicate?: string;
 }>;
 
 /**
  * Viewer for extracted semantic facts with two views: a grouped **list** (by subject entity, with
  * conflicts highlighted) and a **graph** (tidy tree rooted at the context entity, exploring the fact
- * graph). A `context` entity scopes the list and roots the graph. Pure/presentational.
+ * graph). A `context` entity scopes the list and roots the graph; a `predicate` further filters the
+ * list. Pure/presentational.
  */
-export const FactViewer = ({ classNames, facts, context }: FactViewerProps) => {
+export const FactViewer = ({ classNames, facts, context, predicate }: FactViewerProps) => {
   const [filter, setFilter] = useState('');
   const [view, setView] = useState<View>('list');
   const scoped = useMemo(
     () =>
-      context == null
-        ? facts
-        : facts.filter(
-            (fact) => termKey(fact.assertion.subject) === context || termKey(fact.assertion.object) === context,
-          ),
-    [facts, context],
+      facts.filter(
+        (fact) =>
+          (context == null ||
+            termKey(fact.assertion.subject) === context ||
+            termKey(fact.assertion.object) === context) &&
+          (predicate == null || fact.assertion.predicate === predicate),
+      ),
+    [facts, context, predicate],
   );
   const groups = useMemo(() => groupFacts(scoped, filter), [scoped, filter]);
   const graph = useMemo(
@@ -122,8 +127,8 @@ const SubjectGroup = ({ group }: { group: Group }) => (
 const cellClassNames =
   'bg-input-surface border border-subdued-separator rounded-sm px-2 py-0.5 font-medium whitespace-nowrap truncate';
 
-const FactRow = ({ fact, conflicting }: { fact: Type.Fact; conflicting: boolean }) => {
-  const { assertion, valence, attribution } = fact;
+const FactRow = ({ fact, conflicting }: { fact: RDF.Fact; conflicting: boolean }) => {
+  const { assertion, factuality, attribution } = fact;
   return (
     <Listbox.Item
       id={fact.id}
@@ -141,10 +146,10 @@ const FactRow = ({ fact, conflicting }: { fact: Type.Fact; conflicting: boolean 
         </div>
 
         <div className='flex items-center justify-end gap-2 shrink-0'>
-          {valence.confidence != null && (
-            <span className='text-xs text-subdued'>{Math.round(valence.confidence * 100)}%</span>
+          {factuality.confidence != null && (
+            <span className='text-xs text-subdued'>{Math.round(factuality.confidence * 100)}%</span>
           )}
-          <Tag hue={factualityColor(valence.factuality)}>{valence.factuality}</Tag>
+          <Tag hue={factualityColor(factuality.value)}>{factuality.value}</Tag>
         </div>
       </div>
 
