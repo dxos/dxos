@@ -106,7 +106,9 @@ describe('feeds', () => {
     }
 
     {
-      const [obj1, obj2, relation] = await db.query(Query.select(Filter.everything()).from(Scope.feed(Feed.getFeedUri(feed)!))).run();
+      const [obj1, obj2, relation] = await db
+        .query(Query.select(Filter.everything()).from(Scope.feed(Feed.getFeedUri(feed)!)))
+        .run();
       expect((obj1 as TestSchema.Person).name).toEqual('john');
       expect((obj2 as TestSchema.Organization).name).toEqual('DXOS');
       expect(Relation.getSource(relation as TestSchema.EmployedBy).name).toEqual('john');
@@ -137,7 +139,9 @@ describe('feeds', () => {
     }
 
     {
-      const [org, relation] = await db.query(Query.select(Filter.everything()).from(Scope.feed(Feed.getFeedUri(feed)!))).run();
+      const [org, relation] = await db
+        .query(Query.select(Filter.everything()).from(Scope.feed(Feed.getFeedUri(feed)!)))
+        .run();
       expect((org as TestSchema.Organization).name).toEqual('DXOS');
       expect(Relation.getSource(relation as TestSchema.EmployedBy).name).toEqual('alice');
       expect(Relation.getTarget(relation as TestSchema.EmployedBy).name).toEqual('DXOS');
@@ -172,7 +176,9 @@ describe('feeds', () => {
         Obj.make(TestSchema.Person, { name: 'jane' }),
       ]);
 
-      const result = await db.query(Query.select(Filter.type(TestSchema.Person)).from(Scope.feed(Feed.getFeedUri(feed)!))).run();
+      const result = await db
+        .query(Query.select(Filter.type(TestSchema.Person)).from(Scope.feed(Feed.getFeedUri(feed)!)))
+        .run();
       expect(result).toHaveLength(2);
       expect(result.map((o) => (o as TestSchema.Person).name).sort()).toEqual(['jane', 'john']);
     });
@@ -187,9 +193,7 @@ describe('feeds', () => {
 
       const localFeedObjects = await db
         .query(
-          Query.select(Filter.type(TestSchema.Person, { name: 'local-only' })).from(
-            Scope.feed(Feed.getFeedUri(feed)!),
-          ),
+          Query.select(Filter.type(TestSchema.Person, { name: 'local-only' })).from(Scope.feed(Feed.getFeedUri(feed)!)),
         )
         .run();
 

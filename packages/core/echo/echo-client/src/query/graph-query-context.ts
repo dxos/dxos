@@ -415,4 +415,3 @@ const filterCoreByDeletedFlag = (core: ObjectCore, options: QueryAST.QueryOption
       return core.isDeleted();
   }
 };
-
