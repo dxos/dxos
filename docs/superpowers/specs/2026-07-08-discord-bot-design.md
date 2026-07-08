@@ -133,11 +133,11 @@ ingests as facts), and the bot returns when it can.
 
 All bot state lives in the same shared SQLite database as the crawl (one `SqlClient`):
 
-| Table | Contents |
-| --- | --- |
-| `greeted_member` | `user_id` PK, `greeted_at` |
-| `answered_message` | `message_id` PK, `disposition`, `answer`, `at` |
-| `question_thread` | `question_id` PK, `thread_id`, `message_id`, `delivered_at` |
+| Table              | Contents                                                    |
+| ------------------ | ----------------------------------------------------------- |
+| `greeted_member`   | `user_id` PK, `greeted_at`                                  |
+| `answered_message` | `message_id` PK, `disposition`, `answer`, `at`              |
+| `question_thread`  | `question_id` PK, `thread_id`, `message_id`, `delivered_at` |
 
 Everything else (messages, cursors, agents, facts, questions, extracted questions) is the existing
 phase 2/3 schema — the bot adds no parallel bookkeeping.
