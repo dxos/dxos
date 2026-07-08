@@ -4,7 +4,7 @@
 
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
@@ -17,7 +17,7 @@ import { Card, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
-import { type Actor } from '@dxos/types';
+import { type Actor, ContentBlock } from '@dxos/types';
 
 import { InboxCapabilities, Mailbox, Starred } from '#types';
 
@@ -38,7 +38,8 @@ import { useMessageActions } from './useToolbar';
 type MessageContextValue = {
   attendableId?: string;
   viewMode: ViewMode;
-  setViewMode: (mode: ViewMode) => void;
+  /** Omit to make the body read-only: the toolbar then hides its view-mode switcher. */
+  setViewMode?: (mode: ViewMode) => void;
   message: Mailbox.MessageLike;
   /** Owning mailbox; enables starring (the message's tag association lives in the mailbox's tag index). */
   mailbox?: Mailbox.Mailbox;
@@ -65,21 +66,15 @@ const NOT_STARRED = Atom.make(false);
 //
 
 type MessageRootProps = PropsWithChildren<
-  Omit<MessageContextValue, 'viewMode' | 'setViewMode'> & {
+  Omit<MessageContextValue, 'viewMode'> & {
     viewMode?: ViewMode;
-    /**
-     * Controlled view-mode setter. When provided the component is controlled — the caller owns the
-     * `viewMode` state (e.g. MessageArticle shares one mode across the toolbar and every message body,
-     * which render in separate roots). Omit for standalone self-managed usage.
-     */
-    setViewMode?: (mode: ViewMode) => void;
   }
 >;
 
 const MessageRoot = ({
   children,
-  viewMode: viewModeProp = 'markdown',
-  setViewMode: setViewModeProp,
+  viewMode = 'markdown',
+  setViewMode,
   onOpen,
   onReply,
   onReplyAll,
@@ -87,10 +82,6 @@ const MessageRoot = ({
   onDelete,
   ...props
 }: MessageRootProps) => {
-  const [internalViewMode, setInternalViewMode] = useState(viewModeProp);
-  const viewMode = setViewModeProp ? viewModeProp : internalViewMode;
-  const setViewMode = setViewModeProp ?? setInternalViewMode;
-
   return (
     <MessageContextProvider
       viewMode={viewMode}
@@ -311,26 +302,29 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
     [mailbox, message, personalTag],
   );
 
-  // With HTML→markdown disabled at sync time, the first text block holds the email's raw HTML.
-  const raw = useMemo(() => {
-    const textBlocks = message.blocks.filter((block) => 'text' in block);
-    return (viewMode === 'enriched' ? textBlocks[1]?.text : textBlocks[0]?.text) || '';
-  }, [message.blocks, viewMode]);
+  // Content blocks are typed by mimeType: `text/html` (raw email HTML), `text/markdown` (an authored
+  // markdown rendering), `text/plain` or untyped (plaintext). The markdown view prefers an authored
+  // markdown block, else converts the HTML in-memory, else falls back to the plaintext.
+  const { html, markdown } = useMemo(() => {
+    const textBlocks = message.blocks.filter((block): block is ContentBlock.Text => block._tag === 'text');
+    const htmlText = textBlocks.find((block) => block.mimeType === 'text/html')?.text ?? '';
+    const markdownBlock = textBlocks.find((block) => block.mimeType === 'text/markdown')?.text;
+    const plainText = textBlocks.find((block) => block.mimeType == null || block.mimeType === 'text/plain')?.text ?? '';
+    return { html: htmlText, markdown: markdownBlock ?? (htmlText ? normalizeText(htmlText) : plainText) };
+  }, [message.blocks]);
 
-  // Markdown/plain views convert the HTML to markdown in-memory (memoized) rather than persisting a
-  // derived copy at sync time. Skipped for the HTML view, which renders `raw` directly.
-  const markdownContent = useMemo(() => (viewMode === 'html' ? '' : normalizeText(raw)), [raw, viewMode]);
-
-  if (viewMode === 'html') {
+  // The HTML view needs an html block; without one (e.g. a markdown-only body) fall through to the
+  // markdown renderer.
+  if (viewMode === 'html' && html) {
     return (
-      <HtmlViewer classNames={classNames} html={raw} loadRemoteImages={loadRemoteImages} isPersonal={isPersonal} />
+      <HtmlViewer classNames={classNames} html={html} loadRemoteImages={loadRemoteImages} isPersonal={isPersonal} />
     );
   }
 
   return (
     <MarkdownViewer
       classNames={classNames}
-      content={markdownContent}
+      content={markdown}
       markdown={viewMode !== 'plain'}
       loadRemoteImages={loadRemoteImages}
       slots={{ content: { className: 'mx-4!' } }}

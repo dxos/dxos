@@ -7,15 +7,14 @@ import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 /**
  * How the body is rendered.
  *   - `html`:     the raw email HTML, rendered in a sandboxed iframe (the default for messages).
- *   - `enriched`: the enriched (second) text block, decorated via the markdown extensions.
- *   - `markdown`: the body converted to markdown in-memory, decorated via the markdown extensions.
+ *   - `markdown`: an authored markdown block if the message has one, else the body converted to
+ *                 markdown in-memory; decorated via the markdown extensions (the "enriched" view).
  *   - `plain`:    the body as text, shown verbatim with no markdown parsing.
  */
-export type ViewMode = 'html' | 'enriched' | 'markdown' | 'plain';
+export type ViewMode = 'html' | 'markdown' | 'plain';
 
 export const VIEW_MODE_ICONS: Record<ViewMode, string> = {
   html: 'ph--browser--regular',
-  enriched: 'ph--article--regular',
   markdown: 'ph--markdown-logo--regular',
   plain: 'ph--text-t--regular',
 };
@@ -25,14 +24,14 @@ export type ViewModeGroupOptions = {
   ns: string;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
-  /** Modes offered, in order. Defaults to all three. */
+  /** Modes offered, in order. Defaults to markdown/plain. */
   modes?: ViewMode[];
   /** Disable the group (e.g. while editing, when the rendered view is irrelevant). */
   disabled?: boolean;
 };
 
 /**
- * Toolbar dropdown that switches how a body is rendered (enriched/markdown/plain).
+ * Toolbar dropdown that switches how a body is rendered (markdown/plain, or html for messages).
  * Shared by the Message and Event toolbars; compose via `MenuBuilder.subgraph(viewModeGroup(...))`.
  */
 export const viewModeGroup =
@@ -40,7 +39,7 @@ export const viewModeGroup =
     ns,
     viewMode,
     setViewMode,
-    modes = ['enriched', 'markdown', 'plain'],
+    modes = ['markdown', 'plain'],
     disabled,
   }: ViewModeGroupOptions): ActionGroupBuilderFn =>
   (builder) => {

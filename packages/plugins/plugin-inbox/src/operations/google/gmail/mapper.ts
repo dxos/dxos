@@ -98,6 +98,8 @@ export const mapToMessage = (decoded: DecodedMessage, contact: Person.Person | u
       {
         _tag: 'text',
         text: body,
+        // Gmail sync keeps the raw email HTML (the markdown/plain views derive from it in-component).
+        mimeType: 'text/html',
       },
     ],
   });

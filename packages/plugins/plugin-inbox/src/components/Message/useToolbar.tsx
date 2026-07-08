@@ -24,7 +24,8 @@ export type UseMessageToolbarActionsProps = {
   /** Whether remote images are currently loaded inline. */
   loadRemoteImages: boolean;
   viewMode: ViewMode;
-  setViewMode: (mode: ViewMode) => void;
+  /** Omit to hide the view-mode switcher (read-only body). */
+  setViewMode?: (mode: ViewMode) => void;
   /** Toggle the remote-image loading setting. */
   onToggleLoadImages: () => void;
   onOpen?: () => void;
@@ -56,13 +57,15 @@ export const useMessageActions = ({
         .root({ label: ['message-toolbar.label', { ns: meta.profile.key }] })
         .subgraph(onOpen && openGroup({ ns: meta.profile.key, labelKey: 'message-toolbar-open.menu', onOpen }))
         .subgraph(
-          viewModeGroup({
-            ns: meta.profile.key,
-            viewMode,
-            setViewMode,
-            // Default HTML view; markdown/plain are computed in-memory by the body component.
-            modes: ['html', 'markdown', 'plain'],
-          }),
+          // Only offer the view-mode switcher when the body is controllable (a setter was provided).
+          setViewMode &&
+            viewModeGroup({
+              ns: meta.profile.key,
+              viewMode,
+              setViewMode,
+              // Default HTML view; markdown/plain are computed in-memory by the body component.
+              modes: ['html', 'markdown', 'plain'],
+            }),
         )
         .subgraph((b) =>
           b.action(

@@ -87,6 +87,8 @@ export const mapToMessage = (decoded: DecodedEmail, contact: Person.Person | und
       {
         _tag: 'text',
         text: body,
+        // JMAP sync converts the body to markdown (via the htmlToMarkdown stage) before mapping.
+        mimeType: 'text/markdown',
       },
     ],
   });
