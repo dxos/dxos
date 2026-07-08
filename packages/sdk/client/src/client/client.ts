@@ -15,8 +15,6 @@ import {
   SpaceProperties,
   STATUS_TIMEOUT,
   clientServiceBundle,
-  runServiceCall,
-  subscribeStream,
 } from '@dxos/client-protocol';
 import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -33,6 +31,8 @@ import {
   InvalidConfigError,
   RemoteServiceConnectionError,
   RemoteServiceConnectionTimeout,
+  runServiceCall,
+  subscribeStream,
 } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';

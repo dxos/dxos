@@ -5,8 +5,9 @@
 import * as Runtime from 'effect/Runtime';
 
 import { Event, MulticastObservable, SubscriptionList } from '@dxos/async';
-import { type ClientServicesProvider, runServiceCall, subscribeStream } from '@dxos/client-protocol';
+import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
+import { runServiceCall, subscribeStream } from '@dxos/protocols';
 import { ConnectionState, type NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
 
 import { RPC_TIMEOUT } from '../common';

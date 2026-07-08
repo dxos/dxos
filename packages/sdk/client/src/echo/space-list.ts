@@ -13,8 +13,6 @@ import {
   IMPORT_SPACE_TIMEOUT,
   type Space,
   SpaceProperties,
-  runServiceCall,
-  subscribeStream,
 } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -24,7 +22,7 @@ import { type EchoClient } from '@dxos/echo-client';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ApiError } from '@dxos/protocols';
+import { ApiError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import {
   Invitation,
   type Space as SerializedSpace,

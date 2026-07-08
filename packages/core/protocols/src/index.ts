@@ -4,6 +4,7 @@
 
 export * from './automerge.ts';
 export * from './edge/index.ts';
+export * from './effect-runtime.ts';
 export * from './errors/index.ts';
 export * from './indexing.ts';
 export * from './messenger.ts';

@@ -5,15 +5,11 @@
 import * as Runtime from 'effect/Runtime';
 
 import { Event, Trigger, synchronized } from '@dxos/async';
-import {
-  type ClientServices,
-  type ClientServicesProvider,
-  clientServiceBundle,
-  subscribeStream,
-} from '@dxos/client-protocol';
+import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import type { PublicKey } from '@dxos/keys';
 import { type CallMetadata, type LogFilter, log, parseFilter } from '@dxos/log';
+import { subscribeStream } from '@dxos/protocols';
 import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { type ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';

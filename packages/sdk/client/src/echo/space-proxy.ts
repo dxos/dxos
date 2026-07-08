@@ -23,8 +23,6 @@ import {
   SPACE_TAG,
   type SpaceInternal,
   SpaceProperties,
-  runServiceCall,
-  subscribeStream,
 } from '@dxos/client-protocol';
 import { Context, cancelWithContext } from '@dxos/context';
 import { type SpecificCredential, checkCredentialType } from '@dxos/credentials';
@@ -43,7 +41,7 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { decodeError } from '@dxos/protocols';
+import { decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import {
   type Contact,
   CreateEpochRequest,

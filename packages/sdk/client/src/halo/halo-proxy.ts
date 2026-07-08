@@ -6,19 +6,13 @@ import * as Runtime from 'effect/Runtime';
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, SubscriptionList, Trigger, asyncTimeout } from '@dxos/async';
-import {
-  AUTH_TIMEOUT,
-  type ClientServicesProvider,
-  type Halo,
-  runServiceCall,
-  subscribeStream,
-} from '@dxos/client-protocol';
+import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ApiError } from '@dxos/protocols';
+import { ApiError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import {
   type Contact,
   type Device,

@@ -4,8 +4,8 @@
 
 import * as Runtime from 'effect/Runtime';
 
-import { runServiceCall } from '@dxos/client-protocol';
 import { type EdgeIdentity } from '@dxos/edge-client';
+import { runServiceCall } from '@dxos/protocols';
 
 import { type Client } from '../client';
 import { RPC_TIMEOUT } from '../common';
