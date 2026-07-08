@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import type * as Layer from 'effect/Layer';
+import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
 import { StateStore } from './StateStore';
@@ -89,4 +90,29 @@ const suite = (name: string, layer: Layer.Layer<StateStore>) =>
 
 describe('StateStore', () => {
   suite('memory', StateStore.layerMemory);
+  suite('sql', StateStore.layerSql.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }))));
+
+  it.effect(
+    'sql state survives a fresh layer over the same database',
+    Effect.fnUntraced(function* () {
+      // Two StateStore layers over ONE memoized client layer: the second sees the first's writes.
+      const shared = Layer.memoize(SqliteClient.layer({ filename: ':memory:' }));
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const memoized = yield* shared;
+          yield* Effect.gen(function* () {
+            const store = yield* StateStore;
+            yield* store.pushTargets([target('chan-1')]);
+            yield* store.setCursor('chan-1', '42');
+          }).pipe(Effect.provide(StateStore.layerSql.pipe(Layer.provide(memoized))));
+
+          yield* Effect.gen(function* () {
+            const store = yield* StateStore;
+            const [entry] = yield* store.listTargets();
+            expect(entry.cursor).toBe('42');
+          }).pipe(Effect.provide(StateStore.layerSql.pipe(Layer.provide(memoized))));
+        }),
+      );
+    }),
+  );
 });

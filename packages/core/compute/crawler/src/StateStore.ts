@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as SqlClient from '@effect/sql/SqlClient';
 import * as Clock from 'effect/Clock';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { type StateError } from './errors';
+import { makeSql, migrate } from './internal/state-store-sql';
 import type * as Type from './types';
 
 export type RunStatus = 'idle' | 'running' | 'paused' | 'done' | 'error';
@@ -15,7 +17,8 @@ export type RunStatus = 'idle' | 'running' | 'paused' | 'done' | 'error';
 /**
  * Durable crawl state: the frontier stack, per-target cursors, and run status. Resumability comes
  * entirely from here — the crawl loop holds no in-memory continuation, so a stop/eviction is safe.
- * The browser binds an ECHO-backed impl; the (deferred) worker binds a DO-SQLite impl.
+ * `layerSql` binds any `@effect/sql` client (browser wasm / node / DO SQLite); `layerMemory` serves
+ * tests and throwaway runs.
  */
 export interface StateStoreApi {
   /** Push targets onto the frontier (LIFO ⇒ depth-first). Ids already present are ignored. */
@@ -37,6 +40,17 @@ export interface StateStoreApi {
 export class StateStore extends Context.Tag('@dxos/crawler/StateStore')<StateStore, StateStoreApi>() {
   /** In-memory frontier (tests, demos, single-process browser runs). */
   static layerMemory: Layer.Layer<StateStore> = Layer.sync(StateStore, () => makeMemory());
+
+  /** SQLite-backed frontier over a shared SqlClient (browser wasm / node / DO SQLite). */
+  static layerSql: Layer.Layer<StateStore, never, SqlClient.SqlClient> = Layer.scoped(
+    StateStore,
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      // Schema creation is a fatal store-construction failure, not a recoverable per-op error.
+      yield* migrate(sql).pipe(Effect.orDie);
+      return makeSql(sql);
+    }),
+  );
 }
 
 const makeMemory = (): StateStoreApi => {
