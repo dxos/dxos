@@ -205,9 +205,7 @@ export interface Query<T> {
    * @param aggregates - Record of aggregate declarations keyed by result name.
    * @returns Query whose group results carry the named aggregates.
    */
-  'aggregate'<
-    const A extends Record<string, Aggregate.Aggregate<T extends Group<any, infer E, any> ? E : never, any>>,
-  >(
+  'aggregate'<const A extends Record<string, Aggregate.Aggregate<T extends Group<any, infer E, any> ? E : never, any>>>(
     aggregates: A,
   ): Query<
     Group<

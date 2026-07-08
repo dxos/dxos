@@ -385,9 +385,7 @@ describe('usePagination', () => {
       .groupBy(GroupKey.property('email'))
       .aggregate({ latest: Aggregate.max('name') });
 
-    const descending = renderHook(() =>
-      usePagination(db, grouped.orderBy(Order.aggregate('latest', 'desc')).limit(2)),
-    );
+    const descending = renderHook(() => usePagination(db, grouped.orderBy(Order.aggregate('latest', 'desc')).limit(2)));
     // First page: the two groups with the highest max(name) — a@x (p7) then b@x (p6).
     await waitFor(() => {
       expect(descending.result.current.items.map((group) => group.key.email)).toEqual(['a@x', 'b@x']);

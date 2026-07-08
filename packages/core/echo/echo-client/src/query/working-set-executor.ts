@@ -509,7 +509,10 @@ export class WorkingSetQueryExecutor {
       }
       case 'aggregate': {
         // Order groups by a named aggregate stamped on each member by `GroupByStep`.
-        const cmp = GroupBy.compareScalar(itemA.aggregates?.[order.name] ?? null, itemB.aggregates?.[order.name] ?? null);
+        const cmp = GroupBy.compareScalar(
+          itemA.aggregates?.[order.name] ?? null,
+          itemB.aggregates?.[order.name] ?? null,
+        );
         return order.direction === 'desc' ? -cmp : cmp;
       }
       default:

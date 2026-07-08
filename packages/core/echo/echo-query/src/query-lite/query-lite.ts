@@ -1001,7 +1001,8 @@ const prettyQuery = (query: QueryAST.Query): string => {
         return grouped;
       }
       const aggregates = query.aggregates.map(
-        (aggregate) => `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${JSON.stringify(aggregate.property)})`,
+        (aggregate) =>
+          `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${JSON.stringify(aggregate.property)})`,
       );
       return `${grouped}.aggregate({ ${aggregates.join(', ')} })`;
     }

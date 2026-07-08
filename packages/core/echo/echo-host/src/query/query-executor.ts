@@ -1521,7 +1521,10 @@ export class QueryExecutor extends Resource {
       }
       case 'aggregate': {
         // Order groups by a named aggregate stamped on each member by `GroupByStep`.
-        const comparison = GroupBy.compareScalar(a.aggregates?.[order.name] ?? null, b.aggregates?.[order.name] ?? null);
+        const comparison = GroupBy.compareScalar(
+          a.aggregates?.[order.name] ?? null,
+          b.aggregates?.[order.name] ?? null,
+        );
         return order.direction === 'desc' ? -comparison : comparison;
       }
       default:

@@ -625,7 +625,6 @@ describe('Query', () => {
       expect(page.every((group) => group.count === 2 && group.values.length === 2)).to.be.true;
     });
 
-
     describe('reactivity', () => {
       // Grouped queries are index-backed (like order/limit queries), so `.runSync()`/`.results`
       // only reflect real data after the first reactive round-trip completes; wait for it before

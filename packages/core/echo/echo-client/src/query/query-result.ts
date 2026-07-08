@@ -282,7 +282,12 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 }
 
 /** Runtime shape of a `Query.Group` value once its `K`/row type parameters are erased. */
-type GroupResult = { key: Record<string, unknown>; count: number; aggregates: Record<string, unknown>; values: unknown[] };
+type GroupResult = {
+  key: Record<string, unknown>;
+  count: number;
+  aggregates: Record<string, unknown>;
+  values: unknown[];
+};
 
 /**
  * Buckets flat row-level entries into `Group` values, in the order groups first appear in
