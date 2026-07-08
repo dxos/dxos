@@ -69,7 +69,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'mailbox-facts',
+        id: 'mailboxFacts',
         // Companion off a Mailbox article: subject is the facts sentinel, and `companionTo` carries the
         // Mailbox. The sentinel-subject clause keeps this from matching the message companion (whose
         // companionTo is also a Mailbox) or the primary Mailbox surface.
