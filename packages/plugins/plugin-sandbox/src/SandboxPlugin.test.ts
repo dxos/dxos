@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { Operation, ServiceResolver } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
-import { Database, Feed, Filter, Ref } from '@dxos/echo';
+import { Database, Filter, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -63,7 +63,7 @@ describe('SandboxPlugin (composer harness)', { tags: ['functions-e2e'] }, () => 
         expect(result.exitCode).toBe(0);
         expect(result.success).toBe(true);
         expect(result.stdout.trim()).toBe('hello world');
-      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service, Feed.FeedService))),
+      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service))),
       { timeout: 30_000 },
     );
   });
