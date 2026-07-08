@@ -290,7 +290,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ### UI-invoked space ops MUST pass `spaceId` in InvokeOptions
 
-- Any op whose `services` include space-affinity tags (`Database.Service`, `Feed.FeedService`, `Credential.CredentialsService`) fails with `ServiceNotAvailable` when invoked from a container without `{ spaceId: Obj.getDatabase(subject)?.spaceId }` — the spawn environment has no `space`, so the space slice never initializes. There is NO inference from ECHO objects in the input. Reference: `plugin-video` `SummarySection.tsx`.
+- Any op whose `services` include space-affinity tags (`Database.Service`, `Credential.CredentialsService`) fails with `ServiceNotAvailable` when invoked from a container without `{ spaceId: Obj.getDatabase(subject)?.spaceId }` — the spawn environment has no `space`, so the space slice never initializes. There is NO inference from ECHO objects in the input. Reference: `plugin-video` `SummarySection.tsx`.
 
 ### Editor menu (`Editor.Root`) props must be referentially stable
 

@@ -192,11 +192,6 @@ export interface Database extends Queryable {
   removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void>;
 
   /**
-   * Queries items in a feed associated with this database.
-   */
-  queryFeed(feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<any>;
-
-  /**
    * Syncs a feed with the server.
    */
   syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void>;

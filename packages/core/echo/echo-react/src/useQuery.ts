@@ -11,6 +11,11 @@ const EMPTY_ARRAY: never[] = [];
 const noop = () => {};
 
 interface UseQueryFn {
+  <K, Row, O extends Entity.Entity<Row> = Entity.Entity<Row>>(
+    resource: Database.Queryable | undefined,
+    query: Query.Query<Query.Group<K, Row>>,
+  ): Query.Group<K, O>[];
+
   <Q extends Query.Any, O extends Entity.Entity<Query.Type<Q>> = Entity.Entity<Query.Type<Q>>>(
     resource: Database.Queryable | undefined,
     query: Q,
@@ -27,10 +32,14 @@ interface UseQueryFn {
  *
  * @param queryOrFilter - The query or filter to apply. Query is memoized based on the AST. No need to call useMemo.
  */
+// The overloaded public signature returns `O[]` (entities) or `Group<K, O>[]` (grouped queries)
+// depending on the query shape; the implementation forwards whatever the query result produces,
+// so — as with any implementation of a multi-signature overloaded function type — it is typed
+// as `any[]` here rather than picking one of the mutually-incompatible overload return shapes.
 export const useQuery: UseQueryFn = (
   resource: Database.Queryable | undefined,
   queryOrFilter: Query.Any | Filter.Any,
-): Entity.Any[] => {
+): any[] => {
   const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
 
   const { getObjects, subscribe } = useMemo(() => {
@@ -55,6 +64,6 @@ export const useQuery: UseQueryFn = (
 
   // https://beta.reactjs.org/reference/react/useSyncExternalStore
   // NOTE: This hook will resubscribe whenever the callback passed to the first argument changes; make sure it is stable.
-  const objects = useSyncExternalStore<Entity.Any[]>(subscribe, getObjects);
+  const objects = useSyncExternalStore<any[]>(subscribe, getObjects);
   return objects;
 };

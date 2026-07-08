@@ -4,25 +4,27 @@
 
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Tag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import { normalizeText } from '@dxos/markdown';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Card, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
-import { type Actor, type Message as MessageType } from '@dxos/types';
+import { type Actor, ContentBlock } from '@dxos/types';
 
 import { InboxCapabilities, Mailbox, Starred } from '#types';
 
 import { useExtractedObjects, useMessageTags } from '../../hooks';
 import { formatDateTime } from '../../util';
 import { Header } from '../Header';
+import { HtmlViewer } from '../HtmlViewer';
 import { MarkdownViewer } from '../MarkdownViewer';
 import { Row } from '../Row';
 import { type ViewMode } from '../ViewMode';
@@ -36,8 +38,9 @@ import { useMessageActions } from './useToolbar';
 type MessageContextValue = {
   attendableId?: string;
   viewMode: ViewMode;
-  setViewMode: (mode: ViewMode) => void;
-  message: MessageType.Message;
+  /** Omit to make the body read-only: the toolbar then hides its view-mode switcher. */
+  setViewMode?: (mode: ViewMode) => void;
+  message: Mailbox.MessageLike;
   /** Owning mailbox; enables starring (the message's tag association lives in the mailbox's tag index). */
   mailbox?: Mailbox.Mailbox;
   sender: EID.EID | undefined;
@@ -65,14 +68,15 @@ const NOT_STARRED = Atom.make(false);
 //
 
 type MessageRootProps = PropsWithChildren<
-  Omit<MessageContextValue, 'viewMode' | 'setViewMode'> & {
+  Omit<MessageContextValue, 'viewMode'> & {
     viewMode?: ViewMode;
   }
 >;
 
 const MessageRoot = ({
   children,
-  viewMode: viewModeProp = 'markdown',
+  viewMode = 'markdown',
+  setViewMode,
   onOpen,
   onReply,
   onReplyAll,
@@ -81,8 +85,6 @@ const MessageRoot = ({
   onDelete,
   ...props
 }: MessageRootProps) => {
-  const [viewMode, setViewMode] = useState(viewModeProp);
-
   return (
     <MessageContextProvider
       viewMode={viewMode}
@@ -287,7 +289,7 @@ const MESSAGE_CONTENT_NAME = 'Message.Content';
 type MessageBodyProps = ThemedClassName;
 
 const MessageBody = ({ classNames }: MessageBodyProps) => {
-  const { message, viewMode } = useMessageContext(MESSAGE_CONTENT_NAME);
+  const { message, mailbox, viewMode } = useMessageContext(MESSAGE_CONTENT_NAME);
   // Settings capability is optional — the Message component can be rendered in contexts (e.g.,
   // standalone storybook) where plugin-inbox isn't fully installed. Fall back to safe defaults.
   const settingsAtoms = useCapabilities(InboxCapabilities.Settings);
@@ -295,16 +297,40 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   const settings = useAtomValue(settingsAtom ?? FALLBACK_SETTINGS_ATOM);
   const loadRemoteImages = settings.loadRemoteImages ?? false;
 
-  // Enriched view shows the second (enriched) block; markdown and plain views show the first block.
-  const content = useMemo(() => {
-    const textBlocks = message.blocks.filter((block) => 'text' in block);
-    return (viewMode === 'enriched' ? textBlocks[1]?.text : textBlocks[0]?.text) || '';
-  }, [message.blocks, viewMode]);
+  // Person-to-person mail carries a provider "personal" tag (e.g. Gmail's "Personal" category,
+  // persisted into the mailbox tag index during label sync); used to decide how aggressively the
+  // HTML view restyles the body.
+  const db = getSpace(mailbox ?? message)?.db;
+  const personalTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [...Mailbox.PERSONAL_TAG_KEYS]))[0];
+  const isPersonal = useMemo(
+    () =>
+      !!(mailbox && personalTag && Mailbox.getTagsForMessage(mailbox, message).includes(Mailbox.tagUri(personalTag))),
+    [mailbox, message, personalTag],
+  );
+
+  // Content blocks are typed by mimeType: `text/html` (raw email HTML), `text/markdown` (an authored
+  // markdown rendering), `text/plain` or untyped (plaintext). The markdown view prefers an authored
+  // markdown block, else converts the HTML in-memory, else falls back to the plaintext.
+  const { html, markdown } = useMemo(() => {
+    const textBlocks = message.blocks.filter((block): block is ContentBlock.Text => block._tag === 'text');
+    const htmlText = textBlocks.find((block) => block.mimeType === 'text/html')?.text ?? '';
+    const markdownBlock = textBlocks.find((block) => block.mimeType === 'text/markdown')?.text;
+    const plainText = textBlocks.find((block) => block.mimeType == null || block.mimeType === 'text/plain')?.text ?? '';
+    return { html: htmlText, markdown: markdownBlock ?? (htmlText ? normalizeText(htmlText) : plainText) };
+  }, [message.blocks]);
+
+  // The HTML view needs an html block; without one (e.g. a markdown-only body) fall through to the
+  // markdown renderer.
+  if (viewMode === 'html' && html) {
+    return (
+      <HtmlViewer classNames={classNames} html={html} loadRemoteImages={loadRemoteImages} isPersonal={isPersonal} />
+    );
+  }
 
   return (
     <MarkdownViewer
       classNames={classNames}
-      content={content}
+      content={markdown}
       markdown={viewMode !== 'plain'}
       loadRemoteImages={loadRemoteImages}
       slots={{ content: { className: 'mx-4!' } }}

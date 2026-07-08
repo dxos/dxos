@@ -11,8 +11,32 @@ import { type AnyProperties } from '@dxos/echo/internal';
 // TODO(burdon): Multi-sort option.
 export type Sort<T extends AnyProperties> = (a: T, b: T) => -1 | 0 | 1;
 
+/**
+ * Group membership carried on query-source entries. Internal transport only: the public
+ * `QueryResult.Entry` intentionally omits this — grouping is surfaced to consumers via the
+ * assembled `Query.Group` result objects, which are the authoritative home for key/count.
+ */
+export type EntryGroup = {
+  key: Record<string, string | number | boolean | null>;
+  count: number;
+};
+
+/**
+ * A query-source result entry augmented with internal group membership.
+ */
+export type SourceEntry<O extends Entity.Unknown = Entity.Unknown> = QueryResult.EntityEntry<O> & {
+  group?: EntryGroup;
+};
+
 export interface QueryContext<T extends AnyProperties = AnyProperties, O extends Entity.Entity<T> = Entity.Entity<T>> {
-  getResults(): QueryResult.EntityEntry<O>[];
+  getResults(): SourceEntry<O>[];
+
+  /**
+   * Whether the current query is served by at least one synchronous source. False when the query is
+   * served only by asynchronous sources (e.g. a feed query served by the index), so callers can defer
+   * the initial subscription event until real results arrive instead of emitting an empty snapshot.
+   */
+  isSynchronous(): boolean;
 
   // TODO(dmaretskyi): Update info?
   changed: Event<void>;
@@ -20,7 +44,7 @@ export interface QueryContext<T extends AnyProperties = AnyProperties, O extends
   /**
    * One-shot query.
    */
-  run(ctx: Context, query: QueryAST.Query, opts?: QueryResult.RunOptions): Promise<QueryResult.EntityEntry<O>[]>;
+  run(ctx: Context, query: QueryAST.Query, opts?: QueryResult.RunOptions): Promise<SourceEntry<O>[]>;
 
   /**
    * Set the filter and trigger continuous updates.

@@ -4,7 +4,15 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Ref, Filter as Filter$, Obj as Obj$, Order as Order$, Query as Query$, Type as Type$ } from '@dxos/echo';
+import type {
+  Ref,
+  Filter as Filter$,
+  GroupKey as GroupKey$,
+  Obj as Obj$,
+  Order as Order$,
+  Query as Query$,
+  Type as Type$,
+} from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 // `DXN`/`EID` are type-only imports to keep the `query-lite` bundle free of
@@ -59,6 +67,26 @@ namespace Order1 {
 
 const Order2: typeof Order$ = Order1;
 export { Order2 as Order };
+
+class GroupKeyClass implements GroupKey$.Any {
+  private static 'variance': GroupKey$.Any['~GroupKey'] = {} as GroupKey$.Any['~GroupKey'];
+
+  static 'is'(value: unknown): value is GroupKey$.Any {
+    return typeof value === 'object' && value !== null && '~GroupKey' in value;
+  }
+
+  'constructor'(public readonly ast: QueryAST.GroupByKey) {}
+
+  '~GroupKey' = GroupKeyClass.variance;
+}
+
+namespace GroupKey1 {
+  export const property = <const K extends string>(property: K): GroupKey$.GroupKey<K> =>
+    new GroupKeyClass({ kind: 'property', property });
+}
+
+const GroupKey2: typeof GroupKey$ = GroupKey1;
+export { GroupKey2 as GroupKey };
 
 // Local filter-match helpers used by FilterClass.toPredicate.
 // Written without a runtime @dxos/echo import so the QuickJS sandbox bundle stays clean.
@@ -724,6 +752,14 @@ class QueryClass implements Query$.Any {
     });
   }
 
+  'groupBy'(...keys: GroupKey$.Any[]): Query$.Any {
+    return new QueryClass({
+      type: 'group-by',
+      query: this.ast,
+      keys: keys.map((key) => key.ast),
+    });
+  }
+
   'options'(options: QueryAST.QueryOptions): Query$.Any {
     return new QueryClass({
       type: 'options',
@@ -935,5 +971,9 @@ const prettyQuery = (query: QueryAST.Query): string => {
       return `${prettyQuery(query.query)}.limit(${query.limit})`;
     case 'skip':
       return `${prettyQuery(query.query)}.skip(${query.skip})`;
+    case 'group-by': {
+      const keys = query.keys.map((key) => JSON.stringify(key.property));
+      return `${prettyQuery(query.query)}.groupBy(${keys.join(', ')})`;
+    }
   }
 };

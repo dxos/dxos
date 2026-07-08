@@ -44,7 +44,13 @@ message QueryResult {
   /// In the ECHO Json object format.
   optional string document_json = 10;
   optional bytes document_automerge = 11;
-  
+
+  /// JSON-encoded group-by key (an object of the picked property values). Present iff the query has a group-by clause.
+  optional string groupKey = 12;
+
+  /// Number of records in this record's group within the result set. Present iff the query has a group-by clause.
+  optional int32 groupCount = 13;
+
   /// @deprecated Use spaceId.
   optional dxos.keys.PublicKey spaceKey = 2;
 }

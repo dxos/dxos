@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Stream from 'effect/Stream';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { Database, Feed, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Pipeline, Stage } from '@dxos/pipeline';
@@ -121,7 +122,7 @@ describe('sync pipeline harness', () => {
         (raw) => raw.key,
       ),
       mapStage,
-      EmailStage.extractContacts,
+      EmailStage.extractContacts(),
     );
     const withFault = options.fault ? mapped.pipe(options.fault) : mapped;
     return withFault.pipe(
@@ -135,7 +136,7 @@ describe('sync pipeline harness', () => {
   const cursorOf = (binding: SyncBinding.SyncBinding): string | undefined => binding.cursor.target?.value;
 
   const feedForeignIds = async (db: Database.Database, feed: Feed.Feed): Promise<string[]> => {
-    const messages = await db.queryFeed(feed, Filter.type(Message.Message)).run();
+    const messages = await db.query(Query.select(Filter.type(Message.Message)).from(feed)).run();
     return messages.flatMap((message) =>
       Obj.getMeta(message)
         .keys.filter((key) => key.source === TEST_SOURCE)
@@ -169,6 +170,45 @@ describe('sync pipeline harness', () => {
     expect(new Set(foreignIds).size).toBe(foreignIds.length);
     expect(await db.query(Filter.type(Person.Person)).run()).toHaveLength(3);
     expect(cursorOf(binding)).toBe('50');
+  });
+
+  test('commit batches identical commit effects (by identity) into one call per page', async ({ expect }) => {
+    const { db, feed, tagIndex, binding } = await setup();
+
+    const calls: (readonly SyncBinding.CommitUnit[])[] = [];
+    // A single stable reference reused across every unit in a run (the shape a per-run commit effect
+    // attaches) — so `commit` must invoke it once per page with every unit that attached it, not once
+    // per unit.
+    const commitEffect: SyncBinding.CommitEffect = (units) =>
+      Effect.sync(() => {
+        calls.push(units);
+      });
+
+    const makeUnit = (raw: Raw): SyncBinding.CommitUnit => ({
+      message: Obj.make(Message.Message, {
+        [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
+        created: new Date(raw.key).toISOString(),
+        sender: { email: raw.email },
+        blocks: [{ _tag: 'text', text: raw.body }],
+      }),
+      foreignId: raw.id,
+      key: raw.key,
+      tagUris: [],
+      commitEffects: [commitEffect],
+    });
+
+    const stats: SyncBinding.Stats = { newMessages: 0 };
+    await EffectEx.runPromise(
+      SyncBinding.commit(Chunk.fromIterable([makeUnit(RAWS[0]), makeUnit(RAWS[1])])).pipe(
+        Effect.provide(
+          SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats }),
+        ),
+        Effect.provide(Database.layer(db)),
+      ),
+    );
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0].map((unit) => unit.foreignId)).toEqual(['m1', 'm2']);
   });
 
   test('re-running a completed sync is a no-op', async ({ expect }) => {

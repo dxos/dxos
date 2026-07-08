@@ -5,7 +5,6 @@
 import { useMemo } from 'react';
 
 import { Obj, Tag } from '@dxos/echo';
-import { type Message } from '@dxos/types';
 import { getHashStyles } from '@dxos/ui-theme';
 
 import { type MessageStackTag } from '#components';
@@ -16,7 +15,7 @@ import { GoogleMail } from '../apis';
 /**
  * Resolve the message's tag uris (from the Mailbox tag index) to Tag objects for label/hue.
  */
-export const useMessageTags = (mailboxes: Mailbox.Mailbox[], message: Message.Message, tagObjects: Tag.Tag[]) => {
+export const useMessageTags = (mailboxes: Mailbox.Mailbox[], message: Mailbox.MessageLike, tagObjects: Tag.Tag[]) => {
   const tagByUri = new Map(tagObjects.map((tag) => [Obj.getURI(tag).toString(), tag]));
   const tagUris = mailboxes.flatMap((mailbox) => Mailbox.getTagsForMessage(mailbox, message));
   const tags = [...new Set(tagUris)].flatMap((uri) => {
