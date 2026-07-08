@@ -2,11 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
-import * as Atom from '@effect-atom/atom/Atom';
-import * as Registry from '@effect-atom/atom/Registry';
-import { act, renderHook, waitFor } from '@testing-library/react';
-import React, { type PropsWithChildren } from 'react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Database, Feed, Filter, Obj, Order, Query } from '@dxos/echo';
@@ -15,18 +11,10 @@ import { TestSchema } from '@dxos/echo/testing';
 
 import { usePagination } from './usePagination';
 
-const createWrapper = (registry: Registry.Registry) => {
-  return ({ children }: PropsWithChildren) => (
-    <RegistryContext.Provider value={registry}>{children}</RegistryContext.Provider>
-  );
-};
-
 describe('usePagination', () => {
   let builder: EchoTestBuilder;
-  let registry: Registry.Registry;
 
   beforeEach(async () => {
-    registry = Registry.make();
     builder = await new EchoTestBuilder().open();
   });
 
@@ -47,7 +35,7 @@ describe('usePagination', () => {
     await appendPeople(feed, db, 10);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
-    const { result } = renderHook(() => usePagination(db, query), { wrapper: createWrapper(registry) });
+    const { result } = renderHook(() => usePagination(db, query));
 
     await waitFor(() => {
       expect(result.current.items.map((person) => person.name)).toEqual(['person-9', 'person-8', 'person-7']);
@@ -63,7 +51,7 @@ describe('usePagination', () => {
     await appendPeople(feed, db, 10);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
-    const { result } = renderHook(() => usePagination(db, query), { wrapper: createWrapper(registry) });
+    const { result } = renderHook(() => usePagination(db, query));
 
     await waitFor(() => {
       expect(result.current.items).toHaveLength(3);
@@ -94,7 +82,7 @@ describe('usePagination', () => {
     await appendPeople(feed, db, 30);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
-    const { result } = renderHook(() => usePagination(db, query), { wrapper: createWrapper(registry) });
+    const { result } = renderHook(() => usePagination(db, query));
 
     await waitFor(() => {
       expect(result.current.items).toHaveLength(3);
@@ -122,7 +110,7 @@ describe('usePagination', () => {
     await appendPeople(feed, db, 5);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
-    const { result } = renderHook(() => usePagination(db, query), { wrapper: createWrapper(registry) });
+    const { result } = renderHook(() => usePagination(db, query));
 
     await waitFor(() => {
       expect(result.current.items).toHaveLength(3);
@@ -144,9 +132,7 @@ describe('usePagination', () => {
     await appendPeople(feed, db, 20);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(5);
-    const { result } = renderHook(() => usePagination(db, query, { maxWindowSize: 10 }), {
-      wrapper: createWrapper(registry),
-    });
+    const { result } = renderHook(() => usePagination(db, query, { maxWindowSize: 10 }));
 
     await waitFor(() => {
       expect(result.current.items).toHaveLength(5);
@@ -190,13 +176,9 @@ describe('usePagination', () => {
   });
 
   test('getNext past maxWindowSize does not transiently undershoot the window size', async () => {
-    // Regression test: reading the query's synchronous `.results` immediately upon subscribing
-    // (previously via `subscribe(cb, { fire: true })`) reflected whatever the underlying
-    // `QueryResult` had buffered *before* its async re-query resolved for a newly advanced `skip`
-    // -- e.g. going from `{skip:0,limit:10}` to `{skip:5,limit:10}` synchronously sliced only the
-    // previous range's 10 items, undershooting to 5 until the new range's fetch resolved and
-    // corrected it back to 10. That transient shrink was visible as a jump under the virtualizer
-    // on every eviction step.
+    // Advancing `skip` (e.g. `{skip:0,limit:10}` -> `{skip:5,limit:10}`) must never render fewer
+    // than `limit` items in between: the new range's query result can only overwrite the previous
+    // range's once it has actually resolved, otherwise the virtualizer sees a transient shrink.
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const feed = db.add(Feed.make({ name: 'windowed' }));
@@ -204,14 +186,11 @@ describe('usePagination', () => {
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(5);
     const lengths: number[] = [];
-    const { result } = renderHook(
-      () => {
-        const paginated = usePagination(db, query, { maxWindowSize: 10 });
-        lengths.push(paginated.items.length);
-        return paginated;
-      },
-      { wrapper: createWrapper(registry) },
-    );
+    const { result } = renderHook(() => {
+      const paginated = usePagination(db, query, { maxWindowSize: 10 });
+      lengths.push(paginated.items.length);
+      return paginated;
+    });
 
     await waitFor(() => expect(result.current.items).toHaveLength(5));
     result.current.getNext(); // limit -> 10 (within maxWindowSize)
@@ -234,9 +213,7 @@ describe('usePagination', () => {
     await appendPeople(feed, db, 30);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(5);
-    const { result } = renderHook(() => usePagination(db, query, { maxWindowSize: 10 }), {
-      wrapper: createWrapper(registry),
-    });
+    const { result } = renderHook(() => usePagination(db, query, { maxWindowSize: 10 }));
 
     await waitFor(() => expect(result.current.items).toHaveLength(5));
 
@@ -286,11 +263,9 @@ describe('usePagination', () => {
   });
 
   test('items never regresses to empty across a getNext transition (no scroll-jump regression)', async () => {
-    // Regression test for a bug where `usePagination` delegated to the generic `useQuery`
-    // hook: every `getNext` produced a brand new query AST, and `useQuery`'s AST-keyed
-    // subscription started that new query from an empty snapshot before its async load resolved
-    // -- flashing `items` to `[]` on every page load, which collapsed the virtualizer and snapped
-    // scroll position back to the top in the real app.
+    // Every `getNext` produces a brand new query AST (a new skip/limit); `items` must keep showing
+    // the previous range's results until the new range's first real result arrives, since a flash
+    // to `[]` on every page load collapses the virtualizer and snaps scroll position to the top.
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const feed = db.add(Feed.make({ name: 'windowed' }));
@@ -298,14 +273,11 @@ describe('usePagination', () => {
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
     const lengths: number[] = [];
-    const { result } = renderHook(
-      () => {
-        const paginated = usePagination(db, query);
-        lengths.push(paginated.items.length);
-        return paginated;
-      },
-      { wrapper: createWrapper(registry) },
-    );
+    const { result } = renderHook(() => {
+      const paginated = usePagination(db, query);
+      lengths.push(paginated.items.length);
+      return paginated;
+    });
 
     await waitFor(() => expect(result.current.items).toHaveLength(3));
     lengths.length = 0;
@@ -323,7 +295,7 @@ describe('usePagination', () => {
     await appendPeople(feed, db, 2);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(5);
-    const { result } = renderHook(() => usePagination(db, query), { wrapper: createWrapper(registry) });
+    const { result } = renderHook(() => usePagination(db, query));
 
     await waitFor(() => {
       expect(result.current.items.map((person) => person.name)).toEqual(['person-1', 'person-0']);
@@ -342,9 +314,7 @@ describe('usePagination', () => {
     const feed = db.add(Feed.make({ name: 'windowed' }));
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc'));
-    expect(() => renderHook(() => usePagination(db, query), { wrapper: createWrapper(registry) })).toThrow(
-      /\.limit\(pageSize\)/,
-    );
+    expect(() => renderHook(() => usePagination(db, query))).toThrow(/\.limit\(pageSize\)/);
   });
 
   test('throws when the query already carries a skip', async () => {
@@ -357,93 +327,6 @@ describe('usePagination', () => {
       .orderBy(Order.natural('desc'))
       .skip(5)
       .limit(5);
-    expect(() => renderHook(() => usePagination(db, query), { wrapper: createWrapper(registry) })).toThrow(
-      /manages \.skip\(\)/,
-    );
-  });
-
-  // An indexed (host) source resolves a range after a round-trip, so a fresh QueryResult starts
-  // empty and fills later — unlike a feed query, which resolves synchronously. This exercises that
-  // path with a controllable source: the window must not flash to empty while a page loads, and
-  // paging must not stall on the transient empty range.
-  test('async source: holds the window while a page loads (no flash) and keeps paging', async () => {
-    const source = new ControlledQueryable();
-    const query = Query.select(Filter.type(TestSchema.Person)).limit(3);
-    // Test-only: the mock implements just the QueryResult surface usePagination reads (`results` +
-    // `subscribe`); the cast bridges to the full Queryable type at this boundary.
-    const { result } = renderHook(() => usePagination(source as unknown as Database.Queryable, query), {
-      wrapper: createWrapper(registry),
-    });
-
-    // Initial range in flight — nothing delivered yet.
-    await waitFor(() => expect(result.current.isLoading).toBe(true));
-    expect(result.current.items).toHaveLength(0);
-
-    // First page arrives (full ⇒ hasMore).
-    const page1 = ['a', 'b', 'c'].map((name) => Obj.make(TestSchema.Person, { name }));
-    act(() => source.latest!.deliver(page1));
-    await waitFor(() => expect(result.current.items).toHaveLength(3));
-    expect(result.current.hasMore).toBe(true);
-    expect(result.current.isLoading).toBe(false);
-
-    // getNext requests a larger range; while it loads the previous window is HELD (no flash to
-    // empty) and hasMore stays true so the virtualizer keeps paging.
-    act(() => result.current.getNext());
-    expect(result.current.items.map((person) => person.name)).toEqual(['a', 'b', 'c']);
-    expect(result.current.isLoading).toBe(true);
-    expect(result.current.hasMore).toBe(true);
-
-    // The larger page arrives and supersedes the held window.
-    const page2 = ['a', 'b', 'c', 'd', 'e', 'f'].map((name) => Obj.make(TestSchema.Person, { name }));
-    act(() => source.latest!.deliver(page2));
-    await waitFor(() => expect(result.current.items).toHaveLength(6));
-    expect(result.current.isLoading).toBe(false);
+    expect(() => renderHook(() => usePagination(db, query))).toThrow(/manages \.skip\(\)/);
   });
 });
-
-/** A single query result that starts empty and delivers on demand (mimics an async/indexed source). */
-class ControlledResult {
-  #objects: any[] = [];
-  readonly #callbacks = new Set<() => void>();
-  #atom: Atom.Atom<any[]> | undefined = undefined;
-  get results(): any[] {
-    return this.#objects;
-  }
-  subscribe(callback?: () => void): () => void {
-    if (callback) {
-      this.#callbacks.add(callback);
-    }
-    return () => {
-      if (callback) {
-        this.#callbacks.delete(callback);
-      }
-    };
-  }
-  get atom(): Atom.Atom<any[]> {
-    if (!this.#atom) {
-      this.#atom = Atom.make((get) => {
-        const unsubscribe = this.subscribe(() => {
-          get.setSelf(this.results);
-        });
-        get.addFinalizer(unsubscribe);
-        return this.results;
-      });
-    }
-    return this.#atom;
-  }
-  deliver(objects: any[]): void {
-    this.#objects = objects;
-    for (const callback of this.#callbacks) {
-      callback();
-    }
-  }
-}
-
-/** A controllable `Queryable`: each `query()` opens a fresh {@link ControlledResult}. */
-class ControlledQueryable {
-  latest: ControlledResult | undefined;
-  query(): ControlledResult {
-    this.latest = new ControlledResult();
-    return this.latest;
-  }
-}

@@ -2,9 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
-import * as Atom from '@effect-atom/atom/Atom';
-import { useMemo } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 
 import { type Database, type Entity, Query, type QueryResult } from '@dxos/echo';
 
@@ -16,33 +14,6 @@ export type UsePaginationOptions = {
    * growing further). Defaults to 10x the query's page size.
    */
   maxWindowSize?: number;
-
-  /**
-   * Grace period (ms) after a page request before an as-yet-undelivered range is settled as the end
-   * of the feed. Only matters for async (indexed) sources, where reaching the end produces no change
-   * event to observe — a real page that arrives later still supersedes this via the live-update path,
-   * so this is a safety net, not a hard cutoff. Defaults to 5000ms.
-   */
-  loadTimeout?: number;
-};
-
-/** Reactive pagination window read from {@link PaginationAtom.atom}. */
-export type PaginationState<O> = {
-  items: O[];
-  skip: number;
-  limit: number;
-  isLoading: boolean;
-  hasMore: boolean;
-};
-
-/** Paginated query atom plus range controls (for use outside React hooks). */
-export type PaginationAtom<O> = {
-  /** Loaded window and paging metadata for the active range. */
-  atom: Atom.Atom<PaginationState<O>>;
-  setMaxWindowSize: (value: number) => void;
-  getNext: () => void;
-  getPrevious: () => void;
-  jumpToHead: () => void;
 };
 
 export type PaginationResult<T> = {
@@ -64,164 +35,135 @@ export type PaginationResult<T> = {
   jumpToHead: () => void;
 };
 
-const parsePaginationQuery = (
-  query: Query.Any,
-): { pageSize: number; innerAst: Parameters<typeof Query.fromAst>[0] } => {
-  if (query.ast.type !== 'limit') {
-    throw new TypeError('usePagination requires the query to carry .limit(pageSize).');
-  }
-  if (query.ast.query.type === 'skip') {
-    throw new TypeError('usePagination manages .skip() internally -- do not include it in the query.');
-  }
-  return { pageSize: query.ast.limit, innerAst: query.ast.query };
-};
+/** Reactive snapshot handed to React by `useSyncExternalStore`; a fresh object only on real change. */
+type Snapshot<O> = { items: O[]; skip: number; limit: number; isLoading: boolean };
 
 /**
- * Builds the pagination query atom for one query identity (filter/order/page size/resource).
- * Range delivery is wired through each range's {@link QueryResult.atom} so consumers read a single
- * atom rather than a bespoke `useSyncExternalStore` pair. `skip`/`limit` remain closure state
- * (pagination bookkeeping, not props the tree reads independently); `getNext`/`getPrevious`
- * re-point the active range by opening a fresh `QueryResult` for it.
+ * Builds the external store backing `usePagination` for one query identity (filter/order/page
+ * size/resource). Mirrors `useQuery`'s own `useMemo`-built `{ getObjects, subscribe }` pair as
+ * closely as the added pagination state allows: nothing is queried and `.results` is never read
+ * until `subscribe()` is called (i.e. from `useSyncExternalStore`'s commit-safe effect, never
+ * during render), and `getSnapshot` reads the live `QueryResult.results` rather than keeping a
+ * second cache of its own -- `QueryResultImpl` already only recomputes it when the underlying data
+ * actually changes, so there's nothing to duplicate.
  *
- * Async-tolerant delivery: a `QueryResult` for a new range starts empty and only fills once its
- * source resolves — instantly for a cache-backed feed query, but after a round-trip for an
- * indexed (host) query. The atom never publishes the in-flight range directly; it keeps the last
- * non-empty window (`items`) and only swaps it on a real delivery, which keeps the list stable
- * (no flash-to-empty / scroll snap) while the next page loads.
+ * `skip`/`limit` live as plain closure state rather than React state: pagination is internal
+ * bookkeeping for *which range this same identity is currently showing*, not a prop the rest of
+ * the component tree needs to read independently. `getNext`/`getPrevious` re-point the query at
+ * a new range by opening a fresh `QueryResult` for it, without discarding the previous one's
+ * results until the new one delivers its own -- that's what keeps the previous page visible while
+ * the new one loads (see the hook's own doc comment for why that matters).
  */
-const createPaginationAtom = <Q extends Query.Any, O extends Entity.Entity<Query.Type<Q>>>(
+const createPaginationStore = <Q extends Query.Any, O extends Entity.Entity<Query.Type<Q>>>(
   resource: Database.Queryable | undefined,
   innerAst: Parameters<typeof Query.fromAst>[0],
   pageSize: number,
   initialMaxWindowSize: number,
-  loadTimeout: number,
-): PaginationAtom<O> => {
+) => {
   let maxWindowSize = initialMaxWindowSize;
   let skip = 0;
   let limit = pageSize;
-  let queryResult: QueryResult.QueryResult<Query.Type<Q>> | undefined;
-  let queryUnsubscribe: (() => void) | undefined;
-  let settleTimer: ReturnType<typeof setTimeout> | undefined;
-
-  let items: O[] = EMPTY_ARRAY;
-  let hasMore = false;
-  let loading = false;
+  // Guards `getNext`/`getPrevious` against a burst of synchronous re-entrant calls within the
+  // same tick (a virtualizer's `onChange` can fire once per newly-rendered row, so a single
+  // "scrolled near the edge" event may invoke the callback many times before the first one's new
+  // range has delivered a result). Plain closure state, checked and set synchronously inside the
+  // call itself, so the rest of the burst sees it immediately -- no dependency on a render
+  // happening in between.
   let pending = false;
+  let subscribed = false;
+  let queryResult: QueryResult.QueryResult<Query.Type<Q>> | undefined;
+  let innerUnsubscribe: (() => void) | undefined;
+  let isLoading = false;
+  let snapshot: Snapshot<O> = { items: EMPTY_ARRAY, skip, limit, isLoading };
+  const listeners = new Set<() => void>();
 
-  let publish: (() => void) | undefined;
-
-  const makeState = (): PaginationState<O> => ({ items, skip, limit, isLoading: loading, hasMore });
-
-  const clearSettleTimer = () => {
-    if (settleTimer !== undefined) {
-      clearTimeout(settleTimer);
-      settleTimer = undefined;
+  const notify = () => {
+    snapshot = {
+      items: subscribed && queryResult ? (queryResult.results as O[]) : EMPTY_ARRAY,
+      skip,
+      limit,
+      isLoading,
+    };
+    for (const listener of listeners) {
+      listener();
     }
   };
 
-  const readCurrentResults = (): O[] => {
-    if (!queryResult) {
-      return EMPTY_ARRAY;
-    }
-    if ('runSync' in queryResult && typeof queryResult.runSync === 'function') {
-      return queryResult.runSync() as O[];
-    }
-    return (queryResult as { results: O[] }).results;
-  };
-
-  const applyDelivery = (results: O[]) => {
-    if (loading) {
-      if (results.length === 0) {
-        return;
-      }
-      clearSettleTimer();
-      loading = false;
-    }
-    items = results;
-    hasMore = results.length >= limit;
-  };
-
-  const settleEnd = () => {
-    settleTimer = undefined;
-    if (!loading) {
-      return;
-    }
-    const results = readCurrentResults();
-    loading = false;
-    if (results.length > 0) {
-      items = results;
-      hasMore = results.length >= limit;
-    } else {
-      hasMore = false;
-    }
-    publish?.();
-  };
-
+  // (Re)points the query at the current skip/limit. Subscribes *before* publishing the new
+  // `QueryResult` to `queryResult` (read by `getSnapshot`), since `.results` throws on a
+  // `QueryResult` with no subscribers -- matching how `useQuery` never reads `.results` until
+  // its own `subscribe()` has already run.
+  //
+  // TODO(wittjosiah): For feeds, this re-fetches/decodes the whole feed on every range change --
+  // only what's rendered is bounded, not what's fetched. Needs index-backed keyset pagination to
+  // fix properly.
   const pointAtRange = () => {
-    clearSettleTimer();
-    queryUnsubscribe?.();
-    queryUnsubscribe = undefined;
+    innerUnsubscribe?.();
+    innerUnsubscribe = undefined;
     queryResult = undefined;
 
     if (!resource) {
-      loading = false;
-      items = EMPTY_ARRAY;
-      hasMore = false;
+      isLoading = false;
+      notify();
       return;
     }
 
+    // `Query.fromAst` necessarily erases the entity type to `Query.Any`; the cast restores it,
+    // which is sound because only `skip`/`limit` were layered on top of the caller's own query's
+    // selection/filter/type -- the entity type this query selects is unchanged from `Q`.
     const effectiveQuery = Query.fromAst(innerAst).skip(skip).limit(limit) as Q;
-    queryResult = resource.query(effectiveQuery);
-    loading = true;
-    queryUnsubscribe = queryResult.subscribe(() => {
-      publish?.();
+    const nextQueryResult = resource.query(effectiveQuery);
+    isLoading = true;
+    // Only refreshes `items` (via `notify`) when the data genuinely changes later -- `isLoading`/
+    // `pending` are resolved separately below, since `QueryResultImpl` only re-emits `changed` on
+    // an actual recompute difference, and this callback never fires at all when the requested
+    // range's recomputed result already matches the cached one.
+    innerUnsubscribe = nextQueryResult.subscribe(() => {
+      notify();
     });
-    if (loading) {
-      settleTimer = setTimeout(settleEnd, loadTimeout);
-    }
+    queryResult = nextQueryResult;
+    notify();
+    // `notify()` above already published the best currently-known value for this range (complete
+    // if it was already buffered, a transient undershoot otherwise -- the same thing `useQuery`
+    // shows for any query that hasn't finished resolving yet). `isLoading`/`pending` gate this
+    // tick's re-entrancy and a "just requested a new range" signal, not "the query is provably
+    // fully settled", so resolving them on the next microtask -- rather than waiting on the
+    // subscribe callback above, which may never fire -- keeps them from ever getting stuck, while
+    // still blocking every synchronous call within the same burst (a virtualizer's `onChange` can
+    // fire many times per tick for one user gesture, all before a single microtask elapses).
+    queueMicrotask(() => {
+      isLoading = false;
+      pending = false;
+      notify();
+    });
   };
 
-  const atom = Atom.make<PaginationState<O>>((get) => {
-    publish = () => {
-      if (queryResult) {
-        applyDelivery(readCurrentResults());
-      }
-      get.setSelf(makeState());
-    };
-
-    get.addFinalizer(() => {
-      publish = undefined;
-      clearSettleTimer();
-      queryUnsubscribe?.();
-      queryUnsubscribe = undefined;
-      queryResult = undefined;
-    });
-
-    if (queryResult) {
-      applyDelivery(get(queryResult.atom) as O[]);
-    } else if (resource) {
-      pointAtRange();
-      if (queryResult) {
-        applyDelivery(readCurrentResults());
-      }
-    }
-
-    return makeState();
-  });
-
   return {
-    atom,
+    subscribe: (onStoreChange: () => void) => {
+      listeners.add(onStoreChange);
+      if (listeners.size === 1) {
+        subscribed = true;
+        pointAtRange();
+      }
+      return () => {
+        listeners.delete(onStoreChange);
+        if (listeners.size === 0) {
+          subscribed = false;
+          innerUnsubscribe?.();
+          innerUnsubscribe = undefined;
+          queryResult = undefined;
+        }
+      };
+    },
+    getSnapshot: (): Snapshot<O> => snapshot,
     setMaxWindowSize: (value: number) => {
       maxWindowSize = value;
     },
     getNext: () => {
-      if (pending || loading || !hasMore) {
+      if (pending || snapshot.items.length < limit) {
         return;
       }
       pending = true;
-      queueMicrotask(() => {
-        pending = false;
-      });
       const nextLimit = limit + pageSize;
       if (nextLimit <= maxWindowSize) {
         limit = nextLimit;
@@ -230,46 +172,26 @@ const createPaginationAtom = <Q extends Query.Any, O extends Entity.Entity<Query
         skip += pageSize;
       }
       pointAtRange();
-      publish?.();
     },
     getPrevious: () => {
-      if (pending || loading || skip === 0) {
+      if (pending || skip === 0) {
         return;
       }
       pending = true;
-      queueMicrotask(() => {
-        pending = false;
-      });
+      // Slides the window toward the head at constant size (limit unchanged) -- decreasing skip
+      // while holding limit fixed both reveals newer items at the front and drops an equal count
+      // of the oldest loaded items, mirroring getNext's own "slide" branch (taken once it hits
+      // maxWindowSize) in the opposite direction.
       skip = Math.max(0, skip - pageSize);
       pointAtRange();
-      publish?.();
     },
     jumpToHead: () => {
       pending = false;
       skip = 0;
       limit = pageSize;
       pointAtRange();
-      publish?.();
     },
   };
-};
-
-/**
- * Paginated query atom for a query identity. Holds the loaded window in {@link PaginationAtom.atom}
- * and exposes imperative range controls for paging. Use inside derived atoms via `get(pagination.atom)`.
- */
-export const paginationAtom = <
-  Q extends Query.Any,
-  O extends Entity.Entity<Query.Type<Q>> = Entity.Entity<Query.Type<Q>>,
->(
-  resource: Database.Queryable | undefined,
-  query: Q,
-  options?: UsePaginationOptions,
-): PaginationAtom<O> => {
-  const { pageSize, innerAst } = parsePaginationQuery(query);
-  const maxWindowSize = options?.maxWindowSize ?? pageSize * 10;
-  const loadTimeout = options?.loadTimeout ?? 5000;
-  return createPaginationAtom<Q, O>(resource, innerAst, pageSize, maxWindowSize, loadTimeout);
 };
 
 /**
@@ -280,20 +202,8 @@ export const paginationAtom = <
  * The query's `.orderBy(...)` is otherwise untouched, and applies to any query the underlying
  * `Database.Queryable` supports -- e.g. `Order.natural('desc')` for feed insertion order.
  *
- * TODO(wittjosiah): For feed-scoped queries, every range change re-fetches and decodes the *entire*
- * underlying feed before slicing out the requested page, regardless of ordering -- this hook only
- * bounds what's held/rendered (via `maxWindowSize` eviction), not what's fetched. A previous
- * version special-cased `Order.natural('desc')` with a cursor-based `FeedWindow` that made only
- * that ordering truly lazy; it was reverted because partial laziness (fast for one ordering, a
- * full decode for every other) wasn't worth the added complexity on its own. Revisit as a general,
- * index-backed keyset-pagination feature covering all orderings uniformly, once the host index
- * (`EntityMetaIndex`/`QueryExecutor`) supports ordered range reads -- see `FeedQueryContext`'s
- * `applyOrderSkipLimit` for where the current full-decode path lives.
- *
- * Backed by {@link paginationAtom}. Range delivery subscribes to the active {@link QueryResult} and
- * reads its {@link QueryResult.atom} on each notification so only `skip`/`limit` moves re-point the
- * subscription in place and the previous window is held until the new range's first real result
- * arrives (no flash-to-empty on `getNext`/`getPrevious`).
+ * Keeps showing the previous page while a new one loads: `items` only resets to empty when the
+ * query's filter/order/page-size/resource identity changes, not when `skip`/`limit` move.
  *
  * @example
  * ```tsx
@@ -311,22 +221,45 @@ export const usePagination = <
   query: Q,
   options?: UsePaginationOptions,
 ): PaginationResult<O> => {
-  const { pageSize, innerAst } = parsePaginationQuery(query);
+  if (query.ast.type !== 'limit') {
+    throw new TypeError('usePagination requires the query to carry .limit(pageSize).');
+  }
+  if (query.ast.query.type === 'skip') {
+    throw new TypeError('usePagination manages .skip() internally -- do not include it in the query.');
+  }
+  const pageSize = query.ast.limit;
+  const innerAst = query.ast.query;
   const innerAstKey = JSON.stringify(innerAst);
   const maxWindowSize = options?.maxWindowSize ?? pageSize * 10;
 
-  const pagination = useMemo(() => paginationAtom<Q, O>(resource, query, options), [resource, innerAstKey, pageSize]);
-  pagination.setMaxWindowSize(maxWindowSize);
+  // A new store -- and thus a reset to empty -- is only built when "what" is being shown changes:
+  // filter/order (`innerAstKey`), page size, or `resource` (matching `useQuery`, which likewise
+  // keys its memo on `resource` directly rather than just its truthiness).
+  const store = useMemo(
+    () => createPaginationStore<Q, O>(resource, innerAst, pageSize, maxWindowSize),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [resource, innerAstKey, pageSize],
+  );
+  // `maxWindowSize` deliberately isn't part of the store's `useMemo` deps above (a caller passing
+  // a literal default each render shouldn't reset the window), but a genuine change should still
+  // take effect immediately rather than only on the next unrelated identity change.
+  store.setMaxWindowSize(maxWindowSize);
 
-  const state = useAtomValue(pagination.atom);
+  const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot);
 
-  return {
-    items: state.items,
-    getNext: pagination.getNext,
-    getPrevious: pagination.getPrevious,
-    hasMore: state.hasMore,
-    isLoading: state.isLoading,
-    atHead: state.skip === 0,
-    jumpToHead: pagination.jumpToHead,
-  };
+  // Stable across renders that don't change `snapshot` (`store`'s own methods are already stable
+  // per store identity) -- callers can pass this straight through to a memoized child (e.g. a
+  // virtualizer's pagination callbacks) without re-destructuring and re-bundling it themselves.
+  return useMemo(
+    () => ({
+      items: snapshot.items,
+      getNext: store.getNext,
+      getPrevious: store.getPrevious,
+      hasMore: snapshot.items.length >= snapshot.limit,
+      isLoading: snapshot.isLoading,
+      atHead: snapshot.skip === 0,
+      jumpToHead: store.jumpToHead,
+    }),
+    [snapshot, store],
+  );
 };
