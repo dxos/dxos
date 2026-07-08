@@ -47,10 +47,16 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-protocol"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"

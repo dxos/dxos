@@ -18,6 +18,11 @@ export default Capability.makeModule(
     const blockstore = Blockstore.create(apiHost);
     yield* Effect.tryPromise(() => blockstore.open());
 
-    return Capability.contributes(WnfsCapabilities.Blockstore, blockstore);
+    const instances: WnfsCapabilities.Instances = {};
+
+    return [
+      Capability.contributes(WnfsCapabilities.Blockstore, blockstore),
+      Capability.contributes(WnfsCapabilities.Instances, instances),
+    ];
   }),
 );
