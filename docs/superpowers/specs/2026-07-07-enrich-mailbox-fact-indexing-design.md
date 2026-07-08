@@ -13,7 +13,7 @@ sync has already landed in the feed, and no UI to view the extracted facts again
 We want a second operation that iterates the feed produced by the ingestion sync and runs a subset
 of `EmailPipeline` — **initially just `extractFactsStage`** — while maintaining its own sync state,
 plus a **Mailbox companion surface** that renders the extracted facts. The existing `ExtractMailbox`
-operation crawls the feed but reads the *entire* feed every run (no cursor) and uses imperative
+operation crawls the feed but reads the _entire_ feed every run (no cursor) and uses imperative
 `Effect.forEach`, not the pipeline API; it is left untouched by this work.
 
 ## Goal
@@ -35,11 +35,11 @@ services at spawn via `ServiceResolver.resolveAll` (`compute-runtime/.../Process
 Consequences:
 
 - The operation and React run in the **same JS context**, so a plugin **capability** holding a
-  per-space `FactStore` singleton can be *both* injected into the operation (the `FactIndexer` closes
-  over it) *and* read by the companion surface (`useCapability`). This is the sharing mechanism.
+  per-space `FactStore` singleton can be _both_ injected into the operation (the `FactIndexer` closes
+  over it) _and_ read by the companion surface (`useCapability`). This is the sharing mechanism.
 - `@effect/sql-sqlite-node` (what `FactStore.layer`'s tests use) is native/Node-only and cannot load
   in the browser — so that specific SQLite path is unavailable in-process.
-- Browser-persistent SQLite *is* otherwise available and is the DXOS-native pattern via
+- Browser-persistent SQLite _is_ otherwise available and is the DXOS-native pattern via
   `@dxos/sql-sqlite` (`@effect/sql-sqlite-wasm` + wa-sqlite/OPFS; Composer/ECHO already persist this
   way). Its OPFS sync-access VFS must run in a **Worker**, so it is not a main-thread in-process
   singleton — it is reached via an async worker-hosted client. See "Future: durability" below.
@@ -61,7 +61,7 @@ Therefore add a **sibling relation type** with concrete, fully-typed endpoints, 
 - `State.binding` is generalized to carry only what the machinery reads — the cursor — so both binding
   types share the machinery without a `Connection` dependency. This is the only change to
   `SyncBinding`'s shared code.
-- `State.feed` is **omitted** for the derived binding: the feed is this operation's *source*, not an
+- `State.feed` is **omitted** for the derived binding: the feed is this operation's _source_, not an
   append target, so `seedDedupSet` (reads the append-target feed) does not run. Deduplication is by
   cursor key only (D3); `dedupSet` stays empty (the existing DB-target path).
 
@@ -73,7 +73,7 @@ Unification lives at the **lifecycle layer**, not the schema — both endpoints 
 
 ECHO's native feed/queue cursor is **not implemented**: `Feed.Cursor<T>` is an opaque marker and
 `Feed.cursor()` is stubbed (`packages/core/echo/echo/src/Feed.ts` — "Currently stubbed — cursor
-operations are not yet implemented"); the only `cursor?: string` is a *retention* option with
+operations are not yet implemented"); the only `cursor?: string` is a _retention_ option with
 `TODO(wittjosiah): Use FeedCursor from @dxos/feed`. Query results are plain `Obj` snapshots with no
 per-item position surfaced on read.
 
