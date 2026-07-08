@@ -14,7 +14,7 @@ import { Annotation, DXN, Obj, Type } from '@dxos/echo';
  * and last message id (snowflakes, so the range is also chronological) and keyed by foreign key
  * `{ source: 'discord.com', id: '<threadId>#<startMessageId>' }` so re-detection upserts.
  */
-export class Topic extends Type.makeObject<Topic>(DXN.make('org.dxos.type.discord-topic', '0.1.0'))(
+export class Topic extends Type.makeObject<Topic>(DXN.make('org.dxos.type.discordTopic', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.annotations({ title: 'Name' }), Schema.optional),
     summary: Schema.String.pipe(Schema.annotations({ title: 'Summary' }), Schema.optional),

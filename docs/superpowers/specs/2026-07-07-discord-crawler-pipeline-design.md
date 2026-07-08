@@ -1,7 +1,7 @@
 # Discord Crawl Pipeline (Crawler Phase 2)
 
 Date: 2026-07-07
-Status: Implemented (phase 2)
+Status: Implemented (phases 2 + 3)
 Builds on: [`2026-06-29-crawler-design.md`](./2026-06-29-crawler-design.md) (phase 1, PR #12014), pipeline normalization (PR #12116).
 
 ## Context
@@ -107,7 +107,7 @@ Once the SQLite working set exists, a second source re-drives different stage as
 - `extractQuestionsStage` — per-message detection of questions users asked, recorded idempotently as (user × channel/thread × message id × question) rows in an `extracted_question` table and logged. Detection is deterministic (sentence-level `?` heuristic) with the stage seam ready for an LLM detector later.
 - Node demo scripts in plugin-discord (env-gated, `DISCORD_TOKEN` from the environment): `crawl-demo` seeds a channel set and fills a persistent SQLite file via `DiscordPipeline.run`; `questions-demo` replays that file through the question-extraction pipeline and prints the table.
 
-## Phase 3: Persons for askers + Topic detection (2026-07-08)
+## Phase 3: Persons for askers + Topic detection (2026-07-08, implemented)
 
 Extends the implemented phase 2 with ECHO output objects. Both features accept an optional
 `db: Database.Database` (the `pipeline-email` seam); with no database the pipeline still runs —
@@ -123,7 +123,7 @@ the `Profile.ref` field for. Idempotent: re-runs resolve the same Person by fore
 
 ### Topic type and detection
 
-New ECHO type in `@dxos/pipeline-discord` (`org.dxos.type.discord-topic`): `name`, `summary`,
+New ECHO type in `@dxos/pipeline-discord` (`org.dxos.type.discordTopic`): `name`, `summary`,
 `threadId` (crawl target id), `participants` (stable author ids), `participantLabels`,
 `startMessageId` / `endMessageId`, `startedAt` / `endedAt`, `messageCount`. Upserted by foreign key
 `{ source: 'discord.com', id: '<targetId>#<startMessageId>' }` so re-runs update rather than duplicate.

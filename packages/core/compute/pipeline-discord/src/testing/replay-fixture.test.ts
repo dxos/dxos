@@ -25,6 +25,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, test } from 'vitest';
 
 import { AgentRegistry, StateStore } from '@dxos/crawler';
+import { EffectEx } from '@dxos/effect';
 import { Pipeline } from '@dxos/pipeline';
 
 import { replayStream } from '../replay';
@@ -46,7 +47,7 @@ describe('replay over the crawled SQLite fixture', () => {
       onTestFinished(() => rmSync(workingCopy, { force: true }));
 
       const layer = storesLayer(SqliteClient.layer({ filename: workingCopy }).pipe(Layer.orDie));
-      const result = await Effect.runPromise(
+      const result = await EffectEx.runPromise(
         Effect.gen(function* () {
           // The fixture is a completed crawl: messages + terminal targets + agents are all present.
           const stored = yield* (yield* MessageStore).count();

@@ -33,7 +33,7 @@ export type Profile = {
   /** ISO-8601 of the earliest/most-recent observed message. */
   readonly firstSeen?: string;
   readonly lastSeen?: string;
-  /** DXN of a canonical ECHO Person, when resolved. */
+  /** URI/DXN of the canonical ECHO object (Person) this agent resolves to, when known. */
   readonly ref?: string;
 };
 
@@ -55,7 +55,7 @@ export interface AgentRegistryApi {
   readonly list: () => Effect.Effect<Profile[], StateError>;
   /** Union two agents under one canonical id (normalization); records a sameAs alias. */
   readonly merge: (keepId: string, mergeId: string) => Effect.Effect<Profile, StateError>;
-  /** Record the DXN of the canonical ECHO object (Person) this agent resolves to. */
+  /** Record the URI/DXN of the canonical ECHO object (Person) this agent resolves to. */
   readonly setRef: (id: string, ref: string) => Effect.Effect<void, StateError>;
 }
 

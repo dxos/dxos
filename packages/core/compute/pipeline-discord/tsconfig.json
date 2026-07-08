@@ -7,6 +7,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/effect"
+    },
+    {
       "path": "../../../common/errors"
     },
     {
