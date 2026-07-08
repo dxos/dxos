@@ -19,9 +19,7 @@ import { Cursor } from '@dxos/types';
  * (which also emits the trailing partial page). Facts are extracted upstream (extract-only) and only
  * persisted here, so there is no double write.
  */
-export const factsCommit = (
-  page: Chunk.Chunk<FactUnit>,
-): Effect.Effect<void, never, SyncBinding.Service | FactStore> =>
+export const factsCommit = (page: Chunk.Chunk<FactUnit>): Effect.Effect<void, never, SyncBinding.Service | FactStore> =>
   Effect.gen(function* () {
     const units = Chunk.toReadonlyArray(page);
     if (units.length === 0) {

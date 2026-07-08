@@ -68,7 +68,9 @@ describe('FactCommit.factsCommit', () => {
       const state = yield* SyncBinding.Service;
       return { facts, cursorValue: state.cursor.value, dedupSet: state.dedupSet };
     }).pipe(
-      Effect.provide(SyncBinding.layer({ binding, foreignKeySource: 'inbox.facts', cursorKey: 0, stats: { newMessages: 0 } })),
+      Effect.provide(
+        SyncBinding.layer({ binding, foreignKeySource: 'inbox.facts', cursorKey: 0, stats: { newMessages: 0 } }),
+      ),
       Effect.provide(Database.layer(db)),
       Effect.provide(FactStore.layerMemory),
       EffectEx.runAndForwardErrors,
@@ -88,7 +90,9 @@ describe('FactCommit.factsCommit', () => {
     await Effect.gen(function* () {
       yield* FactCommit.factsCommit(Chunk.empty());
     }).pipe(
-      Effect.provide(SyncBinding.layer({ binding, foreignKeySource: 'inbox.facts', cursorKey: 0, stats: { newMessages: 0 } })),
+      Effect.provide(
+        SyncBinding.layer({ binding, foreignKeySource: 'inbox.facts', cursorKey: 0, stats: { newMessages: 0 } }),
+      ),
       Effect.provide(Database.layer(db)),
       Effect.provide(FactStore.layerMemory),
       EffectEx.runAndForwardErrors,
