@@ -1,0 +1,31 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {},
+  "include": [
+    "src",
+    "src/**/*.json"
+  ],
+  "references": [
+    {
+      "path": "../../../common/errors"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../ai"
+    },
+    {
+      "path": "../crawler"
+    },
+    {
+      "path": "../pipeline"
+    },
+    {
+      "path": "../pipeline-rdf"
+    }
+  ]
+}
