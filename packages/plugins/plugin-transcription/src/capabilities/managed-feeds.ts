@@ -11,8 +11,11 @@ import { TranscriptionCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // Feed URIs an open TranscriptionManager is writing to; consumed by the UI to hide its local recorder.
-    const managedFeeds = Atom.make<ReadonlySet<string>>(new Set<string>()).pipe(Atom.keepAlive);
+    // Feeds an active meeting call is writing to; consumed by the UI to hide its local recorder and to
+    // toggle the meeting-wide transcription instead.
+    const managedFeeds = Atom.make<ReadonlyMap<string, TranscriptionCapabilities.ManagedFeedControl>>(new Map()).pipe(
+      Atom.keepAlive,
+    );
     return Capability.contributes(TranscriptionCapabilities.ManagedFeeds, managedFeeds);
   }),
 );

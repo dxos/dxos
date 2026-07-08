@@ -68,7 +68,7 @@ export default Capability.makeModule(
         if (transcriptFeedUri) {
           const registry = capabilities.get(Capabilities.AtomRegistry);
           const managedFeeds = capabilities.get(TranscriptionCapabilities.ManagedFeeds);
-          const next = new Set(registry.get(managedFeeds));
+          const next = new Map(registry.get(managedFeeds));
           next.delete(transcriptFeedUri);
           registry.set(managedFeeds, next);
         }

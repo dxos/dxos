@@ -18,11 +18,23 @@ export const Settings = Capability.make<Atom.Writable<SettingsModule.Settings>>(
 );
 
 /**
- * Feed URIs currently written by an active meeting call (native RealtimeKit segments, via `CallManager`).
- * Registered by the meeting wiring while joined. The UI uses this to suppress its own local recorder for
- * these transcripts, so meetings transcribe only via the call rather than a second, per-client capture.
+ * Control surface for a feed written by an active meeting call (native RealtimeKit segments, via
+ * `CallManager`): the current on/off state plus a toggle that switches the meeting-wide transcription.
  */
-export const ManagedFeeds = Capability.make<Atom.Writable<ReadonlySet<string>>>(
+export type ManagedFeedControl = {
+  /** Whether native transcription is currently running for this feed. */
+  enabled: boolean;
+  /** Toggles the meeting's native transcription (broadcast to all participants). */
+  toggle: () => void;
+};
+
+/**
+ * Feeds currently bound to an active meeting call (native RealtimeKit segments, via `CallManager`),
+ * keyed by feed URI. Registered by the meeting wiring while joined. The UI uses this to suppress its
+ * own local recorder for these transcripts (meetings transcribe via the call, not a second per-client
+ * capture) and to drive its toolbar toggle off the meeting-wide state instead.
+ */
+export const ManagedFeeds = Capability.make<Atom.Writable<ReadonlyMap<string, ManagedFeedControl>>>(
   `${meta.profile.key}.capability.managed-feeds`,
 );
 

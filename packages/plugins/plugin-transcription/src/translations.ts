@@ -19,6 +19,8 @@ export const translations = [
 
         'start-recording.label': 'Start recording',
         'stop-recording.label': 'Stop recording',
+        'start-transcription.label': 'Start transcription',
+        'stop-transcription.label': 'Stop transcription',
         'hold-to-record.label': 'Hold to record',
 
         'recording-options.label': 'Recording options',

@@ -32,14 +32,16 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
   // TODO(burdon): Remove if not mutable. E.g., finalized transcript.
   const { recording, toggleRecording } = useTranscriptionRecording(transcript);
 
-  // A meeting-managed transcript is written by an open TranscriptionManager (native RealtimeKit segments), so
-  // suppress the local recorder to avoid a second, per-client capture into the same feed. The standalone case
-  // (no manager bound to this feed) keeps the mic button.
+  // A meeting-managed transcript is written by the call (native RealtimeKit segments), so suppress the
+  // local recorder to avoid a second, per-client capture into the same feed; the toolbar toggle switches
+  // the meeting-wide transcription instead. The standalone case (no meeting bound to this feed) keeps
+  // the local mic button.
   const managedFeeds = useAtomCapability(TranscriptionCapabilities.ManagedFeeds);
-  const managed = !!feed && managedFeeds.has(Obj.getURI(feed));
+  const managedControl = feed ? managedFeeds.get(Obj.getURI(feed)) : undefined;
+  const managed = !!managedControl;
 
-  // Hiding the toolbar action only stops new local recordings — an already-running one keeps capturing.
-  // Force it off so a meeting turning on native transcription can't double-write this feed.
+  // Replacing the toolbar action only stops new local recordings — an already-running one keeps
+  // capturing. Force it off so a meeting turning on native transcription can't double-write this feed.
   useEffect(() => {
     if (managed && recording) {
       toggleRecording();
@@ -49,8 +51,20 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
   const menuActions = useMenuBuilder(() => {
     const builder = MenuBuilder.make();
     return (
-      managed
-        ? builder
+      managedControl
+        ? builder.action(
+            'toggle-transcription',
+            {
+              label: [
+                managedControl.enabled ? 'stop-transcription.label' : 'start-transcription.label',
+                { ns: meta.profile.key },
+              ],
+              icon: managedControl.enabled ? 'ph--stop-circle--regular' : 'ph--subtitles--regular',
+              disposition: 'toolbar',
+              testId: 'transcription.toggle-transcription',
+            },
+            managedControl.toggle,
+          )
         : builder.action(
             'toggle-recording',
             {
@@ -62,7 +76,7 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
             toggleRecording,
           )
     ).build();
-  }, [managed, recording, toggleRecording]);
+  }, [managedControl, managed, recording, toggleRecording]);
 
   return (
     <Panel.Root role={role}>
