@@ -31,9 +31,9 @@ export interface DatabaseDirectory {
 
   access?: {
     /**
-     * ID of the space that owns the document (multibase base-32 encoded).
+     * ID of the space that owns the document.
      */
-    spaceId?: string;
+    spaceId?: SpaceId;
 
     /**
      * @deprecated Use {@link spaceId}. Still written alongside `spaceId` so older clients
@@ -71,11 +71,9 @@ export const DatabaseDirectory = Object.freeze({
    * `experimental_spaceKey`), deriving the id from the key for documents that predate `spaceId`.
    */
   getSpaceId: async (doc: DatabaseDirectory): Promise<SpaceId | null> => {
-    // String(...) to handle RawString.
-    const rawSpaceId = doc.access?.spaceId != null ? String(doc.access.spaceId) : null;
-    if (rawSpaceId != null) {
-      invariant(SpaceId.isValid(rawSpaceId), 'Invalid space ID');
-      return rawSpaceId;
+    if (doc.access?.spaceId != null) {
+      invariant(SpaceId.isValid(doc.access.spaceId), 'Invalid space ID');
+      return doc.access.spaceId;
     }
 
     const spaceKeyHex = DatabaseDirectory.getSpaceKey(doc);
