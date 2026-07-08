@@ -57,7 +57,7 @@ Phase 1 advanced the durable cursor at fetch time, so an interrupt between fetch
 - **Volatile fetch position**: held in-stream while a run is live; drives pagination within the run.
 - **Durable commit cursor**: the per-target row in `StateStore` (the non-ECHO `Cursor` variant: `value`, `lastRunAt`, `lastError`). It advances only from the pipeline **sink**, after a page's events have cleared every stage — the `Cursor.commit` pattern from `@dxos/types` applied to per-target SQLite rows.
 
-Resume refetches from the last committed cursor. The overlap window (bounded by pipeline buffer sizes, default 16) is absorbed by idempotent upserts keyed on message id: at-least-once delivery, exactly-once effect. To make the sink page-aware, `Message` events carry their originating page's high-water id (`pageCursor`), so the sink can advance the target's cursor when the last event of a page commits.
+Resume refetches from the last committed cursor. Message ids are monotonic (snowflakes), so the sink advances the target's durable cursor to each `Message` event's own id as it commits — per-message granularity, no page bookkeeping. The overlap window after a hard interrupt (bounded by pipeline buffer sizes, default 16) is absorbed by the persist stage: a refetched message whose id is already stored is dropped from the stream, so downstream stages (agent stats, extraction) replay nothing — at-least-once delivery, exactly-once effect.
 
 The target's terminal `done` status commits the same way: `advance()` no longer writes `done` at fetch time; the `ThreadEnd`/`ChannelEnd` event flowing through the sink performs the status write. Otherwise an interrupt between fetch-drain and sink could mark a target `done` while its final page of messages was never processed, and resume would skip it.
 
@@ -65,7 +65,7 @@ The target's terminal `done` status commits the same way: `advance()` no longer 
 
 A single database with namespaced tables; one `SqlClient.SqlClient` layer bound per environment:
 
-- Browser: `@dxos/sql-sqlite` (re-exports `@effect/sql-sqlite-wasm`, OPFS-backed).
+- Browser: `@dxos/sql-sqlite` (re-exports `@effect/sql-sqlite-wasm`) with an **in-memory wasm** client held by a session-scoped runtime — crawl state survives across operation invocations (pause/resume) but not reloads. The durable OPFS client is worker-only today, so OPFS persistence lands with the EDGE/worker phase.
 - Node/tests: `@effect/sql-sqlite-node` (already a `pipeline-rdf` devDep).
 - EDGE (deferred): Durable Object SQLite.
 
@@ -112,7 +112,7 @@ Crawler.stream(config)
 - New operation `DiscordOperation.CrawlChannels` alongside `SyncDiscordChannel`:
   - Input: connection ref, channel ids, `descendThreads`, `maxDepth`, `maxDays`, `maxSteps`.
   - Resolves the bot token from the `Connection`, binds `discordSourceLayer` + OPFS `SqlClient` + store layers, runs `DiscordPipeline.run` in bounded batches; surfaces progress via the existing toast pattern.
-  - Pause = stop invoking; resume = invoke again (state is in SQLite).
+  - Pause = stop invoking; resume = invoke again. State lives in the session-scoped SQLite runtime, so resume works across invocations within an app session (durable-across-reload storage arrives with the OPFS/EDGE phase).
 - The ECHO `Cursor`/`Feed` sync path is untouched. An ECHO mirror of crawl status (a summary `Cursor` for UI visibility) is deferred.
 
 ## Testing
