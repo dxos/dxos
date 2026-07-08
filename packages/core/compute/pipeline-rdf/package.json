@@ -60,7 +60,7 @@
     "effect": "catalog:"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "beast": {}
 }
