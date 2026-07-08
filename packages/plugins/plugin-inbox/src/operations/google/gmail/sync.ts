@@ -12,6 +12,10 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
+// `Capability` (from `EmailStage.onArrivalExtractors`) appears in `runGmailSync`'s inferred
+// requirements; the import lets TypeScript name it in the emitted .d.ts.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { type Resolver, resolve } from '@dxos/extractor';
@@ -61,13 +65,6 @@ const STREAMING_CONFIG = {
    */
   pageTimeout: Duration.seconds(1),
 } as const;
-
-// Single-flight guard keyed by binding id: a full "all mail" sync can run for many minutes, so the
-// 5-minute timer trigger (or a repeat manual invoke) would otherwise start a second concurrent sync
-// over the same feed — doubling Gmail traffic, main-thread work, and memory, and keeping the binding
-// "syncing" indefinitely. A run in progress covers the caller's intent (its cursor advances), so a
-// concurrent request is skipped.
-const activeSyncs = new Set<string>();
 
 /**
  * Runs the Gmail sync pipeline for a binding against the {@link GoogleMailApi} service (plus the
@@ -222,14 +219,6 @@ export default InboxOperation.GoogleMailSync.pipe(
       if (!bindingObj || !Obj.getDatabase(bindingObj)) {
         return { newMessages: 0 };
       }
-      // Single-flight guard: a full "all mail" sync runs for minutes, so the 5-minute timer trigger (or
-      // a repeat manual invoke) would otherwise start a second concurrent sync over the same feed —
-      // doubling Gmail traffic, main-thread work, and memory. A run in progress covers the caller.
-      if (activeSyncs.has(bindingObj.id)) {
-        log('gmail sync already running for binding, skipping', { binding: bindingObj.id });
-        return { newMessages: 0 };
-      }
-      activeSyncs.add(bindingObj.id);
       const connectionRef = Ref.make(Relation.getSource(bindingObj));
 
       return yield* runGmailSync({ binding: bindingRef, userId, label, after, before, direction }).pipe(
@@ -243,8 +232,6 @@ export default InboxOperation.GoogleMailSync.pipe(
             InboxResolver.Live,
           ),
         ),
-        // Release the single-flight guard on completion, interruption, or failure.
-        Effect.ensuring(Effect.sync(() => activeSyncs.delete(bindingObj.id))),
       );
     }),
   ),

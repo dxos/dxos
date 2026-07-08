@@ -38,7 +38,6 @@ describe('runGmailSync against a mock Gmail API', () => {
 
   test(
     'syncs generated messages into the feed with contacts, threads, tags, and cursor',
-    { timeout: 30_000 },
     async ({ expect }) => {
       // A window comfortably inside the default 30-day sync horizon (and away from its day boundaries),
       // so the date-walk covers the whole dataset regardless of the local timezone.
@@ -99,7 +98,6 @@ describe('runGmailSync against a mock Gmail API', () => {
 
   test(
     'initial backward, incremental forward, and backfill (cursor stays put)',
-    { timeout: 30_000 },
     async ({ expect }) => {
       const now = new Date();
       const day = (ago: number) => format(subDays(now, ago), 'yyyy-MM-dd');

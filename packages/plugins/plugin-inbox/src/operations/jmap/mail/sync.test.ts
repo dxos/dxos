@@ -44,7 +44,6 @@ describe('runJmapSync against a mock JMAP API', () => {
 
   test(
     'syncs generated emails into the feed with contacts, threads, tags, and cursor',
-    { timeout: 30_000 },
     async ({ expect }) => {
       // A window comfortably inside the default 30-day sync horizon (and away from its day boundaries),
       // so the window walk covers the whole dataset regardless of the local timezone.
@@ -101,7 +100,6 @@ describe('runJmapSync against a mock JMAP API', () => {
 
   test(
     'initial backward, incremental forward, and backfill (cursor stays put)',
-    { timeout: 30_000 },
     async ({ expect }) => {
       const now = new Date();
       const day = (ago: number) => subDays(now, ago).toISOString();
