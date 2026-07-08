@@ -10,6 +10,7 @@ tasks:
       - '--entryPoint=src/BrainPlugin.tsx'
       - '--entryPoint=src/capabilities/index.ts'
       - '--entryPoint=src/operations/index.ts'
+      - '--entryPoint=src/skills/index.ts'
       - '--entryPoint=src/types/index.ts'
       - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/plugin.ts'

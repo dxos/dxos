@@ -5,7 +5,7 @@
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { FactStore, OperationHandler } from '#capabilities';
+import { FactStore, OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -19,6 +19,7 @@ export const BrainPlugin = Plugin.define(meta).pipe(
     activate: FactStore,
   }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
