@@ -31,6 +31,13 @@ export type QueryServiceProps = {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
+  /**
+   * Brings the index up to date and resolves once done. Awaited before a feed-scoped query's first
+   * execution so that a query issued right after a feed append reads the just-written items instead
+   * of racing the host's deferred indexing task. Feed reads have no client-side working-set
+   * fallback, so the index is their only source of truth.
+   */
+  updateIndexes: () => Promise<void>;
 };
 
 /**
@@ -46,6 +53,9 @@ type ActiveQuery = {
   open: boolean;
 
   firstResult: boolean;
+
+  /** Query reads from at least one feed scope, so its first result must await indexing. */
+  feedScoped: boolean;
 
   sendResults: (results: QueryResult[]) => void;
   onError: (err: Error) => void;
@@ -139,6 +149,9 @@ export class QueryServiceImpl extends Resource implements QueryService {
       const queryEntry = this._createQuery(ctx, request, next, close, close);
       scheduleMicroTask(ctx, async () => {
         await queryEntry.executor.open();
+        if (queryEntry.feedScoped) {
+          await this._params.updateIndexes();
+        }
         queryEntry.open = true;
         this._updateQueries.schedule();
       });
@@ -185,6 +198,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
       dirty: true,
       open: false,
       firstResult: true,
+      feedScoped: queryHasFeedScope(parsedQuery),
       sendResults: (results) => {
         if (ctx.disposed) {
           return;
@@ -263,3 +277,16 @@ export class QueryServiceImpl extends Resource implements QueryService {
     log.verbose('executed queries', { dirty: dirtyCount, active: activeCount, duration: performance.now() - begin });
   }
 }
+
+/**
+ * True when the query's `from` clause carries at least one feed scope (`Scope.feed(...)`).
+ */
+const queryHasFeedScope = (query: QueryAST.Query): boolean => {
+  let found = false;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'from' && node.from._tag === 'scope' && node.from.scopes.some((scope) => scope._tag === 'feed')) {
+      found = true;
+    }
+  });
+  return found;
+};
