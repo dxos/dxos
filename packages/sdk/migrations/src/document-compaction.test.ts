@@ -8,8 +8,8 @@ import { describe, expect, test } from 'vitest';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { Filter, Obj } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 
 import { compactDocumentsEpochMigration } from './document-compaction';
