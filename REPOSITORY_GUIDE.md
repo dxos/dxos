@@ -190,6 +190,7 @@ New packages are created with `"private": true` in their `package.json` (see [Ne
    - Repository: `dxos/dxos`
    - Workflow file: `publish-all.yml`
    - Environment: leave blank unless the workflow specifies one.
+   - Allowed actions: `npm publish` only — do not enable `npm stage publish` (staged/review release flow that `publish-all.yml` does not use).
 5. Revert the package's `version` back to align with the rest of the packages in the monorepo, now that the trusted publisher is configured and `publish-all.yml` will handle future releases.
 
 For bulk setup (roughly **10+ packages** at once), the [npm-trusted-publisher](https://github.com/wittjosiah/npm-trusted-publisher) Chrome extension automates step 4 across many packages. Below that threshold, doing it manually per package is faster.
