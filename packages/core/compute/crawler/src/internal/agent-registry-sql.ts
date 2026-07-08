@@ -197,5 +197,10 @@ export const makeSql = (sql: SqlClient.SqlClient): AgentRegistryApi => {
           }),
         )
         .pipe(Effect.mapError(fail('Failed to merge agents'))),
+    setRef: (id, ref) =>
+      Effect.gen(function* () {
+        const canonical = (yield* canonicalId(id)) ?? id;
+        yield* sql`UPDATE agent SET ref = ${ref} WHERE id = ${canonical}`;
+      }).pipe(Effect.asVoid, Effect.mapError(fail('Failed to set agent ref'))),
   };
 };

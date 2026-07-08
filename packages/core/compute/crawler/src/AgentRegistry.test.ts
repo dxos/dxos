@@ -66,6 +66,19 @@ const suite = (name: string, layer: Layer.Layer<AgentRegistry>) =>
         expect(list.length).toBe(1);
       }, Effect.provide(layer)),
     );
+
+    it.effect(
+      'setRef records the canonical ECHO object DXN on the profile',
+      Effect.fnUntraced(function* () {
+        const registry = yield* AgentRegistry;
+        const agent = yield* registry.observe({
+          identifiers: [{ namespace: 'discord-user', value: '123' }],
+          label: 'Alice',
+        });
+        yield* registry.setRef(agent.id, 'dxn:echo:@:person-alice');
+        expect((yield* registry.get(agent.id))?.ref).toBe('dxn:echo:@:person-alice');
+      }, Effect.provide(layer)),
+    );
   });
 
 describe('AgentRegistry', () => {

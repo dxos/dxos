@@ -107,6 +107,54 @@ Once the SQLite working set exists, a second source re-drives different stage as
 - `extractQuestionsStage` — per-message detection of questions users asked, recorded idempotently as (user × channel/thread × message id × question) rows in an `extracted_question` table and logged. Detection is deterministic (sentence-level `?` heuristic) with the stage seam ready for an LLM detector later.
 - Node demo scripts in plugin-discord (env-gated, `DISCORD_TOKEN` from the environment): `crawl-demo` seeds a channel set and fills a persistent SQLite file via `DiscordPipeline.run`; `questions-demo` replays that file through the question-extraction pipeline and prints the table.
 
+## Phase 3: Persons for askers + Topic detection (2026-07-08)
+
+Extends the implemented phase 2 with ECHO output objects. Both features accept an optional
+`db: Database.Database` (the `pipeline-email` seam); with no database the pipeline still runs —
+detection results are logged and returned, nothing is persisted.
+
+### Person objects for question askers
+
+When `extractQuestionsStage` records a question and a database is provided, the asker is
+find-or-created as an ECHO `Person` keyed by foreign key `{ source: 'discord.com', id: <author id> }`
+(`fullName` = display name, `nickname` = username). The created Person's DXN is written back onto
+the crawler's `AgentRegistry` profile via a new `setRef(id, ref)` API — the linkage phase 1 reserved
+the `Profile.ref` field for. Idempotent: re-runs resolve the same Person by foreign key.
+
+### Topic type and detection
+
+New ECHO type in `@dxos/pipeline-discord` (`org.dxos.type.discord-topic`): `name`, `summary`,
+`threadId` (crawl target id), `participants` (stable author ids), `participantLabels`,
+`startMessageId` / `endMessageId`, `startedAt` / `endedAt`, `messageCount`. Upserted by foreign key
+`{ source: 'discord.com', id: '<targetId>#<startMessageId>' }` so re-runs update rather than duplicate.
+
+Detection (`detectTopics` — pure, deterministic, unit-evaluable) segments one target's chronological
+messages:
+
+- A **subthread target is one Topic** spanning its whole conversation (per design directive).
+- On a **main channel**, several topics may be open concurrently (interleaved conversations). Each
+  message is assigned by, in order:
+  1. **Reply link**: `parentId` pointing into a topic joins that topic (even reviving a closed one).
+  2. **Scoring against open topics** (open = last message within `sessionGapMs`, default 30 min):
+     `@mention` of a topic participant +2 per hit; salient-keyword overlap with the topic's
+     accumulated vocabulary +1 per shared token (capped at 3); author already a participant +1.
+     Best score ≥ `minScore` (default 2) joins; otherwise the message **starts a new topic**.
+- This is exactly the "new participant" rule: a newcomer replying to / mentioning / lexically
+  continuing an open topic joins it; an unrelated message opens a new topic even mid-stream.
+- Mentions are matchable because the Discord source normalizes `<@id>` markup to `@displayName`.
+
+`topicsStage` fires on `ThreadEnd`/`ChannelEnd`: reads the target's stored messages, detects
+segments, asks the LLM for `{ name, summary }` per segment (deterministic fallback: top keywords +
+participant list when the model yields nothing), and upserts ECHO Topics when a database is present.
+Works identically over `replayStream`.
+
+### Eval
+
+`detect-topics.test.ts` carries a hand-authored channel fixture: four participants, three
+interleaved conversations (questions, answers via `@mention`, replies, comments, plus a subthread),
+with expected segments (participants, start/end message ids). The eval asserts the detector
+recovers the given topics; an integration test persists them to ECHO via `EchoTestBuilder`.
+
 ## Questions and automation
 
 - `QuestionStore` holds standing user questions. `answerQuestionsStage` fires on `ThreadEnd`/`ChannelEnd` events and once at run end (not per message — cost control). For each `open` question:

@@ -55,6 +55,8 @@ export interface AgentRegistryApi {
   readonly list: () => Effect.Effect<Profile[], StateError>;
   /** Union two agents under one canonical id (normalization); records a sameAs alias. */
   readonly merge: (keepId: string, mergeId: string) => Effect.Effect<Profile, StateError>;
+  /** Record the DXN of the canonical ECHO object (Person) this agent resolves to. */
+  readonly setRef: (id: string, ref: string) => Effect.Effect<void, StateError>;
 }
 
 export class AgentRegistry extends Context.Tag('@dxos/crawler/AgentRegistry')<AgentRegistry, AgentRegistryApi>() {
@@ -195,6 +197,14 @@ const makeMemory = (): AgentRegistryApi => {
           index.set(key(identifier), keepId);
         }
         return merged;
+      }),
+    setRef: (id, ref) =>
+      Effect.sync(() => {
+        const canonical = index.get(id) ?? id;
+        const agent = agents.get(canonical);
+        if (agent) {
+          agents.set(canonical, { ...agent, ref });
+        }
       }),
   };
 };
