@@ -143,9 +143,14 @@ export class WorkingSetQueryExecutor {
       case 'OrderStep':
         return this._execOrderStep(step, ws);
       case 'LimitStep':
-        return ws.slice(0, step.limit);
+        // After a GroupByStep, limit pages over whole groups; otherwise it slices the flat stream.
+        return _isGroupedWorkingSet(ws)
+          ? QueryPlan.GroupByStep.takeGroups(ws, step.limit, _serializeItemGroupKey)
+          : ws.slice(0, step.limit);
       case 'SkipStep':
-        return ws.slice(step.skip);
+        return _isGroupedWorkingSet(ws)
+          ? QueryPlan.GroupByStep.dropGroups(ws, step.skip, _serializeItemGroupKey)
+          : ws.slice(step.skip);
       case 'GroupByStep':
         return this._execGroupByStep(step, ws);
       default:
@@ -597,6 +602,14 @@ export class WorkingSetQueryExecutor {
 }
 
 const MAX_DEPTH_FOR_CHILD_OF_TRACING = 16;
+
+/** True once the working set has been partitioned by a GroupByStep (every item carries a group key). */
+const _isGroupedWorkingSet = (ws: WorkingSetItem[]): boolean => ws.length > 0 && ws[0].groupKey !== undefined;
+
+// Non-null assertion is sound: only called from group-aware limit/skip, which run exclusively on a
+// working set already partitioned by GroupByStep (guarded by `_isGroupedWorkingSet`).
+const _serializeItemGroupKey = (item: WorkingSetItem): string =>
+  QueryPlan.GroupByStep.serializeGroupKey(item.groupKey!);
 
 const _compareValues = (valueA: unknown, valueB: unknown): number => {
   if (valueA == null && valueB == null) {

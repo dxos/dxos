@@ -481,6 +481,13 @@ const overlapsOrUnconstrained = <T>(hintSet: ReadonlySet<T> | undefined, scopeSe
 const _serializeOptionalGroupKey = (key: QueryPlan.GroupKeyValue | undefined): string =>
   key === undefined ? '\0' : QueryPlan.GroupByStep.serializeGroupKey(key);
 
+/** True once the working set has been partitioned by a GroupByStep (every item carries a group key). */
+const isGrouped = (workingSet: QueryItem[]): boolean => workingSet.length > 0 && workingSet[0].groupKey !== undefined;
+
+// Non-null assertion is sound: only called from group-aware limit/skip, which run exclusively on a
+// working set already partitioned by GroupByStep (guarded by `isGrouped`), where every item has a key.
+const serializeItemGroupKey = (item: QueryItem): string => QueryPlan.GroupByStep.serializeGroupKey(item.groupKey!);
+
 /**
  * Executes query plans against the IndexEngine and AutomergeHost.
  *
@@ -1404,7 +1411,11 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execLimitStep(step: QueryPlan.LimitStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
-    const limitedWorkingSet = workingSet.slice(0, step.limit);
+    // After a GroupByStep the working set is partitioned into contiguous groups; limit then pages
+    // over whole groups. Otherwise it slices the flat object stream.
+    const limitedWorkingSet = isGrouped(workingSet)
+      ? QueryPlan.GroupByStep.takeGroups(workingSet, step.limit, serializeItemGroupKey)
+      : workingSet.slice(0, step.limit);
 
     return {
       workingSet: limitedWorkingSet,
@@ -1418,7 +1429,9 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execSkipStep(step: QueryPlan.SkipStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
-    const skippedWorkingSet = workingSet.slice(step.skip);
+    const skippedWorkingSet = isGrouped(workingSet)
+      ? QueryPlan.GroupByStep.dropGroups(workingSet, step.skip, serializeItemGroupKey)
+      : workingSet.slice(step.skip);
 
     return {
       workingSet: skippedWorkingSet,

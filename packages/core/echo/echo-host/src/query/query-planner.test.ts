@@ -1434,9 +1434,43 @@ describe('QueryPlanner', () => {
       expect(limitStep).toMatchObject({ limit: 10 });
     });
 
-    test('throws when a clause is chained on top of groupBy', () => {
+    test('limit after groupBy pages over groups (stays after GroupByStep, no pushdown)', () => {
+      const query = Query.select(Filter.type(TestSchema.Task)).groupBy(GroupKey.property('title')).limit(5);
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      expect(tags).toEqual(['SelectStep', 'FilterDeletedStep', 'FilterStep', 'OrderStep', 'GroupByStep', 'LimitStep']);
+
+      // The group-level limit must NOT be pushed into the SelectStep/OrderStep.
+      const selectStep = plan.steps.find((step) => step._tag === 'SelectStep');
+      expect((selectStep as any).limit).toBeUndefined();
+      const orderStep = plan.steps.find((step) => step._tag === 'OrderStep');
+      expect((orderStep as any).limit).toBeUndefined();
+      const limitStep = plan.steps.find((step) => step._tag === 'LimitStep');
+      expect(limitStep).toMatchObject({ limit: 5 });
+    });
+
+    test('skip + limit after groupBy pages over groups', () => {
+      const query = Query.select(Filter.type(TestSchema.Task)).groupBy(GroupKey.property('title')).skip(2).limit(5);
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      expect(tags).toEqual([
+        'SelectStep',
+        'FilterDeletedStep',
+        'FilterStep',
+        'OrderStep',
+        'GroupByStep',
+        'SkipStep',
+        'LimitStep',
+      ]);
+    });
+
+    test('throws when a data clause (orderBy) is chained on top of groupBy', () => {
       const grouped = Query.select(Filter.type(TestSchema.Task)).groupBy(GroupKey.property('title'));
-      const query = grouped.limit(5);
+      // The grouped query's element is `Group`, so order by one of its keys; ordering groups is
+      // unsupported and must be rejected at plan time regardless.
+      const query = grouped.orderBy(Order.property('count', 'asc'));
 
       expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow(
         'groupBy must be the outermost query clause',

@@ -518,14 +518,39 @@ describe('Query', () => {
       expect(groups[0].count).to.equal(2);
     });
 
-    test('a clause stacked on top of groupBy throws at plan time', async () => {
+    test('limit + skip after groupBy pages over whole groups', async () => {
+      const { db } = await builder.createDatabase();
+      // Four categories (a..d), each with two members; ordered by rank so group order is a<b<c<d.
+      let rank = 0;
+      for (const category of ['a', 'a', 'b', 'b', 'c', 'c', 'd', 'd']) {
+        db.add(Obj.make(TestSchema.Expando, { category, rank: rank++ }));
+      }
+      await db.flush();
+
+      const page = await db
+        .query(
+          Query.select(Filter.everything())
+            .orderBy(Order.property('rank', 'asc'))
+            .groupBy(GroupKey.property('category'))
+            .skip(1)
+            .limit(2),
+        )
+        .run();
+
+      // Skip group a, take groups b and c — as whole groups (each still has its 2 members).
+      expect(page.map((group: any) => group.key.category)).to.deep.equal(['b', 'c']);
+      expect(page.every((group: any) => group.count === 2 && group.values.length === 2)).to.be.true;
+    });
+
+    test('a data clause (orderBy) stacked on top of groupBy throws at plan time', async () => {
       const { db } = await builder.createDatabase();
       await db.flush();
 
       const grouped = Query.select(Filter.everything()).groupBy(GroupKey.property('value'));
-      // `.limit()` after `.groupBy()` typechecks (Query<T>.limit exists for any T) but is invalid
-      // at runtime — groupBy must be the outermost data clause.
-      await expect(db.query(grouped.limit(1)).run()).rejects.toThrow();
+      // `.orderBy()` after `.groupBy()` typechecks (its element type is `Group`, so order by a Group
+      // key) but is invalid at runtime — groupBy must be the outermost data clause (only
+      // from/options/limit/skip may follow).
+      await expect(db.query(grouped.orderBy(Order.property('count', 'asc'))).run()).rejects.toThrow();
     });
 
     describe('reactivity', () => {

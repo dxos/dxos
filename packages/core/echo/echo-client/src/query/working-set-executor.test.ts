@@ -321,6 +321,60 @@ describe('WorkingSetQueryExecutor', () => {
     expect(byId.get(alice.id)).toEqual({ age: 30 });
     expect(byId.get(bob.id)).toEqual({ age: 40 });
   });
+
+  test('limit after groupBy pages over whole groups (not flat items)', async ({ expect }) => {
+    // Three groups by category, each with two members, ordered by rank so group order is a<b<c.
+    for (const [category, rank] of [
+      ['a', 1],
+      ['a', 2],
+      ['b', 3],
+      ['b', 4],
+      ['c', 5],
+      ['c', 6],
+    ] as const) {
+      db.add(Obj.make(TestSchema.Expando, { category, rank }));
+    }
+    await db.flush();
+
+    const results = planAndExecute(
+      db,
+      Query.select(Filter.type(TestSchema.Expando))
+        .orderBy(Order.property('rank', 'asc'))
+        .groupBy(GroupKey.property('category'))
+        .limit(2),
+    );
+
+    // Two whole groups (a, b) → four items, not two.
+    expect(results).toHaveLength(4);
+    expect(new Set(results.map((item) => item.groupKey?.category))).toEqual(new Set(['a', 'b']));
+  });
+
+  test('skip + limit after groupBy pages over whole groups', async ({ expect }) => {
+    for (const [category, rank] of [
+      ['a', 1],
+      ['a', 2],
+      ['b', 3],
+      ['c', 4],
+      ['c', 5],
+      ['d', 6],
+    ] as const) {
+      db.add(Obj.make(TestSchema.Expando, { category, rank }));
+    }
+    await db.flush();
+
+    const results = planAndExecute(
+      db,
+      Query.select(Filter.type(TestSchema.Expando))
+        .orderBy(Order.property('rank', 'asc'))
+        .groupBy(GroupKey.property('category'))
+        .skip(1)
+        .limit(2),
+    );
+
+    // Skip group a, take groups b and c.
+    expect(new Set(results.map((item) => item.groupKey?.category))).toEqual(new Set(['b', 'c']));
+    expect(results).toHaveLength(3);
+  });
 });
 
 // ── Helpers ─────────────────────────────────────────────────────────────────

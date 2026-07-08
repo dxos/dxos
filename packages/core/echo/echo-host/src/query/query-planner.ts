@@ -663,16 +663,20 @@ export class QueryPlanner {
   }
 
   /**
-   * `groupBy` must be the outermost data clause: only `from()`/`options()` may wrap it, and its
-   * inner query must not itself contain another `groupBy`. The DSL's types can't enforce this
-   * (`Query<Group<K, T>>` still exposes `orderBy`/`limit`/etc.), so it's validated here at plan time.
+   * `groupBy` must be the outermost data clause: only `from()`/`options()` and the group-level
+   * pagination clauses `limit()`/`skip()` may wrap it, and its inner query must not itself contain
+   * another `groupBy`. The DSL's types can't enforce this (`Query<Group<K, T>>` still exposes
+   * `orderBy`/`select`/etc.), so it's validated here at plan time.
+   *
+   * `limit`/`skip` above a `group-by` page over whole groups (see the group-aware `LimitStep`/
+   * `SkipStep` execution); a `limit`/`skip` below it windows the flat object stream before grouping.
    *
    * NOTE: this also (conservatively) rejects a `groupBy` found inside a `.from(subquery)` source,
-   * since chaining any clause on top of a grouped subquery is equally unsupported.
+   * since chaining a disallowed clause on top of a grouped subquery is equally unsupported.
    */
   private _validateGroupByPlacement(query: QueryAST.Query): void {
     let root = query;
-    while (root.type === 'options' || root.type === 'from') {
+    while (root.type === 'options' || root.type === 'from' || root.type === 'limit' || root.type === 'skip') {
       root = root.query;
     }
 
@@ -700,7 +704,8 @@ export class QueryPlanner {
     });
     if (foundElsewhere) {
       throw new QueryError({
-        message: 'groupBy must be the outermost query clause — only from()/options() may follow it',
+        message:
+          'groupBy must be the outermost query clause — only from(), options(), limit() and skip() may follow it',
         context: { query },
       });
     }
@@ -882,7 +887,9 @@ export class QueryPlanner {
 
     // Check if we can propagate the limit to a SelectStep and/or OrderStep.
     // We can only do this if there are no unions, traversals, or set differences between them.
-    const BLOCKERS = new Set(['UnionStep', 'TraverseStep', 'SetDifferenceStep']);
+    // GroupByStep is also a blocker: a limit above it counts whole groups, so it must not be
+    // pushed down into the flat SelectStep/OrderStep scan (that would slice objects, not groups).
+    const BLOCKERS = new Set(['UnionStep', 'TraverseStep', 'SetDifferenceStep', 'GroupByStep']);
 
     let selectStepIndex = -1;
     let orderStepIndex = -1;

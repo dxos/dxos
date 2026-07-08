@@ -330,5 +330,53 @@ export namespace QueryPlan {
 
       return Array.from(buckets.values()).flat();
     },
+
+    /**
+     * Returns the items belonging to the first `count` distinct groups (group-level limit).
+     * Assumes `items` are already partitioned into contiguous groups (see {@link partitionByGroupKey}).
+     */
+    takeGroups: <T>(items: readonly T[], count: number, getKey: (item: T) => string): T[] => {
+      if (count <= 0) {
+        return [];
+      }
+      const result: T[] = [];
+      let seenGroups = 0;
+      let currentKey: string | undefined;
+      for (const item of items) {
+        const key = getKey(item);
+        if (key !== currentKey) {
+          seenGroups += 1;
+          currentKey = key;
+          if (seenGroups > count) {
+            break;
+          }
+        }
+        result.push(item);
+      }
+      return result;
+    },
+
+    /**
+     * Returns the items after dropping the first `count` distinct groups (group-level skip).
+     * Assumes `items` are already partitioned into contiguous groups (see {@link partitionByGroupKey}).
+     */
+    dropGroups: <T>(items: readonly T[], count: number, getKey: (item: T) => string): T[] => {
+      if (count <= 0) {
+        return items.slice();
+      }
+      let seenGroups = 0;
+      let currentKey: string | undefined;
+      for (let index = 0; index < items.length; index++) {
+        const key = getKey(items[index]);
+        if (key !== currentKey) {
+          seenGroups += 1;
+          currentKey = key;
+          if (seenGroups > count) {
+            return items.slice(index);
+          }
+        }
+      }
+      return [];
+    },
   });
 }
