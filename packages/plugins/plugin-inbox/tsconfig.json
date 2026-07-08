@@ -80,6 +80,12 @@
       "path": "../../core/compute/pipeline"
     },
     {
+      "path": "../../core/compute/pipeline-email"
+    },
+    {
+      "path": "../../core/compute/pipeline-rdf"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

@@ -154,6 +154,8 @@
     "@dxos/log": "workspace:*",
     "@dxos/markdown": "workspace:*",
     "@dxos/pipeline": "workspace:*",
+    "@dxos/pipeline-email": "workspace:*",
+    "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
