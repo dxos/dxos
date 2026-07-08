@@ -57,3 +57,5 @@ Excludes what is already in use (N3.js, Comunica, sparqljs).
     (`@huggingface/transformers`). WASM/WebGPU embeddings + NER in the browser — for entity resolution
     (collapsing surface variants to canonical entities) and semantic search over facts, complementing
     the LLM extraction.
+
+- TODO(burdon): https://allegrograph.com/

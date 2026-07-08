@@ -219,6 +219,7 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
     if (units.length === 0) {
       return;
     }
+
     const state = yield* Service;
     const feed = state.feed;
     invariant(feed, 'SyncBinding.commit requires a feed target');
@@ -228,6 +229,7 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
         feed,
         units.map((unit) => unit.message),
       );
+
       for (const unit of units) {
         if (state.tagIndex) {
           for (const uri of unit.tagUris) {
@@ -238,6 +240,7 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
           db.add(object);
         }
       }
+
       // Advance the cursor + run status in the same commit as the writes. (A run with no new messages
       // produces no commit, so `lastSyncAt` reflects the last page that landed rather than the last
       // attempt — acceptable, and avoids a separate write path.)

@@ -140,7 +140,14 @@ export default InboxOperation.GoogleMailSync.pipe(
             Stream.grouped(STREAMING_CONFIG.pageSize),
             Pipeline.run({ sink: SyncBinding.commit }),
             Effect.provide(
-              SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: GMAIL_SOURCE, cursorKey, stats }),
+              SyncBinding.layer({
+                binding,
+                feed,
+                tagIndex,
+                foreignKeySource: GMAIL_SOURCE,
+                cursorKey,
+                stats,
+              }),
             ),
           );
 
