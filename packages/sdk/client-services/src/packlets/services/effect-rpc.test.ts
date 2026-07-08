@@ -2,161 +2,146 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
-import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';
-import * as Rpc from '@effect/rpc/Rpc';
-import * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
-import * as RpcServer from '@effect/rpc/RpcServer';
-import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import * as Schema from 'effect/Schema';
+import * as Exit from 'effect/Exit';
+import * as Scope from 'effect/Scope';
+import { describe, onTestFinished, test } from 'vitest';
 
-class User extends Schema.Class<User>('User')({
-  id: Schema.String,
-  name: Schema.String,
-}) {}
+import { Trigger, sleep } from '@dxos/async';
+import { ClientRpcServer, type ClientServices, makeClientServicesClient } from '@dxos/client-protocol';
+import { Stream as PbStream } from '@dxos/codec-protobuf/stream';
+import { EffectEx } from '@dxos/effect';
+import { PublicKey } from '@dxos/keys';
+import { IdentityNotInitializedError, TimeoutError } from '@dxos/protocols';
+import {
+  type QueryStatusResponse,
+  type SpacesService,
+  SpaceState,
+  type SystemService,
+  SystemStatus,
+} from '@dxos/protocols/proto/dxos/client/services';
+import { createLinkedPorts } from '@dxos/rpc';
 
-class TestGroup extends RpcGroup.make(
-  Rpc.make('ping', {
-    success: Schema.String,
-    payload: {
-      message: Schema.String,
-    },
-  }),
-  Rpc.make('getUser', {
-    success: User,
-    payload: {
-      id: Schema.String,
-    },
-  }),
-) {}
+// Test mocks implement only the methods under test; the wire dispatches by method name.
+const mockService = <T>(partial: Partial<T>): T => partial as T;
 
-class GroupA extends RpcGroup.make(
-  Rpc.make('ping', {
-    success: Schema.String,
-    payload: {
-      message: Schema.String,
-    },
-  }),
-) {}
+const setup = async (services: () => Partial<ClientServices>, options?: { onRequest?: () => Promise<void> }) => {
+  const [proxyPort, serverPort] = createLinkedPorts();
 
-class GroupB extends RpcGroup.make(
-  Rpc.make('getUser', {
-    success: User,
-    payload: {
-      id: Schema.String,
-    },
-  }),
-) {}
+  const server = new ClientRpcServer({ services, port: serverPort, onRequest: options?.onRequest });
+  await server.open();
+  onTestFinished(() => server.close());
 
-const handlers = TestGroup.toLayer(
-  Effect.gen(function* () {
-    return {
-      ping: ({ message }) => Effect.succeed(`pong: ${message}`),
-      getUser: ({ id }) => Effect.succeed(new User({ id, name: `User ${id}` })),
-    };
-  }),
-);
+  const scope = Effect.runSync(Scope.make());
+  onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
+  const proxy = await EffectEx.runPromise(makeClientServicesClient(proxyPort).pipe(Scope.extend(scope)));
 
-const makeMessageChannel = () =>
-  Effect.gen(function* () {
-    const channel = new MessageChannel();
-    const port1 = channel.port1;
-    const port2 = channel.port2;
+  return proxy;
+};
 
-    yield* Effect.addFinalizer(() =>
-      Effect.sync(() => {
-        port1.close();
-        port2.close();
+describe('client services effect-rpc', () => {
+  test('unary call round trip preserves substituted types', async ({ expect }) => {
+    const spaceKey = PublicKey.random();
+    const proxy = await setup(() => ({
+      SpacesService: mockService<SpacesService>({
+        createSpace: async () => ({
+          id: 'test-space',
+          spaceKey,
+          state: SpaceState.SPACE_READY,
+        }),
       }),
-    );
+    }));
 
-    return { port1, port2 };
+    const space = await proxy.SpacesService!.createSpace();
+    expect(space.id).toEqual('test-space');
+    // PublicKey instances must survive the transport (protobuf-encoded payloads).
+    expect(space.spaceKey).toBeInstanceOf(PublicKey);
+    expect(space.spaceKey.equals(spaceKey)).toBe(true);
   });
 
-describe('effect-rpc tests', () => {
-  it.scoped(
-    '1. just regular test with a couple rpcs',
-    Effect.fnUntraced(function* () {
-      const { port1, port2 } = yield* makeMessageChannel();
+  test('streaming call round trip', async ({ expect }) => {
+    const proxy = await setup(() => ({
+      SystemService: mockService<SystemService>({
+        queryStatus: () =>
+          new PbStream<QueryStatusResponse>(({ next, close }) => {
+            next({ status: SystemStatus.INACTIVE });
+            next({ status: SystemStatus.ACTIVE });
+            close();
+          }),
+      }),
+    }));
 
-      const serverLayer = Layer.mergeAll(
-        handlers,
-        RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port2))),
-      );
+    const statuses = await PbStream.consumeData(proxy.SystemService!.queryStatus({}));
+    expect(statuses.map((update) => update.status)).toEqual([SystemStatus.INACTIVE, SystemStatus.ACTIVE]);
+  });
 
-      yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(Effect.provide(serverLayer), Effect.forkScoped);
+  test('stream errors propagate to the consumer', async ({ expect }) => {
+    const proxy = await setup(() => ({
+      SystemService: mockService<SystemService>({
+        queryStatus: () =>
+          new PbStream<QueryStatusResponse>(({ next, close }) => {
+            next({ status: SystemStatus.ACTIVE });
+            close(new Error('stream failed'));
+          }),
+      }),
+    }));
 
-      const clientLayer = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layerPlatform(() => port1)),
-      );
+    await expect(PbStream.consumeData(proxy.SystemService!.queryStatus({}))).rejects.toThrow('stream failed');
+  });
 
-      yield* Effect.gen(function* () {
-        const client = yield* RpcClient.make(TestGroup, { disableTracing: true });
-        const pongResult = yield* client.ping({ message: 'hello' });
-        expect(pongResult).toBe('pong: hello');
+  test('typed errors keep their identity across the wire', async ({ expect }) => {
+    const proxy = await setup(() => ({
+      SystemService: mockService<SystemService>({
+        getConfig: async () => {
+          throw new IdentityNotInitializedError({ message: 'no identity' });
+        },
+      }),
+    }));
 
-        const userResult = yield* client.getUser({ id: '42' });
-        expect(userResult.id).toBe('42');
-        expect(userResult.name).toBe('User 42');
-      }).pipe(Effect.provide(clientLayer));
-    }),
-  );
+    const error = await proxy.SystemService!.getConfig().then(
+      () => undefined,
+      (err) => err,
+    );
+    expect(error).toBeInstanceOf(IdentityNotInitializedError);
+    expect(error.message).toContain('no identity');
+  });
 
-  // Note: Test 2 is omitted as a single message channel cannot safely multiplex multiple uncoordinated
-  // effect-rpc clients sharing the same underlying `BrowserWorker` without a custom multiplexing layer.
-  // It results in request ID collisions and hanging fibers since `layerProtocolWorker` uses single latch map.
+  test('calls fail when the service is not available', async ({ expect }) => {
+    const proxy = await setup(() => ({}));
+    await expect(proxy.SystemService!.getConfig()).rejects.toThrow('Service not available: SystemService');
+  });
 
-  it.scoped(
-    '3. two message channels to one server (simulating 2 tabs one worker)',
-    Effect.fnUntraced(function* () {
-      // Create two separate channels (simulating 2 tabs)
-      const channel1 = yield* makeMessageChannel();
-      const channel2 = yield* makeMessageChannel();
+  test('onRequest gates dispatch until ready', async ({ expect }) => {
+    const ready = new Trigger();
+    let called = false;
+    const proxy = await setup(
+      () => ({
+        SystemService: mockService<SystemService>({
+          getConfig: async () => {
+            called = true;
+            return {};
+          },
+        }),
+      }),
+      { onRequest: () => ready.wait() },
+    );
 
-      // Start the server that handles BOTH incoming ports.
-      // We can fork the server twice, once for each port, sharing the same handlers.
-      const serverLayer1 = Layer.mergeAll(
-        handlers,
-        Layer.fresh(RpcServer.layerProtocolWorkerRunner).pipe(
-          Layer.provide(BrowserWorkerRunner.layerMessagePort(channel1.port2)),
-        ),
-      );
+    const request = proxy.SystemService!.getConfig();
+    await sleep(50);
+    expect(called).toBe(false);
 
-      const serverLayer2 = Layer.mergeAll(
-        handlers,
-        Layer.fresh(RpcServer.layerProtocolWorkerRunner).pipe(
-          Layer.provide(BrowserWorkerRunner.layerMessagePort(channel2.port2)),
-        ),
-      );
+    ready.wake();
+    await request;
+    expect(called).toBe(true);
+  });
 
-      yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(Effect.provide(serverLayer1), Effect.forkScoped);
+  test('per-call timeout', async ({ expect }) => {
+    const proxy = await setup(() => ({
+      SystemService: mockService<SystemService>({
+        getConfig: () => new Promise(() => {}), // Never resolves.
+      }),
+    }));
 
-      yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(Effect.provide(serverLayer2), Effect.forkScoped);
-
-      // Client 1 (Tab 1)
-      const clientLayer1 = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layerPlatform(() => channel1.port1)),
-      );
-
-      yield* Effect.gen(function* () {
-        const client = yield* RpcClient.make(TestGroup, { disableTracing: true });
-        const result = yield* client.ping({ message: 'tab1' });
-        expect(result).toBe('pong: tab1');
-      }).pipe(Effect.provide(clientLayer1));
-
-      // Client 2 (Tab 2)
-      const clientLayer2 = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layerPlatform(() => channel2.port1)),
-      );
-
-      yield* Effect.gen(function* () {
-        const client = yield* RpcClient.make(TestGroup, { disableTracing: true });
-        const result = yield* client.ping({ message: 'tab2' });
-        expect(result).toBe('pong: tab2');
-      }).pipe(Effect.provide(clientLayer2));
-    }),
-  );
+    await expect(proxy.SystemService!.getConfig(undefined, { timeout: 100 })).rejects.toThrow(TimeoutError);
+  });
 });

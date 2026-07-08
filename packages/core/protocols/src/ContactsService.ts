@@ -9,23 +9,19 @@ import * as RpcGroup from '@effect/rpc/RpcGroup';
 import { protoMessage, serviceError } from './service-rpc.ts';
 
 /**
- * Effect RPC definitions for `dxos.echo.query.QueryService`.
+ * Effect RPC definitions for `dxos.client.services.ContactsService`.
  * Generated from the protobuf service definition; payloads are protobuf-encoded on the wire.
  */
 export class Rpcs extends RpcGroup.make(
-  Rpc.make('setConfig', {
-    payload: protoMessage('dxos.echo.indexing.IndexConfig'),
+  Rpc.make('getContacts', {
+    success: protoMessage('dxos.client.services.ContactBook'),
     error: serviceError,
   }),
-  Rpc.make('execQuery', {
-    payload: protoMessage('dxos.echo.query.QueryRequest'),
-    success: protoMessage('dxos.echo.query.QueryResponse'),
+  Rpc.make('queryContacts', {
+    success: protoMessage('dxos.client.services.ContactBook'),
     error: serviceError,
     stream: true,
   }),
-  Rpc.make('reindex', {
-    error: serviceError,
-  }),
-).prefix('QueryService.') {}
+).prefix('ContactsService.') {}
 
 export interface Client extends RpcClient.RpcClient<RpcGroup.Rpcs<typeof Rpcs>> {}

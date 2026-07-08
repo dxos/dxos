@@ -2,17 +2,23 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Event, asyncTimeout } from '@dxos/async';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Scope from 'effect/Scope';
+
+import { Event } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesProvider,
   ClientServicesProviderResource,
   clientServiceBundle,
+  makeClientServicesClient,
 } from '@dxos/client-protocol';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
-import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
+import { type RpcPort } from '@dxos/rpc';
 import { trace } from '@dxos/tracing';
 
 /**
@@ -22,7 +28,8 @@ import { trace } from '@dxos/tracing';
 @trace.resource({ annotation: ClientServicesProviderResource })
 export class ClientServicesProxy implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
-  private _proxy?: ProtoRpcPeer<ClientServices>;
+  private _scope?: Scope.CloseableScope;
+  private _services?: Partial<ClientServices>;
 
   constructor(
     private readonly _port: RpcPort,
@@ -31,54 +38,53 @@ export class ClientServicesProxy implements ClientServicesProvider {
     private readonly _timeout = 30_000,
   ) {}
 
-  get proxy() {
-    invariant(this._proxy, 'Client services not open');
-    return this._proxy;
-  }
-
   get descriptors() {
     return clientServiceBundle;
   }
 
   get services() {
-    invariant(this._proxy, 'Client services not open');
-    return this._proxy.rpc;
+    invariant(this._services, 'Client services not open');
+    return this._services;
   }
 
   async open(): Promise<void> {
-    if (this._proxy) {
+    if (this._scope) {
       return;
     }
 
     log('client-services-proxy: opening', { timeout: this._timeout });
-    this._proxy = createProtoRpcPeer({
-      requested: clientServiceBundle,
-      exposed: {},
-      handlers: {},
-      port: this._port,
-      // TODO(wittjosiah): Specifying breaks the reset flows in Composer.
-      // timeout: this._timeout,
-    });
-
-    await asyncTimeout(
-      this._proxy.open(),
-      this._timeout,
-      new RemoteServiceConnectionTimeout({
-        message: 'Failed to establish dxrpc connection',
-        context: { timeout: this._timeout },
-      }),
-    );
+    const scope = Effect.runSync(Scope.make());
+    try {
+      this._services = await EffectEx.runPromise(
+        makeClientServicesClient(this._port).pipe(
+          Scope.extend(scope),
+          Effect.timeoutFail({
+            duration: this._timeout,
+            onTimeout: () =>
+              new RemoteServiceConnectionTimeout({
+                message: 'Failed to establish rpc connection',
+                context: { timeout: this._timeout },
+              }),
+          }),
+        ),
+      );
+    } catch (err) {
+      await EffectEx.runPromise(Scope.close(scope, Exit.void));
+      throw err;
+    }
+    this._scope = scope;
     log('client-services-proxy: opened');
   }
 
   async close(): Promise<void> {
-    if (!this._proxy) {
+    if (!this._scope) {
       return;
     }
 
     log('client-services-proxy: closing');
-    await this._proxy.close();
-    this._proxy = undefined;
+    await EffectEx.runPromise(Scope.close(this._scope, Exit.void));
+    this._scope = undefined;
+    this._services = undefined;
     log('client-services-proxy: closed');
   }
 }

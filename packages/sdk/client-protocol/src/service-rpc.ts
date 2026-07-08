@@ -1,0 +1,294 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import type * as Rpc from '@effect/rpc/Rpc';
+import * as RpcClient from '@effect/rpc/RpcClient';
+import * as RpcGroup from '@effect/rpc/RpcGroup';
+import * as RpcSchema from '@effect/rpc/RpcSchema';
+import * as RpcServer from '@effect/rpc/RpcServer';
+import * as Cause from 'effect/Cause';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Runtime from 'effect/Runtime';
+import type * as Scope from 'effect/Scope';
+import * as Stream from 'effect/Stream';
+
+import { type RequestOptions } from '@dxos/codec-protobuf';
+import { Stream as PbStream } from '@dxos/codec-protobuf/stream';
+import { EffectEx } from '@dxos/effect';
+import {
+  ContactsService,
+  DataService,
+  DevicesService,
+  DevtoolsHost,
+  EdgeAgentService,
+  FeedService,
+  IdentityService,
+  InvitationsService,
+  LoggingService,
+  NetworkService,
+  QueryService,
+  SpacesService,
+  SystemService,
+  TimeoutError,
+} from '@dxos/protocols';
+import { type RpcPort, layerProtocolRpcPortServer, makeProtocolRpcPortClient } from '@dxos/rpc';
+
+import { type ClientServices } from './service';
+
+/**
+ * Effect RPC groups for each client service, keyed consistently with {@link ClientServices}.
+ * Rpc tags are prefixed with the service key (e.g. `DataService.subscribe`).
+ */
+export const clientServiceRpcGroups = {
+  SystemService: SystemService.Rpcs,
+  NetworkService: NetworkService.Rpcs,
+  LoggingService: LoggingService.Rpcs,
+
+  IdentityService: IdentityService.Rpcs,
+  InvitationsService: InvitationsService.Rpcs,
+  DevicesService: DevicesService.Rpcs,
+  SpacesService: SpacesService.Rpcs,
+
+  DataService: DataService.Rpcs,
+  QueryService: QueryService.Rpcs,
+  FeedService: FeedService.Rpcs,
+
+  ContactsService: ContactsService.Rpcs,
+  EdgeAgentService: EdgeAgentService.Rpcs,
+
+  DevtoolsHost: DevtoolsHost.Rpcs,
+} satisfies Record<keyof ClientServices, RpcGroup.RpcGroup<any>>;
+
+/**
+ * All client service RPCs served over a single connection.
+ */
+export class ClientServicesRpcs extends RpcGroup.make().merge(
+  SystemService.Rpcs,
+  NetworkService.Rpcs,
+  LoggingService.Rpcs,
+  IdentityService.Rpcs,
+  InvitationsService.Rpcs,
+  DevicesService.Rpcs,
+  SpacesService.Rpcs,
+  DataService.Rpcs,
+  QueryService.Rpcs,
+  FeedService.Rpcs,
+  ContactsService.Rpcs,
+  EdgeAgentService.Rpcs,
+  DevtoolsHost.Rpcs,
+) {}
+
+type ClientServicesRpc = RpcGroup.Rpcs<typeof ClientServicesRpcs>;
+
+const toError = (cause: unknown): Error => (cause instanceof Error ? cause : new Error(String(cause)));
+
+const isVoidSchema = (schema: { ast: { _tag: string } }): boolean => schema.ast._tag === 'VoidKeyword';
+
+//
+// Server.
+//
+
+export type ClientRpcServerParams = {
+  port: RpcPort;
+  /**
+   * Resolved per call so the served set follows the host lifecycle (services host open/close).
+   */
+  services: () => Partial<ClientServices>;
+  /**
+   * Awaited before dispatching each request (e.g. worker readiness); a rejection fails the call.
+   */
+  onRequest?: () => Promise<void>;
+};
+
+/**
+ * Serves {@link ClientServices} implementations over an {@link RpcPort} via effect-rpc.
+ */
+export class ClientRpcServer {
+  readonly #params: ClientRpcServerParams;
+  #runtime?: ManagedRuntime.ManagedRuntime<never, never>;
+
+  constructor(params: ClientRpcServerParams) {
+    this.#params = params;
+  }
+
+  async open(): Promise<void> {
+    if (this.#runtime) {
+      return;
+    }
+
+    const serverLayer = RpcServer.layer(ClientServicesRpcs, { disableTracing: true, concurrency: 'unbounded' }).pipe(
+      Layer.provide(makeClientServicesHandlers(this.#params)),
+      Layer.provide(layerProtocolRpcPortServer(this.#params.port)),
+    );
+
+    this.#runtime = ManagedRuntime.make(serverLayer);
+    // Force the layer to build so the server is listening once open resolves.
+    await this.#runtime.runPromise(Effect.void);
+  }
+
+  async close(): Promise<void> {
+    const runtime = this.#runtime;
+    this.#runtime = undefined;
+    await runtime?.dispose();
+  }
+}
+
+/**
+ * Builds handler layers for every client service RPC, dispatching to the service implementations
+ * resolved from `services` on each call.
+ */
+export const makeClientServicesHandlers = ({
+  services,
+  onRequest,
+}: Pick<ClientRpcServerParams, 'services' | 'onRequest'>): Layer.Layer<Rpc.ToHandler<ClientServicesRpc>> => {
+  const gate = onRequest ? Effect.tryPromise({ try: onRequest, catch: toError }) : Effect.void;
+
+  const layers = Object.entries(clientServiceRpcGroups).map(([serviceKey, group]) => {
+    const handlers: Record<string, (payload: unknown) => unknown> = {};
+    for (const [tag, rpc] of group.requests as ReadonlyMap<string, Rpc.AnyWithProps>) {
+      const methodName = tag.slice(serviceKey.length + 1);
+      const resolveMethod = (): ((request: unknown) => unknown) => {
+        const service = services()[serviceKey as keyof ClientServices];
+        if (!service) {
+          throw new Error(`Service not available: ${serviceKey}`);
+        }
+        const method = (service as Record<string, unknown>)[methodName];
+        if (typeof method !== 'function') {
+          throw new Error(`Method not available: ${tag}`);
+        }
+        return method.bind(service) as (request: unknown) => unknown;
+      };
+
+      if (RpcSchema.isStreamSchema(rpc.successSchema)) {
+        handlers[tag] = (payload: unknown) =>
+          gate.pipe(
+            Effect.map(() => pbStreamToStream(() => resolveMethod()(payload) as PbStream<unknown>)),
+            Stream.unwrap,
+          );
+      } else {
+        handlers[tag] = (payload: unknown) =>
+          gate.pipe(
+            Effect.flatMap(() =>
+              Effect.tryPromise({
+                try: async () => resolveMethod()(payload),
+                catch: toError,
+              }),
+            ),
+          );
+      }
+    }
+
+    // Handlers are constructed dynamically from the protobuf-derived rpc groups, so their
+    // per-method types cannot be expressed statically.
+    return group.toLayer(handlers as never) as Layer.Layer<Rpc.ToHandler<ClientServicesRpc>>;
+  });
+
+  return Layer.mergeAll(layers[0], ...layers.slice(1));
+};
+
+//
+// Client.
+//
+
+/**
+ * Builds {@link ClientServices} proxies backed by an effect-rpc connection over an {@link RpcPort}.
+ * The returned scope owns the connection; closing it releases the transport.
+ */
+export const makeClientServicesClient = (port: RpcPort): Effect.Effect<Partial<ClientServices>, never, Scope.Scope> =>
+  Effect.gen(function* () {
+    // Build the protocol in the ambient scope so the transport lives until the caller closes it.
+    const protocol = yield* makeProtocolRpcPortClient(port);
+    const client = yield* RpcClient.make(ClientServicesRpcs, { disableTracing: true, flatten: true }).pipe(
+      Effect.provideService(RpcClient.Protocol, protocol),
+    );
+    const runtime = yield* Effect.runtime<never>();
+
+    // The flat client is invoked dynamically with tags from the protobuf-derived rpc groups,
+    // so the per-call types cannot be expressed statically.
+    const callRpc = client as unknown as (tag: string, payload: unknown) => unknown;
+
+    const services: Partial<Record<keyof ClientServices, unknown>> = {};
+    for (const [serviceKey, group] of Object.entries(clientServiceRpcGroups)) {
+      const service: Record<string, unknown> = {};
+      for (const [tag, rpc] of group.requests as ReadonlyMap<string, Rpc.AnyWithProps>) {
+        const methodName = tag.slice(serviceKey.length + 1);
+        const hasPayload = !isVoidSchema(rpc.payloadSchema);
+
+        if (RpcSchema.isStreamSchema(rpc.successSchema)) {
+          service[methodName] = (request?: unknown) =>
+            streamToPbStream(
+              runtime,
+              callRpc(tag, hasPayload ? (request ?? {}) : undefined) as Stream.Stream<unknown, unknown>,
+            );
+        } else {
+          service[methodName] = (request?: unknown, options?: RequestOptions) => {
+            let call = callRpc(tag, hasPayload ? (request ?? {}) : undefined) as Effect.Effect<unknown, unknown>;
+            if (options?.timeout) {
+              call = call.pipe(
+                Effect.timeoutFail({
+                  duration: options.timeout,
+                  onTimeout: () => new TimeoutError(`RPC timeout: ${tag}`, { context: { timeout: options.timeout } }),
+                }),
+              );
+            }
+            // Rejects with the original failure so typed errors keep their identity across the RPC boundary.
+            return EffectEx.runInRuntime(runtime, call);
+          };
+        }
+      }
+      services[serviceKey as keyof ClientServices] = service;
+    }
+
+    return services as Partial<ClientServices>;
+  });
+
+//
+// Stream adapters.
+//
+
+/**
+ * Adapts a protobuf service stream to an effect stream.
+ * Unbounded buffering matches the push semantics of the source stream.
+ */
+const pbStreamToStream = <T>(open: () => PbStream<T>): Stream.Stream<T, Error> =>
+  Stream.asyncScoped<T, Error>(
+    (emit) =>
+      Effect.acquireRelease(Effect.try({ try: open, catch: toError }), (stream) =>
+        Effect.promise(async () => stream.close()),
+      ).pipe(
+        Effect.tap((stream) =>
+          Effect.sync(() => {
+            stream.subscribe(
+              (data) => void emit.single(data),
+              (err) => void (err ? emit.fail(toError(err)) : emit.end()),
+            );
+          }),
+        ),
+      ),
+    { bufferSize: 'unbounded' },
+  );
+
+/**
+ * Adapts an effect stream to a protobuf service stream.
+ * Consumer close interrupts the underlying rpc subscription.
+ */
+const streamToPbStream = <T>(runtime: Runtime.Runtime<never>, stream: Stream.Stream<T, unknown>): PbStream<T> =>
+  new PbStream<T>(({ ready, next, close }) => {
+    const fiber = stream.pipe(
+      Stream.onStart(Effect.sync(ready)),
+      Stream.runForEach((item) => Effect.sync(() => next(item))),
+      Effect.matchCauseEffect({
+        onFailure: (cause) =>
+          Effect.sync(() => close(Cause.isInterruptedOnly(cause) ? undefined : toError(Cause.squash(cause)))),
+        onSuccess: () => Effect.sync(() => close()),
+      }),
+      Runtime.runFork(runtime),
+    );
+
+    return () => {
+      fiber.unsafeInterruptAsFork(fiber.id());
+    };
+  });

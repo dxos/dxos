@@ -6,13 +6,13 @@ import { next as A } from '@automerge/automerge';
 import { cbor } from '@automerge/automerge-repo';
 import * as Schema from 'effect/Schema';
 
-import { type Halo, type Space } from '@dxos/client-protocol';
+import { ClientRpcServer, type Halo, type Space } from '@dxos/client-protocol';
 import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
 import { exposeModule, importModule } from '@dxos/debug';
 import { Feed, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { DXN, PublicKey, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type RpcPeer, type RpcPort, createBundledRpcServer } from '@dxos/rpc';
+import { type RpcPort } from '@dxos/rpc';
 import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
 import { clearIndexedDB, clearOPFS, joinTables } from '@dxos/util';
 
@@ -92,7 +92,7 @@ export type MountOptions = {
 };
 
 export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
-  let server: RpcPeer;
+  let server: ClientRpcServer;
   let diagnostics: DiagnosticMetadata[] = [];
 
   const hook: DevtoolsHook = {
@@ -113,9 +113,8 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       }
 
       log('Opening devtools client RPC server...');
-      server = createBundledRpcServer({
-        services: client.services.descriptors,
-        handlers: client.services.services,
+      server = new ClientRpcServer({
+        services: () => client.services.services,
         port,
       });
 
