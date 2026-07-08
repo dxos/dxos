@@ -258,7 +258,7 @@ export class SpaceQuerySource implements QuerySource {
   };
 
   async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry<Obj.Unknown>[]> {
-    if (!this._isValidSourceForQuery(query)) {
+    if (!this._isValidSourceForQuery(query) || !this._servesSpaceScope(query)) {
       return [];
     }
 
@@ -308,7 +308,7 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   update(query: QueryAST.Query): void {
-    if (!this._isValidSourceForQuery(query)) {
+    if (!this._isValidSourceForQuery(query) || !this._servesSpaceScope(query)) {
       this._query = undefined;
       return;
     }
