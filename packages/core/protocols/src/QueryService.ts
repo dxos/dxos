@@ -1,7 +1,14 @@
-import { RpcGroup, Rpc, type RpcClient } from '@effect/rpc';
-import * as QueryPb from './proto/gen/dxos/echo/query';
-import * as IndexingPb from './proto/gen/dxos/echo/indexing';
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Rpc from '@effect/rpc/Rpc';
+import type * as RpcClient from '@effect/rpc/RpcClient';
+import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
+
+import * as IndexingPb from './proto/gen/dxos/echo/indexing';
+import * as QueryPb from './proto/gen/dxos/echo/query';
 
 export class Rpcs extends RpcGroup.make(
   Rpc.make('setConfig', {

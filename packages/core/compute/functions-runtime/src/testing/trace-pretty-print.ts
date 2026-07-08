@@ -37,7 +37,7 @@ export const traceSinkPrettyLayer = (): Layer.Layer<Trace.TraceSink> =>
 
 /**
  * Subscribes to the space trace feed and pretty-prints newly appended messages.
- * Returns an unsubscribe function. Requires ambient {@link Database.Service} and {@link Feed.FeedService}.
+ * Returns an unsubscribe function. Requires ambient {@link Database.Service}.
  */
 export const traceFeedPrettyPrintSubscription = Effect.gen(function* () {
   const feed = yield* FeedTraceSink.getOrCreateTraceFeed();

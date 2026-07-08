@@ -4,7 +4,7 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { type Database, type Entity, Query, type QueryResult } from '@dxos/echo';
+import { type Database, type Entity, Query } from '@dxos/echo';
 
 const EMPTY_ARRAY: never[] = [];
 
@@ -43,9 +43,10 @@ type Snapshot<O> = { items: O[]; skip: number; limit: number; isLoading: boolean
  * size/resource). Mirrors `useQuery`'s own `useMemo`-built `{ getObjects, subscribe }` pair as
  * closely as the added pagination state allows: nothing is queried and `.results` is never read
  * until `subscribe()` is called (i.e. from `useSyncExternalStore`'s commit-safe effect, never
- * during render), and `getSnapshot` reads the live `QueryResult.results` rather than keeping a
- * second cache of its own -- `QueryResultImpl` already only recomputes it when the underlying data
- * actually changes, so there's nothing to duplicate.
+ * during render). `getSnapshot` returns the last *delivered* results (`displayItems`), which are
+ * only replaced once a newly-pointed range actually produces a result -- so the previous page stays
+ * visible (rather than flashing empty) while an async range loads. `QueryResultImpl` still owns
+ * recompute/dedup; we only retain the most recent delivered array.
  *
  * `skip`/`limit` live as plain closure state rather than React state: pagination is internal
  * bookkeeping for *which range this same identity is currently showing*, not a prop the rest of
@@ -70,39 +71,32 @@ const createPaginationStore = <Q extends Query.Any, O extends Entity.Entity<Quer
   // call itself, so the rest of the burst sees it immediately -- no dependency on a render
   // happening in between.
   let pending = false;
-  let subscribed = false;
-  let queryResult: QueryResult.QueryResult<Query.Type<Q>> | undefined;
   let innerUnsubscribe: (() => void) | undefined;
   let isLoading = false;
-  let snapshot: Snapshot<O> = { items: EMPTY_ARRAY, skip, limit, isLoading };
+  // The items currently shown. Held across a range change until the new range delivers its own
+  // results, so the list never flickers to empty while a new (possibly async) range loads.
+  let displayItems: O[] = EMPTY_ARRAY;
+  let snapshot: Snapshot<O> = { items: displayItems, skip, limit, isLoading };
   const listeners = new Set<() => void>();
 
   const notify = () => {
-    snapshot = {
-      items: subscribed && queryResult ? (queryResult.results as O[]) : EMPTY_ARRAY,
-      skip,
-      limit,
-      isLoading,
-    };
+    snapshot = { items: displayItems, skip, limit, isLoading };
     for (const listener of listeners) {
       listener();
     }
   };
 
-  // (Re)points the query at the current skip/limit. Subscribes *before* publishing the new
-  // `QueryResult` to `queryResult` (read by `getSnapshot`), since `.results` throws on a
-  // `QueryResult` with no subscribers -- matching how `useQuery` never reads `.results` until
-  // its own `subscribe()` has already run.
+  // (Re)points the query at the current skip/limit.
   //
-  // TODO(wittjosiah): For feeds, this re-fetches/decodes the whole feed on every range change
-  // (see `FeedQueryContext.applyOrderSkipLimit`) -- only what's rendered is bounded, not what's
-  // fetched. Needs index-backed keyset pagination to fix properly.
+  // TODO(wittjosiah): For feeds, this re-fetches/decodes the whole feed on every range change --
+  // only what's rendered is bounded, not what's fetched. Needs index-backed keyset pagination to
+  // fix properly.
   const pointAtRange = () => {
     innerUnsubscribe?.();
     innerUnsubscribe = undefined;
-    queryResult = undefined;
 
     if (!resource) {
+      displayItems = EMPTY_ARRAY;
       isLoading = false;
       notify();
       return;
@@ -114,23 +108,28 @@ const createPaginationStore = <Q extends Query.Any, O extends Entity.Entity<Quer
     const effectiveQuery = Query.fromAst(innerAst).skip(skip).limit(limit) as Q;
     const nextQueryResult = resource.query(effectiveQuery);
     isLoading = true;
-    // Only refreshes `items` (via `notify`) when the data genuinely changes later -- `isLoading`/
-    // `pending` are resolved separately below, since `QueryResultImpl` only re-emits `changed` on
-    // an actual recompute difference, and this callback never fires at all when the requested
-    // range's recomputed result already matches the cached one.
-    innerUnsubscribe = nextQueryResult.subscribe(() => {
-      notify();
-    });
-    queryResult = nextQueryResult;
+
+    // Publish the new range's results only once they exist. `subscribe({ fire: true })` invokes the
+    // callback synchronously for synchronous sources (authoritative results, possibly empty) and
+    // defers it until the first real result for asynchronous sources (e.g. a feed served by the
+    // index). Until then `displayItems` keeps showing the previous range, so the list never flickers
+    // to empty while a new range loads. The callback also fires on every later change, keeping the
+    // window live.
+    innerUnsubscribe = nextQueryResult.subscribe(
+      () => {
+        displayItems = nextQueryResult.results as O[];
+        notify();
+      },
+      { fire: true },
+    );
+
+    // Reflect the pending state without clobbering `displayItems` (which still holds the previous
+    // range for async sources; synchronous sources have already replaced it above). `isLoading`/
+    // `pending` gate this tick's re-entrancy and a "just requested a new range" signal, not "the
+    // query is provably settled", so resolving them on the next microtask keeps them from getting
+    // stuck while still blocking every synchronous call within the same burst (a virtualizer's
+    // `onChange` can fire many times per tick for one user gesture, all before a microtask elapses).
     notify();
-    // `notify()` above already published the best currently-known value for this range (complete
-    // if it was already buffered, a transient undershoot otherwise -- the same thing `useQuery`
-    // shows for any query that hasn't finished resolving yet). `isLoading`/`pending` gate this
-    // tick's re-entrancy and a "just requested a new range" signal, not "the query is provably
-    // fully settled", so resolving them on the next microtask -- rather than waiting on the
-    // subscribe callback above, which may never fire -- keeps them from ever getting stuck, while
-    // still blocking every synchronous call within the same burst (a virtualizer's `onChange` can
-    // fire many times per tick for one user gesture, all before a single microtask elapses).
     queueMicrotask(() => {
       isLoading = false;
       pending = false;
@@ -142,16 +141,13 @@ const createPaginationStore = <Q extends Query.Any, O extends Entity.Entity<Quer
     subscribe: (onStoreChange: () => void) => {
       listeners.add(onStoreChange);
       if (listeners.size === 1) {
-        subscribed = true;
         pointAtRange();
       }
       return () => {
         listeners.delete(onStoreChange);
         if (listeners.size === 0) {
-          subscribed = false;
           innerUnsubscribe?.();
           innerUnsubscribe = undefined;
-          queryResult = undefined;
         }
       };
     },
