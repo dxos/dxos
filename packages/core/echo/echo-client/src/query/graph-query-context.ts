@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
 import { type DatabaseImpl } from '../proxy-db';
 import { type QueryContext } from './query-context';
-import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
+import { getTargetSpacesForQuery, isSimpleSelectionQuery, queryHasWindowing } from './util';
 import { type WorkingSetDataProvider, type WorkingSetItem, WorkingSetQueryExecutor } from './working-set-executor';
 
 export type GraphQueryContextProps = {
@@ -258,7 +258,7 @@ export class SpaceQuerySource implements QuerySource {
   };
 
   async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry<Obj.Unknown>[]> {
-    if (!this._isValidSourceForQuery(query) || !this._servesSpaceScope(query)) {
+    if (!this._isValidSourceForQuery(query) || !this._servesSpaceScope(query) || queryHasWindowing(query)) {
       return [];
     }
 
@@ -285,9 +285,10 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   isSynchronous(): boolean {
-    // The working set serves space-scoped selections synchronously. Feed-only queries are served by
-    // the index source, so the working set contributes nothing synchronous for them.
-    return this._query !== undefined && this._servesSpaceScope(this._query);
+    // The working set serves space-scoped selections synchronously. Feed-only queries and queries
+    // with order/skip/limit clauses contribute nothing here (see `queryHasWindowing`), so they are
+    // not synchronous from this source's perspective.
+    return this._query !== undefined && this._servesSpaceScope(this._query) && !queryHasWindowing(this._query);
   }
 
   getResults(): QueryResult.EntityEntry<Obj.Unknown>[] {
@@ -308,7 +309,7 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   update(query: QueryAST.Query): void {
-    if (!this._isValidSourceForQuery(query) || !this._servesSpaceScope(query)) {
+    if (!this._isValidSourceForQuery(query) || !this._servesSpaceScope(query) || queryHasWindowing(query)) {
       this._query = undefined;
       return;
     }
@@ -324,11 +325,13 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   /**
-   * Executes a query against the in-memory working set. Every query goes through the same planner
-   * and executor -- there is no fast path or query-shape gate. Returns null when the plan requires
-   * SQL index capabilities the working set cannot satisfy (full-text or timestamp selectors); the
-   * index-backed source handles those. A planner failure is a hard error: the planner must accept
-   * any query the source is valid for, so a throw signals a bug rather than an unsupported shape.
+   * Executes a query against the in-memory working set. Every query reaching this point (i.e. not
+   * already excluded by `run`/`update` for windowing or feed scope) goes through the same planner
+   * and executor -- there is no further fast path or query-shape gate. Returns null when the plan
+   * requires SQL index capabilities the working set cannot satisfy (full-text or timestamp
+   * selectors); the index-backed source handles those. A planner failure is a hard error: the
+   * planner must accept any query the source is valid for, so a throw signals a bug rather than an
+   * unsupported shape.
    */
   private _executeWithWorkingSet(query: QueryAST.Query): WorkingSetItem[] | null {
     const plan = this._planner.createPlan(query);
