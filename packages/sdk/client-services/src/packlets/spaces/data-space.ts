@@ -359,6 +359,23 @@ export class DataSpace {
     const ready = this.stateUpdate.waitForCondition(() => this._state === SpaceState.SPACE_READY);
 
     log('initializing automerge root');
+    const isPersisted = this._echoHost.spaces.some((s) => s.spaceId === this.id);
+    if (isPersisted) {
+      try {
+        log('opening persisted space root', { spaceId: this.id });
+        const root = await this._echoHost.openSpaceRoot(ctx, this.id);
+        this._databaseRoot = root;
+        if (root.getVersion() !== SpaceDocVersion.CURRENT) {
+          this._state = SpaceState.SPACE_REQUIRES_MIGRATION;
+          this.stateUpdate.emit();
+        } else {
+          await this._enterReadyState();
+        }
+      } catch (err) {
+        log.warn('failed to open persisted space root, will wait for credentials', { spaceId: this.id, err });
+      }
+    }
+
     this._automergeSpaceState.startProcessingRootDocs();
 
     // TODO(dmaretskyi): Change so `initializeDataPipeline` doesn't wait for the space to be READY, but rather any state with a valid root.
@@ -524,7 +541,7 @@ export class DataSpace {
 
         // TODO(dmaretskyi): Close roots.
         // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
-        const root = await this._echoHost.openSpaceRoot(this._ctx, this.id, handle.url);
+        const root = await this._echoHost.updateSpaceRoot(this._ctx, this.id, handle.url);
 
         // NOTE: Make sure this assignment happens synchronously together with the state change.
         this._databaseRoot = root;
