@@ -2,7 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
+import * as Atom from '@effect-atom/atom/Atom';
+import * as Registry from '@effect-atom/atom/Registry';
 import { act, renderHook, waitFor } from '@testing-library/react';
+import React, { type PropsWithChildren } from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Database, Feed, Filter, Obj, Order, Query } from '@dxos/echo';
@@ -11,10 +15,18 @@ import { TestSchema } from '@dxos/echo/testing';
 
 import { usePagination } from './usePagination';
 
+const createWrapper = (registry: Registry.Registry) => {
+  return ({ children }: PropsWithChildren) => (
+    <RegistryContext.Provider value={registry}>{children}</RegistryContext.Provider>
+  );
+};
+
 describe('usePagination', () => {
   let builder: EchoTestBuilder;
+  let registry: Registry.Registry;
 
   beforeEach(async () => {
+    registry = Registry.make();
     builder = await new EchoTestBuilder().open();
   });
 
@@ -35,7 +47,7 @@ describe('usePagination', () => {
     await appendPeople(feed, db, 10);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
-    const { result } = renderHook(() => usePagination(db, query));
+    const { result } = renderHook(() => usePagination(db, query), { wrapper: createWrapper(registry) });
 
     await waitFor(() => {
       expect(result.current.items.map((person) => person.name)).toEqual(['person-9', 'person-8', 'person-7']);
@@ -51,7 +63,7 @@ describe('usePagination', () => {
     await appendPeople(feed, db, 10);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
-    const { result } = renderHook(() => usePagination(db, query));
+    const { result } = renderHook(() => usePagination(db, query), { wrapper: createWrapper(registry) });
 
     await waitFor(() => {
       expect(result.current.items).toHaveLength(3);
@@ -82,7 +94,7 @@ describe('usePagination', () => {
     await appendPeople(feed, db, 30);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
-    const { result } = renderHook(() => usePagination(db, query));
+    const { result } = renderHook(() => usePagination(db, query), { wrapper: createWrapper(registry) });
 
     await waitFor(() => {
       expect(result.current.items).toHaveLength(3);
@@ -110,7 +122,7 @@ describe('usePagination', () => {
     await appendPeople(feed, db, 5);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
-    const { result } = renderHook(() => usePagination(db, query));
+    const { result } = renderHook(() => usePagination(db, query), { wrapper: createWrapper(registry) });
 
     await waitFor(() => {
       expect(result.current.items).toHaveLength(3);
@@ -132,7 +144,9 @@ describe('usePagination', () => {
     await appendPeople(feed, db, 20);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(5);
-    const { result } = renderHook(() => usePagination(db, query, { maxWindowSize: 10 }));
+    const { result } = renderHook(() => usePagination(db, query, { maxWindowSize: 10 }), {
+      wrapper: createWrapper(registry),
+    });
 
     await waitFor(() => {
       expect(result.current.items).toHaveLength(5);
@@ -190,11 +204,14 @@ describe('usePagination', () => {
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(5);
     const lengths: number[] = [];
-    const { result } = renderHook(() => {
-      const paginated = usePagination(db, query, { maxWindowSize: 10 });
-      lengths.push(paginated.items.length);
-      return paginated;
-    });
+    const { result } = renderHook(
+      () => {
+        const paginated = usePagination(db, query, { maxWindowSize: 10 });
+        lengths.push(paginated.items.length);
+        return paginated;
+      },
+      { wrapper: createWrapper(registry) },
+    );
 
     await waitFor(() => expect(result.current.items).toHaveLength(5));
     result.current.getNext(); // limit -> 10 (within maxWindowSize)
@@ -217,7 +234,9 @@ describe('usePagination', () => {
     await appendPeople(feed, db, 30);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(5);
-    const { result } = renderHook(() => usePagination(db, query, { maxWindowSize: 10 }));
+    const { result } = renderHook(() => usePagination(db, query, { maxWindowSize: 10 }), {
+      wrapper: createWrapper(registry),
+    });
 
     await waitFor(() => expect(result.current.items).toHaveLength(5));
 
@@ -279,11 +298,14 @@ describe('usePagination', () => {
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
     const lengths: number[] = [];
-    const { result } = renderHook(() => {
-      const paginated = usePagination(db, query);
-      lengths.push(paginated.items.length);
-      return paginated;
-    });
+    const { result } = renderHook(
+      () => {
+        const paginated = usePagination(db, query);
+        lengths.push(paginated.items.length);
+        return paginated;
+      },
+      { wrapper: createWrapper(registry) },
+    );
 
     await waitFor(() => expect(result.current.items).toHaveLength(3));
     lengths.length = 0;
@@ -301,7 +323,7 @@ describe('usePagination', () => {
     await appendPeople(feed, db, 2);
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(5);
-    const { result } = renderHook(() => usePagination(db, query));
+    const { result } = renderHook(() => usePagination(db, query), { wrapper: createWrapper(registry) });
 
     await waitFor(() => {
       expect(result.current.items.map((person) => person.name)).toEqual(['person-1', 'person-0']);
@@ -320,7 +342,9 @@ describe('usePagination', () => {
     const feed = db.add(Feed.make({ name: 'windowed' }));
 
     const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc'));
-    expect(() => renderHook(() => usePagination(db, query))).toThrow(/\.limit\(pageSize\)/);
+    expect(() => renderHook(() => usePagination(db, query), { wrapper: createWrapper(registry) })).toThrow(
+      /\.limit\(pageSize\)/,
+    );
   });
 
   test('throws when the query already carries a skip', async () => {
@@ -333,7 +357,9 @@ describe('usePagination', () => {
       .orderBy(Order.natural('desc'))
       .skip(5)
       .limit(5);
-    expect(() => renderHook(() => usePagination(db, query))).toThrow(/manages \.skip\(\)/);
+    expect(() => renderHook(() => usePagination(db, query), { wrapper: createWrapper(registry) })).toThrow(
+      /manages \.skip\(\)/,
+    );
   });
 
   // An indexed (host) source resolves a range after a round-trip, so a fresh QueryResult starts
@@ -345,7 +371,9 @@ describe('usePagination', () => {
     const query = Query.select(Filter.type(TestSchema.Person)).limit(3);
     // Test-only: the mock implements just the QueryResult surface usePagination reads (`results` +
     // `subscribe`); the cast bridges to the full Queryable type at this boundary.
-    const { result } = renderHook(() => usePagination(source as unknown as Database.Queryable, query));
+    const { result } = renderHook(() => usePagination(source as unknown as Database.Queryable, query), {
+      wrapper: createWrapper(registry),
+    });
 
     // Initial range in flight — nothing delivered yet.
     await waitFor(() => expect(result.current.isLoading).toBe(true));
@@ -377,6 +405,7 @@ describe('usePagination', () => {
 class ControlledResult {
   #objects: any[] = [];
   readonly #callbacks = new Set<() => void>();
+  #atom: Atom.Atom<any[]> | undefined = undefined;
   get results(): any[] {
     return this.#objects;
   }
@@ -389,6 +418,18 @@ class ControlledResult {
         this.#callbacks.delete(callback);
       }
     };
+  }
+  get atom(): Atom.Atom<any[]> {
+    if (!this.#atom) {
+      this.#atom = Atom.make((get) => {
+        const unsubscribe = this.subscribe(() => {
+          get.setSelf(this.results);
+        });
+        get.addFinalizer(unsubscribe);
+        return this.results;
+      });
+    }
+    return this.#atom;
   }
   deliver(objects: any[]): void {
     this.#objects = objects;

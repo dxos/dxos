@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as Resource from '@effect/opentelemetry/Resource';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { InMemorySpanExporter, type ReadableSpan, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
-import type * as Resource from '@effect/opentelemetry/Resource';
 import * as Effect from 'effect/Effect';
 import type * as Layer from 'effect/Layer';
 

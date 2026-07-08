@@ -178,7 +178,11 @@ export default Capability.makeModule(
               const mailboxSnapshot = get(Obj.atom(mailbox));
               const feed = mailboxSnapshot.feed ? get(mailboxSnapshot.feed.atom) : undefined;
               const messages = feed
-                ? get(space.db.query(Query.select(Filter.type(Message.Message)).from(feed).limit(NEW_MESSAGE_COUNT_WINDOW)).atom)
+                ? get(
+                    space.db.query(
+                      Query.select(Filter.type(Message.Message)).from(feed).limit(NEW_MESSAGE_COUNT_WINDOW),
+                    ).atom,
+                  )
                 : [];
               const modifiedCount = Mailbox.getNewMessageCount(mailboxSnapshot, messages);
 

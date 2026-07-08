@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import React, { type FC, useCallback, useMemo, useState } from 'react';
+import React, { type FC, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Database, DXN, Feed, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { random } from '@dxos/random';
@@ -20,7 +20,7 @@ import { Focus } from '../Focus';
 import { Mosaic } from './Mosaic';
 import { type MosaicTileProps } from './Tile';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 50;
 const MAX_WINDOW_SIZE = PAGE_SIZE * 10;
 
 //
@@ -42,6 +42,7 @@ type Range = { skip: number; limit: number };
  */
 const usePaginatedItems = (total: number) => {
   const [range, setRange] = useState<Range>({ skip: 0, limit: PAGE_SIZE });
+  const pendingRef = useRef(false);
 
   const items = useMemo<ListItem[]>(() => {
     const count = Math.max(0, Math.min(range.limit, total - range.skip));
@@ -52,6 +53,13 @@ const usePaginatedItems = (total: number) => {
   }, [range, total]);
 
   const getNext = useCallback(() => {
+    if (pendingRef.current) {
+      return;
+    }
+    pendingRef.current = true;
+    queueMicrotask(() => {
+      pendingRef.current = false;
+    });
     setRange((prev) => {
       if (prev.skip + prev.limit >= total) {
         return prev;
@@ -64,6 +72,13 @@ const usePaginatedItems = (total: number) => {
   }, [total]);
 
   const getPrevious = useCallback(() => {
+    if (pendingRef.current) {
+      return;
+    }
+    pendingRef.current = true;
+    queueMicrotask(() => {
+      pendingRef.current = false;
+    });
     setRange((prev) => (prev.skip === 0 ? prev : { ...prev, skip: Math.max(0, prev.skip - PAGE_SIZE) }));
   }, []);
 
@@ -84,7 +99,7 @@ const ListItemTile: FC<MosaicTileProps<ListItem>> = ({ data, location, current }
 
 const VirtualStackPaginationStory = () => {
   const { items, getNext, getPrevious, atHead } = usePaginatedItems(TOTAL_ITEMS);
-  const pagination = useMemo(() => ({ getNext, getPrevious }), [getNext, getPrevious]);
+  const pagination = useMemo(() => ({ getNext, getPrevious, atHead }), [getNext, getPrevious, atHead]);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
   const { onChange } = useVirtualizerPagination({
@@ -252,7 +267,7 @@ const FeedPaginationStory = () => {
     maxWindowSize: MAX_WINDOW_SIZE,
   });
 
-  const pagination = useMemo(() => ({ getNext, getPrevious }), [getNext, getPrevious]);
+  const pagination = useMemo(() => ({ getNext, getPrevious, atHead }), [getNext, getPrevious, atHead]);
   const { onChange } = useVirtualizerPagination({ items, getId: (item) => item.id, pagination });
 
   const handleAdd = useCallback(() => {

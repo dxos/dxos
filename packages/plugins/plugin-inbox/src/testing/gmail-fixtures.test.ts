@@ -8,7 +8,6 @@ import { describe, test } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 
 import { GoogleMailApi } from '../services';
-
 import { generateGmailDataset } from './gmail-fixtures';
 
 describe('generateGmailDataset + GoogleMailApi.mock', () => {

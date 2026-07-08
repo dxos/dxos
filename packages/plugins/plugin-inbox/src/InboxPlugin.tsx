@@ -24,7 +24,7 @@ import {
 import { meta } from '#meta';
 import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
 import { translations } from '#translations';
-import { Calendar, ExtractedFrom, InboxCapabilities, InboxEvents, Mailbox, ThreadIndex } from '#types';
+import { Calendar, ExtractedFrom, InboxCapabilities, InboxEvents, Mailbox } from '#types';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
@@ -43,7 +43,6 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       Message.Message,
       ExtractedFrom.ExtractedFrom,
       TagIndex.TagIndex,
-      ThreadIndex.ThreadIndex,
     ],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),

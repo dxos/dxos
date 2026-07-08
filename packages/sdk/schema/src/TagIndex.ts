@@ -61,6 +61,9 @@ export interface Accessor {
 
 type TagKey = readonly [TagIndex, EntityId, string | undefined];
 
+const tagsEqual = (left: readonly string[], right: readonly string[]): boolean =>
+  left.length === right.length && left.every((value, index) => value === right[index]);
+
 const tagFamily = Atom.family((key: TagKey) =>
   Atom.make<boolean>((get) => {
     const [tagIndex, objectId, tagUri] = key;
@@ -83,12 +86,41 @@ const tagFamily = Atom.family((key: TagKey) =>
   }),
 );
 
+const objectTagsFamily = Atom.family((key: TagKey) =>
+  Atom.make<string[]>((get) => {
+    const [tagIndex, objectId] = key;
+    const read = (): string[] => bind(tagIndex).tags(objectId);
+    let previous = read();
+    const unsubscribe = Obj.subscribe(tagIndex, () => {
+      const next = read();
+      if (!tagsEqual(next, previous)) {
+        previous = next;
+        get.setSelf(next);
+      }
+    });
+    get.addFinalizer(() => unsubscribe());
+    return previous;
+  }),
+);
+
 /**
- * Reactive boolean for whether `objectId` carries `tagUri` in a TagIndex. Fires only when
- * membership for this specific object+tag changes. Memoized via `Atom.family`.
+ * TagIndex reactive atoms, memoized via `Atom.family`.
+ *
+ * - One argument: per-object tag-uri family — `(objectId) => Atom<string[]>`.
+ * - Three arguments: membership boolean for one object+tag pair.
  */
-export const atom = (tagIndex: TagIndex, objectId: EntityId, tagUri: string | undefined): Atom.Atom<boolean> =>
-  tagFamily(Data.tuple(tagIndex, objectId, tagUri));
+export function atom(tagIndex: TagIndex): (objectId: EntityId) => Atom.Atom<string[]>;
+export function atom(tagIndex: TagIndex, objectId: EntityId, tagUri: string | undefined): Atom.Atom<boolean>;
+export function atom(
+  tagIndex: TagIndex,
+  objectId?: EntityId,
+  tagUri?: string | undefined,
+): ((objectId: EntityId) => Atom.Atom<string[]>) | Atom.Atom<boolean> {
+  if (objectId === undefined) {
+    return (objectId: EntityId) => objectTagsFamily(Data.tuple(tagIndex, objectId, undefined));
+  }
+  return tagFamily(Data.tuple(tagIndex, objectId, tagUri));
+}
 
 /** Binds an {@link Accessor} over a {@link TagIndex} object; all mutations go through `Obj.update`. */
 export const bind = (tagIndex: TagIndex): Accessor => {

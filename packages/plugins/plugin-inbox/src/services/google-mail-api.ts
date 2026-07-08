@@ -10,7 +10,6 @@ import * as Layer from 'effect/Layer';
 import { Credential } from '@dxos/compute';
 
 import { GoogleMail } from '../apis';
-
 import { GoogleCredentials } from './google-credentials';
 
 /**

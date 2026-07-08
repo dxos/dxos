@@ -70,7 +70,10 @@ export const generateGmailDataset = (options: GenerateGmailDatasetOptions = {}):
     const subject = random.lorem.sentence();
     const body = random.lorem.paragraph();
     // One custom label ~half the time, so tag application is exercised without every message sharing all tags.
-    const labelIds = ['INBOX', ...(random.number.int({ min: 0, max: 1 }) ? [random.helpers.arrayElement(customLabels).id] : [])];
+    const labelIds = [
+      'INBOX',
+      ...(random.number.int({ min: 0, max: 1 }) ? [random.helpers.arrayElement(customLabels).id] : []),
+    ];
 
     return {
       id: `${idPrefix}-${index}`,

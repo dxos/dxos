@@ -16,20 +16,19 @@ import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types'
 
 import { GMAIL_SOURCE } from '../constants';
 import { type GmailDataset, GoogleMailApi, type JmapDataset, JmapMailApi } from '../services';
-import { Mailbox, ThreadIndex } from '../types';
+import { Mailbox } from '../types';
 
 // Shared harness for the mock-provider sync tests (unit + OTEL + benchmark): a real ECHO db seeded
 // with a mailbox binding, plus the ambient services `runGmailSync`/`runJmapSync` require. Not exported
 // from `@dxos/plugin-inbox/testing` — it pulls app-framework/compute, so it stays a local test helper.
 
-/** The ECHO types the sync writes: messages, contacts, tags, thread/tag indices, binding + cursor. */
+/** The ECHO types the sync writes: messages, contacts, tags, tag index, binding + cursor. */
 export const SYNC_TEST_TYPES = [
   Message.Message,
   Person.Person,
   Organization.Organization,
   Tag.Tag,
   TagIndex.TagIndex,
-  ThreadIndex.ThreadIndex,
   Mailbox.Mailbox,
   AccessToken.AccessToken,
   Connection.Connection,

@@ -17,7 +17,8 @@ export default Capability.makeModule(() =>
       key: meta.profile.key,
       schema: Settings.Settings,
       defaultValue: () => ({
-        conversations: true,
+        // Conversation grouping is off by default: the grouped view's pagination is currently broken.
+        conversations: false,
         loadRemoteImages: false,
       }),
     });

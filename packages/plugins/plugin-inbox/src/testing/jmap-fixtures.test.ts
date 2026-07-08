@@ -9,7 +9,6 @@ import { EffectEx } from '@dxos/effect';
 
 import { type JmapMail } from '../apis';
 import { JmapMailApi } from '../services';
-
 import { generateJmapDataset } from './jmap-fixtures';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';

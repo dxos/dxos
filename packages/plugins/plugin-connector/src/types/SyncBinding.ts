@@ -217,7 +217,6 @@ const advanceCursor = (state: State, maxKey: number): void => {
   }
 };
 
-
 /** Appends the page's messages to the feed — the durable write that must precede the space-db mutations. */
 const appendMessages = Effect.fn('sync.commit.appendToFeed')(function* (feed: Feed.Feed, units: readonly CommitUnit[]) {
   yield* Feed.append(

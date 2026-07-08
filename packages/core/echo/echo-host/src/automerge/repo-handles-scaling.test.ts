@@ -38,7 +38,9 @@ describe.runIf(process.env.DX_PROBE)('automerge-repo handle-lookup scaling', () 
             acc += repo.handles[target] ? 1 : 0;
           }
           viaHandlesUs = ((performance.now() - t0) / LOOKUPS) * 1000;
-          if (acc < 0) {throw new Error('unreachable');}
+          if (acc < 0) {
+            throw new Error('unreachable');
+          }
         }
 
         // Proposed O(1) accessor (present only after the fork patch).
@@ -51,7 +53,9 @@ describe.runIf(process.env.DX_PROBE)('automerge-repo handle-lookup scaling', () 
             acc += getHandle(target) ? 1 : 0;
           }
           viaGetHandleUs = round(((performance.now() - t0) / LOOKUPS) * 1000);
-          if (acc < 0) {throw new Error('unreachable');}
+          if (acc < 0) {
+            throw new Error('unreachable');
+          }
         }
 
         rows.push({ handles: n + 1, perLookupUs_handles: round(viaHandlesUs), perLookupUs_getHandle: viaGetHandleUs });

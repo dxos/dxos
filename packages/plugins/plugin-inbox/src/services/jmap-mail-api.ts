@@ -10,7 +10,6 @@ import * as Predicate from 'effect/Predicate';
 
 import { Jmap, JmapMail } from '../apis';
 import { type JmapApiError } from '../errors';
-
 import { type JmapCredentials } from './jmap-credentials';
 
 /**
@@ -55,8 +54,7 @@ export interface JmapDataset {
 }
 
 /** Narrows an `unknown` filter value to a plain object so the mock can walk its conditions. */
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
 /**
  * Evaluates an `Email/query` filter against an email — enough of RFC 8621 §4.4.1 for the sync's

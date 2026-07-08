@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
 import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
@@ -10,8 +9,6 @@ import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
-
-import * as ThreadIndex from './ThreadIndex';
 
 /**
  * Foreign-key source for Gmail provider labels. A Gmail label maps to a {@link Tag} object carrying
@@ -55,11 +52,6 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     // Messages are immutable Queue items, so their tag associations live in a child `TagIndex` object
     // (the `meta.tags` augmentation for feed objects). Tag labels/hues live on the `Tag` objects.
     tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
-    // Inverse conversation index for immutable feed Messages: provider thread id → message refs.
-    // Optional/lazy (provisioned on first sync by {@link getOrCreateThreadIndex}) so mailboxes created
-    // before the field existed need no migration. Members are refs so the thread detail view resolves
-    // them directly rather than scanning the feed.
-    threads: Ref.Ref(ThreadIndex.ThreadIndex).pipe(FormInputAnnotation.set(false), Schema.optional),
     extractors: Schema.Struct({
       enabled: Schema.Array(Schema.String),
       threshold: Schema.Number.pipe(Schema.between(0, 1)),
@@ -240,53 +232,3 @@ export type MessageLike = Message.Message | Obj.Snapshot<Message.Message>;
 /** Returns the tag uris currently applied to a single message. */
 export const getTagsForMessage = (mailbox: Mailbox, message: MessageLike): string[] =>
   Tagging.get(message, { index: mailbox.tags.target });
-
-//
-// Conversation (thread) index API.
-//
-
-/**
- * Returns the mailbox's conversation index, provisioning it on first use. Optional/lazy so mailboxes
- * created before the `threads` field existed need no migration; mirrors {@link Starred.toggleStarred}'s
- * lazy tag-index provisioning.
- */
-export const getOrCreateThreadIndex = (mailbox: Mailbox, db: Database.Database): ThreadIndex.ThreadIndex => {
-  const existing = mailbox.threads?.target;
-  if (existing) {
-    return existing;
-  }
-  const index = db.add(ThreadIndex.make());
-  // Thread index is a child: cascade-deleted with the mailbox.
-  Obj.setParent(index, mailbox);
-  Obj.update(mailbox, (mailbox) => {
-    mailbox.threads = Ref.make(index);
-  });
-  return index;
-};
-
-/**
- * Per-thread message-count atom family over a conversation index. Each atom yields the authoritative
- * count for one thread id (from the {@link ThreadIndex}, independent of which messages are loaded), so
- * a consumer subscribes only to the thread it renders and re-renders only when that thread's count
- * changes — no whole-index `Object.keys` scan and no cross-thread render coupling. Derived from the
- * index object's reactive atom; reads a single key off the snapshot (no auto-vivify).
- */
-export const threadCountAtom = Atom.family(([mailbox, threadId]: readonly [Mailbox, string]) =>
-  Atom.make((get) => {
-    if (!mailbox.threads) {
-      return 0;
-    }
-
-    const threadIndex = get(Obj.atomReactive(mailbox.threads));
-    if (!threadIndex) {
-      return 0;
-    }
-
-    const index = Obj.atomProperty(threadIndex, 'index');
-    if (!index) {
-      return 0;
-    }
-
-    return get(index)?.[threadId]?.length ?? 0;
-  }),
-);

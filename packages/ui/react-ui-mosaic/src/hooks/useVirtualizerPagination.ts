@@ -7,14 +7,31 @@ import { useCallback, useLayoutEffect, useRef } from 'react';
 
 import { type GetId } from '../components';
 
-/** Number of virtual rows from either loaded edge at which the next/previous page is requested. */
+/** Rows from either loaded edge at which the next/previous page is requested. */
 const DEFAULT_THRESHOLD = 12;
+
+/** Index at/above which `getNext` fires; small windows clamp to the last row only. */
+const nextPageIndexThreshold = (itemCount: number, threshold: number): number =>
+  itemCount > threshold ? itemCount - threshold : itemCount - 1;
+
+/** True when loaded content exceeds the scroll viewport (user can actually scroll). */
+const isScrollable = (virtualizer: Virtualizer<any, any>): boolean => {
+  const viewportHeight = virtualizer.scrollElement?.clientHeight ?? 0;
+  if (viewportHeight === 0) {
+    return false;
+  }
+  return virtualizer.getTotalSize() > viewportHeight + 1;
+};
 
 export type VirtualizerPaginationController = {
   /** Requests the next (e.g. older) page. Omit to disable the bottom-edge trigger. */
   getNext?: () => void;
   /** Requests the previous (e.g. newer) page. Omit to disable the top-edge trigger. */
   getPrevious?: () => void;
+  /** When true, suppresses the top-edge trigger (window is anchored at the live head). */
+  atHead?: boolean;
+  /** When true, suppresses both edge triggers while a page is in flight. */
+  isLoading?: boolean;
 };
 
 export type UseVirtualizerPaginationProps<TItem = any> = {
@@ -68,6 +85,14 @@ export const useVirtualizerPagination = <TItem = any>({
   // as a side effect of our own correction rather than real user scrolling -- cascading into
   // repeated loads/corrections while scrolling quickly.
   const restoringRef = useRef(false);
+  // One page request per loaded `items` snapshot; cleared when the user scrolls away from both edges.
+  const lastRequestedItemsRef = useRef<typeof items>(undefined);
+  // Scroll offset when the last page request was issued; sync sources can deliver a new `items`
+  // snapshot without the user scrolling, which would otherwise re-trigger at the same edge.
+  const lastGetNextScrollRef = useRef<number | null>(null);
+  const lastGetPreviousScrollRef = useRef<number | null>(null);
+  const paginationRef = useRef(pagination);
+  paginationRef.current = pagination;
 
   // Snapshot the anchor the moment `items` is about to change, during render rather than inside
   // `onChange` or an effect. `@tanstack/react-virtual` calls `onChange` synchronously as part of
@@ -98,17 +123,61 @@ export const useVirtualizerPagination = <TItem = any>({
         restoringRef.current = false;
         return;
       }
+      const scrollable = isScrollable(virtualizer);
+      const scrollOffset = virtualizer.scrollOffset ?? 0;
       const virtualItems = virtualizer.getVirtualItems();
       const firstVisible = virtualItems.at(0);
       const lastVisible = virtualItems.at(-1);
-      if (pagination?.getNext && lastVisible && lastVisible.index >= itemCount - threshold) {
-        pagination.getNext();
+      const nextThreshold = nextPageIndexThreshold(itemCount, threshold);
+      const smallWindow = itemCount <= threshold;
+      const nearBottomIndex = !!(lastVisible && lastVisible.index >= nextThreshold);
+      const canGetNext = lastGetNextScrollRef.current === null || scrollOffset !== lastGetNextScrollRef.current;
+      const canGetPrevious =
+        lastGetPreviousScrollRef.current === null || scrollOffset !== lastGetPreviousScrollRef.current;
+      const triggerNext = !!(
+        pagination?.getNext &&
+        !pagination.isLoading &&
+        scrollable &&
+        nearBottomIndex &&
+        canGetNext &&
+        (!smallWindow || scrollOffset > 0)
+      );
+      const triggerPrev = !!(
+        pagination?.getPrevious &&
+        !pagination.isLoading &&
+        scrollable &&
+        scrollOffset > 0 &&
+        canGetPrevious &&
+        firstVisible &&
+        firstVisible.index < threshold &&
+        pagination.atHead !== true
+      );
+      const alreadyRequestedForItems = lastRequestedItemsRef.current === items;
+      if (!nearBottomIndex) {
+        lastGetNextScrollRef.current = null;
       }
-      if (pagination?.getPrevious && firstVisible && firstVisible.index < threshold) {
-        pagination.getPrevious();
+      if (!firstVisible || firstVisible.index >= threshold) {
+        lastGetPreviousScrollRef.current = null;
+      }
+      if (!triggerNext && !triggerPrev) {
+        lastRequestedItemsRef.current = undefined;
+        return;
+      }
+      if (alreadyRequestedForItems) {
+        return;
+      }
+      lastRequestedItemsRef.current = items;
+      if (triggerNext) {
+        lastGetNextScrollRef.current = scrollOffset;
+        const getNext = paginationRef.current?.getNext;
+        queueMicrotask(() => getNext?.());
+      } else if (triggerPrev) {
+        lastGetPreviousScrollRef.current = scrollOffset;
+        const getPrevious = paginationRef.current?.getPrevious;
+        queueMicrotask(() => getPrevious?.());
       }
     },
-    [pagination, itemCount, threshold],
+    [items, pagination, itemCount, threshold],
   );
 
   // Restores the previously-first-visible item to the same on-screen offset it had before `items`

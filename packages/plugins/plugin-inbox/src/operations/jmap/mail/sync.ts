@@ -90,8 +90,6 @@ export const runJmapSync = ({
     const { db } = yield* Database.Service;
     const feed = yield* Database.load(mailbox.feed);
     const tagIndex = yield* Database.load(mailbox.tags);
-    // Conversation index (lazily provisioned): thread membership is recorded during commit.
-    const threadIndex = Mailbox.getOrCreateThreadIndex(mailbox, db);
 
     // TODO(wittjosiah): Migrate this folder→Tag sync onto a pipeline too (source: folders; sink:
     //   find-or-create Tag), rather than the imperative loop below.
@@ -157,10 +155,11 @@ export const runJmapSync = ({
       mapToMessageStage,
       EmailStage.onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
-      EmailStage.recordThreads(threadIndex),
       Stream.grouped(COMMIT_PAGE_SIZE),
       Pipeline.run({ sink: SyncBinding.commit }),
-      Effect.provide(SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: JMAP_MESSAGE_SOURCE, cursorKey, stats })),
+      Effect.provide(
+        SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: JMAP_MESSAGE_SOURCE, cursorKey, stats }),
+      ),
     );
 
     // Flush indexes once at the end of the run (per-page commits no longer flush — see

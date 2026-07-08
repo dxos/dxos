@@ -11670,6 +11670,9 @@ importers:
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect

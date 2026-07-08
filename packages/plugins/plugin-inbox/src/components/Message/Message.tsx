@@ -306,7 +306,8 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   const db = getSpace(mailbox ?? message)?.db;
   const personalTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Mailbox.GMAIL_PERSONAL_TAG_KEY]))[0];
   const isPersonal = useMemo(
-    () => !!(mailbox && personalTag && Mailbox.getTagsForMessage(mailbox, message).includes(Mailbox.tagUri(personalTag))),
+    () =>
+      !!(mailbox && personalTag && Mailbox.getTagsForMessage(mailbox, message).includes(Mailbox.tagUri(personalTag))),
     [mailbox, message, personalTag],
   );
 

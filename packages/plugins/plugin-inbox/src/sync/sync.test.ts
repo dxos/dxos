@@ -17,8 +17,6 @@ import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { TagIndex } from '@dxos/schema';
 import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
 
-import { ThreadIndex } from '#types';
-
 import { EmailStage } from './index';
 
 const TEST_SOURCE = 'test.mail';
@@ -75,7 +73,6 @@ describe('sync pipeline harness', () => {
         Connection.Connection,
         Cursor.Cursor,
         SyncBinding.SyncBinding,
-        ThreadIndex.ThreadIndex,
       ],
     });
     const feed = db.add(Feed.make({ name: 'mailbox' }));
@@ -179,8 +176,8 @@ describe('sync pipeline harness', () => {
     const { db, feed, tagIndex, binding } = await setup();
 
     const calls: (readonly SyncBinding.CommitUnit[])[] = [];
-    // A single stable reference — the same shape `EmailStage.recordThreads` attaches to every unit
-    // in a run — so `commit` must invoke it once per page with every unit that attached it, not once
+    // A single stable reference reused across every unit in a run (the shape a per-run commit effect
+    // attaches) — so `commit` must invoke it once per page with every unit that attached it, not once
     // per unit.
     const commitEffect: SyncBinding.CommitEffect = (units) =>
       Effect.sync(() => {
@@ -212,52 +209,6 @@ describe('sync pipeline harness', () => {
 
     expect(calls).toHaveLength(1);
     expect(calls[0].map((unit) => unit.foreignId)).toEqual(['m1', 'm2']);
-  });
-
-  test('recordThreads populates the thread index via the commit effect', async ({ expect }) => {
-    const { db, feed, tagIndex, binding } = await setup();
-    const threadIndex = db.add(ThreadIndex.make());
-    await db.flush({ indexes: true });
-
-    // t1 spans three messages (across pages), t2 is a singleton.
-    const threadOf: Record<string, string> = { m1: 't1', m2: 't1', m3: 't2', m4: 't1', m5: 't1' };
-    const mapThreaded: Stage.Stage<Raw, EmailStage.Mapped, never, never> = Stage.map('map', (raw: Raw) =>
-      Effect.sync(() => ({
-        message: Obj.make(Message.Message, {
-          [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
-          created: new Date(raw.key).toISOString(),
-          sender: { email: raw.email },
-          threadId: threadOf[raw.id],
-          blocks: [{ _tag: 'text', text: raw.body }],
-        }),
-        foreignId: raw.id,
-        key: raw.key,
-        tagUris: [],
-      })),
-    );
-
-    const stats: SyncBinding.Stats = { newMessages: 0 };
-    await EffectEx.runPromise(
-      Stream.fromIterable(RAWS).pipe(
-        SyncBinding.dedupStage<Raw>(
-          'dedup',
-          (raw) => raw.id,
-          (raw) => raw.key,
-        ),
-        mapThreaded,
-        EmailStage.extractContacts(),
-        EmailStage.recordThreads(threadIndex),
-        Stream.grouped(2),
-        Pipeline.run({ sink: SyncBinding.commit }),
-        Effect.provide(SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats })),
-        Effect.provide(Database.layer(db)),
-      ),
-    );
-
-    const bound = ThreadIndex.bind(threadIndex);
-    expect(bound.threadIds().sort()).toEqual(['t1', 't2']);
-    expect(bound.messages('t1')).toHaveLength(4);
-    expect(bound.messages('t2')).toHaveLength(1);
   });
 
   test('re-running a completed sync is a no-op', async ({ expect }) => {

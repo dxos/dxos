@@ -1,8 +1,4 @@
 //
-// Copyright 2025 example.com
-//
-
-//
 // Copyright 2025 DXOS.org
 //
 
@@ -1255,10 +1251,7 @@ describe('QueryPlanner', () => {
   });
 
   test('ordered, skipped, and limited results: skip is added to the propagated cap; the limit step is removed', () => {
-    const query = Query.select(Filter.type(TestSchema.Task))
-      .orderBy(Order.property('title', 'asc'))
-      .skip(5)
-      .limit(10);
+    const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'asc')).skip(5).limit(10);
 
     const plan = planner.createPlan(withSpaceIdOptions(query.ast));
 

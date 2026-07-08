@@ -15,7 +15,7 @@ import { type Message as MessageType } from '@dxos/types';
 
 import { Message, type MessageHeaderProps, type ViewMode } from '#components';
 import { useActorContact } from '#hooks';
-import { InboxOperation, Mailbox, ThreadIndex } from '#types';
+import { InboxOperation, Mailbox } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 
@@ -29,20 +29,16 @@ export type MessageArticleProps = AppSurface.ObjectArticleProps<
 /** Messages default to rendering the raw email HTML; markdown/plain are opt-in toolbar views. */
 const DEFAULT_VIEW_MODE: ViewMode = 'html';
 
-/** Conversation key for a message — its provider thread id, or its own id when unthreaded. */
-const conversationKey = (message: MessageType.Message): string => message.threadId ?? message.id;
-
 type MessageOrRef = MessageType.Message | Ref.Ref<MessageType.Message>;
 
 const keyOf = (message: MessageOrRef): string => (Ref.isRef(message) ? String(message.uri) : Obj.getURI(message));
 
 /**
- * Message/conversation detail view. Given the opened message, renders every message in its
- * conversation as a vertical stack (a single unthreaded message is just a one-message conversation, so
- * this is the only message detail surface). Conversation members come from the mailbox's
- * {@link ThreadIndex} (refs resolve by id, independent of the feed's newest-by-position window); each
- * is resolved by its own leaf (see {@link ThreadMessageItem}) so subscriptions stay granular. Toolbar
- * actions (reply/forward/delete) act on the opened message.
+ * Message/conversation detail view. Renders the opened message as a vertical stack that can hold a
+ * whole conversation — each member resolved by its own leaf (see {@link ThreadMessageItem}) so
+ * subscriptions stay granular. Conversation grouping is not wired up right now, so the stack holds
+ * only the opened message; the multi-message rendering path is kept for when threading returns.
+ * Toolbar actions (reply/forward/delete) act on the opened message.
  */
 export const MessageArticle = ({
   role,
@@ -60,8 +56,8 @@ export const MessageArticle = ({
   // View mode is owned here and shared (controlled) across the toolbar and every message body, which
   // render in separate `Message.Root`s — so the toolbar's switch applies to all bodies.
   const [viewMode, setViewMode] = useState<ViewMode>(DEFAULT_VIEW_MODE);
-  const [threadIndex] = useObject(mailbox?.threads, 'index');
-  const messages = threadIndex?.[conversationKey(message)] ?? [];
+  // Only the opened message for now; the stack below still supports a multi-message conversation.
+  const messages: MessageOrRef[] = [message];
 
   const { invokePromise } = useOperationInvoker();
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(

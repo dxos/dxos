@@ -9,14 +9,14 @@ import * as Stream from 'effect/Stream';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { type ContactLookup, buildContactFromActor, buildContactLookup } from '@dxos/extractor-lib';
 import { normalizeText } from '@dxos/markdown';
 import { Stage } from '@dxos/pipeline';
 import { SyncBinding } from '@dxos/plugin-connector';
 import { Message } from '@dxos/types';
 
-import { type Mailbox, ThreadIndex } from '../types';
+import { type Mailbox } from '../types';
 import { runOnArrivalExtractors } from '../util/mailbox-sync';
 
 /**
@@ -82,51 +82,6 @@ export const extractContacts = (): Stage.Stage<Mapped, SyncBinding.CommitUnit, n
       };
     }),
   );
-};
-
-/**
- * Records each message's thread membership into the mailbox's {@link ThreadIndex}. The stage stays
- * idempotent — it only aggregates the write as a deferred commit effect on the {@link SyncBinding.CommitUnit};
- * the actual index mutation runs inside `SyncBinding.commit`'s flush, alongside the feed append (so a
- * crash never leaves the index referencing an uncommitted message). Messages without a provider
- * `threadId` pass through unchanged.
- *
- * The closure attached per unit (`record`) is created once per call to `recordThreads(threadIndex)` —
- * once per pipeline run — and the same reference is reused for every unit. `SyncBinding.commit`
- * dedupes commit effects by function identity, so this reuse is what turns a page's worth of
- * thread-membership writes into a single {@link ThreadIndex.Accessor.addBatch} call instead of one
- * `add` per message; without a stable reference, each unit would get its own one-off closure and
- * every add would still pay the batch's `Object.keys` scan individually.
- */
-export const recordThreads = (threadIndex: ThreadIndex.ThreadIndex) => {
-  // One accessor for the whole run so its thread-id snapshot is taken once (not per page) — see
-  // `ThreadIndex.bind`. The `recordThreads` factory is called once per pipeline run.
-  const accessor = ThreadIndex.bind(threadIndex);
-  const record: SyncBinding.CommitEffect = Effect.fn('sync.commit.recordThreads')(function* (
-    units: readonly SyncBinding.CommitUnit[],
-  ) {
-    const entries = units.flatMap((unit) => {
-      const message = unit.message;
-      return Obj.instanceOf(Message.Message, message) && message.threadId
-        ? [{ threadId: message.threadId, message }]
-        : [];
-    });
-    yield* Effect.sync(() => accessor.addBatch(entries));
-  });
-
-  return <In extends SyncBinding.CommitUnit, E, R>(self: Stream.Stream<In, E, R>): Stream.Stream<In, E, R> =>
-    Stage.map('record-threads', (unit: In) =>
-      Effect.sync(() => {
-        const message = unit.message;
-        if (!Obj.instanceOf(Message.Message, message) || !message.threadId) {
-          return unit;
-        }
-        return {
-          ...unit,
-          commitEffects: [...(unit.commitEffects ?? []), record],
-        };
-      }),
-    )(self);
 };
 
 /**

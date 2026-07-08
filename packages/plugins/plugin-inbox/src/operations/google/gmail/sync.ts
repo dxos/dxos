@@ -140,7 +140,14 @@ export const runGmailSync = ({
       direction: resolvedDirection,
       start: rangeStart,
       end: upperBound,
-    } = resolveSyncWindow({ cursorKey, now: new Date(), after, before, direction, syncBackDays: targetOptions.syncBackDays });
+    } = resolveSyncWindow({
+      cursorKey,
+      now: new Date(),
+      after,
+      before,
+      direction,
+      syncBackDays: targetOptions.syncBackDays,
+    });
     let rangeEnd = upperBound;
     // Restricted mode limits work to a single leading window (plus `Stream.take` on message count).
     if (restrictedMode) {
@@ -148,7 +155,10 @@ export const runGmailSync = ({
         rangeEnd = addDays(rangeStart, STREAMING_CONFIG.dateChunkDays);
       }
     }
-    const start = resolvedDirection === 'backward' && restrictedMode ? subDays(rangeEnd, STREAMING_CONFIG.dateChunkDays) : rangeStart;
+    const start =
+      resolvedDirection === 'backward' && restrictedMode
+        ? subDays(rangeEnd, STREAMING_CONFIG.dateChunkDays)
+        : rangeStart;
     log('syncing gmail', {
       mailbox: Obj.getURI(mailbox),
       userId,
@@ -162,8 +172,6 @@ export const runGmailSync = ({
     const feed = yield* Database.load(mailbox.feed);
     // Resolve the child tag index so provider-label tags can be applied synchronously during commit.
     const tagIndex = yield* Database.load(mailbox.tags);
-    // Conversation index (lazily provisioned): thread membership is recorded during commit.
-    const threadIndex = Mailbox.getOrCreateThreadIndex(mailbox, db);
     const labelMap = yield* syncLabels(mailbox, userId).pipe(
       Effect.catchAll((error) => {
         log.catch(error);
@@ -221,7 +229,6 @@ export const runGmailSync = ({
       mapToMessageStage,
       EmailStage.onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
-      EmailStage.recordThreads(threadIndex),
       // Emit a page when it fills OR after `pageTimeout`, so the first messages commit (and render) as
       // soon as they're processed rather than waiting to accumulate a full page.
       Stream.groupedWithin(STREAMING_CONFIG.pageSize, STREAMING_CONFIG.pageTimeout),
@@ -331,9 +338,12 @@ const gmailSource = (config: GmailSourceConfig) =>
 
       const messageIds = Function.pipe(
         generateDateRanges(rangeConfig),
-        Stream.flatMap((dateChunk) => fetchMessagesForDateRange(api, config.userId, config.label, dateChunk, config.searchFilter), {
-          concurrency: 1,
-        }),
+        Stream.flatMap(
+          (dateChunk) => fetchMessagesForDateRange(api, config.userId, config.label, dateChunk, config.searchFilter),
+          {
+            concurrency: 1,
+          },
+        ),
         config.restricted ? Stream.take(STREAMING_CONFIG.restrictedMax) : Function.identity,
       );
 
@@ -361,7 +371,10 @@ const generateDateRanges = (config: DateRangeConfig): Stream.Stream<DateChunk> =
         const chunkEnd = addDays(position, config.chunkDays);
         const end = chunkEnd > config.end ? config.end : chunkEnd;
         const chunk: DateChunk = { start: position, end };
-        log('processing date chunk', { start: format(chunk.start, 'yyyy-MM-dd'), end: format(chunk.end, 'yyyy-MM-dd') });
+        log('processing date chunk', {
+          start: format(chunk.start, 'yyyy-MM-dd'),
+          end: format(chunk.end, 'yyyy-MM-dd'),
+        });
         return Option.some([Chunk.of(chunk), end]);
       }
       if (position <= config.start) {
