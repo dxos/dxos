@@ -96,11 +96,10 @@ export class FactStore extends Context.Tag('@dxos/pipeline-rdf/FactStore')<FactS
   );
 
   /**
-   * Browser/test layer backed by an in-memory N3 store (no `SqlClient`, no SQLite). Structured queries
-   * run directly over the store (no SPARQL engine), so the browser path avoids Comunica entirely;
-   * `select` (raw SPARQL) still uses Comunica and so is server-side only.
+   * Builds a fresh in-memory FactStore service (no `SqlClient`). Shared by {@link layerMemory} and
+   * callers that need a standalone instance without a Layer (e.g. a per-space registry).
    */
-  static layerMemory: Layer.Layer<FactStore> = Layer.sync(FactStore, () => {
+  static makeMemory = (): FactStoreApi => {
     const source = makeMemorySource();
     const cursors = new Map<string, string>();
 
@@ -123,5 +122,12 @@ export class FactStore extends Context.Tag('@dxos/pipeline-rdf/FactStore')<FactS
       });
 
     return { putFacts, cursor, setCursor, query, select: makeSelect(source), clear };
-  });
+  };
+
+  /**
+   * Browser/test layer backed by an in-memory N3 store (no `SqlClient`, no SQLite). Structured queries
+   * run directly over the store (no SPARQL engine), so the browser path avoids Comunica entirely;
+   * `select` (raw SPARQL) still uses Comunica and so is server-side only.
+   */
+  static layerMemory: Layer.Layer<FactStore> = Layer.sync(FactStore, () => FactStore.makeMemory());
 }
