@@ -19,7 +19,19 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/pipeline-rdf"
     },
     {
       "path": "../../sdk/app-framework"

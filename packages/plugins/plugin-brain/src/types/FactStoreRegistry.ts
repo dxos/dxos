@@ -2,15 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayerSpec } from '@dxos/compute';
-import { invariant } from '@dxos/invariant';
 import { FactStore, type FactStoreApi } from '@dxos/pipeline-rdf';
-
-import { InboxCapabilities } from '#types';
 
 /**
  * Per-space in-memory FactStore registry: one shared instance per space, used as both the
@@ -41,31 +35,3 @@ export const makeFactStoreRegistry = (): FactStoreRegistry => {
   const layerFor = (spaceId: string): Layer.Layer<FactStore> => Layer.succeed(FactStore, forSpace(spaceId));
   return { forSpace, layerFor };
 };
-
-/**
- * Contributes a single shared {@link FactStoreRegistry} plus a space-affinity {@link LayerSpec} that
- * provides `FactStore` to operations. Both close over the SAME registry, so the operation-injected
- * store and the capability-read store resolve to the same per-space instance.
- */
-export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
-    const registry = makeFactStoreRegistry();
-
-    const factStoreSpec = LayerSpec.make(
-      {
-        affinity: 'space',
-        requires: [],
-        provides: [FactStore],
-      },
-      (context) => {
-        invariant(context.space, 'space context required for FactStore layer');
-        return registry.layerFor(context.space);
-      },
-    );
-
-    return [
-      Capability.contributes(InboxCapabilities.FactStoreRegistry, registry),
-      Capability.contributes(Capabilities.LayerSpec, factStoreSpec),
-    ];
-  }),
-);

@@ -173,6 +173,9 @@
       "path": "../plugin-attention"
     },
     {
+      "path": "../plugin-brain"
+    },
+    {
       "path": "../plugin-client"
     },
     {

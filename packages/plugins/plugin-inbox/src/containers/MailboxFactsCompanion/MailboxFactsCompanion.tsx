@@ -8,12 +8,11 @@ import React, { useEffect, useState } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { type FactStoreApi, type RDF } from '@dxos/pipeline-rdf';
+import { BrainCapabilities, type FactStoreRegistry } from '@dxos/plugin-brain/types';
 import { getSpace } from '@dxos/react-client/echo';
 import { FactViewer } from '@dxos/react-ui-fact-viewer';
 
-import { InboxCapabilities, type Mailbox } from '#types';
-
-import { type FactStoreRegistry } from '../../capabilities/fact-store';
+import { type Mailbox } from '#types';
 
 export type MailboxFactsCompanionProps = {
   mailbox: Mailbox.Mailbox;
@@ -25,7 +24,7 @@ export type MailboxFactsCompanionProps = {
  * presentational {@link FactViewer}.
  */
 export const MailboxFactsCompanion = ({ mailbox }: MailboxFactsCompanionProps) => {
-  const registry = useCapability(InboxCapabilities.FactStoreRegistry);
+  const registry = useCapability(BrainCapabilities.FactStoreRegistry);
   const spaceId = getSpace(mailbox)?.id;
   const facts = useFacts(registry, spaceId);
   return <FactViewer facts={facts} />;

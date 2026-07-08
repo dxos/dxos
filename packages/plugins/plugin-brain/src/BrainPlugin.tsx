@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
+import { FactStore } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -12,6 +13,11 @@ import { translations } from '#translations';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const BrainPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'fact-store',
+    activatesOn: ActivationEvents.SetupProcessManager,
+    activate: FactStore,
+  }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),

@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import { makeFactStoreRegistry } from './fact-store';
+import { makeFactStoreRegistry } from './FactStoreRegistry';
 
 describe('FactStoreRegistry', () => {
   test('returns the same instance for a space', ({ expect }) => {
