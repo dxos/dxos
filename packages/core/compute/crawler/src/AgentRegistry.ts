@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as SqlClient from '@effect/sql/SqlClient';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { StateError } from './errors';
+import { makeSql, migrate } from './internal/agent-registry-sql';
 import type * as Type from './types';
 
 /** A single identifier for an agent, in some namespace (e.g. discord-user:1234567890). */
@@ -58,6 +60,17 @@ export interface AgentRegistryApi {
 export class AgentRegistry extends Context.Tag('@dxos/crawler/AgentRegistry')<AgentRegistry, AgentRegistryApi>() {
   /** In-memory registry (tests, demos). Browser path will back this with ECHO Person objects. */
   static layerMemory: Layer.Layer<AgentRegistry> = Layer.sync(AgentRegistry, () => makeMemory());
+
+  /** SQLite-backed registry over a shared SqlClient. */
+  static layerSql: Layer.Layer<AgentRegistry, never, SqlClient.SqlClient> = Layer.scoped(
+    AgentRegistry,
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      // Schema creation is a fatal store-construction failure, not a recoverable per-op error.
+      yield* migrate(sql).pipe(Effect.orDie);
+      return makeSql(sql);
+    }),
+  );
 }
 
 /**
