@@ -10,7 +10,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { type Feed, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
+import { type Feed, Filter, Key, Obj, Order, Query, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -321,12 +321,26 @@ export default Capability.makeModule(
           const message = get(
             db.query(Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed)).atom,
           )[0];
+          // Resolve the selected message's whole conversation and assign it to the companion node as
+          // the subject, so the article renders the thread directly without re-querying. Chronological
+          // (oldest-first) reading order; a message without a `threadId` is a one-message conversation.
+          const thread = message
+            ? message.threadId
+              ? get(
+                  db.query(
+                    Query.select(Filter.type(Message.Message, { threadId: message.threadId }))
+                      .from(feed)
+                      .orderBy(Order.property('created', 'asc')),
+                  ).atom,
+                )
+              : [message]
+            : [];
           return Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('message'),
               label: ['message.label', { ns: meta.profile.key }],
               icon: 'ph--envelope-open--regular',
-              data: message ?? 'message',
+              data: thread.length > 0 ? thread : 'message',
             }),
           ]);
         },

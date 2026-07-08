@@ -36,6 +36,10 @@ import { getDraftsId } from '../paths';
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
   Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
 
+/** A single non-draft message or a non-empty conversation (thread) of them. */
+const isMessageOrThread = (subject: unknown): subject is Message.Message | Message.Message[] =>
+  Array.isArray(subject) ? subject.length > 0 && subject.every(isNonDraftMessage) : isNonDraftMessage(subject);
+
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
@@ -78,8 +82,8 @@ export default Capability.makeModule(() =>
         id: 'message',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
-          AppSurface.subject(AppSurface.Article, isNonDraftMessage),
-          AppSurface.subject(AppSurface.Section, isNonDraftMessage),
+          AppSurface.subject(AppSurface.Article, isMessageOrThread),
+          AppSurface.subject(AppSurface.Section, isMessageOrThread),
         ),
         component: ({ data, role }) => {
           const { graph } = useAppGraph();
