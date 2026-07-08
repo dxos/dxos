@@ -7,8 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Obj, Ref } from '@dxos/echo';
 import { type Resolver, resolve } from '@dxos/extractor';
 import { log } from '@dxos/log';
-import { normalizeText } from '@dxos/markdown';
-import { Message, Person } from '@dxos/types';
+import { ContentBlock, Message, Person } from '@dxos/types';
 
 import { JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
@@ -20,25 +19,27 @@ import { JMAP_MESSAGE_SOURCE } from '../../../constants';
  */
 export type MappedEmail = { message: Message.Message; mailboxIds: readonly string[] };
 
-/** A JMAP email with its extracted body text (may be HTML, not yet normalized). */
-export type DecodedEmail = { raw: JmapMail.Email; body: string };
+/** A JMAP email with its raw HTML and/or plaintext body (JMAP delivers decoded values; no markdown). */
+export type DecodedEmail = { raw: JmapMail.Email; html?: string; plain?: string };
 
 /**
- * Extracts the decoded body text from a JMAP email. Returns `null` when the email has no extractable
- * body. JMAP delivers decoded values, so (unlike Gmail) there is no base64 decoding; the HTML→markdown
- * normalization is a separate step so it can be shared across providers.
+ * Extracts the raw HTML and plaintext bodies from a JMAP email (values fetched via
+ * `fetchHTMLBodyValues`/`fetchTextBodyValues`). Returns `null` when the email has neither. No
+ * HTML→markdown conversion — the markdown/plain views derive from these raw blocks in the component.
  */
 export const decodeBody = (email: JmapMail.Email): DecodedEmail | null => {
-  const body = getBodyText(email);
-  if (!body) {
+  const html = getBodyValue(email, email.htmlBody);
+  const plain = getBodyValue(email, email.textBody);
+  if (html === undefined && plain === undefined) {
     log('jmap decodeBody: dropping email with no extractable body', {
       id: email.id,
+      htmlBodyParts: email.htmlBody?.length ?? 0,
       textBodyParts: email.textBody?.length ?? 0,
       bodyValues: email.bodyValues ? Object.keys(email.bodyValues).length : 0,
     });
     return null;
   }
-  return { raw: email, body };
+  return { raw: email, html, plain };
 };
 
 /**
@@ -47,7 +48,7 @@ export const decodeBody = (email: JmapMail.Email): DecodedEmail | null => {
  * no sender.
  */
 export const mapToMessage = (decoded: DecodedEmail, contact: Person.Person | undefined): MappedEmail | null => {
-  const { raw: email, body } = decoded;
+  const { raw: email, html, plain } = decoded;
   const fromAddress = email.from?.[0];
   if (!fromAddress) {
     log('jmap mapToMessage: dropping email with no sender', { id: email.id });
@@ -61,6 +62,16 @@ export const mapToMessage = (decoded: DecodedEmail, contact: Person.Person | und
     ...(fromAddress.name ? { name: fromAddress.name } : {}),
     ...(contact ? { contact: Ref.make(contact) } : {}),
   };
+
+  // Store the raw HTML and plaintext bodies as separately-typed blocks; the markdown view derives
+  // from the HTML in-component.
+  const blocks: ContentBlock.Text[] = [];
+  if (html !== undefined) {
+    blocks.push({ _tag: 'text', text: html, mimeType: 'text/html' });
+  }
+  if (plain !== undefined) {
+    blocks.push({ _tag: 'text', text: plain, mimeType: 'text/plain' });
+  }
 
   const echoMessage = Obj.make(Message.Message, {
     [Obj.Meta]: {
@@ -83,14 +94,7 @@ export const mapToMessage = (decoded: DecodedEmail, contact: Person.Person | und
       cc: formatAddresses(email.cc),
     },
 
-    blocks: [
-      {
-        _tag: 'text',
-        text: body,
-        // JMAP sync converts the body to markdown (via the htmlToMarkdown stage) before mapping.
-        mimeType: 'text/markdown',
-      },
-    ],
+    blocks,
   });
 
   return { message: echoMessage, mailboxIds: email.mailboxIds ? Object.keys(email.mailboxIds) : [] };
@@ -98,8 +102,7 @@ export const mapToMessage = (decoded: DecodedEmail, contact: Person.Person | und
 
 /**
  * Maps a JMAP email to an ECHO Message, resolving the sender against existing contacts. Composes
- * {@link decodeBody} → `normalizeText` → {@link mapToMessage}. Returns `null` when the email has no
- * body or no sender.
+ * {@link decodeBody} → {@link mapToMessage}. Returns `null` when the email has no body or no sender.
  */
 export const mapEmail: (email: JmapMail.Email) => Effect.Effect<MappedEmail | null, never, Resolver> =
   Effect.fnUntraced(function* (email) {
@@ -109,7 +112,7 @@ export const mapEmail: (email: JmapMail.Email) => Effect.Effect<MappedEmail | nu
     }
     const fromAddress = email.from?.[0];
     const contact = fromAddress ? yield* resolve(Person.Person, { email: fromAddress.email }) : undefined;
-    return mapToMessage({ ...decoded, body: normalizeText(decoded.body) }, contact ?? undefined);
+    return mapToMessage(decoded, contact ?? undefined);
   });
 
 /** Formats a JMAP address as `"Name <email>"`, or just the address when unnamed. */
@@ -121,20 +124,18 @@ const formatAddresses = (addresses: readonly JmapMail.EmailAddress[] | null | un
   addresses && addresses.length > 0 ? addresses.map(formatAddress).join(', ') : undefined;
 
 /**
- * Returns the decoded plain-text body. Prefers the `textBody` parts' values, then falls back to any
- * fetched `bodyValues` entry (e.g. an HTML-only message whose text alternative isn't referenced from
- * `textBody`). `Email/get` is requested with `fetchTextBodyValues`, so values are already decoded.
+ * Returns the first non-empty decoded value among the given body parts (e.g. `email.htmlBody` or
+ * `email.textBody`). `Email/get` is requested with `fetchHTMLBodyValues`/`fetchTextBodyValues`, so the
+ * referenced `bodyValues` are already decoded.
  */
-const getBodyText = (email: JmapMail.Email): string | undefined => {
-  for (const part of email.textBody ?? []) {
+const getBodyValue = (
+  email: JmapMail.Email,
+  parts: readonly JmapMail.EmailBodyPart[] | undefined,
+): string | undefined => {
+  for (const part of parts ?? []) {
     const value = part.partId ? email.bodyValues?.[part.partId]?.value : undefined;
     if (value && value.trim().length > 0) {
       return value;
-    }
-  }
-  for (const bodyValue of Object.values(email.bodyValues ?? {})) {
-    if (bodyValue.value.trim().length > 0) {
-      return bodyValue.value;
     }
   }
   return undefined;

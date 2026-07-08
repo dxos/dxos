@@ -129,13 +129,14 @@ describe('JMAP API', () => {
   );
 
   it.effect(
-    'emailGet requests text body values and decodes emails',
+    'emailGet requests html + text body values and decodes emails',
     Effect.fnUntraced(function* ({ expect }) {
       respond = ({ body }) => {
         const [name, args] = body.methodCalls[0];
         expect(name).toBe('Email/get');
         expect(args.ids).toEqual(['e1']);
         expect(args.fetchTextBodyValues).toBe(true);
+        expect(args.fetchHTMLBodyValues).toBe(true);
         return {
           body: {
             methodResponses: [

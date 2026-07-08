@@ -151,7 +151,6 @@ export const runJmapSync = ({
         { direction: window.direction },
       ),
       decodeBodyStage,
-      EmailStage.htmlToMarkdown,
       mapToMessageStage,
       EmailStage.onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
