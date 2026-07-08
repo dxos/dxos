@@ -38,13 +38,7 @@ export type ViewModeGroupOptions = {
  * Shared by the Message and Event toolbars; compose via `MenuBuilder.subgraph(viewModeGroup(...))`.
  */
 export const viewModeGroup =
-  ({
-    ns,
-    viewMode,
-    setViewMode,
-    modes = [...VIEW_MODES],
-    disabled,
-  }: ViewModeGroupOptions): ActionGroupBuilderFn =>
+  ({ ns, viewMode, setViewMode, modes = [...VIEW_MODES], disabled }: ViewModeGroupOptions): ActionGroupBuilderFn =>
   (builder) => {
     builder.group(
       'viewMode',
