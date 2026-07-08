@@ -5,7 +5,6 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { addDays, format, subDays } from 'date-fns';
 import * as Chunk from 'effect/Chunk';
-import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
@@ -58,12 +57,6 @@ const STREAMING_CONFIG = {
   maxResults: 500,
   /** Commit page size — kept ≤ 15 so each `Feed.append` is a single atomic queue insert. */
   pageSize: 10,
-  /**
-   * Max time to wait before committing a partial page. Bounds time-to-first-message: with small date
-   * windows a full page of `pageSize` can take many sequential fetches to accumulate, so commit
-   * whatever is ready within this window instead of stalling the UI until 10 arrive.
-   */
-  pageTimeout: Duration.seconds(1),
 } as const;
 
 /**
@@ -197,9 +190,7 @@ export const runGmailSync = ({
       mapToMessageStage,
       EmailStage.onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
-      // Emit a page when it fills OR after `pageTimeout`, so the first messages commit (and render) as
-      // soon as they're processed rather than waiting to accumulate a full page.
-      Stream.groupedWithin(STREAMING_CONFIG.pageSize, STREAMING_CONFIG.pageTimeout),
+      Stream.grouped(STREAMING_CONFIG.pageSize),
       Pipeline.run({ sink: SyncBinding.commit }),
       Effect.provide(SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: GMAIL_SOURCE, cursorKey, stats })),
     );
@@ -222,8 +213,6 @@ export default InboxOperation.GoogleMailSync.pipe(
       const connectionRef = Ref.make(Relation.getSource(bindingObj));
 
       return yield* runGmailSync({ binding: bindingRef, userId, label, after, before, direction }).pipe(
-        // Provide the Live Gmail API (real HTTP + connection credentials) and the contact resolver; a
-        // test provides `GoogleMailApi.mock(...)` + `InboxResolver` over this same seam instead.
         Effect.provide(
           Layer.mergeAll(
             GoogleMailApi.Live.pipe(

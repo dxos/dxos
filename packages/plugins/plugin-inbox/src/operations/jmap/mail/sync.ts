@@ -10,15 +10,9 @@ import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 
-// `Capability` (from `EmailStage.onArrivalExtractors`) appears in `runJmapSync`'s inferred
-// requirements; the import lets TypeScript name it in the emitted .d.ts.
-// eslint-disable-next-line unused-imports/no-unused-imports
 import { type Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
-// `EntityNotFoundError` is part of `runJmapSync`'s inferred error channel; the import lets
-// TypeScript name it in the emitted .d.ts.
-// eslint-disable-next-line unused-imports/no-unused-imports
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type Resolver, resolve } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
@@ -29,11 +23,8 @@ import { Cursor, Person } from '@dxos/types';
 
 import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
-// `JmapApiError` is part of `runJmapSync`'s inferred error channel; the import lets TypeScript name
-// it in the emitted .d.ts.
-// eslint-disable-next-line unused-imports/no-unused-imports
 import { type JmapApiError } from '../../../errors';
-import { JmapCredentials, JmapMailApi, type JmapMailApiService } from '../../../services';
+import { JmapCredentials, JmapMailApi } from '../../../services';
 import { EmailStage, type SyncDirection, type SyncWindow, resolveSyncWindow } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
 import { readBindingOptions } from '../../../util';
@@ -51,7 +42,9 @@ const MAX_SCAN = 500;
  * Runs the JMAP sync pipeline for a binding against the {@link JmapMailApi} service (plus the ambient
  * operation services). It *requires* the service rather than providing HTTP/credentials itself, so a
  * test can drive the whole sync against a mock JMAP API + a real ECHO db — the operation handler
- * below wraps it with the Live layer. Mirrors `runGmailSync`.
+ * below wraps it with the Live layer. The return type is written out (not inferred) so the module's
+ * emitted `.d.ts` can name it without the compiler expanding unnameable cross-package types (TS2883);
+ * the deployed operation stays portable via `Operation.opaqueHandler`. Mirrors `runGmailSync`.
  */
 export const runJmapSync = ({
   binding: bindingRef,
@@ -69,7 +62,11 @@ export const runJmapSync = ({
    * sync); a cursor → `forward` (incremental). Pass `backward` (with `before` = oldest-synced) to backfill.
    */
   direction?: SyncDirection;
-}) =>
+}): Effect.Effect<
+  { newMessages: number },
+  JmapApiError | EntityNotFoundError,
+  JmapMailApi | Database.Service | Resolver | Capability.Service | Operation.Service
+> =>
   Effect.gen(function* () {
     const binding = yield* Database.load(bindingRef);
     const mailbox = Relation.getTarget(binding);
@@ -144,7 +141,7 @@ export const runJmapSync = ({
     );
 
     const stats: SyncBinding.Stats = { newMessages: 0 };
-    yield* jmapSource(api, target, folders, window, { filter: options.filter }).pipe(
+    yield* jmapSource(target, folders, window, { filter: options.filter }).pipe(
       SyncBinding.dedupStage<JmapMail.Email>(
         'dedup',
         (email) => email.id,
@@ -186,8 +183,6 @@ export default InboxOperation.JmapSync.pipe(
       const connectionRef = Ref.make(Relation.getSource(bindingObj));
 
       return yield* runJmapSync({ binding: bindingRef, after, before, direction }).pipe(
-        // Provide the Live JMAP API (real HTTP + connection credentials) and the contact resolver; a
-        // test provides `JmapMailApi.mock(...)` + `InboxResolver` over this same seam instead.
         Effect.provide(
           Layer.mergeAll(
             JmapMailApi.Live.pipe(
@@ -215,66 +210,70 @@ const decodeBodyStage: Stage.Stage<JmapMail.Email, DecodedEmail, never, never> =
  * cursor, backward/backfill bounds the range with `before` — while the query is always newest-first.
  */
 const jmapSource = (
-  api: JmapMailApiService,
   target: JmapMail.Target,
   folders: readonly JmapMail.Mailbox[],
   window: SyncWindow,
   options: { filter?: string },
-) => {
-  const userFilter = options.filter
-    ? JmapMail.parseMailQuery(options.filter, {
-        now: new Date(),
-        resolveMailbox: (nameOrRole) => JmapMail.resolveMailboxByNameOrRole(folders, nameOrRole),
-      })
-    : Option.none<Jmap.Filter>();
-  // When the user filter already scopes a mailbox, skip the default folder restriction.
-  const scopesMailbox = Option.match(userFilter, { onNone: () => false, onSome: JmapMail.filterScopesMailbox });
-  // Default to all mail (every folder incl. Sent) so full conversations sync, excluding Trash/Junk/Drafts.
-  const excludedFolderIds = folders
-    .filter((folder) => folder.role === 'trash' || folder.role === 'junk' || folder.role === 'drafts')
-    .map((folder) => folder.id);
-
-  const conditions: Jmap.Filter[] = [];
-  if (!scopesMailbox && excludedFolderIds.length > 0) {
-    conditions.push({ inMailboxOtherThan: excludedFolderIds });
-  }
-  // Bound the query to the window: `after` (>= horizon/cursor) and `before` (< end/oldest-synced).
-  conditions.push({ after: window.start.toISOString() });
-  conditions.push({ before: window.end.toISOString() });
-  if (Option.isSome(userFilter)) {
-    conditions.push(userFilter.value);
-  }
-  const filter: Jmap.Filter = conditions.length === 1 ? conditions[0] : { operator: 'AND', conditions };
-  log('starting jmap sync', {
-    direction: window.direction,
-    start: window.start.toISOString(),
-    end: window.end.toISOString(),
-    conditions: conditions.length,
-  });
-
-  return Stream.paginateChunkEffect(0, (position: number) =>
+) =>
+  Stream.unwrap(
     Effect.gen(function* () {
-      const { ids } = yield* api.emailQuery(target, {
-        filter,
-        sort: [{ property: 'receivedAt', isAscending: false }],
-        position,
-        limit: QUERY_PAGE_SIZE,
+      const api = yield* JmapMailApi;
+
+      const userFilter = options.filter
+        ? JmapMail.parseMailQuery(options.filter, {
+            now: new Date(),
+            resolveMailbox: (nameOrRole) => JmapMail.resolveMailboxByNameOrRole(folders, nameOrRole),
+          })
+        : Option.none<Jmap.Filter>();
+      // When the user filter already scopes a mailbox, skip the default folder restriction.
+      const scopesMailbox = Option.match(userFilter, { onNone: () => false, onSome: JmapMail.filterScopesMailbox });
+      // Default to all mail (every folder incl. Sent) so full conversations sync, excluding Trash/Junk/Drafts.
+      const excludedFolderIds = folders
+        .filter((folder) => folder.role === 'trash' || folder.role === 'junk' || folder.role === 'drafts')
+        .map((folder) => folder.id);
+
+      const conditions: Jmap.Filter[] = [];
+      if (!scopesMailbox && excludedFolderIds.length > 0) {
+        conditions.push({ inMailboxOtherThan: excludedFolderIds });
+      }
+      // Bound the query to the window: `after` (>= horizon/cursor) and `before` (< end/oldest-synced).
+      conditions.push({ after: window.start.toISOString() });
+      conditions.push({ before: window.end.toISOString() });
+      if (Option.isSome(userFilter)) {
+        conditions.push(userFilter.value);
+      }
+      const filter: Jmap.Filter = conditions.length === 1 ? conditions[0] : { operator: 'AND', conditions };
+      log('starting jmap sync', {
+        direction: window.direction,
+        start: window.start.toISOString(),
+        end: window.end.toISOString(),
+        conditions: conditions.length,
       });
-      log('jmap sync: queried page', { position, total: ids.length });
-      const next = ids.length < QUERY_PAGE_SIZE ? Option.none<number>() : Option.some(position + ids.length);
-      return [Chunk.fromIterable(ids), next];
+
+      return Stream.paginateChunkEffect(0, (position: number) =>
+        Effect.gen(function* () {
+          const { ids } = yield* api.emailQuery(target, {
+            filter,
+            sort: [{ property: 'receivedAt', isAscending: false }],
+            position,
+            limit: QUERY_PAGE_SIZE,
+          });
+          log('jmap sync: queried page', { position, total: ids.length });
+          const next = ids.length < QUERY_PAGE_SIZE ? Option.none<number>() : Option.some(position + ids.length);
+          return [Chunk.fromIterable(ids), next];
+        }),
+      ).pipe(
+        Stream.take(MAX_SCAN),
+        Stream.flatMap(
+          (id) =>
+            Stream.fromEffect(
+              api.emailGet(target, [id]).pipe(
+                Effect.map(({ list }) => list[0]),
+                Effect.filterOrFail(Predicate.isNotNullable, () => new Error(`email ${id} not found`)),
+              ),
+            ).pipe(Stream.orElse(() => Stream.empty)),
+          { concurrency: FETCH_CONCURRENCY, bufferSize: 10 },
+        ),
+      );
     }),
-  ).pipe(
-    Stream.take(MAX_SCAN),
-    Stream.flatMap(
-      (id) =>
-        Stream.fromEffect(
-          api.emailGet(target, [id]).pipe(
-            Effect.map(({ list }) => list[0]),
-            Effect.filterOrFail(Predicate.isNotNullable, () => new Error(`email ${id} not found`)),
-          ),
-        ).pipe(Stream.orElse(() => Stream.empty)),
-      { concurrency: FETCH_CONCURRENCY, bufferSize: 10 },
-    ),
   );
-};
