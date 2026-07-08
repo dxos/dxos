@@ -13,10 +13,12 @@ import {
   type Entity,
   Feed,
   Filter,
+  GroupKey,
   type Hypergraph,
   Obj,
   Order,
   Query,
+  type QueryResult,
   Ref,
   Relation,
   Scope,
@@ -365,6 +367,312 @@ describe('Query', () => {
 
       const datasets = await db.query(Query.type(Dataset.Dataset)).run();
       expect(datasets).to.have.length(3);
+    });
+  });
+
+  describe('groupBy', () => {
+    test('groups by a single property, with per-group counts', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(Obj.make(TestSchema.Expando, { value: 100 }));
+      db.add(Obj.make(TestSchema.Expando, { value: 100 }));
+      db.add(Obj.make(TestSchema.Expando, { value: 200 }));
+      await db.flush();
+
+      const groups = await db.query(Query.select(Filter.everything()).groupBy(GroupKey.property('value'))).run();
+
+      expect(groups).to.have.length(2);
+      const byKey = new Map(groups.map((group) => [group.key.value, group]));
+      expect(byKey.get(100)?.count).to.equal(2);
+      expect(byKey.get(100)?.values).to.have.length(2);
+      expect(byKey.get(200)?.count).to.equal(1);
+      expect(byKey.get(200)?.values).to.have.length(1);
+    });
+
+    test('groups by multiple properties (composite key)', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(Obj.make(TestSchema.Expando, { category: 'a', value: 1 }));
+      db.add(Obj.make(TestSchema.Expando, { category: 'a', value: 1 }));
+      db.add(Obj.make(TestSchema.Expando, { category: 'a', value: 2 }));
+      db.add(Obj.make(TestSchema.Expando, { category: 'b', value: 1 }));
+      await db.flush();
+
+      const groups = await db
+        .query(Query.select(Filter.everything()).groupBy(GroupKey.property('category'), GroupKey.property('value')))
+        .run();
+
+      expect(groups).to.have.length(3);
+      expect(
+        groups
+          .map((group) => group.count)
+          .slice()
+          .sort(),
+      ).to.deep.equal([1, 1, 2]);
+      const aOneGroup = groups.find((group) => group.key.category === 'a' && group.key.value === 1);
+      expect(aOneGroup?.count).to.equal(2);
+    });
+
+    test('missing or non-scalar property values group together under the null key', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(Obj.make(TestSchema.Expando, { value: 100 }));
+      db.add(Obj.make(TestSchema.Expando, {}));
+      db.add(Obj.make(TestSchema.Expando, { value: { nested: true } }));
+      await db.flush();
+
+      const groups = await db.query(Query.select(Filter.everything()).groupBy(GroupKey.property('value'))).run();
+
+      expect(groups).to.have.length(2);
+      const nullGroup = groups.find((group) => group.key.value === null);
+      expect(nullGroup?.count).to.equal(2);
+    });
+
+    test('empty result set produces no groups', async () => {
+      const { db } = await builder.createDatabase();
+      await db.flush();
+
+      const groups = await db.query(Query.select(Filter.nothing()).groupBy(GroupKey.property('value'))).run();
+      expect(groups).to.deep.equal([]);
+    });
+
+    test('orderBy before groupBy controls within-group order', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(Obj.make(TestSchema.Expando, { category: 'a', rank: 2 }));
+      db.add(Obj.make(TestSchema.Expando, { category: 'a', rank: 1 }));
+      db.add(Obj.make(TestSchema.Expando, { category: 'a', rank: 3 }));
+      await db.flush();
+
+      const groups = await db
+        .query(
+          Query.select(Filter.everything())
+            .orderBy(Order.property('rank', 'asc'))
+            .groupBy(GroupKey.property('category')),
+        )
+        .run();
+
+      expect(groups).to.have.length(1);
+      expect(groups[0].values.map((obj) => obj.rank)).to.deep.equal([1, 2, 3]);
+    });
+
+    test('orderBy the key property before groupBy yields key-ascending group order', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(Obj.make(TestSchema.Expando, { category: 'c' }));
+      db.add(Obj.make(TestSchema.Expando, { category: 'a' }));
+      db.add(Obj.make(TestSchema.Expando, { category: 'b' }));
+      await db.flush();
+
+      const groups = await db
+        .query(
+          Query.select(Filter.everything())
+            .orderBy(Order.property('category', 'asc'))
+            .groupBy(GroupKey.property('category')),
+        )
+        .run();
+
+      expect(groups.map((group) => group.key.category)).to.deep.equal(['a', 'b', 'c']);
+    });
+
+    test('threads ordered by most recent message (group order follows the preceding orderBy, not the key)', async () => {
+      const { db } = await builder.createDatabase();
+      const makeMessage = (threadId: string, sentAt: number) => Obj.make(TestSchema.Expando, { threadId, sentAt });
+
+      db.add(makeMessage('thread-a', 1000));
+      db.add(makeMessage('thread-b', 3000));
+      db.add(makeMessage('thread-a', 2000));
+      db.add(makeMessage('thread-c', 1500));
+      db.add(makeMessage('thread-b', 4000));
+      await db.flush();
+
+      const groups = await db
+        .query(
+          Query.select(Filter.everything())
+            .orderBy(Order.property('sentAt', 'desc'))
+            .groupBy(GroupKey.property('threadId')),
+        )
+        .run();
+
+      // Groups ordered by each thread's most recent message: thread-b (4000), thread-a (2000), thread-c (1500).
+      expect(groups.map((group) => group.key.threadId)).to.deep.equal(['thread-b', 'thread-a', 'thread-c']);
+      // Messages within each group are newest-first.
+      expect(groups[0].values.map((obj) => obj.sentAt)).to.deep.equal([4000, 3000]);
+      expect(groups[1].values.map((obj) => obj.sentAt)).to.deep.equal([2000, 1000]);
+      expect(groups[2].values.map((obj) => obj.sentAt)).to.deep.equal([1500]);
+    });
+
+    test('limit applies to the flat stream before grouping', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(Obj.make(TestSchema.Expando, { category: 'a', rank: 1 }));
+      db.add(Obj.make(TestSchema.Expando, { category: 'a', rank: 2 }));
+      db.add(Obj.make(TestSchema.Expando, { category: 'b', rank: 3 }));
+      await db.flush();
+
+      const groups = await db
+        .query(
+          Query.select(Filter.everything())
+            .orderBy(Order.property('rank', 'asc'))
+            .limit(2)
+            .groupBy(GroupKey.property('category')),
+        )
+        .run();
+
+      // Only the first 2 (by rank) objects reach grouping: both are category 'a'.
+      expect(groups).to.have.length(1);
+      expect(groups[0].key.category).to.equal('a');
+      expect(groups[0].count).to.equal(2);
+    });
+
+    test('limit + skip after groupBy pages over whole groups', async () => {
+      const { db } = await builder.createDatabase();
+      // Four categories (a..d), each with two members; ordered by rank so group order is a<b<c<d.
+      let rank = 0;
+      for (const category of ['a', 'a', 'b', 'b', 'c', 'c', 'd', 'd']) {
+        db.add(Obj.make(TestSchema.Expando, { category, rank: rank++ }));
+      }
+      await db.flush();
+
+      const page = await db
+        .query(
+          Query.select(Filter.everything())
+            .orderBy(Order.property('rank', 'asc'))
+            .groupBy(GroupKey.property('category'))
+            .skip(1)
+            .limit(2),
+        )
+        .run();
+
+      // Skip group a, take groups b and c — as whole groups (each still has its 2 members).
+      expect(page.map((group) => group.key.category)).to.deep.equal(['b', 'c']);
+      expect(page.every((group) => group.count === 2 && group.values.length === 2)).to.be.true;
+    });
+
+    test('a data clause (orderBy) stacked on top of groupBy throws at plan time', async () => {
+      const { db } = await builder.createDatabase();
+      await db.flush();
+
+      const grouped = Query.select(Filter.everything()).groupBy(GroupKey.property('value'));
+      // `.orderBy()` after `.groupBy()` typechecks (its element type is `Group`, so order by a Group
+      // key) but is invalid at runtime — groupBy must be the outermost data clause (only
+      // from/options/limit/skip may follow).
+      await expect(db.query(grouped.orderBy(Order.property('count', 'asc'))).run()).rejects.toThrow();
+    });
+
+    describe('reactivity', () => {
+      // Grouped queries are index-backed (like order/limit queries), so `.runSync()`/`.results`
+      // only reflect real data after the first reactive round-trip completes; wait for it before
+      // asserting, following the pattern used for other index-only reactive queries in this file.
+      const subscribeAndWaitForFirstResult = async <T>(query: QueryResult.QueryResult<T>): Promise<T[]> => {
+        let lastResult: T[] = [];
+        const initial = new Trigger();
+        let fired = false;
+        const unsubscribe = query.subscribe(() => {
+          lastResult = query.results;
+          if (!fired) {
+            fired = true;
+            initial.wake();
+          }
+        });
+        await initial.wait();
+        onTestFinished(unsubscribe);
+        return lastResult;
+      };
+
+      test('adding an object creates a new group / updates counts', async () => {
+        const { db } = await builder.createDatabase();
+        db.add(Obj.make(TestSchema.Expando, { category: 'a' }));
+        await db.flush();
+
+        const query = db.query(Query.select(Filter.everything()).groupBy(GroupKey.property('category')));
+        let lastResult = await subscribeAndWaitForFirstResult(query);
+        expect(lastResult).to.have.length(1);
+
+        db.add(Obj.make(TestSchema.Expando, { category: 'b' }));
+        await db.flush({ updates: true });
+        lastResult = query.results;
+
+        expect(lastResult).to.have.length(2);
+        expect(lastResult.find((group) => group.key.category === 'b')?.count).to.equal(1);
+
+        db.add(Obj.make(TestSchema.Expando, { category: 'a' }));
+        await db.flush({ updates: true });
+        lastResult = query.results;
+
+        expect(lastResult.find((group) => group.key.category === 'a')?.count).to.equal(2);
+      });
+
+      test('property edit moves an object between groups, including the same-flat-index boundary case', async () => {
+        const { db } = await builder.createDatabase();
+        // Ordering by `rank` keeps these two objects adjacent; editing the boundary object's
+        // category moves it into the other group without changing its position in the flat stream.
+        const boundary = db.add(Obj.make(TestSchema.Expando, { category: 'a', rank: 1 }));
+        db.add(Obj.make(TestSchema.Expando, { category: 'b', rank: 2 }));
+        await db.flush();
+
+        const query = db.query(
+          Query.select(Filter.everything())
+            .orderBy(Order.property('rank', 'asc'))
+            .groupBy(GroupKey.property('category')),
+        );
+        const initialResult = await subscribeAndWaitForFirstResult(query);
+        expect(initialResult).to.have.length(2);
+
+        Obj.update(boundary, (boundary) => {
+          boundary.category = 'b';
+        });
+        await db.flush({ updates: true });
+        const lastResult = query.results;
+
+        expect(lastResult).to.have.length(1);
+        expect(lastResult[0].key.category).to.equal('b');
+        expect(lastResult[0].count).to.equal(2);
+      });
+
+      test('deleting the last object in a group removes the group', async () => {
+        const { db } = await builder.createDatabase();
+        const obj = db.add(Obj.make(TestSchema.Expando, { category: 'a' }));
+        db.add(Obj.make(TestSchema.Expando, { category: 'b' }));
+        await db.flush();
+
+        const query = db.query(Query.select(Filter.everything()).groupBy(GroupKey.property('category')));
+        const initialResult = await subscribeAndWaitForFirstResult(query);
+        expect(initialResult).to.have.length(2);
+
+        db.remove(obj);
+        await db.flush({ updates: true });
+        const lastResult = query.results;
+
+        expect(lastResult).to.have.length(1);
+        expect(lastResult[0].key.category).to.equal('b');
+      });
+    });
+
+    test('run() matches subscribed results', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(Obj.make(TestSchema.Expando, { category: 'a' }));
+      db.add(Obj.make(TestSchema.Expando, { category: 'a' }));
+      db.add(Obj.make(TestSchema.Expando, { category: 'b' }));
+      await db.flush();
+
+      const query = db.query(Query.select(Filter.everything()).groupBy(GroupKey.property('category')));
+
+      const initial = new Trigger();
+      const unsubscribe = query.subscribe(() => initial.wake());
+      await initial.wait();
+      onTestFinished(unsubscribe);
+
+      const subscribed = query.results;
+      const ran = await query.run();
+
+      expect(ran.map((group) => group.key.category).sort()).to.deep.equal(
+        subscribed.map((group) => group.key.category).sort(),
+      );
+      expect(ran.map((group) => group.count).sort()).to.deep.equal(subscribed.map((group) => group.count).sort());
+    });
+
+    test('grouped queries participate in the result/atom cache like ordinary queries', async () => {
+      const { db } = await builder.createDatabase();
+
+      const first = db.query(Query.select(Filter.everything()).groupBy(GroupKey.property('category')));
+      const second = db.query(Query.select(Filter.everything()).groupBy(GroupKey.property('category')));
+      expect(second).toBe(first);
+      expect(second.atom).toBe(first.atom);
     });
   });
 

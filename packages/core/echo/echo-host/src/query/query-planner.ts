@@ -56,6 +56,7 @@ export class QueryPlanner {
 
   createPlan(query: QueryAST.Query): QueryPlan.Plan {
     this._validateQueryScoped(query);
+    this._validateGroupByPlacement(query);
     let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });
     plan = this._optimizeEmptyFilters(plan);
     plan = this._optimizeSoloUnions(plan);
@@ -92,6 +93,8 @@ export class QueryPlanner {
         return this._generateLimitClause(query, context);
       case 'skip':
         return this._generateSkipClause(query, context);
+      case 'group-by':
+        return this._generateGroupByClause(query, context);
       case 'from':
         return this._generateFromClause(query, context);
       default:
@@ -686,6 +689,51 @@ export class QueryPlanner {
   }
 
   /**
+   * `groupBy` must be the outermost data clause: only `from()`/`options()` and the group-level
+   * pagination clauses `limit()`/`skip()` may wrap it. At most one `groupBy` may appear anywhere
+   * in the tree — including inside a `.from(subquery)` source, which the planner flattens (so a
+   * grouped subquery would otherwise produce an unsupported double-`groupBy`). The DSL's types
+   * can't enforce this (`Query<Group<K, T>>` still exposes `orderBy`/`select`/etc.), so it's
+   * validated here at plan time.
+   *
+   * `limit`/`skip` above a `group-by` page over whole groups (see the group-aware `LimitStep`/
+   * `SkipStep` execution); a `limit`/`skip` below it windows the flat object stream before grouping.
+   */
+  private _validateGroupByPlacement(query: QueryAST.Query): void {
+    // Count every group-by anywhere in the tree. `QueryAST.visit` recurses through `from` sources,
+    // so this also sees grouped subqueries that flattening would merge in.
+    let groupByCount = 0;
+    QueryAST.visit(query, (node) => {
+      if (node.type === 'group-by') {
+        groupByCount += 1;
+      }
+    });
+    if (groupByCount === 0) {
+      return;
+    }
+    if (groupByCount > 1) {
+      throw new QueryError({
+        message: 'Only one groupBy clause is supported per query',
+        context: { query },
+      });
+    }
+
+    // Exactly one group-by: it must sit at the outermost data position (only from/options/limit/skip
+    // may wrap it). Unwrap those and require the group-by to be what remains.
+    let root = query;
+    while (root.type === 'options' || root.type === 'from' || root.type === 'limit' || root.type === 'skip') {
+      root = root.query;
+    }
+    if (root.type !== 'group-by') {
+      throw new QueryError({
+        message:
+          'groupBy must be the outermost query clause — only from(), options(), limit() and skip() may follow it',
+        context: { query },
+      });
+    }
+  }
+
+  /**
    * Removes filter steps that have no predicates.
    */
   private _optimizeEmptyFilters(plan: QueryPlan.Plan): QueryPlan.Plan {
@@ -749,6 +797,16 @@ export class QueryPlanner {
     ]);
   }
 
+  private _generateGroupByClause(query: QueryAST.QueryGroupByClause, context: GenerationContext): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.query, context).steps,
+      {
+        _tag: 'GroupByStep',
+        keys: query.keys,
+      },
+    ]);
+  }
+
   // After complete plan is built, inspect it from the end:
   //   - Walk backwards until hitting an object set changer.
   //   - If an order step is found, skip.
@@ -785,10 +843,12 @@ export class QueryPlanner {
       }
     }
 
-    // Find the position to insert the order step (before any trailing limit/skip steps).
+    // Find the position to insert the order step (before any trailing limit/skip/group-by steps —
+    // grouping must see the intended order already applied, both within and between groups).
     let insertIndex = processedPlan.steps.length;
     for (let i = processedPlan.steps.length - 1; i >= 0; i--) {
-      if (processedPlan.steps[i]._tag === 'LimitStep' || processedPlan.steps[i]._tag === 'SkipStep') {
+      const tag = processedPlan.steps[i]._tag;
+      if (tag === 'LimitStep' || tag === 'SkipStep' || tag === 'GroupByStep') {
         insertIndex = i;
       } else {
         break;
@@ -849,7 +909,9 @@ export class QueryPlanner {
 
     // Check if we can propagate the limit to a SelectStep and/or OrderStep.
     // We can only do this if there are no unions, traversals, or set differences between them.
-    const BLOCKERS = new Set(['UnionStep', 'TraverseStep', 'SetDifferenceStep']);
+    // GroupByStep is also a blocker: a limit above it counts whole groups, so it must not be
+    // pushed down into the flat SelectStep/OrderStep scan (that would slice objects, not groups).
+    const BLOCKERS = new Set(['UnionStep', 'TraverseStep', 'SetDifferenceStep', 'GroupByStep']);
 
     let selectStepIndex = -1;
     let orderStepIndex = -1;
