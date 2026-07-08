@@ -619,3 +619,32 @@ export const EnrichMailbox = Operation.make({
     facts: Schema.Number,
   }),
 });
+
+/** Default number of thread messages included in the {@link GenerateReply} prompt. */
+export const DEFAULT_GENERATE_REPLY_THREAD_LIMIT = 5;
+
+/** Default maximum number of facts included in the {@link GenerateReply} prompt. */
+export const DEFAULT_GENERATE_REPLY_FACT_LIMIT = 20;
+
+export const GenerateReply = Operation.make({
+  meta: {
+    key: makeKey('generateReply'),
+    name: 'Generate Reply',
+    description:
+      'Drafts a reply to an email, grounded on the thread context and facts the space fact store knows about the participants.',
+    icon: 'ph--sparkle--regular',
+  },
+  services: [AiService.AiService, Database.Service, FactStore],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox whose feed holds the thread.',
+    }),
+    message: Schema.Any.annotations({
+      description: 'The message to reply to.',
+    }),
+  }),
+  output: Schema.Struct({
+    subject: Schema.String,
+    body: Schema.String,
+  }),
+}).pipe(Operation.visible);
