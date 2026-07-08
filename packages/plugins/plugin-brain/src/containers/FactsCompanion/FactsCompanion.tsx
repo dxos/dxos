@@ -6,26 +6,27 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
+import { type Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type FactStoreApi, type RDF } from '@dxos/pipeline-rdf';
-import { BrainCapabilities, type FactStoreRegistry } from '@dxos/plugin-brain/types';
 import { getSpace } from '@dxos/react-client/echo';
 import { FactViewer } from '@dxos/react-ui-fact-viewer';
 
-import { type Mailbox } from '#types';
+import { BrainCapabilities, type FactStoreRegistry } from '#types';
 
-export type MailboxFactsCompanionProps = {
-  mailbox: Mailbox.Mailbox;
+export type FactsCompanionProps = {
+  subject: Obj.Any;
 };
 
 /**
- * Companion surface rendering the semantic facts extracted for a Mailbox. Reads the shared per-space
- * {@link FactStoreRegistry} (populated by the `EnrichMailbox` operation) and hands its facts to the
- * presentational {@link FactViewer}.
+ * Companion surface rendering the semantic facts of the subject's space. Reads the shared per-space
+ * {@link FactStoreRegistry} (populated by fact-extraction operations such as plugin-inbox's
+ * `EnrichMailbox`) and hands its facts to the presentational {@link FactViewer}. The store is
+ * per-space, so the view shows all space facts; subject-scoped filtering by source DXN is roadmap.
  */
-export const MailboxFactsCompanion = ({ mailbox }: MailboxFactsCompanionProps) => {
+export const FactsCompanion = ({ subject }: FactsCompanionProps) => {
   const registry = useCapability(BrainCapabilities.FactStoreRegistry);
-  const spaceId = getSpace(mailbox)?.id;
+  const spaceId = getSpace(subject)?.id;
   const facts = useFacts(registry, spaceId);
   return <FactViewer facts={facts} />;
 };
@@ -66,3 +67,5 @@ export const useFacts = (registry: FactStoreRegistry, spaceId: string | undefine
 
   return facts;
 };
+
+export default FactsCompanion;

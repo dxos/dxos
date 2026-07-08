@@ -25,6 +25,9 @@
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/storybook-utils"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -46,7 +49,34 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/react-client"
+    },
+    {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-fact-viewer"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-attention"
+    },
+    {
+      "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-testing"
+    },
+    {
+      "path": "../plugin-theme"
     }
   ]
 }

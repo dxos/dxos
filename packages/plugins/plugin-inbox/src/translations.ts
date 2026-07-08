@@ -56,7 +56,6 @@ export const translations = [
         'action-mark-read.menu': 'Mark as read',
         'message.label': 'Message',
         'event.label': 'Event',
-        'facts.label': 'Facts',
         'inbox.label': 'Inbox',
 
         'no-connections.label': 'No connections configured',
