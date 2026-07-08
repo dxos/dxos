@@ -803,6 +803,12 @@ describe('query api', () => {
       expect(filter.ast.type === 'child-of' && filter.ast.parents.length).toBe(2);
       Schema.validateSync(QueryAST.Filter)(filter.ast);
     });
+
+    describe('.groupBy', () => {
+      test('groupBy with single property', () => {
+        const query = Query.select(Filter.type(TestSchema.Person)).groupBy(Query.GroupKey.property('email'));
+      });
+    });
   });
 
   describe('Filter', () => {

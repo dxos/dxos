@@ -23,6 +23,7 @@ import type * as Relation from './Relation';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Type$ from './Type';
 import type * as View from './View';
+import type { Simplify } from 'effect/Types';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
@@ -44,6 +45,41 @@ type ReferenceTraversalTarget<P> = P extends Ref.Unknown
     : RefArrayElement<P> extends Ref.Unknown
       ? Ref.Target<RefArrayElement<P>>
       : never;
+
+// TODO(dmaretskyi): Extract to separate module.
+export const GroupKeyTypeId = '~@dxos/echo/GroupKey' as const;
+export type GroupKeyTypeId = typeof GroupKeyTypeId;
+
+export interface GroupKey<K,> {
+  [GroupKeyTypeId]: { 
+    __Key: K;
+  };
+  // TODO(dmaretskyi): Support foreign keys + annotations, etc.
+  key: {
+    _tag: 'property';
+    property: string;
+  }
+}
+
+export declare namespace GroupKey {
+  export type Property<Key extends GroupKey<any>> = Key extends GroupKey<infer K> ? K : never;
+}
+
+export const GroupKey = { 
+  // TODO(dmaretskyi): Support nested properties.
+  property: <const K extends string>(property: K): GroupKey<K> => ({
+    [GroupKeyTypeId]: null as any,
+    key: {
+      _tag: 'property',
+      property,
+    },
+  }),
+} as const;
+
+export interface Group<K, T> {
+  readonly key: K;
+  readonly values: T[];
+}
 
 // TODO(burdon): Narrow T to Entity.Unknown?
 export interface Query<T> {
@@ -135,6 +171,13 @@ export interface Query<T> {
    * @returns Query for the ordered results.
    */
   'orderBy'(...order: EffectArray.NonEmptyArray<Order.Order<T>>): Query<T>;
+
+  /**
+   * Group the query results by the given keys.
+   * @param keys - Keys to group the results by.
+   * @returns Query for the grouped results.
+   */
+  'groupBy'<const K extends GroupKey<keyof T>[]>(...keys: K): Query<Group<Simplify<Pick<T, GroupKey.Property<K[number]>>>, T>>;
 
   /**
    * Limit the number of results.
