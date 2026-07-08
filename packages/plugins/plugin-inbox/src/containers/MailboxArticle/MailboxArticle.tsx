@@ -86,19 +86,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const conversations = settings.conversations ?? true;
   const direction = sortDescending.value ? 'desc' : 'asc';
 
-  // Messages, ordered by message date in the toolbar's sort direction (not feed insertion order): a
-  // backward/backfill sync appends out of time order, so the window must be selected by date. When
-  // conversation grouping is on, the query groups by `threadId`, orders each thread's messages
-  // newest-first, and orders the threads themselves by their most recent message (a `max(created)`
-  // aggregate) in the toolbar direction — so flipping the sort reverses threads by their latest
-  // activity, not by their oldest message. `usePagination`'s limit/skip then page over whole
-  // conversations. This content order currently runs on the client feed path (full-fetch + sort +
-  // slice); `usePagination` and the virtualizer bound what's rendered, but the whole feed is fetched.
-  // TODO(wittjosiah): Move this to the host indexer for bounded-memory paging (fetch only the window,
-  //   not the whole feed); blocked on indexed ordered range reads being fast enough.
-  // `pagination` is passed straight through to `MessageStack` rather than destructured --
-  // `usePagination` already returns a stable object, so rebuilding one here would only reintroduce
-  // the instability it avoids.
+  // Order by message `created` (not feed insertion order): a backward/backfill sync appends out of
+  // date order. The mailbox reads and sorts/groups the whole feed client-side; `usePagination` and
+  // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
+  // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
   const source = feed && Query.select(Filter.type(Message.Message)).from(feed);
   const pagination = usePagination(
     db,
