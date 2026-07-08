@@ -3,7 +3,6 @@
 //
 
 import * as A from '@automerge/automerge';
-import { type AutomergeUrl } from '@automerge/automerge-repo';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
@@ -24,16 +23,14 @@ import {
   Type,
   View,
 } from '@dxos/echo';
+import { type EchoDatabase } from '@dxos/echo-client';
+import { EchoTestBuilder, type EchoTestPeer, createTmpPath, getObjectCore } from '@dxos/echo-client/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { range } from '@dxos/util';
-
-import { getObjectCore } from '../echo-handler';
-import { type EchoDatabase } from '../proxy-db';
-import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 
 random.seed(1);
 
@@ -1245,45 +1242,40 @@ describe('Query', () => {
 
   test('query.run() queries everything after restart', async () => {
     const tmpPath = createTmpPath();
-    const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
     onTestFinished(async () => {
       await builder.close();
     });
 
-    let root: AutomergeUrl;
     {
       const peer = await builder.createPeer({ storagePath: tmpPath });
-      const db = await peer.createDatabase(spaceKey);
+      const db = await peer.createDatabase();
       await createObjects(peer, db, { count: 3 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(3);
-      root = db.getSpaceRootDocHandle().url!;
       await peer.close();
     }
 
     {
       const peer = await builder.createPeer({ storagePath: tmpPath });
-      const db = await peer.openDatabase(spaceKey, root);
+      const db = await peer.openLastDatabase();
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(3);
     }
   });
 
   test('objects with incorrect document urls are ignored', async () => {
     const tmpPath = createTmpPath();
-    const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
     onTestFinished(async () => {
       await builder.close();
     });
 
-    let root: AutomergeUrl;
     let expectedObjectId: string;
     {
       const peer = await builder.createPeer({ storagePath: tmpPath });
-      const db = await peer.createDatabase(spaceKey);
+      const db = await peer.createDatabase();
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(2);
@@ -1292,14 +1284,13 @@ describe('Query', () => {
         doc.links![obj1.id] = 'automerge:4hjTgo9zLNsfRTJiLcpPY8P4smy';
       });
       await db.flush();
-      root = rootDocHandle.url!;
       expectedObjectId = obj2.id;
       await peer.close();
     }
 
     {
       const peer = await builder.createPeer({ storagePath: tmpPath });
-      const db = await peer.openDatabase(spaceKey, root);
+      const db = await peer.openLastDatabase();
       const queryResult = await db.query(Query.select(Filter.everything())).run();
       expect(queryResult.length).to.eq(1);
       expect(queryResult[0].id).to.eq(expectedObjectId);
@@ -1307,7 +1298,6 @@ describe('Query', () => {
   });
 
   test('objects url changes, the latest document is loaded', async () => {
-    const spaceKey = PublicKey.random();
     const builder = new EchoTestBuilder();
     onTestFinished(async () => {
       await builder.close();
@@ -1315,10 +1305,9 @@ describe('Query', () => {
 
     const peer = await builder.createPeer();
 
-    let root: AutomergeUrl;
     let assertion: { objectId: string; documentUrl: string };
     {
-      const db = await peer.createDatabase(spaceKey);
+      const db = await peer.createDatabase();
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(2);
@@ -1336,14 +1325,13 @@ describe('Query', () => {
       await db.flush();
       await peer.host.queryService.reindex();
 
-      root = rootDocHandle.url!;
       assertion = { objectId: obj2.id, documentUrl: anotherDocHandle.url! };
     }
 
     await peer.reload();
 
     {
-      const db = await peer.openDatabase(spaceKey, root);
+      const db = await peer.openLastDatabase();
       await db.updateIndexes();
       const queryResult = await db.query(Query.select(Filter.everything())).run();
       expect(queryResult.length).to.eq(2);

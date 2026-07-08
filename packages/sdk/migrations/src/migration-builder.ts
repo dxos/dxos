@@ -81,9 +81,7 @@ export class MigrationBuilder {
 
     const newState: DatabaseDirectory = {
       version: SpaceDocVersion.CURRENT,
-      access: {
-        spaceKey: this._space.key.toHex(),
-      },
+      access: this._makeAccess(),
       objects: {
         [id]: {
           system: {
@@ -137,6 +135,8 @@ export class MigrationBuilder {
 
       await oldHandle.whenReady();
       const materialized = toJS(oldHandle.doc()!) as DatabaseDirectory;
+      // Re-stamp access so documents that predate access.spaceId pick it up during compaction.
+      materialized.access = this._makeAccess();
       const newHandle = this._repo.create<DatabaseDirectory>(materialized);
       await newHandle.whenReady();
       invariant(newHandle.url, 'Compacted document URL not available after whenReady');
@@ -204,9 +204,7 @@ export class MigrationBuilder {
 
     this._newRoot = this._repo.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
-      access: {
-        spaceKey: this._space.key.toHex(),
-      },
+      access: this._makeAccess(),
       objects: this._rootDoc.objects,
       links,
     });
@@ -232,9 +230,7 @@ export class MigrationBuilder {
     core.setType(EncodedReference.fromURI(getSchemaURI(schema)!));
     const newHandle = this._repo.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
-      access: {
-        spaceKey: this._space.key.toHex(),
-      },
+      access: this._makeAccess(),
       objects: {
         [core.id]: core.getDoc() as EntityStructure,
       },
@@ -244,6 +240,14 @@ export class MigrationBuilder {
     this._addHandleToFlushList(newHandle.documentId!);
 
     return core;
+  }
+
+  private _makeAccess(): NonNullable<DatabaseDirectory['access']> {
+    return {
+      spaceId: this._space.id,
+      // spaceKey is deprecated but still written so older clients can resolve the owning space.
+      spaceKey: this._space.key.toHex(),
+    };
   }
 
   private _addHandleToFlushList(id: DocumentId): void {

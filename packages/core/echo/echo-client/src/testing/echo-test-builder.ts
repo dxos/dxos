@@ -13,7 +13,7 @@ import isEqual from 'fast-deep-equal';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { Filter, type Obj, Query, type Type } from '@dxos/echo';
+import { Filter, Obj, Query, type Type } from '@dxos/echo';
 import { EchoHost } from '@dxos/echo-host';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -246,6 +246,11 @@ export class EchoTestPeer extends Resource {
 
     this._lastDatabaseSpaceKey = spaceKey;
     this._lastDatabaseRootUrl = root.url;
+    if (this._storagePath) {
+      await this.setStorageMetadata('lastDatabaseSpaceKey', spaceKey.toHex());
+      await this.setStorageMetadata('lastDatabaseRootUrl', root.url);
+    }
+
     return db;
   }
 
@@ -268,13 +273,31 @@ export class EchoTestPeer extends Resource {
     const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
     await db.setSpaceRoot(resolvedRootUrl);
     await db.open();
+
+    this._lastDatabaseSpaceKey = spaceKey;
+    this._lastDatabaseRootUrl = rootUrl;
+    if (this._storagePath) {
+      await this.setStorageMetadata('lastDatabaseSpaceKey', spaceKey.toHex());
+      await this.setStorageMetadata('lastDatabaseRootUrl', rootUrl);
+    }
+
     return db;
   }
 
   async openLastDatabase({ client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {}) {
-    invariant(this._lastDatabaseSpaceKey, 'No database has been created yet.');
-    invariant(this._lastDatabaseRootUrl, 'No database has been created yet.');
-    return this.openDatabase(this._lastDatabaseSpaceKey, this._lastDatabaseRootUrl, {
+    if (this._storagePath && (!this._lastDatabaseSpaceKey || !this._lastDatabaseRootUrl)) {
+      const storedKeyHex = await this.getStorageMetadata('lastDatabaseSpaceKey');
+      const storedUrl = await this.getStorageMetadata('lastDatabaseRootUrl');
+      if (storedKeyHex && storedUrl) {
+        this._lastDatabaseSpaceKey = PublicKey.fromHex(storedKeyHex);
+        this._lastDatabaseRootUrl = storedUrl;
+      }
+    }
+    const spaceKey = this._lastDatabaseSpaceKey;
+    const rootUrl = this._lastDatabaseRootUrl;
+    invariant(spaceKey, 'lastDatabaseSpaceKey not set');
+    invariant(rootUrl, 'lastDatabaseRootUrl not set');
+    return this.openDatabase(spaceKey, rootUrl, {
       client,
       reactiveSchemaQuery,
       preloadSchemaOnOpen,
@@ -306,7 +329,9 @@ export const createDataAssertion = ({
 
   return {
     seed: async (db: EchoDatabase) => {
-      seedObjects = range(numObjects).map((idx) => db.add({ type: 'task', title: 'A', idx } as any));
+      seedObjects = range(numObjects).map((idx) =>
+        db.add(Obj.make(TestSchema.Expando, { type: 'task', title: 'A', idx })),
+      );
       await db.flush();
     },
     waitForReplication: (db: EchoDatabase) => {

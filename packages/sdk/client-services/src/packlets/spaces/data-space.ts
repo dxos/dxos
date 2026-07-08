@@ -528,11 +528,14 @@ export class DataSpace {
         // Ensure only one root is processed at a time.
         using _guard = await this._epochProcessingMutex.acquire();
 
-        // Attaching space keys to legacy documents.
+        // Attaching space identifiers to legacy documents.
         const doc = handle.doc();
-        if (!doc.access?.spaceKey) {
-          handle.change((doc: any) => {
-            doc.access = { spaceKey: this.key.toHex() };
+        if (!doc.access?.spaceId || !doc.access?.spaceKey) {
+          handle.change((doc: DatabaseDirectory) => {
+            doc.access ??= {};
+            doc.access.spaceId ??= this.id;
+            // spaceKey is deprecated but still written so older clients can resolve the owning space.
+            doc.access.spaceKey ??= this.key.toHex();
           });
         }
 

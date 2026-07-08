@@ -340,7 +340,8 @@ export class EchoHost extends Resource {
 
     const automergeRoot = await this._automergeHost.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
-      access: { spaceKey: spaceKey.toHex() },
+      // spaceKey is deprecated but still written so older clients can resolve the owning space.
+      access: { spaceId, spaceKey: spaceKey.toHex() },
 
       // Better to initialize them right away to avoid merge conflicts and data loss that can occur if those maps get created on the fly.
       objects: {},
