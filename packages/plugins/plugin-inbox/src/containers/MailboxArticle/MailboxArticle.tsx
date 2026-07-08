@@ -8,7 +8,7 @@ import React, { type Ref, useCallback, useEffect, useMemo, useRef, useState } fr
 import { useAtomCapability, useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { type Database, Filter, GroupKey, Obj, Order, Query, Tag } from '@dxos/echo';
+import { Aggregate, type Database, Filter, GroupKey, Obj, Order, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -35,7 +35,6 @@ import { InboxOperation } from '#types';
 import { InboxCapabilities, Mailbox, Starred } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
-import { sortByCreated } from '../../util';
 import { InitializeMailbox, InitializeMailboxAction } from './InitializeMailbox';
 
 export type MailboxArticleProps = AppSurface.ObjectArticleProps<
@@ -85,58 +84,52 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   // Whether messages are grouped into conversations (threads). On by default.
   const conversations = settings.conversations ?? true;
+  const direction = sortDescending.value ? 'desc' : 'asc';
 
   // Messages, ordered by message date in the toolbar's sort direction (not feed insertion order): a
   // backward/backfill sync appends out of time order, so the window must be selected by date. When
-  // conversation grouping is on, the query groups by `threadId` and `usePagination`'s limit/skip
-  // page over whole conversations. This content order currently runs on the client feed path
-  // (full-fetch + sort + slice); `usePagination` and the virtualizer bound what's rendered, but the
-  // whole feed is fetched to sort it.
+  // conversation grouping is on, the query groups by `threadId`, orders each thread's messages
+  // newest-first, and orders the threads themselves by their most recent message (a `max(created)`
+  // aggregate) in the toolbar direction — so flipping the sort reverses threads by their latest
+  // activity, not by their oldest message. `usePagination`'s limit/skip then page over whole
+  // conversations. This content order currently runs on the client feed path (full-fetch + sort +
+  // slice); `usePagination` and the virtualizer bound what's rendered, but the whole feed is fetched.
   // TODO(wittjosiah): Move this to the host indexer for bounded-memory paging (fetch only the window,
   //   not the whole feed); blocked on indexed ordered range reads being fast enough.
   // `pagination` is passed straight through to `MessageStack` rather than destructured --
   // `usePagination` already returns a stable object, so rebuilding one here would only reintroduce
   // the instability it avoids.
-  const orderedQuery =
-    feed &&
-    Query.select(Filter.type(Message.Message))
-      .from(feed)
-      .orderBy(Order.property('created', sortDescending.value ? 'desc' : 'asc'));
+  const source = feed && Query.select(Filter.type(Message.Message)).from(feed);
   const pagination = usePagination(
     db,
-    orderedQuery
+    source
       ? conversations
-        ? orderedQuery.groupBy(GroupKey.property('threadId')).limit(MAILBOX_PAGE_SIZE)
-        : orderedQuery.limit(MAILBOX_PAGE_SIZE)
+        ? source
+            .orderBy(Order.property('created', 'desc'))
+            .groupBy(GroupKey.property('threadId'))
+            .aggregate({ lastMessageAt: Aggregate.max('created') })
+            .orderBy(Order.aggregate('lastMessageAt', direction))
+            .limit(MAILBOX_PAGE_SIZE)
+        : source.orderBy(Order.property('created', direction)).limit(MAILBOX_PAGE_SIZE)
       : Query.select(Filter.nothing()).limit(MAILBOX_PAGE_SIZE),
   );
 
-  // Grouped-query results become conversation entries. Messages without a `threadId` all land in the
-  // group-by clause's single `null`-key group; they are split back into singleton conversations and
-  // re-interleaved by date (group order from the query follows each group's first occurrence in the
-  // date-ordered stream, so the anchor for a conversation is its newest message when descending and
-  // its oldest when ascending).
+  // The grouped query already orders threads (by latest message) and their members (newest-first),
+  // so entries map straight to stack items. Messages without a `threadId` share the group-by's
+  // single `null`-key group; split them back into singleton conversations at that group's position.
   const items = useMemo<MessageStackItem[]>(() => {
     const result: MessageStackItem[] = [];
     for (const entry of pagination.items) {
       if (!isThreadGroup(entry)) {
         result.push(entry);
-        continue;
-      }
-      const { threadId } = entry.key;
-      if (threadId == null) {
+      } else if (entry.key.threadId == null) {
         result.push(...entry.values.map((message) => ({ id: message.id, messages: [message] })));
       } else {
-        // Conversation tiles show the latest message first regardless of the mailbox sort direction.
-        result.push({ id: threadId, messages: [...entry.values].sort(sortByCreated('created', true)) });
+        result.push({ id: entry.key.threadId, messages: entry.values });
       }
     }
-    const anchor = (item: MessageStackItem): string =>
-      isMessageGroup(item) ? item.messages[sortDescending.value ? 0 : item.messages.length - 1].created : item.created;
-    return result.sort((a, b) =>
-      sortDescending.value ? anchor(b).localeCompare(anchor(a)) : anchor(a).localeCompare(anchor(b)),
-    );
-  }, [pagination.items, sortDescending.value]);
+    return result;
+  }, [pagination.items]);
 
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);

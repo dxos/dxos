@@ -5,6 +5,7 @@
 export { QueryAST } from '@dxos/echo-protocol';
 export { DXN, EID, URI } from '@dxos/keys';
 
+export * as Aggregate from './Aggregate';
 export * as Annotation from './Annotation';
 export * as Blob from './Blob';
 export * as Database from './Database';

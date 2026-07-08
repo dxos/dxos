@@ -364,6 +364,14 @@ const Order_ = Schema.Union(
     field: Schema.Literal('createdAt', 'updatedAt'),
     direction: OrderDirection,
   }),
+  Schema.Struct({
+    // Order groups by one of the group's named aggregates (see `QueryGroupByClause.aggregates`).
+    // Only valid on a query whose outermost data clause is a `group-by`; ordering happens at group
+    // granularity, keeping each group's members contiguous and in their pre-group order.
+    kind: Schema.Literal('aggregate'),
+    name: Schema.String,
+    direction: OrderDirection,
+  }),
 );
 
 export type Order = Schema.Schema.Type<typeof Order_>;
@@ -434,16 +442,33 @@ export type GroupByKey = Schema.Schema.Type<typeof GroupByKey_>;
 export const GroupByKey: Schema.Schema<GroupByKey> = GroupByKey_;
 
 /**
+ * A named aggregate computed per group over its members. Exposed on the result as
+ * `Group.aggregates[name]` and referenceable from a post-group `orderBy` via the `aggregate`
+ * order kind. `property` is the scalar member property to reduce.
+ */
+const GroupAggregate_ = Schema.Struct({
+  name: Schema.String,
+  kind: Schema.Literal('max', 'min'),
+  property: Schema.String,
+});
+
+export type GroupAggregate = Schema.Schema.Type<typeof GroupAggregate_>;
+export const GroupAggregate: Schema.Schema<GroupAggregate> = GroupAggregate_;
+
+/**
  * Groups results by one or more scalar property values, producing contiguous groups.
  * Groups are ordered by the first occurrence of their key in the incoming (already-ordered)
  * result stream — this lets a preceding `orderBy` also control group order (e.g. ordering
- * thread groups by their most recent message). Must be the outermost data clause: only
- * `from`/`options` may wrap it.
+ * thread groups by their most recent message). A post-group `orderBy` referencing a named
+ * `aggregate` reorders whole groups instead. Must be the outermost data clause: only
+ * `from`/`options`/`order` may wrap it.
  */
 const QueryGroupByClause_ = Schema.Struct({
   type: Schema.Literal('group-by'),
   query: Schema.suspend(() => Query),
   keys: Schema.Array(GroupByKey),
+  /** Named aggregates computed per group; empty/absent when the query declares none. */
+  aggregates: Schema.optional(Schema.Array(GroupAggregate)),
 });
 
 export interface QueryGroupByClause extends Schema.Schema.Type<typeof QueryGroupByClause_> {}

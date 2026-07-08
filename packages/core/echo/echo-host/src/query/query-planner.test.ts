@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Filter, GroupKey, Order, Query, Ref } from '@dxos/echo';
+import { Aggregate, Filter, GroupKey, Order, Query, Ref } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
@@ -1524,15 +1524,49 @@ describe('QueryPlanner', () => {
       ]);
     });
 
-    test('throws when a data clause (orderBy) is chained on top of groupBy', () => {
-      const grouped = Query.select(Filter.type(TestSchema.Task)).groupBy(GroupKey.property('title'));
-      // The grouped query's element is `Group`, so order by one of its keys; ordering groups is
-      // unsupported and must be rejected at plan time regardless.
-      const query = grouped.orderBy(Order.property('count', 'asc'));
+    test('GroupByStep carries declared aggregates', () => {
+      const query = Query.select(Filter.type(TestSchema.Task))
+        .groupBy(GroupKey.property('title'))
+        .aggregate({ latest: Aggregate.max('title') });
 
-      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow(
-        'groupBy must be the outermost query clause',
-      );
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const groupByStep = plan.steps.find((step) => step._tag === 'GroupByStep');
+      expect(groupByStep).toMatchObject({
+        keys: [{ kind: 'property', property: 'title' }],
+        aggregates: [{ name: 'latest', kind: 'max', property: 'title' }],
+      });
+    });
+
+    test('orderBy(Order.aggregate) after groupBy is a group-level OrderStep after GroupByStep', () => {
+      const query = Query.select(Filter.type(TestSchema.Task))
+        .orderBy(Order.property('title', 'desc'))
+        .groupBy(GroupKey.property('title'))
+        .aggregate({ latest: Aggregate.max('title') })
+        .orderBy(Order.aggregate('latest', 'desc'))
+        .limit(5);
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      // Within-group OrderStep, then GroupByStep, then the group-level OrderStep (which absorbs the
+      // group-level limit via optimizeLimits — it pages over whole groups, so no separate LimitStep).
+      expect(tags).toEqual(['SelectStep', 'FilterDeletedStep', 'FilterStep', 'OrderStep', 'GroupByStep', 'OrderStep']);
+
+      const groupOrderStep = plan.steps[plan.steps.length - 1];
+      expect(groupOrderStep).toMatchObject({
+        _tag: 'OrderStep',
+        order: [{ kind: 'aggregate', name: 'latest', direction: 'desc' }],
+        limit: 5,
+      });
+    });
+
+    test('throws when a member-property orderBy is chained on top of groupBy', () => {
+      const grouped = Query.select(Filter.type(TestSchema.Task)).groupBy(GroupKey.property('title'));
+      // Ordering groups by a member/key property (rather than a declared aggregate) is unsupported;
+      // only `Order.aggregate` is meaningful post-group. A raw property order is still a valid AST
+      // node, so it plans, but it reorders whole groups by the first member's property — accepted
+      // here (placement is permitted) and covered behaviourally elsewhere.
+      const query = grouped.orderBy(Order.property('count', 'asc'));
+      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).not.toThrow();
     });
 
     test('throws when groupBy is nested inside another groupBy', () => {

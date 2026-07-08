@@ -9,6 +9,7 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import * as Aggregate from './Aggregate';
 import * as Dataset from './Dataset';
 import * as Feed from './Feed';
 import * as Filter from './Filter';
@@ -870,6 +871,78 @@ describe('query api', () => {
         expectTypeOf<Query.Type<typeof query>>().toHaveProperty('count');
         expectTypeOf<Query.Type<typeof query>>().toHaveProperty('values');
         expectTypeOf<Query.Type<typeof query>['key']>().toHaveProperty('email');
+      });
+
+      test('aggregate declares named aggregates on the group-by node', () => {
+        const query = Query.select(Filter.type(TestSchema.Person))
+          .groupBy(GroupKey.property('email'))
+          .aggregate({ latest: Aggregate.max('name'), earliest: Aggregate.min('name') });
+
+        expect(query.ast).toMatchObject({
+          type: 'group-by',
+          keys: [{ kind: 'property', property: 'email' }],
+          aggregates: [
+            { name: 'latest', kind: 'max', property: 'name' },
+            { name: 'earliest', kind: 'min', property: 'name' },
+          ],
+        });
+        Schema.validateSync(QueryAST.Query)(query.ast);
+      });
+
+      test('orderBy(Order.aggregate) wraps the grouped query as a group-level order', () => {
+        const grouped = Query.select(Filter.type(TestSchema.Person))
+          .groupBy(GroupKey.property('email'))
+          .aggregate({ latest: Aggregate.max('name') });
+        const ordered = grouped.orderBy(Order.aggregate('latest', 'desc'));
+
+        expect(ordered.ast).toMatchObject({
+          type: 'order',
+          query: grouped.ast,
+          order: [{ kind: 'aggregate', name: 'latest', direction: 'desc' }],
+        });
+        Schema.validateSync(QueryAST.Query)(ordered.ast);
+      });
+
+      test('Query.pretty renders aggregates and aggregate ordering', () => {
+        const query = Query.select(Filter.type(TestSchema.Person))
+          .groupBy(GroupKey.property('email'))
+          .aggregate({ latest: Aggregate.max('name') })
+          .orderBy(Order.aggregate('latest', 'desc'));
+        const pretty = Query.pretty(query);
+        expect(pretty).toContain('.groupBy("email").aggregate({ "latest": Aggregate.max("name") })');
+        expect(pretty).toContain('.orderBy(Order.aggregate("latest", "desc"))');
+      });
+
+      test('.aggregate() throws when it does not follow groupBy', () => {
+        expect(() => Query.select(Filter.type(TestSchema.Person)).aggregate({ latest: Aggregate.max('name') })).toThrow(
+          /must directly follow \.groupBy/,
+        );
+      });
+
+      test('type-level: aggregate names surface on the group', () => {
+        const query = Query.type(TestSchema.Person)
+          .groupBy(GroupKey.property('email'))
+          .aggregate({ latest: Aggregate.max('name') });
+        expectTypeOf<Query.Type<typeof query>>().toHaveProperty('aggregates');
+        expectTypeOf<Query.Type<typeof query>['aggregates']>().toHaveProperty('latest');
+        // The aggregated value is nullable (a group may have no scalar members).
+        const latest: Query.Type<typeof query>['aggregates']['latest'] = null;
+        expect(latest).toBeNull();
+      });
+
+      test('type-level: Aggregate.max is checked against the member type', () => {
+        // @ts-expect-error - 'nope' is not a property of Person.
+        Query.type(TestSchema.Person).groupBy(GroupKey.property('email')).aggregate({ latest: Aggregate.max('nope') });
+      });
+
+      test('type-level: Order.aggregate is checked against declared aggregate names', () => {
+        const grouped = Query.type(TestSchema.Person)
+          .groupBy(GroupKey.property('email'))
+          .aggregate({ latest: Aggregate.max('name') });
+        // Valid name compiles.
+        grouped.orderBy(Order.aggregate('latest', 'desc'));
+        // @ts-expect-error - 'earliest' was never declared as an aggregate.
+        grouped.orderBy(Order.aggregate('earliest', 'desc'));
       });
     });
   });

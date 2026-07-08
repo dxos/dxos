@@ -7,11 +7,12 @@ import * as Atom from '@effect-atom/atom/Atom';
 import { type CleanupFn, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Entity, Query, type QueryResult } from '@dxos/echo';
+import { type Entity, Query, type QueryAST, type QueryResult } from '@dxos/echo';
+import { type AggregateValue, GroupBy } from '@dxos/echo-host/query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
-import { isNonNullable } from '@dxos/util';
+import { getDeep, isNonNullable } from '@dxos/util';
 
 import { type QueryContext, type SourceEntry } from './query-context';
 
@@ -215,7 +216,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     grouped: boolean;
   } {
     if (entries.length > 0 && entries[0].group !== undefined) {
-      const { groups, entries: groupEntries } = _assembleGroups(entries);
+      const { groups, entries: groupEntries } = _assembleGroups(entries, _groupAggregatesFromQuery(this._query.ast));
       // Boundary cast: T is `Group<K, Row>` for grouped queries (per Query.groupBy's return type),
       // but this class is written generically over the row type — grouping is a presentation
       // transform applied on top of row-level entries, with K/Row erased at runtime.
@@ -281,16 +282,19 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 }
 
 /** Runtime shape of a `Query.Group` value once its `K`/row type parameters are erased. */
-type GroupResult = { key: Record<string, unknown>; count: number; values: unknown[] };
+type GroupResult = { key: Record<string, unknown>; count: number; aggregates: Record<string, unknown>; values: unknown[] };
 
 /**
  * Buckets flat row-level entries into `Group` values, in the order groups first appear in
  * `entries`. The host/local query sources already deliver a grouped query's entries with groups
  * contiguous and correctly ordered (see `GroupByStep`); this only needs to re-derive that
- * grouping locally, after row objects have deduped/hydrated on the client.
+ * grouping locally, after row objects have deduped/hydrated on the client. Named aggregates are
+ * recomputed here from each group's hydrated members (the ordering they drive is already applied by
+ * the source); a group with unhydrated members reflects only the hydrated subset, mirroring `values`.
  */
 const _assembleGroups = (
   entries: SourceEntry[],
+  aggregates: readonly QueryAST.GroupAggregate[],
 ): { groups: GroupResult[]; entries: QueryResult.Entry<GroupResult>[] } => {
   const seenIds = new Set<unknown>();
   const buckets = new Map<string, GroupResult>();
@@ -312,7 +316,7 @@ const _assembleGroups = (
     const serializedKey = JSON.stringify(entry.group.key);
     let bucket = buckets.get(serializedKey);
     if (!bucket) {
-      bucket = { key: entry.group.key, count: entry.group.count, values: [] };
+      bucket = { key: entry.group.key, count: entry.group.count, aggregates: {}, values: [] };
       buckets.set(serializedKey, bucket);
       order.push(serializedKey);
     }
@@ -321,9 +325,37 @@ const _assembleGroups = (
     }
   }
 
+  for (const bucket of buckets.values()) {
+    for (const aggregate of aggregates) {
+      const values = bucket.values.map(
+        // Row objects are erased to `unknown` at this presentation boundary (see the Group cast in
+        // `_presentResults`); the aggregate reads a dynamic property path off the hydrated object.
+        (value): AggregateValue => _coerceScalar(getDeep(value as Record<string, unknown>, [aggregate.property])),
+      );
+      bucket.aggregates[aggregate.name] = GroupBy.reduceAggregate(values, aggregate.kind);
+    }
+  }
+
   const groups = order.map((key) => buckets.get(key)!);
   const groupEntries = order.map((key, index) => ({ id: key, result: groups[index] }));
   return { groups, entries: groupEntries };
+};
+
+/** Coerces a raw property value to the scalar aggregate domain (non-scalars → `null`). */
+const _coerceScalar = (value: unknown): AggregateValue =>
+  typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? value : null;
+
+/**
+ * Extracts the group-by clause's aggregate declarations from a query AST, unwrapping the wrappers
+ * permitted above a `group-by` (`order`/`limit`/`skip`/`from`/`options`). Empty when the query has
+ * no `group-by` or declares no aggregates.
+ */
+const _groupAggregatesFromQuery = (query: QueryAST.Query): readonly QueryAST.GroupAggregate[] => {
+  let node: QueryAST.Query | undefined = query;
+  while (node && node.type !== 'group-by' && 'query' in node) {
+    node = node.query;
+  }
+  return node?.type === 'group-by' ? (node.aggregates ?? []) : [];
 };
 
 /**

@@ -11,6 +11,7 @@ import type * as EffectTypes from 'effect/Types';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { EID, type URI } from '@dxos/keys';
 
+import type * as Aggregate from './Aggregate';
 import type * as Collection from './Collection';
 import * as Database from './Database';
 import type * as Dataset from './Dataset';
@@ -49,17 +50,20 @@ type ReferenceTraversalTarget<P> = P extends Ref.Unknown
 
 /**
  * One group of query results, produced by {@link Query.groupBy}.
- * `K` is the group's key (an object of the properties grouped by); `T` is the element type.
+ * `K` is the group's key (an object of the properties grouped by); `T` is the element type; `A` is
+ * the record of named aggregates declared via {@link Query.aggregate} (empty when none).
  */
-export interface Group<K, T> {
+export interface Group<K, T, A = {}> {
   readonly key: K;
 
   /**
    * Number of results in this group in the source result set.
    * May exceed `values.length` while some results have not hydrated locally.
    */
-  // TODO(dmaretskyi): Reserve room for future aggregations (sum/min/max/avg) as a sibling field.
   readonly count: number;
+
+  /** Named aggregates computed over the group's members (see {@link Query.aggregate}). */
+  readonly aggregates: A;
 
   readonly values: T[];
 }
@@ -175,6 +179,34 @@ export interface Query<T> {
   'groupBy'<const K extends GroupKey.GroupKey<keyof T>[]>(
     ...keys: K
   ): Query<Group<EffectTypes.Simplify<Pick<T, GroupKey.Property<K[number]>>>, T>>;
+
+  /**
+   * Declare named aggregates computed per group. Must directly follow {@link groupBy}. The
+   * aggregates are exposed on each result as `Group.aggregates` and can be ordered by with a
+   * following {@link orderBy} using {@link Order.aggregate}.
+   *
+   * ```ts
+   * Query.type(Message)
+   *   .orderBy(Order.property('created', 'desc'))
+   *   .groupBy(GroupKey.property('threadId'))
+   *   .aggregate({ lastMessageAt: Aggregate.max('created') })
+   *   .orderBy(Order.aggregate('lastMessageAt', 'desc'));
+   * ```
+   *
+   * @param aggregates - Record of aggregate declarations keyed by result name.
+   * @returns Query whose group results carry the named aggregates.
+   */
+  'aggregate'<
+    const A extends Record<string, Aggregate.Aggregate<T extends Group<any, infer E, any> ? E : never, any>>,
+  >(
+    aggregates: A,
+  ): Query<
+    Group<
+      T extends Group<infer K, any, any> ? K : unknown,
+      T extends Group<any, infer E, any> ? E : unknown,
+      EffectTypes.Simplify<{ readonly [N in keyof A]: Aggregate.ValueOf<A[N]> }>
+    >
+  >;
 
   /**
    * Limit the number of results.
@@ -387,6 +419,16 @@ class QueryClass implements Any {
       type: 'group-by',
       query: this.ast,
       keys: keys.map((key) => key.ast),
+    });
+  }
+
+  'aggregate'(aggregates: Record<string, Aggregate.Any>): Any {
+    if (this.ast.type !== 'group-by') {
+      throw new TypeError('.aggregate() must directly follow .groupBy().');
+    }
+    return new QueryClass({
+      ...this.ast,
+      aggregates: Object.entries(aggregates).map(([name, aggregate]) => ({ name, ...aggregate.spec })),
     });
   }
 

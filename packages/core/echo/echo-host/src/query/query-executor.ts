@@ -31,7 +31,7 @@ import type { SpaceStateManager } from '../db-host';
 import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint';
 import { filterMatchDoc, filterMatchObjectJSON } from '../filter';
 import { QueryError } from './errors';
-import { GroupBy, type GroupKeyValue } from './group-by';
+import { type GroupAggregates, GroupBy, type GroupKeyValue } from './group-by';
 import { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
 
@@ -90,6 +90,12 @@ type QueryItem = {
    * Group-by key, set by `GroupByStep`. Undefined for queries without a `groupBy` clause.
    */
   groupKey?: GroupKeyValue;
+
+  /**
+   * Named group aggregates, stamped by `GroupByStep` when the query declares aggregates; shared by
+   * every member of a group and read by a following group-level `OrderStep` (`aggregate` order).
+   */
+  aggregates?: GroupAggregates;
 };
 
 const QueryItem = Object.freeze({
@@ -1390,11 +1396,18 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execOrderStep(step: QueryPlan.OrderStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
-    let sortedWorkingSet = [...workingSet].sort((a, b) => this._compareMultiOrder(a, b, step.order));
+    // After a GroupByStep the working set is partitioned into contiguous groups; a post-group order
+    // reorders whole groups (by their aggregates), and a pushed-down limit pages over whole groups.
+    // Otherwise it sorts and slices the flat object stream.
+    let sortedWorkingSet = isGrouped(workingSet)
+      ? GroupBy.orderGroups(workingSet, serializeItemGroupKey, (a, b) => this._compareMultiOrder(a, b, step.order))
+      : [...workingSet].sort((a, b) => this._compareMultiOrder(a, b, step.order));
 
     // Apply limit if specified on the order step.
     if (step.limit !== undefined && sortedWorkingSet.length > step.limit) {
-      sortedWorkingSet = sortedWorkingSet.slice(0, step.limit);
+      sortedWorkingSet = isGrouped(sortedWorkingSet)
+        ? GroupBy.takeGroups(sortedWorkingSet, step.limit, serializeItemGroupKey)
+        : sortedWorkingSet.slice(0, step.limit);
     }
 
     return {
@@ -1444,9 +1457,16 @@ export class QueryExecutor extends Resource {
 
   private async _execGroupByStep(step: QueryPlan.GroupByStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const withKeys = workingSet.map((item) => ({ ...item, groupKey: QueryItem.getGroupKey(item, step.keys) }));
-    const groupedWorkingSet = GroupBy.partitionByGroupKey(withKeys, (item) =>
-      GroupBy.serializeGroupKey(item.groupKey!),
-    );
+    const partitioned = GroupBy.partitionByGroupKey(withKeys, (item) => GroupBy.serializeGroupKey(item.groupKey!));
+    const groupedWorkingSet =
+      step.aggregates && step.aggregates.length > 0
+        ? GroupBy.withGroupAggregates(
+            partitioned,
+            (item) => GroupBy.serializeGroupKey(item.groupKey!),
+            step.aggregates,
+            (item, property) => QueryItem.getProperty(item, [property]),
+          )
+        : partitioned;
 
     return {
       workingSet: groupedWorkingSet,
@@ -1497,6 +1517,11 @@ export class QueryExecutor extends Resource {
         const aValue = (order.field === 'updatedAt' ? a.updatedAt : a.createdAt) ?? 0;
         const bValue = (order.field === 'updatedAt' ? b.updatedAt : b.createdAt) ?? 0;
         const comparison = aValue - bValue;
+        return order.direction === 'desc' ? -comparison : comparison;
+      }
+      case 'aggregate': {
+        // Order groups by a named aggregate stamped on each member by `GroupByStep`.
+        const comparison = GroupBy.compareScalar(a.aggregates?.[order.name] ?? null, b.aggregates?.[order.name] ?? null);
         return order.direction === 'desc' ? -comparison : comparison;
       }
       default:

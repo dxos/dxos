@@ -718,16 +718,24 @@ export class QueryPlanner {
       });
     }
 
-    // Exactly one group-by: it must sit at the outermost data position (only from/options/limit/skip
-    // may wrap it). Unwrap those and require the group-by to be what remains.
+    // Exactly one group-by: it must sit at the outermost data position (only from/options/order/
+    // limit/skip may wrap it). A wrapping `order` reorders whole groups (see the `aggregate` order
+    // kind); an `order` inside the group-by's own query orders members within each group. Unwrap the
+    // permitted wrappers and require the group-by to be what remains.
     let root = query;
-    while (root.type === 'options' || root.type === 'from' || root.type === 'limit' || root.type === 'skip') {
+    while (
+      root.type === 'options' ||
+      root.type === 'from' ||
+      root.type === 'order' ||
+      root.type === 'limit' ||
+      root.type === 'skip'
+    ) {
       root = root.query;
     }
     if (root.type !== 'group-by') {
       throw new QueryError({
         message:
-          'groupBy must be the outermost query clause — only from(), options(), limit() and skip() may follow it',
+          'groupBy must be the outermost query clause — only from(), options(), orderBy(), limit() and skip() may follow it',
         context: { query },
       });
     }
@@ -803,6 +811,7 @@ export class QueryPlanner {
       {
         _tag: 'GroupByStep',
         keys: query.keys,
+        aggregates: query.aggregates,
       },
     ]);
   }

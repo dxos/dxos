@@ -119,6 +119,8 @@ export const prettyQuery = (query: QueryAST.Query): string => {
         } else if (o.kind === 'timestamp') {
           const fn = o.field === 'updatedAt' ? 'updated' : 'created';
           return `Order.${fn}(${JSON.stringify(o.direction)})`;
+        } else if (o.kind === 'aggregate') {
+          return `Order.aggregate(${JSON.stringify(o.name)}, ${JSON.stringify(o.direction)})`;
         } else {
           return `Order.property(${JSON.stringify(o.property)}, ${JSON.stringify(o.direction)})`;
         }
@@ -162,7 +164,15 @@ export const prettyQuery = (query: QueryAST.Query): string => {
       return `${prettyQuery(query.query)}.skip(${query.skip})`;
     case 'group-by': {
       const keys = query.keys.map((key) => JSON.stringify(key.property));
-      return `${prettyQuery(query.query)}.groupBy(${keys.join(', ')})`;
+      const grouped = `${prettyQuery(query.query)}.groupBy(${keys.join(', ')})`;
+      if (!query.aggregates || query.aggregates.length === 0) {
+        return grouped;
+      }
+      const aggregates = query.aggregates.map(
+        (aggregate) =>
+          `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${aggregate.property !== undefined ? JSON.stringify(aggregate.property) : ''})`,
+      );
+      return `${grouped}.aggregate({ ${aggregates.join(', ')} })`;
     }
   }
 };
