@@ -1,7 +1,6 @@
 {
   "name": "@dxos/react-ui-fact-viewer",
   "version": "0.10.0",
-  "private": true,
   "description": "Presentational viewer for extracted semantic facts.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
