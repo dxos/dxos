@@ -8,7 +8,7 @@ import { useOptionalAtomCapabilityState } from '@dxos/app-framework/ui';
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
 import { useTranslation } from '@dxos/react-ui';
 import { type ChatEditorController } from '@dxos/react-ui-chat';
-import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
+import { useAudioTrack, useEdgeTranscribe, useTranscriber } from '@dxos/react-ui-transcription';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
 
@@ -93,11 +93,13 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
   );
 
   const track = useAudioTrack(active, audioConstraints);
+  const transcribe = useEdgeTranscribe();
 
   useTranscriber({
     audioStreamTrack: track,
     transcriberConfig,
     recorderConfig,
+    transcribe,
     onSegments: handleSegments,
   });
 };

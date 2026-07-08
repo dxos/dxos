@@ -4,6 +4,7 @@
 
 export * from './useAudioFile';
 export * from './useAudioTrack';
+export * from './useEdgeTranscribe';
 export * from './useFeedModelAdapter';
 export * from './useIsSpeaking';
 export * from './useRecordingPipeline';

@@ -95,6 +95,15 @@ export type JoinCallRoomResponse = {
   authToken: string;
 };
 
+export type TranscribeAudioRequest = {
+  /** Base64-encoded WAV payload. */
+  audio: string;
+};
+
+export type TranscribeAudioResponse = {
+  segments: unknown[];
+};
+
 export type EdgeHttpClientOptions = BaseHttpClientOptions;
 
 /**
@@ -458,6 +467,24 @@ export class EdgeHttpClient extends BaseHttpClient {
     args?: EdgeHttpCallArgs,
   ): Promise<JoinCallRoomResponse> {
     return this._call(ctx, new URL('/calls/api/rooms/join', this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
+      auth: true,
+    });
+  }
+
+  /**
+   * Transcribe a WAV audio payload via calls-service's Whisper proxy. Authenticated (verifiable
+   * presentation), so `setIdentity` must have been called. Routes through the edge worker's `/calls/*`
+   * proxy, same as {@link joinCallRoom}.
+   */
+  public async transcribeAudio(
+    ctx: Context,
+    body: TranscribeAudioRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<TranscribeAudioResponse> {
+    return this._call(ctx, new URL('/calls/transcribe', this.baseUrl), {
       ...args,
       body,
       method: 'POST',

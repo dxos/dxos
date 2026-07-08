@@ -11,7 +11,7 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
+import { useAudioTrack, useEdgeTranscribe, useTranscriber } from '@dxos/react-ui-transcription';
 import { Message, type Transcript } from '@dxos/types';
 
 import { TranscriptionCapabilities, TranscriptOperation } from '#types';
@@ -33,6 +33,7 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
 
   const [recording, setRecording] = useState(false);
   const track = useAudioTrack(recording);
+  const transcribe = useEdgeTranscribe();
   const { invokePromise } = useOperationInvoker();
   const settings = useAtomCapability(TranscriptionCapabilities.Settings);
 
@@ -71,7 +72,7 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
   );
 
   // Drive the transcriber lifecycle off the recording flag + audio track.
-  const transcriber = useTranscriber({ audioStreamTrack: track, onSegments: handleSegments });
+  const transcriber = useTranscriber({ audioStreamTrack: track, transcribe, onSegments: handleSegments });
   useEffect(() => {
     if (!transcriber) {
       return;

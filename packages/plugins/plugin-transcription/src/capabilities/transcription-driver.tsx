@@ -10,7 +10,7 @@ import { useAtomCapability, useAtomCapabilityState, useCapabilities } from '@dxo
 import { log } from '@dxos/log';
 import { linkEntities } from '@dxos/pipeline-transcription';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
-import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
+import { useAudioTrack, useEdgeTranscribe, useTranscriber } from '@dxos/react-ui-transcription';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
 
@@ -175,11 +175,13 @@ const TranscriptionDriver = () => {
   // Stable identity: a fresh object would change useTranscriber's memo deps every render, recreating
   // (and reopening) the transcriber and discarding its buffered audio.
   const recorderConfig = useMemo(() => ({ interval: RECORDER_INTERVAL_MS }), []);
+  const transcribe = useEdgeTranscribe();
   const transcriber = useTranscriber({
     audioStreamTrack: track,
     onSegments: handleSegments,
     transcriberConfig,
     recorderConfig,
+    transcribe,
   });
   const transcriberRef = useRef(transcriber);
   transcriberRef.current = transcriber;
