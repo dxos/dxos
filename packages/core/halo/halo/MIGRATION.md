@@ -24,12 +24,12 @@ HALO is a credential system layered over append-only, signed hypercore feeds. Ev
 
 ```protobuf
 message Credential {
-  PublicKey id;                       // SHA-256 of signed payload.
-  PublicKey issuer;                   // Space, identity, or device key.
+  PublicKey id;                                 // SHA-256 of signed payload.
+  PublicKey issuer;                             // Space, identity, or device key.
   Timestamp issuance_date;
-  Claim subject;                      // { id: PublicKey, assertion: Any }
-  Proof proof;                        // { type, signer, nonce, value, chain? }
-  repeated PublicKey parent_credential_ids;  // DAG for concurrent updates.
+  Claim subject;                                // { id: PublicKey, assertion: Any }
+  Proof proof;                                  // { type, signer, nonce, value, chain? }
+  repeated PublicKey parent_credential_ids;     // DAG for concurrent updates.
 }
 ```
 
