@@ -97,7 +97,7 @@ export const MessageArticle = ({
   }, [invokePromise, mailbox, message, db]);
 
   return (
-    <Panel.Root role={role} className='dx-document'>
+    <Panel.Root role={role}>
       <Message.Root
         attendableId={toolbarAttendableId}
         viewMode={viewMode}
@@ -118,7 +118,7 @@ export const MessageArticle = ({
       <Panel.Content asChild>
         <ScrollArea.Root padding thin>
           <ScrollArea.Viewport>
-            <div className='flex flex-col'>
+            <div className='dx-document flex flex-col'>
               {messages.map((messageOrRef) => (
                 <div key={keyOf(messageOrRef)} className='border-be border-separator'>
                   <ThreadMessageItem

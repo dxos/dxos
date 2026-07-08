@@ -318,7 +318,6 @@ export default Capability.makeModule(
           }
 
           const messageId = get(selectedId(matched.nodeId));
-          // Query the whole feed (not the rendered window) so a selection scrolled out of view resolves.
           const message = get(
             db.query(Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed)).atom,
           )[0];
