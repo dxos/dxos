@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Clock from 'effect/Clock';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -76,10 +77,13 @@ const makeMemory = (): StateStoreApi => {
     hasActionable: () =>
       Effect.sync(() => frontier.some((target) => target.status === 'pending' || target.status === 'active')),
     setCursor: (targetId, cursor) =>
-      Effect.sync(() => {
+      Effect.gen(function* () {
+        // The success write seam (Cursor.advance semantics): value + lastRunAt advance together and
+        // the previous error clears. Clock keeps the write deterministic under TestClock.
+        const lastRunAt = new Date(yield* Clock.currentTimeMillis).toISOString();
         const target = byId.get(targetId);
         if (target) {
-          replace({ ...target, cursor });
+          replace({ ...target, cursor, lastRunAt, lastError: undefined });
         }
       }),
     setStatus: (targetId, status, error) =>
