@@ -4,7 +4,7 @@
 
 import md5Hex from 'md5-hex';
 
-import { DeferredTask, Event, scheduleTaskInterval, sleep, synchronized } from '@dxos/async';
+import { DeferredTask, Event, scheduleTask, sleep, synchronized } from '@dxos/async';
 import { type Identity } from '@dxos/client/halo';
 import { Context, Resource } from '@dxos/context';
 import { generateName } from '@dxos/display-name';
@@ -61,7 +61,7 @@ const DISCONNECTED_ABRUPT_TIMEOUT = 10_000; // [ms]
  * Swarm activity key under which the room's RealtimeKit meeting id is advertised. The first joiner mints
  * the meeting and advertises it here (CRDT last-write-wins); late joiners read it to share one session.
  */
-const MEETING_ACTIVITY_KEY = 'dxos.org/plugin-calls/realtimekit-meeting';
+export const MEETING_ACTIVITY_KEY = 'dxos.org/plugin-calls/realtimekit-meeting';
 
 /**
  * When another peer is present but has not advertised a meeting id yet (concurrent first-join), poll this
@@ -81,6 +81,8 @@ export class CallSwarmSynchronizer extends Resource {
   private readonly _networkService: NetworkService;
   private _lastSwarmEvent?: SwarmResponse = undefined;
   private _reconcileSwarmStateTask?: DeferredTask = undefined;
+  // A single pending inactive-peer re-check (see `_reconcileSwarmState`); reset on `leave()`.
+  #inactivePeerRecheckPending = false;
 
   private _identityKey?: string = undefined;
   private _identityDid?: string = undefined;
@@ -231,7 +233,11 @@ export class CallSwarmSynchronizer extends Resource {
     this._state.self = undefined;
     // Otherwise a rejoin's `resolveMeetingId` can read this device's own stale advertisement (re-sent by
     // `_sendState` before a fresh one is published) and reuse an already-torn-down RealtimeKit meeting.
-    delete this._state.activities![MEETING_ACTIVITY_KEY];
+    delete this._state.activities?.[MEETING_ACTIVITY_KEY];
+    // The snapshot belongs to the session being left; a straggling reconcile must not repopulate
+    // users/self/activities from it after the clears above.
+    this._lastSwarmEvent = undefined;
+    this.#inactivePeerRecheckPending = false;
   }
 
   async querySwarm(roomId: string) {
@@ -339,8 +345,14 @@ export class CallSwarmSynchronizer extends Resource {
   }
 
   private async _reconcileSwarmState(): Promise<void> {
+    // A reconcile can land after `leave()` (scheduled before it, or via the inactive-peer re-check);
+    // mutating state from the stale snapshot would resurrect what `leave()` cleared — most harmfully
+    // the meeting advertisement, which a rejoin's `_sendState` would then re-broadcast to real peers.
     const swarmEvent = this._lastSwarmEvent;
-    invariant(swarmEvent);
+    const swarmCtx = this._swarmCtx;
+    if (!swarmEvent || !swarmCtx || !this._state.joined) {
+      return;
+    }
     // We include inactive peers that were disconnected abruptly and have not yet reconnected to not drop them from call.
     // Websocket connection could be unstable and we include graceful period for peers to reconnect.
     const peers = [
@@ -369,9 +381,14 @@ export class CallSwarmSynchronizer extends Resource {
       return;
     }
 
-    const activityKeys = new Set<string>(users.flatMap((user) => Object.keys(user.activities)));
+    // Merge only remote peers' activities: our own are authoritative locally (written via
+    // `setActivity`), and a stale echo of our own entry (server-cached after the fire-and-forget
+    // swarm leave, or a pre-leave snapshot) must not re-introduce deleted state — symmetric with the
+    // self-exclusion in `#readAdvertisedMeetingId`.
+    const remoteUsers = users.filter((user) => user.id !== this._deviceKey);
+    const activityKeys = new Set<string>(remoteUsers.flatMap((user) => Object.keys(user.activities)));
     [...activityKeys].forEach((key) => {
-      const activities = users.map((user) => user.activities?.[key]).filter(isNonNullable);
+      const activities = remoteUsers.map((user) => user.activities?.[key]).filter(isNonNullable);
       const lastActivity = LamportTimestampCrdt.getLastState(activities);
       if (
         lastActivity &&
@@ -382,11 +399,17 @@ export class CallSwarmSynchronizer extends Resource {
     });
     this.stateUpdated.emit(this._state);
 
-    // Schedule next reconcile if there are inactive peer to drop them after timeout.
-    if (peers.some((peer) => peer.connectionState !== ConnectionState.CONNECTED)) {
-      scheduleTaskInterval(
-        this._ctx,
-        async () => this._reconcileSwarmStateTask!.schedule(),
+    // Re-check while inactive peers are present so they drop off after the grace timeout. A single
+    // pending re-check, bound to the swarm session so leaving cancels it — an unconditional repeating
+    // interval would stack one instance per reconcile pass and keep firing after the call ends.
+    if (!this.#inactivePeerRecheckPending && peers.some((peer) => peer.connectionState !== ConnectionState.CONNECTED)) {
+      this.#inactivePeerRecheckPending = true;
+      scheduleTask(
+        swarmCtx,
+        async () => {
+          this.#inactivePeerRecheckPending = false;
+          this._reconcileSwarmStateTask?.schedule();
+        },
         Math.min(DISCONNECTED_ABRUPT_TIMEOUT / 2, 1000),
       );
     }

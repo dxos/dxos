@@ -293,6 +293,13 @@ export class CallManager extends Resource {
   // waiting for a prior in-flight join or a queued teardown to release the lock. The real work runs in the
   // serialized `_runJoin`. `roomId` was set by the caller (`provider.join`) before this.
   async join(): Promise<void> {
+    // A join while already joined (or while one is optimistically in flight) must be inert: it would
+    // double-join the swarm ('Already joined') and its failure rollback would tear down the live call.
+    // Room switches go through `leave()` first (see the calls transport provider).
+    if (this.joined) {
+      return;
+    }
+
     // Validate before the optimistic flip so a missing room id / device key can't leave us marked joined.
     const roomId = this._swarmSynchronizer._getState().roomId;
     const deviceKey = this._client.halo.device?.deviceKey.toHex();
@@ -308,7 +315,13 @@ export class CallManager extends Resource {
       // superseded this attempt: that call chain owns the state now and this one must not clobber it.
       if (generation === this.#joinGeneration) {
         this._swarmSynchronizer.setJoined(false);
-        await this._teardown();
+        try {
+          await this._teardown();
+        } catch (teardownError) {
+          // The rollback is best-effort: a secondary teardown failure must not mask the root-cause
+          // join error thrown below.
+          log.catch(teardownError);
+        }
       }
       throw error;
     }
