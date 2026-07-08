@@ -3257,6 +3257,573 @@ git commit -m "feat(stories-brain): drive the crawl demo through DiscordPipeline
 
 ---
 
+### Task 12: Replay stream over stored messages (run after Task 8)
+
+A second pipeline source: iterate the SQLite working set (no live Source, no token) and re-drive a different stage assembly. Targets come from the persisted frontier; messages from `MessageStore`.
+
+**Files:**
+- Create: `packages/core/compute/pipeline-discord/src/replay.ts`
+- Modify: `src/index.ts`
+- Test: covered by Task 13's pipeline test (replay + extraction end-to-end)
+
+- [ ] **Step 12.1: Implement `replayStream`**
+
+`src/replay.ts`:
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
+
+import { StateStore, type StateError, type Type } from '@dxos/crawler';
+
+import { type StoreError } from './errors';
+import { MessageStore, type StoredMessage } from './stores';
+
+export type ReplayOptions = {
+  /** Restrict the replay to these target (channel/thread) ids. */
+  readonly targetIds?: readonly string[];
+};
+
+// The stored columns are the crawl-message fields; `raw` stays for future full-fidelity needs.
+const toCrawlMessage = (stored: StoredMessage): Type.Message => ({
+  id: stored.id,
+  text: stored.text,
+  author: {
+    id: stored.authorId,
+    source: 'discord',
+    ...(stored.authorLabel ? { displayName: stored.authorLabel } : {}),
+  },
+  ...(stored.createdAt ? { createdAt: stored.createdAt } : {}),
+  ...(stored.parentId ? { parentId: stored.parentId } : {}),
+});
+
+/**
+ * Re-drive pipeline stages from the SQLite working set instead of a live Source: for every stored
+ * target, emits Start → each stored message (chronological) → End. A stage assembly that is
+ * idempotent over a live crawl behaves identically over a replay; there is no frontier/cursor —
+ * a replay is a full pass, and stages rely on their own idempotency (fact hash cursors, upserts).
+ */
+export const replayStream = (
+  options: ReplayOptions = {},
+): Stream.Stream<Type.Event, StoreError | StateError, MessageStore | StateStore> =>
+  Stream.unwrap(
+    Effect.gen(function* () {
+      const state = yield* StateStore;
+      const messages = yield* MessageStore;
+      const targets = (yield* state.listTargets()).filter(
+        (target) => !options.targetIds || options.targetIds.includes(target.id),
+      );
+      return Stream.fromIterable(targets).pipe(
+        Stream.flatMap((target) =>
+          Stream.unwrap(
+            messages.listByTarget(target.id).pipe(
+              Effect.map((stored) => {
+                const open: Type.Event = target.threadId
+                  ? { _tag: 'ThreadStart', target, parentMessageId: target.parentMessageId }
+                  : { _tag: 'ChannelStart', target };
+                const close: Type.Event = target.threadId
+                  ? { _tag: 'ThreadEnd', target }
+                  : { _tag: 'ChannelEnd', target };
+                const middle: Type.Event[] = stored.map((message) => ({
+                  _tag: 'Message',
+                  target,
+                  message: toCrawlMessage(message),
+                }));
+                return Stream.fromIterable([open, ...middle, close]);
+              }),
+            ),
+          ),
+        ),
+      );
+    }),
+  );
+```
+
+Add `export * from './replay';` to `src/index.ts`.
+
+- [ ] **Step 12.2: Build + commit**
+
+Run: `moon run pipeline-discord:build` → succeeds.
+
+```bash
+git add packages/core/compute/pipeline-discord
+git commit -m "feat(pipeline-discord): replay stream over the stored message set"
+```
+
+---
+
+### Task 13: User-question extraction pipeline (run after Task 12)
+
+Extract questions users asked in messages — (user × channel × message id × question) — deterministically (sentence-level `?` detection), persist them idempotently, and log each hit.
+
+**Files:**
+- Create: `src/stores/extracted-question-store.ts`
+- Create: `src/stages/extract-questions.ts`
+- Modify: `src/stores/index.ts`, `src/stages/index.ts`
+- Test: `src/stages/extract-questions.test.ts`
+
+- [ ] **Step 13.1: Write the failing test**
+
+`src/stages/extract-questions.test.ts`:
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import { describe, it } from '@effect/vitest';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import { expect } from 'vitest';
+
+import { type Type } from '@dxos/crawler';
+import { Pipeline } from '@dxos/pipeline';
+
+import { DiscordPipeline } from '../pipeline';
+import { replayStream } from '../replay';
+import { ExtractedQuestionStore } from '../stores';
+import { THREADED_FIXTURE, deterministicAiService, fixtureSourceLayer, storesLayer } from '../testing';
+import { detectQuestions, extractQuestionsStage } from './extract-questions';
+
+const CONFIG: Type.Config = { channels: ['chan-1'], descendThreads: true };
+
+const TestLayer = Layer.mergeAll(
+  storesLayer(SqliteClient.layer({ filename: ':memory:' })),
+  fixtureSourceLayer(THREADED_FIXTURE),
+  deterministicAiService(),
+);
+
+describe('detectQuestions', () => {
+  it.effect(
+    'finds question sentences and ignores statements',
+    Effect.fnUntraced(function* () {
+      expect(detectQuestions('Should Composer use OPFS for local storage?')).toEqual([
+        'Should Composer use OPFS for local storage?',
+      ]);
+      expect(detectQuestions('It works. Does it scale? Yes it does.')).toEqual(['Does it scale?']);
+      expect(detectQuestions('No questions here.')).toEqual([]);
+      // Too short to be a real question.
+      expect(detectQuestions('eh?')).toEqual([]);
+    }),
+  );
+});
+
+describe('extractQuestionsStage', () => {
+  it.effect(
+    'replay over a crawled store extracts user questions idempotently',
+    Effect.fnUntraced(
+      function* () {
+        // First: the live crawl fills the message store (fixture channel + thread).
+        yield* DiscordPipeline.run(CONFIG);
+
+        // Then: replay the stored messages through the question-extraction assembly.
+        const replay = replayStream().pipe(extractQuestionsStage(), Pipeline.run({ sink: () => Effect.void }));
+        yield* replay;
+
+        const store = yield* ExtractedQuestionStore;
+        const extracted = yield* store.list();
+        // The fixture has exactly one interrogative message (Alice's OPFS question, id 1000).
+        expect(extracted.length).toBe(1);
+        expect(extracted[0]).toMatchObject({
+          authorId: 'Alice',
+          targetId: 'chan-1',
+          messageId: '1000',
+          question: 'Should Composer use OPFS for local storage?',
+        });
+
+        // Replaying again changes nothing (idempotent upsert).
+        yield* replay;
+        expect((yield* store.list()).length).toBe(1);
+      },
+      Effect.provide(TestLayer),
+    ),
+  );
+});
+```
+
+Run: `moon run pipeline-discord:test -- src/stages/extract-questions.test.ts` → FAIL.
+
+- [ ] **Step 13.2: Implement the store**
+
+`src/stores/extracted-question-store.ts`:
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as SqlClient from '@effect/sql/SqlClient';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
+import { StoreError } from '../errors';
+
+/** A question a user asked in a message: the (user × channel × message × question) record. */
+export type ExtractedQuestion = {
+  readonly authorId: string;
+  readonly authorLabel?: string;
+  /** Crawl target (channel or thread) the message belongs to. */
+  readonly targetId: string;
+  readonly messageId: string;
+  readonly question: string;
+  /** ISO-8601 message time, when known. */
+  readonly askedAt?: string;
+};
+
+export interface ExtractedQuestionStoreApi {
+  /** Idempotent upsert keyed on (messageId, question). */
+  readonly put: (question: ExtractedQuestion) => Effect.Effect<void, StoreError>;
+  readonly list: (targetId?: string) => Effect.Effect<ExtractedQuestion[], StoreError>;
+}
+
+const fail = (message: string) => (cause: unknown) => new StoreError({ message, cause });
+
+const migrate = (sql: SqlClient.SqlClient) =>
+  sql`CREATE TABLE IF NOT EXISTS extracted_question (
+    message_id TEXT NOT NULL,
+    question TEXT NOT NULL,
+    author_id TEXT NOT NULL,
+    author_label TEXT,
+    target_id TEXT NOT NULL,
+    asked_at TEXT,
+    PRIMARY KEY (message_id, question)
+  )`;
+
+type Row = {
+  readonly message_id: string;
+  readonly question: string;
+  readonly author_id: string;
+  readonly author_label: string | null;
+  readonly target_id: string;
+  readonly asked_at: string | null;
+};
+
+const toQuestion = (row: Row): ExtractedQuestion => ({
+  authorId: row.author_id,
+  ...(row.author_label !== null ? { authorLabel: row.author_label } : {}),
+  targetId: row.target_id,
+  messageId: row.message_id,
+  question: row.question,
+  ...(row.asked_at !== null ? { askedAt: row.asked_at } : {}),
+});
+
+export class ExtractedQuestionStore extends Context.Tag('@dxos/pipeline-discord/ExtractedQuestionStore')<
+  ExtractedQuestionStore,
+  ExtractedQuestionStoreApi
+>() {
+  static layerSql: Layer.Layer<ExtractedQuestionStore, never, SqlClient.SqlClient> = Layer.scoped(
+    ExtractedQuestionStore,
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* migrate(sql).pipe(Effect.orDie);
+      return {
+        put: (question) =>
+          sql`INSERT INTO extracted_question (message_id, question, author_id, author_label, target_id, asked_at)
+            VALUES (${question.messageId}, ${question.question}, ${question.authorId},
+              ${question.authorLabel ?? null}, ${question.targetId}, ${question.askedAt ?? null})
+            ON CONFLICT(message_id, question) DO NOTHING`.pipe(
+            Effect.asVoid,
+            Effect.mapError(fail('Failed to persist extracted question')),
+          ),
+        list: (targetId) =>
+          (targetId !== undefined
+            ? sql<Row>`SELECT * FROM extracted_question WHERE target_id = ${targetId} ORDER BY message_id ASC`
+            : sql<Row>`SELECT * FROM extracted_question ORDER BY message_id ASC`
+          ).pipe(
+            Effect.map((rows) => rows.map(toQuestion)),
+            Effect.mapError(fail('Failed to list extracted questions')),
+          ),
+      };
+    }),
+  );
+
+  static layerMemory: Layer.Layer<ExtractedQuestionStore> = Layer.sync(ExtractedQuestionStore, () => {
+    const byKey = new Map<string, ExtractedQuestion>();
+    return {
+      put: (question) => Effect.sync(() => void byKey.set(`${question.messageId}#${question.question}`, question)),
+      list: (targetId) =>
+        Effect.sync(() =>
+          [...byKey.values()]
+            .filter((question) => targetId === undefined || question.targetId === targetId)
+            .sort((left, right) => left.messageId.localeCompare(right.messageId)),
+        ),
+    };
+  });
+}
+```
+
+Add `export * from './extracted-question-store';` to `src/stores/index.ts`, and add `ExtractedQuestionStore.layerSql` to `storesLayer` in `src/testing/index.ts` (extend the union type accordingly).
+
+- [ ] **Step 13.3: Implement the stage**
+
+`src/stages/extract-questions.ts`:
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import { tapStage, type StateError, type StateStore, type Type } from '@dxos/crawler';
+import { log } from '@dxos/log';
+import { type Stage } from '@dxos/pipeline';
+
+import { ExtractedQuestionStore } from '../stores';
+
+/**
+ * Deterministic question detector: sentence-level split, keep sentences that end in `?` and are
+ * long enough to carry a real question (drops interjections like "eh?"). LLM-grade detection can
+ * replace this behind the same stage seam later.
+ */
+export const detectQuestions = (text: string): string[] =>
+  text
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map((sentence) => sentence.trim())
+    .filter((sentence) => sentence.endsWith('?') && sentence.length >= 8 && sentence.length <= 400);
+
+/**
+ * Per-message stage: extract the questions a user asked and record each
+ * (user × channel × message × question) row — idempotent, so it can run on the live crawl or on a
+ * {@link replayStream} pass over the stored working set.
+ */
+export const extractQuestionsStage = (): Stage.Stage<
+  Type.Event,
+  Type.Event,
+  StateError,
+  ExtractedQuestionStore | StateStore
+> =>
+  tapStage('extract-questions', ['Message'], (event) =>
+    event._tag !== 'Message'
+      ? Effect.void
+      : Effect.gen(function* () {
+          const questions = detectQuestions(event.message.text);
+          if (questions.length === 0) {
+            return;
+          }
+          const store = yield* ExtractedQuestionStore;
+          yield* Effect.forEach(
+            questions,
+            (question) =>
+              store
+                .put({
+                  authorId: event.message.author.id,
+                  ...(event.message.author.displayName ? { authorLabel: event.message.author.displayName } : {}),
+                  targetId: event.target.id,
+                  messageId: event.message.id,
+                  question,
+                  ...(event.message.createdAt ? { askedAt: event.message.createdAt } : {}),
+                })
+                .pipe(
+                  Effect.tap(() =>
+                    Effect.sync(() =>
+                      log.info('question', {
+                        author: event.message.author.displayName ?? event.message.author.id,
+                        target: event.target.id,
+                        message: event.message.id,
+                        question,
+                      }),
+                    ),
+                  ),
+                ),
+            { discard: true },
+          );
+        }),
+  );
+```
+
+Add `export * from './extract-questions';` to `src/stages/index.ts`. Add `@dxos/log` to pipeline-discord dependencies (`pnpm add --filter "@dxos/pipeline-discord" "@dxos/log@workspace:*"`) plus the tsconfig reference.
+
+- [ ] **Step 13.4: Run tests + commit**
+
+Run: `moon run pipeline-discord:test` → PASS.
+
+```bash
+git add packages/core/compute/pipeline-discord pnpm-lock.yaml
+git commit -m "feat(pipeline-discord): user-question extraction over live crawl or replay"
+```
+
+---
+
+### Task 14: Node demo scripts — live crawl + question replay (run after Task 9)
+
+Two env-gated node scripts in plugin-discord, runnable as moon tasks. The crawl demo seeds real channels and fills a persistent SQLite file; the questions demo replays that file through the question-extraction pipeline and prints the (user × channel × message × question) table. Credentials come from `DISCORD_TOKEN` — never hardcode the token.
+
+**Files:**
+- Create: `packages/plugins/plugin-discord/src/testing/crawl-demo.test.ts`
+- Create: `packages/plugins/plugin-discord/src/testing/questions-demo.test.ts`
+- Modify: `packages/plugins/plugin-discord/moon.yml`
+
+- [ ] **Step 14.1: Crawl demo**
+
+`src/testing/crawl-demo.test.ts`:
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+// Live crawl demo (node): seeds a set of Discord channels and runs the basic pipeline into a
+// persistent SQLite file, so subsequent runs (and the questions demo) resume/replay over it.
+//   DISCORD_TOKEN=…  [DISCORD_CRAWL_CHANNELS=id,id,…] [DISCORD_CRAWL_DB=path] [DISCORD_MAX_DAYS=30]
+//   moon run plugin-discord:crawl-demo
+
+import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { describe, test } from 'vitest';
+
+import { AgentRegistry, StateStore } from '@dxos/crawler';
+import { deterministicAiService } from '@dxos/crawler/testing';
+import { EffectEx } from '@dxos/effect';
+import { DiscordPipeline, MessageStore } from '@dxos/pipeline-discord';
+import { storesLayer } from '@dxos/pipeline-discord/testing';
+
+import { discordSourceLayer } from '../services';
+
+const token = process.env.DISCORD_TOKEN;
+// Defaults: DXOS #questions and #test-bot.
+const channels = (process.env.DISCORD_CRAWL_CHANNELS ?? '850444891104215091,1494842957340086382')
+  .split(',')
+  .map((id) => id.trim())
+  .filter((id) => id.length > 0);
+const dbPath = process.env.DISCORD_CRAWL_DB ?? join(tmpdir(), 'dxos-discord-crawl.db');
+const maxDays = Number(process.env.DISCORD_MAX_DAYS ?? 30);
+
+describe('crawl demo', () => {
+  test.skipIf(!token)(
+    'crawls the seed channels into the SQLite working set',
+    async ({ expect }) => {
+      const layer = Layer.mergeAll(
+        storesLayer(SqliteClient.layer({ filename: dbPath })),
+        discordSourceLayer(token!),
+        deterministicAiService(),
+      );
+      const result = await EffectEx.runPromise(
+        Effect.gen(function* () {
+          const summary = yield* DiscordPipeline.run({ channels, descendThreads: true, seed: { maxDays } });
+          const stored = yield* (yield* MessageStore).count();
+          const agents = yield* (yield* AgentRegistry).list();
+          const targets = yield* (yield* StateStore).listTargets();
+          return { summary, stored, agents, targets };
+        }).pipe(Effect.provide(layer)),
+      );
+
+      console.log(`\ndb:       ${dbPath}`);
+      console.log(`channels: ${channels.join(', ')}`);
+      console.log(`steps:    ${result.summary.steps}  done: ${result.summary.done}  errored: ${result.summary.errored}`);
+      console.log(`messages: ${result.stored}`);
+      console.log(`targets:  ${result.targets.map((target) => `${target.id}(${target.status})`).join(', ')}`);
+      console.log(`agents:   ${result.agents.length}`);
+      for (const agent of result.agents.slice(0, 10)) {
+        console.log(`  ${String(agent.messageCount).padStart(4)}  ${agent.label ?? agent.id}`);
+      }
+
+      expect(result.summary.done).toBe(true);
+      expect(result.stored).toBeGreaterThan(0);
+    },
+    600_000,
+  );
+});
+```
+
+- [ ] **Step 14.2: Questions demo (replay)**
+
+`src/testing/questions-demo.test.ts`:
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+// Replay demo (node): iterates the messages stored by crawl-demo (no token needed) through the
+// question-extraction pipeline and prints the (user × channel × message × question) table.
+//   [DISCORD_CRAWL_DB=path]  moon run plugin-discord:questions-demo
+
+import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import * as Effect from 'effect/Effect';
+import { existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { describe, test } from 'vitest';
+
+import { EffectEx } from '@dxos/effect';
+import { Pipeline } from '@dxos/pipeline';
+import { ExtractedQuestionStore, extractQuestionsStage, replayStream } from '@dxos/pipeline-discord';
+import { storesLayer } from '@dxos/pipeline-discord/testing';
+
+const dbPath = process.env.DISCORD_CRAWL_DB ?? join(tmpdir(), 'dxos-discord-crawl.db');
+
+describe('questions demo', () => {
+  test.skipIf(!existsSync(dbPath))(
+    'replays stored messages through the question-extraction pipeline',
+    async ({ expect }) => {
+      const layer = storesLayer(SqliteClient.layer({ filename: dbPath }));
+      const questions = await EffectEx.runPromise(
+        Effect.gen(function* () {
+          yield* replayStream().pipe(extractQuestionsStage(), Pipeline.run({ sink: () => Effect.void }));
+          return yield* (yield* ExtractedQuestionStore).list();
+        }).pipe(Effect.provide(layer)),
+      );
+
+      console.log(`\ndb: ${dbPath}`);
+      console.log(`questions: ${questions.length}\n`);
+      for (const question of questions) {
+        console.log(
+          `  ${question.authorLabel ?? question.authorId} × ${question.targetId} × ${question.messageId}\n    ${question.question}`,
+        );
+      }
+
+      expect(Array.isArray(questions)).toBe(true);
+    },
+    120_000,
+  );
+});
+```
+
+- [ ] **Step 14.3: moon tasks**
+
+Add to `packages/plugins/plugin-discord/moon.yml` under `tasks:` (create the section if absent, mirroring `crawler/moon.yml`'s `demo` task):
+
+```yaml
+  crawl-demo:
+    command: 'pnpm exec vitest run src/testing/crawl-demo.test.ts'
+    options:
+      runInCI: false
+      cache: false
+  questions-demo:
+    command: 'pnpm exec vitest run src/testing/questions-demo.test.ts'
+    options:
+      runInCI: false
+      cache: false
+```
+
+- [ ] **Step 14.4: Run the demos live (requires `DISCORD_TOKEN`)**
+
+```bash
+DISCORD_TOKEN=<token> moon run plugin-discord:crawl-demo
+moon run plugin-discord:questions-demo
+```
+
+Expected: crawl-demo reports `done: true`, stored > 0 for the seed channels; questions-demo prints the extracted question table from the same DB file. Re-running crawl-demo resumes (steps small, message count stable).
+
+- [ ] **Step 14.5: Commit**
+
+```bash
+git add packages/plugins/plugin-discord
+git commit -m "feat(plugin-discord): node crawl + question-replay demo scripts"
+```
+
+---
+
 ### Task 11: Final verification
 
 - [ ] **Step 11.1: Full builds and tests for every touched package**

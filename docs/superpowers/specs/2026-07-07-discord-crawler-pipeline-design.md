@@ -99,6 +99,14 @@ Crawler.stream(config)
 - Per-message stage failures are recorded on the target (`last_error`) and do not abort the crawl, preserving phase 1's isolation contract.
 - Non-LLM runs (tests, offline demo): the extraction stage accepts the deterministic extractor used by the phase-1 demo, so the full pipeline runs without an `AiService`.
 
+## Replay pipeline and user-question extraction
+
+Once the SQLite working set exists, a second source re-drives different stage assemblies without a live crawl:
+
+- `replayStream(options?)` — emits the stored targets/messages as the same typed crawl events (Start → Messages → End per target), so any stage assembly runs identically over a replay. No frontier or cursor: a replay is a full pass and relies on stage idempotency (fact hash cursors, upserts).
+- `extractQuestionsStage` — per-message detection of questions users asked, recorded idempotently as (user × channel/thread × message id × question) rows in an `extracted_question` table and logged. Detection is deterministic (sentence-level `?` heuristic) with the stage seam ready for an LLM detector later.
+- Node demo scripts in plugin-discord (env-gated, `DISCORD_TOKEN` from the environment): `crawl-demo` seeds a channel set and fills a persistent SQLite file via `DiscordPipeline.run`; `questions-demo` replays that file through the question-extraction pipeline and prints the table.
+
 ## Questions and automation
 
 - `QuestionStore` holds standing user questions. `answerQuestionsStage` fires on `ThreadEnd`/`ChannelEnd` events and once at run end (not per message — cost control). For each `open` question:
