@@ -6,6 +6,7 @@ import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as NodeCrypto from 'node:crypto';
 
 import { Database, Feed, Type, View } from '@dxos/echo';
 import { type DatabaseImpl } from '@dxos/echo-client';
@@ -21,6 +22,9 @@ export const testStoragePath = ({ name = PublicKey.random().toHex() }: { name?: 
 };
 
 const FIXED_SPACE_KEY = PublicKey.from('665c420e0dec9aa36c2bedca567afb0778701920e346eaf83ab2bd3403859723');
+
+const deriveKeyFromStoragePath = (storagePath: string): PublicKey =>
+  PublicKey.from(NodeCrypto.createHash('sha256').update(storagePath).digest('hex'));
 
 const DEFAULT_TYPES = [Feed.Feed, View.View];
 
@@ -46,7 +50,12 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
       types.push(...DEFAULT_TYPES);
       types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
-      const key = spaceKey === 'fixed' ? FIXED_SPACE_KEY : (spaceKey ?? PublicKey.random());
+      // A storage-derived key must be reproducible across reopens of the same peer, since the
+      // persisted space is looked up by the id derived from this key, not stored alongside it.
+      const key =
+        spaceKey === 'fixed'
+          ? FIXED_SPACE_KEY
+          : (spaceKey ?? (storagePath ? deriveKeyFromStoragePath(storagePath) : PublicKey.random()));
 
       const builder = yield* testBuilder;
 
