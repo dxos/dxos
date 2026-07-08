@@ -20,6 +20,7 @@ import {
   type SystemService,
   SystemStatus,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createLinkedPorts } from '@dxos/rpc';
 
 // Test mocks implement only the methods under test; the wire dispatches by method name.
@@ -48,11 +49,13 @@ describe('client services effect-rpc', () => {
           id: 'test-space',
           spaceKey,
           state: SpaceState.SPACE_READY,
+          membershipPolicy: MembershipPolicy.INVITE,
+          metrics: {},
         }),
       }),
     }));
 
-    const space = await proxy.SpacesService!.createSpace();
+    const space = await proxy.SpacesService!.createSpace({ membershipPolicy: MembershipPolicy.INVITE });
     expect(space.id).toEqual('test-space');
     // PublicKey instances must survive the transport (protobuf-encoded payloads).
     expect(space.spaceKey).toBeInstanceOf(PublicKey);

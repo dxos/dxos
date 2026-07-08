@@ -6,6 +6,7 @@ import { Event, Trigger, synchronized } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf/stream';
 import { Config } from '@dxos/config';
+import { invariant } from '@dxos/invariant';
 import type { PublicKey } from '@dxos/keys';
 import { type CallMetadata, type LogFilter, log, parseFilter } from '@dxos/log';
 import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
@@ -103,7 +104,9 @@ export class WorkerClientServices implements ClientServicesProvider {
       }
     });
 
-    this._loggingStream = this._services.services.LoggingService.queryLogs(
+    const loggingService = this._services.services.LoggingService;
+    invariant(loggingService, 'LoggingService not available');
+    this._loggingStream = loggingService.queryLogs(
       {
         filters: this._logFilter,
       },

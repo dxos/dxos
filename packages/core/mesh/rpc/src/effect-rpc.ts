@@ -21,7 +21,7 @@ import { type RpcPort } from './rpc';
 /**
  * Interval at which the client re-sends the initial Ping while waiting for the server to attach.
  */
-const HANDSHAKE_RETRY_INTERVAL = Duration.millis(500);
+const HANDSHAKE_RETRY_INTERVAL = Duration.millis(50);
 
 /**
  * Effect RPC protocols over a {@link RpcPort} — a transport-agnostic, reliable, ordered,
@@ -87,6 +87,7 @@ export const makeProtocolRpcPortClient = (
         );
 
       // Handshake: resend Ping until the server responds, forwarding any other early responses.
+      // Transport failures during the handshake are unrecoverable for this connection.
       yield* Effect.gen(function* () {
         let connected = false;
         while (!connected) {
@@ -103,12 +104,13 @@ export const makeProtocolRpcPortClient = (
             }
           }
         }
-      });
+      }).pipe(Effect.orDie);
 
       yield* mailbox.take.pipe(
         Effect.flatMap(decodeFrame),
         Effect.flatMap((responses) => Effect.forEach(responses, writeResponse, { discard: true })),
         Effect.forever,
+        Effect.orDie,
         Effect.interruptible,
         Effect.forkScoped,
       );

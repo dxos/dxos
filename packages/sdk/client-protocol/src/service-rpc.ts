@@ -9,6 +9,7 @@ import * as RpcSchema from '@effect/rpc/RpcSchema';
 import * as RpcServer from '@effect/rpc/RpcServer';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Runtime from 'effect/Runtime';
@@ -30,6 +31,7 @@ import {
   LoggingService,
   NetworkService,
   QueryService,
+  RpcClosedError,
   SpacesService,
   SystemService,
   TimeoutError,
@@ -39,31 +41,8 @@ import { type RpcPort, layerProtocolRpcPortServer, makeProtocolRpcPortClient } f
 import { type ClientServices } from './service';
 
 /**
- * Effect RPC groups for each client service, keyed consistently with {@link ClientServices}.
- * Rpc tags are prefixed with the service key (e.g. `DataService.subscribe`).
- */
-export const clientServiceRpcGroups = {
-  SystemService: SystemService.Rpcs,
-  NetworkService: NetworkService.Rpcs,
-  LoggingService: LoggingService.Rpcs,
-
-  IdentityService: IdentityService.Rpcs,
-  InvitationsService: InvitationsService.Rpcs,
-  DevicesService: DevicesService.Rpcs,
-  SpacesService: SpacesService.Rpcs,
-
-  DataService: DataService.Rpcs,
-  QueryService: QueryService.Rpcs,
-  FeedService: FeedService.Rpcs,
-
-  ContactsService: ContactsService.Rpcs,
-  EdgeAgentService: EdgeAgentService.Rpcs,
-
-  DevtoolsHost: DevtoolsHost.Rpcs,
-} satisfies Record<keyof ClientServices, RpcGroup.RpcGroup<any>>;
-
-/**
  * All client service RPCs served over a single connection.
+ * Rpc tags are prefixed with the {@link ClientServices} key (e.g. `DataService.subscribe`).
  */
 export class ClientServicesRpcs extends RpcGroup.make().merge(
   SystemService.Rpcs,
@@ -86,6 +65,12 @@ type ClientServicesRpc = RpcGroup.Rpcs<typeof ClientServicesRpcs>;
 const toError = (cause: unknown): Error => (cause instanceof Error ? cause : new Error(String(cause)));
 
 const isVoidSchema = (schema: { ast: { _tag: string } }): boolean => schema.ast._tag === 'VoidKeyword';
+
+/** Splits an rpc tag into the {@link ClientServices} key and the service method name. */
+const parseTag = (tag: string): [serviceKey: keyof ClientServices, methodName: string] => {
+  const index = tag.indexOf('.');
+  return [tag.slice(0, index) as keyof ClientServices, tag.slice(index + 1)];
+};
 
 //
 // Server.
@@ -146,47 +131,43 @@ export const makeClientServicesHandlers = ({
 }: Pick<ClientRpcServerParams, 'services' | 'onRequest'>): Layer.Layer<Rpc.ToHandler<ClientServicesRpc>> => {
   const gate = onRequest ? Effect.tryPromise({ try: onRequest, catch: toError }) : Effect.void;
 
-  const layers = Object.entries(clientServiceRpcGroups).map(([serviceKey, group]) => {
-    const handlers: Record<string, (payload: unknown) => unknown> = {};
-    for (const [tag, rpc] of group.requests as ReadonlyMap<string, Rpc.AnyWithProps>) {
-      const methodName = tag.slice(serviceKey.length + 1);
-      const resolveMethod = (): ((request: unknown) => unknown) => {
-        const service = services()[serviceKey as keyof ClientServices];
-        if (!service) {
-          throw new Error(`Service not available: ${serviceKey}`);
-        }
-        const method = (service as Record<string, unknown>)[methodName];
-        if (typeof method !== 'function') {
-          throw new Error(`Method not available: ${tag}`);
-        }
-        return method.bind(service) as (request: unknown) => unknown;
-      };
-
-      if (RpcSchema.isStreamSchema(rpc.successSchema)) {
-        handlers[tag] = (payload: unknown) =>
-          gate.pipe(
-            Effect.map(() => pbStreamToStream(() => resolveMethod()(payload) as PbStream<unknown>)),
-            Stream.unwrap,
-          );
-      } else {
-        handlers[tag] = (payload: unknown) =>
-          gate.pipe(
-            Effect.flatMap(() =>
-              Effect.tryPromise({
-                try: async () => resolveMethod()(payload),
-                catch: toError,
-              }),
-            ),
-          );
+  const handlers: Record<string, (payload: unknown) => unknown> = {};
+  for (const [tag, rpc] of ClientServicesRpcs.requests) {
+    const [serviceKey, methodName] = parseTag(tag);
+    const resolveMethod = (): ((request: unknown) => unknown) => {
+      const service = services()[serviceKey] as object | undefined;
+      if (!service) {
+        throw new Error(`Service not available: ${serviceKey}`);
       }
+      const method = (service as Record<string, unknown>)[methodName];
+      if (typeof method !== 'function') {
+        throw new Error(`Method not available: ${tag}`);
+      }
+      return method.bind(service) as (request: unknown) => unknown;
+    };
+
+    if (RpcSchema.isStreamSchema(rpc.successSchema)) {
+      handlers[tag] = (payload: unknown) =>
+        gate.pipe(
+          Effect.map(() => pbStreamToStream(() => resolveMethod()(payload) as PbStream<unknown>)),
+          Stream.unwrap,
+        );
+    } else {
+      handlers[tag] = (payload: unknown) =>
+        gate.pipe(
+          Effect.flatMap(() =>
+            Effect.tryPromise({
+              try: async () => resolveMethod()(payload),
+              catch: toError,
+            }),
+          ),
+        );
     }
+  }
 
-    // Handlers are constructed dynamically from the protobuf-derived rpc groups, so their
-    // per-method types cannot be expressed statically.
-    return group.toLayer(handlers as never) as Layer.Layer<Rpc.ToHandler<ClientServicesRpc>>;
-  });
-
-  return Layer.mergeAll(layers[0], ...layers.slice(1));
+  // Handlers are constructed dynamically from the protobuf-derived rpc groups, so their
+  // per-method types cannot be expressed statically.
+  return ClientServicesRpcs.toLayer(handlers as never);
 };
 
 //
@@ -210,36 +191,44 @@ export const makeClientServicesClient = (port: RpcPort): Effect.Effect<Partial<C
     // so the per-call types cannot be expressed statically.
     const callRpc = client as unknown as (tag: string, payload: unknown) => unknown;
 
-    const services: Partial<Record<keyof ClientServices, unknown>> = {};
-    for (const [serviceKey, group] of Object.entries(clientServiceRpcGroups)) {
-      const service: Record<string, unknown> = {};
-      for (const [tag, rpc] of group.requests as ReadonlyMap<string, Rpc.AnyWithProps>) {
-        const methodName = tag.slice(serviceKey.length + 1);
-        const hasPayload = !isVoidSchema(rpc.payloadSchema);
+    const services: Partial<Record<keyof ClientServices, Record<string, unknown>>> = {};
+    for (const [tag, rpc] of ClientServicesRpcs.requests) {
+      const [serviceKey, methodName] = parseTag(tag);
+      const service = (services[serviceKey] ??= {});
+      const hasPayload = !isVoidSchema(rpc.payloadSchema);
 
-        if (RpcSchema.isStreamSchema(rpc.successSchema)) {
-          service[methodName] = (request?: unknown) =>
-            streamToPbStream(
-              runtime,
-              callRpc(tag, hasPayload ? (request ?? {}) : undefined) as Stream.Stream<unknown, unknown>,
+      if (RpcSchema.isStreamSchema(rpc.successSchema)) {
+        service[methodName] = (request?: unknown) =>
+          streamToPbStream(
+            runtime,
+            callRpc(tag, hasPayload ? (request ?? {}) : undefined) as Stream.Stream<unknown, unknown>,
+          );
+      } else {
+        service[methodName] = (request?: unknown, options?: RequestOptions) => {
+          let call = callRpc(tag, hasPayload ? (request ?? {}) : undefined) as Effect.Effect<unknown, unknown>;
+          if (options?.timeout) {
+            call = call.pipe(
+              Effect.timeoutFail({
+                duration: options.timeout,
+                onTimeout: () =>
+                  new TimeoutError({ message: `RPC timeout: ${tag}`, context: { timeout: options.timeout } }),
+              }),
             );
-        } else {
-          service[methodName] = (request?: unknown, options?: RequestOptions) => {
-            let call = callRpc(tag, hasPayload ? (request ?? {}) : undefined) as Effect.Effect<unknown, unknown>;
-            if (options?.timeout) {
-              call = call.pipe(
-                Effect.timeoutFail({
-                  duration: options.timeout,
-                  onTimeout: () => new TimeoutError(`RPC timeout: ${tag}`, { context: { timeout: options.timeout } }),
-                }),
-              );
+          }
+          return Runtime.runPromiseExit(runtime)(call).then((exit) => {
+            if (Exit.isSuccess(exit)) {
+              return exit.value;
             }
-            // Rejects with the original failure so typed errors keep their identity across the RPC boundary.
-            return EffectEx.runInRuntime(runtime, call);
-          };
-        }
+            // Interruption means the connection closed underneath the call; surface the same
+            // RpcClosedError the protobuf rpc used so callers suppress shutdown races.
+            if (Cause.isInterruptedOnly(exit.cause)) {
+              throw new RpcClosedError();
+            }
+            // Rethrows the original failure so typed errors keep their identity across the RPC boundary.
+            throw EffectEx.causeToError(exit.cause);
+          });
+        };
       }
-      services[serviceKey as keyof ClientServices] = service;
     }
 
     return services as Partial<ClientServices>;
@@ -268,7 +257,7 @@ const pbStreamToStream = <T>(open: () => PbStream<T>): Stream.Stream<T, Error> =
           }),
         ),
       ),
-    { bufferSize: 'unbounded' },
+    'unbounded',
   );
 
 /**
