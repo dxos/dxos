@@ -185,7 +185,59 @@ Conclusion: a legacy shim is feasible as a _transition layer_ — same API, redu
 backend lands. The prototype's in-memory layer and a future `layerLegacy()` are then two
 implementations of one seam, and cut-over is a layer swap.
 
+### 5.1 EDGE service specification
+
+How the EDGE service (`@dxos/edge-client`, `EdgeService` in `@dxos/protocols`) participates in
+the Keyhive model — both under the legacy shim and after cut-over.
+
+**Identity.** Each EDGE deployment is a first-class principal: an Ed25519 key with a DID, like
+any device. The current `EdgeIdentity` challenge/`Presentation` handshake (`presentCredentials`
+with nonce, `/ws/<identityDid>/<peerKey>`) is replaced by Keyhive/Subduction message auth:
+every message signed by the sender's key and audience-bound to the EDGE hostname hash
+(anti-MITM, anti-replay) — no session handshake state.
+
+**Admission.** EDGE is admitted to a space/group like any member:
+`delegate({ group, subject: <edge did>, access: 'pull' })`. This makes relay access explicit,
+auditable, and revocable in the membership DAG — today EDGE access is implicit in feed
+replication auth. Server-side capabilities that require plaintext (AI, search/indexing) must be
+admitted as explicit `read`-level members, making that trust decision visible per space rather
+than ambient.
+
+**Capabilities at `pull` level.** EDGE may: store and forward ciphertext (the `CiphertextStore`
+role; sedimentree strata + commit-graph hashes, which stay outside the encryption envelope for
+sync); relay membership ops (delegations/revocations/CGKA ops are signed, self-verifying
+events); serve set-reconciliation (RIBLT) exchanges. EDGE cannot: decrypt content, author or
+forge membership ops, or build plaintext indexes.
+
+**Service mapping** (`EdgeService` enum):
+
+| Service                 | Disposition under Keyhive                                                               |
+| ----------------------- | --------------------------------------------------------------------------------------- |
+| `SUBDUCTION_REPLICATOR` | Primary sync path; EDGE acts as a `pull`-level Subduction peer.                         |
+| `AUTOMERGE_REPLICATOR`  | Superseded by Subduction; retire with the migration.                                    |
+| `FEED_REPLICATOR`       | Deleted — already `TODO(mykola): Remove once we migrate to keyhive for access control`. |
+| `QUEUE_REPLICATOR`      | Retained (renamed per existing TODO); queue payloads become ciphertext under `pull`.    |
+| `SWARM` / `SIGNAL`      | Unchanged — pure transport; requires message auth but no group capability.              |
+| `STATUS`                | Unchanged.                                                                              |
+
+**Hub duties layered on EDGE** (require no `read` access):
+
+1. **Offline invitation mailbox.** Prekey-based admission means delegations can be issued for
+   offline invitees; EDGE parks the signed ops (and encrypted welcome payloads) until the
+   invitee connects — replacing `DelegateSpaceInvitation` availability semantics.
+2. **Contact directory.** Handle/email → DID + `ContactCard` resolution (comparable to atproto
+   handle resolution). Contact cards are signed and self-verifying, so the directory is
+   untrusted for integrity — it can withhold but not forge.
+3. **Agent key custody.** `agent-managed` devices become distinct principals whose access is
+   explicitly delegated (`read`/`edit` as needed) rather than inherited from feed replication;
+   custody of those keys is an EDGE responsibility and revocation is an ordinary membership op.
+
+**Under the legacy shim.** `layerLegacy()` cannot grant `pull` (feeds are plaintext), so EDGE
+remains read-equivalent until the Keyhive backend lands. The shim-era spec is therefore:
+adopt the delegation-based admission and signed message auth now (both expressible over
+credentials), and treat `pull` enforcement as activated by the backend swap, not by an EDGE
+API change.
+
 ## A. ISSUES
 
 1. Migration from protobuf?
-2. Implement Keyhive service abstraction with Shim against temporary EDGE-based auth?
