@@ -37,8 +37,6 @@ const QUERY_PAGE_SIZE = 50;
 const FETCH_CONCURRENCY = 5;
 const COMMIT_PAGE_SIZE = 10;
 const MAX_SCAN = 500;
-// Restricted mode: cap the scan to a small leading window of the newest messages (quick sync).
-const RESTRICTED_MAX = 20;
 
 /**
  * Runs the JMAP sync pipeline for a binding against the {@link JmapMailApi} service (plus the ambient
@@ -51,7 +49,6 @@ export const runJmapSync = ({
   after,
   before,
   direction,
-  restrictedMode = false,
 }: {
   binding: Ref.Ref<SyncBinding.SyncBinding>;
   /** Lower (oldest) bound of the range to sync — unix ms or yyyy-MM-dd. Defaults to the sync horizon. */
@@ -63,7 +60,6 @@ export const runJmapSync = ({
    * sync); a cursor → `forward` (incremental). Pass `backward` (with `before` = oldest-synced) to backfill.
    */
   direction?: SyncDirection;
-  restrictedMode?: boolean;
 }): Effect.Effect<
   { newMessages: number },
   JmapApiError | EntityNotFoundError,
@@ -143,7 +139,7 @@ export const runJmapSync = ({
     );
 
     const stats: SyncBinding.Stats = { newMessages: 0 };
-    yield* jmapSource(api, target, folders, window, { filter: options.filter, restricted: restrictedMode }).pipe(
+    yield* jmapSource(api, target, folders, window, { filter: options.filter }).pipe(
       SyncBinding.dedupStage<JmapMail.Email>(
         'dedup',
         (email) => email.id,
@@ -170,7 +166,7 @@ export const runJmapSync = ({
   }).pipe(Effect.withSpan('jmap-sync'));
 
 export default InboxOperation.JmapSync.pipe(
-  Operation.withHandler(({ binding: bindingRef, after, before, direction, restrictedMode }) =>
+  Operation.withHandler(({ binding: bindingRef, after, before, direction }) =>
     Effect.gen(function* () {
       const bindingObj = bindingRef.target;
       const db = bindingObj ? Obj.getDatabase(bindingObj) : undefined;
@@ -184,7 +180,7 @@ export default InboxOperation.JmapSync.pipe(
 
       const connectionRef = Ref.make(Relation.getSource(bindingObj));
 
-      return yield* runJmapSync({ binding: bindingRef, after, before, direction, restrictedMode }).pipe(
+      return yield* runJmapSync({ binding: bindingRef, after, before, direction }).pipe(
         // Provide the Live JMAP API (real HTTP + connection credentials) and the contact resolver; a
         // test provides `JmapMailApi.mock(...)` + `InboxResolver` over this same seam instead.
         Effect.provide(
@@ -218,7 +214,7 @@ const jmapSource = (
   target: JmapMail.Target,
   folders: readonly JmapMail.Mailbox[],
   window: SyncWindow,
-  options: { filter?: string; restricted?: boolean },
+  options: { filter?: string },
 ) => {
   const userFilter = options.filter
     ? JmapMail.parseMailQuery(options.filter, {
@@ -264,7 +260,7 @@ const jmapSource = (
       return [Chunk.fromIterable(ids), next];
     }),
   ).pipe(
-    Stream.take(options.restricted ? RESTRICTED_MAX : MAX_SCAN),
+    Stream.take(MAX_SCAN),
     Stream.flatMap(
       (id) =>
         Stream.fromEffect(

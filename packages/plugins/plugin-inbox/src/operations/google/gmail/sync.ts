@@ -3,22 +3,17 @@
 //
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import type * as HttpClientError from '@effect/platform/HttpClientError';
 import { addDays, format, subDays } from 'date-fns';
-import type * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import type * as ParseResult from 'effect/ParseResult';
 import * as Stream from 'effect/Stream';
 
-import { type Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type Resolver, resolve } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
@@ -31,7 +26,6 @@ import { Cursor, Person } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
-import { GoogleApiError } from '../../../errors';
 import { GoogleCredentials, GoogleMailApi, type GoogleMailApiService } from '../../../services';
 import { EmailStage, type SyncDirection, resolveSyncWindow } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
@@ -55,10 +49,9 @@ type DateRangeConfig = {
 };
 
 const STREAMING_CONFIG = {
-  dateChunkDays: 1,
+  dateChunkDays: 7,
   messageFetchConcurrency: 5,
-  maxResults: 100,
-  restrictedMax: 10,
+  maxResults: 500,
   /** Commit page size — kept ≤ 15 so each `Feed.append` is a single atomic queue insert. */
   pageSize: 10,
   /**
@@ -91,7 +84,6 @@ export const runGmailSync = ({
   after = format(subDays(new Date(), 30), 'yyyy-MM-dd'),
   before,
   direction,
-  restrictedMode = false,
 }: {
   binding: Ref.Ref<SyncBinding.SyncBinding>;
   userId?: string;
@@ -106,17 +98,7 @@ export const runGmailSync = ({
    * `backward` explicitly (with `before` = oldest-synced) to backfill older gaps.
    */
   direction?: SyncDirection;
-  restrictedMode?: boolean;
-}): Effect.Effect<
-  { newMessages: number },
-  | EntityNotFoundError
-  | GoogleApiError
-  | GoogleMail.GoogleError
-  | ParseResult.ParseError
-  | Cause.TimeoutException
-  | HttpClientError.HttpClientError,
-  GoogleMailApi | Database.Service | Resolver | Capability.Service | Operation.Service
-> =>
+}) =>
   Effect.gen(function* () {
     const binding = yield* Database.load(bindingRef);
     const mailbox = Relation.getTarget(binding);
@@ -148,17 +130,8 @@ export const runGmailSync = ({
       direction,
       syncBackDays: targetOptions.syncBackDays,
     });
-    let rangeEnd = upperBound;
-    // Restricted mode limits work to a single leading window (plus `Stream.take` on message count).
-    if (restrictedMode) {
-      if (resolvedDirection === 'forward') {
-        rangeEnd = addDays(rangeStart, STREAMING_CONFIG.dateChunkDays);
-      }
-    }
-    const start =
-      resolvedDirection === 'backward' && restrictedMode
-        ? subDays(rangeEnd, STREAMING_CONFIG.dateChunkDays)
-        : rangeStart;
+    const rangeEnd = upperBound;
+    const start = rangeStart;
     log('syncing gmail', {
       mailbox: Obj.getURI(mailbox),
       userId,
@@ -166,7 +139,6 @@ export const runGmailSync = ({
       direction: resolvedDirection,
       start: format(start, 'yyyy-MM-dd'),
       end: format(rangeEnd, 'yyyy-MM-dd'),
-      restrictedMode,
     });
 
     const feed = yield* Database.load(mailbox.feed);
@@ -211,7 +183,6 @@ export const runGmailSync = ({
       direction: resolvedDirection,
       start,
       end: rangeEnd,
-      restricted: restrictedMode,
       searchFilter: targetOptions.filter,
     }).pipe(
       SyncBinding.dedupStage<GoogleMail.Message>(
@@ -245,7 +216,7 @@ export const runGmailSync = ({
   }).pipe(Effect.withSpan('gmail-sync'));
 
 export default InboxOperation.GoogleMailSync.pipe(
-  Operation.withHandler(({ binding: bindingRef, userId, label, after, before, direction, restrictedMode }) =>
+  Operation.withHandler(({ binding: bindingRef, userId, label, after, before, direction }) =>
     Effect.gen(function* () {
       const bindingObj = bindingRef.target;
       if (!bindingObj || !Obj.getDatabase(bindingObj)) {
@@ -261,7 +232,7 @@ export default InboxOperation.GoogleMailSync.pipe(
       activeSyncs.add(bindingObj.id);
       const connectionRef = Ref.make(Relation.getSource(bindingObj));
 
-      return yield* runGmailSync({ binding: bindingRef, userId, label, after, before, direction, restrictedMode }).pipe(
+      return yield* runGmailSync({ binding: bindingRef, userId, label, after, before, direction }).pipe(
         // Provide the Live Gmail API (real HTTP + connection credentials) and the contact resolver; a
         // test provides `GoogleMailApi.mock(...)` + `InboxResolver` over this same seam instead.
         Effect.provide(
@@ -315,7 +286,6 @@ type GmailSourceConfig = {
   /** Full [start, end) range to cover; the walk order within it is set by `direction`. */
   readonly start: Date;
   readonly end: Date;
-  readonly restricted: boolean;
   readonly searchFilter?: string;
 };
 
@@ -344,7 +314,6 @@ const gmailSource = (config: GmailSourceConfig) =>
             concurrency: 1,
           },
         ),
-        config.restricted ? Stream.take(STREAMING_CONFIG.restrictedMax) : Function.identity,
       );
 
       return messageIds.pipe(

@@ -166,12 +166,6 @@ export const GoogleMailSync = Operation.make({
       }),
       Schema.optional,
     ),
-    restrictedMode: Schema.Boolean.pipe(
-      Schema.annotations({
-        description: 'Use restricted mode to limit to single date range and max 20 messages. Reduces subrequests.',
-      }),
-      Schema.optional,
-    ),
   }),
   output: Schema.Struct({
     newMessages: Schema.Number,
@@ -224,12 +218,6 @@ export const JmapSync = Operation.make({
       Schema.annotations({
         description:
           'Override the walk direction. Inferred from the cursor by default: no cursor → backward (initial, newest-first); a cursor → forward (incremental). Pass backward with `before` to backfill older gaps.',
-      }),
-      Schema.optional,
-    ),
-    restrictedMode: Schema.Boolean.pipe(
-      Schema.annotations({
-        description: 'Use restricted mode to limit to a small leading window of the newest messages.',
       }),
       Schema.optional,
     ),
