@@ -465,6 +465,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/halo/halo/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/halo/keyring/package.json",
           "jsonpath": "$.version"
         },

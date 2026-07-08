@@ -6644,6 +6644,18 @@ importers:
         specifier: 'catalog:'
         version: 1.3.0
 
+  packages/core/halo/halo:
+    dependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../echo/echo
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
+
   packages/core/halo/keyring:
     dependencies:
       '@dxos/async':

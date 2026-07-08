@@ -265,6 +265,9 @@
       "path": "packages/core/halo/credentials/tsconfig.json"
     },
     {
+      "path": "packages/core/halo/halo/tsconfig.json"
+    },
+    {
       "path": "packages/core/halo/keyring/tsconfig.json"
     },
     {
