@@ -28,7 +28,7 @@ type Requirements = HttpClient.HttpClient | GoogleCredentials | Credential.Crede
  * The failure modes shared by every {@link GoogleMail} request: transport ({@link GoogleApiError},
  * HTTP, request timeout) and decode ({@link GoogleMail.GoogleError}, schema parse).
  */
-type GoogleMailApiError =
+export type GoogleMailApiError =
   | GoogleApiError
   | HttpClientError.HttpClientError
   | Cause.TimeoutException

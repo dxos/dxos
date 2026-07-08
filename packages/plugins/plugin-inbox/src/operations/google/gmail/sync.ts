@@ -11,12 +11,10 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-// `Capability` (from `EmailStage.onArrivalExtractors`) appears in `runGmailSync`'s inferred
-// requirements; the import lets TypeScript name it in the emitted .d.ts.
-// eslint-disable-next-line unused-imports/no-unused-imports
 import { type Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
+import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type Resolver, resolve } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
@@ -29,7 +27,12 @@ import { Cursor, Person } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
-import { GoogleCredentials, GoogleMailApi, type GoogleMailApiService } from '../../../services';
+import {
+  GoogleCredentials,
+  GoogleMailApi,
+  type GoogleMailApiError,
+  type GoogleMailApiService,
+} from '../../../services';
 import { EmailStage, type SyncDirection, resolveSyncWindow } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
 import { readBindingOptions } from '../../../util';
@@ -63,7 +66,9 @@ const STREAMING_CONFIG = {
  * Runs the Gmail sync pipeline for a binding against the {@link GoogleMailApi} service (plus the
  * ambient operation services). It *requires* the service rather than providing HTTP/credentials
  * itself, so a test can drive the whole sync against a mock Gmail API + a real ECHO db — the
- * operation handler below wraps it with the Live layer.
+ * operation handler below wraps it with the Live layer. The return type is written out (not inferred)
+ * so the module's emitted `.d.ts` can name it without the compiler expanding unnameable cross-package
+ * types (TS2883); the deployed operation stays portable via `Operation.opaqueHandler`.
  */
 export const runGmailSync = ({
   binding: bindingRef,
@@ -88,7 +93,11 @@ export const runGmailSync = ({
    * `backward` explicitly (with `before` = oldest-synced) to backfill older gaps.
    */
   direction?: SyncDirection;
-}) =>
+}): Effect.Effect<
+  { newMessages: number },
+  GoogleMailApiError | EntityNotFoundError,
+  GoogleMailApi | Database.Service | Resolver | Capability.Service | Operation.Service
+> =>
   Effect.gen(function* () {
     const binding = yield* Database.load(bindingRef);
     const mailbox = Relation.getTarget(binding);
