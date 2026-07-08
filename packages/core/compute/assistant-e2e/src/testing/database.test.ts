@@ -21,7 +21,9 @@ describe('Database', () => {
         Query the database to confirm that the organization is created and the query tool is working.
       `,
     }),
-    { timeout: agentTestTimeout() },
+    {
+      timeout: agentTestTimeout(),
+    },
   );
 
   it.effect(
@@ -32,6 +34,8 @@ describe('Database', () => {
       `,
       completionCriteria: ['Person object created with correct data.'],
     }),
-    { timeout: agentTestTimeout() },
+    {
+      timeout: agentTestTimeout(),
+    },
   );
 });

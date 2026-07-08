@@ -19,11 +19,8 @@ describe.skip('InboxSkillEnable', () => {
     agentTest({
       instructions: trim`
         The database starts empty.
-
         First, create a Mailbox object in the space using the database skill tools (typename org.dxos.type.mailbox). Give it a clear name.
-
         Then enable the inbox skill (key: org.dxos.skill.inbox) using the skill manager.
-
         Call the ReadEmail operation (org.dxos.plugin.inbox.operation.readEmail) for that mailbox. With no messages in the feed, it should return zero emails — the important part is that ReadEmail completes successfully, not the count.
       `,
       completionCriteria: [
@@ -32,6 +29,8 @@ describe.skip('InboxSkillEnable', () => {
         'You have called [read-email] and it completes successfully.',
       ],
     }),
-    { timeout: agentTestTimeout() },
+    {
+      timeout: agentTestTimeout(),
+    },
   );
 });

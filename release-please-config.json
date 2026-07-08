@@ -1255,6 +1255,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-fact-viewer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-form/package.json",
           "jsonpath": "$.version"
         },

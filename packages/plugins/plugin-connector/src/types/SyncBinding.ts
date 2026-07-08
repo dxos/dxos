@@ -110,13 +110,20 @@ export class SyncBindingV1 extends Type.makeRelation<SyncBindingV1>(DXN.make('or
 export type Stats = { newMessages: number };
 
 /**
+ * The minimal shape the sync lifecycle needs from a binding: its progress cursor. `SyncBinding`
+ * satisfies this structurally, as will sibling relation types (e.g. `DerivedBinding`) that have no
+ * `Connection` source but still track sync progress via a cursor.
+ */
+export type CursorHolder = { readonly cursor: Ref.Ref<Cursor.Cursor> };
+
+/**
  * Per-run sync state provided to the pipeline stages and the commit sink. Mutable fields (`dedupSet`,
  * `createdContactEmails`, `stats`) accumulate across the run; a caller that needs the result (e.g.
  * `stats.newMessages`) constructs those objects and reads them back after the run.
  */
 export type State = {
-  /** The binding being synced. */
-  readonly binding: SyncBinding;
+  /** The binding being synced; only its cursor is read by this machinery. */
+  readonly binding: CursorHolder;
   /** The binding's cursor object, advanced as pages commit (resolved from `binding.cursor`). */
   readonly cursor: Cursor.Cursor;
   /** Feed the mapped messages are appended to; absent for DB-target syncs (e.g. contacts upsert). */
@@ -219,6 +226,7 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
     if (units.length === 0) {
       return;
     }
+
     const state = yield* Service;
     const feed = state.feed;
     invariant(feed, 'SyncBinding.commit requires a feed target');
@@ -228,6 +236,7 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
         feed,
         units.map((unit) => unit.message),
       );
+
       for (const unit of units) {
         if (state.tagIndex) {
           for (const uri of unit.tagUris) {
@@ -238,6 +247,7 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
           db.add(object);
         }
       }
+
       // Advance the cursor + run status in the same commit as the writes. (A run with no new messages
       // produces no commit, so `lastSyncAt` reflects the last page that landed rather than the last
       // attempt — acceptable, and avoids a separate write path.)

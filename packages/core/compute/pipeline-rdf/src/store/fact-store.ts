@@ -19,21 +19,6 @@ import { querySqlite } from '../internal/sparql/query-sqlite';
 import { migrate } from '../internal/sqlite/schema';
 import { type Fact } from '../types';
 
-export interface FactStoreApi {
-  /** Reify and persist facts as RDF triples (idempotent appends; no write-time merge). */
-  readonly putFacts: (facts: readonly Fact[]) => Effect.Effect<void, SemanticIndexError>;
-  /** Run a structured query over the stored facts via SPARQL and reassemble matching Facts. */
-  readonly query: (query: SemanticQuery) => Effect.Effect<Fact[], SemanticIndexError>;
-  /** Execute a raw SPARQL `SELECT ?fact ?p ?o` and reassemble matching Facts (used for LLM-authored queries). */
-  readonly select: (sparql: string) => Effect.Effect<Fact[], SemanticIndexError>;
-  /** Read the ingest cursor (last processed source hash) keyed by source DXN. */
-  readonly cursor: (source: string) => Effect.Effect<string | undefined, SemanticIndexError>;
-  /** Upsert the ingest cursor for the given source DXN. */
-  readonly setCursor: (source: string, hash: string) => Effect.Effect<void, SemanticIndexError>;
-  /** Remove all facts, entities, and cursors from the store. */
-  readonly clear: () => Effect.Effect<void, SemanticIndexError>;
-}
-
 // triplesToFacts validates via Schema and can throw a ParseError on malformed stored data.
 const reassemble = (quads: Quad[]): Effect.Effect<Fact[], SemanticIndexError> =>
   Effect.try({
@@ -48,6 +33,21 @@ const makeSelect = (source: Parameters<typeof selectTriples>[1]): FactStoreApi['
   const getEngine = () => (engine ??= makeEngine());
   return (sparql) => selectTriples(getEngine(), source, sparql).pipe(Effect.flatMap(reassemble));
 };
+
+export interface FactStoreApi {
+  /** Reify and persist facts as RDF triples (idempotent appends; no write-time merge). */
+  readonly putFacts: (facts: readonly Fact[]) => Effect.Effect<void, SemanticIndexError>;
+  /** Run a structured query over the stored facts via SPARQL and reassemble matching Facts. */
+  readonly query: (query: SemanticQuery) => Effect.Effect<Fact[], SemanticIndexError>;
+  /** Execute a raw SPARQL `SELECT ?fact ?p ?o` and reassemble matching Facts (used for LLM-authored queries). */
+  readonly select: (sparql: string) => Effect.Effect<Fact[], SemanticIndexError>;
+  /** Read the ingest cursor (last processed source hash) keyed by source DXN. */
+  readonly cursor: (source: string) => Effect.Effect<string | undefined, SemanticIndexError>;
+  /** Upsert the ingest cursor for the given source DXN. */
+  readonly setCursor: (source: string, hash: string) => Effect.Effect<void, SemanticIndexError>;
+  /** Remove all facts, entities, and cursors from the store. */
+  readonly clear: () => Effect.Effect<void, SemanticIndexError>;
+}
 
 export class FactStore extends Context.Tag('@dxos/pipeline-rdf/FactStore')<FactStore, FactStoreApi>() {
   static layer: Layer.Layer<FactStore, never, SqlClient.SqlClient> = Layer.scoped(
@@ -96,11 +96,10 @@ export class FactStore extends Context.Tag('@dxos/pipeline-rdf/FactStore')<FactS
   );
 
   /**
-   * Browser/test layer backed by an in-memory N3 store (no `SqlClient`, no SQLite). Structured queries
-   * run directly over the store (no SPARQL engine), so the browser path avoids Comunica entirely;
-   * `select` (raw SPARQL) still uses Comunica and so is server-side only.
+   * Builds a fresh in-memory FactStore service (no `SqlClient`). Shared by {@link layerMemory} and
+   * callers that need a standalone instance without a Layer (e.g. a per-space registry).
    */
-  static layerMemory: Layer.Layer<FactStore> = Layer.sync(FactStore, () => {
+  static makeMemory = (): FactStoreApi => {
     const source = makeMemorySource();
     const cursors = new Map<string, string>();
 
@@ -123,5 +122,12 @@ export class FactStore extends Context.Tag('@dxos/pipeline-rdf/FactStore')<FactS
       });
 
     return { putFacts, cursor, setCursor, query, select: makeSelect(source), clear };
-  });
+  };
+
+  /**
+   * Browser/test layer backed by an in-memory N3 store (no `SqlClient`, no SQLite). Structured queries
+   * run directly over the store (no SPARQL engine), so the browser path avoids Comunica entirely;
+   * `select` (raw SPARQL) still uses Comunica and so is server-side only.
+   */
+  static layerMemory: Layer.Layer<FactStore> = Layer.sync(FactStore, () => FactStore.makeMemory());
 }

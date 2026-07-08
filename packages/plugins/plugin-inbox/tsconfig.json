@@ -80,6 +80,12 @@
       "path": "../../core/compute/pipeline"
     },
     {
+      "path": "../../core/compute/pipeline-email"
+    },
+    {
+      "path": "../../core/compute/pipeline-rdf"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -138,6 +144,9 @@
     },
     {
       "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-fact-viewer"
     },
     {
       "path": "../../ui/react-ui-form"
