@@ -922,27 +922,59 @@ describe('query api', () => {
       test('type-level: aggregate names surface on the group', () => {
         const query = Query.type(TestSchema.Person)
           .groupBy(GroupKey.property('email'))
-          .aggregate({ latest: Aggregate.max('name') });
+          .aggregate({ latest: Aggregate.max('name'), oldest: Aggregate.min('age') });
         expectTypeOf<Query.Type<typeof query>>().toHaveProperty('aggregates');
         expectTypeOf<Query.Type<typeof query>['aggregates']>().toHaveProperty('latest');
-        // The aggregated value is nullable (a group may have no scalar members).
-        const latest: Query.Type<typeof query>['aggregates']['latest'] = null;
-        expect(latest).toBeNull();
+        expectTypeOf<Query.Type<typeof query>['aggregates']>().toHaveProperty('oldest');
       });
 
-      test('type-level: Aggregate.max is checked against the member type', () => {
+      test('type-level: Aggregate.<fn> property is checked against the member type', () => {
+        const grouped = Query.type(TestSchema.Person).groupBy(GroupKey.property('email'));
+        // Valid member properties compile.
+        grouped.aggregate({ latest: Aggregate.max('name'), oldest: Aggregate.min('age') });
         // @ts-expect-error - 'nope' is not a property of Person.
-        Query.type(TestSchema.Person).groupBy(GroupKey.property('email')).aggregate({ latest: Aggregate.max('nope') });
+        grouped.aggregate({ bad: Aggregate.max('nope') });
+        // @ts-expect-error - min is checked too.
+        grouped.aggregate({ bad: Aggregate.min('nope') });
       });
 
-      test('type-level: Order.aggregate is checked against declared aggregate names', () => {
+      test('type-level: aggregate value type tracks the member property type', () => {
+        const query = Query.type(TestSchema.Person)
+          .groupBy(GroupKey.property('email'))
+          .aggregate({ latest: Aggregate.max('name'), oldest: Aggregate.min('age') });
+        type Aggregates = Query.Type<typeof query>['aggregates'];
+        // `name`/`age` are optional on Person (partial schema); the aggregate is additionally nullable
+        // (a group may have no scalar members) — so the value tracks the property type, not `any`.
+        expectTypeOf<Aggregates['latest']>().toEqualTypeOf<string | undefined | null>();
+        expectTypeOf<Aggregates['oldest']>().toEqualTypeOf<number | undefined | null>();
+
+        // Assignment-level proof that it is a real string/number union and not `any`.
+        const name: Aggregates['latest'] = null;
+        const age: Aggregates['oldest'] = null;
+        expect([name, age]).to.deep.equal([null, null]);
+        // @ts-expect-error - a string aggregate does not accept a number.
+        const badName: Aggregates['latest'] = 42;
+        // @ts-expect-error - a number aggregate does not accept a string.
+        const badAge: Aggregates['oldest'] = 'nope';
+        void badName;
+        void badAge;
+      });
+
+      test('type-level: Order.aggregate name is checked against the declared aggregates', () => {
         const grouped = Query.type(TestSchema.Person)
           .groupBy(GroupKey.property('email'))
-          .aggregate({ latest: Aggregate.max('name') });
-        // Valid name compiles.
+          .aggregate({ latest: Aggregate.max('name'), oldest: Aggregate.min('age') });
+        // Declared names compile.
         grouped.orderBy(Order.aggregate('latest', 'desc'));
+        grouped.orderBy(Order.aggregate('oldest', 'asc'));
         // @ts-expect-error - 'earliest' was never declared as an aggregate.
         grouped.orderBy(Order.aggregate('earliest', 'desc'));
+      });
+
+      test('type-level: Order.aggregate name on a query with no aggregates is never', () => {
+        const grouped = Query.type(TestSchema.Person).groupBy(GroupKey.property('email'));
+        // @ts-expect-error - no aggregates declared, so no name is valid.
+        grouped.orderBy(Order.aggregate('latest', 'desc'));
       });
     });
   });
