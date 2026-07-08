@@ -19,6 +19,11 @@
       "types": "./dist/types/src/capabilities/index.d.ts",
       "default": "./dist/lib/neutral/capabilities/index.mjs"
     },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/neutral/operations/index.mjs"
+    },
     "#types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
@@ -71,12 +76,15 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/ai": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

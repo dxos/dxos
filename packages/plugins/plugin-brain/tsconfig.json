@@ -28,10 +28,16 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/ai"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/compute/pipeline-rdf"
+    },
+    {
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../sdk/app-framework"
