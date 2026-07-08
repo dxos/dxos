@@ -217,6 +217,9 @@
       "path": "packages/core/compute/pipeline/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/pipeline-discord/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/pipeline-email/tsconfig.json"
     },
     {

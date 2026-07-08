@@ -10636,6 +10636,9 @@ importers:
 
   packages/plugins/plugin-discord:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -10672,6 +10675,12 @@ importers:
       '@dxos/pipeline':
         specifier: workspace:*
         version: link:../../core/compute/pipeline
+      '@dxos/pipeline-discord':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline-discord
+      '@dxos/pipeline-rdf':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline-rdf
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -10681,6 +10690,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../common/sql-sqlite
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -10697,15 +10709,15 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
     devDependencies:
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../../core/compute/ai
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
+      '@effect/sql-sqlite-node':
+        specifier: 'catalog:'
+        version: 0.52.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       vite:
         specifier: '>=8.0.16'
         version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)

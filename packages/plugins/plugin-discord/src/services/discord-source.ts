@@ -8,10 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { CrawlError, Source, type SourceApi, type ThreadRef, type Type } from '@dxos/crawler';
+import { type Err, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { type Connection } from '@dxos/plugin-connector';
 
 import { DEFAULT_DAYS, snowflakeForTimestamp } from '../constants';
-import { makeDiscordLayerFromToken } from './discord';
+import { makeDiscordLayer, makeDiscordLayerFromToken } from './discord';
 
 const MESSAGE_PAGE_LIMIT = 100;
 const GUILD_PAGE_LIMIT = 200;
@@ -77,17 +79,9 @@ const initialCursor = (cursor: string | undefined, maxDays: number | undefined):
   return snowflakeForTimestamp(Date.now() - days * 24 * 60 * 60 * 1000);
 };
 
-/**
- * Live {@link Source} over the Discord REST API. `fetchMessages` drains every page newer than the
- * cursor in one call (dfx handles 429 retry + pagination); the crawler then calls again with the
- * advanced cursor to confirm the target is drained. Threads are returned as refs for the crawler to
- * descend depth-first.
- */
-export const discordSourceLayer = (token: string): Layer.Layer<Source> =>
-  Layer.effect(
-    Source,
-    Effect.gen(function* () {
-      const rest = yield* DiscordREST;
+/** Construct the Source API over an ambient DiscordREST (transport bound by the caller's layer). */
+const makeSource: Effect.Effect<SourceApi, never, DiscordREST> = Effect.gen(function* () {
+  const rest = yield* DiscordREST;
 
       const drain = (channelId: string, after: string) =>
         Effect.gen(function* () {
@@ -164,5 +158,23 @@ export const discordSourceLayer = (token: string): Layer.Layer<Source> =>
         }).pipe(Effect.mapError((cause) => new CrawlError({ message: 'Failed to list Discord channels', cause })));
 
       return { listChannels, fetchMessages };
-    }),
-  ).pipe(Layer.provide(makeDiscordLayerFromToken(token)));
+});
+
+/**
+ * Live {@link Source} over the Discord REST API, authenticated with a raw bot token (stories,
+ * demo scripts, tests). `fetchMessages` drains every page newer than the cursor in one call (dfx
+ * handles 429 retry + pagination); the crawler then calls again with the advanced cursor to
+ * confirm the target is drained. Threads are returned as refs for the crawler to descend
+ * depth-first.
+ */
+export const discordSourceLayer = (token: string): Layer.Layer<Source> =>
+  Layer.effect(Source, makeSource).pipe(Layer.provide(makeDiscordLayerFromToken(token)));
+
+/**
+ * Live {@link Source} authenticated from a persisted {@link Connection} ref (the operation path).
+ * The connection's access token is loaded at layer construction, so the handler never sees it.
+ */
+export const discordSourceLayerFromConnection = (
+  connection: Ref.Ref<Connection.Connection>,
+): Layer.Layer<Source, Err.EntityNotFoundError> =>
+  Layer.effect(Source, makeSource).pipe(Layer.provide(makeDiscordLayer(connection)));
