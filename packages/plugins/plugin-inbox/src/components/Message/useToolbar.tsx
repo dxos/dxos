@@ -58,14 +58,8 @@ export const useMessageActions = ({
         .subgraph(onOpen && openGroup({ ns: meta.profile.key, labelKey: 'message-toolbar-open.menu', onOpen }))
         .subgraph(
           // Only offer the view-mode switcher when the body is controllable (a setter was provided).
-          setViewMode &&
-            viewModeGroup({
-              ns: meta.profile.key,
-              viewMode,
-              setViewMode,
-              // Default HTML view; markdown/plain are computed in-memory by the body component.
-              modes: ['html', 'markdown', 'plain'],
-            }),
+          // Messages offer all view modes (the group's default); markdown/plain derive in-memory.
+          setViewMode && viewModeGroup({ ns: meta.profile.key, viewMode, setViewMode }),
         )
         .subgraph((b) =>
           b.action(

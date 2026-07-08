@@ -5,13 +5,16 @@
 import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
 /**
- * How the body is rendered.
+ * Body view modes, in menu order. The {@link ViewMode} type and the toolbar group's default both
+ * derive from this so they stay aligned.
  *   - `html`:     the raw email HTML, rendered in a sandboxed iframe (the default for messages).
  *   - `markdown`: an authored markdown block if the message has one, else the body converted to
  *                 markdown in-memory; decorated via the markdown extensions (the "enriched" view).
  *   - `plain`:    the body as text, shown verbatim with no markdown parsing.
  */
-export type ViewMode = 'html' | 'markdown' | 'plain';
+export const VIEW_MODES = ['html', 'markdown', 'plain'] as const;
+
+export type ViewMode = (typeof VIEW_MODES)[number];
 
 export const VIEW_MODE_ICONS: Record<ViewMode, string> = {
   html: 'ph--browser--regular',
@@ -24,7 +27,7 @@ export type ViewModeGroupOptions = {
   ns: string;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
-  /** Modes offered, in order. Defaults to markdown/plain. */
+  /** Modes offered, in order. Defaults to all view modes ({@link VIEW_MODES}). */
   modes?: ViewMode[];
   /** Disable the group (e.g. while editing, when the rendered view is irrelevant). */
   disabled?: boolean;
@@ -39,7 +42,7 @@ export const viewModeGroup =
     ns,
     viewMode,
     setViewMode,
-    modes = ['markdown', 'plain'],
+    modes = [...VIEW_MODES],
     disabled,
   }: ViewModeGroupOptions): ActionGroupBuilderFn =>
   (builder) => {
