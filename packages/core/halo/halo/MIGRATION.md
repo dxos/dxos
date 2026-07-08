@@ -142,3 +142,7 @@ Phased; no backwards compatibility. Each phase lands behind the new `@dxos/halo`
 - Concurrent admin-vs-admin revocation semantics differ from HALO's OWNER-wins rule; product implications need review.
 - Content-layer forward secrecy is deliberately absent in Keyhive (causal encryption); confirm this matches our threat model.
 - Agent/server ("AGENT" device type) key custody with non-extractable keys needs a story (e.g. `Pull`-only relays + delegated agent keys).
+
+## 5. ISSUES
+
+1. Migration from protobuf?
