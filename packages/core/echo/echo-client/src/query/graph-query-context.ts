@@ -2,15 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Predicate from 'effect/Predicate';
-
 import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Entity, Feed, Obj, Query, type QueryResult } from '@dxos/echo';
+import { Obj, Query, type QueryResult } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
 import { QueryPlanner } from '@dxos/echo-host/query';
 import { QueryAST } from '@dxos/echo-protocol';
-import { EID, type EntityId, type SpaceId } from '@dxos/keys';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
@@ -18,12 +16,7 @@ import { prohibitSignalActions } from '../guarded-scope';
 import { type DatabaseImpl } from '../proxy-db';
 import { type QueryContext } from './query-context';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
-import {
-  type WorkingSetDataProvider,
-  type WorkingSetFeedItem,
-  type WorkingSetItem,
-  WorkingSetQueryExecutor,
-} from './working-set-executor';
+import { type WorkingSetDataProvider, type WorkingSetItem, WorkingSetQueryExecutor } from './working-set-executor';
 
 export type GraphQueryContextProps = {
   // TODO(dmaretskyi): Make async.
@@ -50,6 +43,13 @@ export interface QuerySource {
    * Synchronous query.
    */
   getResults(): QueryResult.EntityEntry[];
+
+  /**
+   * Whether this source produces authoritative synchronous results for its current query (via
+   * {@link getResults}). Sources that resolve asynchronously (e.g. index- or network-backed) return
+   * false so callers can defer the initial subscription event until real results arrive.
+   */
+  isSynchronous(): boolean;
 
   /**
    * One-shot query.
@@ -110,6 +110,17 @@ export class GraphQueryContext implements QueryContext {
       return [];
     }
     return Array.from(this._sources).flatMap((source) => source.getResults());
+  }
+
+  /**
+   * Whether any source produces authoritative synchronous results for the current query. False when
+   * the query is served only by asynchronous sources (e.g. a feed query served by the index).
+   */
+  isSynchronous(): boolean {
+    if (!this._query) {
+      return false;
+    }
+    return Array.from(this._sources).some((source) => source.isSynchronous());
   }
 
   async run(
@@ -186,26 +197,6 @@ export class SpaceQuerySource implements QuerySource {
       allCores: () => _database.allObjectCores(),
       getCoreById: (id, load) => _database.getObjectCoreById(id, { load: load ?? false }),
       areStrongDepsSatisfied: (core) => _database.areStrongDepsSatisfied(core),
-      getFeedItems: (queueIds) => {
-        const feedItems: WorkingSetFeedItem[] = [];
-        for (const queueId of queueIds) {
-          const feedUri = EID.make({ spaceId: _database.spaceId, entityId: queueId });
-          const handle = _database._tryGetFeedHandle(feedUri);
-          if (handle) {
-            const objects = handle.getObjectsSync();
-            for (const obj of objects) {
-              feedItems.push({
-                objectId: obj.id,
-                spaceId: _database.spaceId,
-                queueId,
-                queueNamespace: handle.namespace,
-                data: Entity.toJSON(obj),
-              });
-            }
-          }
-        }
-        return feedItems;
-      },
     };
     this._executor = new WorkingSetQueryExecutor(provider);
     this._planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
@@ -269,68 +260,37 @@ export class SpaceQuerySource implements QuerySource {
     });
   };
 
-  async run(ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry<Obj.Unknown>[]> {
+  async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry<Obj.Unknown>[]> {
     if (!this._isValidSourceForQuery(query)) {
       return [];
     }
 
-    // The working-set executor reads feed items synchronously from the handle, so the feed must be
-    // fetched before evaluating a feed-scoped query.
-    const feedUris = getFeedScopeUris(query);
-    for (const feedUri of feedUris) {
-      const feedObjectId = EID.getEntityId(feedUri);
-      const feed = feedObjectId ? this._database.getObjectById<Feed.Feed>(feedObjectId) : undefined;
-      try {
-        const handle = this._database._getOrCreateFeedHandle(feedUri, feed?.namespace);
-        await handle.refresh();
-      } catch (err) {
-        // Feed service not connected yet; index-only queries still resolve via the host executor.
-        log.verbose('feed refresh failed during query', { feedUri, error: err });
-      }
-    }
+    // Actively load by-id targets into the working set before executing. The executor's synchronous
+    // getCoreById only kicks off a load, so a one-shot query would otherwise miss objects whose
+    // (possibly linked) Automerge document has not been resolved into the working set yet.
+    await this._preloadQueryIds(query);
 
+    const items = this._executeWithWorkingSet(query);
+    return items === null ? [] : items.map((item) => this._mapItemToResult(item));
+  }
+
+  /**
+   * Loads any by-id selection targets into the working set. Preserves load-on-demand for
+   * `Filter.id(...)` against linked (not-yet-resolved) Automerge documents, which the synchronous
+   * executor cannot await. Feed-scoped by-id lookups are served by the index source, not the working set.
+   */
+  private async _preloadQueryIds(query: QueryAST.Query): Promise<void> {
     const simple = isSimpleSelectionQuery(query);
-
-    // For queries that contain traversals, unions, or set-difference nodes — structures that the
-    // SQL-backed source cannot handle — try the working-set executor. If it can satisfy the query
-    // entirely from in-memory cores, return those results; otherwise return empty.
-    if (requiresWorkingSetExecutor(query)) {
-      const executorResults = this._tryExecuteWithWorkingSet(query);
-      if (executorResults !== null) {
-        return executorResults.map((item) => this._mapItemToResult(item));
-      }
-      return [];
+    if (!simple || simple.hasQueues || simple.filter.type !== 'object' || !simple.filter.id?.length) {
+      return;
     }
+    await this._database.batchLoadObjectCores([...simple.filter.id]);
+  }
 
-    // Simple path returned null for non-traversal reasons (limit, order, etc.) — the SQL-backed
-    // source handles those entirely; this source has nothing to contribute.
-    if (!simple || simple.hasQueues) {
-      return [];
-    }
-
-    // Simple selection path: load by id when needed, then scan the working set.
-    const { filter, options } = simple;
-    const results: QueryResult.EntityEntry<Obj.Any>[] = [];
-    if (isObjectIdFilter(filter)) {
-      results.push(
-        ...(await this._database.batchLoadObjectCores((filter as QueryAST.FilterObject).id as EntityId[]))
-          .filter(Predicate.isNotUndefined)
-          .filter((core) => this._filterCore(core, filter, options))
-          .map((core) => this._mapCoreToResult(core)),
-      );
-    }
-
-    prohibitSignalActions(() => {
-      results.push(...this._queryWorkingSet(filter, options));
-    });
-
-    // Dedup
-    const map = new Map<string, QueryResult.EntityEntry<Obj.Unknown>>();
-    for (const result of results) {
-      map.set(result.id, result);
-    }
-
-    return [...map.values()];
+  isSynchronous(): boolean {
+    // The working set serves space-scoped selections synchronously. Feed-only queries are served by
+    // the index source, so the working set contributes nothing synchronous for them.
+    return this._query !== undefined && this._servesSpaceScope(this._query);
   }
 
   getResults(): QueryResult.EntityEntry<Obj.Unknown>[] {
@@ -348,27 +308,8 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   private _computeResults(query: QueryAST.Query): QueryResult.EntityEntry<Obj.Unknown>[] {
-    // For queries that contain traversals, unions, or set-difference nodes, the SQL-backed source
-    // cannot handle them — use the working-set executor instead.
-    if (requiresWorkingSetExecutor(query)) {
-      const executorResults = this._tryExecuteWithWorkingSet(query);
-      if (executorResults !== null) {
-        return executorResults.map((item) => this._mapItemToResult(item));
-      }
-      return [];
-    }
-
-    const trivial = isSimpleSelectionQuery(query);
-
-    // Non-traversal reasons for isSimpleSelectionQuery returning null (limit, order, etc.) —
-    // the SQL-backed source handles those; this source has nothing to contribute.
-    if (!trivial || trivial.hasQueues) {
-      return [];
-    }
-
-    // Simple selection path: scan the working set directly.
-    const { filter, options } = trivial;
-    return this._queryWorkingSet(filter, options);
+    const items = this._executeWithWorkingSet(query);
+    return items === null ? [] : items.map((item) => this._mapItemToResult(item));
   }
 
   update(query: QueryAST.Query): void {
@@ -383,72 +324,26 @@ export class SpaceQuerySource implements QuerySource {
 
     this._database._updateEvent.on(this._ctx, this._onUpdate);
 
-    const feedUris = getFeedScopeUris(query);
-    for (const feedUri of feedUris) {
-      const feedObjectId = EID.getEntityId(feedUri);
-      const feed = feedObjectId ? this._database.getObjectById<Feed.Feed>(feedObjectId) : undefined;
-      try {
-        const handle = this._database._getOrCreateFeedHandle(feedUri, feed?.namespace);
-        if (feed) {
-          // A Feed schema class is an ECHO object at runtime but its class type does not carry the
-          // structural Obj.Unknown brand, so the assignment needs an explicit widening.
-          handle.setParentEntity(feed as Obj.Unknown);
-        }
-        this._ctx.onDispose(handle.beginPolling());
-        handle.updated.on(this._ctx, () => this._onUpdate());
-      } catch (err) {
-        // Feed service not connected yet; index-only queries still resolve via the host executor.
-        log.verbose('feed handle setup failed during update', { feedUri, error: err });
-      }
-    }
-
     this._results = undefined;
     this.changed.emit();
   }
 
   /**
-   * Queries from already loaded objects.
+   * Executes a query against the in-memory working set. Every query goes through the same planner
+   * and executor -- there is no fast path or query-shape gate. Returns null when the plan requires
+   * SQL index capabilities the working set cannot satisfy (full-text or timestamp selectors); the
+   * index-backed source handles those. A planner failure is a hard error: the planner must accept
+   * any query the source is valid for, so a throw signals a bug rather than an unsupported shape.
    */
-  private _queryWorkingSet(
-    filter: QueryAST.Filter,
-    options: QueryAST.QueryOptions | undefined,
-  ): QueryResult.EntityEntry<Obj.Unknown>[] {
-    const filteredCores = isObjectIdFilter(filter)
-      ? (filter as QueryAST.FilterObject)
-          .id!.map((id) => this._database.getObjectCoreById(id, { load: true }))
-          .filter(Predicate.isNotUndefined)
-          .filter((core) => this._filterCore(core, filter, options))
-      : this._database.allObjectCores().filter((core) => this._filterCore(core, filter, options));
-
-    return filteredCores.map((core) => this._mapCoreToResult(core));
-  }
-
-  /**
-   * Attempt to resolve a query entirely from the in-memory working set.
-   * Returns null when the plan requires SQL index capabilities.
-   */
-  private _tryExecuteWithWorkingSet(query: QueryAST.Query): WorkingSetItem[] | null {
-    try {
-      const plan = this._planner.createPlan(query);
-      return this._executor.tryExecute(plan);
-    } catch {
-      // Query planner threw (e.g. unsupported query shape). Fall back.
-      return null;
-    }
+  private _executeWithWorkingSet(query: QueryAST.Query): WorkingSetItem[] | null {
+    const plan = this._planner.createPlan(query);
+    return this._executor.tryExecute(plan);
   }
 
   private _mapItemToResult(item: WorkingSetItem): QueryResult.EntityEntry<Obj.Unknown> {
-    // Feed items are not addressable via getObjectById (they live in the queue, not the space
-    // document set), so fall back to the feed handle's fetched entities. Feeds hold both objects
-    // and relations, so this must not filter to objects only.
-    let result = this._database.getObjectById<Obj.Unknown>(item.objectId, { deleted: true });
-    if (!result && item.queueId) {
-      const feedUri = EID.make({ spaceId: this.spaceId, entityId: item.queueId });
-      result = this._database._tryGetFeedHandle(feedUri)?.getCachedObjectById<Obj.Unknown>(item.objectId);
-    }
     return {
       id: item.objectId,
-      result,
+      result: this._database.getObjectById<Obj.Unknown>(item.objectId, { deleted: true }),
       match: { rank: 1 },
       resolution: {
         source: 'local',
@@ -482,16 +377,23 @@ export class SpaceQuerySource implements QuerySource {
     return true;
   }
 
-  private _mapCoreToResult(core: ObjectCore): QueryResult.EntityEntry<Obj.Unknown> {
-    return {
-      id: core.id,
-      result: this._database.getObjectById(core.id, { deleted: true }),
-      match: { rank: 1 },
-      resolution: {
-        source: 'local',
-        time: 0,
-      },
-    };
+  /**
+   * Whether the query selects from the space working set: either it has no explicit `from` scope
+   * (defaults to the owning space) or its `from` scope includes a space scope. Feed-only queries
+   * return false — the working set holds no feed items.
+   */
+  private _servesSpaceScope(query: QueryAST.Query): boolean {
+    let hasExplicitNonEmptyScope = false;
+    let hasSpaceScope = false;
+    QueryAST.visit(query, (node) => {
+      if (node.type === 'from' && node.from._tag === 'scope' && node.from.scopes.length > 0) {
+        hasExplicitNonEmptyScope = true;
+        if (node.from.scopes.some((s) => s._tag === 'space')) {
+          hasSpaceScope = true;
+        }
+      }
+    });
+    return !hasExplicitNonEmptyScope || hasSpaceScope;
   }
 
   private _filterCore(core: ObjectCore, filter: QueryAST.Filter, options: QueryAST.QueryOptions | undefined): boolean {
@@ -507,10 +409,6 @@ export class SpaceQuerySource implements QuerySource {
   }
 }
 
-const isObjectIdFilter = (filter: QueryAST.Filter) => {
-  return filter.type === 'object' && filter.id !== undefined && filter.id.length > 0;
-};
-
 const filterCoreByDeletedFlag = (core: ObjectCore, options: QueryAST.QueryOptions | undefined): boolean => {
   switch (options?.deleted) {
     case undefined:
@@ -523,81 +421,3 @@ const filterCoreByDeletedFlag = (core: ObjectCore, options: QueryAST.QueryOption
   }
 };
 
-/**
- * Query node types whose shapes the SQL-backed source does not satisfy locally; the working-set
- * executor handles them. Plain select/filter/limit/order queries stay on the SQL path.
- */
-const WORKING_SET_NODE_TYPES = new Set<QueryAST.Query['type']>([
-  'reference-traversal',
-  'relation-traversal',
-  'hierarchy-traversal',
-  'incoming-references',
-  'relation',
-  'union',
-  'set-difference',
-]);
-
-/**
- * Returns true when the query contains traversal, relation, union, set-difference, or child-of
- * filter nodes. These query types cannot be satisfied by the SQL index and require the working-set
- * executor. Limit and order nodes alone do not qualify — those are handled entirely by the SQL source.
- * Child-of filters have no traversal AST node — they appear as filter predicates — so they must
- * be detected by visiting the filter tree directly.
- */
-const requiresWorkingSetExecutor = (query: QueryAST.Query): boolean => {
-  let found = false;
-  QueryAST.visit(query, (node) => {
-    if (WORKING_SET_NODE_TYPES.has(node.type)) {
-      found = true;
-    }
-    if ((node.type === 'filter' || node.type === 'select') && _filterContainsChildOf(node.filter)) {
-      found = true;
-    }
-    if (node.type === 'from' && node.from._tag === 'scope') {
-      for (const scope of node.from.scopes) {
-        if (scope._tag === 'feed') {
-          found = true;
-        }
-      }
-    }
-  });
-  return found;
-};
-
-/**
- * Returns true if the filter is or composes a child-of predicate.
- * Child-of filters require in-memory parent-chain traversal which the SQL index cannot handle.
- */
-const _filterContainsChildOf = (filter: QueryAST.Filter): boolean => {
-  switch (filter.type) {
-    case 'child-of':
-      return true;
-    case 'not':
-      return _filterContainsChildOf(filter.filter);
-    case 'and':
-    case 'or':
-      return filter.filters.some(_filterContainsChildOf);
-    default:
-      return false;
-  }
-};
-
-/**
- * Extracts the feed URIs from a query's feed scope (`Scope.feed(...)`), if present.
- */
-const getFeedScopeUris = (query: QueryAST.Query): EID.EID[] => {
-  const feedUris: EID.EID[] = [];
-  QueryAST.visit(query, (node) => {
-    if (node.type === 'from' && node.from._tag === 'scope') {
-      for (const scope of node.from.scopes) {
-        if (scope._tag === 'feed') {
-          const parsed = EID.tryParse(scope.feedUri);
-          if (parsed) {
-            feedUris.push(parsed);
-          }
-        }
-      }
-    }
-  });
-  return feedUris;
-};

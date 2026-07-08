@@ -14,6 +14,13 @@ export type Sort<T extends AnyProperties> = (a: T, b: T) => -1 | 0 | 1;
 export interface QueryContext<T extends AnyProperties = AnyProperties, O extends Entity.Entity<T> = Entity.Entity<T>> {
   getResults(): QueryResult.EntityEntry<O>[];
 
+  /**
+   * Whether the current query is served by at least one synchronous source. False when the query is
+   * served only by asynchronous sources (e.g. a feed query served by the index), so callers can defer
+   * the initial subscription event until real results arrive instead of emitting an empty snapshot.
+   */
+  isSynchronous(): boolean;
+
   // TODO(dmaretskyi): Update info?
   changed: Event<void>;
 

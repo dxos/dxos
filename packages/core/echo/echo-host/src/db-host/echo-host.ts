@@ -137,6 +137,8 @@ export class EchoHost extends Resource {
       indexEngine: this._indexEngine,
       runtime: this._runtime,
       spaceStateManager: this._spaceStateManager,
+      // Delegate to the public method so the closed-host early-out and cooperative loop apply.
+      updateIndexes: () => this.updateIndexes(),
     });
 
     this._dataService = new DataServiceImpl({

@@ -2,64 +2,39 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Obj } from '@dxos/echo';
-import { filterMatchDoc, filterMatchObjectJSON } from '@dxos/echo-host/filter';
+import { filterMatchDoc } from '@dxos/echo-host/filter';
 import { type QueryPlan } from '@dxos/echo-host/query';
 import {
   EncodedReference,
   type EntityPropPath,
   EntityStructure,
-  type ForeignKey,
   type QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 import { EscapedPropPath } from '@dxos/index-core';
 import { EID, type EntityId, type SpaceId } from '@dxos/keys';
-import { FeedProtocol } from '@dxos/protocols';
-import { getDeep, isNonNullable, visitValues } from '@dxos/util';
+import { getDeep, visitValues } from '@dxos/util';
 
 import type { ObjectCore } from '../core-db';
 
 export type WorkingSetItem = {
   objectId: EntityId;
   spaceId: SpaceId;
-  queueId: EntityId | null;
-  queueNamespace: string | null;
   /** Automerge-backed object core. */
-  core: ObjectCore | null;
-  /** Feed/queue JSON payload. */
-  data: Obj.JSON | null;
+  core: ObjectCore;
 };
 
 const WorkingSetItem = Object.freeze({
   isDeleted(item: WorkingSetItem): boolean {
-    if (item.core) {
-      return item.core.isDeleted();
-    }
-    if (item.data) {
-      return item.data['@deleted'] === true;
-    }
-    return false;
+    return item.core.isDeleted();
   },
 
   getProperty(item: WorkingSetItem, property: EntityPropPath): unknown {
-    if (item.core) {
-      return getDeep(item.core.getObjectStructure().data, property);
-    }
-    if (item.data) {
-      return getDeep(item.data, property);
-    }
-    return undefined;
+    return getDeep(item.core.getObjectStructure().data, property);
   },
 
   getParentEid(item: WorkingSetItem): EID.EID | undefined {
-    let raw: string | undefined;
-    if (item.core) {
-      raw = EntityStructure.getParent(item.core.getObjectStructure())?.['/'];
-    } else if (item.data) {
-      raw = item.data[ATTR_PARENT];
-    }
+    const raw = EntityStructure.getParent(item.core.getObjectStructure())?.['/'];
     return raw !== undefined ? EID.tryParse(raw) : undefined;
   },
 });
@@ -69,21 +44,12 @@ export type WorkingSetDataProvider = {
   allCores(): ObjectCore[];
   getCoreById(id: EntityId, load?: boolean): ObjectCore | undefined;
   areStrongDepsSatisfied(core: ObjectCore): boolean;
-  /** Optional: enumerate locally-cached feed items for the given queue IDs. */
-  getFeedItems?: (queueIds: EntityId[]) => WorkingSetFeedItem[];
-};
-
-export type WorkingSetFeedItem = {
-  objectId: EntityId;
-  spaceId: SpaceId;
-  queueId: EntityId;
-  queueNamespace: string | null;
-  data: Obj.JSON;
 };
 
 /**
  * Executes a QueryPlan against the client-side in-memory working set.
  * No SQL index access — all selection is done by scanning loaded cores.
+ * Feed-scoped reads are not served here; they go through the index-backed source.
  * Returns null when the plan requires index capabilities (TextSelector, TimestampSelector).
  */
 export class WorkingSetQueryExecutor {
@@ -141,9 +107,9 @@ export class WorkingSetQueryExecutor {
       return null;
     }
 
-    // Check if this scope includes our space.
+    // Check if this scope includes our space. A feed-only scope resolves to no working-set items:
+    // feed reads are served by the index-backed source, not here.
     const spaceScopes = step.scope.filter((scope): scope is QueryAST.SpaceScope => scope._tag === 'space');
-    const feedScopes = step.scope.filter((scope): scope is QueryAST.FeedScope => scope._tag === 'feed');
 
     const hasExplicitScopes = step.scope.length > 0;
     const scopeIncludesOurSpace =
@@ -177,35 +143,6 @@ export class WorkingSetQueryExecutor {
       }
     }
 
-    // Feed items for explicit feed scopes.
-    if (feedScopes.length > 0 && this._provider.getFeedItems) {
-      const queueIds = feedScopes
-        .map((scope) => {
-          const eid = EID.tryParse(String(scope.feedUri));
-          return eid ? EID.getEntityId(eid) : null;
-        })
-        .filter(isNonNullable);
-      // An IdSelector narrows the query to specific ids; the following FilterStep no longer
-      // carries the id predicate (the planner moves it into the selector), so feed items must be
-      // narrowed here or every feed item would leak through.
-      const idSelector = step.selector._tag === 'IdSelector' ? new Set<string>(step.selector.objectIds) : null;
-      const feedItems = this._provider
-        .getFeedItems(queueIds)
-        .filter((feedItem) => idSelector === null || idSelector.has(feedItem.objectId));
-      newItems.push(
-        ...feedItems.map(
-          (feedItem): WorkingSetItem => ({
-            objectId: feedItem.objectId,
-            spaceId: feedItem.spaceId,
-            queueId: feedItem.queueId,
-            queueNamespace: feedItem.queueNamespace,
-            core: null,
-            data: feedItem.data,
-          }),
-        ),
-      );
-    }
-
     // Deduplicate by objectId.
     const seen = new Set<EntityId>();
     const deduped = newItems.filter((item) => {
@@ -230,19 +167,13 @@ export class WorkingSetQueryExecutor {
       return null;
     }
 
-    return ws.filter((item) => {
-      if (item.core) {
-        return filterMatchDoc(step.filter, {
-          id: item.objectId,
-          doc: item.core.getObjectStructure(),
-          spaceId: item.spaceId,
-        });
-      }
-      if (item.data) {
-        return filterMatchObjectJSON(step.filter, item.data);
-      }
-      return false;
-    });
+    return ws.filter((item) =>
+      filterMatchDoc(step.filter, {
+        id: item.objectId,
+        doc: item.core.getObjectStructure(),
+        spaceId: item.spaceId,
+      }),
+    );
   }
 
   private _execChildOfFilterStep(filter: QueryAST.FilterChildOf, ws: WorkingSetItem[]): WorkingSetItem[] | null {
@@ -343,29 +274,26 @@ export class WorkingSetQueryExecutor {
   }
 
   private _collectOutgoingRefs(item: WorkingSetItem, property: EscapedPropPath | null): EncodedReference[] {
-    if (item.core) {
-      const structure = item.core.getObjectStructure();
-      if (property !== null) {
-        // Collect refs at specified property path only.
-        const path = EscapedPropPath.unescape(property);
-        const value = getDeep(structure.data, path);
-        const refs: EncodedReference[] = [];
-        if (isEncodedReference(value)) {
-          refs.push(value);
-        } else if (Array.isArray(value)) {
-          for (const element of value) {
-            if (isEncodedReference(element)) {
-              refs.push(element);
-            }
+    const structure = item.core.getObjectStructure();
+    if (property !== null) {
+      // Collect refs at specified property path only.
+      const path = EscapedPropPath.unescape(property);
+      const value = getDeep(structure.data, path);
+      const refs: EncodedReference[] = [];
+      if (isEncodedReference(value)) {
+        refs.push(value);
+      } else if (Array.isArray(value)) {
+        for (const element of value) {
+          if (isEncodedReference(element)) {
+            refs.push(element);
           }
         }
-        return refs;
-      } else {
-        // Collect all outgoing refs.
-        return EntityStructure.getAllOutgoingReferences(structure).map((refEntry) => refEntry.reference);
       }
+      return refs;
+    } else {
+      // Collect all outgoing refs.
+      return EntityStructure.getAllOutgoingReferences(structure).map((refEntry) => refEntry.reference);
     }
-    return [];
   }
 
   private _execRelationTraversal(traversal: QueryPlan.RelationTraversal, ws: WorkingSetItem[]): WorkingSetItem[] {
@@ -376,19 +304,11 @@ export class WorkingSetQueryExecutor {
       case 'relation-to-target': {
         const result: WorkingSetItem[] = [];
         for (const item of ws) {
-          let raw: string | undefined;
-          if (item.core) {
-            const ref =
-              traversal.direction === 'relation-to-source'
-                ? EntityStructure.getRelationSource(item.core.getObjectStructure())
-                : EntityStructure.getRelationTarget(item.core.getObjectStructure());
-            raw = ref?.['/'];
-          } else if (item.data) {
-            raw =
-              traversal.direction === 'relation-to-source'
-                ? (item.data[ATTR_RELATION_SOURCE] as string | undefined)
-                : (item.data[ATTR_RELATION_TARGET] as string | undefined);
-          }
+          const ref =
+            traversal.direction === 'relation-to-source'
+              ? EntityStructure.getRelationSource(item.core.getObjectStructure())
+              : EntityStructure.getRelationTarget(item.core.getObjectStructure());
+          const raw = ref?.['/'];
           if (!raw) {
             continue;
           }
@@ -442,9 +362,6 @@ export class WorkingSetQueryExecutor {
     if (traversal.direction === 'to-parent') {
       const result: WorkingSetItem[] = [];
       for (const item of ws) {
-        if (!item.core) {
-          continue;
-        }
         const ref = EntityStructure.getParent(item.core.getObjectStructure());
         if (!ref || !EncodedReference.isEncodedReference(ref)) {
           continue;
@@ -525,18 +442,8 @@ export class WorkingSetQueryExecutor {
   private _compareByOrder(itemA: WorkingSetItem, itemB: WorkingSetItem, order: QueryAST.Order): number {
     switch (order.kind) {
       case 'natural': {
-        const posA = getQueuePosition(itemA);
-        const posB = getQueuePosition(itemB);
-        if (posA !== null && posB !== null) {
-          const comparison = posA - posB;
-          return order.direction === 'desc' ? -comparison : comparison;
-        }
-        if (posA === null && posB !== null) {
-          return 1;
-        }
-        if (posA !== null && posB === null) {
-          return -1;
-        }
+        // The working set has no queue/insertion order (that lives in the feed index); fall back
+        // to a stable id ordering so results are deterministic.
         const comparison = itemA.objectId.localeCompare(itemB.objectId);
         return order.direction === 'desc' ? -comparison : comparison;
       }
@@ -563,10 +470,7 @@ export class WorkingSetQueryExecutor {
       // entity ids are structurally EntityId strings but the core uses a plain string type.
       objectId: core.id as EntityId,
       spaceId: this._provider.spaceId,
-      queueId: null,
-      queueNamespace: null,
       core,
-      data: null,
     };
   }
 }
@@ -662,19 +566,4 @@ const _valueReferencesAny = (value: unknown, targetIds: Set<EntityId>): boolean 
     return value.some((element) => _valueReferencesAny(element, targetIds));
   }
   return false;
-};
-
-const getQueuePosition = (item: WorkingSetItem): number | null => {
-  const keys = item.data?.['@meta']?.keys;
-  if (!Array.isArray(keys)) {
-    return null;
-  }
-  const key = keys.find((foreignKey: ForeignKey) => foreignKey.source === FeedProtocol.KEY_QUEUE_POSITION);
-  if (key && typeof key.id === 'string') {
-    const parsed = Number.parseInt(key.id, 10);
-    if (!Number.isNaN(parsed)) {
-      return parsed;
-    }
-  }
-  return null;
 };

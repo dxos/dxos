@@ -136,6 +136,11 @@ export class IndexQuerySource implements QuerySource {
     return this._results ?? [];
   }
 
+  /** Index results are produced asynchronously from the host query stream. */
+  isSynchronous(): boolean {
+    return false;
+  }
+
   async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry[]> {
     this._query = query;
     return new Promise((resolve, reject) => {
@@ -381,12 +386,16 @@ export class IndexQuerySource implements QuerySource {
         context: { space: result.spaceId, feed: queueEchoUri },
       });
       const database = this._params.graph.getDatabase(result.spaceId);
+      // A feed item's parent is the Feed object (whose id equals the queue id). Setting it here mirrors
+      // the client feed-handle read path so `Obj.getParent` resolves for index-hydrated feed items.
+      const parent = database?.getObjectById(result.queueId);
       let object;
       try {
         object = await Obj.fromJSON(json, {
           refResolver,
           uri: EID.make({ spaceId: result.spaceId, entityId: result.id }),
           database,
+          parent,
         });
       } catch (err) {
         const typeDxn = typeof json[ATTR_TYPE] === 'string' ? json[ATTR_TYPE] : '<unknown>';
