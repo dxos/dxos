@@ -42,6 +42,41 @@ export class TextEditNotFoundError extends BaseError.extend('TextEditNotFoundErr
 }
 
 /**
+ * Thrown when a blob's bytes exceed the inline storage size limit.
+ */
+export class BlobTooLargeError extends BaseError.extend('BlobTooLargeError', 'Blob is too large for inline storage') {
+  constructor(context: { size: number; limit: number }, options?: BaseErrorOptions) {
+    super({ context, ...options });
+  }
+}
+
+/**
+ * Reason why a blob's bytes could not be read.
+ * - `offline`: The backend's transport failed (e.g. network unavailable).
+ * - `not-found`: The backend could not locate the bytes for the given URI.
+ * - `backend-not-registered`: No backend is registered for the URI's scheme.
+ */
+export type BlobNotAvailableReason = 'offline' | 'not-found' | 'backend-not-registered';
+
+/**
+ * Thrown when a blob's bytes cannot be read from its backend.
+ */
+export class BlobNotAvailableError extends BaseError.extend('BlobNotAvailableError', 'Blob is not available') {
+  constructor(context: { backend: string; key: string; reason: BlobNotAvailableReason }, options?: BaseErrorOptions) {
+    super({ context, ...options });
+  }
+}
+
+/**
+ * Thrown when a blob's bytes fail to upload to its backend.
+ */
+export class BlobWriteError extends BaseError.extend('BlobWriteError', 'Failed to write blob') {
+  constructor(context: { backend: string }, options?: BaseErrorOptions) {
+    super({ context, ...options });
+  }
+}
+
+/**
  * Reason why getting a reactive object from a snapshot failed.
  * - `no-database`: The snapshot is not associated with a database.
  * - `object-not-found`: The object was removed or does not exist in the database.

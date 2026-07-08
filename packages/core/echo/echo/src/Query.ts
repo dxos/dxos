@@ -8,12 +8,12 @@ import type * as EffectArray from 'effect/Array';
 import type * as Schema from 'effect/Schema';
 
 import { type QueryAST } from '@dxos/echo-protocol';
-import { type URI } from '@dxos/keys';
+import { EID, type URI } from '@dxos/keys';
 
 import type * as Collection from './Collection';
 import * as Database from './Database';
 import type * as Dataset from './Dataset';
-import * as Feed from './Feed';
+import type * as Feed from './Feed';
 import * as Filter from './Filter';
 import * as internal from './internal';
 import * as Obj from './Obj';
@@ -142,6 +142,14 @@ export interface Query<T> {
    * @returns Query for the limited results.
    */
   'limit'(limit: number): Query<T>;
+
+  /**
+   * Skip a number of results (offset). Combined with `orderBy` and `limit`, expresses a windowed
+   * (paginated) read.
+   * @param skip - Number of leading results to skip.
+   * @returns Query for the remaining results.
+   */
+  'skip'(skip: number): Query<T>;
 
   /**
    * Query from selected databases only.
@@ -342,6 +350,14 @@ class QueryClass implements Any {
     });
   }
 
+  'skip'(skip: number): Any {
+    return new QueryClass({
+      type: 'skip',
+      query: this.ast,
+      skip,
+    });
+  }
+
   'from'(
     ...args:
       | [
@@ -451,11 +467,13 @@ class QueryClass implements Any {
       if (typename === 'org.dxos.type.collection') {
         throw new Error('Query.from(collection) is not yet supported.');
       }
-      // Validate that the items are Feed.Feed instances.
+      // Validate that the items are feed objects. Checked by typename rather than schema instanceof
+      // to keep this module free of a runtime dependency on the Feed module (avoids an import cycle).
       for (const item of items) {
-        if (!Obj.instanceOf(Feed.Feed, item)) {
+        const itemTypename = Obj.getTypename(item as Obj.Unknown);
+        if (itemTypename !== 'org.dxos.type.feed') {
           throw new TypeError(
-            `Query.from() expects Feed objects (org.dxos.type.feed), but received an object with typename '${typename ?? 'unknown'}'.`,
+            `Query.from() expects Feed objects (org.dxos.type.feed), but received an object with typename '${itemTypename ?? 'unknown'}'.`,
           );
         }
       }
@@ -463,7 +481,8 @@ class QueryClass implements Any {
 
     const feedItems = items as Feed.Feed[];
     const feedScopes = feedItems.map((feed) => {
-      const uri = Feed.getFeedUri(feed);
+      // Inlined Feed.getFeedUri to avoid a runtime import cycle with the Feed module.
+      const uri = EID.tryParse(Obj.getURI(feed));
       if (!uri) {
         throw new TypeError(
           `Query.from() expects persisted Feed objects with a feed URI; got feed without a space (id=${Obj.getURI(feed)}).`,

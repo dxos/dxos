@@ -58,6 +58,14 @@ type HttpRequestArgs = {
   signal?: AbortSignal;
 };
 
+export type RawHttpRequestArgs = {
+  method: string;
+  body?: BodyInit;
+  headers?: Record<string, string>;
+  retry?: RetryConfig;
+  auth?: boolean;
+};
+
 export abstract class BaseHttpClient {
   protected readonly _baseUrl: string;
   protected readonly _clientTag: string | undefined;
@@ -82,9 +90,6 @@ export abstract class BaseHttpClient {
     }
   }
 
-  // TODO(mykola): Extend `_call` to support streaming/raw `Response` returns so
-  // `EdgeHttpClient.anthropicAiRequest` can be absorbed here and the auth/retry loop
-  // stops being duplicated across the two paths.
   protected async _call<T>(ctx: Context, url: URL, args: HttpRequestArgs): Promise<T> {
     const shouldRetry = createRetryHandler(args);
     // Log presence/size only — never log raw body contents which may contain PII.
@@ -167,6 +172,69 @@ export abstract class BaseHttpClient {
         (await shouldRetry(ctx, processingError.retryAfterMs))
       ) {
         log.verbose('retrying request', { url, processingError });
+      } else {
+        throw processingError!;
+      }
+    }
+  }
+
+  /**
+   * Like {@link _call} but returns the raw `Response` instead of parsing a JSON envelope — for
+   * endpoints with binary or absent response bodies (e.g. blob storage). A 404 is returned to the
+   * caller rather than thrown, since "not found" is an expected outcome for lookups; all other
+   * non-ok, non-retryable statuses throw `EdgeCallFailedError`, mirroring `_call`.
+   *
+   * NOTE: Duplicates `_call`'s auth/retry loop rather than sharing it, to avoid touching `_call`'s
+   * broadly-depended-on JSON-envelope behavior. `EdgeHttpClient.anthropicAiRequest`'s separate
+   * duplicate loop is a follow-up candidate for consolidating onto this method.
+   */
+  protected async _callRaw(ctx: Context, url: URL, args: RawHttpRequestArgs): Promise<Response> {
+    const shouldRetry = createRetryHandler(args);
+    log('fetch', { url, hasBody: args.body !== undefined });
+
+    const traceHeaders = getTraceHeaders(ctx);
+
+    let handledAuth = false;
+    while (true) {
+      let processingError: EdgeCallFailedError | undefined;
+      try {
+        if (!this._authHeader && args.auth) {
+          const response = await fetch(new URL('/auth', this._baseUrl));
+          if (response.status === 401) {
+            this._authHeader = await this._handleUnauthorized(response);
+          }
+        }
+
+        const headers: Record<string, string> = { ...args.headers };
+        if (this._authHeader) {
+          headers['Authorization'] = this._authHeader;
+        }
+        if (traceHeaders) {
+          Object.assign(headers, traceHeaders);
+        }
+        if (this._clientTag) {
+          headers[EDGE_CLIENT_TAG_HEADER] = this._clientTag;
+        }
+
+        const response = await fetch(url, { method: args.method, body: args.body, headers });
+
+        if (response.ok || response.status === 404) {
+          return response;
+        }
+
+        if (response.status === 401 && response.headers.get('WWW-Authenticate') !== null && !handledAuth) {
+          this._authHeader = await this._handleUnauthorized(response);
+          handledAuth = true;
+          continue;
+        }
+
+        processingError = await EdgeCallFailedError.fromHttpFailure(response);
+      } catch (error: any) {
+        processingError = EdgeCallFailedError.fromProcessingFailureCause(error);
+      }
+
+      if (processingError?.isRetryable && (await shouldRetry(ctx, processingError.retryAfterMs))) {
+        log.verbose('retrying raw request', { url, processingError });
       } else {
         throw processingError!;
       }

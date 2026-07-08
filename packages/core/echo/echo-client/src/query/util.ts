@@ -55,6 +55,11 @@ const filterContainsChildOf = (filter: QueryAST.Filter): boolean => {
 /**
  * Extracts the filter and options from a query.
  * Supports Select(...), Options(Select(...)), and From(Select(...)) queries.
+ *
+ * Deliberately returns `null` for queries carrying `order`/`skip`/`limit` clauses -- callers
+ * (e.g. `GraphQueryContext`) use that as the signal that this query has semantics (windowing,
+ * ordering) they cannot contribute to, and defer entirely to the SQL-backed/feed sources that
+ * can.
  */
 export const isSimpleSelectionQuery = (
   query: QueryAST.Query,

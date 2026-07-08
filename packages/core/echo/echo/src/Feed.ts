@@ -11,6 +11,7 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
+import { invariant } from '@dxos/invariant';
 import { DXN, EID } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
@@ -18,10 +19,10 @@ import * as Database from './Database';
 import type * as Entity from './Entity';
 import type * as Filter from './Filter';
 import * as internal from './internal';
-import * as queryInternal from './internal/Query';
 import * as Obj from './Obj';
-import type * as Query from './Query';
+import * as Query from './Query';
 import type * as QueryResult from './QueryResult';
+import * as Scope from './Scope';
 import * as Type from './Type';
 
 /**
@@ -109,50 +110,6 @@ export class ContextFeedService extends Context.Tag('@dxos/echo/Feed/ContextFeed
 >() {
   static layer = (feed: Feed) => Layer.succeed(ContextFeedService, { feed });
 }
-
-//
-// Service
-//
-
-/**
- * Effect service for feed operations.
- * @deprecated Use `Database.Service` instead — feed operations now run directly on the database.
- */
-export class FeedService extends Context.Tag('@dxos/echo/Feed/FeedService')<
-  FeedService,
-  {
-    append(feed: Feed, items: Entity.Unknown[]): Promise<void>;
-    remove(feed: Feed, ids: string[]): Promise<void>;
-    query: {
-      <Q extends Query.Any>(feed: Feed, query: Q): QueryResult.QueryResult<Query.Type<Q>>;
-      <F extends Filter.Any>(feed: Feed, filter: F): QueryResult.QueryResult<Filter.Type<F>>;
-    };
-    sync(feed: Feed, options?: SyncOptions): Promise<void>;
-    getSyncState(feed: Feed): Promise<SyncState>;
-  }
->() {}
-
-/**
- * Layer that provides a `FeedService` that throws when accessed.
- * @deprecated Use `Database.layer(db)` instead.
- */
-export const notAvailable: Layer.Layer<FeedService> = Layer.succeed(FeedService, {
-  append: () => {
-    throw new Error('Feed.FeedService not available');
-  },
-  remove: () => {
-    throw new Error('Feed.FeedService not available');
-  },
-  query: () => {
-    throw new Error('Feed.FeedService not available') as never;
-  },
-  sync: () => {
-    throw new Error('Feed.FeedService not available');
-  },
-  getSyncState: () => {
-    throw new Error('Feed.FeedService not available');
-  },
-} as Context.Tag.Service<FeedService>);
 
 //
 // Factory
@@ -250,13 +207,12 @@ export const query: {
   <F extends Filter.Any>(
     filter: F,
   ): (feed: Feed) => QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
-} = Function.dual(2, (feed: Feed, queryOrFilter: Query.Any | Filter.Any) =>
-  Database.Service.pipe(
-    Effect.map(({ db }) => db.queryFeed(feed, queryOrFilter)),
-    Effect.withSpan('Feed.query'),
-    queryInternal.makeQueryResultEffect,
-  ),
-);
+} = Function.dual(2, (feed: Feed, queryOrFilter: Query.Any | Filter.Any) => {
+  const feedUri = getFeedUri(feed);
+  invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
+  const query = Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter);
+  return Database.query(query.from(Scope.feed(feedUri.toString())));
+});
 
 /**
  * Syncs the feed with the server.

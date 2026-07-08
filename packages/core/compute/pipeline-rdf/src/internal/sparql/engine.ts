@@ -10,6 +10,8 @@ import { SemanticIndexError } from '../../errors';
 
 const { quad } = DataFactory;
 
+// TOOD(burdon): See also https://ldkit.io/docs/components/query-engine
+
 /** Context accepted by the engine for string queries (carries the `sources` array). */
 type QueryContext = NonNullable<Parameters<QueryEngine['queryBindings']>[1]>;
 

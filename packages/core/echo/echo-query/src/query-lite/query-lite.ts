@@ -30,7 +30,8 @@ class OrderClass implements Order$.Any {
 }
 
 namespace Order1 {
-  export const natural: Order$.Any = new OrderClass({ kind: 'natural' });
+  export const natural = (direction: QueryAST.OrderDirection = 'asc'): Order$.Order<any> =>
+    new OrderClass({ kind: 'natural', direction });
   export const property = <T>(property: keyof T & string, direction: QueryAST.OrderDirection): Order$.Order<T> =>
     new OrderClass({
       kind: 'property',
@@ -715,6 +716,14 @@ class QueryClass implements Query$.Any {
     });
   }
 
+  'skip'(skip: number): Query$.Any {
+    return new QueryClass({
+      type: 'skip',
+      query: this.ast,
+      skip,
+    });
+  }
+
   'options'(options: QueryAST.QueryOptions): Query$.Any {
     return new QueryClass({
       type: 'options',
@@ -879,7 +888,7 @@ const prettyQuery = (query: QueryAST.Query): string => {
     case 'order': {
       const orders = query.order.map((o) => {
         if (o.kind === 'natural') {
-          return 'Order.natural';
+          return `Order.natural(${JSON.stringify(o.direction)})`;
         }
         if (o.kind === 'rank') {
           return `Order.rank(${JSON.stringify(o.direction)})`;
@@ -924,5 +933,7 @@ const prettyQuery = (query: QueryAST.Query): string => {
     }
     case 'limit':
       return `${prettyQuery(query.query)}.limit(${query.limit})`;
+    case 'skip':
+      return `${prettyQuery(query.query)}.skip(${query.skip})`;
   }
 };

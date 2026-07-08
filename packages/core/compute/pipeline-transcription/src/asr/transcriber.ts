@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { type ContentBlock } from '@dxos/types';
 
+import { mergeFloat64Arrays } from '../internal/asr-util';
 import { type AudioChunk, type AudioRecorder } from './audio-recorder';
-import { mergeFloat64Arrays } from './util';
 
 export type WhisperWord = {
   word: string;

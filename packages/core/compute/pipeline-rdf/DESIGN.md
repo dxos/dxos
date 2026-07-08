@@ -17,18 +17,18 @@ We record one fact with three separable parts:
 
 - **Attribution** — Alice asserted it, on June 6, in this email (who / when / where).
 - **Assertion** — Alice travels to Paris, on/around June 12 (the proposition).
-- **Valence** — she is unsure ("probably"); epistemic, positive polarity.
+- **Factuality** — she is unsure ("probably"); epistemic, positive polarity.
 
 ## Data model
 
 A **Fact** is the unit of storage: one extracted proposition plus its metadata.
 
-| Part        | Fields                                                                                             | Grounded in         |
-| ----------- | -------------------------------------------------------------------------------------------------- | ------------------- |
-| Assertion   | subject, predicate, object (entity-ref or literal), validFrom/validTo, quote                       | RDF triple          |
-| Valence     | factuality (`CT+`/`PR+`/`PS+`/… 8 values), polarity, confidence (0–1), nature (epistemic/aleatory) | FactBank factuality |
-| Attribution | agent, source (DXN), generatedAtTime, wasDerivedFrom, span                                         | PROV-O              |
-| Provenance  | id, recordedAt (transaction time), extractor {id, model, version}, sourceHash                      | —                   |
+| Part        | Fields                                                                                        | Grounded in         |
+| ----------- | --------------------------------------------------------------------------------------------- | ------------------- |
+| Assertion   | subject, predicate, object (entity-ref or literal), validFrom/validTo, quote                  | RDF triple          |
+| Factuality  | value (`CT+`/`PR+`/`PS+`/… 8 values), polarity, confidence (0–1), nature (epistemic/aleatory) | FactBank factuality |
+| Attribution | agent, source (DXN), generatedAtTime, wasDerivedFrom, span                                    | PROV-O              |
+| Provenance  | id, recordedAt (transaction time), extractor {id, model, version}, sourceHash                 | —                   |
 
 An **Entity** is a mention (person/org/place/event/concept/thing) with a label, aliases, and
 an optional `ref` (DXN of a canonical ECHO object once linked). Predicates are open strings
@@ -63,7 +63,7 @@ independently without re-extracting. Three layers, by increasing cost and contex
 ## Storage & query engine
 
 One SPARQL path: **Comunica (`@comunica/query-sparql-rdfjs`)** runs over a swappable RDF/JS
-`Source`. `SemanticStore.query` → `buildSparql` → Comunica → `Source.match()` in every
+`Source`. `FactStore.query` → `buildSparql` → Comunica → `Source.match()` in every
 configuration below; only the backend differs.
 
 | Config                 | Source                                              | Persistence | Platform          |
@@ -85,7 +85,7 @@ lookups, not heavy joins).
 ### Reification (storage shape)
 
 Each Fact is stored as **plain RDF reification**: a Fact node with `sx:subject` /
-`sx:predicate` / `sx:object` plus PROV-O attribution and `sx:` valence/metadata triples.
+`sx:predicate` / `sx:object` plus PROV-O attribution and `sx:` factuality/metadata triples.
 This is equivalent to the RDF-star quoted-triple form (used only as an export shape) but
 avoids RDF-star vs RDF-1.2 version fragility and keeps the SQLite `Source` a simple
 `(subject, predicate, object, objectType, graph)` table.
@@ -107,7 +107,7 @@ Incremental, document-oriented stages:
 
 1. **Chunk** — split text into analyzable units.
 2. **Extract** — schema-constrained LLM call (`@dxos/ai` `LanguageModel.generateObject`)
-   producing assertions + valence + attribution. The heart of the system.
+   producing assertions + factuality + attribution. The heart of the system.
 3. **Link** — resolve entity mentions (get-or-create), optionally to ECHO objects by DXN.
 4. **Reconcile** — append facts; conflicting/superseding facts coexist.
 5. **Persist** — write to the store; record a per-source `sourceHash` cursor.
@@ -155,7 +155,7 @@ Three levers, smallest-change first:
    call to do everything (mirrors KGGEN's "detect entities, then generate relations" to cut the
    model's cognitive load): **extract → type → normalize → score/prune**. The normalize pass runs the
    deferred entity-resolution + predicate-canonicalization corpus-wide (see [Normalization](#normalization));
-   the prune pass drops low-confidence / unsupported facts using the `valence.confidence` already on
+   the prune pass drops low-confidence / unsupported facts using the `factuality.confidence` already on
    each fact (probabilistic confidence is more robust than hard accept/reject —
    [Noise Mitigation for Entity Typing & Relation Extraction](https://arxiv.org/abs/1612.07495)). An
    optional LLM-as-judge verification step (refute-or-confirm against the source quote) gates the

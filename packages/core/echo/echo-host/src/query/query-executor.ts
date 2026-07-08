@@ -644,6 +644,9 @@ export class QueryExecutor extends Resource {
       case 'LimitStep':
         ({ workingSet: newWorkingSet, trace } = await this._execLimitStep(step, workingSet));
         break;
+      case 'SkipStep':
+        ({ workingSet: newWorkingSet, trace } = await this._execSkipStep(step, workingSet));
+        break;
       default:
         throw new Error(`Unknown step type: ${(step as any)._tag}`);
     }
@@ -1364,6 +1367,20 @@ export class QueryExecutor extends Resource {
     };
   }
 
+  private async _execSkipStep(step: QueryPlan.SkipStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+    const skippedWorkingSet = workingSet.slice(step.skip);
+
+    return {
+      workingSet: skippedWorkingSet,
+      trace: {
+        ...ExecutionTrace.makeEmpty(),
+        name: 'Skip',
+        details: JSON.stringify({ skip: step.skip }),
+        objectCount: skippedWorkingSet.length,
+      },
+    };
+  }
+
   private _compareMultiOrder(a: QueryItem, b: QueryItem, orders: readonly QueryAST.Order[]): number {
     // Short circuit for common cases.
     if (orders.length === 0) {
@@ -1383,8 +1400,10 @@ export class QueryExecutor extends Resource {
 
   private _compareByOrder(a: QueryItem, b: QueryItem, order: QueryAST.Order): number {
     switch (order.kind) {
-      case 'natural':
-        return a.objectId.localeCompare(b.objectId);
+      case 'natural': {
+        const comparison = a.objectId.localeCompare(b.objectId);
+        return order.direction === 'desc' ? -comparison : comparison;
+      }
       case 'property': {
         const comparison = this._compareByProperty(a, b, order.property);
         return order.direction === 'desc' ? -comparison : comparison;

@@ -41,6 +41,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
     "@effect/sql": "catalog:",
     "asynciterator": "catalog:",

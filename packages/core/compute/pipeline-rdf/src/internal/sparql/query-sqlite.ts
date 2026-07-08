@@ -86,7 +86,7 @@ export const querySqlite = (
       return facts;
     }
     const min = query.minConfidence;
-    return facts.filter((fact) => (fact.valence.confidence ?? 0) >= min);
+    return facts.filter((fact) => (fact.factuality.confidence ?? 0) >= min);
   }).pipe(
     Effect.mapError((cause) =>
       cause instanceof SemanticIndexError ? cause : new SemanticIndexError({ message: 'Failed to query facts', cause }),

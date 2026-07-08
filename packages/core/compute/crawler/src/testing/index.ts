@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
 import { AiService } from '@dxos/ai';
-import { SemanticStore } from '@dxos/pipeline-rdf';
+import { FactStore } from '@dxos/pipeline-rdf';
 
 import { AgentRegistry } from '../AgentRegistry';
 import { type Page, Source, type SourceApi, type ThreadRef } from '../Source';
@@ -271,17 +271,17 @@ export const deterministicAiService = (): Layer.Layer<AiService.AiService> =>
  * State + agent registry + semantic store, with NO `Source` and NO `AiService`. Compose with a
  * `Source` layer and an `AiService` (the deterministic stand-in or a real model) to run the crawler.
  */
-export const coreLayer: Layer.Layer<StateStore | AgentRegistry | SemanticStore> = Layer.mergeAll(
+export const coreLayer: Layer.Layer<StateStore | AgentRegistry | FactStore> = Layer.mergeAll(
   StateStore.layerMemory,
   AgentRegistry.layerMemory,
-  SemanticStore.layerMemory,
+  FactStore.layerMemory,
 );
 
 /**
  * Everything the crawler needs EXCEPT a {@link Source}: {@link coreLayer} + the deterministic
  * extractor. Compose with any `Source` layer to run the crawler offline (no AI token).
  */
-export const servicesLayer: Layer.Layer<StateStore | AgentRegistry | SemanticStore | AiService.AiService> = Layer.merge(
+export const servicesLayer: Layer.Layer<StateStore | AgentRegistry | FactStore | AiService.AiService> = Layer.merge(
   coreLayer,
   deterministicAiService(),
 );
@@ -289,7 +289,7 @@ export const servicesLayer: Layer.Layer<StateStore | AgentRegistry | SemanticSto
 /** All services the crawler needs, wired against a fixture + the deterministic extractor. */
 export const TestLayer = (
   fixture: Fixture,
-): Layer.Layer<Source | StateStore | AgentRegistry | SemanticStore | AiService.AiService> =>
+): Layer.Layer<Source | StateStore | AgentRegistry | FactStore | AiService.AiService> =>
   Layer.merge(fixtureSourceLayer(fixture), servicesLayer);
 
 /** A channel with one message that spawns a thread — exercises depth-first descent + per-thread resume. */

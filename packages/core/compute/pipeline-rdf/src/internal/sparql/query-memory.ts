@@ -68,5 +68,5 @@ export const queryMemory = (store: Store, query: SemanticQuery): Fact[] => {
     return facts;
   }
   const min = query.minConfidence;
-  return facts.filter((fact) => (fact.valence.confidence ?? 0) >= min);
+  return facts.filter((fact) => (fact.factuality.confidence ?? 0) >= min);
 };

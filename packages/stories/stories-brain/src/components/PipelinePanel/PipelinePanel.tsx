@@ -2,113 +2,105 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React from 'react';
 
-import { Icon, Input, Panel, ScrollArea, type ThemedClassName, Toolbar } from '@dxos/react-ui';
-import { Empty, OrderedList } from '@dxos/react-ui-list';
+import { IconButton, Panel, ScrollArea, Select, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Empty } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
-import { arrayMove } from '@dxos/util';
 
 export type StageInfo = {
   id: string;
   description?: string;
-  /** Whether the stage participates in the next run. */
+  /** Whether the stage participates in the run (configured by the story; shown dimmed when false). */
   enabled: boolean;
 };
 
-export type PipelinePanelProps = ThemedClassName<{
-  /** Stages composed into the pipeline, in execution order. */
+export type PipelineInfo = {
+  id: string;
+  label: string;
+  /** Fixed stage list for this pipeline, in execution order. */
   stages: StageInfo[];
-  /** Controlled update: fired on checkbox toggle and drag reorder. */
-  onStagesChanged?: (stages: StageInfo[]) => void;
-  /** Id of the stage currently executing. */
-  active?: string;
-  /** Latest pipeline output (rendered as JSON). */
-  output?: unknown;
+};
+
+export type PipelinePanelProps = ThemedClassName<{
+  /** Available pipelines; the toolbar picker selects which one runs. */
+  pipelines: PipelineInfo[];
+  /** Selected pipeline id. */
+  selected: string;
+  onSelect: (id: string) => void;
+  /** Whether the pipeline is currently running (drives the start/stop toggle). */
+  running?: boolean;
+  /** Count of objects processed by the current/last run (reset when a run starts). */
+  processed?: number;
+  /** Start the selected pipeline over the current input. */
+  onStart?: () => void;
+  /** Interrupt the in-flight run. */
+  onStop?: () => void;
 }>;
 
-const isStage = (value: unknown): value is StageInfo =>
-  typeof value === 'object' && value !== null && 'id' in value && typeof value.id === 'string';
-
 /**
- * Pipeline column (placeholder): the composed stages in execution order — each toggleable via a
- * checkbox and re-orderable by dragging — and the raw output of the latest run. Variants will
- * replace the output view with live per-stage progress and typed results.
+ * Pipeline column: a toolbar picker selecting which pipeline runs, a start/stop toggle, a live count
+ * of objects processed, and the fixed, read-only list of the pipeline's composed stages in execution
+ * order (disabled stages dimmed).
  */
-export const PipelinePanel = ({ classNames, stages, onStagesChanged, active, output }: PipelinePanelProps) => {
-  const handleToggle = useCallback(
-    (id: string, enabled: boolean) =>
-      onStagesChanged?.(stages.map((stage) => (stage.id === id ? { ...stage, enabled } : stage))),
-    [stages, onStagesChanged],
-  );
-
-  const handleMove = useCallback(
-    (fromIndex: number, toIndex: number) => {
-      const next = [...stages];
-      arrayMove(next, fromIndex, toIndex);
-      onStagesChanged?.(next);
-    },
-    [stages, onStagesChanged],
-  );
-
+export const PipelinePanel = ({
+  classNames,
+  pipelines,
+  selected,
+  onSelect,
+  running,
+  processed = 0,
+  onStart,
+  onStop,
+}: PipelinePanelProps) => {
+  const pipeline = pipelines.find((item) => item.id === selected) ?? pipelines[0];
+  const stages = pipeline?.stages ?? [];
   return (
     <Panel.Root classNames={classNames}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Toolbar.Text>Pipeline</Toolbar.Text>
+          <Select.Root value={selected} onValueChange={onSelect}>
+            <Select.TriggerButton placeholder='Pipeline' />
+            <Select.Portal>
+              <Select.Content>
+                <Select.Viewport>
+                  {pipelines.map((item) => (
+                    <Select.Option key={item.id} value={item.id}>
+                      {item.label}
+                    </Select.Option>
+                  ))}
+                </Select.Viewport>
+                <Select.Arrow />
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
+          <div role='none' className='grow' />
+          <span className='text-sm text-description tabular-nums'>{processed} processed</span>
+          <IconButton
+            icon={running ? 'ph--stop--regular' : 'ph--play--regular'}
+            iconOnly
+            label={running ? 'Stop' : 'Start'}
+            disabled={running ? !onStop : !onStart}
+            onClick={() => (running ? onStop?.() : onStart?.())}
+          />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
         <ScrollArea.Root padding>
           <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
             {stages.length === 0 && <Empty label='No stages.' />}
-            <OrderedList.Root<StageInfo>
-              items={stages}
-              isItem={isStage}
-              getId={(stage) => stage.id}
-              onMove={handleMove}
-              readonly={!onStagesChanged}
-            >
-              {({ items }) => (
-                <OrderedList.Content>
-                  {items.map((stage) => (
-                    <OrderedList.Item
-                      key={stage.id}
-                      id={stage.id}
-                      item={stage}
-                      hover
-                      classNames='grid grid-cols-[var(--dx-rail-item)_var(--dx-rail-item)_1fr_var(--dx-rail-item)] items-center gap-1 px-1 py-1'
-                    >
-                      <OrderedList.DragHandle />
-                      <Input.Root>
-                        <Input.Checkbox
-                          checked={stage.enabled}
-                          disabled={!onStagesChanged}
-                          onCheckedChange={(next) => handleToggle(stage.id, next === true)}
-                        />
-                      </Input.Root>
-                      <div className={mx('flex flex-col min-w-0', !stage.enabled && 'text-subdued')}>
-                        <span className='font-medium truncate'>{stage.id}</span>
-                        {stage.description && (
-                          <span className='text-sm text-description truncate'>{stage.description}</span>
-                        )}
-                      </div>
-                      {stage.id === active && (
-                        <Icon icon='ph--spinner-gap--regular' size={4} classNames='animate-spin' />
-                      )}
-                    </OrderedList.Item>
-                  ))}
-                </OrderedList.Content>
-              )}
-            </OrderedList.Root>
-            {output != null && (
-              <>
-                <h3 className='pt-2 text-sm text-description'>Output</h3>
-                <pre className='bg-input-surface border border-subdued-separator rounded-sm p-2 text-xs overflow-x-auto'>
-                  {JSON.stringify(output, null, 2)}
-                </pre>
-              </>
-            )}
+            {stages.map((stage) => (
+              <div
+                key={stage.id}
+                className={mx(
+                  'flex flex-col min-w-0 bg-card-surface border border-subdued-separator rounded-sm px-3 py-2',
+                  !stage.enabled && 'opacity-50',
+                )}
+              >
+                <span className='font-medium truncate'>{stage.id}</span>
+                {stage.description && <span className='text-sm text-description truncate'>{stage.description}</span>}
+              </div>
+            ))}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Content>
