@@ -6,10 +6,10 @@ import React, { useMemo, useState } from 'react';
 
 import { type RDF } from '@dxos/pipeline-rdf';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { FactViewer } from '@dxos/react-ui-fact-viewer';
 import { mx } from '@dxos/ui-theme';
 
 import { EntityList } from '../EntityList';
-import { FactViewer } from '../FactViewer';
 import { PredicateList } from '../PredicateList';
 import { entitiesFromFacts, predicatesFromFacts } from '../types';
 

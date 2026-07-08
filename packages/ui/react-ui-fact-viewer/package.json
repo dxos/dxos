@@ -1,0 +1,55 @@
+{
+  "name": "@dxos/react-ui-fact-viewer",
+  "version": "0.10.0",
+  "private": true,
+  "description": "Presentational viewer for extracted semantic facts.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/react-ui-graph": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/ui-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
