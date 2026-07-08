@@ -275,10 +275,10 @@ export class EchoTestPeer extends Resource {
     await db.open();
 
     this._lastDatabaseSpaceKey = spaceKey;
-    this._lastDatabaseRootUrl = rootUrl;
+    this._lastDatabaseRootUrl = resolvedRootUrl;
     if (this._storagePath) {
       await this.setStorageMetadata('lastDatabaseSpaceKey', spaceKey.toHex());
-      await this.setStorageMetadata('lastDatabaseRootUrl', rootUrl);
+      await this.setStorageMetadata('lastDatabaseRootUrl', resolvedRootUrl);
     }
 
     return db;
