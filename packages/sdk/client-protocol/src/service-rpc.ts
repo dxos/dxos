@@ -72,6 +72,24 @@ const parseTag = (tag: string): [serviceKey: keyof ClientServices, methodName: s
   return [tag.slice(0, index) as keyof ClientServices, tag.slice(index + 1)];
 };
 
+/** Resolves a bound service method from a services provider, throwing if the service/method is absent. */
+const resolveServiceMethod = (
+  services: Partial<ClientServices>,
+  serviceKey: keyof ClientServices,
+  methodName: string,
+  tag: string,
+): ((request: unknown) => unknown) => {
+  const service = services[serviceKey] as Record<string, unknown> | undefined;
+  if (!service) {
+    throw new Error(`Service not available: ${serviceKey}`);
+  }
+  const method = service[methodName];
+  if (typeof method !== 'function') {
+    throw new Error(`Method not available: ${tag}`);
+  }
+  return (method as (request: unknown) => unknown).bind(service);
+};
+
 //
 // Server.
 //
@@ -134,17 +152,7 @@ export const makeClientServicesHandlers = ({
   const handlers: Record<string, (payload: unknown) => unknown> = {};
   for (const [tag, rpc] of ClientServicesRpcs.requests) {
     const [serviceKey, methodName] = parseTag(tag);
-    const resolveMethod = (): ((request: unknown) => unknown) => {
-      const service = services()[serviceKey] as object | undefined;
-      if (!service) {
-        throw new Error(`Service not available: ${serviceKey}`);
-      }
-      const method = (service as Record<string, unknown>)[methodName];
-      if (typeof method !== 'function') {
-        throw new Error(`Method not available: ${tag}`);
-      }
-      return method.bind(service) as (request: unknown) => unknown;
-    };
+    const resolveMethod = () => resolveServiceMethod(services(), serviceKey, methodName, tag);
 
     if (RpcSchema.isStreamSchema(rpc.successSchema)) {
       handlers[tag] = (payload: unknown) =>
@@ -330,17 +338,7 @@ export const makeRpcFromServices = (services: () => Partial<ClientServices>): Cl
   for (const [tag, rpcDef] of ClientServicesRpcs.requests) {
     const [serviceKey, methodName] = parseTag(tag);
     const service = (rpc[serviceKey] ??= {});
-    const resolveMethod = (): ((request: unknown) => unknown) => {
-      const impl = services()[serviceKey] as Record<string, unknown> | undefined;
-      if (!impl) {
-        throw new Error(`Service not available: ${serviceKey}`);
-      }
-      const method = impl[methodName];
-      if (typeof method !== 'function') {
-        throw new Error(`Method not available: ${tag}`);
-      }
-      return (method as (request: unknown) => unknown).bind(impl);
-    };
+    const resolveMethod = () => resolveServiceMethod(services(), serviceKey, methodName, tag);
 
     if (RpcSchema.isStreamSchema(rpcDef.successSchema)) {
       service[methodName] = (request?: unknown) =>

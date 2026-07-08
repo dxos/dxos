@@ -46,10 +46,6 @@ export class WorkerClientServices implements ClientServicesProvider {
   @trace.info()
   private _isOpen = false;
 
-  get rpc() {
-    return this._services.rpc;
-  }
-
   private readonly _config: Config;
   private readonly _createWorker: () => SharedWorker;
   private readonly _logFilter: LogFilter[];
@@ -66,6 +62,10 @@ export class WorkerClientServices implements ClientServicesProvider {
 
   get descriptors(): ServiceBundle<ClientServices> {
     return clientServiceBundle;
+  }
+
+  get rpc() {
+    return this._services.rpc;
   }
 
   get services(): Partial<ClientServices> {
@@ -135,6 +135,7 @@ export class WorkerClientServices implements ClientServicesProvider {
               break;
           }
         },
+        onError: (err) => log.catch(err),
       },
     );
 

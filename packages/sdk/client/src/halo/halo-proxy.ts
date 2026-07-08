@@ -163,6 +163,8 @@ export class HaloProxy implements Halo {
    * Set up the credential stream for the given identity.
    */
   private _setupCredentialStream(identity: Identity): void {
+    // A fresh subscription replays the full credential set, so reset to avoid duplicates on reconnect.
+    this._credentialsChanged.emit([]);
     const cleanup = subscribeStream(
       this._runtime,
       this._serviceProvider.rpc.SpacesService.queryCredentials({ spaceKey: identity.spaceKey! }),
