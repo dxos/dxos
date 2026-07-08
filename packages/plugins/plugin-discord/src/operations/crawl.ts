@@ -37,6 +37,8 @@ const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannel
           for (const text of questions ?? []) {
             if (!known.has(text)) {
               yield* store.add(text);
+              // Track within this batch too, so a repeated text in `questions` is added once.
+              known.add(text);
             }
           }
           return yield* DiscordPipeline.run(

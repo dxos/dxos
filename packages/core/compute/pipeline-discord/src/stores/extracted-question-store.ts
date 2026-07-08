@@ -30,15 +30,20 @@ export interface ExtractedQuestionStoreApi {
 const fail = (message: string) => (cause: unknown) => new StoreError({ message, cause });
 
 const migrate = (sql: SqlClient.SqlClient) =>
-  sql`CREATE TABLE IF NOT EXISTS extracted_question (
-    message_id TEXT NOT NULL,
-    question TEXT NOT NULL,
-    author_id TEXT NOT NULL,
-    author_label TEXT,
-    target_id TEXT NOT NULL,
-    asked_at TEXT,
-    PRIMARY KEY (message_id, question)
-  )`;
+  Effect.gen(function* () {
+    yield* sql`CREATE TABLE IF NOT EXISTS extracted_question (
+      message_id TEXT NOT NULL,
+      question TEXT NOT NULL,
+      author_id TEXT NOT NULL,
+      author_label TEXT,
+      target_id TEXT NOT NULL,
+      asked_at TEXT,
+      PRIMARY KEY (message_id, question)
+    )`;
+    // `list(targetId)` filters by target — index it so the lookup does not scan the whole table
+    // (mirrors MessageStore's `message_target` index).
+    yield* sql`CREATE INDEX IF NOT EXISTS extracted_question_target ON extracted_question (target_id, message_id)`;
+  });
 
 type Row = {
   readonly message_id: string;

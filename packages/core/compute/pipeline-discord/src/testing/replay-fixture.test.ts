@@ -71,9 +71,12 @@ describe('replay over the crawled SQLite fixture', () => {
       console.log(`targets:   ${result.targets.map((target) => `${target.id}(${target.status})`).join(', ')}`);
       console.log(`agents:    ${result.agents.length}`);
       console.log(`questions: ${result.questions.length}\n`);
+      // This is a non-CI manual diagnostic over a fixture that may hold real chat content; truncate
+      // the question body so the console output stays a summary, not a verbatim message dump.
+      const clip = (text: string) => (text.length > 80 ? `${text.slice(0, 77)}…` : text);
       for (const question of result.questions) {
         console.log(
-          `  (${question.authorLabel ?? question.authorId} × ${question.targetId} × ${question.messageId})\n    ${question.question}`,
+          `  (${question.authorLabel ?? question.authorId} × ${question.targetId} × ${question.messageId})\n    ${clip(question.question)}`,
         );
       }
 

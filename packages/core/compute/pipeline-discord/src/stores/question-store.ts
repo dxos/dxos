@@ -20,6 +20,8 @@ export type Question = {
   readonly answer?: string;
   /** Fact/message ids supporting the answer (citations). */
   readonly supportingIds: readonly string[];
+  /** Count of failed answer attempts — bounds redundant retries across many target boundaries. */
+  readonly attempts: number;
   readonly createdAt: string;
   readonly updatedAt: string;
 };
@@ -32,6 +34,8 @@ export interface QuestionStoreApi {
   readonly list: (status?: QuestionStatus) => Effect.Effect<Question[], StoreError>;
   /** Record an answer with its supporting ids and close the question. */
   readonly answer: (id: string, answer: string, supportingIds: readonly string[]) => Effect.Effect<void, StoreError>;
+  /** Increment the failed-attempt counter for a question left open by an answer pass. */
+  readonly recordAttempt: (id: string) => Effect.Effect<void, StoreError>;
 }
 
 const fail = (message: string) => (cause: unknown) => new StoreError({ message, cause });
@@ -45,6 +49,7 @@ const migrate = (sql: SqlClient.SqlClient) =>
     status TEXT NOT NULL,
     answer TEXT,
     supporting_ids TEXT NOT NULL DEFAULT '[]',
+    attempts INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   )`;
@@ -55,6 +60,7 @@ type Row = {
   readonly status: string;
   readonly answer: string | null;
   readonly supporting_ids: string;
+  readonly attempts: number;
   readonly created_at: string;
   readonly updated_at: string;
 };
@@ -74,6 +80,7 @@ const toQuestion = (row: Row): Question => ({
   status: row.status === 'answered' ? 'answered' : 'open',
   ...(row.answer !== null ? { answer: row.answer } : {}),
   supportingIds: parseSupportingIds(row.supporting_ids),
+  attempts: Number(row.attempts ?? 0),
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -96,11 +103,12 @@ export class QuestionStore extends Context.Tag('@dxos/pipeline-discord/QuestionS
               text,
               status: 'open',
               supportingIds: [],
+              attempts: 0,
               createdAt: timestamp,
               updatedAt: timestamp,
             };
-            yield* sql`INSERT INTO question (id, text, status, supporting_ids, created_at, updated_at)
-              VALUES (${question.id}, ${question.text}, 'open', '[]', ${timestamp}, ${timestamp})`;
+            yield* sql`INSERT INTO question (id, text, status, supporting_ids, attempts, created_at, updated_at)
+              VALUES (${question.id}, ${question.text}, 'open', '[]', 0, ${timestamp}, ${timestamp})`;
             return question;
           }).pipe(Effect.mapError(fail('Failed to add question'))),
         get: (id) =>
@@ -122,6 +130,11 @@ export class QuestionStore extends Context.Tag('@dxos/pipeline-discord/QuestionS
             yield* sql`UPDATE question SET status = 'answered', answer = ${answer},
               supporting_ids = ${JSON.stringify(supportingIds)}, updated_at = ${timestamp} WHERE id = ${id}`;
           }).pipe(Effect.asVoid, Effect.mapError(fail('Failed to answer question'))),
+        recordAttempt: (id) =>
+          Effect.gen(function* () {
+            const timestamp = yield* now;
+            yield* sql`UPDATE question SET attempts = attempts + 1, updated_at = ${timestamp} WHERE id = ${id}`;
+          }).pipe(Effect.asVoid, Effect.mapError(fail('Failed to record question attempt'))),
       };
     }),
   );
@@ -137,6 +150,7 @@ export class QuestionStore extends Context.Tag('@dxos/pipeline-discord/QuestionS
             text,
             status: 'open',
             supportingIds: [],
+            attempts: 0,
             createdAt: timestamp,
             updatedAt: timestamp,
           };
@@ -162,6 +176,14 @@ export class QuestionStore extends Context.Tag('@dxos/pipeline-discord/QuestionS
               supportingIds: [...supportingIds],
               updatedAt: timestamp,
             });
+          }
+        }),
+      recordAttempt: (id) =>
+        Effect.gen(function* () {
+          const timestamp = yield* now;
+          const question = byId.get(id);
+          if (question) {
+            byId.set(id, { ...question, attempts: question.attempts + 1, updatedAt: timestamp });
           }
         }),
     };

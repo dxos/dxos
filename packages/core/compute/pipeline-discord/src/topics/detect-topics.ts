@@ -136,14 +136,14 @@ type OpenTopic = {
 
 const label = (message: StoredMessage): string => message.authorLabel ?? message.authorId;
 
-const openTopic = (targetId: string, message: StoredMessage, at: number): OpenTopic => ({
+const openTopic = (targetId: string, message: StoredMessage, at: number, tokens: Set<string>): OpenTopic => ({
   targetId,
   participants: [message.authorId],
   participantLabels: [label(message)],
   labelIndex: new Set([label(message).toLowerCase()]),
   authorIndex: new Set([message.authorId]),
   messageIds: [message.id],
-  keywords: salientTokens(message.text),
+  keywords: new Set(tokens),
   startMessageId: message.id,
   endMessageId: message.id,
   startedAt: message.createdAt,
@@ -151,7 +151,7 @@ const openTopic = (targetId: string, message: StoredMessage, at: number): OpenTo
   lastAt: at,
 });
 
-const join = (topic: OpenTopic, message: StoredMessage, at: number): void => {
+const join = (topic: OpenTopic, message: StoredMessage, at: number, tokens: Set<string>): void => {
   if (!topic.authorIndex.has(message.authorId)) {
     topic.authorIndex.add(message.authorId);
     topic.participants.push(message.authorId);
@@ -159,7 +159,7 @@ const join = (topic: OpenTopic, message: StoredMessage, at: number): void => {
     topic.labelIndex.add(label(message).toLowerCase());
   }
   topic.messageIds.push(message.id);
-  for (const token of salientTokens(message.text)) {
+  for (const token of tokens) {
     topic.keywords.add(token);
   }
   topic.endMessageId = message.id;
@@ -170,17 +170,18 @@ const join = (topic: OpenTopic, message: StoredMessage, at: number): void => {
 /**
  * Affinity of a message for an open topic: @mentions of topic participants are the strongest
  * conversational signal (asker ↔ answerer), shared vocabulary carries subject continuity, and an
- * author already in the topic gets a small continuation bias.
+ * author already in the topic gets a small continuation bias. `tokens`/`mentions` are computed once
+ * per message by the caller and reused across every open topic (avoiding O(M×N) recomputation).
  */
-const score = (topic: OpenTopic, message: StoredMessage): number => {
+const score = (topic: OpenTopic, message: StoredMessage, tokens: Set<string>, mentions: readonly string[]): number => {
   let total = 0;
-  for (const mention of mentionsOf(message.text)) {
+  for (const mention of mentions) {
     if (topic.labelIndex.has(mention.toLowerCase())) {
       total += 2;
     }
   }
   let overlap = 0;
-  for (const token of salientTokens(message.text)) {
+  for (const token of tokens) {
     if (topic.keywords.has(token)) {
       overlap++;
     }
@@ -223,9 +224,9 @@ export const detectTopics = (
 
   // A subthread IS a topic: Discord already scoped the conversation.
   if (target.threadId) {
-    const topic = openTopic(target.id, messages[0], 0);
+    const topic = openTopic(target.id, messages[0], 0, salientTokens(messages[0].text));
     for (const message of messages.slice(1)) {
-      join(topic, message, 0);
+      join(topic, message, 0, salientTokens(message.text));
     }
     return [toSegment(topic, target.threadId)];
   }
@@ -243,10 +244,14 @@ export const detectTopics = (
     const at = Number.isFinite(parsed) ? parsed : lastSeen;
     lastSeen = at;
 
+    // Computed once per message and reused across every open topic below.
+    const tokens = salientTokens(message.text);
+    const mentions = mentionsOf(message.text);
+
     // 1. Reply link: joins its parent's topic even when that topic has gone quiet.
     const parentTopic = message.parentId ? byMessageId.get(message.parentId) : undefined;
     if (parentTopic) {
-      join(parentTopic, message, at);
+      join(parentTopic, message, at, tokens);
       byMessageId.set(message.id, parentTopic);
       continue;
     }
@@ -258,17 +263,17 @@ export const detectTopics = (
       if (at - topic.lastAt > sessionGapMs) {
         continue;
       }
-      const affinity = score(topic, message);
+      const affinity = score(topic, message, tokens, mentions);
       if (affinity > bestScore) {
         best = topic;
         bestScore = affinity;
       }
     }
     if (best && bestScore >= minScore) {
-      join(best, message, at);
+      join(best, message, at, tokens);
       byMessageId.set(message.id, best);
     } else {
-      const topic = openTopic(target.id, message, at);
+      const topic = openTopic(target.id, message, at, tokens);
       topics.push(topic);
       byMessageId.set(message.id, topic);
     }

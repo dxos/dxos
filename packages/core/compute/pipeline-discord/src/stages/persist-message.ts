@@ -27,7 +27,9 @@ const toStored = (target: Type.Target, message: Type.Message): StoredMessage => 
  * after a hard interrupt the durable cursor can lag what was processed (commit-after-process), so
  * a resumed crawl refetches an overlap window — dropping known ids here keeps every downstream
  * effect (agent stats, extraction, question answering) exactly-once. Non-message events pass
- * through untouched; a store failure is recorded on the target and the event continues.
+ * through untouched; a store failure is recorded on the target and the message is dropped (not
+ * forwarded) so the commit sink cannot advance the durable cursor past an un-stored message —
+ * the message is refetched and retried on the next resume.
  */
 export const persistMessageStage = (): Stage.Stage<Type.Event, Type.Event, StateError, MessageStore | StateStore> =>
   Stage.map(
@@ -49,7 +51,9 @@ export const persistMessageStage = (): Stage.Stage<Type.Event, Type.Event, State
               Effect.flatMap(StateStore, (store) =>
                 store
                   .setStatus(event.target.id, event.target.status, `persist-message: ${error.message}`)
-                  .pipe(Effect.as(event)),
+                  // Drop the event: forwarding it would let the commit sink advance the cursor past
+                  // a message that was never stored, silently losing it on resume.
+                  .pipe(Effect.as(undefined)),
               ),
             ),
           ),
