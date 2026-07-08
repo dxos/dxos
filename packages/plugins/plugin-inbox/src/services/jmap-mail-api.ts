@@ -20,25 +20,56 @@ import { type JmapCredentials } from './jmap-credentials';
  */
 type Requirements = HttpClient.HttpClient | JmapCredentials;
 
-/** Strips a request function's requirements (baked in by {@link JmapMailApi.Live}). */
-type Baked<Fn> = Fn extends (...args: infer A) => Effect.Effect<infer S, infer E, any>
-  ? (...args: A) => Effect.Effect<S, E>
-  : never;
-
 /**
  * Swappable JMAP API surface. `Live` delegates to the real {@link Jmap}/{@link JmapMail} request
  * functions; tests provide a data-backed mock. Making the JMAP dependency a service (rather than the
  * sync operation calling `Jmap.*`/`JmapMail.*` and hardcoding `FetchHttpClient.layer` internally) is
  * what lets the sync run against generated data with no live account — mirrors `GoogleMailApi`.
+ * Every request fails only with {@link JmapApiError}, and methods carry no requirements: `Live`
+ * bakes them in (see {@link Requirements}) so a mock can satisfy the surface with no HTTP or creds.
  */
 export interface JmapMailApiService {
   readonly getSession: Effect.Effect<Jmap.Session, JmapApiError>;
-  readonly mailboxGet: Baked<typeof JmapMail.mailboxGet>;
-  readonly emailQuery: Baked<typeof JmapMail.emailQuery>;
-  readonly emailGet: Baked<typeof JmapMail.emailGet>;
-  readonly identityGet: Baked<typeof JmapMail.identityGet>;
-  readonly emailSetUpdate: Baked<typeof JmapMail.emailSetUpdate>;
-  readonly submitEmail: Baked<typeof JmapMail.submitEmail>;
+  readonly mailboxGet: (target: JmapMail.Target) => Effect.Effect<JmapMail.MailboxGetResult, JmapApiError>;
+  readonly emailQuery: (
+    target: JmapMail.Target,
+    options?: {
+      filter?: unknown;
+      sort?: readonly { property: string; isAscending?: boolean }[];
+      position?: number;
+      limit?: number;
+      calculateTotal?: boolean;
+    },
+  ) => Effect.Effect<JmapMail.EmailQueryResult, JmapApiError>;
+  readonly emailGet: (
+    target: JmapMail.Target,
+    ids: readonly string[],
+    properties?: readonly string[],
+  ) => Effect.Effect<JmapMail.EmailGetResult, JmapApiError>;
+  readonly identityGet: (target: JmapMail.Target) => Effect.Effect<JmapMail.IdentityGetResult, JmapApiError>;
+  readonly emailSetUpdate: (
+    target: JmapMail.Target,
+    emailId: string,
+    patch: Record<string, unknown>,
+  ) => Effect.Effect<JmapMail.EmailSetResult, JmapApiError>;
+  readonly submitEmail: (
+    target: JmapMail.Target,
+    args: {
+      identityId: string;
+      draftsMailboxId: string;
+      sentMailboxId: string;
+      draft: {
+        from: readonly JmapMail.EmailAddress[];
+        to: readonly JmapMail.EmailAddress[];
+        cc?: readonly JmapMail.EmailAddress[];
+        bcc?: readonly JmapMail.EmailAddress[];
+        subject?: string;
+        inReplyTo?: readonly string[];
+        references?: readonly string[];
+        text: string;
+      };
+    },
+  ) => Effect.Effect<{ id: string; threadId: string | undefined }, JmapApiError>;
 }
 
 /**

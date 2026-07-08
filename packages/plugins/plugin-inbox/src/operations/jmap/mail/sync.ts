@@ -10,9 +10,15 @@ import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 
+// `Capability` (from `EmailStage.onArrivalExtractors`) appears in `runJmapSync`'s inferred
+// requirements; the import lets TypeScript name it in the emitted .d.ts.
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { type Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
+// `EntityNotFoundError` is part of `runJmapSync`'s inferred error channel; the import lets
+// TypeScript name it in the emitted .d.ts.
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type Resolver, resolve } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
@@ -23,6 +29,9 @@ import { Cursor, Person } from '@dxos/types';
 
 import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
+// `JmapApiError` is part of `runJmapSync`'s inferred error channel; the import lets TypeScript name
+// it in the emitted .d.ts.
+// eslint-disable-next-line unused-imports/no-unused-imports
 import { type JmapApiError } from '../../../errors';
 import { JmapCredentials, JmapMailApi, type JmapMailApiService } from '../../../services';
 import { EmailStage, type SyncDirection, type SyncWindow, resolveSyncWindow } from '../../../sync';
@@ -60,11 +69,7 @@ export const runJmapSync = ({
    * sync); a cursor → `forward` (incremental). Pass `backward` (with `before` = oldest-synced) to backfill.
    */
   direction?: SyncDirection;
-}): Effect.Effect<
-  { newMessages: number },
-  JmapApiError | EntityNotFoundError,
-  JmapMailApi | Database.Service | Resolver | Capability.Service | Operation.Service
-> =>
+}) =>
   Effect.gen(function* () {
     const binding = yield* Database.load(bindingRef);
     const mailbox = Relation.getTarget(binding);

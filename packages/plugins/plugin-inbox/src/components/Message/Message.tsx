@@ -292,10 +292,11 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   const settings = useAtomValue(settingsAtom ?? FALLBACK_SETTINGS_ATOM);
   const loadRemoteImages = settings.loadRemoteImages ?? false;
 
-  // Person-to-person mail carries Gmail's "Personal" category tag (persisted into the mailbox tag
-  // index during label sync); used to decide how aggressively the HTML view restyles the body.
+  // Person-to-person mail carries a provider "personal" tag (e.g. Gmail's "Personal" category,
+  // persisted into the mailbox tag index during label sync); used to decide how aggressively the
+  // HTML view restyles the body.
   const db = getSpace(mailbox ?? message)?.db;
-  const personalTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Mailbox.GMAIL_PERSONAL_TAG_KEY]))[0];
+  const personalTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [...Mailbox.PERSONAL_TAG_KEYS]))[0];
   const isPersonal = useMemo(
     () =>
       !!(mailbox && personalTag && Mailbox.getTagsForMessage(mailbox, message).includes(Mailbox.tagUri(personalTag))),

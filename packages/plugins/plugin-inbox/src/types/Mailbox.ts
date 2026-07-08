@@ -18,11 +18,13 @@ import { Message } from '@dxos/types';
 export const GMAIL_TAG_SOURCE = 'com.google.gmail.label';
 
 /**
- * Foreign key of the Gmail "Personal" category tag (the Primary inbox category). Persisted during
- * label sync like any other Gmail label; used to tell person-to-person mail from bulk/marketing when
- * deciding how aggressively to restyle a message body (see the HTML viewer).
+ * Foreign keys that mark a message as person-to-person ("personal") mail, used to tell it from
+ * bulk/marketing when deciding how aggressively to restyle a message body (see the HTML viewer).
+ * Each provider contributes its own signal: Gmail persists the "Personal"/Primary inbox category
+ * (`CATEGORY_PERSONAL`) during label sync. JMAP contributes nothing — its mailbox roles
+ * (inbox/archive/sent/…) don't distinguish person-to-person from bulk mail — so it has no equivalent.
  */
-export const GMAIL_PERSONAL_TAG_KEY = { source: GMAIL_TAG_SOURCE, id: 'CATEGORY_PERSONAL' } as const;
+export const PERSONAL_TAG_KEYS = [{ source: GMAIL_TAG_SOURCE, id: 'CATEGORY_PERSONAL' }] as const;
 
 /**
  * Foreign-key source for JMAP provider folders (mailboxes). A JMAP mailbox maps to a {@link Tag}

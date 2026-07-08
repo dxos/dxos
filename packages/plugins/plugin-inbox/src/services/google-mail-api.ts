@@ -3,13 +3,17 @@
 //
 
 import type * as HttpClient from '@effect/platform/HttpClient';
+import type * as HttpClientError from '@effect/platform/HttpClientError';
+import type * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import type * as ParseResult from 'effect/ParseResult';
 
 import { Credential } from '@dxos/compute';
 
 import { GoogleMail } from '../apis';
+import { GoogleApiError } from '../errors';
 import { GoogleCredentials } from './google-credentials';
 
 /**
@@ -20,23 +24,41 @@ import { GoogleCredentials } from './google-credentials';
  */
 type Requirements = HttpClient.HttpClient | GoogleCredentials | Credential.CredentialsService;
 
-/** Strips a {@link GoogleMail} request function's requirements (baked in by {@link GoogleMailApi.Live}). */
-type Baked<Fn> = Fn extends (...args: infer A) => Effect.Effect<infer S, infer E, any>
-  ? (...args: A) => Effect.Effect<S, E>
-  : never;
+/**
+ * The failure modes shared by every {@link GoogleMail} request: transport ({@link GoogleApiError},
+ * HTTP, request timeout) and decode ({@link GoogleMail.GoogleError}, schema parse).
+ */
+type GoogleMailApiError =
+  | GoogleApiError
+  | HttpClientError.HttpClientError
+  | Cause.TimeoutException
+  | GoogleMail.GoogleError
+  | ParseResult.ParseError;
 
 /**
  * Swappable Gmail API surface. `Live` delegates to the real {@link GoogleMail} request functions;
  * tests provide a data-backed mock. Making the Gmail dependency a service (rather than the sync
  * operation calling `GoogleMail.*` and hardcoding `FetchHttpClient.layer` internally) is what lets
- * the sync run against generated data with no live account.
+ * the sync run against generated data with no live account. Methods carry no requirements: `Live`
+ * bakes them in (see {@link Requirements}) so a mock can satisfy the surface with no HTTP or creds.
  */
 export interface GoogleMailApiService {
-  readonly listLabels: Baked<typeof GoogleMail.listLabels>;
-  readonly listMessages: Baked<typeof GoogleMail.listMessages>;
-  readonly getMessage: Baked<typeof GoogleMail.getMessage>;
-  readonly sendMessage: Baked<typeof GoogleMail.sendMessage>;
-  readonly trashMessage: Baked<typeof GoogleMail.trashMessage>;
+  readonly listLabels: (userId: string) => Effect.Effect<GoogleMail.LabelsResponse, GoogleMailApiError>;
+  readonly listMessages: (
+    userId: string,
+    q: string,
+    pageSize: number,
+    pageToken?: string,
+  ) => Effect.Effect<GoogleMail.ListMessagesResponse, GoogleMailApiError>;
+  readonly getMessage: (userId: string, messageId: string) => Effect.Effect<GoogleMail.Message, GoogleMailApiError>;
+  readonly sendMessage: (
+    userId: string,
+    message: { raw: string; threadId?: string },
+  ) => Effect.Effect<
+    { readonly id: string; readonly threadId: string; readonly labelIds: readonly string[] },
+    GoogleMailApiError
+  >;
+  readonly trashMessage: (userId: string, messageId: string) => Effect.Effect<GoogleMail.Message, GoogleMailApiError>;
 }
 
 /**
