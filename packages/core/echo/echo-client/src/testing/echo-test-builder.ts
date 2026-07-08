@@ -272,7 +272,9 @@ export class EchoTestPeer extends Resource {
   }
 
   async openLastDatabase({ client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {}) {
-    return this.openDatabase(this._lastDatabaseSpaceKey!, this._lastDatabaseRootUrl!, {
+    invariant(this._lastDatabaseSpaceKey, 'No database has been created yet.');
+    invariant(this._lastDatabaseRootUrl, 'No database has been created yet.');
+    return this.openDatabase(this._lastDatabaseSpaceKey, this._lastDatabaseRootUrl, {
       client,
       reactiveSchemaQuery,
       preloadSchemaOnOpen,
