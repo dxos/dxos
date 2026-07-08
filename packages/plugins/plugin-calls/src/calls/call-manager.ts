@@ -13,6 +13,7 @@ import { Resource } from '@dxos/context';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
 import { type ContentBlock, Message } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
@@ -299,7 +300,18 @@ export class CallManager extends Resource {
 
     const generation = ++this.#joinGeneration;
     this._swarmSynchronizer.setJoined(true);
-    await this._runJoin(generation, roomId, deviceKey);
+    try {
+      await this._runJoin(generation, roomId, deviceKey);
+    } catch (error) {
+      // Roll back the optimistic flip and release any partially-acquired swarm/media state — otherwise the
+      // UI is stuck showing "in call" with no working connection. Skip if a newer join/leave already
+      // superseded this attempt: that call chain owns the state now and this one must not clobber it.
+      if (generation === this.#joinGeneration) {
+        this._swarmSynchronizer.setJoined(false);
+        await this._teardown();
+      }
+      throw error;
+    }
   }
 
   // TODO(mykola): Reconcile with _swarmSynchronizer.state.joined.
@@ -333,8 +345,13 @@ export class CallManager extends Resource {
       joiner: this._roomJoiner,
       createMeeting: this._createMeeting,
       // Advertise as soon as the edge join returns (before the SFU connect) so a concurrently-joining peer
-      // converges on this meeting rather than minting its own.
-      onMeetingResolved: (id) => this._swarmSynchronizer.advertiseMeetingId(id),
+      // converges on this meeting rather than minting its own. Skip if superseded: this join's meeting will
+      // never actually be attended, so advertising it would steer a real peer into a doomed meeting.
+      onMeetingResolved: (id) => {
+        if (generation === this.#joinGeneration) {
+          this._swarmSynchronizer.advertiseMeetingId(id);
+        }
+      },
     });
     await this._mediaManager.join(transport);
 
@@ -348,7 +365,7 @@ export class CallManager extends Resource {
     // Native transcription broadcasts every participant; persist only our own so each segment is written once.
     this.#transcriptUnsubscribe = transport.subscribeTranscripts?.((event) => {
       if (event.deviceKey === deviceKey) {
-        void this.#writeTranscript(event);
+        void this.#writeTranscript(event).catch((error) => log.catch(error));
       }
     });
 

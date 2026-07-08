@@ -229,6 +229,9 @@ export class CallSwarmSynchronizer extends Resource {
 
     this._state.users = undefined;
     this._state.self = undefined;
+    // Otherwise a rejoin's `resolveMeetingId` can read this device's own stale advertisement (re-sent by
+    // `_sendState` before a fresh one is published) and reuse an already-torn-down RealtimeKit meeting.
+    delete this._state.activities![MEETING_ACTIVITY_KEY];
   }
 
   async querySwarm(roomId: string) {
@@ -268,7 +271,9 @@ export class CallSwarmSynchronizer extends Resource {
 
   #readAdvertisedMeetingId(peers: SwarmResponse['peers']): string | undefined {
     for (const peer of peers ?? []) {
-      if (!peer.state) {
+      // Self's own advertisement is not external confirmation that a meeting exists — reading it back
+      // would let a rejoin resolve to a meeting id this same device already tore down.
+      if (!peer.state || peer.peerKey === this._deviceKey) {
         continue;
       }
       try {

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { useAtomCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -37,6 +37,14 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
   // (no manager bound to this feed) keeps the mic button.
   const managedFeeds = useAtomCapability(TranscriptionCapabilities.ManagedFeeds);
   const managed = !!feed && managedFeeds.has(Obj.getURI(feed));
+
+  // Hiding the toolbar action only stops new local recordings — an already-running one keeps capturing.
+  // Force it off so a meeting turning on native transcription can't double-write this feed.
+  useEffect(() => {
+    if (managed && recording) {
+      toggleRecording();
+    }
+  }, [managed, recording, toggleRecording]);
 
   const menuActions = useMenuBuilder(() => {
     const builder = MenuBuilder.make();

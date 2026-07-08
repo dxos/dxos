@@ -34,7 +34,7 @@ export const CallArticle = ({ roomId }: CallArticleProps) => {
   const leaveSound = useSoundEffect('LeaveCall');
 
   const handleJoin = useCallback(() => {
-    void provider?.join(roomId);
+    void provider?.join(roomId).catch((err) => log.catch(err));
   }, [provider, roomId]);
 
   const handleLeave = useCallback(() => {
