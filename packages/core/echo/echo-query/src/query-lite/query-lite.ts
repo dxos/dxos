@@ -67,7 +67,7 @@ namespace Order1 {
   export const aggregate = <T>(
     name: T extends Query$.Group<any, any, infer A> ? keyof A & string : string,
     direction: QueryAST.OrderDirection,
-  ): Order$.Order<T> =>
+  ): Order$.Order<T, 'aggregate'> =>
     new OrderClass({
       kind: 'aggregate',
       name,

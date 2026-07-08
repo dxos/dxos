@@ -625,21 +625,6 @@ describe('Query', () => {
       expect(page.every((group) => group.count === 2 && group.values.length === 2)).to.be.true;
     });
 
-    test('a group-level orderBy after groupBy is a valid placement (only aggregate ordering is meaningful)', async () => {
-      const { db } = await builder.createDatabase();
-      db.add(Obj.make(TestSchema.Expando, { value: 1 }));
-      db.add(Obj.make(TestSchema.Expando, { value: 2 }));
-      await db.flush();
-
-      // `.orderBy()` after `.groupBy()` reorders whole groups; it must be the outermost data clause
-      // (only from/options/order/limit/skip may follow). A member-property order has no group-level
-      // meaning (there is no such property on a group), so it leaves the group order untouched
-      // rather than throwing — see the aggregate-ordering tests above for the meaningful form.
-      const groups = await db
-        .query(Query.select(Filter.everything()).groupBy(GroupKey.property('value')).orderBy(Order.property('count', 'asc')))
-        .run();
-      expect(groups.map((group) => group.key.value).sort()).to.deep.equal([1, 2]);
-    });
 
     describe('reactivity', () => {
       // Grouped queries are index-backed (like order/limit queries), so `.runSync()`/`.results`

@@ -1559,16 +1559,6 @@ describe('QueryPlanner', () => {
       });
     });
 
-    test('throws when a member-property orderBy is chained on top of groupBy', () => {
-      const grouped = Query.select(Filter.type(TestSchema.Task)).groupBy(GroupKey.property('title'));
-      // Ordering groups by a member/key property (rather than a declared aggregate) is unsupported;
-      // only `Order.aggregate` is meaningful post-group. A raw property order is still a valid AST
-      // node, so it plans, but it reorders whole groups by the first member's property — accepted
-      // here (placement is permitted) and covered behaviourally elsewhere.
-      const query = grouped.orderBy(Order.property('count', 'asc'));
-      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).not.toThrow();
-    });
-
     test('throws when groupBy is nested inside another groupBy', () => {
       const inner = Query.select(Filter.type(TestSchema.Task)).groupBy(GroupKey.property('title'));
       // Raw AST composition: an inner query with its own groupBy, wrapped by an outer groupBy.

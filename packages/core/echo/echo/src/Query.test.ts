@@ -976,6 +976,24 @@ describe('query api', () => {
         // @ts-expect-error - no aggregates declared, so no name is valid.
         grouped.orderBy(Order.aggregate('latest', 'desc'));
       });
+
+      test('type-level: member and aggregate ordering are mutually exclusive across groupBy', () => {
+        const ungrouped = Query.type(TestSchema.Person);
+        // Before groupBy: member orders are accepted, aggregate ordering is not.
+        ungrouped.orderBy(Order.property('name', 'desc'));
+        // @ts-expect-error - Order.aggregate is not allowed before a groupBy.
+        ungrouped.orderBy(Order.aggregate('latest', 'desc'));
+
+        const grouped = Query.type(TestSchema.Person)
+          .groupBy(GroupKey.property('email'))
+          .aggregate({ latest: Aggregate.max('name') });
+        // After groupBy: only aggregate ordering is accepted.
+        grouped.orderBy(Order.aggregate('latest', 'desc'));
+        // @ts-expect-error - member orders (property) are not allowed after a groupBy.
+        grouped.orderBy(Order.property('count', 'desc'));
+        // @ts-expect-error - other member orders (natural) are not allowed after a groupBy either.
+        grouped.orderBy(Order.natural('desc'));
+      });
     });
   });
 

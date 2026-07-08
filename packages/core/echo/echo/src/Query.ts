@@ -154,10 +154,19 @@ export interface Query<T> {
   /**
    * Order the query results.
    * Orders are specified in priority order. The first order will be applied first, etc.
+   *
+   * The accepted order kind is mutually exclusive with grouping: before a {@link groupBy} only
+   * member orders ({@link Order.property} / {@link Order.natural} / {@link Order.rank} /
+   * {@link Order.created} / {@link Order.updated}) are allowed; after a {@link groupBy} only
+   * {@link Order.aggregate} is (it reorders whole groups by a declared aggregate).
    * @param order - Order to sort the results.
    * @returns Query for the ordered results.
    */
-  'orderBy'(...order: EffectArray.NonEmptyArray<Order.Order<T>>): Query<T>;
+  'orderBy'(
+    ...order: T extends Group<any, any, any>
+      ? EffectArray.NonEmptyArray<Order.Order<T, 'aggregate'>>
+      : EffectArray.NonEmptyArray<Order.Order<T, 'member'>>
+  ): Query<T>;
 
   /**
    * Group the query results by one or more scalar property values.
@@ -406,7 +415,7 @@ class QueryClass implements Any {
     });
   }
 
-  'orderBy'(...order: Order.Order<any>[]): Any {
+  'orderBy'(...order: Order.Any[]): Any {
     return new QueryClass({
       type: 'order',
       query: this.ast,
