@@ -32,10 +32,9 @@ const calendarTypename = Type.getTypename(Calendar.Calendar);
 
 const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
 
-// The navtree new-message badge only needs to distinguish "some new" up to a cap, so it queries a
-// bounded newest-N window instead of the whole feed. This keeps the always-mounted count query from
-// loading (and pinning the client's retention window to) the entire mailbox — the badge saturates at
-// this many rather than reporting an exact count for very large unread backlogs.
+// TODO(wittjosiah): Precompute the new-message count rather than deriving it from a feed query. A
+//   windowed query can't count past the window (it saturates at the cap), and querying the feed here
+//   pins the client's retention window. The count should be maintained/precomputed off the sync cursor.
 const NEW_MESSAGE_COUNT_WINDOW = 100;
 
 type FeedObjectNodeConfig<Parent extends Obj.Unknown, Child extends Obj.Unknown> = {
@@ -319,9 +318,7 @@ export default Capability.makeModule(
           }
 
           const messageId = get(selectedId(matched.nodeId));
-          // Resolve the selected message by id against the whole feed (a bare feed query fetches all
-          // items and matches by id), so a message outside the list's rendered window still resolves
-          // — otherwise the companion would blank for a selection scrolled out of view.
+          // Query the whole feed (not the rendered window) so a selection scrolled out of view resolves.
           const message = get(
             db.query(Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed)).atom,
           )[0];

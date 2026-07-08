@@ -2,21 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
-import * as Atom from '@effect-atom/atom/Atom';
-import React, {
-  type KeyboardEvent,
-  type MouseEvent,
-  createContext,
-  forwardRef,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from 'react';
+import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { type PaginationResult } from '@dxos/echo-react';
 import { DxAvatar } from '@dxos/lit-ui/react';
+import { type PaginationResult } from '@dxos/react-client/echo';
 import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
@@ -33,20 +22,6 @@ import { useGmailTags } from '#hooks';
 import { getMessageProps } from '../../util';
 import { Row } from '../Row';
 import { Tile } from '../Tile';
-
-/** Per-message tag chip atom family; a message tile subscribes to just its own tags. */
-export type MessageTagsFamily = (messageId: string) => Atom.Atom<MessageStackTag[]>;
-
-/** Per-message starred boolean atom family; a message tile subscribes to just its own star state. */
-export type StarredFamily = (messageId: string) => Atom.Atom<boolean>;
-
-const EMPTY_TAGS_ATOM = Atom.make((): MessageStackTag[] => []);
-const defaultMessageTagsFamily: MessageTagsFamily = () => EMPTY_TAGS_ATOM;
-const TagsContext = createContext<MessageTagsFamily>(defaultMessageTagsFamily);
-
-const NOT_STARRED_ATOM = Atom.make(() => false);
-const defaultStarredFamily: StarredFamily = () => NOT_STARRED_ATOM;
-const StarredContext = createContext<StarredFamily>(defaultStarredFamily);
 
 export type MessageStackAction =
   | { type: 'current'; messageId: string }
@@ -68,29 +43,28 @@ export type MessageStackActionHandler = (action: MessageStackAction) => void;
  */
 export type MessageStackTag = { id: string; label: string; hue?: string };
 
+/**
+ * Inverted index `messageId → tags`. Built by `Mailbox.buildMessageTagsIndex` in the parent
+ * (MailboxArticle) so each tile can look up its tags by message id with no extra query.
+ */
+export type MessageTagsIndex = Record<string, MessageStackTag[]>;
+
 export type MessageStackProps = {
   id: string;
   messages?: Message.Message[];
-  /** Per-message tag chip atom family; each tile subscribes to only its own message's tags. */
-  tagsAtom?: MessageTagsFamily;
+  /** Per-message tag list, indexed by message id. */
+  tags?: MessageTagsIndex;
   currentId?: string;
   /** IDs of selected messages (forwarded to Mosaic so `aria-selected` fires `dx-selected`). */
   selectedIds?: ReadonlySet<string>;
-  /** Per-message starred atom family; each tile subscribes to only its own star state. */
-  starredAtom?: StarredFamily;
+  /** IDs of starred messages; drives the per-tile star toggle. */
+  starredIds?: ReadonlySet<string>;
   /**
-   * When true, messages are grouped into conversations by `threadId` (the email thread key).
-   * Messages without a `threadId` form singleton conversations.
+   * When true, messages are grouped into conversations by `threadId` (the email thread key) and only
+   * the most recent message per conversation is displayed. Messages without a `threadId` form singleton
+   * conversations.
    */
   conversations?: boolean;
-  /**
-   * When true, a conversation tile previews only its most recent message instead of up to 4 --
-   * every tile then renders exactly one message row, giving conversation tiles a uniform, predictable
-   * height. Without it, a tile's height varies with how many of its messages happen to be loaded (1
-   * to 4 rows), which the virtualizer's pagination can't account for (its scroll-anchor restoration
-   * assumes a stable per-item size). No effect outside `conversations` mode.
-   */
-  latestMessageOnly?: boolean;
   /**
    * When `messages` is a lazily-loaded window (see `usePagination`), drives loading more
    * older messages as the user scrolls toward the loaded end. Accepts `usePagination`'s full
@@ -106,18 +80,7 @@ export type MessageStackProps = {
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
   (
-    {
-      messages,
-      tagsAtom,
-      currentId,
-      selectedIds,
-      starredAtom,
-      conversations,
-      latestMessageOnly,
-      pagination,
-      onAction,
-      ...props
-    },
+    { messages, tags, currentId, selectedIds, starredIds, conversations, pagination, onAction, ...props },
     forwardedRef,
   ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
@@ -127,9 +90,6 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
         return undefined;
       }
 
-      // `messages` arrives ordered newest-first (the feed query orders by `created` desc), and a `Map`
-      // preserves insertion order — so each conversation is keyed on first sight of its most-recent
-      // message, and the resulting tile order is threads-by-most-recent-message.
       const groups = new Map<string, Message.Message[]>();
       for (const message of messages ?? []) {
         const key = message.threadId ?? message.id;
@@ -154,17 +114,20 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
         return Array.from(conversationGroups.entries(), ([conversationId, conversationMessages]) => ({
           conversationId,
           messages: conversationMessages,
-          latestMessageOnly,
-          // Conversations show the latest message; star reflects/toggles that message via StarredContext.
+          tags,
+          // Conversations show the latest message; star reflects/toggles that message.
+          starred: starredIds?.has(conversationMessages[0]?.id),
           onAction,
         }));
       }
 
       return messages?.map((message) => ({
         message,
+        tags: tags?.[message.id],
+        starred: starredIds?.has(message.id),
         onAction,
       }));
-    }, [conversationGroups, messages, onAction, latestMessageOnly]);
+    }, [conversationGroups, messages, tags, starredIds, onAction]);
 
     // In conversation view, the incoming `currentId` is a message ID (set when a
     // specific message becomes selected), but the tiles are keyed by conversation ID.
@@ -232,57 +195,45 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
 
     const getItemId = useCallback((item: any) => item.conversationId ?? item.message?.id, []);
 
-    const virtualizerPagination = useMemo(
-      () =>
-        pagination
-          ? {
-              getNext: pagination.getNext,
-              getPrevious: pagination.getPrevious,
-              atHead: pagination.atHead,
-              isLoading: pagination.isLoading,
-            }
-          : undefined,
-      [pagination?.getNext, pagination?.getPrevious, pagination?.atHead, pagination?.isLoading],
-    );
-
+    // Requests the next (older) page once the visible range approaches the loaded end, or the
+    // previous (newer) page once it approaches the loaded start, and preserves scroll position
+    // across the resulting `items` change (see `useVirtualizerPagination`). `pagination.getNext`/
+    // `getPrevious` are single-flight and a no-op once exhausted/at the head, so triggering them
+    // on every virtualizer change while near either edge is safe.
     const { onChange: handleVirtualizerChange } = useVirtualizerPagination({
       items,
       getId: getItemId,
-      pagination: virtualizerPagination,
+      pagination,
     });
 
     return (
-      <StarredContext.Provider value={starredAtom ?? defaultStarredFamily}>
-        <TagsContext.Provider value={tagsAtom ?? defaultMessageTagsFamily}>
-          <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
-            <Mosaic.Container
-              asChild
-              withFocus
-              currentId={effectiveCurrentId}
-              onCurrentChange={handleCurrentChange}
-              selectedIds={effectiveSelectedIds}
-              onSelectionChange={handleSelectionChange}
-            >
-              <ScrollArea.Root padding centered thin>
-                <ScrollArea.Viewport ref={setViewport}>
-                  {/* The two tile components carry different data shapes (message vs conversation), which the
+      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+        <Mosaic.Container
+          asChild
+          withFocus
+          currentId={effectiveCurrentId}
+          onCurrentChange={handleCurrentChange}
+          selectedIds={effectiveSelectedIds}
+          onSelectionChange={handleSelectionChange}
+        >
+          <ScrollArea.Root padding centered thin>
+            <ScrollArea.Viewport ref={setViewport}>
+              {/* The two tile components carry different data shapes (message vs conversation), which the
                   single-typed Mosaic `Tile`/`items` generics can't express — hence the casts at this boundary. */}
-                  <Mosaic.VirtualStack
-                    Tile={conversations ? (ConversationTile as any) : MessageTile}
-                    items={items as any}
-                    draggable={false}
-                    getId={(item: any) => item.conversationId ?? item.message?.id}
-                    getScrollElement={() => viewport}
-                    estimateSize={() => 150}
-                    gap={4}
-                    onChange={handleVirtualizerChange}
-                  />
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
-            </Mosaic.Container>
-          </Focus.Group>
-        </TagsContext.Provider>
-      </StarredContext.Provider>
+              <Mosaic.VirtualStack
+                Tile={conversations ? (ConversationTile as any) : MessageTile}
+                items={items as any}
+                draggable={false}
+                getId={(item: any) => item.conversationId ?? item.message?.id}
+                getScrollElement={() => viewport}
+                estimateSize={() => 150}
+                gap={4}
+                onChange={handleVirtualizerChange}
+              />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Mosaic.Container>
+      </Focus.Group>
     );
   },
 );
@@ -295,17 +246,17 @@ MessageStack.displayName = 'MessageStack';
 
 type MessageTileData = {
   message: Message.Message;
+  tags?: MessageStackTag[];
+  starred?: boolean;
   onAction?: MessageStackActionHandler;
 };
 
 type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current'>;
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
-  const { message, onAction } = data;
+  const { message, tags, starred, onAction } = data;
   const { date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
   const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
-  const tags = useAtomValue(useContext(TagsContext)(message.id));
-  const starred = useAtomValue(useContext(StarredContext)(message.id));
   const messageTags = useGmailTags(tags);
 
   // Click / Enter commit both current and selection. Arrow keys only move
@@ -375,7 +326,8 @@ MessageTile.displayName = 'MessageTile';
 type ConversationTileData = {
   conversationId: string;
   messages: Message.Message[];
-  latestMessageOnly?: boolean;
+  tags?: MessageTagsIndex;
+  starred?: boolean;
   onAction?: MessageStackActionHandler;
 };
 
@@ -383,12 +335,8 @@ type ConversationTileProps = Pick<MosaicTileProps<ConversationTileData>, 'data' 
 
 const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
   ({ data, location, current }, forwardedRef) => {
-    const { conversationId, messages, latestMessageOnly, onAction } = data;
+    const { conversationId, messages, starred, onAction } = data;
     const latest = messages[0];
-    const starred = useAtomValue(useContext(StarredContext)(latest.id));
-    // The count reflects the messages loaded into this conversation group (the whole thread isn't
-    // indexed for now); the badge shows it only when the group has more than one message.
-    const messageCount = messages.length;
     const { subject } = getMessageProps(latest, new Date());
     const { setCurrentId, setSelected } = useMosaicContainer('ConversationTile');
 
@@ -437,17 +385,11 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
           menu
           starred={starred}
           onToggleStar={onAction ? handleToggleStar : undefined}
-          title={
-            <>
-              <span className='grow truncate font-medium'>{subject}</span>
-              {messageCount > 1 && (
-                <span className='text-xs text-description whitespace-nowrap shrink-0'>{messageCount}</span>
-              )}
-            </>
-          }
+          title={<span className='grow truncate font-medium'>{subject}</span>}
         />
         <Card.Body>
-          {messages.slice(0, latestMessageOnly ? 1 : 4).map((message) => {
+          {/* TODO(burdon): Currently limits to last n messages. */}
+          {messages.slice(0, 4).map((message) => {
             const { hue, from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
             return (
               <Card.Row key={message.id}>
