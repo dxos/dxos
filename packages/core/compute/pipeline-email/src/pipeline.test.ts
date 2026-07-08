@@ -15,10 +15,9 @@ import { EmailPipeline } from './pipeline';
 import { type FactIndexer } from './stages';
 import { Thread } from './types';
 
-// `mockAiService`'s `generateText` always answers `''` (only `generateObject` echoes the payload), so
-// summarize degrades to its empty-summary default and extract-contacts derives no LLM contacts here;
-// this asserts the assembly WIRING (messages flow, stats tally, threads group) over a real ECHO db.
-// Summary/contact/fact CONTENT is covered by the stage-specific suites.
+// The canonical assembly is facts-only (summarize/extract-contacts pending reconciliation with the
+// sync pipeline); this asserts the assembly WIRING (messages flow, stats tally, threads group) over a
+// real ECHO db. Summary/contact/fact CONTENT is covered by the stage-specific suites.
 
 describe('email pipeline (canonical assembly)', () => {
   let builder: EchoTestBuilder;
@@ -29,7 +28,7 @@ describe('email pipeline (canonical assembly)', () => {
     await builder.close();
   });
 
-  test('EmailPipeline.run: summarize → extract-contacts → stats → extract-facts → threads', async ({ expect }) => {
+  test('EmailPipeline.run: extract-facts → stats → threads', async ({ expect }) => {
     const { db } = await builder.createDatabase({
       types: [Person.Person, Organization.Organization, Thread],
     });
@@ -57,8 +56,8 @@ describe('email pipeline (canonical assembly)', () => {
     expect(result.stats.total).toBe(2);
     expect(result.stats.from.get('alice@enron.com')).toBe(1);
     expect(result.stats.from.get('bob@enron.com')).toBe(1);
-    // summarize recorded a result per message (content empty: see note above).
-    expect(result.summaries).toHaveLength(2);
+    // The facts-only assembly runs no summarize stage; the collector stays empty.
+    expect(result.summaries).toHaveLength(0);
     // Both messages share a subject/thread, so they group into a single thread persisted to the db.
     expect(result.threads).toHaveLength(1);
     expect(result.threads[0].messageIds).toHaveLength(2);
