@@ -704,3 +704,203 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
     });
   });
 });
+
+/**
+ * Characterization of subduction (re)connect semantics over the in-memory
+ * `TestAdapter` harness. Production context: DXOS clients restart their logical
+ * edge connection on WS `onReconnected` (including one spurious initial fire),
+ * which produces a second SUH handshake for the same repo peer while the first
+ * connection is live. `subduction_core` resolves the duplicate by silently
+ * removing the older connection (`connection closed, removing conn-1`),
+ * orphaning any sync rounds in flight on it — the requester's only recovery is
+ * the `syncMs` deadline plus the heal re-issue.
+ *
+ * These tests pin today's behavior to evaluate the two candidate fixes:
+ *  1. dedup handshakes / keep the old connection — must not break a valid
+ *     re-handshake (client restart/reload: same route, fresh peer instance);
+ *  2. proper re-initiation with the current structure (disconnect-then-
+ *     candidate cycle).
+ */
+describe.skipIf(process.env.CI)('subduction reconnect semantics', () => {
+  beforeAll(async () => {
+    await initSubduction();
+  });
+
+  // Pins the upstream `subduction_core` hazard: a second SUH handshake for a peer
+  // with a live connection makes the responder silently remove the older connection
+  // ("connection closed, removing conn-1"), orphaning in-flight rounds and breaking
+  // host->client delivery of subsequent documents. DXOS code no longer produces bare
+  // duplicates (every reconnect emits peer-disconnected first and mints a new peer id),
+  // so this is `test.fails` documentation, not a production path. When upstream stops
+  // silently removing connections this test starts passing — remove `.fails` then.
+  test.fails('duplicate handshake while connected: both directions still converge', { timeout: 20_000 }, async () => {
+    const { repos, adapters } = await createHostClientRepoTopology();
+    const [host, client] = repos;
+    const [pair] = adapters;
+    await connectAdapters(adapters);
+
+    // Baseline: initial sync works.
+    const docA = host.create<{ text?: string }>();
+    docA.change((doc: any) => {
+      doc.text = 'baseline';
+    });
+    await waitForSubductionSave();
+    const clientDocA = await findInStates<{ text?: string }>(client, docA.url, FIND_STATES);
+    await expect.poll(() => clientDocA.doc()?.text, { timeout: 10_000 }).toEqual('baseline');
+
+    // Duplicate handshake: the client's adapter re-announces the host peer with
+    // NO preceding peer-disconnected — `AdapterConnections` starts a second
+    // transport + SUH handshake to the same responder.
+    pair[1].peerCandidate(pair[0].peerId!);
+    await sleep(200);
+
+    // Host -> client after the duplicate.
+    const start = performance.now();
+    const docB = host.create<{ text?: string }>();
+    docB.change((doc: any) => {
+      doc.text = 'after-duplicate';
+    });
+    await waitForSubductionSave();
+    const clientDocB = await findInStates<{ text?: string }>(client, docB.url, FIND_STATES);
+    await expect.poll(() => clientDocB.doc()?.text, { timeout: 10_000 }).toEqual('after-duplicate');
+
+    // Client -> host after the duplicate.
+    const docC = client.create<{ text?: string }>();
+    docC.change((doc: any) => {
+      doc.text = 'reverse';
+    });
+    await waitForSubductionSave();
+    const hostDocC = await findInStates<{ text?: string }>(host, docC.url, FIND_STATES);
+    await expect.poll(() => hostDocC.doc()?.text, { timeout: 10_000 }).toEqual('reverse');
+
+    // eslint-disable-next-line no-console
+    console.log(`[reconnect-semantics] post-duplicate convergence took ${Math.round(performance.now() - start)}ms`);
+  });
+
+  test(
+    'duplicate handshake racing an in-flight fetch: recovery only via sync timeout + heal',
+    { timeout: 20_000 },
+    async () => {
+      const { repos, adapters } = await createHostClientRepoTopology();
+      const [host, client] = repos;
+      const [pair] = adapters;
+      await connectAdapters(adapters);
+
+      const docA = host.create<{ text?: string }>();
+      docA.change((doc: any) => {
+        doc.text = 'target';
+      });
+      await waitForSubductionSave();
+
+      // Start the fetch, then land the duplicate handshake mid-flight
+      // (TestAdapter adds 10ms latency per hop, so 30ms is inside the round).
+      const start = performance.now();
+      const progress = client.findWithProgress<{ text?: string }>(docA.url);
+      await sleep(30);
+      pair[1].peerCandidate(pair[0].peerId!);
+
+      await waitForQueryState(progress, ['ready'], { timeout: 15_000 });
+      const elapsed = Math.round(performance.now() - start);
+      // eslint-disable-next-line no-console
+      console.log(`[reconnect-semantics] fetch across duplicate handshake reached ready in ${elapsed}ms`);
+      // Characterization marker: with the harness `syncMs: 500`, an orphaned
+      // round cannot complete before the deadline; < 500ms means the round
+      // survived the duplicate, >= 500ms means it burned the timeout + heal.
+      expect(progress.peek().state).toEqual('ready');
+    },
+  );
+
+  test('valid re-handshake: restarted client over the same route converges', { timeout: 20_000 }, async () => {
+    const { repos, adapters } = await createHostClientRepoTopology();
+    const [host, client] = repos;
+    const [pair] = adapters;
+    await connectAdapters(adapters);
+
+    const docA = host.create<{ text?: string }>();
+    docA.change((doc: any) => {
+      doc.text = 'pre-restart';
+    });
+    await waitForSubductionSave();
+    const clientDocA = await findInStates<{ text?: string }>(client, docA.url, FIND_STATES);
+    await expect.poll(() => clientDocA.doc()?.text, { timeout: 10_000 }).toEqual('pre-restart');
+
+    // Restart: tear the client repo down entirely and bring up a fresh repo
+    // instance (fresh WASM peer identity) on the SAME adapter route — the
+    // "reload" case a naive handshake-dedup would misclassify as a duplicate.
+    await shutdownRepo(client);
+    const client2 = createRepo({
+      peerId: pair[1].peerId ?? ('client' as PeerId),
+      network: [],
+      subductionAdapters: [{ adapter: pair[1], serviceName: SUBDUCTION_SERVICE_NAME, role: 'connect' }],
+    });
+    await reconnectAdapters(adapters);
+
+    // New doc after the restart must reach the new client instance.
+    const docB = host.create<{ text?: string }>();
+    docB.change((doc: any) => {
+      doc.text = 'post-restart';
+    });
+    await waitForSubductionSave();
+    const start = performance.now();
+    const progressB = client2.findWithProgress<{ text?: string }>(docB.url);
+    await waitForQueryState(progressB, ['ready'], { timeout: 15_000 });
+    // eslint-disable-next-line no-console
+    console.log(`[reconnect-semantics] post-restart fetch reached ready in ${Math.round(performance.now() - start)}ms`);
+
+    // The pre-restart doc must also be fetchable by the new instance.
+    const progressA = client2.findWithProgress<{ text?: string }>(docA.url);
+    await waitForQueryState(progressA, ['ready'], { timeout: 15_000 });
+  });
+
+  test(
+    'disconnect-then-candidate cycle: idle reconnect stays healthy; mid-flight fetch recovers',
+    { timeout: 25_000 },
+    async () => {
+      const { repos, adapters } = await createHostClientRepoTopology();
+      const [host, client] = repos;
+      await connectAdapters(adapters);
+
+      const docA = host.create<{ text?: string }>();
+      docA.change((doc: any) => {
+        doc.text = 'target';
+      });
+      await waitForSubductionSave();
+      const clientDocA = await findInStates<{ text?: string }>(client, docA.url, FIND_STATES);
+      await expect
+        .poll(() => clientDocA.doc()?.text, { timeout: 10_000 })
+        .toEqual('baseline'.replace('baseline', 'target'));
+
+      // Idle reconnect: full peer-disconnected + peer-candidate cycle on both
+      // sides, no traffic in flight. A subsequent fetch must be fast.
+      await reconnectAdapters(adapters);
+      await sleep(100);
+      const docB = host.create<{ text?: string }>();
+      docB.change((doc: any) => {
+        doc.text = 'after-idle-reconnect';
+      });
+      await waitForSubductionSave();
+      let start = performance.now();
+      const progressB = client.findWithProgress<{ text?: string }>(docB.url);
+      await waitForQueryState(progressB, ['ready'], { timeout: 15_000 });
+      // eslint-disable-next-line no-console
+      console.log(`[reconnect-semantics] fetch after idle reconnect: ${Math.round(performance.now() - start)}ms`);
+
+      // Mid-flight reconnect: start a fetch, cycle the connection while the
+      // round is in flight, measure recovery.
+      const docC = host.create<{ text?: string }>();
+      docC.change((doc: any) => {
+        doc.text = 'mid-flight';
+      });
+      await waitForSubductionSave();
+      start = performance.now();
+      const progressC = client.findWithProgress<{ text?: string }>(docC.url);
+      await sleep(30);
+      await reconnectAdapters(adapters);
+      await waitForQueryState(progressC, ['ready'], { timeout: 15_000 });
+      // eslint-disable-next-line no-console
+      console.log(
+        `[reconnect-semantics] fetch across mid-flight reconnect: ${Math.round(performance.now() - start)}ms`,
+      );
+    },
+  );
+});

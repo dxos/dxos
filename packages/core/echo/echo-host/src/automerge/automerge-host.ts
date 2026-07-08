@@ -1045,11 +1045,16 @@ export class AutomergeHost extends Resource {
       return;
     }
 
+    // Per-handle state included: a document stuck in `unavailable`/`loading` here on every diff
+    // pass is the signature of a subduction DocumentQuery parked without retry —
+    // `findWithProgress` will not re-issue the query, so the doc never arrives.
     log('replicating documents after collection sync', {
       collectionId,
       peerId,
-      toReplicateWithoutBatching,
       count: toReplicateWithoutBatching.length,
+      handleStates: Object.fromEntries(
+        toReplicateWithoutBatching.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
+      ),
     });
 
     // Trigger replication of the missing documents. `findWithProgress` is the

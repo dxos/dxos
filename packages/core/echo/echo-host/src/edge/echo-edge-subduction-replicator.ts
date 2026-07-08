@@ -4,7 +4,7 @@
 
 import { cbor } from '@automerge/automerge-repo';
 
-import { Mutex, scheduleMicroTask, scheduleTask } from '@dxos/async';
+import { Mutex, scheduleMicroTask, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
 import type { CollectionId } from '@dxos/echo-protocol';
@@ -51,6 +51,16 @@ export type EchoEdgeSubductionReplicatorProps = {
   edgeConnection: EdgeConnection;
   edgeHttpClient: EdgeHttpClient;
   disableSharePolicy?: boolean;
+};
+
+/** Cumulative message counts and peak throughput for a single subduction connection. */
+export type SubductionMessageStats = {
+  messagesSent: number;
+  messagesReceived: number;
+  /** Highest `sentPerSecond` observed across the 1-second rate samples taken so far. */
+  maxSentPerSecond: number;
+  /** Highest `receivedPerSecond` observed across the 1-second rate samples taken so far. */
+  maxReceivedPerSecond: number;
 };
 
 /**
@@ -114,9 +124,14 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     this._context = context;
     this._ctx = ctx.derive();
     this._ctx.onDispose(
-      this._edgeConnection.onReconnected(() => {
-        this._ctx && scheduleMicroTask(this._ctx, () => this._handleReconnect());
-      }),
+      this._edgeConnection.onReconnected(
+        () => {
+          this._ctx && scheduleMicroTask(this._ctx, () => this._handleReconnect());
+        },
+        // Reconnect-reaction logic: reacting to the subscribe-time current-state firing would
+        // tear down and reopen connections that are already on the fresh WS.
+        { emitCurrentState: false },
+      ),
     );
   }
 
@@ -164,6 +179,16 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     if (this._context !== null) {
       await this._openConnection(spaceId);
     }
+  }
+
+  /** Message stats for a single space's connection, or `undefined` if the space is not connected. */
+  getMessageStats(spaceId: SpaceId): SubductionMessageStats | undefined {
+    return this._connections.get(spaceId)?.messageStats;
+  }
+
+  /** Message stats for every currently connected space. */
+  getAllMessageStats(): Map<SpaceId, SubductionMessageStats> {
+    return new Map([...this._connections].map(([spaceId, connection]) => [spaceId, connection.messageStats]));
   }
 
   async disconnectFromSpace(spaceId: SpaceId): Promise<void> {
@@ -268,6 +293,19 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
 
   private _readableStreamController!: ReadableStreamDefaultController<SubductionProtocolMessage>;
 
+  // Message-rate tracking, sliding window (mirrors `EdgeWsConnection`'s byte-rate tracking).
+  private readonly _rateWindowMs = 10_000;
+  private readonly _rateUpdateIntervalMs = 1_000;
+  private _messageSamples: Array<{ timestamp: number; sent: number; received: number }> = [];
+  private _messagesSent = 0;
+  private _messagesReceived = 0;
+  private _sentPerSecond = 0;
+  private _receivedPerSecond = 0;
+  /** Peak `_sentPerSecond` observed across every rate sample taken so far (see {@link _updateMessageRates}). */
+  private _maxSentPerSecond = 0;
+  /** Peak `_receivedPerSecond` observed across every rate sample taken so far. */
+  private _maxReceivedPerSecond = 0;
+
   public readable: ReadableStream<SubductionProtocolMessage>;
   public writable: WritableStream<SubductionProtocolMessage>;
 
@@ -314,18 +352,21 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
       }),
     );
 
-    let firstReconnect = true;
     this._ctx.onDispose(
-      this._edgeConnection.onReconnected(async () => {
-        if (firstReconnect) {
-          log.verbose('first reconnect skipped');
-          firstReconnect = false;
-          return;
-        }
-
-        this._onRestartRequested();
-      }),
+      this._edgeConnection.onReconnected(
+        async () => {
+          // Every WS (re-)establishment after this session started runs the full restart cycle:
+          // close this connection (emitting peer-disconnected for its peer id) and open a fresh
+          // one under a new connectionId. `emitCurrentState: false` is essential: the default
+          // subscribe-time firing would restart the connection that was just created, and each
+          // restart re-subscribes — an unbounded restart loop.
+          this._onRestartRequested();
+        },
+        { emitCurrentState: false },
+      ),
     );
+
+    scheduleTaskInterval(this._ctx, async () => this._updateMessageRates(), this._rateUpdateIntervalMs);
 
     await this._onRemoteConnected();
   }
@@ -342,6 +383,15 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
 
   get bundleSyncEnabled(): boolean {
     return false;
+  }
+
+  get messageStats(): SubductionMessageStats {
+    return {
+      messagesSent: this._messagesSent,
+      messagesReceived: this._messagesReceived,
+      maxSentPerSecond: this._maxSentPerSecond,
+      maxReceivedPerSecond: this._maxReceivedPerSecond,
+    };
   }
 
   async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
@@ -378,6 +428,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     if (message.serviceId !== this._subductionServiceId) {
       return;
     }
+    this._recordMessage({ received: 1 });
 
     let payload: SubductionProtocolMessageEnveloped;
     try {
@@ -437,8 +488,22 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         this._readableStreamController.enqueue(inner);
         return;
       }
+      case MESSAGE_TYPE_COLLECTION_STATE: {
+        const documentCount =
+          payload.state && typeof payload.state === 'object' && 'documents' in payload.state
+            ? Object.keys((payload.state as { documents: Record<string, unknown> }).documents).length
+            : undefined;
+        log.info('received collection-state', {
+          collectionId: payload.collectionId,
+          documentCount,
+          remoteId: this._remotePeerId,
+        });
+        payload.senderId = this._remotePeerId as PeerId;
+        this._readableStreamController.enqueue(payload);
+        return;
+      }
       case MESSAGE_TYPE_COLLECTION_QUERY:
-      case MESSAGE_TYPE_COLLECTION_STATE:
+        log.info('received collection-query', { collectionId: payload.collectionId, remoteId: this._remotePeerId });
         payload.senderId = this._remotePeerId as PeerId;
         this._readableStreamController.enqueue(payload);
         return;
@@ -478,11 +543,19 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
       }
     }
 
-    log.verbose('sending...', {
-      type: wire.type,
-      serviceId: this._subductionServiceId,
-      remoteId: this._remotePeerId,
-    });
+    if (wire.type === MESSAGE_TYPE_COLLECTION_QUERY || wire.type === MESSAGE_TYPE_COLLECTION_STATE) {
+      log.info(`sending ${wire.type}`, {
+        collectionId: wire.collectionId,
+        serviceId: this._subductionServiceId,
+        remoteId: this._remotePeerId,
+      });
+    } else {
+      log.verbose('sending...', {
+        type: wire.type,
+        serviceId: this._subductionServiceId,
+        remoteId: this._remotePeerId,
+      });
+    }
 
     const encoded = cbor.encode(wire);
 
@@ -498,8 +571,59 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           payload: { value: bufferToArray(encoded) },
         }),
       );
+      this._recordMessage({ sent: 1 });
     } catch (err) {
       log.error('failed to send message', { err });
+    }
+  }
+
+  /** Accumulates raw sent/received message counts for the current 1-second bucket. */
+  private _recordMessage({ sent = 0, received = 0 }: { sent?: number; received?: number }): void {
+    if (sent > 0) {
+      this._messagesSent += sent;
+    }
+    if (received > 0) {
+      this._messagesReceived += received;
+    }
+
+    const now = Date.now();
+    const currentBucket = Math.floor(now / 1000) * 1000;
+    const existingSample = this._messageSamples.find((sample) => sample.timestamp === currentBucket);
+    if (existingSample) {
+      existingSample.sent += sent;
+      existingSample.received += received;
+    } else {
+      this._messageSamples.push({ timestamp: currentBucket, sent, received });
+    }
+  }
+
+  /**
+   * Recomputes {@link _sentPerSecond}/{@link _receivedPerSecond} from the sliding window, folds
+   * them into the running {@link _maxSentPerSecond}/{@link _maxReceivedPerSecond} peaks, and logs
+   * the result.
+   */
+  private _updateMessageRates(): void {
+    const now = Date.now();
+    const windowStart = now - this._rateWindowMs;
+    this._messageSamples = this._messageSamples.filter((sample) => sample.timestamp >= windowStart);
+
+    const windowSeconds = this._rateWindowMs / 1000;
+    this._sentPerSecond = this._messageSamples.reduce((total, sample) => total + sample.sent, 0) / windowSeconds;
+    this._receivedPerSecond =
+      this._messageSamples.reduce((total, sample) => total + sample.received, 0) / windowSeconds;
+    this._maxSentPerSecond = Math.max(this._maxSentPerSecond, this._sentPerSecond);
+    this._maxReceivedPerSecond = Math.max(this._maxReceivedPerSecond, this._receivedPerSecond);
+
+    if (this._sentPerSecond > 0 || this._receivedPerSecond > 0) {
+      log.info('subduction message rate', {
+        spaceId: this._spaceId,
+        messagesSent: this._messagesSent,
+        messagesReceived: this._messagesReceived,
+        sentPerSecond: this._sentPerSecond.toFixed(1),
+        receivedPerSecond: this._receivedPerSecond.toFixed(1),
+        maxSentPerSecond: this._maxSentPerSecond.toFixed(1),
+        maxReceivedPerSecond: this._maxReceivedPerSecond.toFixed(1),
+      });
     }
   }
 }

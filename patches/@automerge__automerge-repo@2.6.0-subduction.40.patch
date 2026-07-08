@@ -234,6 +234,23 @@ index d9dcbded092b95e69d41d142fe73a25b108de585..ff91b96b86aff5e9efd8ac06fcffb638
          for (const [timer, resolve] of this.#pendingSleeps) {
              clearTimeout(timer);
              resolve();
+diff --git a/dist/subduction/network.js b/dist/subduction/network.js
+index 761e08f5065092d61888b381f5fe5ac08d5829db..3b57a2ff7af10c58e862fe4c979468f22361b550 100644
+--- a/dist/subduction/network.js
++++ b/dist/subduction/network.js
+@@ -92,7 +92,11 @@ export class NetworkAdapterTransport {
+     };
+     #handlePeerDisconnected = ({ peerId }) => {
+         if (peerId === this.#remotePeerId.toString()) {
+-            this.#teardown();
++            // DXOS patch: fire the disconnect callback so subduction_core removes its
++            // connection for this transport. Without it the core keeps a zombie
++            // connection that it later replaces silently on the next handshake,
++            // orphaning any sync rounds in flight on it.
++            this.#teardown({ fireDisconnectCallback: true });
+         }
+     };
+     /** Send a tagged frame over the adapter. */
 diff --git a/dist/subduction/source.d.ts b/dist/subduction/source.d.ts
 index 825f7407bd8bf1f4b1f4fafe17f67e82778781a6..2a10de3c01e415de407c345f60698d38ce445d32 100644
 --- a/dist/subduction/source.d.ts
@@ -291,10 +308,27 @@ index 825f7407bd8bf1f4b1f4fafe17f67e82778781a6..2a10de3c01e415de407c345f60698d38
      isConnected(): boolean;
      getSubduction(): Promise<Subduction>;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 890813ea22ab990a13b1af60ee8e3b2103652ac7..e06a3e5bc0f609c4fb02d2ffcfc5bff7e85896dc 100644
+index 890813ea22ab990a13b1af60ee8e3b2103652ac7..ab6eba1909035659288fad9147a11b09c29a46a1 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
-@@ -60,7 +60,7 @@ export class SubductionSource {
+@@ -33,12 +33,16 @@ const SHUTDOWN_SYNC_TIMEOUT_MS = 5_000;
+  * `RepoConfig.subductionCompactionDeleteConcurrency`.
+  */
+ const DEFAULT_COMPACTION_DELETE_CONCURRENCY = 16;
++/** Sentinel resolved by the disconnect race in #doSync (DXOS patch). */
++const disconnectedSentinel = Symbol("subduction-sync-disconnected");
+ export class SubductionSource {
+     #subduction;
+     #storage;
+     #entries = new Map();
+     #log;
+     #connectionManagers = [];
++    /** Resolvers fired when aggregate connectivity drops to fully-disconnected; used to abort in-flight syncs early (DXOS patch). */
++    #disconnectAbortWaiters = new Set();
+     #scheduler;
+     #syncTimeoutMs;
+     #syncTimeout;
+@@ -60,7 +64,7 @@ export class SubductionSource {
       */
      #shuttingDown = false;
      priority;
@@ -303,7 +337,7 @@ index 890813ea22ab990a13b1af60ee8e3b2103652ac7..e06a3e5bc0f609c4fb02d2ffcfc5bff7
          this.#blobInterceptor = blobInterceptor;
          this.#onConnectionChanged = onConnectionChanged;
          this.priority = priority;
-@@ -119,12 +119,23 @@ export class SubductionSource {
+@@ -119,12 +123,23 @@ export class SubductionSource {
              ...defaultTimeoutOption,
          }));
          // ── Connection managers ─────────────────────────────────────────
@@ -329,3 +363,60 @@ index 890813ea22ab990a13b1af60ee8e3b2103652ac7..e06a3e5bc0f609c4fb02d2ffcfc5bff7
          for (const { adapter, serviceName, role } of adapters) {
              adapterConnections.addAdapter(adapter, serviceName, role ?? "connect");
          }
+@@ -133,6 +148,15 @@ export class SubductionSource {
+             mgr.onChange(() => {
+                 this.#scheduleRecompute();
+                 this.#notifyConnectionChange();
++                // DXOS patch: on full disconnect, wake sync races so in-flight
++                // syncWithAllPeers calls settle immediately instead of waiting out
++                // the WASM per-request timeout (subduction_core does not reject
++                // pending RequestIds on disconnect).
++                if (!this.isConnected()) {
++                    for (const wake of this.#disconnectAbortWaiters)
++                        wake();
++                    this.#disconnectAbortWaiters.clear();
++                }
+             });
+         }
+         this.#storage.on("commit-saved", (sid, commitId, blob) => {
+@@ -644,7 +668,28 @@ export class SubductionSource {
+             entry.flushSave.flush();
+             await entry.saveSettled;
+             this.#log.debug(`doSync ${sid} (state=${entry.syncState})`);
+-            const peerResultMap = await subduction.syncWithAllPeers(sedimentreeId, true, timeoutMs !== undefined ? timeoutMs : this.#syncTimeout);
++            // DXOS patch: race the sync against a full-disconnect signal. On
++            // disconnect the WASM call would otherwise hang until its timeout
++            // (60s default); settling as all-failed here lets the heal/resync
++            // machinery re-issue the fetch on the next connection immediately.
++            let wakeOnDisconnect;
++            const disconnected = new Promise(resolve => {
++                wakeOnDisconnect = () => resolve(disconnectedSentinel);
++                this.#disconnectAbortWaiters.add(wakeOnDisconnect);
++            });
++            entry.disconnectWaiter = wakeOnDisconnect;
++            const racedResult = await Promise.race([
++                subduction.syncWithAllPeers(sedimentreeId, true, timeoutMs !== undefined ? timeoutMs : this.#syncTimeout),
++                disconnected,
++            ]);
++            if (racedResult === disconnectedSentinel) {
++                this.#log.debug(`doSync ${sid}: aborted by disconnect; settling as all-failed`);
++                entry.lastSyncResult = "all-failed";
++                entry.needsResync = true;
++                this.#scheduler.scheduleHealSync(sedimentreeId);
++                return;
++            }
++            const peerResultMap = racedResult;
+             const results = peerResultMap.entries();
+             const anySuccess = results.some(r => r.success);
+             this.#log.debug(`doSync ${sid}: ${results.length} peer(s), success=${anySuccess}`);
+@@ -691,6 +736,10 @@ export class SubductionSource {
+             this.#scheduler.scheduleHealSync(sedimentreeId);
+         }
+         finally {
++            if (entry.disconnectWaiter) {
++                this.#disconnectAbortWaiters.delete(entry.disconnectWaiter);
++                entry.disconnectWaiter = undefined;
++            }
+             entry.syncInFlight = false;
+             resolveSyncSettled();
+             if (entry.retryTransformAfterSync) {
