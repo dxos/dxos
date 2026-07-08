@@ -33,15 +33,18 @@
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/crawler": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
     "@effect/sql": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
     "@effect/sql-sqlite-node": "catalog:",
     "@effect/vitest": "catalog:",
     "effect": "catalog:",

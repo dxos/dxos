@@ -16,6 +16,15 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../sdk/types"
+    },
+    {
+      "path": "../../echo/echo"
+    },
+    {
+      "path": "../../echo/echo-client"
+    },
+    {
       "path": "../ai"
     },
     {
