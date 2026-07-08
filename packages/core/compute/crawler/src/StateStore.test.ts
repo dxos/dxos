@@ -37,7 +37,7 @@ const suite = (name: string, layer: Layer.Layer<StateStore>) =>
     );
 
     it.effect(
-      'setCursor stamps lastRunAt and clears lastError (Cursor.advance semantics)',
+      'setCursor stamps lastRunAt and preserves lastError as a diagnostic',
       Effect.fnUntraced(function* () {
         const store = yield* StateStore;
         yield* store.pushTargets([target('chan-1')]);
@@ -46,7 +46,8 @@ const suite = (name: string, layer: Layer.Layer<StateStore>) =>
         const [entry] = yield* store.listTargets();
         expect(entry.cursor).toBe('1000');
         expect(entry.lastRunAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
-        expect(entry.lastError).toBeUndefined();
+        // The sink commits per message; a recorded fault must survive later commits.
+        expect(entry.lastError).toBe('boom');
         // Status is orthogonal to the cursor write.
         expect(entry.status).toBe('error');
       }, Effect.provide(layer)),

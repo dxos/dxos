@@ -96,8 +96,10 @@ export const makeSql = (sql: SqlClient.SqlClient): StateStoreApi => ({
 
   setCursor: (targetId, cursor) =>
     Effect.gen(function* () {
+      // `last_error` is intentionally preserved: the sink commits per message, and an isolated
+      // stage fault recorded on the target must survive later commits as a diagnostic.
       const lastRunAt = new Date(yield* Clock.currentTimeMillis).toISOString();
-      yield* sql`UPDATE crawl_target SET cursor = ${cursor}, last_run_at = ${lastRunAt}, last_error = NULL
+      yield* sql`UPDATE crawl_target SET cursor = ${cursor}, last_run_at = ${lastRunAt}
         WHERE id = ${targetId}`;
     }).pipe(Effect.asVoid, Effect.mapError(fail('Failed to set cursor'))),
 

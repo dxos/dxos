@@ -16,6 +16,9 @@
       "path": "../ai"
     },
     {
+      "path": "../pipeline"
+    },
+    {
       "path": "../pipeline-rdf"
     }
   ]

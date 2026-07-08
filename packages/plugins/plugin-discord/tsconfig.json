@@ -46,6 +46,9 @@
       "path": "../../core/compute/crawler"
     },
     {
+      "path": "../../core/compute/pipeline"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

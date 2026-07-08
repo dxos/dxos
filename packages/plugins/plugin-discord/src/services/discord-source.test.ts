@@ -12,15 +12,15 @@ import { type AiService } from '@dxos/ai';
 import { DirectAiServiceLayer } from '@dxos/ai/testing';
 import {
   AgentRegistry,
+  Crawler,
   Source,
-  type Stage,
   type Type,
+  agentProfileStage,
+  extractFactsStage,
   extractTopics,
   listFacts,
-  makeAgentProfileStage,
-  makeExtractFactsStage,
-  run,
 } from '@dxos/crawler';
+import { Pipeline } from '@dxos/pipeline';
 import { coreLayer, deterministicAiService } from '@dxos/crawler/testing';
 import { EffectEx } from '@dxos/effect';
 
@@ -94,7 +94,6 @@ describe('DiscordSource live crawl', () => {
       const maxDays = Number(process.env.DISCORD_MAX_DAYS ?? 7);
       const descendThreads = process.env.DISCORD_THREADS !== '0';
       const config: Type.Config = { channels: [channelId!], descendThreads, seed: { maxDays } };
-      const stages: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
 
       // Real LLM extraction (attributed S-P-O + valence) when an Anthropic key is set; otherwise the
       // deterministic proper-noun stand-in. DirectAiServiceLayer reads DX_ANTHROPIC_API_KEY.
@@ -113,7 +112,12 @@ describe('DiscordSource live crawl', () => {
 
       const { summary, agents, report, facts } = await EffectEx.runPromise(
         Effect.gen(function* () {
-          const summary = yield* run(config, stages);
+          yield* Crawler.stream(config).pipe(
+            agentProfileStage(),
+            extractFactsStage(),
+            Pipeline.run({ sink: Crawler.commit }),
+          );
+          const summary = yield* Crawler.summarize();
           const registry = yield* AgentRegistry;
           const agents = yield* registry.list();
           const report = yield* extractTopics({ limit: 15 });
@@ -123,7 +127,7 @@ describe('DiscordSource live crawl', () => {
       );
 
       console.log(
-        `\nCrawled ${summary.steps} steps — ${agents.length} agents, ${report.factCount} facts` +
+        `\nCrawled — ${agents.length} agents, ${report.factCount} facts` +
           (summary.errored > 0 ? ` (${summary.errored} channel(s) skipped — no access)` : ''),
       );
       for (const topic of report.topics) {

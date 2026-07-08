@@ -92,12 +92,14 @@ const makeMemory = (): StateStoreApi => {
       Effect.sync(() => frontier.some((target) => target.status === 'pending' || target.status === 'active')),
     setCursor: (targetId, cursor) =>
       Effect.gen(function* () {
-        // The success write seam (Cursor.advance semantics): value + lastRunAt advance together and
-        // the previous error clears. Clock keeps the write deterministic under TestClock.
+        // The success write seam: value + lastRunAt advance together. `lastError` is intentionally
+        // preserved — the sink commits per message, and an isolated stage fault recorded on the
+        // target must survive later commits as a diagnostic. Clock keeps the write deterministic
+        // under TestClock.
         const lastRunAt = new Date(yield* Clock.currentTimeMillis).toISOString();
         const target = byId.get(targetId);
         if (target) {
-          replace({ ...target, cursor, lastRunAt, lastError: undefined });
+          replace({ ...target, cursor, lastRunAt });
         }
       }),
     setStatus: (targetId, status, error) =>

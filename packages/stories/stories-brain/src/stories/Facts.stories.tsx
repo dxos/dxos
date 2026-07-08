@@ -14,13 +14,13 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AgentRegistry,
   type ChannelInfo,
+  Crawler,
   Source,
-  type Stage,
   StateStore,
-  makeAgentProfileStage,
-  makeExtractFactsStage,
-  run,
+  agentProfileStage,
+  extractFactsStage,
 } from '@dxos/crawler';
+import { Pipeline } from '@dxos/pipeline';
 import { EffectEx } from '@dxos/effect';
 import { FactPipeline, FactStore, type RDF, buildSparql, generateQuery, parseSparqlToQuery } from '@dxos/pipeline-rdf';
 import { discordSourceLayer } from '@dxos/plugin-discord';
@@ -37,8 +37,6 @@ import {
   entitiesFromFacts,
   initialOptions,
 } from '../components';
-
-const CRAWL_STAGES: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
 
 const makeStore = () => ManagedRuntime.make(FactStore.layerMemory);
 
@@ -149,10 +147,12 @@ const DefaultStory = (_: StoryArgs) => {
       );
       const result = await getStore().runPromise(
         Effect.gen(function* () {
-          const summary = yield* run(
-            { channels: [options.channel], descendThreads: options.descendThreads, seed: { maxDays: options.maxDays } },
-            CRAWL_STAGES,
-          );
+          yield* Crawler.stream({
+            channels: [options.channel],
+            descendThreads: options.descendThreads,
+            seed: { maxDays: options.maxDays },
+          }).pipe(agentProfileStage(), extractFactsStage(), Pipeline.run({ sink: Crawler.commit }));
+          const summary = yield* Crawler.summarize();
           const registry = yield* AgentRegistry;
           const crawled = yield* registry.list();
           const store = yield* FactStore;
