@@ -8,7 +8,7 @@ import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, Feed, Obj, Query, type QueryResult } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
-import { QueryPlanner } from '@dxos/echo-host/query';
+import { QueryPlan, QueryPlanner } from '@dxos/echo-host/query';
 import { QueryAST } from '@dxos/echo-protocol';
 import { EID, type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -294,7 +294,7 @@ export class SpaceQuerySource implements QuerySource {
     if (requiresWorkingSetExecutor(query)) {
       const executorResults = this._tryExecuteWithWorkingSet(query);
       if (executorResults !== null) {
-        return executorResults.map((item) => this._mapItemToResult(item));
+        return this._mapItemsToResults(executorResults);
       }
       return [];
     }
@@ -346,7 +346,7 @@ export class SpaceQuerySource implements QuerySource {
     if (requiresWorkingSetExecutor(query)) {
       const executorResults = this._tryExecuteWithWorkingSet(query);
       if (executorResults !== null) {
-        return executorResults.map((item) => this._mapItemToResult(item));
+        return this._mapItemsToResults(executorResults);
       }
       return [];
     }
@@ -430,7 +430,26 @@ export class SpaceQuerySource implements QuerySource {
     }
   }
 
-  private _mapItemToResult(item: WorkingSetItem): QueryResult.EntityEntry<Obj.Unknown> {
+  /**
+   * Maps working-set executor results, computing per-group counts once over the full set
+   * (rather than per-item) so grouped queries report accurate counts.
+   */
+  private _mapItemsToResults(items: WorkingSetItem[]): QueryResult.EntityEntry<Obj.Unknown>[] {
+    const groupCounts = new Map<string, number>();
+    for (const item of items) {
+      if (item.groupKey === undefined) {
+        continue;
+      }
+      const serialized = QueryPlan.GroupByStep.serializeGroupKey(item.groupKey);
+      groupCounts.set(serialized, (groupCounts.get(serialized) ?? 0) + 1);
+    }
+    return items.map((item) => this._mapItemToResult(item, groupCounts));
+  }
+
+  private _mapItemToResult(
+    item: WorkingSetItem,
+    groupCounts?: Map<string, number>,
+  ): QueryResult.EntityEntry<Obj.Unknown> {
     // Feed items are not addressable via getObjectById (they live in the queue, not the space
     // document set), so fall back to the feed handle's fetched entities. Feeds hold both objects
     // and relations, so this must not filter to objects only.
@@ -439,6 +458,8 @@ export class SpaceQuerySource implements QuerySource {
       const feedUri = EID.make({ spaceId: this.spaceId, entityId: item.queueId });
       result = this._database._tryGetFeedHandle(feedUri)?.getCachedObjectById<Obj.Unknown>(item.objectId);
     }
+    const serializedGroupKey =
+      item.groupKey !== undefined ? QueryPlan.GroupByStep.serializeGroupKey(item.groupKey) : undefined;
     return {
       id: item.objectId,
       result,
@@ -447,6 +468,10 @@ export class SpaceQuerySource implements QuerySource {
         source: 'local',
         time: 0,
       },
+      group:
+        item.groupKey !== undefined
+          ? { key: item.groupKey, count: groupCounts?.get(serializedGroupKey!) ?? 1 }
+          : undefined,
     };
   }
 

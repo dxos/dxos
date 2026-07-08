@@ -31,7 +31,7 @@ import type { SpaceStateManager } from '../db-host';
 import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint';
 import { filterMatchDoc, filterMatchObjectJSON } from '../filter';
 import { QueryError } from './errors';
-import type { QueryPlan } from './plan';
+import { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
 
 type QueryExecutorOptions = {
@@ -84,6 +84,11 @@ type QueryItem = {
    */
   createdAt: number | null;
   updatedAt: number | null;
+
+  /**
+   * Group-by key, set by `GroupByStep`. Undefined for queries without a `groupBy` clause.
+   */
+  groupKey?: QueryPlan.GroupKeyValue;
 };
 
 const QueryItem = Object.freeze({
@@ -109,6 +114,23 @@ const QueryItem = Object.freeze({
     } else {
       throw new Error('Invalid query item');
     }
+  },
+
+  /**
+   * Computes the composite group-by key for this item from the given key specifiers.
+   */
+  getGroupKey: (item: QueryItem, keys: readonly QueryAST.GroupByKey[]): QueryPlan.GroupKeyValue => {
+    const key: QueryPlan.GroupKeyValue = {};
+    for (const groupByKey of keys) {
+      switch (groupByKey.kind) {
+        case 'property':
+          key[groupByKey.property] = QueryPlan.GroupByStep.coerceKeyComponent(
+            QueryItem.getProperty(item, [groupByKey.property]),
+          );
+          break;
+      }
+    }
+    return key;
   },
 
   getParent: (item: QueryItem): EID.EID | undefined => {
@@ -453,6 +475,13 @@ const overlapsOrUnconstrained = <T>(hintSet: ReadonlySet<T> | undefined, scopeSe
   hintSet === undefined || scopeSet === null || setsOverlap(hintSet, scopeSet);
 
 /**
+ * Serializes a possibly-absent group key for `changed` diffing. `undefined` (non-grouped
+ * queries) serializes to a distinct sentinel so it never collides with a real (empty) group key.
+ */
+const _serializeOptionalGroupKey = (key: QueryPlan.GroupKeyValue | undefined): string =>
+  key === undefined ? '\0' : QueryPlan.GroupByStep.serializeGroupKey(key);
+
+/**
  * Executes query plans against the IndexEngine and AutomergeHost.
  *
  * The QueryExecutor is responsible for:
@@ -516,8 +545,20 @@ export class QueryExecutor extends Resource {
   }
 
   getResults(): QueryResult[] {
-    return this._lastResultSet.map(
-      (item): QueryResult => ({
+    // Computed over the final (post-filter) result set so counts always match shipped records.
+    const groupCounts = new Map<string, number>();
+    for (const item of this._lastResultSet) {
+      if (item.groupKey === undefined) {
+        continue;
+      }
+      const serialized = QueryPlan.GroupByStep.serializeGroupKey(item.groupKey);
+      groupCounts.set(serialized, (groupCounts.get(serialized) ?? 0) + 1);
+    }
+
+    return this._lastResultSet.map((item): QueryResult => {
+      const serializedGroupKey =
+        item.groupKey !== undefined ? QueryPlan.GroupByStep.serializeGroupKey(item.groupKey) : undefined;
+      return {
         id: item.objectId,
         documentId: item.documentId ?? undefined,
         queueId: item.queueId ?? undefined,
@@ -527,8 +568,11 @@ export class QueryExecutor extends Resource {
         rank: item.rank,
 
         documentJson: item.doc ? JSON.stringify(item.doc) : item.data ? JSON.stringify(item.data) : undefined,
-      }),
-    );
+
+        groupKey: serializedGroupKey,
+        groupCount: serializedGroupKey !== undefined ? groupCounts.get(serializedGroupKey) : undefined,
+      };
+    });
   }
 
   /**
@@ -576,7 +620,10 @@ export class QueryExecutor extends Resource {
           workingSet[index].spaceId !== item.spaceId ||
           workingSet[index].documentId !== item.documentId ||
           workingSet[index].queueId !== item.queueId ||
-          workingSet[index].queueNamespace !== item.queueNamespace,
+          workingSet[index].queueNamespace !== item.queueNamespace ||
+          // A property edit can move an item between groups without changing its flat position
+          // (e.g. the last item of group A becomes the first item of group B at the same index).
+          _serializeOptionalGroupKey(workingSet[index].groupKey) !== _serializeOptionalGroupKey(item.groupKey),
       );
 
     // Disabled because concurrent queries don't print hierarchies correctly.
@@ -646,6 +693,9 @@ export class QueryExecutor extends Resource {
         break;
       case 'SkipStep':
         ({ workingSet: newWorkingSet, trace } = await this._execSkipStep(step, workingSet));
+        break;
+      case 'GroupByStep':
+        ({ workingSet: newWorkingSet, trace } = await this._execGroupByStep(step, workingSet));
         break;
       default:
         throw new Error(`Unknown step type: ${(step as any)._tag}`);
@@ -1377,6 +1427,23 @@ export class QueryExecutor extends Resource {
         name: 'Skip',
         details: JSON.stringify({ skip: step.skip }),
         objectCount: skippedWorkingSet.length,
+      },
+    };
+  }
+
+  private async _execGroupByStep(step: QueryPlan.GroupByStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+    const withKeys = workingSet.map((item) => ({ ...item, groupKey: QueryItem.getGroupKey(item, step.keys) }));
+    const groupedWorkingSet = QueryPlan.GroupByStep.partitionByGroupKey(withKeys, (item) =>
+      QueryPlan.GroupByStep.serializeGroupKey(item.groupKey!),
+    );
+
+    return {
+      workingSet: groupedWorkingSet,
+      trace: {
+        ...ExecutionTrace.makeEmpty(),
+        name: 'GroupBy',
+        details: JSON.stringify({ keys: step.keys }),
+        objectCount: groupedWorkingSet.length,
       },
     };
   }

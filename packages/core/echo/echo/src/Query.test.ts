@@ -12,6 +12,7 @@ import { log } from '@dxos/log';
 import * as Dataset from './Dataset';
 import * as Feed from './Feed';
 import * as Filter from './Filter';
+import * as GroupKey from './GroupKey';
 import * as Obj from './Obj';
 import * as Order from './Order';
 import * as Query from './Query';
@@ -806,7 +807,69 @@ describe('query api', () => {
 
     describe('.groupBy', () => {
       test('groupBy with single property', () => {
-        const query = Query.select(Filter.type(TestSchema.Person)).groupBy(Query.GroupKey.property('email'));
+        const query = Query.select(Filter.type(TestSchema.Person)).groupBy(GroupKey.property('email'));
+
+        expect(query.ast).toMatchObject({
+          type: 'group-by',
+          keys: [{ kind: 'property', property: 'email' }],
+        });
+        Schema.validateSync(QueryAST.Query)(query.ast);
+      });
+
+      test('groupBy with multiple properties', () => {
+        const query = Query.select(Filter.type(TestSchema.Person)).groupBy(
+          GroupKey.property('name'),
+          GroupKey.property('email'),
+        );
+
+        expect(query.ast).toMatchObject({
+          type: 'group-by',
+          keys: [
+            { kind: 'property', property: 'name' },
+            { kind: 'property', property: 'email' },
+          ],
+        });
+        Schema.validateSync(QueryAST.Query)(query.ast);
+      });
+
+      test("groupBy wraps the preceding query as the group-by node's inner query", () => {
+        const inner = Query.select(Filter.type(TestSchema.Person));
+        const query = inner.groupBy(GroupKey.property('email'));
+
+        expect(query.ast).toMatchObject({ type: 'group-by', query: inner.ast });
+      });
+
+      test('from()/options() may follow groupBy, keeping it the outermost data clause', () => {
+        const grouped = Query.select(Filter.type(TestSchema.Person)).groupBy(GroupKey.property('email'));
+
+        const withOptions = grouped.options({ debugLabel: 'grouped' });
+        expect(withOptions.ast).toMatchObject({ type: 'options', query: grouped.ast });
+        Schema.validateSync(QueryAST.Query)(withOptions.ast);
+
+        const withDebugLabel = grouped.debugLabel('grouped-2');
+        expect(withDebugLabel.ast).toMatchObject({ type: 'options', options: { debugLabel: 'grouped-2' } });
+        Schema.validateSync(QueryAST.Query)(withDebugLabel.ast);
+      });
+
+      test('Query.pretty renders groupBy', () => {
+        const query = Query.select(Filter.type(TestSchema.Person)).groupBy(GroupKey.property('email'));
+        expect(Query.pretty(query)).toContain('.groupBy("email")');
+      });
+
+      test('Query.pretty renders multi-key groupBy', () => {
+        const query = Query.select(Filter.type(TestSchema.Person)).groupBy(
+          GroupKey.property('name'),
+          GroupKey.property('email'),
+        );
+        expect(Query.pretty(query)).toContain('.groupBy("name", "email")');
+      });
+
+      test('type-level: Group key is a Pick of the grouped properties', () => {
+        const query = Query.type(TestSchema.Person).groupBy(GroupKey.property('email'));
+        expectTypeOf<Query.Type<typeof query>>().toHaveProperty('key');
+        expectTypeOf<Query.Type<typeof query>>().toHaveProperty('count');
+        expectTypeOf<Query.Type<typeof query>>().toHaveProperty('values');
+        expectTypeOf<Query.Type<typeof query>['key']>().toHaveProperty('email');
       });
     });
   });

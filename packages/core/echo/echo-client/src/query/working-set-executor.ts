@@ -4,7 +4,7 @@
 
 import { type Obj } from '@dxos/echo';
 import { filterMatchDoc, filterMatchObjectJSON } from '@dxos/echo-host/filter';
-import { type QueryPlan } from '@dxos/echo-host/query';
+import { QueryPlan } from '@dxos/echo-host/query';
 import {
   EncodedReference,
   type EntityPropPath,
@@ -30,6 +30,8 @@ export type WorkingSetItem = {
   core: ObjectCore | null;
   /** Feed/queue JSON payload. */
   data: Obj.JSON | null;
+  /** Group-by key, set by `GroupByStep`. Undefined for queries without a `groupBy` clause. */
+  groupKey?: QueryPlan.GroupKeyValue;
 };
 
 const WorkingSetItem = Object.freeze({
@@ -61,6 +63,20 @@ const WorkingSetItem = Object.freeze({
       raw = item.data[ATTR_PARENT];
     }
     return raw !== undefined ? EID.tryParse(raw) : undefined;
+  },
+
+  getGroupKey(item: WorkingSetItem, keys: readonly QueryAST.GroupByKey[]): QueryPlan.GroupKeyValue {
+    const key: QueryPlan.GroupKeyValue = {};
+    for (const groupByKey of keys) {
+      switch (groupByKey.kind) {
+        case 'property':
+          key[groupByKey.property] = QueryPlan.GroupByStep.coerceKeyComponent(
+            WorkingSetItem.getProperty(item, [groupByKey.property]),
+          );
+          break;
+      }
+    }
+    return key;
   },
 });
 
@@ -130,9 +146,18 @@ export class WorkingSetQueryExecutor {
         return ws.slice(0, step.limit);
       case 'SkipStep':
         return ws.slice(step.skip);
+      case 'GroupByStep':
+        return this._execGroupByStep(step, ws);
       default:
         return null;
     }
+  }
+
+  private _execGroupByStep(step: QueryPlan.GroupByStep, ws: WorkingSetItem[]): WorkingSetItem[] {
+    const withKeys = ws.map((item) => ({ ...item, groupKey: WorkingSetItem.getGroupKey(item, step.keys) }));
+    return QueryPlan.GroupByStep.partitionByGroupKey(withKeys, (item) =>
+      QueryPlan.GroupByStep.serializeGroupKey(item.groupKey!),
+    );
   }
 
   private _execSelectStep(step: QueryPlan.SelectStep, ws: WorkingSetItem[]): WorkingSetItem[] | null {

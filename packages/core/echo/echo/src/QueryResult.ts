@@ -31,6 +31,14 @@ export type Entry<T> = {
   };
 
   /**
+   * Group membership; present iff the query has a `groupBy` clause.
+   */
+  group?: {
+    key: Record<string, string | number | boolean | null>;
+    count: number;
+  };
+
+  /**
    * Query resolution metadata.
    */
   // TODO(dmaretskyi): Rename to meta?

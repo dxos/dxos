@@ -401,6 +401,7 @@ export class IndexQuerySource implements QuerySource {
         result: object,
         match: { rank: result.rank },
         resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
+        group: _groupFromRemoteResult(result),
       };
       return queryResult;
     }
@@ -419,6 +420,7 @@ export class IndexQuerySource implements QuerySource {
       result: object,
       match: { rank: result.rank },
       resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
+      group: _groupFromRemoteResult(result),
     };
     return queryResult;
   }
@@ -463,3 +465,9 @@ let nextQueryId = 1;
  * Keyed by the type DXN.
  */
 const emittedSchemaValidationWarnings = new Set<string>();
+
+/**
+ * Builds the `Entry.group` metadata from a wire record; present iff the query has a `groupBy` clause.
+ */
+const _groupFromRemoteResult = (result: RemoteQueryResult): QueryResult.EntityEntry['group'] =>
+  result.groupKey !== undefined ? { key: JSON.parse(result.groupKey), count: result.groupCount ?? 0 } : undefined;

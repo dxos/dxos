@@ -8,7 +8,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Filter, Order, Query, Ref } from '@dxos/echo';
+import { Filter, GroupKey, Order, Query, Ref } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
@@ -1373,6 +1373,92 @@ describe('QueryPlanner', () => {
   test('throws when query has no from clause', () => {
     const query = Query.select(Filter.type(TestSchema.Person));
     expect(() => planner.createPlan(query.ast)).toThrow('Query must be scoped with a from() clause');
+  });
+
+  describe('groupBy', () => {
+    test('group by single property inserts a natural OrderStep before GroupByStep', () => {
+      const query = Query.select(Filter.type(TestSchema.Task)).groupBy(GroupKey.property('title'));
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      expect(tags).toEqual(['SelectStep', 'FilterDeletedStep', 'FilterStep', 'OrderStep', 'GroupByStep']);
+
+      const orderStep = plan.steps.find((step) => step._tag === 'OrderStep');
+      expect(orderStep).toMatchObject({ order: [{ kind: 'natural', direction: 'asc' }] });
+
+      const groupByStep = plan.steps.find((step) => step._tag === 'GroupByStep');
+      expect(groupByStep).toMatchObject({ keys: [{ kind: 'property', property: 'title' }] });
+    });
+
+    test('an explicit orderBy before groupBy is preserved (no natural order inserted)', () => {
+      const query = Query.select(Filter.type(TestSchema.Task))
+        .orderBy(Order.property('title', 'desc'))
+        .groupBy(GroupKey.property('title'));
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      expect(tags).toEqual(['SelectStep', 'FilterDeletedStep', 'FilterStep', 'OrderStep', 'GroupByStep']);
+
+      const orderStep = plan.steps.find((step) => step._tag === 'OrderStep');
+      expect(orderStep).toMatchObject({ order: [{ kind: 'property', property: 'title', direction: 'desc' }] });
+    });
+
+    test('multi-key groupBy carries all keys on GroupByStep', () => {
+      const query = Query.select(Filter.type(TestSchema.Task)).groupBy(
+        GroupKey.property('title'),
+        GroupKey.property('id'),
+      );
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const groupByStep = plan.steps.find((step) => step._tag === 'GroupByStep');
+      expect(groupByStep).toMatchObject({
+        keys: [
+          { kind: 'property', property: 'title' },
+          { kind: 'property', property: 'id' },
+        ],
+      });
+    });
+
+    test('limit before groupBy stays before GroupByStep with no pushdown across it', () => {
+      const query = Query.select(Filter.type(TestSchema.Task))
+        .orderBy(Order.property('title', 'asc'))
+        .limit(10)
+        .groupBy(GroupKey.property('title'));
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      // No optimizeLimits pushdown: LimitStep remains a distinct step (not folded into SelectStep/OrderStep).
+      expect(tags).toEqual(['SelectStep', 'FilterDeletedStep', 'FilterStep', 'OrderStep', 'LimitStep', 'GroupByStep']);
+
+      const limitStep = plan.steps.find((step) => step._tag === 'LimitStep');
+      expect(limitStep).toMatchObject({ limit: 10 });
+    });
+
+    test('throws when a clause is chained on top of groupBy', () => {
+      const grouped = Query.select(Filter.type(TestSchema.Task)).groupBy(GroupKey.property('title'));
+      const query = grouped.limit(5);
+
+      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow(
+        'groupBy must be the outermost query clause',
+      );
+    });
+
+    test('throws when groupBy is nested inside another groupBy', () => {
+      const inner = Query.select(Filter.type(TestSchema.Task)).groupBy(GroupKey.property('title'));
+      // Raw AST composition: an inner query with its own groupBy, wrapped by an outer groupBy.
+      const query = Query.fromAst({ type: 'group-by', query: inner.ast, keys: [{ kind: 'property', property: 'id' }] });
+
+      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow('Only one groupBy clause is supported');
+    });
+
+    test('groupBy under from()/options() is still valid (outermost data clause)', () => {
+      const query = Query.select(Filter.type(TestSchema.Task)).groupBy(GroupKey.property('title')).options({
+        debugLabel: 'grouped',
+      });
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      expect(plan.steps.some((step) => step._tag === 'GroupByStep')).toBe(true);
+    });
   });
 
   test('from all accessible spaces', () => {

@@ -56,6 +56,7 @@ export class QueryPlanner {
 
   createPlan(query: QueryAST.Query): QueryPlan.Plan {
     this._validateQueryScoped(query);
+    this._validateGroupByPlacement(query);
     let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });
     plan = this._optimizeEmptyFilters(plan);
     plan = this._optimizeSoloUnions(plan);
@@ -92,6 +93,8 @@ export class QueryPlanner {
         return this._generateLimitClause(query, context);
       case 'skip':
         return this._generateSkipClause(query, context);
+      case 'group-by':
+        return this._generateGroupByClause(query, context);
       case 'from':
         return this._generateFromClause(query, context);
       default:
@@ -660,6 +663,50 @@ export class QueryPlanner {
   }
 
   /**
+   * `groupBy` must be the outermost data clause: only `from()`/`options()` may wrap it, and its
+   * inner query must not itself contain another `groupBy`. The DSL's types can't enforce this
+   * (`Query<Group<K, T>>` still exposes `orderBy`/`limit`/etc.), so it's validated here at plan time.
+   *
+   * NOTE: this also (conservatively) rejects a `groupBy` found inside a `.from(subquery)` source,
+   * since chaining any clause on top of a grouped subquery is equally unsupported.
+   */
+  private _validateGroupByPlacement(query: QueryAST.Query): void {
+    let root = query;
+    while (root.type === 'options' || root.type === 'from') {
+      root = root.query;
+    }
+
+    if (root.type === 'group-by') {
+      let nestedGroupBy = false;
+      QueryAST.visit(root.query, (node) => {
+        if (node.type === 'group-by') {
+          nestedGroupBy = true;
+        }
+      });
+      if (nestedGroupBy) {
+        throw new QueryError({
+          message: 'Only one groupBy clause is supported per query',
+          context: { query },
+        });
+      }
+      return;
+    }
+
+    let foundElsewhere = false;
+    QueryAST.visit(query, (node) => {
+      if (node.type === 'group-by') {
+        foundElsewhere = true;
+      }
+    });
+    if (foundElsewhere) {
+      throw new QueryError({
+        message: 'groupBy must be the outermost query clause — only from()/options() may follow it',
+        context: { query },
+      });
+    }
+  }
+
+  /**
    * Removes filter steps that have no predicates.
    */
   private _optimizeEmptyFilters(plan: QueryPlan.Plan): QueryPlan.Plan {
@@ -723,6 +770,16 @@ export class QueryPlanner {
     ]);
   }
 
+  private _generateGroupByClause(query: QueryAST.QueryGroupByClause, context: GenerationContext): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.query, context).steps,
+      {
+        _tag: 'GroupByStep',
+        keys: query.keys,
+      },
+    ]);
+  }
+
   // After complete plan is built, inspect it from the end:
   //   - Walk backwards until hitting an object set changer.
   //   - If an order step is found, skip.
@@ -759,10 +816,12 @@ export class QueryPlanner {
       }
     }
 
-    // Find the position to insert the order step (before any trailing limit/skip steps).
+    // Find the position to insert the order step (before any trailing limit/skip/group-by steps —
+    // grouping must see the intended order already applied, both within and between groups).
     let insertIndex = processedPlan.steps.length;
     for (let i = processedPlan.steps.length - 1; i >= 0; i--) {
-      if (processedPlan.steps[i]._tag === 'LimitStep' || processedPlan.steps[i]._tag === 'SkipStep') {
+      const tag = processedPlan.steps[i]._tag;
+      if (tag === 'LimitStep' || tag === 'SkipStep' || tag === 'GroupByStep') {
         insertIndex = i;
       } else {
         break;
