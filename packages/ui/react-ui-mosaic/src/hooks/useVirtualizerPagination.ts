@@ -51,16 +51,89 @@ export type UseVirtualizerPaginationResult = {
   leadingSpace: number;
 };
 
+//
+// Edge-trigger evaluation
+//
+
 /** A retained item's identity and pre-change offset. */
 type Anchor = { id: string; start: number };
 
+/** Position of the loaded window relative to the viewport, independent of what's rendered. */
+type EdgeGeometry = {
+  scrollOffset: number;
+  viewportHeight: number;
+  /** Index of the topmost/bottommost *rendered* row; undefined if nothing overlaps the viewport. */
+  firstVisibleIndex: number | undefined;
+  lastVisibleIndex: number | undefined;
+  /** Absolute start/end of the whole loaded window, defined even when nothing is rendered there. */
+  windowStart: number | undefined;
+  windowEnd: number | undefined;
+};
+
+const readEdgeGeometry = (virtualizer: Virtualizer<any, any>): EdgeGeometry => {
+  const virtualItems = virtualizer.getVirtualItems();
+  // `measurementsCache` covers the whole array even when nothing is rendered (deep in the spacer).
+  const measurements = virtualizer.measurementsCache;
+  return {
+    scrollOffset: virtualizer.scrollOffset ?? 0,
+    viewportHeight: virtualizer.scrollElement?.clientHeight ?? 0,
+    firstVisibleIndex: virtualItems.at(0)?.index,
+    lastVisibleIndex: virtualItems.at(-1)?.index,
+    windowStart: measurements[0]?.start,
+    windowEnd: measurements.at(-1)?.end,
+  };
+};
+
+const isNearBottomEdge = (geometry: EdgeGeometry, itemCount: number, threshold: number): boolean =>
+  geometry.lastVisibleIndex !== undefined
+    ? geometry.lastVisibleIndex >= nextPageIndexThreshold(itemCount, threshold)
+    : geometry.windowEnd != null && geometry.scrollOffset + geometry.viewportHeight > geometry.windowEnd;
+
+const isNearTopEdge = (geometry: EdgeGeometry, threshold: number): boolean =>
+  geometry.firstVisibleIndex !== undefined
+    ? geometry.firstVisibleIndex < threshold
+    : geometry.windowStart != null && geometry.scrollOffset < geometry.windowStart;
+
+/** Loaded content doesn't reach the viewport's top edge (e.g. scrolled into the leading spacer). */
+const isBlankAbove = (geometry: EdgeGeometry): boolean =>
+  geometry.windowStart != null && geometry.windowStart > geometry.scrollOffset;
+
+/** Loaded content doesn't reach the viewport's bottom edge. */
+const isBlankBelow = (geometry: EdgeGeometry): boolean =>
+  geometry.windowEnd != null && geometry.windowEnd < geometry.scrollOffset + geometry.viewportHeight;
+
 /** Per-direction dedup/throttle state for `evaluateTriggers`, independent of item type. */
 type TriggerState = {
-  lastNextRequestedItems: MutableRefObject<unknown>;
-  lastPreviousRequestedItems: MutableRefObject<unknown>;
-  lastGetNextScroll: MutableRefObject<number | null>;
-  lastGetPreviousScroll: MutableRefObject<number | null>;
-  pagination: MutableRefObject<VirtualizerPaginationController | undefined>;
+  lastNextRequestedItemsRef: MutableRefObject<unknown>;
+  lastPreviousRequestedItemsRef: MutableRefObject<unknown>;
+  lastGetNextScrollRef: MutableRefObject<number | null>;
+  lastGetPreviousScrollRef: MutableRefObject<number | null>;
+  paginationRef: MutableRefObject<VirtualizerPaginationController | undefined>;
+};
+
+/** Not fired at this exact scroll offset since the edge was last left, unless blank re-arms it. */
+const canRequestNext = (state: TriggerState, geometry: EdgeGeometry): boolean =>
+  state.lastGetNextScrollRef.current === null ||
+  geometry.scrollOffset !== state.lastGetNextScrollRef.current ||
+  isBlankBelow(geometry);
+
+const canRequestPrevious = (state: TriggerState, geometry: EdgeGeometry): boolean =>
+  state.lastGetPreviousScrollRef.current === null ||
+  geometry.scrollOffset !== state.lastGetPreviousScrollRef.current ||
+  isBlankAbove(geometry);
+
+const requestNext = (state: TriggerState, items: unknown, scrollOffset: number): void => {
+  state.lastNextRequestedItemsRef.current = items;
+  state.lastGetNextScrollRef.current = scrollOffset;
+  const getNext = state.paginationRef.current?.getNext;
+  queueMicrotask(() => getNext?.());
+};
+
+const requestPrevious = (state: TriggerState, items: unknown, scrollOffset: number): void => {
+  state.lastPreviousRequestedItemsRef.current = items;
+  state.lastGetPreviousScrollRef.current = scrollOffset;
+  const getPrevious = state.paginationRef.current?.getPrevious;
+  queueMicrotask(() => getPrevious?.());
 };
 
 type EvaluateTriggersOptions = {
@@ -73,76 +146,56 @@ type EvaluateTriggersOptions = {
 };
 
 /**
- * Requests `getNext`/`getPrevious` once the loaded window's edge (by row index, not scroll
- * position -- the spacer makes blank space scrollable too) nears the viewport. Deduped per
+ * Requests `getNext`/`getPrevious` once the loaded window's edge nears the viewport. Deduped per
  * direction and per `items` snapshot; re-armed while the viewport sits in blank space so a chain
  * of pages loads back-to-back without further user scrolling.
  */
 const evaluateTriggers = ({ virtualizer, items, pagination, itemCount, threshold, state }: EvaluateTriggersOptions) => {
+  const geometry = readEdgeGeometry(virtualizer);
   const scrollable = isScrollable(virtualizer);
-  const scrollOffset = virtualizer.scrollOffset ?? 0;
-  const viewportHeight = virtualizer.scrollElement?.clientHeight ?? 0;
-  const virtualItems = virtualizer.getVirtualItems();
-  const firstVisible = virtualItems.at(0);
-  const lastVisible = virtualItems.at(-1);
-  // `measurementsCache` covers the whole array even when nothing is rendered (deep in the spacer).
-  const measurements = virtualizer.measurementsCache;
-  const firstItemStart = measurements[0]?.start;
-  const lastItemEnd = measurements.at(-1)?.end;
-  const nextThreshold = nextPageIndexThreshold(itemCount, threshold);
   const smallWindow = itemCount <= threshold;
-  const nearBottomIndex = lastVisible
-    ? lastVisible.index >= nextThreshold
-    : !!(lastItemEnd != null && scrollOffset + viewportHeight > lastItemEnd);
-  const nearTopIndex = firstVisible
-    ? firstVisible.index < threshold
-    : !!(firstItemStart != null && scrollOffset < firstItemStart);
-  const blankAbove = !!(firstItemStart != null && firstItemStart > scrollOffset);
-  const blankBelow = !!(lastItemEnd != null && lastItemEnd < scrollOffset + viewportHeight);
-  const canGetNext =
-    state.lastGetNextScroll.current === null || scrollOffset !== state.lastGetNextScroll.current || blankBelow;
-  const canGetPrevious =
-    state.lastGetPreviousScroll.current === null || scrollOffset !== state.lastGetPreviousScroll.current || blankAbove;
-  const triggerNext = !!(
-    pagination?.getNext &&
+  const nearBottom = isNearBottomEdge(geometry, itemCount, threshold);
+  const nearTop = isNearTopEdge(geometry, threshold);
+
+  if (!nearBottom) {
+    state.lastGetNextScrollRef.current = null;
+  }
+  if (!nearTop) {
+    state.lastGetPreviousScrollRef.current = null;
+  }
+
+  const triggerNext =
+    !!pagination?.getNext &&
     !pagination.isLoading &&
     scrollable &&
-    nearBottomIndex &&
-    canGetNext &&
-    (!smallWindow || scrollOffset > 0)
-  );
-  const triggerPrev = !!(
-    pagination?.getPrevious &&
+    nearBottom &&
+    (!smallWindow || geometry.scrollOffset > 0) &&
+    canRequestNext(state, geometry);
+  const triggerPrevious =
+    !!pagination?.getPrevious &&
     !pagination.isLoading &&
     scrollable &&
-    canGetPrevious &&
-    nearTopIndex &&
-    pagination.atHead !== true
-  );
-  if (!nearBottomIndex) {
-    state.lastGetNextScroll.current = null;
-  }
-  if (!nearTopIndex) {
-    state.lastGetPreviousScroll.current = null;
-  }
+    nearTop &&
+    pagination.atHead !== true &&
+    canRequestPrevious(state, geometry);
+
   if (!triggerNext) {
-    state.lastNextRequestedItems.current = undefined;
+    state.lastNextRequestedItemsRef.current = undefined;
   }
-  if (!triggerPrev) {
-    state.lastPreviousRequestedItems.current = undefined;
+  if (!triggerPrevious) {
+    state.lastPreviousRequestedItemsRef.current = undefined;
   }
-  if (triggerNext && state.lastNextRequestedItems.current !== items) {
-    state.lastNextRequestedItems.current = items;
-    state.lastGetNextScroll.current = scrollOffset;
-    const getNext = state.pagination.current?.getNext;
-    queueMicrotask(() => getNext?.());
-  } else if (triggerPrev && state.lastPreviousRequestedItems.current !== items) {
-    state.lastPreviousRequestedItems.current = items;
-    state.lastGetPreviousScroll.current = scrollOffset;
-    const getPrevious = state.pagination.current?.getPrevious;
-    queueMicrotask(() => getPrevious?.());
+
+  if (triggerNext && state.lastNextRequestedItemsRef.current !== items) {
+    requestNext(state, items, geometry.scrollOffset);
+  } else if (triggerPrevious && state.lastPreviousRequestedItemsRef.current !== items) {
+    requestPrevious(state, items, geometry.scrollOffset);
   }
 };
+
+//
+// Front-edge (eviction/prepend) reconciliation
+//
 
 /** Total height (px) of `prevItems[0, oldIndexOfNewFirst)`, per its outgoing measurements. */
 const evictedPrefixHeight = (virtualizer: Virtualizer<any, any>, oldIndexOfNewFirst: number): number => {
@@ -171,6 +224,78 @@ const findRetainedAnchor = <TItem>(
   return null;
 };
 
+type FrontEdgeChange =
+  | { kind: 'none' }
+  | { kind: 'evicted'; evictedHeight: number }
+  | { kind: 'prepended'; anchor: Anchor | null };
+
+/**
+ * Classifies how `items` changed at the front, relative to `prevItems`, using only the outgoing
+ * window's own measurements (no need to wait for the incoming render). `'evicted'` covers both a
+ * prefix eviction (the window slid forward) and a pure append (the window grew) -- either way the
+ * item now at the front was already loaded, so its height is already known. `'prepended'` covers
+ * everything else (a `getPrevious` prepend, or a reset to a disjoint range).
+ */
+const classifyFrontEdgeChange = <TItem>(
+  prevItems: readonly TItem[] | TItem[] | undefined,
+  items: readonly TItem[] | TItem[] | undefined,
+  getId: GetId<TItem>,
+  virtualizer: Virtualizer<any, any> | null,
+): FrontEdgeChange => {
+  if (!virtualizer || !prevItems) {
+    return { kind: 'none' };
+  }
+  const firstNewId = items?.[0] != null ? getId(items[0]) : undefined;
+  const oldIndexOfNewFirst = firstNewId != null ? prevItems.findIndex((item) => getId(item) === firstNewId) : -1;
+  if (oldIndexOfNewFirst >= 0) {
+    return { kind: 'evicted', evictedHeight: evictedPrefixHeight(virtualizer, oldIndexOfNewFirst) };
+  }
+  const newIds = new Set(items?.map((item) => getId(item)));
+  return { kind: 'prepended', anchor: findRetainedAnchor(prevItems, newIds, getId, virtualizer) };
+};
+
+//
+// Prepend correction (deferred to a layout effect; see the hook's own doc comment for why)
+//
+
+type PrependCorrection =
+  | { kind: 'no-overlap' }
+  | { kind: 'pending' }
+  | { kind: 'absorbed'; nextSpace: number }
+  | { kind: 'snap'; nextSpace: number; scrollAdjust: number };
+
+/**
+ * `'no-overlap'`: the anchor isn't in the new `items` (e.g. a reset) -- the spacer no longer
+ * describes anything. `'pending'`: the incoming render hasn't measured the anchor yet. `'absorbed'`:
+ * the shift is fully absorbed by the spacer, no scroll rewrite needed. `'snap'`: growing past an
+ * empty spacer (or the `atHead` reset) leaves a remainder that has to move the scroll offset.
+ */
+const computePrependCorrection = <TItem>(
+  virtualizer: Virtualizer<any, any>,
+  items: readonly TItem[] | TItem[],
+  getId: GetId<TItem>,
+  anchor: Anchor,
+  currentSpace: number,
+  atHead: boolean,
+): PrependCorrection => {
+  const newIndex = items.findIndex((item) => getId(item) === anchor.id);
+  if (newIndex < 0) {
+    return { kind: 'no-overlap' };
+  }
+  const newStart = virtualizer.measurementsCache[newIndex]?.start;
+  if (newStart == null) {
+    return { kind: 'pending' };
+  }
+  const shift = newStart - anchor.start;
+  const nextSpace = atHead ? 0 : Math.max(0, currentSpace - shift);
+  const scrollAdjust = shift + (nextSpace - currentSpace);
+  return scrollAdjust === 0 ? { kind: 'absorbed', nextSpace } : { kind: 'snap', nextSpace, scrollAdjust };
+};
+
+//
+// Hook
+//
+
 /**
  * Wires a paginated data source into a `Mosaic.VirtualStack`: requests the next/previous page near
  * either loaded edge (`evaluateTriggers`), and keeps the scrollbar stable across the resulting
@@ -185,12 +310,13 @@ const findRetainedAnchor = <TItem>(
  * `paddingStart`) grows by exactly the evicted height and shrinks by exactly the prepended height,
  * so retained items keep their absolute position and the thumb only scales as the total grows.
  *
- * Eviction is corrected synchronously during the same render that observes the new `items`, since
- * the evicted height is already known from the outgoing window's own measurements -- deferring it
+ * Eviction (`classifyFrontEdgeChange`'s `'evicted'`) is corrected synchronously during the same
+ * render that observes the new `items`, since the evicted height is already known -- deferring it
  * would let the browser observe (and clamp `scrollTop` against) a momentary, too-short frame.
- * Prepending is corrected one render later, from a layout effect, since the prepended items'
- * heights aren't known until the incoming render measures them; that lag is safe because
- * prepending only ever grows content before the spacer shrinks to match.
+ * Prepending (`'prepended'`) is corrected one render later, from a layout effect
+ * (`computePrependCorrection`), since the prepended items' heights aren't known until the incoming
+ * render measures them; that lag is safe because prepending only ever grows content before the
+ * spacer shrinks to match.
  *
  * The layout effect also re-runs `evaluateTriggers`, because `@tanstack/react-virtual` only calls
  * `onChange` when the visible range changes, not merely when `items` does -- while the viewport
@@ -209,6 +335,12 @@ export const useVirtualizerPagination = <TItem = any>({
 
   const [leadingSpace, setLeadingSpace] = useState(0);
   const leadingSpaceRef = useRef(leadingSpace);
+  const setSpacer = useCallback((nextSpace: number) => {
+    if (nextSpace !== leadingSpaceRef.current) {
+      leadingSpaceRef.current = nextSpace;
+      setLeadingSpace(nextSpace);
+    }
+  }, []);
 
   const virtualizerRef = useRef<Virtualizer<any, any> | null>(null);
   const anchorRef = useRef<Anchor | null>(null);
@@ -217,38 +349,41 @@ export const useVirtualizerPagination = <TItem = any>({
   const restoringRef = useRef(false);
 
   const triggerState: TriggerState = {
-    lastNextRequestedItems: useRef<unknown>(undefined),
-    lastPreviousRequestedItems: useRef<unknown>(undefined),
-    lastGetNextScroll: useRef<number | null>(null),
-    lastGetPreviousScroll: useRef<number | null>(null),
-    pagination: useRef(pagination),
+    lastNextRequestedItemsRef: useRef<unknown>(undefined),
+    lastPreviousRequestedItemsRef: useRef<unknown>(undefined),
+    lastGetNextScrollRef: useRef<number | null>(null),
+    lastGetPreviousScrollRef: useRef<number | null>(null),
+    paginationRef: useRef(pagination),
   };
-  triggerState.pagination.current = pagination;
+  triggerState.paginationRef.current = pagination;
 
-  // Snapshots the front-edge change during render, before `Mosaic.VirtualStack` re-renders with
+  const rearmTriggers = useCallback(
+    (virtualizer: Virtualizer<any, any>) => {
+      evaluateTriggers({
+        virtualizer,
+        items,
+        pagination: triggerState.paginationRef.current,
+        itemCount,
+        threshold,
+        state: triggerState,
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [items, itemCount, threshold],
+  );
+
+  // Classifies the front-edge change during render, before `Mosaic.VirtualStack` re-renders with
   // the new `items` -- at this point `virtualizerRef.current` still reflects the outgoing array.
-  // The spacer/anchor computation itself is gated on `pagination` so a caller not using pagination
-  // never gets it for an unrelated `items` change (e.g. a sort or filter); `prevItemsRef` still
-  // tracks every change unconditionally so it isn't stale if `pagination` is attached later.
+  // Skipped entirely when `pagination` is unset, so a caller not using pagination never gets
+  // spacer/anchor bookkeeping for an unrelated `items` change (e.g. a sort or filter).
   if (prevItemsRef.current !== items) {
-    const virtualizer = virtualizerRef.current;
-    const prevItems = prevItemsRef.current;
     if (pagination) {
-      const firstNewId = items?.[0] != null ? getId(items[0]) : undefined;
-      const oldIndexOfNewFirst =
-        firstNewId != null ? (prevItems?.findIndex((item) => getId(item) === firstNewId) ?? -1) : -1;
-      if (virtualizer && oldIndexOfNewFirst >= 0) {
-        // Prefix eviction or pure append: correct now (see doc comment above).
-        const nextSpace = leadingSpaceRef.current + evictedPrefixHeight(virtualizer, oldIndexOfNewFirst);
-        if (nextSpace !== leadingSpaceRef.current) {
-          leadingSpaceRef.current = nextSpace;
-          setLeadingSpace(nextSpace);
-        }
+      const change = classifyFrontEdgeChange(prevItemsRef.current, items, getId, virtualizerRef.current);
+      if (change.kind === 'evicted') {
+        setSpacer(leadingSpaceRef.current + change.evictedHeight);
         anchorRef.current = null;
-      } else if (virtualizer && prevItems) {
-        // Prepend or a reset to a disjoint range: defer to the layout effect below.
-        const newIds = new Set(items?.map((item) => getId(item)));
-        anchorRef.current = findRetainedAnchor(prevItems, newIds, getId, virtualizer);
+      } else if (change.kind === 'prepended') {
+        anchorRef.current = change.anchor;
       }
     }
     prevItemsRef.current = items;
@@ -261,14 +396,11 @@ export const useVirtualizerPagination = <TItem = any>({
         restoringRef.current = false;
         return;
       }
-      evaluateTriggers({ virtualizer, items, pagination, itemCount, threshold, state: triggerState });
+      rearmTriggers(virtualizer);
     },
-    [items, pagination, itemCount, threshold],
+    [rearmTriggers],
   );
 
-  // Applies the prepend correction: the anchor's new offset (still under the OLD `leadingSpace`)
-  // minus its captured offset is the shift; the spacer absorbs it so item and scroll offsets both
-  // stay put. Only the remainder -- growing past the spacer while at the head -- moves the thumb.
   useLayoutEffect(() => {
     const virtualizer = virtualizerRef.current;
     const anchor = anchorRef.current;
@@ -276,53 +408,29 @@ export const useVirtualizerPagination = <TItem = any>({
     if (!virtualizer || !anchor || !items) {
       return;
     }
-    const newIndex = items.findIndex((item) => getId(item) === anchor.id);
-    const atHead = triggerState.pagination.current?.atHead === true;
-    if (newIndex < 0) {
-      // No overlap with the outgoing window (e.g. a reset to a fresh first page).
-      if (leadingSpaceRef.current !== 0) {
-        leadingSpaceRef.current = 0;
-        setLeadingSpace(0);
-      }
-      evaluateTriggers({
-        virtualizer,
-        items,
-        pagination: triggerState.pagination.current,
-        itemCount,
-        threshold,
-        state: triggerState,
-      });
-      return;
-    }
-    const newStart = virtualizer.measurementsCache[newIndex]?.start;
-    if (newStart == null) {
-      return;
-    }
-    const shift = newStart - anchor.start;
-    const previousSpace = leadingSpaceRef.current;
-    const nextSpace = atHead ? 0 : Math.max(0, previousSpace - shift);
-    const scrollAdjust = shift + (nextSpace - previousSpace);
-    if (nextSpace !== previousSpace) {
-      leadingSpaceRef.current = nextSpace;
-      setLeadingSpace(nextSpace);
-    }
-    if (scrollAdjust !== 0) {
-      // The head-reset snap: a one-shot move, not a chain, so skip re-evaluating triggers here --
-      // `virtualizer.scrollOffset` won't reflect it until the (suppressed) scroll event fires.
-      restoringRef.current = true;
-      virtualizer.scrollToOffset((virtualizer.scrollOffset ?? 0) + scrollAdjust);
-    } else {
-      evaluateTriggers({
-        virtualizer,
-        items,
-        pagination: triggerState.pagination.current,
-        itemCount,
-        threshold,
-        state: triggerState,
-      });
+    const atHead = triggerState.paginationRef.current?.atHead === true;
+    const correction = computePrependCorrection(virtualizer, items, getId, anchor, leadingSpaceRef.current, atHead);
+    switch (correction.kind) {
+      case 'pending':
+        return;
+      case 'no-overlap':
+        setSpacer(0);
+        rearmTriggers(virtualizer);
+        return;
+      case 'absorbed':
+        setSpacer(correction.nextSpace);
+        rearmTriggers(virtualizer);
+        return;
+      case 'snap':
+        // A one-shot move, not a chain, so `rearmTriggers` is skipped: `virtualizer.scrollOffset`
+        // won't reflect this until the (suppressed) scroll event fires.
+        setSpacer(correction.nextSpace);
+        restoringRef.current = true;
+        virtualizer.scrollToOffset((virtualizer.scrollOffset ?? 0) + correction.scrollAdjust);
+        return;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, getId]);
+  }, [items, getId, setSpacer, rearmTriggers]);
 
   return { onChange, leadingSpace };
 };
