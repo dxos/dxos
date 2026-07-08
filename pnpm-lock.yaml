@@ -11745,6 +11745,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-fact-viewer':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-fact-viewer
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
