@@ -1485,6 +1485,26 @@ describe('QueryPlanner', () => {
       expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow('Only one groupBy clause is supported');
     });
 
+    test('throws when a grouped subquery is used as a from() source', () => {
+      // The planner flattens `.from(subquery)`; a grouped subquery would merge a second group-by
+      // into the plan, so it must be rejected even though the outer query has no group-by of its own.
+      const groupedSubquery = Query.select(Filter.type(TestSchema.Person)).groupBy(GroupKey.property('email'));
+      const query = Query.select(Filter.type(TestSchema.Task)).from(groupedSubquery);
+
+      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow(
+        'groupBy must be the outermost query clause',
+      );
+    });
+
+    test('throws when both the outer query and a from() subquery are grouped', () => {
+      const groupedSubquery = Query.select(Filter.type(TestSchema.Person)).groupBy(GroupKey.property('email'));
+      const query = Query.select(Filter.type(TestSchema.Task))
+        .from(groupedSubquery)
+        .groupBy(GroupKey.property('title'));
+
+      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow('Only one groupBy clause is supported');
+    });
+
     test('groupBy under from()/options() is still valid (outermost data clause)', () => {
       const query = Query.select(Filter.type(TestSchema.Task)).groupBy(GroupKey.property('title')).options({
         debugLabel: 'grouped',

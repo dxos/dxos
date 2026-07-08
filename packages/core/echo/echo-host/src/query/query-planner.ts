@@ -664,45 +664,41 @@ export class QueryPlanner {
 
   /**
    * `groupBy` must be the outermost data clause: only `from()`/`options()` and the group-level
-   * pagination clauses `limit()`/`skip()` may wrap it, and its inner query must not itself contain
-   * another `groupBy`. The DSL's types can't enforce this (`Query<Group<K, T>>` still exposes
-   * `orderBy`/`select`/etc.), so it's validated here at plan time.
+   * pagination clauses `limit()`/`skip()` may wrap it. At most one `groupBy` may appear anywhere
+   * in the tree — including inside a `.from(subquery)` source, which the planner flattens (so a
+   * grouped subquery would otherwise produce an unsupported double-`groupBy`). The DSL's types
+   * can't enforce this (`Query<Group<K, T>>` still exposes `orderBy`/`select`/etc.), so it's
+   * validated here at plan time.
    *
    * `limit`/`skip` above a `group-by` page over whole groups (see the group-aware `LimitStep`/
    * `SkipStep` execution); a `limit`/`skip` below it windows the flat object stream before grouping.
-   *
-   * NOTE: this also (conservatively) rejects a `groupBy` found inside a `.from(subquery)` source,
-   * since chaining a disallowed clause on top of a grouped subquery is equally unsupported.
    */
   private _validateGroupByPlacement(query: QueryAST.Query): void {
+    // Count every group-by anywhere in the tree. `QueryAST.visit` recurses through `from` sources,
+    // so this also sees grouped subqueries that flattening would merge in.
+    let groupByCount = 0;
+    QueryAST.visit(query, (node) => {
+      if (node.type === 'group-by') {
+        groupByCount += 1;
+      }
+    });
+    if (groupByCount === 0) {
+      return;
+    }
+    if (groupByCount > 1) {
+      throw new QueryError({
+        message: 'Only one groupBy clause is supported per query',
+        context: { query },
+      });
+    }
+
+    // Exactly one group-by: it must sit at the outermost data position (only from/options/limit/skip
+    // may wrap it). Unwrap those and require the group-by to be what remains.
     let root = query;
     while (root.type === 'options' || root.type === 'from' || root.type === 'limit' || root.type === 'skip') {
       root = root.query;
     }
-
-    if (root.type === 'group-by') {
-      let nestedGroupBy = false;
-      QueryAST.visit(root.query, (node) => {
-        if (node.type === 'group-by') {
-          nestedGroupBy = true;
-        }
-      });
-      if (nestedGroupBy) {
-        throw new QueryError({
-          message: 'Only one groupBy clause is supported per query',
-          context: { query },
-        });
-      }
-      return;
-    }
-
-    let foundElsewhere = false;
-    QueryAST.visit(query, (node) => {
-      if (node.type === 'group-by') {
-        foundElsewhere = true;
-      }
-    });
-    if (foundElsewhere) {
+    if (root.type !== 'group-by') {
       throw new QueryError({
         message:
           'groupBy must be the outermost query clause — only from(), options(), limit() and skip() may follow it',

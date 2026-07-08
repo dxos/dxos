@@ -467,7 +467,9 @@ let nextQueryId = 1;
 const emittedSchemaValidationWarnings = new Set<string>();
 
 /**
- * Builds the `Entry.group` metadata from a wire record; present iff the query has a `groupBy` clause.
+ * Builds the group membership from a wire record; present iff the query has a `groupBy` clause.
+ * The host always sends `groupCount` alongside `groupKey`; the `?? 1` floor (a present record
+ * implies at least one member) is defensive and matches the working-set source's fallback.
  */
 const _groupFromRemoteResult = (result: RemoteQueryResult): SourceEntry['group'] =>
-  result.groupKey !== undefined ? { key: JSON.parse(result.groupKey), count: result.groupCount ?? 0 } : undefined;
+  result.groupKey !== undefined ? { key: JSON.parse(result.groupKey), count: result.groupCount ?? 1 } : undefined;
