@@ -10,8 +10,8 @@ import { type Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type FactStoreApi, type RDF } from '@dxos/pipeline-rdf';
 import { getSpace } from '@dxos/react-client/echo';
-import { FactViewer } from '@dxos/react-ui-fact-viewer';
 
+import { FactViewer } from '#components';
 import { BrainCapabilities, type FactStoreRegistry } from '#types';
 
 export type FactsCompanionProps = {

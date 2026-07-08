@@ -16,7 +16,6 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 - Stub AiService for handler tests: mirror pipeline-rdf `mockAiService` shape (`Layer.succeed(AiService.AiService, { model: () => Layer.succeed(LanguageModel.LanguageModel, {...} as any) })`) with a prompt-capturing `generateText` to assert grounding; test the handler's core via a NAMED export (precedent: `runFactPipeline` in enrich-mailbox.ts) instead of Operation.invoke when services are hand-provided.
 - Editor content set programmatically (e.g. AI-generated draft body): `Editor.View` only reads `initialValue` — bump a `key` on the editing component after `Obj.update` to remount with the new text.
 
-
 ## 2026-07-05 — plugin-chess-com (operation handlers)
 
 - Operation handler files: `export default Op.pipe(Operation.withHandler(...), Operation.opaqueHandler)` as the default export — mirror `plugin-trip/src/operations/add-segment.ts`; no separate `const handler` alias.

@@ -53,6 +53,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../plugins/plugin-brain"
+    },
+    {
       "path": "../../plugins/plugin-client"
     },
     {
@@ -99,9 +102,6 @@
     },
     {
       "path": "../../ui/react-ui-editor"
-    },
-    {
-      "path": "../../ui/react-ui-fact-viewer"
     },
     {
       "path": "../../ui/react-ui-form"

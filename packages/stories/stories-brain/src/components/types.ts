@@ -3,7 +3,7 @@
 //
 
 import { type RDF } from '@dxos/pipeline-rdf';
-import { formatTerm } from '@dxos/react-ui-fact-viewer';
+import { formatTerm } from '@dxos/plugin-brain/components';
 
 export type EntityItem = {
   /** Entity id (slug) — the context key for filtering / graph rooting. */

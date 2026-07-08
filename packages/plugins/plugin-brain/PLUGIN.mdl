@@ -21,7 +21,7 @@ On top of the store, the plugin contributes:
   `org.dxos.skill.brain` skill. Skill instructions describe HOW to use the tools (entity-slug
   conventions, confidence filtering, iterative narrowing) — task-specific behavior lives in the
   operations themselves.
-- A `FactsCompanion` surface rendering `FactViewer` (from `@dxos/react-ui-fact-viewer`) over the
+- A `FactsCompanion` surface rendering the plugin's `FactViewer` component over the
   space's facts as a companion to article subjects, with an entity/predicate filter and an empty
   state when no facts relate to the subject.
 
@@ -136,7 +136,8 @@ op summarizeSubject
 ```mdl
 component FactsCompanion
   desc: |
-    Companion surface over an article subject rendering the space's facts via FactViewer.
+    Companion surface over an article subject rendering the space's facts via the FactViewer
+    component (src/components/FactViewer, exported via ./components).
     Facts are read from the shared per-space store (FactStoreRegistry.forSpace). v0 shows
     all space facts (the store is per-space, matching its granularity) with FactViewer's
     text filter; subject-scoped filtering by source DXN is roadmap.

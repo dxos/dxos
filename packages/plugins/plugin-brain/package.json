@@ -24,6 +24,11 @@
       "types": "./dist/types/src/skills/index.d.ts",
       "default": "./dist/lib/neutral/skills/index.mjs"
     },
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/neutral/components/index.mjs"
+    },
     "#containers": {
       "source": "./src/containers/index.ts",
       "types": "./dist/types/src/containers/index.d.ts",
@@ -62,6 +67,11 @@
       "default": "./dist/lib/neutral/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/neutral/components/index.mjs"
+    },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -98,7 +108,10 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-fact-viewer": "workspace:*",
+    "@dxos/react-ui-graph": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
     "effect": "catalog:"
@@ -109,7 +122,6 @@
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
