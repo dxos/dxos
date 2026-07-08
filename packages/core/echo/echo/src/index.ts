@@ -13,6 +13,7 @@ export * as Err from './Err';
 export * as Feed from './Feed';
 export * as Filter from './Filter';
 export * as Format from './Format';
+export * as GroupKey from './GroupKey';
 export * as Hypergraph from './Hypergraph';
 export * as Json from './Json';
 export * as JsonSchema from './JsonSchema';

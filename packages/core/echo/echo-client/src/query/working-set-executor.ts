@@ -3,7 +3,7 @@
 //
 
 import { filterMatchDoc } from '@dxos/echo-host/filter';
-import { type QueryPlan } from '@dxos/echo-host/query';
+import { GroupBy, type GroupKeyValue, type QueryPlan } from '@dxos/echo-host/query';
 import {
   EncodedReference,
   type EntityPropPath,
@@ -22,6 +22,8 @@ export type WorkingSetItem = {
   spaceId: SpaceId;
   /** Automerge-backed object core. */
   core: ObjectCore;
+  /** Group-by key, set by `GroupByStep`. Undefined for queries without a `groupBy` clause. */
+  groupKey?: GroupKeyValue;
 };
 
 const WorkingSetItem = Object.freeze({
@@ -36,6 +38,20 @@ const WorkingSetItem = Object.freeze({
   getParentEid(item: WorkingSetItem): EID.EID | undefined {
     const raw = EntityStructure.getParent(item.core.getObjectStructure())?.['/'];
     return raw !== undefined ? EID.tryParse(raw) : undefined;
+  },
+
+  getGroupKey(item: WorkingSetItem, keys: readonly QueryAST.GroupByKey[]): GroupKeyValue {
+    const key: GroupKeyValue = {};
+    for (const groupByKey of keys) {
+      switch (groupByKey.kind) {
+        case 'property':
+          key[groupByKey.property] = GroupBy.coerceKeyComponent(
+            WorkingSetItem.getProperty(item, [groupByKey.property]),
+          );
+          break;
+      }
+    }
+    return key;
   },
 });
 
@@ -93,12 +109,24 @@ export class WorkingSetQueryExecutor {
       case 'OrderStep':
         return this._execOrderStep(step, ws);
       case 'LimitStep':
-        return ws.slice(0, step.limit);
+        // After a GroupByStep, limit pages over whole groups; otherwise it slices the flat stream.
+        return _isGroupedWorkingSet(ws)
+          ? GroupBy.takeGroups(ws, step.limit, _serializeItemGroupKey)
+          : ws.slice(0, step.limit);
       case 'SkipStep':
-        return ws.slice(step.skip);
+        return _isGroupedWorkingSet(ws)
+          ? GroupBy.dropGroups(ws, step.skip, _serializeItemGroupKey)
+          : ws.slice(step.skip);
+      case 'GroupByStep':
+        return this._execGroupByStep(step, ws);
       default:
         return null;
     }
+  }
+
+  private _execGroupByStep(step: QueryPlan.GroupByStep, ws: WorkingSetItem[]): WorkingSetItem[] {
+    const withKeys = ws.map((item) => ({ ...item, groupKey: WorkingSetItem.getGroupKey(item, step.keys) }));
+    return GroupBy.partitionByGroupKey(withKeys, (item) => GroupBy.serializeGroupKey(item.groupKey!));
   }
 
   private _execSelectStep(step: QueryPlan.SelectStep, ws: WorkingSetItem[]): WorkingSetItem[] | null {
@@ -476,6 +504,13 @@ export class WorkingSetQueryExecutor {
 }
 
 const MAX_DEPTH_FOR_CHILD_OF_TRACING = 16;
+
+/** True once the working set has been partitioned by a GroupByStep (every item carries a group key). */
+const _isGroupedWorkingSet = (ws: WorkingSetItem[]): boolean => ws.length > 0 && ws[0].groupKey !== undefined;
+
+// Non-null assertion is sound: only called from group-aware limit/skip, which run exclusively on a
+// working set already partitioned by GroupByStep (guarded by `_isGroupedWorkingSet`).
+const _serializeItemGroupKey = (item: WorkingSetItem): string => GroupBy.serializeGroupKey(item.groupKey!);
 
 const _compareValues = (valueA: unknown, valueB: unknown): number => {
   if (valueA == null && valueB == null) {

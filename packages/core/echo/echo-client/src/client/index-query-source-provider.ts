@@ -7,7 +7,7 @@ import * as Array from 'effect/Array';
 import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
-import { Entity, type Hypergraph, Obj, Query, type QueryResult } from '@dxos/echo';
+import { Entity, type Hypergraph, Obj, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -23,7 +23,7 @@ import {
 import { isNonNullable } from '@dxos/util';
 
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
-import { type QuerySource, getTargetSpacesForQuery } from '../query';
+import { type QuerySource, type SourceEntry, getTargetSpacesForQuery } from '../query';
 
 export type LoadObjectProps = {
   spaceId: SpaceId;
@@ -88,7 +88,7 @@ export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
 
   private _query?: QueryAST.Query = undefined;
-  private _results?: QueryResult.EntityEntry[] = [];
+  private _results?: SourceEntry[] = [];
   private _stream?: Stream<QueryResponse>;
   private _open = false;
 
@@ -132,7 +132,7 @@ export class IndexQuerySource implements QuerySource {
     this._closeStream();
   }
 
-  getResults(): QueryResult.EntityEntry[] {
+  getResults(): SourceEntry[] {
     return this._results ?? [];
   }
 
@@ -141,7 +141,7 @@ export class IndexQuerySource implements QuerySource {
     return false;
   }
 
-  async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry[]> {
+  async run(_ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]> {
     this._query = query;
     return new Promise((resolve, reject) => {
       this._runOneShot(query, resolve, reject);
@@ -172,7 +172,7 @@ export class IndexQuerySource implements QuerySource {
   /** Single-use query: resolves with the first host response, then closes the stream. */
   private _runOneShot(
     query: QueryAST.Query,
-    resolve: (results: QueryResult.EntityEntry[]) => void,
+    resolve: (results: SourceEntry[]) => void,
     reject: (error: Error) => void,
   ): void {
     const queryId = nextQueryId++;
@@ -322,7 +322,7 @@ export class IndexQuerySource implements QuerySource {
     query: QueryAST.Query,
     start: number,
     records: readonly RemoteQueryResult[],
-  ): Promise<QueryResult.EntityEntry[]> {
+  ): Promise<SourceEntry[]> {
     log('queryIndex raw results', {
       queryId,
       query: Query.pretty(Query.fromAst(query)),
@@ -364,7 +364,7 @@ export class IndexQuerySource implements QuerySource {
     ctx: Context,
     queryStartTimestamp: number,
     result: RemoteQueryResult,
-  ): Promise<QueryResult.EntityEntry | null> {
+  ): Promise<SourceEntry | null> {
     if (!OBJECT_DIAGNOSTICS.has(result.id)) {
       OBJECT_DIAGNOSTICS.set(result.id, {
         objectId: result.id,
@@ -405,11 +405,12 @@ export class IndexQuerySource implements QuerySource {
         }
         return null;
       }
-      const queryResult: QueryResult.EntityEntry = {
+      const queryResult: SourceEntry = {
         id: result.id,
         result: object,
         match: { rank: result.rank },
         resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
+        group: _groupFromRemoteResult(result),
       };
       return queryResult;
     }
@@ -423,11 +424,12 @@ export class IndexQuerySource implements QuerySource {
       return null;
     }
 
-    const queryResult: QueryResult.EntityEntry = {
+    const queryResult: SourceEntry = {
       id: object.id,
       result: object,
       match: { rank: result.rank },
       resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
+      group: _groupFromRemoteResult(result),
     };
     return queryResult;
   }
@@ -472,3 +474,11 @@ let nextQueryId = 1;
  * Keyed by the type DXN.
  */
 const emittedSchemaValidationWarnings = new Set<string>();
+
+/**
+ * Builds the group membership from a wire record; present iff the query has a `groupBy` clause.
+ * The host always sends `groupCount` alongside `groupKey`; the `?? 1` floor (a present record
+ * implies at least one member) is defensive and matches the working-set source's fallback.
+ */
+const _groupFromRemoteResult = (result: RemoteQueryResult): SourceEntry['group'] =>
+  result.groupKey !== undefined ? { key: JSON.parse(result.groupKey), count: result.groupCount ?? 1 } : undefined;

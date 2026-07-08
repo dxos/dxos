@@ -6,14 +6,14 @@ import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj, Query, type QueryResult } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
-import { QueryPlanner } from '@dxos/echo-host/query';
+import { GroupBy, QueryPlanner } from '@dxos/echo-host/query';
 import { QueryAST } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
 import { type DatabaseImpl } from '../proxy-db';
-import { type QueryContext } from './query-context';
+import { type QueryContext, type SourceEntry } from './query-context';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery, queryHasWindowing } from './util';
 import { type WorkingSetDataProvider, type WorkingSetItem, WorkingSetQueryExecutor } from './working-set-executor';
 
@@ -41,7 +41,7 @@ export interface QuerySource {
   /**
    * Synchronous query.
    */
-  getResults(): QueryResult.EntityEntry[];
+  getResults(): SourceEntry[];
 
   /**
    * Whether this source produces authoritative synchronous results for its current query (via
@@ -53,7 +53,7 @@ export interface QuerySource {
   /**
    * One-shot query.
    */
-  run(ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry[]>;
+  run(ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]>;
 
   /**
    * Set the filter and trigger continuous updates.
@@ -103,7 +103,7 @@ export class GraphQueryContext implements QueryContext {
     this._params.onStop();
   }
 
-  getResults(): QueryResult.EntityEntry[] {
+  getResults(): SourceEntry[] {
     // TODO: dedup by meta.key based on scope order (space results take precedence over registry).
     if (!this._query) {
       return [];
@@ -126,14 +126,14 @@ export class GraphQueryContext implements QueryContext {
     ctx: Context,
     query: QueryAST.Query,
     { timeout = 30_000 }: QueryResult.RunOptions = {},
-  ): Promise<QueryResult.EntityEntry[]> {
+  ): Promise<SourceEntry[]> {
     const runTasks = [...this._sources.values()].map(async (s) => {
       try {
         log('run query', {
           resolver: Object.getPrototypeOf(s).constructor.name,
           query: Query.pretty(Query.fromAst(query)),
         });
-        const results = await asyncTimeout<QueryResult.EntityEntry[]>(s.run(ctx, query), timeout);
+        const results = await asyncTimeout<SourceEntry[]>(s.run(ctx, query), timeout);
         log('run query results', {
           resolver: Object.getPrototypeOf(s).constructor.name,
           count: results.length,
@@ -184,7 +184,7 @@ export class SpaceQuerySource implements QuerySource {
 
   private _ctx: Context = new Context();
   private _query: QueryAST.Query | undefined = undefined;
-  private _results?: QueryResult.EntityEntry<Obj.Any>[] = undefined;
+  private _results?: SourceEntry<Obj.Any>[] = undefined;
   private readonly _executor: WorkingSetQueryExecutor;
   private readonly _planner: QueryPlanner;
 
@@ -257,7 +257,7 @@ export class SpaceQuerySource implements QuerySource {
     }
   };
 
-  async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry<Obj.Unknown>[]> {
+  async run(_ctx: Context, query: QueryAST.Query): Promise<SourceEntry<Obj.Unknown>[]> {
     if (!this._isValidSourceForQuery(query) || !this._servesSpaceScope(query) || queryHasWindowing(query)) {
       return [];
     }
@@ -268,7 +268,7 @@ export class SpaceQuerySource implements QuerySource {
     await this._preloadQueryIds(query);
 
     const items = this._executeWithWorkingSet(query);
-    return items === null ? [] : items.map((item) => this._mapItemToResult(item));
+    return items === null ? [] : this._mapItemsToResults(items);
   }
 
   /**
@@ -291,7 +291,7 @@ export class SpaceQuerySource implements QuerySource {
     return this._query !== undefined && this._servesSpaceScope(this._query) && !queryHasWindowing(this._query);
   }
 
-  getResults(): QueryResult.EntityEntry<Obj.Unknown>[] {
+  getResults(): SourceEntry<Obj.Unknown>[] {
     if (!this._query) {
       return [];
     }
@@ -303,9 +303,9 @@ export class SpaceQuerySource implements QuerySource {
     return this._results!;
   }
 
-  private _computeResults(query: QueryAST.Query): QueryResult.EntityEntry<Obj.Unknown>[] {
+  private _computeResults(query: QueryAST.Query): SourceEntry<Obj.Unknown>[] {
     const items = this._executeWithWorkingSet(query);
-    return items === null ? [] : items.map((item) => this._mapItemToResult(item));
+    return items === null ? [] : this._mapItemsToResults(items);
   }
 
   update(query: QueryAST.Query): void {
@@ -338,7 +338,24 @@ export class SpaceQuerySource implements QuerySource {
     return this._executor.tryExecute(plan);
   }
 
-  private _mapItemToResult(item: WorkingSetItem): QueryResult.EntityEntry<Obj.Unknown> {
+  /**
+   * Maps working-set executor results, computing per-group counts once over the full set
+   * (rather than per-item) so grouped queries report accurate counts.
+   */
+  private _mapItemsToResults(items: WorkingSetItem[]): SourceEntry<Obj.Unknown>[] {
+    const groupCounts = new Map<string, number>();
+    for (const item of items) {
+      if (item.groupKey === undefined) {
+        continue;
+      }
+      const serialized = GroupBy.serializeGroupKey(item.groupKey);
+      groupCounts.set(serialized, (groupCounts.get(serialized) ?? 0) + 1);
+    }
+    return items.map((item) => this._mapItemToResult(item, groupCounts));
+  }
+
+  private _mapItemToResult(item: WorkingSetItem, groupCounts?: Map<string, number>): SourceEntry<Obj.Unknown> {
+    const serializedGroupKey = item.groupKey !== undefined ? GroupBy.serializeGroupKey(item.groupKey) : undefined;
     return {
       id: item.objectId,
       result: this._database.getObjectById<Obj.Unknown>(item.objectId, { deleted: true }),
@@ -347,6 +364,10 @@ export class SpaceQuerySource implements QuerySource {
         source: 'local',
         time: 0,
       },
+      group:
+        item.groupKey !== undefined
+          ? { key: item.groupKey, count: groupCounts?.get(serializedGroupKey!) ?? 1 }
+          : undefined,
     };
   }
 
