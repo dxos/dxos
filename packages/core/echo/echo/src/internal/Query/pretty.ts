@@ -160,5 +160,9 @@ export const prettyQuery = (query: QueryAST.Query): string => {
       return `${prettyQuery(query.query)}.limit(${query.limit})`;
     case 'skip':
       return `${prettyQuery(query.query)}.skip(${query.skip})`;
+    case 'group-by': {
+      const keys = query.keys.map((key) => JSON.stringify(key.property));
+      return `${prettyQuery(query.query)}.groupBy(${keys.join(', ')})`;
+    }
   }
 };
