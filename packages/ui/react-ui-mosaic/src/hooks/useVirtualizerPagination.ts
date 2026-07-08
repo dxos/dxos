@@ -41,7 +41,7 @@ export type UseVirtualizerPaginationProps<TItem = any> = {
   /** Load-next/load-previous callbacks. Both edges are inert while omitted. */
   pagination?: VirtualizerPaginationController;
 
-  /** Rows from either loaded edge at which the adjacent page is requested. @default 12 */
+  /** Rows from either loaded edge at which the adjacent page is requested. @default 12. */
   threshold?: number;
 };
 
@@ -384,6 +384,11 @@ export const useVirtualizerPagination = <TItem = any>({
         anchorRef.current = null;
       } else if (change.kind === 'prepended') {
         anchorRef.current = change.anchor;
+        if (!change.anchor) {
+          // No retained item to anchor on (a disjoint reset): the layout effect below never runs
+          // its own reset for this case, since it bails out early on a null anchor.
+          setSpacer(0);
+        }
       }
     }
     prevItemsRef.current = items;

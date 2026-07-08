@@ -182,7 +182,7 @@ type MosaicVirtualStackProps<TData = any> = MosaicStackProps<TData> &
   > & {
     /** Enables paginated loading; see `useVirtualizerPagination`. Requires `draggable={false}`. */
     pagination?: VirtualizerPaginationController;
-    /** Rows from either loaded edge at which the adjacent page is requested. @default 12 */
+    /** Rows from either loaded edge at which the adjacent page is requested. @default 12. */
     paginationThreshold?: number;
   };
 
@@ -208,6 +208,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
     forwardedRef,
   ) => {
     invariant(Tile);
+    invariant(!pagination || !draggable, 'pagination requires draggable={false}');
     const { id, dragging, currentId, selectedIds, registerScrollTo } =
       useMosaicContainerContext(MOSAIC_VIRTUAL_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
