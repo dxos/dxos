@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { Entity, Feed, Filter, Obj, Query, Ref, Relation, Scope } from '@dxos/echo';
+import { Entity, Feed, Filter, Obj, Order, Query, Ref, Relation, Scope } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EID } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
@@ -301,6 +301,121 @@ describe('feeds', () => {
       expect(query.results).toHaveLength(2);
       expect(query.results.map((obj) => obj.name).sort()).toEqual(['jane', 'john']);
       sub();
+    });
+  });
+
+  describe('Windowed query', () => {
+    test('one-shot `Order.natural(desc).limit(n)` returns the newest N (tail window), newest-first', async ({
+      expect,
+    }) => {
+      await using peer = await builder.createPeer({
+        types: [Feed.Feed, TestSchema.Person],
+        assignQueuePositions: true,
+      });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      await db.appendToFeed(feed, [
+        Obj.make(TestSchema.Person, { name: 'a' }),
+        Obj.make(TestSchema.Person, { name: 'b' }),
+        Obj.make(TestSchema.Person, { name: 'c' }),
+        Obj.make(TestSchema.Person, { name: 'd' }),
+      ]);
+
+      const scope = Scope.feed(Feed.getFeedUri(feed)!);
+      const window = await db
+        .query(Query.select(Filter.type(TestSchema.Person)).from(scope).orderBy(Order.natural('desc')).limit(2))
+        .run();
+      // Newest two (appended last), returned newest-first (natural desc).
+      expect(window.map((obj) => (obj as TestSchema.Person).name)).toEqual(['d', 'c']);
+
+      // No limit ⇒ the whole feed (unchanged behavior).
+      const all = await db.query(Query.select(Filter.type(TestSchema.Person)).from(scope)).run();
+      expect(all).toHaveLength(4);
+    });
+
+    test('reactive `.limit(n)` windows the newest N and extends when the limit grows', async ({ expect }) => {
+      await using peer = await builder.createPeer({
+        types: [Feed.Feed, TestSchema.Person],
+        assignQueuePositions: true,
+      });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      await db.appendToFeed(feed, [
+        Obj.make(TestSchema.Person, { name: 'a' }),
+        Obj.make(TestSchema.Person, { name: 'b' }),
+        Obj.make(TestSchema.Person, { name: 'c' }),
+      ]);
+
+      const scope = Scope.feed(Feed.getFeedUri(feed)!);
+
+      const narrow = db.query(
+        Query.select(Filter.type(TestSchema.Person)).from(scope).orderBy(Order.natural('desc')).limit(2),
+      );
+      const narrowCalled = new Event();
+      const narrowOnce = narrowCalled.waitForCount(1);
+      const narrowSub = narrow.subscribe(() => narrowCalled.emit(), { fire: true });
+      await narrowOnce;
+      expect(narrow.results.map((obj) => obj.name).sort()).toEqual(['b', 'c']);
+      narrowSub();
+
+      // A wider window (the "load older" case) surfaces the older items too.
+      const wide = db.query(
+        Query.select(Filter.type(TestSchema.Person)).from(scope).orderBy(Order.natural('desc')).limit(10),
+      );
+      const wideCalled = new Event();
+      const wideOnce = wideCalled.waitForCount(1);
+      const wideSub = wide.subscribe(() => wideCalled.emit(), { fire: true });
+      await wideOnce;
+      expect(wide.results.map((obj) => obj.name).sort()).toEqual(['a', 'b', 'c']);
+      wideSub();
+    });
+
+    // Content-ordered (non-`natural`) feed paging — the mailbox's path (order by a message field, not
+    // insertion order). Runs on the client feed path (`FeedQueryContext` → `applyOrderSkipLimit`:
+    // full-fetch, sort by the property, slice), so it guards that a slid window (`skip > 0`) returns
+    // the full page, not `limit - skip`.
+    test('content-ordered `.orderBy(property).skip().limit()` returns correct windows (skip+limit)', async ({
+      expect,
+    }) => {
+      await using peer = await builder.createPeer({
+        types: [Feed.Feed, TestSchema.Person],
+        assignQueuePositions: true,
+      });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+
+      const total = 40;
+      const names = Array.from({ length: total }, (_, index) => `p${String(index).padStart(2, '0')}`);
+      // Append in an order distinct from name order (odds then evens) so a correct result must sort by
+      // the `name` property, not rely on insertion order — mimics an out-of-order/backfill sync.
+      const shuffled = [...names.filter((_, index) => index % 2 === 1), ...names.filter((_, index) => index % 2 === 0)];
+      await db.appendToFeed(
+        feed,
+        shuffled.map((name) => Obj.make(TestSchema.Person, { name })),
+      );
+
+      const scope = Scope.feed(Feed.getFeedUri(feed)!);
+      const page = (skip: number, limit: number) =>
+        db
+          .query(
+            Query.select(Filter.type(TestSchema.Person))
+              .from(scope)
+              .orderBy(Order.property('name', 'desc'))
+              .skip(skip)
+              .limit(limit),
+          )
+          .run()
+          .then((rows) => rows.map((obj) => (obj as TestSchema.Person).name));
+
+      const expectedDesc = [...names].reverse(); // p39..p00 by name desc.
+      // Grow-limit paging (what usePagination does before it slides): each window is the newest-by-name prefix.
+      for (const limit of [10, 20, 30, 40]) {
+        expect(await page(0, limit)).toEqual(expectedDesc.slice(0, limit));
+      }
+      // Slide window (skip advances once usePagination hits maxWindowSize): the next content-ordered slice.
+      expect(await page(10, 30)).toEqual(expectedDesc.slice(10, 40));
     });
   });
 

@@ -6,6 +6,7 @@ export * from './EditMessage';
 export * from './Event';
 export * from './EventStack';
 export * from './Header';
+export * from './HtmlViewer';
 export * from './Initialize';
 export * from './MarkdownViewer';
 export * from './MessageStack';

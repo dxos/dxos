@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
+import * as Atom from '@effect-atom/atom/Atom';
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
@@ -43,22 +45,25 @@ export type MessageStackActionHandler = (action: MessageStackAction) => void;
  */
 export type MessageStackTag = { id: string; label: string; hue?: string };
 
-/**
- * Inverted index `messageId → tags`. Built by `Mailbox.buildMessageTagsIndex` in the parent
- * (MailboxArticle) so each tile can look up its tags by message id with no extra query.
- */
-export type MessageTagsIndex = Record<string, MessageStackTag[]>;
+/** Per-message tag chip atom family; each tile subscribes to just its own message's tags. */
+export type MessageTagsFamily = (messageId: string) => Atom.Atom<MessageStackTag[]>;
+
+/** Per-message starred atom family; each tile subscribes to just its own star state. */
+export type StarredFamily = (messageId: string) => Atom.Atom<boolean>;
+
+const EMPTY_TAGS_ATOM = Atom.make((): MessageStackTag[] => []);
+const NOT_STARRED_ATOM = Atom.make(() => false);
 
 export type MessageStackProps = {
   id: string;
   messages?: Message.Message[];
-  /** Per-message tag list, indexed by message id. */
-  tags?: MessageTagsIndex;
+  /** Per-message tag chip atom family; each tile subscribes to only its own message's tags. */
+  tagsAtom?: MessageTagsFamily;
   currentId?: string;
   /** IDs of selected messages (forwarded to Mosaic so `aria-selected` fires `dx-selected`). */
   selectedIds?: ReadonlySet<string>;
-  /** IDs of starred messages; drives the per-tile star toggle. */
-  starredIds?: ReadonlySet<string>;
+  /** Per-message starred atom family; each tile subscribes to only its own star state. */
+  starredAtom?: StarredFamily;
   /**
    * When true, messages are grouped into conversations by `threadId` (the email thread key) and only
    * the most recent message per conversation is displayed. Messages without a `threadId` form singleton
@@ -80,7 +85,7 @@ export type MessageStackProps = {
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
   (
-    { messages, tags, currentId, selectedIds, starredIds, conversations, pagination, onAction, ...props },
+    { messages, tagsAtom, currentId, selectedIds, starredAtom, conversations, pagination, onAction, ...props },
     forwardedRef,
   ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
@@ -114,20 +119,19 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
         return Array.from(conversationGroups.entries(), ([conversationId, conversationMessages]) => ({
           conversationId,
           messages: conversationMessages,
-          tags,
           // Conversations show the latest message; star reflects/toggles that message.
-          starred: starredIds?.has(conversationMessages[0]?.id),
+          starredAtom: starredAtom?.(conversationMessages[0]?.id),
           onAction,
         }));
       }
 
       return messages?.map((message) => ({
         message,
-        tags: tags?.[message.id],
-        starred: starredIds?.has(message.id),
+        tagsAtom: tagsAtom?.(message.id),
+        starredAtom: starredAtom?.(message.id),
         onAction,
       }));
-    }, [conversationGroups, messages, tags, starredIds, onAction]);
+    }, [conversationGroups, messages, tagsAtom, starredAtom, onAction]);
 
     // In conversation view, the incoming `currentId` is a message ID (set when a
     // specific message becomes selected), but the tiles are keyed by conversation ID.
@@ -246,17 +250,19 @@ MessageStack.displayName = 'MessageStack';
 
 type MessageTileData = {
   message: Message.Message;
-  tags?: MessageStackTag[];
-  starred?: boolean;
+  tagsAtom?: Atom.Atom<MessageStackTag[]>;
+  starredAtom?: Atom.Atom<boolean>;
   onAction?: MessageStackActionHandler;
 };
 
 type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current'>;
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
-  const { message, tags, starred, onAction } = data;
+  const { message, tagsAtom, starredAtom, onAction } = data;
   const { date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
   const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
+  const tags = useAtomValue(tagsAtom ?? EMPTY_TAGS_ATOM);
+  const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
   const messageTags = useGmailTags(tags);
 
   // Click / Enter commit both current and selection. Arrow keys only move
@@ -326,8 +332,7 @@ MessageTile.displayName = 'MessageTile';
 type ConversationTileData = {
   conversationId: string;
   messages: Message.Message[];
-  tags?: MessageTagsIndex;
-  starred?: boolean;
+  starredAtom?: Atom.Atom<boolean>;
   onAction?: MessageStackActionHandler;
 };
 
@@ -335,8 +340,9 @@ type ConversationTileProps = Pick<MosaicTileProps<ConversationTileData>, 'data' 
 
 const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
   ({ data, location, current }, forwardedRef) => {
-    const { conversationId, messages, starred, onAction } = data;
+    const { conversationId, messages, starredAtom, onAction } = data;
     const latest = messages[0];
+    const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
     const { subject } = getMessageProps(latest, new Date());
     const { setCurrentId, setSelected } = useMosaicContainer('ConversationTile');
 

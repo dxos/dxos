@@ -9,12 +9,12 @@ import * as Stream from 'effect/Stream';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, type Obj } from '@dxos/echo';
-import { extractContact } from '@dxos/extractor-lib';
+import { Database } from '@dxos/echo';
+import { type ContactLookup, buildContactFromActor, buildContactLookup } from '@dxos/extractor-lib';
 import { normalizeText } from '@dxos/markdown';
 import { Stage } from '@dxos/pipeline';
 import { SyncBinding } from '@dxos/plugin-connector';
-import { type Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import { type Mailbox } from '../types';
 import { runOnArrivalExtractors } from '../util/mailbox-sync';
@@ -44,40 +44,45 @@ export type Mapped = {
 };
 
 /**
- * Runs the shared `contactExtractor` to build a Person (+ Organization link by domain) from the
- * message sender, producing the objects for the commit step to `db.add` (it writes nothing itself).
+ * Builds a Person (+ Organization link by domain) from the message sender, deferring the `db.add` to
+ * the commit step as a {@link SyncBinding.CommitUnit} commit effect (the stage writes nothing itself).
+ * A stage factory: call it once per pipeline run so its {@link ContactLookup} is scoped to that run.
  *
- * `extractContact` dedups against the persisted db (skips a sender whose Person already exists), so
- * cross-run repeats never duplicate. Within a single run, before the first commit, two messages from
- * the same new sender would each yield a created Person; the run-scoped `createdContactEmails` set
- * keeps only the first.
+ * Dedups against both the space (contacts present before the run) and contacts created earlier in the
+ * same run (the lookup is maintained as each is built, since a not-yet-committed contact wouldn't show
+ * in a fresh query), so a repeat sender never yields a duplicate Person.
  */
-export const extractContacts: Stage.Stage<
-  Mapped,
-  SyncBinding.CommitUnit,
-  never,
-  SyncBinding.Service | Database.Service
-> = Stage.map('extract-contacts', (mapped: Mapped) =>
-  Effect.gen(function* () {
-    const { createdContactEmails } = yield* SyncBinding.Service;
-    const { db } = yield* Database.Service;
-    const result = yield* extractContact({ db, source: mapped.message });
-    const email = mapped.message.sender?.email?.trim().toLowerCase();
-    const alreadyCreated = !!email && createdContactEmails.has(email);
-    const extractedObjects: Obj.Any[] = alreadyCreated ? [] : [...result.created];
-    if (email && extractedObjects.length > 0) {
-      createdContactEmails.add(email);
-    }
-
-    return {
-      message: mapped.message,
-      foreignId: mapped.foreignId,
-      key: mapped.key,
-      tagUris: mapped.tagUris,
-      extractedObjects,
-    };
-  }),
-);
+export const extractContacts = (): Stage.Stage<Mapped, SyncBinding.CommitUnit, never, Database.Service> => {
+  // Run-scoped contact/org lookup, seeded once on the first item and maintained by
+  // `buildContactFromActor` as it creates contacts. Without it, each message re-queried every Person
+  // and Organization in the space (O(#contacts) per message → O(n²) over a large sync) — the dominant
+  // upstream cost measured in profiling.
+  let lookup: ContactLookup | undefined;
+  return Stage.map('extract-contacts', (mapped: Mapped) =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      if (!lookup) {
+        lookup = yield* buildContactLookup(db);
+      }
+      const sender = mapped.message.sender;
+      const contact = sender ? yield* buildContactFromActor(sender, db, lookup) : undefined;
+      return {
+        message: mapped.message,
+        foreignId: mapped.foreignId,
+        key: mapped.key,
+        tagUris: mapped.tagUris,
+        // Defer the write to commit (the stage stays idempotent) — add the extracted contact there.
+        commitEffects: contact
+          ? [
+              Effect.fn('sync.commit.addContact')(function* () {
+                yield* Database.add(contact);
+              }),
+            ]
+          : undefined,
+      };
+    }),
+  );
+};
 
 /**
  * Optional stage that runs the mailbox's configured on-arrival extractors (AI and others) for each

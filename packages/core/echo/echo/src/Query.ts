@@ -6,6 +6,7 @@
 
 import type * as EffectArray from 'effect/Array';
 import type * as Schema from 'effect/Schema';
+import type * as EffectTypes from 'effect/Types';
 
 import { type QueryAST } from '@dxos/echo-protocol';
 import { EID, type URI } from '@dxos/keys';
@@ -15,6 +16,7 @@ import * as Database from './Database';
 import type * as Dataset from './Dataset';
 import type * as Feed from './Feed';
 import * as Filter from './Filter';
+import type * as GroupKey from './GroupKey';
 import * as internal from './internal';
 import * as Obj from './Obj';
 import type * as Order from './Order';
@@ -44,6 +46,23 @@ type ReferenceTraversalTarget<P> = P extends Ref.Unknown
     : RefArrayElement<P> extends Ref.Unknown
       ? Ref.Target<RefArrayElement<P>>
       : never;
+
+/**
+ * One group of query results, produced by {@link Query.groupBy}.
+ * `K` is the group's key (an object of the properties grouped by); `T` is the element type.
+ */
+export interface Group<K, T> {
+  readonly key: K;
+
+  /**
+   * Number of results in this group in the source result set.
+   * May exceed `values.length` while some results have not hydrated locally.
+   */
+  // TODO(dmaretskyi): Reserve room for future aggregations (sum/min/max/avg) as a sibling field.
+  readonly count: number;
+
+  readonly values: T[];
+}
 
 // TODO(burdon): Narrow T to Entity.Unknown?
 export interface Query<T> {
@@ -135,6 +154,27 @@ export interface Query<T> {
    * @returns Query for the ordered results.
    */
   'orderBy'(...order: EffectArray.NonEmptyArray<Order.Order<T>>): Query<T>;
+
+  /**
+   * Group the query results by one or more scalar property values.
+   *
+   * Groups are ordered by the first occurrence of their key in the incoming result stream —
+   * a preceding `orderBy` therefore controls group order too. For example, to get message
+   * threads ordered by their most recent message:
+   *
+   * ```ts
+   * Query.type(Message)
+   *   .orderBy(Order.property('created', 'desc'))
+   *   .groupBy(GroupKey.property('threadId'));
+   * ```
+   *
+   * Must be the last data-selecting clause in the chain — only `from`/`options` may follow.
+   * @param keys - Keys to group the results by.
+   * @returns Query for the grouped results.
+   */
+  'groupBy'<const K extends GroupKey.GroupKey<keyof T>[]>(
+    ...keys: K
+  ): Query<Group<EffectTypes.Simplify<Pick<T, GroupKey.Property<K[number]>>>, T>>;
 
   /**
    * Limit the number of results.
@@ -339,6 +379,14 @@ class QueryClass implements Any {
       type: 'order',
       query: this.ast,
       order: order.map((o) => o.ast),
+    });
+  }
+
+  'groupBy'(...keys: GroupKey.Any[]): Any {
+    return new QueryClass({
+      type: 'group-by',
+      query: this.ast,
+      keys: keys.map((key) => key.ast),
     });
   }
 
