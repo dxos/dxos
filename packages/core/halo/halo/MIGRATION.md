@@ -143,6 +143,49 @@ Phased; no backwards compatibility. Each phase lands behind the new `@dxos/halo`
 - Content-layer forward secrecy is deliberately absent in Keyhive (causal encryption); confirm this matches our threat model.
 - Agent/server ("AGENT" device type) key custody with non-extractable keys needs a story (e.g. `Pull`-only relays + delegated agent keys).
 
-## 5. ISSUES
+## 5. Prototype service and HALO shim feasibility
+
+`src/Keyhive.ts` implements a pure-TypeScript, in-memory prototype of the Keyhive membership
+model (Keyhive is not published to npm; see the module comment for scope and omissions). The
+`Keyhive.Service` interface mirrors the `keyhive_wasm` bindings so a WASM-backed layer can
+replace `layerMemory()` unchanged.
+
+**Can the existing HALO implementation be shimmed behind this API?** Mostly yes for the
+membership core; no for encryption. A `layerLegacy()` backed by `@dxos/credentials` +
+`@dxos/client-services` would map:
+
+| Service operation    | Legacy backing                                          | Fidelity                                                                                                                                       |
+| -------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `active`             | Device key (DID from device public key)                 | Good — devices are already key-identified principals.                                                                                          |
+| `createGroup`        | Space genesis (`SpaceGenesis` + `SpaceMember(OWNER)`)   | Good — both are self-certifying roots.                                                                                                         |
+| `delegate`           | `SpaceMember` credential with role mapped from `Access` | Partial — `admin→ADMIN`, `edit→EDITOR`, `read→READER`; **`pull` has no legacy equivalent** (no E2EE, membership implies readability) — reject. |
+| `revoke`             | `SpaceMember(REMOVED)`                                  | Partial — legacy resolves conflicts via credential DAG + OWNER-wins, not causal seniority; semantics differ under concurrency.                 |
+| `members`            | `MemberStateMachine` output                             | Good — both are materialized views.                                                                                                            |
+| `contactCard`        | Identity key + `ProfileDocument` (as a `Presentation`)  | Partial — legacy has no prekeys, so offline admission needs `DelegateSpaceInvitation` instead of prekey delegation.                            |
+| `receiveContactCard` | Verify presentation; record identity key                | Good.                                                                                                                                          |
+| `ops` / `receiveOps` | Credential feed messages                                | Partial — legacy ops are totally ordered per feed (hypercore), not a causal DAG; export is possible, import must be replayed in feed order.    |
+
+Structural gaps that cannot be shimmed:
+
+1. **Nested groups.** Legacy members are identities only; a `delegate` whose subject is another
+   group/space has no credential representation. Shim must reject group subjects.
+2. **Attenuated sub-delegation.** Legacy `EDITOR`/`READER` cannot invite at all
+   (`_canInviteNewMembers` requires ADMIN/OWNER); Keyhive lets any member delegate up to their
+   own access. Shim must restrict delegation to admins, which is _stricter_ than the API implies.
+3. **Encryption surface.** Anything CGKA-related (`ApplicationSecret`, PCS rotation) is
+   unimplementable over plaintext feeds; the service deliberately excludes it so the membership
+   API stays shimmable.
+4. **Signer.** Legacy keyring is ECDSA-P256, prototype is Ed25519 — the op envelope carries the
+   algorithm implicitly via the author key, so a shim needs an algorithm tag or must reuse the
+   keyring's P-256 keys for signing ops.
+
+Conclusion: a legacy shim is feasible as a _transition layer_ — same API, reduced semantics
+(no `pull`, no nested groups, admin-only delegation, feed-ordered sync) — which would let
+`client-services` code migrate to the `Keyhive.Service` API before the Keyhive/Subduction
+backend lands. The prototype's in-memory layer and a future `layerLegacy()` are then two
+implementations of one seam, and cut-over is a layer swap.
+
+## A. ISSUES
 
 1. Migration from protobuf?
+2. Implement Keyhive service abstraction with Shim against temporary EDGE-based auth?
