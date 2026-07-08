@@ -71,8 +71,10 @@ export type TranscribeConfig = {
 /**
  * Function that converts a base64-encoded WAV payload into Whisper segments.
  * Allows callers to swap in alternative providers or mock the transport.
+ * Implementations should honor `options.signal` — it is how `Transcriber.abort()`/`close()` cancel
+ * the in-flight request.
  */
-export type TranscribeFn = (audio: string) => Promise<WhisperSegment[]>;
+export type TranscribeFn = (audio: string, options?: { signal?: AbortSignal }) => Promise<WhisperSegment[]>;
 
 export type TranscriberProps = {
   config: TranscribeConfig;
@@ -200,6 +202,12 @@ export class Transcriber extends Resource {
 
     const audio = await this._mergeAudioChunks(chunks);
     const segments = await this._fetchTranscription(audio);
+    // Closed while the request was in flight: the consumer (feed/editor sink) is torn down, so even a
+    // successfully-returned tail must not be delivered. Cancellation alone cannot cover this — the
+    // response may already be resolved when `close()` runs.
+    if (this._lifecycleState !== LifecycleState.OPEN) {
+      return;
+    }
     if (!Array.isArray(segments) || segments.length === 0) {
       return;
     }
@@ -237,38 +245,41 @@ export class Transcriber extends Resource {
       throw new Error('No audio to send for transcribing');
     }
 
+    // Armed for both transports so `abort()`/`_close()` can cancel the in-flight request; a single
+    // slot suffices because `_transcribe` is serialized.
+    this._transcribeAbort = new AbortController();
+    const signal = this._transcribeAbort.signal;
+
     let segments: unknown;
-    if (this._transcribeFn) {
-      segments = await this._transcribeFn(audio);
-    } else {
-      // TODO(burdon): Create separate endpoint?
-      const endpoint = this._config.endpoint ?? EDGE_SERVICE_DEFAULTS[EdgeServiceName.Transcription];
-      this._transcribeAbort = new AbortController();
-      let response: Response;
-      try {
-        response = await fetch(`${endpoint}/transcribe`, {
+    try {
+      if (this._transcribeFn) {
+        segments = await this._transcribeFn(audio, { signal });
+      } else {
+        // TODO(burdon): Create separate endpoint?
+        const endpoint = this._config.endpoint ?? EDGE_SERVICE_DEFAULTS[EdgeServiceName.Transcription];
+        const response = await fetch(`${endpoint}/transcribe`, {
           method: 'POST',
           body: JSON.stringify({ audio }),
           headers: {
             'Content-Type': 'application/json',
           },
-          signal: this._transcribeAbort.signal,
+          signal,
         });
-      } catch (err) {
-        // Aborting (user cancelled the drain) is a clean stop, not a failed transcription cycle.
-        if (err instanceof DOMException && err.name === 'AbortError') {
-          return [];
+        if (!response.ok) {
+          throw new Error(`Transcription failed: ${response.statusText}`);
         }
-        throw err;
-      } finally {
-        this._transcribeAbort = undefined;
+        ({ segments } = (await response.json()) as { segments?: unknown });
       }
-
-      if (!response.ok) {
-        throw new Error(`Transcription failed: ${response.statusText}`);
+    } catch (err) {
+      // Aborting (user cancelled the drain, or the transcriber closed) is a clean stop, not a failed
+      // transcription cycle. Detected via the signal rather than the error shape: wrapped transports
+      // (e.g. `EdgeHttpClient`) surface aborts as their own error types, not `AbortError`.
+      if (signal.aborted) {
+        return [];
       }
-
-      ({ segments } = (await response.json()) as { segments?: unknown });
+      throw err;
+    } finally {
+      this._transcribeAbort = undefined;
     }
 
     if (!Array.isArray(segments)) {

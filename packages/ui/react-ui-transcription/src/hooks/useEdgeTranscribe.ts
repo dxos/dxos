@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context } from '@dxos/context';
-import { EdgeHttpClient } from '@dxos/edge-client';
+import { EdgeHttpClient, type TranscribeAudioResponse } from '@dxos/edge-client';
 import { type TranscribeFn, type WhisperSegment } from '@dxos/pipeline-transcription';
 import { useClient } from '@dxos/react-client';
 
@@ -22,12 +22,20 @@ export const useEdgeTranscribe = (): TranscribeFn => {
     // harness/story that renders a transcription surface without configuring edge, even when no audio is
     // ever sent.
     let httpClient: EdgeHttpClient | undefined;
-    return async (audio: string): Promise<WhisperSegment[]> => {
+    return async (audio: string, options?: { signal?: AbortSignal }): Promise<WhisperSegment[]> => {
       httpClient ??= new EdgeHttpClient(client.config.getOrThrow('runtime.services.edge.url'));
-      if (client.halo.identity.get()) {
+      // `createEdgeIdentity` needs both halves; the device can lag the identity (device join/recovery).
+      if (client.halo.identity.get() && client.halo.device) {
         httpClient.setIdentity(createEdgeIdentity(client));
       }
-      const { segments } = await httpClient.transcribeAudio(new Context(), { audio });
+      // `_call` resolves to undefined for no-content/non-JSON successes; fold that into the
+      // invalid-payload error instead of a destructuring TypeError.
+      const response: TranscribeAudioResponse | undefined = await httpClient.transcribeAudio(
+        new Context(),
+        { audio },
+        { signal: options?.signal },
+      );
+      const segments = response?.segments;
       if (!Array.isArray(segments)) {
         throw new Error('Transcription response payload is invalid');
       }

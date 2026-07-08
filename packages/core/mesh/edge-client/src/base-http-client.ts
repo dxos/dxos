@@ -34,6 +34,10 @@ export type EdgeHttpCallArgs = {
    * Not available on HubHttpClient (hub-service has no `/auth` endpoint).
    */
   auth?: boolean;
+  /**
+   * Cancels the in-flight request (and any pending retries of it).
+   */
+  signal?: AbortSignal;
 };
 
 export type BaseHttpClientOptions = {
@@ -51,6 +55,7 @@ type HttpRequestArgs = {
   /** @default true */
   json?: boolean;
   auth?: boolean;
+  signal?: AbortSignal;
 };
 
 export abstract class BaseHttpClient {
@@ -97,7 +102,7 @@ export abstract class BaseHttpClient {
       let processingError: EdgeCallFailedError | undefined = undefined;
       try {
         if (!this._authHeader && args.auth) {
-          const response = await fetch(new URL('/auth', this._baseUrl));
+          const response = await fetch(new URL('/auth', this._baseUrl), { signal: args.signal });
           if (response.status === 401) {
             this._authHeader = await this._handleUnauthorized(response);
           }
@@ -154,7 +159,13 @@ export abstract class BaseHttpClient {
         processingError = EdgeCallFailedError.fromProcessingFailureCause(error);
       }
 
-      if (processingError?.isRetryable && (await shouldRetry(ctx, processingError.retryAfterMs))) {
+      // An aborted request must not be retried — the failure is the caller's cancellation, and its
+      // wrapped error can otherwise classify as a retryable network failure.
+      if (
+        processingError?.isRetryable &&
+        !args.signal?.aborted &&
+        (await shouldRetry(ctx, processingError.retryAfterMs))
+      ) {
         log.verbose('retrying request', { url, processingError });
       } else {
         throw processingError!;
@@ -173,7 +184,7 @@ export abstract class BaseHttpClient {
 }
 
 const createRequest = (
-  { method, body, json = true }: HttpRequestArgs,
+  { method, body, json = true, signal }: HttpRequestArgs,
   authHeader: string | undefined,
   traceHeaders?: Record<string, string>,
   clientTag?: string,
@@ -204,7 +215,7 @@ const createRequest = (
     headers[EDGE_CLIENT_TAG_HEADER] = clientTag;
   }
 
-  return { method, body: requestBody, headers };
+  return { method, body: requestBody, headers, signal };
 };
 
 const getTraceHeaders = (ctx: Context): Record<string, string> | undefined => {
