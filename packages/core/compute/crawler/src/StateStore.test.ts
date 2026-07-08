@@ -90,13 +90,13 @@ const suite = (name: string, layer: Layer.Layer<StateStore>) =>
 
 describe('StateStore', () => {
   suite('memory', StateStore.layerMemory);
-  suite('sql', StateStore.layerSql.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }))));
+  suite('sql', StateStore.layerSql.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie))));
 
   it.effect(
     'sql state survives a fresh layer over the same database',
     Effect.fnUntraced(function* () {
       // Two StateStore layers over ONE memoized client layer: the second sees the first's writes.
-      const shared = Layer.memoize(SqliteClient.layer({ filename: ':memory:' }));
+      const shared = Layer.memoize(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie));
       yield* Effect.scoped(
         Effect.gen(function* () {
           const memoized = yield* shared;
