@@ -4,7 +4,7 @@
 
 import { type Obj } from '@dxos/echo';
 import { filterMatchDoc, filterMatchObjectJSON } from '@dxos/echo-host/filter';
-import { QueryPlan } from '@dxos/echo-host/query';
+import { GroupBy, type GroupKeyValue, QueryPlan } from '@dxos/echo-host/query';
 import {
   EncodedReference,
   type EntityPropPath,
@@ -31,7 +31,7 @@ export type WorkingSetItem = {
   /** Feed/queue JSON payload. */
   data: Obj.JSON | null;
   /** Group-by key, set by `GroupByStep`. Undefined for queries without a `groupBy` clause. */
-  groupKey?: QueryPlan.GroupKeyValue;
+  groupKey?: GroupKeyValue;
 };
 
 const WorkingSetItem = Object.freeze({
@@ -65,12 +65,12 @@ const WorkingSetItem = Object.freeze({
     return raw !== undefined ? EID.tryParse(raw) : undefined;
   },
 
-  getGroupKey(item: WorkingSetItem, keys: readonly QueryAST.GroupByKey[]): QueryPlan.GroupKeyValue {
-    const key: QueryPlan.GroupKeyValue = {};
+  getGroupKey(item: WorkingSetItem, keys: readonly QueryAST.GroupByKey[]): GroupKeyValue {
+    const key: GroupKeyValue = {};
     for (const groupByKey of keys) {
       switch (groupByKey.kind) {
         case 'property':
-          key[groupByKey.property] = QueryPlan.GroupByStep.coerceKeyComponent(
+          key[groupByKey.property] = GroupBy.coerceKeyComponent(
             WorkingSetItem.getProperty(item, [groupByKey.property]),
           );
           break;
@@ -145,11 +145,11 @@ export class WorkingSetQueryExecutor {
       case 'LimitStep':
         // After a GroupByStep, limit pages over whole groups; otherwise it slices the flat stream.
         return _isGroupedWorkingSet(ws)
-          ? QueryPlan.GroupByStep.takeGroups(ws, step.limit, _serializeItemGroupKey)
+          ? GroupBy.takeGroups(ws, step.limit, _serializeItemGroupKey)
           : ws.slice(0, step.limit);
       case 'SkipStep':
         return _isGroupedWorkingSet(ws)
-          ? QueryPlan.GroupByStep.dropGroups(ws, step.skip, _serializeItemGroupKey)
+          ? GroupBy.dropGroups(ws, step.skip, _serializeItemGroupKey)
           : ws.slice(step.skip);
       case 'GroupByStep':
         return this._execGroupByStep(step, ws);
@@ -160,9 +160,7 @@ export class WorkingSetQueryExecutor {
 
   private _execGroupByStep(step: QueryPlan.GroupByStep, ws: WorkingSetItem[]): WorkingSetItem[] {
     const withKeys = ws.map((item) => ({ ...item, groupKey: WorkingSetItem.getGroupKey(item, step.keys) }));
-    return QueryPlan.GroupByStep.partitionByGroupKey(withKeys, (item) =>
-      QueryPlan.GroupByStep.serializeGroupKey(item.groupKey!),
-    );
+    return GroupBy.partitionByGroupKey(withKeys, (item) => GroupBy.serializeGroupKey(item.groupKey!));
   }
 
   private _execSelectStep(step: QueryPlan.SelectStep, ws: WorkingSetItem[]): WorkingSetItem[] | null {
@@ -608,8 +606,7 @@ const _isGroupedWorkingSet = (ws: WorkingSetItem[]): boolean => ws.length > 0 &&
 
 // Non-null assertion is sound: only called from group-aware limit/skip, which run exclusively on a
 // working set already partitioned by GroupByStep (guarded by `_isGroupedWorkingSet`).
-const _serializeItemGroupKey = (item: WorkingSetItem): string =>
-  QueryPlan.GroupByStep.serializeGroupKey(item.groupKey!);
+const _serializeItemGroupKey = (item: WorkingSetItem): string => GroupBy.serializeGroupKey(item.groupKey!);
 
 const _compareValues = (valueA: unknown, valueB: unknown): number => {
   if (valueA == null && valueB == null) {

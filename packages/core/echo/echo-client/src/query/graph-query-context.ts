@@ -8,7 +8,7 @@ import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, Feed, Obj, Query, type QueryResult } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
-import { QueryPlan, QueryPlanner } from '@dxos/echo-host/query';
+import { GroupBy, QueryPlanner } from '@dxos/echo-host/query';
 import { QueryAST } from '@dxos/echo-protocol';
 import { EID, type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -440,7 +440,7 @@ export class SpaceQuerySource implements QuerySource {
       if (item.groupKey === undefined) {
         continue;
       }
-      const serialized = QueryPlan.GroupByStep.serializeGroupKey(item.groupKey);
+      const serialized = GroupBy.serializeGroupKey(item.groupKey);
       groupCounts.set(serialized, (groupCounts.get(serialized) ?? 0) + 1);
     }
     return items.map((item) => this._mapItemToResult(item, groupCounts));
@@ -455,8 +455,7 @@ export class SpaceQuerySource implements QuerySource {
       const feedUri = EID.make({ spaceId: this.spaceId, entityId: item.queueId });
       result = this._database._tryGetFeedHandle(feedUri)?.getCachedObjectById<Obj.Unknown>(item.objectId);
     }
-    const serializedGroupKey =
-      item.groupKey !== undefined ? QueryPlan.GroupByStep.serializeGroupKey(item.groupKey) : undefined;
+    const serializedGroupKey = item.groupKey !== undefined ? GroupBy.serializeGroupKey(item.groupKey) : undefined;
     return {
       id: item.objectId,
       result,

@@ -31,6 +31,7 @@ import type { SpaceStateManager } from '../db-host';
 import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint';
 import { filterMatchDoc, filterMatchObjectJSON } from '../filter';
 import { QueryError } from './errors';
+import { GroupBy, type GroupKeyValue } from './group-by';
 import { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
 
@@ -88,7 +89,7 @@ type QueryItem = {
   /**
    * Group-by key, set by `GroupByStep`. Undefined for queries without a `groupBy` clause.
    */
-  groupKey?: QueryPlan.GroupKeyValue;
+  groupKey?: GroupKeyValue;
 };
 
 const QueryItem = Object.freeze({
@@ -119,14 +120,12 @@ const QueryItem = Object.freeze({
   /**
    * Computes the composite group-by key for this item from the given key specifiers.
    */
-  getGroupKey: (item: QueryItem, keys: readonly QueryAST.GroupByKey[]): QueryPlan.GroupKeyValue => {
-    const key: QueryPlan.GroupKeyValue = {};
+  getGroupKey: (item: QueryItem, keys: readonly QueryAST.GroupByKey[]): GroupKeyValue => {
+    const key: GroupKeyValue = {};
     for (const groupByKey of keys) {
       switch (groupByKey.kind) {
         case 'property':
-          key[groupByKey.property] = QueryPlan.GroupByStep.coerceKeyComponent(
-            QueryItem.getProperty(item, [groupByKey.property]),
-          );
+          key[groupByKey.property] = GroupBy.coerceKeyComponent(QueryItem.getProperty(item, [groupByKey.property]));
           break;
       }
     }
@@ -478,15 +477,15 @@ const overlapsOrUnconstrained = <T>(hintSet: ReadonlySet<T> | undefined, scopeSe
  * Serializes a possibly-absent group key for `changed` diffing. `undefined` (non-grouped
  * queries) serializes to a distinct sentinel so it never collides with a real (empty) group key.
  */
-const _serializeOptionalGroupKey = (key: QueryPlan.GroupKeyValue | undefined): string =>
-  key === undefined ? '\0' : QueryPlan.GroupByStep.serializeGroupKey(key);
+const _serializeOptionalGroupKey = (key: GroupKeyValue | undefined): string =>
+  key === undefined ? '\0' : GroupBy.serializeGroupKey(key);
 
 /** True once the working set has been partitioned by a GroupByStep (every item carries a group key). */
 const isGrouped = (workingSet: QueryItem[]): boolean => workingSet.length > 0 && workingSet[0].groupKey !== undefined;
 
 // Non-null assertion is sound: only called from group-aware limit/skip, which run exclusively on a
 // working set already partitioned by GroupByStep (guarded by `isGrouped`), where every item has a key.
-const serializeItemGroupKey = (item: QueryItem): string => QueryPlan.GroupByStep.serializeGroupKey(item.groupKey!);
+const serializeItemGroupKey = (item: QueryItem): string => GroupBy.serializeGroupKey(item.groupKey!);
 
 /**
  * Executes query plans against the IndexEngine and AutomergeHost.
@@ -558,13 +557,12 @@ export class QueryExecutor extends Resource {
       if (item.groupKey === undefined) {
         continue;
       }
-      const serialized = QueryPlan.GroupByStep.serializeGroupKey(item.groupKey);
+      const serialized = GroupBy.serializeGroupKey(item.groupKey);
       groupCounts.set(serialized, (groupCounts.get(serialized) ?? 0) + 1);
     }
 
     return this._lastResultSet.map((item): QueryResult => {
-      const serializedGroupKey =
-        item.groupKey !== undefined ? QueryPlan.GroupByStep.serializeGroupKey(item.groupKey) : undefined;
+      const serializedGroupKey = item.groupKey !== undefined ? GroupBy.serializeGroupKey(item.groupKey) : undefined;
       return {
         id: item.objectId,
         documentId: item.documentId ?? undefined,
@@ -1414,7 +1412,7 @@ export class QueryExecutor extends Resource {
     // After a GroupByStep the working set is partitioned into contiguous groups; limit then pages
     // over whole groups. Otherwise it slices the flat object stream.
     const limitedWorkingSet = isGrouped(workingSet)
-      ? QueryPlan.GroupByStep.takeGroups(workingSet, step.limit, serializeItemGroupKey)
+      ? GroupBy.takeGroups(workingSet, step.limit, serializeItemGroupKey)
       : workingSet.slice(0, step.limit);
 
     return {
@@ -1430,7 +1428,7 @@ export class QueryExecutor extends Resource {
 
   private async _execSkipStep(step: QueryPlan.SkipStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const skippedWorkingSet = isGrouped(workingSet)
-      ? QueryPlan.GroupByStep.dropGroups(workingSet, step.skip, serializeItemGroupKey)
+      ? GroupBy.dropGroups(workingSet, step.skip, serializeItemGroupKey)
       : workingSet.slice(step.skip);
 
     return {
@@ -1446,8 +1444,8 @@ export class QueryExecutor extends Resource {
 
   private async _execGroupByStep(step: QueryPlan.GroupByStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const withKeys = workingSet.map((item) => ({ ...item, groupKey: QueryItem.getGroupKey(item, step.keys) }));
-    const groupedWorkingSet = QueryPlan.GroupByStep.partitionByGroupKey(withKeys, (item) =>
-      QueryPlan.GroupByStep.serializeGroupKey(item.groupKey!),
+    const groupedWorkingSet = GroupBy.partitionByGroupKey(withKeys, (item) =>
+      GroupBy.serializeGroupKey(item.groupKey!),
     );
 
     return {

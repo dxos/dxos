@@ -18,6 +18,7 @@ import {
   Obj,
   Order,
   Query,
+  type QueryResult,
   Ref,
   Relation,
   Scope,
@@ -380,7 +381,7 @@ describe('Query', () => {
       const groups = await db.query(Query.select(Filter.everything()).groupBy(GroupKey.property('value'))).run();
 
       expect(groups).to.have.length(2);
-      const byKey = new Map(groups.map((group: any) => [group.key.value, group]));
+      const byKey = new Map(groups.map((group) => [group.key.value, group]));
       expect(byKey.get(100)?.count).to.equal(2);
       expect(byKey.get(100)?.values).to.have.length(2);
       expect(byKey.get(200)?.count).to.equal(1);
@@ -402,11 +403,11 @@ describe('Query', () => {
       expect(groups).to.have.length(3);
       expect(
         groups
-          .map((group: any) => group.count)
+          .map((group) => group.count)
           .slice()
           .sort(),
       ).to.deep.equal([1, 1, 2]);
-      const aOneGroup = groups.find((group: any) => group.key.category === 'a' && group.key.value === 1);
+      const aOneGroup = groups.find((group) => group.key.category === 'a' && group.key.value === 1);
       expect(aOneGroup?.count).to.equal(2);
     });
 
@@ -420,7 +421,7 @@ describe('Query', () => {
       const groups = await db.query(Query.select(Filter.everything()).groupBy(GroupKey.property('value'))).run();
 
       expect(groups).to.have.length(2);
-      const nullGroup = groups.find((group: any) => group.key.value === null);
+      const nullGroup = groups.find((group) => group.key.value === null);
       expect(nullGroup?.count).to.equal(2);
     });
 
@@ -448,7 +449,7 @@ describe('Query', () => {
         .run();
 
       expect(groups).to.have.length(1);
-      expect(groups[0].values.map((obj: any) => obj.rank)).to.deep.equal([1, 2, 3]);
+      expect(groups[0].values.map((obj) => obj.rank)).to.deep.equal([1, 2, 3]);
     });
 
     test('orderBy the key property before groupBy yields key-ascending group order', async () => {
@@ -466,7 +467,7 @@ describe('Query', () => {
         )
         .run();
 
-      expect(groups.map((group: any) => group.key.category)).to.deep.equal(['a', 'b', 'c']);
+      expect(groups.map((group) => group.key.category)).to.deep.equal(['a', 'b', 'c']);
     });
 
     test('threads ordered by most recent message (group order follows the preceding orderBy, not the key)', async () => {
@@ -489,11 +490,11 @@ describe('Query', () => {
         .run();
 
       // Groups ordered by each thread's most recent message: thread-b (4000), thread-a (2000), thread-c (1500).
-      expect(groups.map((group: any) => group.key.threadId)).to.deep.equal(['thread-b', 'thread-a', 'thread-c']);
+      expect(groups.map((group) => group.key.threadId)).to.deep.equal(['thread-b', 'thread-a', 'thread-c']);
       // Messages within each group are newest-first.
-      expect(groups[0].values.map((obj: any) => obj.sentAt)).to.deep.equal([4000, 3000]);
-      expect(groups[1].values.map((obj: any) => obj.sentAt)).to.deep.equal([2000, 1000]);
-      expect(groups[2].values.map((obj: any) => obj.sentAt)).to.deep.equal([1500]);
+      expect(groups[0].values.map((obj) => obj.sentAt)).to.deep.equal([4000, 3000]);
+      expect(groups[1].values.map((obj) => obj.sentAt)).to.deep.equal([2000, 1000]);
+      expect(groups[2].values.map((obj) => obj.sentAt)).to.deep.equal([1500]);
     });
 
     test('limit applies to the flat stream before grouping', async () => {
@@ -538,8 +539,8 @@ describe('Query', () => {
         .run();
 
       // Skip group a, take groups b and c — as whole groups (each still has its 2 members).
-      expect(page.map((group: any) => group.key.category)).to.deep.equal(['b', 'c']);
-      expect(page.every((group: any) => group.count === 2 && group.values.length === 2)).to.be.true;
+      expect(page.map((group) => group.key.category)).to.deep.equal(['b', 'c']);
+      expect(page.every((group) => group.count === 2 && group.values.length === 2)).to.be.true;
     });
 
     test('a data clause (orderBy) stacked on top of groupBy throws at plan time', async () => {
@@ -557,8 +558,8 @@ describe('Query', () => {
       // Grouped queries are index-backed (like order/limit queries), so `.runSync()`/`.results`
       // only reflect real data after the first reactive round-trip completes; wait for it before
       // asserting, following the pattern used for other index-only reactive queries in this file.
-      const subscribeAndWaitForFirstResult = async (query: any): Promise<any[]> => {
-        let lastResult: any[] = [];
+      const subscribeAndWaitForFirstResult = async <T>(query: QueryResult.QueryResult<T>): Promise<T[]> => {
+        let lastResult: T[] = [];
         const initial = new Trigger();
         let fired = false;
         const unsubscribe = query.subscribe(() => {
@@ -587,13 +588,13 @@ describe('Query', () => {
         lastResult = query.results;
 
         expect(lastResult).to.have.length(2);
-        expect(lastResult.find((group: any) => group.key.category === 'b')?.count).to.equal(1);
+        expect(lastResult.find((group) => group.key.category === 'b')?.count).to.equal(1);
 
         db.add(Obj.make(TestSchema.Expando, { category: 'a' }));
         await db.flush({ updates: true });
         lastResult = query.results;
 
-        expect(lastResult.find((group: any) => group.key.category === 'a')?.count).to.equal(2);
+        expect(lastResult.find((group) => group.key.category === 'a')?.count).to.equal(2);
       });
 
       test('property edit moves an object between groups, including the same-flat-index boundary case', async () => {
@@ -612,7 +613,7 @@ describe('Query', () => {
         const initialResult = await subscribeAndWaitForFirstResult(query);
         expect(initialResult).to.have.length(2);
 
-        Obj.update(boundary, (boundary: any) => {
+        Obj.update(boundary, (boundary) => {
           boundary.category = 'b';
         });
         await db.flush({ updates: true });
@@ -659,12 +660,10 @@ describe('Query', () => {
       const subscribed = query.results;
       const ran = await query.run();
 
-      expect(ran.map((group: any) => group.key.category).sort()).to.deep.equal(
-        subscribed.map((group: any) => group.key.category).sort(),
+      expect(ran.map((group) => group.key.category).sort()).to.deep.equal(
+        subscribed.map((group) => group.key.category).sort(),
       );
-      expect(ran.map((group: any) => group.count).sort()).to.deep.equal(
-        subscribed.map((group: any) => group.count).sort(),
-      );
+      expect(ran.map((group) => group.count).sort()).to.deep.equal(subscribed.map((group) => group.count).sort());
     });
 
     test('grouped queries participate in the result/atom cache like ordinary queries', async () => {
