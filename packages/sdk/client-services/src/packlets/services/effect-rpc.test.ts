@@ -23,23 +23,6 @@ import {
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createLinkedPorts } from '@dxos/rpc';
 
-// Test mocks implement only the methods under test; the wire dispatches by method name.
-const mockService = <T>(partial: Partial<T>): T => partial as T;
-
-const setup = async (services: () => Partial<ClientServices>, options?: { onRequest?: () => Promise<void> }) => {
-  const [proxyPort, serverPort] = createLinkedPorts();
-
-  const server = new ClientRpcServer({ services, port: serverPort, onRequest: options?.onRequest });
-  await server.open();
-  onTestFinished(() => server.close());
-
-  const scope = Effect.runSync(Scope.make());
-  onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
-  const proxy = await EffectEx.runPromise(makeClientServicesClient(proxyPort).pipe(Scope.extend(scope)));
-
-  return proxy;
-};
-
 describe('client services effect-rpc', () => {
   test('unary call round trip preserves substituted types', async ({ expect }) => {
     const spaceKey = PublicKey.random();
@@ -148,3 +131,20 @@ describe('client services effect-rpc', () => {
     await expect(proxy.SystemService!.getConfig(undefined, { timeout: 100 })).rejects.toThrow(TimeoutError);
   });
 });
+
+// Test mocks implement only the methods under test; the wire dispatches by method name.
+const mockService = <T>(partial: Partial<T>): T => partial as T;
+
+const setup = async (services: () => Partial<ClientServices>, options?: { onRequest?: () => Promise<void> }) => {
+  const [proxyPort, serverPort] = createLinkedPorts();
+
+  const server = new ClientRpcServer({ services, port: serverPort, onRequest: options?.onRequest });
+  await server.open();
+  onTestFinished(() => server.close());
+
+  const scope = Effect.runSync(Scope.make());
+  onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
+  const proxy = await EffectEx.runPromise(makeClientServicesClient(proxyPort).pipe(Scope.extend(scope)));
+
+  return proxy;
+};

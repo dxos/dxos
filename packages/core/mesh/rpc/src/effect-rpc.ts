@@ -43,12 +43,15 @@ const subscribePort = (port: RpcPort) =>
     return mailbox;
   });
 
-const sendFrame = (port: RpcPort, frame: Uint8Array | string | undefined): Effect.Effect<void> =>
+const sendFrame = (port: RpcPort, frame: Uint8Array | string | undefined): Effect.Effect<void, Error> =>
   frame === undefined || typeof frame === 'string'
     ? Effect.dieMessage('rpc-port protocol requires binary frames')
     : // Copy the frame: msgpack encoders reuse their output buffer, but RpcPort.send may be
       // asynchronous (e.g. postMessage) and read the bytes after the encoder has overwritten them.
-      Effect.promise(async () => port.send(frame.slice()));
+      Effect.tryPromise({
+        try: async () => port.send(frame.slice()),
+        catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+      });
 
 /**
  * Client-side effect-rpc protocol over an {@link RpcPort}.

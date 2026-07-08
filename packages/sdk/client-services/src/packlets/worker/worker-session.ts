@@ -125,7 +125,7 @@ export class WorkerSession {
       log.catch(err);
     }
 
-    await Promise.all([this._clientRpc.close(), this._iframeRpc.close()]);
+    await Promise.all([this._clientRpc.close(), this._shellClientRpc?.close(), this._iframeRpc.close()]);
     log.debug('closed');
   }
 
