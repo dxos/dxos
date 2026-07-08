@@ -13,4 +13,5 @@ export * from './OutputPanel';
 export * from './PipelinePanel';
 export * from './PredicateList';
 export * from './QueryPanel';
+export * from './QuestionsPanel';
 export * from './types';

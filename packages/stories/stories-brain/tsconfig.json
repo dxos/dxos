@@ -23,6 +23,9 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/sql-sqlite"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -39,6 +42,9 @@
     },
     {
       "path": "../../core/compute/pipeline"
+    },
+    {
+      "path": "../../core/compute/pipeline-discord"
     },
     {
       "path": "../../core/compute/pipeline-email"
