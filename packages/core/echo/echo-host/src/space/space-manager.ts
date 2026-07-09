@@ -3,8 +3,8 @@
 //
 
 import { type AutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
-import * as Effect from 'effect/Effect';
 import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Trigger, synchronized, trackLeaks } from '@dxos/async';
@@ -22,8 +22,8 @@ import { type Teleport } from '@dxos/teleport';
 import { type BlobStoreApi, BlobStoreApiService } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
-import { type IMetadataStore, IMetadataStoreService } from '../metadata';
 import { createIdFromSpaceKey } from '../common/space-id';
+import { type IMetadataStore, IMetadataStoreService } from '../metadata';
 import { CredentialRetrieverExtension } from './admission-discovery-extension';
 import { Space } from './space';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol';

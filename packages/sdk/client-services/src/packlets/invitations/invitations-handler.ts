@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 

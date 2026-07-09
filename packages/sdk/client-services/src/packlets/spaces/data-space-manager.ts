@@ -40,7 +40,12 @@ import {
   findInlineObjectOfType,
 } from '@dxos/echo-host';
 import { type DatabaseDirectory, createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { type EdgeConnection, EdgeConnectionService, type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
+import {
+  type EdgeConnection,
+  EdgeConnectionService,
+  type EdgeHttpClient,
+  EdgeHttpClientService,
+} from '@dxos/edge-client';
 import { type FeedStore, FeedStoreService, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
@@ -98,18 +103,20 @@ export class SigningContextProviderService extends EffectContext.Tag('@dxos/clie
 /**
  * Builds a {@link SigningContextProvider} from an identity resolver.
  */
-export const createSigningContextProvider = (getIdentity: () => Identity): SigningContextProvider => () => {
-  const identity = getIdentity();
-  return {
-    credentialSigner: identity.getIdentityCredentialSigner(),
-    identityKey: identity.identityKey,
-    deviceKey: identity.deviceKey,
-    getProfile: () => identity.profileDocument,
-    recordCredential: async (credential) => {
-      await identity.controlPipeline.writer.write({ credential: { credential } });
-    },
+export const createSigningContextProvider =
+  (getIdentity: () => Identity): SigningContextProvider =>
+  () => {
+    const identity = getIdentity();
+    return {
+      credentialSigner: identity.getIdentityCredentialSigner(),
+      identityKey: identity.identityKey,
+      deviceKey: identity.deviceKey,
+      getProfile: () => identity.profileDocument,
+      recordCredential: async (credential) => {
+        await identity.controlPipeline.writer.write({ credential: { credential } });
+      },
+    };
   };
-};
 
 /**
  * Effect Layer providing {@link SigningContextProvider} from {@link IdentityProviderService}.

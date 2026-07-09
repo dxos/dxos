@@ -1,11 +1,11 @@
+import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 //
 // Copyright 2022 DXOS.org
 //
 import platform from 'platform';
-import * as Effect from 'effect/Effect';
-import * as EffectContext from 'effect/Context';
-import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -104,8 +104,10 @@ export class IdentityProviderService extends EffectContext.Tag('@dxos/client-ser
 /**
  * Builds an {@link IdentityProvider} from an {@link IdentityManager}.
  */
-export const identityProviderFromManager = (identityManager: IdentityManager): IdentityProvider =>
-  () => identityManager.identity ?? failUndefined();
+export const identityProviderFromManager =
+  (identityManager: IdentityManager): IdentityProvider =>
+  () =>
+    identityManager.identity ?? failUndefined();
 
 /**
  * Effect service tag for {@link IdentityManager}.

@@ -225,10 +225,7 @@ export class ServiceContext extends Resource implements ServiceContextApi {
   public readonly _runtimeProps?: ServiceContextRuntimeProps;
   readonly #edgeFeatures?: Runtime.Client.EdgeFeatures;
 
-  readonly #handlerFactories = new Map<
-    Invitation.Kind,
-    (invitation: Partial<Invitation>) => InvitationProtocol
-  >();
+  readonly #handlerFactories = new Map<Invitation.Kind, (invitation: Partial<Invitation>) => InvitationProtocol>();
 
   constructor(options: ServiceContextOptions) {
     super();

@@ -45,7 +45,12 @@ import { LoggingServiceImpl } from '../logging';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { SystemServiceImpl } from '../system';
-import { ServiceContext, ServiceContextLayer, type ServiceContextRuntimeProps, ServiceContextService } from './service-context';
+import {
+  ServiceContext,
+  ServiceContextLayer,
+  type ServiceContextRuntimeProps,
+  ServiceContextService,
+} from './service-context';
 import { ServiceRegistry } from './service-registry';
 
 export type ClientServicesHostProps = {

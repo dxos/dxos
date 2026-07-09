@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Event, PushStream, TimeoutError, Trigger } from '@dxos/async';

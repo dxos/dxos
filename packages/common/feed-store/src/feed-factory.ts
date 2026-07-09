@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import defaultsDeep from 'lodash.defaultsdeep';
-import * as Effect from 'effect/Effect';
 import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import defaultsDeep from 'lodash.defaultsdeep';
 
 import { type Signer, subtleCrypto } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';

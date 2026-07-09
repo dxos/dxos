@@ -4,8 +4,8 @@
 
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
-import * as Effect from 'effect/Effect';
 import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
 
 import { Event } from '@dxos/async';
 import { assertArgument } from '@dxos/invariant';
@@ -42,10 +42,7 @@ export interface FeedStoreOptions {
 /**
  * Effect service tag for {@link FeedStore}.
  */
-export class FeedStoreService extends EffectContext.Tag('@dxos/feed/FeedStore')<
-  FeedStoreService,
-  FeedStore
->() {}
+export class FeedStoreService extends EffectContext.Tag('@dxos/feed/FeedStore')<FeedStoreService, FeedStore>() {}
 
 /**
  * Persistent storage for feed metadata, blocks, subscriptions, and sync state.

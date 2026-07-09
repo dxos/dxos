@@ -4,8 +4,8 @@
 
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
-import * as Effect from 'effect/Effect';
 import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type { Callback, FileStat, RandomAccessStorage } from 'random-access-storage';
 

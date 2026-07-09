@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import path from 'node:path';
-
 import * as EffectContext from 'effect/Context';
+import path from 'node:path';
 
 import { synchronized } from '@dxos/async';
 import { subtleCrypto } from '@dxos/crypto';

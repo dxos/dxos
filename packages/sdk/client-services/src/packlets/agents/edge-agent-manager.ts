@@ -217,6 +217,11 @@ export const EdgeAgentManagerLayer = (
       const dataSpaceManager = yield* DataSpaceManagerService;
       const identityProvider = yield* IdentityProviderService;
       const edgeHttpClient = yield* Effect.serviceOption(EdgeHttpClientService);
-      return new EdgeAgentManager(options.edgeFeatures, Option.getOrUndefined(edgeHttpClient), dataSpaceManager, identityProvider);
+      return new EdgeAgentManager(
+        options.edgeFeatures,
+        Option.getOrUndefined(edgeHttpClient),
+        dataSpaceManager,
+        identityProvider,
+      );
     }),
   );

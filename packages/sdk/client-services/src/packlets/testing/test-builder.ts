@@ -16,7 +16,12 @@ import { SqliteMetadataStore } from '@dxos/echo-host';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { SqliteKeyring } from '@dxos/keyring';
-import { MemorySignalManager, MemorySignalManagerContext, type SignalManager, SignalManagerService } from '@dxos/messaging';
+import {
+  MemorySignalManager,
+  MemorySignalManagerContext,
+  type SignalManager,
+  SignalManagerService,
+} from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { StorageType } from '@dxos/random-access-storage';

@@ -162,11 +162,7 @@ const keyPairToPublicKey = async (keyPair: CryptoKeyPair): Promise<PublicKey> =>
 /**
  * Effect Layer constructing a {@link SqliteKeyring} from the ambient SQL runtime.
  */
-export const SqliteKeyringLayer = (): Layer.Layer<
-  KeyringApiService,
-  never,
-  SqlClient.SqlClient | SqlTransactionTag
-> =>
+export const SqliteKeyringLayer = (): Layer.Layer<KeyringApiService, never, SqlClient.SqlClient | SqlTransactionTag> =>
   Layer.effect(
     KeyringApiService,
     Effect.gen(function* () {
