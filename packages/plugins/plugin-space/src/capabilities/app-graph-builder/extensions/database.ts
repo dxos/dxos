@@ -27,8 +27,8 @@ import { makeCreateObjectEntryForDatabaseType } from '../../../util';
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
   DATABASE_SECTION_TYPE,
+  SCHEMA_NODE_TYPE,
   SNAPSHOT_BY_SCHEMA_LABEL,
-  STATIC_SCHEMA_TYPE,
   buildViewIndex,
   downloadBlob,
 } from './shared';
@@ -152,9 +152,10 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       id: 'schemaChildren',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-        // Scoped to the Database section's own type nodes: other plugins' type nodes (e.g. plugin-crm's
-        // virtual type nodes) share the `Type.isType(node.data)` shape but should stay leaf nodes for now.
-        return node.type === STATIC_SCHEMA_TYPE && space && Type.isType(node.data)
+        // Scoped to the Database section's own type nodes (both static and database schemas — see
+        // SCHEMA_NODE_TYPE): other plugins' type nodes (e.g. plugin-crm's virtual type nodes) share the
+        // `Type.isType(node.data)` shape but should stay leaf nodes for now.
+        return node.type === SCHEMA_NODE_TYPE && space && Type.isType(node.data)
           ? Option.some({ space, schema: node.data })
           : Option.none();
       },
@@ -312,7 +313,7 @@ const createSchemaNode = ({
   const iconHue = Type.getDatabase(schema) != null ? 'neutral' : iconAnnotation?.hue;
   return Node.make({
     id: nodeId,
-    type: STATIC_SCHEMA_TYPE,
+    type: SCHEMA_NODE_TYPE,
     data: schema,
     properties: {
       label,
