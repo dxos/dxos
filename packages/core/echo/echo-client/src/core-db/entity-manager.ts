@@ -4,6 +4,10 @@
 
 import { next as A, getHeads } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as Runtime from 'effect/Runtime';
+import * as Stream from 'effect/Stream';
 
 import {
   type CleanupFn,
@@ -15,7 +19,6 @@ import {
   asyncTimeout,
   runInContextAsync,
 } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { raise, warnAfterTimeout } from '@dxos/debug';
 import { type Database, Ref } from '@dxos/echo';
@@ -30,9 +33,9 @@ import { type RefResolver, type RefResolverRequest, batchEvents } from '@dxos/ec
 import { assertState, invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError } from '@dxos/protocols';
-import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
+import type { SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, chunkArray, deepMapValues } from '@dxos/util';
 
@@ -75,8 +78,9 @@ type SpaceDocumentLinks = DatabaseDirectory['links'];
 
 export type EntityManagerProps = {
   graph: HypergraphImpl;
-  dataService: DataService;
-  queryService: QueryService;
+  dataService: DataService.Client;
+  queryService: QueryService.Client;
+  runtime: Runtime.Runtime<never>;
   spaceId: SpaceId;
   spaceKey: PublicKey;
 };
@@ -92,8 +96,9 @@ export class EntityManager implements IDatabaseBinding {
   private readonly _spaceKey: PublicKey;
   private readonly _spaceId: SpaceId;
   private readonly _hypergraph: HypergraphImpl;
-  private _dataService: DataService;
-  private _queryService: QueryService;
+  private _dataService: DataService.Client;
+  private _queryService: QueryService.Client;
+  private readonly _runtime: Runtime.Runtime<never>;
   readonly _repoProxy: RepoProxy;
 
   // ── Object storage ──────────────────────────────────────────────────────
@@ -156,7 +161,8 @@ export class EntityManager implements IDatabaseBinding {
     this._hypergraph = options.graph;
     this._dataService = options.dataService;
     this._queryService = options.queryService;
-    this._repoProxy = new RepoProxy(this._dataService, this._spaceId);
+    this._runtime = options.runtime;
+    this._repoProxy = new RepoProxy(this._dataService, this._runtime, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
   }
 
@@ -550,18 +556,19 @@ export class EntityManager implements IDatabaseBinding {
     await this._waitForPendingCreations();
     if (disk) {
       await this._repoProxy.flush();
-      await this._dataService.flush(
-        {
+      await runServiceCall(
+        this._runtime,
+        this._dataService.DataService.flush({
           documentIds: this._getAllDocHandles()
             .map((handle) => handle.documentId)
             .filter((id): id is DocumentId => id != null),
-        },
+        }),
         { timeout: RPC_TIMEOUT },
       );
     }
 
     if (indexes) {
-      await this._dataService.updateIndexes(undefined, { timeout: 0 });
+      await runServiceCall(this._runtime, this._dataService.DataService.updateIndexes());
     }
 
     if (updates) {
@@ -576,12 +583,13 @@ export class EntityManager implements IDatabaseBinding {
       return { heads: {} };
     }
 
-    const headsStates = await this._dataService.getDocumentHeads(
-      {
+    const headsStates = await runServiceCall(
+      this._runtime,
+      this._dataService.DataService.getDocumentHeads({
         documentIds: Object.values(doc.links ?? {}).map((link) =>
           interpretAsDocumentId(link.toString() as AutomergeUrl),
         ),
-      },
+      }),
       { timeout: RPC_TIMEOUT },
     );
 
@@ -596,13 +604,13 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   async waitUntilHeadsReplicated(heads: SpaceDocumentHeads): Promise<void> {
-    await this._dataService.waitUntilHeadsReplicated(
-      {
+    await runServiceCall(
+      this._runtime,
+      this._dataService.DataService.waitUntilHeadsReplicated({
         heads: {
           entries: Object.entries(heads.heads).map(([documentId, heads]) => ({ documentId, heads })),
         },
-      },
-      { timeout: 0 },
+      }),
     );
   }
 
@@ -612,51 +620,55 @@ export class EntityManager implements IDatabaseBinding {
     invariant(doc);
     invariant(root.documentId, 'Space root document must have documentId');
 
-    await this._dataService.reIndexHeads(
-      {
+    await runServiceCall(
+      this._runtime,
+      this._dataService.DataService.reIndexHeads({
         documentIds: [
           root.documentId,
           ...Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
         ],
-      },
-      { timeout: 0 },
+      }),
     );
   }
 
   /** @deprecated Use `flush()`. */
   async updateIndexes(): Promise<void> {
-    await this._dataService.updateIndexes(undefined, { timeout: 0 });
+    await runServiceCall(this._runtime, this._dataService.DataService.updateIndexes());
   }
 
   async getSyncState(): Promise<SpaceSyncState> {
-    const value = await Stream.first(
-      this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT }),
+    const value = await runServiceCall(
+      this._runtime,
+      this._dataService.DataService.subscribeSpaceSyncState({ spaceId: this.spaceId }).pipe(
+        Stream.runHead,
+        Effect.map(Option.getOrElse(() => raise(new Error('Failed to get sync state')))),
+      ),
+      { timeout: RPC_TIMEOUT },
     );
-    return value ?? raise(new Error('Failed to get sync state'));
+    return value;
   }
 
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
-    let currentStream: ReturnType<DataService['subscribeSpaceSyncState']> | undefined;
+    let cleanup: (() => void) | undefined;
 
     const setupStream = () => {
-      currentStream = this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
-      currentStream.subscribe(
-        (data) => {
+      cleanup = subscribeStream(this._runtime, this._dataService.DataService.subscribeSpaceSyncState({ spaceId: this.spaceId }), {
+        onData: (data) => {
           void runInContextAsync(ctx, () => callback(data));
         },
-        (err) => {
+        onError: (err) => {
           if (err instanceof RpcClosedError) {
             this._reconnected.once(ctx, () => setupStream());
           } else if (err) {
             ctx.raise(err);
           }
         },
-      );
+      });
     };
 
     setupStream();
-    ctx.onDispose(() => currentStream?.close());
-    return () => currentStream?.close();
+    ctx.onDispose(() => cleanup?.());
+    return () => cleanup?.();
   }
 
   getAllObjectIds(): string[] {
@@ -692,7 +704,13 @@ export class EntityManager implements IDatabaseBinding {
     return Object.values(this._repoProxy.handles);
   }
 
-  _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
+  _updateServices({
+    dataService,
+    queryService,
+  }: {
+    dataService: DataService.Client;
+    queryService: QueryService.Client;
+  }): void {
     this._dataService = dataService;
     this._queryService = queryService;
     this._repoProxy._updateDataService(dataService);
