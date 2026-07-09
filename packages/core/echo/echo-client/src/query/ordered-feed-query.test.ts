@@ -26,7 +26,12 @@ describe('ordered feed queries', () => {
     await db.flush({ indexes: true });
 
     const ordered = await db
-      .query(Query.select(Filter.type(TestSchema.Task)).from(feed).orderBy(Order.property('title', 'asc')).limit(2))
+      .query(
+        Query.select(Filter.type(TestSchema.Task))
+          .from(feed)
+          .orderBy((_) => Order.asc(_.title))
+          .limit(2),
+      )
       .run();
 
     expect(ordered.map((task) => task.title)).toEqual(['a', 'b']);

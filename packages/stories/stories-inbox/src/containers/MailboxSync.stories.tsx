@@ -210,7 +210,9 @@ const MailboxSyncStory = ({ enrich = false, seed = false }: { enrich?: boolean; 
   const messages = useQuery(
     db,
     feed
-      ? Query.select(Filter.type(Message.Message)).from(feed).orderBy(Order.property('created', 'desc'))
+      ? Query.select(Filter.type(Message.Message))
+          .from(feed)
+          .orderBy((_) => Order.desc(_.created))
       : Query.select(Filter.nothing()),
   );
 

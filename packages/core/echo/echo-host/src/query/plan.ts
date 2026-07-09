@@ -36,7 +36,8 @@ export namespace QueryPlan {
     | OrderStep
     | LimitStep
     | SkipStep
-    | GroupByStep;
+    | GroupByStep
+    | ReduceStep;
 
   /**
    * Clear the current working set.
@@ -297,5 +298,17 @@ export namespace QueryPlan {
      * group-level `OrderStep` (`aggregate` order kind). Absent when the query declares none.
      */
     aggregates?: readonly QueryAST.GroupAggregate[];
+  };
+
+  /**
+   * Collapses the whole working set to a single implicit group (key `{}`) carrying the declared
+   * aggregates — even when the working set is empty. Unlike `GroupByStep`, there is no `keys` array:
+   * every item belongs to the one group. Mutually exclusive with `GroupByStep` in the same plan
+   * (validated at plan-generation time, like `GroupByStep` placement).
+   */
+  export type ReduceStep = {
+    _tag: 'ReduceStep';
+
+    aggregates: readonly QueryAST.GroupAggregate[];
   };
 }

@@ -187,16 +187,22 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     const results = this._queryContext.getResults();
     const presented = this._presentResults(results);
 
-    const changed = presented.grouped
-      ? // Same T-is-erased-Group boundary as `_presentResults` — `_objectCache`/`presented.objects`
-        // are really `GroupResult[]` here, just typed as `T[]` at this generic class's surface.
-        !_groupsEqual(
-          this._objectCache as unknown as GroupResult[] | undefined,
-          presented.objects as unknown as GroupResult[],
-        )
-      : !this._objectCache ||
-        this._objectCache.length !== presented.objects.length ||
-        this._objectCache.some((obj, index) => obj.id !== presented.objects[index].id);
+    // Same T-is-erased boundary as `_presentResults` — `_objectCache`/`presented.objects` are
+    // really `GroupResult[]`/`ReduceResult[]` here, just typed as `T[]` at this generic surface.
+    const changed =
+      presented.presentation === 'grouped'
+        ? !_groupsEqual(
+            this._objectCache as unknown as GroupResult[] | undefined,
+            presented.objects as unknown as GroupResult[],
+          )
+        : presented.presentation === 'reduced'
+          ? !_reduceResultEqual(
+              (this._objectCache as unknown as ReduceResult[] | undefined)?.[0],
+              (presented.objects as unknown as ReduceResult[])[0],
+            )
+          : !this._objectCache ||
+            this._objectCache.length !== presented.objects.length ||
+            this._objectCache.some((obj, index) => obj.id !== presented.objects[index].id);
 
     log('recomputeResult', { changed });
 
@@ -206,15 +212,28 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
   }
 
   /**
-   * Turns flat, row-level source entries into the query's public result shape. For a `groupBy`
-   * query (detected by the internal `SourceEntry.group` annotation, which the query context sets
-   * uniformly across all entries or none), assembles `Group` values instead of deduped row objects.
+   * Turns flat, row-level source entries into the query's public result shape: `Group` values for
+   * a `groupBy` query, a single reduced result for a `reduce` query (detected from the query AST,
+   * since it must synthesize a result even when `entries` is empty), or deduped row objects
+   * otherwise (detected by the internal `SourceEntry.group` annotation, which the query context
+   * sets uniformly across all entries or none).
    */
   private _presentResults(entries: SourceEntry<T>[]): {
     objects: T[];
     entries: QueryResult.EntityEntry<T>[];
-    grouped: boolean;
+    presentation: 'grouped' | 'reduced' | 'rows';
   } {
+    if (_isReduceQuery(this._query.ast)) {
+      const { result, entries: reduceEntries } = _assembleReduce(entries, _reduceAggregatesFromQuery(this._query.ast));
+      // Boundary cast: T is the reduce's aggregate-fields record (per Query.reduce's return type),
+      // but this class is written generically over the row type.
+      return {
+        objects: [result] as unknown as T[],
+        entries: reduceEntries as unknown as QueryResult.EntityEntry<T>[],
+        presentation: 'reduced',
+      };
+    }
+
     if (entries.length > 0 && entries[0].group !== undefined) {
       const { groups, entries: groupEntries } = _assembleGroups(entries, _groupAggregatesFromQuery(this._query.ast));
       // Boundary cast: T is `Group<K, Row>` for grouped queries (per Query.groupBy's return type),
@@ -223,11 +242,11 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
       return {
         objects: groups as unknown as T[],
         entries: groupEntries as unknown as QueryResult.EntityEntry<T>[],
-        grouped: true,
+        presentation: 'grouped',
       };
     }
 
-    return { objects: this._uniqueObjects(entries), entries, grouped: false };
+    return { objects: this._uniqueObjects(entries), entries, presentation: 'rows' };
   }
 
   private _uniqueObjects(entries: SourceEntry<T>[]): T[] {
@@ -283,9 +302,16 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 
 /**
  * Runtime shape of a `Query.Group` value once its type parameters are erased: the always-present
- * `key`, plus one field per declared aggregate ({@link Query.aggregate}).
+ * `key`, plus one field per declared aggregate ({@link Query.map}).
  */
 type GroupResult = { key: Record<string, unknown>; [field: string]: unknown };
+
+/**
+ * Runtime shape of a `Query.reduce` value once its type parameter is erased: one field per
+ * declared aggregate ({@link Query.reduce}), with no `key` (unlike {@link GroupResult}) — a reduce
+ * has exactly one implicit group over every match.
+ */
+type ReduceResult = { [field: string]: unknown };
 
 /**
  * Buckets flat row-level entries into `Group` values, in the order groups first appear in
@@ -413,6 +439,97 @@ const _groupsEqual = (prev: GroupResult[] | undefined, next: GroupResult[]): boo
       }
       return prevValue === nextValue;
     });
+  });
+};
+
+/**
+ * True iff the query's outermost data clause (after unwrapping the `order`/`limit`/`skip`/`from`/
+ * `options` wrappers permitted above it) is `reduce`.
+ */
+const _isReduceQuery = (query: QueryAST.Query): boolean => {
+  let node: QueryAST.Query | undefined = query;
+  while (node && node.type !== 'reduce' && 'query' in node) {
+    node = node.query;
+  }
+  return node?.type === 'reduce';
+};
+
+/**
+ * Extracts the `reduce` clause's aggregate declarations from a query AST, unwrapping the wrappers
+ * permitted above it (`order`/`limit`/`skip`/`from`/`options`). Empty when the query has no
+ * `reduce` or declares no aggregates.
+ */
+const _reduceAggregatesFromQuery = (query: QueryAST.Query): readonly QueryAST.GroupAggregate[] => {
+  let node: QueryAST.Query | undefined = query;
+  while (node && node.type !== 'reduce' && 'query' in node) {
+    node = node.query;
+  }
+  return node?.type === 'reduce' ? node.aggregates : [];
+};
+
+/**
+ * Collapses flat row-level entries into a single {@link ReduceResult}, synthesizing one even when
+ * `entries` is empty (`count` `0`, `items` `[]`, `max`/`min` `null`) — a `reduce` query always
+ * yields exactly one result, unlike {@link _assembleGroups}'s per-key groups. `count` is taken from
+ * the source's shared group annotation (all entries share the one implicit group), not recomputed
+ * from hydrated members, so it reflects the true total even when only some members are hydrated.
+ */
+const _assembleReduce = (
+  entries: SourceEntry[],
+  aggregates: readonly QueryAST.GroupAggregate[],
+): { result: ReduceResult; entries: QueryResult.Entry<ReduceResult>[] } => {
+  const seenIds = new Set<unknown>();
+  const members: unknown[] = [];
+  let count = 0;
+
+  for (const entry of entries) {
+    if (entry.group) {
+      count = entry.group.count;
+    }
+    const objectId = entry.result?.id;
+    if (objectId != null) {
+      if (seenIds.has(objectId)) {
+        continue;
+      }
+      seenIds.add(objectId);
+    }
+    if (entry.result != null) {
+      members.push(entry.result);
+    }
+  }
+
+  const result: ReduceResult = {};
+  for (const aggregate of aggregates) {
+    result[aggregate.name] = _computeAggregate(aggregate, members, count);
+  }
+  return { result, entries: [{ id: '__reduce__', result }] };
+};
+
+/**
+ * Compares two reduced results field-by-field — mirrors {@link _groupsEqual} minus the `key`
+ * comparison (a reduce result has no `key`). `items` compares by member id sequence; scalar
+ * aggregates (`max`/`min`/`count`) compare by value.
+ */
+const _reduceResultEqual = (prev: ReduceResult | undefined, next: ReduceResult): boolean => {
+  if (!prev) {
+    return false;
+  }
+  const fields = Object.keys(prev);
+  if (fields.length !== Object.keys(next).length) {
+    return false;
+  }
+  return fields.every((field) => {
+    const prevValue = prev[field];
+    const nextValue = next[field];
+    if (Array.isArray(prevValue) && Array.isArray(nextValue)) {
+      return (
+        prevValue.length === nextValue.length &&
+        prevValue.every(
+          (value, valueIndex) => (value as { id: unknown })?.id === (nextValue[valueIndex] as { id: unknown })?.id,
+        )
+      );
+    }
+    return prevValue === nextValue;
   });
 };
 

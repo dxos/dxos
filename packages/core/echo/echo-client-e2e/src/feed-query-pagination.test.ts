@@ -41,7 +41,12 @@ describe('Feed query pagination', () => {
 
     const all = await db.query(Query.select(Filter.type(TestSchema.Task)).from(feed)).run();
     const skipped = await db
-      .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural()).skip(2).from(feed))
+      .query(
+        Query.select(Filter.type(TestSchema.Task))
+          .orderBy(() => Order.natural())
+          .skip(2)
+          .from(feed),
+      )
       .run();
 
     expect(all).toHaveLength(5);
@@ -54,7 +59,13 @@ describe('Feed query pagination', () => {
     const { db, feed } = await setupFeedWithTasks(builder, titles);
 
     const window = await db
-      .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural()).skip(1).limit(3).from(feed))
+      .query(
+        Query.select(Filter.type(TestSchema.Task))
+          .orderBy(() => Order.natural())
+          .skip(1)
+          .limit(3)
+          .from(feed),
+      )
       .run();
 
     expect(window).toHaveLength(3);
@@ -66,7 +77,11 @@ describe('Feed query pagination', () => {
     const { db, feed } = await setupFeedWithTasks(builder, titles);
 
     const results = await db
-      .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural()).from(feed))
+      .query(
+        Query.select(Filter.type(TestSchema.Task))
+          .orderBy(() => Order.natural())
+          .from(feed),
+      )
       .run();
 
     expect(results.map((obj) => (obj as TestSchema.Task).title)).toEqual(titles);
@@ -77,7 +92,11 @@ describe('Feed query pagination', () => {
     const { db, feed } = await setupFeedWithTasks(builder, titles);
 
     const results = await db
-      .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural('desc')).from(feed))
+      .query(
+        Query.select(Filter.type(TestSchema.Task))
+          .orderBy(() => Order.natural('desc'))
+          .from(feed),
+      )
       .run();
 
     expect(results.map((obj) => (obj as TestSchema.Task).title)).toEqual([...titles].reverse());
@@ -87,7 +106,12 @@ describe('Feed query pagination', () => {
     const { db, feed } = await setupFeedWithTasks(builder, ['charlie', 'alpha', 'bravo']);
 
     const results = await db
-      .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'asc')).limit(2).from(feed))
+      .query(
+        Query.select(Filter.type(TestSchema.Task))
+          .orderBy((_) => Order.asc(_.title))
+          .limit(2)
+          .from(feed),
+      )
       .run();
 
     expect(results).toHaveLength(2);
@@ -106,7 +130,12 @@ describe('Feed query pagination', () => {
     const { db, feed } = await setupFeedWithTasks(builder, ['a', 'b']);
 
     const results = await db
-      .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural()).skip(10).from(feed))
+      .query(
+        Query.select(Filter.type(TestSchema.Task))
+          .orderBy(() => Order.natural())
+          .skip(10)
+          .from(feed),
+      )
       .run();
 
     expect(results).toHaveLength(0);
@@ -125,7 +154,7 @@ describe('Feed query pagination', () => {
     const results = await db
       .query(
         Query.select(Filter.type(TestSchema.Task))
-          .orderBy(Order.natural())
+          .orderBy(() => Order.natural())
           .skip(1)
           .limit(2)
           .from(Scope.feed(Feed.getFeedUri(feed)!)),
@@ -150,7 +179,12 @@ describe('Feed query pagination', () => {
     await db.flush();
 
     const results = await db
-      .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural()).limit(2).from(feed))
+      .query(
+        Query.select(Filter.type(TestSchema.Task))
+          .orderBy(() => Order.natural())
+          .limit(2)
+          .from(feed),
+      )
       .run();
 
     expect(results).toHaveLength(2);

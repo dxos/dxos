@@ -6,6 +6,8 @@
 
 import { type QueryAST } from '@dxos/echo-protocol';
 
+import * as internal from './internal';
+
 export interface Order<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Order': { value: T };
@@ -33,11 +35,33 @@ class OrderClass implements Order<any> {
  */
 export const natural = (direction: QueryAST.OrderDirection = 'asc'): Order<any> =>
   new OrderClass({ kind: 'natural', direction });
-export const property = <T>(property: keyof T & string, direction: QueryAST.OrderDirection): Order<T> =>
+
+/**
+ * Order by a scalar property, named via a query binding (e.g. `Order.asc(_.created)`) — checked
+ * against the row type. Also accepts a raw property name string for schema-agnostic call sites
+ * (e.g. a generic table driven by user-configured column paths) where the property isn't known
+ * until runtime and so can't be expressed as `_.foo`; unlike the binding form, a string name is
+ * not checked against the row type.
+ */
+export const asc = (pathOrProperty: internal.Binding.BindingPath | string): Order<any> =>
   new OrderClass({
     kind: 'property',
-    property,
-    direction,
+    property: typeof pathOrProperty === 'string' ? pathOrProperty : internal.Binding.propertyOf(pathOrProperty),
+    direction: 'asc',
+  });
+
+/**
+ * Order by a scalar property, named via a query binding (e.g. `Order.desc(_.created)`) — checked
+ * against the row type. Also accepts a raw property name string for schema-agnostic call sites
+ * (e.g. a generic table driven by user-configured column paths) where the property isn't known
+ * until runtime and so can't be expressed as `_.foo`; unlike the binding form, a string name is
+ * not checked against the row type.
+ */
+export const desc = (pathOrProperty: internal.Binding.BindingPath | string): Order<any> =>
+  new OrderClass({
+    kind: 'property',
+    property: typeof pathOrProperty === 'string' ? pathOrProperty : internal.Binding.propertyOf(pathOrProperty),
+    direction: 'desc',
   });
 
 /**

@@ -259,12 +259,14 @@ const useQueryWorkaround = (
     // Apply sort order from the query AST.
     const orders = extractOrder(ast);
     if (orders && orders.length > 0) {
-      const orderObjects = orders
+      // Raw property-name form: the sort column comes from the persisted query AST, not a
+      // statically-known schema property.
+      const orderFns = orders
         .filter((order): order is QueryAST.Order & { kind: 'property' } => order.kind === 'property')
-        .map((order) => Order.property<any>(order.property, order.direction));
+        .map((order) => () => (order.direction === 'desc' ? Order.desc(order.property) : Order.asc(order.property)));
 
-      if (orderObjects.length > 0) {
-        return query.orderBy(...(orderObjects as [Order.Any, ...Order.Any[]]));
+      if (orderFns.length > 0) {
+        return query.orderBy(...(orderFns as [() => Order.Any, ...(() => Order.Any)[]]));
       }
     }
 

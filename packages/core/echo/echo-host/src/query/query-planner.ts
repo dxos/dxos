@@ -56,7 +56,7 @@ export class QueryPlanner {
 
   createPlan(query: QueryAST.Query): QueryPlan.Plan {
     this._validateQueryScoped(query);
-    this._validateGroupByPlacement(query);
+    this._validateGroupByAndReducePlacement(query);
     let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });
     plan = this._optimizeEmptyFilters(plan);
     plan = this._optimizeSoloUnions(plan);
@@ -95,6 +95,8 @@ export class QueryPlanner {
         return this._generateSkipClause(query, context);
       case 'group-by':
         return this._generateGroupByClause(query, context);
+      case 'reduce':
+        return this._generateReduceClause(query, context);
       case 'from':
         return this._generateFromClause(query, context);
       default:
@@ -689,39 +691,46 @@ export class QueryPlanner {
   }
 
   /**
-   * `groupBy` must be the outermost data clause: only `from()`/`options()` and the group-level
-   * pagination clauses `limit()`/`skip()` may wrap it. At most one `groupBy` may appear anywhere
-   * in the tree — including inside a `.from(subquery)` source, which the planner flattens (so a
-   * grouped subquery would otherwise produce an unsupported double-`groupBy`). The DSL's types
-   * can't enforce this (`Query<Group<K, T>>` still exposes `orderBy`/`select`/etc.), so it's
-   * validated here at plan time.
+   * `groupBy`/`reduce` must be the outermost data clause: only `from()`/`options()`/`orderBy()` and
+   * the pagination clauses `limit()`/`skip()` may wrap them. At most one of either may appear
+   * anywhere in the tree — including inside a `.from(subquery)` source, which the planner flattens
+   * (so a grouped/reduced subquery would otherwise produce an unsupported double clause) — and the
+   * two are mutually exclusive with each other. The DSL's types can't enforce this (`Query<Group<K,
+   * T>>` still exposes `orderBy`/`select`/etc.), so it's validated here at plan time.
    *
    * `limit`/`skip` above a `group-by` page over whole groups (see the group-aware `LimitStep`/
-   * `SkipStep` execution); a `limit`/`skip` below it windows the flat object stream before grouping.
+   * `SkipStep` execution); below it, they window the flat object stream before grouping. `reduce`
+   * produces one implicit group, so the same group-aware pagination applies above it too — `limit(0)`
+   * or `skip(≥1)` drops the single result, `limit(≥1)` keeps it; below it, they window the flat
+   * stream before reducing.
    */
-  private _validateGroupByPlacement(query: QueryAST.Query): void {
-    // Count every group-by anywhere in the tree. `QueryAST.visit` recurses through `from` sources,
-    // so this also sees grouped subqueries that flattening would merge in.
+  private _validateGroupByAndReducePlacement(query: QueryAST.Query): void {
+    // Count every group-by/reduce anywhere in the tree. `QueryAST.visit` recurses through `from`
+    // sources, so this also sees grouped/reduced subqueries that flattening would merge in.
     let groupByCount = 0;
+    let reduceCount = 0;
     QueryAST.visit(query, (node) => {
       if (node.type === 'group-by') {
         groupByCount += 1;
+      } else if (node.type === 'reduce') {
+        reduceCount += 1;
       }
     });
-    if (groupByCount === 0) {
+    if (groupByCount === 0 && reduceCount === 0) {
       return;
     }
-    if (groupByCount > 1) {
+    if (groupByCount + reduceCount > 1) {
       throw new QueryError({
-        message: 'Only one groupBy clause is supported per query',
+        message: 'Only one groupBy or reduce clause is supported per query, and they cannot be combined',
         context: { query },
       });
     }
 
-    // Exactly one group-by: it must sit at the outermost data position (only from/options/order/
-    // limit/skip may wrap it). A wrapping `order` reorders whole groups (see the `aggregate` order
-    // kind); an `order` inside the group-by's own query orders members within each group. Unwrap the
-    // permitted wrappers and require the group-by to be what remains.
+    // Exactly one group-by or reduce: it must sit at the outermost data position (only
+    // from/options/order/limit/skip may wrap it). A wrapping `order` reorders whole groups (see the
+    // `aggregate` order kind) or is a no-op over a single reduced result; an `order` inside the
+    // clause's own query orders members beforehand. Unwrap the permitted wrappers and require the
+    // clause to be what remains.
     let root = query;
     while (
       root.type === 'options' ||
@@ -732,10 +741,10 @@ export class QueryPlanner {
     ) {
       root = root.query;
     }
-    if (root.type !== 'group-by') {
+    if (root.type !== 'group-by' && root.type !== 'reduce') {
       throw new QueryError({
         message:
-          'groupBy must be the outermost query clause — only from(), options(), orderBy(), limit() and skip() may follow it',
+          'groupBy/reduce must be the outermost query clause — only from(), options(), orderBy(), limit() and skip() may follow it',
         context: { query },
       });
     }
@@ -816,6 +825,16 @@ export class QueryPlanner {
     ]);
   }
 
+  private _generateReduceClause(query: QueryAST.QueryReduceClause, context: GenerationContext): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.query, context).steps,
+      {
+        _tag: 'ReduceStep',
+        aggregates: query.aggregates,
+      },
+    ]);
+  }
+
   // After complete plan is built, inspect it from the end:
   //   - Walk backwards until hitting an object set changer.
   //   - If an order step is found, skip.
@@ -852,12 +871,12 @@ export class QueryPlanner {
       }
     }
 
-    // Find the position to insert the order step (before any trailing limit/skip/group-by steps —
-    // grouping must see the intended order already applied, both within and between groups).
+    // Find the position to insert the order step (before any trailing limit/skip/group-by/reduce
+    // steps — grouping must see the intended order already applied, both within and between groups).
     let insertIndex = processedPlan.steps.length;
     for (let i = processedPlan.steps.length - 1; i >= 0; i--) {
       const tag = processedPlan.steps[i]._tag;
-      if (tag === 'LimitStep' || tag === 'SkipStep' || tag === 'GroupByStep') {
+      if (tag === 'LimitStep' || tag === 'SkipStep' || tag === 'GroupByStep' || tag === 'ReduceStep') {
         insertIndex = i;
       } else {
         break;
@@ -918,9 +937,10 @@ export class QueryPlanner {
 
     // Check if we can propagate the limit to a SelectStep and/or OrderStep.
     // We can only do this if there are no unions, traversals, or set differences between them.
-    // GroupByStep is also a blocker: a limit above it counts whole groups, so it must not be
-    // pushed down into the flat SelectStep/OrderStep scan (that would slice objects, not groups).
-    const BLOCKERS = new Set(['UnionStep', 'TraverseStep', 'SetDifferenceStep', 'GroupByStep']);
+    // GroupByStep/ReduceStep are also blockers: a limit above them counts whole groups (or the
+    // single reduced result), so it must not be pushed down into the flat SelectStep/OrderStep scan
+    // (that would slice objects, not groups).
+    const BLOCKERS = new Set(['UnionStep', 'TraverseStep', 'SetDifferenceStep', 'GroupByStep', 'ReduceStep']);
 
     let selectStepIndex = -1;
     let orderStepIndex = -1;

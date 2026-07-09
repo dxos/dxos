@@ -121,6 +121,8 @@ export class WorkingSetQueryExecutor {
           : ws.slice(step.skip);
       case 'GroupByStep':
         return this._execGroupByStep(step, ws);
+      case 'ReduceStep':
+        return this._execReduceStep(step, ws);
       default:
         return null;
     }
@@ -135,6 +137,25 @@ export class WorkingSetQueryExecutor {
     return GroupBy.withGroupAggregates(
       partitioned,
       (item) => GroupBy.serializeGroupKey(item.groupKey!),
+      step.aggregates,
+      (item, property) => WorkingSetItem.getProperty(item, [property]),
+    );
+  }
+
+  /**
+   * Collapses the working set to one implicit group (key `{}`), mirroring the host executor's
+   * `_execReduceStep`. Over an empty working set this yields an empty working set too —
+   * synthesizing a single result with empty/`null` aggregate values is a client presentation
+   * concern (see `query-result.ts`).
+   */
+  private _execReduceStep(step: QueryPlan.ReduceStep, ws: WorkingSetItem[]): WorkingSetItem[] {
+    const withKeys = ws.map((item) => ({ ...item, groupKey: {} as GroupKeyValue }));
+    if (step.aggregates.length === 0) {
+      return withKeys;
+    }
+    return GroupBy.withGroupAggregates(
+      withKeys,
+      () => '',
       step.aggregates,
       (item, property) => WorkingSetItem.getProperty(item, [property]),
     );

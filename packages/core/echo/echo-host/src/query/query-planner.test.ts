@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Aggregate, Filter, GroupKey, Order, Query, Ref } from '@dxos/echo';
+import { Aggregate, Filter, Order, Query, Ref } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
@@ -65,7 +65,7 @@ describe('QueryPlanner', () => {
   });
 
   test('get all people ordered by name', () => {
-    const query = Query.select(Filter.type(TestSchema.Person)).orderBy(Order.property('name', 'asc'));
+    const query = Query.select(Filter.type(TestSchema.Person)).orderBy((_) => Order.asc(_.name));
 
     const plan = planner.createPlan(withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
@@ -1247,7 +1247,9 @@ describe('QueryPlanner', () => {
   });
 
   test('ordered and limited results', () => {
-    const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'asc')).limit(10);
+    const query = Query.select(Filter.type(TestSchema.Task))
+      .orderBy((_) => Order.asc(_.title))
+      .limit(10);
 
     const plan = planner.createPlan(withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
@@ -1299,7 +1301,10 @@ describe('QueryPlanner', () => {
   });
 
   test('ordered, skipped, and limited results: skip is added to the propagated cap; the limit step is removed', () => {
-    const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'asc')).skip(5).limit(10);
+    const query = Query.select(Filter.type(TestSchema.Task))
+      .orderBy((_) => Order.asc(_.title))
+      .skip(5)
+      .limit(10);
 
     const plan = planner.createPlan(withSpaceIdOptions(query.ast));
 
@@ -1435,7 +1440,7 @@ describe('QueryPlanner', () => {
 
   describe('groupBy', () => {
     test('group by single property inserts a natural OrderStep before GroupByStep', () => {
-      const query = Query.select(Filter.type(TestSchema.Task)).groupBy(GroupKey.property('title'));
+      const query = Query.select(Filter.type(TestSchema.Task)).groupBy((_) => _.title);
 
       const plan = planner.createPlan(withSpaceIdOptions(query.ast));
       const tags = plan.steps.map((step) => step._tag);
@@ -1450,8 +1455,8 @@ describe('QueryPlanner', () => {
 
     test('an explicit orderBy before groupBy is preserved (no natural order inserted)', () => {
       const query = Query.select(Filter.type(TestSchema.Task))
-        .orderBy(Order.property('title', 'desc'))
-        .groupBy(GroupKey.property('title'));
+        .orderBy((_) => Order.desc(_.title))
+        .groupBy((_) => _.title);
 
       const plan = planner.createPlan(withSpaceIdOptions(query.ast));
       const tags = plan.steps.map((step) => step._tag);
@@ -1462,10 +1467,7 @@ describe('QueryPlanner', () => {
     });
 
     test('multi-key groupBy carries all keys on GroupByStep', () => {
-      const query = Query.select(Filter.type(TestSchema.Task)).groupBy(
-        GroupKey.property('title'),
-        GroupKey.property('id'),
-      );
+      const query = Query.select(Filter.type(TestSchema.Task)).groupBy((_) => [_.title, _.id]);
 
       const plan = planner.createPlan(withSpaceIdOptions(query.ast));
       const groupByStep = plan.steps.find((step) => step._tag === 'GroupByStep');
@@ -1479,9 +1481,9 @@ describe('QueryPlanner', () => {
 
     test('limit before groupBy stays before GroupByStep with no pushdown across it', () => {
       const query = Query.select(Filter.type(TestSchema.Task))
-        .orderBy(Order.property('title', 'asc'))
+        .orderBy((_) => Order.asc(_.title))
         .limit(10)
-        .groupBy(GroupKey.property('title'));
+        .groupBy((_) => _.title);
 
       const plan = planner.createPlan(withSpaceIdOptions(query.ast));
       const tags = plan.steps.map((step) => step._tag);
@@ -1493,7 +1495,9 @@ describe('QueryPlanner', () => {
     });
 
     test('limit after groupBy pages over groups (stays after GroupByStep, no pushdown)', () => {
-      const query = Query.select(Filter.type(TestSchema.Task)).groupBy(GroupKey.property('title')).limit(5);
+      const query = Query.select(Filter.type(TestSchema.Task))
+        .groupBy((_) => _.title)
+        .limit(5);
 
       const plan = planner.createPlan(withSpaceIdOptions(query.ast));
       const tags = plan.steps.map((step) => step._tag);
@@ -1509,7 +1513,10 @@ describe('QueryPlanner', () => {
     });
 
     test('skip + limit after groupBy pages over groups', () => {
-      const query = Query.select(Filter.type(TestSchema.Task)).groupBy(GroupKey.property('title')).skip(2).limit(5);
+      const query = Query.select(Filter.type(TestSchema.Task))
+        .groupBy((_) => _.title)
+        .skip(2)
+        .limit(5);
 
       const plan = planner.createPlan(withSpaceIdOptions(query.ast));
       const tags = plan.steps.map((step) => step._tag);
@@ -1526,8 +1533,8 @@ describe('QueryPlanner', () => {
 
     test('GroupByStep carries declared aggregates', () => {
       const query = Query.select(Filter.type(TestSchema.Task))
-        .groupBy(GroupKey.property('title'))
-        .aggregate({ latest: Aggregate.max('title') });
+        .groupBy((_) => _.title)
+        .map((_) => ({ latest: Aggregate.max(_.title) }));
 
       const plan = planner.createPlan(withSpaceIdOptions(query.ast));
       const groupByStep = plan.steps.find((step) => step._tag === 'GroupByStep');
@@ -1539,10 +1546,10 @@ describe('QueryPlanner', () => {
 
     test('a post-aggregate orderBy is a group-level OrderStep after GroupByStep', () => {
       const query = Query.select(Filter.type(TestSchema.Task))
-        .orderBy(Order.property('title', 'desc'))
-        .groupBy(GroupKey.property('title'))
-        .aggregate({ latest: Aggregate.max('title') })
-        .orderBy(Order.property('latest', 'desc'))
+        .orderBy((_) => Order.desc(_.title))
+        .groupBy((_) => _.title)
+        .map((_) => ({ latest: Aggregate.max(_.title) }))
+        .orderBy((_) => Order.desc(_.latest))
         .limit(5);
 
       const plan = planner.createPlan(withSpaceIdOptions(query.ast));
@@ -1560,40 +1567,124 @@ describe('QueryPlanner', () => {
     });
 
     test('throws when groupBy is nested inside another groupBy', () => {
-      const inner = Query.select(Filter.type(TestSchema.Task)).groupBy(GroupKey.property('title'));
+      const inner = Query.select(Filter.type(TestSchema.Task)).groupBy((_) => _.title);
       // Raw AST composition: an inner query with its own groupBy, wrapped by an outer groupBy.
       const query = Query.fromAst({ type: 'group-by', query: inner.ast, keys: [{ kind: 'property', property: 'id' }] });
 
-      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow('Only one groupBy clause is supported');
+      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow(
+        'Only one groupBy or reduce clause is supported',
+      );
     });
 
     test('throws when a grouped subquery is used as a from() source', () => {
       // The planner flattens `.from(subquery)`; a grouped subquery would merge a second group-by
       // into the plan, so it must be rejected even though the outer query has no group-by of its own.
-      const groupedSubquery = Query.select(Filter.type(TestSchema.Person)).groupBy(GroupKey.property('email'));
+      const groupedSubquery = Query.select(Filter.type(TestSchema.Person)).groupBy((_) => _.email);
       const query = Query.select(Filter.type(TestSchema.Task)).from(groupedSubquery);
 
       expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow(
-        'groupBy must be the outermost query clause',
+        'groupBy/reduce must be the outermost query clause',
       );
     });
 
     test('throws when both the outer query and a from() subquery are grouped', () => {
-      const groupedSubquery = Query.select(Filter.type(TestSchema.Person)).groupBy(GroupKey.property('email'));
+      const groupedSubquery = Query.select(Filter.type(TestSchema.Person)).groupBy((_) => _.email);
       const query = Query.select(Filter.type(TestSchema.Task))
         .from(groupedSubquery)
-        .groupBy(GroupKey.property('title'));
+        .groupBy((_) => _.title);
 
-      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow('Only one groupBy clause is supported');
+      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow(
+        'Only one groupBy or reduce clause is supported',
+      );
     });
 
     test('groupBy under from()/options() is still valid (outermost data clause)', () => {
-      const query = Query.select(Filter.type(TestSchema.Task)).groupBy(GroupKey.property('title')).options({
-        debugLabel: 'grouped',
-      });
+      const query = Query.select(Filter.type(TestSchema.Task))
+        .groupBy((_) => _.title)
+        .options({
+          debugLabel: 'grouped',
+        });
 
       const plan = planner.createPlan(withSpaceIdOptions(query.ast));
       expect(plan.steps.some((step) => step._tag === 'GroupByStep')).toBe(true);
+    });
+  });
+
+  describe('reduce', () => {
+    test('reduce inserts a natural OrderStep before ReduceStep', () => {
+      const query = Query.select(Filter.type(TestSchema.Task)).reduce((_) => ({ total: Aggregate.count() }));
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      expect(tags).toEqual(['SelectStep', 'FilterDeletedStep', 'FilterStep', 'OrderStep', 'ReduceStep']);
+
+      const reduceStep = plan.steps.find((step) => step._tag === 'ReduceStep');
+      expect(reduceStep).toMatchObject({ aggregates: [{ name: 'total', kind: 'count' }] });
+    });
+
+    test('ReduceStep carries declared aggregates', () => {
+      const query = Query.select(Filter.type(TestSchema.Task)).reduce((_) => ({
+        latest: Aggregate.max(_.title),
+        total: Aggregate.count(),
+      }));
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const reduceStep = plan.steps.find((step) => step._tag === 'ReduceStep');
+      expect(reduceStep).toMatchObject({
+        aggregates: [
+          { name: 'latest', kind: 'max', property: 'title' },
+          { name: 'total', kind: 'count' },
+        ],
+      });
+    });
+
+    test('limit above reduce pages over the single implicit group (no pushdown)', () => {
+      const query = Query.select(Filter.type(TestSchema.Task))
+        .reduce((_) => ({ total: Aggregate.count() }))
+        .limit(1);
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      const tags = plan.steps.map((step) => step._tag);
+      expect(tags).toEqual(['SelectStep', 'FilterDeletedStep', 'FilterStep', 'OrderStep', 'ReduceStep', 'LimitStep']);
+
+      // The reduce-level limit must NOT be pushed into the SelectStep/OrderStep.
+      const selectStep = plan.steps.find((step) => step._tag === 'SelectStep');
+      expect((selectStep as any).limit).toBeUndefined();
+      const orderStep = plan.steps.find((step) => step._tag === 'OrderStep');
+      expect((orderStep as any).limit).toBeUndefined();
+    });
+
+    test('throws when reduce co-occurs with groupBy', () => {
+      const inner = Query.select(Filter.type(TestSchema.Task)).groupBy((_) => _.title);
+      const query = Query.fromAst({
+        type: 'reduce',
+        query: inner.ast,
+        aggregates: [{ name: 'total', kind: 'count' }],
+      });
+
+      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow(
+        'Only one groupBy or reduce clause is supported',
+      );
+    });
+
+    test('throws when a reduced subquery is used as a from() source', () => {
+      const reducedSubquery = Query.select(Filter.type(TestSchema.Person)).reduce((_) => ({
+        total: Aggregate.count(),
+      }));
+      const query = Query.select(Filter.type(TestSchema.Task)).from(reducedSubquery);
+
+      expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow(
+        'groupBy/reduce must be the outermost query clause',
+      );
+    });
+
+    test('reduce under from()/options() is still valid (outermost data clause)', () => {
+      const query = Query.select(Filter.type(TestSchema.Task))
+        .reduce((_) => ({ total: Aggregate.count() }))
+        .options({ debugLabel: 'reduced' });
+
+      const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+      expect(plan.steps.some((step) => step._tag === 'ReduceStep')).toBe(true);
     });
   });
 

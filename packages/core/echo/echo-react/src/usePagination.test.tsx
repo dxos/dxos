@@ -5,7 +5,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Aggregate, Database, Feed, Filter, GroupKey, Obj, Order, Query } from '@dxos/echo';
+import { Aggregate, Database, Feed, Filter, Obj, Order, Query } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
@@ -34,7 +34,10 @@ describe('usePagination', () => {
     const feed = db.add(Feed.make({ name: 'windowed' }));
     await appendPeople(feed, db, 10);
 
-    const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
+    const query = Query.select(Filter.type(TestSchema.Person))
+      .from(feed)
+      .orderBy(() => Order.natural('desc'))
+      .limit(3);
     const { result } = renderHook(() => usePagination(db, query));
 
     await waitFor(() => {
@@ -50,7 +53,10 @@ describe('usePagination', () => {
     const feed = db.add(Feed.make({ name: 'windowed' }));
     await appendPeople(feed, db, 10);
 
-    const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
+    const query = Query.select(Filter.type(TestSchema.Person))
+      .from(feed)
+      .orderBy(() => Order.natural('desc'))
+      .limit(3);
     const { result } = renderHook(() => usePagination(db, query));
 
     await waitFor(() => {
@@ -81,7 +87,10 @@ describe('usePagination', () => {
     const feed = db.add(Feed.make({ name: 'windowed' }));
     await appendPeople(feed, db, 30);
 
-    const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
+    const query = Query.select(Filter.type(TestSchema.Person))
+      .from(feed)
+      .orderBy(() => Order.natural('desc'))
+      .limit(3);
     const { result } = renderHook(() => usePagination(db, query));
 
     await waitFor(() => {
@@ -109,7 +118,10 @@ describe('usePagination', () => {
     const feed = db.add(Feed.make({ name: 'windowed' }));
     await appendPeople(feed, db, 5);
 
-    const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
+    const query = Query.select(Filter.type(TestSchema.Person))
+      .from(feed)
+      .orderBy(() => Order.natural('desc'))
+      .limit(3);
     const { result } = renderHook(() => usePagination(db, query));
 
     await waitFor(() => {
@@ -131,7 +143,10 @@ describe('usePagination', () => {
     const feed = db.add(Feed.make({ name: 'windowed' }));
     await appendPeople(feed, db, 20);
 
-    const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(5);
+    const query = Query.select(Filter.type(TestSchema.Person))
+      .from(feed)
+      .orderBy(() => Order.natural('desc'))
+      .limit(5);
     const { result } = renderHook(() => usePagination(db, query, { maxWindowSize: 10 }));
 
     await waitFor(() => {
@@ -184,7 +199,10 @@ describe('usePagination', () => {
     const feed = db.add(Feed.make({ name: 'windowed' }));
     await appendPeople(feed, db, 20);
 
-    const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(5);
+    const query = Query.select(Filter.type(TestSchema.Person))
+      .from(feed)
+      .orderBy(() => Order.natural('desc'))
+      .limit(5);
     const lengths: number[] = [];
     const { result } = renderHook(() => {
       const paginated = usePagination(db, query, { maxWindowSize: 10 });
@@ -212,7 +230,10 @@ describe('usePagination', () => {
     const feed = db.add(Feed.make({ name: 'windowed' }));
     await appendPeople(feed, db, 30);
 
-    const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(5);
+    const query = Query.select(Filter.type(TestSchema.Person))
+      .from(feed)
+      .orderBy(() => Order.natural('desc'))
+      .limit(5);
     const { result } = renderHook(() => usePagination(db, query, { maxWindowSize: 10 }));
 
     await waitFor(() => expect(result.current.items).toHaveLength(5));
@@ -271,7 +292,10 @@ describe('usePagination', () => {
     const feed = db.add(Feed.make({ name: 'windowed' }));
     await appendPeople(feed, db, 30);
 
-    const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(3);
+    const query = Query.select(Filter.type(TestSchema.Person))
+      .from(feed)
+      .orderBy(() => Order.natural('desc'))
+      .limit(3);
     const lengths: number[] = [];
     const { result } = renderHook(() => {
       const paginated = usePagination(db, query);
@@ -294,7 +318,10 @@ describe('usePagination', () => {
     const feed = db.add(Feed.make({ name: 'windowed' }));
     await appendPeople(feed, db, 2);
 
-    const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc')).limit(5);
+    const query = Query.select(Filter.type(TestSchema.Person))
+      .from(feed)
+      .orderBy(() => Order.natural('desc'))
+      .limit(5);
     const { result } = renderHook(() => usePagination(db, query));
 
     await waitFor(() => {
@@ -321,9 +348,9 @@ describe('usePagination', () => {
 
     const query = Query.select(Filter.type(TestSchema.Person))
       .from(feed)
-      .orderBy(Order.natural('desc'))
-      .groupBy(GroupKey.property('email'))
-      .aggregate({ items: Aggregate.items() })
+      .orderBy(() => Order.natural('desc'))
+      .groupBy((_) => _.email)
+      .map((_) => ({ items: Aggregate.items(_) }))
       .limit(2);
     const { result } = renderHook(() => usePagination(db, query));
 
@@ -382,11 +409,11 @@ describe('usePagination', () => {
     // Members newest-first (name desc) within each thread; threads ordered by their max(name).
     const grouped = Query.select(Filter.type(TestSchema.Person))
       .from(feed)
-      .orderBy(Order.property('name', 'desc'))
-      .groupBy(GroupKey.property('email'))
-      .aggregate({ latest: Aggregate.max('name'), items: Aggregate.items() });
+      .orderBy((_) => Order.desc(_.name))
+      .groupBy((_) => _.email)
+      .map((_) => ({ latest: Aggregate.max(_.name), items: Aggregate.items(_) }));
 
-    const descending = renderHook(() => usePagination(db, grouped.orderBy(Order.property('latest', 'desc')).limit(2)));
+    const descending = renderHook(() => usePagination(db, grouped.orderBy((_) => Order.desc(_.latest)).limit(2)));
     // First page: the two groups with the highest max(name) — a@x (p7) then b@x (p6).
     await waitFor(() => {
       expect(descending.result.current.items.map((group) => group.key.email)).toEqual(['a@x', 'b@x']);
@@ -403,7 +430,7 @@ describe('usePagination', () => {
     });
 
     // Ascending flips the thread order by latest message (not by oldest); members stay newest-first.
-    const ascending = renderHook(() => usePagination(db, grouped.orderBy(Order.property('latest', 'asc')).limit(2)));
+    const ascending = renderHook(() => usePagination(db, grouped.orderBy((_) => Order.asc(_.latest)).limit(2)));
     await waitFor(() => {
       expect(ascending.result.current.items.map((group) => group.key.email)).toEqual(['d@x', 'c@x']);
     });
@@ -418,7 +445,9 @@ describe('usePagination', () => {
     const db = await peer.createDatabase();
     const feed = db.add(Feed.make({ name: 'windowed' }));
 
-    const query = Query.select(Filter.type(TestSchema.Person)).from(feed).orderBy(Order.natural('desc'));
+    const query = Query.select(Filter.type(TestSchema.Person))
+      .from(feed)
+      .orderBy(() => Order.natural('desc'));
     expect(() => renderHook(() => usePagination(db, query))).toThrow(/\.limit\(pageSize\)/);
   });
 
@@ -429,7 +458,7 @@ describe('usePagination', () => {
 
     const query = Query.select(Filter.type(TestSchema.Person))
       .from(feed)
-      .orderBy(Order.natural('desc'))
+      .orderBy(() => Order.natural('desc'))
       .skip(5)
       .limit(5);
     expect(() => renderHook(() => usePagination(db, query))).toThrow(/manages \.skip\(\)/);

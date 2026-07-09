@@ -17,7 +17,6 @@ import * as Database from './Database';
 import type * as Dataset from './Dataset';
 import type * as Feed from './Feed';
 import * as Filter from './Filter';
-import type * as GroupKey from './GroupKey';
 import * as internal from './internal';
 import * as Obj from './Obj';
 import type * as Order from './Order';
@@ -51,18 +50,46 @@ type ReferenceTraversalTarget<P> = P extends Ref.Unknown
 /**
  * One group of query results, produced by {@link Query.groupBy}.
  * `K` is the group's key (an object of the properties grouped by); `E` is the member type, carried
- * for {@link Query.aggregate} (e.g. `Aggregate.items` yields `E[]`).
+ * for {@link Query.map} (e.g. `Aggregate.items(_)` yields `E[]`).
  *
  * A group carries only its `key` by default. Members, counts, and other aggregates are opt-in via
- * {@link Query.aggregate} and appear as additional top-level fields (e.g. `Aggregate.items()` →
- * `items: E[]`, `Aggregate.count()` → `count: number`, `Aggregate.max('created')` → the scalar).
+ * {@link Query.map} and appear as additional top-level fields (e.g. `Aggregate.items(_)` →
+ * `items: E[]`, `Aggregate.count()` → `count: number`, `Aggregate.max(_.created)` → the scalar).
  */
 export interface Group<K, E> {
   readonly key: K;
 }
 
+/**
+ * Extracts the literal property names a `groupBy` closure accessed off its binding, from the
+ * closure's return type: a single `BindingPath` for one key, or an array of them for a composite key.
+ */
+type GroupBindingKeys<R> =
+  R extends internal.Binding.BindingPath<infer P>
+    ? P[number]
+    : R extends readonly internal.Binding.BindingPath<infer P>[]
+      ? P[number]
+      : never;
+
+/**
+ * The shape a post-`groupBy` `orderBy` binds to: the group key's own properties flattened to the
+ * top level (alongside any `map`-declared fields), matching how ordering-by-group-key is executed
+ * (against the shared member property, not the presented `group.key.<prop>` shape).
+ */
+type OrderBinding<T> = T extends Group<infer K, any> ? EffectTypes.Simplify<Omit<T, 'key'> & K> : T;
+
+/**
+ * True only when `T` is literally `any` (not merely wide) — the standard `0 extends 1 & T` idiom.
+ * `groupBy`/`map`/`reduce` use this to collapse their derived return type to plain `any` when `T`
+ * is `any`: `Pick`/`Omit` over `any` produce an index-signature shape that — unlike `any` itself —
+ * doesn't structurally satisfy the same method's return type instantiated at a concrete `T`, which
+ * would make `Query<any>` (the `Any` used throughout this module's own implementation) incompatible
+ * with `Query<SomeConcreteType>` and break every other generic method built on `Query<any>`.
+ */
+type IsAnyT<T> = 0 extends 1 & T ? true : false;
+
 // TODO(burdon): Narrow T to Entity.Unknown?
-export interface Query<T> {
+export interface Query<out T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Query': { value: T };
 
@@ -148,17 +175,17 @@ export interface Query<T> {
    * Order the query results.
    * Orders are specified in priority order. The first order will be applied first, etc.
    *
-   * `Order.property` orders by the current result shape's fields, so it works both before and after
-   * a {@link groupBy}: before, by member properties; after, by the group's fields (its `key` and any
-   * aggregates declared via {@link aggregate} — e.g. `Order.property('lastMessageAt')` reorders the
-   * groups by that aggregate).
-   * @param order - Order to sort the results.
+   * Each order is a closure receiving a binding `_` shaped like the current result, so it works
+   * both before and after a {@link groupBy}: before, `_` binds member properties; after, `_` binds
+   * the group's key properties and any fields declared via {@link map} — e.g.
+   * `_ => Order.desc(_.lastMessageAt)` reorders the groups by that field.
+   * @param order - Closures producing the orders to sort the results by.
    * @returns Query for the ordered results.
    */
-  'orderBy'(...order: EffectArray.NonEmptyArray<Order.Order<T>>): Query<T>;
+  'orderBy'(...order: EffectArray.NonEmptyArray<(_: internal.Binding.Binding<OrderBinding<T>>) => Order.Any>): Query<T>;
 
   /**
-   * Group the query results by one or more scalar property values.
+   * Group the query results by one or more scalar property values, named via a binding closure.
    *
    * Groups are ordered by the first occurrence of their key in the incoming result stream —
    * a preceding `orderBy` therefore controls group order too. For example, to get message
@@ -166,43 +193,67 @@ export interface Query<T> {
    *
    * ```ts
    * Query.type(Message)
-   *   .orderBy(Order.property('created', 'desc'))
-   *   .groupBy(GroupKey.property('threadId'));
+   *   .orderBy(_ => Order.desc(_.created))
+   *   .groupBy(_ => _.threadId);
    * ```
    *
+   * A composite key groups by multiple properties: `.groupBy(_ => [_.a, _.b])`.
+   *
    * Must be the last data-selecting clause in the chain — only `from`/`options` may follow.
-   * @param keys - Keys to group the results by.
+   * @param key - Closure returning the property (or properties) to group by.
    * @returns Query for the grouped results.
    */
-  'groupBy'<const K extends GroupKey.GroupKey<keyof T>[]>(
-    ...keys: K
-  ): Query<Group<EffectTypes.Simplify<Pick<T, GroupKey.Property<K[number]>>>, T>>;
+  'groupBy'<
+    const R extends
+      | internal.Binding.BindingPath<readonly string[]>
+      | readonly internal.Binding.BindingPath<readonly string[]>[],
+  >(
+    key: (_: internal.Binding.Binding<T>) => R,
+  ): Query<IsAnyT<T> extends true ? any : Group<EffectTypes.Simplify<Pick<T, GroupBindingKeys<R> & keyof T>>, T>>;
 
   /**
    * Declare named aggregates computed per group. Must directly follow {@link groupBy}. Each becomes
-   * a top-level field on the group result and can be ordered by with a following {@link orderBy}
-   * using {@link Order.property}.
+   * a top-level field on the group result and can be ordered by with a following {@link orderBy}.
    *
    * ```ts
    * Query.type(Message)
-   *   .orderBy(Order.property('created', 'desc'))
-   *   .groupBy(GroupKey.property('threadId'))
-   *   .aggregate({ lastMessageAt: Aggregate.max('created'), items: Aggregate.items() })
-   *   .orderBy(Order.property('lastMessageAt', 'desc'));
+   *   .orderBy(_ => Order.desc(_.created))
+   *   .groupBy(_ => _.threadId)
+   *   .map(_ => ({ lastMessageAt: Aggregate.max(_.created), items: Aggregate.items(_) }))
+   *   .orderBy(_ => Order.desc(_.lastMessageAt));
    * ```
    *
-   * @param aggregates - Record of aggregate declarations keyed by result field name.
+   * @param project - Closure returning a record of aggregate declarations keyed by result field name.
    * @returns Query whose group results carry the named aggregates as fields.
    */
-  'aggregate'<const A extends Record<string, Aggregate.Aggregate<T extends Group<any, infer E> ? E : never, any>>>(
-    aggregates: A,
+  'map'<const A extends Record<string, Aggregate.Any>>(
+    project: (_: internal.Binding.Binding<T extends Group<any, infer E> ? E : never>) => A,
   ): Query<
-    EffectTypes.Simplify<
-      (T extends Group<infer K, infer E> ? Group<K, E> : Group<unknown, unknown>) & {
-        readonly [N in keyof A]: Aggregate.ValueOf<A[N]>;
-      }
-    >
+    IsAnyT<T> extends true
+      ? any
+      : EffectTypes.Simplify<
+          (T extends Group<infer K, infer E> ? Group<K, E> : Group<unknown, unknown>) & {
+            readonly [N in keyof A]: Aggregate.ValueOf<A[N]>;
+          }
+        >
   >;
+
+  /**
+   * Collapse the whole query to a single result. Unlike {@link groupBy}/{@link map}, which
+   * transform each group, `reduce` aggregates every matched object into one result — even when
+   * there are no matches (`count` is `0`, `items` is `[]`, `max`/`min` are `null`).
+   *
+   * ```ts
+   * Query.type(Message).reduce(_ => ({ count: Aggregate.count() }));
+   * ```
+   *
+   * Must not follow a {@link groupBy}.
+   * @param project - Closure returning a record of aggregate declarations keyed by result field name.
+   * @returns Query for the single aggregated result.
+   */
+  'reduce'<const A extends Record<string, Aggregate.Any>>(
+    project: (_: internal.Binding.Binding<T>) => A,
+  ): Query<IsAnyT<T> extends true ? any : EffectTypes.Simplify<{ readonly [N in keyof A]: Aggregate.ValueOf<A[N]> }>>;
 
   /**
    * Limit the number of results.
@@ -402,28 +453,48 @@ class QueryClass implements Any {
     });
   }
 
-  'orderBy'(...order: Order.Any[]): Any {
+  // The class implementation widens `orderBy`/`groupBy`/`map`/`reduce` to `Binding<any>` rather than
+  // mirroring the interface's per-instantiation binding types (`Binding<OrderBinding<T>>`, etc.) —
+  // there is exactly one runtime implementation behind those strongly-typed public signatures, so
+  // (like `.select`/`.aggregate` above) it only needs to be as loose as satisfying all of them
+  // requires; every consuming call site is still checked against the strict interface.
+  'orderBy'(...order: ((_: internal.Binding.Binding<any>) => Order.Any)[]): Any {
+    const binding = internal.Binding.makeBinding();
     return new QueryClass({
       type: 'order',
       query: this.ast,
-      order: order.map((o) => o.ast),
+      order: order.map((fn) => fn(binding).ast),
     });
   }
 
-  'groupBy'(...keys: GroupKey.Any[]): Any {
+  'groupBy'(
+    key: (_: internal.Binding.Binding<any>) => internal.Binding.BindingPath | readonly internal.Binding.BindingPath[],
+  ): Any {
+    const result = key(internal.Binding.makeBinding());
+    const paths = Array.isArray(result) ? result : [result];
     return new QueryClass({
       type: 'group-by',
       query: this.ast,
-      keys: keys.map((key) => key.ast),
+      keys: paths.map((path) => ({ kind: 'property', property: internal.Binding.propertyOf(path) })),
     });
   }
 
-  'aggregate'(aggregates: Record<string, Aggregate.Any>): Any {
+  'map'(project: (_: internal.Binding.Binding<any>) => Record<string, Aggregate.Any>): Any {
     if (this.ast.type !== 'group-by') {
-      throw new TypeError('.aggregate() must directly follow .groupBy().');
+      throw new TypeError('.map() must directly follow .groupBy().');
     }
+    const aggregates = project(internal.Binding.makeBinding());
     return new QueryClass({
       ...this.ast,
+      aggregates: Object.entries(aggregates).map(([name, aggregate]) => ({ name, ...aggregate.spec })),
+    });
+  }
+
+  'reduce'(project: (_: internal.Binding.Binding<any>) => Record<string, Aggregate.Any>): Any {
+    const aggregates = project(internal.Binding.makeBinding());
+    return new QueryClass({
+      type: 'reduce',
+      query: this.ast,
       aggregates: Object.entries(aggregates).map(([name, aggregate]) => ({ name, ...aggregate.spec })),
     });
   }

@@ -324,7 +324,12 @@ describe('feeds', () => {
 
       const scope = Scope.feed(Feed.getFeedUri(feed)!);
       const window = await db
-        .query(Query.select(Filter.type(TestSchema.Person)).from(scope).orderBy(Order.natural('desc')).limit(2))
+        .query(
+          Query.select(Filter.type(TestSchema.Person))
+            .from(scope)
+            .orderBy(() => Order.natural('desc'))
+            .limit(2),
+        )
         .run();
       // Newest two (appended last), returned newest-first (natural desc).
       expect(window.map((obj) => (obj as TestSchema.Person).name)).toEqual(['d', 'c']);
@@ -351,7 +356,10 @@ describe('feeds', () => {
       const scope = Scope.feed(Feed.getFeedUri(feed)!);
 
       const narrow = db.query(
-        Query.select(Filter.type(TestSchema.Person)).from(scope).orderBy(Order.natural('desc')).limit(2),
+        Query.select(Filter.type(TestSchema.Person))
+          .from(scope)
+          .orderBy(() => Order.natural('desc'))
+          .limit(2),
       );
       const narrowCalled = new Event();
       const narrowOnce = narrowCalled.waitForCount(1);
@@ -362,7 +370,10 @@ describe('feeds', () => {
 
       // A wider window (the "load older" case) surfaces the older items too.
       const wide = db.query(
-        Query.select(Filter.type(TestSchema.Person)).from(scope).orderBy(Order.natural('desc')).limit(10),
+        Query.select(Filter.type(TestSchema.Person))
+          .from(scope)
+          .orderBy(() => Order.natural('desc'))
+          .limit(10),
       );
       const wideCalled = new Event();
       const wideOnce = wideCalled.waitForCount(1);
@@ -402,7 +413,7 @@ describe('feeds', () => {
           .query(
             Query.select(Filter.type(TestSchema.Person))
               .from(scope)
-              .orderBy(Order.property('name', 'desc'))
+              .orderBy((_) => Order.desc(_.name))
               .skip(skip)
               .limit(limit),
           )
