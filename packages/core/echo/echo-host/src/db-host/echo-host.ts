@@ -21,6 +21,7 @@ import type {
   GetSyncStateResponse,
   SyncFeedRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { type FeedService } from '@dxos/protocols/rpc';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
 
@@ -94,7 +95,7 @@ export class EchoHost extends Resource {
 
   private _updateIndexes!: DeferredTask;
 
-  private _feedService: FeedProtocol.FeedService;
+  private _feedService: FeedService.Handlers;
 
   private _indexesUpToDate = false;
 
@@ -203,7 +204,7 @@ export class EchoHost extends Resource {
     return this._dataService;
   }
 
-  get feedService(): FeedProtocol.FeedService {
+  get feedService(): FeedService.Handlers {
     return this._feedService;
   }
 
