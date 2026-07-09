@@ -6,7 +6,7 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 
 import { Event, synchronized } from '@dxos/async';
-import { type ClientServices, clientServiceBundle } from '@dxos/client-protocol';
+import { type ClientServices, type ClientServicesHandlers, clientServiceBundle } from '@dxos/client-protocol';
 import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
@@ -42,6 +42,8 @@ import { LoggingServiceImpl } from '../logging';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { SystemServiceImpl } from '../system';
+import { type ServiceBundle } from '@dxos/rpc';
+
 import { ServiceContext, type ServiceContextRuntimeProps } from './service-context';
 import { ServiceRegistry } from './service-registry';
 
@@ -76,7 +78,7 @@ export type InitializeOptions = {
 @Trace.resource()
 export class ClientServicesHost {
   private readonly _resourceLock?: ResourceLock;
-  private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
+  private readonly _serviceRegistry: ServiceRegistry<ClientServicesHandlers>;
   private readonly _systemService: SystemServiceImpl;
   private readonly _loggingService: LoggingServiceImpl;
   private readonly _statusUpdate = new Event<void>();
@@ -158,9 +160,14 @@ export class ClientServicesHost {
     this.diagnosticsBroadcastHandler = createCollectDiagnosticsBroadcastHandler(this._systemService);
     this._loggingService = new LoggingServiceImpl();
 
-    this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
-      SystemService: this._systemService,
-    });
+    // The proto `clientServiceBundle` descriptor is retained only for the deprecated `descriptors`
+    // surface (legacy transports/devtools); the registry itself now holds effect-rpc handlers.
+    this._serviceRegistry = new ServiceRegistry<ClientServicesHandlers>(
+      clientServiceBundle as unknown as ServiceBundle<ClientServicesHandlers>,
+      {
+        SystemService: this._systemService,
+      },
+    );
   }
 
   get isOpen() {

@@ -31,5 +31,7 @@ describe('makeInProcessClient', () => {
 
       const counted = yield* client.Test.count({ to: 3 }).pipe(Stream.runCollect);
       expect([...counted]).toEqual([1, 2, 3]);
-    }).pipe(Effect.scoped, Effect.runPromise));
+      // The bridged group carries no middleware, so the residual middleware requirement in the
+      // inferred type is vacuous; drop it so the scoped program can run.
+    }).pipe(Effect.scoped, (effect) => Effect.runPromise(effect as Effect.Effect<void, never, never>)));
 });
