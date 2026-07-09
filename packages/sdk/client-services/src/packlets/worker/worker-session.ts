@@ -4,6 +4,7 @@
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import {
+  ClientRpcServer,
   type IframeServiceBundle,
   PROXY_CONNECTION_TIMEOUT,
   iframeServiceBundle,
@@ -15,7 +16,7 @@ import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 import { Callback, type MaybePromise } from '@dxos/util';
 
-import { ClientRpcServer, type ClientRpcServerProps, type ClientServicesHost } from '../services';
+import { type ClientServicesHost } from '../services';
 
 export type WorkerSessionProps = {
   serviceHost: ClientServicesHost;
@@ -50,36 +51,25 @@ export class WorkerSession {
     invariant(serviceHost);
     this._serviceHost = serviceHost;
 
-    const middleware: Pick<ClientRpcServerProps, 'handleCall' | 'handleStream'> = {
-      handleCall: async (method, params, handler, options) => {
-        const error = await readySignal.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
-        if (error) {
-          throw error;
-        }
-
-        return handler(method, params, options);
-      },
-      handleStream: async (method, params, handler, options) => {
-        const error = await readySignal.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
-        if (error) {
-          throw error;
-        }
-
-        return handler(method, params, options);
-      },
+    // Hold requests until the worker runtime is ready; propagate startup errors to callers.
+    const onRequest = async () => {
+      const error = await readySignal.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
+      if (error) {
+        throw error;
+      }
     };
 
     this._clientRpc = new ClientRpcServer({
-      serviceRegistry: this._serviceHost.serviceRegistry,
+      services: () => this._serviceHost.serviceRegistry.services,
       port: appPort,
-      ...middleware,
+      onRequest,
     });
 
     this._shellClientRpc = shellPort
       ? new ClientRpcServer({
-          serviceRegistry: this._serviceHost.serviceRegistry,
+          services: () => this._serviceHost.serviceRegistry.services,
           port: shellPort,
-          ...middleware,
+          onRequest,
         })
       : undefined;
 
@@ -135,7 +125,7 @@ export class WorkerSession {
       log.catch(err);
     }
 
-    await Promise.all([this._clientRpc.close(), this._iframeRpc.close()]);
+    await Promise.all([this._clientRpc.close(), this._shellClientRpc?.close(), this._iframeRpc.close()]);
     log.debug('closed');
   }
 
