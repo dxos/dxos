@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as Runtime from 'effect/Runtime';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { subscribeStream } from '@dxos/protocols';
@@ -30,7 +30,7 @@ describe('NetworkService', () => {
   });
 
   test('setNetworkOptions changes network status', async () => {
-    await Effect.runPromise(
+    await EffectEx.runPromise(
       networkService['NetworkService.updateConfig']({
         swarm: ConnectionState.OFFLINE,
       }),
@@ -49,7 +49,7 @@ describe('NetworkService', () => {
     expect(await result.wait()).to.equal(ConnectionState.ONLINE);
 
     result = new Trigger<ConnectionState | undefined>();
-    await Effect.runPromise(
+    await EffectEx.runPromise(
       networkService['NetworkService.updateConfig']({
         swarm: ConnectionState.OFFLINE,
       }),

@@ -6800,6 +6800,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
       isomorphic-ws:
         specifier: 'catalog:'
         version: 5.0.0(ws@8.18.3)

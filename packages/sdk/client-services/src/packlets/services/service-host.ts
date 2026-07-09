@@ -4,13 +4,22 @@
 
 import * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Runtime from 'effect/Runtime';
+import * as Scope from 'effect/Scope';
 
 import { Event, synchronized } from '@dxos/async';
-import { type ClientServices, type ClientServicesHandlers, clientServiceBundle } from '@dxos/client-protocol';
+import {
+  type ClientServices,
+  type ClientServicesHandlers,
+  clientServiceBundle,
+  makeInProcessClientServicesRpc,
+  makeServicesFromRpc,
+} from '@dxos/client-protocol';
 import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
-import { RuntimeProvider } from '@dxos/effect';
+import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EdgeSignalManager, type SignalManager, WebsocketSignalManager } from '@dxos/messaging';
@@ -138,8 +147,20 @@ export class ClientServicesHost {
       config: () => this._config,
       statusUpdate: this._statusUpdate,
       getCurrentStatus: () => (this.isOpen && !this._resetting ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
-      getDiagnostics: () => {
-        return createDiagnostics(this._serviceRegistry.services, this._serviceContext, this._config!);
+      getDiagnostics: async () => {
+        // Bridge the host Handlers to the proto services surface that diagnostics collection consumes.
+        const scope = Effect.runSync(Scope.make());
+        try {
+          const rpc = await EffectEx.runPromise(
+            makeInProcessClientServicesRpc(() => this._serviceRegistry.services).pipe(
+              Effect.provideService(Scope.Scope, scope),
+            ),
+          );
+          const services = makeServicesFromRpc(rpc, Runtime.defaultRuntime);
+          return await createDiagnostics(services, this._serviceContext, this._config!);
+        } finally {
+          await EffectEx.runPromise(Scope.close(scope, Exit.void));
+        }
       },
       onUpdateStatus: async (status: SystemStatus) => {
         if (!this.isOpen && status === SystemStatus.ACTIVE) {

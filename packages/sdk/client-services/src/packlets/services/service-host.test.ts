@@ -3,12 +3,18 @@
 //
 
 import { rmSync } from 'node:fs';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Runtime from 'effect/Runtime';
+import * as Scope from 'effect/Scope';
 import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
+import { type ClientServices, makeInProcessClientServicesRpc, makeServicesFromRpc } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { verifyPresentation } from '@dxos/credentials';
+import { EffectEx } from '@dxos/effect';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext } from '@dxos/messaging';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
@@ -17,6 +23,18 @@ import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { isNode } from '@dxos/util';
 
 import { createMockCredential, createServiceHost } from '../testing';
+
+/**
+ * Bridges a host's effect-rpc {@link ClientServices} handlers to the Promise/`Stream` shaped
+ * {@link ClientServices} surface the assertions consume, in-process (no wire hop). The scope closing
+ * the bridge is torn down when the test finishes.
+ */
+const makeProxyServices = async (host: ReturnType<typeof createServiceHost>): Promise<Partial<ClientServices>> => {
+  const scope = Effect.runSync(Scope.make());
+  onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
+  const rpc = await EffectEx.runPromise(makeInProcessClientServicesRpc(() => host.services).pipe(Scope.extend(scope)));
+  return makeServicesFromRpc(rpc, Runtime.defaultRuntime);
+};
 
 describe('ClientServicesHost', () => {
   const dataRoot = '/tmp/dxos/client-services/service-host/storage';
@@ -36,11 +54,12 @@ describe('ClientServicesHost', () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
     await host.open(new Context());
     onTestFinished(() => host.close(Context.default()));
+    const services = await makeProxyServices(host);
 
-    await host.services.IdentityService!.createIdentity({});
-    const { spaceKey } = await host.services.SpacesService!.createSpace({ membershipPolicy: MembershipPolicy.INVITE });
+    await services.IdentityService!.createIdentity({});
+    const { spaceKey } = await services.SpacesService!.createSpace({ membershipPolicy: MembershipPolicy.INVITE });
 
-    const stream = host.services.SpacesService!.queryCredentials({ spaceKey });
+    const stream = services.SpacesService!.queryCredentials({ spaceKey });
     const [done, tick] = latch({ count: 3 });
     stream.subscribe((credential) => {
       tick();
@@ -55,8 +74,9 @@ describe('ClientServicesHost', () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
     await host.open(new Context());
     onTestFinished(() => host.close(Context.default()));
+    const services = await makeProxyServices(host);
 
-    await host.services.IdentityService!.createIdentity({});
+    await services.IdentityService!.createIdentity({});
 
     const testCredential = await createMockCredential({
       signer: host.context.keyring,
@@ -65,18 +85,18 @@ describe('ClientServicesHost', () => {
 
     // Test if Identity exposes haloSpace key.
     const haloSpace = new Trigger<PublicKey>();
-    host.services.IdentityService!.queryIdentity()!.subscribe(({ identity }) => {
+    services.IdentityService!.queryIdentity()!.subscribe(({ identity }) => {
       if (identity?.spaceKey) {
         haloSpace.wake(identity.spaceKey);
       }
     });
 
-    await host.services.SpacesService?.writeCredentials({
+    await services.SpacesService?.writeCredentials({
       spaceKey: await haloSpace.wait(),
       credentials: [testCredential],
     });
 
-    const credentials = host.services.SpacesService!.queryCredentials({ spaceKey: await haloSpace.wait() });
+    const credentials = services.SpacesService!.queryCredentials({ spaceKey: await haloSpace.wait() });
     const queriedCredential = new Trigger<Credential>();
     credentials.subscribe((credential) => {
       if (credential.subject.id.equals(testCredential.subject.id)) {
@@ -92,8 +112,9 @@ describe('ClientServicesHost', () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
     await host.open(new Context());
     onTestFinished(() => host.close(Context.default()));
+    const services = await makeProxyServices(host);
 
-    await host.services.IdentityService!.createIdentity({});
+    await services.IdentityService!.createIdentity({});
 
     const testCredential = await createMockCredential({
       signer: host.context.keyring,
@@ -102,7 +123,7 @@ describe('ClientServicesHost', () => {
 
     const nonce = new Uint8Array([0, 0, 0, 0]);
 
-    const presentation = await host.services.IdentityService!.signPresentation({
+    const presentation = await services.IdentityService!.signPresentation({
       presentation: {
         credentials: [testCredential],
       },
@@ -122,8 +143,9 @@ describe('ClientServicesHost', () => {
     {
       const host = createServiceHost(config, new MemorySignalManagerContext());
       await host.open(new Context());
+      const services = await makeProxyServices(host);
 
-      await host.services.IdentityService?.createIdentity({});
+      await services.IdentityService?.createIdentity({});
 
       await asyncTimeout(host.reset(), 1000);
       await host.close(Context.default());
@@ -132,9 +154,10 @@ describe('ClientServicesHost', () => {
     {
       const host = createServiceHost(config, new MemorySignalManagerContext());
       await host.open(new Context());
+      const services = await makeProxyServices(host);
       const trigger = new Trigger<Identity>();
 
-      const stream = host.services.IdentityService?.queryIdentity();
+      const stream = services.IdentityService?.queryIdentity();
       await stream?.waitUntilReady();
 
       stream?.subscribe((identity) => {

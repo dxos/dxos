@@ -3,11 +3,11 @@
 //
 
 import { type SpaceId } from '@dxos/keys';
-import type * as QueryProto from '@dxos/protocols/proto/dxos/echo/query';
-import type * as DataProto from '@dxos/protocols/proto/dxos/echo/service';
 
+import type * as DataService from './DataService';
+import type * as FeedService from './FeedService';
+import type * as QueryService from './QueryService';
 import { type EdgeFunctionEnv } from './edge';
-import type * as FeedProtocol from './FeedProtocol';
 import type * as TraceProtocol from './TraceProtocol';
 
 //
@@ -64,19 +64,19 @@ export interface Context {
      * Query service.
      * Available if the function is invoked in context of a space.
      */
-    queryService?: QueryProto.QueryService;
+    queryService?: QueryService.Client;
 
     /**
      * Data service.
      * Available if the function is invoked in context of a space.
      */
-    dataService?: DataProto.DataService;
+    dataService?: DataService.Client;
 
     /**
      * Queue service.
      * Available if the function is invoked in context of a space.
      */
-    queueService?: FeedProtocol.FeedService;
+    queueService?: FeedService.Client;
 
     /**
      * Functions service.

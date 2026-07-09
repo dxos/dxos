@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as Runtime from 'effect/Runtime';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
@@ -33,7 +33,7 @@ describe('DevicesService', () => {
   describe('updateDevice', () => {
     test.skip('updates device profile', async () => {
       const stream = devicesService['DevicesService.queryDevices']();
-      const device = await Effect.runPromise(devicesService['DevicesService.updateDevice']({ label: 'test-device' }));
+      const device = await EffectEx.runPromise(devicesService['DevicesService.updateDevice']({ label: 'test-device' }));
       const result = new Trigger<Device[] | undefined>();
       const cleanup = subscribeStream(Runtime.defaultRuntime, stream, {
         onData: ({ devices }) => result.wake(devices),

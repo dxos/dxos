@@ -5,8 +5,11 @@
 import * as Reactivity from '@effect/experimental/Reactivity';
 import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as EffectRuntime from 'effect/Runtime';
+import * as Scope from 'effect/Scope';
 
 import { Event, synchronized } from '@dxos/async';
 import {
@@ -14,11 +17,13 @@ import {
   type ClientServicesProvider,
   type ClientServicesRpc,
   clientServiceBundle,
-  makeRpcFromServices,
+  makeInProcessClientServicesRpc,
+  makeServicesFromRpc,
 } from '@dxos/client-protocol';
 import { type ClientServicesHost, type ClientServicesHostProps } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
@@ -134,8 +139,6 @@ const setupNetworking = async (
  */
 export class LocalClientServices implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
-  // Derives the effect surface from the in-process host services (no wire hop).
-  private readonly _rpc: ClientServicesRpc = makeRpcFromServices(() => this.services);
   private readonly _ctx = new Context();
   private readonly _params: LocalClientServicesParams;
   private readonly _createOpfsWorker?: () => Worker;
@@ -151,6 +154,9 @@ export class LocalClientServices implements ClientServicesProvider {
   };
 
   private _isOpen = false;
+  private _serviceScope?: Scope.CloseableScope;
+  private _rpc?: ClientServicesRpc;
+  private _services?: Partial<ClientServices>;
 
   constructor(params: LocalClientServicesParams) {
     this._params = params;
@@ -177,11 +183,13 @@ export class LocalClientServices implements ClientServicesProvider {
   }
 
   get rpc() {
+    invariant(this._rpc, 'Client services not open');
     return this._rpc;
   }
 
   get services(): Partial<ClientServices> {
-    return this._host?.services ?? {};
+    invariant(this._services, 'Client services not open');
+    return this._services;
   }
 
   get host(): ClientServicesHost | undefined {
@@ -269,9 +277,18 @@ export class LocalClientServices implements ClientServicesProvider {
 
     await this._host.open(this._ctx);
     this._isOpen = true;
+
+    // Bridge the in-process host Handlers to the effect-rpc client surface (no wire hop), then derive
+    // the deprecated Promise/Stream shaped services from it for consumers not yet on the effect surface.
+    this._serviceScope = Effect.runSync(Scope.make());
+    this._rpc = await Effect.runPromise(
+      makeInProcessClientServicesRpc(() => this._host!.services).pipe(Scope.extend(this._serviceScope)),
+    );
+    this._services = makeServicesFromRpc(this._rpc, EffectRuntime.defaultRuntime);
+
     setIdentityTags({
-      identityService: this._host.services.IdentityService!,
-      devicesService: this._host.services.DevicesService!,
+      identityService: this._rpc,
+      devicesService: this._rpc,
       setTag: (k: string, v: string) => {
         this.signalMetadataTags[k] = v;
       },
@@ -285,6 +302,13 @@ export class LocalClientServices implements ClientServicesProvider {
     }
 
     await this._host?.close(this._ctx);
+
+    if (this._serviceScope) {
+      await Effect.runPromise(Scope.close(this._serviceScope, Exit.void));
+      this._serviceScope = undefined;
+    }
+    this._rpc = undefined;
+    this._services = undefined;
 
     log('local-client-services: terminated effect runtime', { runtimePresent: !!this._runtime });
     await this._runtime?.dispose();

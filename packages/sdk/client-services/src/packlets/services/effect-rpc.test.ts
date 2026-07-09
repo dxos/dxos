@@ -20,7 +20,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger, sleep } from '@dxos/async';
 import {
   ClientRpcServer,
-  type ClientServices,
+  type ClientServicesHandlers,
   type ClientServicesRpc,
   makeClientServicesRpc,
   makeServicesFromRpc,
@@ -29,14 +29,9 @@ import { Stream as PbStream } from '@dxos/codec-protobuf/stream';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { IdentityNotInitializedError, TimeoutError } from '@dxos/protocols';
-import {
-  type QueryStatusResponse,
-  type SpacesService,
-  SpaceState,
-  type SystemService,
-  SystemStatus,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { type QueryStatusResponse, SpaceState, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpacesService, SystemService } from '@dxos/protocols/rpc';
 import { createLinkedPorts } from '@dxos/rpc';
 
 //
@@ -95,7 +90,7 @@ const makeMessageChannel = () =>
 const mockService = <T>(partial: Partial<T>): T => partial as T;
 
 const setupRpc = async (
-  services: () => Partial<ClientServices>,
+  services: () => Partial<ClientServicesHandlers>,
   options?: { onRequest?: () => Promise<void> },
 ): Promise<ClientServicesRpc> => {
   const [proxyPort, serverPort] = createLinkedPorts();
@@ -109,7 +104,10 @@ const setupRpc = async (
   return EffectEx.runPromise(makeClientServicesRpc(proxyPort).pipe(Scope.extend(scope)));
 };
 
-const setup = async (services: () => Partial<ClientServices>, options?: { onRequest?: () => Promise<void> }) => {
+const setup = async (
+  services: () => Partial<ClientServicesHandlers>,
+  options?: { onRequest?: () => Promise<void> },
+) => {
   const rpc = await setupRpc(services, options);
   return makeServicesFromRpc(rpc, Runtime.defaultRuntime);
 };
@@ -122,14 +120,15 @@ describe('client services effect-rpc', () => {
   test('unary call round trip preserves substituted types', async ({ expect }) => {
     const spaceKey = PublicKey.random();
     const proxy = await setup(() => ({
-      SpacesService: mockService<SpacesService>({
-        createSpace: async () => ({
-          id: 'test-space',
-          spaceKey,
-          state: SpaceState.SPACE_READY,
-          membershipPolicy: MembershipPolicy.INVITE,
-          metrics: {},
-        }),
+      SpacesService: mockService<SpacesService.Handlers>({
+        ['SpacesService.createSpace']: () =>
+          Effect.succeed({
+            id: 'test-space',
+            spaceKey,
+            state: SpaceState.SPACE_READY,
+            membershipPolicy: MembershipPolicy.INVITE,
+            metrics: {},
+          }),
       }),
     }));
 
@@ -141,13 +140,9 @@ describe('client services effect-rpc', () => {
 
   test('streaming call round trip', async ({ expect }) => {
     const proxy = await setup(() => ({
-      SystemService: mockService<SystemService>({
-        queryStatus: () =>
-          new PbStream<QueryStatusResponse>(({ next, close }) => {
-            next({ status: SystemStatus.INACTIVE });
-            next({ status: SystemStatus.ACTIVE });
-            close();
-          }),
+      SystemService: mockService<SystemService.Handlers>({
+        ['SystemService.queryStatus']: (): Stream.Stream<QueryStatusResponse, Error> =>
+          Stream.fromIterable([{ status: SystemStatus.INACTIVE }, { status: SystemStatus.ACTIVE }]),
       }),
     }));
 
@@ -157,12 +152,9 @@ describe('client services effect-rpc', () => {
 
   test('stream errors propagate to the consumer', async ({ expect }) => {
     const proxy = await setup(() => ({
-      SystemService: mockService<SystemService>({
-        queryStatus: () =>
-          new PbStream<QueryStatusResponse>(({ next, close }) => {
-            next({ status: SystemStatus.ACTIVE });
-            close(new Error('stream failed'));
-          }),
+      SystemService: mockService<SystemService.Handlers>({
+        ['SystemService.queryStatus']: (): Stream.Stream<QueryStatusResponse, Error> =>
+          Stream.make({ status: SystemStatus.ACTIVE }).pipe(Stream.concat(Stream.fail(new Error('stream failed')))),
       }),
     }));
 
@@ -171,10 +163,8 @@ describe('client services effect-rpc', () => {
 
   test('typed errors keep their identity across the wire', async ({ expect }) => {
     const proxy = await setup(() => ({
-      SystemService: mockService<SystemService>({
-        getConfig: async () => {
-          throw new IdentityNotInitializedError({ message: 'no identity' });
-        },
+      SystemService: mockService<SystemService.Handlers>({
+        ['SystemService.getConfig']: () => Effect.fail(new IdentityNotInitializedError({ message: 'no identity' })),
       }),
     }));
 
@@ -188,7 +178,9 @@ describe('client services effect-rpc', () => {
 
   test('calls fail when the service is not available', async ({ expect }) => {
     const proxy = await setup(() => ({}));
-    await expect(proxy.SystemService!.getConfig()).rejects.toThrow('Service not available: SystemService');
+    await expect(proxy.SystemService!.getConfig()).rejects.toThrow(
+      'Service handler not available: SystemService.getConfig',
+    );
   });
 
   test('onRequest gates dispatch until ready', async ({ expect }) => {
@@ -196,11 +188,12 @@ describe('client services effect-rpc', () => {
     let called = false;
     const proxy = await setup(
       () => ({
-        SystemService: mockService<SystemService>({
-          getConfig: async () => {
-            called = true;
-            return {};
-          },
+        SystemService: mockService<SystemService.Handlers>({
+          ['SystemService.getConfig']: () =>
+            Effect.sync(() => {
+              called = true;
+              return {};
+            }),
         }),
       }),
       { onRequest: () => ready.wait() },
@@ -217,8 +210,8 @@ describe('client services effect-rpc', () => {
 
   test('per-call timeout', async ({ expect }) => {
     const proxy = await setup(() => ({
-      SystemService: mockService<SystemService>({
-        getConfig: () => new Promise(() => {}),
+      SystemService: mockService<SystemService.Handlers>({
+        ['SystemService.getConfig']: () => Effect.never,
       }),
     }));
 
@@ -227,13 +220,11 @@ describe('client services effect-rpc', () => {
 
   test('effect-native rpc surface: unary and stream', async ({ expect }) => {
     const rpc = await setupRpc(() => ({
-      SystemService: mockService<SystemService>({
-        getConfig: async () => ({ runtime: { client: { remoteSource: 'https://example.com' } } }),
-        queryStatus: () =>
-          new PbStream<QueryStatusResponse>(({ next, close }) => {
-            next({ status: SystemStatus.ACTIVE });
-            close();
-          }),
+      SystemService: mockService<SystemService.Handlers>({
+        ['SystemService.getConfig']: () =>
+          Effect.succeed({ runtime: { client: { remoteSource: 'https://example.com' } } }),
+        ['SystemService.queryStatus']: (): Stream.Stream<QueryStatusResponse, Error> =>
+          Stream.make({ status: SystemStatus.ACTIVE }),
       }),
     }));
 

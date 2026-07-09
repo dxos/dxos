@@ -8,6 +8,7 @@ import * as Runtime from 'effect/Runtime';
 import * as Stream from 'effect/Stream';
 import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
 import { Event, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { subscribeStream } from '@dxos/protocols';
@@ -50,17 +51,17 @@ describe('SystemService', () => {
   });
 
   test('getConfig returns config', async () => {
-    expect(await Effect.runPromise(systemService['SystemService.getConfig']())).to.deep.equal(config.values);
+    expect(await EffectEx.runPromise(systemService['SystemService.getConfig']())).to.deep.equal(config.values);
   });
 
   test('updateStatus triggers callback', async () => {
-    await Effect.runPromise(systemService['SystemService.updateStatus']({ status: SystemStatus.INACTIVE }));
+    await EffectEx.runPromise(systemService['SystemService.updateStatus']({ status: SystemStatus.INACTIVE }));
     const result = await updateStatus.wait();
     expect(result).to.equal(SystemStatus.INACTIVE);
   });
 
   test('queryStatus returns initial status', async () => {
-    const response = await Effect.runPromise(
+    const response = await EffectEx.runPromise(
       systemService['SystemService.queryStatus']({}).pipe(Stream.runHead, Effect.map(Option.getOrThrow)),
     );
     expect(response).to.deep.equal({ status: SystemStatus.ACTIVE });
@@ -90,7 +91,7 @@ describe('SystemService', () => {
   });
 
   test('reset triggers callback', async () => {
-    await Effect.runPromise(systemService['SystemService.reset']());
+    await EffectEx.runPromise(systemService['SystemService.reset']());
     const result = await reset.wait();
     expect(result).to.be.true;
   });

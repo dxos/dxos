@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as Runtime from 'effect/Runtime';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
@@ -42,13 +42,13 @@ describe('SpacesService', () => {
   describe('createSpace', () => {
     test('fails if no identity is available', async () => {
       await expect(
-        Effect.runPromise(spacesService['SpacesService.createSpace']({ membershipPolicy: MembershipPolicy.INVITE })),
+        EffectEx.runPromise(spacesService['SpacesService.createSpace']({ membershipPolicy: MembershipPolicy.INVITE })),
       ).rejects.toBeInstanceOf(Error);
     });
 
     test('creates a new space', async () => {
       await serviceContext.createIdentity();
-      const space = await Effect.runPromise(
+      const space = await EffectEx.runPromise(
         spacesService['SpacesService.createSpace']({ membershipPolicy: MembershipPolicy.INVITE }),
       );
       expect(space).to.exist;
@@ -72,9 +72,15 @@ describe('SpacesService', () => {
     test('returns list of existing spaces', async () => {
       await serviceContext.createIdentity();
       const existingSpaces = [
-        await Effect.runPromise(spacesService['SpacesService.createSpace']({ membershipPolicy: MembershipPolicy.INVITE })),
-        await Effect.runPromise(spacesService['SpacesService.createSpace']({ membershipPolicy: MembershipPolicy.INVITE })),
-        await Effect.runPromise(spacesService['SpacesService.createSpace']({ membershipPolicy: MembershipPolicy.INVITE })),
+        await EffectEx.runPromise(
+          spacesService['SpacesService.createSpace']({ membershipPolicy: MembershipPolicy.INVITE }),
+        ),
+        await EffectEx.runPromise(
+          spacesService['SpacesService.createSpace']({ membershipPolicy: MembershipPolicy.INVITE }),
+        ),
+        await EffectEx.runPromise(
+          spacesService['SpacesService.createSpace']({ membershipPolicy: MembershipPolicy.INVITE }),
+        ),
       ];
 
       const query = spacesService['SpacesService.querySpaces']();
@@ -100,7 +106,7 @@ describe('SpacesService', () => {
       expect(await result.wait()).to.be.length(0);
 
       result.reset();
-      const space = await Effect.runPromise(
+      const space = await EffectEx.runPromise(
         spacesService['SpacesService.createSpace']({ membershipPolicy: MembershipPolicy.INVITE }),
       );
       const spaces = await result.wait();

@@ -8,6 +8,7 @@ import * as Scope from 'effect/Scope';
 
 import { Resource } from '@dxos/context';
 import { EchoClient } from '@dxos/echo-client';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, makeInProcessClient } from '@dxos/protocols';
@@ -55,7 +56,7 @@ export class FunctionsClient extends Resource {
     const services = await this._serviceContainer.createServices();
     // Bridge the host Handlers to the effect-rpc client surface in-process (no wire).
     this._serviceScope = Effect.runSync(Scope.make());
-    const [dataService, queryService] = await Effect.runPromise(
+    const [dataService, queryService] = await EffectEx.runPromise(
       Effect.all([
         makeInProcessClient(DataService.Rpcs, services.dataService),
         makeInProcessClient(QueryService.Rpcs, services.queryService),
@@ -73,7 +74,7 @@ export class FunctionsClient extends Resource {
 
     await this._echoClient.close();
     if (this._serviceScope) {
-      await Effect.runPromise(Scope.close(this._serviceScope, Exit.void));
+      await EffectEx.runPromise(Scope.close(this._serviceScope, Exit.void));
       this._serviceScope = undefined;
     }
   }

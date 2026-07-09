@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Scope from 'effect/Scope';
 
+import { EffectEx } from '@dxos/effect';
 import { Context } from '@dxos/context';
 import { type Obj } from '@dxos/echo';
 import { type SerializedFeed, type SerializedSpace } from '@dxos/echo-client';
@@ -236,12 +237,12 @@ const collectFeedMessages = async (
   // Bridge the host feed Handlers to a client to call it in-process (Handlers are served, not
   // called directly). The scope owns the client for the duration of the read.
   const scope = Effect.runSync(Scope.make());
-  const feedClient = await Effect.runPromise(
+  const feedClient = await EffectEx.runPromise(
     makeInProcessClient(FeedService.Rpcs, echoHost.feedService).pipe(Effect.provideService(Scope.Scope, scope)),
   );
   try {
     while (true) {
-      const result = await Effect.runPromise(
+      const result = await EffectEx.runPromise(
         feedClient.FeedService.queryFeed({
           query: {
             spaceId,
@@ -251,27 +252,27 @@ const collectFeedMessages = async (
           },
         }),
       );
-    const batch = (result.objects ?? []).flatMap((encoded): Obj.JSON[] => {
-      try {
-        return [JSON.parse(encoded) as Obj.JSON];
-      } catch (err) {
-        log.verbose('feed object JSON parse failed; object ignored', { encoded, error: err });
-        return [];
+      const batch = (result.objects ?? []).flatMap((encoded): Obj.JSON[] => {
+        try {
+          return [JSON.parse(encoded) as Obj.JSON];
+        } catch (err) {
+          log.verbose('feed object JSON parse failed; object ignored', { encoded, error: err });
+          return [];
+        }
+      });
+      if (batch.length === 0) {
+        break;
       }
-    });
-    if (batch.length === 0) {
-      break;
-    }
-    for (const message of batch) {
-      messages.push(orderObjJsonFields(message));
-    }
-    if (!result.nextCursor || result.nextCursor === cursor) {
-      break;
-    }
+      for (const message of batch) {
+        messages.push(orderObjJsonFields(message));
+      }
+      if (!result.nextCursor || result.nextCursor === cursor) {
+        break;
+      }
       cursor = result.nextCursor;
     }
   } finally {
-    await Effect.runPromise(Scope.close(scope, Exit.void));
+    await EffectEx.runPromise(Scope.close(scope, Exit.void));
   }
   return messages;
 };

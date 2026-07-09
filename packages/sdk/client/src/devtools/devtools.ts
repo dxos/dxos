@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import { cbor } from '@automerge/automerge-repo';
 import * as Schema from 'effect/Schema';
 
-import { ClientRpcServer, type Halo, type Space } from '@dxos/client-protocol';
+import { ClientRpcServer, type Halo, type Space, makeHandlersFromRpc } from '@dxos/client-protocol';
 import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
 import { exposeModule, importModule } from '@dxos/debug';
 import { Feed, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
@@ -114,7 +114,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
       log('Opening devtools client RPC server...');
       server = new ClientRpcServer({
-        services: () => client.services.services,
+        services: () => makeHandlersFromRpc(client.services.rpc),
         port,
       });
 
@@ -252,8 +252,9 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
       const data = await uploadFile();
 
-      const { createLevel, createStorageObjects, decodeProfileArchive, importProfileData } =
-        await import('@dxos/client-services');
+      const { createLevel, createStorageObjects, decodeProfileArchive, importProfileData } = await import(
+        '@dxos/client-services'
+      );
 
       const storageConfig = client.config.get('runtime.client.storage', {})!;
 

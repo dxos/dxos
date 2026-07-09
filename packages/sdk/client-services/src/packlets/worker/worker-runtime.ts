@@ -5,9 +5,12 @@
 import * as Reactivity from '@effect/experimental/Reactivity';
 import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Scope from 'effect/Scope';
 
+import { EffectEx } from '@dxos/effect';
 import { Trigger } from '@dxos/async';
 import { DEFAULT_WORKER_BROADCAST_CHANNEL } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
@@ -21,6 +24,8 @@ import {
   setIdentityTags,
 } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
+import { makeInProcessClient } from '@dxos/protocols';
+import { DevicesService, IdentityService } from '@dxos/protocols/rpc';
 import { type RpcPort } from '@dxos/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
@@ -78,6 +83,7 @@ export class WorkerRuntime {
   private _config!: Config;
   private _signalMetadataTags: any = { runtime: 'worker-runtime' };
   private _signalTelemetryEnabled: boolean = false;
+  private _serviceScope?: Scope.CloseableScope;
   private _runtime!: ManagedRuntime.ManagedRuntime<
     SqlTransaction.SqlTransaction | SqlClient.SqlClient | SqlExport.SqlExport,
     never
@@ -170,9 +176,17 @@ export class WorkerRuntime {
       log('worker-runtime: client services host opened, signalling ready');
       this._ready.wake(undefined);
       log('started');
+      // Bridge the host identity/devices Handlers to the effect-rpc client surface in-process.
+      this._serviceScope = Effect.runSync(Scope.make());
+      const [identityService, devicesService] = await EffectEx.runPromise(
+        Effect.all([
+          makeInProcessClient(IdentityService.Rpcs, this._clientServices.services.IdentityService!),
+          makeInProcessClient(DevicesService.Rpcs, this._clientServices.services.DevicesService!),
+        ]).pipe(Effect.provideService(Scope.Scope, this._serviceScope)),
+      );
       setIdentityTags({
-        identityService: this._clientServices.services.IdentityService!,
-        devicesService: this._clientServices.services.DevicesService!,
+        identityService,
+        devicesService,
         setTag: (k: string, v: string) => {
           this._signalMetadataTags[k] = v;
         },
@@ -189,6 +203,10 @@ export class WorkerRuntime {
     this._broadcastChannel?.close();
     this._broadcastChannel = undefined;
     await this._clientServices.close(Context.default());
+    if (this._serviceScope) {
+      await EffectEx.runPromise(Scope.close(this._serviceScope, Exit.void));
+      this._serviceScope = undefined;
+    }
     await this._runtime.dispose();
     await this._onStop?.();
     await this._livenessLock.release();

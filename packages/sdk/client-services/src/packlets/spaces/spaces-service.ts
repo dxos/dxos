@@ -6,6 +6,7 @@ import type { AutomergeUrl } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
+import { EffectEx } from '@dxos/effect';
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
@@ -97,11 +98,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     });
   }
 
-  ['SpacesService.updateSpace']({
-    spaceKey,
-    state,
-    edgeReplication,
-  }: UpdateSpaceRequest): Effect.Effect<void, Error> {
+  ['SpacesService.updateSpace']({ spaceKey, state, edgeReplication }: UpdateSpaceRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
         const ctx = Context.default();
@@ -463,7 +460,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
       try {
         // Handlers are served, not called directly; bridge to a client in-process for this write.
         const feedService = this._echoHost.feedService;
-        await Effect.runPromise(
+        await EffectEx.runPromise(
           Effect.gen(function* () {
             const feedClient = yield* makeInProcessClient(FeedService.Rpcs, feedService);
             yield* feedClient.FeedService.insertIntoFeed({

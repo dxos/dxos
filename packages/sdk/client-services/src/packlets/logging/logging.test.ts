@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 
 import { LoggingServiceImpl } from './logging-service';
@@ -26,7 +27,7 @@ describe('LoggingService', () => {
 
   test('queryLogs streams logs', async () => {
     const message = 'Hello World!';
-    const entry = await Effect.runPromise(
+    const entry = await EffectEx.runPromise(
       Effect.gen(function* () {
         const fiber = yield* Effect.fork(Stream.runHead(loggingService['LoggingService.queryLogs']({})));
         // Yield so the forked subscription registers its log handler before emitting.
@@ -41,7 +42,7 @@ describe('LoggingService', () => {
 
   test('queryLogs filters logs', async () => {
     const message = 'This is a failure';
-    const entry = await Effect.runPromise(
+    const entry = await EffectEx.runPromise(
       Effect.gen(function* () {
         const fiber = yield* Effect.fork(
           Stream.runHead(loggingService['LoggingService.queryLogs']({ filters: [{ level: LogLevel.ERROR }] })),

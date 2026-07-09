@@ -7,6 +7,7 @@ import * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as RpcSchema from '@effect/rpc/RpcSchema';
 import * as RpcServer from '@effect/rpc/RpcServer';
+import * as RpcTest from '@effect/rpc/RpcTest';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -21,7 +22,10 @@ import { runServiceCall } from '@dxos/protocols';
 // Type-only imports so declaration emit can name the effect-rpc message types referenced by the
 // exported {@link ClientServicesHandlers}/{@link ClientServicesRpcs} inferred types (TS2883).
 import type { IndexConfig as _IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
-import type { QueryRequest as _QueryRequest, QueryResponse as _QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
+import type {
+  QueryRequest as _QueryRequest,
+  QueryResponse as _QueryResponse,
+} from '@dxos/protocols/proto/dxos/echo/query';
 import type {
   BatchedDocumentUpdates as _BatchedDocumentUpdates,
   CreateDocumentRequest as _CreateDocumentRequest,
@@ -206,7 +210,8 @@ export const makeClientServicesHandlers = ({
           Stream.unwrap,
         );
     } else {
-      handlers[tag] = (payload: unknown) => gate.pipe(Effect.flatMap(() => invoke(payload) as Effect.Effect<unknown, unknown>));
+      handlers[tag] = (payload: unknown) =>
+        gate.pipe(Effect.flatMap(() => invoke(payload) as Effect.Effect<unknown, unknown>));
     }
   }
 
@@ -227,8 +232,7 @@ export const makeClientServicesHandlers = ({
  * re-expanding the full merged {@link RpcClient.RpcClient} mapped type over all services.
  */
 export interface ClientServicesRpc
-  extends
-    SystemService.Client,
+  extends SystemService.Client,
     NetworkService.Client,
     LoggingService.Client,
     IdentityService.Client,
@@ -257,6 +261,34 @@ export const makeClientServicesRpc = (port: RpcPort): Effect.Effect<ClientServic
     // narrowed to the cheaper {@link ClientServicesRpc} to keep the type-checker fast.
     return client as unknown as ClientServicesRpc;
   });
+
+/**
+ * Builds an in-process {@link ClientServicesRpc} backed directly by host {@link ClientServicesHandlers}
+ * (no wire hop or serialization). Used by host-internal consumers (diagnostics, devtools) that need
+ * the client surface without a transport.
+ */
+export const makeInProcessClientServicesRpc = (
+  services: () => Partial<ClientServicesHandlers>,
+): Effect.Effect<ClientServicesRpc, never, Scope.Scope> =>
+  RpcTest.makeClient(ClientServicesRpcs).pipe(
+    Effect.provide(makeClientServicesHandlers({ services })),
+  ) as unknown as Effect.Effect<ClientServicesRpc, never, Scope.Scope>;
+
+/**
+ * Derives host {@link ClientServicesHandlers} from an effect-native {@link ClientServicesRpc}, so a
+ * client-side rpc surface can be re-served (e.g. the devtools bridge). Each handler delegates to the
+ * corresponding client method.
+ */
+export const makeHandlersFromRpc = (rpc: ClientServicesRpc): Partial<ClientServicesHandlers> => {
+  const rpcRecord = rpc as unknown as Record<string, Record<string, (...args: any[]) => unknown>>;
+  const handlers: Partial<Record<keyof ClientServices, Record<string, unknown>>> = {};
+  for (const [tag] of ClientServicesRpcs.requests) {
+    const [serviceKey, methodName] = parseTag(tag);
+    const service = (handlers[serviceKey] ??= {});
+    service[tag] = (payload: unknown) => rpcRecord[serviceKey][methodName](payload);
+  }
+  return handlers as Partial<ClientServicesHandlers>;
+};
 
 /**
  * Derives the Promise/{@link PbStream} shaped {@link ClientServices} from an effect-native

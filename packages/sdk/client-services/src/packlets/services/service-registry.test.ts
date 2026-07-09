@@ -2,16 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { type ClientServices } from '@dxos/client-protocol';
+import { ServiceDescriptor } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { log } from '@dxos/log';
+import { makeInProcessClient } from '@dxos/protocols';
+import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { schema } from '@dxos/protocols/proto';
-import { type SystemService, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { createLinkedPorts, createProtoRpcPeer, createServiceBundle } from '@dxos/rpc';
+import { SystemService } from '@dxos/protocols/rpc';
+import { type ServiceBundle, createServiceBundle } from '@dxos/rpc';
 
 import { SystemServiceImpl } from '../system';
 import { createServiceContext } from '../testing';
@@ -20,11 +22,17 @@ import { ServiceRegistry } from './service-registry';
 // TODO(burdon): Create TestService (that doesn't require peers).
 
 type TestServices = {
-  SystemService: SystemService;
+  SystemService: SystemService.Handlers;
 };
 
-const serviceBundle = createServiceBundle<TestServices>({
-  SystemService: schema.getService('dxos.client.services.SystemService'),
+// The registry now holds effect-rpc handlers, but its legacy `descriptors` surface is still keyed by
+// the proto service descriptor. Re-tag the proto descriptor to the Handlers shape it accompanies
+// (the descriptor is unused by this test's assertions), mirroring `ClientServicesHost`.
+const serviceBundle: ServiceBundle<TestServices> = createServiceBundle<TestServices>({
+  SystemService: new ServiceDescriptor<SystemService.Handlers>(
+    schema.getService('dxos.client.services.SystemService').serviceProto,
+    schema,
+  ),
 });
 
 describe('service registry', () => {
@@ -44,35 +52,12 @@ describe('service registry', () => {
       }),
     });
 
-    const [proxyPort, serverPort] = createLinkedPorts();
-
-    const proxy = createProtoRpcPeer({
-      requested: serviceRegistry.descriptors,
-      exposed: {},
-      handlers: {},
-      port: proxyPort,
-    });
-
-    const server = createProtoRpcPeer({
-      exposed: serviceRegistry.descriptors,
-      handlers: serviceRegistry.services as ClientServices,
-      port: serverPort,
-    });
-
-    log('opening...');
-    await Promise.all([proxy.open(), server.open()]);
-    log('open');
-
-    {
-      const config = await proxy.rpc.SystemService.getConfig();
+    // The registry now holds effect-rpc handlers; bridge the registered handler to an in-process
+    // client so the call exercises the same effect surface consumers use.
+    await Effect.gen(function* () {
+      const client = yield* makeInProcessClient(SystemService.Rpcs, serviceRegistry.services.SystemService!);
+      const config = yield* client.SystemService.getConfig(undefined);
       expect(config.runtime?.client?.remoteSource).to.equal(remoteSource);
-    }
-
-    // TODO(burdon): Error handling (create tests).
-    //  Uncaught Error: Request was terminated because the RPC endpoint is closed.
-    // log('closing...');
-    // await Promise.all([proxy.close(), server.close()]);
-    // await serviceContext.close();
-    // log('closed');
+    }).pipe(Effect.scoped, Effect.runPromise);
   });
 });

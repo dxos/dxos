@@ -18,7 +18,6 @@ import {
 } from '@dxos/client-protocol';
 import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { raise } from '@dxos/debug';
 import { Blob, type Hypergraph, Type } from '@dxos/echo';
 import { EchoClient } from '@dxos/echo-client';
 import { type EdgeHttpClient } from '@dxos/edge-client';
