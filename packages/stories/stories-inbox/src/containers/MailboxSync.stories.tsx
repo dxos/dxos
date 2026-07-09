@@ -233,7 +233,14 @@ const MailboxSyncStory = ({ enrich = false }: { enrich?: boolean }) => {
   const [facts, setFacts] = useState<RDF.Fact[]>([]);
   const [enriching, setEnriching] = useState(false);
   const mountedRef = useRef(true);
-  useEffect(() => () => void (mountedRef.current = false), []);
+  useEffect(() => {
+    // Reset on (re)mount: StrictMode mounts→unmounts→remounts, and a ref only initialized to `true`
+    // would stay `false` after the first unmount, silently dropping every later `setFacts`.
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // Reads the whole store; the in-memory FactStore is not ECHO-reactive, so refreshes are explicit
   // (on space change, on a progress tick, and when a run settles).
@@ -254,7 +261,6 @@ const MailboxSyncStory = ({ enrich = false }: { enrich?: boolean }) => {
           Effect.orElseSucceed((): RDF.Fact[] => []),
         ),
     );
-    log.info('refreshFacts: result', { spaceId: space.id, count: result.length });
     if (mountedRef.current) {
       setFacts(result);
     }

@@ -8,7 +8,6 @@ import * as Layer from 'effect/Layer';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayerSpec } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { FactStore, type FactStoreApi } from '@dxos/pipeline-rdf';
 
 import { FeedCursors, type FeedCursorsApi, InboxCapabilities } from '#types';
@@ -40,13 +39,11 @@ export const makeFactStoreRegistry = (): FactStoreRegistry => {
 
   const forSpace = (spaceId: string): FactStoreApi => {
     let store = stores.get(spaceId);
-    const hit = store !== undefined;
     if (!store) {
       store = FactStore.makeMemory();
       stores.set(spaceId, store);
     }
 
-    log.info('factStore: forSpace', { spaceId, hit, stores: stores.size });
     return store;
   };
 
