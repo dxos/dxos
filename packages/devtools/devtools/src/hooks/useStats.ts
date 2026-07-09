@@ -9,12 +9,9 @@ import { type NetworkStatus } from '@dxos/client/mesh';
 import { type EchoDataStats, type EchoStatsDiagnostic } from '@dxos/echo-host';
 import { log } from '@dxos/log';
 import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
-import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { type Diagnostics, type DiagnosticsRequest, TRACE_PROCESSOR } from '@dxos/tracing';
-import { DiagnosticsChannel } from '@dxos/tracing';
-import { getDeep } from '@dxos/util';
+import { DiagnosticsChannel, type DiagnosticsRequest } from '@dxos/tracing';
 
 // TODO(burdon): Factor out.
 
@@ -58,7 +55,6 @@ export type DatabaseInfo = {
  */
 export type Stats = {
   performanceEntries?: PerformanceEntry[];
-  diagnostics?: Diagnostics;
   database?: DatabaseInfo;
   queries?: QueryInfo[];
   memory?: MemoryInfo;
@@ -100,15 +96,9 @@ export const useStats = (): [Stats, () => void] => {
   useAsyncEffect(async () => {
     const begin = performance.now();
 
-    // TODO(burdon): Reconcile with diagnostics.
-    const objects = TRACE_PROCESSOR.findResourcesByClassName('RepoProxy')
-      .flatMap((r) => Object.values(r.instance.deref()?.handles ?? {}))
-      .map((handle: any) => handle.doc())
-      .filter(Boolean);
-
     const database: DatabaseInfo = {
       spaces: client.spaces.get().length,
-      objects: objects.length,
+      objects: 0,
       documents: 0,
       documentsToReconcile: 0,
     };
@@ -127,7 +117,6 @@ export const useStats = (): [Stats, () => void] => {
     setStats((stats) =>
       Object.assign({}, stats, {
         performanceEntries,
-        diagnostics: TRACE_PROCESSOR.getDiagnostics(),
         memory,
         database,
       }),
@@ -137,18 +126,6 @@ export const useStats = (): [Stats, () => void] => {
   // Slower metrics.
   useAsyncEffect(async () => {
     const begin = performance.now();
-
-    // client.experimental.graph;
-    // TODO(burdon): This is very expensive (do separately).
-    const diagnostics = await client.diagnostics();
-
-    // const s = TRACE_PROCESSOR.findResourcesByClassName('QueryState');
-    const resources = getDeep<Record<string, Resource>>(diagnostics, ['services', 'diagnostics', 'trace', 'resources']);
-    const queries: QueryInfo[] = Object.values(resources ?? {})
-      .filter((res) => res.className === 'QueryState')
-      .map((res) => {
-        return res.info as QueryInfo;
-      });
 
     const syncStates = await Promise.all(
       client.spaces
@@ -163,7 +140,6 @@ export const useStats = (): [Stats, () => void] => {
     log('collected stats', { elapsed: performance.now() - begin });
     setStats((stats) =>
       Object.assign({}, stats, {
-        queries,
         database: Object.assign({}, stats.database, { documentsToReconcile }),
       }),
     );

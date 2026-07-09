@@ -154,7 +154,6 @@ const CLOSE_TIMEOUT = 2_000;
  * level and never reach the Subduction sedimentree layer. Bundle sync remains available
  * for replicators that opt in.
  */
-@trace.resource({ lifecycle: true })
 export class AutomergeHost extends Resource {
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
   private readonly _echoNetworkAdapter: EchoNetworkAdapter;
@@ -177,7 +176,6 @@ export class AutomergeHost extends Resource {
     ({ collectionId, peerId }) => `${collectionId}|${peerId}`,
   );
 
-  @trace.info()
   private _peerId!: PeerId;
 
   private readonly _peerIdProvider?: PeerIdProvider;

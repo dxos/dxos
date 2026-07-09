@@ -42,7 +42,6 @@ export type EdgeInvitationConfig = {
   retryJitter?: number;
 };
 
-@trace.resource()
 export class EdgeInvitationHandler implements FlowLockHolder {
   private _flowLock: MutexGuard | undefined;
 

@@ -29,7 +29,6 @@ export type CollectionSynchronizerProps = {
 /**
  * Implements collection sync protocol.
  */
-@trace.resource({ lifecycle: true })
 export class CollectionSynchronizer extends Resource {
   private readonly _sendCollectionState: CollectionSynchronizerProps['sendCollectionState'];
   private readonly _queryCollectionState: CollectionSynchronizerProps['queryCollectionState'];
