@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
@@ -101,7 +101,7 @@ describe('mapMessage', () => {
 });
 
 describe('decodeBody attachments', () => {
-  it('collects a top-level attachment part', ({ expect }) => {
+  test('collects a top-level attachment part', ({ expect }) => {
     const message = makeGmailMessage({
       payload: {
         headers: [{ name: 'From', value: 'Alice <alice@unknown.com>' }],
@@ -121,7 +121,7 @@ describe('decodeBody attachments', () => {
     ]);
   });
 
-  it('recurses into nested multipart parts to find attachments', ({ expect }) => {
+  test('recurses into nested multipart parts to find attachments', ({ expect }) => {
     const message = makeGmailMessage({
       payload: {
         headers: [{ name: 'From', value: 'Alice <alice@unknown.com>' }],
@@ -147,7 +147,7 @@ describe('decodeBody attachments', () => {
     ]);
   });
 
-  it('extracts and strips the Content-ID header for inline attachments', ({ expect }) => {
+  test('extracts and strips the Content-ID header for inline attachments', ({ expect }) => {
     const message = makeGmailMessage({
       payload: {
         headers: [{ name: 'From', value: 'Alice <alice@unknown.com>' }],
@@ -174,7 +174,7 @@ describe('decodeBody attachments', () => {
     ]);
   });
 
-  it('ignores parts with no filename or attachmentId', ({ expect }) => {
+  test('ignores parts with no filename or attachmentId', ({ expect }) => {
     const message = makeGmailMessage({
       payload: {
         headers: [{ name: 'From', value: 'Alice <alice@unknown.com>' }],
@@ -187,7 +187,7 @@ describe('decodeBody attachments', () => {
 });
 
 describe('decodeBody nested multipart bodies', () => {
-  it('finds text/html nested under a multipart/related wrapper (inline image), not just top-level parts', ({
+  test('finds text/html nested under a multipart/related wrapper (inline image), not just top-level parts', ({
     expect,
   }) => {
     // A reply with an inline signature image: Gmail wraps `multipart/alternative` (plain + html) and
@@ -230,7 +230,7 @@ describe('decodeBody nested multipart bodies', () => {
     ]);
   });
 
-  it('drops (and logs) a message whose body cannot be found anywhere in the part tree', ({ expect }) => {
+  test('drops (and logs) a message whose body cannot be found anywhere in the part tree', ({ expect }) => {
     const message = makeGmailMessage({
       payload: {
         headers: [{ name: 'From', value: 'Alice <alice@unknown.com>' }],
@@ -248,7 +248,7 @@ describe('decodeBody nested multipart bodies', () => {
 });
 
 describe('GoogleMail.Message schema', () => {
-  it('decodes a real response missing labelIds (not every message has one)', ({ expect }) => {
+  test('decodes a real response missing labelIds (not every message has one)', ({ expect }) => {
     const raw: unknown = {
       id: 'msg-001',
       threadId: 'thread-001',

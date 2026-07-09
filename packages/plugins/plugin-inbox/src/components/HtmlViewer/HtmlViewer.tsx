@@ -201,6 +201,8 @@ export const HtmlViewer = ({
   // Resolved cid: → blob: URL cache, persisted across content rebuilds; revoked on unmount below.
   const cidUrlCacheRef = useRef<Map<string, string>>(new Map());
 
+  // Cleanup-only (mount phase is a no-op): on unmount, revoke any `blob:` object URLs minted for
+  // the fallback path — `data:`/edge URLs in the cache need no cleanup.
   useEffect(
     () => () => {
       for (const url of cidUrlCacheRef.current.values()) {
