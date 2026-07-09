@@ -74,16 +74,13 @@ export const downloadBlob = Effect.fn('downloadBlob')(function* (
   const { token } = yield* JmapCredentials;
   const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
 
-  // Mapped to `JmapApiError` inside the per-attempt pipeline (before `Effect.retry`) so `shouldRetry`
-  // can actually distinguish a permanent 4xx from a transient failure — mirrors `jmapRequest`.
-  const executed = HttpClientRequest.get(url).pipe(
+  // Mapped to `JmapApiError` before `Effect.timeout`/`Effect.retry` so `shouldRetry` can actually
+  // distinguish a permanent 4xx from a transient failure — mirrors `jmapRequest`.
+  const buffer = yield* HttpClientRequest.get(url).pipe(
     httpClient.execute,
     Effect.flatMap((response) => response.arrayBuffer),
     Effect.mapError(asJmapDownloadError),
     Effect.timeout(REQUEST_TIMEOUT),
-  );
-
-  const buffer = yield* executed.pipe(
     Effect.retry({ schedule: REQUEST_RETRY, while: shouldRetry }),
     Effect.scoped,
     Effect.mapError(asJmapDownloadError),
