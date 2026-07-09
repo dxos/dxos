@@ -123,6 +123,11 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
     return clientServiceBundle;
   }
 
+  get rpc() {
+    invariant(this.#services, 'services not initialized');
+    return this.#services.rpc;
+  }
+
   get services(): Partial<ClientServices> {
     invariant(this.#services, 'services not initialized');
     return this.#services.services;

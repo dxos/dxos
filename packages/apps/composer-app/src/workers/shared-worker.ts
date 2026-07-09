@@ -17,7 +17,7 @@ let logStoreInstalled = false;
 
 onconnect = async (event) => {
   const { Effect } = await import('effect');
-  const { onconnect, getWorkerServiceHost, getWorkerConfig } = await import('@dxos/client/worker');
+  const { onconnect, getWorkerClientServices, getWorkerConfig } = await import('@dxos/client/worker');
   const { log } = await import('@dxos/log');
   const { IdbLogStore } = await import('@dxos/log-store-idb');
   const { ObservabilityProvider } = await import('@dxos/observability');
@@ -36,9 +36,9 @@ onconnect = async (event) => {
   void getWorkerConfig()
     .then(async (config) => {
       const observability = await initializeObservability(config, false);
-      const host = await getWorkerServiceHost();
+      const services = await getWorkerClientServices();
       await observability
-        .addDataProvider(ObservabilityProvider.Client.identityProvider(host.services))
+        .addDataProvider(ObservabilityProvider.Client.identityProvider(services))
         .pipe(Effect.runPromise);
     })
     .catch((err) => log.catch(err));
