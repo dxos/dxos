@@ -38,7 +38,9 @@ const SEED_EMAIL_INPUT = {
       `,
     },
   ],
-  properties: { subject: 'Your AI Assistant access is live. Meet Noz.' },
+  properties: {
+    subject: 'Your AI Assistant access is live. Meet Noz.',
+  },
   created: '2026-06-26T12:00:00.000Z',
 };
 
@@ -56,7 +58,6 @@ describe('CRM Mailbox', () => {
         - org.dxos.skill.markdown
 
         A new email message is provided in the <input> block below.
-
         - Research the sender and any contacts mentioned in the message.
         - Create and link a summary document for the sender's Organization if one does not already exist.
         - Create or update CRM Profiles (Person and/or Organization objects) for those contacts using the CRM tools.
@@ -72,6 +73,8 @@ describe('CRM Mailbox', () => {
       plugins: [CrmPlugin(), MarkdownPlugin()],
       clientTypes: [ProfileOf.ProfileOf, Markdown.Document],
     }),
-    { timeout: agentTestTimeout() },
+    {
+      timeout: agentTestTimeout(),
+    },
   );
 });

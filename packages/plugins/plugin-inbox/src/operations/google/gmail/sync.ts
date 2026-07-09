@@ -201,7 +201,16 @@ export const runGmailSync = ({
       EmailStage.extractContacts(),
       Stream.grouped(STREAMING_CONFIG.pageSize),
       Pipeline.run({ sink: SyncBinding.commit }),
-      Effect.provide(SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: GMAIL_SOURCE, cursorKey, stats })),
+      Effect.provide(
+        SyncBinding.layer({
+          binding,
+          feed,
+          tagIndex,
+          foreignKeySource: GMAIL_SOURCE,
+          cursorKey,
+          stats,
+        }),
+      ),
     );
 
     // Flush indexes once, at the end of the run, so cross-run dedup / contact resolution observe this

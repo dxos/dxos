@@ -35,7 +35,7 @@ export class SyncBinding extends Type.makeRelation<SyncBinding>(DXN.make('org.dx
 })(
   Schema.Struct({
     id: Obj.ID,
-    /** Remote foreign id (board id, calendar id, channel id, …). */
+    /** Remote foreign id (board id, calendar id, channel id, etc.). */
     remoteId: Schema.String.pipe(Schema.optional),
     /** Cached display label for the remote target. */
     name: Schema.String.pipe(Schema.optional),
@@ -58,16 +58,17 @@ export class SyncBinding extends Type.makeRelation<SyncBinding>(DXN.make('org.dx
 
 export const instanceOf = (value: unknown): value is SyncBinding => Relation.instanceOf(SyncBinding, value);
 
+export type MakeProps = Omit<Relation.MakeProps<typeof SyncBinding>, 'cursor'> & {
+  cursor?: Obj.MakeProps<typeof Cursor.Cursor>;
+};
+
 /**
  * Creates a `SyncBinding` relation linking a {@link Connection} to its synced local root, with a
  * fresh {@link Cursor} materialized as a child (cascade-deleted with the binding). The cursor is
  * constructed here so callers never build one; pass `cursor` to initialize its fields (`value`,
  * `lastRunAt`, `lastError`) — e.g. to seed sync state.
  */
-export const make = ({
-  cursor: cursorProps,
-  ...props
-}: Omit<Relation.MakeProps<typeof SyncBinding>, 'cursor'> & { cursor?: Obj.MakeProps<typeof Cursor.Cursor> }) => {
+export const make = ({ cursor: cursorProps, ...props }: MakeProps) => {
   const cursor = Cursor.make(cursorProps);
   const binding = Relation.make(SyncBinding, { ...props, cursor: Ref.make(cursor) });
   // The cursor is owned by the binding: parenting cascade-deletes it with the binding, and persists it
@@ -115,7 +116,7 @@ export type Stats = { newMessages: number };
  * constructs those objects and reads them back after the run.
  */
 export type State = {
-  /** The binding being synced. */
+  /** The binding being synced; only its cursor is read by this machinery. */
   readonly binding: SyncBinding;
   /** The binding's cursor object, advanced as pages commit (resolved from `binding.cursor`). */
   readonly cursor: Cursor.Cursor;
@@ -289,6 +290,7 @@ export const commit = (page: Chunk.Chunk<CommitUnit>): Effect.Effect<void, never
     if (units.length === 0) {
       return;
     }
+
     const state = yield* Service;
     const feed = state.feed;
     invariant(feed, 'SyncBinding.commit requires a feed target');

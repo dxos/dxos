@@ -9,6 +9,7 @@ export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('
 export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const Connector = Capability.lazy('Connector', () => import('./connector'));
+export const FactStore = Capability.lazy('FactStore', () => import('./fact-store'));
 export const NavigationResolver = Capability.lazy('NavigationResolver', () => import('./navigation-resolver'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',

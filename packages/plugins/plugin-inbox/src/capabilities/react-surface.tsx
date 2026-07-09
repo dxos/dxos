@@ -21,6 +21,7 @@ import {
   EventArticle,
   EventCard,
   MailboxArticle,
+  MailboxFactsCompanion,
   MailboxProperties,
   MessageArticle,
   MessageCard,
@@ -30,7 +31,7 @@ import {
 } from '#containers';
 import { Calendar, DraftMessage, Mailbox } from '#types';
 
-import { MAILBOX_DRAFTS_NODE_DATA, POPOVER_SAVE_FILTER } from '../constants';
+import { MAILBOX_DRAFTS_NODE_DATA, MAILBOX_FACTS_NODE_DATA, POPOVER_SAVE_FILTER } from '../constants';
 import { getDraftsId } from '../paths';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
@@ -66,6 +67,21 @@ export default Capability.makeModule(() =>
             <MailboxArticle subject={data.subject} filter={data.properties?.filter} attendableId={data.attendableId} />
           );
         },
+      }),
+      Surface.create({
+        id: 'mailboxFacts',
+        // Companion off a Mailbox article: subject is the facts sentinel, and `companionTo` carries the
+        // Mailbox. The sentinel-subject clause keeps this from matching the message companion (whose
+        // companionTo is also a Mailbox) or the primary Mailbox surface.
+        filter: AppSurface.allOf(
+          AppSurface.subject(
+            AppSurface.Article,
+            (value): value is typeof MAILBOX_FACTS_NODE_DATA => value === MAILBOX_FACTS_NODE_DATA,
+          ),
+          AppSurface.companion(AppSurface.Article, Mailbox.Mailbox),
+        ),
+        component: ({ data }) =>
+          Mailbox.instanceOf(data.companionTo) ? <MailboxFactsCompanion mailbox={data.companionTo} /> : null,
       }),
       Surface.create({
         id: 'draftMessage',

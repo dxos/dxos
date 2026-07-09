@@ -31,6 +31,7 @@ import { type Space, useDatabase, useQuery, useSpaces } from '@dxos/react-client
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Message as MessageType, Person } from '@dxos/types';
+import { trim } from '@dxos/util';
 
 import FLIGHT_EMAIL from '../testing/flight.md?raw';
 
@@ -97,14 +98,15 @@ const ImportantExtractorPlugin = Plugin.define(
 );
 
 /**
- * Fake summary text returned by the mocked `LanguageModel.generateText` call below. The
- * production `SummarizeMessageExtractor` makes the assistant produce a short paragraph; the
- * exact wording doesn't matter for the story — only that summarization completes and the
+ * Fake summary text returned by the mocked `LanguageModel.generateText` call below.
+ * The production `SummarizeMessageExtractor` makes the assistant produce a short paragraph;
+ * the exact wording doesn't matter for the story — only that summarization completes and the
  * resulting `Markdown.Document` lands in the space.
  */
-const MOCK_SUMMARY =
-  'Flying Blue confirmed a multi-city itinerary (JFK → CDG → LIS) for one passenger. ' +
-  'Payment was settled in miles plus taxes; ticket changes incur a fee.';
+const MOCK_SUMMARY = trim`
+  Flying Blue confirmed a multi-city itinerary (JFK → CDG → LIS) for one passenger.
+  Payment was settled in miles plus taxes; ticket changes incur a fee.
+`;
 
 /**
  * Canned structured output returned by the mocked `LanguageModel.generateObject` call. Drives
@@ -125,8 +127,8 @@ const MOCK_FLIGHT_PAYLOAD = {
 
 /**
  * Story-only `AiService` provider contributed on `SetupProcessManager`, mirroring
- * `AssistantPlugin`'s real wiring at `plugin-assistant/src/capabilities/ai-service.ts`. The
- * service's `model(...)` returns a `LanguageModel` whose `generateText` resolves with a
+ * `AssistantPlugin`'s real wiring at `plugin-assistant/src/capabilities/ai-service.ts`.
+ * The service's `model(...)` returns a `LanguageModel` whose `generateText` resolves with a
  * static text part instead of hitting Anthropic; that lets `SummarizeMessageExtractor` run
  * the full Operation.invoke → handler → `Markdown.make({...})` chain inside the story
  * runtime, which has no network access and no real API key.
@@ -188,10 +190,10 @@ const seedMessage = (space: Space) => {
 };
 
 const DefaultStory = () => {
-  const spaces = useSpaces();
-  const db = useDatabase(spaces[0]?.id);
-  const [message] = useQuery(db, Filter.type(MessageType.Message));
+  const [space] = useSpaces();
+  const db = useDatabase(space?.id);
   const [mailbox] = useQuery(db, Filter.type(Mailbox.Mailbox));
+  const [message] = useQuery(db, Filter.type(MessageType.Message));
 
   if (!db || !message) {
     return <Loading data={{ db: !!db, message: !!message }} />;
@@ -201,7 +203,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'stories/stories-inbox/MessageArticle',
+  title: 'stories/stories-inbox/ExtractTrip',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
