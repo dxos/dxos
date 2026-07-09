@@ -12,7 +12,6 @@ import { Event, synchronized } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesProvider,
-  ClientServicesProviderResource,
   type ClientServicesRpc,
   clientServiceBundle,
   makeRpcFromServices,
@@ -29,7 +28,6 @@ import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platfor
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { trace } from '@dxos/tracing';
 import { isBun } from '@dxos/util';
 
 const waitForOpfsWorkerClosed = (worker: Worker, timeoutMs = 30_000): Promise<void> =>
@@ -134,7 +132,6 @@ const setupNetworking = async (
 /**
  * Starts a local instance of the service host.
  */
-@trace.resource({ annotation: ClientServicesProviderResource })
 export class LocalClientServices implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
   // Derives the effect surface from the in-process host services (no wire hop).
@@ -153,7 +150,6 @@ export class LocalClientServices implements ClientServicesProvider {
     runtime: 'local-client-services',
   };
 
-  @trace.info()
   private _isOpen = false;
 
   constructor(params: LocalClientServicesParams) {

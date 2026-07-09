@@ -79,7 +79,6 @@ export type ClientOptions = {
 /**
  * The Client class encapsulates the core client-side API of DXOS.
  */
-@trace.resource()
 export class Client {
   /**
    * Emitted after the client is reset and the services have finished restarting.
@@ -100,22 +99,17 @@ export class Client {
   /**
    * Unique id of the Client, local to the current peer.
    */
-  @trace.info()
   private readonly _instanceId = PublicKey.random().toHex();
 
   /**
    * The version of this client API.
    */
-  @trace.info()
   readonly version = DXOS_VERSION;
 
-  @trace.info()
   private _services?: ClientServicesProvider;
 
-  @trace.info()
   private _initialized = false;
 
-  @trace.info()
   private _resetting = false;
 
   private _runtime?: ClientRuntime;
@@ -173,7 +167,6 @@ export class Client {
     return `Client(${this._instanceId})`;
   }
 
-  @trace.info({ depth: null })
   toJSON() {
     return {
       initialized: this.initialized,

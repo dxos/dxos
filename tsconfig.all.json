@@ -775,6 +775,9 @@
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-rdf/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-search/tsconfig.json"
     },
     {

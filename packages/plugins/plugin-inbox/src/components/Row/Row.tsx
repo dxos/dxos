@@ -146,12 +146,15 @@ const RowRef = ({ object }: RowRefProps) => {
   const icon = Obj.getIcon(object)?.icon ?? 'ph--cube--regular';
   const echoUri = EID.tryParse(Obj.getURI(object).toString());
 
+  // TODO(burdon): Nav?
   return (
     <Card.Row>
       <Card.Block>
         <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
       </Card.Block>
-      <h3 className='truncate text-primary-text'>{label}</h3>
+      <div className='flex items-center'>
+        <span className='truncate text-primary-text'>{label}</span>
+      </div>
     </Card.Row>
   );
 };

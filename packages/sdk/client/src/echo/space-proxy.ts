@@ -94,7 +94,6 @@ export const getSpace = (object?: any): Space | undefined => {
   return undefined;
 };
 
-@trace.resource()
 export class SpaceProxy implements Space, CustomInspectable {
   readonly [SPACE_TAG] = true as const;
 
@@ -128,13 +127,11 @@ export class SpaceProxy implements Space, CustomInspectable {
    */
   public readonly _initializationComplete = new Trigger();
 
-  @trace.info()
   private _initializing = false;
 
   /**
    * @internal
    */
-  @trace.info()
   _initialized = false;
 
   private readonly _db!: DatabaseImpl;
@@ -214,12 +211,10 @@ export class SpaceProxy implements Space, CustomInspectable {
     };
   }
 
-  @trace.info({ spanAttribute: true })
   get id(): SpaceId {
     return this._data.id as SpaceId;
   }
 
-  @trace.info({ spanAttribute: true })
   get key() {
     return this._data.spaceKey;
   }
@@ -236,12 +231,10 @@ export class SpaceProxy implements Space, CustomInspectable {
     return this._db;
   }
 
-  @trace.info()
   get isOpen() {
     return this._data.state === SpaceState.SPACE_READY && this._initialized;
   }
 
-  @trace.info({ depth: 2 })
   get properties(): Obj.OfShape<SpaceProperties> {
     this._throwIfNotInitialized();
     invariant(this._properties, 'Properties not available');
@@ -300,7 +293,6 @@ export class SpaceProxy implements Space, CustomInspectable {
    * The database is ready to be used in `SpaceState.SPACE_READY` state.
    * Presence is available in `SpaceState.SPACE_CONTROL_ONLY` state.
    */
-  @trace.info({ enum: SpaceState })
   private get _currentState(): SpaceState {
     if (this._data.state === SpaceState.SPACE_READY && !this._initialized) {
       return SpaceState.SPACE_INITIALIZING;

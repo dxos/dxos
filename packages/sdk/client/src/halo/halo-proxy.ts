@@ -31,7 +31,6 @@ import { trace } from '@dxos/tracing';
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
 
-@trace.resource()
 export class HaloProxy implements Halo {
   /** Subscriptions for overall lifecycle (reconnected event listener). */
   private readonly _subscriptions = new SubscriptionList();
@@ -60,7 +59,6 @@ export class HaloProxy implements Halo {
     return inspectObject(this);
   }
 
-  @trace.info({ depth: null })
   toJSON(): { identityKey: string | undefined; deviceKey: string | undefined } {
     return {
       identityKey: this._identity.get()?.identityKey.truncate(),
@@ -97,7 +95,6 @@ export class HaloProxy implements Halo {
   }
 
   // TODO(burdon): Standardize isOpen, etc.
-  @trace.info()
   get opened() {
     return this._invitationProxy !== undefined;
   }

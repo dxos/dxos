@@ -16,6 +16,9 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -28,6 +31,9 @@
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/compute/ai"
     },
     {
@@ -37,10 +43,19 @@
       "path": "../../core/compute/extractor"
     },
     {
+      "path": "../../core/compute/pipeline-rdf"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../plugins/plugin-client"
+    },
+    {
+      "path": "../../plugins/plugin-connector"
     },
     {
       "path": "../../plugins/plugin-inbox"
@@ -50,6 +65,9 @@
     },
     {
       "path": "../../plugins/plugin-preview"
+    },
+    {
+      "path": "../../plugins/plugin-space"
     },
     {
       "path": "../../plugins/plugin-testing"
@@ -74,6 +92,12 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-rdf"
     }
   ]
 }

@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './client';
 export * from './config';
 export type * from './echo';
 export type * from './halo';

@@ -10,6 +10,7 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { FactStore } from '@dxos/pipeline-rdf';
 import {
   Connection,
   GetSyncTargetsInput,
@@ -25,6 +26,7 @@ import { Actor, Event, Message, type Person } from '@dxos/types';
 
 import { meta } from '#meta';
 
+import { FeedCursors } from './FeedCursors';
 import * as Mailbox from './Mailbox';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
@@ -619,5 +621,41 @@ export const ExtractMailbox = Operation.make({
     failed: Schema.Number,
     created: Schema.Number,
     updated: Schema.Number,
+  }),
+});
+
+/** Default page size for {@link EnrichMailbox} fact-store commits. */
+export const DEFAULT_ENRICH_MAILBOX_PAGE_SIZE = 10;
+
+export const EnrichMailbox = Operation.make({
+  meta: {
+    key: makeKey('enrichMailbox'),
+    name: 'Enrich Mailbox',
+    description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
+    icon: 'ph--brain--regular',
+  },
+  services: [AiService.AiService, Database.Service, FactStore, FeedCursors],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox whose feed messages are enriched.',
+    }),
+    pageSize: Schema.optional(
+      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+        description: 'Number of messages processed per fact-store commit.',
+      }),
+    ),
+    model: Schema.optional(
+      Schema.String.annotations({ description: 'Extraction model DXN; defaults to the edge Claude model.' }),
+    ),
+    provider: Schema.optional(
+      Schema.String.annotations({ description: 'AI provider id (e.g. ollama) for local extraction.' }),
+    ),
+    strict: Schema.optional(
+      Schema.Boolean.annotations({ description: 'Strict structured output; set false for weak local models.' }),
+    ),
+  }),
+  output: Schema.Struct({
+    processed: Schema.Number,
+    facts: Schema.Number,
   }),
 });

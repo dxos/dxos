@@ -71,7 +71,6 @@ type QueryInvalidationStats = {
   averageQueriesActive: number;
 };
 
-@trace.resource()
 export class QueryServiceImpl extends Resource implements QueryService.Handlers {
   // TODO(dmaretskyi): We need to implement query deduping. Idle composer has 80 queries with only 10 being unique.
   private readonly _queries = new Set<ActiveQuery>();

@@ -11,7 +11,6 @@ import { Event } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesProvider,
-  ClientServicesProviderResource,
   type ClientServicesRpc,
   clientServiceBundle,
   makeClientServicesRpc,
@@ -22,13 +21,11 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
 import { type RpcPort } from '@dxos/rpc';
-import { trace } from '@dxos/tracing';
 
 /**
  * Implements services that are not local to the app.
  * For example, the services can be located in Wallet Extension.
  */
-@trace.resource({ annotation: ClientServicesProviderResource })
 export class ClientServicesProxy implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
   private _scope?: Scope.CloseableScope;

@@ -248,19 +248,22 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
             <Icon icon='ph--envelope-open--regular' />
           )}
         </Card.Block>
-        <div className='flex flex-col gap-1 overflow-hidden'>
+        <div className='flex items-center'>
           <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
-          {message.created && (
-            <div className='whitespace-nowrap text-sm text-description'>
-              {formatDateTime(new Date(message.created), new Date())}
-            </div>
-          )}
         </div>
       </Card.Row>
 
       {/* Sender row. */}
       {/* TODO(burdon): List other To/CC/BCC (Message schema only models `sender` today). */}
       <Row.Person actor={message.sender} role='from' db={db} onContactCreate={onContactCreate} />
+
+      <Card.Row>
+        {message.created && (
+          <div className='whitespace-nowrap text-sm text-description'>
+            {formatDateTime(new Date(message.created), new Date())}
+          </div>
+        )}
+      </Card.Row>
 
       {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
       {objects.map((object) => (
