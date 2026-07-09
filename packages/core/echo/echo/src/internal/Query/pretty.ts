@@ -119,8 +119,6 @@ export const prettyQuery = (query: QueryAST.Query): string => {
         } else if (o.kind === 'timestamp') {
           const fn = o.field === 'updatedAt' ? 'updated' : 'created';
           return `Order.${fn}(${JSON.stringify(o.direction)})`;
-        } else if (o.kind === 'aggregate') {
-          return `Order.aggregate(${JSON.stringify(o.name)}, ${JSON.stringify(o.direction)})`;
         } else {
           return `Order.property(${JSON.stringify(o.property)}, ${JSON.stringify(o.direction)})`;
         }

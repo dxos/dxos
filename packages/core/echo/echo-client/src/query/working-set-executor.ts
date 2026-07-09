@@ -502,17 +502,18 @@ export class WorkingSetQueryExecutor {
         // No timestamp index on client; treat as equal.
         return 0;
       case 'property': {
-        const aVal = WorkingSetItem.getProperty(itemA, [order.property]);
-        const bVal = WorkingSetItem.getProperty(itemB, [order.property]);
+        // On a grouped working set, a property order names a group field: prefer a stamped scalar
+        // aggregate (max/min/count) when present, else the member/row property (which also covers a
+        // group-key component, shared by every member).
+        const aVal =
+          itemA.aggregates && order.property in itemA.aggregates
+            ? itemA.aggregates[order.property]
+            : WorkingSetItem.getProperty(itemA, [order.property]);
+        const bVal =
+          itemB.aggregates && order.property in itemB.aggregates
+            ? itemB.aggregates[order.property]
+            : WorkingSetItem.getProperty(itemB, [order.property]);
         const cmp = _compareValues(aVal, bVal);
-        return order.direction === 'desc' ? -cmp : cmp;
-      }
-      case 'aggregate': {
-        // Order groups by a named aggregate stamped on each member by `GroupByStep`.
-        const cmp = GroupBy.compareScalar(
-          itemA.aggregates?.[order.name] ?? null,
-          itemB.aggregates?.[order.name] ?? null,
-        );
         return order.direction === 'desc' ? -cmp : cmp;
       }
       default:

@@ -64,15 +64,6 @@ namespace Order1 {
       field: 'createdAt',
       direction,
     });
-  export const aggregate = <T>(
-    name: T extends Query$.Group<any, any, infer A> ? keyof A & string : string,
-    direction: QueryAST.OrderDirection,
-  ): Order$.Order<T, 'aggregate'> =>
-    new OrderClass({
-      kind: 'aggregate',
-      name,
-      direction,
-    });
 }
 
 const Order2: typeof Order$ = Order1;
@@ -953,9 +944,6 @@ const prettyQuery = (query: QueryAST.Query): string => {
           const fn = o.field === 'updatedAt' ? 'updated' : 'created';
           return `Order.${fn}(${JSON.stringify(o.direction)})`;
         }
-        if (o.kind === 'aggregate') {
-          return `Order.aggregate(${JSON.stringify(o.name)}, ${JSON.stringify(o.direction)})`;
-        }
         return `Order.property(${JSON.stringify(o.property)}, ${JSON.stringify(o.direction)})`;
       });
       return `${prettyQuery(query.query)}.orderBy(${orders.join(', ')})`;
@@ -1002,7 +990,7 @@ const prettyQuery = (query: QueryAST.Query): string => {
       }
       const aggregates = query.aggregates.map(
         (aggregate) =>
-          `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${JSON.stringify(aggregate.property)})`,
+          `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${aggregate.property !== undefined ? JSON.stringify(aggregate.property) : ''})`,
       );
       return `${grouped}.aggregate({ ${aggregates.join(', ')} })`;
     }

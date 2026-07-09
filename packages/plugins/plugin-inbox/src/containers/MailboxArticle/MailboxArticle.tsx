@@ -98,8 +98,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         ? source
             .orderBy(Order.property('created', 'desc'))
             .groupBy(GroupKey.property('threadId'))
-            .aggregate({ lastMessageAt: Aggregate.max('created') })
-            .orderBy(Order.aggregate('lastMessageAt', direction))
+            .aggregate({ lastMessageAt: Aggregate.max('created'), items: Aggregate.items() })
+            .orderBy(Order.property('lastMessageAt', direction))
             .limit(MAILBOX_PAGE_SIZE)
         : source.orderBy(Order.property('created', direction)).limit(MAILBOX_PAGE_SIZE)
       : Query.select(Filter.nothing()).limit(MAILBOX_PAGE_SIZE),
@@ -114,9 +114,9 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       if (!isThreadGroup(entry)) {
         result.push(entry);
       } else if (entry.key.threadId == null) {
-        result.push(...entry.values.map((message) => ({ id: message.id, messages: [message] })));
+        result.push(...entry.items.map((message) => ({ id: message.id, messages: [message] })));
       } else {
-        result.push({ id: entry.key.threadId, messages: entry.values });
+        result.push({ id: entry.key.threadId, messages: entry.items });
       }
     }
     return result;
@@ -319,10 +319,13 @@ const MailboxFilter = ({
   );
 };
 
-/** One thread's worth of results from the conversation-grouped message query. */
-type ThreadGroup = Query.Group<Pick<Message.Message, 'threadId'>, Message.Message>;
+/** One thread's worth of results from the conversation-grouped message query (see the query above). */
+type ThreadGroup = Query.Group<Pick<Message.Message, 'threadId'>, Message.Message> & {
+  lastMessageAt: string | null | undefined;
+  items: Message.Message[];
+};
 
-const isThreadGroup = (entry: Message.Message | ThreadGroup): entry is ThreadGroup => 'values' in entry;
+const isThreadGroup = (entry: Message.Message | ThreadGroup): entry is ThreadGroup => 'key' in entry;
 
 const EMPTY_MESSAGE_TAGS_ATOM = Atom.make((): { id: string; label: string; hue?: string }[] => []);
 

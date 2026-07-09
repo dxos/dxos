@@ -130,10 +130,10 @@ export const GroupBy = Object.freeze({
   },
 
   /**
-   * Reduces a group's member values under a single aggregate. `max`/`min` ignore `null`s (values
-   * missing or non-scalar); a group with no scalar values yields `null`.
+   * Reduces a group's member values under a `max`/`min` aggregate. Ignores `null`s (values missing
+   * or non-scalar); a group with no scalar values yields `null`.
    */
-  reduceAggregate: (values: readonly AggregateValue[], kind: QueryAST.GroupAggregate['kind']): AggregateValue => {
+  reduceAggregate: (values: readonly AggregateValue[], kind: 'max' | 'min'): AggregateValue => {
     let result: AggregateValue = null;
     for (const value of values) {
       if (value == null) {
@@ -152,9 +152,11 @@ export const GroupBy = Object.freeze({
   },
 
   /**
-   * Computes each group's named aggregates and returns the same items with `aggregates` stamped on
-   * every member (all members of a group share the same values). Assumes `items` are already
-   * partitioned into contiguous groups (see {@link partitionByGroupKey}).
+   * Computes each group's scalar aggregates (`max`/`min`/`count`) and returns the same items with
+   * those values stamped on every member (all members of a group share them), so a following
+   * group-level `OrderStep` can order by them. The `items` aggregate is not stamped — it collects the
+   * members and is materialised at result assembly. Assumes `items` are already partitioned into
+   * contiguous groups (see {@link partitionByGroupKey}).
    */
   withGroupAggregates: <T extends { aggregates?: GroupAggregates }>(
     items: readonly T[],
@@ -162,6 +164,10 @@ export const GroupBy = Object.freeze({
     aggregates: readonly QueryAST.GroupAggregate[],
     getProperty: (item: T, property: string) => unknown,
   ): T[] => {
+    // Only max/min/count are stamped for ordering; `items` collects members at result assembly.
+    if (!aggregates.some((aggregate) => aggregate.kind !== 'items')) {
+      return items.slice();
+    }
     const result: T[] = [];
     let index = 0;
     while (index < items.length) {
@@ -173,8 +179,16 @@ export const GroupBy = Object.freeze({
       const members = items.slice(index, end);
       const computed: GroupAggregates = {};
       for (const aggregate of aggregates) {
-        const values = members.map((member) => coerceScalar(getProperty(member, aggregate.property)));
-        computed[aggregate.name] = GroupBy.reduceAggregate(values, aggregate.kind);
+        if (aggregate.kind === 'items') {
+          continue;
+        }
+        computed[aggregate.name] =
+          aggregate.kind === 'count'
+            ? members.length
+            : GroupBy.reduceAggregate(
+                members.map((member) => coerceScalar(getProperty(member, aggregate.property!))),
+                aggregate.kind,
+              );
       }
       for (const member of members) {
         result.push({ ...member, aggregates: computed });

@@ -50,22 +50,15 @@ type ReferenceTraversalTarget<P> = P extends Ref.Unknown
 
 /**
  * One group of query results, produced by {@link Query.groupBy}.
- * `K` is the group's key (an object of the properties grouped by); `T` is the element type; `A` is
- * the record of named aggregates declared via {@link Query.aggregate} (empty when none).
+ * `K` is the group's key (an object of the properties grouped by); `E` is the member type, carried
+ * for {@link Query.aggregate} (e.g. `Aggregate.items` yields `E[]`).
+ *
+ * A group carries only its `key` by default. Members, counts, and other aggregates are opt-in via
+ * {@link Query.aggregate} and appear as additional top-level fields (e.g. `Aggregate.items()` →
+ * `items: E[]`, `Aggregate.count()` → `count: number`, `Aggregate.max('created')` → the scalar).
  */
-export interface Group<K, T, A = {}> {
+export interface Group<K, E> {
   readonly key: K;
-
-  /**
-   * Number of results in this group in the source result set.
-   * May exceed `values.length` while some results have not hydrated locally.
-   */
-  readonly count: number;
-
-  /** Named aggregates computed over the group's members (see {@link Query.aggregate}). */
-  readonly aggregates: A;
-
-  readonly values: T[];
 }
 
 // TODO(burdon): Narrow T to Entity.Unknown?
@@ -155,18 +148,14 @@ export interface Query<T> {
    * Order the query results.
    * Orders are specified in priority order. The first order will be applied first, etc.
    *
-   * The accepted order kind is mutually exclusive with grouping: before a {@link groupBy} only
-   * member orders ({@link Order.property} / {@link Order.natural} / {@link Order.rank} /
-   * {@link Order.created} / {@link Order.updated}) are allowed; after a {@link groupBy} only
-   * {@link Order.aggregate} is (it reorders whole groups by a declared aggregate).
+   * `Order.property` orders by the current result shape's fields, so it works both before and after
+   * a {@link groupBy}: before, by member properties; after, by the group's fields (its `key` and any
+   * aggregates declared via {@link aggregate} — e.g. `Order.property('lastMessageAt')` reorders the
+   * groups by that aggregate).
    * @param order - Order to sort the results.
    * @returns Query for the ordered results.
    */
-  'orderBy'(
-    ...order: T extends Group<any, any, any>
-      ? EffectArray.NonEmptyArray<Order.Order<T, 'aggregate'>>
-      : EffectArray.NonEmptyArray<Order.Order<T, 'member'>>
-  ): Query<T>;
+  'orderBy'(...order: EffectArray.NonEmptyArray<Order.Order<T>>): Query<T>;
 
   /**
    * Group the query results by one or more scalar property values.
@@ -190,28 +179,28 @@ export interface Query<T> {
   ): Query<Group<EffectTypes.Simplify<Pick<T, GroupKey.Property<K[number]>>>, T>>;
 
   /**
-   * Declare named aggregates computed per group. Must directly follow {@link groupBy}. The
-   * aggregates are exposed on each result as `Group.aggregates` and can be ordered by with a
-   * following {@link orderBy} using {@link Order.aggregate}.
+   * Declare named aggregates computed per group. Must directly follow {@link groupBy}. Each becomes
+   * a top-level field on the group result and can be ordered by with a following {@link orderBy}
+   * using {@link Order.property}.
    *
    * ```ts
    * Query.type(Message)
    *   .orderBy(Order.property('created', 'desc'))
    *   .groupBy(GroupKey.property('threadId'))
-   *   .aggregate({ lastMessageAt: Aggregate.max('created') })
-   *   .orderBy(Order.aggregate('lastMessageAt', 'desc'));
+   *   .aggregate({ lastMessageAt: Aggregate.max('created'), items: Aggregate.items() })
+   *   .orderBy(Order.property('lastMessageAt', 'desc'));
    * ```
    *
-   * @param aggregates - Record of aggregate declarations keyed by result name.
-   * @returns Query whose group results carry the named aggregates.
+   * @param aggregates - Record of aggregate declarations keyed by result field name.
+   * @returns Query whose group results carry the named aggregates as fields.
    */
-  'aggregate'<const A extends Record<string, Aggregate.Aggregate<T extends Group<any, infer E, any> ? E : never, any>>>(
+  'aggregate'<const A extends Record<string, Aggregate.Aggregate<T extends Group<any, infer E> ? E : never, any>>>(
     aggregates: A,
   ): Query<
-    Group<
-      T extends Group<infer K, any, any> ? K : unknown,
-      T extends Group<any, infer E, any> ? E : unknown,
-      EffectTypes.Simplify<{ readonly [N in keyof A]: Aggregate.ValueOf<A[N]> }>
+    EffectTypes.Simplify<
+      (T extends Group<infer K, infer E> ? Group<K, E> : Group<unknown, unknown>) & {
+        readonly [N in keyof A]: Aggregate.ValueOf<A[N]>;
+      }
     >
   >;
 

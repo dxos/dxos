@@ -1537,12 +1537,12 @@ describe('QueryPlanner', () => {
       });
     });
 
-    test('orderBy(Order.aggregate) after groupBy is a group-level OrderStep after GroupByStep', () => {
+    test('a post-aggregate orderBy is a group-level OrderStep after GroupByStep', () => {
       const query = Query.select(Filter.type(TestSchema.Task))
         .orderBy(Order.property('title', 'desc'))
         .groupBy(GroupKey.property('title'))
         .aggregate({ latest: Aggregate.max('title') })
-        .orderBy(Order.aggregate('latest', 'desc'))
+        .orderBy(Order.property('latest', 'desc'))
         .limit(5);
 
       const plan = planner.createPlan(withSpaceIdOptions(query.ast));
@@ -1554,7 +1554,7 @@ describe('QueryPlanner', () => {
       const groupOrderStep = plan.steps[plan.steps.length - 1];
       expect(groupOrderStep).toMatchObject({
         _tag: 'OrderStep',
-        order: [{ kind: 'aggregate', name: 'latest', direction: 'desc' }],
+        order: [{ kind: 'property', property: 'latest', direction: 'desc' }],
         limit: 5,
       });
     });

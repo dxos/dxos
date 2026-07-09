@@ -379,14 +379,20 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { value: 200 }));
       await db.flush();
 
-      const groups = await db.query(Query.select(Filter.everything()).groupBy(GroupKey.property('value'))).run();
+      const groups = await db
+        .query(
+          Query.select(Filter.everything())
+            .groupBy(GroupKey.property('value'))
+            .aggregate({ count: Aggregate.count(), items: Aggregate.items() }),
+        )
+        .run();
 
       expect(groups).to.have.length(2);
       const byKey = new Map(groups.map((group) => [group.key.value, group]));
       expect(byKey.get(100)?.count).to.equal(2);
-      expect(byKey.get(100)?.values).to.have.length(2);
+      expect(byKey.get(100)?.items).to.have.length(2);
       expect(byKey.get(200)?.count).to.equal(1);
-      expect(byKey.get(200)?.values).to.have.length(1);
+      expect(byKey.get(200)?.items).to.have.length(1);
     });
 
     test('groups by multiple properties (composite key)', async () => {
@@ -398,7 +404,11 @@ describe('Query', () => {
       await db.flush();
 
       const groups = await db
-        .query(Query.select(Filter.everything()).groupBy(GroupKey.property('category'), GroupKey.property('value')))
+        .query(
+          Query.select(Filter.everything())
+            .groupBy(GroupKey.property('category'), GroupKey.property('value'))
+            .aggregate({ count: Aggregate.count() }),
+        )
         .run();
 
       expect(groups).to.have.length(3);
@@ -419,7 +429,11 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { value: { nested: true } }));
       await db.flush();
 
-      const groups = await db.query(Query.select(Filter.everything()).groupBy(GroupKey.property('value'))).run();
+      const groups = await db
+        .query(
+          Query.select(Filter.everything()).groupBy(GroupKey.property('value')).aggregate({ count: Aggregate.count() }),
+        )
+        .run();
 
       expect(groups).to.have.length(2);
       const nullGroup = groups.find((group) => group.key.value === null);
@@ -445,12 +459,13 @@ describe('Query', () => {
         .query(
           Query.select(Filter.everything())
             .orderBy(Order.property('rank', 'asc'))
-            .groupBy(GroupKey.property('category')),
+            .groupBy(GroupKey.property('category'))
+            .aggregate({ items: Aggregate.items() }),
         )
         .run();
 
       expect(groups).to.have.length(1);
-      expect(groups[0].values.map((obj) => obj.rank)).to.deep.equal([1, 2, 3]);
+      expect(groups[0].items.map((obj) => obj.rank)).to.deep.equal([1, 2, 3]);
     });
 
     test('orderBy the key property before groupBy yields key-ascending group order', async () => {
@@ -486,16 +501,17 @@ describe('Query', () => {
         .query(
           Query.select(Filter.everything())
             .orderBy(Order.property('sentAt', 'desc'))
-            .groupBy(GroupKey.property('threadId')),
+            .groupBy(GroupKey.property('threadId'))
+            .aggregate({ items: Aggregate.items() }),
         )
         .run();
 
       // Groups ordered by each thread's most recent message: thread-b (4000), thread-a (2000), thread-c (1500).
       expect(groups.map((group) => group.key.threadId)).to.deep.equal(['thread-b', 'thread-a', 'thread-c']);
       // Messages within each group are newest-first.
-      expect(groups[0].values.map((obj) => obj.sentAt)).to.deep.equal([4000, 3000]);
-      expect(groups[1].values.map((obj) => obj.sentAt)).to.deep.equal([2000, 1000]);
-      expect(groups[2].values.map((obj) => obj.sentAt)).to.deep.equal([1500]);
+      expect(groups[0].items.map((obj) => obj.sentAt)).to.deep.equal([4000, 3000]);
+      expect(groups[1].items.map((obj) => obj.sentAt)).to.deep.equal([2000, 1000]);
+      expect(groups[2].items.map((obj) => obj.sentAt)).to.deep.equal([1500]);
     });
 
     test('orders threads by a max aggregate, in both directions, independent of within-group order', async () => {
@@ -512,20 +528,20 @@ describe('Query', () => {
       const grouped = Query.select(Filter.everything())
         .orderBy(Order.property('sentAt', 'desc'))
         .groupBy(GroupKey.property('threadId'))
-        .aggregate({ latest: Aggregate.max('sentAt') });
+        .aggregate({ latest: Aggregate.max('sentAt'), items: Aggregate.items() });
 
       // Descending by latest message.
-      const desc = await db.query(grouped.orderBy(Order.aggregate('latest', 'desc'))).run();
+      const desc = await db.query(grouped.orderBy(Order.property('latest', 'desc'))).run();
       expect(desc.map((group) => group.key.threadId)).to.deep.equal(['thread-b', 'thread-a', 'thread-c']);
-      expect(desc.map((group) => group.aggregates.latest)).to.deep.equal([4000, 2000, 1500]);
+      expect(desc.map((group) => group.latest)).to.deep.equal([4000, 2000, 1500]);
       // Members stay newest-first regardless of the group sort direction.
-      expect(desc[0].values.map((obj) => obj.sentAt)).to.deep.equal([4000, 3000]);
+      expect(desc[0].items.map((obj) => obj.sentAt)).to.deep.equal([4000, 3000]);
 
       // Ascending reverses threads by latest message (not by oldest message), members unchanged.
-      const asc = await db.query(grouped.orderBy(Order.aggregate('latest', 'asc'))).run();
+      const asc = await db.query(grouped.orderBy(Order.property('latest', 'asc'))).run();
       expect(asc.map((group) => group.key.threadId)).to.deep.equal(['thread-c', 'thread-a', 'thread-b']);
-      expect(asc.map((group) => group.aggregates.latest)).to.deep.equal([1500, 2000, 4000]);
-      expect(asc[2].values.map((obj) => obj.sentAt)).to.deep.equal([4000, 3000]);
+      expect(asc.map((group) => group.latest)).to.deep.equal([1500, 2000, 4000]);
+      expect(asc[2].items.map((obj) => obj.sentAt)).to.deep.equal([4000, 3000]);
     });
 
     test('a min aggregate exposes the earliest member and can order groups', async () => {
@@ -543,13 +559,13 @@ describe('Query', () => {
             .orderBy(Order.property('sentAt', 'desc'))
             .groupBy(GroupKey.property('threadId'))
             .aggregate({ earliest: Aggregate.min('sentAt') })
-            .orderBy(Order.aggregate('earliest', 'asc')),
+            .orderBy(Order.property('earliest', 'asc')),
         )
         .run();
 
       // Ordered by each thread's earliest message: thread-a (1000) then thread-b (2000).
       expect(groups.map((group) => group.key.threadId)).to.deep.equal(['thread-a', 'thread-b']);
-      expect(groups.map((group) => group.aggregates.earliest)).to.deep.equal([1000, 2000]);
+      expect(groups.map((group) => group.earliest)).to.deep.equal([1000, 2000]);
     });
 
     test('aggregate ordering pages over whole groups (limit + skip)', async () => {
@@ -569,7 +585,7 @@ describe('Query', () => {
             .orderBy(Order.property('sentAt', 'desc'))
             .groupBy(GroupKey.property('threadId'))
             .aggregate({ latest: Aggregate.max('sentAt') })
-            .orderBy(Order.aggregate('latest', 'desc'))
+            .orderBy(Order.property('latest', 'desc'))
             .skip(1)
             .limit(2),
         )
@@ -591,7 +607,8 @@ describe('Query', () => {
           Query.select(Filter.everything())
             .orderBy(Order.property('rank', 'asc'))
             .limit(2)
-            .groupBy(GroupKey.property('category')),
+            .groupBy(GroupKey.property('category'))
+            .aggregate({ count: Aggregate.count() }),
         )
         .run();
 
@@ -615,6 +632,7 @@ describe('Query', () => {
           Query.select(Filter.everything())
             .orderBy(Order.property('rank', 'asc'))
             .groupBy(GroupKey.property('category'))
+            .aggregate({ count: Aggregate.count(), items: Aggregate.items() })
             .skip(1)
             .limit(2),
         )
@@ -622,7 +640,7 @@ describe('Query', () => {
 
       // Skip group a, take groups b and c — as whole groups (each still has its 2 members).
       expect(page.map((group) => group.key.category)).to.deep.equal(['b', 'c']);
-      expect(page.every((group) => group.count === 2 && group.values.length === 2)).to.be.true;
+      expect(page.every((group) => group.count === 2 && group.items.length === 2)).to.be.true;
     });
 
     describe('reactivity', () => {
@@ -650,7 +668,11 @@ describe('Query', () => {
         db.add(Obj.make(TestSchema.Expando, { category: 'a' }));
         await db.flush();
 
-        const query = db.query(Query.select(Filter.everything()).groupBy(GroupKey.property('category')));
+        const query = db.query(
+          Query.select(Filter.everything())
+            .groupBy(GroupKey.property('category'))
+            .aggregate({ count: Aggregate.count() }),
+        );
         let lastResult = await subscribeAndWaitForFirstResult(query);
         expect(lastResult).to.have.length(1);
 
@@ -679,7 +701,8 @@ describe('Query', () => {
         const query = db.query(
           Query.select(Filter.everything())
             .orderBy(Order.property('rank', 'asc'))
-            .groupBy(GroupKey.property('category')),
+            .groupBy(GroupKey.property('category'))
+            .aggregate({ count: Aggregate.count() }),
         );
         const initialResult = await subscribeAndWaitForFirstResult(query);
         expect(initialResult).to.have.length(2);
@@ -721,7 +744,11 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { category: 'b' }));
       await db.flush();
 
-      const query = db.query(Query.select(Filter.everything()).groupBy(GroupKey.property('category')));
+      const query = db.query(
+        Query.select(Filter.everything())
+          .groupBy(GroupKey.property('category'))
+          .aggregate({ count: Aggregate.count() }),
+      );
 
       const initial = new Trigger();
       const unsubscribe = query.subscribe(() => initial.wake());

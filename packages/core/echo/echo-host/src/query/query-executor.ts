@@ -1519,14 +1519,6 @@ export class QueryExecutor extends Resource {
         const comparison = aValue - bValue;
         return order.direction === 'desc' ? -comparison : comparison;
       }
-      case 'aggregate': {
-        // Order groups by a named aggregate stamped on each member by `GroupByStep`.
-        const comparison = GroupBy.compareScalar(
-          a.aggregates?.[order.name] ?? null,
-          b.aggregates?.[order.name] ?? null,
-        );
-        return order.direction === 'desc' ? -comparison : comparison;
-      }
       default:
         // Should never reach here with proper TypeScript types.
         return 0;
@@ -1534,8 +1526,13 @@ export class QueryExecutor extends Resource {
   }
 
   private _compareByProperty(a: QueryItem, b: QueryItem, property: string): number {
-    const aValue = QueryItem.getProperty(a, [property]);
-    const bValue = QueryItem.getProperty(b, [property]);
+    // On a grouped working set, a property order names a group field: prefer a stamped scalar
+    // aggregate (max/min/count) when present, else fall through to the member/row property (which
+    // also covers ordering by a group-key component, shared by every member).
+    const aValue =
+      a.aggregates && property in a.aggregates ? a.aggregates[property] : QueryItem.getProperty(a, [property]);
+    const bValue =
+      b.aggregates && property in b.aggregates ? b.aggregates[property] : QueryItem.getProperty(b, [property]);
 
     // Both null or undefined
     if (aValue == null && bValue == null) {

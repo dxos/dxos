@@ -5,11 +5,11 @@
 // @import-as-namespace
 
 /**
- * A per-group aggregate declaration, materialised onto `Query.Group.aggregates` and referenceable
- * from a post-group `orderBy` via {@link Order.aggregate}. Construct with {@link max} / {@link min}
- * and name it via the record passed to `Query.aggregate({ name: Aggregate.max('created') })`.
+ * A per-group aggregate declaration, materialised as a top-level field on `Query.Group` and
+ * orderable via a post-group `orderBy(Order.property(name))`. Name it via the record passed to
+ * `Query.aggregate({ name: Aggregate.max('created') })`.
  *
- * `T` is the group's member type (so the reduced property is checked against it); `V` is the value
+ * `T` is the group's member type (so a reduced property is checked against it); `V` is the value
  * the aggregate produces.
  */
 export interface Aggregate<T, V> {
@@ -17,7 +17,7 @@ export interface Aggregate<T, V> {
   '~Aggregate': { element: T; value: V };
 
   /** The aggregate spec sans name; the name is supplied by the `Query.aggregate` record key. */
-  'spec': { kind: 'max' | 'min'; property: string };
+  'spec': { kind: 'max' | 'min' | 'items' | 'count'; property?: string };
 }
 
 export type Any = Aggregate<any, any>;
@@ -32,7 +32,7 @@ class AggregateClass<T, V> implements Aggregate<T, V> {
     return typeof value === 'object' && value !== null && '~Aggregate' in value;
   }
 
-  'constructor'(public readonly spec: { kind: 'max' | 'min'; property: string }) {}
+  'constructor'(public readonly spec: { kind: 'max' | 'min' | 'items' | 'count'; property?: string }) {}
 
   '~Aggregate' = AggregateClass.variance as Aggregate<T, V>['~Aggregate'];
 }
@@ -50,3 +50,13 @@ export const max = <T, K extends keyof T & string>(property: K): Aggregate<T, T[
  */
 export const min = <T, K extends keyof T & string>(property: K): Aggregate<T, T[K] | null> =>
   new AggregateClass({ kind: 'min', property });
+
+/**
+ * Collect the group's members. Opt-in — groups carry no members unless this aggregate is declared.
+ */
+export const items = <T>(): Aggregate<T, T[]> => new AggregateClass({ kind: 'items' });
+
+/**
+ * Count the group's members. Opt-in — groups carry no count unless this aggregate is declared.
+ */
+export const count = <T>(): Aggregate<T, number> => new AggregateClass({ kind: 'count' });
