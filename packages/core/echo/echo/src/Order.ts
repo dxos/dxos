@@ -18,7 +18,7 @@ export type Any = Order<any>;
 class OrderClass implements Order<any> {
   private static 'variance': Order<any>['~Order'] = {} as Order<any>['~Order'];
 
-  static 'is'(value: unknown): value is Order<any> {
+  static 'is'(value: unknown): value is Any {
     return typeof value === 'object' && value !== null && '~Order' in value;
   }
 

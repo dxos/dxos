@@ -8,7 +8,7 @@ import React, { type Ref, useCallback, useEffect, useMemo, useRef, useState } fr
 import { useAtomCapability, useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { type Database, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
+import { Aggregate, type Database, Filter, GroupKey, Obj, Order, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -25,7 +25,9 @@ import { Message } from '@dxos/types';
 import {
   MessageStack,
   type MessageStackActionHandler,
+  type MessageStackItem,
   type MessageTagsFamily,
+  isMessageGroup,
   useMailboxExtractorActions,
 } from '#components';
 import { meta } from '#meta';
@@ -80,25 +82,48 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     setFilter(filter);
   }, [filterText, builder]);
 
-  // Messages, newest-first by message date. Ordered by `created` (not feed insertion order): a
-  // backward/backfill sync appends out of time order, so the window must be selected by date. This
-  // content order currently runs on the client feed path (full-fetch + sort + slice); `usePagination`
-  // and the virtualizer bound what's rendered, but the whole feed is fetched to sort it.
-  // TODO(wittjosiah): Move this to the host indexer for bounded-memory paging (fetch only the window,
-  //   not the whole feed); blocked on indexed ordered range reads being fast enough.
-  // `pagination` is passed straight through to `MessageStack` rather than destructured --
-  // `usePagination` already returns a stable object, so rebuilding one here would only reintroduce
-  // the instability it avoids.
+  // Whether messages are grouped into conversations (threads). On by default.
+  const conversations = settings.conversations ?? true;
+  const direction = sortDescending.value ? 'desc' : 'asc';
+
+  // Order by message `created` (not feed insertion order): a backward/backfill sync appends out of
+  // date order. The mailbox reads and sorts/groups the whole feed client-side; `usePagination` and
+  // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
+  // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
+  const source = feed && Query.select(Filter.type(Message.Message)).from(feed);
   const pagination = usePagination(
     db,
-    feed
-      ? Query.select(Filter.type(Message.Message))
-          .from(feed)
-          .orderBy(Order.property('created', 'desc'))
-          .limit(MAILBOX_PAGE_SIZE)
+    source
+      ? conversations
+        ? source
+            .orderBy(Order.property('created', 'desc'))
+            .groupBy(GroupKey.property('threadId'))
+            .aggregate({ lastMessageAt: Aggregate.max('created'), items: Aggregate.items() })
+            .orderBy(Order.property('lastMessageAt', direction))
+            .limit(MAILBOX_PAGE_SIZE)
+        : source.orderBy(Order.property('created', direction)).limit(MAILBOX_PAGE_SIZE)
       : Query.select(Filter.nothing()).limit(MAILBOX_PAGE_SIZE),
   );
-  const messages = pagination.items;
+
+  // The grouped query already orders threads (by latest message) and their members (newest-first),
+  // so entries map straight to stack items. Messages without a `threadId` share the group-by's
+  // single `null`-key group; split them back into singleton conversations at that group's position.
+  const items = useMemo<MessageStackItem[]>(() => {
+    const result: MessageStackItem[] = [];
+    for (const entry of pagination.items) {
+      if (!isThreadGroup(entry)) {
+        result.push(entry);
+      } else if (entry.key.threadId == null) {
+        result.push(...entry.items.map((message) => ({ id: message.id, messages: [message] })));
+      } else {
+        result.push({ id: entry.key.threadId, messages: entry.items });
+      }
+    }
+    return result;
+  }, [pagination.items]);
+
+  // Flat message list backing keyboard navigation and message-id lookups in action handlers.
+  const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
 
   // Mark the mailbox as viewed when opened, advancing its `viewedAt` cursor so the navtree new-message
   // badge clears. Uses the live `subject` (not the `mailbox` snapshot) since this mutates, and is keyed on
@@ -232,11 +257,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         ) : (
           <MessageStack
             id={id}
-            messages={messages}
+            items={items}
             currentId={currentId}
             tagsAtom={tagsAtom}
             starredAtom={starredAtom}
-            conversations={settings.conversations}
             pagination={feed ? pagination : undefined}
             onAction={handleAction}
           />
@@ -294,6 +318,14 @@ const MailboxFilter = ({
     </>
   );
 };
+
+/** One thread's worth of results from the conversation-grouped message query (see the query above). */
+type ThreadGroup = Query.Group<Pick<Message.Message, 'threadId'>, Message.Message> & {
+  lastMessageAt: string | null | undefined;
+  items: Message.Message[];
+};
+
+const isThreadGroup = (entry: Message.Message | ThreadGroup): entry is ThreadGroup => 'key' in entry;
 
 const EMPTY_MESSAGE_TAGS_ATOM = Atom.make((): { id: string; label: string; hue?: string }[] => []);
 

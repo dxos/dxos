@@ -2,11 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type QueryAST } from '@dxos/echo-protocol';
+
 /**
  * A (possibly composite) group key: one coerced scalar component per grouped property.
  * Missing/undefined/non-scalar property values coerce to `null`.
  */
 export type GroupKeyValue = Record<string, string | number | boolean | null>;
+
+/** Scalar result of a `max`/`min` aggregate (`null` when the group has no scalar values). */
+export type AggregateValue = string | number | boolean | null;
+
+/** Named aggregate values computed for one group, keyed by the aggregate's result name. */
+export type GroupAggregates = Record<string, AggregateValue>;
 
 /**
  * Execution helpers for the `group-by` query clause, shared by the host `QueryExecutor` and the
@@ -94,4 +102,129 @@ export const GroupBy = Object.freeze({
     }
     return [];
   },
+
+  /**
+   * Compares two scalar aggregate/property values. `null` sorts last (largest), mirroring the
+   * executors' own property comparison so aggregate ordering is consistent with member ordering.
+   */
+  compareScalar: (a: AggregateValue, b: AggregateValue): number => {
+    if (a == null && b == null) {
+      return 0;
+    }
+    if (a == null) {
+      return 1;
+    }
+    if (b == null) {
+      return -1;
+    }
+    if (typeof a === 'string' && typeof b === 'string') {
+      return a.localeCompare(b);
+    }
+    if (typeof a === 'number' && typeof b === 'number') {
+      return a - b;
+    }
+    if (typeof a === 'boolean' && typeof b === 'boolean') {
+      return a === b ? 0 : a ? 1 : -1;
+    }
+    return String(a).localeCompare(String(b));
+  },
+
+  /**
+   * Reduces a group's member values under a `max`/`min` aggregate. Ignores `null`s (values missing
+   * or non-scalar); a group with no scalar values yields `null`.
+   */
+  reduceAggregate: (values: readonly AggregateValue[], kind: 'max' | 'min'): AggregateValue => {
+    let result: AggregateValue = null;
+    for (const value of values) {
+      if (value == null) {
+        continue;
+      }
+      if (result == null) {
+        result = value;
+        continue;
+      }
+      const comparison = GroupBy.compareScalar(value, result);
+      if ((kind === 'max' && comparison > 0) || (kind === 'min' && comparison < 0)) {
+        result = value;
+      }
+    }
+    return result;
+  },
+
+  /**
+   * Computes each group's scalar aggregates (`max`/`min`/`count`) and returns the same items with
+   * those values stamped on every member (all members of a group share them), so a following
+   * group-level `OrderStep` can order by them. The `items` aggregate is not stamped — it collects the
+   * members and is materialised at result assembly. Assumes `items` are already partitioned into
+   * contiguous groups (see {@link partitionByGroupKey}).
+   */
+  withGroupAggregates: <T extends { aggregates?: GroupAggregates }>(
+    items: readonly T[],
+    getKey: (item: T) => string,
+    aggregates: readonly QueryAST.GroupAggregate[],
+    getProperty: (item: T, property: string) => unknown,
+  ): T[] => {
+    // Only max/min/count are stamped for ordering; `items` collects members at result assembly.
+    if (!aggregates.some((aggregate) => aggregate.kind !== 'items')) {
+      return items.slice();
+    }
+    const result: T[] = [];
+    let index = 0;
+    while (index < items.length) {
+      const key = getKey(items[index]);
+      let end = index;
+      while (end < items.length && getKey(items[end]) === key) {
+        end += 1;
+      }
+      const members = items.slice(index, end);
+      const computed: GroupAggregates = {};
+      for (const aggregate of aggregates) {
+        if (aggregate.kind === 'items') {
+          continue;
+        }
+        computed[aggregate.name] =
+          aggregate.kind === 'count'
+            ? members.length
+            : GroupBy.reduceAggregate(
+                members.map((member) => coerceScalar(getProperty(member, aggregate.property!))),
+                aggregate.kind,
+              );
+      }
+      for (const member of members) {
+        result.push({ ...member, aggregates: computed });
+      }
+      index = end;
+    }
+    return result;
+  },
+
+  /**
+   * Reorders whole groups by `compareGroups` (applied to each group's first member, since all
+   * members share the group's key/aggregates), preserving within-group order and contiguity.
+   * Stable: groups comparing equal keep their incoming relative order. Assumes `items` are already
+   * partitioned into contiguous groups (see {@link partitionByGroupKey}).
+   */
+  orderGroups: <T>(items: readonly T[], getKey: (item: T) => string, compareGroups: (a: T, b: T) => number): T[] => {
+    const groups: T[][] = [];
+    let currentKey: string | undefined;
+    for (const item of items) {
+      const key = getKey(item);
+      if (groups.length === 0 || key !== currentKey) {
+        groups.push([]);
+        currentKey = key;
+      }
+      groups[groups.length - 1].push(item);
+    }
+    return groups
+      .map((group, index) => ({ group, index }))
+      .sort((a, b) => {
+        const comparison = compareGroups(a.group[0], b.group[0]);
+        return comparison !== 0 ? comparison : a.index - b.index;
+      })
+      .flatMap(({ group }) => group);
+  },
 });
+
+/** Coerces a raw property value to the scalar aggregate domain (non-scalars → `null`). */
+const coerceScalar = (value: unknown): AggregateValue =>
+  typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? value : null;

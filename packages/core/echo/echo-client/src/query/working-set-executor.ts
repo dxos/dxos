@@ -3,7 +3,7 @@
 //
 
 import { filterMatchDoc } from '@dxos/echo-host/filter';
-import { GroupBy, type GroupKeyValue, type QueryPlan } from '@dxos/echo-host/query';
+import { type GroupAggregates, GroupBy, type GroupKeyValue, type QueryPlan } from '@dxos/echo-host/query';
 import {
   EncodedReference,
   type EntityPropPath,
@@ -24,6 +24,8 @@ export type WorkingSetItem = {
   core: ObjectCore;
   /** Group-by key, set by `GroupByStep`. Undefined for queries without a `groupBy` clause. */
   groupKey?: GroupKeyValue;
+  /** Named group aggregates, stamped by `GroupByStep`; read by a following group-level `OrderStep`. */
+  aggregates?: GroupAggregates;
 };
 
 const WorkingSetItem = Object.freeze({
@@ -126,7 +128,16 @@ export class WorkingSetQueryExecutor {
 
   private _execGroupByStep(step: QueryPlan.GroupByStep, ws: WorkingSetItem[]): WorkingSetItem[] {
     const withKeys = ws.map((item) => ({ ...item, groupKey: WorkingSetItem.getGroupKey(item, step.keys) }));
-    return GroupBy.partitionByGroupKey(withKeys, (item) => GroupBy.serializeGroupKey(item.groupKey!));
+    const partitioned = GroupBy.partitionByGroupKey(withKeys, (item) => GroupBy.serializeGroupKey(item.groupKey!));
+    if (!step.aggregates || step.aggregates.length === 0) {
+      return partitioned;
+    }
+    return GroupBy.withGroupAggregates(
+      partitioned,
+      (item) => GroupBy.serializeGroupKey(item.groupKey!),
+      step.aggregates,
+      (item, property) => WorkingSetItem.getProperty(item, [property]),
+    );
   }
 
   private _execSelectStep(step: QueryPlan.SelectStep, ws: WorkingSetItem[]): WorkingSetItem[] | null {
@@ -455,7 +466,7 @@ export class WorkingSetQueryExecutor {
   }
 
   private _execOrderStep(step: QueryPlan.OrderStep, ws: WorkingSetItem[]): WorkingSetItem[] | null {
-    const sorted = [...ws].sort((itemA, itemB) => {
+    const compare = (itemA: WorkingSetItem, itemB: WorkingSetItem): number => {
       for (const order of step.order) {
         const cmp = this._compareByOrder(itemA, itemB, order);
         if (cmp !== 0) {
@@ -463,7 +474,16 @@ export class WorkingSetQueryExecutor {
         }
       }
       return 0;
-    });
+    };
+
+    // After a GroupByStep the working set is partitioned into contiguous groups; a post-group order
+    // reorders whole groups (by their aggregates), and a pushed-down limit pages over whole groups.
+    if (_isGroupedWorkingSet(ws)) {
+      const sorted = GroupBy.orderGroups(ws, _serializeItemGroupKey, compare);
+      return step.limit !== undefined ? GroupBy.takeGroups(sorted, step.limit, _serializeItemGroupKey) : sorted;
+    }
+
+    const sorted = [...ws].sort(compare);
     return step.limit !== undefined ? sorted.slice(0, step.limit) : sorted;
   }
 
@@ -482,8 +502,17 @@ export class WorkingSetQueryExecutor {
         // No timestamp index on client; treat as equal.
         return 0;
       case 'property': {
-        const aVal = WorkingSetItem.getProperty(itemA, [order.property]);
-        const bVal = WorkingSetItem.getProperty(itemB, [order.property]);
+        // On a grouped working set, a property order names a group field: prefer a stamped scalar
+        // aggregate (max/min/count) when present, else the member/row property (which also covers a
+        // group-key component, shared by every member).
+        const aVal =
+          itemA.aggregates && order.property in itemA.aggregates
+            ? itemA.aggregates[order.property]
+            : WorkingSetItem.getProperty(itemA, [order.property]);
+        const bVal =
+          itemB.aggregates && order.property in itemB.aggregates
+            ? itemB.aggregates[order.property]
+            : WorkingSetItem.getProperty(itemB, [order.property]);
         const cmp = _compareValues(aVal, bVal);
         return order.direction === 'desc' ? -cmp : cmp;
       }

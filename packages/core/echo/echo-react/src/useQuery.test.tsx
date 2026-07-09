@@ -5,7 +5,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, GroupKey, Obj, Query } from '@dxos/echo';
+import { Aggregate, Filter, GroupKey, Obj, Query } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
@@ -46,7 +46,9 @@ describe('useQuery', () => {
     db.add(Obj.make(TestSchema.Expando, { category: 'b' }));
     await db.flush();
 
-    const query = Query.select(Filter.everything()).groupBy(GroupKey.property('category'));
+    const query = Query.select(Filter.everything())
+      .groupBy(GroupKey.property('category'))
+      .aggregate({ count: Aggregate.count(), items: Aggregate.items() });
     const { result } = renderHook(() => useQuery(db, query));
 
     await waitFor(() => {
@@ -55,7 +57,7 @@ describe('useQuery', () => {
 
     const byKey = new Map(result.current.map((group: any) => [group.key.category, group]));
     expect(byKey.get('a')?.count).toBe(2);
-    expect(byKey.get('a')?.values).toHaveLength(2);
+    expect(byKey.get('a')?.items).toHaveLength(2);
     expect(byKey.get('b')?.count).toBe(1);
   });
 
