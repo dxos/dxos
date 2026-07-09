@@ -55,7 +55,7 @@ export const ModuleContainer = ({ layout: layoutProp, skills = [], showContext }
         const skill = registry
           .query(Filter.type(Skill.Skill))
           .runSync()
-          .find((skill) => Obj.getMeta(skill).key === key);
+          .find((candidateSkill) => Obj.getMeta(candidateSkill).key === key);
         if (skill) {
           return space.db.add(Obj.clone(skill));
         }

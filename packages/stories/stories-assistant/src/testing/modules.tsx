@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React, { type FC, type ReactNode } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
@@ -40,7 +40,7 @@ import {
  * The guard lives here (not inside each module) so module bodies never call hooks
  * conditionally — mirrors the `useActiveSpace()` pattern used by plugin react-surfaces.
  */
-const withActiveSpace = (Component: FC<{ space: Space }>) => (): React.ReactNode => {
+const withActiveSpace = (Component: FC<{ space: Space }>) => (): ReactNode => {
   const space = useActiveSpace();
   return space ? <Component space={space} /> : null;
 };

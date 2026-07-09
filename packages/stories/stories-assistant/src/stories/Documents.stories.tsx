@@ -53,9 +53,9 @@ const STYLE_GUIDE = trim`
   - Proofread for clarity and correctness.
 `;
 
-const addSpellingMistakes = (text: string, n: number): string => {
+const addSpellingMistakes = (text: string, mistakeCount: number): string => {
   const words = text.split(' ');
-  for (let i = 0; i < n; i++) {
+  for (let mistakeIndex = 0; mistakeIndex < mistakeCount; mistakeIndex++) {
     const idx = Math.floor(Math.random() * words.length);
     const word = words[idx];
     const charIdx = Math.floor(Math.random() * word.length);
