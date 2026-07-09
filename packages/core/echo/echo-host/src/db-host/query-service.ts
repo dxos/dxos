@@ -3,22 +3,20 @@
 //
 
 import type * as SqlClient from '@effect/sql/SqlClient';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as EffectStream from 'effect/Stream';
 
 import { DeferredTask, scheduleMicroTask, synchronized } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
-import { type Context, Resource } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { QueryAST } from '@dxos/echo-protocol';
 import { type RuntimeProvider } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
 import { log } from '@dxos/log';
-import {
-  type QueryRequest,
-  type QueryResponse,
-  type QueryResult,
-  type QueryService,
-} from '@dxos/protocols/proto/dxos/echo/query';
+import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
+import { type QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
 import { type AutomergeHost } from '../automerge';
@@ -74,7 +72,7 @@ type QueryInvalidationStats = {
 };
 
 @trace.resource()
-export class QueryServiceImpl extends Resource implements QueryService {
+export class QueryServiceImpl extends Resource implements QueryService.Handlers {
   // TODO(dmaretskyi): We need to implement query deduping. Idle composer has 80 queries with only 10 being unique.
   private readonly _queries = new Set<ActiveQuery>();
 
@@ -132,21 +130,29 @@ export class QueryServiceImpl extends Resource implements QueryService {
   /**
    * @deprecated No longer needed with SQL-based indexing.
    */
-  async setConfig(): Promise<void> {
+  ['QueryService.setConfig'](_request: IndexConfig): Effect.Effect<void, Error> {
     // No-op: SQL indexer doesn't need explicit configuration.
+    return Effect.void;
   }
 
   /**
    * @deprecated No longer needed with SQL-based indexing.
    */
-  async reindex(): Promise<void> {
+  ['QueryService.reindex'](): Effect.Effect<void, Error> {
     // No-op: SQL indexer handles re-indexing automatically.
-    log.warn('reindex() is deprecated and no longer has any effect');
+    return Effect.sync(() => log.warn('reindex() is deprecated and no longer has any effect'));
   }
 
-  execQuery(request: QueryRequest): Stream<QueryResponse> {
-    return new Stream<QueryResponse>(({ next, close, ctx }) => {
-      const queryEntry = this._createQuery(ctx, request, next, close, close);
+  ['QueryService.execQuery'](request: QueryRequest): EffectStream.Stream<QueryResponse, Error> {
+    return EffectStream.async<QueryResponse, Error>((emit) => {
+      const ctx = Context.default();
+      const queryEntry = this._createQuery(
+        ctx,
+        request,
+        (response) => void emit.single(response),
+        (err) => void emit.fail(err),
+        () => void emit.end(),
+      );
       scheduleMicroTask(ctx, async () => {
         await queryEntry.executor.open();
         if (queryEntry.feedScoped) {
@@ -155,7 +161,10 @@ export class QueryServiceImpl extends Resource implements QueryService {
         queryEntry.open = true;
         this._updateQueries.schedule();
       });
-      return queryEntry.close;
+      return Effect.promise(async () => {
+        await queryEntry.close();
+        await ctx.dispose();
+      });
     });
   }
 
