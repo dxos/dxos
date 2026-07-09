@@ -4,12 +4,14 @@
 
 import * as A from '@automerge/automerge';
 import { type DocumentId, type Heads, cbor } from '@automerge/automerge-repo';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { Mutex, scheduleMicroTask, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
 import type { CollectionId } from '@dxos/echo-protocol';
-import { type EdgeConnection, type EdgeHttpClient } from '@dxos/edge-client';
+import { EdgeConnectionService, EdgeHttpClientService, type EdgeConnection, type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -33,6 +35,7 @@ import { bufferToArray, compositeKey, setDeep } from '@dxos/util';
 import {
   type AutomergeReplicatorConnection,
   type AutomergeReplicatorContext,
+  EdgeAutomergeReplicatorService,
   type EdgeAutomergeReplicator,
   type ShouldAdvertiseProps,
   type ShouldSyncCollectionProps,
@@ -457,3 +460,24 @@ const getMessageInfo = (msg: AutomergeProtocolMessage) => {
     sequence: msg.metadata?.dxos_sequence,
   };
 };
+
+export type EchoEdgeReplicatorLayerOptions = Pick<EchoEdgeReplicatorProps, 'disableSharePolicy'>;
+
+/**
+ * Effect Layer constructing an {@link EchoEdgeReplicator}.
+ */
+export const EchoEdgeReplicatorLayer = (
+  options: EchoEdgeReplicatorLayerOptions = {},
+): Layer.Layer<EdgeAutomergeReplicatorService, never, EdgeConnectionService | EdgeHttpClientService> =>
+  Layer.effect(
+    EdgeAutomergeReplicatorService,
+    Effect.gen(function* () {
+      const edgeConnection = yield* EdgeConnectionService;
+      const edgeHttpClient = yield* EdgeHttpClientService;
+      return new EchoEdgeReplicator({
+        edgeConnection,
+        edgeHttpClient,
+        disableSharePolicy: options.disableSharePolicy,
+      });
+    }),
+  );

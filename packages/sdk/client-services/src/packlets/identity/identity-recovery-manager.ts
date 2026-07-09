@@ -2,12 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as EffectContext from 'effect/Context';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+
 import { type Context } from '@dxos/context';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { sign } from '@dxos/crypto';
-import { type EdgeHttpClient } from '@dxos/edge-client';
+import { EdgeHttpClientService, type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import { type KeyringApi } from '@dxos/keyring';
+import { KeyringApiService, type KeyringApi } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -23,15 +28,32 @@ import {
 import { Timeframe } from '@dxos/timeframe';
 
 import { type Identity } from './identity';
-import { type JoinIdentityProps } from './identity-manager';
+import { IdentityManagerService, type JoinIdentityProps } from './identity-manager';
+
+/**
+ * Effect service tag for {@link EdgeIdentityRecoveryManager}.
+ */
+export class EdgeIdentityRecoveryManagerService extends EffectContext.Tag(
+  '@dxos/client-services/EdgeIdentityRecoveryManager',
+)<EdgeIdentityRecoveryManagerService, EdgeIdentityRecoveryManager>() {}
+
+export type AcceptRecoveredIdentity = (params: JoinIdentityProps) => Promise<Identity>;
 
 export class EdgeIdentityRecoveryManager {
+  private _acceptRecoveredIdentity?: AcceptRecoveredIdentity;
+
   constructor(
     private readonly _keyring: KeyringApi,
     private readonly _edgeClient: EdgeHttpClient | undefined,
     private readonly _identityProvider: () => Identity | undefined,
-    private readonly _acceptRecoveredIdentity: (params: JoinIdentityProps) => Promise<Identity>,
   ) {}
+
+  /**
+   * Wires identity acceptance after the composing stack is fully constructed.
+   */
+  setAcceptRecoveredIdentity(acceptRecoveredIdentity: AcceptRecoveredIdentity): void {
+    this._acceptRecoveredIdentity = acceptRecoveredIdentity;
+  }
 
   public async createRecoveryCredential({
     data,
@@ -127,7 +149,7 @@ export class EdgeIdentityRecoveryManager {
 
     const response = await this._edgeClient.recoverIdentity(ctx, request);
 
-    await this._acceptRecoveredIdentity({
+    await this.#acceptRecoveredIdentity({
       authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
       haloGenesisFeedKey: PublicKey.fromHex(response.genesisFeedKey),
       haloSpaceKey: PublicKey.fromHex(response.haloSpaceKey),
@@ -159,7 +181,7 @@ export class EdgeIdentityRecoveryManager {
 
     const response = await this._edgeClient.recoverIdentity(ctx, request);
 
-    await this._acceptRecoveredIdentity({
+    await this.#acceptRecoveredIdentity({
       authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
       haloGenesisFeedKey: PublicKey.fromHex(response.genesisFeedKey),
       haloSpaceKey: PublicKey.fromHex(response.haloSpaceKey),
@@ -199,7 +221,7 @@ export class EdgeIdentityRecoveryManager {
 
     log.info('recovering identity', response);
 
-    await this._acceptRecoveredIdentity({
+    await this.#acceptRecoveredIdentity({
       authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
       haloGenesisFeedKey: PublicKey.fromHex(response.genesisFeedKey),
       haloSpaceKey: PublicKey.fromHex(response.haloSpaceKey),
@@ -209,6 +231,11 @@ export class EdgeIdentityRecoveryManager {
       dataFeedKey: await this._keyring.createKey(),
     });
   }
+
+  #acceptRecoveredIdentity(params: JoinIdentityProps): Promise<Identity> {
+    invariant(this._acceptRecoveredIdentity, 'acceptRecoveredIdentity not set');
+    return this._acceptRecoveredIdentity(params);
+  }
 }
 
 const decodeCredential = (credentialBase64: string) => {
@@ -216,3 +243,25 @@ const decodeCredential = (credentialBase64: string) => {
   const codec = schema.getCodecForType('dxos.halo.credentials.Credential');
   return codec.decode(credentialBytes);
 };
+
+/**
+ * Effect Layer constructing a dormant {@link EdgeIdentityRecoveryManager}.
+ */
+export const EdgeIdentityRecoveryManagerLayer = (): Layer.Layer<
+  EdgeIdentityRecoveryManagerService,
+  never,
+  KeyringApiService | EdgeHttpClientService | IdentityManagerService
+> =>
+  Layer.effect(
+    EdgeIdentityRecoveryManagerService,
+    Effect.gen(function* () {
+      const keyring = yield* KeyringApiService;
+      const edgeClient = yield* Effect.serviceOption(EdgeHttpClientService);
+      const identityManager = yield* IdentityManagerService;
+      return new EdgeIdentityRecoveryManager(
+        keyring,
+        Option.getOrUndefined(edgeClient),
+        () => identityManager.identity,
+      );
+    }),
+  );

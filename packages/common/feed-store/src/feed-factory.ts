@@ -3,11 +3,15 @@
 //
 
 import defaultsDeep from 'lodash.defaultsdeep';
+import * as Effect from 'effect/Effect';
+import * as EffectContext from 'effect/Context';
+import * as Layer from 'effect/Layer';
 
 import { type Signer, subtleCrypto } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import type { HypercoreOptions } from '@dxos/hypercore';
 import { createCrypto, hypercore } from '@dxos/hypercore';
+import { KeyringApiService } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Directory } from '@dxos/random-access-storage';
@@ -30,6 +34,22 @@ export type FeedOptions = HypercoreOptions & {
    */
   onwrite?: (index: number, data: any, peer: null, cb: (err: Error | null) => void) => void;
 };
+
+/**
+ * Effect service tag for {@link FeedFactory}.
+ */
+export class FeedFactoryService extends EffectContext.Tag('@dxos/feed-store/FeedFactory')<
+  FeedFactoryService,
+  FeedFactory<any>
+>() {}
+
+/**
+ * Root directory for hypercore feed files.
+ */
+export class FeedStorageDirectoryService extends EffectContext.Tag('@dxos/feed-store/FeedStorageDirectory')<
+  FeedStorageDirectoryService,
+  Directory
+>() {}
 
 /**
  * Hypercore factory.
@@ -90,3 +110,24 @@ export class FeedFactory<T extends {}> {
     return new FeedWrapper(core, publicKey, storageDir);
   }
 }
+
+export type FeedFactoryLayerOptions = Pick<FeedFactoryOptions, 'hypercore'>;
+
+/**
+ * Effect Layer constructing a {@link FeedFactory} from feed storage and keyring services.
+ */
+export const FeedFactoryLayer = (
+  options: FeedFactoryLayerOptions = {},
+): Layer.Layer<FeedFactoryService, never, KeyringApiService | FeedStorageDirectoryService> =>
+  Layer.effect(
+    FeedFactoryService,
+    Effect.gen(function* () {
+      const root = yield* FeedStorageDirectoryService;
+      const signer = yield* KeyringApiService;
+      return new FeedFactory({
+        root,
+        signer,
+        hypercore: options.hypercore,
+      });
+    }),
+  );

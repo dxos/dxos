@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Context } from 'effect';
+
 import { type Event } from '@dxos/async';
 import { type Lifecycle } from '@dxos/context';
 
@@ -14,3 +16,8 @@ export interface SignalManager extends SignalMethods, Required<Lifecycle> {
   statusChanged?: Event<SignalStatus[]>;
   getStatus?: () => SignalStatus[];
 }
+
+export class SignalManagerService extends Context.Tag('@dxos/messaging/SignalManager')<
+  SignalManagerService,
+  SignalManager
+>() {}

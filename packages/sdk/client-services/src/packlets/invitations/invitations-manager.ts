@@ -2,6 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as EffectContext from 'effect/Context';
+import * as Layer from 'effect/Layer';
+
 import { Event, PushStream, TimeoutError, Trigger } from '@dxos/async';
 import {
   AuthenticatingInvitation,
@@ -11,7 +15,7 @@ import {
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
-import { type IMetadataStore, hasInvitationExpired } from '@dxos/echo-host';
+import { IMetadataStoreService, type IMetadataStore, hasInvitationExpired } from '@dxos/echo-host';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -24,7 +28,15 @@ import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { trace } from '@dxos/tracing';
 
 import type { InvitationProtocol } from './invitation-protocol';
-import { type InvitationsHandler, createAdmissionKeypair } from './invitations-handler';
+import { InvitationsHandlerService, type InvitationsHandler, createAdmissionKeypair } from './invitations-handler';
+
+/**
+ * Effect service tag for {@link InvitationsManager}.
+ */
+export class InvitationsManagerService extends EffectContext.Tag('@dxos/client-services/InvitationsManager')<
+  InvitationsManagerService,
+  InvitationsManager
+>() {}
 
 /**
  * Entry point for creating and accepting invitations, keeps track of existing invitation set and
@@ -354,3 +366,22 @@ export class InvitationsManager {
     );
   }
 }
+
+export type InvitationsManagerLayerOptions = {
+  getHandler: (invitation: Partial<Invitation> & Pick<Invitation, 'kind'>) => InvitationProtocol;
+};
+
+/**
+ * Effect Layer constructing an {@link InvitationsManager}.
+ */
+export const InvitationsManagerLayer = (
+  options: InvitationsManagerLayerOptions,
+): Layer.Layer<InvitationsManagerService, never, InvitationsHandlerService | IMetadataStoreService> =>
+  Layer.effect(
+    InvitationsManagerService,
+    Effect.gen(function* () {
+      const invitationsHandler = yield* InvitationsHandlerService;
+      const metadataStore = yield* IMetadataStoreService;
+      return new InvitationsManager(invitationsHandler, options.getHandler, metadataStore);
+    }),
+  );

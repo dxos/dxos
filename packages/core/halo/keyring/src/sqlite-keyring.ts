@@ -5,6 +5,7 @@
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { Event, synchronized } from '@dxos/async';
 import { subtleCrypto } from '@dxos/crypto';
@@ -16,7 +17,7 @@ import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { ComplexMap, arrayToBuffer } from '@dxos/util';
 
-import { type KeyringApi } from './keyring';
+import { KeyringApiService, type KeyringApi } from './keyring';
 
 const KeyRecordCodec = schema.getCodecForType('dxos.halo.keyring.KeyRecord');
 
@@ -157,3 +158,19 @@ export class SqliteKeyring implements KeyringApi {
 
 const keyPairToPublicKey = async (keyPair: CryptoKeyPair): Promise<PublicKey> =>
   PublicKey.from(new Uint8Array(await subtleCrypto.exportKey('raw', keyPair.publicKey)));
+
+/**
+ * Effect Layer constructing a {@link SqliteKeyring} from the ambient SQL runtime.
+ */
+export const SqliteKeyringLayer = (): Layer.Layer<
+  KeyringApiService,
+  never,
+  SqlClient.SqlClient | SqlTransactionTag
+> =>
+  Layer.effect(
+    KeyringApiService,
+    Effect.gen(function* () {
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+      return new SqliteKeyring({ runtime });
+    }),
+  );

@@ -5,9 +5,12 @@
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
+import * as EffectContext from 'effect/Context';
+import * as Layer from 'effect/Layer';
 import type { Callback, FileStat, RandomAccessStorage } from 'random-access-storage';
 
 import { RuntimeProvider } from '@dxos/effect';
+import { FeedStorageDirectoryService } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { Directory, type File, type Storage, StorageType, wrapFile } from '@dxos/random-access-storage';
 import { SqlTransaction } from '@dxos/sql-sqlite';
@@ -18,6 +21,14 @@ type SqlTransactionTag = SqlTransaction.SqlTransaction;
 export type SqliteStorageOptions = {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
 };
+
+/**
+ * Effect service tag for {@link SqliteStorage}.
+ */
+export class SqliteStorageService extends EffectContext.Tag('@dxos/client-services/SqliteStorage')<
+  SqliteStorageService,
+  SqliteStorage
+>() {}
 
 /** Minimal cross-platform EventEmitter needed by the RandomAccessStorage contract. */
 class BaseEventEmitter {
@@ -398,3 +409,39 @@ export class SqliteStorage implements Storage {
     this.#nativeFiles.clear();
   }
 }
+
+export type SqliteStorageLayerOptions = {
+  path?: string;
+};
+
+/**
+ * Effect Layer constructing a {@link SqliteStorage} from the ambient SQL runtime.
+ */
+export const SqliteStorageLayer = (
+  options: SqliteStorageLayerOptions = {},
+): Layer.Layer<SqliteStorageService, never, SqlClient.SqlClient | SqlTransactionTag> =>
+  Layer.effect(
+    SqliteStorageService,
+    Effect.gen(function* () {
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+      return new SqliteStorage({ runtime }, options.path);
+    }),
+  );
+
+export type FeedStorageDirectoryLayerOptions = {
+  sub?: string;
+};
+
+/**
+ * Effect Layer providing the hypercore feeds root directory from {@link SqliteStorage}.
+ */
+export const FeedStorageDirectoryLayer = (
+  options: FeedStorageDirectoryLayerOptions = {},
+): Layer.Layer<FeedStorageDirectoryService, never, SqliteStorageService> =>
+  Layer.effect(
+    FeedStorageDirectoryService,
+    Effect.gen(function* () {
+      const storage = yield* SqliteStorageService;
+      return storage.createDirectory(options.sub ?? 'feeds');
+    }),
+  );

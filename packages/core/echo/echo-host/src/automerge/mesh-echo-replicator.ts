@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
 import { type Context } from '@dxos/context';
 import type { CollectionId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -12,6 +15,7 @@ import { ComplexSet, defaultMap } from '@dxos/util';
 
 import { createIdFromSpaceKey } from '../common/space-id';
 import {
+  AutomergeReplicatorService,
   type AutomergeReplicator,
   type AutomergeReplicatorContext,
   type ShouldAdvertiseProps,
@@ -198,3 +202,9 @@ export class MeshEchoReplicator implements AutomergeReplicator {
     }
   }
 }
+
+/**
+ * Effect Layer constructing a {@link MeshEchoReplicator}.
+ */
+export const MeshEchoReplicatorLayer = (): Layer.Layer<AutomergeReplicatorService> =>
+  Layer.succeed(AutomergeReplicatorService, new MeshEchoReplicator());

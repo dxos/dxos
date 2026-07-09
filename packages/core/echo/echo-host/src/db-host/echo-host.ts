@@ -4,6 +4,9 @@
 
 import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 import * as SqlClient from '@effect/sql/SqlClient';
+import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { DeferredTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
@@ -72,6 +75,14 @@ export type EchoHostProps = {
    */
   useSubduction?: boolean;
 };
+
+/**
+ * Effect service tag for {@link EchoHost}.
+ */
+export class EchoHostService extends EffectContext.Tag('@dxos/echo-host/EchoHost')<
+  EchoHostService,
+  EchoHost
+>() {}
 
 /**
  * Host for the Echo database.
@@ -572,3 +583,27 @@ export type EchoStatsDiagnostic = {
   loadedDocsCount: number;
   dataStats: EchoDataStats;
 };
+
+export type EchoHostLayerOptions = Pick<
+  EchoHostProps,
+  | 'peerIdProvider'
+  | 'getSpaceKeyByRootDocumentId'
+  | 'assignQueuePositions'
+  | 'syncFeed'
+  | 'getSyncState'
+  | 'useSubduction'
+>;
+
+/**
+ * Effect Layer constructing a dormant {@link EchoHost}.
+ */
+export const EchoHostLayer = (
+  options: EchoHostLayerOptions = {},
+): Layer.Layer<EchoHostService, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
+  Layer.effect(
+    EchoHostService,
+    Effect.gen(function* () {
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
+      return new EchoHost({ runtime, ...options });
+    }),
+  );

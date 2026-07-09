@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
+
 import { Event, synchronized } from '@dxos/async';
 import { type ProtoCodec } from '@dxos/codec-protobuf';
 import { type Signer, subtleCrypto } from '@dxos/crypto';
@@ -24,6 +26,14 @@ export interface KeyringApi extends Signer {
   importKeyPair(keyPair: CryptoKeyPair): Promise<PublicKey>;
   list(): Promise<KeyRecord[]>;
 }
+
+/**
+ * Effect service tag for {@link KeyringApi}.
+ */
+export class KeyringApiService extends EffectContext.Tag('@dxos/keyring/KeyringApi')<
+  KeyringApiService,
+  KeyringApi
+>() {}
 
 /**
  * Manages keys.

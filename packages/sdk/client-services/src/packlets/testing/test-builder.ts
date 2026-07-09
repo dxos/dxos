@@ -204,7 +204,7 @@ export class TestPeer {
       spaceManager: this.spaceManager,
       metadataStore: this.metadataStore,
       keyring: this.keyring,
-      signingContext: this.identity,
+      signingContextProvider: () => this.identity,
       feedStore: this.feedStore,
       echoHost: this.echoHost,
       invitationsManager: this.invitationsManager,

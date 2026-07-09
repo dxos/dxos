@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
@@ -82,6 +83,11 @@ export type GetCronTriggersResponse = {
 };
 
 export type EdgeHttpClientOptions = BaseHttpClientOptions;
+
+export class EdgeHttpClientService extends EffectContext.Tag('@dxos/edge-client/EdgeHttpClient')<
+  EdgeHttpClientService,
+  EdgeHttpClient | undefined
+>() {}
 
 /**
  * HTTP client for the edge worker API (spaces, queues, functions, agents, etc.).

@@ -2,6 +2,10 @@
 // Copyright 2019 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
 import { Event, Mutex } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -9,12 +13,20 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, defaultMap } from '@dxos/util';
 
-import { type FeedFactory, type FeedOptions } from './feed-factory';
+import { FeedFactoryService, type FeedFactory, type FeedOptions } from './feed-factory';
 import { type FeedWrapper } from './feed-wrapper';
 
 export interface FeedStoreOptions<T extends {}> {
   factory: FeedFactory<T>;
 }
+
+/**
+ * Effect service tag for {@link FeedStore}.
+ */
+export class FeedStoreService extends EffectContext.Tag('@dxos/feed-store/FeedStore')<
+  FeedStoreService,
+  FeedStore<any>
+>() {}
 
 /**
  * Persistent hypercore store.
@@ -108,3 +120,15 @@ export class FeedStore<T extends {}> {
     log('closed');
   }
 }
+
+/**
+ * Effect Layer constructing a {@link FeedStore} from a {@link FeedFactory} service.
+ */
+export const FeedStoreLayer = (): Layer.Layer<FeedStoreService, never, FeedFactoryService> =>
+  Layer.effect(
+    FeedStoreService,
+    Effect.gen(function* () {
+      const factory = yield* FeedFactoryService;
+      return new FeedStore({ factory });
+    }),
+  );

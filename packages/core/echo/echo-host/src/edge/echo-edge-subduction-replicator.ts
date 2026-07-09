@@ -3,12 +3,14 @@
 //
 
 import { cbor } from '@automerge/automerge-repo';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { Mutex, scheduleMicroTask, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
 import type { CollectionId } from '@dxos/echo-protocol';
-import { type EdgeConnection, type EdgeHttpClient } from '@dxos/edge-client';
+import { EdgeConnectionService, EdgeHttpClientService, type EdgeConnection, type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -34,6 +36,7 @@ import { bufferToArray, compositeKey } from '@dxos/util';
 import {
   type AutomergeReplicatorConnection,
   type AutomergeReplicatorContext,
+  EdgeAutomergeReplicatorService,
   type EdgeAutomergeReplicator,
   type ShouldAdvertiseProps,
   type ShouldSyncCollectionProps,
@@ -503,3 +506,24 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     }
   }
 }
+
+export type EchoEdgeSubductionReplicatorLayerOptions = Pick<EchoEdgeSubductionReplicatorProps, 'disableSharePolicy'>;
+
+/**
+ * Effect Layer constructing an {@link EchoEdgeSubductionReplicator}.
+ */
+export const EchoEdgeSubductionReplicatorLayer = (
+  options: EchoEdgeSubductionReplicatorLayerOptions = {},
+): Layer.Layer<EdgeAutomergeReplicatorService, never, EdgeConnectionService | EdgeHttpClientService> =>
+  Layer.effect(
+    EdgeAutomergeReplicatorService,
+    Effect.gen(function* () {
+      const edgeConnection = yield* EdgeConnectionService;
+      const edgeHttpClient = yield* EdgeHttpClientService;
+      return new EchoEdgeSubductionReplicator({
+        edgeConnection,
+        edgeHttpClient,
+        disableSharePolicy: options.disableSharePolicy,
+      });
+    }),
+  );
