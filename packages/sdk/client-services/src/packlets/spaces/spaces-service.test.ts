@@ -2,12 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as Runtime from 'effect/Runtime';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { type Space, type SpacesService } from '@dxos/protocols/proto/dxos/client/services';
+import { subscribeStream } from '@dxos/protocols';
+import { type Space } from '@dxos/protocols/proto/dxos/client/services';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { type ServiceContext } from '../services';
@@ -16,7 +19,7 @@ import { SpacesServiceImpl } from './spaces-service';
 
 describe('SpacesService', () => {
   let serviceContext: ServiceContext;
-  let spacesService: SpacesService;
+  let spacesService: SpacesServiceImpl;
 
   beforeEach(async () => {
     serviceContext = await createServiceContext();
@@ -38,14 +41,16 @@ describe('SpacesService', () => {
 
   describe('createSpace', () => {
     test('fails if no identity is available', async () => {
-      await expect(spacesService.createSpace({ membershipPolicy: MembershipPolicy.INVITE })).rejects.toBeInstanceOf(
-        Error,
-      );
+      await expect(
+        Effect.runPromise(spacesService['SpacesService.createSpace']({ membershipPolicy: MembershipPolicy.INVITE })),
+      ).rejects.toBeInstanceOf(Error);
     });
 
     test('creates a new space', async () => {
       await serviceContext.createIdentity();
-      const space = await spacesService.createSpace({ membershipPolicy: MembershipPolicy.INVITE });
+      const space = await Effect.runPromise(
+        spacesService['SpacesService.createSpace']({ membershipPolicy: MembershipPolicy.INVITE }),
+      );
       expect(space).to.exist;
       expect(space.spaceKey).to.be.instanceof(PublicKey);
     });
@@ -55,29 +60,29 @@ describe('SpacesService', () => {
 
   describe('querySpaces', () => {
     test('returns empty list if no identity is available', async () => {
-      const query = spacesService.querySpaces();
+      const query = spacesService['SpacesService.querySpaces']();
       const result = new Trigger<Space[] | undefined>();
-      query.subscribe(({ spaces }) => {
-        result.wake(spaces);
+      const unsubscribe = subscribeStream(Runtime.defaultRuntime, query, {
+        onData: ({ spaces }) => result.wake(spaces),
       });
-      onTestFinished(() => query.close());
+      onTestFinished(() => unsubscribe());
       expect(await result.wait()).to.be.length(0);
     });
 
     test('returns list of existing spaces', async () => {
       await serviceContext.createIdentity();
       const existingSpaces = [
-        await spacesService.createSpace({ membershipPolicy: MembershipPolicy.INVITE }),
-        await spacesService.createSpace({ membershipPolicy: MembershipPolicy.INVITE }),
-        await spacesService.createSpace({ membershipPolicy: MembershipPolicy.INVITE }),
+        await Effect.runPromise(spacesService['SpacesService.createSpace']({ membershipPolicy: MembershipPolicy.INVITE })),
+        await Effect.runPromise(spacesService['SpacesService.createSpace']({ membershipPolicy: MembershipPolicy.INVITE })),
+        await Effect.runPromise(spacesService['SpacesService.createSpace']({ membershipPolicy: MembershipPolicy.INVITE })),
       ];
 
-      const query = spacesService.querySpaces();
+      const query = spacesService['SpacesService.querySpaces']();
       const result = new Trigger<Space[] | undefined>();
-      query.subscribe(({ spaces }) => {
-        result.wake(spaces);
+      const unsubscribe = subscribeStream(Runtime.defaultRuntime, query, {
+        onData: ({ spaces }) => result.wake(spaces),
       });
-      onTestFinished(() => query.close());
+      onTestFinished(() => unsubscribe());
 
       const spaces = await result.wait();
       expect(spaces).to.be.length(3);
@@ -86,16 +91,18 @@ describe('SpacesService', () => {
 
     test('updates when new space is added', async () => {
       await serviceContext.createIdentity();
-      const query = spacesService.querySpaces();
+      const query = spacesService['SpacesService.querySpaces']();
       const result = new Trigger<Space[] | undefined>();
-      query.subscribe(({ spaces }) => {
-        result.wake(spaces);
+      const unsubscribe = subscribeStream(Runtime.defaultRuntime, query, {
+        onData: ({ spaces }) => result.wake(spaces),
       });
-      onTestFinished(() => query.close());
+      onTestFinished(() => unsubscribe());
       expect(await result.wait()).to.be.length(0);
 
       result.reset();
-      const space = await spacesService.createSpace({ membershipPolicy: MembershipPolicy.INVITE });
+      const space = await Effect.runPromise(
+        spacesService['SpacesService.createSpace']({ membershipPolicy: MembershipPolicy.INVITE }),
+      );
       const spaces = await result.wait();
       expect(spaces).to.be.length(1);
       expect(spaces?.[0].spaceKey.equals(space.spaceKey)).to.be.true;

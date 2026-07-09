@@ -2,14 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Runtime from 'effect/Runtime';
+import * as EffectScope from 'effect/Scope';
+import * as Stream from 'effect/Stream';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Entity, type Hypergraph, Scope } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
+import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, type SpaceId, SpaceId as SpaceId$ } from '@dxos/keys';
-import { QueryReactivity, type QueryRequest, type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
+import { makeInProcessClient } from '@dxos/protocols';
+import {
+  QueryReactivity,
+  type QueryRequest,
+  type QueryResponse,
+  type QueryResult,
+} from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryService } from '@dxos/protocols/rpc';
 
 import { type ObjectUpdate } from './index-query-source-provider';
 import { IndexQuerySource } from './index-query-source-provider';
@@ -40,20 +53,20 @@ describe('IndexQuerySource', () => {
   test('does not start a REACTIVE remote query until open() is called', async () => {
     const calls: QueryRequest[] = [];
 
-    const service = {
-      execQuery: (request: QueryRequest) => {
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) => {
         calls.push(request);
-        return {
-          subscribe: (next: any) => {
-            queueMicrotask(() => next({ queryId: request.queryId, results: [] }));
-          },
-          close: async () => {},
-        } as any;
+        return Stream.async<QueryResponse>((emit) => {
+          queueMicrotask(() => void emit.single({ queryId: request.queryId, results: [] }));
+        });
       },
-    } as unknown as QueryService;
+      'QueryService.reindex': () => Effect.void,
+    });
 
     const source = new IndexQuerySource({
       service,
+      runtime: Runtime.defaultRuntime,
       objectLoader: {
         loadObject: async () => undefined,
         updateEvent: noopUpdateEvent,
@@ -71,28 +84,29 @@ describe('IndexQuerySource', () => {
     source.open();
     expect(calls).toHaveLength(0);
 
+    // The reactive query is dispatched on the host stream fiber, so it lands after a turn.
     source.update(query);
-    expect(calls).toHaveLength(1);
+    await expect.poll(() => calls).toHaveLength(1);
     expect(calls[0].reactivity).toBe(QueryReactivity.REACTIVE);
   });
 
   test('update() then run() issues only a ONE_SHOT remote query when not open', async () => {
     const calls: QueryRequest[] = [];
 
-    const service = {
-      execQuery: (request: QueryRequest) => {
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) => {
         calls.push(request);
-        return {
-          subscribe: (next: any, _error?: any) => {
-            queueMicrotask(() => next({ queryId: request.queryId, results: [] }));
-          },
-          close: async () => {},
-        } as any;
+        return Stream.async<QueryResponse>((emit) => {
+          queueMicrotask(() => void emit.single({ queryId: request.queryId, results: [] }));
+        });
       },
-    } as unknown as QueryService;
+      'QueryService.reindex': () => Effect.void,
+    });
 
     const source = new IndexQuerySource({
       service,
+      runtime: Runtime.defaultRuntime,
       objectLoader: {
         loadObject: async () => undefined,
         updateEvent: noopUpdateEvent,
@@ -122,19 +136,20 @@ describe('IndexQuerySource', () => {
     // Fake entity at the loader boundary — only `id` is read by the source under test.
     let loaded: Entity.Unknown | undefined;
 
-    let emit!: (results: any[]) => void;
-    const service = {
-      execQuery: (request: QueryRequest) => ({
-        subscribe: (next: any) => {
-          emit = (results) => next({ queryId: request.queryId, results });
-        },
-        close: async () => {},
-      }),
-    } as unknown as QueryService;
+    let emit: ((results: QueryResult[]) => void) | undefined;
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) =>
+        Stream.async<QueryResponse>((streamEmit) => {
+          emit = (results) => void streamEmit.single({ queryId: request.queryId, results });
+        }),
+      'QueryService.reindex': () => Effect.void,
+    });
 
     const updateEvent = new Event<ObjectUpdate>();
     const source = new IndexQuerySource({
       service,
+      runtime: Runtime.defaultRuntime,
       objectLoader: {
         loadObject: async () => loaded,
         updateEvent,
@@ -152,9 +167,13 @@ describe('IndexQuerySource', () => {
     source.open();
     source.update(query);
 
+    // `execQuery` runs on the host stream fiber, so the emitter is registered after a turn.
+    await expect.poll(() => emit).toBeDefined();
+    invariant(emit);
+
     // Host returns the index hit, but the object can't be hydrated yet → empty results.
     const settled = nextChanged();
-    emit([{ id: objectId, spaceId, rank: 0 } as any]);
+    emit([{ id: objectId, spaceId, rank: 0 }]);
     await settled;
     expect(source.getResults()).toEqual([]);
 
@@ -169,3 +188,15 @@ describe('IndexQuerySource', () => {
     void ctx.dispose();
   });
 });
+
+/**
+ * Bridges hand-written {@link QueryService.Handlers} to an in-process effect-rpc client (no wire hop),
+ * matching the client shape `IndexQuerySource` consumes. The bridge scope is closed on test teardown.
+ */
+const makeQueryClient = async (handlers: QueryService.Handlers): Promise<QueryService.Client> => {
+  const scope = Effect.runSync(EffectScope.make());
+  onTestFinished(() => Effect.runPromise(EffectScope.close(scope, Exit.void)));
+  return Effect.runPromise(
+    makeInProcessClient(QueryService.Rpcs, handlers).pipe(Effect.provideService(EffectScope.Scope, scope)),
+  );
+};

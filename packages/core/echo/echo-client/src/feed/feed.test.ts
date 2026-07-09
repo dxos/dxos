@@ -432,22 +432,26 @@ describe('Feed', () => {
         yield* Feed.append(traceFeed, [Obj.make(TestSchema.Person, { name: 'trace-item' })]);
       }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
 
-      const traceResult = await peer.host.feedService.queryFeed({
-        query: {
-          spaceId: db.spaceId,
-          feedIds: [traceFeed.id],
-          feedNamespace: FeedProtocol.WellKnownNamespaces.trace,
-        },
-      });
+      const traceResult = await Effect.runPromise(
+        peer.host.feedService['FeedService.queryFeed']({
+          query: {
+            spaceId: db.spaceId,
+            feedIds: [traceFeed.id],
+            feedNamespace: FeedProtocol.WellKnownNamespaces.trace,
+          },
+        }),
+      );
       expect(traceResult.objects?.length).toBe(1);
 
-      const dataResult = await peer.host.feedService.queryFeed({
-        query: {
-          spaceId: db.spaceId,
-          feedIds: [traceFeed.id],
-          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
-        },
-      });
+      const dataResult = await Effect.runPromise(
+        peer.host.feedService['FeedService.queryFeed']({
+          query: {
+            spaceId: db.spaceId,
+            feedIds: [traceFeed.id],
+            feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          },
+        }),
+      );
       expect(dataResult.objects?.length).toBe(0);
     });
   });
