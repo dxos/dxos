@@ -2,41 +2,46 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as EffectStream from 'effect/Stream';
+
 import { SubscriptionList } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import {
   Device,
   DeviceKind,
-  type DevicesService,
   EdgeStatus,
   type QueryDevicesResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DevicesService } from '@dxos/protocols/rpc';
 
 import { type IdentityManager } from '../identity';
 
-export class DevicesServiceImpl implements DevicesService {
+export class DevicesServiceImpl implements DevicesService.Handlers {
   constructor(
     private readonly _identityManager: IdentityManager,
     private readonly _edgeConnection?: EdgeConnection,
   ) {}
 
-  async updateDevice(profile: DeviceProfileDocument): Promise<Device> {
-    return this._identityManager.updateDeviceProfile(profile);
+  ['DevicesService.updateDevice'](request: DeviceProfileDocument): Effect.Effect<Device, Error> {
+    return Effect.tryPromise({
+      try: async () => this._identityManager.updateDeviceProfile(request),
+      catch: (error) => error as Error,
+    });
   }
 
-  queryDevices(): Stream<QueryDevicesResponse> {
-    return new Stream(({ next }) => {
+  ['DevicesService.queryDevices'](): EffectStream.Stream<QueryDevicesResponse, Error> {
+    return EffectStream.async<QueryDevicesResponse, Error>((emit) => {
       const update = () => {
         const deviceKeys = this._identityManager.identity?.authorizedDeviceKeys;
         if (!deviceKeys) {
-          next({ devices: [] });
+          void emit.single({ devices: [] });
         } else {
           invariant(this._identityManager.identity?.presence, 'presence not present');
           const peers = this._identityManager.identity.presence.getPeersOnline();
-          next({
+          void emit.single({
             devices: Array.from(deviceKeys.entries()).map(([key, profile]) => {
               const isMe = this._identityManager.identity?.deviceKey.equals(key);
               let presence;
@@ -104,7 +109,7 @@ export class DevicesServiceImpl implements DevicesService {
 
       update();
 
-      return () => subscriptions.clear();
+      return Effect.sync(() => subscriptions.clear());
     });
   }
 }

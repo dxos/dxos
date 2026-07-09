@@ -18,6 +18,24 @@ import * as Stream from 'effect/Stream';
 import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream as PbStream } from '@dxos/codec-protobuf/stream';
 import { runServiceCall } from '@dxos/protocols';
+// Type-only imports so declaration emit can name the effect-rpc message types referenced by the
+// exported {@link ClientServicesHandlers}/{@link ClientServicesRpcs} inferred types (TS2883).
+import type { IndexConfig as _IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import type { QueryRequest as _QueryRequest, QueryResponse as _QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
+import type {
+  BatchedDocumentUpdates as _BatchedDocumentUpdates,
+  CreateDocumentRequest as _CreateDocumentRequest,
+  CreateDocumentResponse as _CreateDocumentResponse,
+  FlushRequest as _FlushRequest,
+  GetDocumentHeadsRequest as _GetDocumentHeadsRequest,
+  GetDocumentHeadsResponse as _GetDocumentHeadsResponse,
+  GetSpaceSyncStateRequest as _GetSpaceSyncStateRequest,
+  ReIndexHeadsRequest as _ReIndexHeadsRequest,
+  SubscribeRequest as _SubscribeRequest,
+  UpdateRequest as _UpdateRequest,
+  UpdateSubscriptionRequest as _UpdateSubscriptionRequest,
+  WaitUntilHeadsReplicatedRequest as _WaitUntilHeadsReplicatedRequest,
+} from '@dxos/protocols/proto/dxos/echo/service';
 import {
   ContactsService,
   DataService,
@@ -59,6 +77,27 @@ export class ClientServicesRpcs extends RpcGroup.make().merge(
 
 type ClientServicesRpcUnion = RpcGroup.Rpcs<typeof ClientServicesRpcs>;
 
+/**
+ * Host-side service implementations, one per client service, each in the effect-rpc `Handlers`
+ * shape (Effect/Stream-returning, tag-keyed). This is the shape service hosts provide and
+ * {@link ClientRpcServer} serves directly, with no protobuf encode/decode at the boundary.
+ */
+export type ClientServicesHandlers = {
+  SystemService: SystemService.Handlers;
+  NetworkService: NetworkService.Handlers;
+  LoggingService: LoggingService.Handlers;
+  IdentityService: IdentityService.Handlers;
+  InvitationsService: InvitationsService.Handlers;
+  DevicesService: DevicesService.Handlers;
+  SpacesService: SpacesService.Handlers;
+  DataService: DataService.Handlers;
+  QueryService: QueryService.Handlers;
+  FeedService: FeedService.Handlers;
+  ContactsService: ContactsService.Handlers;
+  EdgeAgentService: EdgeAgentService.Handlers;
+  DevtoolsHost: DevtoolsHost.Handlers;
+};
+
 const toError = (cause: unknown): Error => (cause instanceof Error ? cause : new Error(String(cause)));
 
 const isVoidSchema = (schema: { ast: { _tag: string } }): boolean => schema.ast._tag === 'VoidKeyword';
@@ -96,7 +135,7 @@ export type ClientRpcServerParams = {
   /**
    * Resolved per call so the served set follows the host lifecycle (services host open/close).
    */
-  services: () => Partial<ClientServices>;
+  services: () => Partial<ClientServicesHandlers>;
   /**
    * Awaited before dispatching each request (e.g. worker readiness); a rejection fails the call.
    */
@@ -148,30 +187,31 @@ export const makeClientServicesHandlers = ({
 
   const handlers: Record<string, (payload: unknown) => unknown> = {};
   for (const [tag, rpc] of ClientServicesRpcs.requests) {
-    const [serviceKey, methodName] = parseTag(tag);
-    const resolveMethod = () => resolveServiceMethod(services(), serviceKey, methodName, tag);
+    const [serviceKey] = parseTag(tag);
+    // The host service is itself in the Handlers shape, keyed by the full prefixed tag; invoking it
+    // returns the Effect/Stream directly, so no protobuf encode/decode adapter is needed.
+    const invoke = (payload: unknown) => {
+      const service = services()[serviceKey] as Record<string, (payload: unknown) => unknown> | undefined;
+      const handler = service?.[tag];
+      if (typeof handler !== 'function') {
+        throw new Error(`Service handler not available: ${tag}`);
+      }
+      return handler.call(service, payload);
+    };
 
     if (RpcSchema.isStreamSchema(rpc.successSchema)) {
       handlers[tag] = (payload: unknown) =>
         gate.pipe(
-          Effect.map(() => pbStreamToStream(() => resolveMethod()(payload) as PbStream<unknown>)),
+          Effect.map(() => invoke(payload) as Stream.Stream<unknown, unknown>),
           Stream.unwrap,
         );
     } else {
-      handlers[tag] = (payload: unknown) =>
-        gate.pipe(
-          Effect.flatMap(() =>
-            Effect.tryPromise({
-              try: async () => resolveMethod()(payload),
-              catch: toError,
-            }),
-          ),
-        );
+      handlers[tag] = (payload: unknown) => gate.pipe(Effect.flatMap(() => invoke(payload) as Effect.Effect<unknown, unknown>));
     }
   }
 
-  // Handlers are constructed dynamically from the protobuf-derived rpc groups, so their
-  // per-method types cannot be expressed statically.
+  // Handlers are dispatched dynamically across all merged service groups, so their per-method types
+  // cannot be expressed statically.
   return ClientServicesRpcs.toLayer(handlers as never);
 };
 

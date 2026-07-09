@@ -2,20 +2,23 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as EffectStream from 'effect/Stream';
+
 import { Event } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { type LogLevel, type LogProcessor, type LogEntry as NaturalLogEntry, log } from '@dxos/log';
 import {
   type ControlMetricsRequest,
   type ControlMetricsResponse,
   type LogEntry,
-  type LoggingService,
   type Metrics,
   QueryLogsRequest,
   type QueryMetricsRequest,
   type QueryMetricsResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { type LoggingService } from '@dxos/protocols/rpc';
 import { numericalValues, tracer } from '@dxos/util';
 
 /**
@@ -25,7 +28,7 @@ import { numericalValues, tracer } from '@dxos/util';
  * seen in the main window console without opening the shared worker DevTools. Shared worker client
  * services is deprecated; dedicated worker logs already show in the main window console.
  */
-export class LoggingServiceImpl implements LoggingService {
+export class LoggingServiceImpl implements LoggingService.Handlers {
   private readonly _logs = new Event<NaturalLogEntry>();
   private readonly _started = Date.now();
   private readonly _sessionId = PublicKey.random().toHex();
@@ -39,31 +42,38 @@ export class LoggingServiceImpl implements LoggingService {
     log.runtimeConfig.processors.splice(index, 1);
   }
 
-  async controlMetrics({ reset, record }: ControlMetricsRequest): Promise<ControlMetricsResponse> {
-    if (reset) {
-      tracer.clear();
-    }
+  ['LoggingService.controlMetrics']({
+    reset,
+    record,
+  }: ControlMetricsRequest): Effect.Effect<ControlMetricsResponse, Error> {
+    return Effect.sync(() => {
+      if (reset) {
+        tracer.clear();
+      }
 
-    if (record === true) {
-      tracer.start();
-    } else if (record === false) {
-      tracer.stop();
-    }
+      if (record === true) {
+        tracer.start();
+      } else if (record === false) {
+        tracer.stop();
+      }
 
-    return { recording: tracer.recording };
+      return { recording: tracer.recording };
+    });
   }
 
   /**
    * @deprecated (Move to diagnostics).
    */
-  queryMetrics({ interval = 5_000 }: QueryMetricsRequest): Stream<QueryMetricsResponse> {
+  ['LoggingService.queryMetrics']({
+    interval = 5_000,
+  }: QueryMetricsRequest): EffectStream.Stream<QueryMetricsResponse, Error> {
     // TODO(burdon): Map all traces; how to bind to reducer/metrics shape (e.g., numericalValues)?
     const getNumericalValues = (key: string) => {
       const events = tracer.get(key) ?? [];
       return { key, stats: numericalValues(events, 'duration') };
     };
 
-    return new Stream(({ next }) => {
+    return EffectStream.async<QueryMetricsResponse, Error>((emit) => {
       const update = () => {
         const metrics: Metrics = {
           timestamp: new Date(),
@@ -73,7 +83,7 @@ export class LoggingServiceImpl implements LoggingService {
           ].filter(Boolean) as Metrics.KeyPair[],
         };
 
-        next({
+        void emit.single({
           timestamp: new Date(),
           metrics,
         });
@@ -81,14 +91,15 @@ export class LoggingServiceImpl implements LoggingService {
 
       update();
       const i = setInterval(update, Math.max(interval, 1_000));
-      return () => {
+      return Effect.sync(() => {
         clearInterval(i);
-      };
+      });
     });
   }
 
-  queryLogs(request: QueryLogsRequest): Stream<LogEntry> {
-    return new Stream<LogEntry>(({ ctx, next }) => {
+  ['LoggingService.queryLogs'](request: QueryLogsRequest): EffectStream.Stream<LogEntry, Error> {
+    return EffectStream.async<LogEntry, Error>((emit) => {
+      const ctx = Context.default();
       const handler = (entry: NaturalLogEntry) => {
         // This call was caused by the logging service itself.
         if (LOG_PROCESSING > 0) {
@@ -133,13 +144,14 @@ export class LoggingServiceImpl implements LoggingService {
 
         try {
           LOG_PROCESSING++;
-          next(record);
+          void emit.single(record);
         } finally {
           LOG_PROCESSING--;
         }
       };
 
       this._logs.on(ctx, handler);
+      return Effect.promise(() => ctx.dispose());
     });
   }
 
