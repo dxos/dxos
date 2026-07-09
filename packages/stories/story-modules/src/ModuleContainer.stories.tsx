@@ -20,9 +20,9 @@ import { ModuleContainer } from './ModuleContainer';
 
 // Example module role tokens (role-only dispatch). A real storybook defines these alongside its
 // module surfaces; here they exercise the container in isolation from any plugin.
-const PanelA = Role.make('org.dxos.storybook.storyModules.panelA');
-const PanelB = Role.make('org.dxos.storybook.storyModules.panelB');
-const PanelC = Role.make('org.dxos.storybook.storyModules.panelC');
+const PanelA = Role.make<Record<string, any>>('org.dxos.storybook.storyModules.panelA');
+const PanelB = Role.make<Record<string, any>>('org.dxos.storybook.storyModules.panelB');
+const PanelC = Role.make<Record<string, any>>('org.dxos.storybook.storyModules.panelC');
 
 /** Trivial surface component: shows its label and the active space it resolved. */
 const ExamplePanel = ({ label }: { label: string }) => {
