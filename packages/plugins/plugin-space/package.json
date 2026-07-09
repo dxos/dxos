@@ -156,6 +156,7 @@
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
+    "@dxos/react-ui-table": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/types": "workspace:*",

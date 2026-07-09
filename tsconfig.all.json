@@ -454,9 +454,6 @@
       "path": "packages/plugins/plugin-markdown/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-masonry/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-meeting/tsconfig.json"
     },
     {
@@ -668,6 +665,9 @@
     },
     {
       "path": "packages/stories/stories-inbox/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/story-modules/tsconfig.json"
     },
     {
       "path": "packages/ui/brand/tsconfig.json"

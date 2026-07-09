@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './types';
+export * as Module from './Module';
 
 export * from './SkillModule';
 export * from './ChatModule';
