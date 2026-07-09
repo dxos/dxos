@@ -29,6 +29,7 @@ import {
   SpaceManagerLayer,
   SpaceManagerService,
   SqliteMetadataStore,
+  SqliteMetadataStoreLayer,
   runSqliteHealthCheck,
   valueEncoding,
 } from '@dxos/echo-host';
@@ -43,7 +44,7 @@ import {
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedFactoryLayer, type FeedStore, FeedStoreLayer, FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { type KeyringApi, KeyringApiService, SqliteKeyring } from '@dxos/keyring';
+import { type KeyringApi, KeyringApiService, SqliteKeyring, SqliteKeyringLayer } from '@dxos/keyring';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SignalManager, SignalManagerService } from '@dxos/messaging';
@@ -54,7 +55,12 @@ import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SqlTransaction } from '@dxos/sql-sqlite';
-import { type BlobStoreApi, BlobStoreApiService, SqliteBlobStore } from '@dxos/teleport-extension-object-sync';
+import {
+  type BlobStoreApi,
+  BlobStoreApiService,
+  SqliteBlobStore,
+  SqliteBlobStoreLayer,
+} from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { safeInstanceof } from '@dxos/util';
 
@@ -102,7 +108,7 @@ import {
   CrossDeviceSpaceSynchronizerService,
 } from './cross-device-space-synchronizer';
 import { FeedSyncer, FeedSyncerLayer, FeedSyncerService } from './feed-syncer';
-import { FeedStorageDirectoryLayer, SqliteStorage, SqliteStorageService } from './sqlite-storage';
+import { FeedStorageDirectoryLayer, SqliteStorage, SqliteStorageLayer } from './sqlite-storage';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
@@ -659,41 +665,38 @@ const identityProviderLayer = Layer.effect(
 );
 
 /**
- * Constructs the concrete SQLite stores once and exposes them (plus the combined migration effect
- * and the hypercore feed store) to the rest of the stack. Migrations run in stage 2, not here.
+ * Combined storage migration effect. Storage migrations are idempotent `CREATE TABLE` effects that
+ * do not depend on store instance state, so they are extracted from throwaway instances to keep the
+ * store layers individual. Run in stage 2 by {@link ServiceContext._open}.
+ */
+const storageMigrationLayer = Layer.effect(
+  StorageMigrationService,
+  Effect.gen(function* () {
+    const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+    return Effect.all(
+      [
+        new SqliteMetadataStore({ runtime }).migrate,
+        new SqliteBlobStore({ runtime }).migrate,
+        new SqliteKeyring({ runtime }).migrate,
+        new SqliteStorage({ runtime }).migrate,
+      ],
+      { discard: true },
+    );
+  }),
+);
+
+/**
+ * Storage / feed layers composed from the individual store layers plus the combined migration.
  */
 const storageLayer = Layer.empty.pipe(
   Layer.provideMerge(FeedStoreLayer()),
-  Layer.provideMerge(
-    FeedFactoryLayer({
-      hypercore: {
-        valueEncoding,
-        stats: true,
-      },
-    }),
-  ),
+  Layer.provideMerge(FeedFactoryLayer({ hypercore: { valueEncoding, stats: true } })),
   Layer.provideMerge(FeedStorageDirectoryLayer()),
-  Layer.provideMerge(
-    Layer.effectContext(
-      Effect.gen(function* () {
-        const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
-        const metadataStore = new SqliteMetadataStore({ runtime });
-        const blobStore = new SqliteBlobStore({ runtime });
-        const keyring = new SqliteKeyring({ runtime });
-        const storage = new SqliteStorage({ runtime });
-        const storageMigrate = Effect.all([metadataStore.migrate, blobStore.migrate, keyring.migrate, storage.migrate], {
-          discard: true,
-        });
-        return EffectContext.empty().pipe(
-          EffectContext.add(IMetadataStoreService, metadataStore),
-          EffectContext.add(BlobStoreApiService, blobStore),
-          EffectContext.add(KeyringApiService, keyring),
-          EffectContext.add(SqliteStorageService, storage),
-          EffectContext.add(StorageMigrationService, storageMigrate),
-        );
-      }),
-    ),
-  ),
+  Layer.provideMerge(SqliteMetadataStoreLayer()),
+  Layer.provideMerge(SqliteBlobStoreLayer()),
+  Layer.provideMerge(SqliteKeyringLayer()),
+  Layer.provideMerge(SqliteStorageLayer()),
+  Layer.provideMerge(storageMigrationLayer),
 );
 
 /**
