@@ -18,6 +18,7 @@ import {
   type DataService,
   type DocumentUpdate,
 } from '@dxos/protocols/proto/dxos/echo/service';
+
 import { DocHandleProxy } from './doc-handle-proxy';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
