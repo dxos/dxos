@@ -18,7 +18,7 @@ import {
   messageSource,
   messageToDocument,
 } from '@dxos/pipeline-email';
-import { FactStore, extractDocFacts } from '@dxos/pipeline-rdf';
+import { FactStore, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
 import { FeedCursors, type FeedCursorsApi, InboxOperation } from '../../types';
@@ -91,17 +91,32 @@ export const runFactPipeline = (options: {
 
 const handler = InboxOperation.EnrichMailbox.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ mailbox: mailboxRef, pageSize = InboxOperation.DEFAULT_ENRICH_MAILBOX_PAGE_SIZE }) {
+    Effect.fnUntraced(function* ({
+      mailbox: mailboxRef,
+      pageSize = InboxOperation.DEFAULT_ENRICH_MAILBOX_PAGE_SIZE,
+      model,
+      provider,
+      strict,
+    }) {
       const mailbox = yield* Database.load(mailboxRef);
       const feed = yield* Database.load(mailbox.feed);
       const aiService = yield* AiService.AiService;
       const cursors = yield* FeedCursors;
 
+      // Extract options: the email rules plus optional model/provider/strict overrides so callers can
+      // target a local model (e.g. ollama, strict:false) instead of the default edge Claude model.
+      const extractOptions: RDF.ExtractOptions = {
+        ...EMAIL_EXTRACT_OPTIONS,
+        ...(model !== undefined ? { model } : {}),
+        ...(provider !== undefined ? { provider } : {}),
+        ...(strict !== undefined ? { strict } : {}),
+      };
+
       // Extract-only closure: derives facts via pipeline-rdf with the injected AiService without
       // persisting (the sink persists per page, so there is no double write).
       const extract: FactExtractor = (message) =>
         EffectEx.runPromise(
-          extractDocFacts(messageToDocument(message), EMAIL_EXTRACT_OPTIONS).pipe(
+          extractDocFacts(messageToDocument(message), extractOptions).pipe(
             Effect.provideService(AiService.AiService, aiService),
           ),
         );

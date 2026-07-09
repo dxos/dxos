@@ -30,38 +30,42 @@
 import { useAtomSet } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useEffect } from 'react';
+import * as Layer from 'effect/Layer';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { AiService, Provider } from '@dxos/ai';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useCapability } from '@dxos/app-framework/ui';
+import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppPlugin, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { Feed, Filter, Order, Query, Tag } from '@dxos/echo';
+import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
+import { Feed, Filter, Order, Query, Ref, Tag } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
+import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { type RDF } from '@dxos/pipeline-rdf';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
+import { InboxCapabilities, InboxOperation, Mailbox } from '@dxos/plugin-inbox';
+import { InboxPlugin } from '@dxos/plugin-inbox/testing';
+import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookCapabilities, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Config, useClient } from '@dxos/react-client';
 import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Splitter, Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { useAttentionAttributes, useSelection } from '@dxos/react-ui-attention';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { FactViewer } from '@dxos/react-ui-rdf';
+import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
 import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
-
-import { initializeMailbox } from '#testing';
-import { Mailbox } from '#types';
-
-import { InboxPlugin } from '../../InboxPlugin';
-import { translations as inboxTranslations } from '../../translations';
 
 // Shared attention context id: the LEFT article writes its selection under this id
 // (`showItem({ contextId })`) and the render component reads it back to drive the MIDDLE column.
@@ -70,6 +74,10 @@ const ATTENDABLE_ID = 'story';
 // Composer's public Edge deployment — satisfies the connector coordinator's
 // `invariant(edgeUrl, 'EDGE services not configured.')` so OAuth initiation can run.
 const EDGE_URL = 'https://edge.dxos.workers.dev/';
+
+// Local Ollama model driving `EnrichMailbox` fact extraction in the `EnrichFacts` variant. Ollama
+// reliably fails structured output, so the operation is invoked with `strict: false`.
+const OLLAMA_MODEL = 'com.meta.model.llama-3-2-3b.instruct';
 
 // Schema for every object the connect+sync flow reads or writes: the mailbox + feed, the
 // OAuth-created access token / connection / binding / cursor, and the synced messages,
@@ -109,7 +117,36 @@ const StorySyncPlugin = Plugin.define(
   Plugin.make,
 );
 
-const DefaultStory = () => {
+// Provides an AiService backed by a local Ollama instance so `EnrichMailbox` extracts facts against
+// a local model (start ollama with `OLLAMA_ORIGINS="*" ollama serve`). Contributed on the same
+// process-manager lifecycle as the FactStore LayerSpec so it is present when the operation resolves.
+const StoryAiPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.inbox.story.ai'),
+    name: 'Story Ollama AiService',
+  }),
+).pipe(
+  Plugin.addModule({
+    activatesOn: ActivationEvents.SetupProcessManager,
+    activate: Capability.makeModule(
+      Effect.fnUntraced(function* () {
+        return [
+          Capability.contributes(
+            Capabilities.LayerSpec,
+            LayerSpec.make({ affinity: 'space', requires: [], provides: [AiService.AiService] }, () =>
+              // `orDie`: a layer-construction ConfigError is a story setup fault, not a recoverable
+              // operation error, and `LayerSpec` requires an empty error channel.
+              AiServiceTestingPreset('ollama').pipe(Layer.orDie),
+            ),
+          ),
+        ];
+      }),
+    ),
+  }),
+  Plugin.make,
+);
+
+const MailboxSyncStory = ({ enrich = false }: { enrich?: boolean }) => {
   const client = useClient();
   const identity = useIdentity();
   const [space] = useSpaces();
@@ -125,7 +162,7 @@ const DefaultStory = () => {
   }, [client]);
 
   // The connector auth surface only renders when `useActiveSpace()` resolves, which reads the
-  // layout workspace path; StorybookPlugin defaults it to 'default'. Point it at the personal space.
+  // layout workspace path; StorybookPlugin defaults it to 'default'.
   const layoutState = useCapability(StorybookCapabilities.LayoutState);
   const setLayout = useAtomSet(layoutState);
   useEffect(() => {
@@ -134,8 +171,7 @@ const DefaultStory = () => {
     }
   }, [space, setLayout]);
 
-  // MIDDLE column subject: the message selected in the LEFT article. No fallback to the newest
-  // message — left unselected by default so a sync doesn't immediately churn the middle column.
+  // Feed.
   const feed = useResolveRef(mailbox?.feed);
   const messages = useQuery(
     db,
@@ -143,74 +179,119 @@ const DefaultStory = () => {
       ? Query.select(Filter.type(Message.Message)).from(feed).orderBy(Order.property('created', 'desc'))
       : Query.select(Filter.nothing()),
   );
+
+  // Selected message.
   const selectedId = useSelection(ATTENDABLE_ID, 'single');
   const message = messages.find((candidate) => candidate.id === selectedId);
 
-  // RIGHT column subject: the SyncBinding whose target is this mailbox (reverse-ref index).
+  // Sync binding.
   const bindings = useQuery(
     db,
     mailbox ? Query.select(Filter.id(mailbox.id)).targetOf(SyncBinding.SyncBinding) : Query.select(Filter.nothing()),
   );
-  const syncBinding = bindings.find(SyncBinding.instanceOf);
+  const binding = bindings.find(SyncBinding.instanceOf);
 
-  // The toolbar (and its Reset button) must render regardless of whether the space/mailbox have
-  // loaded — it's the only escape hatch if a persisted identity's data never shows up (e.g. left
-  // over from an interrupted prior run); only the content pane below it is loading-gated.
+  // Facts (enrich variant): the shared per-space FactStore populated by `EnrichMailbox`. Read via
+  // `useCapabilities` (not `useCapability`) so the story never throws if the process-manager
+  // capabilities are not yet active.
+  const [registry] = useCapabilities(InboxCapabilities.FactStoreRegistry);
+  const [invoker] = useCapabilities(Capabilities.OperationInvoker);
+  const [facts, setFacts] = useState<RDF.Fact[]>([]);
+  const [factsNonce, setFactsNonce] = useState(0);
+  const [enriching, setEnriching] = useState(false);
+  useEffect(() => {
+    if (!registry || !space?.id) {
+      setFacts([]);
+      return;
+    }
+
+    // Ignore a late resolve after unmount / space change so we never set state on a stale store.
+    let cancelled = false;
+    void EffectEx.runPromise(
+      registry
+        .forSpace(space.id)
+        .query({})
+        .pipe(Effect.orElseSucceed((): RDF.Fact[] => [])),
+    ).then((result) => {
+      if (!cancelled) {
+        setFacts(result);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [registry, space?.id, factsNonce]);
+
+  // Runs `EnrichMailbox` against the local Ollama model, then refreshes the facts column. The
+  // in-memory FactStore is not ECHO-reactive, so the read is re-triggered via `factsNonce`.
+  const handleEnrich = useCallback(async () => {
+    if (!invoker || !mailbox || !space?.id) {
+      return;
+    }
+
+    setEnriching(true);
+    try {
+      const { error } = await invoker.invokePromise(
+        InboxOperation.EnrichMailbox,
+        { mailbox: Ref.make(mailbox), model: OLLAMA_MODEL, provider: Provider.ollama.id, strict: false },
+        { spaceId: space.id },
+      );
+      if (error) {
+        log.warn('EnrichMailbox failed', { error });
+      }
+      setFactsNonce((nonce) => nonce + 1);
+    } finally {
+      setEnriching(false);
+    }
+  }, [invoker, mailbox, space?.id]);
+
+  // The toolbar (and its Reset button) must render regardless of whether the space/mailbox have loaded.
   return (
-    <div className='dx-container flex flex-col flex-1 overflow-hidden'>
-      <Toolbar.Root classNames='shrink-0 border-be border-separator'>
-        <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
-        <Toolbar.Text>{identity ? `Identity: ${identity.identityKey.truncate()}` : 'No identity'}</Toolbar.Text>
-      </Toolbar.Root>
-      {!db || !mailbox ? (
-        <Loading data={{ db: !!db, mailbox: !!mailbox }} />
-      ) : (
-        <div className='flex-1 overflow-hidden' {...attentionAttrs}>
-          <Splitter.Root orientation='horizontal' anchor='start' resizable defaultSize={24} minSize={16}>
-            <Splitter.Panel position='start'>
-              <Surface.Surface
-                type={AppSurface.Article}
-                data={{ subject: mailbox, attendableId: ATTENDABLE_ID }}
-                limit={1}
-              />
-            </Splitter.Panel>
-            <Splitter.Handle />
-            <Splitter.Panel position='end'>
-              <Splitter.Root orientation='horizontal' anchor='end' resizable defaultSize={24} minSize={16}>
-                <Splitter.Panel position='start'>
-                  {message ? (
-                    <Surface.Surface
-                      type={AppSurface.Article}
-                      data={{ subject: message, companionTo: mailbox, attendableId: ATTENDABLE_ID }}
-                      limit={1}
-                    />
-                  ) : (
-                    <div className='h-full grid place-items-center text-description'>Select a message</div>
-                  )}
-                </Splitter.Panel>
-                <Splitter.Handle />
-                <Splitter.Panel position='end'>
-                  {syncBinding ? (
-                    <Surface.Surface
-                      type={AppSurface.Article}
-                      data={{ subject: syncBinding, companionTo: mailbox, attendableId: ATTENDABLE_ID }}
-                      limit={1}
-                    />
-                  ) : (
-                    <div className='h-full grid place-items-center text-description'>Not connected yet</div>
-                  )}
-                </Splitter.Panel>
-              </Splitter.Root>
-            </Splitter.Panel>
-          </Splitter.Root>
-        </div>
-      )}
-    </div>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
+          {enrich && (
+            <Toolbar.Button onClick={handleEnrich} disabled={!mailbox || enriching}>
+              {enriching ? 'Enriching…' : 'Enrich'}
+            </Toolbar.Button>
+          )}
+          <Toolbar.Text>{identity ? `Identity: ${identity.identityKey.truncate()}` : 'No identity'}</Toolbar.Text>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content className='dx-container grid grid-cols-[1fr_2fr_1fr]' {...attentionAttrs}>
+        <Surface.Surface type={AppSurface.Article} data={{ subject: mailbox, attendableId: ATTENDABLE_ID }} limit={1} />
+
+        {message ? (
+          <Surface.Surface
+            type={AppSurface.Article}
+            data={{ subject: message, companionTo: mailbox, attendableId: ATTENDABLE_ID }}
+            limit={1}
+          />
+        ) : (
+          <div className='h-full grid place-items-center text-description'>Select a message</div>
+        )}
+
+        {enrich ? (
+          <FactViewer facts={facts} />
+        ) : binding ? (
+          <Surface.Surface
+            type={AppSurface.Article}
+            data={{ subject: binding, companionTo: mailbox, attendableId: ATTENDABLE_ID }}
+            limit={1}
+          />
+        ) : (
+          <div className='h-full grid place-items-center text-description'>Not connected yet</div>
+        )}
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
+const DefaultStory = () => <MailboxSyncStory />;
+
 const meta = {
-  title: 'plugins/plugin-inbox/containers/MailboxSync',
+  title: 'stories/stories-inbox/MailboxSync',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
@@ -242,7 +323,8 @@ const meta = {
                 return;
               }
               const { personalSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => initializeMailbox(personalSpace, 0));
+              // Seed an empty mailbox (with its backing feed); the connect/sync flow populates it live.
+              personalSpace.db.add(Mailbox.make());
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),
@@ -252,6 +334,7 @@ const meta = {
         ConnectorPlugin(),
         PreviewPlugin(),
         StorySyncPlugin(),
+        StoryAiPlugin(),
       ],
     })),
   ],
@@ -267,3 +350,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Live: Story = {};
+
+// Replaces the RIGHT connection column with a `FactViewer` and adds an Enrich toolbar button that
+// runs `EnrichMailbox` against the local Ollama model (see `StoryAiPlugin`).
+export const EnrichFacts: Story = {
+  render: () => <MailboxSyncStory enrich />,
+};

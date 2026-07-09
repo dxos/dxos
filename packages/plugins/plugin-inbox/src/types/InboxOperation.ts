@@ -644,6 +644,15 @@ export const EnrichMailbox = Operation.make({
         description: 'Number of messages processed per fact-store commit.',
       }),
     ),
+    model: Schema.optional(
+      Schema.String.annotations({ description: 'Extraction model DXN; defaults to the edge Claude model.' }),
+    ),
+    provider: Schema.optional(
+      Schema.String.annotations({ description: 'AI provider id (e.g. ollama) for local extraction.' }),
+    ),
+    strict: Schema.optional(
+      Schema.Boolean.annotations({ description: 'Strict structured output; set false for weak local models.' }),
+    ),
   }),
   output: Schema.Struct({
     processed: Schema.Number,

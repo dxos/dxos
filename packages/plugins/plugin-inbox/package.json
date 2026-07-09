@@ -208,6 +208,7 @@
     "@opentelemetry/sdk-node": "catalog:",
     "@opentelemetry/sdk-trace-base": "catalog:",
     "@opentelemetry/semantic-conventions": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/js-yaml": "catalog:",
     "@types/mailparser": "catalog:",
     "@types/react": "catalog:",
