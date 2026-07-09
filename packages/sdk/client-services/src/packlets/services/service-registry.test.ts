@@ -5,11 +5,11 @@
 import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
 import { Event } from '@dxos/async';
 import { ServiceDescriptor } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
 import { makeInProcessClient } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';

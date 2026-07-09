@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { EffectEx } from '@dxos/effect';
 import * as Rpc from '@effect/rpc/Rpc';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
+
+import { EffectEx } from '@dxos/effect';
 
 import { makeInProcessClient } from './rpc-bridge.ts';
 

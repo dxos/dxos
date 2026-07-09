@@ -11,7 +11,6 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as EffectRuntime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 
-import { EffectEx } from '@dxos/effect';
 import { Event, synchronized } from '@dxos/async';
 import {
   type ClientServices,
@@ -24,6 +23,7 @@ import {
 import { type ClientServicesHost, type ClientServicesHostProps } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
