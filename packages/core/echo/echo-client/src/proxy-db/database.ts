@@ -10,6 +10,7 @@ import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/a
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import {
+  type Blob,
   Database,
   Entity,
   Feed,
@@ -18,7 +19,6 @@ import {
   Obj,
   Query,
   QueryAST,
-  QueryResult,
   Ref,
   type Registry,
   Type,
@@ -61,7 +61,6 @@ import {
 } from '../echo-handler';
 import { FeedHandle } from '../feed/feed-handle';
 import { type HypergraphImpl } from '../hypergraph';
-import { isSimpleSelectionQuery } from '../query';
 import { type ObjectMigration } from './object-migration';
 
 export interface EchoDatabase extends Database.Database {
@@ -154,15 +153,7 @@ export interface EchoDatabase extends Database.Database {
    */
   syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void>;
 
-  /**
-   * Returns the replication backlog for a feed's namespace.
-   */
   getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
-
-  /**
-   * Queries items in a feed associated with this database.
-   */
-  queryFeed(feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<any>;
 }
 
 export type EchoDatabaseProps = {
@@ -408,14 +399,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   private _query(query: Query.Any | Filter.Any) {
     query = Filter.is(query) ? Query.select(query) : query;
 
-    // Feed-scoped queries the client can evaluate against fetched queue items run on the feed
-    // handle (immediately reflecting appends). Index-only queries (e.g. full-text search) fall
-    // through to the host indexer, which is also where unindexed feed items become visible.
-    const feedUri = getFeedScopeUri(query.ast);
-    if (feedUri && isClientEvaluableFeedQuery(query.ast)) {
-      return this._queryFeed(feedUri, query);
-    }
-
     if (!isQueryScoped(query.ast)) {
       query = query.from(this);
     } else {
@@ -466,6 +449,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   private _addObject<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     if (!isEchoObject(obj)) {
+      if (!isProxy(obj) && !Entity.isEntity(obj)) {
+        throw new TypeError(
+          'db.add expects a reactive ECHO object. Plain objects must be created using Obj.make(Type, props).',
+        );
+      }
+
       const typeEntity = Entity.getType(obj);
       if (typeEntity != null) {
         const isPersisted = Type.getDatabase(typeEntity) != null;
@@ -530,15 +519,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this.#getFeedHandle(feed).getSyncState();
   }
 
-  queryFeed(feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<any> {
-    const feedUri = Feed.getFeedUri(feed);
-    if (!feedUri) {
-      throw new Error('Unable to query feed: make sure feed is stored in the database');
-    }
-    const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
-    return this._queryFeed(feedUri, query);
-  }
-
   /**
    * @internal
    * Sets or refreshes the feed backend service (e.g. after reconnection).
@@ -593,14 +573,24 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return handle;
   }
 
-  private _queryFeed(feedUri: EID.EID, query: Query.Any) {
-    const feedObjectId = EID.getEntityId(feedUri);
-    const feed = feedObjectId ? this.getObjectById<Feed.Feed>(feedObjectId) : undefined;
-    const handle = this._getOrCreateFeedHandle(feedUri, feed?.namespace);
-    if (feed) {
-      handle.setParentEntity(feed as Obj.Unknown);
-    }
-    return handle.query(query);
+  //
+  // Blobs.
+  //
+
+  async createBlob(bytes: Uint8Array, options?: { type?: string; storage?: string }): Promise<Blob.Blob> {
+    return this.graph.blobManager.createBlob(this.spaceId, bytes, options);
+  }
+
+  async readBlob(blob: Blob.Blob): Promise<Uint8Array> {
+    return this.graph.blobManager.readBlob(this.spaceId, blob);
+  }
+
+  async blobExists(blob: Blob.Blob): Promise<boolean> {
+    return this.graph.blobManager.blobExists(this.spaceId, blob);
+  }
+
+  async getBlobUrl(blob: Blob.Blob): Promise<string | undefined> {
+    return this.graph.blobManager.getBlobUrl(this.spaceId, blob);
   }
 
   async flush(opts?: Database.FlushOptions): Promise<void> {
@@ -802,49 +792,6 @@ const isQueryScoped = (query: QueryAST.Query): boolean => {
     }
   });
   return scoped;
-};
-
-/**
- * Whether a feed-scoped query can be evaluated client-side against fetched queue items.
- * Index-only queries (e.g. full-text search) must instead run through the host indexer.
- */
-const isClientEvaluableFeedQuery = (query: QueryAST.Query): boolean => {
-  const simple = isSimpleSelectionQuery(query);
-  return simple != null && !filterContainsTextSearch(simple.filter);
-};
-
-const filterContainsTextSearch = (filter: QueryAST.Filter): boolean => {
-  if (filter.type === 'text-search') {
-    return true;
-  }
-  if (filter.type === 'and' || filter.type === 'or') {
-    return filter.filters.some(filterContainsTextSearch);
-  }
-  if (filter.type === 'not') {
-    return filterContainsTextSearch(filter.filter);
-  }
-  return false;
-};
-
-/**
- * Extracts the feed URI from a query's feed scope (`Scope.feed(...)`), if present.
- * Feed-scoped queries are dispatched to the feed handle rather than the space query sources.
- */
-const getFeedScopeUri = (query: QueryAST.Query): EID.EID | undefined => {
-  let feedUri: EID.EID | undefined;
-  QueryAST.visit(query, (node) => {
-    if (node.type === 'from' && node.from._tag === 'scope') {
-      for (const scope of node.from.scopes) {
-        if (scope._tag === 'feed') {
-          const parsed = EID.tryParse(scope.feedUri);
-          if (parsed) {
-            feedUri = parsed;
-          }
-        }
-      }
-    }
-  });
-  return feedUri;
 };
 
 /**

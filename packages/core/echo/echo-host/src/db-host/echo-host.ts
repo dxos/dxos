@@ -83,7 +83,7 @@ export class EchoHost extends Resource {
   private readonly _automergeHost: AutomergeHost;
   private readonly _queryService: QueryServiceImpl;
   private readonly _dataService: DataServiceImpl;
-  private readonly _spaceStateManager = new SpaceStateManager();
+  private readonly _spaceStateManager: SpaceStateManager;
   private readonly _echoDataMonitor: EchoDataMonitor;
 
   private readonly _automergeDataSource: AutomergeDataSource;
@@ -119,6 +119,7 @@ export class EchoHost extends Resource {
     });
 
     this._runtime = runtime;
+    this._spaceStateManager = new SpaceStateManager({ runtime });
     this._automergeDataSource = new AutomergeDataSource(this._automergeHost);
 
     this._feedStore = new FeedStore({ assignPositions: assignQueuePositions, localActorId: crypto.randomUUID() });
@@ -137,6 +138,8 @@ export class EchoHost extends Resource {
       indexEngine: this._indexEngine,
       runtime: this._runtime,
       spaceStateManager: this._spaceStateManager,
+      // Delegate to the public method so the closed-host early-out and cooperative loop apply.
+      updateIndexes: () => this.updateIndexes(),
     });
 
     this._dataService = new DataServiceImpl({
@@ -339,7 +342,8 @@ export class EchoHost extends Resource {
 
     const automergeRoot = await this._automergeHost.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
-      access: { spaceKey: spaceKey.toHex() },
+      // spaceKey is deprecated but still written so older clients can resolve the owning space.
+      access: { spaceId, spaceKey: spaceKey.toHex() },
 
       // Better to initialize them right away to avoid merge conflicts and data loss that can occur if those maps get created on the fly.
       objects: {},
@@ -348,12 +352,33 @@ export class EchoHost extends Resource {
 
     await this._automergeHost.flush(ctx, { documentIds: [automergeRoot.documentId] });
 
-    return await this.openSpaceRoot(ctx, spaceId, automergeRoot.url);
+    return await this.updateSpaceRoot(ctx, spaceId, automergeRoot.url);
   }
 
-  // TODO(dmaretskyi): Change to document id.
-  async openSpaceRoot(ctx: Context, spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
+  get spaces(): ReadonlyArray<{ spaceId: SpaceId; rootDocUrl: AutomergeUrl }> {
+    return this._spaceStateManager.getPersistedSpaces();
+  }
+
+  async openSpaceRoot(ctx: Context, spaceId: SpaceId): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
+    const documentId = this._spaceStateManager.getSpaceRootDocumentId(spaceId);
+    invariant(documentId, `Space root document not found for space: ${spaceId}`);
+    const url = `automerge:${documentId}` as AutomergeUrl;
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, url, {
+      fetchFromNetwork: true,
+    });
+    invariant(handle, 'Space root document must load before assignment.');
+    const query = this._automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);
+
+    return this._spaceStateManager.assignRootToSpace(spaceId, query);
+  }
+
+  async updateSpaceRoot(ctx: Context, spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+    const currentRoot = this._spaceStateManager.getRootBySpaceId(spaceId);
+    if (currentRoot && currentRoot.url === automergeUrl) {
+      return currentRoot;
+    }
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, automergeUrl, {
       fetchFromNetwork: true,
     });
@@ -363,9 +388,16 @@ export class EchoHost extends Resource {
     return this._spaceStateManager.assignRootToSpace(spaceId, query);
   }
 
-  // TODO(dmaretskyi): Change to document id.
-  async closeSpaceRoot(_automergeUrl: AutomergeUrl): Promise<void> {
+  async closeSpace(spaceId: SpaceId): Promise<void> {
     todo();
+  }
+
+  async removeSpace(spaceId: SpaceId): Promise<void> {
+    const root = this._spaceStateManager.getRootBySpaceId(spaceId);
+    if (root) {
+      void this._automergeHost.clearLocalCollectionState(deriveCollectionIdFromSpaceId(spaceId, root.documentId));
+    }
+    await this._spaceStateManager.removeSpace(spaceId);
   }
 
   /**

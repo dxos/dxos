@@ -80,6 +80,12 @@
       "path": "../../core/compute/pipeline"
     },
     {
+      "path": "../../core/compute/pipeline-email"
+    },
+    {
+      "path": "../../core/compute/pipeline-rdf"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -90,6 +96,9 @@
     },
     {
       "path": "../../core/echo/echo-query"
+    },
+    {
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../core/protocols"
@@ -150,6 +159,9 @@
     },
     {
       "path": "../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../ui/react-ui-rdf"
     },
     {
       "path": "../../ui/react-ui-table"

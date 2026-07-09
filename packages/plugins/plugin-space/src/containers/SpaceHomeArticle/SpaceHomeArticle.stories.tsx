@@ -19,9 +19,9 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { SpaceHomeContent } from '#components';
 import { SpaceHomeDashboard, SpaceHomeRecent } from '#containers';
 import { translations } from '#translations';
+import { SpaceHomeContent } from '#types';
 
 import { SpaceHomeArticle } from './SpaceHomeArticle';
 

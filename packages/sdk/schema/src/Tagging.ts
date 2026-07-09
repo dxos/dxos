@@ -36,10 +36,15 @@ export const get = (object: Obj.Any | Obj.Snapshot<Obj.Any>, { index }: Options 
 };
 
 /** Applies a tag (by id/URI) to an object (idempotent). */
-export const set = (object: Obj.Any, tagId: string, { index }: Options = {}): void => {
+export const set = (object: Obj.Any | Obj.Snapshot<Obj.Any>, tagId: string, { index }: Options = {}): void => {
   if (index) {
+    // Index path is keyed by id, so it works for immutable snapshots (e.g. feed messages) too.
     TagIndex.bind(index).setTag(tagId, object.id);
     return;
+  }
+  // The on-object meta path mutates the object, so it requires a live (non-snapshot) object.
+  if (Obj.isSnapshot(object)) {
+    throw new TypeError('tagging without an index requires a live object');
   }
   // Stored tag refs are canonical EIDs (read-time upgrade normalizes legacy DXN ids); normalize the
   // incoming id the same way so dedupe compares like-for-like.
@@ -52,11 +57,32 @@ export const set = (object: Obj.Any, tagId: string, { index }: Options = {}): vo
   });
 };
 
+/**
+ * Applies many (object, tagId) pairs at once. On the index path this is a single `Obj.update` (one
+ * Automerge change + one reactive notification for the whole batch, vs one per {@link set}) — use it
+ * for bulk tagging (e.g. a sync page) to avoid a per-tag change/notification storm. Falls back to
+ * per-pair {@link set} on the mutable path (no index), where each object's meta changes separately.
+ */
+export const setBatch = (entries: readonly { object: Obj.Any; tagId: string }[], { index }: Options = {}): void => {
+  if (!index) {
+    for (const { object, tagId } of entries) {
+      set(object, tagId, {});
+    }
+    return;
+  }
+  TagIndex.bind(index).setBatch(entries.map(({ object, tagId }) => ({ tagId, objectId: object.id })));
+};
+
 /** Removes a tag (by id/URI) from an object. No-op when not present. */
-export const unset = (object: Obj.Any, tagId: string, { index }: Options = {}): void => {
+export const unset = (object: Obj.Any | Obj.Snapshot<Obj.Any>, tagId: string, { index }: Options = {}): void => {
   if (index) {
+    // Index path is keyed by id, so it works for immutable snapshots (e.g. feed messages) too.
     TagIndex.bind(index).unsetTag(tagId, object.id);
     return;
+  }
+  // The on-object meta path mutates the object, so it requires a live (non-snapshot) object.
+  if (Obj.isSnapshot(object)) {
+    throw new TypeError('tagging without an index requires a live object');
   }
   const id = EID.tryParse(tagId) ?? tagId;
   Obj.update(object, (object) => {

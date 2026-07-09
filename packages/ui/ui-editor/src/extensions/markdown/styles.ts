@@ -111,26 +111,38 @@ export const formattingStyles = EditorView.theme({
   /**
    * Table.
    */
+  '.cm-table': {
+    borderCollapse: 'separate',
+    borderSpacing: '2px',
+  },
   '.cm-table *': {
-    fontFamily: fontMono,
     lineHeight: 1.5,
-    textDecoration: 'none !important',
+  },
+  '.cm-table-editor *': {
+    fontFamily: fontMono,
   },
   '.cm-table-head': {
-    padding: '2px 16px 2px 0px',
+    padding: '4px 8px',
+    paddingRight: '24px',
     overflowWrap: 'break-word',
     whiteSpace: 'pre-wrap',
     wordBreak: 'keep-all',
     textAlign: 'left',
-    color: 'var(--color-subdued)',
-    borderBottom: '1px solid var(--color-cm-separator)',
+    textDecoration: 'none !important',
+    fontSize: 'small',
+    textTransform: 'uppercase',
+    color: 'var(--color-description)',
+    backgroundColor: 'var(--color-input-surface)',
+    // borderBottom: '1px solid var(--color-cm-separator)',
   },
   '.cm-table-cell': {
-    padding: '2px 16px 2px 0px',
+    padding: '4px 8px',
     overflowWrap: 'break-word',
     whiteSpace: 'pre-wrap',
     wordBreak: 'keep-all',
     verticalAlign: 'top',
+    backgroundColor: 'var(--color-base-surface)',
+    fontVariantNumeric: 'tabular-nums',
   },
 
   /**

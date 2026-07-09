@@ -10,6 +10,7 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { FactStore } from '@dxos/pipeline-rdf';
 import {
   Connection,
   GetSyncTargetsInput,
@@ -25,6 +26,7 @@ import { Actor, Event, Message, type Person } from '@dxos/types';
 
 import { meta } from '#meta';
 
+import { FeedCursors } from './FeedCursors';
 import * as Mailbox from './Mailbox';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
@@ -148,13 +150,21 @@ export const GoogleMailSync = Operation.make({
     ),
     after: Schema.Union(Schema.Number, Schema.String).pipe(
       Schema.annotations({
-        description: 'Date to start syncing from, either a unix timestamp or yyyy-MM-dd string.',
+        description: 'Oldest bound of the range to sync (the horizon), a unix timestamp or yyyy-MM-dd string.',
       }),
       Schema.optional,
     ),
-    restrictedMode: Schema.Boolean.pipe(
+    before: Schema.Union(Schema.Number, Schema.String).pipe(
       Schema.annotations({
-        description: 'Use restricted mode to limit to single date range and max 20 messages. Reduces subrequests.',
+        description:
+          'Newest bound of the range to sync, a unix timestamp or yyyy-MM-dd string. Defaults to today; backfill passes the oldest-synced date to cap a backward walk.',
+      }),
+      Schema.optional,
+    ),
+    direction: Schema.Literal('forward', 'backward').pipe(
+      Schema.annotations({
+        description:
+          'Override the walk direction. Inferred from the cursor by default: no cursor → backward (initial, newest-first); a cursor → forward (incremental). Pass backward with `before` to backfill older gaps.',
       }),
       Schema.optional,
     ),
@@ -193,6 +203,26 @@ export const JmapSync = Operation.make({
     binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
       description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
     }),
+    after: Schema.Union(Schema.Number, Schema.String).pipe(
+      Schema.annotations({
+        description: 'Oldest bound of the range to sync (the horizon), a unix timestamp or ISO string.',
+      }),
+      Schema.optional,
+    ),
+    before: Schema.Union(Schema.Number, Schema.String).pipe(
+      Schema.annotations({
+        description:
+          'Newest bound of the range to sync, a unix timestamp or ISO string. Defaults to today; backfill passes the oldest-synced date to cap a backward walk.',
+      }),
+      Schema.optional,
+    ),
+    direction: Schema.Literal('forward', 'backward').pipe(
+      Schema.annotations({
+        description:
+          'Override the walk direction. Inferred from the cursor by default: no cursor → backward (initial, newest-first); a cursor → forward (incremental). Pass backward with `before` to backfill older gaps.',
+      }),
+      Schema.optional,
+    ),
   }),
   output: Schema.Struct({
     newMessages: Schema.Number,
@@ -547,7 +577,9 @@ export const ExtractMessage = Operation.make({
   meta: { key: makeKey('extractMessage'), name: 'Extract Message' },
   services: [Capability.Service, AiService.AiService, Database.Service],
   input: Schema.Struct({
-    source: Obj.Unknown,
+    // Live object or an immutable snapshot (feed messages resolve to snapshots); the handler
+    // re-resolves the live proxy by id when available and reads only `source.id` otherwise.
+    source: Schema.Any,
     extractorId: Schema.optional(Schema.String),
   }),
   output: Schema.Struct({
@@ -589,5 +621,41 @@ export const ExtractMailbox = Operation.make({
     failed: Schema.Number,
     created: Schema.Number,
     updated: Schema.Number,
+  }),
+});
+
+/** Default page size for {@link EnrichMailbox} fact-store commits. */
+export const DEFAULT_ENRICH_MAILBOX_PAGE_SIZE = 10;
+
+export const EnrichMailbox = Operation.make({
+  meta: {
+    key: makeKey('enrichMailbox'),
+    name: 'Enrich Mailbox',
+    description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
+    icon: 'ph--brain--regular',
+  },
+  services: [AiService.AiService, Database.Service, FactStore, FeedCursors],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox whose feed messages are enriched.',
+    }),
+    pageSize: Schema.optional(
+      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+        description: 'Number of messages processed per fact-store commit.',
+      }),
+    ),
+    model: Schema.optional(
+      Schema.String.annotations({ description: 'Extraction model DXN; defaults to the edge Claude model.' }),
+    ),
+    provider: Schema.optional(
+      Schema.String.annotations({ description: 'AI provider id (e.g. ollama) for local extraction.' }),
+    ),
+    strict: Schema.optional(
+      Schema.Boolean.annotations({ description: 'Strict structured output; set false for weak local models.' }),
+    ),
+  }),
+  output: Schema.Struct({
+    processed: Schema.Number,
+    facts: Schema.Number,
   }),
 });

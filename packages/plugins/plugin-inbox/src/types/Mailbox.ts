@@ -18,6 +18,15 @@ import { Message } from '@dxos/types';
 export const GMAIL_TAG_SOURCE = 'com.google.gmail.label';
 
 /**
+ * Foreign keys that mark a message as person-to-person ("personal") mail, used to tell it from
+ * bulk/marketing when deciding how aggressively to restyle a message body (see the HTML viewer).
+ * Each provider contributes its own signal: Gmail persists the "Personal"/Primary inbox category
+ * (`CATEGORY_PERSONAL`) during label sync. JMAP contributes nothing — its mailbox roles
+ * (inbox/archive/sent/…) don't distinguish person-to-person from bulk mail — so it has no equivalent.
+ */
+export const PERSONAL_TAG_KEYS = [{ source: GMAIL_TAG_SOURCE, id: 'CATEGORY_PERSONAL' }] as const;
+
+/**
  * Foreign-key source for JMAP provider folders (mailboxes). A JMAP mailbox maps to a {@link Tag}
  * object carrying a foreign key `{ source: JMAP_TAG_SOURCE, id: <jmap-mailbox-id> }`; mirrors
  * {@link GMAIL_TAG_SOURCE}.
@@ -215,6 +224,13 @@ export const buildMessageTagsIndex = (mailbox: Mailbox | Obj.Snapshot<Mailbox>):
   return index;
 };
 
+/**
+ * A message as either a live database/queue object or an immutable snapshot (e.g. a feed message
+ * resolved via `useObject`, which cannot be reconstituted to a live object). Components and hooks
+ * that only read message fields (not mutate them) accept this instead of the live type.
+ */
+export type MessageLike = Message.Message | Obj.Snapshot<Message.Message>;
+
 /** Returns the tag uris currently applied to a single message. */
-export const getTagsForMessage = (mailbox: Mailbox, message: Message.Message): string[] =>
+export const getTagsForMessage = (mailbox: Mailbox, message: MessageLike): string[] =>
   Tagging.get(message, { index: mailbox.tags.target });

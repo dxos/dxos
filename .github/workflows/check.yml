@@ -84,6 +84,9 @@ jobs:
       - name: Check publish config
         run: pnpm run check-publish-config
 
+      - name: Check public packages are published
+        run: pnpm run check-packages-published
+
       - name: Check package.json paths
         run: pnpm run pkg-lint
 

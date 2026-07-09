@@ -342,8 +342,10 @@ export type OrderDirection = Schema.Schema.Type<typeof OrderDirection>;
 
 const Order_ = Schema.Union(
   Schema.Struct({
-    // How database wants to order them (in practice - by id).
+    // How the database wants to order them by default. For non-feed sources this is by id;
+    // for feed sources this is insertion order, so `desc` gives newest-first head reads.
     kind: Schema.Literal('natural'),
+    direction: OrderDirection,
   }),
   Schema.Struct({
     kind: Schema.Literal('property'),
@@ -404,6 +406,68 @@ const QueryLimitClause_ = Schema.Struct({
 export interface QueryLimitClause extends Schema.Schema.Type<typeof QueryLimitClause_> {}
 export const QueryLimitClause: Schema.Schema<QueryLimitClause> = QueryLimitClause_;
 
+/**
+ * Skip a number of results (offset). Combined with `limit` and a `natural` order, this expresses
+ * a windowed (paginated) read without any feed-specific query surface.
+ */
+const QuerySkipClause_ = Schema.Struct({
+  type: Schema.Literal('skip'),
+  query: Schema.suspend(() => Query),
+  skip: Schema.Number,
+});
+
+export interface QuerySkipClause extends Schema.Schema.Type<typeof QuerySkipClause_> {}
+export const QuerySkipClause: Schema.Schema<QuerySkipClause> = QuerySkipClause_;
+
+/**
+ * Specifies one component of a (possibly composite) group-by key.
+ * Extensible union — future kinds may include grouping by type or nested paths.
+ */
+const GroupByKey_ = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal('property'),
+    property: Schema.String,
+  }),
+);
+
+export type GroupByKey = Schema.Schema.Type<typeof GroupByKey_>;
+export const GroupByKey: Schema.Schema<GroupByKey> = GroupByKey_;
+
+/**
+ * A named aggregate computed per group over its members, exposed as a top-level field on the group
+ * result (`Group[name]`) and orderable via a post-group `orderBy(Order.property(name))`.
+ * - `max`/`min` reduce a scalar member `property`.
+ * - `items` collects the group's members; `count` yields the member count. Both are opt-in — a group
+ *   carries neither its members nor a count otherwise. `property` is unused for `items`/`count`.
+ */
+const GroupAggregate_ = Schema.Struct({
+  name: Schema.String,
+  kind: Schema.Literal('max', 'min', 'items', 'count'),
+  property: Schema.optional(Schema.String),
+});
+
+export type GroupAggregate = Schema.Schema.Type<typeof GroupAggregate_>;
+export const GroupAggregate: Schema.Schema<GroupAggregate> = GroupAggregate_;
+
+/**
+ * Groups results by one or more scalar property values, producing contiguous groups.
+ * Groups are ordered by the first occurrence of their key in the incoming (already-ordered)
+ * result stream — this lets a preceding `orderBy` also control group order (e.g. ordering
+ * thread groups by their most recent message). A post-group `orderBy(Order.property(name))`
+ * referencing a named aggregate reorders whole groups instead. Must be the outermost data clause:
+ * only `from`/`options`/`order` may wrap it.
+ */
+const QueryGroupByClause_ = Schema.Struct({
+  type: Schema.Literal('group-by'),
+  query: Schema.suspend(() => Query),
+  keys: Schema.Array(GroupByKey),
+  /** Named aggregates computed per group; empty/absent when the query declares none. */
+  aggregates: Schema.optional(Schema.Array(GroupAggregate)),
+});
+
+export interface QueryGroupByClause extends Schema.Schema.Type<typeof QueryGroupByClause_> {}
+export const QueryGroupByClause: Schema.Schema<QueryGroupByClause> = QueryGroupByClause_;
+
 export const QueryFromClause_ = Schema.Struct({
   type: Schema.Literal('from'),
   query: Schema.suspend(() => Query),
@@ -432,6 +496,8 @@ const Query_ = Schema.Union(
   QueryOrderClause,
   QueryOptionsClause,
   QueryLimitClause,
+  QuerySkipClause,
+  QueryGroupByClause,
   QueryFromClause,
 ).annotations({ identifier: 'org.dxos.schema.query' });
 
@@ -511,6 +577,8 @@ export const visit = (query: Query, visitor: (node: Query) => void) => {
     }),
     Match.when({ type: 'order' }, ({ query }) => visit(query, visitor)),
     Match.when({ type: 'limit' }, ({ query }) => visit(query, visitor)),
+    Match.when({ type: 'skip' }, ({ query }) => visit(query, visitor)),
+    Match.when({ type: 'group-by' }, ({ query }) => visit(query, visitor)),
     Match.when({ type: 'from' }, (node) => {
       visit(node.query, visitor);
       if (node.from._tag === 'query') {
@@ -537,6 +605,8 @@ export const map = (query: Query, mapper: (node: Query) => Query): Query => {
     Match.when({ type: 'options' }, (node) => ({ ...node, query: map(node.query, mapper) })),
     Match.when({ type: 'order' }, (node) => ({ ...node, query: map(node.query, mapper) })),
     Match.when({ type: 'limit' }, (node) => ({ ...node, query: map(node.query, mapper) })),
+    Match.when({ type: 'skip' }, (node) => ({ ...node, query: map(node.query, mapper) })),
+    Match.when({ type: 'group-by' }, (node) => ({ ...node, query: map(node.query, mapper) })),
     Match.when({ type: 'from' }, (node) => ({
       ...node,
       query: map(node.query, mapper),
@@ -570,6 +640,8 @@ export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
     ),
     Match.when({ type: 'order' }, ({ query }) => fold(query, reducer)),
     Match.when({ type: 'limit' }, ({ query }) => fold(query, reducer)),
+    Match.when({ type: 'skip' }, ({ query }) => fold(query, reducer)),
+    Match.when({ type: 'group-by' }, ({ query }) => fold(query, reducer)),
     Match.when({ type: 'from' }, (node) => {
       const results = fold(node.query, reducer);
       if (node.from._tag === 'query') {

@@ -56,6 +56,7 @@ export const translations = [
         'action-mark-read.menu': 'Mark as read',
         'message.label': 'Message',
         'event.label': 'Event',
+        'facts.label': 'Facts',
         'inbox.label': 'Inbox',
 
         'no-connections.label': 'No connections configured',
@@ -93,6 +94,7 @@ export const translations = [
         'view-trigger.label': 'View trigger',
 
         'view-mode.menu': 'View mode',
+        'view-mode-html.menu': 'HTML',
         'view-mode-enriched.menu': 'Enriched',
         'view-mode-markdown.menu': 'Markdown',
         'view-mode-plain.menu': 'Plain text',

@@ -390,12 +390,12 @@
         },
         {
           "type": "json",
-          "path": "packages/core/compute/pipeline-transcription/package.json",
+          "path": "packages/core/compute/pipeline-rdf/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/core/compute/semantic-index/package.json",
+          "path": "packages/core/compute/pipeline-transcription/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1316,6 +1316,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-pickers/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-rdf/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -117,7 +117,7 @@ Starting from main's new-API version, add:
 4. Register `Thread` in `createDatabase({ types: [Organization.Organization, Person.Person, Thread] })`.
 5. Dispose `factRuntime` alongside the model runtime.
 6. Assertions:
-   - **Facts (lenient, documented):** `gpt-oss:20b` emits schema-conforming `generateObject` output only ~15–25% of the time (same limitation the summarize stage sidesteps via lenient `generateText`), so a strict `facts.length > 0` is flaky under Ollama. Assert `expect(facts.length).toBeGreaterThanOrEqual(0)` with a comment stating the deterministic proof lives in `extract-stage.test.ts` (mockAiService). Do **not** hard-assert `> 0` here.
+   - **Facts (advisory, non-vacuous):** `gpt-oss:20b` emits schema-conforming `generateObject` output only ~15–25% of the time (same limitation the summarize stage sidesteps via lenient `generateText`), so a strict `facts.length > 0` is flaky under Ollama — don't assert it here. Instead assert the **wiring executed** (a counter proves `indexFacts` was invoked for every message, i.e. `indexedMessageCount === items.length`) and that the store query returns an array; the deterministic proof that extraction produces real facts lives in `extract-stage.test.ts` (mockAiService). Never assert `facts.length >= 0` — that is a tautology.
    - **Threads (strict, deterministic):** `buildThreads(items, { ownerEmail: 'owner@dxos.org', now: new Date().toISOString() })`, add to `db`, `flush`, query `Filter.type(Thread)`, assert count matches and every thread has `messageIds.length > 0`. No `.sort()` on reactive ECHO array fields.
 
 ### Step 5 — Verify semantic-index override survived the merge

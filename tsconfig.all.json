@@ -220,10 +220,10 @@
       "path": "packages/core/compute/pipeline-email/tsconfig.json"
     },
     {
-      "path": "packages/core/compute/pipeline-transcription/tsconfig.json"
+      "path": "packages/core/compute/pipeline-rdf/tsconfig.json"
     },
     {
-      "path": "packages/core/compute/semantic-index/tsconfig.json"
+      "path": "packages/core/compute/pipeline-transcription/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo/tsconfig.json"
@@ -773,6 +773,9 @@
     },
     {
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-rdf/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-search/tsconfig.json"

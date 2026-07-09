@@ -4,7 +4,16 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Ref, Filter as Filter$, Obj as Obj$, Order as Order$, Query as Query$, Type as Type$ } from '@dxos/echo';
+import type {
+  Ref,
+  Aggregate as Aggregate$,
+  Filter as Filter$,
+  GroupKey as GroupKey$,
+  Obj as Obj$,
+  Order as Order$,
+  Query as Query$,
+  Type as Type$,
+} from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 // `DXN`/`EID` are type-only imports to keep the `query-lite` bundle free of
@@ -30,7 +39,8 @@ class OrderClass implements Order$.Any {
 }
 
 namespace Order1 {
-  export const natural: Order$.Any = new OrderClass({ kind: 'natural' });
+  export const natural = (direction: QueryAST.OrderDirection = 'asc'): Order$.Order<any> =>
+    new OrderClass({ kind: 'natural', direction });
   export const property = <T>(property: keyof T & string, direction: QueryAST.OrderDirection): Order$.Order<T> =>
     new OrderClass({
       kind: 'property',
@@ -58,6 +68,26 @@ namespace Order1 {
 
 const Order2: typeof Order$ = Order1;
 export { Order2 as Order };
+
+class GroupKeyClass implements GroupKey$.Any {
+  private static 'variance': GroupKey$.Any['~GroupKey'] = {} as GroupKey$.Any['~GroupKey'];
+
+  static 'is'(value: unknown): value is GroupKey$.Any {
+    return typeof value === 'object' && value !== null && '~GroupKey' in value;
+  }
+
+  'constructor'(public readonly ast: QueryAST.GroupByKey) {}
+
+  '~GroupKey' = GroupKeyClass.variance;
+}
+
+namespace GroupKey1 {
+  export const property = <const K extends string>(property: K): GroupKey$.GroupKey<K> =>
+    new GroupKeyClass({ kind: 'property', property });
+}
+
+const GroupKey2: typeof GroupKey$ = GroupKey1;
+export { GroupKey2 as GroupKey };
 
 // Local filter-match helpers used by FilterClass.toPredicate.
 // Written without a runtime @dxos/echo import so the QuickJS sandbox bundle stays clean.
@@ -715,6 +745,32 @@ class QueryClass implements Query$.Any {
     });
   }
 
+  'skip'(skip: number): Query$.Any {
+    return new QueryClass({
+      type: 'skip',
+      query: this.ast,
+      skip,
+    });
+  }
+
+  'groupBy'(...keys: GroupKey$.Any[]): Query$.Any {
+    return new QueryClass({
+      type: 'group-by',
+      query: this.ast,
+      keys: keys.map((key) => key.ast),
+    });
+  }
+
+  'aggregate'(aggregates: Record<string, Aggregate$.Any>): Query$.Any {
+    if (this.ast.type !== 'group-by') {
+      throw new TypeError('.aggregate() must directly follow .groupBy().');
+    }
+    return new QueryClass({
+      ...this.ast,
+      aggregates: Object.entries(aggregates).map(([name, aggregate]) => ({ name, ...aggregate.spec })),
+    });
+  }
+
   'options'(options: QueryAST.QueryOptions): Query$.Any {
     return new QueryClass({
       type: 'options',
@@ -879,7 +935,7 @@ const prettyQuery = (query: QueryAST.Query): string => {
     case 'order': {
       const orders = query.order.map((o) => {
         if (o.kind === 'natural') {
-          return 'Order.natural';
+          return `Order.natural(${JSON.stringify(o.direction)})`;
         }
         if (o.kind === 'rank') {
           return `Order.rank(${JSON.stringify(o.direction)})`;
@@ -924,5 +980,19 @@ const prettyQuery = (query: QueryAST.Query): string => {
     }
     case 'limit':
       return `${prettyQuery(query.query)}.limit(${query.limit})`;
+    case 'skip':
+      return `${prettyQuery(query.query)}.skip(${query.skip})`;
+    case 'group-by': {
+      const keys = query.keys.map((key) => JSON.stringify(key.property));
+      const grouped = `${prettyQuery(query.query)}.groupBy(${keys.join(', ')})`;
+      if (!query.aggregates || query.aggregates.length === 0) {
+        return grouped;
+      }
+      const aggregates = query.aggregates.map(
+        (aggregate) =>
+          `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${aggregate.property !== undefined ? JSON.stringify(aggregate.property) : ''})`,
+      );
+      return `${grouped}.aggregate({ ${aggregates.join(', ')} })`;
+    }
   }
 };

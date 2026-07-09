@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
-import { SemanticStore } from '@dxos/semantic-index';
+import { FactStore } from '@dxos/pipeline-rdf';
 
 import { AgentRegistry } from './AgentRegistry';
 import { run } from './Crawler';
@@ -53,7 +53,7 @@ describe('Crawler', () => {
     Effect.fnUntraced(
       function* () {
         const summary = yield* run(CONFIG, STAGES);
-        const store = yield* SemanticStore;
+        const store = yield* FactStore;
         const registry = yield* AgentRegistry;
         const state = yield* StateStore;
 
@@ -169,7 +169,7 @@ describe('Crawler', () => {
     Effect.fnUntraced(
       function* () {
         yield* run(CONFIG, STAGES);
-        const store = yield* SemanticStore;
+        const store = yield* FactStore;
         const before = (yield* store.query({})).length;
 
         yield* run(CONFIG, STAGES);

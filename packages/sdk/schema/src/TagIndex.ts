@@ -48,11 +48,21 @@ export interface Accessor {
   tags(objectId: EntityId): string[];
   /** Applies a tag to an object (creating the tag entry when absent); idempotent. */
   setTag(tagId: string, objectId: EntityId): void;
+  /**
+   * Applies many (tagId, objectId) pairs in a single `Obj.update` (one Automerge change + one
+   * reactive notification for the whole batch, vs one per {@link setTag}). Use for a sync page's
+   * worth of tag applications — the per-call change/notification storm otherwise dominates commit and
+   * freezes the UI. Idempotent per pair, same as {@link setTag}.
+   */
+  setBatch(entries: readonly { tagId: string; objectId: EntityId }[]): void;
   /** Removes a tag from an object, pruning the tag entry when it empties. */
   unsetTag(tagId: string, objectId: EntityId): void;
 }
 
 type TagKey = readonly [TagIndex, EntityId, string | undefined];
+
+const tagsEqual = (left: readonly string[], right: readonly string[]): boolean =>
+  left.length === right.length && left.every((value, index) => value === right[index]);
 
 const tagFamily = Atom.family((key: TagKey) =>
   Atom.make<boolean>((get) => {
@@ -76,12 +86,41 @@ const tagFamily = Atom.family((key: TagKey) =>
   }),
 );
 
+const objectTagsFamily = Atom.family((key: TagKey) =>
+  Atom.make<string[]>((get) => {
+    const [tagIndex, objectId] = key;
+    const read = (): string[] => bind(tagIndex).tags(objectId);
+    let previous = read();
+    const unsubscribe = Obj.subscribe(tagIndex, () => {
+      const next = read();
+      if (!tagsEqual(next, previous)) {
+        previous = next;
+        get.setSelf(next);
+      }
+    });
+    get.addFinalizer(() => unsubscribe());
+    return previous;
+  }),
+);
+
 /**
- * Reactive boolean for whether `objectId` carries `tagUri` in a TagIndex. Fires only when
- * membership for this specific object+tag changes. Memoized via `Atom.family`.
+ * TagIndex reactive atoms, memoized via `Atom.family`.
+ *
+ * - One argument: per-object tag-uri family — `(objectId) => Atom<string[]>`.
+ * - Three arguments: membership boolean for one object+tag pair.
  */
-export const atom = (tagIndex: TagIndex, objectId: EntityId, tagUri: string | undefined): Atom.Atom<boolean> =>
-  tagFamily(Data.tuple(tagIndex, objectId, tagUri));
+export function atom(tagIndex: TagIndex): (objectId: EntityId) => Atom.Atom<string[]>;
+export function atom(tagIndex: TagIndex, objectId: EntityId, tagUri: string | undefined): Atom.Atom<boolean>;
+export function atom(
+  tagIndex: TagIndex,
+  objectId?: EntityId,
+  tagUri?: string | undefined,
+): ((objectId: EntityId) => Atom.Atom<string[]>) | Atom.Atom<boolean> {
+  if (objectId === undefined) {
+    return (objectId: EntityId) => objectTagsFamily(Data.tuple(tagIndex, objectId, undefined));
+  }
+  return tagFamily(Data.tuple(tagIndex, objectId, tagUri));
+}
 
 /** Binds an {@link Accessor} over a {@link TagIndex} object; all mutations go through `Obj.update`. */
 export const bind = (tagIndex: TagIndex): Accessor => {
@@ -124,6 +163,24 @@ export const bind = (tagIndex: TagIndex): Accessor => {
           index[tagId].push(objectId);
         }
       }),
+    setBatch: (entries) => {
+      if (entries.length === 0) {
+        return;
+      }
+      write((index) => {
+        // One `Object.keys` snapshot for the whole batch, extended in place as tags are created —
+        // and, crucially, one `Obj.update` (one change + one notification) for all pairs.
+        const known = new Set(Object.keys(index));
+        for (const { tagId, objectId } of entries) {
+          if (!known.has(tagId)) {
+            index[tagId] = [objectId];
+            known.add(tagId);
+          } else if (!index[tagId].includes(objectId)) {
+            index[tagId].push(objectId);
+          }
+        }
+      });
+    },
     unsetTag: (tagId, objectId) =>
       write((index) => {
         if (!has(index, tagId)) {
