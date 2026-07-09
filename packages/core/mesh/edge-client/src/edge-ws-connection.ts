@@ -19,6 +19,13 @@ import { toUint8Array } from './protocol';
 
 const SIGNAL_KEEPALIVE_INTERVAL = 4_000;
 const SIGNAL_KEEPALIVE_TIMEOUT = 12_000;
+/**
+ * Watchdog self-check: if the inactivity timer fires later than its schedule by more than this,
+ * the local event loop was starved (heavy WASM sync compute pins it for seconds at a time) —
+ * our pings were not being sent and inbound pongs were not being processed, so the silence says
+ * nothing about the connection. Probe and re-arm instead of restarting.
+ */
+const KEEPALIVE_WATCHDOG_LATE_TOLERANCE = 3_000;
 
 export type EdgeWsConnectionCallbacks = {
   onConnected: () => void;
@@ -36,6 +43,7 @@ export class EdgeWsConnection extends Resource {
 
   // Latency tracking.
   private _pingTimestamp: number | undefined;
+  private _lastPingSentTimestamp = 0;
   private _rtt = 0;
 
   // Rate tracking with sliding window.
@@ -212,35 +220,72 @@ export class EdgeWsConnection extends Resource {
       async () => {
         // TODO(mykola): use RFC6455 ping/pong once implemented in the browser?
         // Cloudflare's worker responds to this `without interrupting hibernation`. https://developers.cloudflare.com/durable-objects/api/websockets/#setwebsocketautoresponse
-        this._pingTimestamp = Date.now();
-        this._ws?.send('__ping__');
+        this._sendPing();
       },
       SIGNAL_KEEPALIVE_INTERVAL,
     );
-    this._pingTimestamp = Date.now();
-    this._ws.send('__ping__');
+    this._sendPing();
     this._rescheduleHeartbeatTimeout();
   }
 
+  private _sendPing(): void {
+    if (!this._ws) {
+      return;
+    }
+    this._pingTimestamp = Date.now();
+    this._lastPingSentTimestamp = Date.now();
+    this._ws.send('__ping__');
+  }
+
+  /**
+   * Inactivity watchdog. Restarts the connection only after a fair trial: pings were actually
+   * flowing (a recent send), the timer fired on schedule (the local event loop was alive to
+   * process an answer), and still nothing was received for the full window. Wall-clock silence
+   * alone is not evidence — sync compute can pin the event loop for seconds, during which the
+   * ping sender does not run and arrived pongs are not processed; restarting a healthy
+   * connection on that basis costs a re-handshake and fails in-flight sync rounds.
+   */
   private _rescheduleHeartbeatTimeout(): void {
     if (!this.isOpen) {
       return;
     }
     void this._inactivityTimeoutCtx?.dispose();
     this._inactivityTimeoutCtx = new Context();
+    const armedAt = Date.now();
     scheduleTask(
       this._inactivityTimeoutCtx,
       () => {
-        if (this.isOpen) {
-          if (Date.now() - this._lastReceivedMessageTimestamp > SIGNAL_KEEPALIVE_TIMEOUT) {
-            log.warn('restart due to inactivity timeout', {
-              lastReceivedMessageTimestamp: this._lastReceivedMessageTimestamp,
-            });
-            this._callbacks.onRestartRequired();
-          } else {
-            this._rescheduleHeartbeatTimeout();
-          }
+        if (!this.isOpen) {
+          return;
         }
+        const now = Date.now();
+        const silenceMs = now - this._lastReceivedMessageTimestamp;
+        if (silenceMs <= SIGNAL_KEEPALIVE_TIMEOUT) {
+          this._rescheduleHeartbeatTimeout();
+          return;
+        }
+        const pingAgeMs = this._lastPingSentTimestamp ? now - this._lastPingSentTimestamp : Number.POSITIVE_INFINITY;
+        const firedLateByMs = now - armedAt - SIGNAL_KEEPALIVE_TIMEOUT;
+        const pingsWereFlowing = pingAgeMs <= SIGNAL_KEEPALIVE_INTERVAL * 2;
+        const loopWasLive = firedLateByMs < KEEPALIVE_WATCHDOG_LATE_TOLERANCE;
+        if (pingsWereFlowing && loopWasLive) {
+          log.warn('restart due to inactivity timeout', {
+            silenceMs,
+            pingAgeMs,
+            lastReceivedMessageTimestamp: this._lastReceivedMessageTimestamp,
+          });
+          this._callbacks.onRestartRequired();
+          return;
+        }
+        // The silence is self-inflicted (starved event loop stopped our pings and delayed this
+        // timer). Probe immediately and give the connection a fresh full window to answer.
+        log.verbose('keepalive starved by event loop; probing instead of restarting', {
+          silenceMs,
+          pingAgeMs,
+          firedLateByMs,
+        });
+        this._sendPing();
+        this._rescheduleHeartbeatTimeout();
       },
       SIGNAL_KEEPALIVE_TIMEOUT,
     );
