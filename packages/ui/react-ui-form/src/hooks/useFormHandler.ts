@@ -451,10 +451,7 @@ const omitPaths = <V>(
   paths: SchemaEx.JsonPath[],
 ): Record<SchemaEx.JsonPath, V> => {
   const omit = new Set<string>(paths);
-  return Object.fromEntries(Object.entries(record).filter(([key]) => !omit.has(key))) as Record<
-    SchemaEx.JsonPath,
-    V
-  >;
+  return Object.fromEntries(Object.entries(record).filter(([key]) => !omit.has(key))) as Record<SchemaEx.JsonPath, V>;
 };
 
 const flatMap = (errors: ValidationError[]) => {

@@ -21399,9 +21399,6 @@ importers:
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
