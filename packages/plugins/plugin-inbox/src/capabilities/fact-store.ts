@@ -36,8 +36,10 @@ export const makeFactStoreRegistry = (): FactStoreRegistry => {
       store = FactStore.makeMemory();
       stores.set(spaceId, store);
     }
+
     return store;
   };
+
   const layerFor = (spaceId: string): Layer.Layer<FactStore> => Layer.succeed(FactStore, forSpace(spaceId));
   return { forSpace, layerFor };
 };
@@ -50,7 +52,6 @@ export const makeFactStoreRegistry = (): FactStoreRegistry => {
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = makeFactStoreRegistry();
-
     const factStoreSpec = LayerSpec.make(
       {
         affinity: 'space',
