@@ -576,10 +576,13 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         return;
       }
       case MESSAGE_TYPE_COLLECTION_STATE: {
+        // The state shape is implementation-defined and arrives from remote CBOR; every level must
+        // be validated so a malformed frame degrades the diagnostic instead of throwing mid-dispatch.
+        const state = payload.state;
+        const documents =
+          state !== null && typeof state === 'object' && 'documents' in state ? state.documents : undefined;
         const documentCount =
-          payload.state && typeof payload.state === 'object' && 'documents' in payload.state
-            ? Object.keys((payload.state as { documents: Record<string, unknown> }).documents).length
-            : undefined;
+          documents !== null && typeof documents === 'object' ? Object.keys(documents).length : undefined;
         log.verbose('received collection-state', {
           collectionId: payload.collectionId,
           documentCount,
