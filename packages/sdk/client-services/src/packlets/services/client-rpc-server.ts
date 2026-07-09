@@ -6,7 +6,6 @@ import { type ClientServices } from '@dxos/client-protocol';
 import { type Any, type RequestOptions, type ServiceHandler, Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
 import { RpcPeer, type RpcPeerOptions, type ServiceBundle, parseMethodName } from '@dxos/rpc';
-import { MapCounter, trace } from '@dxos/tracing';
 import { type MaybePromise } from '@dxos/util';
 
 import { type ServiceRegistry } from './service-registry';
@@ -27,21 +26,12 @@ export type ClientRpcServerProps = {
   ) => MaybePromise<Stream<Any>>;
 } & Omit<RpcPeerOptions, 'callHandler' | 'streamHandler'>;
 
-@trace.resource()
 export class ClientRpcServer {
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _rpcPeer: RpcPeer;
   private readonly _handlerCache = new Map<string, ServiceHandler<any>>();
   private readonly _handleCall: ClientRpcServerProps['handleCall'];
   private readonly _handleStream: ClientRpcServerProps['handleStream'];
-
-  @trace.metricsCounter()
-  private readonly _callMetrics = new MapCounter();
-
-  @trace.info()
-  private get _services() {
-    return Object.keys(this._serviceRegistry.services);
-  }
 
   constructor(params: ClientRpcServerProps) {
     const { serviceRegistry, handleCall, handleStream, ...rpcOptions } = params;
@@ -56,8 +46,6 @@ export class ClientRpcServer {
         const handler = (method: string, params: Any, handlerOptions?: RequestOptions) =>
           this._getServiceHandler(serviceName).call(method, params, handlerOptions);
 
-        this._callMetrics.inc(`${serviceName}.${methodName} request`);
-
         if (this._handleCall) {
           return this._handleCall(methodName, params, handler, options);
         } else {
@@ -69,13 +57,8 @@ export class ClientRpcServer {
         const handler = (method: string, params: Any, handlerOptions?: RequestOptions) =>
           this._getServiceHandler(serviceName).callStream(method, params, handlerOptions);
 
-        this._callMetrics.inc(`${serviceName}.${methodName} request stream`);
-
         if (this._handleStream) {
-          return Stream.map(Stream.unwrapPromise(this._handleStream(methodName, params, handler, options)), (data) => {
-            this._callMetrics.inc(`${serviceName}.${methodName} response stream`);
-            return data;
-          });
+          return Stream.unwrapPromise(this._handleStream(methodName, params, handler, options));
         } else {
           return handler(methodName, params, options);
         }

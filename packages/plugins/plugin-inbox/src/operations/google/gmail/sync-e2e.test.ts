@@ -69,7 +69,6 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
       func,
       {
         binding: Ref.make(binding),
-        restrictedMode: true,
       },
       {
         spaceId: space.id,
@@ -95,7 +94,7 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
         enabled: true,
         runnable: Ref.make(func),
         spec: Trigger.specTimer('*/30 * * * * *'),
-        input: { binding: Ref.make(binding), restrictedMode: true },
+        input: { binding: Ref.make(binding) },
       }),
     );
     await sync(space);
@@ -126,7 +125,7 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
         enabled: true,
         runnable: Ref.make(func),
         spec: Trigger.specTimer('*/30 * * * * *'),
-        input: { binding: Ref.make(binding), restrictedMode: true },
+        input: { binding: Ref.make(binding) },
       }),
     );
     await sync(space);
@@ -155,7 +154,7 @@ describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
         enabled: true,
         runnable: Ref.make(func),
         spec: Trigger.specTimer('*/3 * * * * *'),
-        input: { binding: Ref.make(binding), restrictedMode: true },
+        input: { binding: Ref.make(binding) },
       }),
     );
     await sync(space);

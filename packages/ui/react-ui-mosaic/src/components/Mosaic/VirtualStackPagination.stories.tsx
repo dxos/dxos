@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import React, { type FC, useCallback, useMemo, useState } from 'react';
+import React, { type FC, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Database, DXN, Feed, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { random } from '@dxos/random';
@@ -15,17 +15,16 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Card, Input, Panel, ScrollArea, Select, Toolbar } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { useVirtualizerPagination } from '../../hooks';
 import { Focus } from '../Focus';
 import { Mosaic } from './Mosaic';
 import { type MosaicTileProps } from './Tile';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 50;
 const MAX_WINDOW_SIZE = PAGE_SIZE * 10;
 
 //
-// In-memory story (no ECHO): windows a plain array to show `useVirtualizerPagination` needs only a
-// `{ items, getNext, getPrevious }` shape.
+// In-memory story (no ECHO): windows a plain array to show `Mosaic.VirtualStack`'s `pagination`
+// prop needs only a `{ getNext, getPrevious }` shape.
 //
 
 /** Total size of the synthetic, in-memory data source. */
@@ -42,6 +41,7 @@ type Range = { skip: number; limit: number };
  */
 const usePaginatedItems = (total: number) => {
   const [range, setRange] = useState<Range>({ skip: 0, limit: PAGE_SIZE });
+  const pendingRef = useRef(false);
 
   const items = useMemo<ListItem[]>(() => {
     const count = Math.max(0, Math.min(range.limit, total - range.skip));
@@ -52,6 +52,13 @@ const usePaginatedItems = (total: number) => {
   }, [range, total]);
 
   const getNext = useCallback(() => {
+    if (pendingRef.current) {
+      return;
+    }
+    pendingRef.current = true;
+    queueMicrotask(() => {
+      pendingRef.current = false;
+    });
     setRange((prev) => {
       if (prev.skip + prev.limit >= total) {
         return prev;
@@ -64,6 +71,13 @@ const usePaginatedItems = (total: number) => {
   }, [total]);
 
   const getPrevious = useCallback(() => {
+    if (pendingRef.current) {
+      return;
+    }
+    pendingRef.current = true;
+    queueMicrotask(() => {
+      pendingRef.current = false;
+    });
     setRange((prev) => (prev.skip === 0 ? prev : { ...prev, skip: Math.max(0, prev.skip - PAGE_SIZE) }));
   }, []);
 
@@ -84,14 +98,8 @@ const ListItemTile: FC<MosaicTileProps<ListItem>> = ({ data, location, current }
 
 const VirtualStackPaginationStory = () => {
   const { items, getNext, getPrevious, atHead } = usePaginatedItems(TOTAL_ITEMS);
-  const pagination = useMemo(() => ({ getNext, getPrevious }), [getNext, getPrevious]);
+  const pagination = useMemo(() => ({ getNext, getPrevious, atHead }), [getNext, getPrevious, atHead]);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
-
-  const { onChange } = useVirtualizerPagination({
-    items,
-    getId: (item) => item.id,
-    pagination,
-  });
 
   const range = items.length > 0 ? `${items[0].index}–${items[items.length - 1].index}` : '–';
 
@@ -117,7 +125,7 @@ const VirtualStackPaginationStory = () => {
                   getScrollElement={() => viewport}
                   estimateSize={() => 56}
                   gap={4}
-                  onChange={onChange}
+                  pagination={pagination}
                 />
               </ScrollArea.Viewport>
             </ScrollArea.Root>
@@ -252,8 +260,7 @@ const FeedPaginationStory = () => {
     maxWindowSize: MAX_WINDOW_SIZE,
   });
 
-  const pagination = useMemo(() => ({ getNext, getPrevious }), [getNext, getPrevious]);
-  const { onChange } = useVirtualizerPagination({ items, getId: (item) => item.id, pagination });
+  const pagination = useMemo(() => ({ getNext, getPrevious, atHead }), [getNext, getPrevious, atHead]);
 
   const handleAdd = useCallback(() => {
     if (!db || !feed || !counter || addCount <= 0) {
@@ -350,7 +357,7 @@ const FeedPaginationStory = () => {
                   getScrollElement={() => viewport}
                   estimateSize={() => 56}
                   gap={4}
-                  onChange={onChange}
+                  pagination={pagination}
                 />
               </ScrollArea.Viewport>
             </ScrollArea.Root>
@@ -374,10 +381,10 @@ export default meta;
 type Story = StoryObj;
 
 /**
- * `Mosaic.VirtualStack` paginated by `useVirtualizerPagination` over a plain in-memory array --
- * no ECHO query or `usePagination` involved. Scroll down to grow the window, then keep
- * scrolling past `MAX_WINDOW_SIZE` to see it slide (evicting the newest items); scroll back up to
- * slide it back toward the head without a visible jump.
+ * `Mosaic.VirtualStack`'s `pagination` prop over a plain in-memory array -- no ECHO query or
+ * `usePagination` involved. Scroll down to grow the window, then keep scrolling past
+ * `MAX_WINDOW_SIZE` to see it slide (evicting the newest items); scroll back up to slide it back
+ * toward the head without a visible jump.
  */
 export const Default: Story = {
   render: VirtualStackPaginationStory,
@@ -385,10 +392,10 @@ export const Default: Story = {
 
 /**
  * End-to-end pagination over a live ECHO feed: `usePagination` windows a feed seeded with 100
- * items (each a number + a random word), rendered through `useVirtualizerPagination` +
- * `Mosaic.VirtualStack`. Scroll to page toward older items (past `MAX_WINDOW_SIZE` to see the
- * window slide). Use the toolbar to append more items (they appear live at the head), and to sort
- * by natural/number/word in either direction.
+ * items (each a number + a random word), rendered through `Mosaic.VirtualStack`'s `pagination`
+ * prop. Scroll to page toward older items (past `MAX_WINDOW_SIZE` to see the window slide). Use
+ * the toolbar to append more items (they appear live at the head), and to sort by
+ * natural/number/word in either direction.
  */
 export const FeedBacked: Story = {
   render: FeedPaginationStory,

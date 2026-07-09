@@ -52,7 +52,8 @@
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/timeframe": "workspace:*"
+    "@dxos/timeframe": "workspace:*",
+    "@effect/rpc": "catalog:"
   },
   "devDependencies": {
     "@bufbuild/buf": "catalog:",

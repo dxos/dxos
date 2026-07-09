@@ -213,6 +213,7 @@ describe('Feed', () => {
       const calledOnce = called.waitForCount(1);
       const unsubscribe = queryResult.subscribe(() => called.emit(), { fire: true });
 
+      // The initial event is deferred until the async index results arrive (no empty snapshot).
       yield* Effect.promise(() => calledOnce);
       expect(queryResult.results).toHaveLength(2);
       expect(queryResult.results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);

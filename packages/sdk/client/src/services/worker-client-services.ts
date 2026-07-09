@@ -11,7 +11,6 @@ import { type CallMetadata, type LogFilter, log, parseFilter } from '@dxos/log';
 import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { type ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
-import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { STORAGE_LOCK_KEY } from '../lock-key';
@@ -33,12 +32,10 @@ export type WorkerClientServicesProps = {
 /**
  * Proxy to host client service in worker.
  */
-@trace.resource()
 export class WorkerClientServices implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
   readonly joinedSpace = new Event<PublicKey>();
 
-  @trace.info()
   private _isOpen = false;
 
   private readonly _config: Config;

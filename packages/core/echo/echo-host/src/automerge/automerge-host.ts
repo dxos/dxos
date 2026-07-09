@@ -154,7 +154,6 @@ const CLOSE_TIMEOUT = 2_000;
  * level and never reach the Subduction sedimentree layer. Bundle sync remains available
  * for replicators that opt in.
  */
-@trace.resource({ lifecycle: true })
 export class AutomergeHost extends Resource {
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
   private readonly _echoNetworkAdapter: EchoNetworkAdapter;
@@ -177,7 +176,6 @@ export class AutomergeHost extends Resource {
     ({ collectionId, peerId }) => `${collectionId}|${peerId}`,
   );
 
-  @trace.info()
   private _peerId!: PeerId;
 
   private readonly _peerIdProvider?: PeerIdProvider;
@@ -756,7 +754,7 @@ export class AutomergeHost extends Resource {
     }
 
     const documentId = path[0] as DocumentId;
-    const handle = this._repo.handles[documentId];
+    const handle = this._repo.getHandle(documentId);
     if (!handle) {
       return;
     }
@@ -798,7 +796,7 @@ export class AutomergeHost extends Resource {
     // Read the spaceKey iff the document is already loaded; otherwise let the share policy
     // fall through to the `_getSpaceKeyByRootDocumentId` lookup or the
     // `isDocumentInRemoteCollection` check on the caller.
-    const handle = this._repo.handles[documentId as any];
+    const handle = this._repo.getHandle(documentId as any);
     if (handle && getHandleState(this._repo, documentId as DocumentId) === 'ready') {
       const doc = handle.doc();
       if (doc) {
@@ -850,7 +848,7 @@ export class AutomergeHost extends Resource {
     const storeRequestIds: DocumentId[] = [];
     const storeResultIndices: number[] = [];
     for (const documentId of documentIds) {
-      const handle = this._repo.handles[documentId];
+      const handle = this._repo.getHandle(documentId);
       if (handle && getHandleState(this._repo, documentId) === 'ready' && handle.doc()) {
         result.push(getHeads(handle.doc()!));
       } else {
@@ -1102,8 +1100,8 @@ export class AutomergeHost extends Resource {
         log.warn('document not ready, skipping', { documentId });
         return;
       }
-      const handle = this._repo.handles[documentId];
-      const doc = handle.doc();
+      const handle = this._repo.getHandle(documentId);
+      const doc = handle?.doc();
       if (!doc) {
         log.warn('document not available, skipping', { documentId });
         return;

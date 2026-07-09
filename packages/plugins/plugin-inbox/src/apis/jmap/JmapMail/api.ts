@@ -88,7 +88,7 @@ export const emailQuery = Effect.fn('emailQuery')(function* (
   return yield* getMethodResponse(response, '0', EmailQueryResult);
 });
 
-/** Fetches emails by id with decoded text body values (RFC 8621 §4.2). */
+/** Fetches emails by id with decoded HTML and text body values (RFC 8621 §4.2). */
 export const emailGet = Effect.fn('emailGet')(function* (
   target: Target,
   ids: readonly string[],
@@ -96,7 +96,13 @@ export const emailGet = Effect.fn('emailGet')(function* (
 ) {
   const response = yield* jmapRequest(target.apiUrl, {
     using: MAIL_CAPABILITIES,
-    methodCalls: [['Email/get', { accountId: target.accountId, ids, properties, fetchTextBodyValues: true }, '0']],
+    methodCalls: [
+      [
+        'Email/get',
+        { accountId: target.accountId, ids, properties, fetchTextBodyValues: true, fetchHTMLBodyValues: true },
+        '0',
+      ],
+    ],
   });
   return yield* getMethodResponse(response, '0', EmailGetResult);
 });

@@ -42,6 +42,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-graph": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-rdf": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/types": "workspace:*",

@@ -15,3 +15,5 @@ export * as Config2 from './Config2.ts';
 export * as FunctionProtocol from './FunctionProtocol.ts';
 export * as FeedProtocol from './FeedProtocol.ts';
 export * as TraceProtocol from './TraceProtocol.ts';
+export * as DataService from './DataService.ts';
+export * as QueryService from './QueryService.ts';

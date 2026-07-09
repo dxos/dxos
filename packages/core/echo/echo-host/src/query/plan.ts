@@ -35,7 +35,8 @@ export namespace QueryPlan {
     | SetDifferenceStep
     | OrderStep
     | LimitStep
-    | SkipStep;
+    | SkipStep
+    | AggregateStep;
 
   /**
    * Clear the current working set.
@@ -277,5 +278,21 @@ export namespace QueryPlan {
     _tag: 'SkipStep';
 
     skip: number;
+  };
+
+  /**
+   * Aggregate the working set. `group`-kind entries partition it into contiguous groups by scalar
+   * property values (with none, the whole set forms one group), ordered by the first occurrence of
+   * their key in the incoming (already-ordered) working set — this lets a preceding `OrderStep` also
+   * control group order. Non-`group` aggregates are stamped on each member so a following group-level
+   * `OrderStep` can order by them.
+   *
+   * The runtime grouping/pagination algorithms live in `./group-by` (executor-side), not here.
+   */
+  export type AggregateStep = {
+    _tag: 'AggregateStep';
+
+    /** Aggregate declarations; `group`-kind entries define the grouping keys. */
+    aggregates: readonly QueryAST.GroupAggregate[];
   };
 }

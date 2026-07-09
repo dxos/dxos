@@ -790,11 +790,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-masonry/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-meeting/package.json",
           "jsonpath": "$.version"
         },
@@ -1321,6 +1316,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-pickers/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-rdf/package.json",
           "jsonpath": "$.version"
         },
         {

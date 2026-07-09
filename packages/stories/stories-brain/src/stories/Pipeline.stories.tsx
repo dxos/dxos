@@ -143,7 +143,7 @@ type StoryArgs = { ai: AiConfig };
 const DefaultStory = ({ ai }: StoryArgs) => {
   const [space] = useSpaces();
   // Fact-extraction options for the active backend (undefined → pipeline-rdf's Claude/edge defaults).
-  const extractOptions = useMemo(
+  const extractOptions = useMemo<RDF.ExtractOptions | undefined>(
     () => (ai.preset === 'ollama' ? { model: ai.model, provider: Provider.ollama.id, strict: false } : undefined),
     [ai],
   );
@@ -163,16 +163,16 @@ const DefaultStory = ({ ai }: StoryArgs) => {
 
   // Live view of the ECHO objects the pipelines materialize (email creates Person/Org/Thread;
   // transcription links the seeded entities). Reactive: updates as stages persist to the space.
-  const people = useQuery(space?.db, Query.type(Person.Person));
   const organizations = useQuery(space?.db, Query.type(Organization.Organization));
+  const people = useQuery(space?.db, Query.type(Person.Person));
   const threads = useQuery(space?.db, Query.type(Thread));
   const objects = useMemo<EchoObjectItem[]>(
     () => [
-      ...people.map((person) => ({ id: person.id, typename: 'Person', label: person.fullName ?? person.id })),
       ...organizations.map((org) => ({ id: org.id, typename: 'Organization', label: org.name ?? org.id })),
+      ...people.map((person) => ({ id: person.id, typename: 'Person', label: person.fullName ?? person.id })),
       ...threads.map((thread) => ({ id: thread.id, typename: 'Thread', label: thread.subject ?? thread.threadId })),
     ],
-    [people, organizations, threads],
+    [organizations, people, threads],
   );
 
   const runRdf = useCallback(
@@ -216,8 +216,11 @@ const DefaultStory = ({ ai }: StoryArgs) => {
     if (!space) {
       return Promise.resolve();
     }
+
     const startedMs = Date.now();
     const aiLayer = Layer.fresh(AiServiceTestingPreset(ai.preset));
+
+    // TODO(burdon): Replace with store?
     const collected: RDF.Fact[] = [];
     const indexFacts: FactIndexer = (message) =>
       EffectEx.runPromise(
@@ -227,6 +230,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
             extractFactsStage(extractOptions),
             Pipeline.run({ sink: (item) => Effect.sync(() => out.push(item)) }),
           );
+
           return out.flatMap((item) => [...item.facts]);
         }).pipe(Effect.provide(aiLayer)),
       ).then((messageFacts) => {

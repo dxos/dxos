@@ -50,18 +50,15 @@ export type CreatePipelineProps = {
 // TODO(dmaretskyi): Extract database stuff.
 // TODO(dmaretskyi): Rename HaloGraph move to HALO.
 @trackLeaks('open', 'close')
-@trace.resource()
 export class Space extends Resource {
   public readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
   public readonly stateUpdate = new Event();
-  @trace.info()
   public readonly protocol: SpaceProtocol;
 
   private readonly _id: SpaceId;
   private readonly _key: PublicKey;
   private readonly _genesisFeedKey: PublicKey;
   private readonly _feedProvider: FeedProvider;
-  @trace.info()
   private readonly _controlPipeline: ControlPipeline;
 
   private _controlFeed?: FeedWrapper<FeedMessage>;
@@ -117,13 +114,11 @@ export class Space extends Resource {
   }
 
   @logInfo
-  @trace.info()
   get id() {
     return this._id;
   }
 
   @logInfo
-  @trace.info()
   get key() {
     return this._key;
   }

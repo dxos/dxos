@@ -116,6 +116,9 @@
       "path": "../../ui/react-ui-list"
     },
     {
+      "path": "../../ui/react-ui-rdf"
+    },
+    {
       "path": "../../ui/ui-editor"
     },
     {

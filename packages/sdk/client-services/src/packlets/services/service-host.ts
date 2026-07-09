@@ -73,7 +73,6 @@ export type InitializeOptions = {
 /**
  * Remote service implementation.
  */
-@Trace.resource()
 export class ClientServicesHost {
   private readonly _resourceLock?: ResourceLock;
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
@@ -96,13 +95,10 @@ export class ClientServicesHost {
   private readonly _runtimeProps: ServiceContextRuntimeProps;
   private diagnosticsBroadcastHandler: CollectDiagnosticsBroadcastHandler;
 
-  @Trace.info()
   private _opening = false;
 
-  @Trace.info()
   private _open = false;
 
-  @Trace.info()
   private _resetting = false;
 
   constructor({

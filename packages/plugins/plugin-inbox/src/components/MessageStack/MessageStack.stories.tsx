@@ -27,18 +27,48 @@ import { Builder, MessagesOptions, initializeMailbox } from '#testing';
 import { Mailbox } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
-import { MessageStack, MessageStackProps } from './MessageStack';
+import { MessageStack, type MessageStackItem, MessageStackProps } from './MessageStack';
 
-const DefaultStory = ({
-  count = 0,
-  options,
-  ...props
-}: MessageStackProps & { count?: number; options?: MessagesOptions }) => {
-  const [messages] = useState(() =>
-    count ? new Builder().createMessages(count, options).build().messages : undefined,
-  );
+type DefaultStoryProps = MessageStackProps & {
+  count?: number;
+  options?: MessagesOptions;
+  /** Group the generated messages by thread id, mirroring the mailbox's conversation query. */
+  groupByThread?: boolean;
+};
 
-  return <MessageStack {...props} messages={messages} />;
+const DefaultStory = ({ count = 0, options, groupByThread, ...props }: DefaultStoryProps) => {
+  const [items] = useState<MessageStackItem[] | undefined>(() => {
+    if (!count) {
+      return undefined;
+    }
+    const { messages } = new Builder().createMessages(count, options).build();
+    if (!groupByThread) {
+      return messages;
+    }
+    const groups = new Map<string, Message.Message[]>();
+    for (const message of messages) {
+      const key = message.threadId ?? message.id;
+      const group = groups.get(key);
+      if (group) {
+        group.push(message);
+      } else {
+        groups.set(key, [message]);
+      }
+    }
+    // Mirror the mailbox: each conversation card previews at most `THREAD_PREVIEW_COUNT` messages
+    // and carries the full thread size as `total` so the card can render a "+N more" affordance.
+    const THREAD_PREVIEW_COUNT = 4;
+    return Array.from(groups, ([id, groupMessages]) => {
+      const sorted = groupMessages.sort((a, b) => b.created.localeCompare(a.created));
+      return {
+        id,
+        messages: sorted.slice(0, THREAD_PREVIEW_COUNT),
+        total: sorted.length,
+      };
+    });
+  });
+
+  return <MessageStack {...props} items={items} />;
 };
 
 const CompanionStory = () => {
@@ -77,13 +107,12 @@ const CompanionStory = () => {
 
 const meta = {
   title: 'plugins/plugin-inbox/components/MessageStack',
-  component: MessageStack,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' }), withAttention(), withMosaic()],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof MessageStack>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
@@ -105,7 +134,7 @@ export const WithMessages: Story = {
 export const WithConversations: Story = {
   args: {
     id: 'story',
-    conversations: true,
+    groupByThread: true,
     count: 100,
     options: {
       threads: 10,

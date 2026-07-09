@@ -8,12 +8,13 @@ import type * as EffectArray from 'effect/Array';
 import type * as Schema from 'effect/Schema';
 
 import { type QueryAST } from '@dxos/echo-protocol';
-import { type URI } from '@dxos/keys';
+import { EID, type URI } from '@dxos/keys';
 
+import type * as Aggregate from './Aggregate';
 import type * as Collection from './Collection';
 import * as Database from './Database';
 import type * as Dataset from './Dataset';
-import * as Feed from './Feed';
+import type * as Feed from './Feed';
 import * as Filter from './Filter';
 import * as internal from './internal';
 import * as Obj from './Obj';
@@ -44,6 +45,17 @@ type ReferenceTraversalTarget<P> = P extends Ref.Unknown
     : RefArrayElement<P> extends Ref.Unknown
       ? Ref.Target<RefArrayElement<P>>
       : never;
+
+/**
+ * Phantom brand on the flat row produced by {@link Query.aggregate}. Present only at the type level
+ * (never at runtime), it lets hooks like `useQuery`/`usePagination` distinguish an aggregate-row
+ * query from an entity query and avoid wrapping the row in `Entity.Entity`. The brand is a required
+ * property so `T extends AggregateResult` discriminates — an optional one would be satisfied by any
+ * type. Consumers never read it.
+ */
+export interface AggregateResult {
+  readonly '~@dxos/echo/Query.AggregateResult': true;
+}
 
 // TODO(burdon): Narrow T to Entity.Unknown?
 export interface Query<T> {
@@ -131,10 +143,46 @@ export interface Query<T> {
   /**
    * Order the query results.
    * Orders are specified in priority order. The first order will be applied first, etc.
+   *
+   * `Order.property` orders by the current result shape's fields, so it works both before and after
+   * an {@link aggregate}: before, by member (row) properties; after, by the flat record's fields
+   * (any group or aggregate field — e.g. `Order.property('lastMessageAt')` reorders the groups by
+   * that aggregate).
    * @param order - Order to sort the results.
    * @returns Query for the ordered results.
    */
   'orderBy'(...order: EffectArray.NonEmptyArray<Order.Order<T>>): Query<T>;
+
+  /**
+   * Aggregate the query results into flat records. {@link Aggregate.group} entries partition the
+   * results into contiguous groups (one record each), keyed by the record field the group is named
+   * after; with no `group` entries the entire input aggregates into a single record. Each declared
+   * aggregate becomes a top-level field and can be ordered by with a following {@link orderBy} using
+   * {@link Order.property}.
+   *
+   * Groups are ordered by the first occurrence of their key in the incoming stream, so a preceding
+   * `orderBy` controls group order too. For example, message threads ordered by their most recent
+   * message, each retaining up to 20 members newest-first:
+   *
+   * ```ts
+   * Query.type(Message)
+   *   .orderBy(Order.property('created', 'desc'))
+   *   .aggregate({
+   *     threadId: Aggregate.group('threadId'),
+   *     lastMessageAt: Aggregate.max('created'),
+   *     items: Aggregate.items({ limit: 20 }),
+   *   })
+   *   .orderBy(Order.property('lastMessageAt', 'desc'));
+   * ```
+   *
+   * Must be the last data-selecting clause in the chain — only `from`/`options`/`orderBy`/`limit`/
+   * `skip` may follow.
+   * @param aggregates - Record of aggregate declarations keyed by result field name.
+   * @returns Query whose flat result records carry the named aggregates as fields.
+   */
+  'aggregate'<const A extends Record<string, Aggregate.Aggregate<T, any>>>(
+    aggregates: A,
+  ): Query<Aggregate.AggregationResult<A>>;
 
   /**
    * Limit the number of results.
@@ -334,11 +382,19 @@ class QueryClass implements Any {
     });
   }
 
-  'orderBy'(...order: Order.Order<any>[]): Any {
+  'orderBy'(...order: Order.Any[]): Any {
     return new QueryClass({
       type: 'order',
       query: this.ast,
       order: order.map((o) => o.ast),
+    });
+  }
+
+  'aggregate'(aggregates: Record<string, Aggregate.Any>): Any {
+    return new QueryClass({
+      type: 'aggregate',
+      query: this.ast,
+      aggregates: Object.entries(aggregates).map(([name, aggregate]) => ({ name, ...aggregate.spec })),
     });
   }
 
@@ -467,11 +523,13 @@ class QueryClass implements Any {
       if (typename === 'org.dxos.type.collection') {
         throw new Error('Query.from(collection) is not yet supported.');
       }
-      // Validate that the items are Feed.Feed instances.
+      // Validate that the items are feed objects. Checked by typename rather than schema instanceof
+      // to keep this module free of a runtime dependency on the Feed module (avoids an import cycle).
       for (const item of items) {
-        if (!Obj.instanceOf(Feed.Feed, item)) {
+        const itemTypename = Obj.getTypename(item as Obj.Unknown);
+        if (itemTypename !== 'org.dxos.type.feed') {
           throw new TypeError(
-            `Query.from() expects Feed objects (org.dxos.type.feed), but received an object with typename '${typename ?? 'unknown'}'.`,
+            `Query.from() expects Feed objects (org.dxos.type.feed), but received an object with typename '${itemTypename ?? 'unknown'}'.`,
           );
         }
       }
@@ -479,7 +537,8 @@ class QueryClass implements Any {
 
     const feedItems = items as Feed.Feed[];
     const feedScopes = feedItems.map((feed) => {
-      const uri = Feed.getFeedUri(feed);
+      // Inlined Feed.getFeedUri to avoid a runtime import cycle with the Feed module.
+      const uri = EID.tryParse(Obj.getURI(feed));
       if (!uri) {
         throw new TypeError(
           `Query.from() expects persisted Feed objects with a feed URI; got feed without a space (id=${Obj.getURI(feed)}).`,
