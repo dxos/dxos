@@ -162,7 +162,15 @@ export const prettyQuery = (query: QueryAST.Query): string => {
       return `${prettyQuery(query.query)}.skip(${query.skip})`;
     case 'group-by': {
       const keys = query.keys.map((key) => JSON.stringify(key.property));
-      return `${prettyQuery(query.query)}.groupBy(${keys.join(', ')})`;
+      const grouped = `${prettyQuery(query.query)}.groupBy(${keys.join(', ')})`;
+      if (!query.aggregates || query.aggregates.length === 0) {
+        return grouped;
+      }
+      const aggregates = query.aggregates.map(
+        (aggregate) =>
+          `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${aggregate.property !== undefined ? JSON.stringify(aggregate.property) : ''})`,
+      );
+      return `${grouped}.aggregate({ ${aggregates.join(', ')} })`;
     }
   }
 };

@@ -6,6 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import type {
   Ref,
+  Aggregate as Aggregate$,
   Filter as Filter$,
   GroupKey as GroupKey$,
   Obj as Obj$,
@@ -760,6 +761,16 @@ class QueryClass implements Query$.Any {
     });
   }
 
+  'aggregate'(aggregates: Record<string, Aggregate$.Any>): Query$.Any {
+    if (this.ast.type !== 'group-by') {
+      throw new TypeError('.aggregate() must directly follow .groupBy().');
+    }
+    return new QueryClass({
+      ...this.ast,
+      aggregates: Object.entries(aggregates).map(([name, aggregate]) => ({ name, ...aggregate.spec })),
+    });
+  }
+
   'options'(options: QueryAST.QueryOptions): Query$.Any {
     return new QueryClass({
       type: 'options',
@@ -973,7 +984,15 @@ const prettyQuery = (query: QueryAST.Query): string => {
       return `${prettyQuery(query.query)}.skip(${query.skip})`;
     case 'group-by': {
       const keys = query.keys.map((key) => JSON.stringify(key.property));
-      return `${prettyQuery(query.query)}.groupBy(${keys.join(', ')})`;
+      const grouped = `${prettyQuery(query.query)}.groupBy(${keys.join(', ')})`;
+      if (!query.aggregates || query.aggregates.length === 0) {
+        return grouped;
+      }
+      const aggregates = query.aggregates.map(
+        (aggregate) =>
+          `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${aggregate.property !== undefined ? JSON.stringify(aggregate.property) : ''})`,
+      );
+      return `${grouped}.aggregate({ ${aggregates.join(', ')} })`;
     }
   }
 };

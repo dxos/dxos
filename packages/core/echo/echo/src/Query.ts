@@ -11,6 +11,7 @@ import type * as EffectTypes from 'effect/Types';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { EID, type URI } from '@dxos/keys';
 
+import type * as Aggregate from './Aggregate';
 import type * as Collection from './Collection';
 import * as Database from './Database';
 import type * as Dataset from './Dataset';
@@ -49,19 +50,15 @@ type ReferenceTraversalTarget<P> = P extends Ref.Unknown
 
 /**
  * One group of query results, produced by {@link Query.groupBy}.
- * `K` is the group's key (an object of the properties grouped by); `T` is the element type.
+ * `K` is the group's key (an object of the properties grouped by); `E` is the member type, carried
+ * for {@link Query.aggregate} (e.g. `Aggregate.items` yields `E[]`).
+ *
+ * A group carries only its `key` by default. Members, counts, and other aggregates are opt-in via
+ * {@link Query.aggregate} and appear as additional top-level fields (e.g. `Aggregate.items()` →
+ * `items: E[]`, `Aggregate.count()` → `count: number`, `Aggregate.max('created')` → the scalar).
  */
-export interface Group<K, T> {
+export interface Group<K, E> {
   readonly key: K;
-
-  /**
-   * Number of results in this group in the source result set.
-   * May exceed `values.length` while some results have not hydrated locally.
-   */
-  // TODO(dmaretskyi): Reserve room for future aggregations (sum/min/max/avg) as a sibling field.
-  readonly count: number;
-
-  readonly values: T[];
 }
 
 // TODO(burdon): Narrow T to Entity.Unknown?
@@ -150,6 +147,11 @@ export interface Query<T> {
   /**
    * Order the query results.
    * Orders are specified in priority order. The first order will be applied first, etc.
+   *
+   * `Order.property` orders by the current result shape's fields, so it works both before and after
+   * a {@link groupBy}: before, by member properties; after, by the group's fields (its `key` and any
+   * aggregates declared via {@link aggregate} — e.g. `Order.property('lastMessageAt')` reorders the
+   * groups by that aggregate).
    * @param order - Order to sort the results.
    * @returns Query for the ordered results.
    */
@@ -175,6 +177,32 @@ export interface Query<T> {
   'groupBy'<const K extends GroupKey.GroupKey<keyof T>[]>(
     ...keys: K
   ): Query<Group<EffectTypes.Simplify<Pick<T, GroupKey.Property<K[number]>>>, T>>;
+
+  /**
+   * Declare named aggregates computed per group. Must directly follow {@link groupBy}. Each becomes
+   * a top-level field on the group result and can be ordered by with a following {@link orderBy}
+   * using {@link Order.property}.
+   *
+   * ```ts
+   * Query.type(Message)
+   *   .orderBy(Order.property('created', 'desc'))
+   *   .groupBy(GroupKey.property('threadId'))
+   *   .aggregate({ lastMessageAt: Aggregate.max('created'), items: Aggregate.items() })
+   *   .orderBy(Order.property('lastMessageAt', 'desc'));
+   * ```
+   *
+   * @param aggregates - Record of aggregate declarations keyed by result field name.
+   * @returns Query whose group results carry the named aggregates as fields.
+   */
+  'aggregate'<const A extends Record<string, Aggregate.Aggregate<T extends Group<any, infer E> ? E : never, any>>>(
+    aggregates: A,
+  ): Query<
+    EffectTypes.Simplify<
+      (T extends Group<infer K, infer E> ? Group<K, E> : Group<unknown, unknown>) & {
+        readonly [N in keyof A]: Aggregate.ValueOf<A[N]>;
+      }
+    >
+  >;
 
   /**
    * Limit the number of results.
@@ -374,7 +402,7 @@ class QueryClass implements Any {
     });
   }
 
-  'orderBy'(...order: Order.Order<any>[]): Any {
+  'orderBy'(...order: Order.Any[]): Any {
     return new QueryClass({
       type: 'order',
       query: this.ast,
@@ -387,6 +415,16 @@ class QueryClass implements Any {
       type: 'group-by',
       query: this.ast,
       keys: keys.map((key) => key.ast),
+    });
+  }
+
+  'aggregate'(aggregates: Record<string, Aggregate.Any>): Any {
+    if (this.ast.type !== 'group-by') {
+      throw new TypeError('.aggregate() must directly follow .groupBy().');
+    }
+    return new QueryClass({
+      ...this.ast,
+      aggregates: Object.entries(aggregates).map(([name, aggregate]) => ({ name, ...aggregate.spec })),
     });
   }
 

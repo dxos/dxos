@@ -434,16 +434,35 @@ export type GroupByKey = Schema.Schema.Type<typeof GroupByKey_>;
 export const GroupByKey: Schema.Schema<GroupByKey> = GroupByKey_;
 
 /**
+ * A named aggregate computed per group over its members, exposed as a top-level field on the group
+ * result (`Group[name]`) and orderable via a post-group `orderBy(Order.property(name))`.
+ * - `max`/`min` reduce a scalar member `property`.
+ * - `items` collects the group's members; `count` yields the member count. Both are opt-in — a group
+ *   carries neither its members nor a count otherwise. `property` is unused for `items`/`count`.
+ */
+const GroupAggregate_ = Schema.Struct({
+  name: Schema.String,
+  kind: Schema.Literal('max', 'min', 'items', 'count'),
+  property: Schema.optional(Schema.String),
+});
+
+export type GroupAggregate = Schema.Schema.Type<typeof GroupAggregate_>;
+export const GroupAggregate: Schema.Schema<GroupAggregate> = GroupAggregate_;
+
+/**
  * Groups results by one or more scalar property values, producing contiguous groups.
  * Groups are ordered by the first occurrence of their key in the incoming (already-ordered)
  * result stream — this lets a preceding `orderBy` also control group order (e.g. ordering
- * thread groups by their most recent message). Must be the outermost data clause: only
- * `from`/`options` may wrap it.
+ * thread groups by their most recent message). A post-group `orderBy(Order.property(name))`
+ * referencing a named aggregate reorders whole groups instead. Must be the outermost data clause:
+ * only `from`/`options`/`order` may wrap it.
  */
 const QueryGroupByClause_ = Schema.Struct({
   type: Schema.Literal('group-by'),
   query: Schema.suspend(() => Query),
   keys: Schema.Array(GroupByKey),
+  /** Named aggregates computed per group; empty/absent when the query declares none. */
+  aggregates: Schema.optional(Schema.Array(GroupAggregate)),
 });
 
 export interface QueryGroupByClause extends Schema.Schema.Type<typeof QueryGroupByClause_> {}

@@ -291,5 +291,11 @@ export namespace QueryPlan {
     _tag: 'GroupByStep';
 
     keys: readonly QueryAST.GroupByKey[];
+
+    /**
+     * Named aggregates computed per group and stamped on each item, consumed by a following
+     * group-level `OrderStep` (`aggregate` order kind). Absent when the query declares none.
+     */
+    aggregates?: readonly QueryAST.GroupAggregate[];
   };
 }

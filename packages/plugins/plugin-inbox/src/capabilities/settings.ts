@@ -17,7 +17,7 @@ export default Capability.makeModule(() =>
       key: meta.profile.key,
       schema: Settings.Settings,
       defaultValue: () => ({
-        conversations: false,
+        conversations: true,
         loadRemoteImages: false,
       }),
     });
