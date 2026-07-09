@@ -12,7 +12,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, Focus, Icon, Panel, useTranslation } from '@dxos/react-ui';
-import { useSelection } from '@dxos/react-ui-attention';
+import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
@@ -103,6 +103,10 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
     Obj.getDatabase(object)?.remove(object);
   }, []);
 
+  // Table row selection feeds the 'selected-objects' companion, keyed by the type's own URI — the
+  // same id the companion surface resolves from its `companionTo` (see react-surface.tsx).
+  const { multi: setSelectedObjects } = useSelectionActions(Type.getURI(type));
+
   // Table rows are editable, so opening a row is a deliberate row action rather than `onRowClick`
   // (which would fire on every cell click and fight with in-cell editing).
   const rowActions = useMemo(
@@ -150,9 +154,15 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
             <DynamicTable
               type={type}
               rows={results}
-              features={{ selection: { enabled: false }, dataEditable: true, schemaEditable: false, pinColumns: 1 }}
+              features={{
+                selection: { enabled: true, mode: 'multiple' },
+                dataEditable: true,
+                schemaEditable: false,
+                pinColumns: 1,
+              }}
               rowActions={rowActions}
               onRowAction={handleRowAction}
+              onSelectionChanged={setSelectedObjects}
             />
           ) : (
             <Masonry.Root Tile={TileAdapter}>
