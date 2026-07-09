@@ -9,7 +9,6 @@ import { type RandomAccessStorage } from 'random-access-storage';
 import { synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { TimeSeriesCounter, trace } from '@dxos/tracing';
 
 import { Directory, type DiskInfo, type File, type Storage, StorageType, getFullPath } from '../common';
 
@@ -179,9 +178,7 @@ export class WebFS implements Storage {
 }
 
 // TODO(mykola): Remove EventEmitter.
-// @trace.resource()
 export class WebFile extends EventEmitter implements File {
-  @trace.info()
   readonly fileName: string;
 
   private readonly _fileHandle: Promise<FileSystemFileHandle>;
@@ -202,29 +199,6 @@ export class WebFile extends EventEmitter implements File {
    */
   private _flushSequence = 0;
 
-  //
-  // Metrics
-  //
-
-  @trace.metricsCounter()
-  private _flushes = new TimeSeriesCounter();
-
-  @trace.metricsCounter()
-  private _operations = new TimeSeriesCounter();
-
-  @trace.metricsCounter()
-  private _reads = new TimeSeriesCounter();
-
-  @trace.metricsCounter()
-  private _readBytes = new TimeSeriesCounter();
-
-  @trace.metricsCounter()
-  private _writes = new TimeSeriesCounter();
-
-  @trace.metricsCounter()
-  private _writeBytes = new TimeSeriesCounter();
-
-  @trace.info()
   get _bufferSize() {
     return this._buffer?.length;
   }
@@ -294,8 +268,6 @@ export class WebFile extends EventEmitter implements File {
     }
     this._flushSequence = sequence + 1;
 
-    this._flushes.inc();
-
     await this._loadBufferGuarded();
     invariant(this._buffer);
 
@@ -330,10 +302,6 @@ export class WebFile extends EventEmitter implements File {
   async read(offset: number, size: number): Promise<Buffer> {
     this.assertNotDestroyed('Read');
 
-    this._operations.inc();
-    this._reads.inc();
-    this._readBytes.inc(size);
-
     if (!this._buffer) {
       await this._loadBufferGuarded();
       invariant(this._buffer);
@@ -349,10 +317,6 @@ export class WebFile extends EventEmitter implements File {
 
   async write(offset: number, data: Buffer): Promise<void> {
     this.assertNotDestroyed('Write');
-
-    this._operations.inc();
-    this._writes.inc();
-    this._writeBytes.inc(data.length);
 
     if (!this._buffer) {
       await this._loadBufferGuarded();
@@ -374,8 +338,6 @@ export class WebFile extends EventEmitter implements File {
 
   async del(offset: number, size: number): Promise<void> {
     this.assertNotDestroyed('Del');
-
-    this._operations.inc();
 
     if (offset < 0 || size <= 0) {
       return;
@@ -400,8 +362,6 @@ export class WebFile extends EventEmitter implements File {
   async stat(): Promise<{ size: number }> {
     this.assertNotDestroyed('Truncate');
 
-    this._operations.inc();
-
     // NOTE: This will load all data from the file just to get it's size. While this is a lot of overhead, this works ok for out use cases.
     if (!this._buffer) {
       await this._loadBufferGuarded();
@@ -415,8 +375,6 @@ export class WebFile extends EventEmitter implements File {
 
   async truncate(offset: number): Promise<void> {
     this.assertNotDestroyed('Truncate');
-
-    this._operations.inc();
 
     if (!this._buffer) {
       await this._loadBufferGuarded();
