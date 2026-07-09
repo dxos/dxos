@@ -20,6 +20,16 @@
             "statusMessage": "Checking worktree boundary"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-branch.sh\"",
+            "statusMessage": "Checking branch/worktree safety"
+          }
+        ]
       }
     ]
   }
