@@ -300,11 +300,6 @@ const MailboxSyncStory = ({ enrich = false }: { enrich?: boolean }) => {
       ),
       {
         onExit: (exit: Exit.Exit<{ processed: number; facts: number }, Error>) => {
-          log.info('enrich: onExit', {
-            success: Exit.isSuccess(exit),
-            interrupted: Exit.isInterrupted(exit),
-            value: Exit.isSuccess(exit) ? exit.value : undefined,
-          });
           cancelRef.current = undefined;
           if (mountedRef.current) {
             setEnriching(false);

@@ -83,7 +83,6 @@ export const runFactPipeline = (options: {
             }
 
             const pageFacts = units.flatMap((unit) => unit.facts);
-            log.info('enrich: commit page', { units: units.length, pageFacts: pageFacts.length });
             if (pageFacts.length > 0) {
               // A fact-store write failure is fatal to the run (not a recoverable per-page error).
               yield* store.putFacts(pageFacts).pipe(Effect.orDie);
