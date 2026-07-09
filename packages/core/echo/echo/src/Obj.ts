@@ -760,12 +760,7 @@ interface UpdateFromOptions<T> {
   include?: (keyof T)[];
 }
 
-/**
- * Structural value equality tailored to ECHO property values: references compare by target URI, and arrays
- * and plain object-shaped property bags (excluding `id`) compare recursively; everything else falls back to
- * Effect `Equal.equals` inside a structural region.
- */
-export const valuesEqual = (left: unknown, right: unknown): boolean => {
+const valuesEqual = (left: unknown, right: unknown): boolean => {
   if (left === right) {
     return true;
   }

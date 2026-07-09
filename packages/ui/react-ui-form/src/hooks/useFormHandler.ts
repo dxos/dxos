@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Equal from 'effect/Equal';
 import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
+import * as Utils from 'effect/Utils';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -184,7 +186,7 @@ export const useFormHandler = <T extends AnyProperties>({
   // render (a new source value re-renders the form), reconciling against whatever the source currently holds.
   useEffect(() => {
     const reconciled = (Object.keys(overrides) as SchemaEx.JsonPath[]).filter((path) =>
-      Obj.valuesEqual(SchemaEx.getValue(source, path), overrides[path]),
+      valuesEqual(SchemaEx.getValue(source, path), overrides[path]),
     );
     if (reconciled.length === 0) {
       return;
@@ -397,6 +399,50 @@ const applyOverrides = <T>(base: Partial<T>, overrides: Record<SchemaEx.JsonPath
     result = mergeAtPath(result, SchemaEx.splitJsonPath(path), overrides[path]) as Partial<T>;
   }
   return result;
+};
+
+// Copied from `@dxos/echo` (internal `Obj.valuesEqual`): references compare by target URI, arrays and plain
+// object-shaped property bags (excluding `id`) compare recursively, and leaves fall back to Effect `Equal.equals`
+// inside a structural region. Effect's `Schema.equivalence` is not a safe substitute — it returns false-positive
+// equality for dynamic/union/ref-array schemas, which would silently prune edits.
+// TODO(wittjosiah): Factor out into a shared util rather than duplicating echo's internal implementation.
+const valuesEqual = (left: unknown, right: unknown): boolean => {
+  if (left === right) {
+    return true;
+  }
+  if (left === null || right === null) {
+    return left === right;
+  }
+  if (typeof left !== 'object' || typeof right !== 'object') {
+    return Utils.structuralRegion(() => Equal.equals(left, right));
+  }
+  if (Ref.isRef(left) && Ref.isRef(right)) {
+    return left.uri === right.uri;
+  }
+  if (Ref.isRef(left) || Ref.isRef(right)) {
+    return false;
+  }
+  if (Array.isArray(left) && Array.isArray(right)) {
+    if (left.length !== right.length) {
+      return false;
+    }
+    return left.every((value, index) => valuesEqual(value, right[index]));
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return false;
+  }
+  const leftRecord = left as Record<string, unknown>;
+  const rightRecord = right as Record<string, unknown>;
+  const keys = new Set([
+    ...Object.keys(leftRecord).filter((key) => key !== 'id'),
+    ...Object.keys(rightRecord).filter((key) => key !== 'id'),
+  ]);
+  for (const key of keys) {
+    if (!valuesEqual(leftRecord[key], rightRecord[key])) {
+      return false;
+    }
+  }
+  return true;
 };
 
 /** Returns a copy of `record` without the given json-path keys. */
