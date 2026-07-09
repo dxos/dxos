@@ -3,6 +3,7 @@
 //
 
 import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -14,6 +15,9 @@ import { DraftMessage, InboxOperation, Mailbox } from '@dxos/plugin-inbox/types'
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+/** Raised when the LLM reply generation fails (provider error or timeout). */
+export class GenerateReplyError extends Data.TaggedClass('GenerateReplyError')<{ cause: unknown }> {}
+
 const handler: Operation.WithHandler<typeof InboxOperation.GenerateReply> = InboxOperation.GenerateReply.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ mailbox: mailboxRef, message }) {
@@ -21,7 +25,10 @@ const handler: Operation.WithHandler<typeof InboxOperation.GenerateReply> = Inbo
       if (!Mailbox.instanceOf(mailbox) || !Obj.instanceOf(Message.Message, message)) {
         return { subject: '', body: '' };
       }
-      return yield* generateReply({ mailbox, message });
+      // Degrade to an empty draft on generation failure so the toolbar action always yields a draft.
+      return yield* generateReply({ mailbox, message }).pipe(
+        Effect.catchTag('GenerateReplyError', () => Effect.succeed({ subject: '', body: '' })),
+      );
     }),
   ),
 );
@@ -67,14 +74,18 @@ const generatePrompt = (options: { thread: string; facts: string; sender: string
  * Drafts a grounded reply: gathers the message's thread (same normalized subject) from the mailbox
  * feed, looks up facts about the participants in the space fact store, and prompts the LLM for a
  * reply body. Accepts either the message to reply to or a reply draft (resolved via `inReplyTo`).
- * Fact lookup degrades to none on store failure — a reply can always be drafted; LLM failure is a
- * defect (a broken model configuration should surface loudly). Named export so the flow is
- * unit-testable without the operation runtime.
+ * Fact lookup degrades to none on store failure — a reply can always be drafted; LLM failure surfaces
+ * as a typed {@link GenerateReplyError} so callers can recover (e.g. fall back to an empty draft).
+ * Named export so the flow is unit-testable without the operation runtime.
  */
 export const generateReply = (options: {
   readonly mailbox: Mailbox.Mailbox;
   readonly message: Message.Message;
-}): Effect.Effect<{ subject: string; body: string }, never, FactStore | AiService.AiService | Database.Service> =>
+}): Effect.Effect<
+  { subject: string; body: string },
+  GenerateReplyError,
+  FactStore | AiService.AiService | Database.Service
+> =>
   Effect.gen(function* () {
     const { mailbox } = options;
 
@@ -132,7 +143,7 @@ export const generateReply = (options: {
       Effect.provide(AiService.model(GENERATE_MODEL).pipe(Layer.orDie)),
       Effect.timeout('30 seconds'),
       Effect.map((response) => response.text),
-      Effect.orDie,
+      Effect.catchAll((cause) => Effect.fail(new GenerateReplyError({ cause }))),
     );
 
     return { subject: replySubject(message.properties?.subject), body };
