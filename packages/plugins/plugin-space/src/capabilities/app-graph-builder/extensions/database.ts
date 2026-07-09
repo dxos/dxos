@@ -152,7 +152,11 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       id: 'schemaChildren',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-        return space && Type.isType(node.data) ? Option.some({ space, schema: node.data }) : Option.none();
+        // Scoped to the Database section's own type nodes: other plugins' type nodes (e.g. plugin-crm's
+        // virtual type nodes) share the `Type.isType(node.data)` shape but should stay leaf nodes for now.
+        return node.type === STATIC_SCHEMA_TYPE && space && Type.isType(node.data)
+          ? Option.some({ space, schema: node.data })
+          : Option.none();
       },
       connector: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
@@ -161,7 +165,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
 
         // View objects are the type node's only visible children; objects of the type are resolved
         // on demand as hidden children (see the `typeCollectionObject` resolver). The list of all
-        // objects is rendered when the type node is selected (see TypeCollectionArticle).
+        // objects is rendered when the type node is selected (see TypeArticle).
         const viewIndex = buildViewIndex(get, space, schemas);
         const viewNodes = viewIndex
           .getViewsForTypeUri(typeUri)
@@ -314,7 +318,7 @@ const createSchemaNode = ({
       label,
       icon,
       iconHue,
-      // Selecting the type node opens a list of every object of this type (see TypeCollectionArticle);
+      // Selecting the type node opens a list of every object of this type (see TypeArticle);
       // objects resolve on demand as hidden children. View objects are its only visible children, so
       // without a view the node is a leaf (no `role: 'branch'`).
       testId: `spacePlugin.schemaNode.${typename}`,

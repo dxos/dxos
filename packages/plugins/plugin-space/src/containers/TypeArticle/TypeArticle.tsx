@@ -1,8 +1,9 @@
 //
-// Copyright 2026 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { Atom } from '@effect-atom/atom-react';
+import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -16,15 +17,13 @@ import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import { DynamicTable } from '@dxos/react-ui-table';
+import { DynamicTable, type TableRowAction } from '@dxos/react-ui-table';
+import { CardAnnotation } from '@dxos/schema';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-// TODO(burdon): Reconcile with MasonryArticle; remove plugin-masonry?
-// TODO(burdon): Move to plugin-space (supercedes TypeCollectionArticle).
-
-/** Sidebar layout modes for a type collection. */
+/** Sidebar layout modes for a type article. */
 type Layout = 'masonry' | 'table';
 
 const LAYOUTS: { value: Layout; icon: string }[] = [
@@ -32,7 +31,7 @@ const LAYOUTS: { value: Layout; icon: string }[] = [
   { value: 'table', icon: 'ph--table--regular' },
 ];
 
-export type CollectionArticleProps = {
+export type TypeArticleProps = {
   role?: string;
   space: Space;
   type: Type.AnyEntity;
@@ -40,12 +39,12 @@ export type CollectionArticleProps = {
 };
 
 /**
- * Generic collection view for every object of a type: a toolbar with a Masonry/Table layout switch
- * and a text filter over a shared query. Mirrors the database type folder (`TypeCollectionArticle`)
- * but lets the user choose between the header-card masonry and a schema-derived table. Selecting an
- * item opens it as a sibling plank.
+ * List view rendered when a type node is selected: a toolbar with a Masonry/Table layout switch and a
+ * text filter over every object of the type. Selecting an item opens it as a sibling plank. Objects are
+ * not enumerated in the nav tree; each navigated object becomes a hidden child of the type node resolved
+ * on demand.
  */
-export const CollectionArticle = ({ role, space, type, attendableId }: CollectionArticleProps) => {
+export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const currentId = useSelection(attendableId, 'single');
@@ -104,6 +103,22 @@ export const CollectionArticle = ({ role, space, type, attendableId }: Collectio
     Obj.getDatabase(object)?.remove(object);
   }, []);
 
+  // Table rows are editable, so opening a row is a deliberate row action rather than `onRowClick`
+  // (which would fire on every cell click and fight with in-cell editing).
+  const rowActions = useMemo(
+    (): TableRowAction[] => [{ id: 'open', label: ['open-object.label', { ns: meta.profile.key }] }],
+    [],
+  );
+
+  const handleRowAction = useCallback(
+    (actionId: string, object: Obj.Unknown) => {
+      if (actionId === 'open') {
+        handleOpen(object);
+      }
+    },
+    [handleOpen],
+  );
+
   const tileItems = useMemo<TileData[]>(
     () =>
       results.map((object) => ({
@@ -135,8 +150,9 @@ export const CollectionArticle = ({ role, space, type, attendableId }: Collectio
             <DynamicTable
               type={type}
               rows={results}
-              features={{ selection: { enabled: false }, dataEditable: false, schemaEditable: false, pinColumns: 1 }}
-              onRowClick={handleOpen}
+              features={{ selection: { enabled: false }, dataEditable: true, schemaEditable: false, pinColumns: 1 }}
+              rowActions={rowActions}
+              onRowAction={handleRowAction}
             />
           ) : (
             <Masonry.Root Tile={TileAdapter}>
@@ -163,11 +179,11 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
     return null;
   }
 
-  return <CollectionTile object={data.object} current={data.current} onOpen={data.onOpen} onDelete={data.onDelete} />;
+  return <TypeTile object={data.object} current={data.current} onOpen={data.onOpen} onDelete={data.onDelete} />;
 };
 
 /** Selectable header-only card for a single object. */
-const CollectionTile = ({ object, current, onOpen, onDelete }: TileData) => {
+const TypeTile = ({ object, current, onOpen, onDelete }: TileData) => {
   const { t } = useTranslation(meta.profile.key);
   // Subscribe so the label re-renders when the object changes.
   const [live] = useObject(object);
@@ -180,10 +196,12 @@ const CollectionTile = ({ object, current, onOpen, onDelete }: TileData) => {
   const icon = iconAnnotation?.icon ?? 'ph--circle-dashed--regular';
   const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
 
-  // Always render the full object card body (e.g. PersonCard/OrganizationCard from plugin-preview);
-  // types without a `CardContent` surface fall back to a header-only tile.
+  // Render a content preview body only for types that opt in via `CardAnnotation`.
+  const type = Obj.getType(object);
+  const showCardContent = !!type && Option.getOrElse(CardAnnotation.get(Type.getSchema(type)), () => false);
   const cardData = useMemo<AppSurface.ObjectCardData>(() => ({ subject: object }), [object]);
 
+  // `Focus.Item` calls `onCurrentChange` on click and on Enter.
   const handleCurrentChange = useCallback(() => onOpen(object), [onOpen, object]);
 
   const menuItems = useMemo(
@@ -212,7 +230,7 @@ const CollectionTile = ({ object, current, onOpen, onDelete }: TileData) => {
           <Card.Title>{label}</Card.Title>
           {menuItems.length > 0 && <Card.Menu items={menuItems} />}
         </Card.Header>
-        <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />
+        {showCardContent && <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />}
       </Card.Root>
     </Focus.Item>
   );

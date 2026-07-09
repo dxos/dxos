@@ -131,6 +131,9 @@
       "path": "../../ui/react-ui-search"
     },
     {
+      "path": "../../ui/react-ui-table"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {

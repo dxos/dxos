@@ -44,7 +44,7 @@ import {
   SpaceSettings,
   SpaceSettingsContainer,
   SyncStatus,
-  TypeCollectionArticle,
+  TypeArticle,
   ViewEditor,
 } from '#containers';
 import { meta } from '#meta';
@@ -119,14 +119,7 @@ export default Capability.makeModule(
             return null;
           }
 
-          return (
-            <TypeCollectionArticle
-              role={role}
-              space={space}
-              typeUri={Type.getURI(data.subject)}
-              attendableId={data.attendableId}
-            />
-          );
+          return <TypeArticle role={role} space={space} type={data.subject} attendableId={data.attendableId} />;
         },
       }),
       Surface.create({

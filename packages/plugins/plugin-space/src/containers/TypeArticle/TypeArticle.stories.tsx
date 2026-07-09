@@ -9,7 +9,7 @@ import React from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppAnnotation, AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -17,10 +17,11 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { CardAnnotation } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { TypeCollectionArticle } from './TypeCollectionArticle';
+import { TypeArticle } from './TypeArticle';
 
 /**
  * Type that opts in to a content preview card via `CardAnnotation`.
@@ -32,7 +33,7 @@ class CardType extends Type.makeObject<CardType>(DXN.make('org.dxos.type.test.ca
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--cards--regular', hue: 'emerald' }),
-    AppAnnotation.CardAnnotation.set(true),
+    CardAnnotation.set(true),
   ),
 ) {}
 
@@ -59,11 +60,11 @@ const DefaultStory = ({ type }: StoryArgs) => {
     return <Loading />;
   }
 
-  return <TypeCollectionArticle role='article' space={space} typeUri={Type.getURI(type)} attendableId='story' />;
+  return <TypeArticle role='article' space={space} type={type} attendableId='story' />;
 };
 
 const meta = {
-  title: 'plugins/plugin-space/containers/TypeCollectionArticle',
+  title: 'plugins/plugin-space/containers/TypeArticle',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
