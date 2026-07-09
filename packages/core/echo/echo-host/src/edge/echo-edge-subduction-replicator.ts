@@ -17,9 +17,12 @@ import {
   MESSAGE_TYPE_COLLECTION_QUERY,
   MESSAGE_TYPE_COLLECTION_STATE,
   MESSAGE_TYPE_ERROR,
+  MESSAGE_TYPE_SUBDUCTION_BATCH,
   MESSAGE_TYPE_SUBDUCTION_CONNECTION,
   MESSAGE_TYPE_SUBDUCTION_FRAME,
   type PeerId,
+  type SubductionBatchEnvelope,
+  type SubductionConnectionMessage,
   type SubductionProtocolMessage,
   type SubductionProtocolMessageEnveloped,
 } from '@dxos/protocols';
@@ -59,10 +62,27 @@ const MAX_RESTART_DELAY = 5000;
 const CONNECTION_DRAIN_QUIESCE_MS = 500;
 const CONNECTION_DRAIN_MAX_MS = 5_000;
 
+/**
+ * Outbound frame batching bounds (see `frame-batching-spec.md`). Subduction transport frames are
+ * coalesced into one {@link SubductionBatchEnvelope}, flushed on whichever bound trips first:
+ * {@link SUBDUCTION_BATCH_MAX_FRAMES} frames, {@link SUBDUCTION_BATCH_MAX_BYTES} accumulated, or
+ * {@link SUBDUCTION_BATCH_MAX_DELAY_MS} elapsed. The byte cap is a hard safety bound well under
+ * the 1 MB Cloudflare WebSocket message limit; count and delay tune coalescing vs latency.
+ */
+const SUBDUCTION_BATCH_MAX_FRAMES = 32;
+const SUBDUCTION_BATCH_MAX_BYTES = 256 * 1024;
+const SUBDUCTION_BATCH_MAX_DELAY_MS = 20;
+
 export type EchoEdgeSubductionReplicatorProps = {
   edgeConnection: EdgeConnection;
   edgeHttpClient: EdgeHttpClient;
   disableSharePolicy?: boolean;
+  /**
+   * Coalesce outbound subduction transport frames into batches (default enabled). Both peers
+   * accept single and batched frames; a mixed-version fleet can flip this off until the edge is
+   * deployed. See `frame-batching-spec.md`.
+   */
+  frameBatching?: boolean;
 };
 
 /** Cumulative message counts and peak throughput for a single subduction connection. */
@@ -110,6 +130,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
    */
   private readonly _spaceMutexes = new Map<SpaceId, Mutex>();
   private readonly _disableSharePolicy: boolean;
+  private readonly _frameBatching: boolean;
 
   private _ctx?: Context = undefined;
   private _context: AutomergeReplicatorContext | null = null;
@@ -127,10 +148,16 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     return mutex;
   }
 
-  constructor({ edgeConnection, edgeHttpClient, disableSharePolicy }: EchoEdgeSubductionReplicatorProps) {
+  constructor({
+    edgeConnection,
+    edgeHttpClient,
+    disableSharePolicy,
+    frameBatching,
+  }: EchoEdgeSubductionReplicatorProps) {
     this._edgeConnection = edgeConnection;
     this._edgeHttpClient = edgeHttpClient;
     this._disableSharePolicy = disableSharePolicy ?? false;
+    this._frameBatching = frameBatching ?? true;
   }
 
   async connect(ctx: Context, context: AutomergeReplicatorContext): Promise<void> {
@@ -278,6 +305,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
       spaceId,
       context: this._context,
       sharedPolicyEnabled: !this._disableSharePolicy,
+      frameBatching: this._frameBatching,
       onRemoteConnected: async () => {
         log.trace('dxos.echo.edge.subduction-replicator.onRemoteConnected', { spaceId });
         this._context?.onConnectionOpen(connection);
@@ -333,6 +361,7 @@ type EdgeSubductionReplicatorConnectionProps = {
   spaceId: SpaceId;
   context: AutomergeReplicatorContext;
   sharedPolicyEnabled: boolean;
+  frameBatching: boolean;
   onRemoteConnected: () => Promise<void>;
   onRemoteDisconnected: () => Promise<void>;
   onRestartRequested: () => Promise<void>;
@@ -352,6 +381,17 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
   private readonly _onRemoteConnected: () => Promise<void>;
   private readonly _onRemoteDisconnected: () => Promise<void>;
   private readonly _onRestartRequested: () => void;
+  private readonly _frameBatching: boolean;
+
+  // Outbound batching state. `#pending` holds encoded-size-tracked inner frames awaiting a
+  // flush; `#firstFrameSent` forces the handshake (first frame) to go single so session
+  // establishment is version-independent; `#inFlightFlush` bounds buffering to one flush at a
+  // time so a slow socket cannot grow the buffer without applying write backpressure.
+  #pendingFrames: SubductionConnectionMessage[] = [];
+  #pendingBytes = 0;
+  #flushTimer?: ReturnType<typeof setTimeout>;
+  #firstFrameSent = false;
+  #inFlightFlush?: Promise<void>;
 
   private _readableStreamController!: ReadableStreamDefaultController<SubductionProtocolMessage>;
 
@@ -376,6 +416,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     spaceId,
     context,
     sharedPolicyEnabled,
+    frameBatching,
     onRemoteConnected,
     onRemoteDisconnected,
     onRestartRequested,
@@ -385,6 +426,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     this._spaceId = spaceId;
     this._context = context;
     this._sharedPolicyEnabled = sharedPolicyEnabled;
+    this._frameBatching = frameBatching;
     // Generate a unique peer id for every connection so sync-state is fresh on reconnect.
     this._subductionServiceId = compositeKey(EdgeService.SUBDUCTION_REPLICATOR, spaceId);
     this._remotePeerId = `${this._subductionServiceId}-${this._connectionId}`;
@@ -435,6 +477,9 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
 
   protected override async _close(ctx: Context): Promise<void> {
     log('closing...');
+    // Flush buffered frames before teardown so nothing is lost when a connection is drained or
+    // restarted mid-batch.
+    await this.#flushPendingFrames();
     this._readableStreamController.close();
     await this._onRemoteDisconnected();
   }
@@ -551,6 +596,35 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         this._readableStreamController.enqueue(inner);
         return;
       }
+      case MESSAGE_TYPE_SUBDUCTION_BATCH: {
+        // Batched counterpart of MESSAGE_TYPE_SUBDUCTION_FRAME: same connectionId gate, then
+        // enqueue every inner frame in array order so the subduction byte stream stays FIFO.
+        if (payload.connectionId !== this._connectionId) {
+          log.verbose('dropping subduction-batch for different connection', {
+            expected: this._connectionId,
+            got: payload.connectionId,
+          });
+          return;
+        }
+        if (!Array.isArray(payload.frames)) {
+          log.warn('dropping subduction-batch with missing frames', { payload });
+          return;
+        }
+        this.lastInboundAt = Date.now();
+        log.verbose('received subduction batch', { frames: payload.frames.length, remoteId: this._remotePeerId });
+        for (const inner of payload.frames) {
+          if (inner === null || typeof inner !== 'object') {
+            continue;
+          }
+          inner.senderId = this._remotePeerId as PeerId;
+          this._readableStreamController.enqueue(inner);
+        }
+        // Top-level `received: 1` was already counted for the router message; add the rest.
+        if (payload.frames.length > 1) {
+          this._recordMessage({ received: payload.frames.length - 1 });
+        }
+        return;
+      }
       case MESSAGE_TYPE_COLLECTION_STATE: {
         const documentCount =
           payload.state && typeof payload.state === 'object' && 'documents' in payload.state
@@ -578,21 +652,45 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
   }
 
   private async _sendMessage(ctx: Context, message: SubductionProtocolMessage): Promise<void> {
-    let wire: SubductionProtocolMessageEnveloped;
     switch (message.type) {
-      case MESSAGE_TYPE_SUBDUCTION_CONNECTION:
+      case MESSAGE_TYPE_SUBDUCTION_CONNECTION: {
         message.targetId = this._subductionServiceId as PeerId;
-        wire = {
-          type: MESSAGE_TYPE_SUBDUCTION_FRAME,
-          connectionId: this._connectionId,
-          subductionFrame: message,
-        };
-        break;
+        if (!this._frameBatching) {
+          await this.#sendEnveloped({
+            type: MESSAGE_TYPE_SUBDUCTION_FRAME,
+            connectionId: this._connectionId,
+            subductionFrame: message,
+          });
+          return;
+        }
+        // The first frame of a connection (the handshake) is sent alone so the edge can
+        // establish the session before any batched data arrives, keeping session setup
+        // independent of whether the peer understands batches.
+        if (!this.#firstFrameSent) {
+          this.#firstFrameSent = true;
+          await this.#sendEnveloped({
+            type: MESSAGE_TYPE_SUBDUCTION_FRAME,
+            connectionId: this._connectionId,
+            subductionFrame: message,
+          });
+          return;
+        }
+        this.#enqueueFrame(message);
+        // If a flush is already in flight and another full batch is queued behind it, apply
+        // write backpressure so a slow socket cannot grow the buffer without bound.
+        if (this.#inFlightFlush && this.#pendingFrames.length >= SUBDUCTION_BATCH_MAX_FRAMES) {
+          await this.#inFlightFlush;
+        }
+        return;
+      }
       case MESSAGE_TYPE_COLLECTION_QUERY:
       case MESSAGE_TYPE_COLLECTION_STATE:
         message.targetId = this._subductionServiceId as PeerId;
-        wire = message;
-        break;
+        // Preserve send order: any buffered transport frames must reach the edge before this
+        // control-plane message.
+        await this.#flushPendingFrames();
+        await this.#sendEnveloped(message);
+        return;
       case MESSAGE_TYPE_ERROR:
         // Edge → client only; the client never originates an error on the subduction channel.
         log.warn('dropping unexpected error outbound', { message: message.message });
@@ -605,7 +703,51 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         return;
       }
     }
+  }
 
+  /** Buffer an inner frame for the next batch flush, arming the delay timer / tripping bounds. */
+  #enqueueFrame(frame: SubductionConnectionMessage): void {
+    this.#pendingFrames.push(frame);
+    this.#pendingBytes += frame.data.byteLength;
+    if (this.#pendingFrames.length >= SUBDUCTION_BATCH_MAX_FRAMES || this.#pendingBytes >= SUBDUCTION_BATCH_MAX_BYTES) {
+      void this.#flushPendingFrames();
+    } else if (this.#flushTimer === undefined) {
+      this.#flushTimer = setTimeout(() => {
+        this.#flushTimer = undefined;
+        void this.#flushPendingFrames();
+      }, SUBDUCTION_BATCH_MAX_DELAY_MS);
+    }
+  }
+
+  /** Send all buffered frames as one batch (or a single-frame envelope for the degenerate case). */
+  async #flushPendingFrames(): Promise<void> {
+    if (this.#flushTimer !== undefined) {
+      clearTimeout(this.#flushTimer);
+      this.#flushTimer = undefined;
+    }
+    if (this.#pendingFrames.length === 0) {
+      return;
+    }
+    const frames = this.#pendingFrames;
+    this.#pendingFrames = [];
+    this.#pendingBytes = 0;
+    const wire: SubductionProtocolMessageEnveloped =
+      frames.length === 1
+        ? { type: MESSAGE_TYPE_SUBDUCTION_FRAME, connectionId: this._connectionId, subductionFrame: frames[0] }
+        : { type: MESSAGE_TYPE_SUBDUCTION_BATCH, connectionId: this._connectionId, frames };
+    const flush = this.#sendEnveloped(wire, frames.length);
+    // Track a single in-flight flush; chain a follow-up if frames accumulated during this send.
+    this.#inFlightFlush = flush.finally(() => {
+      this.#inFlightFlush = undefined;
+      if (this.#pendingFrames.length > 0) {
+        void this.#flushPendingFrames();
+      }
+    });
+    await flush;
+  }
+
+  /** Encode one wire envelope and send it as a single router message. */
+  async #sendEnveloped(wire: SubductionProtocolMessageEnveloped, frameCount = 1): Promise<void> {
     if (wire.type === MESSAGE_TYPE_COLLECTION_QUERY || wire.type === MESSAGE_TYPE_COLLECTION_STATE) {
       log.verbose(`sending ${wire.type}`, {
         collectionId: wire.collectionId,
@@ -613,18 +755,13 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         remoteId: this._remotePeerId,
       });
     } else {
-      log.verbose('sending...', {
-        type: wire.type,
-        serviceId: this._subductionServiceId,
-        remoteId: this._remotePeerId,
-      });
+      log.verbose('sending...', { type: wire.type, frameCount, remoteId: this._remotePeerId });
     }
 
     const encoded = cbor.encode(wire);
-
     try {
       await this._edgeConnection.send(
-        ctx,
+        this._ctx,
         buf.create(RouterMessageSchema, {
           serviceId: this._subductionServiceId,
           source: {
@@ -634,7 +771,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           payload: { value: bufferToArray(encoded) },
         }),
       );
-      this._recordMessage({ sent: 1 });
+      this._recordMessage({ sent: frameCount });
     } catch (err) {
       log.error('failed to send message', { err });
     }
