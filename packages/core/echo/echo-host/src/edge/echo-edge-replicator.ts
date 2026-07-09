@@ -56,7 +56,6 @@ export type EchoEdgeReplicatorProps = {
   disableSharePolicy?: boolean;
 };
 
-@trace.resource()
 export class EchoEdgeReplicator implements EdgeAutomergeReplicator {
   private readonly _edgeConnection: EdgeConnection;
   private readonly _edgeHttpClient: EdgeHttpClient;

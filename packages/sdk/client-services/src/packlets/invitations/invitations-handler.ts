@@ -82,7 +82,6 @@ export class InvitationsHandlerService extends EffectContext.Tag('@dxos/client-s
   InvitationsHandler
 >() {}
 
-@_trace.resource()
 export class InvitationsHandler {
   /**
    * @internal

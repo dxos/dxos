@@ -7,7 +7,6 @@ import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { ConnectivityError } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { trace } from '@dxos/tracing';
 
 import type { IceProvider } from '../../signal';
 import { type TransportOptions } from '../transport';
@@ -38,7 +37,6 @@ export type RtcPeerChannelFactoryOptions = {
  * Contains WebRTC connection establishment logic.
  * When the first Transport is opened a connection is established and kept until all the transports are closed.
  */
-@trace.resource()
 export class RtcPeerConnection {
   // A peer who is not the initiator waits for another party to open a channel.
   private readonly _channelCreatedCallbacks = new Map<string, ChannelCreatedCallback>();
@@ -427,7 +425,6 @@ export class RtcPeerConnection {
     await this._options.sendSignal({ payload: { data } });
   }
 
-  @trace.info()
   protected get _connectionInfo() {
     const connectionInfo = this._connection && {
       connectionState: this._connection.connectionState,

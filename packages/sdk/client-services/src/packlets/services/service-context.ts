@@ -184,7 +184,6 @@ export type ServiceContextOptions = {
  * services in stage 3 (`_initialize`). Components themselves are constructed dormant by the stack.
  */
 @safeInstanceof('dxos.client-services.ServiceContext')
-@Trace.resource({ lifecycle: true })
 export class ServiceContext extends Resource implements ServiceContextApi {
   readonly #edgeIdentityUpdateMutex = new Mutex();
 

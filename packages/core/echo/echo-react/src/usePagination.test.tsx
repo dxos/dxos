@@ -5,7 +5,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Aggregate, Database, Feed, Filter, GroupKey, Obj, Order, Query } from '@dxos/echo';
+import { Aggregate, Database, Feed, Filter, Obj, Order, Query } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
@@ -322,18 +322,14 @@ describe('usePagination', () => {
     const query = Query.select(Filter.type(TestSchema.Person))
       .from(feed)
       .orderBy(Order.natural('desc'))
-      .groupBy(GroupKey.property('email'))
-      .aggregate({ items: Aggregate.items() })
+      .aggregate({ email: Aggregate.group('email'), items: Aggregate.items() })
       .limit(2);
     const { result } = renderHook(() => usePagination(db, query));
 
     // Groups are ordered by first occurrence in the newest-first stream; the page size counts
     // groups, not rows.
     await waitFor(() => {
-      expect(result.current.items.map((group) => group.key.email)).toEqual([
-        'group-3@example.com',
-        'group-2@example.com',
-      ]);
+      expect(result.current.items.map((group) => group.email)).toEqual(['group-3@example.com', 'group-2@example.com']);
     });
     expect(result.current.items.map((group) => group.items.map((person) => person.name))).toEqual([
       ['person-7', 'person-3'],
@@ -344,7 +340,7 @@ describe('usePagination', () => {
     result.current.getNext();
 
     await waitFor(() => {
-      expect(result.current.items.map((group) => group.key.email)).toEqual([
+      expect(result.current.items.map((group) => group.email)).toEqual([
         'group-3@example.com',
         'group-2@example.com',
         'group-1@example.com',
@@ -383,13 +379,12 @@ describe('usePagination', () => {
     const grouped = Query.select(Filter.type(TestSchema.Person))
       .from(feed)
       .orderBy(Order.property('name', 'desc'))
-      .groupBy(GroupKey.property('email'))
-      .aggregate({ latest: Aggregate.max('name'), items: Aggregate.items() });
+      .aggregate({ email: Aggregate.group('email'), latest: Aggregate.max('name'), items: Aggregate.items() });
 
     const descending = renderHook(() => usePagination(db, grouped.orderBy(Order.property('latest', 'desc')).limit(2)));
     // First page: the two groups with the highest max(name) — a@x (p7) then b@x (p6).
     await waitFor(() => {
-      expect(descending.result.current.items.map((group) => group.key.email)).toEqual(['a@x', 'b@x']);
+      expect(descending.result.current.items.map((group) => group.email)).toEqual(['a@x', 'b@x']);
     });
     expect(descending.result.current.items.map((group) => group.latest)).toEqual(['p7', 'p6']);
     expect(descending.result.current.items.map((group) => group.items.map((person) => person.name))).toEqual([
@@ -399,13 +394,13 @@ describe('usePagination', () => {
 
     descending.result.current.getNext();
     await waitFor(() => {
-      expect(descending.result.current.items.map((group) => group.key.email)).toEqual(['a@x', 'b@x', 'c@x', 'd@x']);
+      expect(descending.result.current.items.map((group) => group.email)).toEqual(['a@x', 'b@x', 'c@x', 'd@x']);
     });
 
     // Ascending flips the thread order by latest message (not by oldest); members stay newest-first.
     const ascending = renderHook(() => usePagination(db, grouped.orderBy(Order.property('latest', 'asc')).limit(2)));
     await waitFor(() => {
-      expect(ascending.result.current.items.map((group) => group.key.email)).toEqual(['d@x', 'c@x']);
+      expect(ascending.result.current.items.map((group) => group.email)).toEqual(['d@x', 'c@x']);
     });
     expect(ascending.result.current.items.map((group) => group.items.map((person) => person.name))).toEqual([
       ['p4', 'p0'],

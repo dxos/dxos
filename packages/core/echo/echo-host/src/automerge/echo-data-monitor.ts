@@ -4,7 +4,7 @@
 
 import { type Message } from '@automerge/automerge-repo';
 
-import { type TimeAware, trace } from '@dxos/tracing';
+import { trace } from '@dxos/tracing';
 import { CircularBuffer, SlidingWindowSummary, type SlidingWindowSummaryConfig, mapValues } from '@dxos/util';
 
 import { type NetworkDataMonitor } from './echo-network-adapter';
@@ -18,8 +18,7 @@ export type EchoDataMonitorOptions = {
   timeSeriesLength: number;
 };
 
-@trace.resource()
-export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMonitor, TimeAware {
+export class EchoDataMonitor implements StorageAdapterDataMonitor, NetworkDataMonitor {
   private _lastTick = 0;
 
   private _activeCounters = createLocalCounters();

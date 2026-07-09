@@ -9,12 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { Event, synchronized } from '@dxos/async';
-import {
-  type ClientServices,
-  type ClientServicesProvider,
-  ClientServicesProviderResource,
-  clientServiceBundle,
-} from '@dxos/client-protocol';
+import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import { type ClientServicesHost, type ClientServicesHostProps } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -27,7 +22,6 @@ import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platfor
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { trace } from '@dxos/tracing';
 import { isBun } from '@dxos/util';
 
 const waitForOpfsWorkerClosed = (worker: Worker, timeoutMs = 30_000): Promise<void> =>
@@ -132,7 +126,6 @@ const setupNetworking = async (
 /**
  * Starts a local instance of the service host.
  */
-@trace.resource({ annotation: ClientServicesProviderResource })
 export class LocalClientServices implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
   private readonly _ctx = new Context();
@@ -149,7 +142,6 @@ export class LocalClientServices implements ClientServicesProvider {
     runtime: 'local-client-services',
   };
 
-  @trace.info()
   private _isOpen = false;
 
   constructor(params: LocalClientServicesParams) {

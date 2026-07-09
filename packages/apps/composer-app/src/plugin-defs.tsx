@@ -47,7 +47,6 @@ import { MagazinePlugin } from '@dxos/plugin-magazine/plugin';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid/plugin';
 import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
-import { MasonryPlugin } from '@dxos/plugin-masonry/plugin';
 import { MeetingPlugin } from '@dxos/plugin-meeting/plugin';
 import { MermaidPlugin } from '@dxos/plugin-mermaid/plugin';
 import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem/plugin';
@@ -126,7 +125,6 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     InboxPlugin.meta.profile.key,
     KanbanPlugin.meta.profile.key,
     MarkdownPlugin.meta.profile.key,
-    MasonryPlugin.meta.profile.key,
     SearchPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
     SketchPlugin.meta.profile.key,
@@ -227,7 +225,6 @@ export const getPlugins = ({
     MapPlugin(),
     isLocal && MapPluginSolid(),
     MarkdownPlugin(),
-    MasonryPlugin(),
     MeetingPlugin(),
     MermaidPlugin(),
     isTauri && !isMobile && !isPopover && NativePlugin(),

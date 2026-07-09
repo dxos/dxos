@@ -187,7 +187,6 @@ export type CreateSpaceOptions = {
 };
 
 @trackLeaks('open', 'close')
-@trace.resource({ lifecycle: true })
 export class DataSpaceManager extends Resource {
   public readonly updated = new Event();
 

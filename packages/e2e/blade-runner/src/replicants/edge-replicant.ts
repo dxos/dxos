@@ -29,7 +29,6 @@ export class Text extends Type.makeObject<Text>(DXN.make('org.dxos.type.bladeRun
   }),
 ) {}
 
-@trace.resource()
 export class EdgeReplicant {
   private _client?: Client = undefined;
   private _identity?: Identity = undefined;

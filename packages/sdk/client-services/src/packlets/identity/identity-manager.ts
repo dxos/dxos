@@ -116,7 +116,6 @@ export class IdentityManagerService extends EffectContext.Tag('@dxos/client-serv
 >() {}
 
 // TODO(dmaretskyi): Rename: represents the peer's state machine.
-@Trace.resource()
 export class IdentityManager {
   readonly stateUpdate = new Event();
 

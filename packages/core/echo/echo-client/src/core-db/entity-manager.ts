@@ -87,7 +87,6 @@ export type EntityManagerProps = {
  * DatabaseImpl holds a reference to this class and delegates all document and
  * object-core operations here.
  */
-@trace.resource()
 export class EntityManager implements IDatabaseBinding {
   private readonly _spaceKey: PublicKey;
   private readonly _spaceId: SpaceId;
