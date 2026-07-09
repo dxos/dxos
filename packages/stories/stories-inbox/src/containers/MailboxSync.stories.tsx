@@ -61,17 +61,17 @@ import { Module, StoryModulesPlugin } from '../testing/modules';
 // OAuth-created access token / connection / binding / cursor, and the synced messages,
 // contacts, and tags.
 const SYNC_STORY_TYPES = [
-  Feed.Feed,
-  Mailbox.Mailbox,
-  Message.Message,
-  Person.Person,
-  Organization.Organization,
-  Tag.Tag,
-  TagIndex.TagIndex,
   AccessToken.AccessToken,
   Connection.Connection,
   Cursor.Cursor,
+  Feed.Feed,
+  Mailbox.Mailbox,
+  Message.Message,
+  Organization.Organization,
+  Person.Person,
   SyncBinding.SyncBinding,
+  Tag.Tag,
+  TagIndex.TagIndex,
 ];
 
 // `showItem` (in the 'storybook' layout mode) dispatches `LayoutOperation.UpdateCompanion` after
@@ -138,13 +138,19 @@ const SeedRunner = () => {
     if (!feed || !space || seededRef.current) {
       return;
     }
+
     seededRef.current = true;
     void EffectEx.runPromise(seedDemoMessages(feed).pipe(Effect.provide(Database.layer(space.db))));
   }, [feed, space]);
   return null;
 };
 
-const MailboxSyncStory = ({ enrich = false, seed = false }: { enrich?: boolean; seed?: boolean }) => (
+type StoryArgs = {
+  enrich?: boolean;
+  seed?: boolean;
+};
+
+const DefaultStory = ({ enrich = false, seed = false }: StoryArgs) => (
   <>
     {seed && <SeedRunner />}
     <ModuleContainer
@@ -156,8 +162,6 @@ const MailboxSyncStory = ({ enrich = false, seed = false }: { enrich?: boolean; 
     />
   </>
 );
-
-const DefaultStory = () => <MailboxSyncStory />;
 
 const meta = {
   title: 'stories/stories-inbox/MailboxSync',
@@ -233,11 +237,11 @@ export const Live: Story = {};
 // adds Enrich, which runs `EnrichMailbox` against the local Ollama model (see `StoryAiPlugin`).
 // Operates on real synced mail — connect an account first, or use `SeededFacts` for offline content.
 export const EnrichFacts: Story = {
-  render: () => <MailboxSyncStory enrich />,
+  render: () => <DefaultStory enrich />,
 };
 
 // Like `EnrichFacts`, but seeds the feed with a few demo messages so Enrich has content to extract
 // without connecting an account — the self-contained offline demo of the extract → facts flow.
 export const SeededFacts: Story = {
-  render: () => <MailboxSyncStory enrich seed />,
+  render: () => <DefaultStory enrich seed />,
 };
