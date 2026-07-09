@@ -10,7 +10,15 @@ import { withAuthorization } from '@dxos/functions';
 
 import { JmapApiError } from '../../../errors';
 import { JmapCredentials } from '../../../services/jmap-credentials';
-import { MAIL_CAPABILITIES, SUBMISSION_CAPABILITIES, getMethodResponse, jmapRequest } from '../Jmap/api';
+import {
+  MAIL_CAPABILITIES,
+  REQUEST_RETRY,
+  REQUEST_TIMEOUT,
+  SUBMISSION_CAPABILITIES,
+  getMethodResponse,
+  jmapRequest,
+  shouldRetry,
+} from '../Jmap/api';
 import {
   type EmailAddress,
   EmailGetResult,
@@ -22,9 +30,12 @@ import {
 } from './types';
 
 /**
- * Resolved per-request context: the session `apiUrl`, the mail account id, and the session's blob
- * `downloadUrl` template (RFC 8620 §6.2) — absent when the server didn't advertise one, in which case
- * {@link downloadBlob} cannot be used.
+ * Resolved per-request context: the session `apiUrl`, the mail account id, and (optionally) the
+ * session's blob `downloadUrl` template (RFC 8620 §6.2). Most operations (mailboxGet, emailQuery,
+ * send, delete, …) don't need it and construct a `Target` without it; only the attachment-fetching
+ * path populates it from `Jmap.Session.downloadUrl`, so {@link downloadBlob} is the sole consumer
+ * that requires it — absent here just means "this call site never populated it", not "the server
+ * didn't advertise one" (every real session does).
  */
 export type Target = {
   readonly apiUrl: string;
@@ -63,9 +74,17 @@ export const downloadBlob = Effect.fn('downloadBlob')(function* (
   const { token } = yield* JmapCredentials;
   const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
 
-  const buffer = yield* HttpClientRequest.get(url).pipe(
+  // Mapped to `JmapApiError` inside the per-attempt pipeline (before `Effect.retry`) so `shouldRetry`
+  // can actually distinguish a permanent 4xx from a transient failure — mirrors `jmapRequest`.
+  const executed = HttpClientRequest.get(url).pipe(
     httpClient.execute,
     Effect.flatMap((response) => response.arrayBuffer),
+    Effect.mapError(asJmapDownloadError),
+    Effect.timeout(REQUEST_TIMEOUT),
+  );
+
+  const buffer = yield* executed.pipe(
+    Effect.retry({ schedule: REQUEST_RETRY, while: shouldRetry }),
     Effect.scoped,
     Effect.mapError(asJmapDownloadError),
   );
