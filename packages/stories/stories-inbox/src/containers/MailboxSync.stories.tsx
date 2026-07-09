@@ -397,10 +397,6 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: SYNC_STORY_TYPES,
-          // `configPreset({ edge: 'dev' })` points at the shared 'dev' Edge tier (matches the
-          // `plugin-bluesky` story) — required for Gmail's OAuth coordinator (`getEdgeClient` in
-          // `connector-coordinator.ts`) to initiate its flow. JMAP/Fastmail sync doesn't need this;
-          // it works with or without an Edge service.
           config: new Config(
             { runtime: { client: { storage: { persistent: true } } } },
             configPreset({ edge: 'dev' }).values,
