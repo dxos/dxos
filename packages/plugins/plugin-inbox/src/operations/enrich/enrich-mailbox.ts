@@ -10,10 +10,12 @@ import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import {
   EMAIL_EXTRACT_OPTIONS,
   type FactExtractor,
+  type FactUnit,
   extractFactsUnitStage,
   messageSource,
   messageToDocument,
@@ -56,6 +58,7 @@ export const runFactPipeline = (options: {
     let processed = 0;
     let facts = 0;
     const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+    log.info('enrich: pipeline start', { messages: messages.length, cursorKey, indexed: indexedSources.size, pageSize });
     yield* Stream.fromIterable(messages).pipe(
       Stage.map('facts-dedup', (message: Message.Message) =>
         Effect.sync(() =>
@@ -63,6 +66,13 @@ export const runFactPipeline = (options: {
         ),
       ),
       extractFactsUnitStage(extract),
+      // Observability stage: confirms units flow through and how many facts each carries.
+      Stage.map('facts-log', (unit: FactUnit) =>
+        Effect.sync(() => {
+          log.info('enrich: extracted unit', { foreignId: unit.foreignId, key: unit.key, facts: unit.facts.length });
+          return unit;
+        }),
+      ),
       Stream.grouped(pageSize),
       Pipeline.run({
         sink: (page) =>
@@ -73,6 +83,7 @@ export const runFactPipeline = (options: {
             }
 
             const pageFacts = units.flatMap((unit) => unit.facts);
+            log.info('enrich: commit page', { units: units.length, pageFacts: pageFacts.length });
             if (pageFacts.length > 0) {
               // A fact-store write failure is fatal to the run (not a recoverable per-page error).
               yield* store.putFacts(pageFacts).pipe(Effect.orDie);
@@ -86,6 +97,7 @@ export const runFactPipeline = (options: {
       }),
     );
 
+    log.info('enrich: pipeline done', { processed, facts });
     return { processed, facts };
   });
 

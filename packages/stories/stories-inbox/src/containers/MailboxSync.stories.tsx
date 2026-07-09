@@ -9,8 +9,9 @@
 //   - MIDDLE the selected message (message companion; tracks the LEFT selection).
 //   - RIGHT  `ConnectorCompanion` — the connection bound to the mailbox (once connected).
 //
-// The mailbox starts empty and unbound. The client is configured WITHOUT an Edge service (fully
-// local, no Edge websocket), so only the credential-based connector is usable:
+// The mailbox is seeded with a few demo messages (so `EnrichFacts` has content to extract) and
+// starts unbound. The client is configured WITHOUT an Edge service (fully local, no Edge
+// websocket), so only the credential-based connector is usable:
 //   - JMAP/Fastmail: a credential form (host + email + token), no OAuth.
 //   - Gmail: disabled — its OAuth coordinator requires an Edge URL.
 // Completing JMAP binds an `AccessToken` + `Connection` + `SyncBinding` to the mailbox;
@@ -28,8 +29,9 @@
 import { useAtomSet } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { AiService, Provider } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
@@ -39,7 +41,7 @@ import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui'
 import { AppActivationEvents, AppPlugin, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
-import { Feed, Filter, Order, Query, Ref, Tag } from '@dxos/echo';
+import { Database, Feed, Filter, Order, Query, Ref, Tag } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
@@ -63,15 +65,52 @@ import { useAttentionAttributes, useSelection } from '@dxos/react-ui-attention';
 import { FactViewer } from '@dxos/react-ui-rdf';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
-import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
+import { AccessToken, ContentBlock, Cursor, Message, Organization, Person } from '@dxos/types';
 
 // Shared attention context id: the LEFT article writes its selection under this id
 // (`showItem({ contextId })`) and the render component reads it back to drive the MIDDLE column.
 const ATTENDABLE_ID = 'story';
 
-// Local Ollama model driving `EnrichMailbox` fact extraction in the `EnrichFacts` variant. Ollama
+// Local Ollama model driving `EnrichMailbox` fact extraction in the `EnrichFacts` variant. A 7B
+// model extracts facts far more reliably than a 3B one; swap for any model pulled locally. Ollama
 // reliably fails structured output, so the operation is invoked with `strict: false`.
-const OLLAMA_MODEL = 'com.meta.model.llama-3-2-3b.instruct';
+const OLLAMA_MODEL = 'com.alibaba.model.qwen-2-5-7b.instruct';
+
+// Fresh demo messages seeded into a new mailbox so the `EnrichFacts` variant has content to extract
+// facts from without a live connection. A factory (not a const) so each identity reset appends new
+// object instances rather than re-appending already-persisted ones.
+const makeDemoMessages = (): Message.Message[] => [
+  Message.make({
+    sender: { email: 'jane@sequoia.com', name: 'Jane Partner' },
+    created: '2026-07-01T09:00:00.000Z',
+    blocks: [
+      ContentBlock.Text.make({
+        text: 'Acme Corp raised a $20M Series B led by Sequoia Capital. Jane Doe joins as CFO, reporting to CEO Mark Lee.',
+      }),
+    ],
+    properties: { subject: 'Acme Series B closed' },
+  }),
+  Message.make({
+    sender: { email: 'bob@globex.com', name: 'Bob Smith' },
+    created: '2026-07-02T14:30:00.000Z',
+    blocks: [
+      ContentBlock.Text.make({
+        text: 'Bob Smith from Globex Corporation will present the new logistics platform at the Berlin conference next Tuesday.',
+      }),
+    ],
+    properties: { subject: 'Berlin conference talk' },
+  }),
+  Message.make({
+    sender: { email: 'alice@initech.com', name: 'Alice Johnson' },
+    created: '2026-07-03T11:15:00.000Z',
+    blocks: [
+      ContentBlock.Text.make({
+        text: 'The merger between Initech and Umbrella Industries closes Friday. Alice Johnson is coordinating the legal review with counsel at Wayne & Co.',
+      }),
+    ],
+    properties: { subject: 'Initech / Umbrella merger' },
+  }),
+];
 
 // Schema for every object the connect+sync flow reads or writes: the mailbox + feed, the
 // OAuth-created access token / connection / binding / cursor, and the synced messages,
@@ -192,53 +231,93 @@ const MailboxSyncStory = ({ enrich = false }: { enrich?: boolean }) => {
   const [registry] = useCapabilities(InboxCapabilities.FactStoreRegistry);
   const [invoker] = useCapabilities(Capabilities.OperationInvoker);
   const [facts, setFacts] = useState<RDF.Fact[]>([]);
-  const [factsNonce, setFactsNonce] = useState(0);
   const [enriching, setEnriching] = useState(false);
-  useEffect(() => {
+  const mountedRef = useRef(true);
+  useEffect(() => () => void (mountedRef.current = false), []);
+
+  // Reads the whole store; the in-memory FactStore is not ECHO-reactive, so refreshes are explicit
+  // (on space change, on a progress tick, and when a run settles).
+  const refreshFacts = useCallback(async () => {
     if (!registry || !space?.id) {
-      setFacts([]);
+      if (mountedRef.current) {
+        setFacts([]);
+      }
       return;
     }
 
-    // Ignore a late resolve after unmount / space change so we never set state on a stale store.
-    let cancelled = false;
-    void EffectEx.runPromise(
+    const result = await EffectEx.runPromise(
       registry
         .forSpace(space.id)
         .query({})
-        .pipe(Effect.orElseSucceed((): RDF.Fact[] => [])),
-    ).then((result) => {
-      if (!cancelled) {
-        setFacts(result);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [registry, space?.id, factsNonce]);
+        .pipe(
+          Effect.tapError((error) => Effect.sync(() => log.warn('refreshFacts: query failed', { error }))),
+          Effect.orElseSucceed((): RDF.Fact[] => []),
+        ),
+    );
+    log.info('refreshFacts: result', { spaceId: space.id, count: result.length });
+    if (mountedRef.current) {
+      setFacts(result);
+    }
+  }, [registry, space?.id]);
 
-  // Runs `EnrichMailbox` against the local Ollama model, then refreshes the facts column. The
-  // in-memory FactStore is not ECHO-reactive, so the read is re-triggered via `factsNonce`.
-  const handleEnrich = useCallback(async () => {
-    if (!invoker || !mailbox || !space?.id) {
+  useEffect(() => {
+    void refreshFacts();
+  }, [refreshFacts]);
+
+  // Poll the store for live progress while a run is in flight (facts are committed per page).
+  useEffect(() => {
+    if (!enriching) {
+      return;
+    }
+    const timer = setInterval(() => void refreshFacts(), 500);
+    return () => clearInterval(timer);
+  }, [enriching, refreshFacts]);
+
+  // Holds the running invocation's cancel handle; `undefined` when idle.
+  const cancelRef = useRef<(() => void) | undefined>(undefined);
+
+  // Forks `EnrichMailbox` (against the local Ollama model) so the Stop button can interrupt it —
+  // `invoke` returns a self-contained effect, so a fork + cancel maps directly onto start/stop.
+  const handleEnrich = useCallback(() => {
+    if (!invoker || !mailbox || !space?.id || cancelRef.current) {
       return;
     }
 
     setEnriching(true);
-    try {
-      const { error } = await invoker.invokePromise(
+    const cancel = Effect.runCallback(
+      invoker.invoke(
         InboxOperation.EnrichMailbox,
-        { mailbox: Ref.make(mailbox), model: OLLAMA_MODEL, provider: Provider.ollama.id, strict: false },
+        // `pageSize: 1` commits facts after each message so the toolbar progress ticks live (rather
+        // than only at the end of a large page).
+        { mailbox: Ref.make(mailbox), model: OLLAMA_MODEL, provider: Provider.ollama.id, strict: false, pageSize: 1 },
         { spaceId: space.id },
-      );
-      if (error) {
-        log.warn('EnrichMailbox failed', { error });
-      }
-      setFactsNonce((nonce) => nonce + 1);
-    } finally {
-      setEnriching(false);
-    }
-  }, [invoker, mailbox, space?.id]);
+      ),
+      {
+        onExit: (exit: Exit.Exit<{ processed: number; facts: number }, Error>) => {
+          log.info('enrich: onExit', {
+            success: Exit.isSuccess(exit),
+            interrupted: Exit.isInterrupted(exit),
+            value: Exit.isSuccess(exit) ? exit.value : undefined,
+          });
+          cancelRef.current = undefined;
+          if (mountedRef.current) {
+            setEnriching(false);
+          }
+          void refreshFacts();
+          // Interruption (Stop) is expected; only surface genuine failures.
+          if (Exit.isFailure(exit) && !Exit.isInterrupted(exit)) {
+            log.warn('EnrichMailbox failed', { cause: exit.cause });
+          }
+        },
+      },
+    );
+    cancelRef.current = () => cancel();
+  }, [invoker, mailbox, space?.id, refreshFacts]);
+
+  // Interrupts the running invocation; `onExit` clears state and does a final refresh.
+  const handleStop = useCallback(() => {
+    cancelRef.current?.();
+  }, []);
 
   // The toolbar (and its Reset button) must render regardless of whether the space/mailbox have loaded.
   return (
@@ -246,15 +325,22 @@ const MailboxSyncStory = ({ enrich = false }: { enrich?: boolean }) => {
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
-          {enrich && (
-            <Toolbar.Button onClick={handleEnrich} disabled={!mailbox || enriching}>
-              {enriching ? 'Enriching…' : 'Enrich'}
-            </Toolbar.Button>
-          )}
+          {enrich &&
+            (enriching ? (
+              <>
+                <Toolbar.Button onClick={handleStop}>Stop</Toolbar.Button>
+                <Toolbar.Text>{`Enriching… ${facts.length} facts`}</Toolbar.Text>
+              </>
+            ) : (
+              <Toolbar.Button onClick={handleEnrich} disabled={!mailbox}>
+                Enrich
+              </Toolbar.Button>
+            ))}
+          <Toolbar.Separator />
           <Toolbar.Text>{identity ? `Identity: ${identity.identityKey.truncate()}` : 'No identity'}</Toolbar.Text>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content className='dx-container grid grid-cols-[1fr_2fr_1fr]' {...attentionAttrs}>
+      <Panel.Content className='dx-container grid grid-cols-[2fr_3fr_2fr]' {...attentionAttrs}>
         <Surface.Surface type={AppSurface.Article} data={{ subject: mailbox, attendableId: ATTENDABLE_ID }} limit={1} />
 
         {message ? (
@@ -319,8 +405,13 @@ const meta = {
                 return;
               }
               const { personalSpace } = yield* initializeIdentity(client);
-              // Seed an empty mailbox (with its backing feed); the connect/sync flow populates it live.
-              personalSpace.db.add(Mailbox.make());
+              // Seed a mailbox (with its backing feed) plus demo messages so the EnrichFacts variant
+              // has content; the connect/sync flow can still append live mail on top.
+              const mailbox = personalSpace.db.add(Mailbox.make());
+              const feed = yield* Effect.promise(() => mailbox.feed.tryLoad());
+              if (feed) {
+                yield* Feed.append(feed, makeDemoMessages()).pipe(Effect.provide(Database.layer(personalSpace.db)));
+              }
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),
