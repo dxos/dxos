@@ -64,7 +64,6 @@ export type InvitationConnectionProps = {
  *  TODO: the flow logic should either be contained in invitations-handler or in extensions, not be split across
  *  TODO: potentially re-evaluate host-side API to allow multiple concurrent connection, so that mutex can be removed
  */
-@_trace.resource()
 export class InvitationsHandler {
   /**
    * @internal

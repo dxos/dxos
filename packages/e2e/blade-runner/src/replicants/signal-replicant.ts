@@ -29,7 +29,6 @@ export type ReplicantRunProps = {
   replicantWaitTime: number;
 };
 
-@trace.resource()
 export class SignalReplicant {
   builder = new TestBuilder();
   constructor(private readonly env: ReplicantEnv) {}

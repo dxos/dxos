@@ -9,8 +9,7 @@ import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { TRACE_PROCESSOR } from '@dxos/tracing';
-import { range, sum } from '@dxos/util';
+import { range } from '@dxos/util';
 
 import { HypercoreFactory } from './hypercore-factory';
 import { createReadable } from './iterator';
@@ -376,20 +375,7 @@ describe('Replication', () => {
 
     const end = performance.now();
 
-    // Make sure flushes are counted.
     await sleep(1000);
-
-    TRACE_PROCESSOR.refresh();
-
-    // console.log(inspect(TRACE_PROCESSOR.findResourcesByClassName('WebFile').map(r => [
-    //   r.data.info._fileName,
-    //   ...r.data.metrics!.map(m => [m.name, m.timeSeries!.tracks![0].total])
-    // ])), false, null, true)
-    const totalFlushes = sum(
-      TRACE_PROCESSOR.findResourcesByClassName('WebFile').map(
-        (resource) => resource.getMetric('_flushes')!.timeSeries!.tracks![0].total,
-      ),
-    );
 
     log.info('time', {
       timeMs: end - begin,
@@ -399,7 +385,6 @@ describe('Replication', () => {
       sparse,
       eagerUpdate,
       linear,
-      totalFlushes,
     });
 
     expect(await core2.has(0, numBlocks)).to.eq(true);

@@ -65,7 +65,6 @@ export type EchoEdgeSubductionReplicatorProps = {
  * runs through this class — Subduction's sedimentree protocol replaces those
  * responsibilities. For the classical sync path see {@link EchoEdgeReplicator}.
  */
-@trace.resource()
 export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   private readonly _edgeConnection: EdgeConnection;
   private readonly _edgeHttpClient: EdgeHttpClient;
