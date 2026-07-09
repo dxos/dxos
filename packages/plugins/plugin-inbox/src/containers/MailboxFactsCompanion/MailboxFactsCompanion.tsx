@@ -9,7 +9,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { type FactStoreApi, type RDF } from '@dxos/pipeline-rdf';
 import { getSpace } from '@dxos/react-client/echo';
-import { FactViewer } from '@dxos/react-ui-fact-viewer';
+import { FactViewer } from '@dxos/react-ui-rdf';
 
 import { InboxCapabilities, type Mailbox } from '#types';
 

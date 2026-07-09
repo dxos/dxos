@@ -117,7 +117,7 @@ a correctness backstop.
 - `FactViewer` (`stories-brain/.../FactViewer/FactViewer.tsx`) is **pure/presentational**:
   `{ facts: RDF.Fact[]; context?; predicate? }`, plus supporting helpers in stories-brain's
   `components/types`. It is **relocated** to a plugin-consumable package (new
-  `@dxos/react-ui-fact-viewer`, React + `@dxos/pipeline-rdf`), and stories-brain is updated to import
+  `@dxos/react-ui-rdf`, React + `@dxos/pipeline-rdf`), and stories-brain is updated to import
   from there (no re-export shim, per repo rules).
 - Add a companion surface in `plugin-inbox/.../react-surface.tsx` via
   `AppSurface.companion(AppSurface.Article, Mailbox.Mailbox)` (matching the existing Calendar/event

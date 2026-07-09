@@ -11766,9 +11766,6 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
-      '@dxos/react-ui-fact-viewer':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-fact-viewer
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -11781,6 +11778,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
+      '@dxos/react-ui-rdf':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-rdf
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
@@ -19320,9 +19320,6 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
-      '@dxos/react-ui-fact-viewer':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-fact-viewer
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -19332,6 +19329,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-rdf':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-rdf
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -21361,49 +21361,6 @@ importers:
         specifier: '>=8.0.16'
         version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
-  packages/ui/react-ui-fact-viewer:
-    dependencies:
-      '@dxos/pipeline-rdf':
-        specifier: workspace:*
-        version: link:../../core/compute/pipeline-rdf
-      '@dxos/react-ui-graph':
-        specifier: workspace:*
-        version: link:../react-ui-graph
-      '@dxos/react-ui-list':
-        specifier: workspace:*
-        version: link:../react-ui-list
-      '@dxos/ui-types':
-        specifier: workspace:*
-        version: link:../ui-types
-    devDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../ui-theme
-      '@storybook/react-vite':
-        specifier: 'catalog:'
-        version: 10.4.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.4.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@testing-library/dom@10.4.1)(@types/react@19.2.17)(prettier@3.6.2)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(typescript@6.0.3)(vite@8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))(webpack@5.105.2(@swc/core@1.15.43(@swc/helpers@0.5.17))(esbuild@0.28.0))
-      '@types/react':
-        specifier: ~19.2.17
-        version: 19.2.17
-      '@types/react-dom':
-        specifier: ~19.2.3
-        version: 19.2.3(@types/react@19.2.17)
-      react:
-        specifier: ~19.2.7
-        version: 19.2.7
-      react-dom:
-        specifier: ~19.2.7
-        version: 19.2.7(react@19.2.7)
-      vite:
-        specifier: '>=8.0.16'
-        version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
-
   packages/ui/react-ui-form:
     dependencies:
       '@codemirror/lang-xml':
@@ -22518,6 +22475,49 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
+      '@types/react':
+        specifier: ~19.2.17
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.17)
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ~19.2.7
+        version: 19.2.7(react@19.2.7)
+      vite:
+        specifier: '>=8.0.16'
+        version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
+  packages/ui/react-ui-rdf:
+    dependencies:
+      '@dxos/pipeline-rdf':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline-rdf
+      '@dxos/react-ui-graph':
+        specifier: workspace:*
+        version: link:../react-ui-graph
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../react-ui-list
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../ui-types
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.4.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.4.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@testing-library/dom@10.4.1)(@types/react@19.2.17)(prettier@3.6.2)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(typescript@6.0.3)(vite@8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))(webpack@5.105.2(@swc/core@1.15.43(@swc/helpers@0.5.17))(esbuild@0.28.0))
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17

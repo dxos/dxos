@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/react-ui-fact-viewer",
+  "name": "@dxos/react-ui-rdf",
   "version": "0.10.0",
   "description": "Presentational viewer for extracted semantic facts.",
   "homepage": "https://dxos.org",

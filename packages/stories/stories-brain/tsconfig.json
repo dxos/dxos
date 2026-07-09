@@ -101,9 +101,6 @@
       "path": "../../ui/react-ui-editor"
     },
     {
-      "path": "../../ui/react-ui-fact-viewer"
-    },
-    {
       "path": "../../ui/react-ui-form"
     },
     {
@@ -111,6 +108,9 @@
     },
     {
       "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-rdf"
     },
     {
       "path": "../../ui/ui-editor"

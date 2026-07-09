@@ -91,7 +91,7 @@ const DEMO_FACTS: RDF.Fact[] = [
 const DefaultStory = (props: FactViewerProps) => <FactViewer {...props} />;
 
 const meta = {
-  title: 'ui/react-ui-fact-viewer/FactViewer',
+  title: 'ui/react-ui-rdf/FactViewer',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof DefaultStory>;
