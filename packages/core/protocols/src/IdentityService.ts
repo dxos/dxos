@@ -54,3 +54,5 @@ export class Rpcs extends RpcGroup.make(
 ).prefix('IdentityService.') {}
 
 export interface Client extends RpcClient.RpcClient<RpcGroup.Rpcs<typeof Rpcs>> {}
+
+export interface Handlers extends RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof Rpcs>> {}
