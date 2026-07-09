@@ -869,8 +869,7 @@ export const DataSpaceManagerLayer = (
         invitationsManager,
         edgeConnection: Option.getOrUndefined(edgeConnection),
         edgeHttpClient: Option.getOrUndefined(edgeHttpClient),
-        // Mesh replicator is always available in the stack; disable its use here when p2p is off.
-        meshReplicator: options.runtimeProps?.disableP2pReplication ? undefined : Option.getOrUndefined(meshReplicator),
+        meshReplicator: Option.getOrUndefined(meshReplicator),
         echoEdgeReplicator: Option.getOrUndefined(echoEdgeReplicator),
         ...options,
       });

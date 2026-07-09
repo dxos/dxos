@@ -203,9 +203,6 @@ export class MeshEchoReplicator implements AutomergeReplicator {
 }
 
 /**
- * Effect Layer constructing a {@link MeshEchoReplicator}.
- */
-/**
  * Effect service tag for {@link MeshEchoReplicator}.
  *
  * Distinct from the generic {@link AutomergeReplicatorService} because `DataSpaceManager` drives
@@ -216,5 +213,8 @@ export class MeshEchoReplicatorService extends EffectContext.Tag('@dxos/echo-hos
   MeshEchoReplicator
 >() {}
 
+/**
+ * Effect Layer constructing a {@link MeshEchoReplicator}.
+ */
 export const MeshEchoReplicatorLayer = (): Layer.Layer<MeshEchoReplicatorService> =>
   Layer.succeed(MeshEchoReplicatorService, new MeshEchoReplicator());

@@ -554,10 +554,7 @@ export const ServiceContextLayer = (
       const edgeAgentManager = yield* EdgeAgentManagerService;
       const deviceSpaceSync = yield* CrossDeviceSpaceSynchronizerService;
 
-      // Mesh replicator is always constructed by the stack; its use is disabled here when p2p is off.
-      const meshReplicator = options.disableP2pReplication
-        ? undefined
-        : Option.getOrUndefined(yield* Effect.serviceOption(MeshEchoReplicatorService));
+      const meshReplicator = Option.getOrUndefined(yield* Effect.serviceOption(MeshEchoReplicatorService));
       const echoEdgeReplicator = Option.getOrUndefined(yield* Effect.serviceOption(EdgeAutomergeReplicatorService));
       const feedSyncer = Option.getOrUndefined(yield* Effect.serviceOption(FeedSyncerService));
 
@@ -591,10 +588,14 @@ export const ServiceContextLayer = (
     }),
   );
 
-  // Non-optional core layers, provided below the optional edge outputs so that a `FeedSyncer` /
-  // edge-replicator layer stacked on top has its `EchoHostService` (and other) requirements
-  // satisfied here. The mesh replicator is always provided (its use is gated above and in the
-  // data-space layer). Kept generic so each variant builds a single concrete pipe (no unions).
+  // Optional mesh replicator: read via `serviceOption`, so its `ROut` is hidden (`Layer<never>`)
+  // — absence when p2p is disabled is modelled by not providing it, not by a null value.
+  const meshReplicatorLayer: Layer.Layer<never, never, never> = options.disableP2pReplication
+    ? Layer.empty
+    : MeshEchoReplicatorLayer();
+
+  // Applies the non-optional core beneath any optional edge outputs stacked on top, so a
+  // `FeedSyncer` / edge-replicator layer's `EchoHostService` requirement is satisfied here.
   const withCore = <A, E, R>(top: Layer.Layer<A, E, R>) =>
     top.pipe(
       Layer.provideMerge(CrossDeviceSpaceSynchronizerLayer),
@@ -602,7 +603,7 @@ export const ServiceContextLayer = (
       Layer.provideMerge(DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures })),
       Layer.provideMerge(SigningContextProviderLayer),
       Layer.provideMerge(identityProviderLayer),
-      Layer.provideMerge(MeshEchoReplicatorLayer()),
+      Layer.provideMerge(meshReplicatorLayer),
       Layer.provideMerge(echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator })),
       Layer.provideMerge(InvitationsManagerLayer()),
       Layer.provideMerge(InvitationsHandlerLayer({ connectionProps: options.invitationConnectionDefaultProps })),
@@ -627,26 +628,24 @@ export const ServiceContextLayer = (
     Layer.succeed(EdgeConnectionService, edgeConnection),
     Layer.succeed(EdgeHttpClientService, edgeHttpClient),
   );
-  const feedSyncTop = serviceContextLayer.pipe(
+  // Optional edge replicator (subduction / echo / none) — `ROut` hidden, read via `serviceOption`.
+  const edgeReplicatorLayer: Layer.Layer<never, never, EdgeConnectionService | EdgeHttpClientService> = options
+    .edgeFeatures?.subductionReplicator
+    ? EchoEdgeSubductionReplicatorLayer()
+    : options.edgeFeatures?.echoReplicator
+      ? EchoEdgeReplicatorLayer()
+      : Layer.empty;
+
+  const edgeTop = serviceContextLayer.pipe(
     Layer.provideMerge(
       FeedSyncerLayer({
         peerId: '',
         syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
       }),
     ),
+    Layer.provideMerge(edgeReplicatorLayer),
   );
-
-  if (options.edgeFeatures?.subductionReplicator) {
-    return withCore(feedSyncTop.pipe(Layer.provideMerge(EchoEdgeSubductionReplicatorLayer()))).pipe(
-      Layer.provideMerge(edgeInputLayer),
-    );
-  }
-  if (options.edgeFeatures?.echoReplicator) {
-    return withCore(feedSyncTop.pipe(Layer.provideMerge(EchoEdgeReplicatorLayer()))).pipe(
-      Layer.provideMerge(edgeInputLayer),
-    );
-  }
-  return withCore(feedSyncTop).pipe(Layer.provideMerge(edgeInputLayer));
+  return withCore(edgeTop).pipe(Layer.provideMerge(edgeInputLayer));
 };
 
 /**
