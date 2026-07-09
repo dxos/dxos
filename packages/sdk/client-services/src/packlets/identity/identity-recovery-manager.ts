@@ -10,9 +10,9 @@ import * as Option from 'effect/Option';
 import { type Context } from '@dxos/context';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { sign } from '@dxos/crypto';
-import { EdgeHttpClientService, type EdgeHttpClient } from '@dxos/edge-client';
+import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import { KeyringApiService, type KeyringApi } from '@dxos/keyring';
+import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -247,11 +247,7 @@ const decodeCredential = (credentialBase64: string) => {
 /**
  * Effect Layer constructing a dormant {@link EdgeIdentityRecoveryManager}.
  */
-export const EdgeIdentityRecoveryManagerLayer = (): Layer.Layer<
-  EdgeIdentityRecoveryManagerService,
-  never,
-  KeyringApiService | EdgeHttpClientService | IdentityManagerService
-> =>
+export const EdgeIdentityRecoveryManagerLayer = (): Layer.Layer<EdgeIdentityRecoveryManagerService, never, KeyringApiService | IdentityManagerService> =>
   Layer.effect(
     EdgeIdentityRecoveryManagerService,
     Effect.gen(function* () {

@@ -11,14 +11,14 @@ import { type PushStream, TimeoutError, type Trigger, scheduleTask } from '@dxos
 import { INVITATION_TIMEOUT, getExpirationTime } from '@dxos/client-protocol';
 import { type Context, ContextDisposedError } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
-import { EdgeHttpClientService, type EdgeHttpClient } from '@dxos/edge-client';
+import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  SwarmNetworkManagerService,
   type SwarmConnection,
   type SwarmNetworkManager,
+  SwarmNetworkManagerService,
   createTeleportProtocolFactory,
 } from '@dxos/network-manager';
 import { InvalidInvitationError, InvalidInvitationExtensionRoleError } from '@dxos/protocols';
@@ -592,7 +592,7 @@ export type InvitationsHandlerLayerOptions = {
  */
 export const InvitationsHandlerLayer = (
   options: InvitationsHandlerLayerOptions = {},
-): Layer.Layer<InvitationsHandlerService, never, SwarmNetworkManagerService | EdgeHttpClientService> =>
+): Layer.Layer<InvitationsHandlerService, never, SwarmNetworkManagerService> =>
   Layer.effect(
     InvitationsHandlerService,
     Effect.gen(function* () {

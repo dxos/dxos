@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Context } from 'effect';
+import * as Context from 'effect/Context';
 
 import { type Event } from '@dxos/async';
 import { type Lifecycle } from '@dxos/context';

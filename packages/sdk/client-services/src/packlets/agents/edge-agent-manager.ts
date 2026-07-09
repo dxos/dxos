@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import { DeferredTask, Event, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Resource } from '@dxos/context';
-import { EdgeHttpClientService, type EdgeHttpClient } from '@dxos/edge-client';
+import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -19,8 +19,9 @@ import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
-import { type Identity, IdentityProviderService, type IdentityProvider } from '../identity';
-import { DataSpaceManagerService, type DataSpaceManager } from '../spaces';
+import { type Identity, type IdentityProvider, IdentityProviderService } from '../identity';
+import { type DataSpaceManager, DataSpaceManagerService } from '../spaces';
+const AGENT_STATUS_QUERY_RETRY_INTERVAL = 5000;
 const AGENT_STATUS_QUERY_RETRY_JITTER = 1000;
 const AGENT_FEED_ADDED_CHECK_INTERVAL_MS = 3000;
 
@@ -209,11 +210,7 @@ export type EdgeAgentManagerLayerOptions = {
  */
 export const EdgeAgentManagerLayer = (
   options: EdgeAgentManagerLayerOptions = {},
-): Layer.Layer<
-  EdgeAgentManagerService,
-  never,
-  DataSpaceManagerService | IdentityProviderService | EdgeHttpClientService
-> =>
+): Layer.Layer<EdgeAgentManagerService, never, DataSpaceManagerService | IdentityProviderService> =>
   Layer.effect(
     EdgeAgentManagerService,
     Effect.gen(function* () {

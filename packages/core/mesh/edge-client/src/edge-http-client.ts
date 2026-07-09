@@ -86,7 +86,7 @@ export type EdgeHttpClientOptions = BaseHttpClientOptions;
 
 export class EdgeHttpClientService extends EffectContext.Tag('@dxos/edge-client/EdgeHttpClient')<
   EdgeHttpClientService,
-  EdgeHttpClient | undefined
+  EdgeHttpClient
 >() {}
 
 /**

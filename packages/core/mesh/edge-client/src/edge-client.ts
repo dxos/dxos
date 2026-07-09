@@ -61,7 +61,7 @@ export interface EdgeConnection extends Required<Lifecycle> {
  */
 export class EdgeConnectionService extends EffectContext.Tag('@dxos/edge-client/EdgeConnection')<
   EdgeConnectionService,
-  EdgeConnection | undefined
+  EdgeConnection
 >() {}
 
 /**

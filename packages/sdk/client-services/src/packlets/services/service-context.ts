@@ -3,73 +3,62 @@
 //
 
 import * as SqlClient from '@effect/sql/SqlClient';
+import type * as SqlError from '@effect/sql/SqlError';
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 
 import { Mutex, Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
-import { failUndefined, todo, warnAfterTimeout } from '@dxos/debug';
+import { failUndefined, warnAfterTimeout } from '@dxos/debug';
 import {
-  EchoEdgeReplicator,
-  EchoEdgeSubductionReplicator,
-  EchoHost,
+  type AutomergeReplicator,
+  EchoEdgeReplicatorLayer,
+  EchoEdgeSubductionReplicatorLayer,
+  type EchoHost,
   EchoHostLayer,
-  type EchoHostLayerOptions,
-  type EchoHostProps,
-  type EchoHostService,
+  EchoHostService,
   type EdgeAutomergeReplicator,
-  type IMetadataStoreService,
-  MeshEchoReplicator,
+  EdgeAutomergeReplicatorService,
+  type IMetadataStore,
+  IMetadataStoreService,
   MeshEchoReplicatorLayer,
-  SpaceManager,
+  MeshEchoReplicatorService,
+  type SpaceManager,
   SpaceManagerLayer,
   SpaceManagerService,
   SqliteMetadataStore,
-  SqliteMetadataStoreLayer,
   runSqliteHealthCheck,
   valueEncoding,
 } from '@dxos/echo-host';
 import { createChainEdgeIdentity, createEphemeralEdgeIdentity } from '@dxos/edge-client';
-import type {
-  EdgeConnection,
+import {
+  type EdgeConnection,
   EdgeConnectionService,
-  EdgeHttpClient,
+  type EdgeHttpClient,
   EdgeHttpClientService,
-  EdgeIdentity,
+  type EdgeIdentity,
 } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
-import {
-  FeedFactory,
-  FeedFactoryLayer,
-  FeedStore,
-  FeedStoreLayer,
-  type FeedFactoryService,
-  type FeedStorageDirectoryService,
-  type FeedStoreService,
-} from '@dxos/feed-store';
+import { FeedFactoryLayer, type FeedStore, FeedStoreLayer, FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { SqliteKeyring, SqliteKeyringLayer, type KeyringApiService } from '@dxos/keyring';
+import { type KeyringApi, KeyringApiService, SqliteKeyring } from '@dxos/keyring';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type SignalManager } from '@dxos/messaging';
-import { type SwarmNetworkManager, type SwarmNetworkManagerService } from '@dxos/network-manager';
-import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
-import { FeedProtocol } from '@dxos/protocols';
+import { type SignalManager, SignalManagerService } from '@dxos/messaging';
+import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
+import { FeedProtocol, InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SqlTransaction } from '@dxos/sql-sqlite';
-import { SqliteBlobStore, SqliteBlobStoreLayer, type BlobStoreApiService } from '@dxos/teleport-extension-object-sync';
+import { type BlobStoreApi, BlobStoreApiService, SqliteBlobStore } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { safeInstanceof } from '@dxos/util';
 
-// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
-type SqlTransactionTag = SqlTransaction.SqlTransaction;
-
-import * as EffectContext from 'effect/Context';
-import * as Layer from 'effect/Layer';
-
-import { EdgeAgentManager } from '../agents';
+import { EdgeAgentManager, EdgeAgentManagerLayer, EdgeAgentManagerService } from '../agents';
 import {
   type CreateIdentityOptions,
   type Identity,
@@ -77,13 +66,14 @@ import {
   IdentityManagerLayer,
   type IdentityManagerProps,
   IdentityManagerService,
+  IdentityProviderService,
   type JoinIdentityProps,
   identityProviderFromManager,
 } from '../identity';
 import {
   EdgeIdentityRecoveryManager,
   EdgeIdentityRecoveryManagerLayer,
-  type EdgeIdentityRecoveryManagerService,
+  EdgeIdentityRecoveryManagerService,
 } from '../identity/identity-recovery-manager';
 import {
   DeviceInvitationProtocol,
@@ -91,25 +81,31 @@ import {
   type InvitationProtocol,
   InvitationsHandler,
   InvitationsHandlerLayer,
-  type InvitationsHandlerService,
+  InvitationsHandlerService,
   InvitationsManager,
   InvitationsManagerLayer,
-  type InvitationsManagerLayerOptions,
-  type InvitationsManagerService,
+  InvitationsManagerService,
   SpaceInvitationProtocol,
 } from '../invitations';
-import { DataSpaceManager, type DataSpaceManagerRuntimeProps, createSigningContextProvider } from '../spaces';
 import {
-  createCrossDeviceSpaceSynchronizer,
+  DataSpaceManager,
+  DataSpaceManagerLayer,
+  type DataSpaceManagerRuntimeProps,
+  DataSpaceManagerService,
+  type SigningContextProvider,
+  SigningContextProviderLayer,
+  SigningContextProviderService,
+} from '../spaces';
+import {
   type CrossDeviceSpaceSynchronizer,
+  CrossDeviceSpaceSynchronizerLayer,
+  CrossDeviceSpaceSynchronizerService,
 } from './cross-device-space-synchronizer';
-import { FeedSyncer, FeedSyncerService } from './feed-syncer';
-import {
-  FeedStorageDirectoryLayer,
-  SqliteStorage,
-  SqliteStorageLayer,
-  type SqliteStorageService,
-} from './sqlite-storage';
+import { FeedSyncer, FeedSyncerLayer, FeedSyncerService } from './feed-syncer';
+import { FeedStorageDirectoryLayer, SqliteStorage, SqliteStorageService } from './sqlite-storage';
+
+// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
+type SqlTransactionTag = SqlTransaction.SqlTransaction;
 
 export type ServiceContextRuntimeProps = Pick<
   IdentityManagerProps,
@@ -127,141 +123,146 @@ export interface ServiceContextApi {
   broadcastProfileUpdate(profile: ProfileDocument | undefined): Promise<void>;
 }
 
+/**
+ * The concrete {@link ServiceContext} resolved from the composed stack.
+ */
 export class ServiceContextService extends EffectContext.Tag('@dxos/client-services/ServiceContext')<
   ServiceContextService,
-  ServiceContextApi
+  ServiceContext
 >() {}
 
 /**
- * Shared backend for all client services.
+ * Combined storage migration effect gathered from the concrete SQLite stores.
+ * Internal to the stack; run by {@link ServiceContext} during open (stage 2).
  */
-// TODO(burdon): Rename/break-up into smaller components. And/or make members private.
-// TODO(dmaretskyi): Gets duplicated in CJS build between normal and testing bundles.
+class StorageMigrationService extends EffectContext.Tag('@dxos/client-services/StorageMigration')<
+  StorageMigrationService,
+  Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag>
+>() {}
+
+/**
+ * Injected components for {@link ServiceContext}.
+ */
+export type ServiceContextOptions = {
+  networkManager: SwarmNetworkManager;
+  signalManager: SignalManager;
+  edgeConnection?: EdgeConnection;
+  edgeHttpClient?: EdgeHttpClient;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+
+  metadataStore: IMetadataStore;
+  blobStore: BlobStoreApi;
+  keyring: KeyringApi;
+  feedStore: FeedStore<FeedMessage>;
+  storageMigrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag>;
+
+  spaceManager: SpaceManager;
+  identityManager: IdentityManager;
+  recoveryManager: EdgeIdentityRecoveryManager;
+  invitations: InvitationsHandler;
+  invitationsManager: InvitationsManager;
+  echoHost: EchoHost;
+  signingContextProvider: SigningContextProvider;
+
+  dataSpaceManager: DataSpaceManager;
+  edgeAgentManager: EdgeAgentManager;
+  deviceSpaceSync: CrossDeviceSpaceSynchronizer;
+
+  meshReplicator?: AutomergeReplicator;
+  echoEdgeReplicator?: EdgeAutomergeReplicator;
+  feedSyncer?: FeedSyncer;
+
+  runtimeProps?: ServiceContextRuntimeProps;
+  edgeFeatures?: Runtime.Client.EdgeFeatures;
+};
+
+/**
+ * Shared backend for all client services.
+ *
+ * Lifecycle orchestrator over the layer-composed components: it drives migrate/open, reads or
+ * creates the identity, propagates it outward (`_setNetworkIdentity`), and opens the identity-bound
+ * services in stage 3 (`_initialize`). Components themselves are constructed dormant by the stack.
+ */
 @safeInstanceof('dxos.client-services.ServiceContext')
 @Trace.resource({ lifecycle: true })
 export class ServiceContext extends Resource implements ServiceContextApi {
-  private readonly _edgeIdentityUpdateMutex = new Mutex();
+  readonly #edgeIdentityUpdateMutex = new Mutex();
 
   public readonly initialized = new Trigger();
-  public readonly metadataStore: SqliteMetadataStore;
-  public readonly blobStore: SqliteBlobStore;
+
+  public readonly networkManager: SwarmNetworkManager;
+  public readonly signalManager: SignalManager;
+  public readonly metadataStore: IMetadataStore;
+  public readonly blobStore: BlobStoreApi;
+  public readonly keyring: KeyringApi;
   public readonly feedStore: FeedStore<FeedMessage>;
-  public readonly keyring: SqliteKeyring;
   public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
   public readonly recoveryManager: EdgeIdentityRecoveryManager;
   public readonly invitations: InvitationsHandler;
   public readonly invitationsManager: InvitationsManager;
   public readonly echoHost: EchoHost;
-  private readonly _meshReplicator?: MeshEchoReplicator = undefined;
-  private readonly _echoEdgeReplicator?: EdgeAutomergeReplicator = undefined;
-  private readonly _feedSyncer?: FeedSyncer = undefined;
-  private readonly _feedStorage: SqliteStorage;
 
-  // Initialized after identity is initialized.
-  public dataSpaceManager?: DataSpaceManager;
-  public edgeAgentManager?: EdgeAgentManager;
+  // Identity-bound services: always constructed by the stack, opened in `_initialize`.
+  readonly #dataSpaceManager: DataSpaceManager;
+  readonly #edgeAgentManager: EdgeAgentManager;
+  readonly #deviceSpaceSync: CrossDeviceSpaceSynchronizer;
+  readonly #signingContextProvider: SigningContextProvider;
 
-  private readonly _handlerFactories = new Map<
+  readonly #edgeConnection: EdgeConnection | undefined;
+  readonly #edgeHttpClient: EdgeHttpClient | undefined;
+  readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+  readonly #storageMigrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag>;
+  readonly #meshReplicator: AutomergeReplicator | undefined;
+  readonly #echoEdgeReplicator: EdgeAutomergeReplicator | undefined;
+  readonly #feedSyncer: FeedSyncer | undefined;
+
+  public readonly _runtimeProps?: ServiceContextRuntimeProps;
+  readonly #edgeFeatures?: Runtime.Client.EdgeFeatures;
+
+  readonly #handlerFactories = new Map<
     Invitation.Kind,
     (invitation: Partial<Invitation>) => InvitationProtocol
   >();
 
-  private _deviceSpaceSync?: CrossDeviceSpaceSynchronizer;
-
-  constructor(
-    public readonly networkManager: SwarmNetworkManager,
-    public readonly signalManager: SignalManager,
-    private readonly _edgeConnection: EdgeConnection | undefined,
-    private readonly _edgeHttpClient: EdgeHttpClient | undefined,
-    private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>,
-    public readonly _runtimeProps?: ServiceContextRuntimeProps,
-    private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures,
-  ) {
+  constructor(options: ServiceContextOptions) {
     super();
 
+    this.networkManager = options.networkManager;
+    this.signalManager = options.signalManager;
+    this.#edgeConnection = options.edgeConnection;
+    this.#edgeHttpClient = options.edgeHttpClient;
+    this.#runtime = options.runtime;
+
+    this.metadataStore = options.metadataStore;
+    this.blobStore = options.blobStore;
+    this.keyring = options.keyring;
+    this.feedStore = options.feedStore;
+    this.#storageMigrate = options.storageMigrate;
+
+    this.spaceManager = options.spaceManager;
+    this.identityManager = options.identityManager;
+    this.recoveryManager = options.recoveryManager;
+    this.invitations = options.invitations;
+    this.invitationsManager = options.invitationsManager;
+    this.echoHost = options.echoHost;
+    this.#signingContextProvider = options.signingContextProvider;
+
+    this.#dataSpaceManager = options.dataSpaceManager;
+    this.#edgeAgentManager = options.edgeAgentManager;
+    this.#deviceSpaceSync = options.deviceSpaceSync;
+
+    this.#meshReplicator = options.meshReplicator;
+    this.#echoEdgeReplicator = options.echoEdgeReplicator;
+    this.#feedSyncer = options.feedSyncer;
+
+    this._runtimeProps = options.runtimeProps;
+    this.#edgeFeatures = options.edgeFeatures;
+
     log('runtimeProps', this._runtimeProps);
-    log('edgeFeatures', this._edgeFeatures);
+    log('edgeFeatures', this.#edgeFeatures);
 
-    this.metadataStore = new SqliteMetadataStore({ runtime: this._runtime });
-    this.blobStore = new SqliteBlobStore({ runtime: this._runtime });
-    this.keyring = new SqliteKeyring({ runtime: this._runtime });
-    this._feedStorage = new SqliteStorage({ runtime: this._runtime });
-    const feedStorage = this._feedStorage;
-    this.feedStore = new FeedStore<FeedMessage>({
-      factory: new FeedFactory<FeedMessage>({
-        root: feedStorage.createDirectory('feeds'),
-        signer: this.keyring,
-        hypercore: {
-          valueEncoding,
-          stats: true,
-        },
-      }),
-    });
-
-    this.spaceManager = new SpaceManager({
-      feedStore: this.feedStore,
-      networkManager: this.networkManager,
-      blobStore: this.blobStore,
-      metadataStore: this.metadataStore,
-      disableP2pReplication: this._runtimeProps?.disableP2pReplication,
-    });
-
-    this.identityManager = new IdentityManager({
-      metadataStore: this.metadataStore,
-      keyring: this.keyring,
-      feedStore: this.feedStore,
-      spaceManager: this.spaceManager,
-      devicePresenceOfflineTimeout: this._runtimeProps?.devicePresenceOfflineTimeout,
-      devicePresenceAnnounceInterval: this._runtimeProps?.devicePresenceAnnounceInterval,
-      edgeConnection: this._edgeConnection,
-      edgeFeatures: this._edgeFeatures,
-    });
-
-    this.recoveryManager = new EdgeIdentityRecoveryManager(
-      this.keyring,
-      this._edgeHttpClient,
-      () => this.identityManager.identity,
-    );
-
-    this.echoHost = new EchoHost({
-      peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
-      getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
-      runtime: this._runtime,
-      useSubduction: this._edgeFeatures?.subductionReplicator,
-      syncFeed: async (ctx, request) => {
-        return this._feedSyncer?.syncBlocking(ctx, {
-          spaceId: request.spaceId as SpaceId,
-          subspaceTag: request.subspaceTag,
-          shouldPush: request.shouldPush,
-          shouldPull: request.shouldPull,
-        });
-      },
-      getSyncState: async (ctx, request) => {
-        // Mirror `syncFeed` above: in non-edge / partially-initialised modes the
-        // feed syncer is absent. Return an empty state instead of throwing so
-        // callers (e.g. devtools sync panel) keep working.
-        if (!this._feedSyncer) {
-          return { namespaces: [] };
-        }
-        return this._feedSyncer.getSyncState(ctx, request);
-      },
-    });
-
-    this.invitations = new InvitationsHandler(
-      this.networkManager, //
-      this._edgeHttpClient,
-      _runtimeProps?.invitationConnectionDefaultProps,
-    );
-    this.invitationsManager = new InvitationsManager(
-      this.invitations,
-      (invitation) => this.getInvitationHandler(invitation),
-      this.metadataStore,
-    );
-
-    // TODO(burdon): _initialize called in multiple places.
-    // TODO(burdon): Call _initialize on success.
-    this._handlerFactories.set(
+    this.#handlerFactories.set(
       Invitation.Kind.DEVICE,
       () =>
         new DeviceInvitationProtocol(
@@ -271,50 +272,48 @@ export class ServiceContext extends Resource implements ServiceContextApi {
         ),
     );
 
-    if (!this._runtimeProps?.disableP2pReplication) {
-      this._meshReplicator = new MeshEchoReplicator();
-    }
-    if (this._edgeConnection && this._edgeHttpClient) {
-      if (this._edgeFeatures?.subductionReplicator) {
-        this._echoEdgeReplicator = new EchoEdgeSubductionReplicator({
-          edgeConnection: this._edgeConnection,
-          edgeHttpClient: this._edgeHttpClient,
-        });
-      } else if (this._edgeFeatures?.echoReplicator) {
-        this._echoEdgeReplicator = new EchoEdgeReplicator({
-          edgeConnection: this._edgeConnection,
-          edgeHttpClient: this._edgeHttpClient,
-        });
-      }
-    }
-
-    if (this.echoHost.feedStore && this._edgeConnection) {
-      this._feedSyncer = new FeedSyncer({
-        runtime: this._runtime,
-        feedStore: this.echoHost.feedStore,
-        edgeClient: this._edgeConnection,
-        peerId: this.identityManager.identity?.deviceKey?.toHex() ?? '',
-        getSpaceIds: () => this.echoHost!.spaceIds,
-        syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
-      });
-    }
-
+    // Wire the setters for components that point "up the stack".
     this.recoveryManager.setAcceptRecoveredIdentity((params) => this._acceptIdentity(params));
+    this.invitationsManager.setInvitationHandlerFactory((invitation) => this.getInvitationHandler(invitation));
+    this.echoHost.setFeedSyncHandlers({
+      syncFeed: async (ctx, request) =>
+        this.#feedSyncer?.syncBlocking(ctx, {
+          // Proto carries spaceId as an unbranded string.
+          spaceId: request.spaceId as SpaceId,
+          subspaceTag: request.subspaceTag,
+          shouldPush: request.shouldPush,
+          shouldPull: request.shouldPull,
+        }),
+      getSyncState: async (ctx, request) => {
+        // In non-edge / partially-initialised modes the feed syncer is absent. Return an empty
+        // state instead of throwing so callers (e.g. devtools sync panel) keep working.
+        if (!this.#feedSyncer) {
+          return { namespaces: [] };
+        }
+        return this.#feedSyncer.getSyncState(ctx, request);
+      },
+    });
+  }
+
+  // Present after the stack constructs it; usable once `initialized` wakes.
+  get dataSpaceManager(): DataSpaceManager | undefined {
+    return this.#dataSpaceManager;
+  }
+
+  get edgeAgentManager(): EdgeAgentManager | undefined {
+    return this.#edgeAgentManager;
   }
 
   @Trace.span({ op: 'lifecycle' })
   protected override async _open(ctx: Context): Promise<void> {
-    await RuntimeProvider.runPromise(this._runtime)(
-      Effect.all([this.metadataStore.migrate, this.blobStore.migrate, this.keyring.migrate, this._feedStorage.migrate]),
-    );
+    log('running storage migrations...');
+    await RuntimeProvider.runPromise(this.#runtime)(this.#storageMigrate);
 
     await this._checkStorageVersion();
 
     log('running sqlite health check...');
-    await runSqliteHealthCheck(this._runtime);
+    await runSqliteHealthCheck(this.#runtime);
     log('sqlite health check passed');
-
-    log('opening...');
 
     log('opening identityManager...');
     await this.identityManager.open(ctx);
@@ -322,58 +321,46 @@ export class ServiceContext extends Resource implements ServiceContextApi {
 
     log('setting network identity...');
     await this._setNetworkIdentity({ identity: this.identityManager.identity });
-    log('network identity set');
 
     log('opening edge connection...');
-    await this._edgeConnection?.open(ctx);
-    log('edge connection opened');
+    await this.#edgeConnection?.open(ctx);
 
     log('opening signal manager...');
     await this.signalManager.open(ctx);
-    log('signal manager opened');
 
     log('opening network manager...');
     await this.networkManager.open();
-    log('network manager opened');
 
     log('opening echo host...');
     await this.echoHost.open(ctx);
-    log('echo host opened');
 
-    if (this._meshReplicator) {
+    if (this.#meshReplicator) {
       log('adding mesh replicator...');
-      await this.echoHost.addReplicator(ctx, this._meshReplicator);
-      log('mesh replicator added');
+      await this.echoHost.addReplicator(ctx, this.#meshReplicator);
     }
-    if (this._echoEdgeReplicator) {
+    if (this.#echoEdgeReplicator) {
       log('adding edge replicator...');
-      await this.echoHost.addReplicator(ctx, this._echoEdgeReplicator);
-      log('edge replicator added');
+      await this.echoHost.addReplicator(ctx, this.#echoEdgeReplicator);
     }
 
     log('loading metadata store...');
     await this.metadataStore.load();
-    log('metadata store loaded');
 
     log('opening space manager...');
     await this.spaceManager.open();
-    log('space manager opened');
 
     if (this.identityManager.identity) {
       log('joining network...');
       await this.identityManager.identity.joinNetwork(ctx);
-      log('network joined');
 
-      log('initializing spaces...(calling _initialize)');
+      log('initializing spaces...');
       await this._initialize(ctx);
-      log('spaces initialized');
     } else {
       log('no identity, skipping network join and space initialization');
     }
 
     log('opening feed syncer...');
-    await this._feedSyncer?.open(ctx);
-    log('feed syncer opened');
+    await this.#feedSyncer?.open(ctx);
 
     log('loading persistent invitations...');
     const loadedInvitations = await this.invitationsManager.loadPersistentInvitations(ctx);
@@ -385,18 +372,17 @@ export class ServiceContext extends Resource implements ServiceContextApi {
   protected override async _close(ctx: Context): Promise<void> {
     log('closing...');
 
-    await this._feedSyncer?.close();
-
-    await this._deviceSpaceSync?.close?.();
-    await this.dataSpaceManager?.close(ctx);
-    await this.edgeAgentManager?.close();
+    await this.#feedSyncer?.close();
+    await this.#deviceSpaceSync.close?.();
+    await this.#dataSpaceManager.close(ctx);
+    await this.#edgeAgentManager.close();
     await this.identityManager.close(ctx);
     await this.spaceManager.close();
     await this.echoHost.close(ctx);
 
     await this.networkManager.close(ctx);
     await this.signalManager.close();
-    await this._edgeConnection?.close();
+    await this.#edgeConnection?.close();
     await this.feedStore.close();
     await this.metadataStore.close();
 
@@ -416,17 +402,17 @@ export class ServiceContext extends Resource implements ServiceContextApi {
     if (this.identityManager.identity == null && invitation.kind === Invitation.Kind.SPACE) {
       throw new Error('Identity must be created before joining a space.');
     }
-    const factory = this._handlerFactories.get(invitation.kind);
+    const factory = this.#handlerFactories.get(invitation.kind);
     invariant(factory, `Unknown invitation kind: ${invitation.kind}`);
     return factory(invitation);
   }
 
   async broadcastProfileUpdate(profile: ProfileDocument | undefined): Promise<void> {
-    if (!profile || !this.dataSpaceManager) {
+    if (!profile) {
       return;
     }
 
-    for (const space of this.dataSpaceManager.spaces.values()) {
+    for (const space of this.#dataSpaceManager.spaces.values()) {
       await space.updateOwnProfile(profile);
     }
   }
@@ -448,75 +434,45 @@ export class ServiceContext extends Resource implements ServiceContextApi {
     }
   }
 
-  // Called when identity is created.
+  /**
+   * Stage 3: opens the identity-bound services once an identity is available.
+   */
   @Trace.span()
   private async _initialize(ctx: Context): Promise<void> {
     log('_initialize: start');
     const identity = this.identityManager.identity ?? failUndefined();
-    const signingContextProvider = createSigningContextProvider(() => this.identityManager.identity ?? failUndefined());
 
-    log('_initialize: creating DataSpaceManager');
-    this.dataSpaceManager = new DataSpaceManager({
-      spaceManager: this.spaceManager,
-      metadataStore: this.metadataStore,
-      keyring: this.keyring,
-      signingContextProvider,
-      feedStore: this.feedStore,
-      echoHost: this.echoHost,
-      invitationsManager: this.invitationsManager,
-      edgeConnection: this._edgeConnection,
-      edgeHttpClient: this._edgeHttpClient,
-      echoEdgeReplicator: this._echoEdgeReplicator,
-      meshReplicator: this._meshReplicator,
-      runtimeProps: this._runtimeProps as DataSpaceManagerRuntimeProps,
-      edgeFeatures: this._edgeFeatures,
-    });
-    log('_initialize: opening DataSpaceManager...');
-    await this.dataSpaceManager.open(ctx);
+    await this.#dataSpaceManager.open(ctx);
     log('_initialize: DataSpaceManager opened');
 
-    this.edgeAgentManager = new EdgeAgentManager(
-      this._edgeFeatures,
-      this._edgeHttpClient,
-      this.dataSpaceManager,
-      identityProviderFromManager(this.identityManager),
-    );
-    log('_initialize: opening EdgeAgentManager...');
-    await this.edgeAgentManager.open(ctx);
+    await this.#edgeAgentManager.open(ctx);
     log('_initialize: EdgeAgentManager opened');
 
-    this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {
-      invariant(this.dataSpaceManager, 'dataSpaceManager not initialized yet');
-      return new SpaceInvitationProtocol(
-        this.dataSpaceManager,
-        signingContextProvider(),
-        this.keyring,
-        invitation.spaceKey,
-      );
-    });
+    this.#handlerFactories.set(
+      Invitation.Kind.SPACE,
+      (invitation) =>
+        new SpaceInvitationProtocol(
+          this.#dataSpaceManager,
+          this.#signingContextProvider(),
+          this.keyring,
+          invitation.spaceKey,
+        ),
+    );
     this.initialized.wake();
-    log('_initialize: initialized.wake() called');
 
-    this._deviceSpaceSync = createCrossDeviceSpaceSynchronizer(this.dataSpaceManager);
-    this._deviceSpaceSync.setIdentity(identity);
-    await this._deviceSpaceSync?.open?.(ctx);
+    this.#deviceSpaceSync.setIdentity(identity);
+    await this.#deviceSpaceSync.open?.(ctx);
   }
 
   private async _setNetworkIdentity(params?: { deviceCredential?: Credential; identity?: Identity }): Promise<void> {
     log('_setNetworkIdentity: acquiring mutex...');
-    using _ = await this._edgeIdentityUpdateMutex.acquire();
+    using _ = await this.#edgeIdentityUpdateMutex.acquire();
     log('_setNetworkIdentity: mutex acquired');
 
     let edgeIdentity: EdgeIdentity;
     const identity = params?.identity;
     if (identity) {
-      log('_setNetworkIdentity: has identity', {
-        identity: identity.identityKey.toHex(),
-        hasDeviceCredential: !!params?.deviceCredential,
-      });
-
       if (params?.deviceCredential) {
-        log('_setNetworkIdentity: creating chain edge identity with device credential...');
         edgeIdentity = await createChainEdgeIdentity(
           identity.signer,
           identity.identityKey,
@@ -524,20 +480,14 @@ export class ServiceContext extends Resource implements ServiceContextApi {
           { credential: params.deviceCredential },
           [], // TODO(dmaretskyi): Service access credentials.
         );
-        log('_setNetworkIdentity: chain edge identity created');
       } else {
-        log('_setNetworkIdentity: waiting for identity.ready()...');
         // TODO: throw here or from identity if device chain can't be loaded, to avoid indefinite hangup
         await warnAfterTimeout(10_000, 'Waiting for identity to be ready for edge connection', async () => {
           await identity.ready();
         });
-        log('_setNetworkIdentity: identity.ready() resolved', {
-          hasDeviceCredentialChain: !!identity.deviceCredentialChain,
-        });
 
         invariant(identity.deviceCredentialChain);
 
-        log('_setNetworkIdentity: creating chain edge identity...');
         edgeIdentity = await createChainEdgeIdentity(
           identity.signer,
           identity.identityKey,
@@ -545,16 +495,13 @@ export class ServiceContext extends Resource implements ServiceContextApi {
           identity.deviceCredentialChain,
           [], // TODO(dmaretskyi): Service access credentials.
         );
-        log('_setNetworkIdentity: chain edge identity created');
       }
     } else {
-      log('_setNetworkIdentity: no identity, creating ephemeral edge identity...');
       edgeIdentity = await createEphemeralEdgeIdentity();
-      log('_setNetworkIdentity: ephemeral edge identity created');
     }
 
-    this._edgeConnection?.setIdentity(edgeIdentity);
-    this._edgeHttpClient?.setIdentity(edgeIdentity);
+    this.#edgeConnection?.setIdentity(edgeIdentity);
+    this.#edgeHttpClient?.setIdentity(edgeIdentity);
     this.networkManager.setPeerInfo({
       identityDid: edgeIdentity.identityDid,
       peerKey: edgeIdentity.peerKey,
@@ -565,79 +512,159 @@ export class ServiceContext extends Resource implements ServiceContextApi {
 
 export type ServiceContextLayerOptions = ServiceContextRuntimeProps & {
   edgeFeatures?: Runtime.Client.EdgeFeatures;
-  getInvitationHandler: InvitationsManagerLayerOptions['getHandler'];
-  echoHost?: EchoHostLayerOptions;
+  edgeConnection?: EdgeConnection;
+  edgeHttpClient?: EdgeHttpClient;
 };
 
 /**
- * Effect Layer composing dormant ServiceContext components constructed before identity is ready.
+ * Effect Layer composing dormant {@link ServiceContext} components, constructed before identity is
+ * ready. The resulting {@link ServiceContextService} yields the lifecycle orchestrator.
  */
 export const ServiceContextLayer = (
   options: ServiceContextLayerOptions,
 ): Layer.Layer<
-  | ServiceContextService
-  | IMetadataStoreService
-  | BlobStoreApiService
-  | FeedStoreService
-  | KeyringApiService
-  | SpaceManagerService
-  | IdentityManagerService
-  | EdgeIdentityRecoveryManagerService
-  | InvitationsHandlerService
-  | InvitationsManagerService
-  | EchoHostService,
+  ServiceContextService,
   never,
-  SwarmNetworkManagerService | EdgeConnectionService | EdgeHttpClientService | SqlClient.SqlClient | SqlTransactionTag
-> => Layer.empty.pipe(
-  Layer.provideMerge(Layer.unwrapEffect(Effect.gen(function *() {
-    if(options.disableP2pReplication) {
-      return MeshEchoReplicatorLayer()
-    } else {
-      return Layer.succeed(MeshEchoReplicatorLayer, undefined);
-    }
-  })))
-  // TODO(dmaretskyi): Set invitation handlers.
-  Layer.provideMerge(
-    InvitationsManagerLayer({
-      getHandler: () => todo()
-    })
-  )
-  Layer.provideMerge(InvitationsHandlerLayer({
-    connectionProps: options.invitationConnectionDefaultProps,
-  })),
-  Layer.provideMerge(echoHostLayer({
-    useSubduction: options.useSubduction,
-  })),
-  Layer.provideMerge(
-    EdgeIdentityRecoveryManagerLayer(),
-  ),
-  Layer.provideMerge(IdentityManagerLayer({
-    devicePresenceOfflineTimeout: options.devicePresenceOfflineTimeout,
-    devicePresenceAnnounceInterval: options.devicePresenceAnnounceInterval,
-    edgeFeatures: options.edgeFeatures,
-  })),
-  Layer.provideMerge(SpaceManagerLayer({
-    disableP2pReplication: options.disableP2pReplication
-  }))
-  Layer.provideMerge(storageLayer),
-)
+  SwarmNetworkManagerService | SignalManagerService | SqlClient.SqlClient | SqlTransactionTag
+> => {
+  const { edgeConnection, edgeHttpClient } = options;
 
-// setup was 3 stages
-// 1. construct -- creates service shapes
-// 2. open -- reads storag; assigns network identity and opens service + network
-// 3. initialize -- happens on identity creation, opens spaces
+  const serviceContextLayer = Layer.effect(
+    ServiceContextService,
+    Effect.gen(function* () {
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+      const networkManager = yield* SwarmNetworkManagerService;
+      const signalManager = yield* SignalManagerService;
 
-const storageLayer: Layer.Layer<
-  | BlobStoreApiService
-  | FeedFactoryService
-  | FeedStorageDirectoryService
-  | FeedStoreService
-  | IMetadataStoreService
-  | KeyringApiService
-  | SqliteStorageService,
-  never,
-  SqlClient.SqlClient | SqlTransaction.SqlTransaction
-> = Layer.empty.pipe(
+      const metadataStore = yield* IMetadataStoreService;
+      const blobStore = yield* BlobStoreApiService;
+      const keyring = yield* KeyringApiService;
+      const feedStore = yield* FeedStoreService;
+      const storageMigrate = yield* StorageMigrationService;
+
+      const spaceManager = yield* SpaceManagerService;
+      const identityManager = yield* IdentityManagerService;
+      const recoveryManager = yield* EdgeIdentityRecoveryManagerService;
+      const invitations = yield* InvitationsHandlerService;
+      const invitationsManager = yield* InvitationsManagerService;
+      const echoHost = yield* EchoHostService;
+      const signingContextProvider = yield* SigningContextProviderService;
+
+      const dataSpaceManager = yield* DataSpaceManagerService;
+      const edgeAgentManager = yield* EdgeAgentManagerService;
+      const deviceSpaceSync = yield* CrossDeviceSpaceSynchronizerService;
+
+      // Mesh replicator is always constructed by the stack; its use is disabled here when p2p is off.
+      const meshReplicator = options.disableP2pReplication
+        ? undefined
+        : Option.getOrUndefined(yield* Effect.serviceOption(MeshEchoReplicatorService));
+      const echoEdgeReplicator = Option.getOrUndefined(yield* Effect.serviceOption(EdgeAutomergeReplicatorService));
+      const feedSyncer = Option.getOrUndefined(yield* Effect.serviceOption(FeedSyncerService));
+
+      return new ServiceContext({
+        networkManager,
+        signalManager,
+        edgeConnection,
+        edgeHttpClient,
+        runtime,
+        metadataStore,
+        blobStore,
+        keyring,
+        feedStore,
+        storageMigrate,
+        spaceManager,
+        identityManager,
+        recoveryManager,
+        invitations,
+        invitationsManager,
+        echoHost,
+        signingContextProvider,
+        dataSpaceManager,
+        edgeAgentManager,
+        deviceSpaceSync,
+        meshReplicator,
+        echoEdgeReplicator,
+        feedSyncer,
+        runtimeProps: options,
+        edgeFeatures: options.edgeFeatures,
+      });
+    }),
+  );
+
+  // Non-optional core layers, provided below the optional edge outputs so that a `FeedSyncer` /
+  // edge-replicator layer stacked on top has its `EchoHostService` (and other) requirements
+  // satisfied here. The mesh replicator is always provided (its use is gated above and in the
+  // data-space layer). Kept generic so each variant builds a single concrete pipe (no unions).
+  const withCore = <A, E, R>(top: Layer.Layer<A, E, R>) =>
+    top.pipe(
+      Layer.provideMerge(CrossDeviceSpaceSynchronizerLayer),
+      Layer.provideMerge(EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures })),
+      Layer.provideMerge(DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures })),
+      Layer.provideMerge(SigningContextProviderLayer),
+      Layer.provideMerge(identityProviderLayer),
+      Layer.provideMerge(MeshEchoReplicatorLayer()),
+      Layer.provideMerge(echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator })),
+      Layer.provideMerge(InvitationsManagerLayer()),
+      Layer.provideMerge(InvitationsHandlerLayer({ connectionProps: options.invitationConnectionDefaultProps })),
+      Layer.provideMerge(EdgeIdentityRecoveryManagerLayer()),
+      Layer.provideMerge(
+        IdentityManagerLayer({
+          devicePresenceOfflineTimeout: options.devicePresenceOfflineTimeout,
+          devicePresenceAnnounceInterval: options.devicePresenceAnnounceInterval,
+          edgeFeatures: options.edgeFeatures,
+        }),
+      ),
+      Layer.provideMerge(SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication })),
+      Layer.provideMerge(storageLayer),
+    );
+
+  if (!edgeConnection || !edgeHttpClient) {
+    return withCore(serviceContextLayer);
+  }
+
+  // Edge inputs are provided internally so they never appear in the stack's declared requirements.
+  const edgeInputLayer = Layer.mergeAll(
+    Layer.succeed(EdgeConnectionService, edgeConnection),
+    Layer.succeed(EdgeHttpClientService, edgeHttpClient),
+  );
+  const feedSyncTop = serviceContextLayer.pipe(
+    Layer.provideMerge(
+      FeedSyncerLayer({
+        peerId: '',
+        syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
+      }),
+    ),
+  );
+
+  if (options.edgeFeatures?.subductionReplicator) {
+    return withCore(feedSyncTop.pipe(Layer.provideMerge(EchoEdgeSubductionReplicatorLayer()))).pipe(
+      Layer.provideMerge(edgeInputLayer),
+    );
+  }
+  if (options.edgeFeatures?.echoReplicator) {
+    return withCore(feedSyncTop.pipe(Layer.provideMerge(EchoEdgeReplicatorLayer()))).pipe(
+      Layer.provideMerge(edgeInputLayer),
+    );
+  }
+  return withCore(feedSyncTop).pipe(Layer.provideMerge(edgeInputLayer));
+};
+
+/**
+ * Provides the {@link IdentityProviderService} from the resolved {@link IdentityManager}.
+ */
+const identityProviderLayer = Layer.effect(
+  IdentityProviderService,
+  Effect.gen(function* () {
+    const identityManager = yield* IdentityManagerService;
+    return identityProviderFromManager(identityManager);
+  }),
+);
+
+/**
+ * Constructs the concrete SQLite stores once and exposes them (plus the combined migration effect
+ * and the hypercore feed store) to the rest of the stack. Migrations run in stage 2, not here.
+ */
+const storageLayer = Layer.empty.pipe(
   Layer.provideMerge(FeedStoreLayer()),
   Layer.provideMerge(
     FeedFactoryLayer({
@@ -648,40 +675,42 @@ const storageLayer: Layer.Layer<
     }),
   ),
   Layer.provideMerge(FeedStorageDirectoryLayer()),
-  Layer.provideMerge(SqliteMetadataStoreLayer()),
-  Layer.provideMerge(SqliteBlobStoreLayer()),
-  Layer.provideMerge(SqliteKeyringLayer()),
-  Layer.provideMerge(SqliteStorageLayer()),
-  Layer.provideMerge(SqliteKeyringLayer()),
+  Layer.provideMerge(
+    Layer.effectContext(
+      Effect.gen(function* () {
+        const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+        const metadataStore = new SqliteMetadataStore({ runtime });
+        const blobStore = new SqliteBlobStore({ runtime });
+        const keyring = new SqliteKeyring({ runtime });
+        const storage = new SqliteStorage({ runtime });
+        const storageMigrate = Effect.all([metadataStore.migrate, blobStore.migrate, keyring.migrate, storage.migrate], {
+          discard: true,
+        });
+        return EffectContext.empty().pipe(
+          EffectContext.add(IMetadataStoreService, metadataStore),
+          EffectContext.add(BlobStoreApiService, blobStore),
+          EffectContext.add(KeyringApiService, keyring),
+          EffectContext.add(SqliteStorageService, storage),
+          EffectContext.add(StorageMigrationService, storageMigrate),
+        );
+      }),
+    ),
+  ),
 );
 
-const echoHostLayer = (options: Pick<EchoHostProps, 'useSubduction'>) =>
+/**
+ * Constructs the {@link EchoHost}, resolving the identity/space callbacks that point down the stack.
+ * The feed sync handlers (which point up) are wired later via `EchoHost.setFeedSyncHandlers`.
+ */
+const echoHostLayer = (options: { useSubduction?: boolean }) =>
   Layer.unwrapEffect(
     Effect.gen(function* () {
       const identityManager = yield* IdentityManagerService;
       const spaceManager = yield* SpaceManagerService;
-      const feedSyncer = yield* FeedSyncerService;
       return EchoHostLayer({
         peerIdProvider: () => identityManager.identity?.deviceKey?.toHex(),
         getSpaceKeyByRootDocumentId: (documentId) => spaceManager.findSpaceByRootDocumentId(documentId)?.key,
         useSubduction: options.useSubduction,
-        syncFeed: async (ctx, request) => {
-          return feedSyncer?.syncBlocking(ctx, {
-            spaceId: request.spaceId as SpaceId,
-            subspaceTag: request.subspaceTag,
-            shouldPush: request.shouldPush,
-            shouldPull: request.shouldPull,
-          });
-        },
-        getSyncState: async (ctx, request) => {
-          // Mirror `syncFeed` above: in non-edge / partially-initialised modes the
-          // feed syncer is absent. Return an empty state instead of throwing so
-          // callers (e.g. devtools sync panel) keep working.
-          if (!feedSyncer) {
-            return { namespaces: [] };
-          }
-          return feedSyncer.getSyncState(ctx, request);
-        },
       });
     }),
   );

@@ -10,7 +10,7 @@ import { Mutex, scheduleMicroTask, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
 import type { CollectionId } from '@dxos/echo-protocol';
-import { EdgeConnectionService, EdgeHttpClientService, type EdgeConnection, type EdgeHttpClient } from '@dxos/edge-client';
+import { type EdgeConnection, EdgeConnectionService, type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -36,8 +36,8 @@ import { bufferToArray, compositeKey } from '@dxos/util';
 import {
   type AutomergeReplicatorConnection,
   type AutomergeReplicatorContext,
-  EdgeAutomergeReplicatorService,
   type EdgeAutomergeReplicator,
+  EdgeAutomergeReplicatorService,
   type ShouldAdvertiseProps,
   type ShouldSyncCollectionProps,
   getSpaceIdFromCollectionId,

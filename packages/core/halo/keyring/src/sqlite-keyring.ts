@@ -17,7 +17,7 @@ import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { ComplexMap, arrayToBuffer } from '@dxos/util';
 
-import { KeyringApiService, type KeyringApi } from './keyring';
+import { type KeyringApi, KeyringApiService } from './keyring';
 
 const KeyRecordCodec = schema.getCodecForType('dxos.halo.keyring.KeyRecord');
 

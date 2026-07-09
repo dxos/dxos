@@ -11,9 +11,10 @@ import * as Schema from 'effect/Schema';
 
 import { AsyncTask, Mutex, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
-import { EdgeConnectionService, type EdgeConnection, MessageSchema } from '@dxos/edge-client';
+import { EchoHostService } from '@dxos/echo-host';
+import { type EdgeConnection, EdgeConnectionService, MessageSchema } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
-import { FeedStoreService, type FeedStore, SyncClient } from '@dxos/feed';
+import { type FeedStore, SyncClient } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -551,7 +552,6 @@ export type FeedSyncerLayerOptions = Pick<
   FeedSyncerOptions,
   | 'peerId'
   | 'syncNamespaces'
-  | 'getSpaceIds'
   | 'messageBlocksLimit'
   | 'syncConcurrency'
   | 'pollingInterval'
@@ -561,25 +561,29 @@ export type FeedSyncerLayerOptions = Pick<
 >;
 
 /**
- * Effect Layer constructing a {@link FeedSyncer} from ambient SQL and edge services.
+ * Effect Layer constructing a {@link FeedSyncer} from ambient SQL, echo host, and edge services.
+ *
+ * The feed store is sourced from the {@link EchoHostService} (breaking the EchoHost <-> FeedSyncer
+ * cycle). Only included when an edge connection is configured, so it resolves the edge tag directly.
  */
 export const FeedSyncerLayer = (
   options: FeedSyncerLayerOptions,
 ): Layer.Layer<
   FeedSyncerService,
   never,
-  SqlClient.SqlClient | SqlTransaction.SqlTransaction | FeedStoreService | EdgeConnectionService
+  SqlClient.SqlClient | SqlTransaction.SqlTransaction | EchoHostService | EdgeConnectionService
 > =>
   Layer.effect(
     FeedSyncerService,
     Effect.gen(function* () {
       const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
-      const feedStore = yield* FeedStoreService;
+      const echoHost = yield* EchoHostService;
       const edgeClient = yield* EdgeConnectionService;
       return new FeedSyncer({
         runtime,
-        feedStore,
+        feedStore: echoHost.feedStore,
         edgeClient,
+        getSpaceIds: () => echoHost.spaceIds,
         ...options,
       });
     }),

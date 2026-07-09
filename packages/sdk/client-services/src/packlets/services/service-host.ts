@@ -4,6 +4,8 @@
 
 import * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { Event, synchronized } from '@dxos/async';
 import { type ClientServices, clientServiceBundle } from '@dxos/client-protocol';
@@ -13,9 +15,10 @@ import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { EdgeSignalManager, type SignalManager, WebsocketSignalManager } from '@dxos/messaging';
+import { EdgeSignalManager, type SignalManager, SignalManagerService, WebsocketSignalManager } from '@dxos/messaging';
 import {
   SwarmNetworkManager,
+  SwarmNetworkManagerService,
   type TransportFactory,
   createIceProvider,
   createRtcTransportFactory,
@@ -42,7 +45,7 @@ import { LoggingServiceImpl } from '../logging';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { SystemServiceImpl } from '../system';
-import { ServiceContext, type ServiceContextRuntimeProps } from './service-context';
+import { ServiceContext, ServiceContextLayer, type ServiceContextRuntimeProps, ServiceContextService } from './service-context';
 import { ServiceRegistry } from './service-registry';
 
 export type ClientServicesHostProps = {
@@ -90,6 +93,7 @@ export class ClientServicesHost {
   private _edgeHttpClient?: EdgeHttpClient = undefined;
 
   private _serviceContext!: ServiceContext;
+  #stackRuntime?: ManagedRuntime.ManagedRuntime<ServiceContextService, never>;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<
     SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction
   >;
@@ -285,6 +289,9 @@ export class ClientServicesHost {
     invariant(this._config, 'config not set');
     invariant(this._signalManager, 'signal manager not set');
     invariant(this._networkManager, 'network manager not set');
+    const config = this._config;
+    const signalManager = this._signalManager;
+    const networkManager = this._networkManager;
 
     this._opening = true;
     log('opening...', { lockKey: this._resourceLock?.lockKey });
@@ -293,15 +300,20 @@ export class ClientServicesHost {
 
     await this._loggingService.open();
 
-    this._serviceContext = new ServiceContext(
-      this._networkManager,
-      this._signalManager,
-      this._edgeConnection,
-      this._edgeHttpClient,
-      this._runtime,
-      this._runtimeProps,
-      this._config.get('runtime.client.edgeFeatures'),
+    // Build a single runtime from the ServiceContext layer stack and resolve the orchestrator.
+    const stackLayer = ServiceContextLayer({
+      ...this._runtimeProps,
+      edgeFeatures: config.get('runtime.client.edgeFeatures'),
+      edgeConnection: this._edgeConnection,
+      edgeHttpClient: this._edgeHttpClient,
+    }).pipe(
+      Layer.provideMerge(Layer.succeed(SwarmNetworkManagerService, networkManager)),
+      Layer.provideMerge(Layer.succeed(SignalManagerService, signalManager)),
+      Layer.provideMerge(RuntimeProvider.toLayer(this._runtime)),
+      Layer.orDie,
     );
+    this.#stackRuntime = ManagedRuntime.make(stackLayer);
+    this._serviceContext = await this.#stackRuntime.runPromise(ServiceContextService);
 
     const dataSpaceManagerProvider = async () => {
       await this._serviceContext.initialized.wait();
@@ -406,6 +418,8 @@ export class ClientServicesHost {
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._loggingService.close();
     await this._serviceContext.close();
+    await this.#stackRuntime?.dispose();
+    this.#stackRuntime = undefined;
     this._open = false;
     this._statusUpdate.emit();
     log('closed', { deviceKey });

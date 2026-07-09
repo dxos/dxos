@@ -60,20 +60,25 @@ export type EchoHostProps = {
   assignQueuePositions?: boolean;
 
   /**
-   * Callback to run blocking feed sync.
-   */
-  syncFeed?: (ctx: Context, request: SyncFeedRequest) => Promise<void>;
-
-  /**
-   * Callback to read feed sync backlog per namespace.
-   */
-  getSyncState?: (ctx: Context, request: GetSyncStateRequest) => Promise<GetSyncStateResponse>;
-
-  /**
    * Enable Subduction sedimentree transport for Automerge document replication.
    * @default false
    */
   useSubduction?: boolean;
+};
+
+/**
+ * Feed sync handlers wired after construction to break the EchoHost <-> FeedSyncer cycle.
+ */
+export type FeedSyncHandlers = {
+  /**
+   * Callback to run blocking feed sync.
+   */
+  syncFeed: (ctx: Context, request: SyncFeedRequest) => Promise<void>;
+
+  /**
+   * Callback to read feed sync backlog per namespace.
+   */
+  getSyncState: (ctx: Context, request: GetSyncStateRequest) => Promise<GetSyncStateResponse>;
 };
 
 /**
@@ -109,13 +114,16 @@ export class EchoHost extends Resource {
 
   private _indexesUpToDate = false;
 
+  // Feed sync handlers are wired lazily via `setFeedSyncHandlers` to break the construction-time
+  // cycle with the FeedSyncer, which itself depends on `this.feedStore`.
+  #syncFeed?: (ctx: Context, request: SyncFeedRequest) => Promise<void>;
+  #getSyncState?: (ctx: Context, request: GetSyncStateRequest) => Promise<GetSyncStateResponse>;
+
   constructor({
     peerIdProvider,
     getSpaceKeyByRootDocumentId,
     runtime,
     assignQueuePositions = false,
-    syncFeed,
-    getSyncState,
     useSubduction,
   }: EchoHostProps) {
     super();
@@ -139,7 +147,12 @@ export class EchoHost extends Resource {
       runtime: this._runtime,
       getSpaceIds: () => this._spaceStateManager.spaceIds,
     });
-    this._feedService = new LocalFeedServiceImpl(runtime, this._feedStore, { syncFeed, getSyncState });
+    this._feedService = new LocalFeedServiceImpl(runtime, this._feedStore, {
+      // Read the mutable slots lazily so handlers wired after construction take effect;
+      // fall back to no-op / empty state before they are set.
+      syncFeed: (ctx, request) => this.#syncFeed?.(ctx, request) ?? Promise.resolve(),
+      getSyncState: (ctx, request) => this.#getSyncState?.(ctx, request) ?? Promise.resolve({ namespaces: [] }),
+    });
 
     // SQLite-based index engine for all queries.
     this._indexEngine = new IndexEngine();
@@ -224,6 +237,14 @@ export class EchoHost extends Resource {
 
   get feedStore(): FeedStore {
     return this._feedStore;
+  }
+
+  /**
+   * Wires the feed sync handlers after the composing stack is fully constructed.
+   */
+  setFeedSyncHandlers(handlers: FeedSyncHandlers): void {
+    this.#syncFeed = handlers.syncFeed;
+    this.#getSyncState = handlers.getSyncState;
   }
 
   /**
@@ -586,12 +607,7 @@ export type EchoStatsDiagnostic = {
 
 export type EchoHostLayerOptions = Pick<
   EchoHostProps,
-  | 'peerIdProvider'
-  | 'getSpaceKeyByRootDocumentId'
-  | 'assignQueuePositions'
-  | 'syncFeed'
-  | 'getSyncState'
-  | 'useSubduction'
+  'peerIdProvider' | 'getSpaceKeyByRootDocumentId' | 'assignQueuePositions' | 'useSubduction'
 >;
 
 /**

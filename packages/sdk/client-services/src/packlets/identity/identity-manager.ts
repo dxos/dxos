@@ -12,16 +12,16 @@ import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithKey, createDidFromIdentityKey } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import {
-  IMetadataStoreService,
-  SpaceManagerService,
   type IMetadataStore,
+  IMetadataStoreService,
   type SpaceManager,
+  SpaceManagerService,
   type SwarmIdentity,
 } from '@dxos/echo-host';
-import { EdgeConnectionService, type EdgeConnection } from '@dxos/edge-client';
-import { FeedStoreService, type FeedStore } from '@dxos/feed-store';
+import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
+import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { KeyringApiService, type KeyringApi } from '@dxos/keyring';
+import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
@@ -470,11 +470,7 @@ export const IdentityManagerLayer = (
 ): Layer.Layer<
   IdentityManagerService,
   never,
-  | IMetadataStoreService
-  | KeyringApiService
-  | FeedStoreService
-  | SpaceManagerService
-  | EdgeConnectionService
+  IMetadataStoreService | KeyringApiService | FeedStoreService | SpaceManagerService
 > =>
   Layer.effect(
     IdentityManagerService,

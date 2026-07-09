@@ -683,11 +683,8 @@ const createInvitationsApi = (
   context: ServiceContext,
   metadata: MetadataStore = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory()),
 ) => {
-  const manager = new InvitationsManager(
-    context.invitations,
-    (invitation) => context.getInvitationHandler(invitation),
-    metadata,
-  );
+  const manager = new InvitationsManager(context.invitations, metadata);
+  manager.setInvitationHandlerFactory((invitation) => context.getInvitationHandler(invitation));
   const service = new InvitationsServiceImpl(manager);
   return { manager, service, metadata };
 };

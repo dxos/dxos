@@ -13,7 +13,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, defaultMap } from '@dxos/util';
 
-import { FeedFactoryService, type FeedFactory, type FeedOptions } from './feed-factory';
+import { type FeedFactory, FeedFactoryService, type FeedOptions } from './feed-factory';
 import { type FeedWrapper } from './feed-wrapper';
 
 export interface FeedStoreOptions<T extends {}> {

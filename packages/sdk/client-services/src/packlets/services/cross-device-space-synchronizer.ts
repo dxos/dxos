@@ -6,7 +6,7 @@ import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Resource, type Context, type Lifecycle } from '@dxos/context';
+import { type Context, type Lifecycle, Resource } from '@dxos/context';
 import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
 import { assertState } from '@dxos/invariant';
 import { log } from '@dxos/log';

@@ -3981,6 +3981,9 @@ importers:
       '@dxos/vendor-hypercore':
         specifier: workspace:*
         version: link:../../../vendor/hypercore
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
       lodash.defaultsdeep:
         specifier: 'catalog:'
         version: 4.6.1
@@ -6800,6 +6803,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
       isomorphic-ws:
         specifier: 'catalog:'
         version: 5.0.0(ws@8.18.3)
@@ -6861,6 +6867,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
       node-datachannel:
         specifier: 'catalog:'
         version: 0.30.0

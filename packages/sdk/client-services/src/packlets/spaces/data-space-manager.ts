@@ -22,28 +22,28 @@ import {
 import { Type } from '@dxos/echo';
 import {
   AuthStatus,
-  AutomergeReplicatorService,
   CredentialServerExtension,
   DatabaseRoot,
-  EdgeAutomergeReplicatorService,
-  EchoHostService,
-  IMetadataStoreService,
-  SpaceManagerService,
   type EchoHost,
+  EchoHostService,
   type EdgeAutomergeReplicator,
+  EdgeAutomergeReplicatorService,
   type IMetadataStore,
+  IMetadataStoreService,
   type MeshEchoReplicator,
+  MeshEchoReplicatorService,
   type Space,
   type SpaceManager,
+  SpaceManagerService,
   type SpaceProtocol,
   type SpaceProtocolSession,
   findInlineObjectOfType,
 } from '@dxos/echo-host';
 import { type DatabaseDirectory, createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { EdgeConnectionService, EdgeHttpClientService, type EdgeConnection, type EdgeHttpClient } from '@dxos/edge-client';
-import { FeedStoreService, type FeedStore, writeMessages } from '@dxos/feed-store';
+import { type EdgeConnection, EdgeConnectionService, type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
+import { type FeedStore, FeedStoreService, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
-import { KeyringApiService, type KeyringApi } from '@dxos/keyring';
+import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
@@ -65,8 +65,8 @@ import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
-import { createAuthProvider, IdentityProviderService, type Identity } from '../identity';
-import { InvitationsManagerService, type InvitationsManager } from '../invitations';
+import { type Identity, IdentityProviderService, createAuthProvider } from '../identity';
+import { type InvitationsManager, InvitationsManagerService } from '../invitations';
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
 
@@ -213,7 +213,7 @@ export class DataSpaceManager extends Resource {
     this._spaceManager = params.spaceManager;
     this._metadataStore = params.metadataStore;
     this._keyring = params.keyring;
-    this.signingContextProvider = params.signingContextProvider;
+    this._signingContextProvider = params.signingContextProvider;
     this._feedStore = params.feedStore;
     this._echoHost = params.echoHost;
     this._meshReplicator = params.meshReplicator;
@@ -843,10 +843,6 @@ export const DataSpaceManagerLayer = (
   | FeedStoreService
   | EchoHostService
   | InvitationsManagerService
-  | EdgeConnectionService
-  | EdgeHttpClientService
-  | AutomergeReplicatorService
-  | EdgeAutomergeReplicatorService
 > =>
   Layer.effect(
     DataSpaceManagerService,
@@ -860,7 +856,7 @@ export const DataSpaceManagerLayer = (
       const invitationsManager = yield* InvitationsManagerService;
       const edgeConnection = yield* Effect.serviceOption(EdgeConnectionService);
       const edgeHttpClient = yield* Effect.serviceOption(EdgeHttpClientService);
-      const meshReplicator = yield* Effect.serviceOption(AutomergeReplicatorService);
+      const meshReplicator = yield* Effect.serviceOption(MeshEchoReplicatorService);
       const echoEdgeReplicator = yield* Effect.serviceOption(EdgeAutomergeReplicatorService);
 
       return new DataSpaceManager({
@@ -873,7 +869,8 @@ export const DataSpaceManagerLayer = (
         invitationsManager,
         edgeConnection: Option.getOrUndefined(edgeConnection),
         edgeHttpClient: Option.getOrUndefined(edgeHttpClient),
-        meshReplicator: Option.getOrUndefined(meshReplicator),
+        // Mesh replicator is always available in the stack; disable its use here when p2p is off.
+        meshReplicator: options.runtimeProps?.disableP2pReplication ? undefined : Option.getOrUndefined(meshReplicator),
         echoEdgeReplicator: Option.getOrUndefined(echoEdgeReplicator),
         ...options,
       });
