@@ -9,12 +9,10 @@ import { Script } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { ScriptCapabilities } from '@dxos/plugin-script';
 import { ScriptArticle } from '@dxos/plugin-script/containers';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
-import { type ModuleProps } from './types';
-
-export const ScriptModule = ({ space }: ModuleProps) => {
+export const ScriptModule = ({ space }: { space: Space }) => {
   const [script] = useQuery(space.db, Filter.type(Script.Script));
   const compiler = useCapability(ScriptCapabilities.Compiler);
   const settings = useAtomCapability(ScriptCapabilities.Settings);
