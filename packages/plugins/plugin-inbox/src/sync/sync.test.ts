@@ -324,9 +324,7 @@ describe('sync pipeline harness', () => {
     expect(withoutAttachment.attachments ?? []).toHaveLength(0);
   });
 
-  test('email stages compose in any order (Mapped → Mapped) ahead of the terminal toCommitUnit', async ({
-    expect,
-  }) => {
+  test('email stages compose in any order (Mapped → Mapped) ahead of the terminal toCommitUnit', async ({ expect }) => {
     const { db, feed, tagIndex, binding } = await setup();
 
     type AttachmentRaw = Raw & { readonly attachments?: readonly EmailStage.Attachment[] };

@@ -270,41 +270,39 @@ describe('runGmailSync against a mock Gmail API', () => {
     expect(forwardOrder).toEqual([...forwardOrder].sort((left, right) => left - right));
   });
 
-  test(
-    'a chunk spanning multiple Gmail listMessages pages orders (and advances the cursor) across the whole chunk, not per page',
-    async ({ expect }) => {
-      // More than one Gmail `listMessages` page (`STREAMING_CONFIG.maxResults` = 500) within a single
-      // date chunk (`dateChunkDays` = 7): reversing page-by-page would only be locally oldest-first
-      // within each 500-message page, not globally across the chunk — this is the regression this test
-      // guards against.
-      const end = subDays(new Date(), 3);
-      const dataset = generateGmailDataset({ count: 510, seed: 13, start: subDays(end, 2), end });
-      const after = format(subDays(new Date(), 14), 'yyyy-MM-dd');
+  test('a chunk spanning multiple Gmail listMessages pages orders (and advances the cursor) across the whole chunk, not per page', async ({
+    expect,
+  }) => {
+    // More than one Gmail `listMessages` page (`STREAMING_CONFIG.maxResults` = 500) within a single
+    // date chunk (`dateChunkDays` = 7): reversing page-by-page would only be locally oldest-first
+    // within each 500-message page, not globally across the chunk — this is the regression this test
+    // guards against.
+    const end = subDays(new Date(), 3);
+    const dataset = generateGmailDataset({ count: 510, seed: 13, start: subDays(end, 2), end });
+    const after = format(subDays(new Date(), 14), 'yyyy-MM-dd');
 
-      // Backward (initial sync): Gmail's native newest-first order is never reversed, so it's already
-      // globally consistent across pages — asserted here as a regression guard alongside forward.
-      const backward = await seedMailboxBinding(builder);
-      await EffectEx.runPromise(
-        runGmailSync({ binding: Ref.make(backward.binding), after }).pipe(
-          Effect.provide(inboxSyncTestServices(backward.db, dataset)),
-        ),
-      );
-      const backwardOrder = await insertionOrderTimestamps(backward.db, backward.mailbox);
-      expect(backwardOrder).toHaveLength(510);
-      expect(backwardOrder).toEqual([...backwardOrder].sort((left, right) => right - left));
+    // Backward (initial sync): Gmail's native newest-first order is never reversed, so it's already
+    // globally consistent across pages — asserted here as a regression guard alongside forward.
+    const backward = await seedMailboxBinding(builder);
+    await EffectEx.runPromise(
+      runGmailSync({ binding: Ref.make(backward.binding), after }).pipe(
+        Effect.provide(inboxSyncTestServices(backward.db, dataset)),
+      ),
+    );
+    const backwardOrder = await insertionOrderTimestamps(backward.db, backward.mailbox);
+    expect(backwardOrder).toHaveLength(510);
+    expect(backwardOrder).toEqual([...backwardOrder].sort((left, right) => right - left));
 
-      // Forward (incremental resume): must be oldest-first across the *entire* chunk (both pages), not
-      // just within each page.
-      const forward = await seedMailboxBinding(builder);
-      await EffectEx.runPromise(
-        runGmailSync({ binding: Ref.make(forward.binding), after, direction: 'forward' }).pipe(
-          Effect.provide(inboxSyncTestServices(forward.db, dataset)),
-        ),
-      );
-      const forwardOrder = await insertionOrderTimestamps(forward.db, forward.mailbox);
-      expect(forwardOrder).toHaveLength(510);
-      expect(forwardOrder).toEqual([...forwardOrder].sort((left, right) => left - right));
-    },
-    30_000,
-  );
+    // Forward (incremental resume): must be oldest-first across the *entire* chunk (both pages), not
+    // just within each page.
+    const forward = await seedMailboxBinding(builder);
+    await EffectEx.runPromise(
+      runGmailSync({ binding: Ref.make(forward.binding), after, direction: 'forward' }).pipe(
+        Effect.provide(inboxSyncTestServices(forward.db, dataset)),
+      ),
+    );
+    const forwardOrder = await insertionOrderTimestamps(forward.db, forward.mailbox);
+    expect(forwardOrder).toHaveLength(510);
+    expect(forwardOrder).toEqual([...forwardOrder].sort((left, right) => left - right));
+  }, 30_000);
 });
