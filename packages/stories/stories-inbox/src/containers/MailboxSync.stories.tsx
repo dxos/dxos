@@ -127,6 +127,7 @@ const StoryAiPlugin = Plugin.define(
   }),
 ).pipe(
   Plugin.addModule({
+    id: 'story-ai',
     activatesOn: ActivationEvents.SetupProcessManager,
     activate: Capability.makeModule(
       Effect.fnUntraced(function* () {
