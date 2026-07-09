@@ -6,11 +6,13 @@ import { Event } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesProvider,
+  type ClientServicesRpc,
   DEFAULT_PROFILE,
   DX_RUNTIME,
   DXEnv,
   clientServiceBundle,
   getProfilePath,
+  makeRpcFromServices,
 } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
 import { type ServiceBundle } from '@dxos/rpc';
@@ -36,11 +38,17 @@ export class AgentClientServiceProvider implements ClientServicesProvider {
   // TODO(wittjosiah): Fire an event if the socket disconnects.
   readonly closed = new Event<Error | undefined>();
   private _client?: WebsocketRpcClient<ClientServices, {}>;
+  // Derives the effect surface from the protobuf websocket client (no direct effect transport).
+  private readonly _rpc: ClientServicesRpc = makeRpcFromServices(() => this.services);
 
   constructor(private readonly _profile: string) {}
 
   get descriptors(): ServiceBundle<ClientServices> {
     return clientServiceBundle;
+  }
+
+  get rpc() {
+    return this._rpc;
   }
 
   get services(): Partial<ClientServices> {

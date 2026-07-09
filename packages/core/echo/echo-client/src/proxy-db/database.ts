@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { inspect } from 'node:util';
@@ -43,9 +44,8 @@ import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
-import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
@@ -158,9 +158,10 @@ export interface EchoDatabase extends Database.Database {
 
 export type EchoDatabaseProps = {
   graph: HypergraphImpl;
-  dataService: DataService;
-  queryService: QueryService;
-  feedService?: FeedProtocol.FeedService;
+  dataService: DataService.Client;
+  queryService: QueryService.Client;
+  feedService?: FeedService.Client;
+  runtime: Runtime.Runtime<never>;
   spaceId: SpaceId;
 
   /**
@@ -202,7 +203,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Backend for feed operations. Set on construction and refreshed on reconnect.
    */
-  #feedService: FeedProtocol.FeedService | undefined;
+  #feedService: FeedService.Client | undefined;
+
+  /** Runtime used to run effect-rpc feed calls at Promise boundaries. */
+  readonly #runtime: Runtime.Runtime<never>;
 
   /**
    * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
@@ -217,11 +221,13 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this._preloadSchemaOnOpen = params.preloadSchemaOnOpen ?? true;
     this._hypergraph = params.graph;
     this.#feedService = params.feedService;
+    this.#runtime = params.runtime;
 
     this._entityManager = new EntityManager({
       graph: params.graph,
       dataService: params.dataService,
       queryService: params.queryService,
+      runtime: params.runtime,
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
     });
@@ -523,7 +529,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * @internal
    * Sets or refreshes the feed backend service (e.g. after reconnection).
    */
-  _setFeedService(service: FeedProtocol.FeedService | undefined): void {
+  _setFeedService(service: FeedService.Client | undefined): void {
     this.#feedService = service;
   }
 
@@ -540,6 +546,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     }
     const handle = new FeedHandle(
       this.#feedService,
+      this.#runtime,
       this.graph.createRefResolver({ context: { space: this.spaceId, feed: feedUri } }),
       feedUri,
       this,
@@ -729,9 +736,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     queryService,
     feedService,
   }: {
-    dataService: DataService;
-    queryService: QueryService;
-    feedService?: FeedProtocol.FeedService;
+    dataService: DataService.Client;
+    queryService: QueryService.Client;
+    feedService?: FeedService.Client;
   }): void {
     this._entityManager._updateServices({ dataService, queryService });
     if (feedService !== undefined) {
