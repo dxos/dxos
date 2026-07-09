@@ -25,7 +25,12 @@ import { meta } from '#meta';
 import { InboxOperation } from '#types';
 import { Calendar, DraftMessage, Mailbox } from '#types';
 
-import { MAILBOX_DRAFTS_NODE_DATA, MAILBOX_DRAFTS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
+import {
+  MAILBOX_DRAFTS_NODE_DATA,
+  MAILBOX_DRAFTS_TYPE,
+  MAILBOX_FACTS_NODE_DATA,
+  MAILBOXES_SECTION_TYPE,
+} from '../constants';
 import { getCalendarsPath, getDraftsId, getMailboxesPath, getMailboxesSectionId } from '../paths';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
@@ -344,6 +349,23 @@ export default Capability.makeModule(
             }),
           ]);
         },
+      }),
+
+      // Facts companion: renders the semantic facts extracted for the mailbox. Hangs off the Mailbox
+      // node so its `companionTo` resolves to the mailbox; `data` is a sentinel (not the mailbox) so the
+      // companion surface never collides with the primary Mailbox article surface.
+      GraphBuilder.createExtension({
+        id: 'mailboxFacts',
+        match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              id: linkedSegment('facts'),
+              label: ['facts.label', { ns: meta.profile.key }],
+              icon: 'ph--graph--regular',
+              data: MAILBOX_FACTS_NODE_DATA,
+            }),
+          ]),
       }),
 
       createFeedObjectNodeExtension<Mailbox.Mailbox, Message.Message>({

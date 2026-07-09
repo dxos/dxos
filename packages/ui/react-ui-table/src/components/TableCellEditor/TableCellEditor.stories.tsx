@@ -9,7 +9,7 @@ import { Obj, Type, View } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Grid, type GridEditing, defaultRowSize } from '@dxos/react-ui-grid';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
@@ -26,9 +26,8 @@ type StoryArgs = {
 // TODO(burdon): Broken layout.
 const DefaultStory = ({ editing }: StoryArgs) => {
   const { model, table } = useTestTableModel();
-
   if (!model || !table) {
-    return <div />;
+    return <Loading />;
   }
 
   return (

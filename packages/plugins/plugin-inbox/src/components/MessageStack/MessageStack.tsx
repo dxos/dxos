@@ -10,13 +10,7 @@ import { DxAvatar } from '@dxos/lit-ui/react';
 import { type PaginationResult } from '@dxos/react-client/echo';
 import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import {
-  Focus,
-  Mosaic,
-  type MosaicTileProps,
-  useMosaicContainer,
-  useVirtualizerPagination,
-} from '@dxos/react-ui-mosaic';
+import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
 
 import { useGmailTags } from '#hooks';
@@ -177,17 +171,6 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
       [],
     );
 
-    // Requests the next (older) page once the visible range approaches the loaded end, or the
-    // previous (newer) page once it approaches the loaded start, and preserves scroll position
-    // across the resulting `items` change (see `useVirtualizerPagination`). `pagination.getNext`/
-    // `getPrevious` are single-flight and a no-op once exhausted/at the head, so triggering them
-    // on every virtualizer change while near either edge is safe.
-    const { onChange: handleVirtualizerChange } = useVirtualizerPagination({
-      items: tileItems,
-      getId: getItemId,
-      pagination,
-    });
-
     return (
       <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
@@ -208,7 +191,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
                 getScrollElement={() => viewport}
                 estimateSize={() => 150}
                 gap={4}
-                onChange={handleVirtualizerChange}
+                pagination={pagination}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>

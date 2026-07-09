@@ -101,7 +101,7 @@ export const MessageArticle = ({
     if (mailbox) {
       void invokePromise(InboxOperation.DeleteEmail, { mailbox, message }, { spaceId: db?.spaceId });
     }
-  }, [invokePromise, mailbox, message, db]);
+  }, [invokePromise, db, mailbox, message]);
 
   return (
     <Panel.Root role={role}>

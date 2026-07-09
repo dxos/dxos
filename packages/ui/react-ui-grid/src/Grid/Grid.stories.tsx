@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type MouseEvent, type MutableRefObject, useCallback, useRef, useState } from 'react';
+import React, { type MouseEvent, type RefObject, useCallback, useRef, useState } from 'react';
 
 import { defaultRowSize } from '@dxos/lit-grid';
 import { type DxGridPlaneCells } from '@dxos/lit-grid';
@@ -21,7 +21,7 @@ const storybookItems = random.helpers.uniqueArray(random.commerce.productName, 1
 type GridStoryProps = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
 
 const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
-  const triggerRef = useRef<HTMLButtonElement>(null) as MutableRefObject<HTMLButtonElement>;
+  const triggerRef = useRef<HTMLButtonElement>(null) as RefObject<HTMLButtonElement>;
 
   const [cells, setCells] = useState<GridContentProps['initialCells']>(initialCells);
 
