@@ -8,7 +8,7 @@ import React, { type Ref, useCallback, useEffect, useMemo, useRef, useState } fr
 import { useAtomCapability, useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { Aggregate, type Database, Filter, GroupKey, Obj, Order, Query, Tag } from '@dxos/echo';
+import { Aggregate, type Database, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -96,12 +96,14 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     source
       ? conversations
         ? source
-            .orderBy(Order.property('created', 'desc'))
-            .groupBy(GroupKey.property('threadId'))
-            .aggregate({ lastMessageAt: Aggregate.max('created'), items: Aggregate.items() })
-            .orderBy(Order.property('lastMessageAt', direction))
+            .orderBy((_) => Order.desc(_.created))
+            .groupBy((_) => _.threadId)
+            .map((_) => ({ lastMessageAt: Aggregate.max(_.created), items: Aggregate.items(_) }))
+            .orderBy((_) => (direction === 'desc' ? Order.desc(_.lastMessageAt) : Order.asc(_.lastMessageAt)))
             .limit(MAILBOX_PAGE_SIZE)
-        : source.orderBy(Order.property('created', direction)).limit(MAILBOX_PAGE_SIZE)
+        : source
+            .orderBy((_) => (direction === 'desc' ? Order.desc(_.created) : Order.asc(_.created)))
+            .limit(MAILBOX_PAGE_SIZE)
       : Query.select(Filter.nothing()).limit(MAILBOX_PAGE_SIZE),
   );
 

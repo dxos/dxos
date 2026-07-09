@@ -435,7 +435,7 @@ export const GroupByKey: Schema.Schema<GroupByKey> = GroupByKey_;
 
 /**
  * A named aggregate computed per group over its members, exposed as a top-level field on the group
- * result (`Group[name]`) and orderable via a post-group `orderBy(Order.property(name))`.
+ * result (`Group[name]`) and orderable via a post-group `orderBy(_ => Order.desc(_.name))`.
  * - `max`/`min` reduce a scalar member `property`.
  * - `items` collects the group's members; `count` yields the member count. Both are opt-in — a group
  *   carries neither its members nor a count otherwise. `property` is unused for `items`/`count`.
@@ -453,7 +453,7 @@ export const GroupAggregate: Schema.Schema<GroupAggregate> = GroupAggregate_;
  * Groups results by one or more scalar property values, producing contiguous groups.
  * Groups are ordered by the first occurrence of their key in the incoming (already-ordered)
  * result stream — this lets a preceding `orderBy` also control group order (e.g. ordering
- * thread groups by their most recent message). A post-group `orderBy(Order.property(name))`
+ * thread groups by their most recent message). A post-group `orderBy(_ => Order.desc(_.name))`
  * referencing a named aggregate reorders whole groups instead. Must be the outermost data clause:
  * only `from`/`options`/`order` may wrap it.
  */
@@ -467,6 +467,21 @@ const QueryGroupByClause_ = Schema.Struct({
 
 export interface QueryGroupByClause extends Schema.Schema.Type<typeof QueryGroupByClause_> {}
 export const QueryGroupByClause: Schema.Schema<QueryGroupByClause> = QueryGroupByClause_;
+
+/**
+ * Collapses the whole query to a single result carrying the declared aggregates — even when there
+ * are no matches (`count` is `0`, `items` is `[]`, `max`/`min` are `null`). Unlike `group-by`, this
+ * is not a presentation over per-key groups: there is exactly one implicit group over every match.
+ * Must not co-occur with a `group-by` (validated at plan time, like `group-by` placement).
+ */
+const QueryReduceClause_ = Schema.Struct({
+  type: Schema.Literal('reduce'),
+  query: Schema.suspend(() => Query),
+  aggregates: Schema.Array(GroupAggregate),
+});
+
+export interface QueryReduceClause extends Schema.Schema.Type<typeof QueryReduceClause_> {}
+export const QueryReduceClause: Schema.Schema<QueryReduceClause> = QueryReduceClause_;
 
 export const QueryFromClause_ = Schema.Struct({
   type: Schema.Literal('from'),
@@ -498,6 +513,7 @@ const Query_ = Schema.Union(
   QueryLimitClause,
   QuerySkipClause,
   QueryGroupByClause,
+  QueryReduceClause,
   QueryFromClause,
 ).annotations({ identifier: 'org.dxos.schema.query' });
 
@@ -579,6 +595,7 @@ export const visit = (query: Query, visitor: (node: Query) => void) => {
     Match.when({ type: 'limit' }, ({ query }) => visit(query, visitor)),
     Match.when({ type: 'skip' }, ({ query }) => visit(query, visitor)),
     Match.when({ type: 'group-by' }, ({ query }) => visit(query, visitor)),
+    Match.when({ type: 'reduce' }, ({ query }) => visit(query, visitor)),
     Match.when({ type: 'from' }, (node) => {
       visit(node.query, visitor);
       if (node.from._tag === 'query') {
@@ -607,6 +624,7 @@ export const map = (query: Query, mapper: (node: Query) => Query): Query => {
     Match.when({ type: 'limit' }, (node) => ({ ...node, query: map(node.query, mapper) })),
     Match.when({ type: 'skip' }, (node) => ({ ...node, query: map(node.query, mapper) })),
     Match.when({ type: 'group-by' }, (node) => ({ ...node, query: map(node.query, mapper) })),
+    Match.when({ type: 'reduce' }, (node) => ({ ...node, query: map(node.query, mapper) })),
     Match.when({ type: 'from' }, (node) => ({
       ...node,
       query: map(node.query, mapper),
@@ -642,6 +660,7 @@ export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
     Match.when({ type: 'limit' }, ({ query }) => fold(query, reducer)),
     Match.when({ type: 'skip' }, ({ query }) => fold(query, reducer)),
     Match.when({ type: 'group-by' }, ({ query }) => fold(query, reducer)),
+    Match.when({ type: 'reduce' }, ({ query }) => fold(query, reducer)),
     Match.when({ type: 'from' }, (node) => {
       const results = fold(node.query, reducer);
       if (node.from._tag === 'query') {

@@ -31,9 +31,9 @@ describe('QuerySandbox', () => {
 
   test('Order', () => {
     const ast = sandbox.eval(trim`
-      Query.type('org.dxos.type.person').orderBy(Order.property('name', 'desc'))
+      Query.type('org.dxos.type.person').orderBy(_ => Order.desc(_.name))
     `);
-    expect(ast).toEqual(Query.type(DXN.make('org.dxos.type.person')).orderBy(Order.property('name', 'desc')).ast);
+    expect(ast).toEqual(Query.type(DXN.make('org.dxos.type.person')).orderBy((_) => Order.desc(_.name)).ast);
   });
 
   test('traversal', () => {

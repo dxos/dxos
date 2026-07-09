@@ -206,12 +206,13 @@ const initializeStory = async (client: Client): Promise<void> => {
   await space.db.flush({ indexes: true });
 };
 
-const orderFor = (field: SortField, direction: SortDirection) => {
+const orderFor = (field: SortField, direction: SortDirection): Order.Any => {
+  const orderFn = direction === 'desc' ? Order.desc : Order.asc;
   switch (field) {
     case 'number':
-      return Order.property<CounterItem>('index', direction);
+      return orderFn('index');
     case 'word':
-      return Order.property<CounterItem>('word', direction);
+      return orderFn('word');
     case 'natural':
     default:
       return Order.natural(direction);
@@ -252,7 +253,10 @@ const FeedPaginationStory = () => {
   const query = useMemo(
     () =>
       feed
-        ? Query.select(Filter.type(CounterItem)).from(feed).orderBy(orderFor(sortField, direction)).limit(PAGE_SIZE)
+        ? Query.select(Filter.type(CounterItem))
+            .from(feed)
+            .orderBy(() => orderFor(sortField, direction))
+            .limit(PAGE_SIZE)
         : Query.select(Filter.type(CounterItem)).limit(PAGE_SIZE),
     [feed, sortField, direction],
   );

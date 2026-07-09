@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Filter, GroupKey, Query } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
@@ -245,18 +245,14 @@ describe('QueryExecutor.matchesHint — groupBy query', () => {
   test('a grouped query with a simple type selector still matches on typename/space (isSimple stays true)', ({
     expect,
   }) => {
-    const executor = makeExecutor(
-      withSpace(Query.select(Filter.type(TestSchema.Person)).groupBy(GroupKey.property('age'))),
-    );
+    const executor = makeExecutor(withSpace(Query.select(Filter.type(TestSchema.Person)).groupBy((_) => _.age)));
     expect(
       executor.matchesHint(makeHint({ spaceIds: makeSpaceSet(SPACE_ID), typenames: makeTypeSet(PERSON_TYPENAME) })),
     ).toBe(true);
   });
 
   test('a grouped query does NOT match a disjoint type/space hint', ({ expect }) => {
-    const executor = makeExecutor(
-      withSpace(Query.select(Filter.type(TestSchema.Person)).groupBy(GroupKey.property('age'))),
-    );
+    const executor = makeExecutor(withSpace(Query.select(Filter.type(TestSchema.Person)).groupBy((_) => _.age)));
     const hint = makeHint({
       spaceIds: makeSpaceSet(SpaceId.random()),
       typenames: makeTypeSet(ORG_TYPENAME),
@@ -266,7 +262,11 @@ describe('QueryExecutor.matchesHint — groupBy query', () => {
 
   test('groupBy combined with a traversal still forces conservative (isSimple=false) matching', ({ expect }) => {
     const executor = makeExecutor(
-      withSpace(Query.select(Filter.id(EntityId.random())).referencedBy().groupBy(GroupKey.property('age'))),
+      withSpace(
+        Query.select(Filter.id(EntityId.random()))
+          .referencedBy()
+          .groupBy((_) => _.age),
+      ),
     );
     const hint = makeHint({
       spaceIds: makeSpaceSet(SpaceId.random()),

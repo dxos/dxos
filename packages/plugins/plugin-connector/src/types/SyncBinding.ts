@@ -373,7 +373,12 @@ const DEDUP_SEED_TAIL = 500;
 const seedDedupSet = (feed: Feed.Feed, foreignKeySource: string): Effect.Effect<Set<string>, never, Database.Service> =>
   // `Order.natural('desc')` + `limit` selects the newest N by insertion order (a limited feed query
   // still decodes the whole feed to apply the limit — a query-engine limitation tracked separately).
-  Feed.query(feed, Query.select(Filter.everything()).orderBy(Order.natural('desc')).limit(DEDUP_SEED_TAIL)).run.pipe(
+  Feed.query(
+    feed,
+    Query.select(Filter.everything())
+      .orderBy(() => Order.natural('desc'))
+      .limit(DEDUP_SEED_TAIL),
+  ).run.pipe(
     Effect.map(
       (items) =>
         new Set(

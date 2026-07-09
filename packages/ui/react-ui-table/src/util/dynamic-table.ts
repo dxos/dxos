@@ -110,8 +110,9 @@ const setProperties = (
       if (property.sort) {
         // Apply sort to query instead of deprecated view.sort
         const currentQuery = Query.fromAst(Obj.getSnapshot(view).query.ast);
-        // Use any type parameter since we're working with dynamic field paths
-        const newQuery = currentQuery.orderBy(Order.property<any>(field.path as string, property.sort));
+        // Raw property-name form: the field path is dynamic (user-configured), not statically known.
+        const orderFn = property.sort === 'desc' ? Order.desc : Order.asc;
+        const newQuery = currentQuery.orderBy(() => orderFn(field.path as string));
         Obj.update(view, (view) => {
           // Type assertion needed because Query AST types have some variance issues.
           view.query.ast = newQuery.ast as typeof view.query.ast;

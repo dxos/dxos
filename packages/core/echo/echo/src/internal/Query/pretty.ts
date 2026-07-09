@@ -113,14 +113,15 @@ export const prettyQuery = (query: QueryAST.Query): string => {
     case 'order': {
       const orders = query.order.map((o) => {
         if (o.kind === 'natural') {
-          return `Order.natural(${JSON.stringify(o.direction)})`;
+          return `_ => Order.natural(${JSON.stringify(o.direction)})`;
         } else if (o.kind === 'rank') {
-          return `Order.rank(${JSON.stringify(o.direction)})`;
+          return `_ => Order.rank(${JSON.stringify(o.direction)})`;
         } else if (o.kind === 'timestamp') {
           const fn = o.field === 'updatedAt' ? 'updated' : 'created';
-          return `Order.${fn}(${JSON.stringify(o.direction)})`;
+          return `_ => Order.${fn}(${JSON.stringify(o.direction)})`;
         } else {
-          return `Order.property(${JSON.stringify(o.property)}, ${JSON.stringify(o.direction)})`;
+          const fn = o.direction === 'desc' ? 'desc' : 'asc';
+          return `_ => Order.${fn}(_.${o.property})`;
         }
       });
       return `${prettyQuery(query.query)}.orderBy(${orders.join(', ')})`;
@@ -161,16 +162,27 @@ export const prettyQuery = (query: QueryAST.Query): string => {
     case 'skip':
       return `${prettyQuery(query.query)}.skip(${query.skip})`;
     case 'group-by': {
-      const keys = query.keys.map((key) => JSON.stringify(key.property));
-      const grouped = `${prettyQuery(query.query)}.groupBy(${keys.join(', ')})`;
+      const keyExpr =
+        query.keys.length === 1
+          ? `_.${query.keys[0].property}`
+          : `[${query.keys.map((key) => `_.${key.property}`).join(', ')}]`;
+      const grouped = `${prettyQuery(query.query)}.groupBy(_ => ${keyExpr})`;
       if (!query.aggregates || query.aggregates.length === 0) {
         return grouped;
       }
-      const aggregates = query.aggregates.map(
-        (aggregate) =>
-          `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${aggregate.property !== undefined ? JSON.stringify(aggregate.property) : ''})`,
-      );
-      return `${grouped}.aggregate({ ${aggregates.join(', ')} })`;
+      return `${grouped}.map(_ => (${prettyAggregates(query.aggregates)}))`;
     }
+    case 'reduce':
+      return `${prettyQuery(query.query)}.reduce(_ => (${prettyAggregates(query.aggregates)}))`;
   }
+};
+
+const prettyAggregates = (aggregates: readonly QueryAST.GroupAggregate[]): string => {
+  const parts = aggregates.map((aggregate) => {
+    // `items` takes the root binding purely to pin its value type (see Aggregate.items); `count`
+    // is genuinely argless since its value type is always `number`.
+    const arg = aggregate.property !== undefined ? `_.${aggregate.property}` : aggregate.kind === 'items' ? '_' : '';
+    return `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${arg})`;
+  });
+  return `{ ${parts.join(', ')} }`;
 };

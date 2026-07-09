@@ -8,7 +8,6 @@ import type {
   Ref,
   Aggregate as Aggregate$,
   Filter as Filter$,
-  GroupKey as GroupKey$,
   Obj as Obj$,
   Order as Order$,
   Query as Query$,
@@ -26,6 +25,50 @@ import type { DXN, EID, EntityId, URI } from '@dxos/keys';
 
 // TODO(wittjosiah): The `export * as ...` syntax causes tsdown to genereate multiple files which breaks the sandbox.
 
+// Minimal binding proxy — duplicated from `@dxos/echo`'s internal `Query/binding` module rather
+// than imported, to keep this bundle free of a runtime `@dxos/echo` import (which pulls in
+// `effect/Schema`, unparseable by the QuickJS sandbox — e.g. private class fields; see the module
+// doc comment above). Unlike the main package's version, this one isn't phantom-typed: query-lite's
+// own DSL surface is already loosely typed (matching `Any`), so there's no per-property value type
+// to thread through.
+const BindingTypeId = '~@dxos/echo/query/binding' as const;
+const bindingSegments = Symbol('@dxos/echo-query/query-lite/binding/segments');
+
+const isBinding = (value: unknown): boolean => typeof value === 'object' && value !== null && BindingTypeId in value;
+
+const makeBinding = (segments: string[] = []): any => {
+  const target: any = {
+    [BindingTypeId]: BindingTypeId,
+    [bindingSegments]: segments,
+    toString: () => segments.join('.'),
+  };
+  return new Proxy(target, {
+    get: (target, prop) => {
+      if (typeof prop === 'string' && !(prop in target)) {
+        return makeBinding([...segments, prop]);
+      }
+      return Reflect.get(target, prop);
+    },
+    set: () => false,
+  });
+};
+
+/** Extracts the single property name a captured binding points at (nested paths are deferred). */
+const propertyOfBinding = (path: any): string => {
+  if (!isBinding(path)) {
+    throw new TypeError('Expected a query binding (e.g. `_.foo`), got a plain value.');
+  }
+  const segments: string[] = path[bindingSegments];
+  if (segments.length !== 1) {
+    throw new TypeError(
+      `Expected a single property access (e.g. \`_ => _.foo\`); nested paths are not yet supported. Got: ${
+        segments.join('.') || '<root>'
+      }`,
+    );
+  }
+  return segments[0];
+};
+
 class OrderClass implements Order$.Any {
   private static 'variance': Order$.Any['~Order'] = {} as Order$.Any['~Order'];
 
@@ -41,11 +84,17 @@ class OrderClass implements Order$.Any {
 namespace Order1 {
   export const natural = (direction: QueryAST.OrderDirection = 'asc'): Order$.Order<any> =>
     new OrderClass({ kind: 'natural', direction });
-  export const property = <T>(property: keyof T & string, direction: QueryAST.OrderDirection): Order$.Order<T> =>
+  export const asc = (pathOrProperty: any): Order$.Order<any> =>
     new OrderClass({
       kind: 'property',
-      property,
-      direction,
+      property: typeof pathOrProperty === 'string' ? pathOrProperty : propertyOfBinding(pathOrProperty),
+      direction: 'asc',
+    });
+  export const desc = (pathOrProperty: any): Order$.Order<any> =>
+    new OrderClass({
+      kind: 'property',
+      property: typeof pathOrProperty === 'string' ? pathOrProperty : propertyOfBinding(pathOrProperty),
+      direction: 'desc',
     });
   export const rank = <T>(direction: QueryAST.OrderDirection = 'desc'): Order$.Order<T> =>
     new OrderClass({
@@ -68,26 +117,6 @@ namespace Order1 {
 
 const Order2: typeof Order$ = Order1;
 export { Order2 as Order };
-
-class GroupKeyClass implements GroupKey$.Any {
-  private static 'variance': GroupKey$.Any['~GroupKey'] = {} as GroupKey$.Any['~GroupKey'];
-
-  static 'is'(value: unknown): value is GroupKey$.Any {
-    return typeof value === 'object' && value !== null && '~GroupKey' in value;
-  }
-
-  'constructor'(public readonly ast: QueryAST.GroupByKey) {}
-
-  '~GroupKey' = GroupKeyClass.variance;
-}
-
-namespace GroupKey1 {
-  export const property = <const K extends string>(property: K): GroupKey$.GroupKey<K> =>
-    new GroupKeyClass({ kind: 'property', property });
-}
-
-const GroupKey2: typeof GroupKey$ = GroupKey1;
-export { GroupKey2 as GroupKey };
 
 // Local filter-match helpers used by FilterClass.toPredicate.
 // Written without a runtime @dxos/echo import so the QuickJS sandbox bundle stays clean.
@@ -729,11 +758,12 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  'orderBy'(...order: Order$.Any[]): Query$.Any {
+  'orderBy'(...order: ((_: any) => Order$.Any)[]): Query$.Any {
+    const binding = makeBinding();
     return new QueryClass({
       type: 'order',
       query: this.ast,
-      order: order.map((o) => o.ast),
+      order: order.map((fn) => fn(binding).ast),
     });
   }
 
@@ -753,20 +783,32 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  'groupBy'(...keys: GroupKey$.Any[]): Query$.Any {
+  'groupBy'(key: (_: any) => any): Query$.Any {
+    const result = key(makeBinding());
+    const paths = Array.isArray(result) ? result : [result];
     return new QueryClass({
       type: 'group-by',
       query: this.ast,
-      keys: keys.map((key) => key.ast),
+      keys: paths.map((path: any) => ({ kind: 'property', property: propertyOfBinding(path) })),
     });
   }
 
-  'aggregate'(aggregates: Record<string, Aggregate$.Any>): Query$.Any {
+  'map'(project: (_: any) => Record<string, Aggregate$.Any>): Query$.Any {
     if (this.ast.type !== 'group-by') {
-      throw new TypeError('.aggregate() must directly follow .groupBy().');
+      throw new TypeError('.map() must directly follow .groupBy().');
     }
+    const aggregates = project(makeBinding());
     return new QueryClass({
       ...this.ast,
+      aggregates: Object.entries(aggregates).map(([name, aggregate]) => ({ name, ...aggregate.spec })),
+    });
+  }
+
+  'reduce'(project: (_: any) => Record<string, Aggregate$.Any>): Query$.Any {
+    const aggregates = project(makeBinding());
+    return new QueryClass({
+      type: 'reduce',
+      query: this.ast,
       aggregates: Object.entries(aggregates).map(([name, aggregate]) => ({ name, ...aggregate.spec })),
     });
   }
@@ -935,16 +977,17 @@ const prettyQuery = (query: QueryAST.Query): string => {
     case 'order': {
       const orders = query.order.map((o) => {
         if (o.kind === 'natural') {
-          return `Order.natural(${JSON.stringify(o.direction)})`;
+          return `_ => Order.natural(${JSON.stringify(o.direction)})`;
         }
         if (o.kind === 'rank') {
-          return `Order.rank(${JSON.stringify(o.direction)})`;
+          return `_ => Order.rank(${JSON.stringify(o.direction)})`;
         }
         if (o.kind === 'timestamp') {
           const fn = o.field === 'updatedAt' ? 'updated' : 'created';
-          return `Order.${fn}(${JSON.stringify(o.direction)})`;
+          return `_ => Order.${fn}(${JSON.stringify(o.direction)})`;
         }
-        return `Order.property(${JSON.stringify(o.property)}, ${JSON.stringify(o.direction)})`;
+        const fn = o.direction === 'desc' ? 'desc' : 'asc';
+        return `_ => Order.${fn}(_.${o.property})`;
       });
       return `${prettyQuery(query.query)}.orderBy(${orders.join(', ')})`;
     }
@@ -983,16 +1026,27 @@ const prettyQuery = (query: QueryAST.Query): string => {
     case 'skip':
       return `${prettyQuery(query.query)}.skip(${query.skip})`;
     case 'group-by': {
-      const keys = query.keys.map((key) => JSON.stringify(key.property));
-      const grouped = `${prettyQuery(query.query)}.groupBy(${keys.join(', ')})`;
+      const keyExpr =
+        query.keys.length === 1
+          ? `_.${query.keys[0].property}`
+          : `[${query.keys.map((key) => `_.${key.property}`).join(', ')}]`;
+      const grouped = `${prettyQuery(query.query)}.groupBy(_ => ${keyExpr})`;
       if (!query.aggregates || query.aggregates.length === 0) {
         return grouped;
       }
-      const aggregates = query.aggregates.map(
-        (aggregate) =>
-          `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${aggregate.property !== undefined ? JSON.stringify(aggregate.property) : ''})`,
-      );
-      return `${grouped}.aggregate({ ${aggregates.join(', ')} })`;
+      return `${grouped}.map(_ => (${prettyAggregates(query.aggregates)}))`;
     }
+    case 'reduce':
+      return `${prettyQuery(query.query)}.reduce(_ => (${prettyAggregates(query.aggregates)}))`;
   }
+};
+
+const prettyAggregates = (aggregates: readonly QueryAST.GroupAggregate[]): string => {
+  const parts = aggregates.map((aggregate) => {
+    // `items` takes the root binding purely to pin its value type (see Aggregate.items); `count`
+    // is genuinely argless since its value type is always `number`.
+    const arg = aggregate.property !== undefined ? `_.${aggregate.property}` : aggregate.kind === 'items' ? '_' : '';
+    return `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${arg})`;
+  });
+  return `{ ${parts.join(', ')} }`;
 };

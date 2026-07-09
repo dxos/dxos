@@ -49,7 +49,7 @@ export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
   const query = useMemo(
     () =>
       Query.select(filter ?? Filter.everything())
-        .orderBy(Order.updated('desc'))
+        .orderBy(() => Order.updated('desc'))
         .limit(RECENT_LIMIT),
     [filter],
   );

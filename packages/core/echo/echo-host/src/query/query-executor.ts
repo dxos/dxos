@@ -708,6 +708,9 @@ export class QueryExecutor extends Resource {
       case 'GroupByStep':
         ({ workingSet: newWorkingSet, trace } = await this._execGroupByStep(step, workingSet));
         break;
+      case 'ReduceStep':
+        ({ workingSet: newWorkingSet, trace } = await this._execReduceStep(step, workingSet));
+        break;
       default:
         throw new Error(`Unknown step type: ${(step as any)._tag}`);
     }
@@ -1475,6 +1478,35 @@ export class QueryExecutor extends Resource {
         name: 'GroupBy',
         details: JSON.stringify({ keys: step.keys }),
         objectCount: groupedWorkingSet.length,
+      },
+    };
+  }
+
+  /**
+   * Collapses the working set to one implicit group (key `{}`), reusing the group-by aggregation
+   * and wire (`groupKey`/`groupCount`) machinery so result assembly treats it uniformly. Over an
+   * empty working set this yields an empty working set too — synthesizing a single result with
+   * empty/`null` aggregate values is a client presentation concern (see `query-result.ts`).
+   */
+  private async _execReduceStep(step: QueryPlan.ReduceStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+    const withKeys = workingSet.map((item) => ({ ...item, groupKey: {} as GroupKeyValue }));
+    const reducedWorkingSet =
+      step.aggregates.length > 0
+        ? GroupBy.withGroupAggregates(
+            withKeys,
+            () => '',
+            step.aggregates,
+            (item, property) => QueryItem.getProperty(item, [property]),
+          )
+        : withKeys;
+
+    return {
+      workingSet: reducedWorkingSet,
+      trace: {
+        ...ExecutionTrace.makeEmpty(),
+        name: 'Reduce',
+        details: JSON.stringify({ aggregates: step.aggregates }),
+        objectCount: reducedWorkingSet.length,
       },
     };
   }

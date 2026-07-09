@@ -335,7 +335,7 @@ export default Capability.makeModule(
                   db.query(
                     Query.select(Filter.type(Message.Message, { threadId: message.threadId }))
                       .from(feed)
-                      .orderBy(Order.property('created', 'asc')),
+                      .orderBy((_) => Order.asc(_.created)),
                   ).atom,
                 )
               : [message]

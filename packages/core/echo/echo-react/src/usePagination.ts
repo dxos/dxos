@@ -205,7 +205,7 @@ const createPaginationStore = <Q extends Query.Any, O extends Entity.Entity<Quer
  * ```tsx
  * const { items, getNext, hasMore, isLoading, atHead, jumpToHead } = usePagination(
  *   db,
- *   Query.select(Filter.type(Message.Message)).from(feed).orderBy(Order.natural('desc')).limit(50),
+ *   Query.select(Filter.type(Message.Message)).from(feed).orderBy(() => Order.natural('desc')).limit(50),
  * );
  * ```
  */

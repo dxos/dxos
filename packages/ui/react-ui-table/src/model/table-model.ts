@@ -1008,8 +1008,10 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       // Find the field to get its path
       const field = this._projection.getFields().find((f) => f.id === inMemorySort.fieldId);
       if (field) {
-        // Persist sort to view.query.ast
-        const newQuery = baseQuery.orderBy(Order.property<any>(field.path as string, inMemorySort.direction));
+        // Persist sort to view.query.ast. Raw property-name form: the field path is dynamic
+        // (user-configured), not statically known.
+        const orderFn = inMemorySort.direction === 'desc' ? Order.desc : Order.asc;
+        const newQuery = baseQuery.orderBy(() => orderFn(field.path as string));
         Obj.update(view, (view) => {
           view.query.ast = newQuery.ast as Mutable<typeof newQuery.ast>;
         });

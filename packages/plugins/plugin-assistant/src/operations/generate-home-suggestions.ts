@@ -57,7 +57,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.GenerateHomeSugge
             db
               .query(
                 Query.select(Filter.or(...types.map((type) => Filter.type(type))))
-                  .orderBy(Order.updated('desc'))
+                  .orderBy(() => Order.updated('desc'))
                   .limit(RECENT_LIMIT),
               )
               .run(),

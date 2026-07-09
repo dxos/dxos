@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Filter, GroupKey, Obj, Order, Query, Ref, Relation } from '@dxos/echo';
+import { Aggregate, Filter, Obj, Order, Query, Ref, Relation } from '@dxos/echo';
 import { QueryPlanner } from '@dxos/echo-host/query';
 import { TestSchema } from '@dxos/echo/testing';
 
@@ -178,7 +178,7 @@ describe('WorkingSetQueryExecutor', () => {
 
     const results = planAndExecute(
       db,
-      Query.select(Filter.type(TestSchema.Person)).orderBy(Order.property('name', 'asc')),
+      Query.select(Filter.type(TestSchema.Person)).orderBy((_) => Order.asc(_.name)),
     );
     const personResults = results.filter((item) => {
       const data = item.core?.getObjectStructure().data;
@@ -263,7 +263,10 @@ describe('WorkingSetQueryExecutor', () => {
     db.add(charlie);
     await db.flush();
 
-    const results = planAndExecute(db, Query.select(Filter.type(TestSchema.Person)).groupBy(GroupKey.property('age')));
+    const results = planAndExecute(
+      db,
+      Query.select(Filter.type(TestSchema.Person)).groupBy((_) => _.age),
+    );
     const byId = new Map(results.map((item) => [item.objectId, item.groupKey]));
     expect(byId.get(alice.id)).toEqual({ age: 30 });
     expect(byId.get(bob.id)).toEqual({ age: 30 });
@@ -282,8 +285,8 @@ describe('WorkingSetQueryExecutor', () => {
     const results = planAndExecute(
       db,
       Query.select(Filter.type(TestSchema.Person))
-        .orderBy(Order.property('name', 'asc'))
-        .groupBy(GroupKey.property('age')),
+        .orderBy((_) => Order.asc(_.name))
+        .groupBy((_) => _.age),
     );
     // Alice (30) and Charlie (30) end up contiguous even though Bob (40) sorts between them by name.
     const ages = results.map((item) => item.groupKey?.age);
@@ -314,7 +317,9 @@ describe('WorkingSetQueryExecutor', () => {
 
     const results = planAndExecute(
       db,
-      Query.select(Filter.type(TestSchema.Task)).reference('assignee').groupBy(GroupKey.property('age')),
+      Query.select(Filter.type(TestSchema.Task))
+        .reference('assignee')
+        .groupBy((_) => _.age),
     );
     expect(results).toHaveLength(2);
     const byId = new Map(results.map((item) => [item.objectId, item.groupKey]));
@@ -339,8 +344,8 @@ describe('WorkingSetQueryExecutor', () => {
     const results = planAndExecute(
       db,
       Query.select(Filter.type(TestSchema.Expando))
-        .orderBy(Order.property('rank', 'asc'))
-        .groupBy(GroupKey.property('category'))
+        .orderBy((_) => Order.asc(_.rank))
+        .groupBy((_) => _.category)
         .limit(2),
     );
 
@@ -365,8 +370,8 @@ describe('WorkingSetQueryExecutor', () => {
     const results = planAndExecute(
       db,
       Query.select(Filter.type(TestSchema.Expando))
-        .orderBy(Order.property('rank', 'asc'))
-        .groupBy(GroupKey.property('category'))
+        .orderBy((_) => Order.asc(_.rank))
+        .groupBy((_) => _.category)
         .skip(1)
         .limit(2),
     );
@@ -374,6 +379,39 @@ describe('WorkingSetQueryExecutor', () => {
     // Skip group a, take groups b and c.
     expect(new Set(results.map((item) => item.groupKey?.category))).toEqual(new Set(['b', 'c']));
     expect(results).toHaveLength(3);
+  });
+
+  test('reduce stamps the single implicit group (key {}) with its aggregates', async ({ expect }) => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice', age: 30 });
+    const bob = Obj.make(TestSchema.Person, { name: 'Bob', age: 40 });
+    db.add(alice);
+    db.add(bob);
+    await db.flush();
+
+    const results = planAndExecute(
+      db,
+      Query.select(Filter.type(TestSchema.Person)).reduce((_) => ({
+        total: Aggregate.count(),
+        oldest: Aggregate.max(_.age),
+      })),
+    );
+
+    expect(results).toHaveLength(2);
+    expect(results.every((item) => item.groupKey && Object.keys(item.groupKey).length === 0)).toBe(true);
+    expect(results.every((item) => item.aggregates?.total === 2 && item.aggregates?.oldest === 40)).toBe(true);
+  });
+
+  test('reduce over no matches yields no working-set items (empty-input synthesis is a client concern)', async ({
+    expect,
+  }) => {
+    await db.flush();
+
+    const results = planAndExecute(
+      db,
+      Query.select(Filter.type(TestSchema.Person)).reduce((_) => ({ total: Aggregate.count() })),
+    );
+
+    expect(results).toEqual([]);
   });
 });
 
