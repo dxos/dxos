@@ -4,6 +4,22 @@
 
 // @import-as-namespace
 
+import type * as EffectTypes from 'effect/Types';
+
+import type * as Query from './Query';
+
+/**
+ * The aggregate spec sans name; the name is supplied by the `Query.aggregate` record key. A tagged
+ * union per kind so `property`/`limit` are present exactly when the kind uses them (no unused
+ * optional fields to guard against at read sites).
+ */
+export type Spec =
+  | { kind: 'group'; property: string }
+  | { kind: 'max'; property: string }
+  | { kind: 'min'; property: string }
+  | { kind: 'items'; limit?: number }
+  | { kind: 'count' };
+
 /**
  * A per-group aggregate declaration, materialised as a top-level field on the flat result record
  * `Query.aggregate` produces and orderable via a following `orderBy(Order.property(name))`. Name it
@@ -17,14 +33,18 @@ export interface Aggregate<T, V> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Aggregate': { element: T; value: V };
 
-  /** The aggregate spec sans name; the name is supplied by the `Query.aggregate` record key. */
-  'spec': { kind: 'group' | 'max' | 'min' | 'items' | 'count'; property?: string; limit?: number };
+  'spec': Spec;
 }
 
 export type Any = Aggregate<any, any>;
 
 /** Extracts the value type a {@link Aggregate} produces. */
 export type ValueOf<A> = A extends Aggregate<any, infer V> ? V : never;
+
+/** Computes the flat result type of `Query.aggregate(aggregates)` for a given aggregate record `A`. */
+export type AggregationResult<A extends Record<string, Any>> = EffectTypes.Simplify<
+  Query.AggregateResult & { readonly [N in keyof A]: ValueOf<A[N]> }
+>;
 
 class AggregateClass<T, V> implements Aggregate<T, V> {
   private static 'variance': Aggregate<any, any>['~Aggregate'] = {} as Aggregate<any, any>['~Aggregate'];
@@ -33,9 +53,7 @@ class AggregateClass<T, V> implements Aggregate<T, V> {
     return typeof value === 'object' && value !== null && '~Aggregate' in value;
   }
 
-  'constructor'(
-    public readonly spec: { kind: 'group' | 'max' | 'min' | 'items' | 'count'; property?: string; limit?: number },
-  ) {}
+  'constructor'(public readonly spec: Spec) {}
 
   '~Aggregate' = AggregateClass.variance as Aggregate<T, V>['~Aggregate'];
 }

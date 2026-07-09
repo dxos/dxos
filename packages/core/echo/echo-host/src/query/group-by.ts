@@ -188,9 +188,9 @@ export const GroupBy = Object.freeze({
             ? members.length
             : aggregate.kind === 'group'
               ? // All members of a group share the key, so read the group value off any member.
-                GroupBy.coerceKeyComponent(getProperty(members[0], aggregate.property!))
+                GroupBy.coerceKeyComponent(getProperty(members[0], aggregate.property))
               : GroupBy.reduceAggregate(
-                  members.map((member) => coerceScalar(getProperty(member, aggregate.property!))),
+                  members.map((member) => coerceScalar(getProperty(member, aggregate.property))),
                   aggregate.kind,
                 );
       }

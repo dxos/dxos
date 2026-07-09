@@ -362,7 +362,7 @@ const _computeAggregate = (aggregate: QueryAST.GroupAggregate, members: readonly
       return GroupBy.reduceAggregate(
         // Row objects are erased to `unknown` at this presentation boundary (see the boundary cast in
         // `_presentResults`); the aggregate reads a dynamic property path off the hydrated object.
-        members.map((value) => _coerceScalar(getDeep(value as Record<string, unknown>, [aggregate.property!]))),
+        members.map((value) => _coerceScalar(getDeep(value as Record<string, unknown>, [aggregate.property]))),
         aggregate.kind,
       );
   }

@@ -6,7 +6,6 @@
 
 import type * as EffectArray from 'effect/Array';
 import type * as Schema from 'effect/Schema';
-import type * as EffectTypes from 'effect/Types';
 
 import { type QueryAST } from '@dxos/echo-protocol';
 import { EID, type URI } from '@dxos/keys';
@@ -55,7 +54,7 @@ type ReferenceTraversalTarget<P> = P extends Ref.Unknown
  * type. Consumers never read it.
  */
 export interface AggregateResult {
-  readonly '~AggregateResult': true;
+  readonly '~@dxos/echo/Query.AggregateResult': true;
 }
 
 // TODO(burdon): Narrow T to Entity.Unknown?
@@ -183,7 +182,7 @@ export interface Query<T> {
    */
   'aggregate'<const A extends Record<string, Aggregate.Aggregate<T, any>>>(
     aggregates: A,
-  ): Query<EffectTypes.Simplify<AggregateResult & { readonly [N in keyof A]: Aggregate.ValueOf<A[N]> }>>;
+  ): Query<Aggregate.AggregationResult<A>>;
 
   /**
    * Limit the number of results.

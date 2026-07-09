@@ -132,7 +132,7 @@ const QueryItem = Object.freeze({
     const key: GroupKeyValue = {};
     for (const aggregate of aggregates) {
       if (aggregate.kind === 'group') {
-        key[aggregate.name] = GroupBy.coerceKeyComponent(QueryItem.getProperty(item, [aggregate.property!]));
+        key[aggregate.name] = GroupBy.coerceKeyComponent(QueryItem.getProperty(item, [aggregate.property]));
       }
     }
     return key;

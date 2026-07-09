@@ -167,9 +167,9 @@ export const prettyQuery = (query: QueryAST.Query): string => {
             ? aggregate.limit !== undefined
               ? `{ limit: ${aggregate.limit} }`
               : ''
-            : aggregate.property !== undefined
-              ? JSON.stringify(aggregate.property)
-              : '';
+            : aggregate.kind === 'count'
+              ? ''
+              : JSON.stringify(aggregate.property);
         return `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${arg})`;
       });
       return `${prettyQuery(query.query)}.aggregate({ ${aggregates.join(', ')} })`;

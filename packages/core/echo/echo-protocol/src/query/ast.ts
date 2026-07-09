@@ -421,21 +421,38 @@ export const QuerySkipClause: Schema.Schema<QuerySkipClause> = QuerySkipClause_;
 
 /**
  * A named aggregate computed per group over its members, exposed as a top-level field on the flat
- * result record (`row[name]`) and orderable via a following `orderBy(Order.property(name))`.
+ * result record (`row[name]`) and orderable via a following `orderBy(Order.property(name))`. A
+ * tagged union per kind — `property`/`limit` are present exactly when the kind uses them, so
+ * read sites narrow by `kind` instead of guarding an unused optional field.
  * - `group` partitions members by a scalar `property`; its coerced key value is the field's value.
  *   Composite keys are formed from multiple `group` entries. A query with no `group` entries
  *   aggregates its entire input into a single row.
  * - `max`/`min` reduce a scalar member `property`.
- * - `items` collects the group's members, optionally capped to `limit`; `count` yields the member
- *   count. Both are opt-in — a row carries neither its members nor a count otherwise. `property` is
- *   unused for `items`/`count`; `limit` is used only by `items`.
+ * - `items` collects the group's members, optionally capped to `limit`. Opt-in — a row carries no
+ *   members otherwise.
+ * - `count` yields the member count. Opt-in — a row carries no count otherwise.
  */
-const GroupAggregate_ = Schema.Struct({
+const GroupAggregateGroup_ = Schema.Struct({
   name: Schema.String,
-  kind: Schema.Literal('group', 'max', 'min', 'items', 'count'),
-  property: Schema.optional(Schema.String),
+  kind: Schema.Literal('group'),
+  property: Schema.String,
+});
+const GroupAggregateMax_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('max'), property: Schema.String });
+const GroupAggregateMin_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('min'), property: Schema.String });
+const GroupAggregateItems_ = Schema.Struct({
+  name: Schema.String,
+  kind: Schema.Literal('items'),
   limit: Schema.optional(Schema.Number),
 });
+const GroupAggregateCount_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('count') });
+
+const GroupAggregate_ = Schema.Union(
+  GroupAggregateGroup_,
+  GroupAggregateMax_,
+  GroupAggregateMin_,
+  GroupAggregateItems_,
+  GroupAggregateCount_,
+);
 
 export type GroupAggregate = Schema.Schema.Type<typeof GroupAggregate_>;
 export const GroupAggregate: Schema.Schema<GroupAggregate> = GroupAggregate_;
