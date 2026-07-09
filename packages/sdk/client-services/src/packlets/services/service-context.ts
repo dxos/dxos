@@ -540,13 +540,27 @@ export type ServiceContextLayerOptions = ServiceContextRuntimeProps & {
 };
 
 /**
+ * Component tags the composed stack exposes so client RPC service layers can depend on each
+ * component directly rather than reaching through the {@link ServiceContext} orchestrator.
+ */
+export type ServiceContextStackContext =
+  | ServiceContextService
+  | EchoHostService
+  | IdentityManagerService
+  | SpaceManagerService
+  | InvitationsManagerService
+  | EdgeIdentityRecoveryManagerService
+  | KeyringApiService;
+
+/**
  * Effect Layer composing dormant {@link ServiceContext} components, constructed before identity is
- * ready. The resulting {@link ServiceContextService} yields the lifecycle orchestrator.
+ * ready. Exposes the lifecycle orchestrator ({@link ServiceContextService}) alongside the component
+ * tags in {@link ServiceContextStackContext}.
  */
 export const ServiceContextLayer = (
   options: ServiceContextLayerOptions,
 ): Layer.Layer<
-  ServiceContextService,
+  ServiceContextStackContext,
   never,
   SwarmNetworkManagerService | SignalManagerService | SqlClient.SqlClient | SqlTransactionTag
 > => {
