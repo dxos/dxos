@@ -423,43 +423,40 @@ const fetchMessagesForDateRange = (
   direction: SyncDirection,
   searchFilter?: string,
 ) =>
-  Stream.unfoldChunkEffect({ pageToken: Option.none<string>(), done: false }, (state) =>
+  Stream.unwrap(
     Effect.gen(function* () {
-      if (state.done) {
-        return Option.none();
-      }
-
       // `'all'` → All Mail (incl. Sent) minus Spam/Trash/Drafts/Chats, so conversations are complete;
       // any other value restricts to that Gmail label.
       const folderScope =
         label === 'all' ? 'in:anywhere -in:spam -in:trash -in:drafts -in:chats' : `in:anywhere label:${label}`;
       const scope = `${folderScope} after:${format(dateChunk.start, 'yyyy/MM/dd')} before:${format(dateChunk.end, 'yyyy/MM/dd')}`;
       const query = searchFilter ? `${scope} ${searchFilter}` : scope;
-      log('fetching message IDs', {
-        query,
-        pageToken: Option.getOrUndefined(state.pageToken),
-      });
 
-      const { messages, nextPageToken } = yield* api
-        .listMessages(userId, query, STREAMING_CONFIG.maxResults, Option.getOrUndefined(state.pageToken))
-        .pipe(Effect.withSpan('gmail-sync.fetch.list'));
+      // Gathers every page of the chunk's query into memory before ordering. Gmail paginates
+      // newest-first *within* each page but reversing page-by-page would only be locally correct: a
+      // `forward` walk needs the whole chunk oldest-first so the cursor advances monotonically —
+      // reversing per page would let a newer page's messages commit (and raise the cursor) before an
+      // older page from the same chunk, which can permanently skip that older page if the run is
+      // interrupted between them (a later forward run's query starts *from* the cursor, so it would
+      // never re-fetch dates before it). Chunks stay small (`chunkDays`) so this comfortably fits in
+      // memory; shrink `chunkDays` further if a mailbox's volume ever makes that not true.
+      const messageIds: string[] = [];
+      let pageToken: string | undefined;
+      do {
+        log('fetching message IDs', { query, pageToken });
+        const { messages, nextPageToken } = yield* api
+          .listMessages(userId, query, STREAMING_CONFIG.maxResults, pageToken)
+          .pipe(Effect.withSpan('gmail-sync.fetch.list'));
+        messageIds.push(...(messages ?? []).map((message) => message.id));
+        log('fetched message IDs', { count: messages?.length ?? 0, done: !nextPageToken });
+        pageToken = nextPageToken;
+      } while (pageToken);
 
-      log('fetched message IDs', {
-        count: messages?.length ?? 0,
-        done: !nextPageToken,
-      });
-
-      // Gmail returns messages newest-first within a query. A `backward` walk (initial sync/backfill)
-      // wants that native order preserved end-to-end so the most recent messages commit first; a
-      // `forward` walk (incremental resume) wants oldest-first within the chunk so the cursor advances
-      // gradually through it, matching the chunk-level walk direction (see `generateDateRanges`).
-      const messageIds = (messages ?? []).map((message) => message.id);
-      const orderedMessageIds = direction === 'forward' ? messageIds.reverse() : messageIds;
-      const nextState = {
-        pageToken: Option.fromNullable(nextPageToken),
-        done: !nextPageToken,
-      };
-
-      return Option.some([Chunk.fromIterable(orderedMessageIds), nextState]);
+      // Gmail returns messages newest-first across the whole query (every page). A `backward` walk
+      // (initial sync/backfill) wants that native order preserved end-to-end so the most recent
+      // messages commit first; a `forward` walk (incremental resume) wants oldest-first across the
+      // whole chunk, matching the chunk-level walk direction (see `generateDateRanges`).
+      const orderedMessageIds = direction === 'forward' ? messageIds.slice().reverse() : messageIds;
+      return Stream.fromIterable(orderedMessageIds);
     }),
   );
