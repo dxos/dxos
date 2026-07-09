@@ -554,16 +554,17 @@ export const ServiceContextLayer = (
 
   // Non-edge: just the core beneath the orchestrator.
   if (!edgeConnection || !edgeHttpClient) {
-    return coreLayers(options)(serviceContextServiceLayer(options));
+    return serviceContextServiceLayer(options).pipe(Layer.provideMerge(coreLayers(options)));
   }
 
   // Edge: the optional feed-syncer / edge-replicator sit above the core so their `EchoHostService`
   // requirement is satisfied by it, and the edge inputs are provided internally at the bottom.
-  const edgeTop = serviceContextServiceLayer(options).pipe(
+  return serviceContextServiceLayer(options).pipe(
     Layer.provideMerge(feedSyncerLayer),
     Layer.provideMerge(edgeReplicatorLayer(options)),
+    Layer.provideMerge(coreLayers(options)),
+    Layer.provideMerge(edgeInputLayer(edgeConnection, edgeHttpClient)),
   );
-  return coreLayers(options)(edgeTop).pipe(Layer.provideMerge(edgeInputLayer(edgeConnection, edgeHttpClient)));
 };
 
 /**
@@ -630,32 +631,29 @@ const serviceContextServiceLayer = (options: ServiceContextLayerOptions) =>
   );
 
 /**
- * Applies the non-optional core layers beneath the given top layer.
+ * Composes the non-optional core layers into a single stack that callers merge beneath their top layer.
  */
-const coreLayers =
-  (options: ServiceContextLayerOptions) =>
-  <A, E, R>(top: Layer.Layer<A, E, R>) =>
-    top.pipe(
-      Layer.provideMerge(CrossDeviceSpaceSynchronizerLayer),
-      Layer.provideMerge(EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures })),
-      Layer.provideMerge(DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures })),
-      Layer.provideMerge(SigningContextProviderLayer),
-      Layer.provideMerge(identityProviderLayer),
-      Layer.provideMerge(meshReplicatorLayer(options)),
-      Layer.provideMerge(echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator })),
-      Layer.provideMerge(InvitationsManagerLayer()),
-      Layer.provideMerge(InvitationsHandlerLayer({ connectionProps: options.invitationConnectionDefaultProps })),
-      Layer.provideMerge(EdgeIdentityRecoveryManagerLayer()),
-      Layer.provideMerge(
-        IdentityManagerLayer({
-          devicePresenceOfflineTimeout: options.devicePresenceOfflineTimeout,
-          devicePresenceAnnounceInterval: options.devicePresenceAnnounceInterval,
-          edgeFeatures: options.edgeFeatures,
-        }),
-      ),
-      Layer.provideMerge(SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication })),
-      Layer.provideMerge(storageLayer),
-    );
+const coreLayers = (options: ServiceContextLayerOptions) =>
+  CrossDeviceSpaceSynchronizerLayer.pipe(
+    Layer.provideMerge(EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures })),
+    Layer.provideMerge(DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures })),
+    Layer.provideMerge(SigningContextProviderLayer),
+    Layer.provideMerge(identityProviderLayer),
+    Layer.provideMerge(meshReplicatorLayer(options)),
+    Layer.provideMerge(echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator })),
+    Layer.provideMerge(InvitationsManagerLayer()),
+    Layer.provideMerge(InvitationsHandlerLayer({ connectionProps: options.invitationConnectionDefaultProps })),
+    Layer.provideMerge(EdgeIdentityRecoveryManagerLayer()),
+    Layer.provideMerge(
+      IdentityManagerLayer({
+        devicePresenceOfflineTimeout: options.devicePresenceOfflineTimeout,
+        devicePresenceAnnounceInterval: options.devicePresenceAnnounceInterval,
+        edgeFeatures: options.edgeFeatures,
+      }),
+    ),
+    Layer.provideMerge(SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication })),
+    Layer.provideMerge(storageLayer),
+  );
 
 /**
  * Optional mesh replicator: read via `serviceOption`, so its `ROut` is hidden (`Layer<never>`) —
