@@ -21,7 +21,27 @@ const handlers: RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof TestRpcs>> = {
   'Test.count': ({ to }) => Stream.range(1, to),
 };
 
+// Class-instance handlers define their RPC methods on the prototype (not own-enumerable).
+class TestHandlers implements RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof TestRpcs>> {
+  ['Test.add']({ a, b }: { a: number; b: number }) {
+    return Effect.succeed(a + b);
+  }
+
+  ['Test.count']({ to }: { to: number }) {
+    return Stream.range(1, to);
+  }
+}
+
 describe('makeInProcessClient', () => {
+  test('bridges class-instance handlers (prototype methods) to a client', ({ expect }) =>
+    Effect.gen(function* () {
+      const client = yield* makeInProcessClient(TestRpcs, new TestHandlers());
+      const sum = yield* client.Test.add({ a: 4, b: 5 });
+      expect(sum).toEqual(9);
+      const counted = yield* client.Test.count({ to: 2 }).pipe(Stream.runCollect);
+      expect([...counted]).toEqual([1, 2]);
+    }).pipe(Effect.scoped, Effect.runPromise));
+
   test('bridges unary and streaming handlers to a client without serialization', ({ expect }) =>
     Effect.gen(function* () {
       const client = yield* makeInProcessClient(TestRpcs, handlers);

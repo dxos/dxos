@@ -22,11 +22,22 @@ import type * as Scope from 'effect/Scope';
 export const makeInProcessClient = <Rpcs extends Rpc.Any>(
   group: RpcGroup.RpcGroup<Rpcs>,
   handlers: RpcGroup.HandlersFrom<Rpcs>,
-): Effect.Effect<RpcClient.RpcClient<Rpcs>, never, Scope.Scope> =>
+): Effect.Effect<RpcClient.RpcClient<Rpcs>, never, Scope.Scope> => {
+  // RpcGroup.toLayer enumerates own-enumerable properties (Object.entries), but class-instance
+  // handlers define their RPC methods on the prototype. Normalize to a plain object keyed by rpc tag
+  // (binding `this`) so every handler is found regardless of how the implementation is authored.
+  const source = handlers as unknown as Record<string, (...args: any[]) => unknown>;
+  const normalized: Record<string, (...args: any[]) => unknown> = {};
+  for (const [tag] of group.requests) {
+    const handler = source[tag];
+    if (typeof handler === 'function') {
+      normalized[tag] = (...args) => handler.apply(handlers, args);
+    }
+  }
+
   // The service rpc groups define no middleware, so the middleware requirement in the inferred type
   // is vacuous; narrow the requirement to Scope so consumers can run the client with only a scope.
-  RpcTest.makeClient(group).pipe(Effect.provide(group.toLayer(handlers))) as Effect.Effect<
-    RpcClient.RpcClient<Rpcs>,
-    never,
-    Scope.Scope
-  >;
+  return RpcTest.makeClient(group).pipe(
+    Effect.provide(group.toLayer(normalized as unknown as RpcGroup.HandlersFrom<Rpcs>)),
+  ) as Effect.Effect<RpcClient.RpcClient<Rpcs>, never, Scope.Scope>;
+};
