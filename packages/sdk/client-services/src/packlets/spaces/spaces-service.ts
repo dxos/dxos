@@ -460,12 +460,14 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
       const namespace =
         feed.namespace === 'trace' ? FeedProtocol.WellKnownNamespaces.trace : FeedProtocol.WellKnownNamespaces.data;
       try {
-        await this._echoHost.feedService.insertIntoFeed({
-          spaceId: space.id,
-          feedId: feed.feedObjectId,
-          subspaceTag: namespace,
-          objects: feed.messages.map((message) => JSON.stringify(message)),
-        });
+        await Effect.runPromise(
+          this._echoHost.feedService['FeedService.insertIntoFeed']({
+            spaceId: space.id,
+            feedId: feed.feedObjectId,
+            subspaceTag: namespace,
+            objects: feed.messages.map((message) => JSON.stringify(message)),
+          }),
+        );
       } catch (err) {
         log.warn('failed to import feed data', { feedObjectId: feed.feedObjectId, error: err });
       }

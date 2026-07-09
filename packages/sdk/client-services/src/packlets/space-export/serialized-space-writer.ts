@@ -3,6 +3,7 @@
 //
 
 import { type AutomergeUrl } from '@automerge/automerge-repo';
+import * as Effect from 'effect/Effect';
 
 import { Context } from '@dxos/context';
 import { type Obj } from '@dxos/echo';
@@ -229,14 +230,16 @@ const collectFeedMessages = async (
   const messages: Obj.JSON[] = [];
   let cursor: string | undefined;
   while (true) {
-    const result = await echoHost.feedService.queryFeed({
-      query: {
-        spaceId,
-        feedIds: [feedId],
-        feedNamespace,
-        after: cursor,
-      },
-    });
+    const result = await Effect.runPromise(
+      echoHost.feedService['FeedService.queryFeed']({
+        query: {
+          spaceId,
+          feedIds: [feedId],
+          feedNamespace,
+          after: cursor,
+        },
+      }),
+    );
     const batch = (result.objects ?? []).flatMap((encoded): Obj.JSON[] => {
       try {
         return [JSON.parse(encoded) as Obj.JSON];

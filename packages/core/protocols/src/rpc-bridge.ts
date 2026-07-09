@@ -3,9 +3,11 @@
 //
 
 import type * as Rpc from '@effect/rpc/Rpc';
+import type * as RpcClient from '@effect/rpc/RpcClient';
 import type * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as RpcTest from '@effect/rpc/RpcTest';
 import * as Effect from 'effect/Effect';
+import type * as Scope from 'effect/Scope';
 
 // Bridges an effect-rpc Handlers implementation to a Client without a wire hop or serialization
 // (backed by RpcServer/RpcClient in no-serialization mode). Consumers use the same effect-rpc
@@ -20,4 +22,11 @@ import * as Effect from 'effect/Effect';
 export const makeInProcessClient = <Rpcs extends Rpc.Any>(
   group: RpcGroup.RpcGroup<Rpcs>,
   handlers: RpcGroup.HandlersFrom<Rpcs>,
-) => RpcTest.makeClient(group).pipe(Effect.provide(group.toLayer(handlers)));
+): Effect.Effect<RpcClient.RpcClient<Rpcs>, never, Scope.Scope> =>
+  // The service rpc groups define no middleware, so the middleware requirement in the inferred type
+  // is vacuous; narrow the requirement to Scope so consumers can run the client with only a scope.
+  RpcTest.makeClient(group).pipe(Effect.provide(group.toLayer(handlers))) as Effect.Effect<
+    RpcClient.RpcClient<Rpcs>,
+    never,
+    Scope.Scope
+  >;

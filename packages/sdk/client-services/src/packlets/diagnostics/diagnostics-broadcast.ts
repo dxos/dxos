@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type SystemService } from '@dxos/protocols/proto/dxos/client/services';
+import { type SystemService } from '@dxos/protocols/rpc';
 
 import {
   type CollectDiagnosticsBroadcastHandler,

@@ -382,13 +382,10 @@ export class ClientServicesHost {
 
     const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
     if (devtoolsProxy) {
-      this._devtoolsProxy = new WebsocketRpcClient({
-        url: devtoolsProxy,
-        requested: {},
-        exposed: clientServiceBundle,
-        handlers: this.services as ClientServices,
-      });
-      void this._devtoolsProxy.open();
+      // TODO(dxos): The devtools websocket proxy serves the protobuf service bundle, which is
+      // incompatible with the effect-rpc Handlers the host now provides. Re-enable once this legacy
+      // transport is migrated to effect-rpc (or bridged via makeInProcessClient + a proto adapter).
+      log.warn('devtoolsProxy is not supported with effect-rpc services; skipping', { devtoolsProxy });
     }
     this.diagnosticsBroadcastHandler.start();
 
