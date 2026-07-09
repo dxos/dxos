@@ -23,6 +23,8 @@ import type { AppService, ShellService, WorkerService } from '@dxos/protocols/pr
 import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type ServiceBundle, createServiceBundle } from '@dxos/rpc';
 
+import { type ClientServicesRpc } from './service-rpc';
+
 export type { FeedService } from '@dxos/protocols/proto/dxos/client/services';
 
 //
@@ -73,8 +75,22 @@ export interface ClientServicesProvider {
    */
   onReconnect?: (callback: () => Promise<void>) => void;
 
-  descriptors: ServiceBundle<ClientServices>;
+  /**
+   * Effect-native client for all client services, inferred from the effect-rpc definitions.
+   * Preferred surface for new consumers; must be re-read after reconnect rather than cached.
+   * Effects it produces require only the default runtime and can be run with any `Runtime<never>`.
+   */
+  rpc: ClientServicesRpc;
+
+  /**
+   * @deprecated Prefer {@link rpc}. Promise/`Stream` shaped services derived from {@link rpc}.
+   */
   services: Partial<ClientServices>;
+
+  /**
+   * @deprecated Protobuf service descriptors; retained for legacy transports and devtools.
+   */
+  descriptors: ServiceBundle<ClientServices>;
 
   // TODO(burdon): Should take context from parent?
   open(): Promise<unknown>;

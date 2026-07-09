@@ -454,9 +454,6 @@
       "path": "packages/plugins/plugin-markdown/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-masonry/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-meeting/tsconfig.json"
     },
     {
@@ -773,6 +770,9 @@
     },
     {
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-rdf/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-search/tsconfig.json"

@@ -21,16 +21,18 @@ export const LABELS: Record<string, { label: string }> = Object.fromEntries(
 );
 
 /**
- * Initializes a mailbox with linked messages in the given space.
+ * Initializes a mailbox with linked messages in the given space. `threads` is the size of the
+ * thread-id pool messages are randomly assigned to (fewer threads → larger conversations → fewer
+ * grouped tiles in conversation view).
  */
-export const initializeMailbox = async (space: Space, count = 0): Promise<Mailbox.Mailbox> => {
+export const initializeMailbox = async (space: Space, count = 0, threads = 10): Promise<Mailbox.Mailbox> => {
   const mailbox = space.db.add(Mailbox.make());
   const feed = await mailbox.feed?.tryLoad();
   if (!feed) {
     throw new Error('Mailbox missing backing feed');
   }
 
-  const { messages } = new Builder().createMessages(count, { links: { space }, threads: 10 }).build();
+  const { messages } = new Builder().createMessages(count, { links: { space }, threads }).build();
   await EffectEx.runAndForwardErrors(Feed.append(feed, messages).pipe(Effect.provide(Database.layer(space.db))));
   return mailbox;
 };

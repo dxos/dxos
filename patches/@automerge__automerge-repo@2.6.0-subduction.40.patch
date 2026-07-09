@@ -1,5 +1,5 @@
 diff --git a/dist/Repo.d.ts b/dist/Repo.d.ts
-index de3b577133f1ee0ac56a60a09576cc6e37f37e72..f07b0a65869cef8b4dc9dfebfb08713f7531a0d4 100644
+index de3b577133f1ee0ac56a60a09576cc6e37f37e72..6a62dd902bd8f13ff52055920bed6259964ebba4 100644
 --- a/dist/Repo.d.ts
 +++ b/dist/Repo.d.ts
 @@ -8,6 +8,7 @@ import { StorageAdapterInterface } from "./storage/StorageAdapterInterface.js";
@@ -10,7 +10,19 @@ index de3b577133f1ee0ac56a60a09576cc6e37f37e72..f07b0a65869cef8b4dc9dfebfb08713f
  import type { AnyDocumentId, AutomergeUrl, DocumentId, PeerId, UrlHeads } from "./types.js";
  import { AbortOptions } from "./helpers/abortable.js";
  import { type Subduction } from "@automerge/automerge-subduction/slim";
-@@ -329,6 +330,8 @@ export interface RepoEvents {
+@@ -38,6 +39,11 @@ export declare class Repo extends EventEmitter<RepoEvents> {
+     constructor({ storage, network, peerId, sharePolicy, shareConfig, isEphemeral, enableRemoteHeadsGossiping, denylist, saveDebounceRate, idFactory, signer, subductionPolicy, subductionWebsocketEndpoints, subductionAdapters, subductionTimeouts, subductionCompactionDeleteConcurrency, subductionBlobInterceptor, }?: RepoConfig);
+     /** Returns all the handles we have cached. */
+     get handles(): Record<DocumentId, DocHandle<any>>;
++    /**
++     * O(1) lookup of a single cached handle by id (undefined if not cached). Prefer this over
++     * `repo.handles[id]`, which rebuilds a full object over ALL handles on every access.
++     */
++    getHandle(documentId: DocumentId): DocHandle<any> | undefined;
+     /** Returns a list of all connected peer ids */
+     get peers(): PeerId[];
+     /** Returns the local peer id */
+@@ -329,6 +335,8 @@ export interface RepoEvents {
      "heal-exhausted": (payload: {
          documentId: DocumentId;
      }) => void;
@@ -20,7 +32,7 @@ index de3b577133f1ee0ac56a60a09576cc6e37f37e72..f07b0a65869cef8b4dc9dfebfb08713f
       * A Subduction peer (e.g. the sync server) advertised new heads for a
       * document. `storageId` is the peer's verifying-key peer id. Fires only for
 diff --git a/dist/Repo.js b/dist/Repo.js
-index 3de5b46b4de4340580996a9379ee2fae5cceef23..5751e8482c10a4364682715ecdc09210e1d97eb1 100644
+index 3de5b46b4de4340580996a9379ee2fae5cceef23..30ac6c4c13de415fee09539004fb24874de6335d 100644
 --- a/dist/Repo.js
 +++ b/dist/Repo.js
 @@ -157,6 +157,18 @@ export class Repo extends EventEmitter {
@@ -42,6 +54,21 @@ index 3de5b46b4de4340580996a9379ee2fae5cceef23..5751e8482c10a4364682715ecdc09210
          });
          this.#subductionSource = subductionSource;
          this.#sources.set("subduction", subductionSource);
+@@ -377,6 +389,14 @@ export class Repo extends EventEmitter {
+         }
+         return result;
+     }
++    /**
++     * O(1) lookup of a single cached handle by id (undefined if not cached). Prefer this over
++     * `repo.handles[id]`, which invokes the `handles` getter and rebuilds a full object over ALL
++     * handles on every access — O(n) per lookup, O(n^2) when called per-document in a hot path.
++     */
++    getHandle(documentId) {
++        return this.#queries[documentId]?.handle;
++    }
+     /** Returns a list of all connected peer ids */
+     get peers() {
+         return this.synchronizer.peers;
 diff --git a/dist/index.d.ts b/dist/index.d.ts
 index d8cd3b7aa432704098b20eecd9fe848f05a3d40e..9e22da1c7c84ef2513212cade11938736d6f8cc6 100644
 --- a/dist/index.d.ts

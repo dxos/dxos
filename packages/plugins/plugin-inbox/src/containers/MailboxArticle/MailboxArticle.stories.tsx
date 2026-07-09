@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomSet } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { useCapability } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Filter } from '@dxos/echo';
@@ -21,7 +23,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
 import { initializeMailbox } from '#testing';
-import { Mailbox } from '#types';
+import { InboxCapabilities, Mailbox } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
 import { MailboxArticle } from './MailboxArticle';
@@ -49,13 +51,28 @@ const MockDeckOperationsPlugin = Plugin.define(
 );
 
 type StoryArgs = {
+  /** Number of messages to seed. */
   count?: number;
+  /** Size of the thread-id pool messages are randomly assigned to (fewer → larger conversations). */
+  threads?: number;
+  /** Force conversation grouping on/off; when omitted, the persisted/product-default value applies. */
+  conversations?: boolean;
 };
 
-const DefaultStory = (_: StoryArgs) => {
+const DefaultStory = ({ conversations }: StoryArgs) => {
   const spaces = useSpaces();
   const db = useDatabase(spaces[0].id);
   const [mailbox] = useQuery(db, Filter.type(Mailbox.Mailbox));
+
+  // Force the conversation-grouping setting per-variant, independent of any persisted value.
+  const settingsAtom = useCapability(InboxCapabilities.Settings);
+  const setSettings = useAtomSet(settingsAtom);
+  useEffect(() => {
+    if (conversations !== undefined) {
+      setSettings((settings) => ({ ...settings, conversations }));
+    }
+  }, [conversations, setSettings]);
+
   if (!db || !mailbox) {
     return <Loading data={{ db: !!db, mailbox: !!mailbox }} />;
   }
@@ -68,7 +85,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
-    withPluginManager<StoryArgs>(({ args: { count = 0 } }) => ({
+    withPluginManager<StoryArgs>(({ args: { count = 0, threads = 10 } }) => ({
       setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
@@ -77,7 +94,7 @@ const meta = {
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => initializeMailbox(personalSpace, count));
+              yield* Effect.promise(() => initializeMailbox(personalSpace, count, threads));
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),
@@ -98,9 +115,22 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// Both variants force the setting explicitly: the settings store persists across runs, so an
+// omitted value would inherit whatever a prior session wrote rather than the product default.
 export const Default: Story = {
   args: {
-    count: 100,
+    count: 500,
+    // A thread pool comfortably larger than the page size (10 conversations) so scrolling
+    // exercises group-level pagination — with the default pool of 10 everything fits on one page.
+    threads: 100,
+    conversations: true,
+  },
+};
+
+export const Flat: Story = {
+  args: {
+    count: 500,
+    conversations: false,
   },
 };
 

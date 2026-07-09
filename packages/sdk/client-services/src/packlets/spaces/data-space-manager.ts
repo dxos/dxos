@@ -138,7 +138,6 @@ export type CreateSpaceOptions = {
 };
 
 @trackLeaks('open', 'close')
-@trace.resource({ lifecycle: true })
 export class DataSpaceManager extends Resource {
   public readonly updated = new Event();
 
@@ -328,7 +327,7 @@ export class DataSpaceManager extends Resource {
       invariant(rootDocHandle, 'Root document must be available after import.');
       DatabaseRoot.mapLinks(rootDocHandle, documentIdMapping);
 
-      root = await this._echoHost.openSpaceRoot(ctx, spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
+      root = await this._echoHost.updateSpaceRoot(ctx, spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
     } else {
       root = await this._echoHost.createSpaceRoot(ctx, spaceKey);
     }

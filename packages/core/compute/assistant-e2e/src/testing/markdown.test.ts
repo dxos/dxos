@@ -18,8 +18,8 @@ describe('Markdown', () => {
     'draft a document',
     agentTest({
       instructions: trim`
-       Draft a new document.
-       Pick a title and content yourself.
+        Draft a new document.
+        Pick a title and content yourself.
       `,
       completionCriteria: [
         'A Markdown document object exists in the database.',
@@ -28,7 +28,9 @@ describe('Markdown', () => {
       ],
       plugins: [MarkdownPlugin()],
     }),
-    { timeout: agentTestTimeout() },
+    {
+      timeout: agentTestTimeout(),
+    },
   );
 
   it.effect(
@@ -36,11 +38,8 @@ describe('Markdown', () => {
     agentTest({
       instructions: trim`
         The database starts empty.
-
         Enable the markdown skill (key: org.dxos.skill.markdown) using the skill manager.
-
         Create a new markdown document named "Empty Notes" with empty content (no body text).
-
         Open the document and confirm its content is empty.
 
         Use the markdown Update operation (org.dxos.function.markdown.update) to append this exact line
@@ -57,6 +56,8 @@ describe('Markdown', () => {
       ],
       plugins: [MarkdownPlugin()],
     }),
-    { timeout: agentTestTimeout() },
+    {
+      timeout: agentTestTimeout(),
+    },
   );
 });

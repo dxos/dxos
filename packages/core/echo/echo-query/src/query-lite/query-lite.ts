@@ -4,7 +4,15 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Ref, Filter as Filter$, Obj as Obj$, Order as Order$, Query as Query$, Type as Type$ } from '@dxos/echo';
+import type {
+  Ref,
+  Aggregate as Aggregate$,
+  Filter as Filter$,
+  Obj as Obj$,
+  Order as Order$,
+  Query as Query$,
+  Type as Type$,
+} from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 // `DXN`/`EID` are type-only imports to keep the `query-lite` bundle free of
@@ -724,6 +732,14 @@ class QueryClass implements Query$.Any {
     });
   }
 
+  'aggregate'(aggregates: Record<string, Aggregate$.Any>): Query$.Any {
+    return new QueryClass({
+      type: 'aggregate',
+      query: this.ast,
+      aggregates: Object.entries(aggregates).map(([name, aggregate]) => ({ name, ...aggregate.spec })),
+    });
+  }
+
   'options'(options: QueryAST.QueryOptions): Query$.Any {
     return new QueryClass({
       type: 'options',
@@ -935,5 +951,19 @@ const prettyQuery = (query: QueryAST.Query): string => {
       return `${prettyQuery(query.query)}.limit(${query.limit})`;
     case 'skip':
       return `${prettyQuery(query.query)}.skip(${query.skip})`;
+    case 'aggregate': {
+      const aggregates = query.aggregates.map((aggregate) => {
+        const arg =
+          aggregate.kind === 'items'
+            ? aggregate.limit !== undefined
+              ? `{ limit: ${aggregate.limit} }`
+              : ''
+            : aggregate.kind === 'count'
+              ? ''
+              : JSON.stringify(aggregate.property);
+        return `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${arg})`;
+      });
+      return `${prettyQuery(query.query)}.aggregate({ ${aggregates.join(', ')} })`;
+    }
   }
 };

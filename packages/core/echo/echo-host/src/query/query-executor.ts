@@ -31,7 +31,8 @@ import type { SpaceStateManager } from '../db-host';
 import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint';
 import { filterMatchDoc, filterMatchObjectJSON } from '../filter';
 import { QueryError } from './errors';
-import type { QueryPlan } from './plan';
+import { type GroupAggregates, GroupBy, type GroupKeyValue } from './group-by';
+import { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
 
 type QueryExecutorOptions = {
@@ -84,6 +85,18 @@ type QueryItem = {
    */
   createdAt: number | null;
   updatedAt: number | null;
+
+  /**
+   * Group key, set by `AggregateStep`. Undefined for queries without an `aggregate` clause; `{}` for
+   * an aggregate clause with no `group` entries (a single group over the whole input).
+   */
+  groupKey?: GroupKeyValue;
+
+  /**
+   * Named group aggregates, stamped by `AggregateStep` when the query declares non-`items` aggregates;
+   * shared by every member of a group and read by a following group-level `OrderStep`.
+   */
+  aggregates?: GroupAggregates;
 };
 
 const QueryItem = Object.freeze({
@@ -109,6 +122,20 @@ const QueryItem = Object.freeze({
     } else {
       throw new Error('Invalid query item');
     }
+  },
+
+  /**
+   * Computes the composite group key for this item from the aggregate's `group`-kind entries, keyed
+   * by result field name. No `group` entries yields `{}` — a single group over the whole input.
+   */
+  getGroupKey: (item: QueryItem, aggregates: readonly QueryAST.GroupAggregate[]): GroupKeyValue => {
+    const key: GroupKeyValue = {};
+    for (const aggregate of aggregates) {
+      if (aggregate.kind === 'group') {
+        key[aggregate.name] = GroupBy.coerceKeyComponent(QueryItem.getProperty(item, [aggregate.property]));
+      }
+    }
+    return key;
   },
 
   getParent: (item: QueryItem): EID.EID | undefined => {
@@ -453,6 +480,20 @@ const overlapsOrUnconstrained = <T>(hintSet: ReadonlySet<T> | undefined, scopeSe
   hintSet === undefined || scopeSet === null || setsOverlap(hintSet, scopeSet);
 
 /**
+ * Serializes a possibly-absent group key for `changed` diffing. `undefined` (non-grouped
+ * queries) serializes to a distinct sentinel so it never collides with a real (empty) group key.
+ */
+const _serializeOptionalGroupKey = (key: GroupKeyValue | undefined): string =>
+  key === undefined ? '\0' : GroupBy.serializeGroupKey(key);
+
+/** True once the working set has been partitioned by an AggregateStep (every item carries a group key). */
+const isGrouped = (workingSet: QueryItem[]): boolean => workingSet.length > 0 && workingSet[0].groupKey !== undefined;
+
+// Non-null assertion is sound: only called from group-aware limit/skip, which run exclusively on a
+// working set already partitioned by AggregateStep (guarded by `isGrouped`), where every item has a key.
+const serializeItemGroupKey = (item: QueryItem): string => GroupBy.serializeGroupKey(item.groupKey!);
+
+/**
  * Executes query plans against the IndexEngine and AutomergeHost.
  *
  * The QueryExecutor is responsible for:
@@ -516,8 +557,19 @@ export class QueryExecutor extends Resource {
   }
 
   getResults(): QueryResult[] {
-    return this._lastResultSet.map(
-      (item): QueryResult => ({
+    // Computed over the final (post-filter) result set so counts always match shipped records.
+    const groupCounts = new Map<string, number>();
+    for (const item of this._lastResultSet) {
+      if (item.groupKey === undefined) {
+        continue;
+      }
+      const serialized = GroupBy.serializeGroupKey(item.groupKey);
+      groupCounts.set(serialized, (groupCounts.get(serialized) ?? 0) + 1);
+    }
+
+    return this._lastResultSet.map((item): QueryResult => {
+      const serializedGroupKey = item.groupKey !== undefined ? GroupBy.serializeGroupKey(item.groupKey) : undefined;
+      return {
         id: item.objectId,
         documentId: item.documentId ?? undefined,
         queueId: item.queueId ?? undefined,
@@ -527,8 +579,11 @@ export class QueryExecutor extends Resource {
         rank: item.rank,
 
         documentJson: item.doc ? JSON.stringify(item.doc) : item.data ? JSON.stringify(item.data) : undefined,
-      }),
-    );
+
+        groupKey: serializedGroupKey,
+        groupCount: serializedGroupKey !== undefined ? groupCounts.get(serializedGroupKey) : undefined,
+      };
+    });
   }
 
   /**
@@ -576,7 +631,10 @@ export class QueryExecutor extends Resource {
           workingSet[index].spaceId !== item.spaceId ||
           workingSet[index].documentId !== item.documentId ||
           workingSet[index].queueId !== item.queueId ||
-          workingSet[index].queueNamespace !== item.queueNamespace,
+          workingSet[index].queueNamespace !== item.queueNamespace ||
+          // A property edit can move an item between groups without changing its flat position
+          // (e.g. the last item of group A becomes the first item of group B at the same index).
+          _serializeOptionalGroupKey(workingSet[index].groupKey) !== _serializeOptionalGroupKey(item.groupKey),
       );
 
     // Disabled because concurrent queries don't print hierarchies correctly.
@@ -646,6 +704,9 @@ export class QueryExecutor extends Resource {
         break;
       case 'SkipStep':
         ({ workingSet: newWorkingSet, trace } = await this._execSkipStep(step, workingSet));
+        break;
+      case 'AggregateStep':
+        ({ workingSet: newWorkingSet, trace } = await this._execAggregateStep(step, workingSet));
         break;
       default:
         throw new Error(`Unknown step type: ${(step as any)._tag}`);
@@ -1335,11 +1396,18 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execOrderStep(step: QueryPlan.OrderStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
-    let sortedWorkingSet = [...workingSet].sort((a, b) => this._compareMultiOrder(a, b, step.order));
+    // After an AggregateStep the working set is partitioned into contiguous groups; a post-group order
+    // reorders whole groups (by their aggregates), and a pushed-down limit pages over whole groups.
+    // Otherwise it sorts and slices the flat object stream.
+    let sortedWorkingSet = isGrouped(workingSet)
+      ? GroupBy.orderGroups(workingSet, serializeItemGroupKey, (a, b) => this._compareMultiOrder(a, b, step.order))
+      : [...workingSet].sort((a, b) => this._compareMultiOrder(a, b, step.order));
 
     // Apply limit if specified on the order step.
     if (step.limit !== undefined && sortedWorkingSet.length > step.limit) {
-      sortedWorkingSet = sortedWorkingSet.slice(0, step.limit);
+      sortedWorkingSet = isGrouped(sortedWorkingSet)
+        ? GroupBy.takeGroups(sortedWorkingSet, step.limit, serializeItemGroupKey)
+        : sortedWorkingSet.slice(0, step.limit);
     }
 
     return {
@@ -1354,7 +1422,11 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execLimitStep(step: QueryPlan.LimitStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
-    const limitedWorkingSet = workingSet.slice(0, step.limit);
+    // After an AggregateStep the working set is partitioned into contiguous groups; limit then pages
+    // over whole groups. Otherwise it slices the flat object stream.
+    const limitedWorkingSet = isGrouped(workingSet)
+      ? GroupBy.takeGroups(workingSet, step.limit, serializeItemGroupKey)
+      : workingSet.slice(0, step.limit);
 
     return {
       workingSet: limitedWorkingSet,
@@ -1368,7 +1440,9 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execSkipStep(step: QueryPlan.SkipStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
-    const skippedWorkingSet = workingSet.slice(step.skip);
+    const skippedWorkingSet = isGrouped(workingSet)
+      ? GroupBy.dropGroups(workingSet, step.skip, serializeItemGroupKey)
+      : workingSet.slice(step.skip);
 
     return {
       workingSet: skippedWorkingSet,
@@ -1377,6 +1451,30 @@ export class QueryExecutor extends Resource {
         name: 'Skip',
         details: JSON.stringify({ skip: step.skip }),
         objectCount: skippedWorkingSet.length,
+      },
+    };
+  }
+
+  private async _execAggregateStep(
+    step: QueryPlan.AggregateStep,
+    workingSet: QueryItem[],
+  ): Promise<StepExecutionResult> {
+    const withKeys = workingSet.map((item) => ({ ...item, groupKey: QueryItem.getGroupKey(item, step.aggregates) }));
+    const partitioned = GroupBy.partitionByGroupKey(withKeys, (item) => GroupBy.serializeGroupKey(item.groupKey!));
+    const groupedWorkingSet = GroupBy.withGroupAggregates(
+      partitioned,
+      (item) => GroupBy.serializeGroupKey(item.groupKey!),
+      step.aggregates,
+      (item, property) => QueryItem.getProperty(item, [property]),
+    );
+
+    return {
+      workingSet: groupedWorkingSet,
+      trace: {
+        ...ExecutionTrace.makeEmpty(),
+        name: 'Aggregate',
+        details: JSON.stringify({ aggregates: step.aggregates }),
+        objectCount: groupedWorkingSet.length,
       },
     };
   }
@@ -1428,8 +1526,13 @@ export class QueryExecutor extends Resource {
   }
 
   private _compareByProperty(a: QueryItem, b: QueryItem, property: string): number {
-    const aValue = QueryItem.getProperty(a, [property]);
-    const bValue = QueryItem.getProperty(b, [property]);
+    // On a grouped working set, a property order names a group field: prefer a stamped scalar
+    // aggregate (max/min/count) when present, else fall through to the member/row property (which
+    // also covers ordering by a group-key component, shared by every member).
+    const aValue =
+      a.aggregates && property in a.aggregates ? a.aggregates[property] : QueryItem.getProperty(a, [property]);
+    const bValue =
+      b.aggregates && property in b.aggregates ? b.aggregates[property] : QueryItem.getProperty(b, [property]);
 
     // Both null or undefined
     if (aValue == null && bValue == null) {
