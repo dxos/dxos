@@ -36,7 +36,6 @@ import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
 import { SpaceProxy } from './space-proxy';
 
-@trace.resource()
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;
   private _invitationProxy?: InvitationsProxy;
@@ -63,7 +62,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this._echoClient;
   }
 
-  @trace.info({ depth: null })
   toJSON(): { spaces: number | undefined } {
     return {
       spaces: this._value?.length,
@@ -253,7 +251,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     }
   }
 
-  @trace.info()
   private get _spaces() {
     return this.get();
   }

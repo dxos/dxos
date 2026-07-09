@@ -3,23 +3,16 @@
 //
 
 import { Event, asyncTimeout } from '@dxos/async';
-import {
-  type ClientServices,
-  type ClientServicesProvider,
-  ClientServicesProviderResource,
-  clientServiceBundle,
-} from '@dxos/client-protocol';
+import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
 import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
-import { trace } from '@dxos/tracing';
 
 /**
  * Implements services that are not local to the app.
  * For example, the services can be located in Wallet Extension.
  */
-@trace.resource({ annotation: ClientServicesProviderResource })
 export class ClientServicesProxy implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
   private _proxy?: ProtoRpcPeer<ClientServices>;

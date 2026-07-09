@@ -78,7 +78,6 @@ export type IdentityManagerProps = {
 };
 
 // TODO(dmaretskyi): Rename: represents the peer's state machine.
-@Trace.resource()
 export class IdentityManager {
   readonly stateUpdate = new Event();
 

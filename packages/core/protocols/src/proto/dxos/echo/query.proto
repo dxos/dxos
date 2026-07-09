@@ -45,10 +45,10 @@ message QueryResult {
   optional string document_json = 10;
   optional bytes document_automerge = 11;
 
-  /// JSON-encoded group-by key (an object of the picked property values). Present iff the query has a group-by clause.
+  /// JSON-encoded group key (an object keyed by the aggregate's group-field names). Present iff the query has an aggregate clause.
   optional string groupKey = 12;
 
-  /// Number of records in this record's group within the result set. Present iff the query has a group-by clause.
+  /// Number of records in this record's group within the result set. Present iff the query has an aggregate clause.
   optional int32 groupCount = 13;
 
   /// @deprecated Use spaceId.

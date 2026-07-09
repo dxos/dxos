@@ -43,8 +43,10 @@ export type MessageStackTag = { id: string; label: string; hue?: string };
 export type MessageGroup = {
   /** Thread id, or the message id for singleton conversations without a thread. */
   id: string;
-  /** Messages in the conversation, most recent first. */
+  /** Messages in the conversation, most recent first. May be a capped preview (see {@link total}). */
   messages: Message.Message[];
+  /** Full thread size when `messages` is a capped preview; drives the "+N more" affordance. */
+  total?: number;
 };
 
 /** A stack entry: an individual message or a conversation group. Entries of both kinds may be mixed. */
@@ -97,6 +99,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
               ? {
                   conversationId: item.id,
                   messages: item.messages,
+                  total: item.total,
                   // Conversations show the latest message; star reflects/toggles that message.
                   starredAtom: starredAtom?.(item.messages[0]?.id),
                   onAction,
@@ -310,6 +313,8 @@ MessageTile.displayName = 'MessageTile';
 type ConversationTileData = {
   conversationId: string;
   messages: Message.Message[];
+  /** Full thread size when `messages` is a capped preview; drives the "+N more" affordance. */
+  total?: number;
   starredAtom?: Atom.Atom<boolean>;
   onAction?: MessageStackActionHandler;
 };
@@ -318,8 +323,10 @@ type ConversationTileProps = Pick<MosaicTileProps<ConversationTileData>, 'data' 
 
 const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
   ({ data, location, current }, forwardedRef) => {
-    const { conversationId, messages, starredAtom, onAction } = data;
+    const { conversationId, messages, total, starredAtom, onAction } = data;
     const latest = messages[0];
+    // `messages` is already the capped preview; `total` (when larger) is the full thread size.
+    const remaining = total !== undefined ? total - messages.length : 0;
     const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
     const { subject } = getMessageProps(latest, new Date());
     const { setCurrentId, setSelected } = useMosaicContainer('ConversationTile');
@@ -372,8 +379,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
           title={<span className='grow truncate font-medium'>{subject}</span>}
         />
         <Card.Body>
-          {/* TODO(burdon): Currently limits to last n messages. */}
-          {messages.slice(0, 4).map((message) => {
+          {messages.map((message) => {
             const { hue, from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
             return (
               <Card.Row key={message.id}>
@@ -395,6 +401,11 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
               </Card.Row>
             );
           })}
+          {remaining > 0 && (
+            <Card.Row>
+              <Card.Text variant='description'>{`+${remaining} more`}</Card.Text>
+            </Card.Row>
+          )}
         </Card.Body>
       </Tile.Root>
     );

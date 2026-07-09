@@ -17,8 +17,8 @@ export type AggregateValue = string | number | boolean | null;
 export type GroupAggregates = Record<string, AggregateValue>;
 
 /**
- * Execution helpers for the `group-by` query clause, shared by the host `QueryExecutor` and the
- * client `WorkingSetQueryExecutor`. The clause itself is declared in `QueryPlan.GroupByStep`; this
+ * Execution helpers for the `aggregate` query clause, shared by the host `QueryExecutor` and the
+ * client `WorkingSetQueryExecutor`. The clause itself is declared in `QueryPlan.AggregateStep`; this
  * module holds the runtime grouping/pagination algorithms that the executors apply.
  */
 export const GroupBy = Object.freeze({
@@ -152,11 +152,12 @@ export const GroupBy = Object.freeze({
   },
 
   /**
-   * Computes each group's scalar aggregates (`max`/`min`/`count`) and returns the same items with
-   * those values stamped on every member (all members of a group share them), so a following
-   * group-level `OrderStep` can order by them. The `items` aggregate is not stamped — it collects the
-   * members and is materialised at result assembly. Assumes `items` are already partitioned into
-   * contiguous groups (see {@link partitionByGroupKey}).
+   * Computes each group's scalar aggregates (`group`/`max`/`min`/`count`) and returns the same items
+   * with those values stamped on every member (all members of a group share them), so a following
+   * group-level `OrderStep` can order by them — including by a `group` field whose result name differs
+   * from its source property. The `items` aggregate is not stamped — it collects the members and is
+   * materialised at result assembly. Assumes `items` are already partitioned into contiguous groups
+   * (see {@link partitionByGroupKey}).
    */
   withGroupAggregates: <T extends { aggregates?: GroupAggregates }>(
     items: readonly T[],
@@ -164,7 +165,7 @@ export const GroupBy = Object.freeze({
     aggregates: readonly QueryAST.GroupAggregate[],
     getProperty: (item: T, property: string) => unknown,
   ): T[] => {
-    // Only max/min/count are stamped for ordering; `items` collects members at result assembly.
+    // Only group/max/min/count are stamped for ordering; `items` collects members at result assembly.
     if (!aggregates.some((aggregate) => aggregate.kind !== 'items')) {
       return items.slice();
     }
@@ -185,10 +186,13 @@ export const GroupBy = Object.freeze({
         computed[aggregate.name] =
           aggregate.kind === 'count'
             ? members.length
-            : GroupBy.reduceAggregate(
-                members.map((member) => coerceScalar(getProperty(member, aggregate.property!))),
-                aggregate.kind,
-              );
+            : aggregate.kind === 'group'
+              ? // All members of a group share the key, so read the group value off any member.
+                GroupBy.coerceKeyComponent(getProperty(members[0], aggregate.property))
+              : GroupBy.reduceAggregate(
+                  members.map((member) => coerceScalar(getProperty(member, aggregate.property))),
+                  aggregate.kind,
+                );
       }
       for (const member of members) {
         result.push({ ...member, aggregates: computed });

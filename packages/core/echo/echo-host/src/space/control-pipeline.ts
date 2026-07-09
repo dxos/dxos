@@ -19,7 +19,7 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type ControlPipelineSnapshot } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
-import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
+import { trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback, tracer } from '@dxos/util';
 
 import { type IMetadataStore } from '../metadata';
@@ -41,14 +41,12 @@ const USE_SNAPSHOTS = true;
 /**
  * Processes HALO credentials, which include genesis and invitations.
  */
-@trace.resource()
 @trackLeaks('start', 'stop')
 export class ControlPipeline {
   private readonly _ctx = new Context();
   private readonly _pipeline: Pipeline;
   private readonly _spaceStateMachine: SpaceStateMachine;
 
-  @trace.info({ spanAttribute: true })
   private readonly _spaceKey: PublicKey;
   private readonly _metadata: IMetadataStore;
   private _targetTimeframe?: Timeframe;
@@ -59,12 +57,6 @@ export class ControlPipeline {
   public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
   public readonly onDelegatedInvitation: Callback<AsyncCallback<DelegateInvitationCredential>>;
   public readonly onDelegatedInvitationRemoved: Callback<AsyncCallback<DelegateInvitationCredential>>;
-
-  @trace.metricsCounter()
-  private _usage = new TimeUsageCounter();
-
-  @trace.metricsCounter()
-  private _mutations = new TimeSeriesCounter();
 
   private _snapshotTask = new DeferredTask(this._ctx, async () => {
     await sleepWithContext(this._ctx, CONTROL_PIPELINE_SNAPSHOT_DELAY);
@@ -170,16 +162,11 @@ export class ControlPipeline {
 
   private async _consumePipeline(ctx: Context): Promise<void> {
     for await (const msg of this._pipeline.consume()) {
-      const span = this._usage.beginRecording();
-      this._mutations.inc();
-
       try {
         await this._processMessage(ctx, msg);
       } catch (err: any) {
         log.catch(err);
       }
-
-      span.end();
     }
   }
 

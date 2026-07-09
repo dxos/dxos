@@ -12,10 +12,8 @@ import {
   clientServiceBundle,
   getProfilePath,
 } from '@dxos/client-protocol';
-import { ClientServicesProviderResource } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
 import { type ServiceBundle } from '@dxos/rpc';
-import { trace } from '@dxos/tracing';
 import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 export const getUnixSocket = (profile: string, protocol = 'unix') =>
@@ -34,7 +32,6 @@ export const fromAgent = ({
   return new AgentClientServiceProvider(profile);
 };
 
-@trace.resource({ annotation: ClientServicesProviderResource })
 export class AgentClientServiceProvider implements ClientServicesProvider {
   // TODO(wittjosiah): Fire an event if the socket disconnects.
   readonly closed = new Event<Error | undefined>();
