@@ -53,9 +53,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../plugins/plugin-brain"
-    },
-    {
       "path": "../../plugins/plugin-client"
     },
     {
@@ -111,6 +108,9 @@
     },
     {
       "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-rdf"
     },
     {
       "path": "../../ui/ui-editor"

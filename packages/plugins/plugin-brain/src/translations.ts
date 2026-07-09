@@ -11,8 +11,6 @@ export const translations = [
     'en-US': {
       [meta.profile.key]: {
         'plugin.name': 'Brain',
-        'facts-companion.label': 'Facts',
-        'facts-empty.label': 'No facts have been extracted in this space yet.',
       },
     },
   },

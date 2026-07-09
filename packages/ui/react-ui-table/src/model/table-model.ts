@@ -492,7 +492,10 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       // The `frozenColsStart` plane holds the selection column (if enabled) followed by the pinned fields.
       const frozenColsStart: Record<number, { size: number; resizeable: boolean }> = {};
       if (selectionColumns > 0) {
-        frozenColsStart[0] = { size: 30, resizeable: false };
+        frozenColsStart[0] = {
+          size: 32,
+          resizeable: false,
+        };
       }
       fields.slice(0, pin).forEach((field, index: number) => {
         frozenColsStart[selectionColumns + index] = fieldSize(field);
@@ -501,7 +504,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return {
         grid,
         frozenColsStart,
-        frozenColsEnd: { 0: { size: 32, resizeable: false } },
+        frozenColsEnd: {
+          0: {
+            size: 32,
+            resizeable: false,
+          },
+        },
       };
     });
   }

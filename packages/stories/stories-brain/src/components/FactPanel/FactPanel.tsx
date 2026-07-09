@@ -5,8 +5,8 @@
 import React, { useMemo, useState } from 'react';
 
 import { type RDF } from '@dxos/pipeline-rdf';
-import { FactViewer } from '@dxos/plugin-brain/components';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { FactViewer } from '@dxos/react-ui-rdf';
 import { mx } from '@dxos/ui-theme';
 
 import { EntityList } from '../EntityList';

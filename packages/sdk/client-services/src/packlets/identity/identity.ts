@@ -50,7 +50,6 @@ export type IdentityProps = {
 /**
  * Agent identity manager, which includes the agent's Halo space.
  */
-@trace.resource()
 export class Identity {
   public readonly space: Space;
   private readonly _signer: Signer;

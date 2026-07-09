@@ -8,7 +8,7 @@ import React, { type Ref, useCallback, useEffect, useMemo, useRef, useState } fr
 import { useAtomCapability, useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { type Database, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
+import { Aggregate, type Database, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -25,7 +25,9 @@ import { Message } from '@dxos/types';
 import {
   MessageStack,
   type MessageStackActionHandler,
+  type MessageStackItem,
   type MessageTagsFamily,
+  isMessageGroup,
   useMailboxExtractorActions,
 } from '#components';
 import { meta } from '#meta';
@@ -44,6 +46,9 @@ export type MailboxArticleProps = AppSurface.ObjectArticleProps<
 
 /** Messages per page for the lazily-loaded message window. */
 const MAILBOX_PAGE_SIZE = 10;
+
+/** Messages shown in a conversation card preview; the full thread size is surfaced via the group `count`. */
+const MAILBOX_THREAD_PREVIEW_COUNT = 4;
 
 export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { invokePromise } = useOperationInvoker();
@@ -80,25 +85,53 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     setFilter(filter);
   }, [filterText, builder]);
 
-  // Messages, newest-first by message date. Ordered by `created` (not feed insertion order): a
-  // backward/backfill sync appends out of time order, so the window must be selected by date. This
-  // content order currently runs on the client feed path (full-fetch + sort + slice); `usePagination`
-  // and the virtualizer bound what's rendered, but the whole feed is fetched to sort it.
-  // TODO(wittjosiah): Move this to the host indexer for bounded-memory paging (fetch only the window,
-  //   not the whole feed); blocked on indexed ordered range reads being fast enough.
-  // `pagination` is passed straight through to `MessageStack` rather than destructured --
-  // `usePagination` already returns a stable object, so rebuilding one here would only reintroduce
-  // the instability it avoids.
+  // Whether messages are grouped into conversations (threads). On by default.
+  const conversations = settings.conversations ?? true;
+  const direction = sortDescending.value ? 'desc' : 'asc';
+
+  // Order by message `created` (not feed insertion order): a backward/backfill sync appends out of
+  // date order. The mailbox reads and sorts/groups the whole feed client-side; `usePagination` and
+  // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
+  // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
+  const source = feed && Query.select(Filter.type(Message.Message)).from(feed);
   const pagination = usePagination(
     db,
-    feed
-      ? Query.select(Filter.type(Message.Message))
-          .from(feed)
-          .orderBy(Order.property('created', 'desc'))
-          .limit(MAILBOX_PAGE_SIZE)
+    source
+      ? conversations
+        ? source
+            .orderBy(Order.property('created', 'desc'))
+            .aggregate({
+              threadId: Aggregate.group('threadId'),
+              lastMessageAt: Aggregate.max('created'),
+              count: Aggregate.count(),
+              items: Aggregate.items({ limit: MAILBOX_THREAD_PREVIEW_COUNT }),
+            })
+            .orderBy(Order.property('lastMessageAt', direction))
+            .limit(MAILBOX_PAGE_SIZE)
+        : source.orderBy(Order.property('created', direction)).limit(MAILBOX_PAGE_SIZE)
       : Query.select(Filter.nothing()).limit(MAILBOX_PAGE_SIZE),
   );
-  const messages = pagination.items;
+
+  // The aggregate query already orders threads (by latest message) and their members (newest-first),
+  // so entries map straight to stack items. Messages without a `threadId` share the aggregate's
+  // single `null`-key group; split them back into singleton conversations at that group's position.
+  // A thread's preview is capped at `MAILBOX_THREAD_PREVIEW_COUNT`; `count` carries the full size.
+  const items = useMemo<MessageStackItem[]>(() => {
+    const result: MessageStackItem[] = [];
+    for (const entry of pagination.items) {
+      if (!isThreadGroup(entry)) {
+        result.push(entry);
+      } else if (entry.threadId == null) {
+        result.push(...entry.items.map((message) => ({ id: message.id, messages: [message] })));
+      } else {
+        result.push({ id: entry.threadId, messages: entry.items, total: entry.count });
+      }
+    }
+    return result;
+  }, [pagination.items]);
+
+  // Flat message list backing keyboard navigation and message-id lookups in action handlers.
+  const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
 
   // Mark the mailbox as viewed when opened, advancing its `viewedAt` cursor so the navtree new-message
   // badge clears. Uses the live `subject` (not the `mailbox` snapshot) since this mutates, and is keyed on
@@ -232,11 +265,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         ) : (
           <MessageStack
             id={id}
-            messages={messages}
+            items={items}
             currentId={currentId}
             tagsAtom={tagsAtom}
             starredAtom={starredAtom}
-            conversations={settings.conversations}
             pagination={feed ? pagination : undefined}
             onAction={handleAction}
           />
@@ -294,6 +326,20 @@ const MailboxFilter = ({
     </>
   );
 };
+
+/** One thread's worth of results from the conversation-aggregated message query (see the query above). */
+type ThreadGroup = {
+  threadId: string | null | undefined;
+  lastMessageAt: string | null;
+  count: number;
+  /** Capped preview (see `MAILBOX_THREAD_PREVIEW_COUNT`); `count` carries the full thread size. */
+  items: Message.Message[];
+};
+
+// The aggregate query yields flat records, not entities; a real message is an Echo object, a thread
+// group is a plain record. `Obj.instanceOf` is the seam between the two.
+const isThreadGroup = (entry: Message.Message | ThreadGroup): entry is ThreadGroup =>
+  !Obj.instanceOf(Message.Message, entry);
 
 const EMPTY_MESSAGE_TAGS_ATOM = Atom.make((): { id: string; label: string; hue?: string }[] => []);
 

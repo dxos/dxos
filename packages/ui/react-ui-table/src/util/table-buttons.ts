@@ -39,7 +39,7 @@ const createButton = ({
     .map(([k, v]) => `${k}="${v}"`)
     .join(' ');
 
-  return `<button ${attr} data-testid="${testId}" class="dx-button w-6 aspect-square px-0.5 min-h-0" ${dataAttrs} ${disabled ? 'disabled' : ''} data-dx-grid-action="accessory"><svg data-size="4"><use href="/icons.svg#${icon}"/></svg></button>`;
+  return `<div role="none" class="dx-grid__cell__block"><button ${attr} data-testid="${testId}" class="dx-button w-6 aspect-square px-0.5 min-h-0" ${dataAttrs} ${disabled ? 'disabled' : ''} data-dx-grid-action="accessory"><svg data-size="4"><use href="/icons.svg#${icon}"/></svg></button></div>`;
 };
 
 const addColumnButton = {

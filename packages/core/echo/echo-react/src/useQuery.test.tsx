@@ -5,7 +5,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, GroupKey, Obj, Query } from '@dxos/echo';
+import { Aggregate, Filter, Obj, Query } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
@@ -37,7 +37,7 @@ describe('useQuery', () => {
     expect(result.current[0].name).toBe('Alice');
   });
 
-  test('returns grouped results for a groupBy query', async () => {
+  test('returns grouped results for an aggregate query', async () => {
     await using peer = await builder.createPeer({ types: [TestSchema.Expando] });
     const db = await peer.createDatabase();
 
@@ -46,16 +46,20 @@ describe('useQuery', () => {
     db.add(Obj.make(TestSchema.Expando, { category: 'b' }));
     await db.flush();
 
-    const query = Query.select(Filter.everything()).groupBy(GroupKey.property('category'));
+    const query = Query.select(Filter.everything()).aggregate({
+      category: Aggregate.group('category'),
+      count: Aggregate.count(),
+      items: Aggregate.items(),
+    });
     const { result } = renderHook(() => useQuery(db, query));
 
     await waitFor(() => {
       expect(result.current).toHaveLength(2);
     });
 
-    const byKey = new Map(result.current.map((group: any) => [group.key.category, group]));
+    const byKey = new Map(result.current.map((group) => [group.category, group]));
     expect(byKey.get('a')?.count).toBe(2);
-    expect(byKey.get('a')?.values).toHaveLength(2);
+    expect(byKey.get('a')?.items).toHaveLength(2);
     expect(byKey.get('b')?.count).toBe(1);
   });
 
@@ -66,7 +70,7 @@ describe('useQuery', () => {
     db.add(Obj.make(TestSchema.Expando, { category: 'a' }));
     await db.flush();
 
-    const query = Query.select(Filter.everything()).groupBy(GroupKey.property('category'));
+    const query = Query.select(Filter.everything()).aggregate({ category: Aggregate.group('category') });
     const { result } = renderHook(() => useQuery(db, query));
 
     await waitFor(() => {
@@ -88,7 +92,7 @@ describe('useQuery', () => {
     db.add(Obj.make(TestSchema.Expando, { category: 'a' }));
     await db.flush();
 
-    const query = Query.select(Filter.everything()).groupBy(GroupKey.property('category'));
+    const query = Query.select(Filter.everything()).aggregate({ category: Aggregate.group('category') });
     const { result, rerender } = renderHook(() => useQuery(db, query));
 
     await waitFor(() => {

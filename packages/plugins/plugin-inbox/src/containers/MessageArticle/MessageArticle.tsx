@@ -20,8 +20,13 @@ import { InboxOperation, Mailbox } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 
-export type MessageArticleProps = AppSurface.ObjectArticleProps<
-  MessageType.Message,
+/**
+ * `subject` is either a single message or its whole conversation (thread). The companion graph node
+ * assigns the thread directly (see the `mailboxMessage` connector) so the article renders it without
+ * re-querying; section/other callers may pass a single message.
+ */
+export type MessageArticleProps = AppSurface.ArticleProps<
+  MessageType.Message | MessageType.Message[],
   {
     mailbox?: Mailbox.Mailbox;
   }
@@ -35,15 +40,14 @@ type MessageOrRef = MessageType.Message | Ref.Ref<MessageType.Message>;
 const keyOf = (message: MessageOrRef): string => (Ref.isRef(message) ? String(message.uri) : Obj.getURI(message));
 
 /**
- * Message/conversation detail view. Renders the opened message as a vertical stack that can hold a
- * whole conversation — each member resolved by its own leaf (see {@link ThreadMessageItem}) so
- * subscriptions stay granular. Conversation grouping is not wired up right now, so the stack holds
- * only the opened message; the multi-message rendering path is kept for when threading returns.
- * Toolbar actions (reply/forward/delete) act on the opened message.
+ * Message/conversation detail view. Renders the opened conversation as a vertical stack — each member
+ * resolved by its own leaf (see {@link ThreadMessageItem}) so subscriptions stay granular. `subject`
+ * is the whole thread (assigned by the companion graph node) or a single message. Toolbar actions
+ * (reply/forward/delete) act on the newest message (last, chronological order).
  */
 export const MessageArticle = ({
   role,
-  subject: message,
+  subject,
   attendableId,
   companionTo,
   mailbox: mailboxProp,
@@ -51,14 +55,17 @@ export const MessageArticle = ({
   const toolbarAttendableId = attendableId && isLinkedSegment(attendableId) ? getParentId(attendableId) : attendableId;
   const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : mailboxProp;
 
+  // Normalize the singular-or-plural subject to a conversation; the newest message (last) anchors the
+  // toolbar and header actions.
+  const messages: MessageType.Message[] = Array.isArray(subject) ? subject : [subject];
+  const message = messages[messages.length - 1];
+
   const db = Obj.getDatabase(message);
   const sender = useActorContact(db, message.sender);
 
   // View mode is owned here and shared (controlled) across the toolbar and every message body, which
   // render in separate `Message.Root`s — so the toolbar's switch applies to all bodies.
   const [viewMode, setViewMode] = useState<ViewMode>(DEFAULT_VIEW_MODE);
-  // Only the opened message for now; the stack below still supports a multi-message conversation.
-  const messages: MessageOrRef[] = [message];
 
   const { invokePromise } = useOperationInvoker();
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
@@ -122,7 +129,7 @@ export const MessageArticle = ({
     if (mailbox) {
       void invokePromise(InboxOperation.DeleteEmail, { mailbox, message }, { spaceId: db?.spaceId });
     }
-  }, [invokePromise, mailbox, message, db]);
+  }, [invokePromise, db, mailbox, message]);
 
   return (
     <Panel.Root role={role}>

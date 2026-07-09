@@ -6,8 +6,8 @@ import type * as Schema from 'effect/Schema';
 
 import type {
   Ref,
+  Aggregate as Aggregate$,
   Filter as Filter$,
-  GroupKey as GroupKey$,
   Obj as Obj$,
   Order as Order$,
   Query as Query$,
@@ -67,26 +67,6 @@ namespace Order1 {
 
 const Order2: typeof Order$ = Order1;
 export { Order2 as Order };
-
-class GroupKeyClass implements GroupKey$.Any {
-  private static 'variance': GroupKey$.Any['~GroupKey'] = {} as GroupKey$.Any['~GroupKey'];
-
-  static 'is'(value: unknown): value is GroupKey$.Any {
-    return typeof value === 'object' && value !== null && '~GroupKey' in value;
-  }
-
-  'constructor'(public readonly ast: QueryAST.GroupByKey) {}
-
-  '~GroupKey' = GroupKeyClass.variance;
-}
-
-namespace GroupKey1 {
-  export const property = <const K extends string>(property: K): GroupKey$.GroupKey<K> =>
-    new GroupKeyClass({ kind: 'property', property });
-}
-
-const GroupKey2: typeof GroupKey$ = GroupKey1;
-export { GroupKey2 as GroupKey };
 
 // Local filter-match helpers used by FilterClass.toPredicate.
 // Written without a runtime @dxos/echo import so the QuickJS sandbox bundle stays clean.
@@ -752,11 +732,11 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  'groupBy'(...keys: GroupKey$.Any[]): Query$.Any {
+  'aggregate'(aggregates: Record<string, Aggregate$.Any>): Query$.Any {
     return new QueryClass({
-      type: 'group-by',
+      type: 'aggregate',
       query: this.ast,
-      keys: keys.map((key) => key.ast),
+      aggregates: Object.entries(aggregates).map(([name, aggregate]) => ({ name, ...aggregate.spec })),
     });
   }
 
@@ -971,9 +951,19 @@ const prettyQuery = (query: QueryAST.Query): string => {
       return `${prettyQuery(query.query)}.limit(${query.limit})`;
     case 'skip':
       return `${prettyQuery(query.query)}.skip(${query.skip})`;
-    case 'group-by': {
-      const keys = query.keys.map((key) => JSON.stringify(key.property));
-      return `${prettyQuery(query.query)}.groupBy(${keys.join(', ')})`;
+    case 'aggregate': {
+      const aggregates = query.aggregates.map((aggregate) => {
+        const arg =
+          aggregate.kind === 'items'
+            ? aggregate.limit !== undefined
+              ? `{ limit: ${aggregate.limit} }`
+              : ''
+            : aggregate.kind === 'count'
+              ? ''
+              : JSON.stringify(aggregate.property);
+        return `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${arg})`;
+      });
+      return `${prettyQuery(query.query)}.aggregate({ ${aggregates.join(', ')} })`;
     }
   }
 };

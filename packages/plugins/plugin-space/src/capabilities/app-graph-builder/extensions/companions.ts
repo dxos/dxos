@@ -60,6 +60,12 @@ export const createCompanionExtensions: () => Effect.Effect<GraphBuilder.Builder
       GraphBuilder.createExtension({
         id: 'selectedObjects',
         match: (node) => {
+          // Type/schema node (e.g. a TypeArticle plank): the table's own row selection feeds this
+          // companion directly, no view lookup needed.
+          if (Type.isType(node.data)) {
+            return Option.some(node);
+          }
+
           if (!Obj.isObject(node.data)) {
             return Option.none();
           }

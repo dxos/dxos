@@ -26,6 +26,7 @@ import { Actor, Event, Message, type Person } from '@dxos/types';
 
 import { meta } from '#meta';
 
+import { FeedCursors } from './FeedCursors';
 import * as Mailbox from './Mailbox';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
@@ -633,7 +634,7 @@ export const EnrichMailbox = Operation.make({
     description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
     icon: 'ph--brain--regular',
   },
-  services: [AiService.AiService, Database.Service, FactStore],
+  services: [AiService.AiService, Database.Service, FactStore, FeedCursors],
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
       description: 'Mailbox whose feed messages are enriched.',
@@ -642,6 +643,15 @@ export const EnrichMailbox = Operation.make({
       Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
         description: 'Number of messages processed per fact-store commit.',
       }),
+    ),
+    model: Schema.optional(
+      Schema.String.annotations({ description: 'Extraction model DXN; defaults to the edge Claude model.' }),
+    ),
+    provider: Schema.optional(
+      Schema.String.annotations({ description: 'AI provider id (e.g. ollama) for local extraction.' }),
+    ),
+    strict: Schema.optional(
+      Schema.Boolean.annotations({ description: 'Strict structured output; set false for weak local models.' }),
     ),
   }),
   output: Schema.Struct({

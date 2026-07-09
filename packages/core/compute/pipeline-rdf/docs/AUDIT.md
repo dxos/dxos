@@ -64,7 +64,7 @@ Excludes what is already in use (N3.js, Comunica, sparqljs).
 
 Ways to use the fact store (and complementary ML techniques) to manage email and other messaging
 platforms. Each idea names the concrete building blocks in this repo. Prerequisite shared by all:
-a populated per-space `FactStore` (plugin-brain `FactStoreRegistry` + plugin-inbox `EnrichMailbox`
+a populated per-space `FactStore` (plugin-inbox `FactStoreRegistry` + `EnrichMailbox`
 over a mailbox feed; the crawler for Discord).
 
 1. **Grounded reply drafting** — implemented as plugin-inbox `GenerateReply`: thread context (same
@@ -73,7 +73,7 @@ over a mailbox feed; the crawler for Discord).
    register/tone facts (`alice — prefers — terse-replies`) from the user's own sent mail and inject
    them into the prompt so drafts match how the user actually writes to that person.
 2. **Person/Organization dossiers** — implemented as plugin-brain `SummarizeSubject`; extend by
-   contributing the `FactsCompanion` filtered to `entity = subject` on `Person`/`Organization`
+   contributing a facts companion filtered to `entity = subject` on `Person`/`Organization`
    articles, so opening a contact shows everything the corpus asserts about them (with per-fact
    `source` links back to the originating message via the attribution DXN).
 3. **Commitment tracking (open loops)** — extraction already captures `validFrom`/`validTo` on
@@ -82,7 +82,7 @@ over a mailbox feed; the crawler for Discord).
    `validTo` has passed with no matching completion fact (same subject+object, `delivered`/`done`)
    and surfaces an "outstanding commitments" digest — theirs to you and yours to them.
 4. **Contradiction and change detection** — the FactViewer already flags same-subject+predicate
-   groups with divergent objects (`react-ui-fact-viewer` `groupFacts` `conflictedIds`). Promote
+   groups with divergent objects (`react-ui-rdf` `groupFacts` `conflictedIds`). Promote
    this to a pipeline stage: on `putFacts`, detect a new fact contradicting a stored one
    (`CT+` vs `CT-`, or a changed literal like a meeting date) and emit a notification fact; the
    inbox can then badge the thread that changed the state of the world.
@@ -117,3 +117,6 @@ over a mailbox feed; the crawler for Discord).
     facts with `extractor.id = 'reasoner'` and `wasDerivedFrom` pointing at the premise fact ids —
     derived knowledge stays distinguishable from extracted knowledge, and deleting a premise can
     retract its conclusions.
+
+||||||| e18c136120
+

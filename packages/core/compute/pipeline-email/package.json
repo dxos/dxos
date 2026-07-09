@@ -1,7 +1,6 @@
 {
   "name": "@dxos/pipeline-email",
   "version": "0.9.0",
-  "private": true,
   "description": "Worked email pipeline over the Enron dataset (parquet source → summarize/extract/stats stages).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

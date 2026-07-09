@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
 import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Filter, Query, Relation } from '@dxos/echo';
+import { Database, Feed, Filter } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import {
   EMAIL_EXTRACT_OPTIONS,
@@ -18,120 +20,124 @@ import {
   messageSource,
   messageToDocument,
 } from '@dxos/pipeline-email';
-import { FactStore, extractDocFacts } from '@dxos/pipeline-rdf';
-import { DerivedBinding, SyncBinding } from '@dxos/plugin-connector';
-import { Cursor, Message } from '@dxos/types';
+import { FactStore, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import { Message } from '@dxos/types';
 
-import { FactCommit } from '../../sync';
-import { InboxOperation, type Mailbox } from '../../types';
-
-/** Foreign-key namespace for the fact-indexing dedup set (distinct from provider message keys). */
-const FACT_KEY_SOURCE = 'inbox.facts';
+import { FeedCursors, type FeedCursorsApi, InboxOperation } from '../../types';
 
 /**
- * Runs the cursored fact pipeline over a feed: dedup by cursor → extract facts → commit each page to
- * the {@link FactStore} while advancing the binding cursor. Extraction is injected (`extract`) so the
+ * Runs the cursored fact pipeline over a feed: dedup → extract facts → commit each page to the
+ * {@link FactStore} while advancing the feed's cursor. Extraction is injected (`extract`) so the
  * pipeline is unit-testable with a deterministic stub — no {@link AiService.AiService} required.
+ *
+ * Dedup is by the feed's high-water cursor (a coarse `key < cursorKey` skip) plus the set of message
+ * sources already in the store (the precise idempotency backstop). Both the store and the cursor are
+ * in-memory and share a session lifetime, so no store-emptiness gate is needed.
  */
 export const runFactPipeline = (options: {
   readonly feed: Feed.Feed;
-  readonly binding: DerivedBinding.DerivedBinding;
+  readonly cursors: FeedCursorsApi;
   readonly extract: FactExtractor;
   readonly pageSize: number;
 }): Effect.Effect<{ processed: number; facts: number }, never, FactStore | Database.Service> =>
   Effect.gen(function* () {
-    const { feed, binding, extract, pageSize } = options;
+    const { feed, cursors, extract, pageSize } = options;
     const store = yield* FactStore;
 
-    // D3 (workaround): the Phase-1 FactStore is in-memory, so a reload leaves it empty while the
-    // persisted binding cursor survives — resuming from the cursor would then permanently skip every
-    // message. Gate cursor resume on the store being non-empty: crawl from scratch when it is empty,
-    // resume from the cursor otherwise. Removed once the store is durable (worker/OPFS SQLite).
-    // D5: coarse for a space with multiple mailboxes — any mailbox's facts make the store non-empty,
-    // so a second mailbox resumes from its own (empty) cursor as expected, but a re-added mailbox
-    // would be considered already-crawled. Acceptable until the durable store lands.
+    // Sources (== `messageSource`) already indexed — the precise skip; the cursor is only a coarse
+    // prefilter (the newest message keys equal to the advanced cursor, so `< cursorKey` alone would
+    // re-extract it).
     const priorFacts = yield* store.query({}).pipe(Effect.orElseSucceed(() => []));
-    const hasFacts = priorFacts.length > 0;
-    // Sources (== `messageSource` / the dedup foreign id) already indexed. The cursor's `< cursorKey`
-    // fast-path drops strictly-older messages, but the newest message keys equal to the advanced
-    // cursor, so it alone would re-extract. Dedup against the store by source to skip it too.
     const indexedSources = new Set(priorFacts.map((fact) => fact.attribution.source));
-    // The cursor is materialized with the binding, so a missing one is a defect (mirrors SyncBinding.layer).
-    const cursor = yield* Database.load(binding.cursor).pipe(Effect.orDie);
-    const cursorKey = hasFacts ? Cursor.parseKey(cursor.value) : 0;
+
+    // NOTE(workaround): the cursor key is `message.created` (epoch-ms) because ECHO's native feed
+    // cursor is unimplemented (`Feed.cursor` is stubbed). Replace with the native queue sequence when
+    // available.
+    let cursorKey = cursors.get(feed.id);
 
     let processed = 0;
     let facts = 0;
     const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+    log.info('enrich: pipeline start', {
+      messages: messages.length,
+      cursorKey,
+      indexed: indexedSources.size,
+      pageSize,
+    });
     yield* Stream.fromIterable(messages).pipe(
-      SyncBinding.dedupStage(
-        'facts-dedup',
-        (message: Message.Message) => messageSource(message),
-        (message: Message.Message) => Date.parse(message.created),
-      ),
-      Stage.map('facts-source-dedup', (message: Message.Message) =>
-        Effect.sync(() => (indexedSources.has(messageSource(message)) ? undefined : message)),
+      Stage.map('facts-dedup', (message: Message.Message) =>
+        Effect.sync(() =>
+          Date.parse(message.created) < cursorKey || indexedSources.has(messageSource(message)) ? undefined : message,
+        ),
       ),
       extractFactsUnitStage(extract),
-      Stage.map('tally', (unit: FactUnit) =>
+      // Observability stage: confirms units flow through and how many facts each carries.
+      Stage.map('facts-log', (unit: FactUnit) =>
         Effect.sync(() => {
-          processed += 1;
-          facts += unit.facts.length;
+          log.info('enrich: extracted unit', { foreignId: unit.foreignId, key: unit.key, facts: unit.facts.length });
           return unit;
         }),
       ),
       Stream.grouped(pageSize),
-      Pipeline.run({ sink: FactCommit.factsCommit }),
-      // No `feed` in the layer options → DB-target path, empty dedup set (dedup by cursor key).
-      Effect.provide(
-        SyncBinding.layer({ binding, foreignKeySource: FACT_KEY_SOURCE, cursorKey, stats: { newMessages: 0 } }),
-      ),
+      Pipeline.run({
+        sink: (page) =>
+          Effect.gen(function* () {
+            const units = Chunk.toReadonlyArray(page);
+            if (units.length === 0) {
+              return;
+            }
+
+            const pageFacts = units.flatMap((unit) => unit.facts);
+            if (pageFacts.length > 0) {
+              // A fact-store write failure is fatal to the run (not a recoverable per-page error).
+              yield* store.putFacts(pageFacts).pipe(Effect.orDie);
+            }
+
+            processed += units.length;
+            facts += pageFacts.length;
+            cursorKey = Math.max(cursorKey, ...units.map((unit) => unit.key));
+            cursors.advance(feed.id, cursorKey);
+          }),
+      }),
     );
 
+    log.info('enrich: pipeline done', { processed, facts });
     return { processed, facts };
-  });
-
-/**
- * Finds the {@link DerivedBinding} whose source is this feed, else creates one targeting the mailbox.
- * A mailbox owns exactly one feed, so at most one such binding exists per feed.
- */
-const findOrCreateDerivedBinding = (
-  db: Database.Database,
-  feed: Feed.Feed,
-  mailbox: Mailbox.Mailbox,
-): Effect.Effect<DerivedBinding.DerivedBinding, never, Database.Service> =>
-  Effect.gen(function* () {
-    const existing = yield* Database.query(Query.select(Filter.id(feed.id)).sourceOf(DerivedBinding.DerivedBinding))
-      .run;
-    const found = existing.find((relation) => Relation.getSource(relation).id === feed.id);
-    if (found) {
-      return found;
-    }
-    const binding = DerivedBinding.make({ [Relation.Source]: feed, [Relation.Target]: mailbox });
-    db.add(binding);
-    return binding;
   });
 
 const handler = InboxOperation.EnrichMailbox.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ mailbox: mailboxRef, pageSize = InboxOperation.DEFAULT_ENRICH_MAILBOX_PAGE_SIZE }) {
-      const { db } = yield* Database.Service;
+    Effect.fnUntraced(function* ({
+      mailbox: mailboxRef,
+      pageSize = InboxOperation.DEFAULT_ENRICH_MAILBOX_PAGE_SIZE,
+      model,
+      provider,
+      strict,
+    }) {
       const mailbox = yield* Database.load(mailboxRef);
       const feed = yield* Database.load(mailbox.feed);
       const aiService = yield* AiService.AiService;
+      const cursors = yield* FeedCursors;
 
-      const binding = yield* findOrCreateDerivedBinding(db, feed, mailbox);
+      // Extract options: the email rules plus optional model/provider/strict overrides so callers can
+      // target a local model (e.g. ollama, strict:false) instead of the default edge Claude model.
+      const extractOptions: RDF.ExtractOptions = {
+        ...EMAIL_EXTRACT_OPTIONS,
+        ...(model !== undefined ? { model } : {}),
+        ...(provider !== undefined ? { provider } : {}),
+        ...(strict !== undefined ? { strict } : {}),
+      };
 
       // Extract-only closure: derives facts via pipeline-rdf with the injected AiService without
-      // persisting (FactCommit persists at commit time, so there is no double write).
+      // persisting (the sink persists per page, so there is no double write).
       const extract: FactExtractor = (message) =>
         EffectEx.runPromise(
-          extractDocFacts(messageToDocument(message), EMAIL_EXTRACT_OPTIONS).pipe(
+          extractDocFacts(messageToDocument(message), extractOptions).pipe(
             Effect.provideService(AiService.AiService, aiService),
           ),
         );
 
-      return yield* runFactPipeline({ feed, binding, extract, pageSize });
+      return yield* runFactPipeline({ feed, cursors, extract, pageSize });
     }),
   ),
   // Erase the inferred handler type so the default export is portably nameable in the emitted .d.ts.
