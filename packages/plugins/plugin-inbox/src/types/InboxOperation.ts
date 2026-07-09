@@ -687,4 +687,4 @@ export const GenerateReply = Operation.make({
     subject: Schema.String,
     body: Schema.String,
   }),
-}).pipe(Operation.visible);
+});
