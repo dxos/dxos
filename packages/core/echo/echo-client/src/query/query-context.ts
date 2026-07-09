@@ -13,8 +13,8 @@ export type Sort<T extends AnyProperties> = (a: T, b: T) => -1 | 0 | 1;
 
 /**
  * Group membership carried on query-source entries. Internal transport only: the public
- * `QueryResult.Entry` intentionally omits this — grouping is surfaced to consumers via the
- * assembled `Query.Group` result objects, which are the authoritative home for key/count.
+ * `QueryResult.Entry` intentionally omits this — grouping is surfaced to consumers via the assembled
+ * flat aggregate records, which are the authoritative home for the key fields/count.
  */
 export type EntryGroup = {
   key: Record<string, string | number | boolean | null>;
