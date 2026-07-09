@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { normalizeText } from '@dxos/markdown';
 import { Stage } from '@dxos/pipeline';
 import { SyncBinding } from '@dxos/plugin-connector';
-import { Message } from '@dxos/types';
+import { Message, Person } from '@dxos/types';
 
 import { type Mailbox } from '../types';
 import { runOnArrivalExtractors } from '../util/mailbox-sync';
@@ -38,9 +38,10 @@ export const htmlToMarkdown = <In extends Bodied, E, R>(self: Stream.Stream<In, 
 
 /**
  * A mapped message flowing through the generic email stages (attachments, on-arrival extractors,
- * contact extraction, …) — each is Mapped → Mapped, so they compose in any order. {@link toCommitUnit}
- * is the one stage that converts a run's final Mapped item into the {@link SyncBinding.CommitUnit}
- * the commit sink consumes, and must run last.
+ * contact extraction, …) — each is Mapped → Mapped, so they compose in any order, simply recording
+ * what they found (`attachmentBlobs`, `contact`) rather than each building its own deferred write.
+ * {@link toCommitUnit} is the one stage that turns those into the {@link SyncBinding.CommitUnit}'s
+ * `commitEffects`, and must run last.
  */
 export type Mapped = {
   readonly message: Message.Message;
@@ -49,11 +50,10 @@ export type Mapped = {
   readonly tagUris: readonly string[];
   /** Attachments fetched by a provider-specific stage upstream of {@link processAttachments}. */
   readonly attachments?: readonly Attachment[];
-  /**
-   * Deferred writes accumulated by stages upstream of {@link extractContacts} (e.g.
-   * {@link processAttachments}'s feed append), merged into the emitted {@link SyncBinding.CommitUnit}.
-   */
-  readonly commitEffects?: readonly SyncBinding.CommitEffect[];
+  /** Blobs created by {@link processAttachments}, appended to the feed by {@link toCommitUnit}. */
+  readonly attachmentBlobs?: readonly Blob.Blob[];
+  /** Contact resolved by {@link extractContacts}, added to the database by {@link toCommitUnit}. */
+  readonly contact?: Person.Person;
 };
 
 /** A decoded email attachment, ready for {@link processAttachments} to turn into a Blob. */
@@ -67,9 +67,10 @@ export type Attachment = {
 };
 
 /**
- * Builds a Person (+ Organization link by domain) from the message sender, deferring the `db.add` to
- * the commit step as a {@link SyncBinding.CommitUnit} commit effect (the stage writes nothing itself).
- * A stage factory: call it once per pipeline run so its {@link ContactLookup} is scoped to that run.
+ * Builds a Person (+ Organization link by domain) from the message sender and records it on the
+ * item as {@link Mapped.contact} — the stage writes nothing itself; {@link toCommitUnit} defers the
+ * actual `db.add` to commit. A stage factory: call it once per pipeline run so its
+ * {@link ContactLookup} is scoped to that run.
  *
  * Dedups against both the space (contacts present before the run) and contacts created earlier in the
  * same run (the lookup is maintained as each is built, since a not-yet-committed contact wouldn't show
@@ -89,44 +90,24 @@ export const extractContacts = (): Stage.Stage<Mapped, Mapped, never, Database.S
       }
       const sender = mapped.message.sender;
       const contact = sender ? yield* buildContactFromActor(sender, db, lookup) : undefined;
-      if (!contact) {
-        return mapped;
-      }
-      // Defer the write to commit (the stage stays idempotent) — add the extracted contact there,
-      // alongside any deferred writes carried from earlier stages (e.g. attachment feed appends).
-      return {
-        ...mapped,
-        commitEffects: [
-          ...(mapped.commitEffects ?? []),
-          Effect.fn('sync.commit.addContact')(function* () {
-            yield* Database.add(contact);
-          }),
-        ],
-      };
+      return contact ? { ...mapped, contact } : mapped;
     }),
   );
 };
 
 /**
  * Turns each of the item's `attachments` into a Blob object (via the database's configured storage
- * backend — edge in Composer) and adds a {@link Message.Attachment} to the message pointing at it.
- * The feed append for the created blobs is deferred to commit as a {@link SyncBinding.CommitEffect}
- * (the same mechanism {@link extractContacts} uses for its contact write) rather than a field on
- * {@link SyncBinding.CommitUnit} — appending to the feed only needs `Database.Service`, which is
- * exactly what a commit effect provides. A no-op when the item has no attachments or the run has no
- * feed target (e.g. a DB-target sync).
+ * backend — edge in Composer), adds a {@link Message.Attachment} to the message pointing at it, and
+ * records the created blobs on {@link Mapped.attachmentBlobs} — {@link toCommitUnit} defers their
+ * feed append to commit. A no-op when the item has no attachments.
  *
  * One bad or oversized attachment must not fail the whole message: each `Blob.fromBytes` is caught
  * and logged individually, so a rejected attachment is simply dropped from the message.
  */
-export const processAttachments = (): Stage.Stage<Mapped, Mapped, never, Database.Service | SyncBinding.Service> =>
+export const processAttachments = (): Stage.Stage<Mapped, Mapped, never, Database.Service> =>
   Stage.map('process-attachments', (mapped: Mapped) =>
     Effect.gen(function* () {
       if (!mapped.attachments?.length) {
-        return mapped;
-      }
-      const { feed } = yield* SyncBinding.Service;
-      if (!feed) {
         return mapped;
       }
 
@@ -157,11 +138,7 @@ export const processAttachments = (): Stage.Stage<Mapped, Mapped, never, Databas
         message.attachments = [...(message.attachments ?? []), ...attachments];
       });
 
-      const appendAttachmentBlobs: SyncBinding.CommitEffect = () => Feed.append(feed, blobs);
-      return {
-        ...mapped,
-        commitEffects: [...(mapped.commitEffects ?? []), appendAttachmentBlobs],
-      };
+      return { ...mapped, attachmentBlobs: [...(mapped.attachmentBlobs ?? []), ...blobs] };
     }),
   );
 
@@ -184,17 +161,35 @@ export const onArrivalExtractors =
 
 /**
  * Terminal stage converting a run's {@link Mapped} item into the {@link SyncBinding.CommitUnit} the
- * commit sink consumes — drops `attachments` (already folded into `message.attachments` and
- * `commitEffects` by {@link processAttachments}), keeping everything else as-is. Every other email
- * stage is Mapped → Mapped and composes in any order; this is the one stage that must run last.
+ * commit sink consumes. The one place that turns what upstream stages recorded into deferred writes:
+ * {@link Mapped.attachmentBlobs} (from {@link processAttachments}) becomes a feed-append commit
+ * effect, and {@link Mapped.contact} (from {@link extractContacts}) becomes a `db.add` commit effect.
+ * Every other email stage is Mapped → Mapped and composes in any order; this is the one stage that
+ * must run last.
  */
-export const toCommitUnit = (): Stage.Stage<Mapped, SyncBinding.CommitUnit, never, never> =>
+export const toCommitUnit = (): Stage.Stage<Mapped, SyncBinding.CommitUnit, never, SyncBinding.Service> =>
   Stage.map('to-commit-unit', (mapped: Mapped) =>
-    Effect.sync(() => ({
-      message: mapped.message,
-      foreignId: mapped.foreignId,
-      key: mapped.key,
-      tagUris: mapped.tagUris,
-      commitEffects: mapped.commitEffects,
-    })),
+    Effect.gen(function* () {
+      const { feed } = yield* SyncBinding.Service;
+      const commitEffects: SyncBinding.CommitEffect[] = [];
+      if (feed && mapped.attachmentBlobs?.length) {
+        const blobs = [...mapped.attachmentBlobs];
+        commitEffects.push(() => Feed.append(feed, blobs));
+      }
+      if (mapped.contact) {
+        const contact = mapped.contact;
+        commitEffects.push(
+          Effect.fn('sync.commit.addContact')(function* () {
+            yield* Database.add(contact);
+          }),
+        );
+      }
+      return {
+        message: mapped.message,
+        foreignId: mapped.foreignId,
+        key: mapped.key,
+        tagUris: mapped.tagUris,
+        commitEffects: commitEffects.length > 0 ? commitEffects : undefined,
+      };
+    }),
   );
