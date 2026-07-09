@@ -9,19 +9,17 @@
 //   - MIDDLE the selected message (message companion; tracks the LEFT selection).
 //   - RIGHT  `ConnectorCompanion` — the connection bound to the mailbox (once connected).
 //
-// The mailbox starts empty and unbound. The auth button (from `@dxos/plugin-connector`,
-// available because `ConnectorPlugin` is installed) offers both connectors:
-//   - Gmail: OAuth popup flow (needs the Edge service configured — see `config` below).
+// The mailbox starts empty and unbound. The client is configured WITHOUT an Edge service (fully
+// local, no Edge websocket), so only the credential-based connector is usable:
 //   - JMAP/Fastmail: a credential form (host + email + token), no OAuth.
-// Completing either binds an `AccessToken` + `Connection` + `SyncBinding` to the mailbox;
+//   - Gmail: disabled — its OAuth coordinator requires an Edge URL.
+// Completing JMAP binds an `AccessToken` + `Connection` + `SyncBinding` to the mailbox;
 // the LEFT button then flips to a refresh button whose click runs a real
-// (`GoogleMailApi.Live` / `JmapMailApi.Live`) sync into the mailbox feed.
+// (`JmapMailApi.Live`) sync into the mailbox feed.
 //
 // Run in CHROME (`ConnectorPlugin` uses a lazy import that WebKit resolves unreliably under
-// vite-dev). Known live risks: (1) Edge must accept the ephemeral storybook identity for OAuth
-// initiation; (2) the `Live` sync calls the mail API directly from the browser, a path normally
-// exercised on Edge/Node — CORS is expected to work (Google REST + JMAP allow it; the Gmail
-// helper disables the Effect HTTP tracer, the known preflight workaround) but must be verified.
+// vite-dev). Known live risk: the `Live` sync calls the mail API directly from the browser, a path
+// normally exercised on Edge/Node — CORS is expected to work (JMAP allows it) but must be verified.
 //
 // Storage is persistent (OPFS), so the identity, mailbox, and any connection/synced mail survive a
 // page reload — reopen the story and pick up where you left off. The top toolbar shows the current
@@ -70,10 +68,6 @@ import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types'
 // Shared attention context id: the LEFT article writes its selection under this id
 // (`showItem({ contextId })`) and the render component reads it back to drive the MIDDLE column.
 const ATTENDABLE_ID = 'story';
-
-// Composer's public Edge deployment — satisfies the connector coordinator's
-// `invariant(edgeUrl, 'EDGE services not configured.')` so OAuth initiation can run.
-const EDGE_URL = 'https://edge.dxos.workers.dev/';
 
 // Local Ollama model driving `EnrichMailbox` fact extraction in the `EnrichFacts` variant. Ollama
 // reliably fails structured output, so the operation is invoked with `strict: false`.
@@ -302,9 +296,10 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: SYNC_STORY_TYPES,
+          // No `edge` service: the client runs fully local (no Edge websocket). JMAP/Fastmail sync
+          // still works; Gmail OAuth does not (its coordinator requires an Edge URL).
           config: new Config({
             runtime: {
-              services: { edge: { url: EDGE_URL } },
               client: { storage: { persistent: true } },
             },
           }),
