@@ -28,6 +28,7 @@ import {
   type Message as RouterMessage,
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { trace } from '@dxos/tracing';
 import { bufferToArray, compositeKey } from '@dxos/util';
 
@@ -46,6 +47,17 @@ import {
 const INITIAL_RESTART_DELAY = 500;
 const RESTART_DELAY_JITTER = 250;
 const MAX_RESTART_DELAY = 5000;
+
+/**
+ * Replaced-connection drain: keep the old connection registered until its in-flight rounds
+ * settle before notifying the repo (and the WASM core) of the disconnect. `subduction_core`
+ * strands — does not cancel or re-route — requests pending on a removed connection while a
+ * sibling connection to the same peer exists, so closing immediately converts in-flight
+ * rounds into full sync-round timeouts. Quiescence is inbound silence; a dead path (e.g.
+ * identity change invalidated the old session's routing) simply quiesces immediately.
+ */
+const CONNECTION_DRAIN_QUIESCE_MS = 500;
+const CONNECTION_DRAIN_MAX_MS = 5_000;
 
 export type EchoEdgeSubductionReplicatorProps = {
   edgeConnection: EdgeConnection;
@@ -103,6 +115,8 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   private _context: AutomergeReplicatorContext | null = null;
   private _connectedSpaces = new Set<SpaceId>();
   private _connections = new Map<SpaceId, EdgeSubductionReplicatorConnection>();
+  /** Replaced connections still flushing in-flight rounds; closed on quiescence or drain cap. */
+  private readonly _drainingConnections = new Set<EdgeSubductionReplicatorConnection>();
 
   private _spaceMutex(spaceId: SpaceId): Mutex {
     let mutex = this._spaceMutexes.get(spaceId);
@@ -147,13 +161,42 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
       using _spaceGuard = await this._spaceMutex(spaceId).acquire();
       const connection = this._connections.get(spaceId);
       if (connection) {
-        await connection.close();
         this._connections.delete(spaceId);
+        this._drainConnection(spaceId, connection);
       }
       if (this._context !== null && this._connectedSpaces.has(spaceId)) {
         await this._openConnection(spaceId);
       }
     }
+  }
+
+  /**
+   * Close a replaced connection only after its in-flight rounds settle (inbound silence for
+   * {@link CONNECTION_DRAIN_QUIESCE_MS}, hard cap {@link CONNECTION_DRAIN_MAX_MS}). The
+   * connection stays subscribed to the WS, so late replies for its connectionId are consumed
+   * by the repo instead of stranding the rounds that requested them.
+   */
+  private _drainConnection(spaceId: SpaceId, connection: EdgeSubductionReplicatorConnection): void {
+    this._drainingConnections.add(connection);
+    const drain = async () => {
+      const deadline = Date.now() + CONNECTION_DRAIN_MAX_MS;
+      while (Date.now() < deadline) {
+        if (Date.now() - connection.lastInboundAt >= CONNECTION_DRAIN_QUIESCE_MS) {
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      if (this._drainingConnections.delete(connection)) {
+        log('drained replaced connection closed', { spaceId });
+        await connection.close();
+      }
+    };
+    drain().catch((err) => {
+      log.warn('replaced-connection drain failed', { spaceId, err });
+      if (this._drainingConnections.delete(connection)) {
+        void connection.close();
+      }
+    });
   }
 
   async disconnect(): Promise<void> {
@@ -164,6 +207,10 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
       await connection.close();
     }
     this._connections.clear();
+    for (const connection of this._drainingConnections) {
+      await connection.close();
+    }
+    this._drainingConnections.clear();
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -212,6 +259,18 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     invariant(this._context);
     invariant(!this._connections.has(spaceId));
 
+    // Opening while the edge WS is down (or mid-restart, e.g. right after an identity change)
+    // would handshake a connection that the reconnect handler immediately restarts. The edge
+    // then supersedes that session the moment the replacement handshake arrives, and sync
+    // requests racing the supersede are silently swallowed inside `subduction_core`
+    // (`remove_connection` detaches the peer's muxes with no notification to the requester),
+    // costing a full sync-round timeout. The space is already registered in `_connectedSpaces`,
+    // so `_handleReconnect` opens this connection once the socket is actually ready.
+    if (this._edgeConnection.status.state !== EdgeStatus.ConnectionState.CONNECTED) {
+      log('deferring subduction connection until edge ws is ready', { spaceId });
+      return;
+    }
+
     let restartScheduled = false;
 
     const connection = new EdgeSubductionReplicatorConnection({
@@ -251,8 +310,8 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
             }
 
             const ctx = this._ctx;
-            await connection.close();
             this._connections.delete(spaceId);
+            this._drainConnection(spaceId, connection);
             if (ctx?.disposed) {
               return;
             }
@@ -281,6 +340,9 @@ type EdgeSubductionReplicatorConnectionProps = {
 
 class EdgeSubductionReplicatorConnection extends Resource implements AutomergeReplicatorConnection {
   private readonly _connectionId = randomUUID();
+
+  /** Timestamp of the last inbound frame consumed by this connection; drives the replaced-connection drain. */
+  lastInboundAt = Date.now();
   private readonly _edgeConnection: EdgeConnection;
   private readonly _remotePeerId: string;
   private readonly _subductionServiceId: string;
@@ -483,6 +545,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           return;
         }
         log.verbose('received subduction frame', { remoteId: this._remotePeerId });
+        this.lastInboundAt = Date.now();
         // Fix the peer id so subduction routing inside the Repo accepts the frame.
         inner.senderId = this._remotePeerId as PeerId;
         this._readableStreamController.enqueue(inner);
@@ -493,7 +556,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           payload.state && typeof payload.state === 'object' && 'documents' in payload.state
             ? Object.keys((payload.state as { documents: Record<string, unknown> }).documents).length
             : undefined;
-        log.info('received collection-state', {
+        log.verbose('received collection-state', {
           collectionId: payload.collectionId,
           documentCount,
           remoteId: this._remotePeerId,
@@ -503,7 +566,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         return;
       }
       case MESSAGE_TYPE_COLLECTION_QUERY:
-        log.info('received collection-query', { collectionId: payload.collectionId, remoteId: this._remotePeerId });
+        log.verbose('received collection-query', { collectionId: payload.collectionId, remoteId: this._remotePeerId });
         payload.senderId = this._remotePeerId as PeerId;
         this._readableStreamController.enqueue(payload);
         return;
@@ -544,7 +607,7 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     }
 
     if (wire.type === MESSAGE_TYPE_COLLECTION_QUERY || wire.type === MESSAGE_TYPE_COLLECTION_STATE) {
-      log.info(`sending ${wire.type}`, {
+      log.verbose(`sending ${wire.type}`, {
         collectionId: wire.collectionId,
         serviceId: this._subductionServiceId,
         remoteId: this._remotePeerId,
@@ -613,17 +676,5 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
       this._messageSamples.reduce((total, sample) => total + sample.received, 0) / windowSeconds;
     this._maxSentPerSecond = Math.max(this._maxSentPerSecond, this._sentPerSecond);
     this._maxReceivedPerSecond = Math.max(this._maxReceivedPerSecond, this._receivedPerSecond);
-
-    if (this._sentPerSecond > 0 || this._receivedPerSecond > 0) {
-      log.info('subduction message rate', {
-        spaceId: this._spaceId,
-        messagesSent: this._messagesSent,
-        messagesReceived: this._messagesReceived,
-        sentPerSecond: this._sentPerSecond.toFixed(1),
-        receivedPerSecond: this._receivedPerSecond.toFixed(1),
-        maxSentPerSecond: this._maxSentPerSecond.toFixed(1),
-        maxReceivedPerSecond: this._maxReceivedPerSecond.toFixed(1),
-      });
-    }
   }
 }
