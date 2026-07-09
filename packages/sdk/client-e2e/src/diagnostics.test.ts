@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, onTestFinished, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { DiagnosticsCollector } from '@dxos/client-services';
@@ -10,7 +10,7 @@ import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 
 describe.skip('DiagnosticsCollector', () => {
-  test('collects configs if client was not initialized', async () => {
+  test('collects configs if client was not initialized', async ({ expect }) => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 
@@ -19,7 +19,7 @@ describe.skip('DiagnosticsCollector', () => {
     expect(diagnostics.services).to.be.undefined;
   });
 
-  test('collects with local services', async () => {
+  test('collects with local services', async ({ expect }) => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 
@@ -32,7 +32,7 @@ describe.skip('DiagnosticsCollector', () => {
     expect(diagnostics.services).not.to.be.undefined;
   });
 
-  test('collects with remote server', async () => {
+  test('collects with remote server', async ({ expect }) => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 

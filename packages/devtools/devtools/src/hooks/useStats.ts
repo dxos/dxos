@@ -44,7 +44,7 @@ export type QueryInfo = {
  */
 export type DatabaseInfo = {
   spaces: number;
-  objects: number;
+  objects?: number;
   documents: number;
   documentsToReconcile: number;
   dataStats?: EchoDataStats;
@@ -98,7 +98,6 @@ export const useStats = (): [Stats, () => void] => {
 
     const database: DatabaseInfo = {
       spaces: client.spaces.get().length,
-      objects: 0,
       documents: 0,
       documentsToReconcile: 0,
     };

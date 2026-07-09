@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Context, type TraceContextData } from '@dxos/context';
+import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 
 import { trace } from './api';
 import { TRACE_PROCESSOR } from './trace-processor';
@@ -48,6 +48,79 @@ const createMockBackend = (): { backend: TracingBackend; spans: SpanRecord[] } =
 
   return { backend, spans };
 };
+
+//
+// Manual span tests
+//
+
+describe('manual spans', () => {
+  let savedBackend: typeof TRACE_PROCESSOR.tracingBackend;
+
+  beforeEach(() => {
+    savedBackend = TRACE_PROCESSOR.tracingBackend;
+    spanCounter = 0;
+  });
+
+  afterEach(() => {
+    TRACE_PROCESSOR.tracingBackend = savedBackend;
+  });
+
+  test('spanStart nests under the parent context and spanEnd ends the span', ({ expect }) => {
+    const { backend, spans } = createMockBackend();
+    TRACE_PROCESSOR.tracingBackend = backend;
+
+    const parentTrace: TraceContextData = {
+      traceparent: '00-bbbb0000bbbb0000bbbb0000bbbb0000-cccc0000cccc0000-01',
+    };
+    const parentCtx = new Context({ attributes: { [TRACE_SPAN_ATTRIBUTE]: parentTrace } });
+
+    const childCtx = trace.spanStart({ id: 'op-1', instance: {}, methodName: 'work', parentCtx });
+
+    const span = spans.find((record) => record.options.name.endsWith('.work'));
+    expect(span).toBeDefined();
+    expect(span!.options.parentContext?.traceparent).toBe(parentTrace.traceparent);
+
+    // The returned ctx carries the new span's trace context so downstream spans nest under it.
+    expect(childCtx?.getAttribute(TRACE_SPAN_ATTRIBUTE)?.traceparent).toBe(span!.spanContext.traceparent);
+
+    expect(span!.ended).toBe(false);
+    trace.spanEnd('op-1');
+    expect(span!.ended).toBe(true);
+  });
+
+  test('spanStart with showInRemoteTracing:false creates no remote span and returns parentCtx unchanged', ({
+    expect,
+  }) => {
+    const { backend, spans } = createMockBackend();
+    TRACE_PROCESSOR.tracingBackend = backend;
+
+    const parentCtx = new Context();
+    const result = trace.spanStart({
+      id: 'op-2',
+      instance: {},
+      methodName: 'work',
+      parentCtx,
+      showInRemoteTracing: false,
+    });
+
+    expect(result).toBe(parentCtx);
+    expect(spans.find((record) => record.options.name.endsWith('.work'))).toBeUndefined();
+  });
+
+  test('duplicate spanStart id returns parentCtx without starting a second span', ({ expect }) => {
+    const { backend, spans } = createMockBackend();
+    TRACE_PROCESSOR.tracingBackend = backend;
+
+    const parentCtx = new Context();
+    trace.spanStart({ id: 'op-3', instance: {}, methodName: 'work', parentCtx });
+    const secondResult = trace.spanStart({ id: 'op-3', instance: {}, methodName: 'work', parentCtx });
+
+    expect(secondResult).toBe(parentCtx);
+    expect(spans.filter((record) => record.options.name.endsWith('.work'))).toHaveLength(1);
+
+    trace.spanEnd('op-3');
+  });
+});
 
 //
 // Buffering backend tests
