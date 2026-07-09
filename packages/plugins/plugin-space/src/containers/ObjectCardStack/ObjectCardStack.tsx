@@ -47,7 +47,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
   }
 
   return (
-    <Panel.Root className='dx-document' ref={forwardedRef}>
+    <Panel.Root ref={forwardedRef}>
       <Panel.Toolbar asChild>
         <Toolbar.Root />
       </Panel.Toolbar>
@@ -58,14 +58,17 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
           </Message.Root>
         ) : (
           <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
-            <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Root orientation='vertical' centered>
               <ScrollArea.Viewport ref={setViewport}>
                 <Mosaic.Stack
+                  draggable={false}
+                  // TODO(wittjosiah): Expose gap as a prop.
+                  // gap={2}
                   items={selectedObjects}
                   getId={(obj) => obj.id}
                   Tile={({ ...props }) => (
                     <Mosaic.Tile {...props}>
-                      <Card.Root>
+                      <Card.Root fullWidth classNames='pb-form-gap'>
                         <ObjectForm object={props.data} type={type} />
                       </Card.Root>
                     </Mosaic.Tile>
