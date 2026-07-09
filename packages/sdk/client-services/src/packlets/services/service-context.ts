@@ -100,11 +100,6 @@ export class ServiceContext extends Resource {
   private readonly _feedSyncer?: FeedSyncer = undefined;
   private readonly _feedStorage: SqliteStorage;
 
-  /** Exposes Subduction message stats for diagnostics/tests; `undefined` when Subduction replication is disabled. */
-  get echoEdgeSubductionReplicator(): EchoEdgeSubductionReplicator | undefined {
-    return this._echoEdgeReplicator instanceof EchoEdgeSubductionReplicator ? this._echoEdgeReplicator : undefined;
-  }
-
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
   public edgeAgentManager?: EdgeAgentManager;

@@ -4,7 +4,7 @@
 
 import { cbor } from '@automerge/automerge-repo';
 
-import { Mutex, scheduleMicroTask, scheduleTask, scheduleTaskInterval } from '@dxos/async';
+import { Mutex, scheduleMicroTask, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
 import type { CollectionId } from '@dxos/echo-protocol';
@@ -83,16 +83,6 @@ export type EchoEdgeSubductionReplicatorProps = {
    * deployed. See `frame-batching-spec.md`.
    */
   frameBatching?: boolean;
-};
-
-/** Cumulative message counts and peak throughput for a single subduction connection. */
-export type SubductionMessageStats = {
-  messagesSent: number;
-  messagesReceived: number;
-  /** Highest `sentPerSecond` observed across the 1-second rate samples taken so far. */
-  maxSentPerSecond: number;
-  /** Highest `receivedPerSecond` observed across the 1-second rate samples taken so far. */
-  maxReceivedPerSecond: number;
 };
 
 /**
@@ -255,16 +245,6 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     }
   }
 
-  /** Message stats for a single space's connection, or `undefined` if the space is not connected. */
-  getMessageStats(spaceId: SpaceId): SubductionMessageStats | undefined {
-    return this._connections.get(spaceId)?.messageStats;
-  }
-
-  /** Message stats for every currently connected space. */
-  getAllMessageStats(): Map<SpaceId, SubductionMessageStats> {
-    return new Map([...this._connections].map(([spaceId, connection]) => [spaceId, connection.messageStats]));
-  }
-
   async disconnectFromSpace(spaceId: SpaceId): Promise<void> {
     using _guard = await this._spaceMutex(spaceId).acquire();
 
@@ -395,19 +375,6 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
 
   private _readableStreamController!: ReadableStreamDefaultController<SubductionProtocolMessage>;
 
-  // Message-rate tracking, sliding window (mirrors `EdgeWsConnection`'s byte-rate tracking).
-  private readonly _rateWindowMs = 10_000;
-  private readonly _rateUpdateIntervalMs = 1_000;
-  private _messageSamples: Array<{ timestamp: number; sent: number; received: number }> = [];
-  private _messagesSent = 0;
-  private _messagesReceived = 0;
-  private _sentPerSecond = 0;
-  private _receivedPerSecond = 0;
-  /** Peak `_sentPerSecond` observed across every rate sample taken so far (see {@link _updateMessageRates}). */
-  private _maxSentPerSecond = 0;
-  /** Peak `_receivedPerSecond` observed across every rate sample taken so far. */
-  private _maxReceivedPerSecond = 0;
-
   public readable: ReadableStream<SubductionProtocolMessage>;
   public writable: WritableStream<SubductionProtocolMessage>;
 
@@ -470,8 +437,6 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
       ),
     );
 
-    scheduleTaskInterval(this._ctx, async () => this._updateMessageRates(), this._rateUpdateIntervalMs);
-
     await this._onRemoteConnected();
   }
 
@@ -490,15 +455,6 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
 
   get bundleSyncEnabled(): boolean {
     return false;
-  }
-
-  get messageStats(): SubductionMessageStats {
-    return {
-      messagesSent: this._messagesSent,
-      messagesReceived: this._messagesReceived,
-      maxSentPerSecond: this._maxSentPerSecond,
-      maxReceivedPerSecond: this._maxReceivedPerSecond,
-    };
   }
 
   async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
@@ -535,7 +491,6 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     if (message.serviceId !== this._subductionServiceId) {
       return;
     }
-    this._recordMessage({ received: 1 });
 
     let payload: SubductionProtocolMessageEnveloped;
     try {
@@ -618,10 +573,6 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           }
           inner.senderId = this._remotePeerId as PeerId;
           this._readableStreamController.enqueue(inner);
-        }
-        // Top-level `received: 1` was already counted for the router message; add the rest.
-        if (payload.frames.length > 1) {
-          this._recordMessage({ received: payload.frames.length - 1 });
         }
         return;
       }
@@ -771,47 +722,8 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           payload: { value: bufferToArray(encoded) },
         }),
       );
-      this._recordMessage({ sent: frameCount });
     } catch (err) {
       log.error('failed to send message', { err });
     }
-  }
-
-  /** Accumulates raw sent/received message counts for the current 1-second bucket. */
-  private _recordMessage({ sent = 0, received = 0 }: { sent?: number; received?: number }): void {
-    if (sent > 0) {
-      this._messagesSent += sent;
-    }
-    if (received > 0) {
-      this._messagesReceived += received;
-    }
-
-    const now = Date.now();
-    const currentBucket = Math.floor(now / 1000) * 1000;
-    const existingSample = this._messageSamples.find((sample) => sample.timestamp === currentBucket);
-    if (existingSample) {
-      existingSample.sent += sent;
-      existingSample.received += received;
-    } else {
-      this._messageSamples.push({ timestamp: currentBucket, sent, received });
-    }
-  }
-
-  /**
-   * Recomputes {@link _sentPerSecond}/{@link _receivedPerSecond} from the sliding window, folds
-   * them into the running {@link _maxSentPerSecond}/{@link _maxReceivedPerSecond} peaks, and logs
-   * the result.
-   */
-  private _updateMessageRates(): void {
-    const now = Date.now();
-    const windowStart = now - this._rateWindowMs;
-    this._messageSamples = this._messageSamples.filter((sample) => sample.timestamp >= windowStart);
-
-    const windowSeconds = this._rateWindowMs / 1000;
-    this._sentPerSecond = this._messageSamples.reduce((total, sample) => total + sample.sent, 0) / windowSeconds;
-    this._receivedPerSecond =
-      this._messageSamples.reduce((total, sample) => total + sample.received, 0) / windowSeconds;
-    this._maxSentPerSecond = Math.max(this._maxSentPerSecond, this._sentPerSecond);
-    this._maxReceivedPerSecond = Math.max(this._maxReceivedPerSecond, this._receivedPerSecond);
   }
 }
