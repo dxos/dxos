@@ -166,9 +166,12 @@ export class RepoProxy extends Resource {
     // Close old subscription (this should cause old RPC calls to fail faster).
     this._subscriptionCleanup?.();
 
-    // Create new subscription. The effect-rpc client sends the subscribe request ahead of the
-    // updateSubscription below over the same client, so the service registers the subscription
-    // before it receives the re-sync (preserving the ordering the old `waitUntilReady` enforced).
+    // Create new subscription.
+    // TODO(dxos): The old PbStream path awaited `waitUntilReady()` here before `updateSubscription`
+    // below, because the host registers the subscription asynchronously (after `synchronizer.open()`).
+    // The effect-rpc Stream has no readiness channel yet, so on reconnect `updateSubscription` can
+    // race ahead of registration and fail with "Subscription not found". Add an in-band ready
+    // sentinel to the `subscribe` stream and await it here before re-adding documents.
     this._subscriptionCleanup = subscribeStream(
       this._runtime,
       this._dataService.DataService.subscribe({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
