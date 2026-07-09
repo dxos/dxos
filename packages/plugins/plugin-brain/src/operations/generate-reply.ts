@@ -10,10 +10,9 @@ import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { FactStore, type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { DraftMessage, InboxOperation, Mailbox } from '@dxos/plugin-inbox/types';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
-
-import { DraftMessage, InboxOperation, Mailbox } from '../types';
 
 const handler: Operation.WithHandler<typeof InboxOperation.GenerateReply> = InboxOperation.GenerateReply.pipe(
   Operation.withHandler(

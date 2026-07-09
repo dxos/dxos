@@ -87,11 +87,14 @@
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/plugin-inbox": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@types/react": "catalog:",

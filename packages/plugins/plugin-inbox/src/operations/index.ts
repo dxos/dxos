@@ -20,7 +20,6 @@ export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./extractor/extract-mailbox'),
   () => import('./extractor/extract-message'),
   () => import('./extractor/summarize-extractor'),
-  () => import('./generate-reply'),
   () => import('./google/calendar/create'),
   () => import('./google/calendar/list'),
   () => import('./google/calendar/materialize-target'),

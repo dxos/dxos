@@ -14,9 +14,9 @@ import { Feed } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { FactStore, type RDF } from '@dxos/pipeline-rdf';
+import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Message } from '@dxos/types';
 
-import { Mailbox } from '../types';
 import { generateReply, replySubject } from './generate-reply';
 
 const makeMessage = (sender: string, subject: string, text: string, created: string) =>
