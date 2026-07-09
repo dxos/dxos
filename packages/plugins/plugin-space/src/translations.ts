@@ -315,6 +315,12 @@ export const translations = [
         'database-section.label': 'Database',
         'collections-section.label': 'Collections',
         'type-collection-empty.message': 'No objects of this type yet.',
+        'layout.label': 'Layout',
+        'layout-masonry.label': 'Cards',
+        'layout-table.label': 'Table',
+        'open-object.label': 'Open object',
+        'search-placeholder.label': 'Filter...',
+        'search-no-results.message': 'No matches.',
 
         'search.placeholder': 'Search…',
         'auth-code.message': 'Authorization code',

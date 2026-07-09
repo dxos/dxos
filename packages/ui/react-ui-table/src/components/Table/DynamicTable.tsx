@@ -26,6 +26,7 @@ export type DynamicTableProps<T extends Type.AnyEntity = Type.AnyEntity> = Theme
   rowActions?: TableRowAction[];
   onRowClick?: (row: any) => void;
   onRowAction?: (actionId: string, datum: any) => void;
+  onSelectionChanged?: (selection: string[]) => void;
 }>;
 
 /**
@@ -43,6 +44,7 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   rowActions,
   onRowClick,
   onRowAction,
+  onSelectionChanged,
   ...props
 }: DynamicTableProps<T>) => {
   const registry = useContext(RegistryContext);
@@ -85,6 +87,7 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
     onCellUpdate: handleCellUpdate,
     onRowOrderChange: handleRowOrderChange,
     onRowAction,
+    onSelectionChanged,
   });
 
   const presentation = useMemo(() => {
