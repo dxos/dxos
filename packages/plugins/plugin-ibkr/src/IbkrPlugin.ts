@@ -26,7 +26,7 @@ export const IbkrPlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
     activate: AppGraphBuilder,
   }),
-  AppPlugin.addSchemaModule({ schema: [Ibkr.Portfolio, Ibkr.Report, Ibkr.Instrument] }),
+  AppPlugin.addSchemaModule({ schema: [Ibkr.Portfolio, Ibkr.Report, Ibkr.Instrument, Ibkr.Lot] }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),

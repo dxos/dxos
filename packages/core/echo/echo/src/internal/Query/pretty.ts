@@ -113,7 +113,7 @@ export const prettyQuery = (query: QueryAST.Query): string => {
     case 'order': {
       const orders = query.order.map((o) => {
         if (o.kind === 'natural') {
-          return 'Order.natural()';
+          return `Order.natural(${JSON.stringify(o.direction)})`;
         } else if (o.kind === 'rank') {
           return `Order.rank(${JSON.stringify(o.direction)})`;
         } else if (o.kind === 'timestamp') {
@@ -158,5 +158,19 @@ export const prettyQuery = (query: QueryAST.Query): string => {
     }
     case 'limit':
       return `${prettyQuery(query.query)}.limit(${query.limit})`;
+    case 'skip':
+      return `${prettyQuery(query.query)}.skip(${query.skip})`;
+    case 'group-by': {
+      const keys = query.keys.map((key) => JSON.stringify(key.property));
+      const grouped = `${prettyQuery(query.query)}.groupBy(${keys.join(', ')})`;
+      if (!query.aggregates || query.aggregates.length === 0) {
+        return grouped;
+      }
+      const aggregates = query.aggregates.map(
+        (aggregate) =>
+          `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${aggregate.property !== undefined ? JSON.stringify(aggregate.property) : ''})`,
+      );
+      return `${grouped}.aggregate({ ${aggregates.join(', ')} })`;
+    }
   }
 };

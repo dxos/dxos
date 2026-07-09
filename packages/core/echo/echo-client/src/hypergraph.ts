@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { type CleanupFn, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Feed, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
+import { type BlobBackend } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   type RefResolverRequest,
@@ -21,6 +22,7 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
 
+import { BlobManager } from './blob';
 import { type ItemsUpdatedEvent } from './core-db';
 import { type LoadBackend, LoadOpTable, type LoadResult } from './core-db/load-op';
 import { RequestImpl } from './core-db/ref-resolver-request';
@@ -67,6 +69,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   // kind / space; closure satisfaction lives in the per-call `RequestImpl`s.
   readonly #loadOpTable = new LoadOpTable((uri) => this.#routeBackend(uri));
   readonly #spaceBackends = new Map<SpaceId, LoadBackend>();
+  readonly #blobManager = new BlobManager();
 
   constructor() {
     this._registry = makeRegistry();
@@ -154,6 +157,21 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     const ref = Ref.fromURI(uri);
     setRefResolver(ref, this.createRefResolver({}));
     return ref;
+  }
+
+  /**
+   * @internal Reached by `DatabaseImpl` to dispatch blob reads/writes.
+   */
+  get blobManager(): BlobManager {
+    return this.#blobManager;
+  }
+
+  registerBlobBackend(name: string, backend: BlobBackend, options?: { default?: boolean }): CleanupFn {
+    return this.#blobManager.registerBackend(name, backend, options);
+  }
+
+  get defaultBlobStorage(): string {
+    return this.#blobManager.defaultStorage;
   }
 
   getDatabase(spaceId: SpaceId): DatabaseImpl | undefined {

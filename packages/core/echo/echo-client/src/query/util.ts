@@ -53,8 +53,34 @@ const filterContainsChildOf = (filter: QueryAST.Filter): boolean => {
 };
 
 /**
+ * Whether the query carries an `order`/`skip`/`limit` clause anywhere in its AST.
+ *
+ * These clauses impose windowing semantics (a specific ordering, or a slice of a larger result
+ * set) that only make sense when computed over the *complete* candidate set. `GraphQueryContext`
+ * merges results from multiple independent sources (working set, SQL index, registry, ...) without
+ * a global re-sort/re-slice, so a source that applied its own local limit/order would silently
+ * return the wrong window while a sibling source contributes overlapping or additional items.
+ * Callers use this to defer such queries entirely to the SQL-backed/feed sources that compute the
+ * full window themselves.
+ */
+export const queryHasWindowing = (query: QueryAST.Query): boolean => {
+  let hasWindowing = false;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'order' || node.type === 'skip' || node.type === 'limit') {
+      hasWindowing = true;
+    }
+  });
+  return hasWindowing;
+};
+
+/**
  * Extracts the filter and options from a query.
  * Supports Select(...), Options(Select(...)), and From(Select(...)) queries.
+ *
+ * Deliberately returns `null` for queries carrying `order`/`skip`/`limit` clauses -- callers
+ * (e.g. `GraphQueryContext`) use that as the signal that this query has semantics (windowing,
+ * ordering) they cannot contribute to, and defer entirely to the SQL-backed/feed sources that
+ * can.
  */
 export const isSimpleSelectionQuery = (
   query: QueryAST.Query,

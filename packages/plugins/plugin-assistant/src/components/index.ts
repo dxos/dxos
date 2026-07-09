@@ -11,4 +11,3 @@ export * from './TaskList';
 export * from './Toolbox';
 
 export { ChatPrompt, type ChatPromptProps } from './ChatPrompt/ChatPrompt';
-export * from '../types/ChatSurface';

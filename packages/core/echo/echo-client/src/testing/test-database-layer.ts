@@ -56,23 +56,16 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
       let db: DatabaseImpl | undefined;
 
       if (storagePath) {
-        const metaJson = yield* Effect.promise(() => peer.getStorageMetadata('test_db'));
-        const testMetadata: { key: string; rootUrl: string } | undefined = metaJson ? JSON.parse(metaJson) : undefined;
-        log('starting persistant test db', { storagePath, testMetadata });
-        if (!testMetadata) {
+        log('starting persistant test db', { storagePath });
+        const persistedSpaces = peer.host.spaces;
+        if (persistedSpaces.length === 0) {
           db = yield* Effect.promise(() => peer.createDatabase(key));
-
-          yield* Effect.promise(() =>
-            peer.setStorageMetadata('test_db', JSON.stringify({ key: key.toHex(), rootUrl: db!.rootUrl })),
-          );
 
           if (onInit) {
             yield* onInit().pipe(Effect.provideService(Database.Service, Database.makeService(db)));
           }
         } else {
-          const resolvedKey = PublicKey.from(testMetadata.key);
-          const rootUrl = testMetadata.rootUrl;
-          db = yield* Effect.promise(() => peer.openDatabase(resolvedKey, rootUrl));
+          db = yield* Effect.promise(() => peer.openDatabase(key));
           // Rebuild index after reopening since in-memory SQLite is recreated.
           yield* Effect.promise(() => db!.flush());
         }

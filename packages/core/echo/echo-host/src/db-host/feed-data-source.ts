@@ -130,7 +130,9 @@ export class FeedDataSource implements IndexDataSource {
           // Process blocks
           for (const block of result.blocks) {
             try {
-              const data = EchoFeedCodec.decode(block.data) as ObjectJSON;
+              // Inject the block's queue position so indexed feed items carry a KEY_QUEUE_POSITION
+              // foreign key (mirrors the local feed-service read path); the index snapshot persists it.
+              const data = EchoFeedCodec.decode(block.data, block.position ?? undefined) as ObjectJSON;
 
               objects.push({
                 spaceId: cursor.spaceId,

@@ -2,70 +2,66 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import { useEffect, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
-import { FileCapabilities } from '@dxos/plugin-file/types';
-import { getSpace } from '@dxos/react-client/echo';
-import { File } from '@dxos/types';
+import { Blob, Database, Obj } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
+import { type File } from '@dxos/types';
 
 /**
  * Resolves a renderable `<img src>` URL for a {@link File.File}.
- * - Inline bytes are turned into a `blob:` URL (revoked on unmount).
- * - `http(s)://`, `data:`, and `blob:` URLs pass through.
- * - Other URL schemes (e.g. `wnfs://`) are dispatched to the first matching
- *   {@link FileCapabilities.UrlResolver} contribution.
+ * Inline blobs resolve to a `data:` URL; external blobs are resolved via the registered
+ * backend's `getUrl`, if it implements one — otherwise the bytes are read and turned into a
+ * `blob:` URL (revoked on unmount).
  */
 export const useImageUrl = (file: File.File | undefined): string | undefined => {
-  const resolvers = useCapabilities(FileCapabilities.UrlResolver);
   const [resolved, setResolved] = useState<string | undefined>(undefined);
 
   useEffect(() => {
+    setResolved(undefined);
+
     if (!file) {
-      setResolved(undefined);
       return;
     }
 
-    const { data, type } = file;
-    if (data._tag === 'inline') {
-      const url = URL.createObjectURL(new Blob([data.bytes as BlobPart], { type }));
-      setResolved(url);
-      return () => URL.revokeObjectURL(url);
-    }
-
-    if (/^(?:https?|data|blob):/i.test(data.url)) {
-      setResolved(data.url);
-      return;
-    }
-
-    const resolver = resolvers.find((r) => r.test(data.url));
-    if (!resolver) {
-      setResolved(undefined);
+    const db = Obj.getDatabase(file);
+    if (!db) {
       return;
     }
 
     let cancelled = false;
     let createdBlobUrl: string | undefined;
-    setResolved(undefined);
-    void resolver
-      .resolve(data.url, file, getSpace(file))
-      .then((url) => {
-        if (cancelled) {
-          if (url?.startsWith('blob:')) {
-            URL.revokeObjectURL(url);
-          }
-          return;
-        }
+
+    const program = Effect.gen(function* () {
+      const blob = yield* Database.load(file.data);
+      const urlOption = yield* Blob.url(blob);
+      if (Option.isSome(urlOption)) {
+        return urlOption.value;
+      }
+      const bytes = yield* Blob.read(blob);
+      // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while DOM's
+      // `BlobPart` only covers `ArrayBuffer`-backed views — a gap between the DOM lib types and
+      // the TS standard lib, not fixable by typing `bytes` differently.
+      return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: file.type }));
+    }).pipe(
+      Effect.provide(Database.layer(db)),
+      Effect.catchAll(() => Effect.succeed(undefined)),
+    );
+
+    void EffectEx.runPromise(program).then((url) => {
+      if (cancelled) {
         if (url?.startsWith('blob:')) {
-          createdBlobUrl = url;
+          URL.revokeObjectURL(url);
         }
-        setResolved(url);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setResolved(undefined);
-        }
-      });
+        return;
+      }
+      if (url?.startsWith('blob:')) {
+        createdBlobUrl = url;
+      }
+      setResolved(url);
+    });
 
     return () => {
       cancelled = true;
@@ -73,7 +69,11 @@ export const useImageUrl = (file: File.File | undefined): string | undefined => 
         URL.revokeObjectURL(createdBlobUrl);
       }
     };
-  }, [file, file?.data, file?.type, resolvers]);
+    // Keyed on `file?.id`/`file?.type` rather than `file`/`file.data` directly: ECHO's reactive
+    // proxy returns a fresh `Ref` wrapper for `.data` on every access, so including it (or the
+    // proxy object itself) here would rerun this effect on every render — clearing resolved to
+    // undefined and re-resolving it each time, which flickers the image while the object settles.
+  }, [file?.id, file?.type]);
 
   return resolved;
 };

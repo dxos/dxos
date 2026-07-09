@@ -143,6 +143,44 @@ describe('LocalFeedServiceImpl', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('should pass tombstone blocks through paginated reads', () =>
+    Effect.gen(function* () {
+      const runtime = Effect.succeed(yield* Effect.runtime<any>());
+      const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
+      yield* feedStore.migrate();
+      const service = new LocalFeedServiceImpl(runtime, feedStore);
+      const spaceId = 'space-3' as SpaceId;
+      const feedId = EntityId.random();
+      const objectId = EntityId.random();
+
+      yield* Effect.promise(() =>
+        service.insertIntoFeed({
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
+          spaceId,
+          feedId,
+          objects: [JSON.stringify({ id: objectId, data: 'test' })],
+        }),
+      );
+      yield* Effect.promise(() =>
+        service.deleteFromFeed({
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
+          spaceId,
+          feedId,
+          objectIds: [objectId],
+        }),
+      );
+
+      const head = yield* Effect.promise(() =>
+        service.queryFeed({
+          query: { spaceId, feedIds: [feedId], limit: 10 },
+        }),
+      );
+      expect(head.objects).toHaveLength(2);
+      expect(JSON.parse(head.objects![0])).toMatchObject({ id: objectId, data: 'test' });
+      expect(JSON.parse(head.objects![1])).toMatchObject({ 'id': objectId, '@deleted': true });
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('should report local push backlog in getSyncState', () =>
     Effect.gen(function* () {
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: false });

@@ -91,6 +91,7 @@
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
     "@effect/experimental": "catalog:",
+    "@effect/rpc": "catalog:",
     "@effect/sql": "catalog:",
     "@obsidize/tar-browserify": "catalog:",
     "cbor-x": "catalog:",
@@ -100,6 +101,8 @@
   "devDependencies": {
     "@dxos/signal": "workspace:*",
     "@dxos/test-utils": "workspace:*",
+    "@effect/platform-browser": "catalog:",
+    "@effect/vitest": "catalog:",
     "@types/platform": "catalog:",
     "@types/readable-stream": "catalog:",
     "get-port-please": "catalog:"

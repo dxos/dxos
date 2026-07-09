@@ -26,7 +26,7 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
     db,
     subject,
     functionKey: 'org.dxos.function.inbox.google-mail-sync',
-    input: { restrictedMode: true },
+    input: {},
   });
 
   const handleViewTrigger = useCallback(() => {

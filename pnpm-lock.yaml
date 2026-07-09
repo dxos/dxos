@@ -1950,7 +1950,7 @@ pnpmfileChecksum: sha256-cQVl+jrEHH0V4IgNkydwSKNmLoShP2mLkufXFXEHIjU=
 
 patchedDependencies:
   '@automerge/automerge-repo@2.6.0-subduction.40':
-    hash: 2bd882245924580ad001599ff56a0021f57f85479833e8d7939e1178f1c527db
+    hash: 73ef0a063dee98fafc630e9b2ce68fcc1dbe7889da802ddc62dc6ad85192c809
     path: patches/@automerge__automerge-repo@2.6.0-subduction.40.patch
   '@automerge/automerge-subduction@0.16.0':
     hash: 6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669
@@ -2380,7 +2380,7 @@ importers:
         version: 3.3.0-fragments.2
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=2bd882245924580ad001599ff56a0021f57f85479833e8d7939e1178f1c527db)
+        version: 2.6.0-subduction.40(patch_hash=73ef0a063dee98fafc630e9b2ce68fcc1dbe7889da802ddc62dc6ad85192c809)
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../../packages/common/keys
@@ -2462,7 +2462,7 @@ importers:
         version: 3.3.0-fragments.2
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=2bd882245924580ad001599ff56a0021f57f85479833e8d7939e1178f1c527db)
+        version: 2.6.0-subduction.40(patch_hash=73ef0a063dee98fafc630e9b2ce68fcc1dbe7889da802ddc62dc6ad85192c809)
       '@codemirror/autocomplete':
         specifier: 'catalog:'
         version: 6.20.3
@@ -5325,9 +5325,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
-      '@dxos/semantic-index':
+      '@dxos/pipeline-rdf':
         specifier: workspace:*
-        version: link:../semantic-index
+        version: link:../pipeline-rdf
       '@effect/ai':
         specifier: 'catalog:'
         version: 0.36.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
@@ -5818,52 +5818,125 @@ importers:
 
   packages/core/compute/pipeline-email:
     dependencies:
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../../common/node-std
-      '@dxos/pipeline':
-        specifier: workspace:*
-        version: link:../pipeline
-      '@dxos/semantic-index':
-        specifier: workspace:*
-        version: link:../semantic-index
-      '@dxos/types':
-        specifier: workspace:*
-        version: link:../../../sdk/types
-      hyparquet:
-        specifier: 'catalog:'
-        version: 1.26.2
-    devDependencies:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../echo/echo-client
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../../common/effect
       '@dxos/extractor-lib':
         specifier: workspace:*
         version: link:../extractor-lib
-      '@dxos/log':
+      '@dxos/node-std':
         specifier: workspace:*
-        version: link:../../../common/log
+        version: link:../../../common/node-std
+      '@dxos/pipeline':
+        specifier: workspace:*
+        version: link:../pipeline
+      '@dxos/pipeline-rdf':
+        specifier: workspace:*
+        version: link:../pipeline-rdf
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
       '@effect/ai':
         specifier: 'catalog:'
         version: 0.36.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+      hyparquet:
+        specifier: 'catalog:'
+        version: 1.26.2
+    devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../echo/echo-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       effect:
         specifier: 3.21.4
         version: 3.21.4
       hyparquet-writer:
         specifier: 'catalog:'
         version: 0.16.1
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.8(patch_hash=a7bf6a3d21c2bc782d60d0f0f916d76f304c0eb6fbf2827e8d981408c7b5120e)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.8)(@vitest/coverage-v8@4.1.8)(@vitest/ui@4.1.8)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
+  packages/core/compute/pipeline-rdf:
+    dependencies:
+      '@comunica/query-sparql-rdfjs':
+        specifier: 'catalog:'
+        version: 5.2.3
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/pipeline':
+        specifier: workspace:*
+        version: link:../pipeline
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../../common/sql-sqlite
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      '@effect/ai':
+        specifier: 'catalog:'
+        version: 0.36.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+      '@effect/sql':
+        specifier: 'catalog:'
+        version: 0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
+      asynciterator:
+        specifier: 'catalog:'
+        version: 3.9.0
+      n3:
+        specifier: 'catalog:'
+        version: 2.1.0
+      sparqljs:
+        specifier: 'catalog:'
+        version: 3.7.4
+    devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../echo/echo-client
+      '@effect/sql-sqlite-node':
+        specifier: 'catalog:'
+        version: 0.52.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 0.29.0(effect@3.21.4)(vitest@4.1.8)
+      '@types/n3':
+        specifier: 'catalog:'
+        version: 1.26.1
+      '@types/sparqljs':
+        specifier: 'catalog:'
+        version: 3.1.12
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
       vitest:
         specifier: 'catalog:'
         version: 4.1.8(patch_hash=a7bf6a3d21c2bc782d60d0f0f916d76f304c0eb6fbf2827e8d981408c7b5120e)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.8)(@vitest/coverage-v8@4.1.8)(@vitest/ui@4.1.8)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -5926,73 +5999,6 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
 
-  packages/core/compute/semantic-index:
-    dependencies:
-      '@comunica/query-sparql-rdfjs':
-        specifier: 'catalog:'
-        version: 5.2.3
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../ai
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../echo/echo
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../../common/effect
-      '@dxos/errors':
-        specifier: workspace:*
-        version: link:../../../common/errors
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
-      '@dxos/sql-sqlite':
-        specifier: workspace:*
-        version: link:../../../common/sql-sqlite
-      '@effect/ai':
-        specifier: 'catalog:'
-        version: 0.36.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
-      '@effect/sql':
-        specifier: 'catalog:'
-        version: 0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
-      asynciterator:
-        specifier: 'catalog:'
-        version: 3.9.0
-      n3:
-        specifier: 'catalog:'
-        version: 2.1.0
-      sparqljs:
-        specifier: 'catalog:'
-        version: 3.7.4
-    devDependencies:
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../echo/echo-client
-      '@effect/sql-sqlite-node':
-        specifier: 'catalog:'
-        version: 0.52.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
-      '@effect/vitest':
-        specifier: 'catalog:'
-        version: 0.29.0(effect@3.21.4)(vitest@4.1.8)
-      '@types/n3':
-        specifier: 'catalog:'
-        version: 1.26.1
-      '@types/sparqljs':
-        specifier: 'catalog:'
-        version: 3.1.12
-      effect:
-        specifier: 3.21.4
-        version: 3.21.4
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.8(patch_hash=a7bf6a3d21c2bc782d60d0f0f916d76f304c0eb6fbf2827e8d981408c7b5120e)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.8)(@vitest/coverage-v8@4.1.8)(@vitest/ui@4.1.8)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
-
   packages/core/echo/echo:
     dependencies:
       '@dxos/async':
@@ -6049,7 +6055,7 @@ importers:
         version: 3.3.0-fragments.2
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=2bd882245924580ad001599ff56a0021f57f85479833e8d7939e1178f1c527db)
+        version: 2.6.0-subduction.40(patch_hash=73ef0a063dee98fafc630e9b2ce68fcc1dbe7889da802ddc62dc6ad85192c809)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -6141,6 +6147,9 @@ importers:
       '@automerge/automerge':
         specifier: 3.3.0-fragments.2
         version: 3.3.0-fragments.2
+      '@automerge/automerge-repo':
+        specifier: 'catalog:'
+        version: 2.6.0-subduction.40(patch_hash=73ef0a063dee98fafc630e9b2ce68fcc1dbe7889da802ddc62dc6ad85192c809)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -6159,6 +6168,9 @@ importers:
       '@dxos/echo-host':
         specifier: workspace:*
         version: link:../echo-host
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo-protocol
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
@@ -6174,6 +6186,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../../mesh/teleport
@@ -6255,7 +6270,7 @@ importers:
         version: 3.3.0-fragments.2
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=2bd882245924580ad001599ff56a0021f57f85479833e8d7939e1178f1c527db)
+        version: 2.6.0-subduction.40(patch_hash=73ef0a063dee98fafc630e9b2ce68fcc1dbe7889da802ddc62dc6ad85192c809)
       '@automerge/automerge-subduction':
         specifier: 0.16.0
         version: 0.16.0(patch_hash=6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669)
@@ -6474,6 +6489,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@effect-atom/atom':
         specifier: 'catalog:'
         version: 0.5.3(patch_hash=90a97dcb5aa93197ad34b41c932b405a7ba98679af6885de637ffa20a623672e)(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
@@ -7223,6 +7241,9 @@ importers:
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
+      '@effect/rpc':
+        specifier: 'catalog:'
+        version: 0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
     devDependencies:
       '@bufbuild/buf':
         specifier: 'catalog:'
@@ -7983,7 +8004,7 @@ importers:
         version: 3.3.0-fragments.2
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=2bd882245924580ad001599ff56a0021f57f85479833e8d7939e1178f1c527db)
+        version: 2.6.0-subduction.40(patch_hash=73ef0a063dee98fafc630e9b2ce68fcc1dbe7889da802ddc62dc6ad85192c809)
       '@automerge/automerge-repo-network-websocket':
         specifier: 'catalog:'
         version: 2.6.0-subduction.40
@@ -11139,6 +11160,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -11667,6 +11691,9 @@ importers:
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -11703,6 +11730,12 @@ importers:
       '@dxos/pipeline':
         specifier: workspace:*
         version: link:../../core/compute/pipeline
+      '@dxos/pipeline-email':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline-email
+      '@dxos/pipeline-rdf':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline-rdf
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -11763,6 +11796,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
+      '@dxos/react-ui-rdf':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-rdf
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
@@ -11778,6 +11814,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.5.3(patch_hash=90a97dcb5aa93197ad34b41c932b405a7ba98679af6885de637ffa20a623672e)(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect-atom/atom-react':
         specifier: 'catalog:'
         version: 0.5.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)(react@19.2.7)(scheduler@0.27.0)
@@ -11790,9 +11829,15 @@ importers:
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
+      '@tanstack/react-virtual':
+        specifier: 'catalog:'
+        version: 3.13.18(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
+      dompurify:
+        specifier: '>=3.2.4'
+        version: 3.3.1
       js-yaml:
         specifier: 'catalog:'
         version: 4.1.1
@@ -11818,9 +11863,30 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@effect/opentelemetry':
+        specifier: 'catalog:'
+        version: 0.63.0(@effect/platform@0.96.2(effect@3.21.4))(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-logs@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-metrics@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-node@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-web@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.41.1)(effect@3.21.4)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.96.2(effect@3.21.4)
+      '@opentelemetry/api':
+        specifier: 'catalog:'
+        version: 1.9.1
+      '@opentelemetry/resources':
+        specifier: 'catalog:'
+        version: 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-node':
+        specifier: 'catalog:'
+        version: 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-trace-base':
+        specifier: 'catalog:'
+        version: 2.9.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/semantic-conventions':
+        specifier: 'catalog:'
+        version: 1.41.1
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.4.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.4.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@testing-library/dom@10.4.1)(@types/react@19.2.17)(prettier@3.6.2)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(typescript@6.0.3)(vite@8.0.16(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))(webpack@5.105.2(@swc/core@1.15.43(@swc/helpers@0.5.17))(esbuild@0.28.1))
       '@types/js-yaml':
         specifier: 'catalog:'
         version: 4.0.9
@@ -17246,12 +17312,18 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../common/crypto
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-protocol
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -17924,7 +17996,7 @@ importers:
         version: 3.3.0-fragments.2
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=2bd882245924580ad001599ff56a0021f57f85479833e8d7939e1178f1c527db)
+        version: 2.6.0-subduction.40(patch_hash=73ef0a063dee98fafc630e9b2ce68fcc1dbe7889da802ddc62dc6ad85192c809)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -18150,7 +18222,7 @@ importers:
         version: 3.3.0-fragments.2
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=2bd882245924580ad001599ff56a0021f57f85479833e8d7939e1178f1c527db)
+        version: 2.6.0-subduction.40(patch_hash=73ef0a063dee98fafc630e9b2ce68fcc1dbe7889da802ddc62dc6ad85192c809)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -18262,6 +18334,9 @@ importers:
       '@effect/experimental':
         specifier: 'catalog:'
         version: 0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2)
+      '@effect/rpc':
+        specifier: 'catalog:'
+        version: 0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@effect/sql':
         specifier: 'catalog:'
         version: 0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
@@ -18284,6 +18359,12 @@ importers:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
+      '@effect/platform-browser':
+        specifier: 'catalog:'
+        version: 0.76.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 0.29.0(effect@3.21.4)(vitest@4.1.8)
       '@types/platform':
         specifier: 'catalog:'
         version: 1.3.5
@@ -18413,7 +18494,7 @@ importers:
         version: 3.3.0-fragments.2
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=2bd882245924580ad001599ff56a0021f57f85479833e8d7939e1178f1c527db)
+        version: 2.6.0-subduction.40(patch_hash=73ef0a063dee98fafc630e9b2ce68fcc1dbe7889da802ddc62dc6ad85192c809)
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -19215,6 +19296,18 @@ importers:
       '@dxos/nlp':
         specifier: workspace:*
         version: link:../../core/compute/nlp
+      '@dxos/pipeline':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline
+      '@dxos/pipeline-email':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline-email
+      '@dxos/pipeline-rdf':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline-rdf
+      '@dxos/pipeline-transcription':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline-transcription
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
@@ -19257,12 +19350,15 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-rdf':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-rdf
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/semantic-index':
+      '@dxos/types':
         specifier: workspace:*
-        version: link:../../core/compute/semantic-index
+        version: link:../../sdk/types
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../../ui/ui-editor
@@ -19318,6 +19414,12 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/extractor':
         specifier: workspace:*
         version: link:../../core/compute/extractor
@@ -19327,9 +19429,15 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/pipeline-rdf':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline-rdf
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
+      '@dxos/plugin-connector':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-connector
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../plugins/plugin-inbox
@@ -19339,6 +19447,9 @@ importers:
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../../plugins/plugin-preview
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-space
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../../plugins/plugin-testing
@@ -19351,15 +19462,30 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-rdf':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-rdf
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.5.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)(react@19.2.7)(scheduler@0.27.0)
       '@effect/ai':
         specifier: 'catalog:'
         version: 0.36.0(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)(ioredis@5.3.2))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.4.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.4.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@testing-library/dom@10.4.1)(@types/react@19.2.17)(prettier@3.6.2)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(typescript@6.0.3)(vite@8.0.16(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))(webpack@5.105.2(@swc/core@1.15.43(@swc/helpers@0.5.17))(esbuild@0.28.1))
       effect:
         specifier: 3.21.4
         version: 3.21.4
@@ -21076,7 +21202,7 @@ importers:
     devDependencies:
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=2bd882245924580ad001599ff56a0021f57f85479833e8d7939e1178f1c527db)
+        version: 2.6.0-subduction.40(patch_hash=73ef0a063dee98fafc630e9b2ce68fcc1dbe7889da802ddc62dc6ad85192c809)
       '@automerge/automerge-repo-network-broadcastchannel':
         specifier: 'catalog:'
         version: 2.6.0-subduction.40
@@ -22413,6 +22539,49 @@ importers:
         specifier: '>=8.0.16'
         version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
+  packages/ui/react-ui-rdf:
+    dependencies:
+      '@dxos/pipeline-rdf':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline-rdf
+      '@dxos/react-ui-graph':
+        specifier: workspace:*
+        version: link:../react-ui-graph
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../react-ui-list
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../ui-types
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.4.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.4.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@testing-library/dom@10.4.1)(@types/react@19.2.17)(prettier@3.6.2)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(typescript@6.0.3)(vite@8.0.16(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))(webpack@5.105.2(@swc/core@1.15.43(@swc/helpers@0.5.17))(esbuild@0.28.1))
+      '@types/react':
+        specifier: ~19.2.17
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.17)
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ~19.2.7
+        version: 19.2.7(react@19.2.7)
+      vite:
+        specifier: '>=8.0.16'
+        version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
   packages/ui/react-ui-search:
     dependencies:
       '@dxos/echo':
@@ -23185,7 +23354,7 @@ importers:
     devDependencies:
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.40(patch_hash=2bd882245924580ad001599ff56a0021f57f85479833e8d7939e1178f1c527db)
+        version: 2.6.0-subduction.40(patch_hash=73ef0a063dee98fafc630e9b2ce68fcc1dbe7889da802ddc62dc6ad85192c809)
       '@automerge/automerge-repo-network-broadcastchannel':
         specifier: 'catalog:'
         version: 2.6.0-subduction.40
@@ -44600,7 +44769,7 @@ snapshots:
 
   '@automerge/automerge-repo-network-broadcastchannel@2.6.0-subduction.40':
     dependencies:
-      '@automerge/automerge-repo': 2.6.0-subduction.40(patch_hash=2bd882245924580ad001599ff56a0021f57f85479833e8d7939e1178f1c527db)
+      '@automerge/automerge-repo': 2.6.0-subduction.40(patch_hash=73ef0a063dee98fafc630e9b2ce68fcc1dbe7889da802ddc62dc6ad85192c809)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -44608,7 +44777,7 @@ snapshots:
 
   '@automerge/automerge-repo-network-websocket@2.6.0-subduction.40':
     dependencies:
-      '@automerge/automerge-repo': 2.6.0-subduction.40(patch_hash=2bd882245924580ad001599ff56a0021f57f85479833e8d7939e1178f1c527db)
+      '@automerge/automerge-repo': 2.6.0-subduction.40(patch_hash=73ef0a063dee98fafc630e9b2ce68fcc1dbe7889da802ddc62dc6ad85192c809)
       cbor-x: 1.6.4
       debug: 4.4.3(supports-color@5.5.0)
       eventemitter3: 5.0.4
@@ -44620,13 +44789,13 @@ snapshots:
 
   '@automerge/automerge-repo-storage-indexeddb@2.6.0-subduction.40':
     dependencies:
-      '@automerge/automerge-repo': 2.6.0-subduction.40(patch_hash=2bd882245924580ad001599ff56a0021f57f85479833e8d7939e1178f1c527db)
+      '@automerge/automerge-repo': 2.6.0-subduction.40(patch_hash=73ef0a063dee98fafc630e9b2ce68fcc1dbe7889da802ddc62dc6ad85192c809)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-repo@2.6.0-subduction.40(patch_hash=2bd882245924580ad001599ff56a0021f57f85479833e8d7939e1178f1c527db)':
+  '@automerge/automerge-repo@2.6.0-subduction.40(patch_hash=73ef0a063dee98fafc630e9b2ce68fcc1dbe7889da802ddc62dc6ad85192c809)':
     dependencies:
       '@automerge/automerge': 3.3.0-fragments.2
       '@automerge/automerge-subduction': 0.16.0(patch_hash=6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669)
@@ -48689,7 +48858,7 @@ snapshots:
       '@comunica/core': 4.5.0
       '@comunica/types': 4.5.0
       '@rdfjs/types': 2.0.1
-      htmlparser2: 10.0.0
+      htmlparser2: 10.1.0
       readable-stream: 4.7.0
 
   '@comunica/actor-rdf-parse-jsonld@4.5.0':
@@ -48728,7 +48897,7 @@ snapshots:
       '@comunica/types': 4.5.0
       '@jeswr/stream-to-string': 2.0.0
       '@rdfjs/types': 2.0.1
-      asynciterator: 3.9.0
+      asynciterator: 3.10.0
       readable-stream: 4.7.0
       shaclc-parse: 1.4.3
 
@@ -49363,7 +49532,7 @@ snapshots:
     dependencies:
       '@rdfjs/types': 2.0.1
       '@types/yargs': 17.0.35
-      asynciterator: 3.9.0
+      asynciterator: 3.10.0
       lru-cache: 10.4.3
       sparqlalgebrajs: 5.0.2
 
@@ -57677,7 +57846,7 @@ snapshots:
 
   asyncjoin@1.2.4:
     dependencies:
-      asynciterator: 3.9.0
+      asynciterator: 3.10.0
 
   asynckit@0.4.0: {}
 

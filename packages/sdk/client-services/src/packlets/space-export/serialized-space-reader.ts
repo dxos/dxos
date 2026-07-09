@@ -114,7 +114,7 @@ export const objJsonToObjectStructure = (obj: Obj.JSON): EntityStructure => {
 
 /**
  * Build a new {@link DatabaseDirectory} containing every object from the archive,
- * keyed by object id. The caller is responsible for stamping the `access.spaceKey`
+ * keyed by object id. The caller is responsible for stamping the `access` (space id/key)
  * and version fields after the document is created.
  */
 export const buildDatabaseDirectoryFromObjects = (objects: readonly Obj.JSON[]): DatabaseDirectory => {

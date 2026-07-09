@@ -4,6 +4,22 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-07-08 — echo query aggregates + plugin-inbox thread sort
+
+- To sort groups by an aggregate (SQL `ORDER BY max(x)`), ECHO now supports: `.groupBy(GroupKey.property(k)).aggregate({ name: Aggregate.max('prop') }).orderBy(Order.aggregate('name', dir))`. `Aggregate.max/min('prop')` is strongly typed to the group member's keys (infers element type from the `.aggregate()` param context, like `Order.property`); `Order.aggregate(name, dir)` is typed to `keyof` the declared aggregates (via `T extends Group<any,any,infer A>`).
+- Group order = first-occurrence in the pre-group `orderBy` stream UNLESS a post-group `orderBy(Order.aggregate(...))` reorders whole groups by the aggregate. Within-group member order is the pre-group `orderBy` (independent of the group order direction). Mailbox: `orderBy(created desc).groupBy(threadId).aggregate({lastMessageAt: max(created)}).orderBy(Order.aggregate('lastMessageAt', dir))` → threads by most-recent message in `dir`, members always newest-first.
+- Feature spans: `echo-protocol/ast.ts` (group-by `aggregates`, `aggregate` Order kind), `echo/{Aggregate,Order,Query,index}.ts` (+`Group<K,T,A>` third param, `.aggregate()` builder — always returns a `Group` query, never `never`, or it breaks `Query<any>`→`Query<T>` assignability), `echo-host/query/{plan,query-planner,group-by,query-executor}.ts`, `echo-client/query/{working-set-executor,query-result}.ts`, and MIRROR in `echo-query/query-lite.ts` (parallel DSL — `Order2/Query1: typeof X$` force full parity).
+- Group aggregates need NO proto/wire change: executors compute them internally to order/page groups (row order carries the result); `Group.aggregates` is recomputed client-side in `query-result._assembleGroups` from hydrated members via `GroupBy.reduceAggregate` (reflects only hydrated members, like `values`).
+- Planner: `_validateGroupByPlacement` permits `order` wrapping group-by; `_ensureOrderStep` never inserts after a GroupByStep; `_optimizeLimits` treats GroupByStep as a blocker and pushes a group-level limit INTO the post-group OrderStep (which then `takeGroups`). Executors' `_execOrderStep` branch on `isGrouped` → `GroupBy.orderGroups` (reorders whole contiguous blocks by first member, stable) + `takeGroups` for a pushed-down limit.
+
+## 2026-07-08 — plugin-inbox (threaded mailbox via group-by query)
+
+- ECHO `Query...groupBy(GroupKey.property('threadId'))` returns `Query.Group<Pick<T,K>, T>` results (`{key, count, values}`); a following `.limit()`/`.skip()` pages over WHOLE groups, so `usePagination` composes directly with grouped queries (page size = groups per page). Group order = first occurrence of the key in the `orderBy`'d stream.
+- Missing/undefined/non-scalar group-key values all coerce to ONE `null`-key group (`GroupBy.coerceKeyComponent`) — split it client-side into singletons if per-item entries are wanted (mailbox: threadless messages become singleton conversations, re-interleaved by anchor date).
+- A union-typed query (`Query<T> | Query<Group<..>>` ternary on a mode flag) passes straight through `usePagination` without casts; discriminate items with a `'values' in entry` type predicate.
+- Mailbox testing builder `threads` option is the SIZE OF THE THREAD-ID POOL (default 10) — with conversation grouping that's 10 conversations TOTAL = exactly one page; grouped stories must seed `threads` >> page size or pagination appears broken.
+- `MessageStack` takes `items?: (Message.Message | MessageGroup)[]` (mixed allowed; `isMessageGroup` guard) and dispatches per-entry to MessageTile/ConversationTile via a single `StackTile` — kills the `Tile as any`/`items as any` casts a mode-switched `Tile` prop needed.
+
 ## 2026-07-05 — plugin-chess-com (operation handlers)
 
 - Operation handler files: `export default Op.pipe(Operation.withHandler(...), Operation.opaqueHandler)` as the default export — mirror `plugin-trip/src/operations/add-segment.ts`; no separate `const handler` alias.
@@ -278,7 +294,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ### UI-invoked space ops MUST pass `spaceId` in InvokeOptions
 
-- Any op whose `services` include space-affinity tags (`Database.Service`, `Feed.FeedService`, `Credential.CredentialsService`) fails with `ServiceNotAvailable` when invoked from a container without `{ spaceId: Obj.getDatabase(subject)?.spaceId }` — the spawn environment has no `space`, so the space slice never initializes. There is NO inference from ECHO objects in the input. Reference: `plugin-video` `SummarySection.tsx`.
+- Any op whose `services` include space-affinity tags (`Database.Service`, `Credential.CredentialsService`) fails with `ServiceNotAvailable` when invoked from a container without `{ spaceId: Obj.getDatabase(subject)?.spaceId }` — the spawn environment has no `space`, so the space slice never initializes. There is NO inference from ECHO objects in the input. Reference: `plugin-video` `SummarySection.tsx`.
 
 ### Editor menu (`Editor.Root`) props must be referentially stable
 

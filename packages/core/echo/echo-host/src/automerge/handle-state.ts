@@ -55,7 +55,7 @@ export type HandleQueryState = QueryState<unknown>['state'];
  * transitions, etc.).
  */
 export const getHandleState = (repo: Repo, documentId: DocumentId): HandleQueryState | undefined => {
-  if (!repo.handles[documentId]) {
+  if (!repo.getHandle(documentId)) {
     return undefined;
   }
   return repo.findWithProgress(documentId).peek().state;

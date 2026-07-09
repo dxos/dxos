@@ -2,32 +2,51 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
+import { useObject } from '@dxos/react-client/echo';
+import { Panel, ScrollArea } from '@dxos/react-ui';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { type Message as MessageType } from '@dxos/types';
 
-import { Message, type MessageHeaderProps, ObjectArticle, type ViewMode } from '#components';
+import { Message, type MessageHeaderProps, type ViewMode } from '#components';
 import { useActorContact } from '#hooks';
-import { InboxOperation } from '#types';
-import { Mailbox } from '#types';
+import { InboxOperation, Mailbox } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 
-export type MessageArticleProps = AppSurface.ObjectArticleProps<
-  MessageType.Message,
+/**
+ * `subject` is either a single message or its whole conversation (thread). The companion graph node
+ * assigns the thread directly (see the `mailboxMessage` connector) so the article renders it without
+ * re-querying; section/other callers may pass a single message.
+ */
+export type MessageArticleProps = AppSurface.ArticleProps<
+  MessageType.Message | MessageType.Message[],
   {
     mailbox?: Mailbox.Mailbox;
   }
 >;
 
+/** Messages default to rendering the raw email HTML; markdown/plain are opt-in toolbar views. */
+const DEFAULT_VIEW_MODE: ViewMode = 'html';
+
+type MessageOrRef = MessageType.Message | Ref.Ref<MessageType.Message>;
+
+const keyOf = (message: MessageOrRef): string => (Ref.isRef(message) ? String(message.uri) : Obj.getURI(message));
+
+/**
+ * Message/conversation detail view. Renders the opened conversation as a vertical stack — each member
+ * resolved by its own leaf (see {@link ThreadMessageItem}) so subscriptions stay granular. `subject`
+ * is the whole thread (assigned by the companion graph node) or a single message. Toolbar actions
+ * (reply/forward/delete) act on the newest message (last, chronological order).
+ */
 export const MessageArticle = ({
   role,
-  subject: message,
+  subject,
   attendableId,
   companionTo,
   mailbox: mailboxProp,
@@ -35,13 +54,17 @@ export const MessageArticle = ({
   const toolbarAttendableId = attendableId && isLinkedSegment(attendableId) ? getParentId(attendableId) : attendableId;
   const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : mailboxProp;
 
-  const viewMode = useMemo<ViewMode>(() => {
-    const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
-    return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'markdown';
-  }, [message]);
+  // Normalize the singular-or-plural subject to a conversation; the newest message (last) anchors the
+  // toolbar and header actions.
+  const messages: MessageType.Message[] = Array.isArray(subject) ? subject : [subject];
+  const message = messages[messages.length - 1];
 
   const db = Obj.getDatabase(message);
   const sender = useActorContact(db, message.sender);
+
+  // View mode is owned here and shared (controlled) across the toolbar and every message body, which
+  // render in separate `Message.Root`s — so the toolbar's switch applies to all bodies.
+  const [viewMode, setViewMode] = useState<ViewMode>(DEFAULT_VIEW_MODE);
 
   const { invokePromise } = useOperationInvoker();
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
@@ -68,40 +91,91 @@ export const MessageArticle = ({
     },
     [db, invokePromise, message, mailbox],
   );
-
   const handleReply = useCallback(() => openDraft('reply'), [openDraft]);
   const handleReplyAll = useCallback(() => openDraft('reply-all'), [openDraft]);
   const handleForward = useCallback(() => openDraft('forward'), [openDraft]);
 
-  // Delete the message (draft locally; synced message is trashed on Gmail and removed from the feed).
-  // NOTE: `spaceId` scopes the spawned operation process so its space-affinity services
-  // (Database/Feed/Credentials) can materialize.
+  // Delete the opened message (draft locally; synced message is trashed on Gmail and removed from the
+  // feed). `spaceId` scopes the spawned operation process so its space-affinity services materialize.
   const handleDelete = useCallback(() => {
     if (mailbox) {
       void invokePromise(InboxOperation.DeleteEmail, { mailbox, message }, { spaceId: db?.spaceId });
     }
-  }, [invokePromise, mailbox, message, db]);
+  }, [invokePromise, db, mailbox, message]);
 
   return (
-    <Message.Root
-      attendableId={toolbarAttendableId}
-      viewMode={viewMode}
-      message={message}
-      mailbox={mailbox}
-      sender={sender}
-      onOpen={companionTo ? handleOpen : undefined}
-      onReply={handleReply}
-      onReplyAll={handleReplyAll}
-      onForward={handleForward}
-      onDelete={mailbox ? handleDelete : undefined}
-    >
-      <ObjectArticle
-        role={role}
-        toolbar={<Message.Toolbar />}
-        header={<Message.Header onContactCreate={handleContactCreate} />}
+    <Panel.Root role={role}>
+      <Message.Root
+        attendableId={toolbarAttendableId}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        message={message}
+        mailbox={mailbox}
+        sender={sender}
+        onOpen={companionTo ? handleOpen : undefined}
+        onReply={handleReply}
+        onReplyAll={handleReplyAll}
+        onForward={handleForward}
+        onDelete={mailbox ? handleDelete : undefined}
       >
-        <Message.Body />
-      </ObjectArticle>
+        <Panel.Toolbar asChild>
+          <Message.Toolbar />
+        </Panel.Toolbar>
+      </Message.Root>
+      <Panel.Content asChild>
+        <ScrollArea.Root padding thin>
+          <ScrollArea.Viewport>
+            <div className='dx-document flex flex-col'>
+              {messages.map((messageOrRef) => (
+                <div key={keyOf(messageOrRef)} className='border-be border-separator'>
+                  <ThreadMessageItem
+                    message={messageOrRef}
+                    mailbox={mailbox}
+                    viewMode={viewMode}
+                    setViewMode={setViewMode}
+                    onContactCreate={handleContactCreate}
+                  />
+                </div>
+              ))}
+            </div>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Content>
+    </Panel.Root>
+  );
+};
+
+/**
+ * A single message within the conversation stack. Owns its own subscription so reactivity is pushed to
+ * the leaf — the parent holds only messages/refs, not resolved objects. `useObject` dereferences the
+ * ref via its loading atom and re-renders when it loads, returning a snapshot the message components
+ * render directly.
+ */
+const ThreadMessageItem = ({
+  message: messageOrRef,
+  mailbox,
+  viewMode,
+  setViewMode,
+  onContactCreate,
+}: {
+  message: MessageOrRef;
+  mailbox?: Mailbox.Mailbox;
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
+  onContactCreate: NonNullable<MessageHeaderProps['onContactCreate']>;
+}) => {
+  const [message] = useObject(messageOrRef);
+  const db = mailbox ? Obj.getDatabase(mailbox) : undefined;
+  const sender = useActorContact(db, message?.sender);
+
+  if (!message) {
+    return null;
+  }
+
+  return (
+    <Message.Root viewMode={viewMode} setViewMode={setViewMode} message={message} mailbox={mailbox} sender={sender}>
+      <Message.Header onContactCreate={onContactCreate} />
+      <Message.Body />
     </Message.Root>
   );
 };

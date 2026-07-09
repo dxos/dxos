@@ -97,6 +97,7 @@ tmp
 temp
 .vite-inspect
 *.tsbuildinfo
+bench-results.json
 
 # Web Extensions
 web-ext-artifacts

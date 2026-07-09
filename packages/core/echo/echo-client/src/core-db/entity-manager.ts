@@ -742,7 +742,7 @@ export class EntityManager implements IDatabaseBinding {
     const doc = existingDocHandle.doc();
     invariant(doc);
     invariant(doc.version === SpaceDocVersion.CURRENT);
-    if (doc.access == null) {
+    if (doc.access?.spaceId == null || doc.access?.spaceKey == null) {
       this._initDocAccess(existingDocHandle);
     }
     this._spaceRootDocHandle = existingDocHandle;
@@ -823,7 +823,8 @@ export class EntityManager implements IDatabaseBinding {
     invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
     const spaceDocHandle = this._repoProxy.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
-      access: { spaceKey: this._spaceKey.toHex() },
+      // spaceKey is deprecated but still written so older clients can resolve the owning space.
+      access: { spaceId: this._spaceId, spaceKey: this._spaceKey.toHex() },
     });
     const creationPromise = spaceDocHandle
       .whenReady()
@@ -911,7 +912,9 @@ export class EntityManager implements IDatabaseBinding {
 
   private _initDocAccess(handle: DocHandleProxy<DatabaseDirectory>): void {
     handle.change((newDoc: DatabaseDirectory) => {
-      newDoc.access ??= { spaceKey: this._spaceKey.toHex() };
+      newDoc.access ??= {};
+      newDoc.access.spaceId = this._spaceId;
+      // spaceKey is deprecated but still written so older clients can resolve the owning space.
       newDoc.access.spaceKey = this._spaceKey.toHex();
     });
   }

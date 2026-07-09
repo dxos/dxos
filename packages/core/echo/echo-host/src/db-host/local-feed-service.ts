@@ -56,13 +56,12 @@ export class LocalFeedServiceImpl implements FeedService {
     const { spaceId, feedIds } = query;
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
-        const cursor = query.after ? parseInt(query.after) : -1;
         const result = yield* this.#feedStore.query({
           requestId: crypto.randomUUID(),
           feedNamespace: request.query.feedNamespace || FeedProtocol.WellKnownNamespaces.data,
           spaceId: spaceId! as SpaceId,
           query: { feedIds: feedIds ?? [] },
-          position: cursor,
+          cursor: query.after ? FeedProtocol.FeedCursor.make(query.after) : undefined,
           limit: query.limit,
         });
 
@@ -70,14 +69,9 @@ export class LocalFeedServiceImpl implements FeedService {
           JSON.stringify(EchoFeedCodec.decode(block.data, block.position ?? undefined) as ObjectJSON),
         );
 
-        const lastBlock = result.blocks[result.blocks.length - 1];
-        const nextCursor = lastBlock && lastBlock.position != null ? String(lastBlock.position) : null;
-
         return Function.identity<FeedQueryResult>({
           objects,
-
-          // TODO(dmaretskyi): This is wrong, fix later - cursors should come directly from the feed.
-          nextCursor: nextCursor?.toString() ?? '',
+          nextCursor: result.nextCursor,
           prevCursor: '',
         });
       }),

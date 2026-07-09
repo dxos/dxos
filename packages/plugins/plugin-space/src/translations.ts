@@ -218,6 +218,7 @@ export const translations = [
         'show-all.label': 'Show all',
         'no-sync-status.label': 'No space with missing objects.',
         'create-space-dialog.title': 'Create Space',
+        'create-space-dialog.error.message': 'Failed to create space. Please try again.',
         'create-object-dialog.title': 'Create {{object}}',
         'space-input.placeholder': 'Select space',
         'schema-input.placeholder': 'Select type',

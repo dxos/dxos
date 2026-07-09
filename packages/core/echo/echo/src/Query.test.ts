@@ -9,9 +9,11 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import * as Aggregate from './Aggregate';
 import * as Dataset from './Dataset';
 import * as Feed from './Feed';
 import * as Filter from './Filter';
+import * as GroupKey from './GroupKey';
 import * as Obj from './Obj';
 import * as Order from './Order';
 import * as Query from './Query';
@@ -802,6 +804,206 @@ describe('query api', () => {
       });
       expect(filter.ast.type === 'child-of' && filter.ast.parents.length).toBe(2);
       Schema.validateSync(QueryAST.Filter)(filter.ast);
+    });
+
+    describe('.groupBy', () => {
+      test('groupBy with single property', () => {
+        const query = Query.select(Filter.type(TestSchema.Person)).groupBy(GroupKey.property('email'));
+
+        expect(query.ast).toMatchObject({
+          type: 'group-by',
+          keys: [{ kind: 'property', property: 'email' }],
+        });
+        Schema.validateSync(QueryAST.Query)(query.ast);
+      });
+
+      test('groupBy with multiple properties', () => {
+        const query = Query.select(Filter.type(TestSchema.Person)).groupBy(
+          GroupKey.property('name'),
+          GroupKey.property('email'),
+        );
+
+        expect(query.ast).toMatchObject({
+          type: 'group-by',
+          keys: [
+            { kind: 'property', property: 'name' },
+            { kind: 'property', property: 'email' },
+          ],
+        });
+        Schema.validateSync(QueryAST.Query)(query.ast);
+      });
+
+      test("groupBy wraps the preceding query as the group-by node's inner query", () => {
+        const inner = Query.select(Filter.type(TestSchema.Person));
+        const query = inner.groupBy(GroupKey.property('email'));
+
+        expect(query.ast).toMatchObject({ type: 'group-by', query: inner.ast });
+      });
+
+      test('from()/options() may follow groupBy, keeping it the outermost data clause', () => {
+        const grouped = Query.select(Filter.type(TestSchema.Person)).groupBy(GroupKey.property('email'));
+
+        const withOptions = grouped.options({ debugLabel: 'grouped' });
+        expect(withOptions.ast).toMatchObject({ type: 'options', query: grouped.ast });
+        Schema.validateSync(QueryAST.Query)(withOptions.ast);
+
+        const withDebugLabel = grouped.debugLabel('grouped-2');
+        expect(withDebugLabel.ast).toMatchObject({ type: 'options', options: { debugLabel: 'grouped-2' } });
+        Schema.validateSync(QueryAST.Query)(withDebugLabel.ast);
+      });
+
+      test('Query.pretty renders groupBy', () => {
+        const query = Query.select(Filter.type(TestSchema.Person)).groupBy(GroupKey.property('email'));
+        expect(Query.pretty(query)).toContain('.groupBy("email")');
+      });
+
+      test('Query.pretty renders multi-key groupBy', () => {
+        const query = Query.select(Filter.type(TestSchema.Person)).groupBy(
+          GroupKey.property('name'),
+          GroupKey.property('email'),
+        );
+        expect(Query.pretty(query)).toContain('.groupBy("name", "email")');
+      });
+
+      test('type-level: a bare group carries only the key', () => {
+        const query = Query.type(TestSchema.Person).groupBy(GroupKey.property('email'));
+        expectTypeOf<Query.Type<typeof query>>().toHaveProperty('key');
+        expectTypeOf<Query.Type<typeof query>['key']>().toHaveProperty('email');
+        // Members/count/aggregates are opt-in via `.aggregate()`.
+        expectTypeOf<Query.Type<typeof query>>().not.toHaveProperty('items');
+        expectTypeOf<Query.Type<typeof query>>().not.toHaveProperty('count');
+      });
+
+      test('aggregate declares named aggregates on the group-by node', () => {
+        const query = Query.select(Filter.type(TestSchema.Person))
+          .groupBy(GroupKey.property('email'))
+          .aggregate({
+            latest: Aggregate.max('name'),
+            earliest: Aggregate.min('name'),
+            total: Aggregate.count(),
+            items: Aggregate.items(),
+          });
+
+        expect(query.ast).toMatchObject({
+          type: 'group-by',
+          keys: [{ kind: 'property', property: 'email' }],
+          aggregates: [
+            { name: 'latest', kind: 'max', property: 'name' },
+            { name: 'earliest', kind: 'min', property: 'name' },
+            { name: 'total', kind: 'count' },
+            { name: 'items', kind: 'items' },
+          ],
+        });
+        Schema.validateSync(QueryAST.Query)(query.ast);
+      });
+
+      test('orderBy(Order.property) after aggregate orders by the aggregate field', () => {
+        const grouped = Query.select(Filter.type(TestSchema.Person))
+          .groupBy(GroupKey.property('email'))
+          .aggregate({ latest: Aggregate.max('name') });
+        const ordered = grouped.orderBy(Order.property('latest', 'desc'));
+
+        expect(ordered.ast).toMatchObject({
+          type: 'order',
+          query: grouped.ast,
+          order: [{ kind: 'property', property: 'latest', direction: 'desc' }],
+        });
+        Schema.validateSync(QueryAST.Query)(ordered.ast);
+      });
+
+      test('Query.pretty renders aggregates (incl. items) and aggregate ordering', () => {
+        const query = Query.select(Filter.type(TestSchema.Person))
+          .groupBy(GroupKey.property('email'))
+          .aggregate({ latest: Aggregate.max('name'), items: Aggregate.items() })
+          .orderBy(Order.property('latest', 'desc'));
+        const pretty = Query.pretty(query);
+        expect(pretty).toContain(
+          '.groupBy("email").aggregate({ "latest": Aggregate.max("name"), "items": Aggregate.items() })',
+        );
+        expect(pretty).toContain('.orderBy(Order.property("latest", "desc"))');
+      });
+
+      test('.aggregate() throws when it does not follow groupBy', () => {
+        expect(() => Query.select(Filter.type(TestSchema.Person)).aggregate({ latest: Aggregate.max('name') })).toThrow(
+          /must directly follow \.groupBy/,
+        );
+      });
+
+      test('type-level: aggregates surface as top-level group fields', () => {
+        const query = Query.type(TestSchema.Person)
+          .groupBy(GroupKey.property('email'))
+          .aggregate({ latest: Aggregate.max('name'), total: Aggregate.count(), items: Aggregate.items() });
+        expectTypeOf<Query.Type<typeof query>>().toHaveProperty('latest');
+        expectTypeOf<Query.Type<typeof query>>().toHaveProperty('total');
+        expectTypeOf<Query.Type<typeof query>>().toHaveProperty('items');
+      });
+
+      test('type-level: Aggregate.max/min property is checked against the member type', () => {
+        const grouped = Query.type(TestSchema.Person).groupBy(GroupKey.property('email'));
+        // Valid member properties compile.
+        grouped.aggregate({ latest: Aggregate.max('name'), oldest: Aggregate.min('age') });
+        // @ts-expect-error - 'nope' is not a property of Person.
+        grouped.aggregate({ bad: Aggregate.max('nope') });
+        // @ts-expect-error - min is checked too.
+        grouped.aggregate({ bad: Aggregate.min('nope') });
+      });
+
+      test('type-level: aggregate value type tracks its kind and member property type', () => {
+        const query = Query.type(TestSchema.Person)
+          .groupBy(GroupKey.property('email'))
+          .aggregate({
+            latest: Aggregate.max('name'),
+            oldest: Aggregate.min('age'),
+            total: Aggregate.count(),
+            items: Aggregate.items(),
+          });
+        type Group = Query.Type<typeof query>;
+        // `name`/`age` are optional on Person (partial schema); max/min are additionally nullable
+        // (a group may have no scalar members) — so the value tracks the property type, not `any`.
+        expectTypeOf<Group['latest']>().toEqualTypeOf<string | undefined | null>();
+        expectTypeOf<Group['oldest']>().toEqualTypeOf<number | undefined | null>();
+        expectTypeOf<Group['total']>().toEqualTypeOf<number>();
+        // `items` is an array of the grouped member type.
+        expectTypeOf<Group['items']>().toBeArray();
+        expectTypeOf<Group['items'][number]>().toHaveProperty('name');
+
+        // Assignment-level proof that it is a real string/number union and not `any`.
+        // @ts-expect-error - a string aggregate does not accept a number.
+        const badName: Group['latest'] = 42;
+        // @ts-expect-error - a number aggregate does not accept a string.
+        const badAge: Group['oldest'] = 'nope';
+        void badName;
+        void badAge;
+      });
+
+      test('type-level: Order.property after aggregate is checked against the group fields', () => {
+        const grouped = Query.type(TestSchema.Person)
+          .groupBy(GroupKey.property('email'))
+          .aggregate({ latest: Aggregate.max('name'), total: Aggregate.count() });
+        // Declared aggregate fields compile.
+        grouped.orderBy(Order.property('latest', 'desc'));
+        grouped.orderBy(Order.property('total', 'asc'));
+        // @ts-expect-error - 'earliest' was never declared as an aggregate.
+        grouped.orderBy(Order.property('earliest', 'desc'));
+        // @ts-expect-error - 'name' is a member property, not a group field, so it is not orderable here.
+        grouped.orderBy(Order.property('name', 'desc'));
+      });
+
+      test('type-level: Order.property follows the current result shape across groupBy', () => {
+        const ungrouped = Query.type(TestSchema.Person);
+        // Before groupBy: member properties are orderable.
+        ungrouped.orderBy(Order.property('name', 'desc'));
+        // @ts-expect-error - 'latest' is not a member property before grouping.
+        ungrouped.orderBy(Order.property('latest', 'desc'));
+
+        const grouped = Query.type(TestSchema.Person)
+          .groupBy(GroupKey.property('email'))
+          .aggregate({ latest: Aggregate.max('name') });
+        // After aggregate: the aggregate field is orderable, member properties are not.
+        grouped.orderBy(Order.property('latest', 'desc'));
+        // @ts-expect-error - 'name' is a member property, not a group field.
+        grouped.orderBy(Order.property('name', 'desc'));
+      });
     });
   });
 
