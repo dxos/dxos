@@ -306,6 +306,27 @@ export class ServiceContext extends Resource implements ServiceContextApi {
     return this.#edgeAgentManager;
   }
 
+  get edgeConnection(): EdgeConnection | undefined {
+    return this.#edgeConnection;
+  }
+
+  /**
+   * Resolves the {@link DataSpaceManager} once identity-bound services have opened (`initialized`).
+   * The manager is always constructed by the stack, so no null-check is needed after the wait.
+   */
+  async whenDataSpaceManagerReady(): Promise<DataSpaceManager> {
+    await this.initialized.wait();
+    return this.#dataSpaceManager;
+  }
+
+  /**
+   * Resolves the {@link EdgeAgentManager} once identity-bound services have opened (`initialized`).
+   */
+  async whenEdgeAgentManagerReady(): Promise<EdgeAgentManager> {
+    await this.initialized.wait();
+    return this.#edgeAgentManager;
+  }
+
   @Trace.span({ op: 'lifecycle' })
   protected override async _open(ctx: Context): Promise<void> {
     log('running storage migrations...');
