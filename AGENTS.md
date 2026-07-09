@@ -9,7 +9,7 @@ This file is the shared, harness-agnostic entrypoint for coding agents.
 ## Start of session
 
 - Confirm you understand these instructions and list the guidance files you are
-  aware of (this file, `.claude/AGENTS.md`, relevant `.agents/skills/*`).
+  aware of (this file, `.claude/CLAUDE.md`, relevant `.agents/skills/*`).
 - State the worktree you are operating in.
 - When asking a question, make it yes/no or give numbered options — never an
   unnumbered a-or-b.

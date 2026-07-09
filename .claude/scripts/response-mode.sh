@@ -2,8 +2,8 @@
 #
 # Copyright 2026 DXOS.org
 #
-# Backs the `/concise` slash command and the UserPromptSubmit hook that together
-# implement a user-toggleable response verbosity mode.
+# Backs the UserPromptSubmit hook that toggles response verbosity via
+# `$concise` / `$natural` sentinels in normal messages.
 #
 #   response-mode.sh get      -> print current mode (concise|natural)
 #   response-mode.sh toggle   -> flip the mode, print the new mode

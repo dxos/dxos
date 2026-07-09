@@ -46,13 +46,15 @@ if printf '%s' "$normalized" | grep -Eq '(^|[;&|[:space:]])git[[:space:]]+worktr
   deny "Refusing to create a worktree: this session already runs in the assigned worktree '$project_dir'. Creating another breaks the Desktop UI's session/worktree pairing. Work in the assigned directory; if you need a different branch, ask the user."
 fi
 
-# git checkout -b|-B / git switch -c|-C — creating a new branch.
-if printf '%s' "$normalized" | grep -Eq '(^|[;&|[:space:]])git[[:space:]]+(checkout[[:space:]]+-[bB]|switch[[:space:]]+-[cC])([[:space:]]|$)'; then
+# git checkout -b|-B / git switch -c|-C — creating a new branch. The suffix
+# accepts any char (not just whitespace) so combined forms like `-bq`/`-cname`
+# cannot bypass the guard; newlines are already normalized to spaces above.
+if printf '%s' "$normalized" | grep -Eq '(^|[;&|[:space:]])git[[:space:]]+(checkout[[:space:]]+-[bB]|switch[[:space:]]+-[cC])(.|$)'; then
   deny "Refusing to create a new branch: the assigned branch must stay 'claude/<worktree-dir-name>' so the Desktop UI can pair this session to its worktree. Do not create branches unless the user explicitly asks."
 fi
 
-# git branch -m|-M — renaming a branch.
-if printf '%s' "$normalized" | grep -Eq '(^|[;&|[:space:]])git[[:space:]]+branch[[:space:]]+-[mM]([[:space:]]|$)'; then
+# git branch -m|-M — renaming a branch (combined form `-mnewname` also caught).
+if printf '%s' "$normalized" | grep -Eq '(^|[;&|[:space:]])git[[:space:]]+branch[[:space:]]+-[mM](.|$)'; then
   deny "Refusing to rename the branch: the assigned branch must stay 'claude/<worktree-dir-name>' so the Desktop UI can pair this session to its worktree. Do not rename the branch."
 fi
 

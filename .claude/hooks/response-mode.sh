@@ -26,8 +26,11 @@ sentinel=$(printf '%s\n' "$prompt" \
 if [ -n "$sentinel" ]; then
   value=$(printf '%s' "$sentinel" | grep -ioE '(concise|natural|default|off)' \
     | tail -1 | tr '[:upper:]' '[:lower:]')
-  bash "$script" set "$value" >/dev/null 2>&1 || true
-  printf 'Response mode set via `%s` sentinel. Acknowledge the new mode in one short line; only treat the rest of the message as a task if it clearly contains one.\n' "$sentinel"
+  if bash "$script" set "$value" >/dev/null 2>&1; then
+    printf 'Response mode set via `%s` sentinel. Acknowledge the new mode in one short line; only treat the rest of the message as a task if it clearly contains one.\n' "$sentinel"
+  else
+    printf 'WARNING: failed to persist response mode via `%s`; the mode may be stale. Tell the user.\n' "$sentinel"
+  fi
 fi
 
 exec bash "$script" context
