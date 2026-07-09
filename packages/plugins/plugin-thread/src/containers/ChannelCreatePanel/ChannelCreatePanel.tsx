@@ -50,3 +50,5 @@ export const ChannelCreatePanel = ({ target, onCreateObject }: SpaceCapabilities
     </Form.Root>
   );
 };
+
+ChannelCreatePanel.displayName = 'ChannelCreatePanel';

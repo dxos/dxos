@@ -46,3 +46,5 @@ export const GameArticle = ({ role, attendableId, subject: game }: GameArticlePr
   const Component = match.article;
   return <Component game={game} variant={variant} role={role} attendableId={attendableId} />;
 };
+
+GameArticle.displayName = 'GameArticle';

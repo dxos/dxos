@@ -58,3 +58,5 @@ export const SearchArticle = ({ space }: AppSurface.SpaceArticleProps) => {
     </SearchList.Root>
   );
 };
+
+SearchArticle.displayName = 'SearchArticle';

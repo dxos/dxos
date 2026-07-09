@@ -86,3 +86,5 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
 /** Convenience: format a Post's published date the way the magazine view shows it. */
 const formatPublished = (post: Obj.Snapshot<Subscription.Post>): string | undefined =>
   post.published ? formatDate(post.published) : undefined;
+
+MagazineTile.displayName = 'MagazineTile';

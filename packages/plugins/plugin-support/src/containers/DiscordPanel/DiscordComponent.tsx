@@ -264,3 +264,5 @@ export const DiscordComponent = {
   Content,
   StatusBar,
 };
+
+DiscordComponent.displayName = 'DiscordComponent';

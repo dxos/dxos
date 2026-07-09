@@ -35,7 +35,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-rdf": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -45,6 +45,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/config": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "catalog:",

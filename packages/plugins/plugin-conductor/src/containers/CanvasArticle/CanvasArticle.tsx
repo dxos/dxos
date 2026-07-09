@@ -124,3 +124,5 @@ const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
 
   return controller;
 };
+
+CanvasArticle.displayName = 'CanvasArticle';

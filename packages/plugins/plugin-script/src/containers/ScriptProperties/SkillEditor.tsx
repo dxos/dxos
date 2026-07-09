@@ -100,3 +100,5 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
     </div>
   );
 };
+
+SkillEditor.displayName = 'SkillEditor';

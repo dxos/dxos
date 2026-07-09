@@ -125,3 +125,5 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     );
   },
 );
+
+SpaceGenerator.displayName = 'SpaceGenerator';

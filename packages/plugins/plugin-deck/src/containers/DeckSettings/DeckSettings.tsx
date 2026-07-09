@@ -40,3 +40,5 @@ export const DeckSettings = ({ settings, onSettingsChange }: DeckSettingsProps) 
     </Form.Root>
   );
 };
+
+DeckSettings.displayName = 'DeckSettings';

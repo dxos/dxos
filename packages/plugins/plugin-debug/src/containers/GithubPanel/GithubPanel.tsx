@@ -15,3 +15,5 @@ export const GithubPanel = () => (
     </div>
   </GithubComponent.Root>
 );
+
+GithubPanel.displayName = 'GithubPanel';

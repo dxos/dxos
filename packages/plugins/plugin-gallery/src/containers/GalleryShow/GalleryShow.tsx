@@ -58,3 +58,5 @@ export const GalleryShow = ({ gallery: subject }: GalleryShowProps) => {
     </div>
   );
 };
+
+GalleryShow.displayName = 'GalleryShow';

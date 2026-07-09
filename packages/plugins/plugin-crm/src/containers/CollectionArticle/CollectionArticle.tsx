@@ -217,3 +217,5 @@ const CollectionTile = ({ object, current, onOpen, onDelete }: TileData) => {
     </Focus.Item>
   );
 };
+
+CollectionArticle.displayName = 'CollectionArticle';

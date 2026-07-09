@@ -53,3 +53,5 @@ export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObj
     </Clipboard.Provider>
   );
 };
+
+DebugSpaceObjectsPanel.displayName = 'DebugSpaceObjectsPanel';

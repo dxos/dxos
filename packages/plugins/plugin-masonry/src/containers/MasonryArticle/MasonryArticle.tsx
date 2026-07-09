@@ -117,3 +117,5 @@ const Item = ({ data }: { data: any }) => {
     </Menu.Root>
   );
 };
+
+MasonryArticle.displayName = 'MasonryArticle';

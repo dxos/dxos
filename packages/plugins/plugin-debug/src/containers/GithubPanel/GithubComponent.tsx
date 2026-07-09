@@ -190,3 +190,5 @@ export const GithubComponent = {
   Content,
   StatusBar,
 };
+
+GithubComponent.displayName = 'GithubComponent';

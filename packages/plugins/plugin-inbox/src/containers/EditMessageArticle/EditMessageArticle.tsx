@@ -81,3 +81,5 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
     </Panel.Root>
   );
 };
+
+EditMessageArticle.displayName = 'EditMessageArticle';

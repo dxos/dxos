@@ -670,9 +670,6 @@
       "path": "packages/stories/stories-inbox/tsconfig.json"
     },
     {
-      "path": "packages/stories/stories-ui/tsconfig.json"
-    },
-    {
       "path": "packages/ui/brand/tsconfig.json"
     },
     {

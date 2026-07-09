@@ -10,10 +10,10 @@
 //   - RIGHT  `ConnectorCompanion` — the connection bound to the mailbox (once connected).
 //
 // The mailbox starts empty and unbound (the `SeededFacts` variant populates the feed with demo
-// messages for an offline demo). The client is configured WITHOUT an Edge service (fully local, no
-// Edge websocket), so only the credential-based connector is usable:
-//   - JMAP/Fastmail: a credential form (host + email + token), no OAuth.
-//   - Gmail: disabled — its OAuth coordinator requires an Edge URL.
+// messages for an offline demo). The client is configured WITH an Edge service (an Edge websocket),
+// so both connectors are usable:
+//   - JMAP/Fastmail: a credential form (host + email + token).
+//   - Gmail: its OAuth coordinator (which requires the Edge URL).
 // Completing JMAP binds an `AccessToken` + `Connection` + `SyncBinding` to the mailbox;
 // the LEFT button then flips to a refresh button whose click runs a real
 // (`JmapMailApi.Live`) sync into the mailbox feed.
@@ -36,11 +36,12 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AiService, Provider } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { withPluginManager } from '@dxos/app-framework/testing';
+import { withPluginManager, withSurfaceDebug } from '@dxos/app-framework/testing';
 import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppPlugin, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
+import { configPreset } from '@dxos/config';
 import { Database, Feed, Filter, Order, Query, Ref, Tag } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
@@ -62,10 +63,12 @@ import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { useAttentionAttributes, useSelection } from '@dxos/react-ui-attention';
-import { FactViewer } from '@dxos/react-ui-rdf';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
-import { AccessToken, ContentBlock, Cursor, Message, Organization, Person } from '@dxos/types';
+import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
+
+import { seedDemoMessages } from '../testing/demo-messages';
 
 // Shared attention context id: the LEFT article writes its selection under this id
 // (`showItem({ contextId })`) and the render component reads it back to drive the MIDDLE column.
@@ -75,42 +78,6 @@ const ATTENDABLE_ID = 'story';
 // model extracts facts far more reliably than a 3B one; swap for any model pulled locally. Ollama
 // reliably fails structured output, so the operation is invoked with `strict: false`.
 const OLLAMA_MODEL = 'com.alibaba.model.qwen-2-5-7b.instruct';
-
-// Fresh demo messages seeded into a new mailbox so the `EnrichFacts` variant has content to extract
-// facts from without a live connection. A factory (not a const) so each identity reset appends new
-// object instances rather than re-appending already-persisted ones.
-const makeDemoMessages = (): Message.Message[] => [
-  Message.make({
-    sender: { email: 'jane@sequoia.com', name: 'Jane Partner' },
-    created: '2026-07-01T09:00:00.000Z',
-    blocks: [
-      ContentBlock.Text.make({
-        text: 'Acme Corp raised a $20M Series B led by Sequoia Capital. Jane Doe joins as CFO, reporting to CEO Mark Lee.',
-      }),
-    ],
-    properties: { subject: 'Acme Series B closed' },
-  }),
-  Message.make({
-    sender: { email: 'bob@globex.com', name: 'Bob Smith' },
-    created: '2026-07-02T14:30:00.000Z',
-    blocks: [
-      ContentBlock.Text.make({
-        text: 'Bob Smith from Globex Corporation will present the new logistics platform at the Berlin conference next Tuesday.',
-      }),
-    ],
-    properties: { subject: 'Berlin conference talk' },
-  }),
-  Message.make({
-    sender: { email: 'alice@initech.com', name: 'Alice Johnson' },
-    created: '2026-07-03T11:15:00.000Z',
-    blocks: [
-      ContentBlock.Text.make({
-        text: 'The merger between Initech and Umbrella Industries closes Friday. Alice Johnson is coordinating the legal review with counsel at Wayne & Co.',
-      }),
-    ],
-    properties: { subject: 'Initech / Umbrella merger' },
-  }),
-];
 
 // Schema for every object the connect+sync flow reads or writes: the mailbox + feed, the
 // OAuth-created access token / connection / binding / cursor, and the synced messages,
@@ -180,9 +147,73 @@ const StoryAiPlugin = Plugin.define(
   Plugin.make,
 );
 
+type ControlsProps = {
+  enrich: boolean;
+  enriching: boolean;
+  hasFeed: boolean;
+  hasMailbox: boolean;
+  facts: RDF.Fact[];
+  onReset: () => void;
+  onResetCursor: () => void;
+  onResetFactStore: () => void;
+  onStop: () => void;
+  onEnrich: () => void;
+};
+
+// First column: the story's controls (reset / enrich) plus a JSON status readout. Reads the identity
+// itself and derives the status counts from `facts` so the parent only passes actions + shared state.
+const Controls = ({
+  enrich,
+  enriching,
+  hasFeed,
+  hasMailbox,
+  facts,
+  onReset,
+  onResetCursor,
+  onResetFactStore,
+  onStop,
+  onEnrich,
+}: ControlsProps) => {
+  const identity = useIdentity();
+  // Distinct fact sources = messages that have produced facts (a live "processed" proxy).
+  const processedCount = new Set(facts.map((fact) => fact.attribution.source)).size;
+  const factsCount = facts.length;
+
+  return (
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.Button onClick={onReset}>Reset store</Toolbar.Button>
+          {enrich && (
+            <>
+              <Toolbar.Button onClick={onResetCursor} disabled={!hasFeed || enriching}>
+                Reset cursor
+              </Toolbar.Button>
+              <Toolbar.Button onClick={onResetFactStore} disabled={enriching}>
+                Reset facts
+              </Toolbar.Button>
+              {enriching ? (
+                <Toolbar.Button onClick={onStop}>Stop</Toolbar.Button>
+              ) : (
+                <Toolbar.Button onClick={onEnrich} disabled={!hasMailbox}>
+                  Enrich
+                </Toolbar.Button>
+              )}
+            </>
+          )}
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content className='flex flex-col gap-2 p-2 text-sm'>
+        {enrich && (
+          <JsonHighlighter data={{ identity: identity?.identityKey.truncate(), processedCount, factsCount }} />
+        )}
+      </Panel.Content>
+    </Panel.Root>
+  );
+};
+
 const MailboxSyncStory = ({ enrich = false, seed = false }: { enrich?: boolean; seed?: boolean }) => {
   const client = useClient();
-  const identity = useIdentity();
   const [space] = useSpaces();
   const db = useDatabase(space?.id);
   const [mailbox] = useQuery(db, Filter.type(Mailbox.Mailbox));
@@ -214,16 +245,17 @@ const MailboxSyncStory = ({ enrich = false, seed = false }: { enrich?: boolean; 
       : Query.select(Filter.nothing()),
   );
 
-  // Seed variant: append demo messages once to an empty feed so Enrich has content without a live
-  // connection. Guarded by a ref (append is not idempotent) and only runs on an empty feed.
+  // Seed variant: populate the feed with demo messages so Enrich has content without a live
+  // connection. `seedDemoMessages` is idempotent (dedups by subject), so a reload against persistent
+  // storage never re-appends; the ref just avoids redundant runs within a session.
   const seededRef = useRef(false);
   useEffect(() => {
-    if (!seed || !feed || !space || seededRef.current || messages.length > 0) {
+    if (!seed || !feed || !space || seededRef.current) {
       return;
     }
     seededRef.current = true;
-    void EffectEx.runPromise(Feed.append(feed, makeDemoMessages()).pipe(Effect.provide(Database.layer(space.db))));
-  }, [seed, feed, space, messages.length]);
+    void EffectEx.runPromise(seedDemoMessages(feed).pipe(Effect.provide(Database.layer(space.db))));
+  }, [seed, feed, space]);
 
   // Selected message.
   const selectedId = useSelection(ATTENDABLE_ID, 'single');
@@ -331,28 +363,54 @@ const MailboxSyncStory = ({ enrich = false, seed = false }: { enrich?: boolean; 
     cancelRef.current?.();
   }, []);
 
-  // The toolbar (and its Reset button) must render regardless of whether the space/mailbox have loaded.
+  // Clears the feed's processing cursor so the next Enrich reconsiders the feed from the start.
+  // NOTE: the pipeline also dedups against sources already in the FactStore, so already-extracted
+  // messages still won't re-extract until the store is cleared (a full identity Reset does that).
+  const handleResetCursor = useCallback(() => {
+    if (!registry || !space?.id || !feed) {
+      return;
+    }
+
+    registry.feedCursorsFor(space.id).reset(feed.id);
+  }, [registry, space?.id, feed]);
+
+  // Clears the space's in-memory FactStore so a subsequent Enrich re-extracts from scratch. Pair with
+  // Reset cursor to fully re-process the feed. The store is not ECHO-reactive, so refresh explicitly.
+  const handleResetFactStore = useCallback(() => {
+    if (!registry || !space?.id) {
+      return;
+    }
+
+    void EffectEx.runPromise(
+      registry
+        .forSpace(space.id)
+        .clear()
+        .pipe(
+          Effect.tapError((error) => Effect.sync(() => log.warn('resetFactStore: clear failed', { error }))),
+          Effect.orElseSucceed(() => undefined),
+        ),
+    ).then(() => refreshFacts());
+  }, [registry, space?.id, refreshFacts]);
+
+  // Four columns: a CONTROLS panel (the story's toolbar + status), then the mailbox, the selected
+  // message, and the facts/connection column. The controls panel renders regardless of whether the
+  // space/mailbox have loaded.
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
-          {enrich &&
-            (enriching ? (
-              <>
-                <Toolbar.Button onClick={handleStop}>Stop</Toolbar.Button>
-                <Toolbar.Text>{`Enriching… ${facts.length} facts`}</Toolbar.Text>
-              </>
-            ) : (
-              <Toolbar.Button onClick={handleEnrich} disabled={!mailbox}>
-                Enrich
-              </Toolbar.Button>
-            ))}
-          <Toolbar.Separator />
-          <Toolbar.Text>{identity ? `Identity: ${identity.identityKey.truncate()}` : 'No identity'}</Toolbar.Text>
-        </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content className='dx-container grid grid-cols-[2fr_3fr_2fr]' {...attentionAttrs}>
+      <Panel.Content className='dx-container grid grid-cols-[2fr_2fr_3fr_2fr]' {...attentionAttrs}>
+        <Controls
+          enrich={enrich}
+          enriching={enriching}
+          hasFeed={!!feed}
+          hasMailbox={!!mailbox}
+          facts={facts}
+          onReset={handleReset}
+          onResetCursor={handleResetCursor}
+          onResetFactStore={handleResetFactStore}
+          onStop={handleStop}
+          onEnrich={handleEnrich}
+        />
+
         <Surface.Surface type={AppSurface.Article} data={{ subject: mailbox, attendableId: ATTENDABLE_ID }} limit={1} />
 
         {message ? (
@@ -366,7 +424,11 @@ const MailboxSyncStory = ({ enrich = false, seed = false }: { enrich?: boolean; 
         )}
 
         {enrich ? (
-          <FactViewer facts={facts} />
+          <Surface.Surface
+            type={AppSurface.Article}
+            data={{ companionTo: mailbox, attendableId: ATTENDABLE_ID }}
+            limit={1}
+          />
         ) : binding ? (
           <Surface.Surface
             type={AppSurface.Article}
@@ -387,6 +449,7 @@ const meta = {
   title: 'stories/stories-inbox/MailboxSync',
   render: DefaultStory,
   decorators: [
+    withSurfaceDebug(false),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager(() => ({
       setupEvents: [AppActivationEvents.SetupSettings],
@@ -394,13 +457,17 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: SYNC_STORY_TYPES,
-          // No `edge` service: the client runs fully local (no Edge websocket). JMAP/Fastmail sync
-          // still works; Gmail OAuth does not (its coordinator requires an Edge URL).
-          config: new Config({
-            runtime: {
-              client: { storage: { persistent: true } },
+          // Edge service configured: the client opens an Edge websocket, so both connectors are
+          // usable — JMAP/Fastmail via its credential form, and Gmail via its OAuth coordinator
+          // (which requires the Edge URL).
+          config: new Config(
+            {
+              runtime: {
+                client: { storage: { persistent: true } },
+              },
             },
-          }),
+            configPreset({ edge: 'dev' }).values,
+          ),
           // OPFS-backed storage so identity/spaces survive a page reload; without a worker the
           // client silently falls back to in-memory storage regardless of `storage.persistent`.
           createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
@@ -416,11 +483,12 @@ const meta = {
               if (client.halo.identity.get()) {
                 return;
               }
-              const { personalSpace } = yield* initializeIdentity(client);
+
+              const { personalSpace: space } = yield* initializeIdentity(client);
               // Seed an empty mailbox (with its backing feed); the connect/sync flow — or the
               // `SeededFacts` variant — populates it. Live/EnrichFacts start empty.
-              personalSpace.db.add(Mailbox.make());
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              space.db.add(Mailbox.make());
+              yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
         SpacePlugin({}),
@@ -446,9 +514,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Live: Story = {};
 
-// Replaces the RIGHT connection column with a `FactViewer` and adds an Enrich toolbar button that
-// runs `EnrichMailbox` against the local Ollama model (see `StoryAiPlugin`). Operates on real synced
-// mail — connect an account first, or use `SeededFacts` for offline content.
+// Replaces the RIGHT connection column with the `MailboxFactsCompanion` surface and adds an Enrich
+// toolbar button that runs `EnrichMailbox` against the local Ollama model (see `StoryAiPlugin`).
+// Operates on real synced mail — connect an account first, or use `SeededFacts` for offline content.
 export const EnrichFacts: Story = {
   render: () => <MailboxSyncStory enrich />,
 };

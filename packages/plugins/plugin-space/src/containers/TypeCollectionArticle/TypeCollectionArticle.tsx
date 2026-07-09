@@ -160,3 +160,5 @@ const TypeCollectionTile = ({ object, current, onOpen, onDelete }: TypeCollectio
     </Focus.Item>
   );
 };
+
+TypeCollectionArticle.displayName = 'TypeCollectionArticle';

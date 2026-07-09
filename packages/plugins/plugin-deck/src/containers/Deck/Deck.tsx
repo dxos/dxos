@@ -19,3 +19,5 @@ export const Deck = {
 };
 
 export type { DeckContentProps, DeckLayoutChangeRequest, DeckRootProps, DeckViewportProps };
+
+Deck.displayName = 'Deck';

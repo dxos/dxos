@@ -1145,11 +1145,6 @@
         },
         {
           "type": "json",
-          "path": "packages/stories/stories-ui/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/ui/brand/package.json",
           "jsonpath": "$.version"
         },
