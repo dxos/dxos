@@ -5617,6 +5617,9 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../echo/echo-protocol
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../../common/errors
@@ -18152,6 +18155,9 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
