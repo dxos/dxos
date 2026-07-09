@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
-import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
+import { afterAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, chain, sleep, waitForCondition } from '@dxos/async';
 import { Client } from '@dxos/client';
@@ -694,9 +694,11 @@ const createInvitationsApi = async (
     metadata,
   );
   // InvitationsProxy consumes the Promise/Stream shaped proto service; bridge the effect-rpc Handlers
-  // impl in-process (no wire hop) and derive the proto surface from it.
+  // impl in-process (no wire hop) and derive the proto surface from it. The endpoint is kept open for
+  // the whole file (torn down in afterAll) so fire-and-forget teardown calls (e.g. invitation cancel)
+  // never race a closed endpoint.
   const scope = Effect.runSync(Scope.make());
-  onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
+  invitationsApiScopes.push(scope);
   const rpc = await EffectEx.runPromise(
     makeInProcessClientServicesRpc(() => ({ InvitationsService: new InvitationsServiceImpl(manager) })).pipe(
       Scope.extend(scope),
@@ -705,3 +707,10 @@ const createInvitationsApi = async (
   const service = makeServicesFromRpc(rpc, Runtime.defaultRuntime).InvitationsService!;
   return { manager, service, metadata };
 };
+
+const invitationsApiScopes: Scope.CloseableScope[] = [];
+
+afterAll(async () => {
+  await Promise.all(invitationsApiScopes.map((scope) => EffectEx.runPromise(Scope.close(scope, Exit.void))));
+  invitationsApiScopes.length = 0;
+});
