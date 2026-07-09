@@ -9,7 +9,7 @@ import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
 import { type FeedService } from '@dxos/protocols/rpc';
 
 export class FeedServiceImpl implements FeedService.Handlers {
-  constructor(
+  'constructor'(
     protected _ctx: EdgeFunctionEnv.TraceContext,
     private readonly _queueService: EdgeFunctionEnv.QueueService,
   ) {}

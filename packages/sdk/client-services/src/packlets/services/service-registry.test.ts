@@ -5,13 +5,14 @@
 import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
 import { Event } from '@dxos/async';
 import { ServiceDescriptor } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { makeInProcessClient } from '@dxos/protocols';
-import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { schema } from '@dxos/protocols/proto';
+import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { SystemService } from '@dxos/protocols/rpc';
 import { type ServiceBundle, createServiceBundle } from '@dxos/rpc';
 
@@ -58,6 +59,6 @@ describe('service registry', () => {
       const client = yield* makeInProcessClient(SystemService.Rpcs, serviceRegistry.services.SystemService!);
       const config = yield* client.SystemService.getConfig(undefined);
       expect(config.runtime?.client?.remoteSource).to.equal(remoteSource);
-    }).pipe(Effect.scoped, Effect.runPromise);
+    }).pipe(Effect.scoped, EffectEx.runPromise);
   });
 });

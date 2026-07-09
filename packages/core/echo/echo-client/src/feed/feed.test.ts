@@ -437,7 +437,7 @@ describe('Feed', () => {
 
       const feedService = await makeFeedClient(peer.host.feedService);
 
-      const traceResult = await Effect.runPromise(
+      const traceResult = await EffectEx.runPromise(
         feedService.FeedService.queryFeed({
           query: {
             spaceId: db.spaceId,
@@ -448,7 +448,7 @@ describe('Feed', () => {
       );
       expect(traceResult.objects?.length).toBe(1);
 
-      const dataResult = await Effect.runPromise(
+      const dataResult = await EffectEx.runPromise(
         feedService.FeedService.queryFeed({
           query: {
             spaceId: db.spaceId,
@@ -468,8 +468,8 @@ describe('Feed', () => {
  */
 const makeFeedClient = async (handlers: FeedService.Handlers): Promise<FeedService.Client> => {
   const scope = Effect.runSync(Scope.make());
-  onTestFinished(() => Effect.runPromise(Scope.close(scope, Exit.void)));
-  return Effect.runPromise(
+  onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
+  return EffectEx.runPromise(
     makeInProcessClient(FeedService.Rpcs, handlers).pipe(Effect.provideService(Scope.Scope, scope)),
   );
 };

@@ -9,6 +9,7 @@ import * as EffectScope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Entity, type Hypergraph, Scope } from '@dxos/echo';
@@ -195,8 +196,8 @@ describe('IndexQuerySource', () => {
  */
 const makeQueryClient = async (handlers: QueryService.Handlers): Promise<QueryService.Client> => {
   const scope = Effect.runSync(EffectScope.make());
-  onTestFinished(() => Effect.runPromise(EffectScope.close(scope, Exit.void)));
-  return Effect.runPromise(
+  onTestFinished(() => EffectEx.runPromise(EffectScope.close(scope, Exit.void)));
+  return EffectEx.runPromise(
     makeInProcessClient(QueryService.Rpcs, handlers).pipe(Effect.provideService(EffectScope.Scope, scope)),
   );
 };

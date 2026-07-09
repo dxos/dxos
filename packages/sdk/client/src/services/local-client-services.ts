@@ -11,6 +11,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as EffectRuntime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 
+import { EffectEx } from '@dxos/effect';
 import { Event, synchronized } from '@dxos/async';
 import {
   type ClientServices,
@@ -281,7 +282,7 @@ export class LocalClientServices implements ClientServicesProvider {
     // Bridge the in-process host Handlers to the effect-rpc client surface (no wire hop), then derive
     // the deprecated Promise/Stream shaped services from it for consumers not yet on the effect surface.
     this._serviceScope = Effect.runSync(Scope.make());
-    this._rpc = await Effect.runPromise(
+    this._rpc = await EffectEx.runPromise(
       makeInProcessClientServicesRpc(() => this._host!.services).pipe(Scope.extend(this._serviceScope)),
     );
     this._services = makeServicesFromRpc(this._rpc, EffectRuntime.defaultRuntime);
@@ -304,7 +305,7 @@ export class LocalClientServices implements ClientServicesProvider {
     await this._host?.close(this._ctx);
 
     if (this._serviceScope) {
-      await Effect.runPromise(Scope.close(this._serviceScope, Exit.void));
+      await EffectEx.runPromise(Scope.close(this._serviceScope, Exit.void));
       this._serviceScope = undefined;
     }
     this._rpc = undefined;

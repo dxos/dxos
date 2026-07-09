@@ -651,18 +651,22 @@ export class EntityManager implements IDatabaseBinding {
     let cleanup: (() => void) | undefined;
 
     const setupStream = () => {
-      cleanup = subscribeStream(this._runtime, this._dataService.DataService.subscribeSpaceSyncState({ spaceId: this.spaceId }), {
-        onData: (data) => {
-          void runInContextAsync(ctx, () => callback(data));
+      cleanup = subscribeStream(
+        this._runtime,
+        this._dataService.DataService.subscribeSpaceSyncState({ spaceId: this.spaceId }),
+        {
+          onData: (data) => {
+            void runInContextAsync(ctx, () => callback(data));
+          },
+          onError: (err) => {
+            if (err instanceof RpcClosedError) {
+              this._reconnected.once(ctx, () => setupStream());
+            } else if (err) {
+              ctx.raise(err);
+            }
+          },
         },
-        onError: (err) => {
-          if (err instanceof RpcClosedError) {
-            this._reconnected.once(ctx, () => setupStream());
-          } else if (err) {
-            ctx.raise(err);
-          }
-        },
-      });
+      );
     };
 
     setupStream();

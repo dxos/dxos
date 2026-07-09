@@ -11,6 +11,7 @@ import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, SpaceStateManager } from '@dxos/echo-host';
@@ -459,9 +460,9 @@ const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runti
   // The bridged client lives on a scope that is closed when the test finishes.
   const serviceScope = Effect.runSync(Scope.make());
   onTestFinished(async () => {
-    await Effect.runPromise(Scope.close(serviceScope, Exit.void));
+    await EffectEx.runPromise(Scope.close(serviceScope, Exit.void));
   });
-  const dataService = await Effect.runPromise(
+  const dataService = await EffectEx.runPromise(
     makeInProcessClient(DataService.Rpcs, dataServiceImpl).pipe(Effect.provideService(Scope.Scope, serviceScope)),
   );
 

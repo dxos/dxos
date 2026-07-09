@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { rmSync } from 'node:fs';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
+import { rmSync } from 'node:fs';
 import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';

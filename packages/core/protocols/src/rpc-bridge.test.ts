@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { EffectEx } from '@dxos/effect';
 import * as Rpc from '@effect/rpc/Rpc';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Effect from 'effect/Effect';
@@ -40,7 +41,7 @@ describe('makeInProcessClient', () => {
       expect(sum).toEqual(9);
       const counted = yield* client.Test.count({ to: 2 }).pipe(Stream.runCollect);
       expect([...counted]).toEqual([1, 2]);
-    }).pipe(Effect.scoped, Effect.runPromise));
+    }).pipe(Effect.scoped, EffectEx.runPromise));
 
   test('bridges unary and streaming handlers to a client without serialization', ({ expect }) =>
     Effect.gen(function* () {
@@ -51,5 +52,5 @@ describe('makeInProcessClient', () => {
 
       const counted = yield* client.Test.count({ to: 3 }).pipe(Stream.runCollect);
       expect([...counted]).toEqual([1, 2, 3]);
-    }).pipe(Effect.scoped, Effect.runPromise));
+    }).pipe(Effect.scoped, EffectEx.runPromise));
 });

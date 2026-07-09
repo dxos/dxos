@@ -18,7 +18,6 @@ import {
   type ServiceContext,
   createAdmissionKeypair,
 } from '@dxos/client-services';
-import { EffectEx } from '@dxos/effect';
 import {
   type PerformInvitationProps,
   type Result,
@@ -30,6 +29,7 @@ import { InvitationsProxy } from '@dxos/client/invitations';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { MetadataStore } from '@dxos/echo-host';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';

@@ -22,10 +22,10 @@ import { type InvitationsManager } from './invitations-manager';
  * Adapts invitation service observable to client/service stream.
  */
 export class InvitationsServiceImpl implements InvitationsService.Handlers {
-  constructor(private readonly _invitationsManager: InvitationsManager) {}
+  'constructor'(private readonly _invitationsManager: InvitationsManager) {}
 
   // TODO(burdon): Guest/host label.
-  getLoggingContext() {
+  'getLoggingContext'() {
     return {
       // deviceKey: this._identityManager.identity?.deviceKey
     };

@@ -13,7 +13,9 @@ export const createCollectDiagnosticsBroadcastSender = (): CollectDiagnosticsBro
   return { broadcastDiagnosticsRequest: async () => undefined };
 };
 
-export const createCollectDiagnosticsBroadcastHandler = (_: SystemService.Handlers): CollectDiagnosticsBroadcastHandler => {
+export const createCollectDiagnosticsBroadcastHandler = (
+  _: SystemService.Handlers,
+): CollectDiagnosticsBroadcastHandler => {
   return {
     start: () => {},
     stop: () => {},

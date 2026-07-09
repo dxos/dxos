@@ -5,9 +5,9 @@
 import { type SpaceId } from '@dxos/keys';
 
 import type * as DataService from './DataService';
+import { type EdgeFunctionEnv } from './edge';
 import type * as FeedService from './FeedService';
 import type * as QueryService from './QueryService';
-import { type EdgeFunctionEnv } from './edge';
 import type * as TraceProtocol from './TraceProtocol';
 
 //

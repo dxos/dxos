@@ -19,27 +19,6 @@ import * as Stream from 'effect/Stream';
 import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream as PbStream } from '@dxos/codec-protobuf/stream';
 import { runServiceCall } from '@dxos/protocols';
-// Type-only imports so declaration emit can name the effect-rpc message types referenced by the
-// exported {@link ClientServicesHandlers}/{@link ClientServicesRpcs} inferred types (TS2883).
-import type { IndexConfig as _IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
-import type {
-  QueryRequest as _QueryRequest,
-  QueryResponse as _QueryResponse,
-} from '@dxos/protocols/proto/dxos/echo/query';
-import type {
-  BatchedDocumentUpdates as _BatchedDocumentUpdates,
-  CreateDocumentRequest as _CreateDocumentRequest,
-  CreateDocumentResponse as _CreateDocumentResponse,
-  FlushRequest as _FlushRequest,
-  GetDocumentHeadsRequest as _GetDocumentHeadsRequest,
-  GetDocumentHeadsResponse as _GetDocumentHeadsResponse,
-  GetSpaceSyncStateRequest as _GetSpaceSyncStateRequest,
-  ReIndexHeadsRequest as _ReIndexHeadsRequest,
-  SubscribeRequest as _SubscribeRequest,
-  UpdateRequest as _UpdateRequest,
-  UpdateSubscriptionRequest as _UpdateSubscriptionRequest,
-  WaitUntilHeadsReplicatedRequest as _WaitUntilHeadsReplicatedRequest,
-} from '@dxos/protocols/proto/dxos/echo/service';
 import {
   ContactsService,
   DataService,
@@ -232,7 +211,8 @@ export const makeClientServicesHandlers = ({
  * re-expanding the full merged {@link RpcClient.RpcClient} mapped type over all services.
  */
 export interface ClientServicesRpc
-  extends SystemService.Client,
+  extends
+    SystemService.Client,
     NetworkService.Client,
     LoggingService.Client,
     IdentityService.Client,

@@ -6,7 +6,6 @@ import type { AutomergeUrl } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
-import { EffectEx } from '@dxos/effect';
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
@@ -18,6 +17,7 @@ import {
 import { raise } from '@dxos/debug';
 import { type EchoHost, type SpaceManager } from '@dxos/echo-host';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { EffectEx } from '@dxos/effect';
 import { writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -74,7 +74,7 @@ import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';
 
 export class SpacesServiceImpl implements SpacesService.Handlers {
-  constructor(
+  'constructor'(
     private readonly _identityManager: IdentityManager,
     private readonly _spaceManager: SpaceManager,
     private readonly _echoHost: EchoHost,
@@ -434,7 +434,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
    * {@link EntityStructure} entries; feed messages are appended to the appropriate feed
    * via {@link EchoHost.feedService}.
    */
-  private async _hydrateSpaceFromSerialized(
+  private async '_hydrateSpaceFromSerialized'(
     space: DataSpace,
     serialized: ReturnType<typeof readSerializedSpaceArchive>,
   ): Promise<void> {
@@ -477,7 +477,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     }
   }
 
-  private async _joinByAdmission(ctx: Context, { credential }: ContactAdmission): Promise<JoinSpaceResponse> {
+  private async '_joinByAdmission'(ctx: Context, { credential }: ContactAdmission): Promise<JoinSpaceResponse> {
     const assertion = getCredentialAssertion(credential);
     invariant(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
     const myIdentity = this._identityManager.identity;
@@ -497,7 +497,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     return { space: await this._serializeSpace(dataSpace) };
   }
 
-  private async _serializeSpace(space: DataSpace): Promise<Space> {
+  private async '_serializeSpace'(space: DataSpace): Promise<Space> {
     return {
       id: space.id,
       spaceKey: space.key,
@@ -550,7 +550,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     };
   }
 
-  private _requireIdentity() {
+  private '_requireIdentity'() {
     if (!this._identityManager.identity) {
       throw new IdentityNotInitializedError({
         message: 'This device has no HALO identity available. See https://docs.dxos.org/guide/platform/halo',
@@ -559,7 +559,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     return this._identityManager.identity;
   }
 
-  private async _updateMetrics(): Promise<void> {
+  private async '_updateMetrics'(): Promise<void> {
     const dataSpaceManager = await this._getDataSpaceManager();
     const identity = this._identityManager.identity?.identityKey.truncate();
     if (identity) {

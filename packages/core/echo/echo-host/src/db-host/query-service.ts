@@ -73,9 +73,9 @@ type QueryInvalidationStats = {
 
 export class QueryServiceImpl extends Resource implements QueryService.Handlers {
   // TODO(dmaretskyi): We need to implement query deduping. Idle composer has 80 queries with only 10 being unique.
-  private readonly _queries = new Set<ActiveQuery>();
+  private readonly '_queries' = new Set<ActiveQuery>();
 
-  private _updateQueries!: DeferredTask;
+  private '_updateQueries'!: DeferredTask;
 
   // 'all' = catch-all; null = no pending hint.
   #pendingHint: InvalidationHint | 'all' | null = null;
@@ -92,7 +92,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   };
 
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
-  constructor(private readonly _params: QueryServiceProps) {
+  'constructor'(private readonly _params: QueryServiceProps) {
     super();
 
     trace.diagnostic({
@@ -116,12 +116,12 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     });
   }
 
-  override async _open(): Promise<void> {
+  override async '_open'(): Promise<void> {
     this._updateQueries = new DeferredTask(this._ctx, () => this._executeQueries(this._ctx));
   }
 
   @synchronized
-  override async _close(): Promise<void> {
+  override async '_close'(): Promise<void> {
     await this._updateQueries.join();
     await Promise.all(Array.from(this._queries).map((query) => query.close()));
   }
@@ -171,7 +171,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
    * Schedule re-execution of queries, optionally guided by a targeted hint.
    * When called without a hint, all queries are marked dirty (catch-all invalidation).
    */
-  invalidateQueries(hint?: InvalidationHint): void {
+  'invalidateQueries'(hint?: InvalidationHint): void {
     this.#stats.totalInvalidations++;
     if (!hint) {
       this.#pendingHint = 'all';
@@ -185,7 +185,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     this._updateQueries.schedule();
   }
 
-  private _createQuery(
+  private '_createQuery'(
     ctx: Context,
     request: QueryRequest,
     onResults: (respose: QueryResponse) => void,
@@ -225,7 +225,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   }
 
   @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
-  private async _executeQueries(_ctx: Context) {
+  private async '_executeQueries'(_ctx: Context) {
     const hint = this.#pendingHint;
     this.#pendingHint = null;
 

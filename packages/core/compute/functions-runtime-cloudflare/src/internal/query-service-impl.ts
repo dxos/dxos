@@ -13,9 +13,9 @@ import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxo
 import { type QueryService } from '@dxos/protocols/rpc';
 
 export class QueryServiceImpl implements QueryService.Handlers {
-  private _queryCount = 0;
+  private '_queryCount' = 0;
 
-  constructor(
+  'constructor'(
     private readonly _executionContext: EdgeFunctionEnv.TraceContext,
     private readonly _dataService: EdgeFunctionEnv.DataService,
   ) {}

@@ -18,7 +18,7 @@ import { type DataSpaceManager } from '../spaces';
 import { type IdentityManager } from './identity-manager';
 
 export class ContactsServiceImpl implements ContactsService.Handlers {
-  constructor(
+  'constructor'(
     private readonly _identityManager: IdentityManager,
     private readonly _spaceManager: SpaceManager,
     private readonly _dataSpaceManagerProvider: () => Promise<DataSpaceManager>,

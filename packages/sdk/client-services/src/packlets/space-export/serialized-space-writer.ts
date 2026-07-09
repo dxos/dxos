@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Scope from 'effect/Scope';
 
-import { EffectEx } from '@dxos/effect';
 import { Context } from '@dxos/context';
 import { type Obj } from '@dxos/echo';
 import { type SerializedFeed, type SerializedSpace } from '@dxos/echo-client';
 import { type EchoHost } from '@dxos/echo-host';
 import { type DatabaseDirectory, type EntityStructure } from '@dxos/echo-protocol';
+import { EffectEx } from '@dxos/effect';
 import { assertState, invariant } from '@dxos/invariant';
 import { DXN, type EntityId, type IdentityDid, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

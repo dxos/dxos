@@ -7,7 +7,6 @@ import * as EffectStream from 'effect/Stream';
 
 import { type Event } from '@dxos/async';
 import { type Config } from '@dxos/config';
-import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import {
   GetDiagnosticsRequest,
   type GetDiagnosticsResponse,
@@ -17,6 +16,7 @@ import {
   type SystemStatus,
   type UpdateStatusRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { type SystemService } from '@dxos/protocols/rpc';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
@@ -33,14 +33,14 @@ export type SystemServiceOptions = {
 };
 
 export class SystemServiceImpl implements SystemService.Handlers {
-  private readonly _config?: SystemServiceOptions['config'];
-  private readonly _statusUpdate: SystemServiceOptions['statusUpdate'];
-  private readonly _getCurrentStatus: SystemServiceOptions['getCurrentStatus'];
-  private readonly _onUpdateStatus: SystemServiceOptions['onUpdateStatus'];
-  private readonly _onReset: SystemServiceOptions['onReset'];
-  private readonly _getDiagnostics: SystemServiceOptions['getDiagnostics'];
+  private readonly '_config'?: SystemServiceOptions['config'];
+  private readonly '_statusUpdate': SystemServiceOptions['statusUpdate'];
+  private readonly '_getCurrentStatus': SystemServiceOptions['getCurrentStatus'];
+  private readonly '_onUpdateStatus': SystemServiceOptions['onUpdateStatus'];
+  private readonly '_onReset': SystemServiceOptions['onReset'];
+  private readonly '_getDiagnostics': SystemServiceOptions['getDiagnostics'];
 
-  constructor({
+  'constructor'({
     config,
     statusUpdate,
     getDiagnostics,
@@ -104,9 +104,10 @@ export class SystemServiceImpl implements SystemService.Handlers {
   }
 
   // TODO(burdon): Standardize interval option in stream request?
-  ['SystemService.queryStatus']({
-    interval = 3_000,
-  }: QueryStatusRequest = {}): EffectStream.Stream<QueryStatusResponse, Error> {
+  ['SystemService.queryStatus']({ interval = 3_000 }: QueryStatusRequest = {}): EffectStream.Stream<
+    QueryStatusResponse,
+    Error
+  > {
     return EffectStream.async<QueryStatusResponse, Error>((emit) => {
       const update = () => {
         void emit.single({ status: this._getCurrentStatus() });

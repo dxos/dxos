@@ -47,13 +47,13 @@ export class DataServiceImpl implements DataService.Handlers {
    * Map of subscriptions.
    * subscriptionId -> DocumentsSynchronizer
    */
-  private readonly _subscriptions = new Map<string, DocumentsSynchronizer>();
+  private readonly '_subscriptions' = new Map<string, DocumentsSynchronizer>();
 
-  private readonly _automergeHost: AutomergeHost;
-  private readonly _spaceStateManager: SpaceStateManager;
-  private readonly _updateIndexes: () => Promise<void>;
+  private readonly '_automergeHost': AutomergeHost;
+  private readonly '_spaceStateManager': SpaceStateManager;
+  private readonly '_updateIndexes': () => Promise<void>;
 
-  constructor(params: DataServiceProps) {
+  'constructor'(params: DataServiceProps) {
     this._automergeHost = params.automergeHost;
     this._spaceStateManager = params.spaceStateManager;
     this._updateIndexes = params.updateIndexes;
@@ -158,13 +158,15 @@ export class DataServiceImpl implements DataService.Handlers {
    * Test affordance: pause/resume flushing of document updates on every
    * active subscription. See `DocumentsSynchronizer.setSendUpdatesPaused`.
    */
-  setAllSubscriptionsSendUpdatesPaused(paused: boolean): void {
+  'setAllSubscriptionsSendUpdatesPaused'(paused: boolean): void {
     for (const synchronizer of this._subscriptions.values()) {
       synchronizer.setSendUpdatesPaused(paused);
     }
   }
 
-  ['DataService.subscribeSpaceSyncState'](request: GetSpaceSyncStateRequest): EffectStream.Stream<SpaceSyncState, Error> {
+  ['DataService.subscribeSpaceSyncState'](
+    request: GetSpaceSyncStateRequest,
+  ): EffectStream.Stream<SpaceSyncState, Error> {
     return EffectStream.async<SpaceSyncState, Error>((emit) => {
       const ctx = Context.default();
       const spaceId = request.spaceId;

@@ -72,7 +72,7 @@ export type DevtoolsServiceProps = {
  * @deprecated
  */
 export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
-  constructor(private readonly params: DevtoolsServiceProps) {}
+  'constructor'(private readonly params: DevtoolsServiceProps) {}
 
   ['DevtoolsHost.events'](): EffectStream.Stream<Event, Error> {
     return EffectStream.async<Event, Error>((emit) => {

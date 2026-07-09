@@ -13,6 +13,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
 import isEqual from 'fast-deep-equal';
 
+import { EffectEx } from '@dxos/effect';
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { Filter, Obj, Query, type Type } from '@dxos/echo';
@@ -171,7 +172,7 @@ export class EchoTestPeer extends Resource {
    */
   private async _connectServices(client: EchoClient): Promise<void> {
     invariant(this._serviceScope, 'Service scope not initialized');
-    const [dataService, queryService, feedService] = await Effect.runPromise(
+    const [dataService, queryService, feedService] = await EffectEx.runPromise(
       Effect.all([
         makeInProcessClient(DataService.Rpcs, this._echoHost.dataService),
         makeInProcessClient(QueryService.Rpcs, this._echoHost.queryService),
@@ -188,7 +189,7 @@ export class EchoTestPeer extends Resource {
     }
     await this._echoHost.close(ctx);
     if (this._serviceScope) {
-      await Effect.runPromise(Scope.close(this._serviceScope, Exit.void));
+      await EffectEx.runPromise(Scope.close(this._serviceScope, Exit.void));
       this._serviceScope = undefined;
     }
     await this._managedRuntime.dispose();

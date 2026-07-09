@@ -8,9 +8,9 @@ import * as Runtime from 'effect/Runtime';
 import * as Stream from 'effect/Stream';
 import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
 import { Event, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { EffectEx } from '@dxos/effect';
 import { subscribeStream } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 
