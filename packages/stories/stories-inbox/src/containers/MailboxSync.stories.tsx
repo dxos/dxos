@@ -9,9 +9,9 @@
 //   - MIDDLE the selected message (message companion; tracks the LEFT selection).
 //   - RIGHT  `ConnectorCompanion` — the connection bound to the mailbox (once connected).
 //
-// The mailbox is seeded with a few demo messages (so `EnrichFacts` has content to extract) and
-// starts unbound. The client is configured WITHOUT an Edge service (fully local, no Edge
-// websocket), so only the credential-based connector is usable:
+// The mailbox starts empty and unbound (the `SeededFacts` variant populates the feed with demo
+// messages for an offline demo). The client is configured WITHOUT an Edge service (fully local, no
+// Edge websocket), so only the credential-based connector is usable:
 //   - JMAP/Fastmail: a credential form (host + email + token), no OAuth.
 //   - Gmail: disabled — its OAuth coordinator requires an Edge URL.
 // Completing JMAP binds an `AccessToken` + `Connection` + `SyncBinding` to the mailbox;
@@ -180,7 +180,7 @@ const StoryAiPlugin = Plugin.define(
   Plugin.make,
 );
 
-const MailboxSyncStory = ({ enrich = false }: { enrich?: boolean }) => {
+const MailboxSyncStory = ({ enrich = false, seed = false }: { enrich?: boolean; seed?: boolean }) => {
   const client = useClient();
   const identity = useIdentity();
   const [space] = useSpaces();
@@ -213,6 +213,17 @@ const MailboxSyncStory = ({ enrich = false }: { enrich?: boolean }) => {
       ? Query.select(Filter.type(Message.Message)).from(feed).orderBy(Order.property('created', 'desc'))
       : Query.select(Filter.nothing()),
   );
+
+  // Seed variant: append demo messages once to an empty feed so Enrich has content without a live
+  // connection. Guarded by a ref (append is not idempotent) and only runs on an empty feed.
+  const seededRef = useRef(false);
+  useEffect(() => {
+    if (!seed || !feed || !space || seededRef.current || messages.length > 0) {
+      return;
+    }
+    seededRef.current = true;
+    void EffectEx.runPromise(Feed.append(feed, makeDemoMessages()).pipe(Effect.provide(Database.layer(space.db))));
+  }, [seed, feed, space, messages.length]);
 
   // Selected message.
   const selectedId = useSelection(ATTENDABLE_ID, 'single');
@@ -406,13 +417,9 @@ const meta = {
                 return;
               }
               const { personalSpace } = yield* initializeIdentity(client);
-              // Seed a mailbox (with its backing feed) plus demo messages so the EnrichFacts variant
-              // has content; the connect/sync flow can still append live mail on top.
-              const mailbox = personalSpace.db.add(Mailbox.make());
-              const feed = yield* Effect.promise(() => mailbox.feed.tryLoad());
-              if (feed) {
-                yield* Feed.append(feed, makeDemoMessages()).pipe(Effect.provide(Database.layer(personalSpace.db)));
-              }
+              // Seed an empty mailbox (with its backing feed); the connect/sync flow — or the
+              // `SeededFacts` variant — populates it. Live/EnrichFacts start empty.
+              personalSpace.db.add(Mailbox.make());
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),
@@ -440,7 +447,14 @@ type Story = StoryObj<typeof meta>;
 export const Live: Story = {};
 
 // Replaces the RIGHT connection column with a `FactViewer` and adds an Enrich toolbar button that
-// runs `EnrichMailbox` against the local Ollama model (see `StoryAiPlugin`).
+// runs `EnrichMailbox` against the local Ollama model (see `StoryAiPlugin`). Operates on real synced
+// mail — connect an account first, or use `SeededFacts` for offline content.
 export const EnrichFacts: Story = {
   render: () => <MailboxSyncStory enrich />,
+};
+
+// Like `EnrichFacts`, but seeds the feed with a few demo messages so Enrich has content to extract
+// without connecting an account — the self-contained offline demo of the extract → facts flow.
+export const SeededFacts: Story = {
+  render: () => <MailboxSyncStory enrich seed />,
 };

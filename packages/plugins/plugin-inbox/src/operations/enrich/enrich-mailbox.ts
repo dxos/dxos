@@ -58,7 +58,12 @@ export const runFactPipeline = (options: {
     let processed = 0;
     let facts = 0;
     const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-    log.info('enrich: pipeline start', { messages: messages.length, cursorKey, indexed: indexedSources.size, pageSize });
+    log.info('enrich: pipeline start', {
+      messages: messages.length,
+      cursorKey,
+      indexed: indexedSources.size,
+      pageSize,
+    });
     yield* Stream.fromIterable(messages).pipe(
       Stage.map('facts-dedup', (message: Message.Message) =>
         Effect.sync(() =>
