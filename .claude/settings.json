@@ -31,6 +31,16 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/response-mode.sh\""
+          }
+        ]
+      }
     ]
   }
 }
