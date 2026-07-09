@@ -31,6 +31,13 @@ case "${1:-get}" in
       printf 'concise' > "$state"; printf 'Response mode: CONCISE\n'
     fi
     ;;
+  set)
+    case "${2:-}" in
+      concise) printf 'concise' > "$state"; printf 'Response mode: CONCISE\n' ;;
+      natural|default|off) printf 'natural' > "$state"; printf 'Response mode: NATURAL\n' ;;
+      *) printf 'usage: response-mode.sh set {concise|natural}\n' >&2; exit 2 ;;
+    esac
+    ;;
   context)
     [ "$(current)" = 'concise' ] || exit 0
     cat <<'EOF'
