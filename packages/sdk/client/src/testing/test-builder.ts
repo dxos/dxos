@@ -8,7 +8,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { type ExpectStatic } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { type ClientServices } from '@dxos/client-protocol';
+import { ClientRpcServer } from '@dxos/client-protocol';
 import { ClientServicesHost, type ServiceContextRuntimeProps } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -29,7 +29,7 @@ import {
 import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
+import { createLinkedPorts } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
@@ -143,12 +143,11 @@ export class TestBuilder {
   /**
    * Create client/server.
    */
-  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ProtoRpcPeer<{}>] {
+  createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ClientRpcServer] {
     const [proxyPort, hostPort] = createLinkedPorts();
     const client = new Client({ config: this.config, services: new ClientServicesProxy(proxyPort) });
-    const server = createProtoRpcPeer({
-      exposed: host.descriptors,
-      handlers: host.services as ClientServices,
+    const server = new ClientRpcServer({
+      services: () => host.services,
       port: hostPort,
     });
 

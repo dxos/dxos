@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Filter, GroupKey, Query } from '@dxos/echo';
+import { Aggregate, Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
@@ -231,22 +231,22 @@ describe('QueryExecutor.matchesHint — typed query', () => {
 });
 
 // ---------------------------------------------------------------------------
-// QueryExecutor.matchesHint — groupBy queries
+// QueryExecutor.matchesHint — aggregate queries
 // ---------------------------------------------------------------------------
 
-// A groupBy clause on top of a simple type selector stays "simple" for hint purposes — like
+// An aggregate clause on top of a simple type selector stays "simple" for hint purposes — like
 // OrderStep/LimitStep, it reorders/annotates the working set but doesn't change which typenames,
 // spaces, or object ids the query is scoped to. Any property edit on a matching object still
 // triggers re-execution (via the typename/space hint match below); the executor's `changed` diff
 // then decides whether the edit actually moved the object between groups and needs to reach the
-// client — that end-to-end behavior is covered by the reactive groupBy tests in
+// client — that end-to-end behavior is covered by the reactive aggregate tests in
 // `echo-client-e2e/src/query.test.ts`.
-describe('QueryExecutor.matchesHint — groupBy query', () => {
+describe('QueryExecutor.matchesHint — aggregate query', () => {
   test('a grouped query with a simple type selector still matches on typename/space (isSimple stays true)', ({
     expect,
   }) => {
     const executor = makeExecutor(
-      withSpace(Query.select(Filter.type(TestSchema.Person)).groupBy(GroupKey.property('age'))),
+      withSpace(Query.select(Filter.type(TestSchema.Person)).aggregate({ age: Aggregate.group('age') })),
     );
     expect(
       executor.matchesHint(makeHint({ spaceIds: makeSpaceSet(SPACE_ID), typenames: makeTypeSet(PERSON_TYPENAME) })),
@@ -255,7 +255,7 @@ describe('QueryExecutor.matchesHint — groupBy query', () => {
 
   test('a grouped query does NOT match a disjoint type/space hint', ({ expect }) => {
     const executor = makeExecutor(
-      withSpace(Query.select(Filter.type(TestSchema.Person)).groupBy(GroupKey.property('age'))),
+      withSpace(Query.select(Filter.type(TestSchema.Person)).aggregate({ age: Aggregate.group('age') })),
     );
     const hint = makeHint({
       spaceIds: makeSpaceSet(SpaceId.random()),
@@ -264,15 +264,19 @@ describe('QueryExecutor.matchesHint — groupBy query', () => {
     expect(executor.matchesHint(hint)).toBe(false);
   });
 
-  test('groupBy combined with a traversal still forces conservative (isSimple=false) matching', ({ expect }) => {
+  test('aggregate combined with a traversal still forces conservative (isSimple=false) matching', ({ expect }) => {
     const executor = makeExecutor(
-      withSpace(Query.select(Filter.id(EntityId.random())).referencedBy().groupBy(GroupKey.property('age'))),
+      withSpace(
+        Query.select(Filter.id(EntityId.random()))
+          .referencedBy()
+          .aggregate({ age: Aggregate.group('age') }),
+      ),
     );
     const hint = makeHint({
       spaceIds: makeSpaceSet(SpaceId.random()),
       typenames: makeTypeSet(ORG_TYPENAME),
     });
-    // Traversal forces isSimple=false regardless of the trailing groupBy, so it always re-runs.
+    // Traversal forces isSimple=false regardless of the trailing aggregate, so it always re-runs.
     expect(executor.matchesHint(hint)).toBe(true);
   });
 });

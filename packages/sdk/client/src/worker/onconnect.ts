@@ -2,8 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as Runtime from 'effect/Runtime';
+import * as Scope from 'effect/Scope';
+
 import { Trigger } from '@dxos/async';
+import { type ClientServices, makeInProcessClientServicesRpc, makeServicesFromRpc } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
@@ -111,6 +117,25 @@ export const onconnect = async (event: MessageEvent<any>) => {
 };
 
 export const getWorkerServiceHost = async () => (await workerRuntimePromise).host;
+
+let workerClientServicesPromise: Promise<Partial<ClientServices>> | undefined;
+
+/**
+ * Promise/`Stream` shaped {@link ClientServices} bridged from the worker host's effect-rpc handlers,
+ * for legacy consumers (e.g. observability) that predate the effect surface. The in-process bridge
+ * lives for the worker's lifetime, so its scope is intentionally never closed.
+ */
+export const getWorkerClientServices = async (): Promise<Partial<ClientServices>> => {
+  workerClientServicesPromise ??= (async () => {
+    const host = (await workerRuntimePromise).host;
+    const scope = Effect.runSync(Scope.make());
+    const rpc = await EffectEx.runPromise(
+      makeInProcessClientServicesRpc(() => host.services).pipe(Scope.extend(scope)),
+    );
+    return makeServicesFromRpc(rpc, Runtime.defaultRuntime);
+  })();
+  return workerClientServicesPromise;
+};
 
 /**
  * Returns the config seeded by the first connecting client.

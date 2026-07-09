@@ -55,10 +55,17 @@ const DefaultStory = ({ count = 0, options, groupByThread, ...props }: DefaultSt
         groups.set(key, [message]);
       }
     }
-    return Array.from(groups, ([id, groupMessages]) => ({
-      id,
-      messages: groupMessages.sort((a, b) => b.created.localeCompare(a.created)),
-    }));
+    // Mirror the mailbox: each conversation card previews at most `THREAD_PREVIEW_COUNT` messages
+    // and carries the full thread size as `total` so the card can render a "+N more" affordance.
+    const THREAD_PREVIEW_COUNT = 4;
+    return Array.from(groups, ([id, groupMessages]) => {
+      const sorted = groupMessages.sort((a, b) => b.created.localeCompare(a.created));
+      return {
+        id,
+        messages: sorted.slice(0, THREAD_PREVIEW_COUNT),
+        total: sorted.length,
+      };
+    });
   });
 
   return <MessageStack {...props} items={items} />;

@@ -206,9 +206,9 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
   }
 
   /**
-   * Turns flat, row-level source entries into the query's public result shape. For a `groupBy`
+   * Turns flat, row-level source entries into the query's public result shape. For an `aggregate`
    * query (detected by the internal `SourceEntry.group` annotation, which the query context sets
-   * uniformly across all entries or none), assembles `Group` values instead of deduped row objects.
+   * uniformly across all entries or none), assembles flat aggregate records instead of deduped rows.
    */
   private _presentResults(entries: SourceEntry<T>[]): {
     objects: T[];
@@ -217,9 +217,9 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
   } {
     if (entries.length > 0 && entries[0].group !== undefined) {
       const { groups, entries: groupEntries } = _assembleGroups(entries, _groupAggregatesFromQuery(this._query.ast));
-      // Boundary cast: T is `Group<K, Row>` for grouped queries (per Query.groupBy's return type),
-      // but this class is written generically over the row type — grouping is a presentation
-      // transform applied on top of row-level entries, with K/Row erased at runtime.
+      // Boundary cast: T is the flat aggregate record for aggregate queries (per Query.aggregate's
+      // return type), but this class is written generically over the row type — aggregation is a
+      // presentation transform applied on top of row-level entries, with the row type erased at runtime.
       return {
         objects: groups as unknown as T[],
         entries: groupEntries as unknown as QueryResult.EntityEntry<T>[],
@@ -282,19 +282,20 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 }
 
 /**
- * Runtime shape of a `Query.Group` value once its type parameters are erased: the always-present
- * `key`, plus one field per declared aggregate ({@link Query.aggregate}).
+ * Runtime shape of a `Query.aggregate` row once its type parameter is erased: a flat record with one
+ * field per declared aggregate ({@link Query.aggregate}), including the group-key fields.
  */
-type GroupResult = { key: Record<string, unknown>; [field: string]: unknown };
+type GroupResult = { [field: string]: unknown };
 
 /**
- * Buckets flat row-level entries into `Group` values, in the order groups first appear in
- * `entries`. The host/local query sources already deliver a grouped query's entries with groups
- * contiguous and correctly ordered (see `GroupByStep`); this only needs to re-derive that grouping
- * locally, after row objects have deduped/hydrated on the client. Declared aggregates become
- * top-level group fields, recomputed here from each group's hydrated members (`max`/`min`/`items`)
- * or taken from the source (`count`); the ordering they drive is already applied by the source. A
- * group with unhydrated members reflects only the hydrated subset for member-derived aggregates.
+ * Buckets flat row-level entries into flat aggregate records, in the order groups first appear in
+ * `entries`. The host/local query sources already deliver an aggregate query's entries with groups
+ * contiguous and correctly ordered (see `AggregateStep`); this only needs to re-derive that grouping
+ * locally, after row objects have deduped/hydrated on the client. Group-key fields and declared
+ * aggregates become top-level record fields — group keys spread from the source `key`, others
+ * recomputed here from each group's hydrated members (`max`/`min`/`items`) or taken from the source
+ * (`count`); the ordering they drive is already applied by the source. A group with unhydrated
+ * members reflects only the hydrated subset for member-derived aggregates.
  */
 const _assembleGroups = (
   entries: SourceEntry[],
@@ -333,11 +334,15 @@ const _assembleGroups = (
 
   const groups = order.map((serializedKey): GroupResult => {
     const groupMembers = members.get(serializedKey)!;
-    const group: GroupResult = { key: keys.get(serializedKey)! };
+    // Group-key fields are already keyed by their result-field name; spread them flat.
+    const record: GroupResult = { ...keys.get(serializedKey)! };
     for (const aggregate of aggregates) {
-      group[aggregate.name] = _computeAggregate(aggregate, groupMembers, counts.get(serializedKey)!);
+      if (aggregate.kind === 'group') {
+        continue; // Group-key fields come from the spread above.
+      }
+      record[aggregate.name] = _computeAggregate(aggregate, groupMembers, counts.get(serializedKey)!);
     }
-    return group;
+    return record;
   });
   const groupEntries = order.map((serializedKey, index) => ({ id: serializedKey, result: groups[index] }));
   return { groups, entries: groupEntries };
@@ -346,16 +351,18 @@ const _assembleGroups = (
 /** Materialises one aggregate for a group from its hydrated members (or the source count). */
 const _computeAggregate = (aggregate: QueryAST.GroupAggregate, members: readonly unknown[], count: number): unknown => {
   switch (aggregate.kind) {
+    case 'group':
+      return undefined; // Group-key fields are assembled from the source key, not here.
     case 'items':
-      return members;
+      return aggregate.limit !== undefined ? members.slice(0, aggregate.limit) : members;
     case 'count':
       return count;
     case 'max':
     case 'min':
       return GroupBy.reduceAggregate(
-        // Row objects are erased to `unknown` at this presentation boundary (see the Group cast in
+        // Row objects are erased to `unknown` at this presentation boundary (see the boundary cast in
         // `_presentResults`); the aggregate reads a dynamic property path off the hydrated object.
-        members.map((value) => _coerceScalar(getDeep(value as Record<string, unknown>, [aggregate.property!]))),
+        members.map((value) => _coerceScalar(getDeep(value as Record<string, unknown>, [aggregate.property]))),
         aggregate.kind,
       );
   }
@@ -366,22 +373,22 @@ const _coerceScalar = (value: unknown): AggregateValue =>
   typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? value : null;
 
 /**
- * Extracts the group-by clause's aggregate declarations from a query AST, unwrapping the wrappers
- * permitted above a `group-by` (`order`/`limit`/`skip`/`from`/`options`). Empty when the query has
- * no `group-by` or declares no aggregates.
+ * Extracts the aggregate clause's declarations from a query AST, unwrapping the wrappers permitted
+ * above an `aggregate` (`order`/`limit`/`skip`/`from`/`options`). Empty when the query has no
+ * `aggregate` clause.
  */
 const _groupAggregatesFromQuery = (query: QueryAST.Query): readonly QueryAST.GroupAggregate[] => {
   let node: QueryAST.Query | undefined = query;
-  while (node && node.type !== 'group-by' && 'query' in node) {
+  while (node && node.type !== 'aggregate' && 'query' in node) {
     node = node.query;
   }
-  return node?.type === 'group-by' ? (node.aggregates ?? []) : [];
+  return node?.type === 'aggregate' ? node.aggregates : [];
 };
 
 /**
- * Compares two `Group` result sets by key and by each aggregate field — mirrors the row-level id
- * diff used for non-grouped queries. Member arrays (the `items` aggregate) compare by id sequence;
- * scalar aggregates (`max`/`min`/`count`) compare by value.
+ * Compares two flat aggregate result sets field-by-field — mirrors the row-level id diff used for
+ * non-aggregate queries. Member arrays (the `items` aggregate) compare by id sequence; scalar fields
+ * (group keys and `max`/`min`/`count`) compare by value.
  */
 const _groupsEqual = (prev: GroupResult[] | undefined, next: GroupResult[]): boolean => {
   if (!prev || prev.length !== next.length) {
@@ -389,17 +396,11 @@ const _groupsEqual = (prev: GroupResult[] | undefined, next: GroupResult[]): boo
   }
   return prev.every((prevGroup, index) => {
     const nextGroup = next[index];
-    if (JSON.stringify(prevGroup.key) !== JSON.stringify(nextGroup.key)) {
-      return false;
-    }
     const fields = Object.keys(prevGroup);
     if (fields.length !== Object.keys(nextGroup).length) {
       return false;
     }
     return fields.every((field) => {
-      if (field === 'key') {
-        return true;
-      }
       const prevValue = prevGroup[field];
       const nextValue = nextGroup[field];
       if (Array.isArray(prevValue) && Array.isArray(nextValue)) {

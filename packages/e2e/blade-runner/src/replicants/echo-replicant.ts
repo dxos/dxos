@@ -29,7 +29,6 @@ export class Text extends Type.makeObject<Text>(DXN.make('org.dxos.type.bladeRun
   }),
 ) {}
 
-@trace.resource()
 export class EchoReplicant {
   private readonly _ctx = new Context();
 

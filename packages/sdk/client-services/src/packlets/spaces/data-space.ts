@@ -96,10 +96,8 @@ export type CreateEpochOptions = {
 };
 
 @trackLeaks('open', 'close')
-@trace.resource()
 export class DataSpace {
   private _ctx = new Context();
-  @trace.info()
   private readonly _inner: Space;
 
   private readonly _gossip: Gossip;
@@ -181,12 +179,10 @@ export class DataSpace {
     log('new state', { state: SpaceState[this._state] });
   }
 
-  @trace.info()
   get id() {
     return this._inner.id;
   }
 
-  @trace.info()
   get key() {
     return this._inner.key;
   }
@@ -195,7 +191,6 @@ export class DataSpace {
     return this._inner.isOpen;
   }
 
-  @trace.info({ enum: SpaceState })
   get state(): SpaceState {
     return this._state;
   }
@@ -230,7 +225,6 @@ export class DataSpace {
     return this._databaseRoot;
   }
 
-  @trace.info({ depth: null })
   private get _automergeInfo() {
     return {
       rootUrl: this._automergeSpaceState.rootUrl,
