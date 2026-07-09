@@ -28,6 +28,7 @@ import {
   IdentityNotInitializedError,
   SpaceNotFoundError,
   encodeError,
+  makeInProcessClient,
 } from '@dxos/protocols';
 import {
   type AdmitContactRequest,
@@ -55,7 +56,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
-import { type SpacesService } from '@dxos/protocols/rpc';
+import { FeedService, type SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
@@ -460,13 +461,18 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
       const namespace =
         feed.namespace === 'trace' ? FeedProtocol.WellKnownNamespaces.trace : FeedProtocol.WellKnownNamespaces.data;
       try {
+        // Handlers are served, not called directly; bridge to a client in-process for this write.
+        const feedService = this._echoHost.feedService;
         await Effect.runPromise(
-          this._echoHost.feedService['FeedService.insertIntoFeed']({
-            spaceId: space.id,
-            feedId: feed.feedObjectId,
-            subspaceTag: namespace,
-            objects: feed.messages.map((message) => JSON.stringify(message)),
-          }),
+          Effect.gen(function* () {
+            const feedClient = yield* makeInProcessClient(FeedService.Rpcs, feedService);
+            yield* feedClient.FeedService.insertIntoFeed({
+              spaceId: space.id,
+              feedId: feed.feedObjectId,
+              subspaceTag: namespace,
+              objects: feed.messages.map((message) => JSON.stringify(message)),
+            });
+          }).pipe(Effect.scoped),
         );
       } catch (err) {
         log.warn('failed to import feed data', { feedObjectId: feed.feedObjectId, error: err });

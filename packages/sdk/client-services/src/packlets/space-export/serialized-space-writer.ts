@@ -4,6 +4,8 @@
 
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Scope from 'effect/Scope';
 
 import { Context } from '@dxos/context';
 import { type Obj } from '@dxos/echo';
@@ -13,8 +15,9 @@ import { type DatabaseDirectory, type EntityStructure } from '@dxos/echo-protoco
 import { assertState, invariant } from '@dxos/invariant';
 import { DXN, type EntityId, type IdentityDid, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { FeedProtocol } from '@dxos/protocols';
+import { FeedProtocol, makeInProcessClient } from '@dxos/protocols';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { FeedService } from '@dxos/protocols/rpc';
 import { createFilename } from '@dxos/util';
 
 import { type DataSpace } from '../spaces/data-space';
@@ -229,17 +232,25 @@ const collectFeedMessages = async (
 
   const messages: Obj.JSON[] = [];
   let cursor: string | undefined;
-  while (true) {
-    const result = await Effect.runPromise(
-      echoHost.feedService['FeedService.queryFeed']({
-        query: {
-          spaceId,
-          feedIds: [feedId],
-          feedNamespace,
-          after: cursor,
-        },
-      }),
-    );
+
+  // Bridge the host feed Handlers to a client to call it in-process (Handlers are served, not
+  // called directly). The scope owns the client for the duration of the read.
+  const scope = Effect.runSync(Scope.make());
+  const feedClient = await Effect.runPromise(
+    makeInProcessClient(FeedService.Rpcs, echoHost.feedService).pipe(Effect.provideService(Scope.Scope, scope)),
+  );
+  try {
+    while (true) {
+      const result = await Effect.runPromise(
+        feedClient.FeedService.queryFeed({
+          query: {
+            spaceId,
+            feedIds: [feedId],
+            feedNamespace,
+            after: cursor,
+          },
+        }),
+      );
     const batch = (result.objects ?? []).flatMap((encoded): Obj.JSON[] => {
       try {
         return [JSON.parse(encoded) as Obj.JSON];
@@ -257,7 +268,10 @@ const collectFeedMessages = async (
     if (!result.nextCursor || result.nextCursor === cursor) {
       break;
     }
-    cursor = result.nextCursor;
+      cursor = result.nextCursor;
+    }
+  } finally {
+    await Effect.runPromise(Scope.close(scope, Exit.void));
   }
   return messages;
 };
