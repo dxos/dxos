@@ -9,8 +9,9 @@ import * as Stream from 'effect/Stream';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
+import { Blob, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { type ContactLookup, buildContactFromActor, buildContactLookup } from '@dxos/extractor-lib';
+import { log } from '@dxos/log';
 import { normalizeText } from '@dxos/markdown';
 import { Stage } from '@dxos/pipeline';
 import { SyncBinding } from '@dxos/plugin-connector';
@@ -41,6 +42,23 @@ export type Mapped = {
   readonly foreignId: string;
   readonly key: number;
   readonly tagUris: readonly string[];
+  /** Attachments fetched by a provider-specific stage upstream of {@link processAttachments}. */
+  readonly attachments?: readonly Attachment[];
+  /**
+   * Deferred writes accumulated by stages upstream of {@link extractContacts} (e.g.
+   * {@link processAttachments}'s feed append), merged into the emitted {@link SyncBinding.CommitUnit}.
+   */
+  readonly commitEffects?: readonly SyncBinding.CommitEffect[];
+};
+
+/** A decoded email attachment, ready for {@link processAttachments} to turn into a Blob. */
+export type Attachment = {
+  readonly name?: string;
+  readonly mimeType?: string;
+  readonly size: number;
+  readonly bytes: Uint8Array;
+  /** The attachment's `Content-ID`, if any — matches a `cid:` reference in the message's HTML body. */
+  readonly contentId?: string;
 };
 
 /**
@@ -71,18 +89,83 @@ export const extractContacts = (): Stage.Stage<Mapped, SyncBinding.CommitUnit, n
         foreignId: mapped.foreignId,
         key: mapped.key,
         tagUris: mapped.tagUris,
-        // Defer the write to commit (the stage stays idempotent) — add the extracted contact there.
-        commitEffects: contact
-          ? [
-              Effect.fn('sync.commit.addContact')(function* () {
-                yield* Database.add(contact);
-              }),
-            ]
-          : undefined,
+        // Defer the write to commit (the stage stays idempotent) — add the extracted contact there,
+        // alongside any deferred writes carried from earlier stages (e.g. attachment feed appends).
+        commitEffects:
+          mapped.commitEffects?.length || contact
+            ? [
+                ...(mapped.commitEffects ?? []),
+                ...(contact
+                  ? [
+                      Effect.fn('sync.commit.addContact')(function* () {
+                        yield* Database.add(contact);
+                      }),
+                    ]
+                  : []),
+              ]
+            : undefined,
       };
     }),
   );
 };
+
+/**
+ * Turns each of the item's `attachments` into a Blob object (via the database's configured storage
+ * backend — edge in Composer) and adds a {@link Message.Attachment} to the message pointing at it.
+ * The feed append for the created blobs is deferred to commit as a {@link SyncBinding.CommitEffect}
+ * (the same mechanism {@link extractContacts} uses for its contact write) rather than a field on
+ * {@link SyncBinding.CommitUnit} — appending to the feed only needs `Database.Service`, which is
+ * exactly what a commit effect provides. A no-op when the item has no attachments or the run has no
+ * feed target (e.g. a DB-target sync).
+ *
+ * One bad or oversized attachment must not fail the whole message: each `Blob.fromBytes` is caught
+ * and logged individually, so a rejected attachment is simply dropped from the message.
+ */
+export const processAttachments = (): Stage.Stage<Mapped, Mapped, never, Database.Service | SyncBinding.Service> =>
+  Stage.map('process-attachments', (mapped: Mapped) =>
+    Effect.gen(function* () {
+      if (!mapped.attachments?.length) {
+        return mapped;
+      }
+      const { feed } = yield* SyncBinding.Service;
+      if (!feed) {
+        return mapped;
+      }
+
+      const blobs: Blob.Blob[] = [];
+      const attachments: Message.Attachment[] = [];
+      for (const attachment of mapped.attachments) {
+        const blob: Blob.Blob | undefined = yield* Blob.fromBytes(attachment.bytes, {
+          type: attachment.mimeType,
+        }).pipe(
+          Effect.catchAll((error) => {
+            log.catch(error, { foreignId: mapped.foreignId, name: attachment.name, size: attachment.size });
+            return Effect.succeed(undefined);
+          }),
+        );
+        if (!blob) {
+          continue;
+        }
+        blobs.push(blob);
+        attachments.push({ name: attachment.name, ref: Ref.make(blob), contentId: attachment.contentId });
+      }
+      if (blobs.length === 0) {
+        return mapped;
+      }
+
+      // The message is not yet appended to the feed, so mutating it here is safe — mirrors how the
+      // mappers assemble `blocks` before the message is ever persisted.
+      Obj.update(mapped.message, (message) => {
+        message.attachments = [...(message.attachments ?? []), ...attachments];
+      });
+
+      const appendAttachmentBlobs: SyncBinding.CommitEffect = () => Feed.append(feed, blobs);
+      return {
+        ...mapped,
+        commitEffects: [...(mapped.commitEffects ?? []), appendAttachmentBlobs],
+      };
+    }),
+  );
 
 /**
  * Optional stage that runs the mailbox's configured on-arrival extractors (AI and others) for each

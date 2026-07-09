@@ -19393,6 +19393,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo

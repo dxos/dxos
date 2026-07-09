@@ -3,10 +3,15 @@
 //
 
 import DOMPurify from 'dompurify';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import React, { useEffect, useMemo, useRef } from 'react';
 
+import { Blob, Database, Obj } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { isHtml } from '@dxos/markdown';
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 import { type ThemeColorParams, cssColorToOklch, processEmailColors } from './transform-colors';
@@ -20,6 +25,10 @@ export type HtmlViewerProps = ThemedClassName<{
    * theme; otherwise only simple (non-table) bodies are, so marketing layouts keep their design.
    */
   isPersonal?: boolean;
+  /** The message's attachments — resolves `<img src="cid:...">` references against them. */
+  attachments?: readonly Message.Attachment[];
+  /** Database the attachments' blobs are resolved against; omit if `attachments` is empty. */
+  db?: Database.Database;
 }>;
 
 // Base styles injected into the shadow root. Inheritable props (font, color) cross the shadow boundary
@@ -99,6 +108,77 @@ const collapseQuotedReply = (content: HTMLElement, expanded: { current: boolean 
 };
 
 /**
+ * Resolves `<img src="cid:...">` references (inline attachments, per RFC 2392) against the message's
+ * attachments' Blobs, mirroring the `Database.load` → `Blob.url()`/`Blob.read()`+`createObjectURL()`
+ * fallback used by `useImageUrl`/`plugin-file`'s image decorations. Resolution is async (a database +
+ * possibly a network read), so each match is swapped in place once resolved rather than blocking the
+ * initial (synchronous) content attach. `cache` persists resolved URLs across content rebuilds (e.g. a
+ * theme change) so a re-render doesn't re-resolve or re-mint `blob:` URLs for the same attachment.
+ */
+const resolveCidImages = (
+  content: HTMLElement,
+  attachments: readonly Message.Attachment[] | undefined,
+  db: Database.Database | undefined,
+  cache: Map<string, string>,
+): void => {
+  if (!db || !attachments?.length) {
+    return;
+  }
+
+  const byContentId = new Map(
+    attachments.filter((attachment) => attachment.contentId).map((attachment) => [attachment.contentId!, attachment]),
+  );
+  if (byContentId.size === 0) {
+    return;
+  }
+
+  for (const img of content.querySelectorAll('img')) {
+    const src = img.getAttribute('src');
+    if (!src?.startsWith('cid:')) {
+      continue;
+    }
+    const contentId = src.slice('cid:'.length).replace(/^<|>$/g, '');
+    const attachment = byContentId.get(contentId);
+    if (!attachment) {
+      continue;
+    }
+
+    const cached = cache.get(contentId);
+    if (cached) {
+      img.setAttribute('src', cached);
+      continue;
+    }
+
+    void EffectEx.runPromise(
+      Effect.gen(function* () {
+        const blob = yield* Database.load(attachment.ref);
+        if (!Obj.instanceOf(Blob.Blob, blob)) {
+          return undefined;
+        }
+        const urlOption = yield* Blob.url(blob);
+        if (Option.isSome(urlOption)) {
+          return urlOption.value;
+        }
+        const bytes = yield* Blob.read(blob);
+        // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while DOM's
+        // `BlobPart` only covers `ArrayBuffer`-backed views — a gap between the DOM lib types and
+        // the TS standard lib, not fixable by typing `bytes` differently.
+        return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: blob.type }));
+      }).pipe(
+        Effect.provide(Database.layer(db)),
+        Effect.catchAll(() => Effect.succeed(undefined)),
+      ),
+    ).then((url) => {
+      if (!url) {
+        return;
+      }
+      cache.set(contentId, url);
+      img.setAttribute('src', url);
+    });
+  }
+};
+
+/**
  * Renders email HTML inside a Shadow DOM host so the email's (often aggressive) CSS is isolated from
  * the app while the content still flows in the app layout (no iframe / height measurement). Script
  * safety comes from DOMPurify sanitization — a shadow root does not sandbox execution — and remote
@@ -106,11 +186,31 @@ const collapseQuotedReply = (content: HTMLElement, expanded: { current: boolean 
  * app theme (see {@link processEmailColors}) so it "fits" light/dark; table-heavy marketing emails are
  * left as authored to preserve their layout. Modeled on macro-inc/macro's email renderer.
  */
-export const HtmlViewer = ({ html, loadRemoteImages = false, isPersonal = false, classNames }: HtmlViewerProps) => {
+export const HtmlViewer = ({
+  html,
+  loadRemoteImages = false,
+  isPersonal = false,
+  attachments,
+  db,
+  classNames,
+}: HtmlViewerProps) => {
   const { themeMode } = useThemeContext();
   const hostRef = useRef<HTMLDivElement>(null);
   // Persists the quoted-reply expand state across re-renders (theme changes rebuild the shadow content).
   const quoteExpandedRef = useRef(false);
+  // Resolved cid: → blob: URL cache, persisted across content rebuilds; revoked on unmount below.
+  const cidUrlCacheRef = useRef<Map<string, string>>(new Map());
+
+  useEffect(
+    () => () => {
+      for (const url of cidUrlCacheRef.current.values()) {
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      }
+    },
+    [],
+  );
 
   const sanitized = useMemo(
     () =>
@@ -120,6 +220,14 @@ export const HtmlViewer = ({ html, loadRemoteImages = false, isPersonal = false,
           })
         : `<pre class="dx-plain">${escapeHtml(html)}</pre>`,
     [html],
+  );
+
+  // A stable primitive key for `attachments` — ECHO's reactive proxy can return a fresh array
+  // reference on every access, so keying the content-rebuild effect on `attachments` directly would
+  // rebuild (and re-resolve cid: images) on every unrelated render.
+  const attachmentsKey = useMemo(
+    () => attachments?.map((attachment) => `${attachment.contentId ?? ''}:${attachment.ref.uri}`).join(',') ?? '',
+    [attachments],
   );
 
   useEffect(() => {
@@ -172,7 +280,11 @@ export const HtmlViewer = ({ html, loadRemoteImages = false, isPersonal = false,
         processEmailColors(content, params);
       }
     }
-  }, [sanitized, loadRemoteImages, isPersonal, themeMode]);
+
+    // Resolve inline (`cid:`) image references against the message's attachments — async, so matches
+    // are swapped in place once resolved rather than blocking the synchronous content attach above.
+    resolveCidImages(content, attachments, db, cidUrlCacheRef.current);
+  }, [sanitized, loadRemoteImages, isPersonal, themeMode, attachmentsKey, db]);
 
   return <div ref={hostRef} className={mx('is-full', classNames)} />;
 };

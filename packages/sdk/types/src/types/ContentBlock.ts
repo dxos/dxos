@@ -305,6 +305,9 @@ export type File = Schema.Schema.Type<typeof File>;
  * Reference
  *
  * Non-text content embedded in the message (e.g., files, polls, etc.).
+ *
+ * @deprecated Use `Message.Attachment` (the message's `attachments` field) to link a message to a
+ * stored object instead of embedding a reference block in `blocks`.
  */
 export const Reference = Schema.TaggedStruct('reference', {
   reference: Ref.Ref(Obj.Unknown),
@@ -312,6 +315,7 @@ export const Reference = Schema.TaggedStruct('reference', {
   ...Base.fields,
 });
 
+/** @deprecated Use `Message.Attachment` instead. */
 export type Reference = Schema.Schema.Type<typeof Reference>;
 /**
  * A noun / proper noun surfaced by the extraction stage that is not (yet) linked to an object.

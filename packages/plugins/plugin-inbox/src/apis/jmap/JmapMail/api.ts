@@ -2,9 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as HttpClient from '@effect/platform/HttpClient';
+import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
 
+import { withAuthorization } from '@dxos/functions';
+
 import { JmapApiError } from '../../../errors';
+import { JmapCredentials } from '../../../services/jmap-credentials';
 import { MAIL_CAPABILITIES, SUBMISSION_CAPABILITIES, getMethodResponse, jmapRequest } from '../Jmap/api';
 import {
   type EmailAddress,
@@ -16,11 +21,62 @@ import {
   MailboxGetResult,
 } from './types';
 
-/** Resolved per-request context: the session `apiUrl` and the mail account id. */
+/**
+ * Resolved per-request context: the session `apiUrl`, the mail account id, and the session's blob
+ * `downloadUrl` template (RFC 8620 §6.2) — absent when the server didn't advertise one, in which case
+ * {@link downloadBlob} cannot be used.
+ */
 export type Target = {
   readonly apiUrl: string;
   readonly accountId: string;
+  readonly downloadUrl?: string;
 };
+
+/** Expands a JMAP `downloadUrl` URI Template (RFC 6570 level 1) with the given variables. */
+const expandDownloadUrl = (
+  template: string,
+  variables: { accountId: string; blobId: string; type: string; name: string },
+): string =>
+  template.replace(/\{(\w+)\}/g, (_, key: string) =>
+    key in variables ? encodeURIComponent(variables[key as keyof typeof variables]) : '',
+  );
+
+/**
+ * Downloads a blob's raw bytes via the session's `downloadUrl` template. `name`/`type` are advisory
+ * (they only affect the response's `Content-Disposition`/`Accept`), not required for correctness.
+ */
+export const downloadBlob = Effect.fn('downloadBlob')(function* (
+  target: Target,
+  blobId: string,
+  options: { name?: string; type?: string } = {},
+) {
+  if (!target.downloadUrl) {
+    return yield* Effect.fail(new JmapApiError(undefined, 'Session has no downloadUrl.'));
+  }
+  const url = expandDownloadUrl(target.downloadUrl, {
+    accountId: target.accountId,
+    blobId,
+    name: options.name ?? blobId,
+    type: options.type ?? 'application/octet-stream',
+  });
+
+  const { token } = yield* JmapCredentials;
+  const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
+
+  const buffer = yield* HttpClientRequest.get(url).pipe(
+    httpClient.execute,
+    Effect.flatMap((response) => response.arrayBuffer),
+    Effect.scoped,
+    Effect.mapError(asJmapDownloadError),
+  );
+  return new Uint8Array(buffer);
+});
+
+/** Collapses transport/decode failures into a typed {@link JmapApiError} (mirrors `Jmap/api.ts`). */
+const asJmapDownloadError = (error: unknown): JmapApiError =>
+  error instanceof JmapApiError
+    ? error
+    : new JmapApiError(undefined, error instanceof Error ? error.message : String(error));
 
 /** Email properties fetched by {@link emailGet} — enough for the mapper to build a Message. */
 export const EMAIL_PROPERTIES = [
@@ -42,6 +98,7 @@ export const EMAIL_PROPERTIES = [
   'bodyValues',
   'textBody',
   'htmlBody',
+  'attachments',
 ] as const;
 
 /** Lists all folders (mailboxes) in the account (RFC 8621 §2.3). */

@@ -10,13 +10,15 @@
 //   - RIGHT  `ConnectorCompanion` — the connection bound to the mailbox (once connected).
 //
 // The mailbox starts empty and unbound (the `SeededFacts` variant populates the feed with demo
-// messages for an offline demo). The client is configured WITHOUT an Edge service (fully local, no
-// Edge websocket), so only the credential-based connector is usable:
-//   - JMAP/Fastmail: a credential form (host + email + token), no OAuth.
-//   - Gmail: disabled — its OAuth coordinator requires an Edge URL.
-// Completing JMAP binds an `AccessToken` + `Connection` + `SyncBinding` to the mailbox;
-// the LEFT button then flips to a refresh button whose click runs a real
-// (`JmapMailApi.Live`) sync into the mailbox feed.
+// messages for an offline demo). The client points at the shared 'dev' Edge tier
+// (https://edge.dxos.workers.dev/ — same as the `plugin-bluesky` story) so both connectors work:
+//   - JMAP/Fastmail: a credential form (host + email + token), no OAuth, no Edge dependency.
+//   - Gmail: OAuth via the `ConnectorCoordinator`, which needs `runtime.services.edge.url` to
+//     initiate the flow. NOTE: this is a real OAuth handshake against a shared dev worker, tied to
+//     this story's (real) HALO identity — use a throwaway Google account if testing Gmail here.
+// Completing either binds an `AccessToken` + `Connection` + `SyncBinding` to the mailbox; the LEFT
+// button then flips to a refresh button whose click runs a real (provider `.Live`) sync into the
+// mailbox feed.
 //
 // Run in CHROME (`ConnectorPlugin` uses a lazy import that WebKit resolves unreliably under
 // vite-dev). Known live risk: the `Live` sync calls the mail API directly from the browser, a path
@@ -41,6 +43,7 @@ import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui'
 import { AppActivationEvents, AppPlugin, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
+import { configPreset } from '@dxos/config';
 import { Database, Feed, Filter, Order, Query, Ref, Tag } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
@@ -394,13 +397,14 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: SYNC_STORY_TYPES,
-          // No `edge` service: the client runs fully local (no Edge websocket). JMAP/Fastmail sync
-          // still works; Gmail OAuth does not (its coordinator requires an Edge URL).
-          config: new Config({
-            runtime: {
-              client: { storage: { persistent: true } },
-            },
-          }),
+          // `configPreset({ edge: 'dev' })` points at the shared 'dev' Edge tier (matches the
+          // `plugin-bluesky` story) — required for Gmail's OAuth coordinator (`getEdgeClient` in
+          // `connector-coordinator.ts`) to initiate its flow. JMAP/Fastmail sync doesn't need this;
+          // it works with or without an Edge service.
+          config: new Config(
+            { runtime: { client: { storage: { persistent: true } } } },
+            configPreset({ edge: 'dev' }).values,
+          ),
           // OPFS-backed storage so identity/spaces survive a page reload; without a worker the
           // client silently falls back to in-memory storage regardless of `storage.persistent`.
           createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),

@@ -13,6 +13,13 @@ import * as Schema from 'effect/Schema';
 export const Session = Schema.Struct({
   /** Endpoint for all subsequent API requests. */
   apiUrl: Schema.String,
+  /**
+   * URI Template (RFC 6570) for blob downloads, with `accountId`/`blobId`/`type`/`name` variables
+   * (RFC 8620 §6.2). Optional here even though the spec requires it, so a fixture/mock session that
+   * predates attachment support doesn't need updating; attachment fetching degrades gracefully when
+   * absent (see `JmapMail.Target.downloadUrl`).
+   */
+  downloadUrl: Schema.optional(Schema.String),
   /** Authenticated username (used to seed the connection account when the form leaves it blank). */
   username: Schema.optional(Schema.String),
   /** Capability urn → primary account id (e.g. `urn:ietf:params:jmap:mail`). */
