@@ -304,5 +304,5 @@ describe('runGmailSync against a mock Gmail API', () => {
     const forwardOrder = await insertionOrderTimestamps(forward.db, forward.mailbox);
     expect(forwardOrder).toHaveLength(510);
     expect(forwardOrder).toEqual([...forwardOrder].sort((left, right) => left - right));
-  }, 30_000);
+  });
 });
