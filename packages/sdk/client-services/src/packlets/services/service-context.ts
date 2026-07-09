@@ -531,7 +531,25 @@ export const ServiceContextLayer = (
 > => {
   const { edgeConnection, edgeHttpClient } = options;
 
-  const serviceContextLayer = Layer.effect(
+  // Non-edge: just the core beneath the orchestrator.
+  if (!edgeConnection || !edgeHttpClient) {
+    return coreLayers(options)(serviceContextServiceLayer(options));
+  }
+
+  // Edge: the optional feed-syncer / edge-replicator sit above the core so their `EchoHostService`
+  // requirement is satisfied by it, and the edge inputs are provided internally at the bottom.
+  const edgeTop = serviceContextServiceLayer(options).pipe(
+    Layer.provideMerge(feedSyncerLayer),
+    Layer.provideMerge(edgeReplicatorLayer(options)),
+  );
+  return coreLayers(options)(edgeTop).pipe(Layer.provideMerge(edgeInputLayer(edgeConnection, edgeHttpClient)));
+};
+
+/**
+ * Yields the {@link ServiceContext} orchestrator from the resolved stack components.
+ */
+const serviceContextServiceLayer = (options: ServiceContextLayerOptions) =>
+  Layer.effect(
     ServiceContextService,
     Effect.gen(function* () {
       const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
@@ -563,8 +581,8 @@ export const ServiceContextLayer = (
       return new ServiceContext({
         networkManager,
         signalManager,
-        edgeConnection,
-        edgeHttpClient,
+        edgeConnection: options.edgeConnection,
+        edgeHttpClient: options.edgeHttpClient,
         runtime,
         metadataStore,
         blobStore,
@@ -590,22 +608,19 @@ export const ServiceContextLayer = (
     }),
   );
 
-  // Optional mesh replicator: read via `serviceOption`, so its `ROut` is hidden (`Layer<never>`)
-  // — absence when p2p is disabled is modelled by not providing it, not by a null value.
-  const meshReplicatorLayer: Layer.Layer<never, never, never> = options.disableP2pReplication
-    ? Layer.empty
-    : MeshEchoReplicatorLayer();
-
-  // Applies the non-optional core beneath any optional edge outputs stacked on top, so a
-  // `FeedSyncer` / edge-replicator layer's `EchoHostService` requirement is satisfied here.
-  const withCore = <A, E, R>(top: Layer.Layer<A, E, R>) =>
+/**
+ * Applies the non-optional core layers beneath the given top layer.
+ */
+const coreLayers =
+  (options: ServiceContextLayerOptions) =>
+  <A, E, R>(top: Layer.Layer<A, E, R>) =>
     top.pipe(
       Layer.provideMerge(CrossDeviceSpaceSynchronizerLayer),
       Layer.provideMerge(EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures })),
       Layer.provideMerge(DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures })),
       Layer.provideMerge(SigningContextProviderLayer),
       Layer.provideMerge(identityProviderLayer),
-      Layer.provideMerge(meshReplicatorLayer),
+      Layer.provideMerge(meshReplicatorLayer(options)),
       Layer.provideMerge(echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator })),
       Layer.provideMerge(InvitationsManagerLayer()),
       Layer.provideMerge(InvitationsHandlerLayer({ connectionProps: options.invitationConnectionDefaultProps })),
@@ -621,34 +636,44 @@ export const ServiceContextLayer = (
       Layer.provideMerge(storageLayer),
     );
 
-  if (!edgeConnection || !edgeHttpClient) {
-    return withCore(serviceContextLayer);
-  }
+/**
+ * Optional mesh replicator: read via `serviceOption`, so its `ROut` is hidden (`Layer<never>`) —
+ * absence when p2p is disabled is modelled by not providing it, not by a null value.
+ */
+const meshReplicatorLayer = (options: ServiceContextLayerOptions): Layer.Layer<never, never, never> =>
+  options.disableP2pReplication ? Layer.empty : MeshEchoReplicatorLayer();
 
-  // Edge inputs are provided internally so they never appear in the stack's declared requirements.
-  const edgeInputLayer = Layer.mergeAll(
-    Layer.succeed(EdgeConnectionService, edgeConnection),
-    Layer.succeed(EdgeHttpClientService, edgeHttpClient),
-  );
-  // Optional edge replicator (subduction / echo / none) — `ROut` hidden, read via `serviceOption`.
-  const edgeReplicatorLayer: Layer.Layer<never, never, EdgeConnectionService | EdgeHttpClientService> = options
-    .edgeFeatures?.subductionReplicator
+/**
+ * Optional edge replicator (subduction / echo / none) — `ROut` hidden, read via `serviceOption`.
+ */
+const edgeReplicatorLayer = (
+  options: ServiceContextLayerOptions,
+): Layer.Layer<never, never, EdgeConnectionService | EdgeHttpClientService> =>
+  options.edgeFeatures?.subductionReplicator
     ? EchoEdgeSubductionReplicatorLayer()
     : options.edgeFeatures?.echoReplicator
       ? EchoEdgeReplicatorLayer()
       : Layer.empty;
 
-  const edgeTop = serviceContextLayer.pipe(
-    Layer.provideMerge(
-      FeedSyncerLayer({
-        peerId: '',
-        syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
-      }),
-    ),
-    Layer.provideMerge(edgeReplicatorLayer),
+/**
+ * Provides the edge inputs internally so they never appear in the stack's declared requirements.
+ */
+const edgeInputLayer = (
+  edgeConnection: EdgeConnection,
+  edgeHttpClient: EdgeHttpClient,
+): Layer.Layer<EdgeConnectionService | EdgeHttpClientService> =>
+  Layer.mergeAll(
+    Layer.succeed(EdgeConnectionService, edgeConnection),
+    Layer.succeed(EdgeHttpClientService, edgeHttpClient),
   );
-  return withCore(edgeTop).pipe(Layer.provideMerge(edgeInputLayer));
-};
+
+/**
+ * Optional feed syncer (only wired into the stack when edge is configured).
+ */
+const feedSyncerLayer = FeedSyncerLayer({
+  peerId: '',
+  syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
+});
 
 /**
  * Provides the {@link IdentityProviderService} from the resolved {@link IdentityManager}.
