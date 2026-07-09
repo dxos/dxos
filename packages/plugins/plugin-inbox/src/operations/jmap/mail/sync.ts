@@ -155,6 +155,7 @@ export const runJmapSync = ({
       EmailStage.processAttachments(),
       EmailStage.onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
+      EmailStage.toCommitUnit(),
       Stream.grouped(COMMIT_PAGE_SIZE),
       Pipeline.run({ sink: SyncBinding.commit }),
       Effect.provide(

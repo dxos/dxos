@@ -36,7 +36,12 @@ export type Bodied = { readonly body: string };
 export const htmlToMarkdown = <In extends Bodied, E, R>(self: Stream.Stream<In, E, R>): Stream.Stream<In, E, R> =>
   Stage.map('html-to-markdown', (item: In) => Effect.sync(() => ({ ...item, body: normalizeText(item.body) })))(self);
 
-/** A mapped message ready for contact extraction and commit. */
+/**
+ * A mapped message flowing through the generic email stages (attachments, on-arrival extractors,
+ * contact extraction, …) — each is Mapped → Mapped, so they compose in any order. {@link toCommitUnit}
+ * is the one stage that converts a run's final Mapped item into the {@link SyncBinding.CommitUnit}
+ * the commit sink consumes, and must run last.
+ */
 export type Mapped = {
   readonly message: Message.Message;
   readonly foreignId: string;
@@ -70,7 +75,7 @@ export type Attachment = {
  * same run (the lookup is maintained as each is built, since a not-yet-committed contact wouldn't show
  * in a fresh query), so a repeat sender never yields a duplicate Person.
  */
-export const extractContacts = (): Stage.Stage<Mapped, SyncBinding.CommitUnit, never, Database.Service> => {
+export const extractContacts = (): Stage.Stage<Mapped, Mapped, never, Database.Service> => {
   // Run-scoped contact/org lookup, seeded once on the first item and maintained by
   // `buildContactFromActor` as it creates contacts. Without it, each message re-queried every Person
   // and Organization in the space (O(#contacts) per message → O(n²) over a large sync) — the dominant
@@ -84,26 +89,19 @@ export const extractContacts = (): Stage.Stage<Mapped, SyncBinding.CommitUnit, n
       }
       const sender = mapped.message.sender;
       const contact = sender ? yield* buildContactFromActor(sender, db, lookup) : undefined;
+      if (!contact) {
+        return mapped;
+      }
+      // Defer the write to commit (the stage stays idempotent) — add the extracted contact there,
+      // alongside any deferred writes carried from earlier stages (e.g. attachment feed appends).
       return {
-        message: mapped.message,
-        foreignId: mapped.foreignId,
-        key: mapped.key,
-        tagUris: mapped.tagUris,
-        // Defer the write to commit (the stage stays idempotent) — add the extracted contact there,
-        // alongside any deferred writes carried from earlier stages (e.g. attachment feed appends).
-        commitEffects:
-          mapped.commitEffects?.length || contact
-            ? [
-                ...(mapped.commitEffects ?? []),
-                ...(contact
-                  ? [
-                      Effect.fn('sync.commit.addContact')(function* () {
-                        yield* Database.add(contact);
-                      }),
-                    ]
-                  : []),
-              ]
-            : undefined,
+        ...mapped,
+        commitEffects: [
+          ...(mapped.commitEffects ?? []),
+          Effect.fn('sync.commit.addContact')(function* () {
+            yield* Database.add(contact);
+          }),
+        ],
       };
     }),
   );
@@ -183,3 +181,20 @@ export const onArrivalExtractors =
     Stage.map('on-arrival-extractors', (item: In) =>
       runOnArrivalExtractors(mailbox, [item.message]).pipe(Effect.as(item)),
     )(self);
+
+/**
+ * Terminal stage converting a run's {@link Mapped} item into the {@link SyncBinding.CommitUnit} the
+ * commit sink consumes — drops `attachments` (already folded into `message.attachments` and
+ * `commitEffects` by {@link processAttachments}), keeping everything else as-is. Every other email
+ * stage is Mapped → Mapped and composes in any order; this is the one stage that must run last.
+ */
+export const toCommitUnit = (): Stage.Stage<Mapped, SyncBinding.CommitUnit, never, never> =>
+  Stage.map('to-commit-unit', (mapped: Mapped) =>
+    Effect.sync(() => ({
+      message: mapped.message,
+      foreignId: mapped.foreignId,
+      key: mapped.key,
+      tagUris: mapped.tagUris,
+      commitEffects: mapped.commitEffects,
+    })),
+  );

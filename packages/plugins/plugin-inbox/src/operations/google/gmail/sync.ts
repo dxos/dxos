@@ -201,6 +201,7 @@ export const runGmailSync = ({
       EmailStage.processAttachments(),
       EmailStage.onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
+      EmailStage.toCommitUnit(),
       Stream.grouped(STREAMING_CONFIG.pageSize),
       Pipeline.run({ sink: SyncBinding.commit }),
       Effect.provide(
