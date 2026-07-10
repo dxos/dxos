@@ -140,6 +140,7 @@ export class WorkerRuntime {
 
       // Steal the lock from the other worker.
       log('worker-runtime: broadcasting stop to displace previous worker');
+      // TODO(dmaretskyi): Displacing should entirely be handled by worker-framework.
       this._broadcastChannel = new BroadcastChannel(this._channel);
       this._broadcastChannel.postMessage({ action: 'stop' });
       this._broadcastChannel.onmessage = async (event) => {

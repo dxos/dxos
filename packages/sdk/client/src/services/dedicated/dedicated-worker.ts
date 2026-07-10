@@ -58,9 +58,11 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
       log('dedicated-worker: WorkerRuntime started');
 
       return {
+        // TODO(dmaretskyi): Liveness should be entirely handled by worker-framework -- APIs can be provided to integrate with the service code.
         livenessLockKey: runtime.livenessLockKey,
         createSession: async ({ appPort, systemPort, clientId, isOwner, onClose }) => {
           const session = await runtime.createSession({
+            // TODO(dmaretskyi): Eliminate RpcPort for worker-related code and rely on MessagePort instead.
             systemPort: createWorkerPort({ port: systemPort }),
             appPort,
             onClose,
