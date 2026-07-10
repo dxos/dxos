@@ -107,3 +107,5 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     );
   },
 );
+
+ChatArticle.displayName = 'ChatArticle';

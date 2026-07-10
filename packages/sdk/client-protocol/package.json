@@ -33,14 +33,18 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "@effect/platform": "catalog:",
+    "@effect/rpc": "catalog:",
     "base-x": "catalog:",
     "effect": "catalog:"
   },

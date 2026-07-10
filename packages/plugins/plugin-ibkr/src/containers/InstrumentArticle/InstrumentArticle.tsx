@@ -93,3 +93,5 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
 };
 
 export default InstrumentArticle;
+
+InstrumentArticle.displayName = 'InstrumentArticle';

@@ -66,3 +66,5 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
     </Form.Section>
   );
 };
+
+CalendarProperties.displayName = 'CalendarProperties';

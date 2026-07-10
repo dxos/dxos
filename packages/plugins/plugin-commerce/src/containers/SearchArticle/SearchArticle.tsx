@@ -195,3 +195,5 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
     />
   );
 };
+
+SearchArticle.displayName = 'SearchArticle';

@@ -158,3 +158,5 @@ export const QuickEntryDialog = () => {
     </Dialog.Content>
   );
 };
+
+QuickEntryDialog.displayName = 'QuickEntryDialog';

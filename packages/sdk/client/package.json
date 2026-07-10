@@ -143,6 +143,8 @@
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
     "@effect/experimental": "catalog:",
+    "@effect/platform-browser": "catalog:",
+    "@effect/rpc": "catalog:",
     "@effect/sql": "catalog:",
     "effect": "catalog:",
     "fast-deep-equal": "catalog:",

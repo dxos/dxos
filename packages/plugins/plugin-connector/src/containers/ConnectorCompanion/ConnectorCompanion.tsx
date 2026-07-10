@@ -162,3 +162,5 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
     </Panel.Root>
   );
 };
+
+ConnectorCompanion.displayName = 'ConnectorCompanion';

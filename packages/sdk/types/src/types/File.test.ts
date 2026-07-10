@@ -33,10 +33,10 @@ describe('File', () => {
       yield* Database.add(file);
 
       expect(file.name).toBe('photo.png');
-      expect(file.type).toBe('image/png');
-      expect(file.size).toBe(bytes.byteLength);
 
       const blob = yield* Database.load(file.data);
+      expect(blob.type).toBe('image/png');
+      expect(blob.size).toBe(bytes.byteLength);
       expect(blob.data._tag).toBe('inline');
 
       const loaded = yield* Blob.read(blob);

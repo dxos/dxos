@@ -86,3 +86,5 @@ export const CreateSpaceDialog = () => {
     </Dialog.Content>
   );
 };
+
+CreateSpaceDialog.displayName = 'CreateSpaceDialog';
