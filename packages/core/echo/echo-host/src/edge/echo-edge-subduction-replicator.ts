@@ -68,7 +68,7 @@ const MAX_RESTART_DELAY = 5000;
  */
 const SUBDUCTION_BATCH_MAX_FRAMES = 32;
 const SUBDUCTION_BATCH_MAX_BYTES = 256 * 1024;
-const SUBDUCTION_BATCH_MAX_DELAY_MS = 20;
+const SUBDUCTION_BATCH_MAX_DELAY_MS = 200;
 
 export type EchoEdgeSubductionReplicatorProps = {
   edgeConnection: EdgeConnection;
