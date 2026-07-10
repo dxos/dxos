@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import * as Rpc from '@effect/rpc/Rpc';
 import type * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
+import * as Schema from 'effect/Schema';
 
 import { protoMessage, serviceError } from './service-rpc.ts';
 import { protoTimestamp, publicKey, timeframe } from './service-schemas.ts';
@@ -50,12 +50,16 @@ export interface SubscribeToKeyringKeysResponse extends Schema.Schema.Type<typeo
 export const SubscribeToCredentialMessagesRequest = Schema.Struct({
   spaceKey: Schema.optional(publicKey),
 });
-export interface SubscribeToCredentialMessagesRequest extends Schema.Schema.Type<typeof SubscribeToCredentialMessagesRequest> {}
+export interface SubscribeToCredentialMessagesRequest extends Schema.Schema.Type<
+  typeof SubscribeToCredentialMessagesRequest
+> {}
 
 export const SubscribeToCredentialMessagesResponse = Schema.Struct({
   messages: Schema.optional(Schema.mutable(Schema.Array(protoMessage('dxos.halo.signed.SignedMessage')))),
 });
-export interface SubscribeToCredentialMessagesResponse extends Schema.Schema.Type<typeof SubscribeToCredentialMessagesResponse> {}
+export interface SubscribeToCredentialMessagesResponse extends Schema.Schema.Type<
+  typeof SubscribeToCredentialMessagesResponse
+> {}
 
 export const SubscribeToSpacesRequest = Schema.Struct({
   spaceKeys: Schema.optional(Schema.mutable(Schema.Array(publicKey))),

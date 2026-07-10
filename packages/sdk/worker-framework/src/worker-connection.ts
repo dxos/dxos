@@ -8,11 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { MaybePromise } from '@dxos/util';
 
-import {
-  isAbortError,
-  requestExclusiveLockWithTimeout,
-  waitWithLockOrRpcTimeout,
-} from './internal/locks';
+import { isAbortError, requestExclusiveLockWithTimeout, waitWithLockOrRpcTimeout } from './internal/locks';
 import type {
   DedicatedWorkerMessage,
   WorkerCoordinator,

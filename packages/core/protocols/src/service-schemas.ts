@@ -35,12 +35,14 @@ const TimeframeFrame = Schema.Struct({
  * generated `TimeframeVector` interface (a plain `frames` array) does not describe the runtime
  * value; both RPC ends share this schema, so the frame list is carried structurally on the wire.
  */
-export const timeframe: Schema.Schema<Timeframe, ReadonlyArray<Schema.Schema.Encoded<typeof TimeframeFrame>>> =
-  Schema.transform(Schema.Array(TimeframeFrame), Schema.instanceOf(Timeframe), {
-    strict: true,
-    decode: (frames) => new Timeframe(frames.map((frame) => [frame.feedKey, frame.seq])),
-    encode: (value) => value.frames().map(([feedKey, seq]) => ({ feedKey, seq })),
-  });
+export const timeframe: Schema.Schema<
+  Timeframe,
+  ReadonlyArray<Schema.Schema.Encoded<typeof TimeframeFrame>>
+> = Schema.transform(Schema.Array(TimeframeFrame), Schema.instanceOf(Timeframe), {
+  strict: true,
+  decode: (frames) => new Timeframe(frames.map((frame) => [frame.feedKey, frame.seq])),
+  encode: (value) => value.frames().map(([feedKey, seq]) => ({ feedKey, seq })),
+});
 
 /**
  * Effect schema for `google.protobuf.Struct`, matching the proto codec substitution shape.

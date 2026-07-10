@@ -15,14 +15,14 @@ It deliberately does **not** implement DXOS client services, WebRTC, storage bac
 
 ## Non-goals
 
-| Concern | Owner |
-|---|---|
+| Concern                                                                     | Owner                                          |
+| --------------------------------------------------------------------------- | ---------------------------------------------- |
 | Concrete service RPC definitions (`ClientServicesRpcs`, IdentityService, …) | `@dxos/client-protocol`, `@dxos/protocols/rpc` |
-| Service host implementations (`WorkerRuntime`, `ClientServicesHost`) | `@dxos/client-services` |
-| System-port WebRTC bridge (`SharedWorkerConnection`) | `@dxos/client` |
-| App-port service proxy (`ClientServicesProxy`) | `@dxos/client` |
-| Low-level msgpack framing over `RpcPort` | `@dxos/rpc` (`effect-rpc.ts`) |
-| SharedWorker-based client services (non-dedicated path) | `@dxos/client` (`WorkerClientServices`) |
+| Service host implementations (`WorkerRuntime`, `ClientServicesHost`)        | `@dxos/client-services`                        |
+| System-port WebRTC bridge (`SharedWorkerConnection`)                        | `@dxos/client`                                 |
+| App-port service proxy (`ClientServicesProxy`)                              | `@dxos/client`                                 |
+| Low-level msgpack framing over `RpcPort`                                    | `@dxos/rpc` (`effect-rpc.ts`)                  |
+| SharedWorker-based client services (non-dedicated path)                     | `@dxos/client` (`WorkerClientServices`)        |
 
 ## Package layout
 
@@ -46,11 +46,11 @@ packages/sdk/worker-framework/
 
 ## Entrypoints
 
-| Import | Exports |
-|---|---|
-| `@dxos/worker-framework` | `WorkerConnection`, `LeaderTimeoutOptions`, `WorkerConnectionHandle`, `WorkerConnectionOptions`, `makeRpcClient`, `serveRpcGroup`, message types |
-| `@dxos/worker-framework/worker` | `runWorker`, `RunWorkerOptions`, `WorkerRuntimeHandle`, `WorkerEndpoint`, `DedicatedWorkerMessage` |
-| `@dxos/worker-framework/coordinator` | `WorkerCoordinator`, coordinators, `createCoordinatorOnConnect`, coordinator + worker message types |
+| Import                               | Exports                                                                                                                                          |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@dxos/worker-framework`             | `WorkerConnection`, `LeaderTimeoutOptions`, `WorkerConnectionHandle`, `WorkerConnectionOptions`, `makeRpcClient`, `serveRpcGroup`, message types |
+| `@dxos/worker-framework/worker`      | `runWorker`, `RunWorkerOptions`, `WorkerRuntimeHandle`, `WorkerEndpoint`, `DedicatedWorkerMessage`                                               |
+| `@dxos/worker-framework/coordinator` | `WorkerCoordinator`, coordinators, `createCoordinatorOnConnect`, coordinator + worker message types                                              |
 
 ## Roles
 
@@ -85,8 +85,8 @@ Three cooperating roles:
 type WorkerConnectionOptions = {
   createWorker: () => WorkerOrPort;
   createCoordinator: () => MaybePromise<WorkerCoordinator>;
-  leaderLockKey: string;               // injected by consumer
-  config?: Record<string, any>;        // opaque; forwarded to worker init
+  leaderLockKey: string; // injected by consumer
+  config?: Record<string, any>; // opaque; forwarded to worker init
   leaderTimeouts?: LeaderTimeoutOptions;
   onConnect: (args: {
     appPort: MessagePort;
@@ -113,19 +113,19 @@ type WorkerConnectionOptions = {
 
 ### Default timeouts
 
-| Option | Default | Purpose |
-|---|---|---|
-| `heartbeatInterval` | 1000 ms | Leader liveness broadcast |
-| `staleTimeout` | 5000 ms | Window before lock steal is considered |
-| `portTimeout` | 15000 ms | Follower wait for `provide-port` |
+| Option               | Default  | Purpose                                           |
+| -------------------- | -------- | ------------------------------------------------- |
+| `heartbeatInterval`  | 1000 ms  | Leader liveness broadcast                         |
+| `staleTimeout`       | 5000 ms  | Window before lock steal is considered            |
+| `portTimeout`        | 15000 ms | Follower wait for `provide-port`                  |
 | lock/RPC acquisition | 15000 ms | `LOCK_OR_RPC_WAIT_TIMEOUT` in `internal/locks.ts` |
 
 ## Worker side: `runWorker`
 
 ```ts
 type RunWorkerOptions = {
-  endpoint?: WorkerEndpoint;   // default: DedicatedWorker `self`
-  storageLockKey: string;      // injected by consumer
+  endpoint?: WorkerEndpoint; // default: DedicatedWorker `self`
+  storageLockKey: string; // injected by consumer
   createRuntime: (args: {
     config: Record<string, any> | undefined;
     requestShutdown: () => void;
@@ -135,13 +135,13 @@ type RunWorkerOptions = {
 
 ### Message protocol (`DedicatedWorkerMessage`)
 
-| Message | Direction | Purpose |
-|---|---|---|
-| `listening` | Worker → Leader | Worker loop ready for `init` |
-| `init` | Leader → Worker | Start runtime with config; includes `ownerClientId` |
-| `ready` | Worker → Leader | Runtime up; returns `livenessLockKey` |
-| `start-session` | Leader → Worker | Open session for a tab `clientId` |
-| `session` | Worker → Leader | Transfers `appPort` + `systemPort` for the tab |
+| Message         | Direction       | Purpose                                             |
+| --------------- | --------------- | --------------------------------------------------- |
+| `listening`     | Worker → Leader | Worker loop ready for `init`                        |
+| `init`          | Leader → Worker | Start runtime with config; includes `ownerClientId` |
+| `ready`         | Worker → Leader | Runtime up; returns `livenessLockKey`               |
+| `start-session` | Leader → Worker | Open session for a tab `clientId`                   |
+| `session`       | Worker → Leader | Transfers `appPort` + `systemPort` for the tab      |
 
 ### Worker loop responsibilities
 
@@ -154,21 +154,21 @@ type RunWorkerOptions = {
 
 ### Message protocol (`WorkerCoordinatorMessage`)
 
-| Message | Purpose |
-|---|---|
-| `new-leader` | Announce current leader id |
-| `leader-heartbeat` | Leader liveness while holding lock |
-| `request-port` | Tab asks leader for worker session ports |
-| `provide-port` | Leader delivers `appPort`, `systemPort`, `livenessLockKey` to requesting tab |
+| Message            | Purpose                                                                      |
+| ------------------ | ---------------------------------------------------------------------------- |
+| `new-leader`       | Announce current leader id                                                   |
+| `leader-heartbeat` | Leader liveness while holding lock                                           |
+| `request-port`     | Tab asks leader for worker session ports                                     |
+| `provide-port`     | Leader delivers `appPort`, `systemPort`, `livenessLockKey` to requesting tab |
 
 ### Implementations
 
-| Class | Use case |
-|---|---|
-| `SharedWorkerCoordinator` | Production multi-tab; requires `createWorker` factory (see `@dxos/client` wrapper for default URL) |
-| `SingleClientCoordinator` | Tauri / single-window; echoes messages locally |
-| `MemoryWorkerCoordiantor` | Tests; in-process async echo |
-| `createCoordinatorOnConnect` | SharedWorker entrypoint handler; routes `provide-port` to the correct tab by `clientId` |
+| Class                        | Use case                                                                                           |
+| ---------------------------- | -------------------------------------------------------------------------------------------------- |
+| `SharedWorkerCoordinator`    | Production multi-tab; requires `createWorker` factory (see `@dxos/client` wrapper for default URL) |
+| `SingleClientCoordinator`    | Tauri / single-window; echoes messages locally                                                     |
+| `MemoryWorkerCoordiantor`    | Tests; in-process async echo                                                                       |
+| `createCoordinatorOnConnect` | SharedWorker entrypoint handler; routes `provide-port` to the correct tab by `clientId`            |
 
 ## RPC helpers
 
@@ -198,13 +198,13 @@ No dependency on `@dxos/client-services`, `@dxos/config`, `@dxos/network-manager
 
 ## Consumer integration (@dxos/client)
 
-| Consumer file | Framework usage |
-|---|---|
+| Consumer file                         | Framework usage                                                                        |
+| ------------------------------------- | -------------------------------------------------------------------------------------- |
 | `dedicated-worker-client-services.ts` | `WorkerConnection` with `onConnect` → `SharedWorkerConnection` + `ClientServicesProxy` |
-| `dedicated-worker.ts` | `runWorker` with `createRuntime` → `WorkerRuntime` |
-| `test-worker-factory.ts` | `runWorker` with `MessagePort` endpoint (in-thread tests) |
-| `shared-worker-coordinator.ts` | Thin wrapper supplying default `#coordinator-worker` URL |
-| `coordinator-worker-entrypoint.ts` | Re-exports `createCoordinatorOnConnect` |
+| `dedicated-worker.ts`                 | `runWorker` with `createRuntime` → `WorkerRuntime`                                     |
+| `test-worker-factory.ts`              | `runWorker` with `MessagePort` endpoint (in-thread tests)                              |
+| `shared-worker-coordinator.ts`        | Thin wrapper supplying default `#coordinator-worker` URL                               |
+| `coordinator-worker-entrypoint.ts`    | Re-exports `createCoordinatorOnConnect`                                                |
 
 Lock keys remain in `@dxos/client`:
 
@@ -213,20 +213,20 @@ Lock keys remain in `@dxos/client`:
 
 ## Consumer integration (@dxos/client-protocol)
 
-| Before | After |
-|---|---|
-| `RpcServer.layer` + `layerProtocolRpcPortServer` inline in `ClientRpcServer` | `serveRpcGroup` |
+| Before                                                                           | After           |
+| -------------------------------------------------------------------------------- | --------------- |
+| `RpcServer.layer` + `layerProtocolRpcPortServer` inline in `ClientRpcServer`     | `serveRpcGroup` |
 | `makeProtocolRpcPortClient` + `RpcClient.make` inline in `makeClientServicesRpc` | `makeRpcClient` |
 
 Public signatures of `ClientRpcServer`, `makeClientServicesRpc`, and service-specific types are unchanged.
 
 ## Testing
 
-| Suite | Location | Covers |
-|---|---|---|
-| Coordinator unit tests | `src/coordinator/single-client-coordinator.test.ts` | Echo semantics, async delivery |
+| Suite                        | Location                                                  | Covers                                       |
+| ---------------------------- | --------------------------------------------------------- | -------------------------------------------- |
+| Coordinator unit tests       | `src/coordinator/single-client-coordinator.test.ts`       | Echo semantics, async delivery               |
 | Dedicated worker integration | `@dxos/client` `dedicated-worker-client-services.test.ts` | Leader election, steal, multi-tab, reconnect |
-| Effect-rpc services | `@dxos/client-services` `effect-rpc.test.ts` | `ClientRpcServer` over linked ports |
+| Effect-rpc services          | `@dxos/client-services` `effect-rpc.test.ts`              | `ClientRpcServer` over linked ports          |
 
 Run:
 

@@ -2,7 +2,12 @@
 
 **Branch:** `dm/worker-package`  
 **Last updated:** 2026-07-10  
-**Status:** Phase A implemented (uncommitted); tests and downstream build not green yet. Phases B–D not started.
+**Status:** Phase A implemented and committed; the whole workspace now builds (`moon exec :build`
+is green). Inline service RPC schemas were realigned with the proto wire types so the service
+hosts compile against `*.Handlers` (see [service-rpc-schemas.md](./service-rpc-schemas.md)), and the
+iframe/extension client consumers (shell, devtools panel, devtools-extension sandbox) were bridged
+onto the `MessagePort` proxy. **Remaining Phase A gap:** the 8 `effect-rpc.test.ts` suite-1 cases
+still fail — see below. Phases B–D not started.
 
 ---
 
@@ -10,25 +15,25 @@
 
 ### What is done — Phase A (code landed, not committed)
 
-| Area | Status | Notes |
-|------|--------|-------|
-| `worker-framework/src/internal/rpc.ts` | ✅ Done | `makeRpcClient` / `serveRpcGroup` use `MessagePort` + `@effect/platform-browser` (`layerProtocolWorker` / `layerProtocolWorkerRunner`). `@dxos/rpc` removed from deps; `@effect/platform-browser` added. |
-| `client-protocol/src/service-rpc.ts` | ✅ Done | `ClientRpcServer`, `makeClientServicesRpc` take `MessagePortLike` (= `MessagePort`). Handler layer unchanged. |
-| `client/src/services/service-proxy.ts` | ✅ Done | `ClientServicesProxy` takes raw `MessagePort`. |
-| App-port consumers | ✅ Done | `createWorkerPort` dropped for **app** ports in `worker-client-services.ts`, `dedicated-worker-client-services.ts`, `dedicated-worker.ts`, `test-worker-factory.ts`, `onconnect.ts`. |
-| `client-services/.../worker-session.ts` | ✅ Done | `appPort: MessagePort`; `shellPort?: MessagePort`. |
-| `client-services/.../worker-runtime.ts` | ✅ Done | `CreateSessionProps.appPort` / `shellPort` are `MessagePort`; `systemPort` still `RpcPort`. |
-| Test harness rewrites | ✅ Partial | `effect-rpc.test.ts` `setupRpc`, `test-builder.ts` `createClientServer`, `client-e2e/shared-worker.test.ts` use `MessageChannel` for app (and shell) ports. |
-| `devtools.ts` | ⚠️ Partial | `ClientRpcServer` uses a lazy `MessageChannel().port1`. The old `window.postMessage` ↔ content-script `RpcPort` bridge was removed — **devtools extension RPC is broken** until a Worker-protocol bridge is added. |
-| Streaming round-trip test (Phase A validation) | ❌ Not done | Still only unary coverage in suite 1; no dedicated DataService/QueryService-style stream test over `serveRpcGroup`. |
+| Area                                           | Status      | Notes                                                                                                                                                                                                              |
+| ---------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `worker-framework/src/internal/rpc.ts`         | ✅ Done     | `makeRpcClient` / `serveRpcGroup` use `MessagePort` + `@effect/platform-browser` (`layerProtocolWorker` / `layerProtocolWorkerRunner`). `@dxos/rpc` removed from deps; `@effect/platform-browser` added.           |
+| `client-protocol/src/service-rpc.ts`           | ✅ Done     | `ClientRpcServer`, `makeClientServicesRpc` take `MessagePortLike` (= `MessagePort`). Handler layer unchanged.                                                                                                      |
+| `client/src/services/service-proxy.ts`         | ✅ Done     | `ClientServicesProxy` takes raw `MessagePort`.                                                                                                                                                                     |
+| App-port consumers                             | ✅ Done     | `createWorkerPort` dropped for **app** ports in `worker-client-services.ts`, `dedicated-worker-client-services.ts`, `dedicated-worker.ts`, `test-worker-factory.ts`, `onconnect.ts`.                               |
+| `client-services/.../worker-session.ts`        | ✅ Done     | `appPort: MessagePort`; `shellPort?: MessagePort`.                                                                                                                                                                 |
+| `client-services/.../worker-runtime.ts`        | ✅ Done     | `CreateSessionProps.appPort` / `shellPort` are `MessagePort`; `systemPort` still `RpcPort`.                                                                                                                        |
+| Test harness rewrites                          | ✅ Partial  | `effect-rpc.test.ts` `setupRpc`, `test-builder.ts` `createClientServer`, `client-e2e/shared-worker.test.ts` use `MessageChannel` for app (and shell) ports.                                                        |
+| `devtools.ts`                                  | ⚠️ Partial  | `ClientRpcServer` uses a lazy `MessageChannel().port1`. The old `window.postMessage` ↔ content-script `RpcPort` bridge was removed — **devtools extension RPC is broken** until a Worker-protocol bridge is added. |
+| Streaming round-trip test (Phase A validation) | ❌ Not done | Still only unary coverage in suite 1; no dedicated DataService/QueryService-style stream test over `serveRpcGroup`.                                                                                                |
 
 ### What is unchanged — still on old protocols
 
-| Channel | Today on branch | Target (Phase C) |
-|---------|-----------------|------------------|
-| **appPort** | Native Worker platform (`MessagePort` direct) | Same |
+| Channel        | Today on branch                                                                      | Target (Phase C)                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| **appPort**    | Native Worker platform (`MessagePort` direct)                                        | Same                                                                                                      |
 | **systemPort** | Protobuf duplex via `createProtoRpcPeer` (`WorkerService` / `BridgeService` bundles) | Rename to **bridgePort**; worker→tab `BridgeService` runner on tab, `WorkerService` merged into app group |
-| **shellPort** | Optional second `ClientRpcServer` over `MessagePort` (deprecated iframe path) | Out of scope (stay protobuf or remove later) |
+| **shellPort**  | Optional second `ClientRpcServer` over `MessagePort` (deprecated iframe path)        | Out of scope (stay protobuf or remove later)                                                              |
 
 `createWorkerPort` is **still used** for `systemPort` everywhere (`onconnect`, dedicated worker, test factory, worker-client-services, dedicated-worker-client-services).
 
@@ -93,13 +98,26 @@ RpcServer runner             RpcClient
 
 ### Remaining Phase A work
 
-- [ ] **Fix suite 1 in `effect-rpc.test.ts`** — 8/10 tests fail with `RpcClosedError` / wrong error types after `MessageChannel` switch. Likely causes to investigate:
-  - `MessagePort.start()` not called on one or both ports (Node/vitest).
-  - Runner `ManagedRuntime` lifecycle vs test `onTestFinished` ordering.
-  - Native protocol has no Ping/Pong handshake — connect timing may differ from old `createLinkedPorts` RpcPort path.
+- [ ] **Fix suite 1 in `effect-rpc.test.ts`** — 8/10 tests fail with `RpcClosedError` ("Fiber was
+  interrupted"). Suites 2/3 (direct `BrowserWorker` in a single fiber) pass, so the transport is
+  sound; the failure is specific to the production-shaped split-runtime path (`ClientRpcServer.open`
+  + `makeClientServicesRpc` in a held scope + calls dispatched on `Runtime.defaultRuntime` via
+  `makeServicesFromRpc`), which mirrors `ClientServicesProxy.open`. Instrumentation narrows it down:
+  the connection establishes (client receives the runner ready `[0]`) and the request reaches the
+  worker protocol (`proto.send` with a `Request` fires), but the request fiber is **immediately
+  interrupted** — a follow-up `Interrupt` is sent and `worker.send`/`executeAcquire` never runs, so
+  the server handler is never invoked. In the passing suites the call runs inside the fiber that
+  built the client (its context carries the client-layer scope); in the failing path it runs on a
+  bare runtime. Neither hosting the server via a long-lived `Scope` (vs `ManagedRuntime`) nor
+  wrapping the call in `Effect.scoped` changes the outcome — the interrupt originates in
+  `@effect/rpc`'s unary `onEffectRequest` fork and needs an `@effect/rpc`-level fix (likely how
+  `makeServicesFromRpc`/`runServiceCall` supply the runtime for forked requests).
 - [ ] Add streaming round-trip test over `ClientRpcServer` + `makeClientServicesRpc` (QueryService/DataService-style).
-- [ ] Re-bridge devtools extension (Worker protocol over `window.postMessage`) or document as follow-up.
-- [ ] Commit Phase A once tests green.
+- [x] Re-bridge iframe/extension consumers (shell, devtools panel, devtools-extension sandbox) onto
+  the `MessagePort` proxy via a `MessageChannel` relayed over `window.postMessage` (structured clone
+  keeps protocol frames intact). The host-side Worker-protocol bridge (the other end of these
+  relays) is still a follow-up — the connections type-check and build but carry no live traffic yet.
+- [x] Commit Phase A (build green; the suite-1 test fix above is the sole open item).
 
 ---
 
@@ -144,28 +162,29 @@ Output: `packages/core/protocols/src/WorkerService.ts`, `BridgeService.ts` with 
 
 ## Risks to validate
 
-| Risk | Phase A status |
-|------|----------------|
-| Streaming over `layerProtocolWorkerRunner` | Not validated in suite 1; suite 2/3 pass (direct BrowserWorker tests). |
-| Init race (no Ping/Pong) | Failing tests suggest lifecycle/timing issue; needs explicit reconnect/steal test after fix. |
-| Transferables (`supportsTransferables: true`) | Not exercised; optional Automerge perf win. |
-| `MessageChannel` + structured clone in vitest | Suite 2/3 OK; suite 1 broken after harness switch. |
-| Devtools extension | Broken until Worker-protocol window bridge. |
-| Service definition regeneration | **High** — do not run full `gen-service-rpcs.ts` against WIP inline schemas. |
+| Risk                                          | Phase A status                                                                               |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Streaming over `layerProtocolWorkerRunner`    | Not validated in suite 1; suite 2/3 pass (direct BrowserWorker tests).                       |
+| Init race (no Ping/Pong)                      | Failing tests suggest lifecycle/timing issue; needs explicit reconnect/steal test after fix. |
+| Transferables (`supportsTransferables: true`) | Not exercised; optional Automerge perf win.                                                  |
+| `MessageChannel` + structured clone in vitest | Suite 2/3 OK; suite 1 broken after harness switch.                                           |
+| Devtools extension / shell iframe             | Consumers bridged onto `MessagePort` (builds); host-side Worker-protocol window bridge still a follow-up. |
+| Service definition regeneration               | **High** — do not run full `gen-service-rpcs.ts` against WIP inline schemas.                 |
 
 ---
 
 ## Verification
 
-### Current results (2026-07-10)
+### Current results (2026-07-10, after main merge)
 
-| Command | Result |
-|---------|--------|
-| `moon run worker-framework:build` | ✅ Pass |
-| `moon run client-protocol:build` | ⚠️ Blocked by `echo-host:build` (FeedService handler payload `readonly` mismatch) |
-| `moon run client-services:test -- effect-rpc.test.ts` | ❌ 8/10 suite-1 tests fail (`RpcClosedError`, wrong error types); suite 2/3 pass |
-| `moon run client:test -- dedicated-worker-client-services.test.ts` | Not re-run after Phase A |
-| `moon run :lint -- --fix` | Not re-run on this diff |
+| Command                                                            | Result                                                                           |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| `moon exec --on-failure continue :build` (whole workspace)         | ✅ Pass                                                                          |
+| `moon run worker-framework:build`                                  | ✅ Pass                                                                          |
+| `moon run protocols:compile` / `client-protocol:build`             | ✅ Pass (echo-host `readonly` mismatch fixed via schema realignment)             |
+| `moon run echo-host:build` / `client-services:build` / `client:build` | ✅ Pass                                                                       |
+| `moon run protocols:test` / `worker-framework:test`                | ✅ Pass                                                                          |
+| `moon run client-services:test -- effect-rpc.test.ts`              | ❌ 8/10 suite-1 tests fail (`RpcClosedError`); suite 2/3 pass (see remaining work) |
 
 ### Target (Phase A complete)
 
