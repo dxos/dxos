@@ -98,7 +98,13 @@ type CounterPanelProps = {
   connection: CounterConnection;
 };
 
-const SessionMeta = ({ session, reconnectCount }: { session: CounterSessionInfo | undefined; reconnectCount: number }) => {
+const SessionMeta = ({
+  session,
+  reconnectCount,
+}: {
+  session: CounterSessionInfo | undefined;
+  reconnectCount: number;
+}) => {
   if (!session) {
     return <div className='text-xs text-subdued'>Connecting…</div>;
   }
@@ -112,7 +118,9 @@ const SessionMeta = ({ session, reconnectCount }: { session: CounterSessionInfo 
           {session.isOwner ? 'Owner' : 'Guest'}
         </span>
         {reconnectCount > 0 && (
-          <span className='rounded bg-warning/15 px-1.5 py-0.5 font-medium text-warning'>Reconnected ×{reconnectCount}</span>
+          <span className='rounded bg-warning/15 px-1.5 py-0.5 font-medium text-warning'>
+            Reconnected ×{reconnectCount}
+          </span>
         )}
       </div>
       <div>
