@@ -59,15 +59,15 @@ No refuse/suppress/quiesce machinery — it was implemented, measured harmful, a
 - **In-flight gate**: `#doSync` acquires a shared semaphore (`MAX_IN_FLIGHT_DOC_SYNCS = 100`); the
   heal scheduler's retries pass through the **same** gate (`syncGate` option) so a reconnect burst
   or a heal storm can't dispatch 800+ concurrent rounds (each starting a 60 s clock).
-- **Re-drive on reconnect**: an `all-failed` entry is re-driven when the connection *generation*
+- **Re-drive on reconnect**: an `all-failed` entry is re-driven when the connection _generation_
   changes, with a fresh heal budget. Without this, a doc that exhausts heal on a dead connection is
   orphaned forever (a healthy WS never bumps the generation). Verified: after a drop, 100/100 rounds
   re-drove ~2.6 s post-settle and all succeeded.
-- **`lastSyncGeneration` is stamped at round *start*, not enqueue** — a round queued behind the gate
+- **`lastSyncGeneration` is stamped at round _start_, not enqueue** — a round queued behind the gate
   across a reconnect must count against the generation it actually runs under.
 
 Why the gate is a patch and not `SubductionPolicy`: policy hooks can only allow/deny (a deny is a
-*failure* with heal-backoff, not queueing), fire mid-round after resources are committed, carry no
+_failure_ with heal-backoff, not queueing), fire mid-round after resources are committed, carry no
 round identity or completion signal, and the recovery kick (`shareConfigChanged`) doesn't reach the
 denied party on a push. Policy is the security seam; the dispatch layer is the flow-control seam.
 
@@ -77,7 +77,7 @@ denied party on a push. Policy is the security seam; the dispatch layer is the f
 `Effect.serviceOption(EdgeAutomergeReplicatorService)` — exactly like the sibling mesh replicator. It
 resolves to a value **only if the providing layer is below it** in the `provideMerge` chain. The
 edge replicator layer requires only `Edge{Connection,HttpClient}Service` (NOT `EchoHostService` —
-that's the feed-syncer), so it belongs below core, next to `edgeInputLayer`. Placing it *above* core
+that's the feed-syncer), so it belongs below core, next to `edgeInputLayer`. Placing it _above_ core
 (the feed-syncer's position) compiles fine — `serviceOption` is optional — but resolves to `none` at
 runtime, so `connectToSpace` silently never runs and **all edge document replication is dead** with
 no error. This shipped broken on main once. Guard: `serviceOption`-resolved wiring must be validated
@@ -93,7 +93,7 @@ races every `sendMessage` against a 10 s timeout (Workers RPC has none), treatin
 transient; replaces the pass mutex with a 60 s pass **watchdog** so a never-settling send can't pin
 all future alarms; and treats a **past-time `getAlarm()` as absent** (a stale alarm otherwise
 suppresses re-arm forever). A past-invocation send that never settles is re-issued by the unacked
-sweep; a settled *failure* is final.
+sweep; a settled _failure_ is final.
 
 ## 7. Keepalive watchdog must be starvation-aware (`edge-ws-connection.ts`)
 
