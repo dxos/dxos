@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './FactViewer';
+export * from './components';
 export * from './types';

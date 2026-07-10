@@ -345,7 +345,7 @@ const InMemoryStory = (_: StoryArgs) => {
 };
 
 const meta = {
-  title: 'stories/stories-brain/stories/Facts',
+  title: 'stories/stories-brain/Facts',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
 } satisfies Meta<typeof DefaultStory>;

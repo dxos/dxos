@@ -41,6 +41,19 @@ describe('createDraftMessage', () => {
     expect(replyBody).toContain('Alice');
   });
 
+  test('reply mode places a provided body above the quoted original', ({ expect }) => {
+    const replyTo = Obj.make(Message.Message, {
+      created: '2025-01-01T00:00:00.000Z',
+      sender: { name: 'Alice', email: 'alice@example.com' },
+      blocks: [{ _tag: 'text' as const, text: 'Original body' }],
+      properties: { subject: 'Topic' },
+    });
+    const props = createDraftMessage({ mode: 'reply', message: replyTo, body: 'Generated reply.' });
+    const replyBody = props.blocks[0] && props.blocks[0]._tag === 'text' ? props.blocks[0].text : '';
+    expect(replyBody.startsWith('Generated reply.')).toBe(true);
+    expect(replyBody.indexOf('Generated reply.')).toBeLessThan(replyBody.indexOf('Original body'));
+  });
+
   test('reply-all sets cc from original to/cc excluding sender', ({ expect }) => {
     const replyTo = Obj.make(Message.Message, {
       created: '2025-01-01T00:00:00.000Z',

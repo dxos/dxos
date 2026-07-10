@@ -625,6 +625,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-brain/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-calls/package.json",
           "jsonpath": "$.version"
         },

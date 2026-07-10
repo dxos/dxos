@@ -12,8 +12,7 @@ import { Markdown } from '@dxos/plugin-markdown';
 import { ViewModel } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { Module } from '../components';
-import { ModuleContainer, config, createDecorators } from '../testing';
+import { Module, ModuleContainer, config, createDecorators } from '../testing';
 import { storyDecorators, storyParameters } from './meta';
 
 const meta: Meta<typeof ModuleContainer> = {

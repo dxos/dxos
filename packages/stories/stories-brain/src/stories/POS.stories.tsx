@@ -89,7 +89,7 @@ const createPosStoryDecorators = (options: PosExtensionOptions) =>
   });
 
 const meta = {
-  title: 'stories/stories-brain/stories/POS',
+  title: 'stories/stories-brain/POS',
   render: DefaultStory,
   parameters: {
     layout: 'fullscreen',

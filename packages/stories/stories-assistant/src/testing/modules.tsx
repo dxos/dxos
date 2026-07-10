@@ -4,6 +4,7 @@
 
 import React, { type FC, type ReactNode } from 'react';
 
+import { Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { type Space } from '@dxos/react-client/echo';
@@ -20,7 +21,6 @@ import {
   InboxModule,
   InvocationsModule,
   MessageModule,
-  Module,
   ProjectModule,
   ResearchInputModule,
   ResearchOutputModule,
@@ -43,6 +43,37 @@ import {
 const withActiveSpace = (Component: FC<{ space: Space }>) => (): ReactNode => {
   const space = useActiveSpace();
   return space ? <Component space={space} /> : null;
+};
+
+/**
+ * Role tokens for the stories-assistant modules. Each module is contributed as a dedicated
+ * `Capabilities.ReactSurface` under its own role NSID (role-only dispatch), so a story layout is a
+ * plain grid of these tokens and each surface resolves the active space via `useActiveSpace()`.
+ */
+export const Module = {
+  Chat: Role.make<Record<string, any>>('org.dxos.storybook.module.chat'),
+  Chess: Role.make<Record<string, any>>('org.dxos.storybook.module.chess'),
+  Comments: Role.make<Record<string, any>>('org.dxos.storybook.module.comments'),
+  Context: Role.make<Record<string, any>>('org.dxos.storybook.module.context'),
+  Database: Role.make<Record<string, any>>('org.dxos.storybook.module.database'),
+  EphemeralDebug: Role.make<Record<string, any>>('org.dxos.storybook.module.ephemeralDebug'),
+  ExecutionGraph: Role.make<Record<string, any>>('org.dxos.storybook.module.executionGraph'),
+  Graph: Role.make<Record<string, any>>('org.dxos.storybook.module.graph'),
+  Inbox: Role.make<Record<string, any>>('org.dxos.storybook.module.inbox'),
+  Invocations: Role.make<Record<string, any>>('org.dxos.storybook.module.invocations'),
+  Message: Role.make<Record<string, any>>('org.dxos.storybook.module.message'),
+  Project: Role.make<Record<string, any>>('org.dxos.storybook.module.project'),
+  ResearchInput: Role.make<Record<string, any>>('org.dxos.storybook.module.researchInput'),
+  ResearchOutput: Role.make<Record<string, any>>('org.dxos.storybook.module.researchOutput'),
+  Routine: Role.make<Record<string, any>>('org.dxos.storybook.module.routine'),
+  RoutineCompanion: Role.make<Record<string, any>>('org.dxos.storybook.module.routineCompanion'),
+  Script: Role.make<Record<string, any>>('org.dxos.storybook.module.script'),
+  Skill: Role.make<Record<string, any>>('org.dxos.storybook.module.skill'),
+  Tasks: Role.make<Record<string, any>>('org.dxos.storybook.module.tasks'),
+  Test: Role.make<Record<string, any>>('org.dxos.storybook.module.test'),
+  TokenManager: Role.make<Record<string, any>>('org.dxos.storybook.module.tokenManager'),
+  Trace: Role.make<Record<string, any>>('org.dxos.storybook.module.trace'),
+  Triggers: Role.make<Record<string, any>>('org.dxos.storybook.module.triggers'),
 };
 
 /**

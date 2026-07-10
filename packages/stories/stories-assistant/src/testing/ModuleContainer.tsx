@@ -19,7 +19,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { type ModuleLayout, ModuleContainer as StoryModuleContainer } from '@dxos/story-modules';
 import { isNonNullable } from '@dxos/util';
 
-import { Module } from '../components';
+import { Module } from './modules';
 
 export type ModuleContainerProps = {
   layout: ModuleLayout;

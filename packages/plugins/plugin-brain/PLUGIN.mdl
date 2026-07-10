@@ -1,0 +1,338 @@
+---
+id: org.dxos.plugin.brain
+name: BrainPlugin
+version: 0.1.0
+---
+
+The Facts layer for Composer: a per-space semantic index of RDF `Fact` tuples (subject / predicate /
+object with factuality, attribution, and provenance) extracted from user content by upstream
+pipelines (e.g. `plugin-inbox`'s `EnrichMailbox` over a mailbox feed).
+
+The plugin owns the provider side of the `FactStore` seam defined in `@dxos/pipeline-rdf`: it
+contributes a shared per-space `FactStoreRegistry` plus a space-affinity operation `LayerSpec` that
+provides the `FactStore` service to any operation declaring it. Consumers (such as `plugin-inbox`'s
+`EnrichMailbox` and `GenerateReply`) depend only on the `FactStore` `Context.Tag` from
+`@dxos/pipeline-rdf` — never on this plugin's package — so the store implementation can move from
+in-memory to a persistent backend without touching consumers.
+
+On top of the store, the plugin contributes:
+
+- Two visible operations, `QueryFacts` and `SummarizeSubject`, exposed to the assistant through the
+  `org.dxos.skill.brain` skill. Skill instructions describe HOW to use the tools (entity-slug
+  conventions, confidence filtering, iterative narrowing) — task-specific behavior lives in the
+  operations themselves.
+- A `FactsCompanion` surface rendering the plugin's `FactViewer` component over the
+  space's facts as a companion to article subjects, with an entity/predicate filter and an empty
+  state when no facts relate to the subject.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type Fact
+  desc: |
+    Defined in @dxos/pipeline-rdf (not re-declared here). An attributed RDF assertion:
+    { id, assertion: { subject: Term, predicate, object: Term }, factuality, attribution,
+    recordedAt, extractor, sourceHash }. Terms are { entity, label? } | { literal }.
+```
+
+```mdl
+type SemanticQueryInput
+  desc: |
+    The structured (browser-safe) query surface over the triple store. Mirrors
+    SemanticQuery from @dxos/pipeline-rdf; no raw SPARQL is exposed to the LLM.
+  fields:
+    subjectEntity?: string     # Entity slug the fact's subject must match
+    predicate?: string         # Exact predicate string
+    entity?: string            # Entity slug appearing as subject OR object
+    source?: string            # Source DXN the fact was extracted from
+    minConfidence?: number     # 0..1 lower bound on factuality confidence
+    limit?: number             # Maximum facts returned (default 50)
+```
+
+```mdl
+type CompactFact
+  desc: |
+    LLM-facing rendering of a Fact: one line per fact, sized for tool-result context.
+    Factuality is the FactBank code (CT+, PR-, ...); date is recordedAt (YYYY-MM-DD).
+  fields:
+    id: string
+    subject: string            # Display label (or slug) of the subject term
+    predicate: string
+    object: string             # Display label (or slug) / literal of the object term
+    factuality: string
+    confidence?: number
+    date: string
+    source: string             # Source DXN
+```
+
+```mdl
+type SummaryResult
+  desc: Output of SummarizeSubject.
+  fields:
+    summary: string            # Grounded prose summary citing fact ids
+    factCount: number          # Number of facts the summary drew from
+```
+
+```mdl
+type FactStoreRegistry
+  desc: |
+    Contributed capability (BrainCapabilities.FactStoreRegistry). One shared FactStore
+    instance per space, created lazily; layerFor wraps the same instance so operation
+    layers and direct consumers (React components) observe identical state.
+  fields:
+    forSpace: (spaceId) => FactStoreApi
+    layerFor: (spaceId) => Layer<FactStore>
+```
+
+## Operations
+
+```mdl
+op queryFacts
+  desc: |
+    Runs a structured SemanticQuery against the space FactStore and returns compact
+    facts for LLM consumption. Visible; listed as a tool of the brain skill.
+  input:
+    query: SemanticQueryInput
+  output: { facts: CompactFact[] }
+  requires: [FactStore]
+  effects: [factstore:read]
+  errors:
+    SemanticIndexError: the underlying triple-store query failed
+```
+
+```mdl
+op summarizeSubject
+  desc: |
+    Queries all facts mentioning the subject (as subject-entity and as object entity),
+    then prompts the LLM to compose a grounded summary that cites fact ids and respects
+    factuality codes (uncertain facts are hedged, negated facts stated as such).
+    Visible; listed as a tool of the brain skill.
+  input:
+    subject: string            # Entity slug or label (normalized to slug before query)
+    focus?: string             # Optional angle, e.g. "commitments", "recent activity"
+  output: SummaryResult
+  requires: [FactStore, AiService]
+  effects: [factstore:read, llm]
+  errors:
+    SemanticIndexError: the underlying triple-store query failed
+  note: Returns { summary: '', factCount: 0 } when no facts match; never invents content.
+```
+
+## Components
+
+```mdl
+component FactsCompanion
+  desc: |
+    Companion surface over an article subject rendering the space's facts via the FactViewer
+    component (src/components/FactViewer, exported via ./components).
+    Facts are read from the shared per-space store (FactStoreRegistry.forSpace). v0 shows
+    all space facts (the store is per-space, matching its granularity) with FactViewer's
+    text filter; subject-scoped filtering by source DXN is roadmap.
+  props:
+    subject: Obj.Any           # The companioned ECHO object
+  state:
+    facts: Fact[]              # Loaded from the store; refreshed on store writes
+    filter: string             # Entity/predicate text filter (FactViewer built-in)
+  slots: {}
+  emits: {}
+```
+
+## Features
+
+```mdl
+feat F-1: Per-space FactStore provisioning
+
+  req F-1.1:
+    when: the plugin activates
+    then: a single FactStoreRegistry is contributed (BrainCapabilities.FactStoreRegistry)
+          together with a space-affinity LayerSpec providing FactStore
+
+  req F-1.2:
+    when: forSpace(spaceId) is called repeatedly for the same space
+    then: the same FactStore instance is returned (lazily created on first use)
+
+  req F-1.3:
+    when: an operation declaring the FactStore service runs with a space context
+    then: the LayerSpec injects the registry's store for that space — the SAME instance
+          forSpace returns, so UI reads observe operation writes
+
+  req F-1.4:
+    when: the store backend changes (in-memory → persistent)
+    then: no consumer changes: only the registry's store construction is touched
+    tags: [roadmap]
+```
+
+```mdl
+feat F-2: Assistant access via the brain skill
+
+  req F-2.1:
+    when: the plugin activates
+    then: the org.dxos.skill.brain skill is contributed with tools QueryFacts and
+          SummarizeSubject
+
+  req F-2.2:
+    when: the skill instructions are rendered
+    then: they describe tool usage only (slug conventions, confidence filtering,
+          iterative narrowing); no task-specific recipes
+
+  req F-2.3:
+    when: the assistant invokes QueryFacts
+    then: results are compact single-line facts bounded by limit (default 50)
+```
+
+```mdl
+feat F-3: FactViewer companion surface
+
+  req F-3.1:
+    when: an article subject is companioned in a space with a FactStore
+    then: the FactsCompanion surface is available and renders FactViewer over the
+          space's facts
+
+  req F-3.2:
+    when: the space store has no facts
+    then: an empty state is shown (no error)
+```
+
+```mdl
+feat F-4: Consumers resolve FactStore through the seam
+
+  req F-4.1:
+    when: plugin-inbox's EnrichMailbox indexes a mailbox feed
+    then: facts land in the store this plugin provides for that space (no
+          plugin-inbox → plugin-brain package dependency)
+
+  req F-4.2:
+    when: plugin-inbox's GenerateReply drafts a reply
+    then: it queries the same per-space store for facts about the message's
+          participants
+```
+
+## Acceptance
+
+```mdl
+test T-1: Registry instance identity
+  given: a FactStoreRegistry
+  when: forSpace('a') is called twice and forSpace('b') once
+  then:
+    - both 'a' calls return the same instance
+    - 'b' returns a distinct instance
+    - layerFor('a') provides the instance forSpace('a') returned
+```
+
+```mdl
+test T-2: QueryFacts returns matching facts
+  given: a memory FactStore seeded with facts about alice (subject) and acme (object)
+  when: QueryFacts runs with { entity: 'alice' } and with { minConfidence: 0.9 }
+  then:
+    - the entity query returns facts where alice is subject or object
+    - the confidence query excludes facts below the bound
+    - results are CompactFact-shaped and bounded by limit
+```
+
+```mdl
+test T-3: SummarizeSubject grounds on facts
+  given: a memory FactStore seeded with facts about a person, and a memoized LLM
+  when: SummarizeSubject runs with that subject
+  then:
+    - factCount equals the number of matched facts
+    - the summary cites at least one fact id
+    - with an unknown subject: summary is empty and factCount is 0
+```
+
+```mdl
+test T-4: FactsCompanion rendering
+  given: a space store with facts (storybook)
+  when: FactsCompanion renders over a subject
+  then:
+    - FactViewer shows the facts grouped by subject
+    - with an empty store the empty state renders
+```
+
+```mdl
+test T-5: Enrich → query integration (lives in plugin-inbox)
+  given: a mailbox feed with messages and the brain-provided store
+  when: EnrichMailbox runs, then QueryFacts for a participant entity
+  then: facts extracted from the messages are returned
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```

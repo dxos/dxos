@@ -28,6 +28,7 @@ import {
   type MessageStackItem,
   type MessageTagsFamily,
   isMessageGroup,
+  useInjectedMailboxActions,
   useMailboxExtractorActions,
 } from '#components';
 import { meta } from '#meta';
@@ -37,18 +38,18 @@ import { InboxCapabilities, Mailbox, Starred } from '#types';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { InitializeMailbox, InitializeMailboxAction } from './InitializeMailbox';
 
+/** Messages per page for the lazily-loaded message window. */
+const MAILBOX_PAGE_SIZE = 10;
+
+/** Messages shown in a conversation card preview; the full thread size is surfaced via the group `count`. */
+const MAILBOX_THREAD_PREVIEW_COUNT = 4;
+
 export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   Mailbox.Mailbox,
   {
     filter?: string;
   }
 >;
-
-/** Messages per page for the lazily-loaded message window. */
-const MAILBOX_PAGE_SIZE = 10;
-
-/** Messages shown in a conversation card preview; the full thread size is surfaced via the group `count`. */
-const MAILBOX_THREAD_PREVIEW_COUNT = 4;
 
 export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { invokePromise } = useOperationInvoker();
@@ -378,6 +379,8 @@ const useMailboxActions = (mailbox: Mailbox.Mailbox, sortDescending: AtomState<b
   }, [invokePromise, mailbox]);
 
   const mailboxExtractorActions = useMailboxExtractorActions(mailbox);
+  const mailboxActions = useInjectedMailboxActions(mailbox);
+  const extractActions = [...mailboxExtractorActions, ...mailboxActions];
 
   return useMenuBuilder(
     () =>
@@ -403,7 +406,7 @@ const useMailboxActions = (mailbox: Mailbox.Mailbox, sortDescending: AtomState<b
           () => setSettings((settings) => ({ ...settings, loadRemoteImages: !loadRemoteImages })),
         )
         .subgraph((builder) => {
-          if (mailboxExtractorActions.length > 0) {
+          if (extractActions.length > 0) {
             return builder.group(
               'extract',
               {
@@ -413,7 +416,7 @@ const useMailboxActions = (mailbox: Mailbox.Mailbox, sortDescending: AtomState<b
                 variant: 'dropdownMenu',
               },
               (group) => {
-                for (const item of mailboxExtractorActions) {
+                for (const item of extractActions) {
                   group.action(`extract-${item.id}`, { label: item.label }, item.onSelect);
                 }
               },
@@ -430,7 +433,7 @@ const useMailboxActions = (mailbox: Mailbox.Mailbox, sortDescending: AtomState<b
           handleCompose,
         )
         .build(),
-    [sortDescending, loadRemoteImages, setSettings, handleCompose, mailboxExtractorActions],
+    [sortDescending, loadRemoteImages, setSettings, handleCompose, mailboxExtractorActions, mailboxActions],
   );
 };
 
