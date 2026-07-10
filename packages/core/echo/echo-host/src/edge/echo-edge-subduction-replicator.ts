@@ -52,21 +52,6 @@ const RESTART_DELAY_JITTER = 250;
 const MAX_RESTART_DELAY = 5000;
 
 /**
- * Replaced-connection drain: the moment a connection is replaced it stops exchanging data —
- * inbound frames for its session are refused (the fresh connection owns the wire) and outbound
- * messages are suppressed (a replaced session must not transmit). The drain only waits for work
- * that is already local to finish: frames sitting unread in the repo's readable-stream backlog
- * (notifying the disconnect earlier would cancel the reader and discard them) and the WASM
- * core's processing of previously delivered frames (observed via its outbound write attempts,
- * which are suppressed but stamp local activity). Once local activity quiesces the disconnect
- * is notified, settling the peer's unfinished rounds `all-failed` in one pass so heal re-drives
- * them on the fresh connection instead of each burning a full sync-round timeout.
- */
-const CONNECTION_DRAIN_QUIESCE_MS = 500;
-const CONNECTION_DRAIN_MAX_MS = 5_000;
-const CONNECTION_DRAIN_POLL_MS = 100;
-
-/**
  * Outbound frame batching bounds (see `frame-batching-spec.md`). Subduction transport frames are
  * coalesced into one {@link SubductionBatchEnvelope}, flushed on whichever bound trips first:
  * {@link SUBDUCTION_BATCH_MAX_FRAMES} frames, {@link SUBDUCTION_BATCH_MAX_BYTES} accumulated, or
@@ -129,8 +114,8 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   private _context: AutomergeReplicatorContext | null = null;
   private _connectedSpaces = new Set<SpaceId>();
   private _connections = new Map<SpaceId, EdgeSubductionReplicatorConnection>();
-  /** Replaced connections still flushing in-flight rounds; closed on quiescence or drain cap. */
-  private readonly _drainingConnections = new Set<EdgeSubductionReplicatorConnection>();
+  /** Replaced connections whose async close is still settling; force-closed on disconnect. */
+  private readonly _closingConnections = new Set<EdgeSubductionReplicatorConnection>();
 
   private _spaceMutex(spaceId: SpaceId): Mutex {
     let mutex = this._spaceMutexes.get(spaceId);
@@ -182,7 +167,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
       const connection = this._connections.get(spaceId);
       if (connection) {
         this._connections.delete(spaceId);
-        this._drainConnection(spaceId, connection);
+        this._closeReplacedConnection(spaceId, connection);
       }
       if (this._context !== null && this._connectedSpaces.has(spaceId)) {
         await this._openConnection(spaceId);
@@ -191,22 +176,22 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   }
 
   /**
-   * Close a replaced connection once its locally-in-flight work quiesces (see the drain
-   * constants above). The connection refuses inbound and suppresses outbound from the moment
-   * {@link EdgeSubductionReplicatorConnection.beginDrain} runs; only the repo backlog and the
-   * WASM core's residual processing are given time to finish before the disconnect is notified.
+   * Close a replaced connection immediately. Closing before the successor binds lets
+   * `subduction_core` fail the connection's pending requests promptly (no sibling exists at
+   * removal), so in-flight rounds settle and re-drive on the fresh connection within
+   * milliseconds instead of riding the sync-round timeout.
    */
-  private _drainConnection(spaceId: SpaceId, connection: EdgeSubductionReplicatorConnection): void {
-    this._drainingConnections.add(connection);
+  private _closeReplacedConnection(spaceId: SpaceId, connection: EdgeSubductionReplicatorConnection): void {
+    this._closingConnections.add(connection);
     const close = async () => {
-      if (this._drainingConnections.delete(connection)) {
+      if (this._closingConnections.delete(connection)) {
         log('replaced connection closed', { spaceId });
         await connection.close();
       }
     };
     close().catch((err) => {
       log.warn('replaced-connection close failed', { spaceId, err });
-      if (this._drainingConnections.delete(connection)) {
+      if (this._closingConnections.delete(connection)) {
         void connection.close();
       }
     });
@@ -226,7 +211,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     }
     log('dropConnection', { spaceId });
     this._connections.delete(spaceId);
-    this._drainConnection(spaceId, connection);
+    this._closeReplacedConnection(spaceId, connection);
     if (this._context !== null && this._connectedSpaces.has(spaceId) && this._ctx?.disposed === false) {
       await this._openConnection(spaceId);
     }
@@ -240,10 +225,10 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
       await connection.close();
     }
     this._connections.clear();
-    for (const connection of this._drainingConnections) {
+    for (const connection of this._closingConnections) {
       await connection.close();
     }
-    this._drainingConnections.clear();
+    this._closingConnections.clear();
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -335,7 +320,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
 
             const ctx = this._ctx;
             this._connections.delete(spaceId);
-            this._drainConnection(spaceId, connection);
+            this._closeReplacedConnection(spaceId, connection);
             if (ctx?.disposed) {
               return;
             }
@@ -388,17 +373,6 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
   #flushTimer?: ReturnType<typeof setTimeout>;
   #firstFrameSent = false;
   #inFlightFlush?: Promise<void>;
-
-  // Drain state. Present from `beginDrain()` on: inbound frames are refused, outbound messages
-  // are suppressed, and each suppressed outbound stamps `lastLocalActivityAt` — the WASM core
-  // attempting to transmit is the observable that it is still processing previously delivered
-  // frames. Counters are type-bucketed for the drain-summary log.
-  #drainState?: {
-    startedAt: number;
-    lastLocalActivityAt: number;
-    inboundRefused: Record<string, number>;
-    outboundSuppressed: Record<string, number>;
-  };
 
   private _readableStreamController!: ReadableStreamDefaultController<SubductionProtocolMessage>;
 
@@ -469,134 +443,10 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
 
   protected override async _close(ctx: Context): Promise<void> {
     log('closing...');
-    if (this.#drainState) {
-      log('drain summary', {
-        spaceId: this._spaceId,
-        connectionId: this._connectionId,
-        durationMs: Date.now() - this.#drainState.startedAt,
-        inboundRefused: this.#drainState.inboundRefused,
-        outboundSuppressed: this.#drainState.outboundSuppressed,
-      });
-    } else {
-      // Flush buffered frames before teardown so nothing is lost on a graceful close
-      // mid-batch. Drained connections must not transmit; their buffer was already dropped.
-      await this.#flushPendingFrames();
-    }
+    // Flush buffered frames before teardown so nothing is lost on a close mid-batch.
+    await this.#flushPendingFrames();
     this._readableStreamController.close();
     await this._onRemoteDisconnected();
-  }
-
-  /**
-   * Enter drain mode: refuse all further inbound, suppress all further outbound, and drop the
-   * pending outbound batch. From this point the connection only exists to let already-local
-   * work finish (see {@link waitForDrainQuiescence}).
-   */
-  beginDrain(): void {
-    if (this.#drainState) {
-      return;
-    }
-    const now = Date.now();
-    this.#drainState = {
-      startedAt: now,
-      lastLocalActivityAt: now,
-      inboundRefused: {},
-      outboundSuppressed: {},
-    };
-    if (this.#flushTimer !== undefined) {
-      clearTimeout(this.#flushTimer);
-      this.#flushTimer = undefined;
-    }
-    const droppedBatch = this.#pendingFrames.length;
-    if (droppedBatch > 0) {
-      this.#recordSuppressed(MESSAGE_TYPE_SUBDUCTION_CONNECTION, droppedBatch);
-    }
-    this.#pendingFrames = [];
-    this.#pendingBytes = 0;
-    log('drain start', {
-      spaceId: this._spaceId,
-      connectionId: this._connectionId,
-      remoteId: this._remotePeerId,
-      repoBacklog: this.#repoBacklog(),
-      droppedPendingBatchFrames: droppedBatch,
-    });
-  }
-
-  get draining(): boolean {
-    return this.#drainState !== undefined;
-  }
-
-  /**
-   * Resolves once locally-in-flight work has quiesced: the repo has consumed the readable-stream
-   * backlog (closing earlier would discard it — the adapter cancels its reader on disconnect)
-   * and the WASM core has stopped attempting to transmit for
-   * {@link CONNECTION_DRAIN_QUIESCE_MS}, hard-capped at {@link CONNECTION_DRAIN_MAX_MS}.
-   */
-  async waitForDrainQuiescence(): Promise<'quiesced' | 'cap'> {
-    invariant(this.#drainState);
-    const deadline = this.#drainState.startedAt + CONNECTION_DRAIN_MAX_MS;
-    while (Date.now() < deadline) {
-      if (
-        this.#repoBacklog() === 0 &&
-        Date.now() - this.#drainState.lastLocalActivityAt >= CONNECTION_DRAIN_QUIESCE_MS
-      ) {
-        return 'quiesced';
-      }
-      await new Promise((resolve) => setTimeout(resolve, CONNECTION_DRAIN_POLL_MS));
-    }
-    return 'cap';
-  }
-
-  /** Frames enqueued for the repo but not yet pulled by the adapter's reader loop. */
-  #repoBacklog(): number {
-    // `desiredSize` is null once the stream is closed/errored and 1 (the default high-water
-    // mark) when the queue is empty.
-    const desiredSize = this._readableStreamController.desiredSize;
-    return desiredSize === null ? 0 : Math.max(0, 1 - desiredSize);
-  }
-
-  #recordRefused(kind: string, count = 1): void {
-    invariant(this.#drainState);
-    this.#drainState.inboundRefused[kind] = (this.#drainState.inboundRefused[kind] ?? 0) + count;
-  }
-
-  #recordSuppressed(kind: string, count = 1): void {
-    invariant(this.#drainState);
-    this.#drainState.outboundSuppressed[kind] = (this.#drainState.outboundSuppressed[kind] ?? 0) + count;
-    this.#drainState.lastLocalActivityAt = Date.now();
-  }
-
-  /**
-   * Drain-mode inbound handling: nothing is delivered to the repo. Frames for this session are
-   * counted and logged; frames addressed to a sibling session (different connectionId) are
-   * ignored silently — during the replacement overlap the fresh connection's traffic reaches
-   * every subscriber of the shared WS. An edge error frame is also refused: the connection is
-   * already being replaced, so its restart signal is moot.
-   */
-  #refuseInbound(payload: SubductionProtocolMessageEnveloped): void {
-    switch (payload.type) {
-      case MESSAGE_TYPE_ERROR:
-      case MESSAGE_TYPE_SUBDUCTION_FRAME:
-        if (payload.connectionId !== this._connectionId) {
-          return;
-        }
-        this.#recordRefused(payload.type);
-        log.verbose('drain refused inbound', { spaceId: this._spaceId, type: payload.type });
-        return;
-      case MESSAGE_TYPE_SUBDUCTION_BATCH: {
-        if (payload.connectionId !== this._connectionId) {
-          return;
-        }
-        const frames = Array.isArray(payload.frames) ? payload.frames.length : 1;
-        this.#recordRefused(payload.type, frames);
-        log.verbose('drain refused inbound', { spaceId: this._spaceId, type: payload.type, frames });
-        return;
-      }
-      default:
-        // Collection-plane messages carry no connectionId; the fresh sibling consumes them.
-        this.#recordRefused(payload.type);
-        log.verbose('drain refused inbound', { spaceId: this._spaceId, type: payload.type });
-        return;
-    }
   }
 
   get peerId(): string {
@@ -653,11 +503,6 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     // envelopes before touching `payload.type` / `payload.subductionFrame`.
     if (payload === null || typeof payload !== 'object' || typeof (payload as { type?: unknown }).type !== 'string') {
       log.warn('dropping malformed subduction envelope', { payload });
-      return;
-    }
-
-    if (this.#drainState) {
-      this.#refuseInbound(payload);
       return;
     }
 
@@ -763,13 +608,6 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
   }
 
   private async _sendMessage(ctx: Context, message: SubductionProtocolMessage): Promise<void> {
-    if (this.#drainState) {
-      // A replaced session must not transmit. The attempt itself is the signal that the WASM
-      // core is still processing previously delivered frames (see `waitForDrainQuiescence`).
-      this.#recordSuppressed(message.type);
-      log.verbose('drain suppressed outbound', { spaceId: this._spaceId, type: message.type });
-      return;
-    }
     switch (message.type) {
       case MESSAGE_TYPE_SUBDUCTION_CONNECTION: {
         message.targetId = this._subductionServiceId as PeerId;
@@ -842,15 +680,6 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     if (this.#flushTimer !== undefined) {
       clearTimeout(this.#flushTimer);
       this.#flushTimer = undefined;
-    }
-    if (this.#drainState) {
-      // Reachable via the chained follow-up of a flush that was in flight when the drain began.
-      if (this.#pendingFrames.length > 0) {
-        this.#recordSuppressed(MESSAGE_TYPE_SUBDUCTION_CONNECTION, this.#pendingFrames.length);
-        this.#pendingFrames = [];
-        this.#pendingBytes = 0;
-      }
-      return;
     }
     if (this.#pendingFrames.length === 0) {
       return;
