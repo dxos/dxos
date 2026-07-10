@@ -12,17 +12,20 @@ import { useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framewo
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { ServiceResolver } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { useQuery } from '@dxos/react-client/echo';
 import { type AssistantOptions, assistant } from '@dxos/react-ui-editor';
 import { type Message } from '@dxos/types';
 
 import { type EditMessageProps } from '#components';
 import { meta } from '#meta';
+import { InboxOperation, Mailbox, Sent } from '#types';
 
+import { JMAP_MAIL_CONNECTOR_ID } from '../constants';
 import { email } from '../extensions';
-import { GmailFunctions } from '../operations/google/gmail';
-import { stripQuotedMessage } from '../util';
+import { findBindingForTarget, stripQuotedMessage } from '../util';
 
 /**
  * Composer wiring (AI draft-assist + email-aware editor extensions, and send) shared by the
@@ -33,6 +36,13 @@ export const useEmailComposer = (message: Message.Message): Pick<EditMessageProp
   const runtime = useProcessManagerRuntime();
   const { invokePromise } = useOperationInvoker();
   const spaceId = db?.spaceId;
+
+  // Resolve the live mailbox from the draft's `properties.mailbox` uri (send routing + sent-tagging).
+  const mailboxUri = typeof message.properties?.mailbox === 'string' ? message.properties.mailbox : undefined;
+  const mailboxEid = mailboxUri ? EID.tryParse(mailboxUri) : undefined;
+  const mailboxId = mailboxEid ? EID.getEntityId(mailboxEid) : undefined;
+  const mailboxResult = useQuery(db, mailboxId ? Filter.id(mailboxId) : Filter.nothing())[0];
+  const mailbox = Mailbox.instanceOf(mailboxResult) ? mailboxResult : undefined;
 
   const extensions = useMemo(() => {
     if (!spaceId) {
@@ -63,21 +73,40 @@ export const useEmailComposer = (message: Message.Message): Pick<EditMessageProp
       if (!spaceId) {
         throw new TypeError('Space not available.');
       }
+      if (!db || !mailbox) {
+        throw new TypeError('Draft is not scoped to a mailbox.');
+      }
 
       try {
-        const { id } = await runtime.runPromise(
-          Operation.invoke(GmailFunctions.Send, { message: draft }, { spaceId }).pipe(
-            Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service)),
-          ),
+        // Route the send to the mailbox's provider: find its sync binding (Connection → Mailbox) and
+        // dispatch to the matching send op with the connection that sources credentials. A fresh draft
+        // has no provider foreign key, so the connection's `connectorId` is the discriminator.
+        const sent = await runtime.runPromise(
+          Effect.gen(function* () {
+            const binding = yield* findBindingForTarget(mailbox);
+            if (!binding) {
+              return undefined;
+            }
+            const connection = Ref.make(Relation.getSource(binding));
+            const { connectorId } = yield* Database.load(connection);
+            // `spaceId` scopes the spawned send process so its space-affinity credentials service
+            // (CredentialsService) materializes.
+            return connectorId === JMAP_MAIL_CONNECTOR_ID
+              ? yield* Operation.invoke(InboxOperation.JmapSend, { message: draft, connection }, { spaceId })
+              : yield* Operation.invoke(InboxOperation.GmailSend, { message: draft, connection }, { spaceId });
+          }).pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service))),
         );
+        if (!sent) {
+          throw new TypeError('Mailbox is not connected to an email account.');
+        }
 
-        // Lock the draft from further edits; the sync reconciliation stage removes it once the
-        // canonical copy — matched by this provider message id — lands in the feed.
+        // Record the provider message id — the reconcile match key the sync stage uses to drop this
+        // draft once its canonical copy lands in the feed — and flag it sent via a tag so the composer
+        // locks read-only reactively (a tag membership atom re-fires; a property mutation would not).
         Obj.update(draft, (draft) => {
-          const properties = (draft.properties ??= {});
-          properties.sentMessageId = id;
-          properties.sentAt = new Date().toISOString();
+          (draft.properties ??= {}).sentMessageId = sent.id;
         });
+        await Sent.markSent(mailbox, draft, db);
 
         void invokePromise(LayoutOperation.AddToast, {
           id: `${meta.profile.key}/send-email-success`,
@@ -98,7 +127,7 @@ export const useEmailComposer = (message: Message.Message): Pick<EditMessageProp
         });
       }
     },
-    [runtime, spaceId, invokePromise],
+    [runtime, spaceId, invokePromise, db, mailbox],
   );
 
   return { extensions, onSend: handleSend };

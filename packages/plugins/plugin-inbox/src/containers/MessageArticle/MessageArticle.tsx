@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
+import { Filter, Obj, Ref, Tag } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { type Message as MessageType } from '@dxos/types';
@@ -16,7 +17,7 @@ import { type Message as MessageType } from '@dxos/types';
 import { EditMessage, Message, type MessageHeaderProps, type ViewMode } from '#components';
 import { useActorContact, useEmailComposer } from '#hooks';
 import { meta } from '#meta';
-import { DraftMessage, InboxOperation, Mailbox } from '#types';
+import { DraftMessage, InboxOperation, Mailbox, Sent } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 
@@ -62,7 +63,8 @@ export const MessageArticle = ({
 
   // Reply/forward act on the newest real (non-draft) message — the tail may be an unsent draft.
   const anchorMessage = useMemo(
-    () => [...messages].reverse().find((candidate) => !DraftMessage.instanceOf(candidate)) ?? messages[messages.length - 1],
+    () =>
+      [...messages].reverse().find((candidate) => !DraftMessage.instanceOf(candidate)) ?? messages[messages.length - 1],
     [messages],
   );
 
@@ -148,14 +150,26 @@ export const MessageArticle = ({
       <Panel.Content asChild>
         <ScrollArea.Root padding thin>
           <ScrollArea.Viewport ref={viewportRef}>
+            {/* TODO(wittjosiah): Give each message in the stack its own toolbar so reply/reply-all/
+                forward act on that specific message, rather than a single article-level toolbar that
+                always targets the newest one. */}
             <div className='dx-document flex flex-col'>
-              {messages.map((messageOrRef) => (
-                <div key={keyOf(messageOrRef)} className='border-be border-separator'>
-                  {/* An unsent draft renders as a live composer inline in the stack; once sent
-                      (`properties.sentAt` set) it locks and falls back to the read-only leaf. */}
-                  {DraftMessage.instanceOf(messageOrRef) && !messageOrRef.properties?.sentAt ? (
-                    <DraftComposerItem message={messageOrRef} mailbox={mailbox} />
-                  ) : (
+              {messages.map((messageOrRef) =>
+                DraftMessage.instanceOf(messageOrRef) ? (
+                  // Drafts resolve their own live object and switch composer↔read-only reactively (see
+                  // {@link DraftThreadItem}); the parent can't gate on the sent flag here because its
+                  // array element comes from the connector's index-hydrated query and lags the mutation.
+                  <div key={keyOf(messageOrRef)} className='border-be border-separator'>
+                    <DraftThreadItem
+                      message={messageOrRef}
+                      mailbox={mailbox}
+                      viewMode={viewMode}
+                      setViewMode={setViewMode}
+                      onContactCreate={handleContactCreate}
+                    />
+                  </div>
+                ) : (
+                  <div key={keyOf(messageOrRef)} className='border-be border-separator'>
                     <ThreadMessageItem
                       message={messageOrRef}
                       mailbox={mailbox}
@@ -163,9 +177,9 @@ export const MessageArticle = ({
                       setViewMode={setViewMode}
                       onContactCreate={handleContactCreate}
                     />
-                  )}
-                </div>
-              ))}
+                  </div>
+                ),
+              )}
             </div>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
@@ -174,11 +188,48 @@ export const MessageArticle = ({
   );
 };
 
-/** An unsent draft rendered as a live composer inline in the conversation stack (see `useEmailComposer`). */
-const DraftComposerItem = ({ message, mailbox }: { message: MessageType.Message; mailbox?: Mailbox.Mailbox }) => {
+type DraftThreadItemProps = {
+  message: MessageType.Message;
+  mailbox?: Mailbox.Mailbox;
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
+  onContactCreate: NonNullable<MessageHeaderProps['onContactCreate']>;
+};
+
+/**
+ * A draft in the conversation stack. Re-resolves its own live, persisting object by id: the object in
+ * the connector's ordered/windowed query is index-hydrated and detached (`Obj.update` on it silently
+ * no-ops), so editing it wouldn't persist. Rendering waits for the live object so the composer's
+ * uncontrolled editor initializes from the persisted body rather than the stale thread copy.
+ */
+const DraftThreadItem = ({ message, mailbox, ...rest }: DraftThreadItemProps) => {
+  const db = mailbox ? Obj.getDatabase(mailbox) : Obj.getDatabase(message);
+  const live = useQuery(db, Filter.id(message.id))[0];
+  if (!live) {
+    return null;
+  }
+
+  return <DraftThreadItemContent message={live} mailbox={mailbox} {...rest} />;
+};
+
+/**
+ * Renders a resolved live draft: the inline composer while unsent, locking to the read-only leaf once
+ * the {@link Sent.TAG_SENT} tag is applied (on send) — reactively, via the tag-index membership atom —
+ * until the sync reconciliation stage swaps in the canonical feed message.
+ */
+const DraftThreadItemContent = ({ message, mailbox, viewMode, setViewMode, onContactCreate }: DraftThreadItemProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const { extensions, onSend } = useEmailComposer(message);
+
+  // Read the sent flag reactively from the mailbox's tag index (a tag membership atom re-fires the
+  // instant the tag is applied on send; reading a message property would not).
+  const db = mailbox ? Obj.getDatabase(mailbox) : Obj.getDatabase(message);
+  const sentTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Sent.TAG_SENT.key]))[0];
+  const sentUri = sentTag && Obj.getURI(sentTag).toString();
+  const sentFamily = useMemo(() => Sent.atom(mailbox?.tags?.target, sentUri), [mailbox?.tags?.target, sentUri]);
+  const sent = useAtomValue(sentFamily(message.id));
+
   const handleDelete = useCallback(() => {
     if (mailbox) {
       void invokePromise(
@@ -188,6 +239,18 @@ const DraftComposerItem = ({ message, mailbox }: { message: MessageType.Message;
       );
     }
   }, [invokePromise, mailbox, message]);
+
+  if (sent) {
+    return (
+      <ThreadMessageItem
+        message={message}
+        mailbox={mailbox}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        onContactCreate={onContactCreate}
+      />
+    );
+  }
 
   return (
     <EditMessage

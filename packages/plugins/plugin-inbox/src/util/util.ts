@@ -49,13 +49,14 @@ export const createDraftMessage = (options: CreateDraftOptions): Obj.MakeProps<t
 
   if (message && mode !== 'compose') {
     const originalSubject = message.properties?.subject ?? '';
-    const quotedBody = formatQuotedMessage(message);
 
+    // TODO(wittjosiah): Quote the original message body (see `formatQuotedMessage`). Disabled for now
+    //   because synced bodies are raw HTML and inlining them as plaintext looks broken; re-enable once
+    //   the quote is rendered as markdown/plain text rather than the raw HTML block.
     switch (mode) {
       case 'reply': {
         to = message.sender?.email ?? '';
         draftSubject = originalSubject.startsWith('Re:') ? originalSubject : `Re: ${originalSubject}`;
-        draftBody = quotedBody;
         break;
       }
 
@@ -69,13 +70,11 @@ export const createDraftMessage = (options: CreateDraftOptions): Obj.MakeProps<t
           .filter((r: string) => r && r !== senderEmail);
         cc = allRecipients.join(', ') || undefined;
         draftSubject = originalSubject.startsWith('Re:') ? originalSubject : `Re: ${originalSubject}`;
-        draftBody = quotedBody;
         break;
       }
 
       case 'forward': {
         draftSubject = originalSubject.startsWith('Fwd:') ? originalSubject : `Fwd: ${originalSubject}`;
-        draftBody = quotedBody;
         break;
       }
     }

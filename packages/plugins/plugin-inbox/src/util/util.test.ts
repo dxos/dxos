@@ -18,7 +18,7 @@ describe('createDraftMessage', () => {
     expect(props.blocks[0]).toMatchObject({ _tag: 'text', text: 'Hello' });
   });
 
-  test('reply mode sets to sender, Re: subject, quoted body, and threading headers', ({ expect }) => {
+  test('reply mode sets to sender, Re: subject, threading headers, and an empty body', ({ expect }) => {
     const replyTo = Obj.make(Message.Message, {
       created: '2025-01-01T00:00:00.000Z',
       sender: { name: 'Alice', email: 'alice@example.com' },
@@ -36,9 +36,9 @@ describe('createDraftMessage', () => {
     expect(props.properties?.threadId).toBe('thread-123');
     expect(props.properties?.inReplyTo).toBe('<msg@example.com>');
     expect(props.properties?.references).toContain('<msg@example.com>');
+    // The original body is intentionally not quoted (see `createDraftMessage`).
     const replyBody = props.blocks[0] && props.blocks[0]._tag === 'text' ? props.blocks[0].text : '';
-    expect(replyBody).toContain('Original body');
-    expect(replyBody).toContain('Alice');
+    expect(replyBody).toBe('');
   });
 
   test('reply-all sets cc from original to/cc excluding sender', ({ expect }) => {
@@ -57,7 +57,7 @@ describe('createDraftMessage', () => {
     expect(ccAddresses).not.toContain('alice@example.com');
   });
 
-  test('forward mode sets Fwd: subject and quoted body', ({ expect }) => {
+  test('forward mode sets Fwd: subject and an empty body', ({ expect }) => {
     const replyTo = Obj.make(Message.Message, {
       created: '2025-01-01T00:00:00.000Z',
       sender: { name: 'Alice', email: 'alice@example.com' },
@@ -68,7 +68,7 @@ describe('createDraftMessage', () => {
     expect(props.properties?.to).toBe('');
     expect(props.properties?.subject).toBe('Fwd: Topic');
     const forwardBody = props.blocks[0] && props.blocks[0]._tag === 'text' ? props.blocks[0].text : '';
-    expect(forwardBody).toContain('Original');
+    expect(forwardBody).toBe('');
   });
 
   test('reply mode copies the source message top-level threadId (the thread-grouping key)', ({ expect }) => {
