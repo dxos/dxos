@@ -197,26 +197,6 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     });
   }
 
-  /**
-   * Drop the space collection's connection mid-sync and open a fresh session.
-   * Diagnostic surface: exercises the replaced-connection drain exactly like an edge-initiated
-   * restart, without waiting for an edge error or a WS reconnect.
-   */
-  async dropConnection(spaceId: SpaceId): Promise<void> {
-    using _guard = await this._spaceMutex(spaceId).acquire();
-
-    const connection = this._connections.get(spaceId);
-    if (!connection) {
-      return;
-    }
-    log('dropConnection', { spaceId });
-    this._connections.delete(spaceId);
-    this._closeReplacedConnection(spaceId, connection);
-    if (this._context !== null && this._connectedSpaces.has(spaceId) && this._ctx?.disposed === false) {
-      await this._openConnection(spaceId);
-    }
-  }
-
   async disconnect(): Promise<void> {
     using _guard = await this._mutex.acquire();
     await this._ctx?.dispose();
