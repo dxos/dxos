@@ -19433,12 +19433,15 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
-      '@dxos/react-ui-rdf':
+      '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
-        version: link:../../ui/react-ui-rdf
+        version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
+      '@dxos/story-modules':
+        specifier: workspace:*
+        version: link:../story-modules
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types

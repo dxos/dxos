@@ -141,3 +141,5 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
     </Panel.Root>
   );
 };
+
+EditMessageArticle.displayName = 'EditMessageArticle';

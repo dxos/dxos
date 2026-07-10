@@ -86,3 +86,5 @@ export const LoadPluginDialog = () => {
     </Dialog.Content>
   );
 };
+
+LoadPluginDialog.displayName = 'LoadPluginDialog';

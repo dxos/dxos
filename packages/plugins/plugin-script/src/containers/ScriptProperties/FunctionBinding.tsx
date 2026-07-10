@@ -81,3 +81,5 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
     </div>
   );
 };
+
+FunctionBinding.displayName = 'FunctionBinding';

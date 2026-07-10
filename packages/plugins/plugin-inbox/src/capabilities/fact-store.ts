@@ -58,6 +58,7 @@ export const makeFactStoreRegistry = (): FactStoreRegistry => {
     return {
       get: (feedId) => map.get(feedId) ?? 0,
       advance: (feedId, key) => void map.set(feedId, Math.max(map.get(feedId) ?? 0, key)),
+      reset: (feedId) => void map.delete(feedId),
     };
   };
 

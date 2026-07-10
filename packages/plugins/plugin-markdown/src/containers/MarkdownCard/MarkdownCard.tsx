@@ -74,3 +74,5 @@ const getInfo = (subject: Markdown.Document | Text.Text) => {
   const text = (Obj.instanceOf(Markdown.Document, subject) ? subject.content?.target?.content : subject.content) ?? '';
   return { words: text.split(' ').length };
 };
+
+MarkdownCard.displayName = 'MarkdownCard';

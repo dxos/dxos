@@ -17,7 +17,7 @@ import React from 'react';
 import { type RDF } from '@dxos/pipeline-rdf';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { FactViewer, type FactViewerProps } from './FactViewer';
+import { FactViewer, type FactViewerRootProps } from './FactViewer';
 
 const extractor = {
   id: 'default',
@@ -88,7 +88,7 @@ const DEMO_FACTS: RDF.Fact[] = [
   },
 ] satisfies RDF.Fact[];
 
-const DefaultStory = (props: FactViewerProps) => <FactViewer {...props} />;
+const DefaultStory = (props: FactViewerRootProps) => <FactViewer.Root {...props} />;
 
 const meta = {
   title: 'ui/react-ui-rdf/FactViewer',
@@ -110,4 +110,17 @@ export const Empty: Story = {
   args: {
     facts: [],
   },
+};
+
+/** Explicit composition of the parts (`FactViewer.Toolbar` + `FactViewer.List`) under `FactViewer.Root`. */
+export const Composed: Story = {
+  args: {
+    facts: DEMO_FACTS,
+  },
+  render: ({ facts }) => (
+    <FactViewer.Root facts={facts}>
+      <FactViewer.Toolbar />
+      <FactViewer.List />
+    </FactViewer.Root>
+  ),
 };

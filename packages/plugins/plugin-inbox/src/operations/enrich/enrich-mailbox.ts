@@ -97,6 +97,16 @@ export const runFactPipeline = (options: {
             facts += pageFacts.length;
             cursorKey = Math.max(cursorKey, ...units.map((unit) => unit.key));
             cursors.advance(feed.id, cursorKey);
+
+            // Terminal progress log (one line per committed page): the only live signal between
+            // pipeline start and done, so a long run's advance is observable rather than silent.
+            log.info('enrich: committed page', {
+              page: units.length,
+              pageFacts: pageFacts.length,
+              processed,
+              facts,
+              cursorKey,
+            });
           }),
       }),
     );

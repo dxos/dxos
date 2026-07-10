@@ -73,3 +73,5 @@ export const SpaceSettings = ({ spaces, onOpenSpaceSettings, settings, onSetting
     </Form.Root>
   );
 };
+
+SpaceSettings.displayName = 'SpaceSettings';

@@ -177,3 +177,5 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
     </Panel.Root>
   );
 };
+
+KanbanArticle.displayName = 'KanbanArticle';

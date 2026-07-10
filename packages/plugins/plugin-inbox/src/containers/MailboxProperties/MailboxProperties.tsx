@@ -61,3 +61,5 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
     </Form.Section>
   );
 };
+
+MailboxProperties.displayName = 'MailboxProperties';

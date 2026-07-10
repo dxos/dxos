@@ -31,3 +31,5 @@ export const MenuFooter = ({ object }: { object: Obj.Unknown }) => {
     </>
   ) : null;
 };
+
+MenuFooter.displayName = 'MenuFooter';

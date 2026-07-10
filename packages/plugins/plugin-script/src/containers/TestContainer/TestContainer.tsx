@@ -42,3 +42,5 @@ export const TestContainer = ({ role, script }: TestContainerProps) => {
     </Panel.Root>
   );
 };
+
+TestContainer.displayName = 'TestContainer';
