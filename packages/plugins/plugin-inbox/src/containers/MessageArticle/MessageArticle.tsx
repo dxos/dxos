@@ -19,6 +19,12 @@ import { useActorContact } from '#hooks';
 import { InboxOperation, Mailbox } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
+/** Messages default to rendering the raw email HTML; markdown/plain are opt-in toolbar views. */
+const DEFAULT_VIEW_MODE: ViewMode = 'html';
+
+type MessageOrRef = MessageType.Message | Ref.Ref<MessageType.Message>;
+
+const keyOf = (message: MessageOrRef): string => (Ref.isRef(message) ? String(message.uri) : Obj.getURI(message));
 
 /**
  * `subject` is either a single message or its whole conversation (thread). The companion graph node
@@ -29,15 +35,9 @@ export type MessageArticleProps = AppSurface.ArticleProps<
   MessageType.Message | MessageType.Message[],
   {
     mailbox?: Mailbox.Mailbox;
+    testId?: string;
   }
 >;
-
-/** Messages default to rendering the raw email HTML; markdown/plain are opt-in toolbar views. */
-const DEFAULT_VIEW_MODE: ViewMode = 'html';
-
-type MessageOrRef = MessageType.Message | Ref.Ref<MessageType.Message>;
-
-const keyOf = (message: MessageOrRef): string => (Ref.isRef(message) ? String(message.uri) : Obj.getURI(message));
 
 /**
  * Message/conversation detail view. Renders the opened conversation as a vertical stack — each member
@@ -51,6 +51,7 @@ export const MessageArticle = ({
   attendableId,
   companionTo,
   mailbox: mailboxProp,
+  testId,
 }: MessageArticleProps) => {
   const toolbarAttendableId = attendableId && isLinkedSegment(attendableId) ? getParentId(attendableId) : attendableId;
   const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : mailboxProp;
@@ -132,7 +133,7 @@ export const MessageArticle = ({
   }, [invokePromise, db, mailbox, message]);
 
   return (
-    <Panel.Root role={role}>
+    <Panel.Root role={role} data-testid={testId}>
       <Message.Root
         attendableId={toolbarAttendableId}
         viewMode={viewMode}
@@ -155,6 +156,7 @@ export const MessageArticle = ({
         <ScrollArea.Root padding thin>
           <ScrollArea.Viewport>
             <div className='dx-document flex flex-col'>
+              {/* TODO(burdon): Better UI for threads. */}
               {messages.map((messageOrRef) => (
                 <div key={keyOf(messageOrRef)} className='border-be border-separator'>
                   <ThreadMessageItem

@@ -152,17 +152,27 @@ const DefaultStory = () => {
           </Toolbar.Button>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content data-testid='counts' className='flex flex-col gap-2 p-2 text-sm'>
-        <JsonHighlighter
-          data={{
-            runs,
-            messages: messages.length,
-            trips: trips.length,
-            segments: segments.length,
-            relations: relations.length,
-            linked,
-          }}
-        />
+      <Panel.Content data-testid='counts' className='dx-container grid grid-cols-2 gap-2 p-2 text-sm'>
+        <div className='overflow-auto'>
+          <JsonHighlighter
+            data={{
+              runs,
+              messages: messages.length,
+              trips: trips.length,
+              segments: segments.length,
+              relations: relations.length,
+              linked,
+            }}
+          />
+        </div>
+        <div className='overflow-auto'>
+          <JsonHighlighter
+            data={{
+              TRIP_MESSAGES,
+              TRIP_LEGS,
+            }}
+          />
+        </div>
       </Panel.Content>
     </Panel.Root>
   );
@@ -172,7 +182,7 @@ const meta = {
   title: 'stories/stories-inbox/ExtractMessageList',
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'column' }),
+    withLayout({ layout: 'fullscreen' }),
     withTheme(),
     withPluginManager({
       setupEvents: [AppActivationEvents.SetupSettings, ActivationEvents.Startup],
