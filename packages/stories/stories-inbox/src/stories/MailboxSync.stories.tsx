@@ -8,6 +8,7 @@ import React from 'react';
 
 import { withPluginManager, withSurfaceDebug } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
+import { persistentClientServices } from '@dxos/client/testing';
 import { configPreset } from '@dxos/config';
 import { Feed, Tag } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -21,7 +22,6 @@ import { translations as inboxTranslations } from '@dxos/plugin-inbox/translatio
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { Config } from '@dxos/react-client';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/story-modules';
@@ -43,6 +43,10 @@ const SYNC_STORY_TYPES = [
   TagIndex.TagIndex,
 ];
 
+// Computed once at module scope (not inside the `withPluginManager` initializer, which re-runs on
+// every render) so the story doesn't spawn a fresh dedicated worker/coordinator on each re-render.
+const SYNC_STORY_CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'dev' }));
+
 const DefaultStory = () => (
   <ModuleContainer
     layout={[[Module.Mailbox], [Module.Message], [Module.Connector, Module.Archive, Module.Stats]]}
@@ -62,17 +66,7 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: SYNC_STORY_TYPES,
-          config: new Config(
-            {
-              runtime: {
-                client: { storage: { persistent: true } },
-              },
-            },
-            configPreset({ edge: 'dev' }).values,
-          ),
-          // OPFS-backed storage so identity/spaces survive a page reload; without a worker the
-          // client silently falls back to in-memory storage regardless of `storage.persistent`.
-          createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
+          ...SYNC_STORY_CLIENT_SERVICES,
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               if (client.halo.identity.get()) {

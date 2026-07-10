@@ -107,6 +107,8 @@ export const objJsonToObjectStructure = (obj: Obj.JSON): EntityStructure => {
       // `objectStructureToObjJson`).
       ...(meta?.key !== undefined ? { key: meta.key } : {}),
       ...(meta?.version !== undefined ? { version: meta.version } : {}),
+      // Preserve annotations (see the symmetric write in `objectStructureToObjJson`).
+      ...(meta?.annotations ? { annotations: meta.annotations } : {}),
     },
     data,
   };
