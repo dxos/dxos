@@ -6,6 +6,8 @@ import { Provider } from '@dxos/ai';
 import { type AiServicePreset } from '@dxos/ai/testing';
 import { type DXN } from '@dxos/keys';
 
+import { MODELS } from './config';
+
 /**
  * A model configuration to benchmark. `preset` selects the AI backend layer and `provider` the model
  * catalog routing (defaults to edge, so ollama models MUST pass their provider); `strict` toggles
@@ -77,7 +79,7 @@ export const ALL_VARIANTS: readonly ModelVariant[] = [...LOCAL_VARIANTS, ...REMO
  * e.g. `MODELS=llama,haiku`; `MODELS=local` / `MODELS=remote` select a tier. Defaults to all six.
  */
 export const selectVariants = (): readonly ModelVariant[] => {
-  const raw = process.env.MODELS?.trim();
+  const raw = MODELS;
   if (!raw) {
     return ALL_VARIANTS;
   }

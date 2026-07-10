@@ -12,7 +12,7 @@ import {
   runItemsBench,
   selectVariants,
   summarizeMessage,
-} from './harness';
+} from '../testing/harness';
 
 describe.skipIf(!fixtureExists())('summarize messages (multi-model)', () => {
   test(
@@ -25,6 +25,7 @@ describe.skipIf(!fixtureExists())('summarize messages (multi-model)', () => {
         items: messages,
         variants,
         perItem: summarizeMessage,
+        renderResponse: (result) => result.summary,
         evaluate: (_variant, results) => {
           const summarized = results.filter((result) => result.summary.length > 0);
           const totalChars = summarized.reduce((sum, result) => sum + result.summary.length, 0);

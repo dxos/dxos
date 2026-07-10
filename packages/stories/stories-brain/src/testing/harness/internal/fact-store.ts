@@ -6,14 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { FactStore, type RDF } from '@dxos/pipeline-rdf';
 
-// The persisted fact store fixture (Phase 1 writes it; Phase 2 loads it). Git-ignored under
-// fixtures/local. Override with `FACT_STORE_FIXTURE`.
-export const FACT_STORE_FIXTURE =
-  process.env.FACT_STORE_FIXTURE ?? fileURLToPath(new URL('../../../fixtures/local/fact-store.json', import.meta.url));
+import { FACT_STORE_FIXTURE } from '../config';
 
 export const factStoreFixtureExists = (): boolean => existsSync(FACT_STORE_FIXTURE);
 

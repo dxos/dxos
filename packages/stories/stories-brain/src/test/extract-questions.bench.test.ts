@@ -12,7 +12,7 @@ import {
   round,
   runItemsBench,
   selectVariants,
-} from './harness';
+} from '../testing/harness';
 
 describe.skipIf(!fixtureExists())('extract questions/requests per message (multi-model)', () => {
   test(
@@ -25,6 +25,11 @@ describe.skipIf(!fixtureExists())('extract questions/requests per message (multi
         items: messages,
         variants,
         perItem: extractQuestions,
+        renderResponse: (result) =>
+          `_${result.subject || result.messageId}_\n\n` +
+          (result.questions.length
+            ? result.questions.map((question, index) => `${index + 1}. ${question}`).join('\n')
+            : '_(no questions)_'),
         evaluate: (_variant, results) => {
           const total = results.reduce((sum, result) => sum + result.questions.length, 0);
           return {

@@ -12,7 +12,7 @@ import {
   round,
   runItemsBench,
   selectVariants,
-} from './harness';
+} from '../testing/harness';
 
 describe.skipIf(!fixtureExists())('tag messages incl. spam (multi-model)', () => {
   test(

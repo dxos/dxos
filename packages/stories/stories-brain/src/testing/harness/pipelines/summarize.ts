@@ -8,16 +8,20 @@ import { type AiService } from '@dxos/ai';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { generateText } from './llm';
-import { type ModelVariant } from './models';
+import { generateText } from '../llm';
+import { type ModelVariant } from '../models';
 
 export type SummaryResult = {
   readonly summary: string;
 };
 
 const PROMPT = trim`
-  Summarize the following email in one or two sentences, capturing who sent it and what they want.
-  Respond with ONLY the summary text — no preamble, labels, or quotes.
+  Summarize the email below as a terse markdown bullet list (1-3 bullets): who sent it and what they
+  want or are telling the recipient.
+  Rules:
+  - Start each bullet with a verb or the sender's name — never with "The email", "This email", or "The sender".
+  - No preamble, heading, labels, or quotes. Output ONLY the bullets.
+  - Keep each bullet under ~15 words.
 `;
 
 /** Produces a one-to-two sentence summary of a single message via the variant's model. */

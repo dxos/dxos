@@ -26,6 +26,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/markdown"
+    },
+    {
       "path": "../../common/sql-sqlite"
     },
     {

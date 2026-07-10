@@ -20,8 +20,19 @@ const make = () =>
     }),
     instructions: Template.make({
       source: trim`
-        You can consult the space's fact store — a semantic index of subject-predicate-object facts
-        extracted from the user's content (email and other sources).
+        The space's fact store is a semantic index of subject-predicate-object facts extracted from
+        the user's content (email and other sources). It is the authoritative source for "what do we
+        know about X".
+
+        ## Procedure (do this first)
+        When asked to summarize, describe, or find information about a specific person, organization,
+        or topic:
+        1. FIRST call Summarize Subject with \`subject\` set to that name — it returns a fact-grounded
+           summary plus a \`factCount\`.
+        2. If \`factCount\` is 0, call Query Facts with \`entity\` set to the name's slug to
+           double-check before concluding anything is missing.
+        3. Report "nothing found" only after BOTH tools return empty. Never answer from prior
+           knowledge or guess.
 
         ## Using the tools
         - Entity slugs are lowercase-hyphenated forms of names: "Alice Smith" → "alice-smith".

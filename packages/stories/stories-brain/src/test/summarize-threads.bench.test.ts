@@ -13,7 +13,7 @@ import {
   runItemsBench,
   selectVariants,
   summarizeThread,
-} from './harness';
+} from '../testing/harness';
 
 describe.skipIf(!fixtureExists())('summarize threads (multi-model)', () => {
   test(
@@ -26,6 +26,8 @@ describe.skipIf(!fixtureExists())('summarize threads (multi-model)', () => {
         items: threads,
         variants,
         perItem: summarizeThread,
+        renderResponse: (result) =>
+          `_Thread ${result.threadId} · ${result.messageCount} message(s)_\n\n${result.summary}`,
         evaluate: (_variant, results) => {
           const summarized = results.filter((result) => result.summary.length > 0);
           return {

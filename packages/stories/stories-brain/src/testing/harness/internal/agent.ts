@@ -18,22 +18,23 @@ import { BrainSkill } from '@dxos/plugin-brain';
 import { BrainOperationHandlerSet } from '@dxos/plugin-brain/plugin';
 import { Message } from '@dxos/types';
 
-import { BrainV2Skill } from './brainV2Skill';
-import { factStoreLayer } from './factStore';
-import { type ModelVariant } from './models';
-import { RagOperationHandlerSet, RagSkill } from './ragSkill';
+import { type ModelVariant } from '../models';
+import { HybridOperationHandlerSet, HybridSkill } from '../skills/hybrid-skill';
+import { RagOperationHandlerSet, RagSkill } from '../skills/rag-skill';
+import { factStoreLayer } from './fact-store';
+import { subjectIndexLayer } from './subject-index';
 import { vectorStoreLayer } from './vector';
 
 /**
  * The skill configuration under test:
  * - `database` — baseline: only the Database skill (queries the ECHO space + feed).
- * - `brain`    — Database + Brain skill (stock fact-store QueryFacts/SummarizeSubject tools).
- * - `brain-v2` — Database + a more directive variant of the Brain skill (same tools, stronger prompt).
+ * - `brain`    — Database + Brain skill (fact-store QueryFacts/SummarizeSubject tools).
  * - `rag`      — Database + RAG skill (vector-index snippet retrieval).
+ * - `hybrid`   — Database + fact→source bridge: facts index into the actual source messages.
  */
-export type SkillMode = 'database' | 'brain' | 'brain-v2' | 'rag';
+export type SkillMode = 'database' | 'brain' | 'rag' | 'hybrid';
 
-const usesFactStore = (mode: SkillMode): boolean => mode === 'brain' || mode === 'brain-v2';
+const usesFactStore = (mode: SkillMode): boolean => mode === 'brain';
 
 export type AgentEvalConfig = {
   readonly variant: ModelVariant;
@@ -65,19 +66,22 @@ export const runAgentEval = async (config: AgentEvalConfig, testContext: TestCon
   const skills = [
     DatabaseSkill.make(),
     ...(config.mode === 'brain' ? [BrainSkill.make()] : []),
-    ...(config.mode === 'brain-v2' ? [BrainV2Skill.make()] : []),
     ...(config.mode === 'rag' ? [RagSkill.make()] : []),
+    ...(config.mode === 'hybrid' ? [HybridSkill.make()] : []),
   ];
   const operationHandlers = [
     DatabaseHandlers,
     ...(usesFactStore(config.mode) ? [BrainOperationHandlerSet] : []),
     ...(config.mode === 'rag' ? [RagOperationHandlerSet] : []),
+    ...(config.mode === 'hybrid' ? [HybridOperationHandlerSet] : []),
   ];
   const extraServices = usesFactStore(config.mode)
     ? factStoreLayer(config.facts)
     : config.mode === 'rag'
       ? vectorStoreLayer(config.messages)
-      : Layer.empty;
+      : config.mode === 'hybrid'
+        ? subjectIndexLayer(config.facts, config.messages)
+        : Layer.empty;
 
   const TestLayer = AssistantTestLayer({
     aiServicePreset: config.variant.preset,
@@ -104,9 +108,14 @@ export const runAgentEval = async (config: AgentEvalConfig, testContext: TestCon
     yield* agent.waitForCompletion();
     const durationMs = Math.round(performance.now() - start);
 
-    // The conversation (prompt + tool calls + assistant replies) lands on the session feed.
+    // The conversation (prompt + tool calls + assistant replies) lands on the session feed. Omit the
+    // user's prompt turn so the response is just the agent's answer.
     const transcript = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
-    const response = transcript.map(Message.extractText).filter(Boolean).join('\n\n');
+    const response = transcript
+      .filter((message) => message.sender.role !== 'user')
+      .map(Message.extractText)
+      .filter((text) => text.length > 0 && text.trim() !== config.prompt.trim())
+      .join('\n\n');
     return { response, durationMs };
   });
 

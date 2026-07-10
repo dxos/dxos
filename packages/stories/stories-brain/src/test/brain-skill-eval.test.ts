@@ -9,6 +9,7 @@ import { log } from '@dxos/log';
 import {
   type AgentEvalResult,
   FACT_STORE_FIXTURE,
+  FIXTURE,
   type SkillMode,
   factEntities,
   factStoreFixtureExists,
@@ -18,22 +19,22 @@ import {
   runAgentEval,
   selectVariants,
   slugify,
+  startResponseLog,
+  toRelative,
+  trackProgress,
   writeResults,
-} from './harness';
+} from '../testing/harness';
+import { DEFAULT_SUBJECT, SKILL_MODES, SUBJECT } from './defs';
 
-// The Phase-2 subject: prefer "Nicole Gudmand" if she is an entity in the fact store, else fall back
-// to the first message sender that is. Override with `SUBJECT`.
-const PREFERRED_SUBJECT = 'Nicole Gudmand';
-
-const ALL_MODES: readonly SkillMode[] = ['database', 'brain', 'brain-v2', 'rag'];
+const ALL_MODES: readonly SkillMode[] = ['database', 'brain', 'rag', 'hybrid'];
 
 // Which skill configurations to compare. `SKILL_MODES=database,brain` narrows the set.
 const selectModes = (): readonly SkillMode[] => {
-  const raw = process.env.SKILL_MODES?.trim();
-  if (!raw) {
+  if (!SKILL_MODES) {
     return ALL_MODES;
   }
-  const names = raw.split(',').map((name) => name.trim());
+
+  const names = SKILL_MODES.split(',').map((name) => name.trim());
   return ALL_MODES.filter((mode) => names.includes(mode));
 };
 
@@ -54,16 +55,17 @@ describe.skipIf(!fixtureExists() || !factStoreFixtureExists())('brain vs. rag sk
       const entities = factEntities(facts);
 
       const resolveSubject = (): string => {
-        if (process.env.SUBJECT) {
-          return process.env.SUBJECT;
+        if (SUBJECT) {
+          return SUBJECT;
         }
-        if (entities.has(slugify(PREFERRED_SUBJECT))) {
-          return PREFERRED_SUBJECT;
+        if (entities.has(slugify(DEFAULT_SUBJECT))) {
+          return DEFAULT_SUBJECT;
         }
         const senderNames = messages.map((message) => message.sender.name).filter((name): name is string => !!name);
         const match = senderNames.find((name) => entities.has(slugify(name)));
         return match ?? senderNames[0] ?? 'the sender';
       };
+
       const subject = resolveSubject();
       const prompt = `summarize messages from ${subject}`;
       const subjectTokens = subject.toLowerCase().split(/\s+/).filter(Boolean);
@@ -76,6 +78,9 @@ describe.skipIf(!fixtureExists() || !factStoreFixtureExists())('brain vs. rag sk
 
       const variants = selectVariants();
       const modes = selectModes();
+      // Responses stream to the sister markdown as each (model, mode) run completes.
+      const responseLog = startResponseLog('brain-vs-rag-eval');
+      const progress = trackProgress('brain-vs-rag-eval', variants.length * modes.length);
       const results: (AgentEvalResult & { subjectMentions: number; error?: string })[] = [];
       for (const variant of variants) {
         for (const mode of modes) {
@@ -87,6 +92,9 @@ describe.skipIf(!fixtureExists() || !factStoreFixtureExists())('brain vs. rag sk
               0,
             );
             results.push({ ...result, subjectMentions });
+            if (result.response.length > 0) {
+              responseLog.append({ title: `${variant.name} · ${mode}`, body: result.response });
+            }
             log.info('eval result', {
               model: variant.name,
               mode,
@@ -108,8 +116,10 @@ describe.skipIf(!fixtureExists() || !factStoreFixtureExists())('brain vs. rag sk
               error: message,
             });
           }
+          progress.advance();
         }
       }
+      progress.done();
 
       writeResults('brain-vs-rag-eval', {
         name: 'brain-vs-rag-eval',
@@ -117,10 +127,13 @@ describe.skipIf(!fixtureExists() || !factStoreFixtureExists())('brain vs. rag sk
         subject,
         subjectInFactStore: entities.has(slugify(subject)),
         prompt,
+        factStore: toRelative(FACT_STORE_FIXTURE),
+        feed: toRelative(FIXTURE),
         factCount: facts.length,
+        messages: messages.length,
         corpusSize: messages.length,
         modes,
-        results,
+        stats: results.map(({ response: _response, prompt: _prompt, ...rest }) => rest),
       });
 
       expect(results.length).toBe(variants.length * modes.length);

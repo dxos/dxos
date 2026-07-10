@@ -8,8 +8,8 @@ import { type AiService } from '@dxos/ai';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { asStringArray, generateText, parseJsonObject } from './llm';
-import { type ModelVariant } from './models';
+import { asStringArray, generateText, parseJsonObject } from '../llm';
+import { type ModelVariant } from '../models';
 
 export type TagResult = {
   readonly tags: string[];

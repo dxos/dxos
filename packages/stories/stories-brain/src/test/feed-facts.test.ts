@@ -15,11 +15,11 @@ import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPi
 import { FactStore, type FeedCursorsApi, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
-import { fixtureExists, loadFixtureMessages, seedFeed } from './harness';
+import { fixtureExists, loadFixtureMessages, seedFeed } from '../testing/harness';
+import { OLLAMA_MODEL } from './defs';
 
-// Local model served by Ollama (model DXN; its final NSID segment must be camelCase). Requires a
-// running Ollama at localhost:11434 (`OLLAMA_ORIGINS="*" ollama serve`).
-const MODEL = process.env.OLLAMA_MODEL ?? 'com.openai.model.gpt-oss-20b.default';
+// Local model served by Ollama; requires a running Ollama (`OLLAMA_ORIGINS="*" ollama serve`).
+const MODEL = OLLAMA_MODEL;
 
 // In-memory per-feed cursor (mirrors the pipeline-rdf FeedCursors registry).
 const makeCursors = (): FeedCursorsApi => {

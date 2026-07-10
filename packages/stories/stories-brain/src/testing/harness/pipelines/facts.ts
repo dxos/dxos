@@ -10,8 +10,49 @@ import { Database, type Feed } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
 import { FactStore, type FeedCursorsApi, type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import { type Message } from '@dxos/types';
 
-import { type ModelVariant } from './models';
+import { type ModelVariant } from '../models';
+
+export type MessageFactsResult = {
+  readonly facts: number;
+  /** Total characters of extractor input (`messageToDocument().text`) — the HTML-vs-text size signal. */
+  readonly inputChars: number;
+};
+
+/**
+ * Extracts facts from each message directly (no feed/store), under the variant's model, returning
+ * total facts and total input characters. Used by the HTML-vs-text benchmark to compare extraction
+ * over raw HTML bodies vs stripped prose for the same messages.
+ */
+export const extractDocFactsForMessages = (
+  variant: ModelVariant,
+  messages: readonly Message.Message[],
+  onMessage?: () => void,
+): Promise<MessageFactsResult> =>
+  EffectEx.runPromise(
+    Effect.gen(function* () {
+      const noFacts: RDF.Fact[] = [];
+      let facts = 0;
+      let inputChars = 0;
+      for (const message of messages) {
+        const document = messageToDocument(message);
+        inputChars += document.text.length;
+        const extracted = yield* extractDocFacts(document, {
+          ...EMAIL_EXTRACT_OPTIONS,
+          model: variant.model,
+          provider: variant.provider,
+          strict: variant.strict,
+        }).pipe(
+          Effect.timeout('120 seconds'),
+          Effect.orElse(() => Effect.succeed(noFacts)),
+        );
+        facts += extracted.length;
+        onMessage?.();
+      }
+      return { facts, inputChars };
+    }).pipe(Effect.provide(AiServiceTestingPreset(variant.preset))),
+  );
 
 /** In-memory per-feed high-water cursor (mirrors the pipeline-rdf FeedCursors registry). */
 export const makeCursors = (): FeedCursorsApi => {
@@ -39,6 +80,7 @@ export const extractFactsForVariant = (
   feed: Feed.Feed,
   db: Database.Database,
   pageSize = 1,
+  onMessage?: () => void,
 ): Promise<FactsRunResult> =>
   EffectEx.runPromise(
     Effect.gen(function* () {
@@ -46,6 +88,8 @@ export const extractFactsForVariant = (
       // A hung/very-slow model call must not stall the whole run (a single big page blocks on it);
       // time each message out and degrade to zero facts for that message.
       const noFacts: RDF.Fact[] = [];
+      // The extract closure is invoked once per message the pipeline processes, so it's the natural
+      // per-message progress hook without instrumenting runFactPipeline's internal stream.
       const extract: FactExtractor = (message) =>
         EffectEx.runPromise(
           extractDocFacts(messageToDocument(message), {
@@ -57,6 +101,7 @@ export const extractFactsForVariant = (
             Effect.provideService(AiService.AiService, aiService),
             Effect.timeout('120 seconds'),
             Effect.orElse(() => Effect.succeed(noFacts)),
+            Effect.tap(() => Effect.sync(() => onMessage?.())),
           ),
         );
 

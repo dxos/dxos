@@ -8,8 +8,8 @@ import { type AiService } from '@dxos/ai';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { generateText } from './llm';
-import { type ModelVariant } from './models';
+import { generateText } from '../llm';
+import { type ModelVariant } from '../models';
 
 export type MessageThread = {
   readonly threadId: string;
@@ -38,8 +38,12 @@ export const groupThreads = (messages: readonly Message.Message[]): MessageThrea
 };
 
 const PROMPT = trim`
-  Summarize the following email thread in two or three sentences: what it is about, who is involved,
-  and any decisions or outstanding items. Respond with ONLY the summary text.
+  Summarize the email thread below as a terse markdown bullet list (2-4 bullets): what it is about,
+  who is involved, and any decisions or outstanding items.
+  Rules:
+  - Start each bullet with a verb, name, or topic — never with "The thread", "This email", or "The sender".
+  - No preamble, heading, labels, or quotes. Output ONLY the bullets.
+  - Keep each bullet under ~15 words.
 `;
 
 const renderThread = (thread: MessageThread): string =>

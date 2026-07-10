@@ -14,7 +14,7 @@ import {
   loadFixtureMessages,
   round,
   writeResults,
-} from './harness';
+} from '../testing/harness';
 
 // Actor extraction is deterministic header parsing (sender + to + cc), so it does not vary by model.
 describe.skipIf(!fixtureExists())('extract actors as contacts (deterministic)', () => {

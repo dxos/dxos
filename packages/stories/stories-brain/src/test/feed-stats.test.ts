@@ -11,7 +11,7 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { fixtureExists, loadFixtureMessages, seedFeed } from './harness';
+import { fixtureExists, loadFixtureMessages, seedFeed } from '../testing/harness';
 
 /** Trivial, LLM-free feed statistics. */
 type FeedStats = {
