@@ -11,15 +11,13 @@ import { type EntityId } from '@dxos/keys';
 import { useFlush } from '@dxos/plugin-assistant/hooks';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { useGraphModel } from '@dxos/plugin-explorer/hooks';
-import { useQuery } from '@dxos/react-client/echo';
-import { Card, Icon, IconButton, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { type Space, useQuery } from '@dxos/react-client/echo';
+import { Card, Icon, IconButton, Panel, ScrollArea, Toolbar, composable, composableProps } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
-
-import { type ModuleProps } from './types';
 
 type DatabaseView = 'graph' | 'object-tree' | 'cards';
 
@@ -29,7 +27,7 @@ const VIEW_OPTIONS: { value: DatabaseView; icon: string; label: string }[] = [
   { value: 'cards', icon: 'ph--squares-four--regular', label: 'Cards' },
 ];
 
-export const DatabaseModule = ({ space }: ModuleProps) => {
+export const DatabaseModule = ({ space }: { space: Space }) => {
   const [filter, setFilter] = useState<Filter.Any>();
   const [view, setView] = useState<DatabaseView>('graph');
   const [open, setOpen] = useState(false);
@@ -123,27 +121,28 @@ export const DatabaseModule = ({ space }: ModuleProps) => {
   );
 };
 
-type DatabaseSearchBarProps = ModuleProps & {
+type DatabaseSearchBarProps = { space: Space } & {
   view: DatabaseView;
   onSubmit: NonNullable<ChatEditorProps['onSubmit']>;
   onViewChange: (value: string) => void;
 };
 
-const DatabaseSearchBar = ({ space, view, onSubmit, onViewChange }: DatabaseSearchBarProps) => {
-  const { state: flushState, handleFlush } = useFlush(space);
-  const editorRef = useRef<EditorController>(null);
+const DatabaseSearchBar = composable<HTMLDivElement, DatabaseSearchBarProps>(
+  ({ space, view, onSubmit, onViewChange, ...props }, forwardedRef) => {
+    const { state: flushState, handleFlush } = useFlush(space);
+    const editorRef = useRef<EditorController>(null);
 
-  return (
-    <Toolbar.Root>
-      <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} />
-      <Toolbar.ToggleGroup type='single' value={view} onValueChange={onViewChange}>
-        {VIEW_OPTIONS.map(({ value, icon, label }) => (
-          <Toolbar.ToggleGroupItem key={value} value={value} aria-label={label} title={label}>
-            <Icon icon={icon} size={4} />
-          </Toolbar.ToggleGroupItem>
-        ))}
-      </Toolbar.ToggleGroup>
-      {/* <Toolbar.IconButton
+    return (
+      <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+        <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} />
+        <Toolbar.ToggleGroup type='single' value={view} onValueChange={onViewChange}>
+          {VIEW_OPTIONS.map(({ value, icon, label }) => (
+            <Toolbar.ToggleGroupItem key={value} value={value} aria-label={label} title={label}>
+              <Icon icon={icon} size={4} />
+            </Toolbar.ToggleGroupItem>
+          ))}
+        </Toolbar.ToggleGroup>
+        {/* <Toolbar.IconButton
         icon='ph--magnifying-glass--regular'
         iconOnly
         label='Search'
@@ -161,12 +160,15 @@ const DatabaseSearchBar = ({ space, view, onSubmit, onViewChange }: DatabaseSear
         label='Flush'
         onClick={handleFlush}
       /> */}
-    </Toolbar.Root>
-  );
-};
+      </Toolbar.Root>
+    );
+  },
+);
+
+DatabaseSearchBar.displayName = 'DatabaseSearchBar';
 
 type DatabaseCardsViewProps = {
-  space: ModuleProps['space'];
+  space: Space;
   filter: Filter.Any | undefined;
   selectedId: EntityId | null;
   onSelect: (id: EntityId) => void;
