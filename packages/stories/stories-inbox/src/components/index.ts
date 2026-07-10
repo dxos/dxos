@@ -8,3 +8,4 @@ export * from './ControlsModule';
 export * from './FactsModule';
 export * from './MailboxModule';
 export * from './MessageModule';
+export * from './StatsModule';
