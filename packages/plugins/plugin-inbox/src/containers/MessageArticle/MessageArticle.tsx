@@ -21,6 +21,7 @@ import { meta } from '#meta';
 import { DraftMessage, InboxOperation, Mailbox, Sent } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
+import { createDraftMessage } from '../../util';
 
 /**
  * `subject` is either a single message or its whole conversation (thread). The companion graph node
@@ -98,12 +99,12 @@ export const MessageArticle = ({
   const openDraft = useCallback(
     (mode: 'reply' | 'reply-all' | 'forward') => {
       if (db) {
-        // Appends the draft inline (shares the thread's `threadId`); the thread query in the
-        // `mailboxMessage` connector picks it up reactively, so no navigation is needed here.
-        void invokePromise(InboxOperation.DraftReply, { db, mode, message: anchorMessage, mailbox });
+        // Add the draft directly; it shares the thread's `threadId`, so the `mailboxMessage` connector
+        // query picks it up reactively and renders it inline — no navigation, no operation needed.
+        db.add(DraftMessage.make(createDraftMessage({ mode, message: anchorMessage, mailbox })));
       }
     },
-    [db, invokePromise, anchorMessage, mailbox],
+    [db, anchorMessage, mailbox],
   );
   const handleReply = useCallback(() => openDraft('reply'), [openDraft]);
   const handleReplyAll = useCallback(() => openDraft('reply-all'), [openDraft]);
@@ -256,8 +257,8 @@ const DraftThreadItemContent = ({ message, mailbox, viewMode, setViewMode, onCon
   const db = mailbox ? Obj.getDatabase(mailbox) : Obj.getDatabase(message);
   const sentTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Sent.TAG_SENT.key]))[0];
   const sentUri = sentTag && Obj.getURI(sentTag).toString();
-  const sentFamily = useMemo(() => Sent.atom(mailbox?.tags?.target, sentUri), [mailbox?.tags?.target, sentUri]);
-  const sent = useAtomValue(sentFamily(message.id));
+  const sentAtomFor = useMemo(() => Sent.atom(mailbox?.tags?.target, sentUri), [mailbox?.tags?.target, sentUri]);
+  const sent = useAtomValue(sentAtomFor(message.id));
 
   const handleDelete = useCallback(() => {
     if (mailbox) {

@@ -25,14 +25,14 @@ export const TAG_SENT = {
 
 const NOT_SENT = Atom.make(() => false);
 
-/** Per-message sent boolean atom family over a mailbox's TagIndex. */
-export type SentFamily = (messageId: EntityId) => Atom.Atom<boolean>;
+/** Resolves the per-message sent boolean atom (backed by `TagIndex.atom`) for a message id. */
+export type SentAtomFor = (messageId: EntityId) => Atom.Atom<boolean>;
 
 /**
- * Per-message sent atom family. Each atom yields whether one message carries the sent tag and
- * re-renders only when that membership changes.
+ * Returns a resolver from message id to a boolean atom yielding whether that message carries the sent
+ * tag; the atom re-renders only when that membership changes.
  */
-export const atom = (tagIndex: TagIndex.TagIndex | undefined, sentUri: string | undefined): SentFamily => {
+export const atom = (tagIndex: TagIndex.TagIndex | undefined, sentUri: string | undefined): SentAtomFor => {
   if (!tagIndex || !sentUri) {
     return () => NOT_SENT;
   }
