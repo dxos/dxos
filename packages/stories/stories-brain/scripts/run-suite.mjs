@@ -33,6 +33,7 @@ const MANIFEST = [
   { name: 'summarize-messages', file: 'src/test/summarize-messages.bench.test.ts', total: messageTotal },
   { name: 'summarize-threads', file: 'src/test/summarize-threads.bench.test.ts' },
   { name: 'extract-questions', file: 'src/test/extract-questions.bench.test.ts', total: messageTotal },
+  { name: 'draft-responses', file: 'src/test/draft-responses.bench.test.ts', total: messageTotal },
   { name: 'html-vs-text', file: 'src/test/html-vs-text.bench.test.ts' },
   { name: 'html-to-markdown', file: 'src/test/html-to-markdown.bench.test.ts' },
   { name: 'brain-vs-rag-eval', file: 'src/test/brain-skill-eval.test.ts' },
