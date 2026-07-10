@@ -11,9 +11,6 @@ packages:
   - '!**/dist/**'
   - '!**/out/**'
 
-# sparqljs was deprecated wholesale on npm ("no longer supported"); it remains a transitive
-# dependency of @comunica/* (via sparqlalgebrajs), so it cannot be removed by dropping the
-# direct @dxos/pipeline-rdf dependency. Acknowledged pending an upstream comunica migration.
 allowedDeprecatedVersions:
   sparqljs: 3.7.4
 
@@ -664,6 +661,7 @@ catalog:
   use-deep-compare-effect: ^1.8.1
   use-resize-observer: ^9.1.0
   use-sync-external-store: ^1.6.0
+  usearch: ^2.25.3
   util: ^0.12.4
   uuid: ^9.0.0
   varint: 6.0.0

@@ -11,7 +11,14 @@ import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { DXN } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 
-import { ConnectorModule, ControlsModule, FactsModule, MailboxModule, MessageModule } from '../components';
+import {
+  ArchiveModule,
+  ConnectorModule,
+  ControlsModule,
+  FactsModule,
+  MailboxModule,
+  MessageModule,
+} from '../components';
 
 export type ModuleProps = {
   space: Space;
@@ -38,6 +45,7 @@ export const Module = {
   Message: Role.make<Record<string, any>>('org.dxos.storybook.inbox.message'),
   Facts: Role.make<Record<string, any>>('org.dxos.storybook.inbox.facts'),
   Connector: Role.make<Record<string, any>>('org.dxos.storybook.inbox.connector'),
+  Archive: Role.make<Record<string, any>>('org.dxos.storybook.inbox.archive'),
 };
 
 /** React surfaces for the MailboxSync story columns, one per `Module` role token. */
@@ -66,6 +74,11 @@ const moduleSurfaces: Surface.Definition[] = [
     id: 'inbox.connector',
     filter: Surface.makeFilter(Module.Connector),
     component: withActiveSpace(ConnectorModule),
+  }),
+  Surface.create({
+    id: 'inbox.archive',
+    filter: Surface.makeFilter(Module.Archive),
+    component: withActiveSpace(ArchiveModule),
   }),
 ];
 

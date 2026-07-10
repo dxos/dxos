@@ -50,9 +50,17 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "catalog:"
+    "@effect/ai": "catalog:",
+    "effect": "catalog:",
+    "usearch": "catalog:"
   },
   "devDependencies": {
+    "@dxos/assistant-toolkit": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/functions-runtime": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-brain": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

@@ -42,7 +42,9 @@ const SYNC_STORY_TYPES = [
   TagIndex.TagIndex,
 ];
 
-const DefaultStory = () => <ModuleContainer layout={[[Module.Mailbox], [Module.Message], [Module.Connector]]} />;
+const DefaultStory = () => (
+  <ModuleContainer layout={[[Module.Mailbox], [Module.Message], [Module.Connector, Module.Archive]]} />
+);
 
 const meta = {
   title: 'stories/stories-inbox/MailboxSync',
