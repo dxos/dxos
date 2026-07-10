@@ -1,7 +1,8 @@
 {
-  "name": "@dxos/client-protocol",
+  "name": "@dxos/worker-framework",
   "version": "0.10.0",
-  "description": "Core DXOS Client API.",
+  "private": true,
+  "description": "Generic worker management framework for DXOS client services.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -10,7 +11,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "type": "module",
   "exports": {
     ".": {
@@ -19,11 +20,17 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs"
+    "./worker": {
+      "source": "./src/worker/index.ts",
+      "types": "./dist/types/src/worker/index.d.ts",
+      "browser": "./dist/lib/browser/worker/index.mjs",
+      "node": "./dist/lib/node-esm/worker/index.mjs"
+    },
+    "./coordinator": {
+      "source": "./src/coordinator/index.ts",
+      "types": "./dist/types/src/coordinator/index.d.ts",
+      "browser": "./dist/lib/browser/coordinator/index.mjs",
+      "node": "./dist/lib/node-esm/coordinator/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -33,20 +40,13 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/credentials": "workspace:*",
-    "@dxos/echo": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/node-std": "workspace:*",
-    "@dxos/protocols": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@dxos/worker-framework": "workspace:*",
-    "@effect/platform": "catalog:",
+    "@dxos/util": "workspace:*",
     "@effect/rpc": "catalog:",
-    "base-x": "catalog:",
     "effect": "catalog:"
   },
   "peerDependencies": {

@@ -3,15 +3,12 @@
 //
 
 import type * as Rpc from '@effect/rpc/Rpc';
-import * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as RpcSchema from '@effect/rpc/RpcSchema';
-import * as RpcServer from '@effect/rpc/RpcServer';
 import * as RpcTest from '@effect/rpc/RpcTest';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Runtime from 'effect/Runtime';
 import type * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
@@ -34,7 +31,8 @@ import {
   SpacesService,
   SystemService,
 } from '@dxos/protocols/rpc';
-import { type RpcPort, layerProtocolRpcPortServer, makeProtocolRpcPortClient } from '@dxos/rpc';
+import { type RpcPort } from '@dxos/rpc';
+import { makeRpcClient, serveRpcGroup } from '@dxos/worker-framework';
 
 import { type ClientServices } from './service';
 
@@ -130,31 +128,30 @@ export type ClientRpcServerParams = {
  */
 export class ClientRpcServer {
   readonly #params: ClientRpcServerParams;
-  #runtime?: ManagedRuntime.ManagedRuntime<never, never>;
+  #server?: ReturnType<typeof serveRpcGroup>;
 
   constructor(params: ClientRpcServerParams) {
     this.#params = params;
   }
 
   async open(): Promise<void> {
-    if (this.#runtime) {
+    if (this.#server) {
       return;
     }
 
-    const serverLayer = RpcServer.layer(ClientServicesRpcs, { disableTracing: true, concurrency: 'unbounded' }).pipe(
-      Layer.provide(makeClientServicesHandlers(this.#params)),
-      Layer.provide(layerProtocolRpcPortServer(this.#params.port)),
+    this.#server = serveRpcGroup(
+      this.#params.port,
+      ClientServicesRpcs,
+      makeClientServicesHandlers(this.#params),
+      { disableTracing: true, concurrency: 'unbounded' },
     );
-
-    this.#runtime = ManagedRuntime.make(serverLayer);
-    // Force the layer to build so the server is listening once open resolves.
-    await this.#runtime.runPromise(Effect.void);
+    await this.#server.open();
   }
 
   async close(): Promise<void> {
-    const runtime = this.#runtime;
-    this.#runtime = undefined;
-    await runtime?.dispose();
+    const server = this.#server;
+    this.#server = undefined;
+    await server?.close();
   }
 }
 
@@ -231,16 +228,9 @@ export interface ClientServicesRpc
  * The returned scope owns the connection; closing it releases the transport.
  */
 export const makeClientServicesRpc = (port: RpcPort): Effect.Effect<ClientServicesRpc, never, Scope.Scope> =>
-  Effect.gen(function* () {
-    // Build the protocol in the ambient scope so the transport lives until the caller closes it.
-    const protocol = yield* makeProtocolRpcPortClient(port);
-    const client = yield* RpcClient.make(ClientServicesRpcs, { disableTracing: true }).pipe(
-      Effect.provideService(RpcClient.Protocol, protocol),
-    );
-    // The merged client is structurally the per-service intersection; the giant mapped type is
-    // narrowed to the cheaper {@link ClientServicesRpc} to keep the type-checker fast.
-    return client as unknown as ClientServicesRpc;
-  });
+  makeRpcClient(port, ClientServicesRpcs, { disableTracing: true }).pipe(
+    Effect.map((client) => client as ClientServicesRpc),
+  );
 
 /**
  * Builds an in-process {@link ClientServicesRpc} backed directly by host {@link ClientServicesHandlers}

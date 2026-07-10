@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import type { WorkerCoordinator, WorkerCoordinatorMessage } from './types';
+import type { WorkerCoordinator, WorkerCoordinatorMessage } from '../internal/messages';
 
 export class MemoryWorkerCoordiantor implements WorkerCoordinator {
   readonly onMessage = new Event<WorkerCoordinatorMessage>();

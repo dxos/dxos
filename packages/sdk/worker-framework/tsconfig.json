@@ -13,7 +13,7 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../common/context"
     },
     {
       "path": "../../common/effect"
@@ -22,28 +22,13 @@
       "path": "../../common/invariant"
     },
     {
-      "path": "../../common/keys"
+      "path": "../../common/log"
     },
     {
-      "path": "../../common/node-std"
-    },
-    {
-      "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/echo/echo-client"
-    },
-    {
-      "path": "../../core/halo/credentials"
+      "path": "../../common/util"
     },
     {
       "path": "../../core/mesh/rpc"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../worker-framework"
     }
   ]
 }

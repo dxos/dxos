@@ -142,6 +142,7 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
+    "@dxos/worker-framework": "workspace:*",
     "@effect/experimental": "catalog:",
     "@effect/platform-browser": "catalog:",
     "@effect/rpc": "catalog:",

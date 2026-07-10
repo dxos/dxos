@@ -21,7 +21,7 @@ export interface DedicatedWorkerInitMessage {
    */
   clientId: string;
   /**
-   * Client ID that should receive the WebRTC bridge connection.
+   * Client ID that should receive the privileged session (e.g. WebRTC bridge).
    * This is the actual client ID used for session requests.
    */
   ownerClientId?: string;
@@ -33,7 +33,6 @@ export interface DedicatedWorkerInitMessage {
 
 /**
  * Worker -> Leader Client to notify that worker is ready.
- * Automatically initializes the first session.
  */
 export interface DedicatedWorkerReadyMessage {
   type: 'ready';
@@ -94,6 +93,16 @@ export type WorkerCoordinatorMessage =
     };
 
 export type WorkerOrPort = Worker | MessagePort;
+
+/**
+ * Endpoint for worker-side message handling (DedicatedWorker global or a MessagePort in tests).
+ */
+export interface WorkerEndpoint {
+  postMessage(message: DedicatedWorkerMessage, transfer?: Transferable[]): void;
+  addEventListener(type: 'message', listener: (ev: MessageEvent<DedicatedWorkerMessage>) => void): void;
+  removeEventListener(type: 'message', listener: (ev: MessageEvent<DedicatedWorkerMessage>) => void): void;
+  close?(): void;
+}
 
 /**
  * Coordinator exchange ports and notify about a new leader.

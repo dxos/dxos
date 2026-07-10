@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 
-import type { WorkerCoordinator, WorkerCoordinatorMessage } from './types';
+import type { WorkerCoordinator, WorkerCoordinatorMessage } from '../internal/messages';
 
 /**
  * Coordinator for single-client mode (e.g. Tauri / single-window).
