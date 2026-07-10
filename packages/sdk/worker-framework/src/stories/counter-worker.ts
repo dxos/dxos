@@ -40,11 +40,18 @@ const counterHandlers = CounterRpcs.toLayer(
 
 runWorker({
   storageLockKey: COUNTER_STORAGE_LOCK_KEY,
-  createRuntime: async () => ({
-    livenessLockKey: COUNTER_LIVENESS_LOCK_KEY,
-    createSession: async ({ appPort }) => {
-      const server = serveRpcGroup(appPort, CounterRpcs, counterHandlers);
-      await server.open();
-    },
-  }),
+  createRuntime: async () => {
+    // Hold the liveness lock for the worker's lifetime. The leader's blocked request on this key
+    // is only granted once the worker is torn down (the browser auto-releases held locks), which
+    // is how {@link WorkerConnection} detects worker termination.
+    void navigator.locks.request(COUNTER_LIVENESS_LOCK_KEY, () => new Promise<never>(() => {}));
+
+    return {
+      livenessLockKey: COUNTER_LIVENESS_LOCK_KEY,
+      createSession: async ({ appPort }) => {
+        const server = serveRpcGroup(appPort, CounterRpcs, counterHandlers);
+        await server.open();
+      },
+    };
+  },
 });
