@@ -198,16 +198,14 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
    */
   private _drainConnection(spaceId: SpaceId, connection: EdgeSubductionReplicatorConnection): void {
     this._drainingConnections.add(connection);
-    const drain = async () => {
-      connection.beginDrain();
-      const reason = await connection.waitForDrainQuiescence();
+    const close = async () => {
       if (this._drainingConnections.delete(connection)) {
-        log('drained replaced connection closed', { spaceId, reason });
+        log('replaced connection closed', { spaceId });
         await connection.close();
       }
     };
-    drain().catch((err) => {
-      log.warn('replaced-connection drain failed', { spaceId, err });
+    close().catch((err) => {
+      log.warn('replaced-connection close failed', { spaceId, err });
       if (this._drainingConnections.delete(connection)) {
         void connection.close();
       }
