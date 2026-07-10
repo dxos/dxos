@@ -40,11 +40,11 @@ const OLLAMA_MODEL = 'com.alibaba.model.qwen-2-5-7b.instruct';
  * plain grid of these tokens and each surface resolves the active space via `useActiveSpace()`.
  */
 export const Module = {
-  Controls: Role.make('org.dxos.storybook.inbox.controls'),
-  Mailbox: Role.make('org.dxos.storybook.inbox.mailbox'),
-  Message: Role.make('org.dxos.storybook.inbox.message'),
-  Facts: Role.make('org.dxos.storybook.inbox.facts'),
-  Connector: Role.make('org.dxos.storybook.inbox.connector'),
+  Controls: Role.make<Record<string, any>>('org.dxos.storybook.inbox.controls'),
+  Mailbox: Role.make<Record<string, any>>('org.dxos.storybook.inbox.mailbox'),
+  Message: Role.make<Record<string, any>>('org.dxos.storybook.inbox.message'),
+  Facts: Role.make<Record<string, any>>('org.dxos.storybook.inbox.facts'),
+  Connector: Role.make<Record<string, any>>('org.dxos.storybook.inbox.connector'),
 };
 
 //
