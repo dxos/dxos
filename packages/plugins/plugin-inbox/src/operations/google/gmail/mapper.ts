@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Obj, Ref } from '@dxos/echo';
 import { type Resolver, resolve } from '@dxos/extractor';
 import { log } from '@dxos/log';
+import { normalizeText } from '@dxos/markdown';
 import { ContentBlock, Message, Person } from '@dxos/types';
 
 import { type GoogleMail } from '../../../apis';
@@ -112,6 +113,11 @@ export type DecodedMessage = {
  */
 export const decodeBody = (message: GoogleMail.Message): DecodedMessage | null => {
   const decode = (data: string) => Buffer.from(data, 'base64').toString('utf-8');
+  // A part that decodes to whitespace (or nothing) is treated as absent: some senders emit an empty
+  // `text/plain` alternative alongside the real HTML. Coercing it to `undefined` lets such messages
+  // fall through to the HTML→markdown synthesis in `mapToMessage` instead of storing a blank body.
+  const nonEmpty = (text: string | undefined): string | undefined =>
+    text !== undefined && text.trim().length > 0 ? text : undefined;
   const htmlData = getPart(message, 'text/html');
   const plainData = getPart(message, 'text/plain');
   // Single-part messages carry the body directly on `payload.body`; the Content-Type header says which.
@@ -119,8 +125,8 @@ export const decodeBody = (message: GoogleMail.Message): DecodedMessage | null =
   const isPlain = /text\/plain/i.test(
     message.payload.headers.find((header) => header.name.toLowerCase() === 'content-type')?.value ?? '',
   );
-  const html = htmlData ? decode(htmlData) : singleData && !isPlain ? decode(singleData) : undefined;
-  const plain = plainData ? decode(plainData) : singleData && isPlain ? decode(singleData) : undefined;
+  const html = nonEmpty(htmlData ? decode(htmlData) : singleData && !isPlain ? decode(singleData) : undefined);
+  const plain = nonEmpty(plainData ? decode(plainData) : singleData && isPlain ? decode(singleData) : undefined);
   if (html === undefined && plain === undefined) {
     log('gmail decodeBody: dropping message with no extractable body', {
       id: message.id,
@@ -155,6 +161,12 @@ export const mapToMessage = (decoded: DecodedMessage, contact: Person.Person | u
   }
   if (plain !== undefined) {
     blocks.push({ _tag: 'text', text: plain, mimeType: 'text/plain' });
+  }
+  // HTML-only messages carry no readable body for consumers that don't render HTML (search, LLM
+  // pipelines, the plain view). Synthesize a markdown block from the HTML so every message has a
+  // clean text body regardless of the parts the sender provided.
+  if (plain === undefined && html !== undefined) {
+    blocks.push({ _tag: 'text', text: normalizeText(html), mimeType: 'text/markdown' });
   }
 
   const echoMessage = Obj.make(Message.Message, {
