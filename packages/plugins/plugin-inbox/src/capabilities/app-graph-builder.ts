@@ -32,11 +32,6 @@ const calendarTypename = Type.getTypename(Calendar.Calendar);
 
 const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
 
-// TODO(wittjosiah): Precompute the new-message count rather than deriving it from a feed query. A
-//   windowed query can't count past the window (it saturates at the cap), and querying the feed here
-//   pins the client's retention window. The count should be maintained/precomputed off the sync cursor.
-const NEW_MESSAGE_COUNT_WINDOW = 100;
-
 type FeedObjectNodeConfig<Parent extends Obj.Unknown, Child extends Obj.Unknown> = {
   id: string;
   /** Parent ECHO type entity; derives the parent filter and (by default) the path segment name. */
@@ -175,15 +170,6 @@ export default Capability.makeModule(
           return Effect.succeed(
             mailboxes.map((mailbox: Mailbox.Mailbox) => {
               const mailboxSnapshot = get(Obj.atom(mailbox));
-              const feed = mailboxSnapshot.feed ? get(mailboxSnapshot.feed.atom) : undefined;
-              const messages = feed
-                ? get(
-                    space.db.query(
-                      Query.select(Filter.type(Message.Message)).from(feed).limit(NEW_MESSAGE_COUNT_WINDOW),
-                    ).atom,
-                  )
-                : [];
-              const modifiedCount = Mailbox.getNewMessageCount(mailboxSnapshot, messages);
 
               return Node.make({
                 id: mailboxSnapshot.id,
@@ -194,7 +180,7 @@ export default Capability.makeModule(
                   icon: 'ph--tray--regular',
                   iconHue: 'rose',
                   role: 'branch',
-                  modifiedCount,
+                  // New-message badge stubbed pending a real read/unread signal (see Mailbox.ts).
                 },
                 nodes: [
                   Node.make({
