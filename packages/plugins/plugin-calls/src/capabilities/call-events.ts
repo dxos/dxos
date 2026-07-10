@@ -1,0 +1,66 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
+
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Context } from '@dxos/context';
+import { log } from '@dxos/log';
+
+import { CallsCapabilities } from '#types';
+
+/**
+ * Bridges {@link CallManager} lifecycle/state events to every contributed
+ * {@link CallsCapabilities.EventHandler} (e.g. plugin-meeting's call wiring). Handlers are resolved
+ * lazily per event so contributors that activate after this module are still invoked.
+ */
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
+    const ctx = Context.default();
+
+    // Wire subscriptions in a forked effect so this module finishes activating immediately; the
+    // `CallManager` capability activates on the same event, so blocking on it here would stall startup.
+    const fiber = Effect.runFork(
+      Effect.gen(function* () {
+        const manager = yield* Capability.waitFor(CallsCapabilities.Manager);
+        const handlers = () => capabilities.getAll(CallsCapabilities.EventHandler);
+
+        // Handlers may be async; surface rejections instead of dropping them (unhandled promise).
+        const dispatch = (result: Promise<void> | void) => {
+          void Promise.resolve(result).catch((err) => log.catch(err));
+        };
+
+        manager.roomJoined.on(ctx, ({ roomId }) => {
+          for (const handler of handlers()) {
+            dispatch(handler.onJoin?.({ roomId }));
+          }
+        });
+        manager.left.on(ctx, (roomId) => {
+          for (const handler of handlers()) {
+            dispatch(handler.onLeave?.(roomId));
+          }
+        });
+        manager.callStateUpdated.on(ctx, (state) => {
+          for (const handler of handlers()) {
+            dispatch(handler.onCallStateUpdated?.(state));
+          }
+        });
+        manager.mediaStateUpdated.on(ctx, (state) => {
+          for (const handler of handlers()) {
+            dispatch(handler.onMediaStateUpdated?.(state));
+          }
+        });
+      }).pipe(Effect.provideService(Capability.Service, capabilities)),
+    );
+
+    return Capability.contributes(Capabilities.Null, null, () =>
+      Effect.gen(function* () {
+        yield* Fiber.interrupt(fiber);
+        yield* Effect.promise(() => ctx.dispose());
+      }),
+    );
+  }),
+);

@@ -7,47 +7,35 @@
 import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
-import { type Space } from '@dxos/client/echo';
-import { type Feed } from '@dxos/echo';
 import { type EntityLookup as EntityLookupFn } from '@dxos/pipeline-transcription';
-import { type Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
 import * as SettingsModule from './Settings';
 
-/**
- * Enriches a transcript message before it is written to the feed (e.g. entity linking).
- */
-export type TranscriptMessageEnricher = (message: Message.Message) => Promise<Message.Message>;
-
-/**
- * Service contract for the meeting transcription manager. Consumers (e.g. plugin-meeting) depend on
- * this interface via the {@link TranscriptionManagerProvider} capability, not on the concrete
- * implementation, keeping the manager's browser/SDK dependencies out of consumer packages.
- */
-export interface TranscriptionManager {
-  readonly enabled: Atom.Atom<boolean>;
-  setFeed(space: Space, feed: Feed.Feed): void;
-  setAudioTrack(track?: MediaStreamTrack): Promise<void>;
-  setRecording(recording?: boolean): void;
-  setEnabled(enabled: boolean): Promise<void>;
-  open(): Promise<this>;
-  close(): Promise<this>;
-}
-
-export type TranscriptionManagerProviderProps = {
-  messageEnricher?: TranscriptMessageEnricher;
-};
-
-export type TranscriptionManagerProvider = (props: TranscriptionManagerProviderProps) => TranscriptionManager;
-
-export const TranscriptionManagerProvider = Capability.make<TranscriptionManagerProvider>(
-  `${meta.profile.key}.capability.transcription-manager`,
-);
-
 export const Settings = Capability.make<Atom.Writable<SettingsModule.Settings>>(
   `${meta.profile.key}.capability.settings`,
+);
+
+/**
+ * Control surface for a feed written by an active meeting call (native RealtimeKit segments, via
+ * `CallManager`): the current on/off state plus a toggle that switches the meeting-wide transcription.
+ */
+export type ManagedFeedControl = {
+  /** Whether native transcription is currently running for this feed. */
+  enabled: boolean;
+  /** Toggles the meeting's native transcription (broadcast to all participants). */
+  toggle: () => void;
+};
+
+/**
+ * Feeds currently bound to an active meeting call (native RealtimeKit segments, via `CallManager`),
+ * keyed by feed URI. Registered by the meeting wiring while joined. The UI uses this to suppress its
+ * own local recorder for these transcripts (meetings transcribe via the call, not a second per-client
+ * capture) and to drive its toolbar toggle off the meeting-wide state instead.
+ */
+export const ManagedFeeds = Capability.make<Atom.Writable<ReadonlyMap<string, ManagedFeedControl>>>(
+  `${meta.profile.key}.capability.managed-feeds`,
 );
 
 /**

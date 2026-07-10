@@ -81,6 +81,29 @@ export type GetCronTriggersResponse = {
   cronIds: string[];
 };
 
+export type JoinCallRoomRequest = {
+  /** DXN of the object anchoring the call (e.g. a Meeting), used as the swarm room id. */
+  roomId: string;
+  /** HALO device key hex (== swarm `UserState.id`); bound to the RealtimeKit participant. */
+  deviceKey: string;
+  /** Existing meeting id coordinated via the swarm; omitted by the first joiner. */
+  meetingId?: string;
+};
+
+export type JoinCallRoomResponse = {
+  meetingId: string;
+  authToken: string;
+};
+
+export type TranscribeAudioRequest = {
+  /** Base64-encoded WAV payload. */
+  audio: string;
+};
+
+export type TranscribeAudioResponse = {
+  segments: unknown[];
+};
+
 export type EdgeHttpClientOptions = BaseHttpClientOptions;
 
 /**
@@ -491,6 +514,48 @@ export class EdgeHttpClient extends BaseHttpClient {
     args?: EdgeHttpCallArgs,
   ): Promise<ExportBundleResponse> {
     return this._call(ctx, new URL(`/spaces/${spaceId}/export`, this.baseUrl), { ...args, body, method: 'POST' });
+  }
+
+  //
+  // Calls (RealtimeKit).
+  //
+
+  /**
+   * Join a call room: resolves (or creates) the RealtimeKit meeting for the room and mints a participant
+   * auth token bound to the caller's verified identity. Authenticated (verifiable presentation), so
+   * `setIdentity` must have been called. Routes through the edge worker's `/calls/*` proxy (like the AI
+   * provider's `/ai/*`), so this client is constructed with the edge base URL — edge forwards to
+   * calls-service and provides the `/auth` challenge endpoint standalone calls-service lacks.
+   */
+  public async joinCallRoom(
+    ctx: Context,
+    body: JoinCallRoomRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<JoinCallRoomResponse> {
+    return this._call(ctx, new URL('/calls/api/rooms/join', this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
+      auth: true,
+    });
+  }
+
+  /**
+   * Transcribe a WAV audio payload via calls-service's Whisper proxy. Authenticated (verifiable
+   * presentation), so `setIdentity` must have been called. Routes through the edge worker's `/calls/*`
+   * proxy, same as {@link joinCallRoom}.
+   */
+  public async transcribeAudio(
+    ctx: Context,
+    body: TranscribeAudioRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<TranscribeAudioResponse> {
+    return this._call(ctx, new URL('/calls/transcribe', this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
+      auth: true,
+    });
   }
 
   //

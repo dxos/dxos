@@ -2,17 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { WebRTCStats, type WebRTCStatsEvent } from '@peermetrics/webrtc-stats';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { truncateKey } from '@dxos/debug';
-import { JsonView, Panel } from '@dxos/devtools';
-import { log } from '@dxos/log';
+import { Panel } from '@dxos/devtools';
 import { IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { type EncodedTrackName, type GlobalState } from '../../calls';
+import { type EncodedTrackName, type GlobalState, type MediaStats } from '../../calls';
 
 export type CallDebugPanelProps = ThemedClassName<{ state?: GlobalState }>;
 
@@ -21,49 +19,36 @@ export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
 
   const [open, setOpen] = useState(false);
   const handleToggle = () => setOpen(!open);
-  const [showServiceHistory, setShowServiceHistory] = useState(false);
-  const handleToggleServiceHistory = () => setShowServiceHistory(!showServiceHistory);
 
   const handleCopyRaw = async () => {
-    await navigator.clipboard.writeText(JSON.stringify({ users: state?.call?.users, stats }, null, 2));
+    await navigator.clipboard.writeText(JSON.stringify({ users: state?.call?.users }, null, 2));
   };
 
-  const [showDetailedWebRTCStats, setShowDetailedWebRTCStats] = useState(false);
-  const handleShowDetailedWebRTCStats = () => setShowDetailedWebRTCStats(!showDetailedWebRTCStats);
-
-  const webrtcStats = useMemo(
-    () =>
-      new WebRTCStats({
-        getStatsInterval: 1000,
-      }),
-    [],
-  );
-  const [stats, setStats] = useState<WebRTCStatsEvent['data']>();
-
-  useEffect(() => {
-    const pc = state?.media.peer?.session?.peerConnection;
-    const handleStats = (stats: WebRTCStatsEvent) => {
-      setStats(stats.data);
-    };
-    let added = false;
-    if (pc && showDetailedWebRTCStats) {
-      webrtcStats.addConnection({ pc, peerId: 1, connectionId: '1' });
-      webrtcStats.on('stats', handleStats as never);
-      added = true;
-    }
-    return () => {
-      try {
-        if (pc && added) {
-          webrtcStats.removeConnection({ pc });
-          webrtcStats.removeListener('stats', handleStats as never);
-        }
-      } catch (error) {
-        log.error('error removing webrtc stats', { error, pc, peerId: 1, connectionId: '1' });
-      }
-    };
-  }, [state?.media.peer?.session?.peerConnection, showDetailedWebRTCStats]);
-
   const rows = useMemo(() => getCallStatusTable(state), [state?.call.users, state?.media.pulledAudioTracks]);
+
+  // Poll the transport's WebRTC send-side stats (~1s) only while the toggle is on and a session is live.
+  const [showStats, setShowStats] = useState(false);
+  const [stats, setStats] = useState<MediaStats>();
+  const peer = state?.media.peer;
+  useEffect(() => {
+    if (!showStats || !peer?.getStats) {
+      setStats(undefined);
+      return;
+    }
+    let active = true;
+    const poll = () => {
+      peer.getStats!().then(
+        (next) => active && setStats(next),
+        () => {},
+      );
+    };
+    poll();
+    const interval = setInterval(poll, 1_000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [showStats, peer]);
 
   return (
     <Panel
@@ -77,23 +62,16 @@ export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
     >
       <div className='flex flex-col w-full text-xs'>
         <div className='flex items-center gap-2 items-center'>
-          <Input.Root>
-            <Input.Switch checked={showDetailedWebRTCStats} onCheckedChange={handleShowDetailedWebRTCStats} />
-            <Input.Label>{t('show-webrtc-stats.title')}</Input.Label>
-          </Input.Root>
-        </div>
-        <div className='flex items-center gap-2 items-center'>
-          <Input.Root>
-            <Input.Switch checked={showServiceHistory} onCheckedChange={handleToggleServiceHistory} />
-            <Input.Label>{t('show-calls-history.title')}</Input.Label>
-          </Input.Root>
-        </div>
-        <div className='flex items-center gap-2 items-center'>
           <IconButton icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />
+          <Input.Root>
+            <Input.Switch checked={showStats} onCheckedChange={setShowStats} />
+            <Input.Label>{t('show-webrtc-stats.label')}</Input.Label>
+          </Input.Root>
         </div>
         <Table rows={rows} />
-        {showDetailedWebRTCStats && <JsonView data={{ stats }} />}
-        {showServiceHistory && <JsonView data={{ history: state?.media.peer?.history.get() }} />}
+        {showStats && (
+          <pre className='mt-2 max-h-64 overflow-auto whitespace-pre-wrap'>{JSON.stringify(stats ?? {}, null, 2)}</pre>
+        )}
       </div>
     </Panel>
   );
@@ -108,16 +86,13 @@ const getCallStatusTable = (state?: GlobalState): TableProps['rows'] => {
   const users = state.call.users
     .filter((user) => user.id !== self!.id)
     .map((user) => {
+      // A track is "ok" when it is present in the pulled cache: the event-driven sync only caches live remote
+      // tracks and drops them when the peer leaves, so presence alone means it is currently playable.
       const isOk = {
-        audio:
-          user.tracks?.audio &&
-          state.media.pulledAudioTracks[user.tracks?.audio as EncodedTrackName]?.ctx.disposed === false,
-        video:
-          user.tracks?.video &&
-          state.media.pulledVideoStreams[user.tracks?.video as EncodedTrackName]?.ctx.disposed === false,
+        audio: user.tracks?.audio && !!state.media.pulledAudioTracks[user.tracks?.audio as EncodedTrackName],
+        video: user.tracks?.video && !!state.media.pulledVideoStreams[user.tracks?.video as EncodedTrackName],
         screenshare:
-          user.tracks?.screenshare &&
-          state.media.pulledVideoStreams[user.tracks?.screenshare as EncodedTrackName]?.ctx.disposed === false,
+          user.tracks?.screenshare && !!state.media.pulledVideoStreams[user.tracks?.screenshare as EncodedTrackName],
       };
 
       return {
@@ -145,7 +120,6 @@ const getCallStatusTable = (state?: GlobalState): TableProps['rows'] => {
       user.isOk.video ? 'VID ✅' : 'VID ❌',
       user.tracks?.screenshareEnabled ? (user.isOk.screenshare ? 'SCR ✅' : 'SCR ❌') : undefined,
     ]),
-    ['ICE', state.media.peer?.session?.peerConnection.iceConnectionState ?? 'no connection'],
   ];
 };
 

@@ -60,7 +60,9 @@ const CALL_VIEWPORT_NAME = 'Call.Viewport';
 
 /** Composable container for the call surface (participant grid + overlays). */
 const CallViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => (
-  <div {...composableProps(props, { classNames: 'relative dx-container flex flex-col' })} ref={forwardedRef}>
+  // `group` anchors the auto-hiding toolbar's `group-hover` reveal (see Call/Lobby `Toolbar`). Without a
+  // `.group` ancestor the controls stay `opacity-0` forever; this restores what the removed `Lobby.Root` provided.
+  <div {...composableProps(props, { classNames: 'relative dx-container flex flex-col group' })} ref={forwardedRef}>
     {children}
   </div>
 ));

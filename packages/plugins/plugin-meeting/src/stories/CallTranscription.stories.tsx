@@ -4,13 +4,13 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
@@ -19,9 +19,8 @@ import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
-import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
 import { Config } from '@dxos/react-client';
-import { getSpace, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -29,6 +28,22 @@ import { Transcript } from '@dxos/types';
 
 import { MeetingPlugin } from '../MeetingPlugin';
 import { Meeting } from '../types';
+
+//
+// LIVE story: this joins a real Cloudflare RealtimeKit meeting through the edge and streams native
+// transcription into the meeting's transcript feed. It requires a network + microphone and is NOT a CI
+// test (nothing runs until the toolbar buttons are clicked).
+//
+// The join routes through the edge worker's `/calls/*` proxy (which forwards to calls-service and
+// provides `/auth`), so EDGE_URL must point at an edge deployment carrying that proxy + the RealtimeKit
+// join route (dxos/edge#685). For local end-to-end, run the edge dev stack
+// (`DX_PARALLEL_WRANGLER_DEV=1 START_HUB=1 START_CALLS=1 moon run edge:dev`) and set EDGE_URL to
+// http://localhost:8787/. CALLS_URL only backs the direct `/transcribe` endpoint (unused by native
+// meeting transcription).
+//
+const LOCAL = true;
+const EDGE_URL = LOCAL ? 'http://localhost:8787/' : 'https://edge.dxos.workers.dev/';
+const CALLS_URL = 'https://calls-service.dxos.workers.dev';
 
 type StoryArgs = {};
 
@@ -51,84 +66,68 @@ type CallTranscriptionViewProps = {
 };
 
 /**
- * Two-column live view: the call's video/participant grid beside the meeting hub whose Transcript
- * tab reflects the live transcript feed. A story-local toolbar joins the call and toggles recording.
+ * Two-column live view: the call's video/participant grid beside the meeting hub whose Transcript tab
+ * reflects the live feed. The toolbar drives the real production path — `callManager.join()` establishes
+ * the RealtimeKit meeting via the edge, and toggling transcription publishes the meeting activity that
+ * enables native transcription; segments then flow through the call-extension bridge into the feed.
  */
 const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewProps) => {
   const callManager = useCapabilities(CallsCapabilities.Manager)[0];
-  const transcriptionManagerProvider = useCapabilities(TranscriptionCapabilities.TranscriptionManagerProvider)[0];
   const roomId = Obj.getURI(meeting);
 
-  const space = getSpace(transcript);
-  const feed = transcript.feed.target;
+  const [joined, setJoined] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
 
-  // Create the same TranscriptionManager service that plugin-meeting uses in production (via the
-  // call-extension) and bind it to the transcript's feed; the story drives it directly.
-  const managerRef = useRef<TranscriptionCapabilities.TranscriptionManager | undefined>(undefined);
-  useEffect(() => {
-    if (!transcriptionManagerProvider || !space || !feed) {
-      return;
-    }
-    const manager = transcriptionManagerProvider({});
-    manager.setFeed(space, feed);
-    void manager.open();
-    managerRef.current = manager;
-    return () => {
-      void manager.close();
-      managerRef.current = undefined;
-    };
-  }, [transcriptionManagerProvider, space, feed]);
-
-  // Toggle mic capture into the manager (production sources the track from the call instead).
-  const [recording, setRecording] = useState(false);
-  const trackRef = useRef<MediaStreamTrack | undefined>(undefined);
-  const toggleRecording = useCallback(async () => {
-    const manager = managerRef.current;
-    if (!manager) {
-      return;
-    }
-    if (recording) {
-      manager.setRecording(false);
-      await manager.setAudioTrack(undefined);
-      trackRef.current?.stop();
-      trackRef.current = undefined;
-      setRecording(false);
-    } else {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true }).catch((err) => log.catch(err));
-      const track = stream?.getAudioTracks()[0];
-      if (!track) {
-        return;
-      }
-      trackRef.current = track;
-      await manager.setEnabled(true);
-      await manager.setAudioTrack(track);
-      manager.setRecording(true);
-      setRecording(true);
-    }
-  }, [recording]);
-
-  const handleStartCall = useCallback(async () => {
+  const handleToggleCall = useCallback(async () => {
     if (!callManager) {
       return;
     }
-    callManager.setRoomId(roomId);
-    await callManager.join().catch((err) => log.catch(err));
-  }, [callManager, roomId]);
+    if (joined) {
+      await callManager.leave().catch((err) => log.catch(err));
+      setJoined(false);
+      setTranscribing(false);
+    } else {
+      callManager.setRoomId(roomId);
+      await callManager.join().catch((err) => log.catch(err));
+      setJoined(true);
+    }
+  }, [callManager, joined, roomId]);
+
+  const handleToggleTranscription = useCallback(async () => {
+    if (!callManager) {
+      return;
+    }
+    // Mirrors the meeting graph action: publish the meeting activity so `handle-payload` binds the feed
+    // and enables transcription; the call manager then writes its own native segments straight to that feed.
+    const feed = transcript.feed.target;
+    const feedUri = feed && Feed.getFeedUri(feed);
+    if (!feedUri) {
+      log.warn('transcript feed has no feed URI');
+      return;
+    }
+    const next = !transcribing;
+    callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
+      meetingId: roomId,
+      transcriptDxn: feedUri.toString(),
+      transcriptionEnabled: next,
+    });
+    setTranscribing(next);
+  }, [callManager, transcribing, transcript, roomId]);
 
   return (
     <div className='dx-container flex flex-col gap-2'>
       <Toolbar.Root>
         <IconButton
-          icon='ph--phone-call--regular'
-          label='Start call'
+          icon={joined ? 'ph--phone-x--regular' : 'ph--phone-call--regular'}
+          label={joined ? 'Leave call' : 'Start call'}
           disabled={!callManager}
-          onClick={handleStartCall}
+          onClick={handleToggleCall}
         />
-        {/* TODO(burdon): Replace with MicButton. */}
         <IconButton
-          icon={recording ? 'ph--stop--regular' : 'ph--microphone--regular'}
-          label={recording ? 'Stop transcription' : 'Start transcription'}
-          onClick={toggleRecording}
+          icon={transcribing ? 'ph--subtitles-slash--regular' : 'ph--subtitles--regular'}
+          label={transcribing ? 'Stop transcription' : 'Start transcription'}
+          disabled={!joined}
+          onClick={handleToggleTranscription}
         />
       </Toolbar.Root>
       <div className='grid grid-cols-2 gap-2 grow min-bs-0'>
@@ -158,12 +157,12 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: [Feed.Feed, Transcript.Transcript, Meeting.Meeting, Text.Text],
-          // CallManager requires the edge service config to construct (it throws otherwise).
+          // CallManager requires the edge service config to construct; the calls-service override points
+          // the RealtimeKit join route (edge#685) at a deployment that serves it.
           config: new Config({
             runtime: {
               services: {
-                edge: { url: 'https://edge.dxos.workers.dev/' },
-                iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+                edge: { url: EDGE_URL },
               },
             },
           }),

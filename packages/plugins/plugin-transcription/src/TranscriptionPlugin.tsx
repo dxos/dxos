@@ -10,6 +10,7 @@ import { Transcript } from '@dxos/types';
 import {
   AppGraphBuilder,
   EntityLookup,
+  ManagedFeeds,
   MarkdownExtension,
   OperationHandler,
   PipelineStatus,
@@ -17,7 +18,6 @@ import {
   RecordingSession,
   SkillDefinition,
   TextContent,
-  Transcriber,
   TranscriptionDriver,
   TranscriptionSettings,
 } from '#capabilities';
@@ -38,11 +38,6 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addReactContextModule({ activate: TranscriptionDriver }),
   Plugin.addModule({
-    id: 'transcription',
-    activatesOn: AppActivationEvents.SetupAppGraph,
-    activate: Transcriber,
-  }),
-  Plugin.addModule({
     id: 'entity-lookup',
     activatesOn: AppActivationEvents.SetupAppGraph,
     activate: EntityLookup,
@@ -51,6 +46,11 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
     id: 'recording-session',
     activatesOn: AppActivationEvents.SetupSettings,
     activate: RecordingSession,
+  }),
+  Plugin.addModule({
+    id: 'managed-feeds',
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: ManagedFeeds,
   }),
   Plugin.addModule({
     id: 'pipeline-status',

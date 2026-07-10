@@ -4,7 +4,7 @@
 
 import md5Hex from 'md5-hex';
 
-import { DeferredTask, Event, scheduleTaskInterval, synchronized } from '@dxos/async';
+import { DeferredTask, Event, scheduleTask, sleep, synchronized } from '@dxos/async';
 import { type Identity } from '@dxos/client/halo';
 import { Context, Resource } from '@dxos/context';
 import { generateName } from '@dxos/display-name';
@@ -58,6 +58,20 @@ export type CallSwarmSynchronizerProps = { networkService: NetworkService };
 const DISCONNECTED_ABRUPT_TIMEOUT = 10_000; // [ms]
 
 /**
+ * Swarm activity key under which the room's RealtimeKit meeting id is advertised. The first joiner mints
+ * the meeting and advertises it here (CRDT last-write-wins); late joiners read it to share one session.
+ */
+export const MEETING_ACTIVITY_KEY = 'dxos.org/plugin-calls/realtimekit-meeting';
+
+/**
+ * When another peer is present but has not advertised a meeting id yet (concurrent first-join), poll this
+ * many times at this interval before minting our own — long enough for the creator's early advertisement
+ * to arrive, short enough not to stall a real first joiner materially.
+ */
+const MEETING_RESOLVE_ATTEMPTS = 6;
+const MEETING_RESOLVE_INTERVAL = 400; // [ms]
+
+/**
  * Sends and receives state to/from Swarm network.
  */
 export class CallSwarmSynchronizer extends Resource {
@@ -67,8 +81,11 @@ export class CallSwarmSynchronizer extends Resource {
   private readonly _networkService: NetworkService;
   private _lastSwarmEvent?: SwarmResponse = undefined;
   private _reconcileSwarmStateTask?: DeferredTask = undefined;
+  // A single pending inactive-peer re-check (see `_reconcileSwarmState`); reset on `leave()`.
+  #inactivePeerRecheckPending = false;
 
   private _identityKey?: string = undefined;
+  private _identityDid?: string = undefined;
   private _deviceKey?: string = undefined;
   private _displayName?: string = undefined;
 
@@ -122,7 +139,8 @@ export class CallSwarmSynchronizer extends Resource {
 
   setActivity(key: string, payload: ActivityState['payload']): void {
     const lamportTimestamp = LamportTimestampCrdt.increment(
-      this._state.activities?.[key]?.lamportTimestamp ?? { id: this._deviceKey },
+      this._state.activities?.[key]?.lamportTimestamp,
+      this._deviceKey,
     );
     this._state.activities![key] = { lamportTimestamp, payload };
 
@@ -134,6 +152,7 @@ export class CallSwarmSynchronizer extends Resource {
    */
   _setIdentity(identity: Identity): void {
     this._identityKey = identity.identityKey.toHex();
+    this._identityDid = identity.did;
     this._displayName = identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
   }
 
@@ -184,12 +203,13 @@ export class CallSwarmSynchronizer extends Resource {
 
     const cleanup = () => {
       void stream.close();
-      if (topic && this._identityKey && this._deviceKey) {
-        log('leaving swarm', { topic, peer: { identityKey: this._identityKey, peerKey: this._deviceKey } });
+      if (topic && this._identityDid && this._deviceKey) {
+        // DX-1059: senders write `identityDid` only (see `_sendState`).
+        log('leaving swarm', { topic, peer: { identityDid: this._identityDid, peerKey: this._deviceKey } });
         void this._networkService
           .leaveSwarm({
             topic,
-            peer: { identityKey: this._identityKey, peerKey: this._deviceKey },
+            peer: { identityDid: this._identityDid, peerKey: this._deviceKey },
           })
           .catch((err) => log.catch(err));
       }
@@ -212,12 +232,67 @@ export class CallSwarmSynchronizer extends Resource {
 
     this._state.users = undefined;
     this._state.self = undefined;
+    // Otherwise a rejoin's `resolveMeetingId` can read this device's own stale advertisement (re-sent by
+    // `_sendState` before a fresh one is published) and reuse an already-torn-down RealtimeKit meeting.
+    delete this._state.activities?.[MEETING_ACTIVITY_KEY];
+    // The snapshot belongs to the session being left; a straggling reconcile must not repopulate
+    // users/self/activities from it after the clears above.
+    this._lastSwarmEvent = undefined;
+    this.#inactivePeerRecheckPending = false;
   }
 
   async querySwarm(roomId: string) {
     const topic = getTopic(roomId);
     const swarm = await this._networkService.querySwarm({ topic });
     return swarm.peers ?? [];
+  }
+
+  /**
+   * Resolve the RealtimeKit meeting id for the room so all participants share one SFU session. Returns an
+   * id already advertised by a peer, or `undefined` to signal this peer should mint one. When other peers
+   * are present but none has advertised yet (a concurrent first-join), polls briefly to let the creator
+   * publish before we mint a competing meeting. A lone joiner returns immediately (no added latency).
+   */
+  async resolveMeetingId(roomId: string): Promise<string | undefined> {
+    for (let attempt = 0; attempt < MEETING_RESOLVE_ATTEMPTS; attempt++) {
+      const peers = await this.querySwarm(roomId);
+      const advertised = this.#readAdvertisedMeetingId(peers);
+      const others = peers.filter((peer) => peer.peerKey !== this._deviceKey).length;
+      log.info('resolveMeetingId', { roomId, attempt, others, advertised });
+      if (advertised) {
+        return advertised;
+      }
+      if (others === 0) {
+        return undefined;
+      }
+      await sleep(MEETING_RESOLVE_INTERVAL);
+    }
+    return undefined;
+  }
+
+  /** Advertise the room's RealtimeKit meeting id via the swarm so late joiners converge on it. */
+  advertiseMeetingId(meetingId: string): void {
+    log.info('advertiseMeetingId', { meetingId });
+    this.setActivity(MEETING_ACTIVITY_KEY, { meetingId });
+  }
+
+  #readAdvertisedMeetingId(peers: SwarmResponse['peers']): string | undefined {
+    for (const peer of peers ?? []) {
+      // Self's own advertisement is not external confirmation that a meeting exists — reading it back
+      // would let a rejoin resolve to a meeting id this same device already tore down.
+      if (!peer.state || peer.peerKey === this._deviceKey) {
+        continue;
+      }
+      try {
+        const meetingId = codec.decode(peer.state).activities?.[MEETING_ACTIVITY_KEY]?.payload?.meetingId;
+        if (typeof meetingId === 'string' && meetingId.length > 0) {
+          return meetingId;
+        }
+      } catch (err) {
+        log.warn('failed to decode peer state during meeting id query', { err });
+      }
+    }
+    return undefined;
   }
 
   /**
@@ -231,7 +306,7 @@ export class CallSwarmSynchronizer extends Resource {
   }
 
   private async _sendState(): Promise<void> {
-    if (!this._state.roomId || !this._identityKey || !this._deviceKey || !this._state.joined) {
+    if (!this._state.roomId || !this._identityKey || !this._identityDid || !this._deviceKey || !this._state.joined) {
       return;
     }
 
@@ -252,7 +327,9 @@ export class CallSwarmSynchronizer extends Resource {
     await this._networkService.joinSwarm({
       topic: getTopic(this._state.roomId),
       peer: {
-        identityKey: this._identityKey,
+        // DX-1059: `identityDid` is the only identity field senders write; the edge validates
+        // `source.identityDid` and rejects a peer that omits it with `EdgeIdentityChangedError`.
+        identityDid: this._identityDid,
         peerKey: this._deviceKey,
         state: codec.encode(state),
       },
@@ -269,8 +346,14 @@ export class CallSwarmSynchronizer extends Resource {
   }
 
   private async _reconcileSwarmState(): Promise<void> {
+    // A reconcile can land after `leave()` (scheduled before it, or via the inactive-peer re-check);
+    // mutating state from the stale snapshot would resurrect what `leave()` cleared — most harmfully
+    // the meeting advertisement, which a rejoin's `_sendState` would then re-broadcast to real peers.
     const swarmEvent = this._lastSwarmEvent;
-    invariant(swarmEvent);
+    const swarmCtx = this._swarmCtx;
+    if (!swarmEvent || !swarmCtx || !this._state.joined) {
+      return;
+    }
     // We include inactive peers that were disconnected abruptly and have not yet reconnected to not drop them from call.
     // Websocket connection could be unstable and we include graceful period for peers to reconnect.
     const peers = [
@@ -299,24 +382,35 @@ export class CallSwarmSynchronizer extends Resource {
       return;
     }
 
-    const activityKeys = new Set<string>(users.flatMap((user) => Object.keys(user.activities)));
+    // Merge only remote peers' activities: our own are authoritative locally (written via
+    // `setActivity`), and a stale echo of our own entry (server-cached after the fire-and-forget
+    // swarm leave, or a pre-leave snapshot) must not re-introduce deleted state — symmetric with the
+    // self-exclusion in `#readAdvertisedMeetingId`.
+    const remoteUsers = users.filter((user) => user.id !== this._deviceKey);
+    const activityKeys = new Set<string>(remoteUsers.flatMap((user) => Object.keys(user.activities)));
     [...activityKeys].forEach((key) => {
-      const activities = users.map((user) => user.activities?.[key]).filter(isNonNullable);
+      const activities = remoteUsers.map((user) => user.activities?.[key]).filter(isNonNullable);
       const lastActivity = LamportTimestampCrdt.getLastState(activities);
       if (
         lastActivity &&
-        lastActivity.lamportTimestamp!.version! > (this._state.activities![key]?.lamportTimestamp?.version ?? 0)
+        LamportTimestampCrdt.supersedes(lastActivity.lamportTimestamp, this._state.activities?.[key]?.lamportTimestamp)
       ) {
         this._state.activities![key] = lastActivity;
       }
     });
     this.stateUpdated.emit(this._state);
 
-    // Schedule next reconcile if there are inactive peer to drop them after timeout.
-    if (peers.some((peer) => peer.connectionState !== ConnectionState.CONNECTED)) {
-      scheduleTaskInterval(
-        this._ctx,
-        async () => this._reconcileSwarmStateTask!.schedule(),
+    // Re-check while inactive peers are present so they drop off after the grace timeout. A single
+    // pending re-check, bound to the swarm session so leaving cancels it — an unconditional repeating
+    // interval would stack one instance per reconcile pass and keep firing after the call ends.
+    if (!this.#inactivePeerRecheckPending && peers.some((peer) => peer.connectionState !== ConnectionState.CONNECTED)) {
+      this.#inactivePeerRecheckPending = true;
+      scheduleTask(
+        swarmCtx,
+        async () => {
+          this.#inactivePeerRecheckPending = false;
+          this._reconcileSwarmStateTask?.schedule();
+        },
         Math.min(DISCONNECTED_ABRUPT_TIMEOUT / 2, 1000),
       );
     }
@@ -338,9 +432,37 @@ class LamportTimestampCrdt {
     return sortedStates[0];
   }
 
-  static increment(timestamp: LamportTimestamp): LamportTimestamp {
+  /**
+   * Total order over activity writes: higher version wins; equal versions tie-break on the writer id
+   * (lexicographically smallest — the same order `getLastState` uses). Without the tie-break, two peers
+   * that wrote the same version concurrently (both writers start at 1) would each keep their own value
+   * forever and never converge — e.g. one peer's transcription toggle losing to the other's bare
+   * meeting selection on half the replicas.
+   */
+  static supersedes(candidate: LamportTimestamp | undefined, current: LamportTimestamp | undefined): boolean {
+    if (!candidate) {
+      return false;
+    }
+    if (!current) {
+      return true;
+    }
+    const candidateVersion = candidate.version ?? 0;
+    const currentVersion = current.version ?? 0;
+    if (candidateVersion !== currentVersion) {
+      return candidateVersion > currentVersion;
+    }
+    // Same writer at the same version is the same write echoed back, not a concurrent one.
+    if (!candidate.id || !current.id || candidate.id === current.id) {
+      return false;
+    }
+    return candidate.id.localeCompare(current.id) < 0;
+  }
+
+  static increment(timestamp: LamportTimestamp | undefined, writerId: string | undefined): LamportTimestamp {
     return {
-      ...(timestamp ?? {}),
+      // The incrementing peer is the author of the new write: keeping the previous writer's id would
+      // corrupt the equal-version tie-break (two distinct writers appearing as one).
+      id: writerId,
       version: (timestamp?.version ?? 0) + 1,
     };
   }

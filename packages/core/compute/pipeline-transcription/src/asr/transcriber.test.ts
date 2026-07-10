@@ -4,8 +4,11 @@
 
 import { describe, test } from 'vitest';
 
-import { type AudioChunk } from './audio-recorder';
-import { type WhisperSegment, alignWhisperSegments } from './transcriber';
+import { Trigger } from '@dxos/async';
+import { type ContentBlock } from '@dxos/types';
+
+import { type AudioChunk, type AudioRecorder } from './audio-recorder';
+import { type TranscribeFn, Transcriber, type WhisperSegment, alignWhisperSegments } from './transcriber';
 
 const T0 = Date.parse('2026-01-01T00:00:00.000Z');
 
@@ -102,3 +105,95 @@ describe('alignWhisperSegments', () => {
     expect(result.transcripts[0].text).toBe('fresh');
   });
 });
+
+describe('Transcriber', () => {
+  test('delivers transcribed segments on flush', async ({ expect }) => {
+    const transcribe: TranscribeFn = async () => [
+      segment({ text: 'hello', start: 0, end: 1, words: [{ word: 'hello', start: 0, end: 1 }] }),
+    ];
+    const { recorder, transcriber, delivered } = setup(transcribe);
+    await transcriber.open();
+    transcriber.startChunksRecording();
+    recorder.emitChunk(chunk(0));
+
+    await transcriber.flush();
+    expect(delivered).toHaveLength(1);
+    expect(delivered[0][0].text).toBe('hello');
+    await transcriber.close();
+  });
+
+  test('abort() cancels the in-flight request and drops the batch', async ({ expect }) => {
+    const requestStarted = new Trigger();
+    let capturedSignal: AbortSignal | undefined;
+    const transcribe: TranscribeFn = (_audio, options) => {
+      capturedSignal = options?.signal;
+      requestStarted.wake();
+      // Models a fetch-like transport: rejects when the signal fires.
+      return new Promise((_resolve, reject) => {
+        options?.signal?.addEventListener('abort', () => reject(new Error('cancelled')));
+      });
+    };
+    const { recorder, transcriber, delivered } = setup(transcribe);
+    await transcriber.open();
+    transcriber.startChunksRecording();
+    recorder.emitChunk(chunk(0));
+
+    const flushed = transcriber.flush();
+    await requestStarted.wait();
+    transcriber.abort();
+    await flushed;
+    expect(capturedSignal?.aborted).toBe(true);
+    expect(delivered).toHaveLength(0);
+    await transcriber.close();
+  });
+
+  test('segments resolving after close() are not delivered', async ({ expect }) => {
+    const requestStarted = new Trigger();
+    let resolveRequest: ((segments: WhisperSegment[]) => void) | undefined;
+    const transcribe: TranscribeFn = () => {
+      requestStarted.wake();
+      // Ignores the abort signal — models a response already in flight when close() runs.
+      return new Promise((resolve) => {
+        resolveRequest = resolve;
+      });
+    };
+    const { recorder, transcriber, delivered } = setup(transcribe);
+    await transcriber.open();
+    transcriber.startChunksRecording();
+    recorder.emitChunk(chunk(0));
+
+    const flushed = transcriber.flush();
+    await requestStarted.wait();
+    await transcriber.close();
+    resolveRequest?.([segment({ text: 'late', start: 0, end: 1, words: [{ word: 'late', start: 0, end: 1 }] })]);
+    await flushed;
+    expect(delivered).toHaveLength(0);
+  });
+});
+
+const stubRecorder = (): AudioRecorder & { emitChunk: (chunk: AudioChunk) => void } => {
+  let onChunk: ((chunk: AudioChunk) => void) | undefined;
+  return {
+    wavConfig: { channels: 1, sampleRate: 16_000, bitDepthCode: '16' },
+    setOnChunk: (callback) => {
+      onChunk = callback;
+    },
+    start: async () => {},
+    stop: async () => {},
+    emitChunk: (audioChunk) => onChunk?.(audioChunk),
+  };
+};
+
+const setup = (transcribe: TranscribeFn) => {
+  const recorder = stubRecorder();
+  const delivered: ContentBlock.Transcript[][] = [];
+  const transcriber = new Transcriber({
+    config: { transcribeAfterChunksAmount: 100, prefixBufferChunksAmount: 10 },
+    recorder,
+    transcribe,
+    onSegments: async (segments) => {
+      delivered.push(segments);
+    },
+  });
+  return { recorder, transcriber, delivered };
+};

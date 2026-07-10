@@ -7,6 +7,7 @@ import type { OperationHandlerSet } from '@dxos/compute';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export const EntityLookup = Capability.lazy('EntityLookup', () => import('./entity-lookup'));
+export const ManagedFeeds = Capability.lazy('ManagedFeeds', () => import('./managed-feeds'));
 export const MarkdownExtension = Capability.lazy('MarkdownExtension', () => import('./markdown-extension'));
 export const PipelineStatus = Capability.lazy('PipelineStatus', () => import('./pipeline-status'));
 export const RecordingSession = Capability.lazy('RecordingSession', () => import('./recording-session'));
@@ -18,5 +19,4 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   () => import('./operation-handler'),
 );
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const Transcriber = Capability.lazy('Transcriber', () => import('./transcriber'));
 export const TranscriptionSettings = Capability.lazy('TranscriptionSettings', () => import('./settings'));

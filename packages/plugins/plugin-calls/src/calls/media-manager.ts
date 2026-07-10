@@ -4,19 +4,13 @@
 
 import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
 import { SpeakingMonitor } from '@dxos/av';
-import { type Context, Resource, cancelWithContext } from '@dxos/context';
+import { Resource, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { type MediaTransport } from './media-transport';
 import { type EncodedTrackName, TrackNameCodec, type TrackObject } from './types';
-import {
-  type CallsServiceConfig,
-  CallsServicePeer,
-  createBlackCanvasStreamTrack,
-  createInaudibleAudioStreamTrack,
-  getScreenshare,
-  getUserMediaTrack,
-} from './util';
+import { getUserMediaTrack } from './util';
 
 export type MediaState = {
   audioDeviceId?: string;
@@ -35,13 +29,13 @@ export type MediaState = {
   pushedVideoTrack?: TrackObject;
   pushedAudioTrack?: TrackObject;
   pushedScreenshareTrack?: TrackObject;
-  peer?: CallsServicePeer;
+  peer?: MediaTransport;
 
-  pulledAudioTracks: Record<EncodedTrackName, { track: MediaStreamTrack; ctx: Context }>;
+  pulledAudioTracks: Record<EncodedTrackName, MediaStreamTrack>;
   /**
    * Includes video feeds and screenshare feeds of other participants.
    */
-  pulledVideoStreams: Record<EncodedTrackName, { stream: MediaStream; ctx: Context }>;
+  pulledVideoStreams: Record<EncodedTrackName, MediaStream>;
 };
 
 // TOOD(burdon): Hard coded.
@@ -50,12 +44,6 @@ const VIDEO_HEIGHT = 720;
 const MAX_WEB_CAM_FRAMERATE = 24;
 const MAX_WEB_CAM_BITRATE = 120_0000;
 const RETRY_INTERVAL = 100;
-
-export type MediaManagerProps = {
-  serviceConfig: CallsServiceConfig;
-};
-
-const USE_INAUDIBLE_AUDIO = true;
 
 export class MediaManager extends Resource {
   public readonly stateUpdated = new Event<MediaState>();
@@ -66,11 +54,8 @@ export class MediaManager extends Resource {
   };
 
   private _speakingMonitor?: SpeakingMonitor = undefined;
-  private _trackToReconcile: EncodedTrackName[] = [];
-  private _blackCanvasStreamTrack?: MediaStreamTrack = undefined;
-  private _inaudibleAudioStreamTrack?: MediaStreamTrack = undefined;
   private _pushTracksTask?: DeferredTask = undefined;
-  private _pullTracksTask?: DeferredTask = undefined;
+  private _mediaChangeUnsubscribe?: () => void = undefined;
 
   get isSpeaking() {
     return this._speakingMonitor?.isSpeaking;
@@ -84,37 +69,11 @@ export class MediaManager extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    this._state.videoStream = new MediaStream();
-
-    // The black-canvas and inaudible-audio placeholder tracks are only consumed once a call is
-    // active (they stand in for a disabled camera/mic). They rely on `canvas.captureStream()` and
-    // `AudioContext`, which are absent or non-functional in some headless browsers (notably the
-    // Playwright Linux WebKit build). Their creation must therefore not be able to fail activation:
-    // otherwise a browser that merely can't do calls would take down every plugin that shares the
-    // activation chain (surfacing as the app's fatal error dialog). Degrade to no placeholders.
-    try {
-      this._blackCanvasStreamTrack = await createBlackCanvasStreamTrack({
-        ctx: this._ctx,
-        width: VIDEO_WIDTH,
-        height: VIDEO_HEIGHT,
-      });
-
-      this._state.videoTrack = this._blackCanvasStreamTrack;
-      this._state.videoStream.addTrack(this._state.videoTrack);
-
-      if (USE_INAUDIBLE_AUDIO) {
-        this._inaudibleAudioStreamTrack = await createInaudibleAudioStreamTrack({ ctx: this._ctx });
-        this._state.audioTrack = this._inaudibleAudioStreamTrack;
-      }
-    } catch (err) {
-      log.warn('failed to create placeholder media tracks; calls will be unavailable', { err });
-    }
-
+    // Camera and mic start disabled and unpublished. `turnVideoOn`/`turnAudioOn` acquire and publish the real
+    // tracks on demand, and off maps to `disableVideo`/`disableAudio` — RealtimeKit's native enable/disable
+    // model, so no black-canvas / inaudible placeholder tracks are needed.
     this._pushTracksTask = new DeferredTask(this._ctx, async () => {
       await this._pushTracks();
-    });
-    this._pullTracksTask = new DeferredTask(this._ctx, async () => {
-      await this._reconcilePulledMedia();
     });
   }
 
@@ -125,21 +84,26 @@ export class MediaManager extends Resource {
     this._state.videoTrack?.stop();
     this._state.screenshareTrack?.stop();
     this._pushTracksTask = undefined;
-    this._pullTracksTask = undefined;
   }
 
   @synchronized
-  async join(serviceConfig: CallsServiceConfig): Promise<void> {
-    this._state.peer = new CallsServicePeer(serviceConfig);
-    await this._state.peer!.open();
+  async join(transport: MediaTransport): Promise<void> {
+    this._state.peer = transport;
+    await this._state.peer.open();
+    // Remote tracks are pulled purely in response to transport media-change events (participant join/leave or
+    // a track toggled/replaced) — never speculatively from the swarm. On each event we re-snapshot the roster
+    // and reconcile the cache; the swarm is only consulted at the UI layer to pick which cached stream to show.
+    this._mediaChangeUnsubscribe = transport.subscribeMediaChanges(() => this._syncRemoteTracks());
+    // Initial sync catches participants already present when we joined (no event fires for those).
+    this._syncRemoteTracks();
     this._pushTracksTask!.schedule();
   }
 
   @synchronized
   async leave(): Promise<void> {
-    await Promise.all(Object.values(this._state.pulledAudioTracks).map(({ ctx }) => ctx.dispose()));
-    await Promise.all(Object.values(this._state.pulledVideoStreams).map(({ ctx }) => ctx.dispose()));
-    this._trackToReconcile = [];
+    this._mediaChangeUnsubscribe?.();
+    this._mediaChangeUnsubscribe = undefined;
+    // Drop the pulled records; never stop the remote tracks (the transport owns them and stops them on close).
     await this._state.peer?.close();
     this._state.peer = undefined;
     this._state.pushedVideoTrack = undefined;
@@ -150,9 +114,14 @@ export class MediaManager extends Resource {
   }
 
   async turnVideoOn(): Promise<void> {
-    this._state.videoStream!.removeTrack(this._state.videoTrack!);
-    this._state.videoTrack = await getUserMediaTrack('videoinput', { width: VIDEO_WIDTH, height: VIDEO_HEIGHT });
-    this._state.videoStream!.addTrack(this._state.videoTrack);
+    // Acquire the camera before mutating state: if `getUserMedia` is slow or rejects (camera busy/denied),
+    // the previous self-view keeps rendering and `videoEnabled` stays false, rather than blanking the tile
+    // and leaving inconsistent state (the source of "toggle makes video disappear").
+    const nextTrack = await getUserMediaTrack('videoinput', { width: VIDEO_WIDTH, height: VIDEO_HEIGHT });
+    this._state.videoTrack?.stop();
+    this._state.videoTrack = nextTrack;
+    // A fresh `MediaStream` (new reference) makes the self-view rebind to the new track.
+    this._state.videoStream = new MediaStream([nextTrack]);
 
     this._state.videoEnabled = true;
     this.stateUpdated.emit(this._state);
@@ -160,12 +129,11 @@ export class MediaManager extends Resource {
   }
 
   async turnVideoOff(): Promise<void> {
-    if (this._state.videoTrack !== this._blackCanvasStreamTrack) {
-      this._state.videoStream!.removeTrack(this._state.videoTrack!);
-      this._state.videoTrack?.stop();
-      this._state.videoTrack = this._blackCanvasStreamTrack;
-      this._state.videoStream!.addTrack(this._state.videoTrack!);
-    }
+    this._state.videoTrack?.stop();
+    this._state.videoTrack = undefined;
+    // Drop the self-view stream so the tile blanks rather than freezing on the last camera frame; the
+    // transport unpublishes via `disableVideo` on the next push (video is no longer enabled).
+    this._state.videoStream = undefined;
 
     this._state.videoEnabled = false;
     this.stateUpdated.emit(this._state);
@@ -175,13 +143,15 @@ export class MediaManager extends Resource {
   // TODO(mykola): Change to `setAudioEnabled(enabled: boolean)`.
   async turnAudioOn(): Promise<void> {
     void this._speakingMonitor?.close();
-    this._state.audioEnabled = true;
+    // Acquire the mic before flipping `audioEnabled`: a rejected/denied capture must not leave the state
+    // enabled with no real track (which would republish a stale/placeholder track on the next reconcile).
     this._state.audioTrack = await getUserMediaTrack('audioinput', {
       echoCancellation: true,
       noiseSuppression: true,
       autoGainControl: true,
       sampleRate: 16_000,
     });
+    this._state.audioEnabled = true;
     this.stateUpdated.emit(this._state);
     this._pushTracksTask!.schedule();
     this._speakingMonitor = new SpeakingMonitor(this._state.audioTrack!);
@@ -193,110 +163,125 @@ export class MediaManager extends Resource {
     void this._speakingMonitor?.close();
     this._speakingMonitor = undefined;
     this._state.audioEnabled = false;
-    if (USE_INAUDIBLE_AUDIO && this._state.audioTrack !== this._inaudibleAudioStreamTrack) {
-      this._state.audioTrack?.stop();
-      this._state.audioTrack = this._inaudibleAudioStreamTrack;
-    } else {
-      this._state.audioTrack?.stop();
-      this._state.audioTrack = undefined;
-    }
+    this._state.audioTrack?.stop();
+    this._state.audioTrack = undefined;
     this.stateUpdated.emit(this._state);
     this._pushTracksTask!.schedule();
   }
 
   async turnScreenshareOn(): Promise<void> {
-    const ms = await getScreenshare({ contentHint: 'text' });
-    this._state.screenshareVideoStream = ms;
-    this._state.screenshareTrack = ms.getVideoTracks()[0];
+    const peer = this._state.peer;
+    if (!peer) {
+      return;
+    }
+    // Screenshare is a distinct producer captured by RealtimeKit itself (not via `getUserMedia` + `pushTrack`
+    // like the camera). The returned descriptor is advertised on the swarm as a `screenshare` track; the local
+    // track mirrors the sharer's own self-view.
+    const { descriptor, localTrack } = await peer.setScreenShareEnabled(true);
+    this._state.pushedScreenshareTrack = descriptor;
+    this._state.screenshareTrack = localTrack;
+    this._state.screenshareVideoStream = localTrack ? new MediaStream([localTrack]) : undefined;
     this._state.screenshareEnabled = true;
     this.stateUpdated.emit(this._state);
-    this._pushTracksTask!.schedule();
   }
 
   async turnScreenshareOff(): Promise<void> {
-    this._state.screenshareEnabled = false;
-    this._state.screenshareTrack?.stop();
+    await this._state.peer?.setScreenShareEnabled(false);
+    this._state.pushedScreenshareTrack = undefined;
     this._state.screenshareTrack = undefined;
+    this._state.screenshareVideoStream = undefined;
+    this._state.screenshareEnabled = false;
     this.stateUpdated.emit(this._state);
-    this._pushTracksTask!.schedule();
   }
 
   /**
-   * @internal
+   * Reconcile the pulled-track cache to the transport's current roster. Called only in response to a transport
+   * media-change event (and once on join) — never speculatively — so every track handled here is one the
+   * transport has actually delivered. Tracks are keyed by the name the publisher advertises in the swarm, so
+   * the UI resolves them by swarm data alone. Synchronous, so it runs atomically against `leave`. Remote
+   * tracks are never stopped here: the transport owns them and stops them on participant-left / leave.
    */
-  _schedulePullTracks(tracks?: EncodedTrackName[]): void {
-    if (
-      !tracks ||
-      (this._trackToReconcile.every((name) => tracks.includes(name)) && this._trackToReconcile.length === tracks.length)
-    ) {
+  private _syncRemoteTracks(): void {
+    const peer = this._state.peer;
+    if (!peer?.isOpen) {
       return;
     }
 
-    this._trackToReconcile = tracks;
-    this._pullTracksTask!.schedule();
-  }
+    // The transport's roster is the true state, so rebuild the pulled-media cache from it directly rather than
+    // diffing. Reuse the existing `MediaStream` wrapper whenever a peer's video track is unchanged: the UI binds
+    // `<video>.srcObject` to that object, so a fresh wrapper for the same track would needlessly re-bind and
+    // flicker the tile. Audio tracks are stored bare (played, not rendered).
+    const pulledVideoStreams: Record<EncodedTrackName, MediaStream> = {};
+    const pulledAudioTracks: Record<EncodedTrackName, MediaStreamTrack> = {};
+    let changed = false;
+    for (const { trackData, track } of peer.getRemoteTracks()) {
+      const name = TrackNameCodec.encode(trackData);
+      if (trackData.trackName === 'audio') {
+        pulledAudioTracks[name] = track;
+        changed ||= this._state.pulledAudioTracks[name] !== track;
+      } else {
+        const existing = this._state.pulledVideoStreams[name];
+        if (existing?.getVideoTracks()[0] === track) {
+          pulledVideoStreams[name] = existing;
+        } else {
+          pulledVideoStreams[name] = new MediaStream([track]);
+          changed = true;
+        }
+      }
+    }
+    // Departed tracks (present before, gone now) are a change too; new/swapped tracks already set `changed`.
+    changed ||=
+      Object.keys(pulledVideoStreams).length !== Object.keys(this._state.pulledVideoStreams).length ||
+      Object.keys(pulledAudioTracks).length !== Object.keys(this._state.pulledAudioTracks).length;
 
-  private async _reconcilePulledMedia(): Promise<void> {
-    log('reconciling tracks');
-    // TODO(mykola): Currently cloudflare fails if you try to pull track immediately after pushing it.
-    // Add retry logic, remove sleep.
-    // Wait for cloudflare to process the track.
-    await cancelWithContext(this._ctx, sleep(800));
-    const trackNames = this._trackToReconcile;
-    const tracksToPull = trackNames.filter(
-      (name) => !this._state.pulledAudioTracks[name] && !this._state.pulledVideoStreams[name],
-    );
+    // Never stop the departed tracks: the transport owns them (stops them on participant-left); dropping the
+    // old records lets their `MediaStream` wrappers be garbage-collected.
+    this._state.pulledVideoStreams = pulledVideoStreams;
+    this._state.pulledAudioTracks = pulledAudioTracks;
 
-    const audioTracksToClose = Object.entries(this._state.pulledAudioTracks).filter(
-      ([key]) => !trackNames.some((name) => name === key),
-    );
-
-    const videoStreamsToClose = Object.entries(this._state.pulledVideoStreams).filter(
-      ([key]) => !trackNames.some((name) => name === key),
-    );
-
-    log('reconciling tracks', {
-      trackNames,
-      tracksToPull,
-      videoStreamsToClose,
-      audioTracksToClose,
-      currentAudioTracks: Object.keys(this._state.pulledAudioTracks),
-      currentVideoStreams: Object.keys(this._state.pulledVideoStreams),
-    });
-
-    // Pull new tracks.
-    const pullResults = await Promise.all(tracksToPull.map((name) => this._pullTrack(name)));
-
-    // Close old tracks.
-    await Promise.all([...audioTracksToClose, ...videoStreamsToClose].map(([_, { ctx }]) => ctx.dispose()));
-
-    log('reconciled tracks', {
-      currentAudioTracks: Object.keys(this._state.pulledAudioTracks),
-      currentVideoStreams: Object.keys(this._state.pulledVideoStreams),
-    });
-
-    this.stateUpdated.emit(this._state);
-    if (pullResults.some(({ shouldRetry }) => shouldRetry)) {
-      await cancelWithContext(this._ctx, sleep(RETRY_INTERVAL));
-      log.info('retrying pull tracks', { tracksToPull });
-      invariant(this._pullTracksTask);
-      this._pullTracksTask.schedule();
+    if (changed) {
+      this.stateUpdated.emit(this._state);
     }
   }
 
   private async _pushTracks(): Promise<void> {
-    if (!this._state.peer?.isOpen) {
+    // Capture the peer for the whole operation. `leave()`/rejoin can swap `_state.peer` while we await the
+    // pushes below; without a stable reference we'd publish to (or reschedule against) a dead peer and write
+    // its stale descriptors over the new session — the "connected but can't push/pull" race.
+    const peer = this._state.peer;
+    if (!peer?.isOpen) {
       return;
     }
 
+    // Publish a track only while its media is enabled. RealtimeKit has native enable/disable semantics, so a
+    // disabled camera/mic maps to `disableVideo`/`disableAudio` and each enable is a clean first-enable from
+    // the disabled state — matching the native `RtkMeeting` path. Gating on the enabled flag (rather than the
+    // track's presence) is what makes that hold: it ensures a toggle is never a custom-track swap while
+    // already enabled (`enable → enable → enable`), which RealtimeKit handles unreliably (remote peers freeze
+    // on a stale track).
+    // Screenshare is published out-of-band via `setScreenShareEnabled` (RealtimeKit self-captures it), so only
+    // the camera and mic flow through here.
     let updated = false;
-    const [pushVideoResult, pushAudioResult, pushScreenshareResult] = await Promise.all([
-      this._maybePushTrack(this._state.videoTrack, this._state.pushedVideoTrack, [
-        { maxFramerate: MAX_WEB_CAM_FRAMERATE, maxBitrate: MAX_WEB_CAM_BITRATE },
-      ]),
-      this._maybePushTrack(this._state.audioTrack, this._state.pushedAudioTrack, [{ networkPriority: 'high' }]),
-      this._maybePushTrack(this._state.screenshareTrack, this._state.pushedScreenshareTrack),
+    const [pushVideoResult, pushAudioResult] = await Promise.all([
+      this._maybePushTrack(
+        peer,
+        this._state.videoEnabled ? this._state.videoTrack : undefined,
+        this._state.pushedVideoTrack,
+        [{ maxFramerate: MAX_WEB_CAM_FRAMERATE, maxBitrate: MAX_WEB_CAM_BITRATE }],
+      ),
+      this._maybePushTrack(
+        peer,
+        this._state.audioEnabled ? this._state.audioTrack : undefined,
+        this._state.pushedAudioTrack,
+        [{ networkPriority: 'high' }],
+      ),
     ]);
+
+    // The call ended or switched peers while pushing: discard this result rather than corrupt the new
+    // session's descriptors / reschedule against a dead peer. The new peer schedules its own push on join.
+    if (this._state.peer !== peer) {
+      return;
+    }
 
     if (pushVideoResult.track !== this._state.pushedVideoTrack) {
       this._state.pushedVideoTrack = pushVideoResult.track;
@@ -306,62 +291,22 @@ export class MediaManager extends Resource {
       this._state.pushedAudioTrack = pushAudioResult.track;
       updated = true;
     }
-    if (pushScreenshareResult.track !== this._state.pushedScreenshareTrack) {
-      this._state.pushedScreenshareTrack = pushScreenshareResult.track;
-      updated = true;
-    }
 
-    const shouldRetry = pushVideoResult.shouldRetry || pushAudioResult.shouldRetry || pushScreenshareResult.shouldRetry;
+    const shouldRetry = pushVideoResult.shouldRetry || pushAudioResult.shouldRetry;
     if (updated) {
       this.stateUpdated.emit(this._state);
     }
 
     if (shouldRetry) {
       await cancelWithContext(this._ctx, sleep(RETRY_INTERVAL));
-      log.info('retrying push tracks', { pushVideoResult, pushAudioResult, pushScreenshareResult });
+      log.info('retrying push tracks', { pushVideoResult, pushAudioResult });
       invariant(this._pushTracksTask);
       this._pushTracksTask.schedule();
     }
   }
 
-  private async _pullTrack(name: EncodedTrackName): Promise<{ shouldRetry: boolean }> {
-    const ctx = this._ctx.derive();
-    try {
-      const trackData = TrackNameCodec.decode(name);
-      // We need to set mid here to `undefined`, because mid is peer specific.
-      const track = await this._state.peer!.pullTrack({ trackData: { ...trackData, mid: undefined }, ctx });
-      if (track?.readyState === 'ended') {
-        throw new Error('Pulled track ended immediately');
-      }
-
-      switch (track?.kind) {
-        case 'audio': {
-          this._state.pulledAudioTracks[name] = { track, ctx };
-          ctx.onDispose(() => delete this._state.pulledAudioTracks[name]);
-          return { shouldRetry: false };
-        }
-        case 'video': {
-          const mediaStream = new MediaStream();
-          mediaStream.addTrack(track);
-          this._state.pulledVideoStreams[name] = { stream: mediaStream, ctx };
-          ctx.onDispose(() => {
-            mediaStream.removeTrack(track);
-            track.stop();
-            delete this._state.pulledVideoStreams[name];
-          });
-          return { shouldRetry: false };
-        }
-        default:
-          throw new Error(`Invalid track kind: ${track?.kind}`);
-      }
-    } catch (err) {
-      log.info('failed to pull track', { err, name });
-      void ctx.dispose();
-      return { shouldRetry: true };
-    }
-  }
-
   private async _maybePushTrack(
+    peer: MediaTransport,
     track?: MediaStreamTrack,
     previousTrack?: TrackObject,
     encodings?: RTCRtpEncodingParameters[],
@@ -373,7 +318,7 @@ export class MediaManager extends Resource {
     const ctx = this._ctx.derive();
     try {
       return {
-        track: await this._state.peer!.pushTrack({
+        track: await peer.pushTrack({
           ctx,
           track: track ?? null,
           previousTrack,

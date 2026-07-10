@@ -21,8 +21,13 @@ export const VideoObject = memo(
 
     useEffect(() => {
       const video = internalRef.current;
-      if (video && videoStream) {
-        video.srcObject = videoStream;
+      if (!video) {
+        return;
+      }
+      // Detach when there is no stream (e.g. camera off) so the element blanks instead of freezing on its
+      // last frame: a `<video>` holds the final decoded frame until `srcObject` is explicitly cleared.
+      video.srcObject = videoStream ?? null;
+      if (videoStream) {
         video.setAttribute('autoplay', 'true');
         video.setAttribute('playsinline', 'true');
       }
