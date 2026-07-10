@@ -24,7 +24,7 @@ export const LEADER_LOCK_KEY = '@dxos/client/DedicatedWorkerClientServices/Leade
 
 export type { LeaderTimeoutOptions };
 
-export interface DedeciatedWorkerClientServicesOptions {
+export interface DedicatedWorkerClientServicesOptions {
   createWorker: () => WorkerOrPort;
   createCoordinator: () => MaybePromise<WorkerCoordinator>;
   config?: Config;
@@ -42,7 +42,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
   #loggingStreamCleanup?: () => void;
   readonly #logFilter: LogFilter[];
 
-  constructor(options: DedeciatedWorkerClientServicesOptions) {
+  constructor(options: DedicatedWorkerClientServicesOptions) {
     super();
     this.#logFilter = parseFilter('error,warn');
     this.#connection = new WorkerConnection({

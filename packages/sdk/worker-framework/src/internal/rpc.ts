@@ -98,8 +98,16 @@ export const serveRpcGroup = <G, H extends Layer.Layer<never, never, never>>(
         Layer.orDie,
       );
 
-      runtime = ManagedRuntime.make(serverLayer);
-      await runtime.runPromise(Effect.void);
+      const current = ManagedRuntime.make(serverLayer);
+      try {
+        await current.runPromise(Effect.void);
+      } catch (error) {
+        // Leave the server un-opened on startup failure so a later open() can retry rather than
+        // returning early against a runtime that never started.
+        await current.dispose();
+        throw error;
+      }
+      runtime = current;
     },
 
     async close(): Promise<void> {

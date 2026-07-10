@@ -18,7 +18,7 @@ export { MemoryWorkerCoordiantor, SingleClientCoordinator, createCoordinatorOnCo
 
 export { type RunDedicatedWorkerOptions, runDedicatedWorker } from './dedicated-worker';
 export {
-  type DedeciatedWorkerClientServicesOptions,
+  type DedicatedWorkerClientServicesOptions,
   DedicatedWorkerClientServices,
   LEADER_LOCK_KEY,
   type LeaderTimeoutOptions,

@@ -6,7 +6,7 @@ import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
-import { type DedeciatedWorkerClientServicesOptions, DedicatedWorkerClientServices } from './dedicated';
+import { type DedicatedWorkerClientServicesOptions, DedicatedWorkerClientServices } from './dedicated';
 import { SharedWorkerCoordinator, SingleClientCoordinator } from './dedicated';
 import { type LocalClientServicesParams, fromHost } from './local-client-services';
 import { fromSocket } from './socket';
@@ -16,7 +16,7 @@ export type CreateClientServicesOptions = {
   /** Factory for creating a shared worker. Required for {@link Runtime.Client.ServicesMode.SHARED_WORKER}. */
   createWorker?: WorkerClientServicesProps['createWorker'];
   /** Factory for creating a dedicated worker. Required for {@link Runtime.Client.ServicesMode.DEDICATED_WORKER}. */
-  createDedicatedWorker?: DedeciatedWorkerClientServicesOptions['createWorker'];
+  createDedicatedWorker?: DedicatedWorkerClientServicesOptions['createWorker'];
   /** Factory for creating the coordinator SharedWorker (for dedicated worker mode). Use for a custom entrypoint that e.g. initializes observability. */
   createCoordinatorWorker?: () => SharedWorker;
   /** Factory for creating an OPFS worker. */

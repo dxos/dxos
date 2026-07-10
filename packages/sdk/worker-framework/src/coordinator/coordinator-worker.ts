@@ -15,9 +15,9 @@ const portsByClient = new Map<string, MessagePort>();
  * Returns the onconnect handler for the coordinator SharedWorker. Exported so apps can use
  * a custom coordinator entrypoint (e.g. to initialize observability) then attach this handler.
  */
-export const createCoordinatorOnConnect = (): ((ev: MessageEvent<MessageEventInit>) => void) => {
-  return (ev: MessageEvent<MessageEventInit>) => {
-    const port = (ev as MessageEvent).ports[0];
+export const createCoordinatorOnConnect = (): ((ev: MessageEvent) => void) => {
+  return (ev: MessageEvent) => {
+    const port = ev.ports[0];
     ports.add(port);
 
     port.onmessage = (event: MessageEvent<WorkerCoordinatorMessage>) => {

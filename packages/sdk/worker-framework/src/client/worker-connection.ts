@@ -278,7 +278,10 @@ export class WorkerConnection extends Resource {
             unsubscribe();
             resolve(LEADER_TIMEOUT);
           }, this.#leaderPortTimeout);
+          // Remove the coordinator listener if the context is disposed before provide-port/timeout,
+          // otherwise interrupted reconnect cycles accumulate listeners on the coordinator.
           ctx.onDispose(() => clearTimeout(timer));
+          ctx.onDispose(() => unsubscribe());
 
           this.#coordinator.sendMessage({
             type: 'request-port',
@@ -309,7 +312,8 @@ export class WorkerConnection extends Resource {
           log.catch(err);
         }
       });
-      this.#coordinator!.onMessage.on(ctx, async (msg) => {
+      invariant(this.#coordinator);
+      this.#coordinator.onMessage.on(ctx, async (msg) => {
         if (msg.type === 'new-leader' && msg.leaderId !== leaderId) {
           await handleLeaderStopped();
         }
