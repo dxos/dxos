@@ -7,7 +7,7 @@ import { createRoot } from 'react-dom/client';
 
 import { Filter } from '@dxos/echo';
 import { ClientProvider } from '@dxos/react-client';
-import { useDatabase, useQuery } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
 const createWorker = () =>
@@ -20,9 +20,9 @@ const Component = () => {
   // Get the user to log in before a space can be obtained.
   const _identity = useIdentity();
   // Get the database of the default space, created with the identity.
-  const db = useDatabase();
+  const [space] = useSpaces();
   // Grab everything in the space.
-  const objects = useQuery(db, Filter.everything());
+  const objects = useQuery(space?.db, Filter.everything());
   // Show the id of the first object returned.
   return <>{objects[0]?.id}</>;
 };

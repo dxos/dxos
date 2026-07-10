@@ -160,3 +160,5 @@ export const TicTacToeArticle = ({ role, variant }: TicTacToeArticleProps) => {
     </Panel.Root>
   );
 };
+
+TicTacToeArticle.displayName = 'TicTacToeArticle';

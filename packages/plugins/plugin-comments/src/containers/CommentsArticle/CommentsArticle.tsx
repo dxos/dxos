@@ -306,3 +306,5 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     </Panel.Root>
   );
 };
+
+CommentsArticle.displayName = 'CommentsArticle';

@@ -74,3 +74,5 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
     );
   },
 );
+
+ResultCard.displayName = 'ResultCard';

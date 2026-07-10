@@ -16,7 +16,7 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes, useSelection } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
@@ -73,14 +73,13 @@ const DefaultStory = ({ count = 0, options, groupByThread, ...props }: DefaultSt
 
 const CompanionStory = () => {
   const [space] = useSpaces();
-  const db = useDatabase(space?.id);
-  const [mailbox] = useQuery(db, Filter.type(Mailbox.Mailbox));
+  const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const feed = mailbox?.feed?.target;
 
   // Selected message.
   const selected = useSelection(feed ? Obj.getURI(feed) : undefined, 'single');
   const message = useQuery(
-    db,
+    space?.db,
     feed ? Query.select(selected ? Filter.id(selected) : Filter.nothing()).from(feed) : Query.select(Filter.nothing()),
   )[0];
 
@@ -93,8 +92,8 @@ const CompanionStory = () => {
   // NOTE: Attention required for scrolling.
   const attentionAttrs = useAttentionAttributes(feed ? Obj.getURI(feed) : undefined);
 
-  if (!db || !feed) {
-    return <Loading data={{ db: !!db, feed: !!feed }} />;
+  if (!space?.db || !feed) {
+    return <Loading data={{ db: !!space?.db, feed: !!feed }} />;
   }
 
   return (

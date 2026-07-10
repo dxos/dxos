@@ -151,7 +151,7 @@ const buildDecorations = ({
               // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while
               // DOM's `BlobPart` only covers `ArrayBuffer`-backed views — a gap between the DOM lib
               // types and the TS standard lib, not fixable by typing `bytes` differently.
-              return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: matched.type }));
+              return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: blob.type }));
             }).pipe(
               Effect.provide(Database.layer(space.db)),
               Effect.catchAll(() => Effect.succeed(undefined)),

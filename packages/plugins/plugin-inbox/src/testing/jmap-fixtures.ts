@@ -45,6 +45,7 @@ const SESSION = {
   apiUrl: 'https://jmap.test/api/',
   username: 'test@jmap.test',
   primaryAccounts: { [MAIL_ACCOUNT_CAPABILITY]: ACCOUNT_ID },
+  downloadUrl: 'https://jmap.test/download/{accountId}/{blobId}/{name}?type={type}',
 };
 
 /**

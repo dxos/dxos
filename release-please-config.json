@@ -385,6 +385,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/pipeline-discord/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/pipeline-email/package.json",
           "jsonpath": "$.version"
         },
@@ -616,6 +621,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-bookmarks/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-brain/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1140,7 +1150,7 @@
         },
         {
           "type": "json",
-          "path": "packages/stories/stories-ui/package.json",
+          "path": "packages/stories/story-modules/package.json",
           "jsonpath": "$.version"
         },
         {

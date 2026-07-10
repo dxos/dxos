@@ -113,3 +113,5 @@ const useCollectionItems = (collection: Collection.Collection, attendableId?: st
 
   return { items: results, handleSearch };
 };
+
+CollectionArticle.displayName = 'CollectionArticle';

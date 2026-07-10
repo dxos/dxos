@@ -18,7 +18,7 @@ import {
   Tag,
   useTranslation,
 } from '@dxos/react-ui';
-import { type Actor } from '@dxos/types';
+import { type Actor, type Message } from '@dxos/types';
 import { toHue } from '@dxos/ui-theme';
 import { toHue as hashToHue } from '@dxos/util';
 
@@ -309,6 +309,43 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
 RowTags.displayName = 'Row.Tags';
 
 //
+// Attachments
+//
+
+type RowAttachmentsProps = {
+  /** Optional — callers may pass an undefined/empty list (e.g. a message with no attachments). */
+  attachments?: readonly Message.Attachment[];
+};
+
+/**
+ * A Card.Row listing a message's attachments by name with a generic file icon. Not yet clickable —
+ * resolving the attachment's ref to open/preview it is a follow-up.
+ */
+const RowAttachments = ({ attachments }: RowAttachmentsProps) => {
+  if (!attachments?.length) {
+    return null;
+  }
+
+  return (
+    <Card.Row>
+      <Card.Block>
+        <Icon icon='ph--paperclip--regular' />
+      </Card.Block>
+      <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='message-attachments'>
+        {attachments.map((attachment) => (
+          <Tag key={attachment.ref.uri} hue='neutral' classNames='inline-flex items-center gap-1'>
+            <Icon icon='ph--file--regular' size={3} />
+            {attachment.name ?? attachment.ref.uri}
+          </Tag>
+        ))}
+      </div>
+    </Card.Row>
+  );
+};
+
+RowAttachments.displayName = 'Row.Attachments';
+
+//
 // Star
 //
 
@@ -349,7 +386,8 @@ export const Row = {
   Ref: RowRef,
   Person: RowPerson,
   Tags: RowTags,
+  Attachments: RowAttachments,
   Star: RowStar,
 };
 
-export type { RowDateProps, RowPersonProps, RowRefProps, RowStarProps, RowTagsProps };
+export type { RowAttachmentsProps, RowDateProps, RowPersonProps, RowRefProps, RowStarProps, RowTagsProps };

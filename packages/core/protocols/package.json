@@ -21,6 +21,10 @@
       "browser": "./dist/src/feed-replication.js",
       "import": "./dist/src/feed-replication.js"
     },
+    "./rpc": {
+      "browser": "./dist/src/rpc.js",
+      "import": "./dist/src/rpc.js"
+    },
     "./proto": {
       "browser": "./dist/src/proto/index.js",
       "import": "./dist/src/proto/index.js"

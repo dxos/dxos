@@ -60,15 +60,19 @@ const ErrorComponent = () => {
   );
 };
 
-const DefaultStory = () => {
+type StoryProps = {
+  debug?: boolean;
+};
+
+const DefaultStory = ({ debug: debugProp }: StoryProps) => {
   const manager = usePluginManager();
   const surfaces = useSurfaces();
   const [selected, setSelected] = useState<string | undefined>();
-  const [debug, setDebug] = useState(isSurfaceDebugEnabled());
+  const [debug, setDebug] = useState(debugProp ?? isSurfaceDebugEnabled());
 
   // Restore the global debug flag on unmount so other stories don't inherit it.
   useEffect(() => {
-    const previous = isSurfaceDebugEnabled();
+    const previous = debugProp ?? isSurfaceDebugEnabled();
     return () => setSurfaceDebug(previous);
   }, []);
 
@@ -162,4 +166,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    debug: true,
+  },
+};

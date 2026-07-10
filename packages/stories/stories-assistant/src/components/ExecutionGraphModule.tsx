@@ -4,15 +4,13 @@
 
 import React from 'react';
 
-import { type Feed, Filter, Query } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { InvocationTraceStartEvent } from '@dxos/functions-runtime';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { Timeline, useExecutionGraph } from '@dxos/react-ui-components';
 
-import { type ModuleProps } from './types';
-
-export const ExecutionGraphModule = ({ space, traceFeed }: ModuleProps & { traceFeed?: Feed.Feed }) => {
+export const ExecutionGraphModule = ({ space }: { space: Space }) => {
   const invocationsFeed = space.properties?.invocationTraceFeed?.target;
   const invocations = useQuery(
     space.db,
@@ -21,8 +19,8 @@ export const ExecutionGraphModule = ({ space, traceFeed }: ModuleProps & { trace
       : Query.select(Filter.nothing()),
   );
 
-  // Use provided trace feed, or fall back to the per-invocation trace feed from the most recent invocation.
-  const feed = traceFeed ?? invocations?.at(-1)?.invocationTraceFeed?.target;
+  // Derive the trace feed from the most recent invocation's `invocationTraceFeed`.
+  const feed = invocations?.at(-1)?.invocationTraceFeed?.target;
   const objects = useQuery(
     space.db,
     feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),

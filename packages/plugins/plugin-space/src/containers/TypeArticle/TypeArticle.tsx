@@ -245,3 +245,5 @@ const TypeTile = ({ object, current, onOpen, onDelete }: TileData) => {
     </Focus.Item>
   );
 };
+
+TypeArticle.displayName = 'TypeArticle';

@@ -96,3 +96,5 @@ export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioR
     </Panel.Root>
   );
 };
+
+PortfolioReportDetail.displayName = 'PortfolioReportDetail';

@@ -1,0 +1,11 @@
+layer: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test-storybook
+  - pack
+  - storybook
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'

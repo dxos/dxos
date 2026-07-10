@@ -5,15 +5,16 @@
 import { type AnyEntity } from '@dxos/echo/Type';
 import { EID, type SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
-import { type QueryService as QueryServiceProto } from '@dxos/protocols/proto/dxos/echo/query';
-import { type DataService as DataServiceProto } from '@dxos/protocols/proto/dxos/echo/service';
+import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
 import { DataServiceImpl } from './data-service-impl';
 import { FeedServiceImpl } from './feed-service-impl';
 import { QueryServiceImpl } from './query-service-impl';
 
 /**
- * TODO: make this implement DataService and QueryService to unify API over edge and web backend
+ * Constructs the ECHO/queue service handlers for the edge (Cloudflare) runtime. The handlers
+ * implement the effect-rpc `Handlers` shape shared with the web backend, so consumers use the
+ * same service surface regardless of runtime.
  */
 export class ServiceContainer {
   constructor(
@@ -36,9 +37,9 @@ export class ServiceContainer {
   }
 
   async createServices(): Promise<{
-    dataService: DataServiceProto;
-    queryService: QueryServiceProto;
-    queueService: FeedProtocol.FeedService;
+    dataService: DataService.Handlers;
+    queryService: QueryService.Handlers;
+    queueService: FeedService.Handlers;
     functionsAiService: EdgeFunctionEnv.FunctionsAiService;
   }> {
     const dataService = new DataServiceImpl(this._executionContext, this._dataService);

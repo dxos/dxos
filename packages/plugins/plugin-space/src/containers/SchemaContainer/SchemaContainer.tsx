@@ -56,3 +56,5 @@ export const useQuerySpaceTypes = (space: Space): Type.AnyEntity[] => {
 
   return types;
 };
+
+SchemaContainer.displayName = 'SchemaContainer';

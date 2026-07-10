@@ -4,15 +4,24 @@
 
 import * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Runtime from 'effect/Runtime';
+import * as Scope from 'effect/Scope';
 
 import { Event, synchronized } from '@dxos/async';
-import { type ClientServices, clientServiceBundle } from '@dxos/client-protocol';
+import {
+  type ClientServices,
+  type ClientServicesHandlers,
+  clientServiceBundle,
+  makeInProcessClientServicesRpc,
+  makeServicesFromRpc,
+} from '@dxos/client-protocol';
 import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
-import { RuntimeProvider } from '@dxos/effect';
+import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EdgeSignalManager, type SignalManager, SignalManagerService, WebsocketSignalManager } from '@dxos/messaging';
@@ -24,6 +33,7 @@ import {
   createRtcTransportFactory,
 } from '@dxos/network-manager';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { type ServiceBundle } from '@dxos/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace as Trace } from '@dxos/tracing';
@@ -90,7 +100,7 @@ export type InitializeOptions = {
  */
 export class ClientServicesHost {
   private readonly _resourceLock?: ResourceLock;
-  private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
+  private readonly _serviceRegistry: ServiceRegistry<ClientServicesHandlers>;
   private readonly _systemService: SystemServiceImpl;
   private readonly _loggingService: LoggingServiceImpl;
   private readonly _statusUpdate = new Event<void>();
@@ -152,8 +162,20 @@ export class ClientServicesHost {
       config: () => this._config,
       statusUpdate: this._statusUpdate,
       getCurrentStatus: () => (this.isOpen && !this._resetting ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
-      getDiagnostics: () => {
-        return createDiagnostics(this._serviceRegistry.services, this._serviceContext, this._config!);
+      getDiagnostics: async () => {
+        // Bridge the host Handlers to the proto services surface that diagnostics collection consumes.
+        const scope = Effect.runSync(Scope.make());
+        try {
+          const rpc = await EffectEx.runPromise(
+            makeInProcessClientServicesRpc(() => this._serviceRegistry.services).pipe(
+              Effect.provideService(Scope.Scope, scope),
+            ),
+          );
+          const services = makeServicesFromRpc(rpc, Runtime.defaultRuntime);
+          return await createDiagnostics(services, this._serviceContext, this._config!);
+        } finally {
+          await EffectEx.runPromise(Scope.close(scope, Exit.void));
+        }
       },
       onUpdateStatus: async (status: SystemStatus) => {
         if (!this.isOpen && status === SystemStatus.ACTIVE) {
@@ -170,9 +192,14 @@ export class ClientServicesHost {
     this.diagnosticsBroadcastHandler = createCollectDiagnosticsBroadcastHandler(this._systemService);
     this._loggingService = new LoggingServiceImpl();
 
-    this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
-      SystemService: this._systemService,
-    });
+    // The proto `clientServiceBundle` descriptor is retained only for the deprecated `descriptors`
+    // surface (legacy transports/devtools); the registry itself now holds effect-rpc handlers.
+    this._serviceRegistry = new ServiceRegistry<ClientServicesHandlers>(
+      clientServiceBundle as unknown as ServiceBundle<ClientServicesHandlers>,
+      {
+        SystemService: this._systemService,
+      },
+    );
   }
 
   get isOpen() {
@@ -384,13 +411,10 @@ export class ClientServicesHost {
 
     const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
     if (devtoolsProxy) {
-      this._devtoolsProxy = new WebsocketRpcClient({
-        url: devtoolsProxy,
-        requested: {},
-        exposed: clientServiceBundle,
-        handlers: this.services as ClientServices,
-      });
-      void this._devtoolsProxy.open();
+      // TODO(dxos): The devtools websocket proxy serves the protobuf service bundle, which is
+      // incompatible with the effect-rpc Handlers the host now provides. Re-enable once this legacy
+      // transport is migrated to effect-rpc (or bridged via makeInProcessClient + a proto adapter).
+      log.warn('devtoolsProxy is not supported with effect-rpc services; skipping', { devtoolsProxy });
     }
     this.diagnosticsBroadcastHandler.start();
 

@@ -2,11 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Runtime from 'effect/Runtime';
+import * as Scope from 'effect/Scope';
+import { afterAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, chain, sleep, waitForCondition } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { type Space } from '@dxos/client-protocol';
+import { type Space, makeInProcessClientServicesRpc, makeServicesFromRpc } from '@dxos/client-protocol';
 import {
   type DataSpace,
   InvitationsManager,
@@ -25,6 +29,7 @@ import { InvitationsProxy } from '@dxos/client/invitations';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { MetadataStore } from '@dxos/echo-host';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
@@ -358,7 +363,7 @@ describe('Invitations', () => {
         invariant(hostContext.dataSpaceManager);
         invariant(guestContext.dataSpaceManager);
 
-        const { service, metadata } = createInvitationsApi(hostContext);
+        const { service, metadata } = await createInvitationsApi(hostContext);
         hostMetadata = metadata;
         space = await hostContext.dataSpaceManager.createSpace(Context.default());
         host = new InvitationsProxy(service, undefined, () => ({
@@ -403,11 +408,11 @@ describe('Invitations', () => {
         );
         invariant(hostContext.dataSpaceManager);
         invariant(guestContext.dataSpaceManager);
-        const hostApi = createInvitationsApi(hostContext);
+        const hostApi = await createInvitationsApi(hostContext);
         // TODO(nf): require calling manually outside of service-host?
         await hostApi.manager.loadPersistentInvitations(Context.default());
 
-        const { service: guestService, manager: guestManager } = createInvitationsApi(guestContext);
+        const { service: guestService, manager: guestManager } = await createInvitationsApi(guestContext);
         await guestManager.loadPersistentInvitations(Context.default());
 
         const space = await hostContext?.dataSpaceManager.createSpace(Context.default());
@@ -439,7 +444,7 @@ describe('Invitations', () => {
           await hostContext.networkManager.leaveSwarm(Context.default(), persistentInvitation.get().swarmKey);
         }
 
-        const { service: newHostService, manager: newHostManager } = createInvitationsApi(
+        const { service: newHostService, manager: newHostManager } = await createInvitationsApi(
           hostContext,
           hostApi.metadata,
         );
@@ -501,7 +506,7 @@ describe('Invitations', () => {
 
         invariant(hostContext.dataSpaceManager);
 
-        const hostApi = createInvitationsApi(hostContext);
+        const hostApi = await createInvitationsApi(hostContext);
 
         const space = await hostContext?.dataSpaceManager.createSpace(Context.default());
         onTestFinished(() => space.close(Context.default()));
@@ -526,7 +531,7 @@ describe('Invitations', () => {
           await createdTrigger.wait();
         }
 
-        const { service: newHostService, manager: newHostManager } = createInvitationsApi(
+        const { service: newHostService, manager: newHostManager } = await createInvitationsApi(
           hostContext,
           hostApi.metadata,
         );
@@ -558,8 +563,8 @@ describe('Invitations', () => {
         invariant(hostContext.dataSpaceManager);
         invariant(guestContext.dataSpaceManager);
 
-        const { service: hostService } = createInvitationsApi(hostContext);
-        const { service: guestService } = createInvitationsApi(guestContext);
+        const { service: hostService } = await createInvitationsApi(hostContext);
+        const { service: guestService } = await createInvitationsApi(guestContext);
 
         space = await hostContext.dataSpaceManager.createSpace(Context.default());
         host = new InvitationsProxy(hostService, undefined, () => ({
@@ -590,8 +595,8 @@ describe('Invitations', () => {
 
         await hostContext.createIdentity();
 
-        const { service: hostService } = createInvitationsApi(hostContext);
-        const { service: guestService } = createInvitationsApi(guestContext);
+        const { service: hostService } = await createInvitationsApi(hostContext);
+        const { service: guestService } = await createInvitationsApi(guestContext);
 
         host = new InvitationsProxy(hostService, undefined, () => ({ kind: Invitation.Kind.DEVICE }));
         guest = new InvitationsProxy(guestService, undefined, () => ({ kind: Invitation.Kind.DEVICE }));
@@ -679,12 +684,30 @@ const expectErrorState = async (args: {
   }
 };
 
-const createInvitationsApi = (
+const createInvitationsApi = async (
   context: ServiceContext,
   metadata: MetadataStore = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory()),
 ) => {
   const manager = new InvitationsManager(context.invitations, metadata);
   manager.setInvitationHandlerFactory((invitation) => context.getInvitationHandler(invitation));
-  const service = new InvitationsServiceImpl(manager);
+  // InvitationsProxy consumes the Promise/Stream shaped proto service; bridge the effect-rpc Handlers
+  // impl in-process (no wire hop) and derive the proto surface from it. The endpoint is kept open for
+  // the whole file (torn down in afterAll) so fire-and-forget teardown calls (e.g. invitation cancel)
+  // never race a closed endpoint.
+  const scope = Effect.runSync(Scope.make());
+  invitationsApiScopes.push(scope);
+  const rpc = await EffectEx.runPromise(
+    makeInProcessClientServicesRpc(() => ({ InvitationsService: new InvitationsServiceImpl(manager) })).pipe(
+      Scope.extend(scope),
+    ),
+  );
+  const service = makeServicesFromRpc(rpc, Runtime.defaultRuntime).InvitationsService!;
   return { manager, service, metadata };
 };
+
+const invitationsApiScopes: Scope.CloseableScope[] = [];
+
+afterAll(async () => {
+  await Promise.all(invitationsApiScopes.map((scope) => EffectEx.runPromise(Scope.close(scope, Exit.void))));
+  invitationsApiScopes.length = 0;
+});

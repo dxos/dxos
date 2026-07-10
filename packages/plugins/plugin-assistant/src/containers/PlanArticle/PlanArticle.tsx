@@ -35,3 +35,5 @@ export const PlanArticle = ({ role, attendableId, subject }: PlanArticleProps) =
     </Panel.Root>
   );
 };
+
+PlanArticle.displayName = 'PlanArticle';

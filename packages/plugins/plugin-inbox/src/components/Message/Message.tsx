@@ -48,6 +48,8 @@ type MessageContextValue = {
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
+  /** Generates an AI reply draft grounded on thread context and known facts. */
+  onAiReply?: () => void;
   onDelete?: () => void;
 };
 
@@ -79,6 +81,7 @@ const MessageRoot = ({
   onReply,
   onReplyAll,
   onForward,
+  onAiReply,
   onDelete,
   ...props
 }: MessageRootProps) => {
@@ -90,6 +93,7 @@ const MessageRoot = ({
       onReply={onReply}
       onReplyAll={onReplyAll}
       onForward={onForward}
+      onAiReply={onAiReply}
       onDelete={onDelete}
       {...props}
     >
@@ -107,7 +111,7 @@ MessageRoot.displayName = 'Message.Root';
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
 const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { attendableId, message, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward, onDelete } =
+  const { attendableId, message, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward, onAiReply, onDelete } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
 
   // Settings capability is optional (see MessageBody); fall back to safe defaults outside the plugin.
@@ -135,6 +139,7 @@ const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
     onReply,
     onReplyAll,
     onForward,
+    onAiReply,
     onDelete,
   });
 
@@ -270,6 +275,9 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
         <Row.Ref key={Obj.getURI(object).toString()} object={object} />
       ))}
 
+      {/* Attachments row. */}
+      <Row.Attachments attachments={message.attachments} />
+
       {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
       <Row.Tags tags={messageTags} />
     </Header.Root>
@@ -321,7 +329,14 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   // markdown renderer.
   if (viewMode === 'html' && html) {
     return (
-      <HtmlViewer classNames={classNames} html={html} loadRemoteImages={loadRemoteImages} isPersonal={isPersonal} />
+      <HtmlViewer
+        classNames={classNames}
+        html={html}
+        loadRemoteImages={loadRemoteImages}
+        isPersonal={isPersonal}
+        attachments={message.attachments}
+        db={db}
+      />
     );
   }
 

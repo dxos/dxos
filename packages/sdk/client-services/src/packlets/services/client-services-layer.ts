@@ -12,6 +12,7 @@ import { EdgeConnectionService } from '@dxos/edge-client';
 import { KeyringApiService } from '@dxos/keyring';
 import { SignalManagerService } from '@dxos/messaging';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
+import { type FeedService } from '@dxos/protocols/rpc';
 
 import { EdgeAgentServiceImpl } from '../agents';
 import { DevicesServiceImpl } from '../devices';
@@ -77,7 +78,7 @@ export class QueryServiceRpc extends EffectContext.Tag('@dxos/client-services/rp
 
 export class FeedServiceRpc extends EffectContext.Tag('@dxos/client-services/rpc/FeedService')<
   FeedServiceRpc,
-  EchoHost['feedService']
+  FeedService.Handlers
 >() {}
 
 /**
