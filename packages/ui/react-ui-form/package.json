@@ -63,7 +63,6 @@
     "@effect-atom/atom-react": "catalog:",
     "@fluentui/react-tabster": "catalog:",
     "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:",
     "date-fns": "catalog:",
     "tabster": "catalog:"
   },
