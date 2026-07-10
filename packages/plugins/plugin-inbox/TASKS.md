@@ -22,12 +22,18 @@ can be recorded there without a schema change. The Gmail sync mapper
     `properties.noReply` and `properties.listUnsubscribe`.
   - Shared `isReplyable(message)` helper (false when no-reply or unsubscribe
     present) to skip draft creation for bulk/automated mail.
-- [ ] **User-editable Instructions object informs reply drafting**
-  - ECHO type `{ text: markdown, skills?: Ref[] }`, edited via a Form, merged
-    into the reply generator's system prompt (skills resolved to their prompt/
-    tool contributions). Scope decision pending (per-mailbox vs per-space).
-  - Draft prototype lives in `stories-brain` (`pipelines/draft.ts`); wire the
-    Instructions input through it first.
+- [ ] **User-editable Instructions inform reply drafting**
+  - Reuse the existing `@dxos/compute` `Instructions` type (`text` markdown +
+    `skills` + `objects`) — do NOT define a new one. It is already used with
+    Routines.
+  - Add an optional `instructions: Ref(Instructions)` to the `Mailbox` schema so
+    the user can select one shared Instructions across mailboxes or create a
+    distinct one per mailbox (edited via a Form / object picker).
+  - The reply generator reads `mailbox.instructions?.target` and merges its
+    `text` + `skills` into the session/system prompt (skills resolved to their
+    tool/prompt contributions, as Routines do).
+  - Draft prototype lives in `stories-brain` (`pipelines/draft.ts`); thread an
+    `instructions` string through it first, then wire the Mailbox ref.
 
 ### References
 
