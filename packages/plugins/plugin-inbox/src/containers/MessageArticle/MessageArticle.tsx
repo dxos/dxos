@@ -10,7 +10,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery, useResolveRef } from '@dxos/react-client/echo';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { type Message as MessageType } from '@dxos/types';
@@ -256,10 +256,10 @@ const DraftThreadItemContent = ({ message, mailbox, viewMode, setViewMode, onCon
   // Read the sent flag reactively from the mailbox's tag index (a tag membership atom re-fires the
   // instant the tag is applied on send; reading a message property would not).
   const db = mailbox ? Obj.getDatabase(mailbox) : Obj.getDatabase(message);
+  const tagIndex = useResolveRef(mailbox?.tags);
   const sentTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Sent.TAG_SENT.key]))[0];
   const sentUri = sentTag && Obj.getURI(sentTag).toString();
-  const sentAtomFor = useMemo(() => Sent.atom(mailbox?.tags?.target, sentUri), [mailbox?.tags?.target, sentUri]);
-  const sent = useAtomValue(sentAtomFor(message.id));
+  const sent = useAtomValue(Sent.atom(tagIndex, sentUri, message.id));
 
   const handleDelete = useCallback(() => {
     if (mailbox) {

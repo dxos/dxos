@@ -3,6 +3,7 @@
 //
 
 import { Atom } from '@effect-atom/atom-react';
+import * as Data from 'effect/Data';
 
 import { type Database, Obj, Tag } from '@dxos/echo';
 import { type EntityId } from '@dxos/keys';
@@ -23,21 +24,30 @@ export const TAG_SENT = {
   hue: 'green',
 } as const;
 
-const NOT_SENT = Atom.make(() => false);
+/** Key for {@link sentFamily}: the tag index, the sent-tag uri, and the message id. */
+type SentKey = readonly [TagIndex.TagIndex | undefined, string | undefined, EntityId];
 
-/** Resolves the per-message sent boolean atom (backed by `TagIndex.atom`) for a message id. */
-export type SentAtomFor = (messageId: EntityId) => Atom.Atom<boolean>;
+// Module-level family so every caller with the same (index, uri, message) shares one memoized atom.
+const sentFamily = Atom.family((key: SentKey) =>
+  Atom.make<boolean>((get) => {
+    const [tagIndex, sentUri, messageId] = key;
+    // The index or tag uri may be unresolved (mailbox loading, or no message ever sent yet).
+    if (!tagIndex || !sentUri) {
+      return false;
+    }
+    return get(TagIndex.atom(tagIndex, messageId, sentUri));
+  }),
+);
 
 /**
- * Returns a resolver from message id to a boolean atom yielding whether that message carries the sent
- * tag; the atom re-renders only when that membership changes.
+ * Reactive boolean atom yielding whether `messageId` carries the sent tag, re-rendering only when that
+ * membership changes. Memoized by the (tag index, sent-tag uri, message id) key.
  */
-export const atom = (tagIndex: TagIndex.TagIndex | undefined, sentUri: string | undefined): SentAtomFor => {
-  if (!tagIndex || !sentUri) {
-    return () => NOT_SENT;
-  }
-  return (messageId: EntityId) => TagIndex.atom(tagIndex, messageId, sentUri);
-};
+export const atom = (
+  tagIndex: TagIndex.TagIndex | undefined,
+  sentUri: string | undefined,
+  messageId: EntityId,
+): Atom.Atom<boolean> => sentFamily(Data.tuple(tagIndex, sentUri, messageId));
 
 /** Applies the sent tag to a message in the mailbox's tag index. Idempotent. Returns the tag uri. */
 export const markSent = async (
