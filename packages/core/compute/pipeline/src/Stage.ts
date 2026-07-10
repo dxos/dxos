@@ -7,6 +7,8 @@
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
+import * as Progress from './Progress';
+
 /**
  * Overflow policy applied when a consumer cannot keep pace, mapped onto `Stream.buffer` strategies.
  * - `suspend`: back pressure — never drop (default; correct for email/document processing).
@@ -126,3 +128,22 @@ export const filter =
   <In>(id: string, pred: (item: In) => boolean): Stage<In, In> =>
   <E0, R0>(self: Stream.Stream<In, E0, R0>) =>
     self.pipe(Stream.filter(pred));
+
+/**
+ * A pass-through stage that reports live progress to the {@link Progress} registry: it registers the
+ * task (with an optional item `total`), advances the item index as each item flows through, and
+ * marks the task done when the stream ends. Progress is thus an artifact of the pipeline itself —
+ * the same stage works in the app (feeding a reactive panel) and in tests (feeding a file sink).
+ */
+export const track =
+  <In>(name: string, options: { total?: number; label?: string } = {}): Stage<In, In, never, Progress.Progress> =>
+  <E0, R0>(self: Stream.Stream<In, E0, R0>) =>
+    Stream.unwrap(
+      Effect.map(Progress.Progress, (progress) => {
+        const handle = progress.task(name, options);
+        return self.pipe(
+          Stream.tap(() => Effect.sync(() => handle.advance())),
+          Stream.ensuring(Effect.sync(() => handle.done())),
+        );
+      }),
+    );
