@@ -593,10 +593,12 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         return;
       }
       case MESSAGE_TYPE_COLLECTION_QUERY:
-        log.verbose('received collection-query', { collectionId: payload.collectionId, remoteId: this._remotePeerId });
-        payload.senderId = this._remotePeerId as PeerId;
-        this._readableStreamController.enqueue(payload);
-        return;
+        // Invariant (not expressed in the protocol union): collection state flows edge → client
+        // only; the edge never queries the client's collection state. An inbound query means a
+        // protocol violation or a misbehaving peer, so surface it loudly instead of answering.
+        throw new Error(
+          `collection-query from edge is not supported (collectionId: ${payload.collectionId}, remoteId: ${this._remotePeerId})`,
+        );
       default: {
         const _exhaustive: never = payload;
         log.warn('unknown subduction protocol message', { payload: _exhaustive });
