@@ -3,7 +3,7 @@
 //
 
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
 import { FactStore, OperationHandler, ReactSurface, Settings, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
@@ -30,7 +30,7 @@ export const BrainPlugin = Plugin.define(meta).pipe(
   // Owns the enrichment settings and injects the `Enrich` action into plugin-inbox's mailbox toolbar
   // menu (facts extraction is owned by brain), reading model/provider/strict from the settings live.
   Plugin.addModule({
-    activatesOn: ActivationEvents.SetupSettings,
+    activatesOn: AppActivationEvents.SetupSettings,
     activate: Settings,
   }),
   Plugin.make,
