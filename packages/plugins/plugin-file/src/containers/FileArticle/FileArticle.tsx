@@ -87,3 +87,5 @@ export const FileArticle = ({ role, subject: file }: FileArticleProps) => {
 };
 
 export default FileArticle;
+
+FileArticle.displayName = 'FileArticle';

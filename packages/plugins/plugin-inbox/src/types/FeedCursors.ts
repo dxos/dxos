@@ -15,6 +15,8 @@ export type FeedCursorsApi = {
   readonly get: (feedId: string) => number;
   /** Raises the feed's high-water key (monotonic — never lowers it). */
   readonly advance: (feedId: string, key: number) => void;
+  /** Clears the feed's high-water key so the next run reconsiders the feed from the start. */
+  readonly reset: (feedId: string) => void;
 };
 
 /**

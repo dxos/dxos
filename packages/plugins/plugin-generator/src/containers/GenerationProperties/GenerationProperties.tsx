@@ -154,3 +154,5 @@ const makeOptions = (options: GenerationOption[], current?: string): Array<{ val
 
 // TODO(burdon): Move to capability.
 const useGenerationProvider = (): GenerationProvider => useMemo(() => new HeyGenProvider(), []);
+
+GenerationProperties.displayName = 'GenerationProperties';

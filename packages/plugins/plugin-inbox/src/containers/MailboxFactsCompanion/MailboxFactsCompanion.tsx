@@ -28,7 +28,7 @@ export const MailboxFactsCompanion = ({ mailbox }: MailboxFactsCompanionProps) =
   const registry = useCapability(InboxCapabilities.FactStoreRegistry);
   const spaceId = getSpace(mailbox)?.id;
   const facts = useFacts(registry, spaceId);
-  return <FactViewer facts={facts} />;
+  return <FactViewer.Root facts={facts} />;
 };
 
 /**
@@ -67,3 +67,5 @@ export const useFacts = (registry: FactStoreRegistry, spaceId: string | undefine
 
   return facts;
 };
+
+MailboxFactsCompanion.displayName = 'MailboxFactsCompanion';

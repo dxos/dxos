@@ -49,3 +49,5 @@ export const RelatedToOrganization = ({
 
   return <RelatedContacts contacts={related} onContactClick={handleContactClick} />;
 };
+
+RelatedToOrganization.displayName = 'RelatedToOrganization';

@@ -86,3 +86,5 @@ export const CrxSettings = ({ settings, onSettingsChange }: CrxSettingsProps) =>
     </Form.Root>
   );
 };
+
+CrxSettings.displayName = 'CrxSettings';

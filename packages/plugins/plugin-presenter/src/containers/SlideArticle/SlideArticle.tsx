@@ -23,3 +23,5 @@ export const SlideArticle = ({ subject: document }: SlideArticleProps) => {
     </Panel>
   );
 };
+
+SlideArticle.displayName = 'SlideArticle';

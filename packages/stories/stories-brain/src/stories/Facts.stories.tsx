@@ -273,7 +273,7 @@ const DefaultStory = (_: StoryArgs) => {
         />
         <QuestionsPanel questions={questions} disabled={!!busy} onAdd={handleAddQuestion} />
       </div>
-      <FactViewer facts={facts} context={context} />
+      <FactViewer.Root facts={facts} context={context} />
       <EntityList entities={entities} selected={context} onSelect={setContext} />
     </div>
   );
@@ -338,7 +338,7 @@ const InMemoryStory = (_: StoryArgs) => {
 
   return (
     <div className='dx-container grid grid-cols-2 gap-2'>
-      <FactViewer facts={facts} context={context} />
+      <FactViewer.Root facts={facts} context={context} />
       <EntityList entities={entities} selected={context} onSelect={setContext} />
     </div>
   );

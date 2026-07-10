@@ -100,7 +100,10 @@
       "path": "../../ui/react-ui-attention"
     },
     {
-      "path": "../../ui/react-ui-rdf"
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../story-modules"
     }
   ]
 }

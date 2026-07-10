@@ -110,3 +110,5 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
     </Lightbox.Root>
   );
 };
+
+GalleryArticle.displayName = 'GalleryArticle';

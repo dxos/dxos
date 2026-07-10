@@ -74,3 +74,5 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
     );
   },
 );
+
+ObjectCardStack.displayName = 'ObjectCardStack';

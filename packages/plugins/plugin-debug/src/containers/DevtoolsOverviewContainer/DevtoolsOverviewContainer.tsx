@@ -49,3 +49,5 @@ export const DevtoolsOverviewContainer = () => {
     </StatsPanel>
   );
 };
+
+DevtoolsOverviewContainer.displayName = 'DevtoolsOverviewContainer';

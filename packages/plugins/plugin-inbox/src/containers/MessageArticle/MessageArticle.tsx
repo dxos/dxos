@@ -179,3 +179,5 @@ const ThreadMessageItem = ({
     </Message.Root>
   );
 };
+
+MessageArticle.displayName = 'MessageArticle';

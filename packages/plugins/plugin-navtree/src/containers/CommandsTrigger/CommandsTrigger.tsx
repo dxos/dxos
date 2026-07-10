@@ -26,3 +26,5 @@ export const CommandsTrigger = () => {
     </Button>
   );
 };
+
+CommandsTrigger.displayName = 'CommandsTrigger';

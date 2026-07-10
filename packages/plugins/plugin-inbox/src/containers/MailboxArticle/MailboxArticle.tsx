@@ -278,6 +278,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   );
 };
 
+MailboxArticle.displayName = 'MailboxArticle';
+
 type MailboxFilterProps = {
   db?: Database.Database;
   tags: Tag.Map;
