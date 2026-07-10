@@ -99,6 +99,7 @@ export const runWorker = ({ endpoint = defaultEndpoint(), storageLockKey, create
               appPort: appChannel.port1,
               systemPort: systemChannel.port1,
               clientId: message.clientId,
+              isOwner: message.clientId === owningClientId,
             } satisfies DedicatedWorkerMessage,
             [appChannel.port1, systemChannel.port1],
           );

@@ -59,6 +59,7 @@ export interface DedicatedWorkerSessionMessage {
   clientId: string;
   appPort: MessagePort;
   systemPort: MessagePort;
+  isOwner: boolean;
 }
 
 export type DedicatedWorkerMessage =
@@ -90,6 +91,7 @@ export type WorkerCoordinatorMessage =
       appPort: MessagePort;
       systemPort: MessagePort;
       livenessLockKey: string;
+      isOwner: boolean;
     };
 
 export type WorkerOrPort = Worker | MessagePort;

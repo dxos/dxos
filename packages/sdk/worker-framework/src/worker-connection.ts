@@ -50,6 +50,7 @@ export type WorkerConnectionOptions = {
     systemPort: MessagePort;
     leaderId: string;
     livenessLockKey: string;
+    isOwner: boolean;
   }) => Promise<WorkerConnectionHandle>;
 };
 
@@ -108,6 +109,10 @@ export class WorkerConnection extends Resource {
   onReconnect = (callback: () => Promise<void>) => {
     this.#reconnectCallbacks.push(callback);
   };
+
+  get clientId(): string {
+    return this.#clientId;
+  }
 
   override async _open(): Promise<void> {
     log('worker-connection: opening', { clientId: this.#clientId });
@@ -246,8 +251,8 @@ export class WorkerConnection extends Resource {
         return;
       }
 
-      const { appPort, systemPort, leaderId, livenessLockKey } = result;
-      log('worker-connection: connected to worker', { leaderId });
+      const { appPort, systemPort, leaderId, livenessLockKey, isOwner } = result;
+      log('worker-connection: connected to worker', { leaderId, isOwner });
 
       queueMicrotask(async () => {
         try {
@@ -268,7 +273,7 @@ export class WorkerConnection extends Resource {
       });
 
       this.#connectionHandle = await waitWithLockOrRpcTimeout(
-        this.#onConnect({ appPort, systemPort, leaderId, livenessLockKey }),
+        this.#onConnect({ appPort, systemPort, leaderId, livenessLockKey, isOwner }),
         'opening worker connection handle',
       );
 
@@ -381,6 +386,7 @@ class LeaderSession extends Resource {
             clientId: event.data.clientId,
             leaderId: this.#leaderId,
             livenessLockKey: this.#livenessLockKey,
+            isOwner: event.data.isOwner,
           });
           break;
         default:

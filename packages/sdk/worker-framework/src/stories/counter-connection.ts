@@ -8,6 +8,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
+import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -22,6 +23,12 @@ export type CounterRpc = {
   subscribe: (input: Record<string, never>) => Stream.Stream<number>;
 };
 
+export type CounterSessionInfo = {
+  clientId: string;
+  leaderId: string;
+  isOwner: boolean;
+};
+
 /**
  * Client-side connection to the shared counter worker via {@link WorkerConnection}.
  */
@@ -30,6 +37,9 @@ export class CounterConnection extends Resource {
   #scope: Scope.CloseableScope | undefined;
   #rpc: CounterRpc | undefined;
   readonly #subscribeCleanups = new Set<() => Promise<void>>();
+  #sessionInfo: CounterSessionInfo | undefined;
+
+  readonly sessionChanged = new Event<CounterSessionInfo>();
 
   constructor() {
     super();
@@ -44,8 +54,10 @@ export class CounterConnection extends Resource {
             }),
         }),
       leaderLockKey: COUNTER_LEADER_LOCK_KEY,
-      onConnect: async ({ appPort }) => {
+      onConnect: async ({ appPort, leaderId, isOwner }) => {
         invariant(this.#scope, 'counter rpc scope not initialized');
+        this.#sessionInfo = { clientId: this.#connection.clientId, leaderId, isOwner };
+        this.sessionChanged.emit(this.#sessionInfo);
         // makeRpcClient returns Effect<unknown>; CounterRpc is the demo group's client shape.
         this.#rpc = (await EffectEx.runPromise(
           makeRpcClient(appPort, CounterRpcs).pipe(Scope.extend(this.#scope)),
@@ -71,6 +83,18 @@ export class CounterConnection extends Resource {
     return this.#connection.reconnected;
   }
 
+  get sessionInfo(): CounterSessionInfo | undefined {
+    return this.#sessionInfo;
+  }
+
+  get clientId(): string {
+    return this.#connection.clientId;
+  }
+
+  onReconnect = (callback: () => Promise<void>): void => {
+    this.#connection.onReconnect(callback);
+  };
+
   override async _open(): Promise<void> {
     this.#scope = Effect.runSync(Scope.make());
     await this.#connection.open();
@@ -85,6 +109,7 @@ export class CounterConnection extends Resource {
       this.#scope = undefined;
     }
     this.#rpc = undefined;
+    this.#sessionInfo = undefined;
   }
 
   increment = async (): Promise<number> => EffectEx.runPromise(this.rpc.increment());
