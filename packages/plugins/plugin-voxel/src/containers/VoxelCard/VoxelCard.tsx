@@ -25,3 +25,5 @@ export const VoxelCard = ({ subject: world }: VoxelCardProps) => {
     </Card.Body>
   );
 };
+
+VoxelCard.displayName = 'VoxelCard';

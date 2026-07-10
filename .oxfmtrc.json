@@ -16,7 +16,7 @@
     "newlinesBetween": true,
     "order": "asc"
   },
-  "sortPackageJson": {},
+  "sortPackageJson": false,
   "ignorePatterns": [
     "*.tpl",
     "**/*.mdx",

@@ -7,24 +7,13 @@ import React from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Pipeline } from '@dxos/types';
 
-import { type ModuleProps } from './types';
-
-export const ProjectModule = ({ space }: ModuleProps) => {
+export const ProjectModule = ({ space }: { space: Space }) => {
   const projects = useQuery(space.db, Filter.type(Pipeline.Pipeline));
 
   return (
-    <Panel.Root>
-      <Panel.Content>
-        <Surface.Surface
-          type={AppSurface.Article}
-          limit={1}
-          data={{ subject: projects.at(-1), attendableId: 'story' }}
-        />
-      </Panel.Content>
-    </Panel.Root>
+    <Surface.Surface type={AppSurface.Article} limit={1} data={{ subject: projects.at(-1), attendableId: 'story' }} />
   );
 };

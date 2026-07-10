@@ -4,29 +4,20 @@
 
 import React, { useId, useMemo } from 'react';
 
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
-import { type ModuleProps } from './types';
-
 /**
- * Diagnostic module that renders the JSON form of the props it receives from `ModuleContainer`.
- * Used to exercise the container's layout/wiring in isolation from any real plugin surface.
+ * Diagnostic module that renders the active space it resolved from the layout.
+ * Used to exercise the container's grid/surface wiring in isolation from any real plugin surface.
  */
-export const TestModule = ({ space, ...rest }: ModuleProps) => {
+export const TestModule = () => {
   // Distinguishes each mounted instance within a multi-cell grid.
   const instanceId = useId();
+  const space = useActiveSpace();
 
-  // The `space` proxy and callbacks are not JSON-representable, so reduce them to a plain object.
-  const data = useMemo(
-    () => ({
-      space: space?.id,
-      ...Object.fromEntries(
-        Object.entries(rest).map(([key, value]) => [key, typeof value === 'function' ? '[Function]' : value]),
-      ),
-    }),
-    [space, rest],
-  );
+  const data = useMemo(() => ({ instanceId, space: space?.id }), [instanceId, space]);
 
   return (
     <Panel.Root>

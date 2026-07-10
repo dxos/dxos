@@ -306,3 +306,5 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
     </div>
   );
 };
+
+TripArticle.displayName = 'TripArticle';

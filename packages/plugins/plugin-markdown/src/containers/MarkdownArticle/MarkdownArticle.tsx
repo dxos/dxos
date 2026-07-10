@@ -144,3 +144,5 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     );
   },
 );
+
+MarkdownArticle.displayName = 'MarkdownArticle';

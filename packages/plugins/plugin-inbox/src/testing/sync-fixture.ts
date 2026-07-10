@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import { Capability, PluginManager } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Ref, Relation, Tag } from '@dxos/echo';
+import { Blob, Database, Ref, Relation, Tag } from '@dxos/echo';
 import { type EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { Connection, SyncBinding } from '@dxos/plugin-connector';
@@ -34,6 +34,7 @@ export const SYNC_TEST_TYPES = [
   Connection.Connection,
   Cursor.Cursor,
   SyncBinding.SyncBinding,
+  Blob.Blob,
 ];
 
 /** Seeds a mailbox binding (Connection → Mailbox) with its feed, tag index, and cursor. */

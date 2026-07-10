@@ -187,3 +187,5 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
     </Board.Root>
   );
 };
+
+BoardArticle.displayName = 'BoardArticle';

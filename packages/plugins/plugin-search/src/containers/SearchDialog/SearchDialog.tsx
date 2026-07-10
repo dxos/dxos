@@ -95,3 +95,5 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
     </Dialog.Content>
   );
 };
+
+SearchDialog.displayName = 'SearchDialog';

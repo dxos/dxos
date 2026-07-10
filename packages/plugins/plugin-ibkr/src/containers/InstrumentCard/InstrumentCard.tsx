@@ -36,3 +36,5 @@ export const InstrumentCard = ({ subject }: InstrumentCardProps) => {
 };
 
 export default InstrumentCard;
+
+InstrumentCard.displayName = 'InstrumentCard';

@@ -9,13 +9,13 @@ export * from './util';
 
 export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-mailbox'),
+  () => import('./analyze/analyze-mailbox'),
   () => import('./classify-email'),
   () => import('./delete-email'),
   () => import('./delete-event'),
   () => import('./draft-email-and-open'),
   () => import('./draft-email'),
   () => import('./draft-reply'),
-  () => import('./enrich/enrich-mailbox'),
   () => import('./extractor/contact-extractor'),
   () => import('./extractor/extract-contact'),
   () => import('./extractor/extract-mailbox'),

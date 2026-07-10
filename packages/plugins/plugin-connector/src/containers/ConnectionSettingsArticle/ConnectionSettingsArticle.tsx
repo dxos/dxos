@@ -115,3 +115,5 @@ const ConnectionRow = ({
     </Listbox.Item>
   );
 };
+
+ConnectionSettingsArticle.displayName = 'ConnectionSettingsArticle';

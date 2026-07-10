@@ -31,9 +31,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/random"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -73,9 +70,6 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/schema"
-    },
-    {
       "path": "../../sdk/types"
     },
     {
@@ -91,22 +85,7 @@
       "path": "../../ui/react-ui-list"
     },
     {
-      "path": "../../ui/react-ui-masonry"
-    },
-    {
-      "path": "../../ui/react-ui-menu"
-    },
-    {
-      "path": "../../ui/react-ui-search"
-    },
-    {
-      "path": "../../ui/react-ui-table"
-    },
-    {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-client"
     },
     {
       "path": "../plugin-graph"
@@ -118,13 +97,7 @@
       "path": "../plugin-markdown"
     },
     {
-      "path": "../plugin-preview"
-    },
-    {
       "path": "../plugin-routine"
-    },
-    {
-      "path": "../plugin-testing"
     }
   ]
 }

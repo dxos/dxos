@@ -9,6 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref, Tag } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
@@ -108,6 +109,33 @@ export const MessageArticle = ({
   const handleReplyAll = useCallback(() => openDraft('reply-all'), [openDraft]);
   const handleForward = useCallback(() => openDraft('forward'), [openDraft]);
 
+  // AI reply: generate a grounded body first (thread + facts), then open the reply draft prefilled.
+  // `spaceId` scopes the spawned operation so its space-affinity services (Database/FactStore) resolve.
+  const handleAiReply = useCallback(async () => {
+    if (!db || !mailbox) {
+      return;
+    }
+    try {
+      const result = await invokePromise(
+        InboxOperation.GenerateReply,
+        { mailbox: Ref.make(mailbox), message: anchorMessage },
+        { spaceId: db.spaceId },
+      );
+      void invokePromise(InboxOperation.DraftEmailAndOpen, {
+        db,
+        mode: 'reply',
+        message: anchorMessage,
+        mailbox,
+        body: result?.data?.body,
+      });
+    } catch (err) {
+      // Reply generation calls an LLM that can fail; fall back to opening an empty reply draft so the
+      // action never leaves the user without a draft (and never leaks an unhandled rejection).
+      log.catch(err);
+      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply', message: anchorMessage, mailbox });
+    }
+  }, [db, invokePromise, anchorMessage, mailbox]);
+
   // Delete the opened message (draft locally; synced message is trashed on Gmail and removed from the
   // feed). `spaceId` scopes the spawned operation process so its space-affinity services materialize.
   const handleDelete = useCallback(() => {
@@ -141,6 +169,7 @@ export const MessageArticle = ({
         onReply={handleReply}
         onReplyAll={handleReplyAll}
         onForward={handleForward}
+        onAiReply={mailbox ? handleAiReply : undefined}
         onDelete={mailbox ? handleDelete : undefined}
       >
         <Panel.Toolbar asChild>
@@ -297,3 +326,5 @@ const ThreadMessageItem = ({
     </Message.Root>
   );
 };
+
+MessageArticle.displayName = 'MessageArticle';

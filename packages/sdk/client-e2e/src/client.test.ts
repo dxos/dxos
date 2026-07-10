@@ -242,4 +242,38 @@ describe('Client', () => {
     await client.halo.createIdentity();
     await client.spaces.create();
   });
+
+  // The dedicated worker path (used by Composer) runs client services over effect-rpc.
+  test('client over dedicated worker services', { timeout: 10_000 }, async () => {
+    const testBuilder = new TestBuilder();
+    onTestFinished(() => testBuilder.destroy());
+
+    await using services = await testBuilder.createDedicatedWorkerClientServices().open();
+    await using client = await new Client({ services }).initialize();
+    await client.halo.createIdentity({ displayName: 'test-user' });
+    expect(client.halo.identity.get()?.profile?.displayName).toEqual('test-user');
+
+    await client.addTypes([TestSchema.TextV0Type]);
+    const space = await client.spaces.create();
+    await space.waitUntilReady();
+    const object = space.db.add(Obj.make(TestSchema.TextV0Type, { content: 'test' }));
+    await space.db.flush();
+
+    const queried = await space.db.query(Filter.id(object.id)).first({ timeout: 1_000 });
+    expect(queried.id).toEqual(object.id);
+  });
+
+  test('two clients share a dedicated worker', { timeout: 10_000 }, async () => {
+    const testBuilder = new TestBuilder();
+    onTestFinished(() => testBuilder.destroy());
+
+    await using services1 = await testBuilder.createDedicatedWorkerClientServices().open();
+    await using client1 = await new Client({ services: services1 }).initialize();
+    const identity = await client1.halo.createIdentity();
+
+    await using services2 = await testBuilder.createDedicatedWorkerClientServices().open();
+    await using client2 = await new Client({ services: services2 }).initialize();
+
+    expect(client2.halo.identity.get()).toEqual(identity);
+  });
 });

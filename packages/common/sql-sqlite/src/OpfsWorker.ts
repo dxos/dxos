@@ -49,6 +49,16 @@ export interface OpfsWorkerConfig {
 }
 
 /**
+ * Failure mode: `AccessHandlePoolVFS` claims exclusive OPFS sync access handles for `dbName`, and
+ * OPFS access handles are exclusive per file across the whole origin — not just per worker. If two
+ * independent instances of this worker try to open the same `dbName` concurrently (e.g. one per
+ * browser tab, each spun up directly via a plain `createOpfsWorker` factory with no cross-tab
+ * coordination), the second instance's `open_v2` blocks or fails outright, effectively locking that
+ * tab out. Callers that need multi-tab persistence must run this worker behind a single elected
+ * leader instead of one-per-tab — see `Runtime.Client.ServicesMode.DEDICATED_WORKER` and
+ * `SharedWorkerCoordinator` in `@dxos/client`, which arbitrate leadership via `navigator.locks` and
+ * a coordinator `SharedWorker` so only the leader's dedicated worker ever touches OPFS.
+ *
  * @category constructor
  * @since 1.0.0
  */

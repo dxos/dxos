@@ -7,13 +7,12 @@ import React from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 
-import { ResearchInputQueue } from '../testing';
-import { type ModuleProps } from './types';
+import { ResearchInputQueue } from '../testing/schema';
 
-export const ResearchOutputModule = ({ space }: ModuleProps) => {
+export const ResearchOutputModule = ({ space }: { space: Space }) => {
   const [researchInput] = useQuery(space.db, Filter.type(ResearchInputQueue));
   const feed = researchInput?.feed.target;
   const objects = useQuery(

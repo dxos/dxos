@@ -293,3 +293,5 @@ const FileEditor = ({ file, role }: FileEditorProps) => {
     </Editor.Root>
   );
 };
+
+CodeArticle.displayName = 'CodeArticle';

@@ -98,3 +98,5 @@ const useMenuActions = (
 
   return { actions: menuActions, onAction };
 };
+
+SpaceHomeArticle.displayName = 'SpaceHomeArticle';
