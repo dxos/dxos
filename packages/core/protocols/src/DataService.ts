@@ -8,7 +8,7 @@ import type * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 
 import { protoMessage, serviceError } from './service-rpc.ts';
-import { protoStruct } from './service-schemas.ts';
+import { mutableArray, protoStruct } from './service-schemas.ts';
 
 //
 // RPC message schemas.
@@ -31,11 +31,11 @@ export const UpdateSubscriptionRequest = Schema.Struct({
    * Used for already existing documents.
    * To add new document use `write` rpc.
    */
-  addIds: Schema.optional(Schema.Array(Schema.String)),
+  addIds: Schema.optional(mutableArray(Schema.String)),
   /**
    * Automerge document ids to unsubscribe from.
    */
-  removeIds: Schema.optional(Schema.Array(Schema.String)),
+  removeIds: Schema.optional(mutableArray(Schema.String)),
 });
 export interface UpdateSubscriptionRequest extends Schema.Schema.Type<typeof UpdateSubscriptionRequest> {}
 
@@ -87,7 +87,7 @@ export interface DocumentUpdate extends Schema.Schema.Type<typeof DocumentUpdate
 
 export const UpdateRequest = Schema.Struct({
   subscriptionId: Schema.String,
-  updates: Schema.optional(Schema.Array(DocumentUpdate)),
+  updates: Schema.optional(mutableArray(DocumentUpdate)),
 });
 export interface UpdateRequest extends Schema.Schema.Type<typeof UpdateRequest> {}
 
@@ -95,38 +95,38 @@ export const FlushRequest = Schema.Struct({
   /**
    * Automerge specific document ids to wait to flush.
    */
-  documentIds: Schema.optional(Schema.Array(Schema.String)),
+  documentIds: Schema.optional(mutableArray(Schema.String)),
 });
 export interface FlushRequest extends Schema.Schema.Type<typeof FlushRequest> {}
 
 export const GetDocumentHeadsRequest = Schema.Struct({
-  documentIds: Schema.optional(Schema.Array(Schema.String)),
+  documentIds: Schema.optional(mutableArray(Schema.String)),
 });
 export interface GetDocumentHeadsRequest extends Schema.Schema.Type<typeof GetDocumentHeadsRequest> {}
 
 export const Entry = Schema.Struct({
   documentId: Schema.String,
-  heads: Schema.optional(Schema.Array(Schema.String)),
+  heads: Schema.optional(mutableArray(Schema.String)),
 });
 export interface Entry extends Schema.Schema.Type<typeof Entry> {}
 
 export const DocHeadsList = Schema.Struct({
-  entries: Schema.optional(Schema.Array(Entry)),
+  entries: Schema.optional(mutableArray(Entry)),
 });
 export interface DocHeadsList extends Schema.Schema.Type<typeof DocHeadsList> {}
 
 export const GetDocumentHeadsResponse = Schema.Struct({
-  heads: Schema.optional(DocHeadsList),
+  heads: DocHeadsList,
 });
 export interface GetDocumentHeadsResponse extends Schema.Schema.Type<typeof GetDocumentHeadsResponse> {}
 
 export const WaitUntilHeadsReplicatedRequest = Schema.Struct({
-  heads: Schema.optional(DocHeadsList),
+  heads: DocHeadsList,
 });
 export interface WaitUntilHeadsReplicatedRequest extends Schema.Schema.Type<typeof WaitUntilHeadsReplicatedRequest> {}
 
 export const ReIndexHeadsRequest = Schema.Struct({
-  documentIds: Schema.optional(Schema.Array(Schema.String)),
+  documentIds: Schema.optional(mutableArray(Schema.String)),
 });
 export interface ReIndexHeadsRequest extends Schema.Schema.Type<typeof ReIndexHeadsRequest> {}
 

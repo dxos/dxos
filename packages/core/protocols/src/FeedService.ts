@@ -8,6 +8,7 @@ import type * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 
 import { serviceError } from './service-rpc.ts';
+import { mutableArray } from './service-schemas.ts';
 
 //
 // RPC message schemas.
@@ -22,7 +23,7 @@ export const FeedQuery = Schema.Struct({
   /**
    * Queries the whole space if missing.
    */
-  feedIds: Schema.optional(Schema.Array(Schema.String)),
+  feedIds: Schema.optional(mutableArray(Schema.String)),
   /**
    * Filter items after this cursor. Exclusive.
    */
@@ -33,16 +34,18 @@ export const FeedQuery = Schema.Struct({
   before: Schema.optional(Schema.String),
   /**
    * Filter items after this position. Inclusive.
+   * Proto `int64`, represented as a decimal string on the wire.
    */
-  beginPosition: Schema.optional(Schema.Number),
+  beginPosition: Schema.optional(Schema.String),
   /**
    * Filter items before this position. Exclusive.
+   * Proto `int64`, represented as a decimal string on the wire.
    */
-  endPosition: Schema.optional(Schema.Number),
+  endPosition: Schema.optional(Schema.String),
   limit: Schema.optional(Schema.Number),
   reverse: Schema.optional(Schema.Boolean),
   // TODO(dmaretskyi): Remove this field -- raw feeds dont index object IDs anymore.
-  objectIds: Schema.optional(Schema.Array(Schema.String)),
+  objectIds: Schema.optional(mutableArray(Schema.String)),
 });
 export interface FeedQuery extends Schema.Schema.Type<typeof FeedQuery> {}
 
@@ -57,7 +60,7 @@ export const FeedQueryResult = Schema.Struct({
    * We use JSON strings instead of google.protobuf.Struct because Struct
    * coerces `undefined` to `null`, corrupting optional fields.
    */
-  objects: Schema.optional(Schema.Array(Schema.String)),
+  objects: Schema.optional(mutableArray(Schema.String)),
   /**
    * Cursor to query the next items. Can be passed to `after` in query to keep querying.
    */
@@ -73,7 +76,7 @@ export const InsertIntoFeedRequest = Schema.Struct({
   /**
    * JSON-encoded object payloads. Each entry is a serialized ObjectJSON.
    */
-  objects: Schema.optional(Schema.Array(Schema.String)),
+  objects: Schema.optional(mutableArray(Schema.String)),
 });
 export interface InsertIntoFeedRequest extends Schema.Schema.Type<typeof InsertIntoFeedRequest> {}
 
@@ -81,7 +84,7 @@ export const DeleteFromFeedRequest = Schema.Struct({
   subspaceTag: Schema.String,
   spaceId: Schema.String,
   feedId: Schema.String,
-  objectIds: Schema.optional(Schema.Array(Schema.String)),
+  objectIds: Schema.optional(mutableArray(Schema.String)),
 });
 export interface DeleteFromFeedRequest extends Schema.Schema.Type<typeof DeleteFromFeedRequest> {}
 
@@ -105,7 +108,7 @@ export const GetSyncStateRequest = Schema.Struct({
   /**
    * If empty, returns state for all namespaces synced by the client.
    */
-  namespaces: Schema.optional(Schema.Array(Schema.String)),
+  namespaces: Schema.optional(mutableArray(Schema.String)),
 });
 export interface GetSyncStateRequest extends Schema.Schema.Type<typeof GetSyncStateRequest> {}
 
@@ -113,21 +116,24 @@ export const FeedNamespaceSyncState = Schema.Struct({
   namespace: Schema.String,
   /**
    * Blocks still to pull from remote. 0 when caught up.
+   * Proto `int64`, represented as a decimal string on the wire.
    */
-  blocksToPull: Schema.Number,
+  blocksToPull: Schema.String,
   /**
    * Unpositioned blocks still to push to remote. 0 when caught up.
+   * Proto `int64`, represented as a decimal string on the wire.
    */
-  blocksToPush: Schema.Number,
+  blocksToPush: Schema.String,
   /**
    * Total blocks stored locally for this namespace in the space.
+   * Proto `int64`, represented as a decimal string on the wire.
    */
-  totalBlocks: Schema.Number,
+  totalBlocks: Schema.String,
 });
 export interface FeedNamespaceSyncState extends Schema.Schema.Type<typeof FeedNamespaceSyncState> {}
 
 export const GetSyncStateResponse = Schema.Struct({
-  namespaces: Schema.Array(FeedNamespaceSyncState),
+  namespaces: Schema.optional(mutableArray(FeedNamespaceSyncState)),
 });
 export interface GetSyncStateResponse extends Schema.Schema.Type<typeof GetSyncStateResponse> {}
 

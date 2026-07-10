@@ -19,9 +19,9 @@ export type SharedWorkerConnectionOptions = {
   config: Config | Provider<MaybePromise<Config>>;
   systemPort: RpcPort;
   /**
-   * @deprecated Only used with iframes.
+   * @deprecated Only used with iframes. Migrated to a native {@link MessagePort} with the app port.
    */
-  shellPort?: RpcPort;
+  shellPort?: MessagePort;
 };
 
 /**

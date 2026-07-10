@@ -31,11 +31,19 @@ import {
   SpacesService,
   SystemService,
 } from '@dxos/protocols/rpc';
-import { makeRpcClient, serveRpcGroup } from '@dxos/worker-framework';
+import { type RpcPort, layerProtocolRpcPortClient } from '@dxos/rpc';
+import { makeRpcClient, makeRpcClientOverProtocol, serveRpcGroup } from '@dxos/worker-framework';
 
 import { type ClientServices } from './service';
 
 export type MessagePortLike = MessagePort;
+
+/**
+ * Transport a {@link ClientServicesRpc} can run over: the native Worker-platform {@link MessagePort}
+ * (shared-worker app port) or a byte {@link RpcPort} for legacy protobuf bridges (iframe shell,
+ * devtools extension).
+ */
+export type ClientServicesTransport = MessagePortLike | RpcPort;
 
 /**
  * All client service RPCs served over a single connection.
@@ -228,10 +236,15 @@ export interface ClientServicesRpc
  * Builds the effect-native {@link ClientServicesRpc} over a {@link MessagePort}.
  * The returned scope owns the connection; closing it releases the transport.
  */
-export const makeClientServicesRpc = (port: MessagePortLike): Effect.Effect<ClientServicesRpc, never, Scope.Scope> =>
-  makeRpcClient(port, ClientServicesRpcs, { disableTracing: true }).pipe(
-    Effect.map((client) => client as ClientServicesRpc),
-  );
+export const makeClientServicesRpc = (
+  port: ClientServicesTransport,
+): Effect.Effect<ClientServicesRpc, never, Scope.Scope> =>
+  // An RpcPort (byte transport) carries the legacy iframe/devtools bridges; a MessagePort uses the
+  // native Worker-platform protocol.
+  ('send' in port
+    ? makeRpcClientOverProtocol(layerProtocolRpcPortClient(port), ClientServicesRpcs, { disableTracing: true })
+    : makeRpcClient(port, ClientServicesRpcs, { disableTracing: true })
+  ).pipe(Effect.map((client) => client as ClientServicesRpc));
 
 /**
  * Builds an in-process {@link ClientServicesRpc} backed directly by host {@link ClientServicesHandlers}

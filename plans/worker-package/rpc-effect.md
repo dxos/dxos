@@ -20,6 +20,7 @@
 | `client-services/.../worker-runtime.ts` | ✅ Done | `CreateSessionProps.appPort` / `shellPort` are `MessagePort`; `systemPort` still `RpcPort`. |
 | Test harness rewrites | ✅ Partial | `effect-rpc.test.ts` `setupRpc`, `test-builder.ts` `createClientServer`, `client-e2e/shared-worker.test.ts` use `MessageChannel` for app (and shell) ports. |
 | `devtools.ts` | ⚠️ Partial | `ClientRpcServer` uses a lazy `MessageChannel().port1`. The old `window.postMessage` ↔ content-script `RpcPort` bridge was removed — **devtools extension RPC is broken** until a Worker-protocol bridge is added. |
+| Legacy `RpcPort` proxies (iframe shell, devtools window bridge) | ✅ Done | `ClientServicesProxy` / `makeClientServicesRpc` now accept `MessagePort \| RpcPort`; an `RpcPort` runs the effect-rpc client over the byte transport (`layerProtocolRpcPortClient`) via `makeRpcClientOverProtocol`, so out-of-scope legacy bridges keep working without the native Worker protocol. |
 | Streaming round-trip test (Phase A validation) | ❌ Not done | Still only unary coverage in suite 1; no dedicated DataService/QueryService-style stream test over `serveRpcGroup`. |
 
 ### What is unchanged — still on old protocols

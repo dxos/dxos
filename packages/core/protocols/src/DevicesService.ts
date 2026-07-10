@@ -8,13 +8,14 @@ import type * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 
 import { protoMessage, serviceError } from './service-rpc.ts';
+import { mutableArray } from './service-schemas.ts';
 
 //
 // RPC message schemas.
 //
 
 export const QueryDevicesResponse = Schema.Struct({
-  devices: Schema.Array(protoMessage('dxos.client.services.Device')),
+  devices: Schema.optional(mutableArray(protoMessage('dxos.client.services.Device'))),
 });
 export interface QueryDevicesResponse extends Schema.Schema.Type<typeof QueryDevicesResponse> {}
 

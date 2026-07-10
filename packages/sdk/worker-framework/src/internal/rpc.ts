@@ -22,6 +22,23 @@ const asRpcGroup = <G>(group: G): Parameters<typeof RpcClient.make>[0] =>
   group as Parameters<typeof RpcClient.make>[0];
 
 /**
+ * Builds an effect-native RPC client over a caller-supplied {@link RpcClient.Protocol} layer.
+ * Transport-agnostic: consumers provide the Worker-platform protocol (see {@link makeRpcClient}) or a
+ * byte protocol over a legacy transport (e.g. `@dxos/rpc`'s RpcPort layer for iframe/devtools bridges).
+ */
+export const makeRpcClientOverProtocol = <G, ProtocolError, ProtocolRequirements>(
+  protocol: Layer.Layer<RpcClient.Protocol, ProtocolError, ProtocolRequirements>,
+  group: G,
+  options?: Pick<ServeRpcGroupOptions, 'disableTracing'>,
+): Effect.Effect<unknown, never, Scope.Scope | ProtocolRequirements> =>
+  Effect.gen(function* () {
+    return yield* RpcClient.make(asRpcGroup(group), { disableTracing: options?.disableTracing ?? true }).pipe(
+      Effect.provide(protocol),
+      Effect.orDie,
+    );
+  });
+
+/**
  * Builds an effect-native RPC client over a {@link MessagePort} using the native Worker platform
  * protocol (structured-clone frames, transferables supported).
  */
@@ -30,15 +47,11 @@ export const makeRpcClient = <G>(
   group: G,
   options?: Pick<ServeRpcGroupOptions, 'disableTracing'>,
 ): Effect.Effect<unknown, never, Scope.Scope> =>
-  Effect.gen(function* () {
-    const clientLayer = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-      Layer.provide(BrowserWorker.layerPlatform(() => port)),
-    );
-    return yield* RpcClient.make(asRpcGroup(group), { disableTracing: options?.disableTracing ?? true }).pipe(
-      Effect.provide(clientLayer),
-      Effect.orDie,
-    );
-  });
+  makeRpcClientOverProtocol(
+    RpcClient.layerProtocolWorker({ size: 1 }).pipe(Layer.provide(BrowserWorker.layerPlatform(() => port))),
+    group,
+    options,
+  );
 
 export type RpcGroupServer = {
   open(): Promise<void>;

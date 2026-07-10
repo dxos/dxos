@@ -8,7 +8,7 @@ import type * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 
 import { protoMessage, serviceError } from './service-rpc.ts';
-import { protoTimestamp, publicKey } from './service-schemas.ts';
+import { mutableArray, protoTimestamp, publicKey } from './service-schemas.ts';
 
 //
 // RPC message schemas.
@@ -43,7 +43,7 @@ export const KeyRecord = Schema.Struct({
 export interface KeyRecord extends Schema.Schema.Type<typeof KeyRecord> {}
 
 export const SubscribeToKeyringKeysResponse = Schema.Struct({
-  keys: Schema.Array(KeyRecord),
+  keys: Schema.optional(mutableArray(KeyRecord)),
 });
 export interface SubscribeToKeyringKeysResponse extends Schema.Schema.Type<typeof SubscribeToKeyringKeysResponse> {}
 
@@ -53,12 +53,12 @@ export const SubscribeToCredentialMessagesRequest = Schema.Struct({
 export interface SubscribeToCredentialMessagesRequest extends Schema.Schema.Type<typeof SubscribeToCredentialMessagesRequest> {}
 
 export const SubscribeToCredentialMessagesResponse = Schema.Struct({
-  messages: Schema.Array(protoMessage('dxos.halo.signed.SignedMessage')),
+  messages: Schema.optional(mutableArray(protoMessage('dxos.halo.signed.SignedMessage'))),
 });
 export interface SubscribeToCredentialMessagesResponse extends Schema.Schema.Type<typeof SubscribeToCredentialMessagesResponse> {}
 
 export const SubscribeToSpacesRequest = Schema.Struct({
-  spaceKeys: Schema.Array(publicKey),
+  spaceKeys: mutableArray(publicKey),
 });
 export interface SubscribeToSpacesRequest extends Schema.Schema.Type<typeof SubscribeToSpacesRequest> {}
 
@@ -71,7 +71,7 @@ export const SubscribeToItemsResponse = Schema.Struct({
 export interface SubscribeToItemsResponse extends Schema.Schema.Type<typeof SubscribeToItemsResponse> {}
 
 export const SubscribeToFeedsRequest = Schema.Struct({
-  feedKeys: Schema.Array(publicKey),
+  feedKeys: mutableArray(publicKey),
 });
 export interface SubscribeToFeedsRequest extends Schema.Schema.Type<typeof SubscribeToFeedsRequest> {}
 
@@ -87,111 +87,14 @@ export const GetSpaceSnapshotRequest = Schema.Struct({
 });
 export interface GetSpaceSnapshotRequest extends Schema.Schema.Type<typeof GetSpaceSnapshotRequest> {}
 
-export const MutationMeta = Schema.Struct({
-  feedKey: Schema.optional(publicKey),
-  seq: Schema.optional(Schema.Number),
-  memberKey: Schema.optional(publicKey),
-  timeframe: Schema.optional(protoMessage('dxos.echo.timeframe.TimeframeVector')),
-  /**
-   * If this mutation was created by this client, this field will be set to the tag in the mutation.
-   */
-  clientTag: Schema.Array(Schema.String),
-});
-export interface MutationMeta extends Schema.Schema.Type<typeof MutationMeta> {}
-
-export const Genesis = Schema.Struct({
-  modelType: Schema.String,
-  modelVersion: Schema.optional(Schema.String),
-});
-export interface Genesis extends Schema.Schema.Type<typeof Genesis> {}
-
-export const Snapshot = Schema.Struct({
-  deleted: Schema.optional(Schema.Boolean),
-  parentId: Schema.optional(Schema.String),
-  /**
-   * Set the model to the provided snapshot.
-   */
-  model: Schema.optional(protoMessage('google.protobuf.Any')),
-});
-export interface Snapshot extends Schema.Schema.Type<typeof Snapshot> {}
-
-export const Action = Schema.Enums({
-  NOOP: 0,
-  DELETE: 1,
-  RESTORE: 2,
-});
-export type Action = Schema.Schema.Type<typeof Action>;
-
-export const Mutation = Schema.Struct({
-  meta: Schema.optional(MutationMeta),
-  /**
-   * Set parent id
-   */
-  parentId: Schema.optional(Schema.String),
-  action: Schema.optional(Action),
-  model: Schema.optional(protoMessage('google.protobuf.Any')),
-});
-export interface Mutation extends Schema.Schema.Type<typeof Mutation> {}
-
-/**
- * Wrapper for all ECHO messages.
- */
-export const EchoObject = Schema.Struct({
-  objectId: Schema.String,
-  /**
-   * Metadata for the genesis mutation.
-   */
-  meta: Schema.optional(MutationMeta),
-  /**
-   * Present in mutations creating new items and snapshots.
-   */
-  genesis: Schema.optional(Genesis),
-  snapshot: Schema.optional(Snapshot),
-  /**
-   * May be present in snapshots. In that case the mutations must be applied on top of the snapshot.
-   */
-  mutations: Schema.Array(Mutation),
-});
-export interface EchoObject extends Schema.Schema.Type<typeof EchoObject> {}
-
-/**
- * Database Snapshot
- */
-export const EchoSnapshot = Schema.Struct({
-  items: Schema.Array(EchoObject),
-});
-export interface EchoSnapshot extends Schema.Schema.Type<typeof EchoSnapshot> {}
-
-/**
- * Snapshots define full space state at a given point in time.
- * They must have enough information to be able to recover the space state without reading the feed messages.
- *
- * Each snapshot is identified by a space key and a timeframe.
- * The timeframe defines the set of feed messages that have already been processed.
- * When loading from the snapshot, application would skip all of the feed messages up to (and including) the provided timeframe.
- */
-export const SpaceSnapshot = Schema.Struct({
-  spaceKey: Schema.Uint8Array,
-  timeframe: Schema.optional(protoMessage('dxos.echo.timeframe.TimeframeVector')),
-  timestamp: Schema.optional(Schema.Number),
-  database: EchoSnapshot,
-});
-export interface SpaceSnapshot extends Schema.Schema.Type<typeof SpaceSnapshot> {}
-
-export const GetSpaceSnapshotResponse = Schema.Struct({
-  snapshot: Schema.optional(SpaceSnapshot),
-});
-export interface GetSpaceSnapshotResponse extends Schema.Schema.Type<typeof GetSpaceSnapshotResponse> {}
+// The space snapshot subgraph (`SpaceSnapshot` / `EchoSnapshot` / `EchoObject` / …) embeds the
+// `Timeframe` proto substitution (a class with a `frames()` accessor). That class cannot be modeled
+// as an inline Effect struct, so the snapshot responses stay protobuf-encoded (`protoMessage`).
 
 export const SaveSpaceSnapshotRequest = Schema.Struct({
   spaceKey: publicKey,
 });
 export interface SaveSpaceSnapshotRequest extends Schema.Schema.Type<typeof SaveSpaceSnapshotRequest> {}
-
-export const SaveSpaceSnapshotResponse = Schema.Struct({
-  snapshot: Schema.optional(SpaceSnapshot),
-});
-export interface SaveSpaceSnapshotResponse extends Schema.Schema.Type<typeof SaveSpaceSnapshotResponse> {}
 
 export const ClearSnapshotsRequest = Schema.Struct({});
 export interface ClearSnapshotsRequest extends Schema.Schema.Type<typeof ClearSnapshotsRequest> {}
@@ -204,12 +107,12 @@ export interface GetNetworkPeersRequest extends Schema.Schema.Type<typeof GetNet
 export const PeerInfo = Schema.Struct({
   id: publicKey,
   state: Schema.String,
-  connections: Schema.Array(Schema.Uint8Array),
+  connections: Schema.optional(mutableArray(Schema.Uint8Array)),
 });
 export interface PeerInfo extends Schema.Schema.Type<typeof PeerInfo> {}
 
 export const GetNetworkPeersResponse = Schema.Struct({
-  peers: Schema.Array(PeerInfo),
+  peers: Schema.optional(mutableArray(PeerInfo)),
 });
 export interface GetNetworkPeersResponse extends Schema.Schema.Type<typeof GetNetworkPeersResponse> {}
 
@@ -220,7 +123,7 @@ export const Topic = Schema.Struct({
 export interface Topic extends Schema.Schema.Type<typeof Topic> {}
 
 export const SubscribeToNetworkTopicsResponse = Schema.Struct({
-  topics: Schema.Array(Topic),
+  topics: Schema.optional(mutableArray(Topic)),
 });
 export interface SubscribeToNetworkTopicsResponse extends Schema.Schema.Type<typeof SubscribeToNetworkTopicsResponse> {}
 
@@ -251,9 +154,9 @@ export const ConnectionInfo = Schema.Struct({
   sessionId: publicKey,
   remotePeerId: publicKey,
   transport: Schema.optional(Schema.String),
-  protocolExtensions: Schema.Array(Schema.String),
-  events: Schema.Array(ConnectionEvent),
-  streams: Schema.Array(StreamStats),
+  protocolExtensions: Schema.optional(mutableArray(Schema.String)),
+  events: Schema.optional(mutableArray(ConnectionEvent)),
+  streams: Schema.optional(mutableArray(StreamStats)),
   closeReason: Schema.optional(Schema.String),
   identity: Schema.optional(Schema.String),
   readBufferSize: Schema.optional(Schema.Number),
@@ -272,12 +175,12 @@ export const SwarmInfo = Schema.Struct({
   topic: publicKey,
   label: Schema.optional(Schema.String),
   isActive: Schema.Boolean,
-  connections: Schema.Array(ConnectionInfo),
+  connections: Schema.optional(mutableArray(ConnectionInfo)),
 });
 export interface SwarmInfo extends Schema.Schema.Type<typeof SwarmInfo> {}
 
 export const SubscribeToSwarmInfoResponse = Schema.Struct({
-  data: Schema.Array(SwarmInfo),
+  data: Schema.optional(mutableArray(SwarmInfo)),
 });
 export interface SubscribeToSwarmInfoResponse extends Schema.Schema.Type<typeof SubscribeToSwarmInfoResponse> {}
 
@@ -383,12 +286,12 @@ export class Rpcs extends RpcGroup.make(
   }),
   Rpc.make('getSpaceSnapshot', {
     payload: GetSpaceSnapshotRequest,
-    success: GetSpaceSnapshotResponse,
+    success: protoMessage('dxos.devtools.host.GetSpaceSnapshotResponse'),
     error: serviceError,
   }),
   Rpc.make('saveSpaceSnapshot', {
     payload: SaveSpaceSnapshotRequest,
-    success: SaveSpaceSnapshotResponse,
+    success: protoMessage('dxos.devtools.host.SaveSpaceSnapshotResponse'),
     error: serviceError,
   }),
   Rpc.make('clearSnapshots', {

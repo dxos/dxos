@@ -8,7 +8,7 @@ import type * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 
 import { protoMessage, serviceError } from './service-rpc.ts';
-import { protoTimestamp } from './service-schemas.ts';
+import { mutableArray, protoTimestamp } from './service-schemas.ts';
 
 //
 // RPC message schemas.
@@ -57,7 +57,7 @@ export interface KeyPair extends Schema.Schema.Type<typeof KeyPair> {}
 
 export const Metrics = Schema.Struct({
   timestamp: protoTimestamp,
-  values: Schema.Array(KeyPair),
+  values: Schema.optional(mutableArray(KeyPair)),
 });
 export interface Metrics extends Schema.Schema.Type<typeof Metrics> {}
 

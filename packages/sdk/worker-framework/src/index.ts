@@ -3,7 +3,7 @@
 //
 
 export * from './worker-connection';
-export { makeRpcClient, serveRpcGroup } from './internal/rpc';
+export { makeRpcClient, makeRpcClientOverProtocol, serveRpcGroup } from './internal/rpc';
 export type { RpcGroupServer, ServeRpcGroupOptions } from './internal/rpc';
 export type {
   DedicatedWorkerMessage,

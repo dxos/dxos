@@ -31,3 +31,14 @@ export const protoStruct: Schema.Schema<Record<string, unknown>> = Schema.Record
  * Effect schema for `google.protobuf.Timestamp`, matching the proto codec substitution shape.
  */
 export const protoTimestamp: Schema.Schema<Date, Date> = Schema.DateFromSelf;
+
+/**
+ * Mutable array schema for `repeated` proto fields.
+ *
+ * `Schema.Array` decodes to a `ReadonlyArray`, which is not assignable to the
+ * mutable `T[]` that generated protobuf request/response interfaces expose. Service
+ * handlers keep those proto types (see service-rpc-schemas.md), so inline RPC payloads
+ * use mutable arrays to stay structurally compatible at the RPC boundary. The wire
+ * encoding is identical — only the TypeScript element mutability differs.
+ */
+export const mutableArray = <Value extends Schema.Schema.Any>(value: Value) => Schema.mutable(Schema.Array(value));

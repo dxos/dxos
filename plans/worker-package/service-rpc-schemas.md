@@ -121,10 +121,29 @@ Reusable wire schemas for protobuf substitution types that appear inside inline 
 
 Proto3 optional and repeated fields map to:
 
-- `Schema.optional(...)` for proto3 `optional` fields and unset repeated fields.
-- `Schema.Array(...)` for `repeated` (may be wrapped in `optional` when the TS proto interface marks the array optional).
+- `Schema.optional(...)` for proto3 `optional` fields and repeated fields the generated TS interface
+  marks optional (`field?: T[]`). Match the generated `.d.ts` optionality exactly — a `Schema.Struct`
+  field that is required where the proto handler type is optional (or vice versa) fails to typecheck at
+  the `Handlers` boundary.
+- `mutableArray(...)` (from `service-schemas.ts`) for `repeated`, wrapped in `optional` when the array
+  is optional. `Schema.Array` decodes to a `ReadonlyArray`, which is not assignable to the mutable
+  `T[]` that the generated protobuf interfaces expose; handlers keep those proto types, so the inline
+  payload must use a mutable array to stay structurally compatible.
+
+`int64` / `uint64` fields decode to `string` in the generated TS interfaces — model them as
+`Schema.String`, not `Schema.Number`.
 
 Required proto3 fields (present in TS interfaces without `?`) are required in the Effect struct.
+
+## Substitution types stay `protoMessage`
+
+Proto messages whose fields use codec substitutions that are classes with methods (e.g.
+`dxos.echo.timeframe.Timeframe`, exposed as a `frames()` accessor) cannot be modeled as inline Effect
+structs — the handler produces the substitution class, not a plain object. Any response that embeds one
+stays `protoMessage`:
+
+- `DevtoolsHost.getSpaceSnapshot` / `saveSpaceSnapshot` — `protoMessage('dxos.devtools.host.GetSpaceSnapshotResponse' | 'SaveSpaceSnapshotResponse')` (the `SpaceSnapshot` subgraph embeds `Timeframe`).
+- `SpacesService.createEpoch` — `protoMessage('dxos.client.services.CreateEpochResponse')` (embeds `Timeframe`).
 
 ## Generator
 
