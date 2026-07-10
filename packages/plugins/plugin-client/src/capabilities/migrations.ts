@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { log } from '@dxos/log';
 
 import { ClientCapabilities } from '#types';
 
@@ -20,7 +21,12 @@ export default Capability.makeModule(
       (_migrations: any[]) => {
         const migrations = Array.from(new Set(_migrations.flat()));
         const spaces = client.spaces.get();
-        void Promise.all(spaces.map((space: any) => space.internal.db.runMigrations(migrations)));
+        // Fire-and-forget: migrations are idempotent and re-run on the next subscription firing.
+        // A rejection (e.g. services torn down mid-run) must be handled here or it escapes as an
+        // unhandled rejection from this floating promise.
+        void Promise.all(spaces.map((space: any) => space.internal.db.runMigrations(migrations))).catch((err) => {
+          log.warn('space migrations failed', { err });
+        });
       },
       { immediate: true },
     );
