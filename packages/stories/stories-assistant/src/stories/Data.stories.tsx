@@ -18,8 +18,8 @@ import { ViewModel } from '@dxos/schema';
 import { AccessToken, Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Module } from '../components';
 import {
+  Module,
   ModuleContainer,
   ResearchInputQueue,
   addTestData,

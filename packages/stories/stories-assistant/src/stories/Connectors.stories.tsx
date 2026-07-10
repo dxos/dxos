@@ -12,8 +12,8 @@ import { MarkdownSkill } from '@dxos/plugin-markdown';
 import { TranscriptionSkill } from '@dxos/plugin-transcription';
 import { Event, Message, Person, Pipeline, Task, Transcript } from '@dxos/types';
 
-import { Module } from '../components';
 import {
+  Module,
   ModuleContainer,
   accessTokensFromEnv,
   config,
