@@ -570,12 +570,14 @@ export const ServiceContextLayer = (
     return serviceContextServiceLayer(options).pipe(Layer.provideMerge(coreLayers(options)));
   }
 
-  // Edge: the optional feed-syncer / edge-replicator sit above the core so their `EchoHostService`
-  // requirement is satisfied by it, and the edge inputs are provided internally at the bottom.
+  // Edge: the feed-syncer sits above the core for its `EchoHostService` requirement. The edge
+  // replicator sits below the core — it needs only the edge inputs — so `DataSpaceManagerLayer`
+  // (inside the core) resolves `EdgeAutomergeReplicatorService` via `serviceOption`, exactly the
+  // way it resolves the mesh replicator. Edge inputs are provided at the bottom.
   return serviceContextServiceLayer(options).pipe(
     Layer.provideMerge(feedSyncerLayer),
-    Layer.provideMerge(edgeReplicatorLayer(options)),
     Layer.provideMerge(coreLayers(options)),
+    Layer.provideMerge(edgeReplicatorLayer(options)),
     Layer.provideMerge(edgeInputLayer(edgeConnection, edgeHttpClient)),
   );
 };
@@ -612,13 +614,6 @@ const serviceContextServiceLayer = (options: ServiceContextLayerOptions) =>
       const meshReplicator = Option.getOrUndefined(yield* Effect.serviceOption(MeshEchoReplicatorService));
       const echoEdgeReplicator = Option.getOrUndefined(yield* Effect.serviceOption(EdgeAutomergeReplicatorService));
       const feedSyncer = Option.getOrUndefined(yield* Effect.serviceOption(FeedSyncerService));
-
-      // The edge-replicator layer sits above the core stack, so `DataSpaceManagerLayer` (inside
-      // the core) cannot resolve `EdgeAutomergeReplicatorService` itself; hand it the instance
-      // here, before any space opens, or `connectToSpace` silently never runs.
-      if (echoEdgeReplicator) {
-        dataSpaceManager.setEchoEdgeReplicator(echoEdgeReplicator);
-      }
 
       return new ServiceContext({
         networkManager,

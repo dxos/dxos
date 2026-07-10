@@ -27,6 +27,7 @@ import {
   type EchoHost,
   EchoHostService,
   type EdgeAutomergeReplicator,
+  EdgeAutomergeReplicatorService,
   type IMetadataStore,
   IMetadataStoreService,
   type MeshEchoReplicator,
@@ -209,7 +210,7 @@ export class DataSpaceManager extends Resource {
   private readonly _edgeHttpClient?: EdgeHttpClient = undefined;
   private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures = undefined;
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
-  private _echoEdgeReplicator?: EdgeAutomergeReplicator = undefined;
+  private readonly _echoEdgeReplicator?: EdgeAutomergeReplicator = undefined;
   private readonly _runtimeProps?: DataSpaceManagerRuntimeProps = undefined;
 
   constructor(params: DataSpaceManagerProps) {
@@ -257,16 +258,6 @@ export class DataSpaceManager extends Resource {
         );
       },
     });
-  }
-
-  /**
-   * The edge replicator layer sits above the core stack (see `ServiceContextLayer`), so
-   * `DataSpaceManagerLayer` cannot resolve `EdgeAutomergeReplicatorService` itself; the
-   * service-context orchestrator injects the replicator after constructing the stack,
-   * before any space opens.
-   */
-  setEchoEdgeReplicator(replicator: EdgeAutomergeReplicator): void {
-    this._echoEdgeReplicator = replicator;
   }
 
   private get signingContext(): SigningContext {
@@ -872,6 +863,7 @@ export const DataSpaceManagerLayer = (
       const edgeConnection = yield* Effect.serviceOption(EdgeConnectionService);
       const edgeHttpClient = yield* Effect.serviceOption(EdgeHttpClientService);
       const meshReplicator = yield* Effect.serviceOption(MeshEchoReplicatorService);
+      const echoEdgeReplicator = yield* Effect.serviceOption(EdgeAutomergeReplicatorService);
 
       return new DataSpaceManager({
         spaceManager,
@@ -884,6 +876,7 @@ export const DataSpaceManagerLayer = (
         edgeConnection: Option.getOrUndefined(edgeConnection),
         edgeHttpClient: Option.getOrUndefined(edgeHttpClient),
         meshReplicator: Option.getOrUndefined(meshReplicator),
+        echoEdgeReplicator: Option.getOrUndefined(echoEdgeReplicator),
         ...options,
       });
     }),
