@@ -354,9 +354,8 @@ export class ServiceContext extends Resource implements ServiceContextApi {
     log('opening network manager...');
     await this.networkManager.open();
 
-    log('opening echo host...');
-    await this.echoHost.open(ctx);
-
+    // EchoHost open/close is owned by its layer scope (see `echoHostLayer`); the host is already
+    // open here, so only the identity/network-bound replicator wiring remains below.
     if (this.#meshReplicator) {
       log('adding mesh replicator...');
       await this.echoHost.addReplicator(ctx, this.#meshReplicator);
@@ -401,7 +400,7 @@ export class ServiceContext extends Resource implements ServiceContextApi {
     await this.#edgeAgentManager.close();
     await this.identityManager.close(ctx);
     await this.spaceManager.close();
-    await this.echoHost.close(ctx);
+    // EchoHost close is owned by its layer scope and runs when the runtime is disposed.
 
     await this.networkManager.close(ctx);
     await this.signalManager.close();
@@ -757,16 +756,32 @@ const storageLayer = Layer.empty.pipe(
 /**
  * Constructs the {@link EchoHost}, resolving the identity/space callbacks that point down the stack.
  * The feed sync handlers (which point up) are wired later via `EchoHost.setFeedSyncHandlers`.
+ *
+ * The host is self-contained (runs its own migrations, owns its feed/automerge stores), so its
+ * open/close is owned by the layer scope: it opens when the stack is built and closes when the
+ * runtime is disposed. Identity-, network-, and storage-bound lifecycle stays in `ServiceContext`.
  */
 const echoHostLayer = (options: { useSubduction?: boolean }) =>
-  Layer.unwrapEffect(
+  Layer.scopedDiscard(
     Effect.gen(function* () {
-      const identityManager = yield* IdentityManagerService;
-      const spaceManager = yield* SpaceManagerService;
-      return EchoHostLayer({
-        peerIdProvider: () => identityManager.identity?.deviceKey?.toHex(),
-        getSpaceKeyByRootDocumentId: (documentId) => spaceManager.findSpaceByRootDocumentId(documentId)?.key,
-        useSubduction: options.useSubduction,
-      });
+      const echoHost = yield* EchoHostService;
+      yield* Effect.acquireRelease(
+        Effect.promise(() => echoHost.open()),
+        () => Effect.promise(() => echoHost.close()),
+      );
     }),
+  ).pipe(
+    Layer.provideMerge(
+      Layer.unwrapEffect(
+        Effect.gen(function* () {
+          const identityManager = yield* IdentityManagerService;
+          const spaceManager = yield* SpaceManagerService;
+          return EchoHostLayer({
+            peerIdProvider: () => identityManager.identity?.deviceKey?.toHex(),
+            getSpaceKeyByRootDocumentId: (documentId) => spaceManager.findSpaceByRootDocumentId(documentId)?.key,
+            useSubduction: options.useSubduction,
+          });
+        }),
+      ),
+    ),
   );
