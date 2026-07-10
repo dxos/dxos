@@ -8,11 +8,11 @@ import type {
   ContactsService,
   DevicesService,
   EdgeAgentService,
+  FeedService,
   IdentityService,
   InvitationsService,
   LoggingService,
   NetworkService,
-  QueueService,
   SpacesService,
   SystemService,
 } from '@dxos/protocols/proto/dxos/client/services';
@@ -23,7 +23,9 @@ import type { AppService, ShellService, WorkerService } from '@dxos/protocols/pr
 import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type ServiceBundle, createServiceBundle } from '@dxos/rpc';
 
-export type { QueueService } from '@dxos/protocols/proto/dxos/client/services';
+import { type ClientServicesRpc } from './service-rpc';
+
+export type { FeedService } from '@dxos/protocols/proto/dxos/client/services';
 
 //
 // NOTE: Should contain client/proxy dependencies only.
@@ -41,7 +43,7 @@ export type ClientServices = {
 
   DataService: DataService;
   QueryService: QueryService;
-  QueueService: QueueService;
+  FeedService: FeedService;
 
   ContactsService: ContactsService;
   EdgeAgentService: EdgeAgentService;
@@ -73,8 +75,22 @@ export interface ClientServicesProvider {
    */
   onReconnect?: (callback: () => Promise<void>) => void;
 
-  descriptors: ServiceBundle<ClientServices>;
+  /**
+   * Effect-native client for all client services, inferred from the effect-rpc definitions.
+   * Preferred surface for new consumers; must be re-read after reconnect rather than cached.
+   * Effects it produces require only the default runtime and can be run with any `Runtime<never>`.
+   */
+  rpc: ClientServicesRpc;
+
+  /**
+   * @deprecated Prefer {@link rpc}. Promise/`Stream` shaped services derived from {@link rpc}.
+   */
   services: Partial<ClientServices>;
+
+  /**
+   * @deprecated Protobuf service descriptors; retained for legacy transports and devtools.
+   */
+  descriptors: ServiceBundle<ClientServices>;
 
   // TODO(burdon): Should take context from parent?
   open(): Promise<unknown>;
@@ -97,7 +113,7 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   DataService: schema.getService('dxos.echo.service.DataService'),
   ContactsService: schema.getService('dxos.client.services.ContactsService'),
   EdgeAgentService: schema.getService('dxos.client.services.EdgeAgentService'),
-  QueueService: schema.getService('dxos.client.services.QueueService'),
+  FeedService: schema.getService('dxos.client.services.FeedService'),
 
   // TODO(burdon): Deprecated.
   DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost'),

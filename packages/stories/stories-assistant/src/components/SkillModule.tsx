@@ -8,13 +8,11 @@ import { Skill } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
 import { meta } from '@dxos/plugin-assistant';
 import { TemplateEditor } from '@dxos/plugin-routine/components';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
-import { type ModuleProps } from './types';
-
-export const SkillModule = ({ space }: ModuleProps) => {
+export const SkillModule = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.profile.key);
   const [skill] = useQuery(space.db, Filter.type(Skill.Skill));
   if (!skill?.instructions) {

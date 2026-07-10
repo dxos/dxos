@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 export const TRACE_FEED_KIND = 'dxos.org.feed.trace';
 
 // In-rare cases its possible to have multiple trace feeds, natural order ensures that all clients use the same feed.
-export const query = Query.select(Filter.type(Feed.Feed, { kind: TRACE_FEED_KIND })).orderBy(Order.natural);
+export const query = Query.select(Filter.type(Feed.Feed, { kind: TRACE_FEED_KIND })).orderBy(Order.natural());
 // TODO(dmaretskyi): limit(1) is broken - query returns empty array.
 // .limit(1);
 

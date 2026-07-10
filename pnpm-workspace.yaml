@@ -11,6 +11,12 @@ packages:
   - '!**/dist/**'
   - '!**/out/**'
 
+# sparqljs was deprecated wholesale on npm ("no longer supported"); it remains a transitive
+# dependency of @comunica/* (via sparqlalgebrajs), so it cannot be removed by dropping the
+# direct @dxos/pipeline-rdf dependency. Acknowledged pending an upstream comunica migration.
+allowedDeprecatedVersions:
+  sparqljs: 3.7.4
+
 catalog:
   3d-force-graph: ^1.76.1
   '@ai-sdk/react': ^3.0.99
@@ -70,6 +76,7 @@ catalog:
   '@dnd-kit/utilities': ^3.2.0
   '@dxos/client': ^0.8.3
   '@dxos/echo': ^0.8.3
+  '@dxos/log': ^0.10.0
   '@dxos/ui-types': ^0.9.0
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.5.3
@@ -820,3 +827,4 @@ trustPolicyExclude:
   - semver@6.3.1
   - semver@5.7.2
   - ua-parser-js@1.0.41
+  - graphql@15.10.2

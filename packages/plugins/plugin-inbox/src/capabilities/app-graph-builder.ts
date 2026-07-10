@@ -10,7 +10,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { type Feed, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
+import { type Feed, Filter, Key, Obj, Order, Query, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -31,6 +31,11 @@ import { getCalendarsPath, getDraftsId, getMailboxesPath, getMailboxesSectionId 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
 const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
+
+// TODO(wittjosiah): Precompute the new-message count rather than deriving it from a feed query. A
+//   windowed query can't count past the window (it saturates at the cap), and querying the feed here
+//   pins the client's retention window. The count should be maintained/precomputed off the sync cursor.
+const NEW_MESSAGE_COUNT_WINDOW = 100;
 
 type FeedObjectNodeConfig<Parent extends Obj.Unknown, Child extends Obj.Unknown> = {
   id: string;
@@ -172,7 +177,11 @@ export default Capability.makeModule(
               const mailboxSnapshot = get(Obj.atom(mailbox));
               const feed = mailboxSnapshot.feed ? get(mailboxSnapshot.feed.atom) : undefined;
               const messages = feed
-                ? get(space.db.query(Query.select(Filter.type(Message.Message)).from(feed)).atom)
+                ? get(
+                    space.db.query(
+                      Query.select(Filter.type(Message.Message)).from(feed).limit(NEW_MESSAGE_COUNT_WINDOW),
+                    ).atom,
+                  )
                 : [];
               const modifiedCount = Mailbox.getNewMessageCount(mailboxSnapshot, messages);
 
@@ -312,12 +321,26 @@ export default Capability.makeModule(
           const message = get(
             db.query(Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed)).atom,
           )[0];
+          // Resolve the selected message's whole conversation and assign it to the companion node as
+          // the subject, so the article renders the thread directly without re-querying. Chronological
+          // (oldest-first) reading order; a message without a `threadId` is a one-message conversation.
+          const thread = message
+            ? message.threadId
+              ? get(
+                  db.query(
+                    Query.select(Filter.type(Message.Message, { threadId: message.threadId }))
+                      .from(feed)
+                      .orderBy(Order.property('created', 'asc')),
+                  ).atom,
+                )
+              : [message]
+            : [];
           return Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('message'),
               label: ['message.label', { ns: meta.profile.key }],
               icon: 'ph--envelope-open--regular',
-              data: message ?? 'message',
+              data: thread.length > 0 ? thread : 'message',
             }),
           ]);
         },

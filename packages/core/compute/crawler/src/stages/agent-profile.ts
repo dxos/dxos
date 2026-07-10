@@ -4,28 +4,29 @@
 
 import * as Effect from 'effect/Effect';
 
+import { type Stage } from '@dxos/pipeline';
+
 import { AgentRegistry, identifiersForUser, labelForUser } from '../AgentRegistry';
-import { StageError } from '../errors';
-import { type Stage } from '../Stage';
+import { type StateError } from '../errors';
+import { tapStage } from '../Stage';
+import { type StateStore } from '../StateStore';
+import type * as Type from '../types';
 
 /**
  * Per-message stage: fold each authored message into the agent registry, accumulating message
- * counts and first/last-seen times. This is the "track all users + collect metadata" requirement,
- * and it builds the agent identities the extract-facts stage attributes facts to.
+ * counts and first/last-seen times. Builds the agent identities the extract-facts stage attributes
+ * facts to.
  */
-export const makeAgentProfileStage = (): Stage => ({
-  name: 'agent-profile',
-  handles: ['Message'],
-  apply: (event) =>
+export const agentProfileStage = (): Stage.Stage<Type.Event, Type.Event, StateError, AgentRegistry | StateStore> =>
+  tapStage('agent-profile', ['Message'], (event) =>
     event._tag !== 'Message'
       ? Effect.void
       : Effect.gen(function* () {
-          const { message } = event;
           const registry = yield* AgentRegistry;
           yield* registry.observe({
-            identifiers: identifiersForUser(message.author),
-            label: labelForUser(message.author),
-            at: message.createdAt,
+            identifiers: identifiersForUser(event.message.author),
+            label: labelForUser(event.message.author),
+            at: event.message.createdAt,
           });
-        }).pipe(Effect.mapError((cause) => new StageError({ message: 'Failed to update agent profile', cause }))),
-});
+        }),
+  );

@@ -60,3 +60,5 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
     </Mosaic.Root>
   );
 };
+
+DeckLayout.displayName = 'DeckLayout';

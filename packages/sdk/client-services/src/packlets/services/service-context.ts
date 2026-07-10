@@ -80,7 +80,6 @@ export type ServiceContextRuntimeProps = Pick<
 // TODO(burdon): Rename/break-up into smaller components. And/or make members private.
 // TODO(dmaretskyi): Gets duplicated in CJS build between normal and testing bundles.
 @safeInstanceof('dxos.client-services.ServiceContext')
-@Trace.resource({ lifecycle: true })
 export class ServiceContext extends Resource {
   private readonly _edgeIdentityUpdateMutex = new Mutex();
 
@@ -172,7 +171,7 @@ export class ServiceContext extends Resource {
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
       runtime: this._runtime,
       useSubduction: this._edgeFeatures?.subductionReplicator,
-      syncQueue: async (ctx, request) => {
+      syncFeed: async (ctx, request) => {
         return this._feedSyncer?.syncBlocking(ctx, {
           spaceId: request.spaceId as SpaceId,
           subspaceTag: request.subspaceTag,
@@ -181,7 +180,7 @@ export class ServiceContext extends Resource {
         });
       },
       getSyncState: async (ctx, request) => {
-        // Mirror `syncQueue` above: in non-edge / partially-initialised modes the
+        // Mirror `syncFeed` above: in non-edge / partially-initialised modes the
         // feed syncer is absent. Return an empty state instead of throwing so
         // callers (e.g. devtools sync panel) keep working.
         if (!this._feedSyncer) {

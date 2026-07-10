@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ClientService } from '@dxos/client';
 import { Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
+import { Blob, Database } from '@dxos/echo';
 // Imported so TypeScript can name this type in the emitted .d.ts (UploadFile → File).
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type File } from '@dxos/types';
@@ -22,8 +22,10 @@ export default UploadFile.pipe(
 
       const loadedSandbox = yield* Database.load(sandbox);
       const loadedFile = yield* Database.load(file);
+      const blob = yield* Database.load(loadedFile.data);
 
-      const content = fileToString(loadedFile);
+      const bytes = yield* Blob.read(blob);
+      const content = new TextDecoder().decode(bytes);
       const sandboxId = loadedSandbox.id;
       const spaceId = db.spaceId;
       const sandboxClient = createSandboxClient(client);
@@ -34,16 +36,3 @@ export default UploadFile.pipe(
     }),
   ),
 );
-
-const fileToString = (file: { data?: { _tag: string; bytes?: Uint8Array; url?: string } }): string => {
-  if (!file.data) {
-    return '';
-  }
-  if (file.data._tag === 'inline' && file.data.bytes) {
-    return new TextDecoder().decode(file.data.bytes);
-  }
-  if (file.data._tag === 'external' && file.data.url) {
-    return file.data.url;
-  }
-  return '';
-};

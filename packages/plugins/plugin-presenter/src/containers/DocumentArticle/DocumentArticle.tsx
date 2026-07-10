@@ -32,3 +32,5 @@ export const DocumentArticle = ({ role, subject: document }: DocumentArticleProp
     </Panel.Root>
   );
 };
+
+DocumentArticle.displayName = 'DocumentArticle';

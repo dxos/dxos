@@ -95,3 +95,5 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
     </Dialog.Content>
   );
 };
+
+JoinDialog.displayName = 'JoinDialog';

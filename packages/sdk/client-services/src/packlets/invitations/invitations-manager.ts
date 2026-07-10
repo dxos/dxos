@@ -30,7 +30,6 @@ import { type InvitationsHandler, createAdmissionKeypair } from './invitations-h
  * Entry point for creating and accepting invitations, keeps track of existing invitation set and
  * emits events when the set changes.
  */
-@trace.resource()
 export class InvitationsManager {
   private readonly _createInvitations = new Map<string, CancellableInvitation>();
   private readonly _acceptInvitations = new Map<string, AuthenticatingInvitation>();

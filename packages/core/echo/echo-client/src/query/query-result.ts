@@ -7,13 +7,14 @@ import * as Atom from '@effect-atom/atom/Atom';
 import { type CleanupFn, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Entity, Query, type QueryResult } from '@dxos/echo';
+import { type Entity, Query, type QueryAST, type QueryResult } from '@dxos/echo';
+import { type AggregateValue, GroupBy } from '@dxos/echo-host/query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
-import { isNonNullable } from '@dxos/util';
+import { getDeep, isNonNullable } from '@dxos/util';
 
-import { type QueryContext } from './query-context';
+import { type QueryContext, type SourceEntry } from './query-context';
 
 /**
  * Predicate based query.
@@ -74,7 +75,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     const filteredResults = await this._queryContext.run(Context.default(), this._query.ast, {
       timeout: opts?.timeout ?? 30_000,
     });
-    return this._uniqueObjects(filteredResults);
+    return this._presentResults(filteredResults).objects;
   }
 
   /**
@@ -85,7 +86,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     const filteredResults = await this._queryContext.run(Context.default(), this._query.ast, {
       timeout: opts?.timeout ?? 30_000,
     });
-    return filteredResults;
+    return this._presentResults(filteredResults).entries;
   }
 
   async first(opts?: { timeout?: number }): Promise<T> {
@@ -143,7 +144,11 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
       this._handleQueryLifecycle();
     };
 
-    if (callback && opts?.fire) {
+    // Fire the initial event synchronously when authoritative results are already available: either
+    // a source can produce them synchronously, or this (cached/reused) result already computed them
+    // during a prior subscription. Only defer when an async-only query has no results yet (e.g. a
+    // fresh feed query served by the index), so subscribers don't observe a spurious empty snapshot.
+    if (callback && opts?.fire && (this._queryContext.isSynchronous() || this._objectCache !== undefined)) {
       try {
         callback(this);
       } catch (err) {
@@ -180,25 +185,52 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
   private _recomputeResult(): boolean {
     // TODO(dmaretskyi): Make results unique too.
     const results = this._queryContext.getResults();
-    const objects = this._uniqueObjects(results);
+    const presented = this._presentResults(results);
 
-    const changed =
-      !this._objectCache ||
-      this._objectCache.length !== objects.length ||
-      this._objectCache.some((obj, index) => obj.id !== objects[index].id);
+    const changed = presented.grouped
+      ? // Same T-is-erased-Group boundary as `_presentResults` — `_objectCache`/`presented.objects`
+        // are really `GroupResult[]` here, just typed as `T[]` at this generic class's surface.
+        !_groupsEqual(
+          this._objectCache as unknown as GroupResult[] | undefined,
+          presented.objects as unknown as GroupResult[],
+        )
+      : !this._objectCache ||
+        this._objectCache.length !== presented.objects.length ||
+        this._objectCache.some((obj, index) => obj.id !== presented.objects[index].id);
 
-    log('recomputeResult', {
-      old: this._objectCache?.map((obj) => obj.id),
-      new: objects.map((obj) => obj.id),
-      changed,
-    });
+    log('recomputeResult', { changed });
 
-    this._resultCache = results;
-    this._objectCache = objects;
+    this._resultCache = presented.entries;
+    this._objectCache = presented.objects;
     return changed;
   }
 
-  private _uniqueObjects(entries: QueryResult.EntityEntry<T>[]): T[] {
+  /**
+   * Turns flat, row-level source entries into the query's public result shape. For an `aggregate`
+   * query (detected by the internal `SourceEntry.group` annotation, which the query context sets
+   * uniformly across all entries or none), assembles flat aggregate records instead of deduped rows.
+   */
+  private _presentResults(entries: SourceEntry<T>[]): {
+    objects: T[];
+    entries: QueryResult.EntityEntry<T>[];
+    grouped: boolean;
+  } {
+    if (entries.length > 0 && entries[0].group !== undefined) {
+      const { groups, entries: groupEntries } = _assembleGroups(entries, _groupAggregatesFromQuery(this._query.ast));
+      // Boundary cast: T is the flat aggregate record for aggregate queries (per Query.aggregate's
+      // return type), but this class is written generically over the row type — aggregation is a
+      // presentation transform applied on top of row-level entries, with the row type erased at runtime.
+      return {
+        objects: groups as unknown as T[],
+        entries: groupEntries as unknown as QueryResult.EntityEntry<T>[],
+        grouped: true,
+      };
+    }
+
+    return { objects: this._uniqueObjects(entries), entries, grouped: false };
+  }
+
+  private _uniqueObjects(entries: SourceEntry<T>[]): T[] {
     const seen = new Set<unknown>();
     return entries
       .map(({ result }) => result)
@@ -248,6 +280,142 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     }
   }
 }
+
+/**
+ * Runtime shape of a `Query.aggregate` row once its type parameter is erased: a flat record with one
+ * field per declared aggregate ({@link Query.aggregate}), including the group-key fields.
+ */
+type GroupResult = { [field: string]: unknown };
+
+/**
+ * Buckets flat row-level entries into flat aggregate records, in the order groups first appear in
+ * `entries`. The host/local query sources already deliver an aggregate query's entries with groups
+ * contiguous and correctly ordered (see `AggregateStep`); this only needs to re-derive that grouping
+ * locally, after row objects have deduped/hydrated on the client. Group-key fields and declared
+ * aggregates become top-level record fields — group keys spread from the source `key`, others
+ * recomputed here from each group's hydrated members (`max`/`min`/`items`) or taken from the source
+ * (`count`); the ordering they drive is already applied by the source. A group with unhydrated
+ * members reflects only the hydrated subset for member-derived aggregates.
+ */
+const _assembleGroups = (
+  entries: SourceEntry[],
+  aggregates: readonly QueryAST.GroupAggregate[],
+): { groups: GroupResult[]; entries: QueryResult.Entry<GroupResult>[] } => {
+  const seenIds = new Set<unknown>();
+  const order: string[] = [];
+  const keys = new Map<string, Record<string, unknown>>();
+  const members = new Map<string, unknown[]>();
+  const counts = new Map<string, number>();
+
+  for (const entry of entries) {
+    if (!entry.group) {
+      continue;
+    }
+
+    const objectId = entry.result?.id;
+    if (objectId != null) {
+      if (seenIds.has(objectId)) {
+        continue;
+      }
+      seenIds.add(objectId);
+    }
+
+    const serializedKey = JSON.stringify(entry.group.key);
+    if (!members.has(serializedKey)) {
+      members.set(serializedKey, []);
+      keys.set(serializedKey, entry.group.key);
+      counts.set(serializedKey, entry.group.count);
+      order.push(serializedKey);
+    }
+    if (entry.result != null) {
+      members.get(serializedKey)!.push(entry.result);
+    }
+  }
+
+  const groups = order.map((serializedKey): GroupResult => {
+    const groupMembers = members.get(serializedKey)!;
+    // Group-key fields are already keyed by their result-field name; spread them flat.
+    const record: GroupResult = { ...keys.get(serializedKey)! };
+    for (const aggregate of aggregates) {
+      if (aggregate.kind === 'group') {
+        continue; // Group-key fields come from the spread above.
+      }
+      record[aggregate.name] = _computeAggregate(aggregate, groupMembers, counts.get(serializedKey)!);
+    }
+    return record;
+  });
+  const groupEntries = order.map((serializedKey, index) => ({ id: serializedKey, result: groups[index] }));
+  return { groups, entries: groupEntries };
+};
+
+/** Materialises one aggregate for a group from its hydrated members (or the source count). */
+const _computeAggregate = (aggregate: QueryAST.GroupAggregate, members: readonly unknown[], count: number): unknown => {
+  switch (aggregate.kind) {
+    case 'group':
+      return undefined; // Group-key fields are assembled from the source key, not here.
+    case 'items':
+      return aggregate.limit !== undefined ? members.slice(0, aggregate.limit) : members;
+    case 'count':
+      return count;
+    case 'max':
+    case 'min':
+      return GroupBy.reduceAggregate(
+        // Row objects are erased to `unknown` at this presentation boundary (see the boundary cast in
+        // `_presentResults`); the aggregate reads a dynamic property path off the hydrated object.
+        members.map((value) => _coerceScalar(getDeep(value as Record<string, unknown>, [aggregate.property]))),
+        aggregate.kind,
+      );
+  }
+};
+
+/** Coerces a raw property value to the scalar aggregate domain (non-scalars → `null`). */
+const _coerceScalar = (value: unknown): AggregateValue =>
+  typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? value : null;
+
+/**
+ * Extracts the aggregate clause's declarations from a query AST, unwrapping the wrappers permitted
+ * above an `aggregate` (`order`/`limit`/`skip`/`from`/`options`). Empty when the query has no
+ * `aggregate` clause.
+ */
+const _groupAggregatesFromQuery = (query: QueryAST.Query): readonly QueryAST.GroupAggregate[] => {
+  let node: QueryAST.Query | undefined = query;
+  while (node && node.type !== 'aggregate' && 'query' in node) {
+    node = node.query;
+  }
+  return node?.type === 'aggregate' ? node.aggregates : [];
+};
+
+/**
+ * Compares two flat aggregate result sets field-by-field — mirrors the row-level id diff used for
+ * non-aggregate queries. Member arrays (the `items` aggregate) compare by id sequence; scalar fields
+ * (group keys and `max`/`min`/`count`) compare by value.
+ */
+const _groupsEqual = (prev: GroupResult[] | undefined, next: GroupResult[]): boolean => {
+  if (!prev || prev.length !== next.length) {
+    return false;
+  }
+  return prev.every((prevGroup, index) => {
+    const nextGroup = next[index];
+    const fields = Object.keys(prevGroup);
+    if (fields.length !== Object.keys(nextGroup).length) {
+      return false;
+    }
+    return fields.every((field) => {
+      const prevValue = prevGroup[field];
+      const nextValue = nextGroup[field];
+      if (Array.isArray(prevValue) && Array.isArray(nextValue)) {
+        return (
+          prevValue.length === nextValue.length &&
+          // Member row objects are Entities with an `id`; compare identity by id sequence.
+          prevValue.every(
+            (value, valueIndex) => (value as { id: unknown })?.id === (nextValue[valueIndex] as { id: unknown })?.id,
+          )
+        );
+      }
+      return prevValue === nextValue;
+    });
+  });
+};
 
 // NOTE: Make sure this doesn't keep references to the queries so that they can be garbage collected.
 type QueryDiagnostic = {

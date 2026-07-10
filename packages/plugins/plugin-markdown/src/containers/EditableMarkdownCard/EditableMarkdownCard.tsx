@@ -42,3 +42,5 @@ export const EditableMarkdownCard = ({ subject }: EditableMarkdownCardProps) => 
     </Card.Section>
   );
 };
+
+EditableMarkdownCard.displayName = 'EditableMarkdownCard';

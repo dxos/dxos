@@ -32,3 +32,5 @@ export const ChessCard = ({ variant }: ChessCardProps) => {
     </Card.Body>
   );
 };
+
+ChessCard.displayName = 'ChessCard';

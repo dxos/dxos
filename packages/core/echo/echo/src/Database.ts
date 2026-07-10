@@ -13,6 +13,7 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type URI } from '@dxos/keys';
 
+import type * as Blob from './Blob';
 import type * as Entity from './Entity';
 import * as Err from './Err';
 import type * as Feed from './Feed';
@@ -191,11 +192,6 @@ export interface Database extends Queryable {
   removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void>;
 
   /**
-   * Queries items in a feed associated with this database.
-   */
-  queryFeed(feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<any>;
-
-  /**
    * Syncs a feed with the server.
    */
   syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void>;
@@ -204,6 +200,30 @@ export interface Database extends Queryable {
    * Returns queue replication backlog for the feed's namespace.
    */
   getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
+
+  /**
+   * Hashes and uploads `bytes` via the chosen storage backend, returning an un-added Blob object.
+   * Rejects with `Err.BlobTooLargeError` (over inline storage's fixed cap, or the backend's own
+   * `maxSize`), `Err.BlobWriteError` (backend upload failure), or `Err.BlobNotAvailableError`
+   * (`reason: 'backend-not-registered'` — the requested storage name has no registered backend).
+   */
+  createBlob(bytes: Uint8Array, options?: { type?: string; storage?: string }): Promise<Blob.Blob>;
+
+  /**
+   * Loads a blob's bytes. Rejects with `Err.BlobNotAvailableError` if the backend for the blob's
+   * storage scheme is not registered, offline, or cannot find the bytes.
+   */
+  readBlob(blob: Blob.Blob): Promise<Uint8Array>;
+
+  /**
+   * Checks whether a blob's bytes are currently available.
+   */
+  blobExists(blob: Blob.Blob): Promise<boolean>;
+
+  /**
+   * Returns a renderable URL for the blob, if one can be produced.
+   */
+  getBlobUrl(blob: Blob.Blob): Promise<string | undefined>;
 }
 
 export const isDatabase = (obj: unknown): obj is Database => {

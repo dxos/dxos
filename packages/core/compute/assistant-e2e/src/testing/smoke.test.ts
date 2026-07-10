@@ -21,7 +21,9 @@ describe('Smoke', () => {
         Do nothing and succeed.
       `,
     }),
-    { timeout: agentTestTimeout() },
+    {
+      timeout: agentTestTimeout(),
+    },
   );
 
   it.effect(
@@ -33,6 +35,8 @@ describe('Smoke', () => {
         Do nothing and fail.
       `,
     }),
-    { timeout: agentTestTimeout() },
+    {
+      timeout: agentTestTimeout(),
+    },
   );
 });

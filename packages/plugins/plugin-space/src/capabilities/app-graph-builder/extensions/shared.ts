@@ -23,7 +23,8 @@ import { meta } from '#meta';
 
 export const DATABASE_SECTION_TYPE = `${meta.profile.key}.database`;
 export const COLLECTIONS_SECTION_TYPE = `${meta.profile.key}.collections`;
-export const STATIC_SCHEMA_TYPE = `${meta.profile.key}.static-schema`;
+/** Tags every type node under the Database section — both static (compile-time) and database (dynamic) schemas. */
+export const SCHEMA_NODE_TYPE = `${meta.profile.key}.static-schema`;
 
 //
 // Constants

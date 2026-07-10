@@ -148,3 +148,5 @@ export const RegistryPanel = () => {
     </PanelContainer>
   );
 };
+
+RegistryPanel.displayName = 'RegistryPanel';

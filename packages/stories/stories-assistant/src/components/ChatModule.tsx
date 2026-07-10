@@ -9,13 +9,12 @@ import { Filter } from '@dxos/echo';
 import { Assistant } from '@dxos/plugin-assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, usePresets } from '@dxos/plugin-assistant/hooks';
-import { useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
+import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
 
 import { ExecutionGraphModule } from './ExecutionGraphModule';
-import { type ModuleProps } from './types';
 
-export const ChatModule = ({ space }: ModuleProps) => {
+export const ChatModule = ({ space }: { space: Space }) => {
   const { preset, ...chatProps } = usePresets({});
 
   const chats = useQuery(space.db, Filter.type(Assistant.Chat));

@@ -23,6 +23,9 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/sql-sqlite"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -38,7 +41,19 @@
       "path": "../../core/compute/nlp"
     },
     {
-      "path": "../../core/compute/semantic-index"
+      "path": "../../core/compute/pipeline"
+    },
+    {
+      "path": "../../core/compute/pipeline-discord"
+    },
+    {
+      "path": "../../core/compute/pipeline-email"
+    },
+    {
+      "path": "../../core/compute/pipeline-rdf"
+    },
+    {
+      "path": "../../core/compute/pipeline-transcription"
     },
     {
       "path": "../../core/echo/echo"
@@ -80,6 +95,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -96,6 +114,9 @@
     },
     {
       "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-rdf"
     },
     {
       "path": "../../ui/ui-editor"

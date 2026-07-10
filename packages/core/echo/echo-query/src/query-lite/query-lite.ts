@@ -4,7 +4,15 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Ref, Filter as Filter$, Obj as Obj$, Order as Order$, Query as Query$, Type as Type$ } from '@dxos/echo';
+import type {
+  Ref,
+  Aggregate as Aggregate$,
+  Filter as Filter$,
+  Obj as Obj$,
+  Order as Order$,
+  Query as Query$,
+  Type as Type$,
+} from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 // `DXN`/`EID` are type-only imports to keep the `query-lite` bundle free of
@@ -30,7 +38,8 @@ class OrderClass implements Order$.Any {
 }
 
 namespace Order1 {
-  export const natural: Order$.Any = new OrderClass({ kind: 'natural' });
+  export const natural = (direction: QueryAST.OrderDirection = 'asc'): Order$.Order<any> =>
+    new OrderClass({ kind: 'natural', direction });
   export const property = <T>(property: keyof T & string, direction: QueryAST.OrderDirection): Order$.Order<T> =>
     new OrderClass({
       kind: 'property',
@@ -715,6 +724,22 @@ class QueryClass implements Query$.Any {
     });
   }
 
+  'skip'(skip: number): Query$.Any {
+    return new QueryClass({
+      type: 'skip',
+      query: this.ast,
+      skip,
+    });
+  }
+
+  'aggregate'(aggregates: Record<string, Aggregate$.Any>): Query$.Any {
+    return new QueryClass({
+      type: 'aggregate',
+      query: this.ast,
+      aggregates: Object.entries(aggregates).map(([name, aggregate]) => ({ name, ...aggregate.spec })),
+    });
+  }
+
   'options'(options: QueryAST.QueryOptions): Query$.Any {
     return new QueryClass({
       type: 'options',
@@ -879,7 +904,7 @@ const prettyQuery = (query: QueryAST.Query): string => {
     case 'order': {
       const orders = query.order.map((o) => {
         if (o.kind === 'natural') {
-          return 'Order.natural';
+          return `Order.natural(${JSON.stringify(o.direction)})`;
         }
         if (o.kind === 'rank') {
           return `Order.rank(${JSON.stringify(o.direction)})`;
@@ -924,5 +949,21 @@ const prettyQuery = (query: QueryAST.Query): string => {
     }
     case 'limit':
       return `${prettyQuery(query.query)}.limit(${query.limit})`;
+    case 'skip':
+      return `${prettyQuery(query.query)}.skip(${query.skip})`;
+    case 'aggregate': {
+      const aggregates = query.aggregates.map((aggregate) => {
+        const arg =
+          aggregate.kind === 'items'
+            ? aggregate.limit !== undefined
+              ? `{ limit: ${aggregate.limit} }`
+              : ''
+            : aggregate.kind === 'count'
+              ? ''
+              : JSON.stringify(aggregate.property);
+        return `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${arg})`;
+      });
+      return `${prettyQuery(query.query)}.aggregate({ ${aggregates.join(', ')} })`;
+    }
   }
 };

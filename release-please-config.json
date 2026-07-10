@@ -385,17 +385,22 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/pipeline-discord/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/pipeline-email/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/core/compute/pipeline-transcription/package.json",
+          "path": "packages/core/compute/pipeline-rdf/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/core/compute/semantic-index/package.json",
+          "path": "packages/core/compute/pipeline-transcription/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -620,6 +625,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-brain/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-calls/package.json",
           "jsonpath": "$.version"
         },
@@ -781,11 +791,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-markdown/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-masonry/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1145,7 +1150,7 @@
         },
         {
           "type": "json",
-          "path": "packages/stories/stories-ui/package.json",
+          "path": "packages/stories/story-modules/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1316,6 +1321,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-pickers/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-rdf/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -4,15 +4,14 @@
 
 import React from 'react';
 
-import { InvocationTraceContainer } from '@dxos/devtools';
+import { DevtoolsContextProvider, InvocationTraceContainer } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 
-import { type ModuleProps } from './types';
-
-export const InvocationsModule = ({ space }: ModuleProps) => {
+export const InvocationsModule = ({ space }: { space: Space }) => {
   const feed = space?.properties.invocationTraceFeed?.target;
-  const feedDXN = feed ? Feed.getQueueUri(feed) : undefined;
+  const feedDXN = feed ? Feed.getFeedUri(feed) : undefined;
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>
@@ -21,7 +20,10 @@ export const InvocationsModule = ({ space }: ModuleProps) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='flex min-h-[20rem] items-center justify-center'>
-        <InvocationTraceContainer db={space?.db} feedDXN={feedDXN} detailAxis='block' />
+        {/* `InvocationTraceContainer` reads the devtools context, which the deck normally provides. */}
+        <DevtoolsContextProvider>
+          <InvocationTraceContainer db={space?.db} feedDXN={feedDXN} detailAxis='block' />
+        </DevtoolsContextProvider>
       </Panel.Content>
     </Panel.Root>
   );

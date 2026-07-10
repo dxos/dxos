@@ -14,7 +14,7 @@ import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useDatabase, useQuery } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
@@ -28,8 +28,8 @@ import { PipelineArticle } from './PipelineArticle';
 random.seed(0);
 
 const DefaultStory = () => {
-  const db = useDatabase();
-  const pipelines = useQuery(db, Filter.type(Pipeline.Pipeline));
+  const [space] = useSpaces();
+  const pipelines = useQuery(space?.db, Filter.type(Pipeline.Pipeline));
   const pipeline = pipelines[0];
 
   if (!pipeline) {

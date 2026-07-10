@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom-react';
+import { type Registry } from '@effect-atom/atom-react';
 import * as Predicate from 'effect/Predicate';
 
 import { Obj, type View } from '@dxos/echo';
@@ -30,7 +30,6 @@ import { type TableModel, type TableRow } from './table-model';
  */
 export class TablePresentation<T extends TableRow = TableRow> {
   private readonly _registry: Registry.Registry;
-  private readonly _visibleRange: Atom.Writable<DxGridPlaneRange>;
   private fieldProjectionCache = new Map<string, ReturnType<typeof this.model.projection.getFieldProjection>>();
 
   constructor(
@@ -38,10 +37,6 @@ export class TablePresentation<T extends TableRow = TableRow> {
     private readonly model: TableModel<T>,
   ) {
     this._registry = registry;
-    this._visibleRange = Atom.make<DxGridPlaneRange>({
-      start: { row: 0, col: 0 },
-      end: { row: 0, col: 0 },
-    });
   }
 
   public getCells(range: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells {
@@ -52,7 +47,8 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
     switch (plane) {
       case 'grid':
-        this._registry.set(this._visibleRange, range);
+        // Report the visible range to the model so it can (re)subscribe to those rows' mutations.
+        this.model.setVisibleRange(range);
         cells = this.getMainGridCells(range);
         break;
       case 'frozenRowsStart':
@@ -211,7 +207,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       const targetObj = SchemaEx.getValue(obj, field.path)?.target;
       if (targetObj) {
         const uri = Obj.getURI(targetObj);
-        cell.accessoryHtml = `<div role="none" class="absolute end-0 inset-y-0 p-(--dx-grid-cell-content-padding-block)"><dx-anchor uri=${uri} class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
+        cell.accessoryHtml = `<div role="none" class="dx-grid__cell__block"><dx-anchor uri=${uri} class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
       }
     }
 
@@ -220,7 +216,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       const value = SchemaEx.getValue(obj, field.path);
       const href = typeof value === 'string' ? safeHttpUrl(value) : undefined;
       if (href) {
-        cell.accessoryHtml = `<div role="none" class="absolute end-0 inset-y-0 p-(--dx-grid-cell-content-padding-block)"><a href="${escapeHtmlAttribute(href)}" target="_blank" rel="noopener noreferrer" class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--arrow-square-out--regular"/></a></div>`;
+        cell.accessoryHtml = `<div role="none" class="dx-grid__cell__block"><a href="${escapeHtmlAttribute(href)}" target="_blank" rel="noopener noreferrer" class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--arrow-square-out--regular"/></a></div>`;
       }
     }
 
@@ -536,8 +532,9 @@ export class TablePresentation<T extends TableRow = TableRow> {
         cells[toPlaneCellIndex({ col: 0, row })] = {
           value: '',
           readonly: true,
-          accessoryHtml: '<dx-icon icon="ph--plus--regular" class="contents"></dx-icon>',
-          className: mx('[&>div]:grid [&>div]:place-content-center', draftRows.length < 1 && 'dx-grid__row--cta__cell'),
+          accessoryHtml:
+            '<div role="none" class="dx-grid__cell__block"><dx-icon icon="ph--plus--regular" class="contents"></dx-icon></div>',
+          className: mx(draftRows.length < 1 && 'dx-grid__row--cta__cell'),
         };
       }
 

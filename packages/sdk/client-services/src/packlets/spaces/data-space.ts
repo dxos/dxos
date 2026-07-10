@@ -96,10 +96,8 @@ export type CreateEpochOptions = {
 };
 
 @trackLeaks('open', 'close')
-@trace.resource()
 export class DataSpace {
   private _ctx = new Context();
-  @trace.info()
   private readonly _inner: Space;
 
   private readonly _gossip: Gossip;
@@ -181,12 +179,10 @@ export class DataSpace {
     log('new state', { state: SpaceState[this._state] });
   }
 
-  @trace.info()
   get id() {
     return this._inner.id;
   }
 
-  @trace.info()
   get key() {
     return this._inner.key;
   }
@@ -195,7 +191,6 @@ export class DataSpace {
     return this._inner.isOpen;
   }
 
-  @trace.info({ enum: SpaceState })
   get state(): SpaceState {
     return this._state;
   }
@@ -230,7 +225,6 @@ export class DataSpace {
     return this._databaseRoot;
   }
 
-  @trace.info({ depth: null })
   private get _automergeInfo() {
     return {
       rootUrl: this._automergeSpaceState.rootUrl,
@@ -359,6 +353,23 @@ export class DataSpace {
     const ready = this.stateUpdate.waitForCondition(() => this._state === SpaceState.SPACE_READY);
 
     log('initializing automerge root');
+    const isPersisted = this._echoHost.spaces.some((s) => s.spaceId === this.id);
+    if (isPersisted) {
+      try {
+        log('opening persisted space root', { spaceId: this.id });
+        const root = await this._echoHost.openSpaceRoot(ctx, this.id);
+        this._databaseRoot = root;
+        if (root.getVersion() !== SpaceDocVersion.CURRENT) {
+          this._state = SpaceState.SPACE_REQUIRES_MIGRATION;
+          this.stateUpdate.emit();
+        } else {
+          await this._enterReadyState();
+        }
+      } catch (err) {
+        log.warn('failed to open persisted space root, will wait for credentials', { spaceId: this.id, err });
+      }
+    }
+
     this._automergeSpaceState.startProcessingRootDocs();
 
     // TODO(dmaretskyi): Change so `initializeDataPipeline` doesn't wait for the space to be READY, but rather any state with a valid root.
@@ -511,17 +522,20 @@ export class DataSpace {
         // Ensure only one root is processed at a time.
         using _guard = await this._epochProcessingMutex.acquire();
 
-        // Attaching space keys to legacy documents.
+        // Attaching space identifiers to legacy documents.
         const doc = handle.doc();
-        if (!doc.access?.spaceKey) {
-          handle.change((doc: any) => {
-            doc.access = { spaceKey: this.key.toHex() };
+        if (!doc.access?.spaceId || !doc.access?.spaceKey) {
+          handle.change((doc: DatabaseDirectory) => {
+            doc.access ??= {};
+            doc.access.spaceId ??= this.id;
+            // spaceKey is deprecated but still written so older clients can resolve the owning space.
+            doc.access.spaceKey ??= this.key.toHex();
           });
         }
 
         // TODO(dmaretskyi): Close roots.
         // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
-        const root = await this._echoHost.openSpaceRoot(this._ctx, this.id, handle.url);
+        const root = await this._echoHost.updateSpaceRoot(this._ctx, this.id, handle.url);
 
         // NOTE: Make sure this assignment happens synchronously together with the state change.
         this._databaseRoot = root;
