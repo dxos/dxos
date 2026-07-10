@@ -67,3 +67,5 @@ export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesPro
     );
   },
 );
+
+DefaultProperties.displayName = 'DefaultProperties';

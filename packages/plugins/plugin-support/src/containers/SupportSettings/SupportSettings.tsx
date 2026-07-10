@@ -41,3 +41,5 @@ export const SupportSettings = ({ settings, onSettingsChange, onShowWelcome }: S
     </Form.Root>
   );
 };
+
+SupportSettings.displayName = 'SupportSettings';

@@ -239,3 +239,5 @@ const paletteToText = (severity: DiagnosticSeverity): string => {
       return 'text-description';
   }
 };
+
+DiagnosticsPanel.displayName = 'DiagnosticsPanel';

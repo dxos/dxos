@@ -41,3 +41,5 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
 
   return <AgentPropertiesComponent agent={agent} />;
 };
+
+AgentProperties.displayName = 'AgentProperties';

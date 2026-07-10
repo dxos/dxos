@@ -44,7 +44,7 @@ export const useImageUrl = (file: File.File | undefined): string | undefined => 
       // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while DOM's
       // `BlobPart` only covers `ArrayBuffer`-backed views — a gap between the DOM lib types and
       // the TS standard lib, not fixable by typing `bytes` differently.
-      return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: file.type }));
+      return URL.createObjectURL(new globalThis.Blob([bytes as BlobPart], { type: blob.type }));
     }).pipe(
       Effect.provide(Database.layer(db)),
       Effect.catchAll(() => Effect.succeed(undefined)),
@@ -69,11 +69,11 @@ export const useImageUrl = (file: File.File | undefined): string | undefined => 
         URL.revokeObjectURL(createdBlobUrl);
       }
     };
-    // Keyed on `file?.id`/`file?.type` rather than `file`/`file.data` directly: ECHO's reactive
-    // proxy returns a fresh `Ref` wrapper for `.data` on every access, so including it (or the
-    // proxy object itself) here would rerun this effect on every render — clearing resolved to
-    // undefined and re-resolving it each time, which flickers the image while the object settles.
-  }, [file?.id, file?.type]);
+    // Keyed on `file?.id` rather than `file`/`file.data` directly: ECHO's reactive proxy returns a
+    // fresh `Ref` wrapper for `.data` on every access, so including it (or the proxy object itself)
+    // here would rerun this effect on every render — clearing resolved to undefined and
+    // re-resolving it each time, which flickers the image while the object settles.
+  }, [file?.id]);
 
   return resolved;
 };

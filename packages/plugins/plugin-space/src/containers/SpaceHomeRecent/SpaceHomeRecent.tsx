@@ -100,3 +100,5 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
 };
 
 RecentObjectTile.displayName = 'RecentObjectTile';
+
+SpaceHomeRecent.displayName = 'SpaceHomeRecent';

@@ -52,6 +52,9 @@
       "path": "../../core/echo/echo-react"
     },
     {
+      "path": "../../plugins/plugin-brain"
+    },
+    {
       "path": "../../plugins/plugin-client"
     },
     {
@@ -85,6 +88,9 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -100,7 +106,10 @@
       "path": "../../ui/react-ui-attention"
     },
     {
-      "path": "../../ui/react-ui-rdf"
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../story-modules"
     }
   ]
 }

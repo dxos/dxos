@@ -217,3 +217,5 @@ const useGenerationProgress = (
 
 /** Resolves the active GenerationProvider. The default is the HeyGen adapter. */
 const useGenerationProvider = (): GenerationProvider => useMemo(() => new HeyGenProvider(), []);
+
+GenerationArticle.displayName = 'GenerationArticle';

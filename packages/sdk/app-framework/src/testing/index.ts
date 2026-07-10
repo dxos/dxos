@@ -7,3 +7,4 @@ export * from './operationCapture';
 export * from './service';
 export * from './StorybookErrorFallback';
 export * from './withPluginManager';
+export * from './withSurfaceDebug';

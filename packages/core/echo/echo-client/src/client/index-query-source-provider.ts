@@ -3,9 +3,9 @@
 //
 
 import * as Array from 'effect/Array';
+import * as Runtime from 'effect/Runtime';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout } from '@dxos/async';
-import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { Entity, type Hypergraph, Obj, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
@@ -13,13 +13,13 @@ import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError } from '@dxos/protocols';
+import { RpcClosedError, subscribeStream } from '@dxos/protocols';
 import {
   QueryReactivity,
   type QueryResponse,
-  type QueryService,
   type QueryResult as RemoteQueryResult,
 } from '@dxos/protocols/proto/dxos/echo/query';
+import { type QueryService } from '@dxos/protocols/rpc';
 import { isNonNullable } from '@dxos/util';
 
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
@@ -51,7 +51,8 @@ export interface ObjectLoader {
 }
 
 export type IndexQueryProviderProps = {
-  service: QueryService;
+  service: QueryService.Client;
+  runtime: Runtime.Runtime<never>;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
 };
@@ -69,6 +70,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
   create(): QuerySource {
     return new IndexQuerySource({
       service: this._params.service,
+      runtime: this._params.runtime,
       objectLoader: this._params.objectLoader,
       graph: this._params.graph,
     });
@@ -76,7 +78,8 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
 }
 
 export type IndexQuerySourceProps = {
-  service: QueryService;
+  service: QueryService.Client;
+  runtime: Runtime.Runtime<never>;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
 };
@@ -89,7 +92,8 @@ export class IndexQuerySource implements QuerySource {
 
   private _query?: QueryAST.Query = undefined;
   private _results?: SourceEntry[] = [];
-  private _stream?: Stream<QueryResponse>;
+  /** Cleanup for the active reactive query subscription. */
+  private _streamCleanup?: () => void = undefined;
   private _open = false;
 
   /**
@@ -179,31 +183,49 @@ export class IndexQuerySource implements QuerySource {
     log('queryIndex', { queryId, query: Query.pretty(Query.fromAst(query)) });
     const start = Date.now();
     let settled = false;
+    let cleanup: (() => void) | undefined;
 
-    const stream = this._params.service.execQuery(
-      { query: JSON.stringify(query), queryId: String(queryId), reactivity: QueryReactivity.ONE_SHOT },
-      { timeout: QUERY_SERVICE_TIMEOUT },
-    );
+    const settle = (run: () => void) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timeout);
+      cleanup?.();
+      run();
+    };
 
-    stream.subscribe(
-      async (response) => {
-        try {
-          this._assertResultSpaces(query, response);
-          if (settled) {
-            return;
-          }
-          settled = true;
-          void stream.close().catch(() => {});
-          const results = await this._mapRecords(new Context(), queryId, query, start, response.results ?? []);
-          resolve(results);
-        } catch (err: any) {
-          reject(err);
-        }
-      },
-      (err) => {
-        if (err != null) {
-          reject(err);
-        }
+    // The one-shot query must resolve/reject within a bounded window; the effect stream is
+    // otherwise lazy and would hang if the host never responds.
+    const timeout = setTimeout(() => {
+      settle(() => reject(new TimeoutError(QUERY_SERVICE_TIMEOUT, 'index query')));
+    }, QUERY_SERVICE_TIMEOUT);
+
+    cleanup = subscribeStream(
+      this._params.runtime,
+      this._params.service.QueryService.execQuery({
+        query: JSON.stringify(query),
+        queryId: String(queryId),
+        reactivity: QueryReactivity.ONE_SHOT,
+      }),
+      {
+        onData: (response) => {
+          void (async () => {
+            try {
+              this._assertResultSpaces(query, response);
+              if (settled) {
+                return;
+              }
+              const results = await this._mapRecords(new Context(), queryId, query, start, response.results ?? []);
+              settle(() => resolve(results));
+            } catch (err: any) {
+              settle(() => reject(err));
+            }
+          })();
+        },
+        onError: (err) => {
+          settle(() => reject(err));
+        },
       },
     );
   }
@@ -214,31 +236,33 @@ export class IndexQuerySource implements QuerySource {
     this._reactiveQueryId = queryId;
     log('queryIndex', { queryId, query: Query.pretty(Query.fromAst(query)) });
 
-    const stream = this._params.service.execQuery(
-      { query: JSON.stringify(query), queryId: String(queryId), reactivity: QueryReactivity.REACTIVE },
-      { timeout: QUERY_SERVICE_TIMEOUT },
-    );
-
-    if (this._stream) {
+    if (this._streamCleanup) {
       log.warn('Query stream already open');
     }
-    this._stream = stream;
 
-    stream.subscribe(
-      async (response) => {
-        try {
-          this._assertResultSpaces(query, response);
-          // Remember the raw host records so a later local object load can re-hydrate them.
-          this._lastRemoteResults = response.results ?? [];
-          this._scheduleHydrate();
-        } catch (err: any) {
-          log.catch(err);
-        }
-      },
-      (err) => {
-        if (err != null && !(err instanceof RpcClosedError)) {
-          log.catch(err);
-        }
+    this._streamCleanup = subscribeStream(
+      this._params.runtime,
+      this._params.service.QueryService.execQuery({
+        query: JSON.stringify(query),
+        queryId: String(queryId),
+        reactivity: QueryReactivity.REACTIVE,
+      }),
+      {
+        onData: (response) => {
+          try {
+            this._assertResultSpaces(query, response);
+            // Remember the raw host records so a later local object load can re-hydrate them.
+            this._lastRemoteResults = response.results ?? [];
+            this._scheduleHydrate();
+          } catch (err: any) {
+            log.catch(err);
+          }
+        },
+        onError: (err) => {
+          if (err != null && !(err instanceof RpcClosedError)) {
+            log.catch(err);
+          }
+        },
       },
     );
   }
@@ -460,8 +484,8 @@ export class IndexQuerySource implements QuerySource {
   }
 
   private _closeStream(): void {
-    void this._stream?.close().catch(() => {});
-    this._stream = undefined;
+    this._streamCleanup?.();
+    this._streamCleanup = undefined;
   }
 }
 

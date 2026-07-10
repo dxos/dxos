@@ -12,7 +12,7 @@ import { Filter } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { type Space, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { TripBuilder } from '#testing';
@@ -41,13 +41,11 @@ const seed = (space: Space) => {
 };
 
 const DefaultStory = ({ selectedIndex = 0 }: StoryArgs) => {
-  const spaces = useSpaces();
-  const spaceId = spaces[0]?.id;
-  const db = useDatabase(spaceId ?? '');
-  const trip = useQuery(db, Filter.type(Trip.Trip))[0];
+  const [space] = useSpaces();
+  const trip = useQuery(space?.db, Filter.type(Trip.Trip))[0];
 
-  if (!spaceId || !db || !trip) {
-    return <Loading data={{ space: !!spaceId, db: !!db, trip: !!trip }} />;
+  if (!space?.db || !trip) {
+    return <Loading data={{ space: !!space, db: !!space?.db, trip: !!trip }} />;
   }
 
   const segment = Trip.getSegments(trip)[selectedIndex];

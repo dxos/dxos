@@ -1,3 +1,7 @@
+import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 //
 // Copyright 2022 DXOS.org
 //
@@ -6,11 +10,18 @@ import platform from 'platform';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithKey, createDidFromIdentityKey } from '@dxos/credentials';
-import { type IMetadataStore, type SpaceManager, type SwarmIdentity } from '@dxos/echo-host';
-import { type EdgeConnection } from '@dxos/edge-client';
-import { type FeedStore } from '@dxos/feed-store';
+import { failUndefined } from '@dxos/debug';
+import {
+  type IMetadataStore,
+  IMetadataStoreService,
+  type SpaceManager,
+  SpaceManagerService,
+  type SwarmIdentity,
+} from '@dxos/echo-host';
+import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
+import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { type KeyringApi } from '@dxos/keyring';
+import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
@@ -76,6 +87,35 @@ export type IdentityManagerProps = {
   devicePresenceAnnounceInterval?: number;
   devicePresenceOfflineTimeout?: number;
 };
+
+/**
+ * Resolves the active identity when it becomes available.
+ */
+export type IdentityProvider = () => Identity;
+
+/**
+ * Effect service tag for {@link IdentityProvider}.
+ */
+export class IdentityProviderService extends EffectContext.Tag('@dxos/client-services/IdentityProvider')<
+  IdentityProviderService,
+  IdentityProvider
+>() {}
+
+/**
+ * Builds an {@link IdentityProvider} from an {@link IdentityManager}.
+ */
+export const identityProviderFromManager =
+  (identityManager: IdentityManager): IdentityProvider =>
+  () =>
+    identityManager.identity ?? failUndefined();
+
+/**
+ * Effect service tag for {@link IdentityManager}.
+ */
+export class IdentityManagerService extends EffectContext.Tag('@dxos/client-services/IdentityManager')<
+  IdentityManagerService,
+  IdentityManager
+>() {}
 
 // TODO(dmaretskyi): Rename: represents the peer's state machine.
 export class IdentityManager {
@@ -417,3 +457,37 @@ export class IdentityManager {
     });
   }
 }
+
+export type IdentityManagerLayerOptions = Pick<
+  IdentityManagerProps,
+  'devicePresenceAnnounceInterval' | 'devicePresenceOfflineTimeout' | 'edgeFeatures'
+>;
+
+/**
+ * Effect Layer constructing an {@link IdentityManager} from ambient service dependencies.
+ */
+export const IdentityManagerLayer = (
+  options: IdentityManagerLayerOptions = {},
+): Layer.Layer<
+  IdentityManagerService,
+  never,
+  IMetadataStoreService | KeyringApiService | FeedStoreService | SpaceManagerService
+> =>
+  Layer.effect(
+    IdentityManagerService,
+    Effect.gen(function* () {
+      const metadataStore = yield* IMetadataStoreService;
+      const keyring = yield* KeyringApiService;
+      const feedStore = yield* FeedStoreService;
+      const spaceManager = yield* SpaceManagerService;
+      const edgeConnection = yield* Effect.serviceOption(EdgeConnectionService);
+      return new IdentityManager({
+        metadataStore,
+        keyring,
+        feedStore,
+        spaceManager,
+        edgeConnection: Option.getOrUndefined(edgeConnection),
+        ...options,
+      });
+    }),
+  );

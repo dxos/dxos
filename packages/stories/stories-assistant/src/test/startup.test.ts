@@ -9,17 +9,33 @@ import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import { describe, onTestFinished, test } from 'vitest';
 
-import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { ActivationEvents, Capabilities, type Plugin } from '@dxos/app-framework';
+import { RpcClosedError } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Client, Config } from '@dxos/react-client';
 
-const localConfig = new Config({
-  runtime: {
-    services: SERVICES_CONFIG.LOCAL,
-  },
-});
+// In-memory config: measuring plugin/client startup does not need EDGE/AI services (avoids the
+// ECONNREFUSED noise from unreachable local services in CI).
+const localConfig = new Config({});
+
+// The client-services effect-rpc endpoint rejects any in-flight request with `RpcClosedError` when
+// the client is destroyed (`onTestFinished` → `client.destroy()`), which surfaces as an unhandled
+// rejection that exits the node test process non-zero even though the test itself passes. Swallow
+// only that specific error; re-throw everything else. Registered once via a global flag so
+// re-running setup across files doesn't stack handlers.
+const FLAG = '__dxos_rpc_closed_teardown_filter__';
+if (!(globalThis as Record<string, unknown>)[FLAG]) {
+  (globalThis as Record<string, unknown>)[FLAG] = true;
+  const handler = (err: unknown) => {
+    if (err instanceof RpcClosedError) {
+      return;
+    }
+    throw err;
+  };
+  process.on('uncaughtException', handler);
+  process.on('unhandledRejection', handler);
+}
 
 /**
  * Measures the time taken for each phase of ClientPlugin startup.

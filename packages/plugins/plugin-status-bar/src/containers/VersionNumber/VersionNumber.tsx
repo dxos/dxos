@@ -44,3 +44,5 @@ export const VersionNumber = (_props: VersionNumberProps) => {
     </Tooltip.Trigger>
   );
 };
+
+VersionNumber.displayName = 'VersionNumber';

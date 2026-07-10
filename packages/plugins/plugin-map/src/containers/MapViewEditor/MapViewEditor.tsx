@@ -103,3 +103,5 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
     </Form.Root>
   );
 };
+
+MapViewEditor.displayName = 'MapViewEditor';

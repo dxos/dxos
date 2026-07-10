@@ -2,15 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Runtime from 'effect/Runtime';
+
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import type { Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
-import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
 import { HypergraphImpl } from '../hypergraph';
 import { DatabaseImpl } from '../proxy-db';
@@ -19,9 +19,12 @@ import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } fro
 export type EchoClientProps = {};
 
 export type ConnectToServiceProps = {
-  dataService: DataService;
-  queryService: QueryService;
-  feedService?: FeedProtocol.FeedService;
+  dataService: DataService.Client;
+  queryService: QueryService.Client;
+  feedService?: FeedService.Client;
+
+  /** Runtime used to run effect-rpc service calls at Promise/callback boundaries. */
+  runtime?: Runtime.Runtime<never>;
 };
 
 export type ConstructDatabaseProps = {
@@ -60,9 +63,10 @@ export class EchoClient extends Resource {
   // TODO(burdon): This already exists in Hypergraph.
   private readonly _databases = new Map<SpaceId, DatabaseImpl>();
 
-  private _dataService: DataService | undefined = undefined;
-  private _queryService: QueryService | undefined = undefined;
-  private _feedService: FeedProtocol.FeedService | undefined = undefined;
+  private _dataService: DataService.Client | undefined = undefined;
+  private _queryService: QueryService.Client | undefined = undefined;
+  private _feedService: FeedService.Client | undefined = undefined;
+  private _runtime: Runtime.Runtime<never> = Runtime.defaultRuntime;
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
@@ -86,11 +90,12 @@ export class EchoClient extends Resource {
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService, feedService }: ConnectToServiceProps): this {
+  connectToService({ dataService, queryService, feedService, runtime }: ConnectToServiceProps): this {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = dataService;
     this._queryService = queryService;
     this._feedService = feedService;
+    this._runtime = runtime ?? Runtime.defaultRuntime;
     return this;
   }
 
@@ -106,6 +111,7 @@ export class EchoClient extends Resource {
 
     this._indexQuerySourceProvider = new IndexQuerySourceProvider({
       service: this._queryService,
+      runtime: this._runtime,
       objectLoader: {
         loadObject: this._loadObjectFromDocument.bind(this),
         updateEvent: this._objectsUpdated,
@@ -144,6 +150,7 @@ export class EchoClient extends Resource {
       dataService: this._dataService!,
       queryService: this._queryService!,
       feedService: this._feedService,
+      runtime: this._runtime,
       graph: this._graph,
       spaceId,
       reactiveSchemaQuery,
@@ -174,9 +181,9 @@ export class EchoClient extends Resource {
     queryService,
     feedService,
   }: {
-    dataService: DataService;
-    queryService: QueryService;
-    feedService?: FeedProtocol.FeedService;
+    dataService: DataService.Client;
+    queryService: QueryService.Client;
+    feedService?: FeedService.Client;
   }): void {
     log('updating service references');
     this._dataService = dataService;
@@ -188,6 +195,7 @@ export class EchoClient extends Resource {
       this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
       this._indexQuerySourceProvider = new IndexQuerySourceProvider({
         service: this._queryService,
+        runtime: this._runtime,
         objectLoader: {
           loadObject: this._loadObjectFromDocument.bind(this),
           updateEvent: this._objectsUpdated,
