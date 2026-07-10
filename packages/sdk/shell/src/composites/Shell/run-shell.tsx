@@ -21,7 +21,24 @@ export const runShell = async (config: Config = new Config()) => {
   await runtime.open();
 
   try {
-    const services = new ClientServicesProxy(createIFramePort({ channel: DEFAULT_CLIENT_CHANNEL }));
+    // `ClientServicesProxy` speaks the effect-rpc native Worker protocol over a `MessagePort`, while
+    // the shell reaches the host over its iframe `window.parent`. Relay one end of a `MessageChannel`
+    // over `window.parent.postMessage` (which preserves structured-clone payloads) tagged with the
+    // client channel so protocol frames cross unencoded.
+    // TODO(dxos): The host-side Worker-protocol bridge is a follow-up; until it lands this connection
+    //   carries no live traffic (see plans/worker-package/rpc-effect.md, Phase C).
+    const clientChannel = new MessageChannel();
+    clientChannel.port2.onmessage = (event) => {
+      window.parent.postMessage({ channel: DEFAULT_CLIENT_CHANNEL, message: event.data }, '*');
+    };
+    window.addEventListener('message', (event) => {
+      if (typeof event.data !== 'object' || event.data === null || event.data.channel !== DEFAULT_CLIENT_CHANNEL) {
+        return;
+      }
+      clientChannel.port2.postMessage(event.data.message);
+    });
+    clientChannel.port2.start();
+    const services = new ClientServicesProxy(clientChannel.port1);
 
     createRoot(document.getElementById('root')!).render(
       <StrictMode>

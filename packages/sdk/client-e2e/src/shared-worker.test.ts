@@ -39,7 +39,6 @@ const setup = (configProvider: Provider<MaybePromise<Config>>) => {
   const clientProxy = new SharedWorkerConnection({
     config: configProvider,
     systemPort: systemPorts[0],
-    shellPort: shellChannel.port1,
   });
   const client = new Client({
     services: new ClientServicesProxy(appChannel.port1),
