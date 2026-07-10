@@ -297,7 +297,8 @@
     </div>
 
     <script>
-      const esc = (str) => str.replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[ch]);
+      const esc = (str) =>
+        str.replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
       const inline = (str) =>
         esc(str)
           .replace(/`([^`]+)`/g, '<code>$1</code>')
@@ -365,12 +366,11 @@
             if (isDone) done++;
             const li = document.createElement('li');
             li.className = 'task' + (isDone ? ' done' : '');
-            const bodyText = task[2].replace(
-              /^\*\*(.+?)\*\*(\s+—\s+(.*))?$/,
-              (all, head, _tail, note) =>
-                `<span class="txt">${inline('**' + head + '**')}</span>` +
-                (note ? ` <span class="done-note">— ${inline(note)}</span>` : ''),
-            );
+            const boldMatch = task[2].match(/^\*\*(.+?)\*\*(\s+—\s+(.*))?$/);
+            const bodyText = boldMatch
+              ? `<span class="txt">${inline('**' + boldMatch[1] + '**')}</span>` +
+                (boldMatch[3] ? ` <span class="done-note">— ${inline(boldMatch[3])}</span>` : '')
+              : inline(task[2]);
             li.innerHTML =
               `<div class="task-head"><span class="box"><svg viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.2 4.7 8.5 9.5 3.4"/></svg></span>` +
               `<span class="headline">${bodyText}</span></div>`;
