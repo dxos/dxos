@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { OperationHandler, SkillDefinition } from '#capabilities';
+import { FactStore, OperationHandler, ReactSurface, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -15,10 +15,18 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export const BrainPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   AppPlugin.addTranslationsModule({ translations }),
+  // Provisions the per-space FactStore/FeedCursors LayerSpecs + registry; the mailbox `EnrichMailbox`
+  // operation (in plugin-inbox) resolves these at invoke time, so BrainPlugin must be loaded wherever
+  // enrich runs.
+  Plugin.addModule({
+    activatesOn: ActivationEvents.SetupProcessManager,
+    activate: FactStore,
+  }),
   Plugin.make,
 );
 

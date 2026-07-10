@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { type FC } from 'react';
+import React, { type FC, type ReactNode } from 'react';
 
 import { ActivationEvents, Capabilities, Capability, Plugin, Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -13,13 +13,18 @@ import { type Space } from '@dxos/react-client/echo';
 
 import { ConnectorModule, ControlsModule, FactsModule, MailboxModule, MessageModule } from '../components';
 
+export type ModuleProps = {
+  space: Space;
+  attendableId: string;
+};
+
 /**
  * Resolves the active space at the surface boundary and mounts the module with it, so module bodies
  * never call hooks conditionally — mirrors the `useActiveSpace()` pattern used by plugin surfaces.
  */
-const withActiveSpace = (Component: FC<{ space: Space }>) => (): React.ReactNode => {
+const withActiveSpace = (Component: FC<ModuleProps>) => (): ReactNode => {
   const space = useActiveSpace();
-  return space ? <Component space={space} /> : null;
+  return space ? <Component space={space} attendableId='test' /> : null;
 };
 
 /**

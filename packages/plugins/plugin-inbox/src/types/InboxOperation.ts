@@ -10,7 +10,7 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FactStore } from '@dxos/pipeline-rdf';
+import { FactStore, FeedCursors } from '@dxos/pipeline-rdf';
 import {
   Connection,
   GetSyncTargetsInput,
@@ -26,7 +26,6 @@ import { Actor, Event, Message, type Person } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { FeedCursors } from './FeedCursors';
 import * as Mailbox from './Mailbox';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);

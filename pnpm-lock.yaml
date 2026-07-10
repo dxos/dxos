@@ -5812,6 +5812,9 @@ importers:
       '@dxos/extractor-lib':
         specifier: workspace:*
         version: link:../extractor-lib
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
@@ -5840,9 +5843,6 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
       effect:
         specifier: 3.21.4
         version: 3.21.4
@@ -9003,12 +9003,21 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-rdf
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
+      '@dxos/react-ui-rdf':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-rdf
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -9025,9 +9034,6 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -19400,6 +19406,9 @@ importers:
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-rdf
+      '@dxos/plugin-brain':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-brain
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client

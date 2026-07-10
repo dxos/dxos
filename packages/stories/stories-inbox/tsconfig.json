@@ -52,6 +52,9 @@
       "path": "../../core/echo/echo-react"
     },
     {
+      "path": "../../plugins/plugin-brain"
+    },
+    {
       "path": "../../plugins/plugin-client"
     },
     {

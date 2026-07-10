@@ -23,11 +23,3 @@ export const Settings = Capability.make<Atom.Writable<import('./Settings').Setti
 export const ObjectExtractor = Capability.make<import('@dxos/extractor').ObjectExtractor>(
   `${meta.profile.key}.capability.objectExtractor`,
 );
-
-/**
- * The per-space in-memory FactStore registry shared between fact-writing operations and
- * fact-reading surfaces. See `../capabilities/fact-store`.
- */
-export const FactStoreRegistry = Capability.make<import('../capabilities/fact-store').FactStoreRegistry>(
-  `${meta.profile.key}.capability.factStoreRegistry`,
-);

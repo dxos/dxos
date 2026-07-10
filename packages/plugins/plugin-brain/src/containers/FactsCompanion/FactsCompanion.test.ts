@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 import { FactStore, type RDF } from '@dxos/pipeline-rdf';
 
-import { queryFacts } from './MailboxFactsCompanion';
+import { queryFacts } from './FactsCompanion';
 
 const mk = (over: Partial<RDF.Fact> & Pick<RDF.Fact, 'id'>): RDF.Fact => ({
   assertion: { subject: { entity: 'alice' }, predicate: 'travelsTo', object: { entity: 'paris' } },

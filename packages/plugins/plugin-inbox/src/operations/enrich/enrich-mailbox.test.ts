@@ -8,12 +8,11 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { type FactExtractor, messageSource } from '@dxos/pipeline-email';
-import { FactStore, type RDF } from '@dxos/pipeline-rdf';
+import { type FactExtractor, messageSource, runFactPipeline } from '@dxos/pipeline-email';
+import { FactStore, type FeedCursorsApi, type RDF } from '@dxos/pipeline-rdf';
 import { Cursor, Message } from '@dxos/types';
 
-import { type FeedCursorsApi, Mailbox } from '../../types';
-import { runFactPipeline } from './enrich-mailbox';
+import { Mailbox } from '../../types';
 
 const makeMessage = (suffix: string, created: string) =>
   Obj.make(Message.Message, {

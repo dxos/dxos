@@ -10,3 +10,5 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   () => import('./operation-handler'),
 );
 export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
+export const FactStore = Capability.lazy('FactStore', () => import('./fact-store'));
+export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));

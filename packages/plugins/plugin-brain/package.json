@@ -19,6 +19,11 @@
       "types": "./dist/types/src/capabilities/index.d.ts",
       "default": "./dist/lib/neutral/capabilities/index.mjs"
     },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/neutral/containers/index.mjs"
+    },
     "#skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",
@@ -86,8 +91,11 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
+    "@dxos/react-ui-rdf": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
@@ -95,7 +103,6 @@
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
-    "@dxos/effect": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@types/react": "catalog:",
     "react": "catalog:",
