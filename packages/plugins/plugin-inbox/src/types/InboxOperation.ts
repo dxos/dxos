@@ -623,20 +623,20 @@ export const ExtractMailbox = Operation.make({
   }),
 });
 
-/** Default page size for {@link EnrichMailbox} fact-store commits. */
-export const DEFAULT_ENRICH_MAILBOX_PAGE_SIZE = 10;
+/** Default page size for {@link AnalyzeMailbox} fact-store commits. */
+export const DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE = 10;
 
-export const EnrichMailbox = Operation.make({
+export const AnalyzeMailbox = Operation.make({
   meta: {
-    key: makeKey('enrichMailbox'),
-    name: 'Enrich Mailbox',
+    key: makeKey('analyzeMailbox'),
+    name: 'Analyze Mailbox',
     description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
     icon: 'ph--brain--regular',
   },
   services: [AiService.AiService, Database.Service, FactStore, FeedCursors],
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
-      description: 'Mailbox whose feed messages are enriched.',
+      description: 'Mailbox whose feed messages are analyzed.',
     }),
     pageSize: Schema.optional(
       Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({

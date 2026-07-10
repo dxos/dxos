@@ -36,7 +36,7 @@ export const StorySyncPlugin = Plugin.define(
 );
 
 /**
- * Provides an AiService backed by a local Ollama instance so `EnrichMailbox` extracts facts against
+ * Provides an AiService backed by a local Ollama instance so `AnalyzeMailbox` extracts facts against
  * a local model (start ollama with `OLLAMA_ORIGINS="*" ollama serve`). Contributed on the same
  * process-manager lifecycle as the FactStore LayerSpec so it is present when the operation resolves.
  */

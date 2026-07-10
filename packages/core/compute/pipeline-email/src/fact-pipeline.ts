@@ -41,7 +41,7 @@ export const EmailFactPipeline = {
   /**
    * Facts-only assembly of the email stages over a batch of messages: stats → extract-facts. Omits
    * summarize, extract-contacts, and {@link buildThreads} from {@link EmailPipeline}, so it needs no
-   * `AiService` and never writes to `db`. The cursored `EnrichMailbox` operation (in plugin-inbox)
+   * `AiService` and never writes to `db`. The cursored `AnalyzeMailbox` operation (in plugin-inbox)
    * covers the same fact-extraction concern incrementally, via a sibling facts-returning stage
    * (`extractFactsUnitStage`) that commits pages atomically with a cursor advance instead of indexing
    * in-stage; this batch variant is for one-shot runs over an already-collected set of messages.
@@ -68,7 +68,7 @@ export const EmailFactPipeline = {
  * Runs the cursored fact pipeline over a feed: dedup → extract facts → commit each page to the
  * {@link FactStore} while advancing the feed's cursor. Extraction is injected (`extract`) so the
  * pipeline is unit-testable with a deterministic stub — no `AiService` required. Feed-generic (the
- * mailbox `EnrichMailbox` operation is a thin wrapper that resolves a Mailbox to its feed).
+ * mailbox `AnalyzeMailbox` operation is a thin wrapper that resolves a Mailbox to its feed).
  *
  * Dedup is by the feed's high-water cursor (a coarse `key < cursorKey` skip) plus the set of message
  * sources already in the store (the precise idempotency backstop). Both the store and the cursor are
@@ -98,7 +98,7 @@ export const runFactPipeline = (options: {
     let processed = 0;
     let facts = 0;
     const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-    log.info('enrich: pipeline start', {
+    log.info('analyze: pipeline start', {
       messages: messages.length,
       cursorKey,
       indexed: indexedSources.size,
@@ -114,7 +114,7 @@ export const runFactPipeline = (options: {
       // Observability stage: confirms units flow through and how many facts each carries.
       Stage.map('facts-log', (unit: FactUnit) =>
         Effect.sync(() => {
-          log.info('enrich: extracted unit', { foreignId: unit.foreignId, key: unit.key, facts: unit.facts.length });
+          log.info('analyze: extracted unit', { foreignId: unit.foreignId, key: unit.key, facts: unit.facts.length });
           return unit;
         }),
       ),
@@ -140,7 +140,7 @@ export const runFactPipeline = (options: {
 
             // Terminal progress log (one line per committed page): the only live signal between
             // pipeline start and done, so a long run's advance is observable rather than silent.
-            log.info('enrich: committed page', {
+            log.info('analyze: committed page', {
               page: units.length,
               pageFacts: pageFacts.length,
               processed,
@@ -151,6 +151,6 @@ export const runFactPipeline = (options: {
       }),
     );
 
-    log.info('enrich: pipeline done', { processed, facts });
+    log.info('analyze: pipeline done', { processed, facts });
     return { processed, facts };
   });

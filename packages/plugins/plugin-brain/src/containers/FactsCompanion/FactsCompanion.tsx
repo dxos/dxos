@@ -17,7 +17,7 @@ import { type FactStoreRegistry } from '../../capabilities';
 
 /**
  * Companion surface rendering the semantic facts extracted for the active space. Reads the shared
- * per-space {@link FactStoreRegistry} (populated by the enrich pipeline) and hands its facts to the
+ * per-space {@link FactStoreRegistry} (populated by the analysis pipeline) and hands its facts to the
  * presentational {@link FactViewer}. Space-scoped via {@link useActiveSpace} — no container coupling.
  */
 export const FactsCompanion = () => {
@@ -40,7 +40,7 @@ export const queryFacts = (store: FactStoreApi): Promise<RDF.Fact[]> =>
 /**
  * Loads the facts for a space from the registry's shared in-memory store, re-querying whenever the
  * store mutates. The in-memory FactStore is not ECHO-reactive, so the registry's `subscribe` (fired
- * after `putFacts`/`clear`) is what keeps the view live as the enrich pipeline writes or a reset clears.
+ * after `putFacts`/`clear`) is what keeps the view live as the analysis pipeline writes or a reset clears.
  */
 export const useFacts = (registry: FactStoreRegistry, spaceId: string | undefined): RDF.Fact[] => {
   const [facts, setFacts] = useState<RDF.Fact[]>([]);

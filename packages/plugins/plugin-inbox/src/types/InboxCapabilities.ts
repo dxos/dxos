@@ -27,7 +27,7 @@ export const ObjectExtractor = Capability.make<import('@dxos/extractor').ObjectE
 /**
  * A mailbox-scoped action injected into the MailboxArticle toolbar menu. A plugin contributes the
  * operation to run plus the input built from the target mailbox (e.g. plugin-brain contributes
- * `Enrich` → `EnrichMailbox`); the toolbar renders each as a menu item and invokes it scoped to the
+ * `Analyze` → `AnalyzeMailbox`); the toolbar renders each as a menu item and invokes it scoped to the
  * mailbox's space.
  */
 export type MailboxAction = {

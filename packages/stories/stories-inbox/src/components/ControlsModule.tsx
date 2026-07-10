@@ -24,11 +24,11 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { ModuleProps } from '../testing';
 
-// Local Ollama model driving `EnrichMailbox` fact extraction. Ollama reliably fails structured
+// Local Ollama model driving `AnalyzeMailbox` fact extraction. Ollama reliably fails structured
 // output, so the operation is invoked with `strict: false`.
 const OLLAMA_MODEL = 'com.alibaba.model.qwen-2-5-7b.instruct';
 
-/** Reset / enrich controls plus a JSON status readout — owns the enrich pipeline. */
+/** Reset / analyze controls plus a JSON status readout — owns the analyze pipeline. */
 export const ControlsModule = ({ space }: ModuleProps) => {
   const client = useClient();
   const identity = useIdentity();
@@ -38,7 +38,7 @@ export const ControlsModule = ({ space }: ModuleProps) => {
   const [invoker] = useCapabilities(Capabilities.OperationInvoker);
 
   const [facts, setFacts] = useState<RDF.Fact[]>([]);
-  const [enriching, setEnriching] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const mountedRef = useRef(true);
   useEffect(() => {
     mountedRef.current = true;
@@ -75,13 +75,13 @@ export const ControlsModule = ({ space }: ModuleProps) => {
 
   // Poll the store for live progress while a run is in flight (facts are committed per page).
   useEffect(() => {
-    if (!enriching) {
+    if (!analyzing) {
       return;
     }
 
     const timer = setInterval(() => void refreshFacts(), 500);
     return () => clearInterval(timer);
-  }, [enriching, refreshFacts]);
+  }, [analyzing, refreshFacts]);
 
   const cancelRef = useRef<(() => void) | undefined>(undefined);
 
@@ -119,10 +119,10 @@ export const ControlsModule = ({ space }: ModuleProps) => {
       return;
     }
 
-    setEnriching(true);
+    setAnalyzing(true);
     const cancel = Effect.runCallback(
       invoker.invoke(
-        InboxOperation.EnrichMailbox,
+        InboxOperation.AnalyzeMailbox,
         {
           mailbox: Ref.make(mailbox),
           // TODO(burdon): Story config.
@@ -139,7 +139,7 @@ export const ControlsModule = ({ space }: ModuleProps) => {
         onExit: (exit: Exit.Exit<{ processed: number; facts: number }, Error>) => {
           cancelRef.current = undefined;
           if (mountedRef.current) {
-            setEnriching(false);
+            setAnalyzing(false);
           }
           void refreshFacts();
           if (Exit.isFailure(exit) && !Exit.isInterrupted(exit)) {
@@ -165,13 +165,13 @@ export const ControlsModule = ({ space }: ModuleProps) => {
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.Button onClick={handleReset}>Reset store</Toolbar.Button>
-          <Toolbar.Button onClick={handleResetFactStore} disabled={enriching}>
+          <Toolbar.Button onClick={handleResetFactStore} disabled={analyzing}>
             Reset facts
           </Toolbar.Button>
-          <Toolbar.Button onClick={handleResetCursor} disabled={!feed || enriching}>
+          <Toolbar.Button onClick={handleResetCursor} disabled={!feed || analyzing}>
             Reset cursor
           </Toolbar.Button>
-          {enriching ? (
+          {analyzing ? (
             <Toolbar.Button onClick={handleStop}>Stop</Toolbar.Button>
           ) : (
             <Toolbar.Button onClick={handleRunPipeline} disabled={!mailbox}>

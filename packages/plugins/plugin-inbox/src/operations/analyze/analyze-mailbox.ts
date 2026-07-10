@@ -19,11 +19,11 @@ import { InboxOperation } from '../../types';
  * the cursored fact pipeline. All facts/feed machinery is mailbox-agnostic; only the input shape
  * (`Ref<Mailbox>`) and the feed lookup are mailbox-specific.
  */
-const handler = InboxOperation.EnrichMailbox.pipe(
+const handler = InboxOperation.AnalyzeMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({
       mailbox: mailboxRef,
-      pageSize = InboxOperation.DEFAULT_ENRICH_MAILBOX_PAGE_SIZE,
+      pageSize = InboxOperation.DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE,
       model,
       provider,
       strict,

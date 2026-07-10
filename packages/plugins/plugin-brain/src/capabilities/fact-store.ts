@@ -25,7 +25,7 @@ export type FactStoreRegistry = {
   /**
    * Subscribe to fact mutations for a space; the listener fires after any `putFacts`/`clear` on that
    * space's store. Returns an unsubscribe. The in-memory FactStore is not otherwise observable, so
-   * this is how surfaces re-query when the enrich pipeline (or a reset) mutates the store.
+   * this is how surfaces re-query when the analysis pipeline (or a reset) mutates the store.
    */
   subscribe: (spaceId: string, listener: () => void) => () => void;
   /** The per-feed processing cursors for a space (created on first use). */

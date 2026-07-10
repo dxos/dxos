@@ -15,7 +15,7 @@ import { type MailboxExtractorMenuItem } from './useMailboxExtractorActions';
 /**
  * Returns a menu item per injected {@link InboxCapabilities.MailboxAction}. Selecting one invokes the
  * contributed operation over the mailbox, scoped to its space — the injection path other plugins use
- * to add mailbox toolbar actions (e.g. plugin-brain's `Enrich`) without depending on the toolbar.
+ * to add mailbox toolbar actions (e.g. plugin-brain's `Analyze`) without depending on the toolbar.
  */
 export const useInjectedMailboxActions = (mailbox: Mailbox.Mailbox): MailboxExtractorMenuItem[] => {
   const actions = useCapabilities(InboxCapabilities.MailboxAction);
