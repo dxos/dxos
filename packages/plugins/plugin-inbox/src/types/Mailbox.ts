@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
+import { Instructions } from '@dxos/compute';
 import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
@@ -56,6 +57,13 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
       enabled: Schema.Array(Schema.String),
       threshold: Schema.Number.pipe(Schema.between(0, 1)),
     }).pipe(FormInputAnnotation.set(false), Schema.optional),
+    // Optional per-mailbox reply guidance (tone, standing facts, sign-off, skills). A shared
+    // `Instructions` object can be referenced by several mailboxes, or a distinct one created per
+    // mailbox; the reply generator merges its text + skills into the session prompt.
+    instructions: Ref.Ref(Instructions.Instructions).pipe(
+      Schema.annotations({ title: 'Instructions' }),
+      Schema.optional,
+    ),
     // Provenance for extracted objects, keyed by message id → extracted object ids. Feed-stored
     // Messages are immutable Queue items and cannot be ECHO relation endpoints, so (like `tags`)
     // the association lives here on the mutable Mailbox. The referenced objects are space-db

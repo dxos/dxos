@@ -30,14 +30,24 @@ const PROMPT = trim`
   - Output ONLY the reply body — no subject line, no quoted original, no commentary.
 `;
 
+export type DraftOptions = {
+  /**
+   * User-authored instructions that steer the reply (tone, standing facts, sign-off, policies). A
+   * proxy for the per-mailbox `Instructions` object (`@dxos/compute`) the product wires in; appended
+   * after the base rules so it can refine or override them.
+   */
+  readonly instructions?: string;
+};
+
 /**
  * Drafts a reply to a single message as the recipient, via the variant's model. Bulk/automated mail
  * (a no-reply sender or an unsubscribe affordance) is skipped without an LLM call — see
- * `Mailbox.isReplyable`.
+ * `Mailbox.isReplyable`. Optional user `instructions` steer the reply.
  */
 export const draftReply = (
   message: Message.Message,
   variant: ModelVariant,
+  options: DraftOptions = {},
 ): Effect.Effect<DraftResult, never, AiService.AiService> =>
   Effect.gen(function* () {
     const messageId = String(message.properties?.messageId ?? message.id);
@@ -45,10 +55,14 @@ export const draftReply = (
     if (!Mailbox.isReplyable(message)) {
       return { messageId, subject, draft: '', skipped: true };
     }
+    const instructions = options.instructions?.trim();
+    const prompt = instructions
+      ? `${PROMPT}\n\nAdditional instructions from the user (follow these):\n${instructions}`
+      : PROMPT;
     const draft = (yield* generateText(
       variant.model,
       variant.provider,
-      `${PROMPT}\n\n${Message.extractText(message)}`,
+      `${prompt}\n\n${Message.extractText(message)}`,
     )).trim();
     return { messageId, subject, draft, skipped: false };
   });

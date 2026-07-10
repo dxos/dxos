@@ -20,5 +20,8 @@ export const SKILL_MODES = process.env.SKILL_MODES?.trim();
 /** Default message count for the intentionally-small html-vs-text benchmark. */
 export const DEFAULT_HTML_VS_TEXT_N = 10;
 
+/** Optional user instructions steering the draft-responses benchmark (a proxy for the Mailbox Instructions object). */
+export const DRAFT_INSTRUCTIONS = process.env.DRAFT_INSTRUCTIONS?.trim();
+
 /** Preferred subject when none is given and it is present in the fact store. */
 export const DEFAULT_SUBJECT = 'Nicole Gudmand';

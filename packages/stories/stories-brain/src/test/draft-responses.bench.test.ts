@@ -13,6 +13,7 @@ import {
   runItemsBench,
   selectVariants,
 } from '../testing/harness';
+import { DRAFT_INSTRUCTIONS } from './defs';
 
 describe.skipIf(!fixtureExists())('draft replies (multi-model)', () => {
   test(
@@ -24,7 +25,7 @@ describe.skipIf(!fixtureExists())('draft replies (multi-model)', () => {
         name: 'draft-responses',
         items: messages,
         variants,
-        perItem: draftReply,
+        perItem: (message, variant) => draftReply(message, variant, { instructions: DRAFT_INSTRUCTIONS }),
         renderResponse: (result) =>
           `_${result.subject || result.messageId}_\n\n` +
           (result.skipped ? '_(skipped: not replyable)_' : result.draft || '_(no draft)_'),
