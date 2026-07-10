@@ -2,12 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { MemoryWorkerCoordiantor } from '@dxos/worker-framework/coordinator';
 
 import { CounterConnection } from './counter-connection';
 
@@ -88,15 +86,12 @@ const CounterPanel = ({ label, connection }: CounterPanelProps) => {
 };
 
 const SingleClientStory = () => {
-  const coordinator = useMemo(() => new MemoryWorkerCoordiantor(), []);
-  const connection = useMemo(() => new CounterConnection({ coordinator }), [coordinator]);
+  const connection = useMemo(() => new CounterConnection(), []);
 
-  useEffect(
-    () => () => {
-      void connection.close();
-    },
-    [connection],
-  );
+  useEffect(() => {
+    connection.open();
+    return () => void connection.close();
+  }, [connection]);
 
   return (
     <div className='p-6'>
@@ -110,9 +105,8 @@ const SingleClientStory = () => {
 };
 
 const TwoClientsStory = () => {
-  const coordinator = useMemo(() => new MemoryWorkerCoordiantor(), []);
-  const connectionA = useMemo(() => new CounterConnection({ coordinator }), [coordinator]);
-  const connectionB = useMemo(() => new CounterConnection({ coordinator }), [coordinator]);
+  const connectionA = useMemo(() => new CounterConnection(), []);
+  const connectionB = useMemo(() => new CounterConnection(), []);
 
   useEffect(
     () => () => {
@@ -124,7 +118,7 @@ const TwoClientsStory = () => {
   return (
     <div className='p-6'>
       <p className='mb-4 max-w-lg text-sm text-subdued'>
-        Two clients share one in-memory coordinator and one dedicated worker. Incrementing from either panel updates
+        Two clients share one SharedWorker coordinator and one dedicated worker. Incrementing from either panel updates
         both subscriptions.
       </p>
       <div className='flex flex-wrap gap-4'>

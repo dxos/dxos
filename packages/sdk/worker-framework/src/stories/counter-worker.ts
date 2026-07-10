@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import { log } from '@dxos/log';
 import { serveRpcGroup } from '@dxos/worker-framework';
 import { runWorker } from '@dxos/worker-framework/worker';
 
@@ -39,20 +38,13 @@ const counterHandlers = CounterRpcs.toLayer(
   }),
 );
 
-log.info('worker module initializing');
-
 runWorker({
   storageLockKey: COUNTER_STORAGE_LOCK_KEY,
-  createRuntime: async () => {
-    log.info('worker runtime initializing');
-    return {
-      livenessLockKey: COUNTER_LIVENESS_LOCK_KEY,
-      createSession: async ({ appPort }) => {
-        log.info('worker session initializing');
-        const server = serveRpcGroup(appPort, CounterRpcs, counterHandlers);
-        await server.open();
-        log.info('worker session opened');
-      },
-    };
-  },
+  createRuntime: async () => ({
+    livenessLockKey: COUNTER_LIVENESS_LOCK_KEY,
+    createSession: async ({ appPort }) => {
+      const server = serveRpcGroup(appPort, CounterRpcs, counterHandlers);
+      await server.open();
+    },
+  }),
 });

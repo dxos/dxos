@@ -2,20 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
-import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
 import { Resource } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { WorkerConnection, makeRpcClient } from '@dxos/worker-framework';
-import { MemoryWorkerCoordiantor } from '@dxos/worker-framework/coordinator';
+import { SharedWorkerCoordinator } from '@dxos/worker-framework/coordinator';
 
 import { COUNTER_LEADER_LOCK_KEY } from './counter-constants';
 import { CounterRpcs } from './counter-service';
@@ -23,11 +20,6 @@ import { CounterRpcs } from './counter-service';
 export type CounterRpc = {
   increment: () => Effect.Effect<number>;
   subscribe: (input: Record<string, never>) => Stream.Stream<number>;
-};
-
-export type CounterConnectionOptions = {
-  coordinator: MemoryWorkerCoordiantor;
-  createWorker?: () => Worker;
 };
 
 /**
@@ -39,12 +31,18 @@ export class CounterConnection extends Resource {
   #rpc: CounterRpc | undefined;
   readonly #subscribeCleanups = new Set<() => Promise<void>>();
 
-  constructor(options: CounterConnectionOptions) {
+  constructor() {
     super();
     this.#connection = new WorkerConnection({
-      createWorker:
-        options.createWorker ?? (() => new Worker(new URL('./counter-worker.ts', import.meta.url), { type: 'module' })),
-      createCoordinator: () => options.coordinator,
+      createWorker: () => new Worker(new URL('./counter-worker.ts', import.meta.url), { type: 'module' }),
+      createCoordinator: () =>
+        new SharedWorkerCoordinator({
+          createWorker: () =>
+            new SharedWorker(new URL('./coordinator-worker.ts', import.meta.url), {
+              type: 'module',
+              name: 'worker-framework-counter-coordinator',
+            }),
+        }),
       leaderLockKey: COUNTER_LEADER_LOCK_KEY,
       onConnect: async ({ appPort }) => {
         invariant(this.#scope, 'counter rpc scope not initialized');
@@ -67,14 +65,11 @@ export class CounterConnection extends Resource {
   }
 
   override async _open(): Promise<void> {
-    log.info('opening..');
     this.#scope = Effect.runSync(Scope.make());
     await this.#connection.open();
-    log.info('open');
   }
 
   override async _close(): Promise<void> {
-    log.info('closing..');
     await Promise.all([...this.#subscribeCleanups].map((cleanup) => cleanup()));
     this.#subscribeCleanups.clear();
     await this.#connection.close();
@@ -83,15 +78,9 @@ export class CounterConnection extends Resource {
       this.#scope = undefined;
     }
     this.#rpc = undefined;
-    log.info('closed');
   }
 
-  increment = async (): Promise<number> => {
-    log.info('incrementing..');
-    const result = await EffectEx.runPromise(this.rpc.increment());
-    log.info('incremented', { result });
-    return result;
-  };
+  increment = async (): Promise<number> => EffectEx.runPromise(this.rpc.increment());
 
   /**
    * Subscribes to counter updates. Returns cleanup that interrupts only this subscription.
@@ -99,14 +88,7 @@ export class CounterConnection extends Resource {
   subscribe = (onValue: (value: number) => void): (() => Promise<void>) => {
     invariant(this.#rpc, 'counter rpc not connected');
     const fiber = Effect.runFork(
-      this.rpc.subscribe({}).pipe(
-        Stream.runForEach((value) =>
-          Effect.sync(() => {
-            log.info('value update', { value });
-            onValue(value);
-          }),
-        ),
-      ),
+      this.rpc.subscribe({}).pipe(Stream.runForEach((value) => Effect.sync(() => onValue(value)))),
     );
     const cleanup = async () => {
       await EffectEx.runPromise(Fiber.interrupt(fiber));
