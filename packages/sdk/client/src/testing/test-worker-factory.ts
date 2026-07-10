@@ -27,6 +27,9 @@ export class TestWorkerFactory extends Resource {
   make(): MessagePort {
     log('worker-entrypoint');
     const messageChannel = new MessageChannel();
+    // runWorker listens via addEventListener, which (unlike assigning onmessage) does not implicitly
+    // start the port, so dispatch it explicitly rather than relying on the host's auto-start.
+    messageChannel.port1.start();
 
     runWorker({
       endpoint: {

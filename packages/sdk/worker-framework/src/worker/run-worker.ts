@@ -162,8 +162,12 @@ export const runWorker = ({
             [appChannel.port1, systemChannel.port1],
           );
 
+          if (!runtime) {
+            log.error('start-session before init; runtime not initialized', { clientId: message.clientId });
+            break;
+          }
           log('dedicated-worker: creating session (waiting for handshake)', { clientId: message.clientId });
-          await runtime!.createSession({
+          await runtime.createSession({
             appPort: appChannel.port2,
             systemPort: systemChannel.port2,
             clientId: message.clientId,
