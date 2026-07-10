@@ -193,9 +193,7 @@ const createBaseExtensions = ({
             'dxn-preview': {
               block: true,
               urlSchemes: ['dxn:', 'echo:'],
-              Component: (props: Omit<PreviewComponentProps, 'space'>) => (
-                <PreviewComponent {...props} space={space} />
-              ),
+              Component: (props: Omit<PreviewComponentProps, 'space'>) => <PreviewComponent {...props} space={space} />,
             },
             'link-preview': {
               block: false,
