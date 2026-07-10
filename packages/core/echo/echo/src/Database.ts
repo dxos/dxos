@@ -362,18 +362,18 @@ export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, ne
  * @see {@link Database.appendToFeed}
  */
 export const appendToFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
-  Service.pipe(
-    Effect.flatMap(({ db }) => Effect.promise(() => db.appendToFeed(feed, entities))),
-  ).pipe(Effect.withSpan('Database.appendToFeed'));
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.appendToFeed(feed, entities)))).pipe(
+    Effect.withSpan('Database.appendToFeed'),
+  );
 
 /**
  * Removes entities from a feed.
  * @see {@link Database.deleteFromFeed}
  */
 export const deleteFromFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
-  Service.pipe(
-    Effect.flatMap(({ db }) => Effect.promise(() => db.deleteFromFeed(feed, entities))),
-  ).pipe(Effect.withSpan('Database.deleteFromFeed'));
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.deleteFromFeed(feed, entities)))).pipe(
+    Effect.withSpan('Database.deleteFromFeed'),
+  );
 
 /**
  * Flushes pending changes to disk.
