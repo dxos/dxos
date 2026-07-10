@@ -11,21 +11,15 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import {
-  AgentRegistry,
-  type ChannelInfo,
-  Source,
-  type Stage,
-  StateStore,
-  makeAgentProfileStage,
-  makeExtractFactsStage,
-  run,
-} from '@dxos/crawler';
+import { AgentRegistry, type ChannelInfo, Source } from '@dxos/crawler';
 import { EffectEx } from '@dxos/effect';
+import { DiscordPipeline, MessageStore, type Question, QuestionStore } from '@dxos/pipeline-discord';
+import { storesLayer } from '@dxos/pipeline-discord/testing';
 import { FactPipeline, FactStore, type RDF, buildSparql, generateQuery, parseSparqlToQuery } from '@dxos/pipeline-rdf';
 import { discordSourceLayer } from '@dxos/plugin-discord';
 import { FactViewer } from '@dxos/react-ui-rdf';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
 import {
   type CrawlAction,
@@ -34,17 +28,18 @@ import {
   DEFAULT_SPARQL,
   EntityList,
   QueryPanel,
+  QuestionsPanel,
   entitiesFromFacts,
   initialOptions,
 } from '../components';
 
-const CRAWL_STAGES: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
+// Every pipeline store (crawl state, agents, messages, facts, questions) over ONE in-memory wasm
+// SQLite client — the browser binding of the shared-SqlClient design. Durable OPFS is worker-only,
+// so it can't run on the storybook main thread; state lives for the session.
+const makeStore = () => ManagedRuntime.make(storesLayer(SqliteClient.layerMemory({}).pipe(Layer.orDie)));
 
-const makeStore = () => ManagedRuntime.make(FactStore.layerMemory);
-
-// Browser persistence: the semantic store runs in-memory (OPFS SQLite is worker-only, so it can't run
-// on the storybook main thread), and the extracted facts are snapshotted to localStorage —
-// rehydrated on mount and re-saved after each crawl, so they survive reloads (entities derive from them).
+// Browser persistence: the extracted facts are snapshotted to localStorage — rehydrated on mount
+// and re-saved after each crawl, so they survive reloads (entities derive from them).
 const FACTS_STORAGE_KEY = 'dxos.crawler.facts';
 const save = (key: string, value: unknown) => {
   try {
@@ -67,6 +62,7 @@ const DefaultStory = (_: StoryArgs) => {
   const [question, setQuestion] = useState('');
   const [query, setQuery] = useState(DEFAULT_SPARQL);
   const [channels, setChannels] = useState<ChannelInfo[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [facts, setFacts] = useState<RDF.Fact[]>([]);
   const [context, setContext] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<string | null>(null);
@@ -136,42 +132,57 @@ const DefaultStory = (_: StoryArgs) => {
     }
 
     void guard('crawl', async () => {
-      // Per-crawl frontier + agents + edge LLM; the FactStore comes from the persistent runtime so
-      // facts accumulate across crawls. `Layer.fresh` on the AI layer is REQUIRED: the Discord source
-      // provides a CORS-proxy FetchHttpClient.Fetch, and Effect memoizes the shared FetchHttpClient
-      // layer — without fresh, the edge-AI client inherits the proxy and routes LLM calls through
-      // cors-proxy (→ 404). Fresh gives the AI its own direct fetch.
+      // Per-crawl source + edge LLM; every store (crawl state, agents, messages, facts, questions)
+      // comes from the persistent SQLite runtime so state accumulates and the crawl resumes across
+      // runs. `Layer.fresh` on the AI layer is REQUIRED: the Discord source provides a CORS-proxy
+      // FetchHttpClient.Fetch, and Effect memoizes the shared FetchHttpClient layer — without
+      // fresh, the edge-AI client inherits the proxy and routes LLM calls through cors-proxy
+      // (→ 404). Fresh gives the AI its own direct fetch.
       const perCrawl = Layer.mergeAll(
         discordSourceLayer(options.token),
-        StateStore.layerMemory,
-        AgentRegistry.layerMemory,
         Layer.fresh(AiServiceTestingPreset('edge-remote')),
       );
       const result = await getStore().runPromise(
         Effect.gen(function* () {
-          const summary = yield* run(
-            { channels: [options.channel], descendThreads: options.descendThreads, seed: { maxDays: options.maxDays } },
-            CRAWL_STAGES,
-          );
+          const summary = yield* DiscordPipeline.run({
+            channels: [options.channel],
+            descendThreads: options.descendThreads,
+            seed: { maxDays: options.maxDays },
+          });
           const registry = yield* AgentRegistry;
           const crawled = yield* registry.list();
           const store = yield* FactStore;
           const extracted = yield* store.query({});
+          const stored = yield* (yield* MessageStore).count();
           // Every message is observed by the agent-profile stage, so the summed counts == messages seen.
           const messages = crawled.reduce((total, agent) => total + agent.messageCount, 0);
-          return { summary, messages, facts: extracted };
+          return { summary, messages, stored, facts: extracted };
         }).pipe(Effect.provide(perCrawl)),
       );
+      await refreshQuestions();
       setFacts(result.facts);
       save(FACTS_STORAGE_KEY, result.facts);
       const skipped = result.summary.errored > 0 ? ` · ${result.summary.errored} skipped` : '';
       setStatus(
         result.messages === 0 && result.summary.errored === 0
           ? `No messages in the last ${options.maxDays}d — widen the lookback.`
-          : `Crawled ${result.messages} messages · ${result.facts.length} facts${skipped}`,
+          : `Crawled ${result.messages} messages · ${result.stored} stored · ${result.facts.length} facts${skipped}`,
       );
     });
   };
+
+  // Standing questions live in the persistent runtime's QuestionStore; the pipeline attempts them
+  // as targets drain, so a refresh after each crawl surfaces new answers.
+  const refreshQuestions = async () => {
+    const listed = await getStore().runPromise(QuestionStore.pipe(Effect.flatMap((store) => store.list())));
+    setQuestions(listed);
+  };
+
+  const handleAddQuestion = (text: string) =>
+    void guard('crawl', async () => {
+      await getStore().runPromise(QuestionStore.pipe(Effect.flatMap((store) => store.add(text))));
+      await refreshQuestions();
+    });
 
   // Process a loaded text/markdown file through the pipeline (no Discord, no agent resolution) and
   // refresh the facts from the store. Uses a fresh edge-AI layer for extraction; the FactStore
@@ -237,7 +248,7 @@ const DefaultStory = (_: StoryArgs) => {
   //  Use as opporutnity to move Surfaces into sub-module.
   return (
     <div className='dx-container grid grid-cols-[1fr_2fr_1fr]'>
-      <div role='none' className='grid grid-rows-2 gap-2 min-h-0'>
+      <div role='none' className='grid grid-rows-3 gap-2 min-h-0'>
         <CrawlPanel
           options={options}
           channels={channels}
@@ -260,6 +271,7 @@ const DefaultStory = (_: StoryArgs) => {
           onRun={handleRunSparql}
           onReset={handleResetQuery}
         />
+        <QuestionsPanel questions={questions} disabled={!!busy} onAdd={handleAddQuestion} />
       </div>
       <FactViewer facts={facts} context={context} />
       <EntityList entities={entities} selected={context} onSelect={setContext} />
