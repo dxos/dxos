@@ -10,7 +10,12 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
  * inlines its own `title` (an object-literal default export, as required by the CSF indexer) and
  * references these for the common storybook setup.
  */
-export const storyDecorators = [withTheme(), withLayout({ layout: 'fullscreen' })];
+export const storyDecorators = [
+  withTheme(),
+  withLayout({
+    layout: 'fullscreen',
+  }),
+];
 
 export const storyParameters = {
   layout: 'fullscreen',

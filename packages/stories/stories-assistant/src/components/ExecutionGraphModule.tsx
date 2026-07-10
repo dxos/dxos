@@ -19,7 +19,7 @@ export const ExecutionGraphModule = ({ space }: { space: Space }) => {
       : Query.select(Filter.nothing()),
   );
 
-  // Use provided trace feed, or fall back to the per-invocation trace feed from the most recent invocation.
+  // Derive the trace feed from the most recent invocation's `invocationTraceFeed`.
   const feed = invocations?.at(-1)?.invocationTraceFeed?.target;
   const objects = useQuery(
     space.db,

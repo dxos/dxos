@@ -270,6 +270,9 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
         <Row.Ref key={Obj.getURI(object).toString()} object={object} />
       ))}
 
+      {/* Attachments row. */}
+      <Row.Attachments attachments={message.attachments} />
+
       {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
       <Row.Tags tags={messageTags} />
     </Header.Root>
@@ -321,7 +324,14 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   // markdown renderer.
   if (viewMode === 'html' && html) {
     return (
-      <HtmlViewer classNames={classNames} html={html} loadRemoteImages={loadRemoteImages} isPersonal={isPersonal} />
+      <HtmlViewer
+        classNames={classNames}
+        html={html}
+        loadRemoteImages={loadRemoteImages}
+        isPersonal={isPersonal}
+        attachments={message.attachments}
+        db={db}
+      />
     );
   }
 

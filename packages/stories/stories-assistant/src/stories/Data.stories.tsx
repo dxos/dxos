@@ -140,7 +140,7 @@ export const WithResearchQueue: Story = {
         Instructions.make({
           name: 'Research',
           description: 'Research organization',
-          text: 'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
+          text: 'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked research (set mockSearch to true).',
           skills: [Ref.make(WebSearchSkill.make())],
         }),
       );
@@ -266,7 +266,7 @@ export const WithProject: Story = {
           text: trim`
             Research the organization provided as input.
             Absolutely, in all cases, create a research note for it at the end.
-            NOTE: Do mocked reseach (set mockSearch to true).
+            NOTE: Do mocked research (set mockSearch to true).
 
             {{organization}}
           `,
@@ -279,7 +279,7 @@ export const WithProject: Story = {
         enabled: true,
         spec: Trigger.specSubscription(organizationsQuery),
         input: {
-          prompt: Ref.make(researchPrompt),
+          instructions: Ref.make(researchPrompt),
           input: {
             organization: '{{event.subject}}',
           },
@@ -380,7 +380,7 @@ export const WithCRM: Story = {
     },
   }),
   args: {
-    layout: [[Module.Inbox], [Module.RoutineCompanion, Module.Trace], [Module.Database]],
+    layout: [[Module.Chat], [Module.Inbox], [Module.RoutineCompanion, Module.Trace], [Module.Database]],
     skills: [
       AssistantSkill.key,
       CrmSkill.key,
