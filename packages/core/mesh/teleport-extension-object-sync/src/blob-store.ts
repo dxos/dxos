@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
 import path from 'node:path';
 
 import { synchronized } from '@dxos/async';
@@ -31,6 +32,14 @@ export interface BlobStoreApi {
   setChunk(chunk: BlobChunk): Promise<BlobMeta>;
   list(): Promise<BlobMeta[]>;
 }
+
+/**
+ * Effect service tag for {@link BlobStoreApi}.
+ */
+export class BlobStoreApiService extends EffectContext.Tag('@dxos/teleport-extension-object-sync/BlobStoreApi')<
+  BlobStoreApiService,
+  BlobStoreApi
+>() {}
 
 const BlobMetaCodec = schema.getCodecForType('dxos.echo.blob.BlobMeta');
 
