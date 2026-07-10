@@ -874,6 +874,7 @@ const makeNotes = (
       '# Q2 sourcing trip — itinerary',
       '',
       `**Traveler:** ${lnk('Diego Alvarez', people.diego)}`,
+      '',
       `**Dates:** ${daysFromNow(21).slice(0, 10)} → ${daysFromNow(35).slice(0, 10)}`,
       '',
       '## Colombia (Huila)',
