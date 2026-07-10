@@ -329,7 +329,6 @@ export default Capability.makeModule(
           // it directly. One combined-scope query (db-root drafts + this mailbox's feed) assembles it
           // via a single reactive subscription, oldest-first, correlated by `threadId`. Two same-shape
           // subscriptions here deadlock the connector's recompute, so keep it to one query.
-          console.log('message', message, message?.threadId, mailbox.feed.uri);
           const conversation = !message
             ? []
             : get(
@@ -339,7 +338,6 @@ export default Capability.makeModule(
                     .orderBy(Order.property('created', 'asc')),
                 ).atom,
               );
-          console.log('conversation', conversation);
 
           // Synced messages (no `properties.mailbox`) always pass; drafts pass only when scoped to this
           // mailbox and not yet superseded by their sent copy in the feed (matched on the provider id
@@ -359,7 +357,7 @@ export default Capability.makeModule(
             }
             return !(item.properties?.sentMessageId && syncedIds.has(item.properties.sentMessageId));
           });
-          console.log('thread', thread);
+
           return Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('message'),

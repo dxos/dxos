@@ -3,10 +3,10 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Column, IconButton, Message, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Column, IconButton, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Editor, EditorViewProps } from '@dxos/react-ui-editor';
 import { Form, FormRootProps } from '@dxos/react-ui-form';
@@ -39,7 +39,6 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
   ({ message, extensions, onSend, title, onDelete, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.profile.key);
     const { themeMode } = useThemeContext();
-    const [error, setError] = useState<string | null>(null);
 
     const extension = useMemo(
       () =>
@@ -92,15 +91,10 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
       [message],
     );
 
+    // Send success/failure is surfaced via toasts by the caller's `onSend` (see `useEmailComposer`).
     const handleSave = useCallback<NonNullable<FormRootProps<MessageProperties>['onSave']>>(async () => {
-      try {
-        setError(null);
-        await onSend?.(message);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : t('send-email-error-unknown.message');
-        setError(errorMessage);
-      }
-    }, [t, onSend, message]);
+      await onSend?.(message);
+    }, [onSend, message]);
 
     const showHeader = title != null || !!onDelete;
 
@@ -139,12 +133,6 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
           <Column.Center>
             <Form.Content>
               <Form.FieldSet />
-              {error && (
-                <Message.Root valence='error'>
-                  <Message.Title>{t('send-email-error.title')}</Message.Title>
-                  <Message.Content>{error}</Message.Content>
-                </Message.Root>
-              )}
             </Form.Content>
           </Column.Center>
           <Column.Center classNames='pbs-form-gap'>

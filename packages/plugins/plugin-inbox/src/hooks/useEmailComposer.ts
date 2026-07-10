@@ -8,14 +8,17 @@ import * as Layer from 'effect/Layer';
 import { useCallback, useMemo } from 'react';
 
 import { AiService } from '@dxos/ai';
-import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import { useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { ServiceResolver } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { type AssistantOptions, assistant } from '@dxos/react-ui-editor';
 import { type Message } from '@dxos/types';
 
 import { type EditMessageProps } from '#components';
+import { meta } from '#meta';
 
 import { email } from '../extensions';
 import { GmailFunctions } from '../operations/google/gmail';
@@ -28,6 +31,7 @@ import { stripQuotedMessage } from '../util';
 export const useEmailComposer = (message: Message.Message): Pick<EditMessageProps, 'extensions' | 'onSend'> => {
   const db = Obj.getDatabase(message);
   const runtime = useProcessManagerRuntime();
+  const { invokePromise } = useOperationInvoker();
   const spaceId = db?.spaceId;
 
   const extensions = useMemo(() => {
@@ -60,21 +64,41 @@ export const useEmailComposer = (message: Message.Message): Pick<EditMessageProp
         throw new TypeError('Space not available.');
       }
 
-      const { id } = await runtime.runPromise(
-        Operation.invoke(GmailFunctions.Send, { message: draft }, { spaceId }).pipe(
-          Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service)),
-        ),
-      );
+      try {
+        const { id } = await runtime.runPromise(
+          Operation.invoke(GmailFunctions.Send, { message: draft }, { spaceId }).pipe(
+            Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service)),
+          ),
+        );
 
-      // Lock the draft from further edits; the sync reconciliation stage removes it once the
-      // canonical copy — matched by this provider message id — lands in the feed.
-      Obj.update(draft, (draft) => {
-        const properties = (draft.properties ??= {});
-        properties.sentMessageId = id;
-        properties.sentAt = new Date().toISOString();
-      });
+        // Lock the draft from further edits; the sync reconciliation stage removes it once the
+        // canonical copy — matched by this provider message id — lands in the feed.
+        Obj.update(draft, (draft) => {
+          const properties = (draft.properties ??= {});
+          properties.sentMessageId = id;
+          properties.sentAt = new Date().toISOString();
+        });
+
+        void invokePromise(LayoutOperation.AddToast, {
+          id: `${meta.profile.key}/send-email-success`,
+          icon: 'ph--paper-plane-tilt--regular',
+          duration: 3_000,
+          title: ['send-email-success.title', { ns: meta.profile.key }],
+          closeLabel: ['close.label', { ns: meta.profile.key }],
+        });
+      } catch (err) {
+        log.catch(err);
+        void invokePromise(LayoutOperation.AddToast, {
+          id: `${meta.profile.key}/send-email-error`,
+          icon: 'ph--warning--regular',
+          duration: 5_000,
+          title: ['send-email-error.title', { ns: meta.profile.key }],
+          description: err instanceof Error ? err.message : undefined,
+          closeLabel: ['close.label', { ns: meta.profile.key }],
+        });
+      }
     },
-    [runtime, spaceId],
+    [runtime, spaceId, invokePromise],
   );
 
   return { extensions, onSend: handleSend };
