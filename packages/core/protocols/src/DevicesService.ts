@@ -2,15 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import * as Rpc from '@effect/rpc/Rpc';
 import type * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 
 import { protoMessage, serviceError } from './service-rpc.ts';
 
+//
+// RPC message schemas.
+//
+
+export const QueryDevicesResponse = Schema.Struct({
+  devices: Schema.Array(protoMessage('dxos.client.services.Device')),
+});
+export interface QueryDevicesResponse extends Schema.Schema.Type<typeof QueryDevicesResponse> {}
+
 /**
  * Effect RPC definitions for `dxos.client.services.DevicesService`.
- * Generated from the protobuf service definition; payloads are protobuf-encoded on the wire.
+ * Service-only payloads use Effect schemas; shared proto types remain protobuf-encoded on the wire.
  */
 export class Rpcs extends RpcGroup.make(
   Rpc.make('updateDevice', {
@@ -19,7 +29,7 @@ export class Rpcs extends RpcGroup.make(
     error: serviceError,
   }),
   Rpc.make('queryDevices', {
-    success: protoMessage('dxos.client.services.QueryDevicesResponse'),
+    success: QueryDevicesResponse,
     error: serviceError,
     stream: true,
   }),
