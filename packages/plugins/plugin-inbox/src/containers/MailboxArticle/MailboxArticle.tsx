@@ -134,13 +134,6 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
 
-  // Mark the mailbox as viewed when opened, advancing its `viewedAt` cursor so the navtree new-message
-  // badge clears. Uses the live `subject` (not the `mailbox` snapshot) since this mutates, and is keyed on
-  // the mailbox id so it runs once per opened mailbox rather than on every update.
-  useEffect(() => {
-    Mailbox.markViewed(mailbox);
-  }, [mailbox.id]);
-
   // TODO(burdon): Actual test should be if we have synced; not number of messages.
   // Show the message list as soon as any messages are present; only fall back to the empty state
   // after a brief delay of genuinely having none (prevents an initial-load flicker). Keyed on the
