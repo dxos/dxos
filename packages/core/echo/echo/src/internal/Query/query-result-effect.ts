@@ -6,8 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as Effectable from 'effect/Effectable';
 import * as Option from 'effect/Option';
 
-import { EffectEx } from '@dxos/effect';
-
 import type * as QueryResult from '../../QueryResult';
 
 /**
@@ -19,9 +17,9 @@ export const makeQueryResultEffect = <T, E, R>(
   eff: Effect.Effect<QueryResult.QueryResult<T>, E, R>,
 ): QueryResult.QueryResultEffect<T, E, R> => {
   return {
-    run: Effect.flatMap(eff, (result) => EffectEx.promiseWithCauseCapture(() => result.run())),
+    run: Effect.flatMap(eff, (result) => Effect.promise(() => result.run())),
     first: Effect.flatMap(eff, (result) =>
-      EffectEx.promiseWithCauseCapture(async () => Option.fromNullable(await result.firstOrUndefined())),
+      Effect.promise(async () => Option.fromNullable(await result.firstOrUndefined())),
     ),
 
     // Effect internals: the result is itself an Effect, so it carries the commit prototype.
