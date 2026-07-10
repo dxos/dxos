@@ -32,14 +32,14 @@ Nested messages used only to compose an inline parent are inlined in the same fi
 
 ### Examples
 
-| Message | Encoding | Reason |
-|---|---|---|
-| `dxos.echo.service.SubscribeRequest` | Effect schema | Service boundary only |
+| Message                                    | Encoding       | Reason                                                         |
+| ------------------------------------------ | -------------- | -------------------------------------------------------------- |
+| `dxos.echo.service.SubscribeRequest`       | Effect schema  | Service boundary only                                          |
 | `dxos.echo.service.BatchedDocumentUpdates` | `protoMessage` | Used in `echo-client` (`repo-proxy`, `documents-synchronizer`) |
-| `dxos.echo.service.SpaceSyncState` | `protoMessage` | Used in client, react-client, plugins |
-| `dxos.client.services.Space` | `protoMessage` | Used across client proxies and UI |
-| `dxos.halo.credentials.Credential` | `protoMessage` | Shared halo type |
-| `dxos.echo.query.QueryRequest` | `protoMessage` | Used in echo query pipeline outside RPC |
+| `dxos.echo.service.SpaceSyncState`         | `protoMessage` | Used in client, react-client, plugins                          |
+| `dxos.client.services.Space`               | `protoMessage` | Used across client proxies and UI                              |
+| `dxos.halo.credentials.Credential`         | `protoMessage` | Shared halo type                                               |
+| `dxos.echo.query.QueryRequest`             | `protoMessage` | Used in echo query pipeline outside RPC                        |
 
 ## Module layout
 
@@ -84,31 +84,31 @@ Exported from `@dxos/protocols/rpc` via `packages/core/protocols/src/rpc.ts` (na
 
 Reusable wire schemas for protobuf substitution types that appear inside inline structs:
 
-| Export | Proto type | Wire encoding |
-|---|---|---|
-| `publicKey` | `dxos.keys.PublicKey` | `Uint8Array` (raw key bytes) |
-| `protoStruct` | `google.protobuf.Struct` | `Record<string, unknown>` |
-| `protoTimestamp` | `google.protobuf.Timestamp` | `Date` |
+| Export           | Proto type                  | Wire encoding                |
+| ---------------- | --------------------------- | ---------------------------- |
+| `publicKey`      | `dxos.keys.PublicKey`       | `Uint8Array` (raw key bytes) |
+| `protoStruct`    | `google.protobuf.Struct`    | `Record<string, unknown>`    |
+| `protoTimestamp` | `google.protobuf.Timestamp` | `Date`                       |
 
 `service-rpc.ts` is unchanged: `protoMessage` still uses the protobuf codec with substitutions; `serviceError` still round-trips `dxos.error.Error`.
 
 ## Per-service summary
 
-| Module | Inlined schemas | Still `protoMessage` |
-|---|---|---|
-| **DataService** | `SubscribeRequest`, `UpdateSubscriptionRequest`, `CreateDocumentRequest/Response`, `DocumentUpdate`, `UpdateRequest`, `FlushRequest`, `GetDocumentHeads*`, `DocHeadsList`, `WaitUntilHeadsReplicatedRequest`, `ReIndexHeadsRequest`, `GetSpaceSyncStateRequest` | `BatchedDocumentUpdates`, `SpaceSyncState` |
-| **FeedService** | All feed RPC types (`FeedQuery`, `QueryFeedRequest`, `FeedQueryResult`, `InsertIntoFeedRequest`, `DeleteFromFeedRequest`, `SyncFeedRequest`, `GetSyncState*`, `FeedNamespaceSyncState`) | — |
-| **SystemService** | `GetDiagnosticsRequest/Response`, `SystemStatus`, `UpdateStatusRequest`, `QueryStatusRequest/Response`, `KeyOption` | `dxos.config.Config`, `Platform` |
-| **IdentityService** | `CreateIdentityRequest`, `RequestRecoveryChallengeResponse`, `RecoveryCredentialData`, `CreateRecoveryCredential*`, `QueryIdentityResponse`, `SignPresentationRequest` | `Identity`, `RecoverIdentityRequest`, `ProfileDocument`, `Presentation`, `Credential` |
-| **InvitationsService** | `AcceptInvitationRequest`, `AuthenticationRequest`, `CancelInvitationRequest` | `Invitation`, `QueryInvitationsResponse` |
-| **DevicesService** | `QueryDevicesResponse` | `Device`, `DeviceProfileDocument` |
-| **NetworkService** | `ConnectionState`, `UpdateConfigRequest`, `SubscribeSwarmStateRequest` | `NetworkStatus`, edge signal/messenger types |
-| **LoggingService** | `ControlMetrics*`, `QueryMetrics*`, `Value`, `Stats`, `KeyPair`, `Metrics` | `QueryLogsRequest`, `LogEntry` |
-| **SpacesService** | All request/response types except those containing full `Space` graphs (`CreateSpaceRequest`, `UpdateSpaceRequest`, `PostMessageRequest`, `SubscribeMessagesRequest`, `WriteCredentialsRequest`, `QueryCredentialsRequest`, `CreateEpoch*`, `UpdateMemberRoleRequest`, `AdmitContactRequest`, `JoinBySpaceKeyRequest`, `ExportSpace*`, `ImportSpace*`, enums) | `Space`, `QuerySpacesResponse`, `JoinSpaceResponse`, `Credential`, `GossipMessage`, `Contact` (field) |
-| **DevtoolsHost** | Most devtools request/response types; echo snapshot subgraph (`EchoObject`, `SpaceSnapshot`, swarm info, etc.) | `Event`, `StorageInfo`, `GetBlobsResponse`, `GetSnapshotsResponse`, `SubscribeTo*Response` (heavy shared payloads), `SignedMessage` (circular halo type — `protoMessage('dxos.halo.signed.SignedMessage')`) |
-| **QueryService** | — (all shared) | `IndexConfig`, `QueryRequest`, `QueryResponse` |
-| **ContactsService** | — | `ContactBook` |
-| **EdgeAgentService** | — | `QueryEdgeStatusResponse`, `QueryAgentStatusResponse` |
+| Module                 | Inlined schemas                                                                                                                                                                                                                                                                                                                                               | Still `protoMessage`                                                                                                                                                                                        |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **DataService**        | `SubscribeRequest`, `UpdateSubscriptionRequest`, `CreateDocumentRequest/Response`, `DocumentUpdate`, `UpdateRequest`, `FlushRequest`, `GetDocumentHeads*`, `DocHeadsList`, `WaitUntilHeadsReplicatedRequest`, `ReIndexHeadsRequest`, `GetSpaceSyncStateRequest`                                                                                               | `BatchedDocumentUpdates`, `SpaceSyncState`                                                                                                                                                                  |
+| **FeedService**        | All feed RPC types (`FeedQuery`, `QueryFeedRequest`, `FeedQueryResult`, `InsertIntoFeedRequest`, `DeleteFromFeedRequest`, `SyncFeedRequest`, `GetSyncState*`, `FeedNamespaceSyncState`)                                                                                                                                                                       | —                                                                                                                                                                                                           |
+| **SystemService**      | `GetDiagnosticsRequest/Response`, `SystemStatus`, `UpdateStatusRequest`, `QueryStatusRequest/Response`, `KeyOption`                                                                                                                                                                                                                                           | `dxos.config.Config`, `Platform`                                                                                                                                                                            |
+| **IdentityService**    | `CreateIdentityRequest`, `RequestRecoveryChallengeResponse`, `RecoveryCredentialData`, `CreateRecoveryCredential*`, `QueryIdentityResponse`, `SignPresentationRequest`                                                                                                                                                                                        | `Identity`, `RecoverIdentityRequest`, `ProfileDocument`, `Presentation`, `Credential`                                                                                                                       |
+| **InvitationsService** | `AcceptInvitationRequest`, `AuthenticationRequest`, `CancelInvitationRequest`                                                                                                                                                                                                                                                                                 | `Invitation`, `QueryInvitationsResponse`                                                                                                                                                                    |
+| **DevicesService**     | `QueryDevicesResponse`                                                                                                                                                                                                                                                                                                                                        | `Device`, `DeviceProfileDocument`                                                                                                                                                                           |
+| **NetworkService**     | `ConnectionState`, `UpdateConfigRequest`, `SubscribeSwarmStateRequest`                                                                                                                                                                                                                                                                                        | `NetworkStatus`, edge signal/messenger types                                                                                                                                                                |
+| **LoggingService**     | `ControlMetrics*`, `QueryMetrics*`, `Value`, `Stats`, `KeyPair`, `Metrics`                                                                                                                                                                                                                                                                                    | `QueryLogsRequest`, `LogEntry`                                                                                                                                                                              |
+| **SpacesService**      | All request/response types except those containing full `Space` graphs (`CreateSpaceRequest`, `UpdateSpaceRequest`, `PostMessageRequest`, `SubscribeMessagesRequest`, `WriteCredentialsRequest`, `QueryCredentialsRequest`, `CreateEpoch*`, `UpdateMemberRoleRequest`, `AdmitContactRequest`, `JoinBySpaceKeyRequest`, `ExportSpace*`, `ImportSpace*`, enums) | `Space`, `QuerySpacesResponse`, `JoinSpaceResponse`, `Credential`, `GossipMessage`, `Contact` (field)                                                                                                       |
+| **DevtoolsHost**       | Most devtools request/response types; echo snapshot subgraph (`EchoObject`, `SpaceSnapshot`, swarm info, etc.)                                                                                                                                                                                                                                                | `Event`, `StorageInfo`, `GetBlobsResponse`, `GetSnapshotsResponse`, `SubscribeTo*Response` (heavy shared payloads), `SignedMessage` (circular halo type — `protoMessage('dxos.halo.signed.SignedMessage')`) |
+| **QueryService**       | — (all shared)                                                                                                                                                                                                                                                                                                                                                | `IndexConfig`, `QueryRequest`, `QueryResponse`                                                                                                                                                              |
+| **ContactsService**    | —                                                                                                                                                                                                                                                                                                                                                             | `ContactBook`                                                                                                                                                                                               |
+| **EdgeAgentService**   | —                                                                                                                                                                                                                                                                                                                                                             | `QueryEdgeStatusResponse`, `QueryAgentStatusResponse`                                                                                                                                                       |
 
 ## JSDoc policy
 
