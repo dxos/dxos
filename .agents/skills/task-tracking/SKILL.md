@@ -75,7 +75,7 @@ Short paragraph of context — what this phase delivers and why.
 ```
 
 - Phases are `##`; tasks are `- [ ]` / `- [x]`; detail as nested bullets.
-- Keep headlines imperative and specific; put the *why* in the phase context.
+- Keep headlines imperative and specific; put the _why_ in the phase context.
 
 ## Workflow
 
@@ -108,11 +108,11 @@ viewer serves over local HTTP instead.
 
 ## Common Mistakes
 
-| Mistake | Fix |
-|---------|-----|
-| Stale checkboxes (work done, box unchecked) | Update `TASKS.md` in the same edit as the code. |
-| Spawning a task chip for an in-scope follow-up | Record it in `TASKS.md`; chips are only for separate spin-off work. |
+| Mistake                                               | Fix                                                                           |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Stale checkboxes (work done, box unchecked)           | Update `TASKS.md` in the same edit as the code.                               |
+| Spawning a task chip for an in-scope follow-up        | Record it in `TASKS.md`; chips are only for separate spin-off work.           |
 | `TASKS.md` in the wrong package/directory or worktree | Write to the unit of work you're actually editing, in the session's worktree. |
-| Duplicating TodoWrite and `TASKS.md` | `TASKS.md` = durable/committed; TodoWrite = in-session scratch. Don't mirror. |
-| Leaving `TASKS.md` uncommitted | Commit it with the work; account for it in `git status`. |
-| Batch-checking all items at the very end | Check off incrementally as each task lands. |
+| Duplicating TodoWrite and `TASKS.md`                  | `TASKS.md` = durable/committed; TodoWrite = in-session scratch. Don't mirror. |
+| Leaving `TASKS.md` uncommitted                        | Commit it with the work; account for it in `git status`.                      |
+| Batch-checking all items at the very end              | Check off incrementally as each task lands.                                   |

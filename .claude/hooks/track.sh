@@ -15,9 +15,10 @@ set -euo pipefail
 input=$(cat)
 prompt=$(printf '%s' "$input" | jq -r '.prompt // empty' 2>/dev/null || printf '')
 
-# Sentinel: `$track ...` anywhere, or a line starting with `track: ...`.
+# Sentinel: `$track ...` (whitespace required after, so `$tracking`/`$tracked`
+# don't match) anywhere, or a line starting with `track: ...`.
 task=$(printf '%s\n' "$prompt" \
-  | grep -ioE '(\$track|^[[:space:]]*track:)[[:space:]]*.*' \
+  | grep -ioE '(\$track[[:space:]]+|^[[:space:]]*track:)[[:space:]]*.*' \
   | head -1 \
   | sed -E 's/^[[:space:]]*(\$track|track:)[[:space:]]*//I' || true)
 

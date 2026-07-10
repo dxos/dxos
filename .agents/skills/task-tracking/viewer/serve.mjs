@@ -9,8 +9,8 @@
 // Usage: node serve.mjs [path/to/TASKS.md] [--port 8787]
 // Defaults: ./TASKS.md in the current directory, port 8787.
 
-import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
+import { createServer } from 'node:http';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
