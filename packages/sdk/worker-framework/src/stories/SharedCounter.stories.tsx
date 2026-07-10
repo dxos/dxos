@@ -89,7 +89,7 @@ const SingleClientStory = () => {
   const connection = useMemo(() => new CounterConnection(), []);
 
   useEffect(() => {
-    connection.open();
+    void connection.open();
     return () => void connection.close();
   }, [connection]);
 
