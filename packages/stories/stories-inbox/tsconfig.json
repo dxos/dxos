@@ -52,6 +52,9 @@
       "path": "../../core/echo/echo-react"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../plugins/plugin-client"
     },
     {
@@ -80,6 +83,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"

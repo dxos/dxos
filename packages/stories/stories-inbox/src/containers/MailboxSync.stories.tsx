@@ -22,9 +22,11 @@
 // vite-dev). Known live risk: the `Live` sync calls the mail API directly from the browser, a path
 // normally exercised on Edge/Node — CORS is expected to work (JMAP allows it) but must be verified.
 //
-// Storage is persistent (OPFS), so the identity, mailbox, and any connection/synced mail survive a
-// page reload — reopen the story and pick up where you left off. The top toolbar shows the current
-// identity key and a Reset button that wipes local storage and reloads to a fresh identity.
+// Storage is persistent (OPFS via a dedicated worker, with a SharedWorker coordinator for
+// cross-tab leader election), so the identity, mailbox, and any connection/synced mail survive a
+// page reload — reopen the story and pick up where you left off, including in a second tab. The
+// top toolbar shows the current identity key and a Reset button that wipes local storage and
+// reloads to a fresh identity.
 
 import { useAtomSet } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -40,6 +42,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppPlugin, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { createClientServices } from '@dxos/client';
 import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Feed, Filter, Order, Query, Ref, Tag } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
@@ -57,6 +60,7 @@ import { translations as inboxTranslations } from '@dxos/plugin-inbox/translatio
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookCapabilities, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { Config, useClient } from '@dxos/react-client';
 import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -128,6 +132,17 @@ const SYNC_STORY_TYPES = [
   Cursor.Cursor,
   SyncBinding.SyncBinding,
 ];
+
+// DEDICATED_WORKER mode: see the `services` comment on `ClientPlugin` below for why this story
+// doesn't use a bare `createOpfsWorker`.
+const SYNC_STORY_CONFIG = new Config({
+  runtime: {
+    client: {
+      servicesMode: Runtime.Client.ServicesMode.DEDICATED_WORKER,
+      storage: { persistent: true },
+    },
+  },
+});
 
 // `showItem` (in the 'storybook' layout mode) dispatches `LayoutOperation.UpdateCompanion` after
 // `Select`; `Select` is handled by AttentionPlugin (writes the selection this story reads), but no
@@ -396,14 +411,18 @@ const meta = {
           types: SYNC_STORY_TYPES,
           // No `edge` service: the client runs fully local (no Edge websocket). JMAP/Fastmail sync
           // still works; Gmail OAuth does not (its coordinator requires an Edge URL).
-          config: new Config({
-            runtime: {
-              client: { storage: { persistent: true } },
-            },
+          config: SYNC_STORY_CONFIG,
+          // DEDICATED_WORKER mode (not a bare `createOpfsWorker`): the dedicated worker's OPFS
+          // access is arbitrated by `navigator.locks`, and the coordinator SharedWorker elects a
+          // single leader across tabs so a second tab proxies through the first instead of racing
+          // it for the same OPFS file handle. See OpfsWorker.ts for the failure mode this avoids —
+          // a plain `createOpfsWorker` (HOST mode) locks out every tab after the first.
+          services: createClientServices(SYNC_STORY_CONFIG, {
+            createDedicatedWorker: () =>
+              new Worker(new URL('@dxos/client/dedicated-worker', import.meta.url), { type: 'module' }),
+            createCoordinatorWorker: () =>
+              new SharedWorker(new URL('@dxos/client/coordinator-worker', import.meta.url), { type: 'module' }),
           }),
-          // OPFS-backed storage so identity/spaces survive a page reload; without a worker the
-          // client silently falls back to in-memory storage regardless of `storage.persistent`.
-          createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               // Only seed a fresh identity here — bounded and deterministic. Do NOT try to
