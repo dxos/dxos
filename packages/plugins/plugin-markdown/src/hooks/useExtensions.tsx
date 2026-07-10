@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 
 import { Paths } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
+import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
@@ -42,7 +43,7 @@ import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '#types';
 
-import { PreviewComponent } from '../components/PreviewComponent/PreviewComponent';
+import { PreviewComponent, type PreviewComponentProps } from '../components/PreviewComponent/PreviewComponent';
 import { setFallbackName } from '../util';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
@@ -95,6 +96,7 @@ export const useExtensions = ({
       createBaseExtensions({
         id,
         object,
+        space,
         settings,
         compact,
         viewMode,
@@ -106,6 +108,7 @@ export const useExtensions = ({
     [
       id,
       object,
+      space,
       compact,
       viewMode,
       viewState,
@@ -154,6 +157,7 @@ export const useExtensions = ({
 const createBaseExtensions = ({
   id,
   object,
+  space,
   onSelectObject,
   settings,
   compact,
@@ -161,7 +165,7 @@ const createBaseExtensions = ({
   viewState,
   setWidgets,
   platform,
-}: ExtensionsOptions): Extension[] => {
+}: ExtensionsOptions & { space?: Space }): Extension[] => {
   const extensions: Extension[] = [
     viewState && selectionChange(viewState),
     settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
@@ -189,7 +193,9 @@ const createBaseExtensions = ({
             'dxn-preview': {
               block: true,
               urlSchemes: ['dxn:', 'echo:'],
-              Component: PreviewComponent,
+              Component: (props: Omit<PreviewComponentProps, 'space'>) => (
+                <PreviewComponent {...props} space={space} />
+              ),
             },
             'link-preview': {
               block: false,

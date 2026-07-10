@@ -7,14 +7,15 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { URI } from '@dxos/keys';
-import { useClient } from '@dxos/react-client';
 import { Icon, IconButton } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
 
 export type PreviewComponentProps = XmlWidgetProps<{
+  space?: Space;
   label: string;
   dxn: string;
   block?: boolean;
@@ -68,12 +69,13 @@ const scrollTopIntoViewIfNeeded = (element: HTMLElement): void => {
  * Replaces the addBlockContainer callback pattern.
  * Used as the Component entry in a urlSchemes XmlWidgetDef.
  */
-export const PreviewComponent = ({ dxn, label: alt, onOpen, view, range }: PreviewComponentProps) => {
-  const client = useClient();
+export const PreviewComponent = ({ space, dxn, label: alt, onOpen, view, range }: PreviewComponentProps) => {
   const { invokePromise } = useOperationInvoker();
   const containerRef = useRef<HTMLDivElement>(null);
   const uri = dxn ? URI.make(dxn) : undefined;
-  const subject = uri ? client.graph.makeRef<Obj.Unknown>(uri).target : undefined;
+  // Resolve relative to the containing document's own space so space-relative embeds
+  // (bare `echo:/<id>` URIs, used so links survive being imported into a new space) resolve.
+  const subject = uri && space ? space.db.makeRef<Obj.Unknown>(uri).target : undefined;
 
   // px per rem; ResizeHandle works in rem while the persisted height is in px.
   const remSize = useMemo(() => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16, []);
