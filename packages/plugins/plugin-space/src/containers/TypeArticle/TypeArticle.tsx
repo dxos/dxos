@@ -246,4 +246,4 @@ const TypeTile = ({ object, current, onOpen, onDelete }: TileData) => {
   );
 };
 
-CollectionArticle.displayName = 'CollectionArticle';
+TypeArticle.displayName = 'TypeArticle';
