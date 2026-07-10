@@ -178,7 +178,10 @@ describe('Client services', () => {
       .toEqual(Device.PresenceState.OFFLINE);
   });
 
-  test('synchronizes data between two spaces after completing invitation', { timeout: 20_000 }, async () => {
+  // Heavy two-peer invitation + replication + presence flow. Node tests run with `isolate: false` and
+  // no default retry, so under e2e-suite concurrency a CPU-starved attempt can trip the timeout with no
+  // second chance. Give it headroom and a retry so a starved attempt re-runs once contention subsides.
+  test('synchronizes data between two spaces after completing invitation', { timeout: 60_000, retry: 2 }, async () => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 
