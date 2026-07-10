@@ -2,12 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 
 import { AppAnnotation } from '@dxos/app-toolkit';
-import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { Annotation, type Database, DXN, Feed, Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
+import { type EntityId } from '@dxos/keys';
+import { FeedAnnotation, StateMap, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 /**
@@ -36,20 +38,29 @@ export const JMAP_TAG_SOURCE = 'org.ietf.jmap.mailbox';
 export const SKILL_KEY = 'org.dxos.skill.inbox';
 
 // TODO(burdon): Implement as labels?
-export enum MessageState {
+export enum MessageStatus {
   NONE = 0,
   ARCHIVED = 1,
   DELETED = 2,
   SPAM = 3,
 }
 
+/** Per-message mutable state stored on the Mailbox (Messages are immutable feed items), keyed by message id. */
+export const MessageState = Schema.Struct({
+  /** ISO 8601 timestamp when the message was first opened; absent while the message is still new. */
+  viewedAt: Schema.optional(Schema.String),
+});
+export type MessageState = Schema.Schema.Type<typeof MessageState>;
+
 /** Mailbox object schema. */
 export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.mailbox', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
-    // ISO timestamp of when the mailbox was last viewed. Messages with a later `created` time are counted as new.
-    viewedAt: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
     feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+    // Per-message mutable state keyed by message id. Feed Messages are immutable Queue items, so their
+    // viewed marker (see `markThreadViewed`) lives in this child `StateMap` rather than on the message.
+    // Created with the mailbox by `make`.
+    messageState: Ref.Ref(StateMap.StateMap).pipe(FormInputAnnotation.set(false)),
     // Inverse tag index for immutable feed Messages: tag id (a `Tag` object's URI) → message ids.
     // Messages are immutable Queue items, so their tag associations live in a child `TagIndex` object
     // (the `meta.tags` augmentation for feed objects). Tag labels/hues live on the `Tag` objects.
@@ -83,52 +94,106 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
 /** Checks if a value is a Mailbox object. */
 export const instanceOf = (value: unknown): value is Mailbox => Obj.instanceOf(Mailbox, value);
 
-/** Number of messages created after the mailbox was last viewed (see {@link markViewed}). */
-export const getNewMessageCount = (
-  mailbox: Mailbox | Obj.Snapshot<Mailbox>,
-  messages: readonly Message.Message[],
-): number => {
-  const viewedAt = mailbox.viewedAt;
-  if (!viewedAt) {
-    return messages.length;
-  }
-  return messages.reduce((count, message) => (message.created > viewedAt ? count + 1 : count), 0);
-};
-
-/** Advances the `viewedAt` cursor to now, clearing the new-message count. */
-export const markViewed = (mailbox: Mailbox): void => {
-  const now = new Date().toISOString();
-  Obj.update(mailbox, (mailbox) => {
-    mailbox.viewedAt = now;
-  });
-};
-
 export const CreateMailboxSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
 });
 
-type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'feed' | 'tags' | 'filters' | 'extractors'> & {
+type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'feed' | 'tags' | 'filters' | 'extractors' | 'messageState'> & {
   filters?: { name: string; filter: string }[];
   extractors?: { enabled: string[]; threshold: number };
 };
 
-/** Creates a mailbox object with a backing feed. */
+/** Creates a mailbox object with a backing feed and per-message state map. */
 export const make = (props: MailboxProps = {}) => {
   const feed = Feed.make();
   const tags = TagIndex.make();
+  const messageState = StateMap.make();
   const mailbox = Obj.make(Mailbox, {
     feed: Ref.make(feed),
     tags: Ref.make(tags),
+    messageState: Ref.make(messageState),
     filters: [],
     ...props,
   });
 
   // TODO(wittjosiah): Parent should be declarative in the schema.
   Obj.setParent(feed, mailbox);
-  // Tag index is a child: cascade-deleted with the mailbox.
+  // Tag index and per-message state are children: cascade-deleted with the mailbox.
   Obj.setParent(tags, mailbox);
+  Obj.setParent(messageState, mailbox);
   return mailbox;
 };
+
+//
+// Per-message viewed state, keyed by message id (Messages are immutable feed items). A message is
+// "new" until its conversation is first opened, at which point `markThreadViewed` stamps its `viewedAt`.
+//
+
+/** Feed window bounding the new-message count (see {@link newMessageCountAtom}). */
+const NEW_MESSAGE_COUNT_WINDOW = 100;
+
+/** Stamps a message's `viewedAt` to now via an already-bound accessor; a no-op once already viewed. */
+const stamp = (state: StateMap.Accessor<MessageState>, messageId: EntityId): void => {
+  if (state.get(messageId).viewedAt === undefined) {
+    state.patch(messageId, { viewedAt: new Date().toISOString() });
+  }
+};
+
+/** Marks a single message viewed, clearing its unread state; a no-op once already viewed. */
+export const markViewed = (mailbox: Mailbox, messageId: EntityId): void => {
+  const stateMap = mailbox.messageState.target;
+  if (stateMap) {
+    stamp(StateMap.bind<MessageState>(stateMap), messageId);
+  }
+};
+
+/**
+ * Marks a whole conversation viewed: every message in the resolved `thread` (as shown in the message
+ * companion), clearing its unread state wholesale. Synchronous — call on mount of the surface that
+ * renders the thread, passing the already-resolved messages.
+ */
+export const markThreadViewed = (
+  mailbox: Mailbox,
+  thread: readonly (Message.Message | Obj.Snapshot<Message.Message>)[],
+): void => {
+  const stateMap = mailbox.messageState.target;
+  if (!stateMap) {
+    return;
+  }
+  const state = StateMap.bind<MessageState>(stateMap);
+  for (const message of thread) {
+    stamp(state, message.id);
+  }
+};
+
+/**
+ * Reactive count of new (not-yet-viewed) messages in a mailbox, keyed by the mailbox. Resolves the
+ * feed and the per-message state map through their atoms so the count re-derives when messages sync
+ * or a conversation is marked viewed. Bounded to the newest {@link NEW_MESSAGE_COUNT_WINDOW} messages.
+ */
+export const newMessageCountAtom = Atom.family((mailbox: Mailbox) =>
+  Atom.make((get) => {
+    const db = Obj.getDatabase(mailbox);
+    const feed = get(mailbox.feed.atom);
+    if (!db || !feed) {
+      return 0;
+    }
+    const messages = get(
+      db.query(Query.select(Filter.type(Message.Message)).from(feed).limit(NEW_MESSAGE_COUNT_WINDOW)).atom,
+    );
+    const stateMap = get(mailbox.messageState.atom);
+    if (!stateMap) {
+      return messages.length;
+    }
+    // Subscribe to viewed-state changes so the count re-derives when a conversation is opened.
+    get(Obj.atom(stateMap));
+    const accessor = StateMap.bind<MessageState>(stateMap);
+    return messages.reduce(
+      (count, message) => (accessor.get(message.id).viewedAt === undefined ? count + 1 : count),
+      0,
+    );
+  }),
+);
 
 //
 // Tag application API.

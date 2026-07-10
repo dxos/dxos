@@ -19,7 +19,7 @@ import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { TagIndex } from '@dxos/schema';
+import { StateMap, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import {
@@ -27,6 +27,7 @@ import {
   type MessageStackActionHandler,
   type MessageStackItem,
   type MessageTagsFamily,
+  type MessageUnreadFamily,
   isMessageGroup,
   useMailboxExtractorActions,
 } from '#components';
@@ -70,6 +71,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const tagIndex = useResolveRef(mailbox.tags);
   // Per-message tag chips, as an atom family so each tile subscribes to only its own message's tags.
   const tagsAtom = useMessageTagsAtomFamily(tagIndex, tagMap);
+  // Per-message viewed state drives the unread (new-message) indicator; each tile subscribes to only
+  // its own message's slice of the state map.
+  const messageState = useResolveRef(mailbox.messageState);
+  const unreadAtom = useMessageUnreadAtomFamily(messageState);
 
   // Starred messages drive the per-tile star toggle; starred state also lives under the tag index.
   const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [Starred.TAG_STARRED.key]))[0];
@@ -133,13 +138,6 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
 
-  // Mark the mailbox as viewed when opened, advancing its `viewedAt` cursor so the navtree new-message
-  // badge clears. Uses the live `subject` (not the `mailbox` snapshot) since this mutates, and is keyed on
-  // the mailbox id so it runs once per opened mailbox rather than on every update.
-  useEffect(() => {
-    Mailbox.markViewed(mailbox);
-  }, [mailbox.id]);
-
   // TODO(burdon): Actual test should be if we have synced; not number of messages.
   // Show the message list as soon as any messages are present; only fall back to the empty state
   // after a brief delay of genuinely having none (prevents an initial-load flicker). Keyed on the
@@ -168,7 +166,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       if (!message || !db) {
         return;
       }
-      // Open the message companion; `MessageArticle` renders the selected message's whole conversation.
+      // Open the message companion; `MessageArticle` renders the whole conversation and marks it viewed.
       void showItem({ contextId: id, selectionId: message.id, companion: linkedSegment('message') });
     },
     [db, id, messages, showItem],
@@ -187,6 +185,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
           const message = messages.find((message) => message.id === action.messageId);
           invariant(message);
           invariant(db);
+          // `MessageArticle` (the companion) marks the opened conversation viewed on mount.
           void showItem({ contextId: id, selectionId: message.id, companion: linkedSegment('message') });
           break;
         }
@@ -268,6 +267,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             items={items}
             currentId={currentId}
             tagsAtom={tagsAtom}
+            unreadAtom={unreadAtom}
             starredAtom={starredAtom}
             pagination={feed ? pagination : undefined}
             onAction={handleAction}
@@ -363,6 +363,23 @@ const useMessageTagsAtomFamily = (tagIndex: TagIndex.TagIndex | undefined, tagMa
       }),
     );
   }, [tagIndex, tagMap]);
+
+// Absent state map (legacy mailbox not yet migrated): treat every message as new/unread.
+const ALWAYS_UNREAD_ATOM = Atom.make(() => true);
+
+/**
+ * Per-message unread atom family over the Mailbox's viewed-state map. Each atom yields whether one
+ * message is still new (unopened) and re-renders only when that message's viewed slice changes.
+ */
+const useMessageUnreadAtomFamily = (messageState: StateMap.StateMap | undefined): MessageUnreadFamily =>
+  useMemo(() => {
+    if (!messageState) {
+      return () => ALWAYS_UNREAD_ATOM;
+    }
+    return Atom.family((messageId: EntityId) =>
+      Atom.make((get) => get(StateMap.atom<Mailbox.MessageState>(messageState, messageId)).viewedAt === undefined),
+    );
+  }, [messageState]);
 
 const useMailboxActions = (mailbox: Mailbox.Mailbox, sortDescending: AtomState<boolean>) => {
   const { invokePromise } = useOperationInvoker();

@@ -12,6 +12,7 @@ import { Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
 import { useGmailTags } from '#hooks';
 
@@ -60,8 +61,12 @@ export type MessageTagsFamily = (messageId: string) => Atom.Atom<MessageStackTag
 /** Per-message starred atom family; each tile subscribes to just its own star state. */
 export type StarredFamily = (messageId: string) => Atom.Atom<boolean>;
 
+/** Per-message unread (new) atom family; each tile subscribes to just its own viewed state. */
+export type MessageUnreadFamily = (messageId: string) => Atom.Atom<boolean>;
+
 const EMPTY_TAGS_ATOM = Atom.make((): MessageStackTag[] => []);
 const NOT_STARRED_ATOM = Atom.make(() => false);
+const NOT_UNREAD_ATOM = Atom.make(() => false);
 
 export type MessageStackProps = {
   id: string;
@@ -74,6 +79,8 @@ export type MessageStackProps = {
   selectedIds?: ReadonlySet<string>;
   /** Per-message starred atom family; each tile subscribes to only its own star state. */
   starredAtom?: StarredFamily;
+  /** Per-message unread atom family; each tile subscribes to only its own viewed state. */
+  unreadAtom?: MessageUnreadFamily;
   /**
    * When `messages` is a lazily-loaded window (see `usePagination`), drives loading more
    * older messages as the user scrolls toward the loaded end. Accepts `usePagination`'s full
@@ -88,7 +95,10 @@ export type MessageStackProps = {
  * Card-based message stack component using mosaic layout.
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
-  ({ items, tagsAtom, currentId, selectedIds, starredAtom, pagination, onAction, ...props }, forwardedRef) => {
+  (
+    { items, tagsAtom, currentId, selectedIds, starredAtom, unreadAtom, pagination, onAction, ...props },
+    forwardedRef,
+  ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
     const tileItems = useMemo(
@@ -100,18 +110,20 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
                   conversationId: item.id,
                   messages: item.messages,
                   total: item.total,
-                  // Conversations show the latest message; star reflects/toggles that message.
+                  // Conversations show the latest message; star and unread reflect that message.
                   starredAtom: starredAtom?.(item.messages[0]?.id),
+                  unreadAtom: unreadAtom?.(item.messages[0]?.id),
                   onAction,
                 }
               : {
                   message: item,
                   tagsAtom: tagsAtom?.(item.id),
                   starredAtom: starredAtom?.(item.id),
+                  unreadAtom: unreadAtom?.(item.id),
                   onAction,
                 },
         ),
-      [items, tagsAtom, starredAtom, onAction],
+      [items, tagsAtom, starredAtom, unreadAtom, onAction],
     );
 
     // The incoming `currentId` is a message ID (set when a specific message becomes selected),
@@ -233,17 +245,20 @@ type MessageTileData = {
   message: Message.Message;
   tagsAtom?: Atom.Atom<MessageStackTag[]>;
   starredAtom?: Atom.Atom<boolean>;
+  unreadAtom?: Atom.Atom<boolean>;
   onAction?: MessageStackActionHandler;
 };
 
 type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current'>;
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
-  const { message, tagsAtom, starredAtom, onAction } = data;
+  const { message, tagsAtom, starredAtom, unreadAtom, onAction } = data;
   const { date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
   const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
   const tags = useAtomValue(tagsAtom ?? EMPTY_TAGS_ATOM);
   const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
+  // TODO(wittjosiah): Indicate unread more clearly than a bold title (e.g. a dot/badge); pending UI design.
+  const unread = useAtomValue(unreadAtom ?? NOT_UNREAD_ATOM);
   const messageTags = useGmailTags(tags);
 
   // Click / Enter commit both current and selection. Arrow keys only move
@@ -284,7 +299,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
         onToggleStar={onAction ? handleToggleStar : undefined}
         title={
           <>
-            <span className='grow truncate font-medium'>{subject}</span>
+            <span className={mx('grow truncate', unread ? 'font-semibold' : 'font-medium')}>{subject}</span>
             <span className='text-xs text-description whitespace-nowrap shrink-0'>{date}</span>
           </>
         }
@@ -316,6 +331,7 @@ type ConversationTileData = {
   /** Full thread size when `messages` is a capped preview; drives the "+N more" affordance. */
   total?: number;
   starredAtom?: Atom.Atom<boolean>;
+  unreadAtom?: Atom.Atom<boolean>;
   onAction?: MessageStackActionHandler;
 };
 
@@ -323,11 +339,13 @@ type ConversationTileProps = Pick<MosaicTileProps<ConversationTileData>, 'data' 
 
 const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
   ({ data, location, current }, forwardedRef) => {
-    const { conversationId, messages, total, starredAtom, onAction } = data;
+    const { conversationId, messages, total, starredAtom, unreadAtom, onAction } = data;
     const latest = messages[0];
     // `messages` is already the capped preview; `total` (when larger) is the full thread size.
     const remaining = total !== undefined ? total - messages.length : 0;
     const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
+    // TODO(wittjosiah): Indicate unread more clearly than a bold title (e.g. a dot/badge); pending UI design.
+    const unread = useAtomValue(unreadAtom ?? NOT_UNREAD_ATOM);
     const { subject } = getMessageProps(latest, new Date());
     const { setCurrentId, setSelected } = useMosaicContainer('ConversationTile');
 
@@ -376,7 +394,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
           menu
           starred={starred}
           onToggleStar={onAction ? handleToggleStar : undefined}
-          title={<span className='grow truncate font-medium'>{subject}</span>}
+          title={<span className={mx('grow truncate', unread ? 'font-semibold' : 'font-medium')}>{subject}</span>}
         />
         <Card.Body>
           {messages.map((message) => {
