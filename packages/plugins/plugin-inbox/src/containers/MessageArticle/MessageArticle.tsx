@@ -16,7 +16,7 @@ import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { type Message as MessageType } from '@dxos/types';
 
 import { EditMessage, Message, type MessageHeaderProps, type ViewMode } from '#components';
-import { useActorContact, useEmailComposer } from '#hooks';
+import { useActorContact, useEmailComposerExtensions, useSendEmail } from '#hooks';
 import { meta } from '#meta';
 import { DraftMessage, InboxOperation, Mailbox, Sent } from '#types';
 
@@ -250,7 +250,8 @@ const DraftThreadItem = ({ message, mailbox, ...rest }: DraftThreadItemProps) =>
 const DraftThreadItemContent = ({ message, mailbox, viewMode, setViewMode, onContactCreate }: DraftThreadItemProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
-  const { extensions, onSend } = useEmailComposer(message);
+  const extensions = useEmailComposerExtensions(message);
+  const onSend = useSendEmail(message);
 
   // Read the sent flag reactively from the mailbox's tag index (a tag membership atom re-fires the
   // instant the tag is applied on send; reading a message property would not).

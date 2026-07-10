@@ -13,7 +13,7 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type Message } from '@dxos/types';
 
 import { EditMessage } from '#components';
-import { useEmailComposer } from '#hooks';
+import { useEmailComposerExtensions, useSendEmail } from '#hooks';
 import { meta } from '#meta';
 
 import { InboxOperation, Mailbox } from '../../types';
@@ -24,7 +24,8 @@ export type EditMessageArticleProps = AppSurface.ObjectArticleProps<Message.Mess
 export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageArticleProps) => {
   const db = Obj.getDatabase(subject);
   const spaceId = db?.spaceId;
-  const { extensions, onSend } = useEmailComposer(subject);
+  const extensions = useEmailComposerExtensions(subject);
+  const onSend = useSendEmail(subject);
 
   // Generate: fill the reply draft's body from the message it replies to (thread + facts grounded).
   // Only offered for reply drafts scoped to a resolvable mailbox.

@@ -91,7 +91,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
       [message],
     );
 
-    // Send success/failure is surfaced via toasts by the caller's `onSend` (see `useEmailComposer`).
+    // Send success/failure is surfaced via toasts by the caller's `onSend` (see `useSendEmail`).
     const handleSave = useCallback<NonNullable<FormRootProps<MessageProperties>['onSave']>>(async () => {
       await onSend?.(message);
     }, [onSend, message]);
