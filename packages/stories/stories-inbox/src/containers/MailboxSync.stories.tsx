@@ -54,8 +54,7 @@ import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/story-modules';
 import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
 
-import { seedDemoMessages } from '../testing/demo-messages';
-import { Module, StoryModulesPlugin } from '../testing/modules';
+import { Module, StoryModulesPlugin, seedDemoMessages } from '../testing';
 
 // Schema for every object the connect+sync flow reads or writes: the mailbox + feed, the
 // OAuth-created access token / connection / binding / cursor, and the synced messages,

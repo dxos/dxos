@@ -344,3 +344,32 @@ This is currently how the HALO vault's service worker is setup (though it will l
 ```bash
 pnpm -r --filter "./packages/core/**" --filter "\!@dxos/automerge" exec depcheck --quiet --skip-missing=true --oneline  --ignores=@dxos/node-std,@bufbuild/protoc-gen-es
 ```
+
+## Cloud / headless environments (Cursor Cloud, CI VMs)
+
+### Toolchain
+
+This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.4, all managed by **proto** (see `.prototools`). In a cloud VM, proto is installed at `~/.proto` and must be on PATH:
+
+```bash
+export PROTO_HOME="$HOME/.proto"
+export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
+```
+
+Do **not** use nvm; proto shims must take precedence.
+
+### Running services
+
+- **Composer app** (main app): `moon run composer-app:serve --quiet` starts a Vite dev server on port 5173. The app auto-creates a local identity on first load; no external auth is required.
+- **Tasks app**: `moon run tasks-app:serve`
+- **Docs site**: `moon run docs:serve`
+
+See the [Run commands](#run-commands) section above for the full list.
+
+### Gotchas
+
+- `pnpm install` must run with `CI=true` or `HUSKY=0` in non-interactive environments to skip the husky git-hooks setup prompt.
+- The `DEPOT_TOKEN` warning from moon is expected and harmless (remote-cache auth token).
+- The `pnpm.onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` controls which native addons are built; warnings about "ignored build scripts" for packages not in the list are normal.
+- Builds must complete before running `serve` commands, because moon tasks have `deps` on `:prebuild`/`:build` targets.
+- No Docker or external services are required for unit tests or local dev. Signal servers for networking tests are pre-compiled binaries spawned automatically by tests.
