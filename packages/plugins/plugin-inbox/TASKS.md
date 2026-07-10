@@ -22,8 +22,9 @@ can be recorded there without a schema change. The Gmail sync mapper
         (`Mailbox.isNoReplyAddress`, `mapper.ts`).
   - [x] Shared `Mailbox.isReplyable(message)` helper (false when no-reply or
         unsubscribe present; falls back to sender address for older fixtures).
-  - [ ] Wire `isReplyable` into the draft flow (harness `pipelines/draft.ts`
-        first) so bulk/automated mail is skipped rather than drafted.
+  - [x] Wire `isReplyable` into the draft flow — harness `pipelines/draft.ts`
+        skips non-replyable mail (no LLM call, `skipped: true`); 21/110 fixture
+        messages skip via the sender-address fallback. Product draft flow TBD.
 - [ ] **User-editable Instructions inform reply drafting**
   - Reuse the existing `@dxos/compute` `Instructions` type (`text` markdown +
     `skills` + `objects`) — do NOT define a new one. It is already used with

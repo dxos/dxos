@@ -25,12 +25,16 @@ describe.skipIf(!fixtureExists())('draft replies (multi-model)', () => {
         items: messages,
         variants,
         perItem: draftReply,
-        renderResponse: (result) => `_${result.subject || result.messageId}_\n\n${result.draft || '_(no draft)_'}`,
+        renderResponse: (result) =>
+          `_${result.subject || result.messageId}_\n\n` +
+          (result.skipped ? '_(skipped: not replyable)_' : result.draft || '_(no draft)_'),
         evaluate: (_variant, results) => {
-          const drafted = results.filter((result) => result.draft.length > 0);
+          const skipped = results.filter((result) => result.skipped).length;
+          const drafted = results.filter((result) => !result.skipped && result.draft.length > 0);
           const totalChars = drafted.reduce((sum, result) => sum + result.draft.length, 0);
           return {
             messages: results.length,
+            skipped,
             drafted: drafted.length,
             avgDraftChars: drafted.length ? round(totalChars / drafted.length) : 0,
           };
