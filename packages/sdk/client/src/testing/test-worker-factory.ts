@@ -48,13 +48,15 @@ export class TestWorkerFactory extends Resource {
           acquireLock: async () => {},
           releaseLock: () => {},
           automaticallyConnectWebrtc: false,
+          // Liveness and displacement are owned by worker-framework's runWorker.
+          manageLifecycle: false,
           sqliteLayer: sqliteLayerMemory,
         });
         await runtime.start();
         this._ctx.onDispose(() => runtime.stop());
 
         return {
-          livenessLockKey: runtime.livenessLockKey,
+          stop: async () => runtime.stop(),
           createSession: async ({ appPort, systemPort, clientId, isOwner }) => {
             const session = await runtime.createSession({
               systemPort: createWorkerPort({ port: systemPort }),

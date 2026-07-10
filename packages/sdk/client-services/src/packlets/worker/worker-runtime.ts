@@ -55,6 +55,13 @@ export type WorkerRuntimeOptions = {
   automaticallyConnectWebrtc?: boolean;
 
   /**
+   * Whether this runtime manages worker displacement itself (broadcasting a stop to prior workers).
+   * Set false when running under worker-framework, which owns liveness and displacement.
+   * @default true
+   */
+  manageLifecycle?: boolean;
+
+  /**
    * Optional SQLite layer for Effect. Defaults to LocalSqliteOpfsLayer.
    * For testing in Node.js, use `sqliteLayerMemory` from `@dxos/sql-sqlite/platform`.
    */
@@ -77,8 +84,12 @@ export class WorkerRuntime {
   private readonly _clientServices!: ClientServicesHost;
   private readonly _channel: string;
   private readonly _automaticallyConnectWebrtc: boolean;
-  private readonly _livenessLock = new WebLockWrapper(`@dxos/client-services/WorkerRuntime/${crypto.randomUUID()}`);
+  // When false, liveness and worker displacement are owned by the enclosing runner (worker-framework's
+  // runWorker) rather than by this runtime. The shared-worker path (which does not run under
+  // worker-framework) keeps managing displacement itself.
+  private readonly _manageLifecycle: boolean;
   private _broadcastChannel?: BroadcastChannel;
+  private _stopped = false;
   private _sessionForNetworking?: WorkerSession; // TODO(burdon): Expose to client QueryStatusResponse.
   private _config!: Config;
   private _signalMetadataTags: any = { runtime: 'worker-runtime' };
@@ -96,6 +107,7 @@ export class WorkerRuntime {
     releaseLock,
     onStop,
     automaticallyConnectWebrtc = true,
+    manageLifecycle = true,
     sqliteLayer,
   }: WorkerRuntimeOptions) {
     this._configProvider = configProvider;
@@ -103,6 +115,7 @@ export class WorkerRuntime {
     this._releaseLock = releaseLock;
     this._onStop = onStop;
     this._channel = channel;
+    this._manageLifecycle = manageLifecycle;
     if (sqliteLayer) {
       log.warn('Using testing SQLite layer');
     }
@@ -128,27 +141,22 @@ export class WorkerRuntime {
     return this._clientServices;
   }
 
-  get livenessLockKey(): string {
-    return this._livenessLock.key;
-  }
-
   async start(): Promise<void> {
     log('starting...');
     try {
-      log('worker-runtime: acquiring liveness lock (background)');
-      void this._livenessLock.acquire();
-
-      // Steal the lock from the other worker.
-      log('worker-runtime: broadcasting stop to displace previous worker');
-      // TODO(dmaretskyi): Displacing should entirely be handled by worker-framework.
-      this._broadcastChannel = new BroadcastChannel(this._channel);
-      this._broadcastChannel.postMessage({ action: 'stop' });
-      this._broadcastChannel.onmessage = async (event) => {
-        if (event.data?.action === 'stop') {
-          log('worker-runtime: received stop broadcast');
-          await this.stop();
-        }
-      };
+      // Displacement of a previous worker. Owned by worker-framework when running under it; the
+      // shared-worker path manages it here.
+      if (this._manageLifecycle) {
+        log('worker-runtime: broadcasting stop to displace previous worker');
+        this._broadcastChannel = new BroadcastChannel(this._channel);
+        this._broadcastChannel.postMessage({ action: 'stop' });
+        this._broadcastChannel.onmessage = async (event) => {
+          if (event.data?.action === 'stop') {
+            log('worker-runtime: received stop broadcast');
+            await this.stop();
+          }
+        };
+      }
 
       log('worker-runtime: acquiring storage lock');
       await this._acquireLock();
@@ -199,6 +207,10 @@ export class WorkerRuntime {
   }
 
   async stop(): Promise<void> {
+    if (this._stopped) {
+      return;
+    }
+    this._stopped = true;
     // Release the lock to notify remote clients that the worker is terminating.
     this._releaseLock();
     this._broadcastChannel?.close();
@@ -210,7 +222,6 @@ export class WorkerRuntime {
     }
     await this._runtime.dispose();
     await this._onStop?.();
-    await this._livenessLock.release();
   }
 
   /**
@@ -336,35 +347,3 @@ const LocalSqliteOpfsLayer = SqlExportLayer.pipe(
   Layer.provideMerge(SqliteClient.layerOpfs({ dbName: DB_NAME })),
   Layer.provideMerge(Reactivity.layer),
 );
-
-// TODO(wittjosiah): Factor out to a separate module.
-class WebLockWrapper {
-  readonly #key: string;
-  #release?: () => void;
-
-  constructor(key: string) {
-    this.#key = key;
-  }
-
-  get key(): string {
-    return this.#key;
-  }
-
-  acquire(options: LockOptions = {}) {
-    return navigator.locks.request(this.#key, options, async () => {
-      await new Promise<void>((resolve) => {
-        this.#release = resolve;
-      }); // Blocks for the duration of the worker's lifetime.
-      this.#release = undefined;
-    });
-  }
-
-  release() {
-    this.#release?.();
-    this.#release = undefined;
-  }
-
-  [Symbol.dispose]() {
-    this.release();
-  }
-}
