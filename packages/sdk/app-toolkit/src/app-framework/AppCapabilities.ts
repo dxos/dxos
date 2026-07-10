@@ -103,6 +103,37 @@ export const translatorLayer: Layer$.Layer<TranslatorService, never, Capability$
   TranslatorService,
 );
 
+/** A writer scoped to a single plugin's compartment — the only way to mutate the stats store. */
+export type StatsCompartment = Readonly<{
+  /** Replace this compartment's value. */
+  set: (stats: unknown) => void;
+  /** Remove this compartment. */
+  clear: () => void;
+}>;
+
+/**
+ * A generic, reactive store for stats/telemetry, partitioned into one compartment per plugin. Every
+ * consumer can READ the entire store (all compartments) reactively, but can only WRITE its own
+ * compartment — obtained via `compartment(pluginKey)` with the plugin's own key (`meta.profile.key`).
+ * Currently in-memory (discarded on reload); persistence may be layered on later, so the name is not
+ * tied to transience. Contributed by a host plugin (plugin-debug) — writers resolve it with
+ * `Capability.getAll` so writing is a no-op when no host is loaded (e.g. production without devtools).
+ * @category Capability
+ */
+export type StatsPanelStore = Readonly<{
+  /** Reactive map of all compartments keyed by plugin key (full read access). */
+  statsAtom: Atom.Writable<Record<string, unknown>>;
+  /** Read one plugin's compartment. */
+  get: (pluginKey: string) => unknown | undefined;
+  /** A writer scoped to one plugin's compartment — the only write path. */
+  compartment: (pluginKey: string) => StatsCompartment;
+}>;
+
+/**
+ * @category Capability
+ */
+export const StatsPanel = Capability$.make<StatsPanelStore>('org.dxos.app-toolkit.capability.statsPanel');
+
 export type AppGraph = Readonly<{
   graph: Graph.ExpandableGraph;
   explore: typeof GraphBuilder.explore;

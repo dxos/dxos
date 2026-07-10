@@ -60,10 +60,11 @@ import {
   DevtoolsOverviewContainer,
   RegistryPanel,
   SpaceGenerator,
+  StatsPanel,
   Wireframe,
 } from '#containers';
 import { meta } from '#meta';
-import { DebugCapabilities, Devtools, type Settings } from '#types';
+import { DebugCapabilities, DebugSurface, Devtools, type Settings } from '#types';
 
 const MCP_SERVER_URL = EDGE_SERVICE_DEFAULTS[EdgeServiceName.Introspect];
 
@@ -257,6 +258,12 @@ export default Capability.makeModule(
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
         position: Position.first,
         component: () => <DebugStatus />,
+      }),
+
+      Surface.create({
+        id: 'statsPanel',
+        filter: Surface.makeFilter(DebugSurface.Stats),
+        component: () => <StatsPanel />,
       }),
 
       //
