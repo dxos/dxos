@@ -30,6 +30,7 @@ import {
   PlanningSkill,
 } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
+import { persistentClientServices } from '@dxos/client/testing';
 import { Instructions, Operation, OperationHandlerSet, ServiceResolver, Skill, Trigger } from '@dxos/compute';
 import { ExampleHandlers } from '@dxos/compute/testing';
 import { Database, Obj } from '@dxos/echo';
@@ -102,86 +103,93 @@ const buildPluginManagerOptions = ({
   onInit,
   onChatCreated,
   createAgent,
+  config,
   ...props
-}: Omit<DecoratorsProps, 'lazyPlugins'>): WithPluginManagerOptions => ({
-  // SetupSchema registers ECHO schemas so plugin-scoped types are available in stories.
-  // SetupSettings causes plugins (e.g. AssistantPlugin) to contribute settings capabilities
-  // that surfaces like TracePanel read via `useAtomCapability(AssistantCapabilities.Settings)`.
-  setupEvents: [AppActivationEvents.SetupSchema, AppActivationEvents.SetupSettings],
-  plugins: [
-    ...corePlugins(),
-    ClientPlugin({
-      types: [
-        AccessToken.AccessToken,
-        Assistant.Chat,
-        Plan.Plan,
-        Skill.Skill,
-        Operation.PersistentOperation,
-        Markdown.Document,
-        Instructions.Instructions,
-        Trigger.Trigger,
-        ...types,
-      ],
-      onClientInitialized: ({ client }) =>
-        Effect.gen(function* () {
-          log.info('onClientInitialized', { identity: client.halo.identity.get()?.did });
-          // Abort if already initialized.
-          if (client.halo.identity.get()) {
-            return;
-          }
+}: Omit<DecoratorsProps, 'lazyPlugins'>): WithPluginManagerOptions => {
+  // The `persistent` config preset (see `config.persistent` below) flags itself via
+  // `storage.persistent`; only then do we pay for DEDICATED_WORKER + a dedicated/coordinator
+  // worker pair — every other preset (`remote`/`local`) stays a plain ephemeral client.
+  const clientServices = config?.values.runtime?.client?.storage?.persistent
+    ? persistentClientServices(config)
+    : { config };
 
-          if (importSnapshot) {
-            yield* initClientFromSpaceSnapshot(importSnapshot)({ client });
-            const space = client.spaces.get()[0];
-            invariant(space, 'No space available after snapshot import.');
+  return {
+    // SetupSchema registers ECHO schemas so plugin-scoped types are available in stories.
+    // SetupSettings causes plugins (e.g. AssistantPlugin) to contribute settings capabilities
+    // that surfaces like TracePanel read via `useAtomCapability(AssistantCapabilities.Settings)`.
+    setupEvents: [AppActivationEvents.SetupSchema, AppActivationEvents.SetupSettings],
+    plugins: [
+      ...corePlugins(),
+      ClientPlugin({
+        types: [
+          AccessToken.AccessToken,
+          Assistant.Chat,
+          Plan.Plan,
+          Skill.Skill,
+          Operation.PersistentOperation,
+          Markdown.Document,
+          Instructions.Instructions,
+          Trigger.Trigger,
+          ...types,
+        ],
+        onClientInitialized: ({ client }) =>
+          Effect.gen(function* () {
+            log.info('onClientInitialized', { identity: client.halo.identity.get()?.did });
+            // Abort if already initialized.
+            if (client.halo.identity.get()) {
+              return;
+            }
 
+            if (importSnapshot) {
+              yield* initClientFromSpaceSnapshot(importSnapshot)({ client });
+              const space = client.spaces.get()[0];
+              invariant(space, 'No space available after snapshot import.');
+
+              for (const accessToken of accessTokens) {
+                space.db.add(Obj.clone(accessToken));
+              }
+
+              if (onInit) {
+                yield* Effect.promise(() => onInit({ client, space }));
+              }
+
+              yield* Effect.promise(() => space.db.flush({ indexes: true }));
+              return;
+            }
+
+            yield* Effect.promise(() => client.halo.createIdentity());
+
+            const space = yield* Effect.promise(() => client.spaces.create());
+            yield* Effect.promise(() => space.waitUntilReady());
+
+            // Add tokens.
             for (const accessToken of accessTokens) {
               space.db.add(Obj.clone(accessToken));
             }
 
+            yield* Effect.promise(() => space.db.flush({ indexes: true }));
             if (onInit) {
               yield* Effect.promise(() => onInit({ client, space }));
             }
-
             yield* Effect.promise(() => space.db.flush({ indexes: true }));
-            return;
-          }
+          }),
+        ...clientServices,
+        ...props,
+      }),
 
-          yield* Effect.promise(() => client.halo.createIdentity());
+      // User plugins.
+      PreviewPlugin(),
+      RoutinePlugin(),
+      AssistantPlugin(),
+      TranscriptionPlugin(),
 
-          const space = yield* Effect.promise(() => client.spaces.create());
-          yield* Effect.promise(() => space.waitUntilReady());
-
-          // Add tokens.
-          for (const accessToken of accessTokens) {
-            space.db.add(Obj.clone(accessToken));
-          }
-
-          yield* Effect.promise(() => space.db.flush({ indexes: true }));
-          if (onInit) {
-            yield* Effect.promise(() => onInit({ client, space }));
-          }
-          yield* Effect.promise(() => space.db.flush({ indexes: true }));
-        }),
-      // Directly importing the "@dxos/client/opfs-worker" didn't work.
-      createOpfsWorker: props.config?.values.runtime?.client?.storage?.persistent
-        ? () => new Worker(new URL('./opfs-worker', import.meta.url), { type: 'module' })
-        : undefined,
-      ...props,
-    }),
-
-    // User plugins.
-    PreviewPlugin(),
-    RoutinePlugin(),
-    AssistantPlugin(),
-    TranscriptionPlugin(),
-
-    // Test-specific.
-    StorybookPlugin({}),
-    StoryPlugin({ onChatCreated, createAgent }),
-    ...plugins,
-  ],
-});
+      // Test-specific.
+      StorybookPlugin({}),
+      StoryPlugin({ onChatCreated, createAgent }),
+      ...plugins,
+    ],
+  };
+};
 
 /**
  * Inner component that creates the plugin manager and renders the app.

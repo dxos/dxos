@@ -42,7 +42,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppPlugin, LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { createClientServices } from '@dxos/client';
+import { persistentClientServices } from '@dxos/client/testing';
 import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Feed, Filter, Order, Query, Ref, Tag } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
@@ -60,8 +60,7 @@ import { translations as inboxTranslations } from '@dxos/plugin-inbox/translatio
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookCapabilities, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { Config, useClient } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
 import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, Toolbar } from '@dxos/react-ui';
@@ -133,16 +132,9 @@ const SYNC_STORY_TYPES = [
   SyncBinding.SyncBinding,
 ];
 
-// DEDICATED_WORKER mode: see the `services` comment on `ClientPlugin` below for why this story
-// doesn't use a bare `createOpfsWorker`.
-const SYNC_STORY_CONFIG = new Config({
-  runtime: {
-    client: {
-      servicesMode: Runtime.Client.ServicesMode.DEDICATED_WORKER,
-      storage: { persistent: true },
-    },
-  },
-});
+// Computed once at module scope (not inside the `withPluginManager` initializer, which re-runs on
+// every render) so the story doesn't spawn a fresh dedicated worker/coordinator on each re-render.
+const SYNC_STORY_CLIENT_SERVICES = persistentClientServices();
 
 // `showItem` (in the 'storybook' layout mode) dispatches `LayoutOperation.UpdateCompanion` after
 // `Select`; `Select` is handled by AttentionPlugin (writes the selection this story reads), but no
@@ -411,18 +403,7 @@ const meta = {
           types: SYNC_STORY_TYPES,
           // No `edge` service: the client runs fully local (no Edge websocket). JMAP/Fastmail sync
           // still works; Gmail OAuth does not (its coordinator requires an Edge URL).
-          config: SYNC_STORY_CONFIG,
-          // DEDICATED_WORKER mode (not a bare `createOpfsWorker`): the dedicated worker's OPFS
-          // access is arbitrated by `navigator.locks`, and the coordinator SharedWorker elects a
-          // single leader across tabs so a second tab proxies through the first instead of racing
-          // it for the same OPFS file handle. See OpfsWorker.ts for the failure mode this avoids —
-          // a plain `createOpfsWorker` (HOST mode) locks out every tab after the first.
-          services: createClientServices(SYNC_STORY_CONFIG, {
-            createDedicatedWorker: () =>
-              new Worker(new URL('@dxos/client/dedicated-worker', import.meta.url), { type: 'module' }),
-            createCoordinatorWorker: () =>
-              new SharedWorker(new URL('@dxos/client/coordinator-worker', import.meta.url), { type: 'module' }),
-          }),
+          ...SYNC_STORY_CLIENT_SERVICES,
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               // Only seed a fresh identity here — bounded and deterministic. Do NOT try to
