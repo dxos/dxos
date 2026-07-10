@@ -16,6 +16,13 @@ export type ServeRpcGroupOptions = {
   concurrency?: number | 'unbounded';
 };
 
+// A worker RPC client runs over a single MessagePort that multiplexes every request by id, so there
+// is no real per-connection concurrency limit. The `@effect/rpc` worker protocol backs the client
+// with a `Pool` that holds one worker for a request's whole lifetime — including long-lived streams.
+// The pool's default concurrency of 1 therefore lets a single open stream (e.g. a subscription) block
+// every other call. Allow effectively-unbounded concurrent requests over the one worker instead.
+const WORKER_CLIENT_CONCURRENCY = Number.MAX_SAFE_INTEGER;
+
 // Merged rpc groups (e.g. ClientServicesRpcs) do not structurally satisfy RpcGroup<Rpc.Any>
 // in @effect/rpc's type parameter; runtime dispatch accepts any RpcGroup instance.
 const asRpcGroup = <G>(group: G): Parameters<typeof RpcClient.make>[0] =>
@@ -32,11 +39,15 @@ export const makeRpcClientOverProtocol = <G, ProtocolError, ProtocolRequirements
   options?: Pick<ServeRpcGroupOptions, 'disableTracing'>,
 ): Effect.Effect<unknown, never, Scope.Scope | ProtocolRequirements> =>
   Effect.gen(function* () {
+    // Build the transport into the caller's scope (extended via `Scope.extend`) rather than
+    // `Effect.provide`-ing the layer directly: that would bind the transport's lifetime to this
+    // construction effect, tearing the worker connection down the instant the client is returned
+    // (the client is used later by the caller). `Layer.build` keeps it alive for the caller's scope.
+    const context = yield* Layer.build(protocol);
     return yield* RpcClient.make(asRpcGroup(group), { disableTracing: options?.disableTracing ?? true }).pipe(
-      Effect.provide(protocol),
-      Effect.orDie,
+      Effect.provide(context),
     );
-  });
+  }).pipe(Effect.orDie);
 
 /**
  * Builds an effect-native RPC client over a {@link MessagePort} using the native Worker platform
@@ -48,7 +59,9 @@ export const makeRpcClient = <G>(
   options?: Pick<ServeRpcGroupOptions, 'disableTracing'>,
 ): Effect.Effect<unknown, never, Scope.Scope> =>
   makeRpcClientOverProtocol(
-    RpcClient.layerProtocolWorker({ size: 1 }).pipe(Layer.provide(BrowserWorker.layerPlatform(() => port))),
+    RpcClient.layerProtocolWorker({ size: 1, concurrency: WORKER_CLIENT_CONCURRENCY }).pipe(
+      Layer.provide(BrowserWorker.layerPlatform(() => port)),
+    ),
     group,
     options,
   );
