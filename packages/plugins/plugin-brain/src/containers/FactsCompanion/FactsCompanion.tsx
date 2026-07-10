@@ -13,7 +13,7 @@ import { FactViewer } from '@dxos/react-ui-rdf';
 
 import { BrainCapabilities } from '#types';
 
-import { type FactStoreRegistry } from '../../capabilities/fact-store';
+import { type FactStoreRegistry } from '../../capabilities';
 
 /**
  * Companion surface rendering the semantic facts extracted for the active space. Reads the shared
@@ -26,6 +26,8 @@ export const FactsCompanion = () => {
   const facts = useFacts(registry, space?.id);
   return <FactViewer.Root facts={facts} />;
 };
+
+FactsCompanion.displayName = 'FactsCompanion';
 
 /**
  * Reads all facts from a store once. Extracted as a plain async function so the read path is
@@ -67,5 +69,3 @@ export const useFacts = (registry: FactStoreRegistry, spaceId: string | undefine
 
   return facts;
 };
-
-FactsCompanion.displayName = 'FactsCompanion';

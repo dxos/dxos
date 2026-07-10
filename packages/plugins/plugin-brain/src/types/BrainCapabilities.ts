@@ -15,3 +15,8 @@ import { meta } from '#meta';
 export const FactStoreRegistry = Capability.make<import('../capabilities/fact-store').FactStoreRegistry>(
   `${meta.profile.key}.capability.factStoreRegistry`,
 );
+
+/** Writable atom holding the fact-enrichment {@link BrainSettings.Settings} (model/provider/strict). */
+export const Settings = Capability.make<
+  import('@effect-atom/atom-react').Atom.Writable<import('./BrainSettings').Settings>
+>(`${meta.profile.key}.capability.settings`);

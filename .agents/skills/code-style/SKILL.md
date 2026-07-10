@@ -96,6 +96,7 @@ entrypoint owns the dependency. Atom factories inside internal modules use the
 - Common suffix for constructor option-bag types is `Options` (e.g.
   `SpawnOptions`, `ManagerImplOptions`) — pick this over `Opts` / `Props` /
   `Config`.
+- Keep React component Props types immediately before the component function.
 - Take an options object when a constructor or function has more than a few
   readonly props, especially when several are optional or share a logical group.
 - For exported functions with multiple overloads, declare them as `const` with
