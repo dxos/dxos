@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import * as Data from 'effect/Data';
 
-import { type Database, Obj, Tag } from '@dxos/echo';
+import { type Database, Filter, Obj, Tag } from '@dxos/echo';
 import { type EntityId } from '@dxos/keys';
 import { Tagging, TagIndex } from '@dxos/schema';
 
@@ -24,30 +24,38 @@ export const TAG_SENT = {
   hue: 'green',
 } as const;
 
-/** Key for {@link sentFamily}: the tag index, the sent-tag uri, and the message id. */
-type SentKey = readonly [TagIndex.TagIndex | undefined, string | undefined, EntityId];
+/** Key for {@link sentFamily}: the mailbox whose tag index is read, and the message id. */
+type SentKey = readonly [Mailbox | undefined, EntityId];
 
-// Module-level family so every caller with the same (index, uri, message) shares one memoized atom.
+// Module-level family so every caller sharing a (mailbox, message) shares one memoized atom. It owns
+// the whole read: resolving the mailbox's tag index and the sent tag's uri from the space's tag
+// registry, so callers ask only "is this message sent?" and never touch the tag-index API.
 const sentFamily = Atom.family((key: SentKey) =>
   Atom.make<boolean>((get) => {
-    const [tagIndex, sentUri, messageId] = key;
-    // The index or tag uri may be unresolved (mailbox loading, or no message ever sent yet).
-    if (!tagIndex || !sentUri) {
+    const [mailbox, messageId] = key;
+    if (!mailbox) {
       return false;
     }
-    return get(TagIndex.atom(tagIndex, messageId, sentUri));
+    const db = Obj.getDatabase(mailbox);
+    const tagIndex = get(mailbox.tags.atom);
+    if (!db || !tagIndex) {
+      return false;
+    }
+    // The sent tag is created lazily on the first send in the space; until it exists, nothing is sent.
+    const sentTag = get(db.query(Filter.foreignKeys(Tag.Tag, [TAG_SENT.key])).atom)[0];
+    if (!sentTag) {
+      return false;
+    }
+    return get(TagIndex.atom(tagIndex, messageId, Obj.getURI(sentTag).toString()));
   }),
 );
 
 /**
- * Reactive boolean atom yielding whether `messageId` carries the sent tag, re-rendering only when that
- * membership changes. Memoized by the (tag index, sent-tag uri, message id) key.
+ * Reactive boolean atom yielding whether `messageId` carries the sent tag in the mailbox's tag index,
+ * re-rendering only when that membership changes. Memoized by the (mailbox, message id) key.
  */
-export const atom = (
-  tagIndex: TagIndex.TagIndex | undefined,
-  sentUri: string | undefined,
-  messageId: EntityId,
-): Atom.Atom<boolean> => sentFamily(Data.tuple(tagIndex, sentUri, messageId));
+export const atom = (mailbox: Mailbox | undefined, messageId: EntityId): Atom.Atom<boolean> =>
+  sentFamily(Data.tuple(mailbox, messageId));
 
 /** Applies the sent tag to a message in the mailbox's tag index. Idempotent. Returns the tag uri. */
 export const markSent = async (
