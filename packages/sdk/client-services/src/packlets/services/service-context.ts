@@ -613,6 +613,13 @@ const serviceContextServiceLayer = (options: ServiceContextLayerOptions) =>
       const echoEdgeReplicator = Option.getOrUndefined(yield* Effect.serviceOption(EdgeAutomergeReplicatorService));
       const feedSyncer = Option.getOrUndefined(yield* Effect.serviceOption(FeedSyncerService));
 
+      // The edge-replicator layer sits above the core stack, so `DataSpaceManagerLayer` (inside
+      // the core) cannot resolve `EdgeAutomergeReplicatorService` itself; hand it the instance
+      // here, before any space opens, or `connectToSpace` silently never runs.
+      if (echoEdgeReplicator) {
+        dataSpaceManager.setEchoEdgeReplicator(echoEdgeReplicator);
+      }
+
       return new ServiceContext({
         networkManager,
         signalManager,
