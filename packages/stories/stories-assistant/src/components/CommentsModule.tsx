@@ -9,12 +9,9 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
 import { Assistant } from '@dxos/plugin-assistant';
 import { useContextBinder } from '@dxos/plugin-assistant/hooks';
-import { useQuery } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 
-import { type ModuleProps } from './types';
-
-export const CommentsModule = ({ space }: ModuleProps) => {
+export const CommentsModule = ({ space }: { space: Space }) => {
   const chats = useQuery(space.db, Filter.type(Assistant.Chat));
   const feedTarget = chats.at(-1)?.feed.target;
   const context = useContextBinder(space, feedTarget);
@@ -24,11 +21,5 @@ export const CommentsModule = ({ space }: ModuleProps) => {
     return null;
   }
 
-  return (
-    <Panel.Root>
-      <Panel.Content>
-        <Surface.Surface type={AppSurface.Article} data={data} />
-      </Panel.Content>
-    </Panel.Root>
-  );
+  return <Surface.Surface type={AppSurface.Article} data={data} />;
 };

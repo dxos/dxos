@@ -13,7 +13,7 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { Builder } from '#testing';
@@ -27,12 +27,11 @@ type StoryArgs = {
 };
 
 const DefaultStory = (_: StoryArgs) => {
-  const spaces = useSpaces();
-  const db = useDatabase(spaces[0].id);
-  const calendars = useQuery(db, Filter.type(Calendar.Calendar));
+  const [space] = useSpaces();
+  const calendars = useQuery(space?.db, Filter.type(Calendar.Calendar));
   const calendar = calendars[0];
-  if (!db || !calendar) {
-    return <Loading data={{ db: !!db, calendar: !!calendar }} />;
+  if (!space?.db || !calendar) {
+    return <Loading data={{ db: !!space?.db, calendar: !!calendar }} />;
   }
 
   return <CalendarArticle role='article' subject={calendar} attendableId='story' />;

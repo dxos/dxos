@@ -5,6 +5,7 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
@@ -82,6 +83,11 @@ export type GetCronTriggersResponse = {
 };
 
 export type EdgeHttpClientOptions = BaseHttpClientOptions;
+
+export class EdgeHttpClientService extends EffectContext.Tag('@dxos/edge-client/EdgeHttpClient')<
+  EdgeHttpClientService,
+  EdgeHttpClient
+>() {}
 
 /**
  * HTTP client for the edge worker API (spaces, queues, functions, agents, etc.).

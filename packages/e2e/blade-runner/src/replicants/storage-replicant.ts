@@ -23,7 +23,6 @@ export type RunResults = {
   sanityDuration: number;
 };
 
-@trace.resource()
 export class StorageReplicant {
   private _storageCtx = new Context();
 

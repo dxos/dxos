@@ -84,7 +84,6 @@
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-kanban": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
-    "@dxos/plugin-masonry": "workspace:*",
     "@dxos/plugin-sheet": "workspace:*",
     "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",

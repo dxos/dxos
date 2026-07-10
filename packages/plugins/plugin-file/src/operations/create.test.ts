@@ -33,10 +33,10 @@ describe('FileOperation.Create', () => {
         );
 
         expect(object.name).toBe('icon.png');
-        expect(object.type).toBe('image/png');
-        expect(object.size).toBe(bytes.byteLength);
 
         const blob = yield* Database.load(object.data);
+        expect(blob.type).toBe('image/png');
+        expect(blob.size).toBe(bytes.byteLength);
         expect(blob.data._tag).toBe('inline');
       }),
     );

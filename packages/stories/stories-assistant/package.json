@@ -89,6 +89,7 @@
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/story-modules": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

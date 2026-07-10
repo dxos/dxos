@@ -26,7 +26,7 @@ export default Capability.makeModule(
         const urlOption = yield* Blob.url(blob).pipe(Effect.provide(Database.layer(db)));
         return {
           name: object.name ?? file.name,
-          type: object.type,
+          type: blob.type ?? 'application/octet-stream',
           ...(Option.isSome(urlOption) ? { url: urlOption.value } : {}),
         };
       });

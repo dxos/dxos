@@ -3,22 +3,20 @@
 //
 
 import type * as SqlClient from '@effect/sql/SqlClient';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as EffectStream from 'effect/Stream';
 
 import { DeferredTask, scheduleMicroTask, synchronized } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
-import { type Context, Resource } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { QueryAST } from '@dxos/echo-protocol';
 import { type RuntimeProvider } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
 import { log } from '@dxos/log';
-import {
-  type QueryRequest,
-  type QueryResponse,
-  type QueryResult,
-  type QueryService,
-} from '@dxos/protocols/proto/dxos/echo/query';
+import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
+import { type QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
 import { type AutomergeHost } from '../automerge';
@@ -73,12 +71,11 @@ type QueryInvalidationStats = {
   averageQueriesActive: number;
 };
 
-@trace.resource()
-export class QueryServiceImpl extends Resource implements QueryService {
+export class QueryServiceImpl extends Resource implements QueryService.Handlers {
   // TODO(dmaretskyi): We need to implement query deduping. Idle composer has 80 queries with only 10 being unique.
-  private readonly _queries = new Set<ActiveQuery>();
+  private readonly '_queries' = new Set<ActiveQuery>();
 
-  private _updateQueries!: DeferredTask;
+  private '_updateQueries'!: DeferredTask;
 
   // 'all' = catch-all; null = no pending hint.
   #pendingHint: InvalidationHint | 'all' | null = null;
@@ -95,7 +92,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
   };
 
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
-  constructor(private readonly _params: QueryServiceProps) {
+  'constructor'(private readonly _params: QueryServiceProps) {
     super();
 
     trace.diagnostic({
@@ -119,12 +116,12 @@ export class QueryServiceImpl extends Resource implements QueryService {
     });
   }
 
-  override async _open(): Promise<void> {
+  override async '_open'(): Promise<void> {
     this._updateQueries = new DeferredTask(this._ctx, () => this._executeQueries(this._ctx));
   }
 
   @synchronized
-  override async _close(): Promise<void> {
+  override async '_close'(): Promise<void> {
     await this._updateQueries.join();
     await Promise.all(Array.from(this._queries).map((query) => query.close()));
   }
@@ -132,21 +129,29 @@ export class QueryServiceImpl extends Resource implements QueryService {
   /**
    * @deprecated No longer needed with SQL-based indexing.
    */
-  async setConfig(): Promise<void> {
+  ['QueryService.setConfig'](_request: IndexConfig): Effect.Effect<void, Error> {
     // No-op: SQL indexer doesn't need explicit configuration.
+    return Effect.void;
   }
 
   /**
    * @deprecated No longer needed with SQL-based indexing.
    */
-  async reindex(): Promise<void> {
+  ['QueryService.reindex'](): Effect.Effect<void, Error> {
     // No-op: SQL indexer handles re-indexing automatically.
-    log.warn('reindex() is deprecated and no longer has any effect');
+    return Effect.sync(() => log.warn('reindex() is deprecated and no longer has any effect'));
   }
 
-  execQuery(request: QueryRequest): Stream<QueryResponse> {
-    return new Stream<QueryResponse>(({ next, close, ctx }) => {
-      const queryEntry = this._createQuery(ctx, request, next, close, close);
+  ['QueryService.execQuery'](request: QueryRequest): EffectStream.Stream<QueryResponse, Error> {
+    return EffectStream.async<QueryResponse, Error>((emit) => {
+      const ctx = Context.default();
+      const queryEntry = this._createQuery(
+        ctx,
+        request,
+        (response) => void emit.single(response),
+        (err) => void emit.fail(err),
+        () => void emit.end(),
+      );
       scheduleMicroTask(ctx, async () => {
         await queryEntry.executor.open();
         if (queryEntry.feedScoped) {
@@ -155,7 +160,10 @@ export class QueryServiceImpl extends Resource implements QueryService {
         queryEntry.open = true;
         this._updateQueries.schedule();
       });
-      return queryEntry.close;
+      return Effect.promise(async () => {
+        await queryEntry.close();
+        await ctx.dispose();
+      });
     });
   }
 
@@ -163,7 +171,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
    * Schedule re-execution of queries, optionally guided by a targeted hint.
    * When called without a hint, all queries are marked dirty (catch-all invalidation).
    */
-  invalidateQueries(hint?: InvalidationHint): void {
+  'invalidateQueries'(hint?: InvalidationHint): void {
     this.#stats.totalInvalidations++;
     if (!hint) {
       this.#pendingHint = 'all';
@@ -177,7 +185,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
     this._updateQueries.schedule();
   }
 
-  private _createQuery(
+  private '_createQuery'(
     ctx: Context,
     request: QueryRequest,
     onResults: (respose: QueryResponse) => void,
@@ -217,7 +225,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
   }
 
   @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
-  private async _executeQueries(_ctx: Context) {
+  private async '_executeQueries'(_ctx: Context) {
     const hint = this.#pendingHint;
     this.#pendingHint = null;
 

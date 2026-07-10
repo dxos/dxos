@@ -4,6 +4,10 @@
 
 import { type Doc } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { SpaceProperties } from '@dxos/client-protocol';
@@ -21,20 +25,30 @@ import {
   CredentialServerExtension,
   DatabaseRoot,
   type EchoHost,
+  EchoHostService,
   type EdgeAutomergeReplicator,
+  EdgeAutomergeReplicatorService,
   type IMetadataStore,
+  IMetadataStoreService,
   type MeshEchoReplicator,
+  MeshEchoReplicatorService,
   type Space,
   type SpaceManager,
+  SpaceManagerService,
   type SpaceProtocol,
   type SpaceProtocolSession,
   findInlineObjectOfType,
 } from '@dxos/echo-host';
 import { type DatabaseDirectory, createIdFromSpaceKey } from '@dxos/echo-protocol';
-import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
-import { type FeedStore, writeMessages } from '@dxos/feed-store';
+import {
+  type EdgeConnection,
+  EdgeConnectionService,
+  type EdgeHttpClient,
+  EdgeHttpClientService,
+} from '@dxos/edge-client';
+import { type FeedStore, FeedStoreService, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
-import { type KeyringApi } from '@dxos/keyring';
+import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
@@ -56,8 +70,8 @@ import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
-import { createAuthProvider } from '../identity';
-import { type InvitationsManager } from '../invitations';
+import { type Identity, IdentityProviderService, createAuthProvider } from '../identity';
+import { type InvitationsManager, InvitationsManagerService } from '../invitations';
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
 
@@ -72,6 +86,48 @@ export interface SigningContext {
   // TODO(dmaretskyi): Should be a getter.
   getProfile: () => ProfileDocument | undefined;
 }
+
+/**
+ * Resolves signing context when identity becomes available.
+ */
+export type SigningContextProvider = () => SigningContext;
+
+/**
+ * Effect service tag for {@link SigningContextProvider}.
+ */
+export class SigningContextProviderService extends EffectContext.Tag('@dxos/client-services/SigningContextProvider')<
+  SigningContextProviderService,
+  SigningContextProvider
+>() {}
+
+/**
+ * Builds a {@link SigningContextProvider} from an identity resolver.
+ */
+export const createSigningContextProvider =
+  (getIdentity: () => Identity): SigningContextProvider =>
+  () => {
+    const identity = getIdentity();
+    return {
+      credentialSigner: identity.getIdentityCredentialSigner(),
+      identityKey: identity.identityKey,
+      deviceKey: identity.deviceKey,
+      getProfile: () => identity.profileDocument,
+      recordCredential: async (credential) => {
+        await identity.controlPipeline.writer.write({ credential: { credential } });
+      },
+    };
+  };
+
+/**
+ * Effect Layer providing {@link SigningContextProvider} from {@link IdentityProviderService}.
+ */
+export const SigningContextProviderLayer = Layer.effect(
+  SigningContextProviderService,
+  Effect.gen(function* () {
+    const identityProvider = yield* IdentityProviderService;
+    return createSigningContextProvider(identityProvider);
+  }),
+);
 
 export type AcceptSpaceOptions = {
   spaceKey: PublicKey;
@@ -106,7 +162,7 @@ export type DataSpaceManagerProps = {
   spaceManager: SpaceManager;
   metadataStore: IMetadataStore;
   keyring: KeyringApi;
-  signingContext: SigningContext;
+  signingContextProvider: SigningContextProvider;
   feedStore: FeedStore<FeedMessage>;
   echoHost: EchoHost;
   invitationsManager: InvitationsManager;
@@ -138,7 +194,6 @@ export type CreateSpaceOptions = {
 };
 
 @trackLeaks('open', 'close')
-@trace.resource({ lifecycle: true })
 export class DataSpaceManager extends Resource {
   public readonly updated = new Event();
 
@@ -147,7 +202,7 @@ export class DataSpaceManager extends Resource {
   private readonly _spaceManager: SpaceManager;
   private readonly _metadataStore: IMetadataStore;
   private readonly _keyring: KeyringApi;
-  private readonly _signingContext: SigningContext;
+  private readonly _signingContextProvider: SigningContextProvider;
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _echoHost: EchoHost;
   private readonly _invitationsManager: InvitationsManager;
@@ -164,7 +219,7 @@ export class DataSpaceManager extends Resource {
     this._spaceManager = params.spaceManager;
     this._metadataStore = params.metadataStore;
     this._keyring = params.keyring;
-    this._signingContext = params.signingContext;
+    this._signingContextProvider = params.signingContextProvider;
     this._feedStore = params.feedStore;
     this._echoHost = params.echoHost;
     this._meshReplicator = params.meshReplicator;
@@ -203,6 +258,10 @@ export class DataSpaceManager extends Resource {
         );
       },
     });
+  }
+
+  private get signingContext(): SigningContext {
+    return this._signingContextProvider();
   }
 
   // TODO(burdon): Remove.
@@ -343,7 +402,7 @@ export class DataSpaceManager extends Resource {
 
     const credentials = await spaceGenesis(
       this._keyring,
-      this._signingContext,
+      this.signingContext,
       space.inner,
       root.url,
       tags,
@@ -353,7 +412,7 @@ export class DataSpaceManager extends Resource {
 
     const memberCredential = credentials[1];
     invariant(getCredentialAssertion(memberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
-    await this._signingContext.recordCredential(memberCredential);
+    await this.signingContext.recordCredential(memberCredential);
 
     await space.initializeDataPipeline(ctx);
 
@@ -424,7 +483,7 @@ export class DataSpaceManager extends Resource {
     }
 
     // Replicates to the user's other devices via the HALO control feed.
-    const credential = await this._signingContext.credentialSigner.createCredential({
+    const credential = await this.signingContext.credentialSigner.createCredential({
       subject: spaceKey,
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceDeleted',
@@ -432,7 +491,7 @@ export class DataSpaceManager extends Resource {
         'deletedAt': new Date(),
       },
     });
-    await this._signingContext.recordCredential(credential);
+    await this.signingContext.recordCredential(credential);
 
     await this._tombstoneSpace(ctx, spaceKey);
   }
@@ -480,7 +539,7 @@ export class DataSpaceManager extends Resource {
 
     // TODO(burdon): Check if already admitted.
     const credentials: FeedMessage.Payload[] = await createAdmissionCredentials(
-      this._signingContext.credentialSigner,
+      this.signingContext.credentialSigner,
       options.identityKey,
       space.key,
       space.genesisFeedKey,
@@ -518,12 +577,12 @@ export class DataSpaceManager extends Resource {
   public async requestSpaceAdmissionCredential(ctx: Context, spaceKey: PublicKey): Promise<Credential> {
     return this._spaceManager.requestSpaceAdmissionCredential(ctx, {
       spaceKey,
-      identityKey: this._signingContext.identityKey,
+      identityKey: this.signingContext.identityKey,
       timeout: 15_000,
       swarmIdentity: {
-        identityKey: this._signingContext.identityKey,
-        peerKey: this._signingContext.deviceKey,
-        credentialProvider: createAuthProvider(this._signingContext.credentialSigner),
+        identityKey: this.signingContext.identityKey,
+        peerKey: this.signingContext.deviceKey,
+        credentialProvider: createAuthProvider(this.signingContext.credentialSigner),
         credentialAuthenticator: async () => true,
       },
     });
@@ -556,12 +615,12 @@ export class DataSpaceManager extends Resource {
   private async _constructSpace(ctx: Context, metadata: SpaceMetadata): Promise<DataSpace> {
     log('construct space', { metadata });
     const gossip = new Gossip({
-      localPeerId: this._signingContext.deviceKey,
+      localPeerId: this.signingContext.deviceKey,
     });
     const presence = new Presence({
       announceInterval: this._runtimeProps?.spaceMemberPresenceAnnounceInterval ?? PRESENCE_ANNOUNCE_INTERVAL,
       offlineTimeout: this._runtimeProps?.spaceMemberPresenceOfflineTimeout ?? PRESENCE_OFFLINE_TIMEOUT,
-      identityKey: this._signingContext.identityKey,
+      identityKey: this.signingContext.identityKey,
       gossip,
     });
 
@@ -577,9 +636,9 @@ export class DataSpaceManager extends Resource {
     const space: Space = await this._spaceManager.constructSpace({
       metadata,
       swarmIdentity: {
-        identityKey: this._signingContext.identityKey,
-        peerKey: this._signingContext.deviceKey,
-        credentialProvider: createAuthProvider(this._signingContext.credentialSigner),
+        identityKey: this.signingContext.identityKey,
+        peerKey: this.signingContext.deviceKey,
+        credentialProvider: createAuthProvider(this.signingContext.credentialSigner),
         credentialAuthenticator: deferFunction(() => dataSpace.authVerifier.verifier),
       },
       onAuthorizedConnection: (session) =>
@@ -608,7 +667,7 @@ export class DataSpaceManager extends Resource {
           this._handleMemberRoleChanges(presence, space.protocol, members);
         }
       },
-      memberKey: this._signingContext.identityKey,
+      memberKey: this.signingContext.identityKey,
       onDelegatedInvitationStatusChange: (invitation, isActive) => {
         return this._handleInvitationStatusChange(dataSpace, invitation, isActive);
       },
@@ -625,7 +684,7 @@ export class DataSpaceManager extends Resource {
       keyring: this._keyring,
       feedStore: this._feedStore,
       echoHost: this._echoHost,
-      signingContext: this._signingContext,
+      signingContext: this.signingContext,
       callbacks: {
         beforeReady: async () => {
           log('before space ready', { space: space.key });
@@ -767,3 +826,58 @@ export class DataSpaceManager extends Resource {
     await Promise.all(tasks);
   }
 }
+
+export class DataSpaceManagerService extends EffectContext.Tag('@dxos/client-services/DataSpaceManager')<
+  DataSpaceManagerService,
+  DataSpaceManager
+>() {}
+
+export type DataSpaceManagerLayerOptions = Pick<DataSpaceManagerProps, 'runtimeProps' | 'edgeFeatures'>;
+
+/**
+ * Effect Layer constructing a dormant {@link DataSpaceManager}.
+ */
+export const DataSpaceManagerLayer = (
+  options: DataSpaceManagerLayerOptions = {},
+): Layer.Layer<
+  DataSpaceManagerService,
+  never,
+  | SpaceManagerService
+  | IMetadataStoreService
+  | KeyringApiService
+  | SigningContextProviderService
+  | FeedStoreService
+  | EchoHostService
+  | InvitationsManagerService
+> =>
+  Layer.effect(
+    DataSpaceManagerService,
+    Effect.gen(function* () {
+      const spaceManager = yield* SpaceManagerService;
+      const metadataStore = yield* IMetadataStoreService;
+      const keyring = yield* KeyringApiService;
+      const signingContextProvider = yield* SigningContextProviderService;
+      const feedStore = yield* FeedStoreService;
+      const echoHost = yield* EchoHostService;
+      const invitationsManager = yield* InvitationsManagerService;
+      const edgeConnection = yield* Effect.serviceOption(EdgeConnectionService);
+      const edgeHttpClient = yield* Effect.serviceOption(EdgeHttpClientService);
+      const meshReplicator = yield* Effect.serviceOption(MeshEchoReplicatorService);
+      const echoEdgeReplicator = yield* Effect.serviceOption(EdgeAutomergeReplicatorService);
+
+      return new DataSpaceManager({
+        spaceManager,
+        metadataStore,
+        keyring,
+        signingContextProvider,
+        feedStore,
+        echoHost,
+        invitationsManager,
+        edgeConnection: Option.getOrUndefined(edgeConnection),
+        edgeHttpClient: Option.getOrUndefined(edgeHttpClient),
+        meshReplicator: Option.getOrUndefined(meshReplicator),
+        echoEdgeReplicator: Option.getOrUndefined(echoEdgeReplicator),
+        ...options,
+      });
+    }),
+  );

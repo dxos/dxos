@@ -135,3 +135,5 @@ const renderUpdateRow = (
     Match.exhaustive,
   );
 };
+
+NativeSettings.displayName = 'NativeSettings';

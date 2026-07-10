@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
@@ -10,8 +10,8 @@ import { Entity, Type } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { Message } from '@dxos/types';
 
-import { type GoogleMail } from '../../../apis';
-import { mapMessage } from './mapper';
+import { GoogleMail } from '../../../apis';
+import { decodeBody, mapMessage } from './mapper';
 
 const makeGmailMessage = (overrides?: Partial<GoogleMail.Message>): GoogleMail.Message => ({
   id: 'msg-001',
@@ -98,4 +98,170 @@ describe('mapMessage', () => {
       expect(properties.subject).toBe("O'Reilly & co.");
     }, Effect.provide(InboxResolver.Mock())),
   );
+});
+
+describe('decodeBody attachments', () => {
+  test('collects a top-level attachment part', ({ expect }) => {
+    const message = makeGmailMessage({
+      payload: {
+        headers: [{ name: 'From', value: 'Alice <alice@unknown.com>' }],
+        parts: [
+          { mimeType: 'text/plain', body: { size: 11, data: Buffer.from('Hello World').toString('base64') } },
+          {
+            mimeType: 'image/png',
+            filename: 'photo.png',
+            body: { size: 1234, attachmentId: 'att-1' },
+          },
+        ],
+      },
+    });
+    const decoded = decodeBody(message);
+    expect(decoded?.attachments).toEqual([
+      { filename: 'photo.png', attachmentId: 'att-1', mimeType: 'image/png', size: 1234 },
+    ]);
+  });
+
+  test('recurses into nested multipart parts to find attachments', ({ expect }) => {
+    const message = makeGmailMessage({
+      payload: {
+        headers: [{ name: 'From', value: 'Alice <alice@unknown.com>' }],
+        parts: [
+          { mimeType: 'text/plain', body: { size: 11, data: Buffer.from('Hello World').toString('base64') } },
+          {
+            mimeType: 'multipart/mixed',
+            body: { size: 0 },
+            parts: [
+              {
+                mimeType: 'application/pdf',
+                filename: 'invoice.pdf',
+                body: { size: 5678, attachmentId: 'att-2' },
+              },
+            ],
+          },
+        ],
+      },
+    });
+    const decoded = decodeBody(message);
+    expect(decoded?.attachments).toEqual([
+      { filename: 'invoice.pdf', attachmentId: 'att-2', mimeType: 'application/pdf', size: 5678 },
+    ]);
+  });
+
+  test('extracts and strips the Content-ID header for inline attachments', ({ expect }) => {
+    const message = makeGmailMessage({
+      payload: {
+        headers: [{ name: 'From', value: 'Alice <alice@unknown.com>' }],
+        parts: [
+          { mimeType: 'text/plain', body: { size: 11, data: Buffer.from('Hello World').toString('base64') } },
+          {
+            mimeType: 'image/png',
+            filename: 'signature.png',
+            headers: [{ name: 'Content-ID', value: '<ii_mrcqn4871>' }],
+            body: { size: 999, attachmentId: 'att-sig' },
+          },
+        ],
+      },
+    });
+    const decoded = decodeBody(message);
+    expect(decoded?.attachments).toEqual([
+      {
+        filename: 'signature.png',
+        attachmentId: 'att-sig',
+        mimeType: 'image/png',
+        size: 999,
+        contentId: 'ii_mrcqn4871',
+      },
+    ]);
+  });
+
+  test('ignores parts with no filename or attachmentId', ({ expect }) => {
+    const message = makeGmailMessage({
+      payload: {
+        headers: [{ name: 'From', value: 'Alice <alice@unknown.com>' }],
+        parts: [{ mimeType: 'text/plain', body: { size: 11, data: Buffer.from('Hello World').toString('base64') } }],
+      },
+    });
+    const decoded = decodeBody(message);
+    expect(decoded?.attachments).toEqual([]);
+  });
+});
+
+describe('decodeBody nested multipart bodies', () => {
+  test('finds text/html nested under a multipart/related wrapper (inline image), not just top-level parts', ({
+    expect,
+  }) => {
+    // A reply with an inline signature image: Gmail wraps `multipart/alternative` (plain + html) and
+    // the inline image inside a `multipart/related` container — the html/plain parts are one level
+    // deeper than `payload.parts`, not at the top level.
+    const message = makeGmailMessage({
+      payload: {
+        headers: [{ name: 'From', value: 'Alice <alice@unknown.com>' }],
+        parts: [
+          {
+            mimeType: 'multipart/related',
+            body: { size: 0 },
+            parts: [
+              {
+                mimeType: 'multipart/alternative',
+                body: { size: 0 },
+                parts: [
+                  { mimeType: 'text/plain', body: { size: 5, data: Buffer.from('Hello').toString('base64') } },
+                  {
+                    mimeType: 'text/html',
+                    body: { size: 16, data: Buffer.from('<p>Hello</p>').toString('base64') },
+                  },
+                ],
+              },
+              {
+                mimeType: 'image/png',
+                filename: 'signature.png',
+                body: { size: 999, attachmentId: 'att-sig' },
+              },
+            ],
+          },
+        ],
+      },
+    });
+    const decoded = decodeBody(message);
+    expect(decoded?.plain).toBe('Hello');
+    expect(decoded?.html).toBe('<p>Hello</p>');
+    expect(decoded?.attachments).toEqual([
+      { filename: 'signature.png', attachmentId: 'att-sig', mimeType: 'image/png', size: 999 },
+    ]);
+  });
+
+  test('drops (and logs) a message whose body cannot be found anywhere in the part tree', ({ expect }) => {
+    const message = makeGmailMessage({
+      payload: {
+        headers: [{ name: 'From', value: 'Alice <alice@unknown.com>' }],
+        parts: [
+          {
+            mimeType: 'application/pdf',
+            filename: 'invoice.pdf',
+            body: { size: 100, attachmentId: 'att-only' },
+          },
+        ],
+      },
+    });
+    expect(decodeBody(message)).toBeNull();
+  });
+});
+
+describe('GoogleMail.Message schema', () => {
+  test('decodes a real response missing labelIds (not every message has one)', ({ expect }) => {
+    const raw: unknown = {
+      id: 'msg-001',
+      threadId: 'thread-001',
+      // `labelIds` intentionally omitted — the Gmail API does not always include it.
+      snippet: 'Test email snippet',
+      internalDate: String(Date.now()),
+      payload: {
+        headers: [{ name: 'From', value: 'Alice <alice@unknown.com>' }],
+        body: { size: 11, data: Buffer.from('Hello World').toString('base64') },
+      },
+    };
+    const decoded = Schema.decodeUnknownEither(GoogleMail.Message)(raw);
+    expect(decoded._tag).toBe('Right');
+    expect(decoded._tag === 'Right' && decoded.right.labelIds).toBeUndefined();
+  });
 });

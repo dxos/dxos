@@ -10,7 +10,7 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FactStore } from '@dxos/pipeline-rdf';
+import { FactStore, FeedCursors } from '@dxos/pipeline-rdf';
 import {
   Connection,
   GetSyncTargetsInput,
@@ -26,7 +26,6 @@ import { Actor, Event, Message, type Person } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { FeedCursors } from './FeedCursors';
 import * as Mailbox from './Mailbox';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
@@ -624,20 +623,20 @@ export const ExtractMailbox = Operation.make({
   }),
 });
 
-/** Default page size for {@link EnrichMailbox} fact-store commits. */
-export const DEFAULT_ENRICH_MAILBOX_PAGE_SIZE = 10;
+/** Default page size for {@link AnalyzeMailbox} fact-store commits. */
+export const DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE = 10;
 
-export const EnrichMailbox = Operation.make({
+export const AnalyzeMailbox = Operation.make({
   meta: {
-    key: makeKey('enrichMailbox'),
-    name: 'Enrich Mailbox',
+    key: makeKey('analyzeMailbox'),
+    name: 'Analyze Mailbox',
     description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
     icon: 'ph--brain--regular',
   },
   services: [AiService.AiService, Database.Service, FactStore, FeedCursors],
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
-      description: 'Mailbox whose feed messages are enriched.',
+      description: 'Mailbox whose feed messages are analyzed.',
     }),
     pageSize: Schema.optional(
       Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
@@ -657,5 +656,34 @@ export const EnrichMailbox = Operation.make({
   output: Schema.Struct({
     processed: Schema.Number,
     facts: Schema.Number,
+  }),
+});
+
+/** Default number of thread messages included in the {@link GenerateReply} prompt. */
+export const DEFAULT_GENERATE_REPLY_THREAD_LIMIT = 5;
+
+/** Default maximum number of facts included in the {@link GenerateReply} prompt. */
+export const DEFAULT_GENERATE_REPLY_FACT_LIMIT = 20;
+
+export const GenerateReply = Operation.make({
+  meta: {
+    key: makeKey('generateReply'),
+    name: 'Generate Reply',
+    description:
+      'Drafts a reply to an email, grounded on the thread context and facts the space fact store knows about the participants.',
+    icon: 'ph--sparkle--regular',
+  },
+  services: [AiService.AiService, Database.Service, FactStore],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox whose feed holds the thread.',
+    }),
+    message: Schema.Any.annotations({
+      description: 'The message to reply to.',
+    }),
+  }),
+  output: Schema.Struct({
+    subject: Schema.String,
+    body: Schema.String,
   }),
 });

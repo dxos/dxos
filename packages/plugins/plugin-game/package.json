@@ -99,6 +99,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

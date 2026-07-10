@@ -11,6 +11,12 @@ packages:
   - '!**/dist/**'
   - '!**/out/**'
 
+# sparqljs was deprecated wholesale on npm ("no longer supported"); it remains a transitive
+# dependency of @comunica/* (via sparqlalgebrajs), so it cannot be removed by dropping the
+# direct @dxos/pipeline-rdf dependency. Acknowledged pending an upstream comunica migration.
+allowedDeprecatedVersions:
+  sparqljs: 3.7.4
+
 catalog:
   3d-force-graph: ^1.76.1
   '@ai-sdk/react': ^3.0.99
@@ -812,12 +818,6 @@ peerDependencyRules:
     - '@effect/rpc'
 
 strictPeerDependencies: true
-
-# sparqljs was deprecated wholesale on npm ("no longer supported"); it remains a transitive
-# dependency of @comunica/* (via sparqlalgebrajs), so it cannot be removed by dropping the
-# direct @dxos/pipeline-rdf dependency. Acknowledged pending an upstream comunica migration.
-allowedDeprecatedVersions:
-  sparqljs: 3.7.4
 
 trustPolicy: no-downgrade
 

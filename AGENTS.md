@@ -1,228 +1,134 @@
 # Agent Guidelines for DXOS
 
-## IMPORTANT
+This file is the shared, harness-agnostic entrypoint for coding agents.
 
-- When you start, the first thing you should do is tell the user if you understand these instructions and list the config files you are aware of.
-- You must disclose your current worktree as soon as it is created.
-- If you are unsure about the best way to implement something, ask the user for clarification.
-- When asking the user a question; either make it yes/no, or provide numbered options.
-- DO NOT EVER ASK a-or-b questions without numbering them.
-- ALWAYS test your work after each step.
+- `CLAUDE.md` and `GEMINI.md` are symlinks to it.
+- Keep it thin and durable — deep how-to lives in `.agents/skills/*`;
+- environment setup lives in `REPOSITORY_GUIDE.md`.
 
-## Dependencies
+## Start of session
 
-- All dependency versions are managed in the default pnpm catalog.
-- To add a new dependency, run `pnpm add --filter "<project>" --save-catalog "<package>"`.
-- **IMPORTANT**: Any `@dxos` package that lives within this repo must be added with the `workspace:` protocol, never from the catalog. The catalog is only for external (non-workspace) packages.
-  - **Regular `dependencies` / `devDependencies` → `workspace:*`.**
-  - **`peerDependencies` → `workspace:^`** (caret, not `*`) — a `*` pin reads as out-of-range on any bump and would cascade the fixed group to a spurious major. Do not "simplify" it to `*`. Why it matters: `.github/RELEASE-SPEC.md`.
+- Confirm you understand these instructions and list the guidance files you are
+  aware of (this file, `.claude/CLAUDE.md`, relevant `.agents/skills/*`).
+- State the worktree you are operating in.
+- When asking a question, make it yes/no or give numbered options — never an
+  unnumbered a-or-b.
+- If unsure how to implement something, ask rather than guess.
 
-## Build, Test, Lint Commands
+## Working with the user
 
-- Project uses `moon` to run tasks, tests, lint etc. (moon run package-name:task-name).
-- Build all: `moon exec --on-failure continue --quiet :build`.
-- Build package: `moon run package-name:build`.
-- Run single test file: `moon run package-name:test -- path/to/test.test.ts`.
-- Run all tests: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`.
-- Storybook: `moon run storybook-react:serve` (defaults to port 9009).
-- Lint & fix: `moon run :lint -- --fix`.
-- Check package tasks: see `moon.yml` in package directory.
-- **Expected warning**: `Auth token DEPOT_TOKEN does not exist` is a normal warning about remote caching and should be ignored. Filter out warnings from your output.
+Treat the user as an expensive, intermittent resource — minimize round-trips.
 
-## Planning
+- **Front-load dependencies.** At task start, identify everything you'll need
+  from the user (credentials, assets, design decisions, manual verification) and
+  gather/scaffold everything obtainable on your own first.
+- **Ask in one batch.** Request all human inputs together, alongside a concise
+  plan, and get a single go-ahead. Then run the rest uninterrupted.
+- **Don't stall on one blocker.** If an unforeseen dependency appears mid-task,
+  park it, continue all other reachable work, and surface it at the next
+  checkpoint — interrupt immediately only when fully blocked.
+- **Automate the user's role where you can.** If their step is mechanical
+  (running a command, checking output), do it yourself rather than asking.
 
-- **IMPORTANT**: Do NOT cast values to fix build issues; instead create a refactoring plan and get permission.
-  - "Cast" means `as T`, `as any`, `as unknown as T`, non-null `!`, or a widened/`any` signature added to silence a type error. `as const` is NOT a cast in this sense — it narrows a literal rather than bypassing the checker, and is always acceptable (no comment or justification needed).
-  - Default: fix the type at its source (inference, signature, generic), not the call site that surfaced the error. A red typecheck during a refactor is a finding, not an obstacle to paper over.
-  - Casts are only acceptable at genuine type-system boundaries (external/untyped data, deliberate coercions), and must carry a concise comment saying why no typed alternative exists.
-  - **Before every commit/PR**, audit your diff for new casts: `git diff origin/main | grep -nE '\bas (any|unknown|[A-Z])|as unknown as'`. Justify or remove each; do not defer to review. (`as const` is intentionally excluded from this pattern.)
-  - Casts accumulate fastest during large codemods — treat each as a deliberate decision, never an autopilot stopgap.
+## Non-negotiables
 
-## Knowledge
+- **Never create, rename, or switch worktrees or branches.** The harness assigns
+  this session's worktree and branch at startup; the Desktop UI pairs them by the
+  convention `branch == claude/<worktree-dir-name>`. Breaking that convention
+  makes your work invisible in the UI. Therefore:
+  - Do NOT run `git worktree add`, `git checkout -b`/`-B`, `git switch -c`/`-C`,
+    or `git branch -m`/`-M` (the `guard-branch.sh` hook denies these).
+  - Do NOT create a new branch or a side worktree, even if a skill or tool
+    suggests it. This overrides `superpowers:using-git-worktrees` and the
+    `EnterWorktree`/`ExitWorktree` tools — the workspace already exists.
+  - Work only in the assigned directory; if you need a different branch, ask the
+    user rather than switching.
+- **Test after every step.** Never claim work is done without running the
+  relevant build/test/lint and showing the result.
+- **No casts to silence the type-checker.** `as any`, `as unknown as T`,
+  widened `any` signatures, and non-null `!` are not fixes — fix the type at its
+  source. `as const` is fine. See the `code-style` skill for the full rule and
+  the pre-commit audit command.
+- **New packages are private.** Every new package MUST set `"private": true` in
+  `package.json`; it is removed manually only after a trusted publisher exists.
+- **Workspace deps use `workspace:*`.** Any in-repo `@dxos` package is added with
+  `workspace:*`, never from the catalog. The catalog is for external packages
+  only. Add deps with `pnpm add --filter "<project>" --save-catalog "<package>"`.
+  **`peerDependencies` use `workspace:^`** (caret, not `*`) — a `*` pin reads as
+  out-of-range on any bump and would cascade the fixed publish group to a
+  spurious major. Do not "simplify" it to `*`. Why it matters:
+  `.github/RELEASE-SPEC.md`.
+- **Never edit the main checkout.** All file edits target the assigned worktree
+  path, never the bare repo root or another worktree (the `guard-worktree.sh`
+  hook denies these).
+- **Commit nothing silently.** Before any commit/push, `git status` and account
+  for every modified/untracked file — including the user's own edits in the
+  shared worktree. Commit them or explicitly confirm exclusion.
 
-- **IMPORTANT**: Follow DXOS-specific rules in `.agents/skills/*`.
-- Update these documents when you learn better patterns; or when the user asks you to correct your implementation.
+## Build, test, lint
 
-## Code Style
+Tasks run through `moon` (`moon run <package>:<task>`). See a package's
+`moon.yml` for its available tasks.
 
-- Follow the DXOS SDK guide.
-- Use TypeScript with single quotes for strings.
-- Prefer functional programming and arrow functions.
-- Import order: builtin → external → @dxos → internal → parent → sibling (with blank lines between groups).
-- **Internal module imports** (e.g. `@dxos/echo` entrypoints importing `src/internal/<Module>/`): import the capitalized internal barrel as a lowercase `*Internal` namespace — `import * as objInternal from './internal/Obj'`, `import * as queryInternal from './internal/Query'`. Do not deep-import submodules (`./internal/Obj/atoms`, `./internal/Ref/ref`, etc.); re-export needed symbols from the module's `index.ts` instead. The top-level `./internal` barrel is for cross-cutting re-exports only — prefer the per-module barrel when a single entrypoint owns the dependency. Atom factories inside internal modules use the `makeAtom` name (not `make`) to avoid clashing with public `make` APIs.
-- Error handling: use Effect-TS patterns. Never put untyped `Error` in an Effect's error type parameter — define domain errors with `BaseError.extend` (from `@dxos/errors`) or `Data.TaggedClass` so callers can recover with `Effect.catchTag`.
-- JSDoc comments for public functions, all comments end with period.
-- Comments state _why the code is necessary_ (the invariant or constraint it satisfies), concise and self-contained. Never narrate the fix, reference this conversation, or use before/after framing ("rather than X we now do Y", "this used to…"). State the constraint that makes the code correct; drop the history.
-- React: arrow function components, TailwindCSS for styles, proper event handler types.
-- Remember to remove/update TODOs as you go.
-- Avoid single letter variable names.
-- Avoid default exports unless required.
-- Avoid re-exports. Prefer importing symbols directly from the package that defines them.
-- **IMPORTANT**: When moving code (between files, packages, or namespaces), do NOT leave compatibility re-exports or shims behind. Proactively update every call site to import from the new location in the same change. Backwards-compatibility aliases rot and hide the refactor; fix all usages up front.
-- Use barrel imports whenever possible.
-- Prefer ES `#private` fields/methods over TypeScript `private` keyword in new code. Existing `_private` convention is fine to keep.
-- For files imported as a namespace (i.e., marked with `// @import-as-namespace`), avoid prefixing top-level types with the namespace name. Inside `Foo.ts` prefer `Manager`, `Service`, `Options` over `FooManager`, `FooService`, `FooOptions` — callers see `Foo.Manager` either way.
-- Common suffix for constructor option-bag types is `Options` (e.g., `SpawnOptions`, `ManagerImplOptions`) — pick this over `Opts`/`Props`/`Config` for consistency.
-- Consider taking an options object when a constructor or function has more than a few readonly props, especially when several are optional or share a logical grouping.
-- Class member ordering (consider): static fields → public readonly → public mutable → private readonly (incl. constructor-injected) → private mutable → constructor → public methods → private methods. Within each group, rank properties roughly from most-important to least — importance signals include "further up the stack" (closer to public API), required over optional, readonly over mutable.
-- For exported functions with multiple overloads, declare them as `const` with the overload signatures inline in the type annotation rather than using `export function` with repeated declarations. This keeps the implementation as an arrow function and groups all signatures together:
-  ```ts
-  export const myFn: {
-    <T extends Foo>(a: T): Bar<T>;
-    (a: string): Bar<any>;
-  } = (a): Bar<unknown> => { ... };
-  ```
+- Build all: `moon exec --on-failure continue --quiet :build`
+- Build one: `moon run <package>:build`
+- Test one file: `moon run <package>:test -- path/to/file.test.ts`
+- Test all: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`
+- Lint & fix: `moon run :lint -- --fix`
+- Format: `pnpm format` (oxfmt — CI checks `oxfmt --check`, not prettier)
+- Storybook: `moon run storybook-react:serve` (port 9009)
 
-### Testing
+Ignore the `Auth token DEPOT_TOKEN does not exist` warning (remote-cache auth).
 
-- place tests near modules as `module.test.ts`, use vitest with `describe`/`test` (not `it`), prefer `test('foo', ({ expect }) => ...)`.
-- **Prefer extending existing test suites over creating new ones.** Before adding a test file, look for a suite that already covers the area and add cases there. A small number of cohesive suites is better than many fragmented ones.
-- **Test behaviours at the level that is naturally the public API.** Exercise the seam consumers actually use (the package's exported surface, a service/manager's public methods) rather than reaching into private internals. This keeps tests resilient to refactors and documents real usage.
-- Prefer unified `TestLayer` for all tests instead of creating a separate one for each test.
-- `TestLayer(opts?)` can be parametrized so tests can configure it.
-- Place test layer, configuration, and main definitions on top of the suite, while helpers go on the bottom.
-- Avoid sleep and polling in tests as much as possible. Try to use events and TestClock instead.
+## Code style
 
-### Namespaces exports in packages
+Universal rules. Deeper conventions live in skills — see the pointers below.
 
-- We're converting more and more packages to ones with namespaces exports. Example:
+- TypeScript, single quotes. Prefer functional style and arrow functions.
+- Import order, blank line between groups:
+  builtin → external → @dxos → internal → parent → sibling.
+- Prefer named exports; avoid default exports. Use barrel imports.
+- **Never leave compatibility re-exports or shims when moving code.** Update
+  every call site to the new location in the same change.
+- Comments state _why_ the code is necessary (the constraint it satisfies), end
+  with a period, and never narrate history or this conversation. JSDoc public
+  functions.
+- Prefer ES `#private` over the TypeScript `private` keyword in new code
+  (`_private` is fine to keep).
+- No single-letter variable names. Remove/update TODOs as you touch them.
+- React: arrow-function components, TailwindCSS, named React imports (`useMemo`,
+  `type Ref` — not `React.useMemo`); name the ref `forwardedRef`.
 
-```text
-src/
-  Foo.ts
-  Bar.ts
-  errors.ts
-  index.ts
-  testing/
-    index.ts
-  internal/
-    foo.ts
-    bar.ts
-    baz.ts
-```
+Deeper conventions:
 
-```ts
-// index.ts
-export * as Foo from './Foo';
-export * as Bar from './Bar';
-export * from './errors';
-```
+- No-cast rule, namespace-export packages, internal-module imports, class-member
+  ordering, options-bag types, overload syntax, and test structure →
+  `code-style` skill.
+- ECHO objects, queries, schema, Ref/DXN → `echo` skill.
+- Effect-TS services, layers, and typed domain errors → `effect` skill.
+- React components, theme tokens, and Composer UI primitives → `composer-ui`
+  skill.
 
-```ts
-// Foo.ts
+## Git & PR workflow
 
-// @import-as-namespace
-export const one = 1;
-export const two = 2;
-export const func: {
-  (a: string): number;
-  (a: number): string;
-} = (a) => {
-  return a;
-};
-```
+- **PR titles use conventional-commit format**, scope when relevant:
+  `feat(echo): add group aggregates`, `fix: resolve subscription leak`,
+  `refactor: simplify error handling`, `docs: update Space API`.
+- **CI is one workflow, "Check"** — build, test, lint, fmt. A red Check is your
+  failure, not pre-existing; fix the root cause on the branch, never merge
+  around it. Inspect: `gh run list --branch <branch> --workflow "Check"`, then
+  `gh run view <id> --log-failed`.
+- Commit hygiene → see "Commit nothing silently" in Non-negotiables.
+- Creating or landing a PR is a procedure — use the `submit-pr` and `land`
+  skills. Always surface the Composer preview URL next to the PR link.
 
-- Code is organized into modules exported as namespace. Modules have capital case names.
-- `@import-as-namespace` linter directive is used to mark the file as a namespace export.
-- Internal code is hidden in the `internal/` directory that is not exported.
-- `testing/` directory and `errors.ts` are the exception.
-- Use `@dxos/echo` as a reference for this pattern.
+## Where things live
 
-### React
-
-- Import all required symbols from React — hooks, types, and utilities — as named imports (i.e., use `useMemo` not `React.useMemo`, use `type Ref` not `React.Ref`).
-- When using `forwardRef` use the variable name `forwardedRef`.
-
-## New Packages
-
-- **IMPORTANT**: Any new package created in this repo MUST have `"private": true` in its `package.json`. The `private` flag can only be removed manually once a trusted publisher has been configured for the package.
-
-## Workflow
-
-- Never work on `main`; always work within the session-generated worktree.
-  - If there are unstaged changes, stash these and move them into the worktree; tell the user.
-  - Before working on code, tell the user the worktree.
-  - IMPORTANT: Do not change the branch or worktree name after you have started unless you are instructed to directly by the user.
-  - **IMPORTANT**: Do NOT create new git branches unless the user explicitly asks. Work on the current branch only.
-  - **IMPORTANT**: Always work in the worktree directory the harness assigned to you — do NOT `cd` into other worktrees or create parallel worktrees on the side. The harness UI tracks progress by watching that directory; working elsewhere makes changes invisible to the user. If the user asks you to continue a different branch, check out that branch in the assigned worktree (clean up the old branch first if needed); do not switch to another worktree path.
-- Check `moon.yml` for available package tasks
-- Run linter at natural stopping points
-- Confirm work complete before final build/lint check
-- If updating `pnpm-workspace.yaml` make sure to preserve comments.
-
-## Interacting The User
-
-- When collaborating closely with the User, determine if the user's role can be automated.
-- Be precise about what you are asking the user to do and actively manage the process.
-- **IMPORTANT**: Model the user as a very expensive, intermittent resource and minimize round-trips to them. The wasteful pattern to avoid: the user waits a long time for the agent to finish, only to be asked to test or supply something the agent could have anticipated.
-  - At task start, analyze ALL human dependencies up-front (test credentials, assets, design decisions, accounts, manual verification steps).
-  - Gather/build/scaffold anything obtainable autonomously BEFORE asking the user for anything.
-  - Request all needed resources from the user in ONE batch, alongside a very concise plan; get a single go-ahead.
-  - Then execute the remainder of the task uninterrupted; do not bounce back for things that could have been front-loaded.
-  - If you hit an unforeseen human dependency mid-task, park it and continue all other reachable work; only surface an immediate ask when you are fully blocked and cannot make progress otherwise. Batch parked asks for the next checkpoint.
-
-## PR Naming Convention
-
-**IMPORTANT**: All PR titles MUST use conventional commit format:
-
-Use scope when relevant: `feat(package-name): <description>`
-
-Examples:
-
-- `feat: add user authentication flow`
-- `fix(echo): resolve memory leak in subscription handler`
-- `refactor: simplify error handling in client SDK`
-- `docs: update API reference for Space class`
-
-## CI
-
-- **IMPORTANT**: There is ONE main CI workflow ("Check") and it verifies **build, test, lint, and fmt**. If any of those are red on your branch, treat them as YOUR failures, not pre-existing ones — address the root cause of the failure on the branch rather than shrugging it off. Never merge around a red "Check".
-- **IMPORTANT**: After every `git push`, proactively check CI status using `gh run list --branch <branch> --limit 5 --workflow "Check"`. Do NOT rely solely on `pnpm -w gh-action --verify` — it only checks agent workflows, not the main **Check** workflow that runs build and tests.
-- If the Check workflow fails, inspect the failure with `gh run view <run-id>` and `gh run view <run-id> --log-failed`, identify the failing job/test, and fix it at the root cause.
-- When the user asks "what is the CI status" or similar, always check the **Check** workflow specifically.
-
-## Committing and Pushing
-
-- **IMPORTANT**: Before every `git commit` and `git push`, run `git status` and check for ALL modified, staged, and untracked files. Every changed file must either be committed or explicitly acknowledged with the user. Never leave unstaged changes behind silently — if a file was modified during your work, it must be included in the commit or you must ask the user whether to include it.
-
-## Submitting PRs
-
-- When the user asks you to submit a PR:
-  - Use `gh` CLI to create and manage PRs.
-  - Merge `origin/main` in to current branch and resolve conflicts.
-  - Format code with `pnpm format` and check that `moon run :lint -- --fix` succeeds.
-  - Check `moon run :test` succeeds.
-  - Commit and push ALL unstaged changes (including any edits that the user may have made in the worktree).
-  - **IMPORTANT**: Verify `git status` shows a clean working tree after the final push. If any files remain modified or untracked, either commit them or confirm with the user before proceeding.
-  - Monitor CI (every 5 minutes): `gh run list --branch <branch> --limit 3 --workflow "Check"` and `pnpm -w gh-action --verify --watch`.
-  - You must attempt to diagnose and if possible fix all CI errors -- regardless of whether they relate to the current branch
-  - **IMPORTANT**: Address and RESPOND to all PR review comments.
-  - Update the PR description with a summary of the changes and the reasoning behind major changes.
-  - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123".
-  - **IMPORTANT**: DO NOT DELETE ANY BRANCHES OR WORKTREES THAT HAVE UNCOMMITTED CHANGES.
-  - **IMPORTANT**: ALWAYS surface the Composer preview URL next to the PR number/link in chat summaries AND in the final message. The `preview-deploy.yml` workflow publishes a sticky `composer-preview` comment on the PR containing a branch-alias URL of the form `https://<branch-alias>.composer-app.pages.dev` and a per-deployment URL — fetch it with `gh pr view <pr> --json comments` (or `gh api repos/dxos/dxos/issues/<pr>/comments`) and include it verbatim. If the preview comment is not yet posted (deploy still running), say "preview pending" alongside the PR link and re-check on the next status update.
-
-## Cursor Cloud specific instructions
-
-### Toolchain
-
-This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.4. All are managed by **proto** (see `.prototools`). In the cloud VM, proto is installed at `~/.proto` and must be on PATH (`export PROTO_HOME="$HOME/.proto" && export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"`). Do **not** use nvm; proto shims must take precedence.
-
-### Running services
-
-- **Composer app** (main app): `moon run composer-app:serve --quiet` starts a Vite dev server on port 5173. The app auto-creates a local identity on first load; no external auth is required.
-- **Tasks app**: `moon run tasks-app:serve`
-- **Docs site**: `moon run docs:serve`
-- See `REPOSITORY_GUIDE.md` for the full list of run commands.
-
-### Gotchas
-
-- `pnpm install` must run with `CI=true` or `HUSKY=0` in non-interactive environments to skip the husky git hooks setup prompt.
-- The `DEPOT_TOKEN` warning from moon is expected and harmless (remote caching auth token).
-- The `pnpm.onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` controls which native addons are built; warnings about "ignored build scripts" for packages not in the list are normal.
-- Builds must complete before running `serve` commands, because moon tasks have `deps` on `:prebuild`/`:build` targets.
-- No Docker or external services are required for unit tests or local dev. Signal servers for networking tests are pre-compiled binaries spawned automatically by tests.
-
-### DXOS APIs
-
-Read additional information about DXOS APIs in ./agents/instructions
+- **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
+  relevant skill for the area you're working in (echo, effect, composer-ui,
+  operations, testing, code-style, submit-pr, land, …).
+- **`REPOSITORY_GUIDE.md`** — toolchain setup, prerequisites, and how to run
+  apps/services (Composer, Tasks, Docs).
+- **`OPS_GUIDE.md`** / **`TROUBLESHOOTING.md`** — operations and common issues.
+- **`.claude/CLAUDE.md`** — Claude-harness-specific notes.
+- **DXOS runtime APIs** — see the `echo`, `effect`, and `operations` skills.

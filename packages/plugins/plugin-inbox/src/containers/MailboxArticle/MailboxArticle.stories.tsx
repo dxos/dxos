@@ -18,7 +18,7 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
@@ -60,9 +60,8 @@ type StoryArgs = {
 };
 
 const DefaultStory = ({ conversations }: StoryArgs) => {
-  const spaces = useSpaces();
-  const db = useDatabase(spaces[0].id);
-  const [mailbox] = useQuery(db, Filter.type(Mailbox.Mailbox));
+  const [space] = useSpaces();
+  const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
 
   // Force the conversation-grouping setting per-variant, independent of any persisted value.
   const settingsAtom = useCapability(InboxCapabilities.Settings);
@@ -73,8 +72,8 @@ const DefaultStory = ({ conversations }: StoryArgs) => {
     }
   }, [conversations, setSettings]);
 
-  if (!db || !mailbox) {
-    return <Loading data={{ db: !!db, mailbox: !!mailbox }} />;
+  if (!space?.db || !mailbox) {
+    return <Loading data={{ db: !!space?.db, mailbox: !!mailbox }} />;
   }
 
   return <MailboxArticle role='article' subject={mailbox} attendableId='story' />;

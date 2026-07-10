@@ -39,6 +39,13 @@ export type PaginationResult<T> = {
 type Snapshot<O> = { items: O[]; skip: number; limit: number; isLoading: boolean };
 
 /**
+ * The element type a paginated query yields: the flat record for an aggregate query (branded with
+ * {@link Query.AggregateResult}), otherwise the query's entity type. Mirrors `useQuery`'s overloads.
+ */
+type PaginationElement<Q extends Query.Any> =
+  Query.Type<Q> extends Query.AggregateResult ? Query.Type<Q> : Entity.Entity<Query.Type<Q>>;
+
+/**
  * Builds the external store backing `usePagination` for one query identity (filter/order/page
  * size/resource). Mirrors `useQuery`'s own `useMemo`-built `{ getObjects, subscribe }` pair as
  * closely as the added pagination state allows: nothing is queried and `.results` is never read
@@ -55,7 +62,7 @@ type Snapshot<O> = { items: O[]; skip: number; limit: number; isLoading: boolean
  * results until the new one delivers its own -- that's what keeps the previous page visible while
  * the new one loads (see the hook's own doc comment for why that matters).
  */
-const createPaginationStore = <Q extends Query.Any, O extends Entity.Entity<Query.Type<Q>>>(
+const createPaginationStore = <Q extends Query.Any, O>(
   resource: Database.Queryable | undefined,
   innerAst: Parameters<typeof Query.fromAst>[0],
   pageSize: number,
@@ -209,14 +216,11 @@ const createPaginationStore = <Q extends Query.Any, O extends Entity.Entity<Quer
  * );
  * ```
  */
-export const usePagination = <
-  Q extends Query.Any,
-  O extends Entity.Entity<Query.Type<Q>> = Entity.Entity<Query.Type<Q>>,
->(
+export const usePagination = <Q extends Query.Any>(
   resource: Database.Queryable | undefined,
   query: Q,
   options?: UsePaginationOptions,
-): PaginationResult<O> => {
+): PaginationResult<PaginationElement<Q>> => {
   if (query.ast.type !== 'limit') {
     throw new TypeError('usePagination requires the query to carry .limit(pageSize).');
   }
@@ -232,7 +236,7 @@ export const usePagination = <
   // filter/order (`innerAstKey`), page size, or `resource` (matching `useQuery`, which likewise
   // keys its memo on `resource` directly rather than just its truthiness).
   const store = useMemo(
-    () => createPaginationStore<Q, O>(resource, innerAst, pageSize, maxWindowSize),
+    () => createPaginationStore<Q, PaginationElement<Q>>(resource, innerAst, pageSize, maxWindowSize),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [resource, innerAstKey, pageSize],
   );

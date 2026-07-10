@@ -87,3 +87,5 @@ export const PortfolioImportAction = ({ subject }: PortfolioImportActionProps) =
     </>
   );
 };
+
+PortfolioImportAction.displayName = 'PortfolioImportAction';
