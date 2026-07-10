@@ -28,6 +28,7 @@ import {
   type MessageStackItem,
   type MessageTagsFamily,
   isMessageGroup,
+  useInjectedMailboxActions,
   useMailboxExtractorActions,
 } from '#components';
 import { meta } from '#meta';
@@ -37,18 +38,18 @@ import { InboxCapabilities, Mailbox, Starred } from '#types';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { InitializeMailbox, InitializeMailboxAction } from './InitializeMailbox';
 
+/** Messages per page for the lazily-loaded message window. */
+const MAILBOX_PAGE_SIZE = 10;
+
+/** Messages shown in a conversation card preview; the full thread size is surfaced via the group `count`. */
+const MAILBOX_THREAD_PREVIEW_COUNT = 4;
+
 export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   Mailbox.Mailbox,
   {
     filter?: string;
   }
 >;
-
-/** Messages per page for the lazily-loaded message window. */
-const MAILBOX_PAGE_SIZE = 10;
-
-/** Messages shown in a conversation card preview; the full thread size is surfaced via the group `count`. */
-const MAILBOX_THREAD_PREVIEW_COUNT = 4;
 
 export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { invokePromise } = useOperationInvoker();
@@ -132,13 +133,6 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
-
-  // Mark the mailbox as viewed when opened, advancing its `viewedAt` cursor so the navtree new-message
-  // badge clears. Uses the live `subject` (not the `mailbox` snapshot) since this mutates, and is keyed on
-  // the mailbox id so it runs once per opened mailbox rather than on every update.
-  useEffect(() => {
-    Mailbox.markViewed(mailbox);
-  }, [mailbox.id]);
 
   // TODO(burdon): Actual test should be if we have synced; not number of messages.
   // Show the message list as soon as any messages are present; only fall back to the empty state
@@ -278,6 +272,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   );
 };
 
+MailboxArticle.displayName = 'MailboxArticle';
+
 type MailboxFilterProps = {
   db?: Database.Database;
   tags: Tag.Map;
@@ -376,6 +372,8 @@ const useMailboxActions = (mailbox: Mailbox.Mailbox, sortDescending: AtomState<b
   }, [invokePromise, mailbox]);
 
   const mailboxExtractorActions = useMailboxExtractorActions(mailbox);
+  const mailboxActions = useInjectedMailboxActions(mailbox);
+  const extractActions = [...mailboxExtractorActions, ...mailboxActions];
 
   return useMenuBuilder(
     () =>
@@ -401,7 +399,7 @@ const useMailboxActions = (mailbox: Mailbox.Mailbox, sortDescending: AtomState<b
           () => setSettings((settings) => ({ ...settings, loadRemoteImages: !loadRemoteImages })),
         )
         .subgraph((builder) => {
-          if (mailboxExtractorActions.length > 0) {
+          if (extractActions.length > 0) {
             return builder.group(
               'extract',
               {
@@ -411,7 +409,7 @@ const useMailboxActions = (mailbox: Mailbox.Mailbox, sortDescending: AtomState<b
                 variant: 'dropdownMenu',
               },
               (group) => {
-                for (const item of mailboxExtractorActions) {
+                for (const item of extractActions) {
                   group.action(`extract-${item.id}`, { label: item.label }, item.onSelect);
                 }
               },
@@ -428,7 +426,7 @@ const useMailboxActions = (mailbox: Mailbox.Mailbox, sortDescending: AtomState<b
           handleCompose,
         )
         .build(),
-    [sortDescending, loadRemoteImages, setSettings, handleCompose, mailboxExtractorActions],
+    [sortDescending, loadRemoteImages, setSettings, handleCompose, mailboxExtractorActions, mailboxActions],
   );
 };
 

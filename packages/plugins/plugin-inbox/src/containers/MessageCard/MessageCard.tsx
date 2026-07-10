@@ -38,3 +38,5 @@ export const MessageCard = ({ subject: message }: AppSurface.ObjectCardProps<Mes
     </Card.Body>
   );
 };
+
+MessageCard.displayName = 'MessageCard';

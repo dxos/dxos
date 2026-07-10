@@ -7,13 +7,14 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Annotation, type Database, DXN, Format, Obj, type QueryAST, Ref, Type, View } from '@dxos/echo';
+import { Annotation, type Database, DXN, Filter, Format, Obj, type QueryAST, Ref, Type, View } from '@dxos/echo';
 import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
+import { useQuery } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Panel, ScrollArea } from '@dxos/react-ui';
+import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -335,6 +336,79 @@ export const RequiredSchema: StoryObj = {
       const text = cell.querySelector('.dx-grid__cell__content')?.textContent;
       await expect(text).toBe('Alice');
     });
+  },
+};
+
+// Reproduces the "form → table" reactivity path: an ECHO object edited *outside* the grid (as the selected-objects
+// companion form does via `Obj.update`) must refresh the corresponding cell. The table model subscribes to each
+// visible row via `Obj.subscribe`, bumping a `cellUpdate` atom the grid re-renders on.
+const ExternalMutationStory = () => {
+  const { schema, table, tableRef, model, presentation, db } = useTestTableModel<typeof TestSchema.Person>();
+  const objects = useQuery(db, schema ? Filter.type(schema) : Filter.nothing());
+  const target = objects.at(0);
+
+  const handleMutate = useCallback(() => {
+    if (!target) {
+      return;
+    }
+    Obj.update(target, (target) => {
+      target.name = 'Zoe Mutated';
+    });
+  }, [target]);
+
+  if (!schema || !table?.view.target) {
+    return <div />;
+  }
+
+  return (
+    <div className='flex flex-col bs-full'>
+      <Toolbar.Root>
+        <Toolbar.Button onClick={handleMutate}>Mutate row externally</Toolbar.Button>
+      </Toolbar.Root>
+      <TableComponent.Root ref={tableRef}>
+        <Panel.Root>
+          <Panel.Content asChild>
+            <TableComponent.Content schema={schema} model={model} presentation={presentation} ignoreAttention />
+          </Panel.Content>
+        </Panel.Root>
+      </TableComponent.Root>
+    </div>
+  );
+};
+
+export const ExternalMutation: StoryObj = {
+  render: () => <ExternalMutationStory />,
+  decorators: [
+    withClientProvider({
+      types: [View.View, Table.Table, TestSchema.Person],
+      createIdentity: true,
+      createSpace: true,
+      onCreateSpace: async ({ space }) => {
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({
+          db: space.db,
+          typename: Type.getTypename(TestSchema.Person),
+        });
+        space.db.add(Table.make({ view, jsonSchema }));
+        space.db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      },
+    }),
+  ],
+  parameters: {
+    layout: 'fullscreen',
+    translations: [...translations, ...formTranslations],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const cellText = () => canvas.getByTestId('grid.0.0').querySelector('.dx-grid__cell__content')?.textContent;
+
+    // Wait for the client/space/table and the initial row to render (30s covers ECHO setup).
+    await waitFor(() => expect(cellText()).toBe('Alice'), { timeout: 30_000 });
+
+    // Mutate the object outside the grid (as an external/companion edit would).
+    await userEvent.click(await canvas.findByRole('button', { name: /mutate row externally/i }));
+
+    // The cell must reflect the external mutation.
+    await waitFor(() => expect(cellText()).toBe('Zoe Mutated'), { timeout: 5_000 });
   },
 };
 

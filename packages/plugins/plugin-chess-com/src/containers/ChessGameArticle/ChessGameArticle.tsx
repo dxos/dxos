@@ -121,3 +121,5 @@ const GameTile = ({ data: game }: { data: Game }) => {
     </Menu.Root>
   );
 };
+
+ChessGameArticle.displayName = 'ChessGameArticle';

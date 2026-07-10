@@ -49,7 +49,6 @@ import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { Kanban } from '@dxos/plugin-kanban';
 import { Map as MapView } from '@dxos/plugin-map';
 import { Markdown } from '@dxos/plugin-markdown';
-import { Masonry } from '@dxos/plugin-masonry';
 import { Sheet } from '@dxos/plugin-sheet';
 import { Sketch } from '@dxos/plugin-sketch';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
@@ -130,7 +129,6 @@ const SCHEMAS: Type.AnyEntity[] = [
   Table.Table,
   Kanban.Kanban,
   MapView.Map,
-  Masonry.Masonry,
   View.View,
   RoastLog,
 ];
@@ -441,7 +439,7 @@ const addPeople = (space: Space, organizations: Record<OrgKey, Organization.Orga
 };
 
 // -----------------------------------------------------------------------------
-// Organization views (Table / Kanban / Map / Masonry)
+// Organization views (Table / Kanban / Map)
 // -----------------------------------------------------------------------------
 
 const addOrganizationViews = (space: Space): void => {
@@ -463,9 +461,6 @@ const addOrganizationViews = (space: Space): void => {
 
   const mapView = makeView(['name', 'location', 'description']);
   space.db.add(MapView.make({ name: 'Map', view: mapView, center: [-100, 30], zoom: 2 }));
-
-  const masonryView = makeView(['name', 'description', 'image']);
-  space.db.add(Masonry.make({ name: 'Masonry', view: masonryView }));
 };
 
 // -----------------------------------------------------------------------------

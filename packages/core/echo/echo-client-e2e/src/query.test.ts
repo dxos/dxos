@@ -1806,7 +1806,6 @@ describe('Query', () => {
         doc.links![obj1.id] = new A.RawString(anotherDocHandle.url!);
       });
       await db.flush();
-      await peer.host.queryService.reindex();
 
       assertion = { objectId: obj2.id, documentUrl: anotherDocHandle.url! };
     }

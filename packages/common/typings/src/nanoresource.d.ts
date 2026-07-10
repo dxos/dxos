@@ -28,7 +28,7 @@ declare module 'nanoresource' {
     close(cb?: Callback<void>): void;
   }
 
-  declare function nanoresource(options?: NanoresourceOptions): Nanoresource;
+  function nanoresource(options?: NanoresourceOptions): Nanoresource;
 
   export = nanoresource;
 }

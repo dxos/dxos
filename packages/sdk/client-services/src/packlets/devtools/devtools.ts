@@ -2,12 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as EffectStream from 'effect/Stream';
+
 import { Event as AsyncEvent } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
+import { Context } from '@dxos/context';
 import {
   type ClearSnapshotsRequest,
-  type DevtoolsHost, // TODO(burdon): Rename DevtoolsService
   type EnableDebugLoggingRequest,
   type EnableDebugLoggingResponse,
   type Event,
@@ -41,8 +44,10 @@ import {
   type SubscribeToSignalStatusResponse,
   type SubscribeToSpacesRequest,
   type SubscribeToSpacesResponse,
+  type SubscribeToSwarmInfoRequest,
   type SubscribeToSwarmInfoResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type DevtoolsHost } from '@dxos/protocols/rpc';
 
 import { type ServiceContext } from '../services';
 import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds';
@@ -66,134 +71,182 @@ export type DevtoolsServiceProps = {
 /**
  * @deprecated
  */
-export class DevtoolsServiceImpl implements DevtoolsHost {
-  constructor(private readonly params: DevtoolsServiceProps) {}
+export class DevtoolsServiceImpl implements DevtoolsHost.Handlers {
+  'constructor'(private readonly params: DevtoolsServiceProps) {}
 
-  events(_request: void): Stream<Event> {
-    return new Stream<Event>(({ next }) => {
-      this.params.events.ready.on(() => {
-        next({ ready: {} });
+  ['DevtoolsHost.events'](): EffectStream.Stream<Event, Error> {
+    return EffectStream.async<Event, Error>((emit) => {
+      const ctx = Context.default();
+      this.params.events.ready.on(ctx, () => {
+        void emit.single({ ready: {} });
       });
+
+      return Effect.promise(() => ctx.dispose());
     });
   }
 
-  async getConfig(_request: void): Promise<GetConfigResponse> {
-    return { config: JSON.stringify(this.params.config.values) }; // 😨
+  ['DevtoolsHost.getConfig'](): Effect.Effect<GetConfigResponse, Error> {
+    return Effect.sync(() => ({ config: JSON.stringify(this.params.config.values) })); // 😨
   }
 
-  async getStorageInfo(): Promise<StorageInfo> {
-    const navigatorInfo = typeof navigator === 'object' ? await navigator.storage.estimate() : undefined;
+  ['DevtoolsHost.getStorageInfo'](): Effect.Effect<StorageInfo, Error> {
+    return Effect.tryPromise({
+      try: async () => {
+        const navigatorInfo = typeof navigator === 'object' ? await navigator.storage.estimate() : undefined;
 
-    return {
-      type: 'sqlite',
-      storageUsage: navigatorInfo?.usage ?? 0,
-      originUsage: navigatorInfo?.usage ?? 0,
-      usageQuota: navigatorInfo?.quota ?? 0,
-    };
+        return {
+          type: 'sqlite',
+          storageUsage: navigatorInfo?.usage ?? 0,
+          originUsage: navigatorInfo?.usage ?? 0,
+          usageQuota: navigatorInfo?.quota ?? 0,
+        };
+      },
+      catch: (error) => error as Error,
+    });
   }
 
-  async getBlobs(): Promise<GetBlobsResponse> {
-    return {
-      blobs: await this.params.context.blobStore.list(),
-    };
+  ['DevtoolsHost.getBlobs'](): Effect.Effect<GetBlobsResponse, Error> {
+    return Effect.tryPromise({
+      try: async () => ({
+        blobs: await this.params.context.blobStore.list(),
+      }),
+      catch: (error) => error as Error,
+    });
   }
 
-  async getSnapshots(): Promise<GetSnapshotsResponse> {
-    return {
+  ['DevtoolsHost.getSnapshots'](): Effect.Effect<GetSnapshotsResponse, Error> {
+    return Effect.sync(() => ({
       snapshots: [],
-    };
+    }));
   }
 
-  resetStorage(_request: ResetStorageRequest): Promise<void> {
-    throw new Error();
+  ['DevtoolsHost.resetStorage'](_request: ResetStorageRequest): Effect.Effect<void, Error> {
+    return Effect.fail(new Error());
   }
 
-  enableDebugLogging(_request: EnableDebugLoggingRequest): Promise<EnableDebugLoggingResponse> {
-    throw new Error();
+  ['DevtoolsHost.enableDebugLogging'](
+    _request: EnableDebugLoggingRequest,
+  ): Effect.Effect<EnableDebugLoggingResponse, Error> {
+    return Effect.fail(new Error());
   }
 
-  disableDebugLogging(_request: EnableDebugLoggingRequest): Promise<EnableDebugLoggingResponse> {
-    throw new Error();
+  ['DevtoolsHost.disableDebugLogging'](
+    _request: EnableDebugLoggingRequest,
+  ): Effect.Effect<EnableDebugLoggingResponse, Error> {
+    return Effect.fail(new Error());
   }
 
-  subscribeToKeyringKeys(_request: SubscribeToKeyringKeysRequest): Stream<SubscribeToKeyringKeysResponse> {
-    return subscribeToKeyringKeys({ keyring: this.params.context.keyring });
+  ['DevtoolsHost.subscribeToKeyringKeys'](
+    _request: SubscribeToKeyringKeysRequest,
+  ): EffectStream.Stream<SubscribeToKeyringKeysResponse, Error> {
+    return toEffectStream(subscribeToKeyringKeys({ keyring: this.params.context.keyring }));
   }
 
-  subscribeToCredentialMessages(
+  ['DevtoolsHost.subscribeToCredentialMessages'](
     _request: SubscribeToCredentialMessagesRequest,
-  ): Stream<SubscribeToCredentialMessagesResponse> {
-    throw new Error();
+  ): EffectStream.Stream<SubscribeToCredentialMessagesResponse, Error> {
+    return EffectStream.fail(new Error());
   }
 
-  subscribeToSpaces(_request: SubscribeToSpacesRequest): Stream<SubscribeToSpacesResponse> {
-    return subscribeToSpaces(this.params.context, _request);
+  ['DevtoolsHost.subscribeToSpaces'](
+    request: SubscribeToSpacesRequest,
+  ): EffectStream.Stream<SubscribeToSpacesResponse, Error> {
+    return toEffectStream(subscribeToSpaces(this.params.context, request));
   }
 
-  subscribeToItems(_request: SubscribeToItemsRequest): Stream<SubscribeToItemsResponse> {
-    throw new Error();
+  ['DevtoolsHost.subscribeToItems'](
+    _request: SubscribeToItemsRequest,
+  ): EffectStream.Stream<SubscribeToItemsResponse, Error> {
+    return EffectStream.fail(new Error());
   }
 
-  subscribeToFeeds(_request: SubscribeToFeedsRequest): Stream<SubscribeToFeedsResponse> {
-    return subscribeToFeeds(this.params.context, _request);
+  ['DevtoolsHost.subscribeToFeeds'](
+    request: SubscribeToFeedsRequest,
+  ): EffectStream.Stream<SubscribeToFeedsResponse, Error> {
+    return toEffectStream(subscribeToFeeds(this.params.context, request));
   }
 
-  subscribeToFeedBlocks(_request: SubscribeToFeedBlocksRequest): Stream<SubscribeToFeedBlocksResponse> {
-    return subscribeToFeedBlocks({ feedStore: this.params.context.feedStore }, _request);
+  ['DevtoolsHost.subscribeToFeedBlocks'](
+    request: SubscribeToFeedBlocksRequest,
+  ): EffectStream.Stream<SubscribeToFeedBlocksResponse, Error> {
+    return toEffectStream(subscribeToFeedBlocks({ feedStore: this.params.context.feedStore }, request));
   }
 
-  getSpaceSnapshot(_request: GetSpaceSnapshotRequest): Promise<GetSpaceSnapshotResponse> {
-    throw new Error();
+  ['DevtoolsHost.subscribeToMetadata'](): EffectStream.Stream<SubscribeToMetadataResponse, Error> {
+    return toEffectStream(subscribeToMetadata({ context: this.params.context }));
   }
 
-  saveSpaceSnapshot(_request: SaveSpaceSnapshotRequest): Promise<SaveSpaceSnapshotResponse> {
-    throw new Error();
+  ['DevtoolsHost.getSpaceSnapshot'](_request: GetSpaceSnapshotRequest): Effect.Effect<GetSpaceSnapshotResponse, Error> {
+    return Effect.fail(new Error());
   }
 
-  clearSnapshots(_request: ClearSnapshotsRequest): Promise<void> {
-    throw new Error();
+  ['DevtoolsHost.saveSpaceSnapshot'](
+    _request: SaveSpaceSnapshotRequest,
+  ): Effect.Effect<SaveSpaceSnapshotResponse, Error> {
+    return Effect.fail(new Error());
   }
 
-  getNetworkPeers(_request: GetNetworkPeersRequest): Promise<GetNetworkPeersResponse> {
-    throw new Error();
+  ['DevtoolsHost.clearSnapshots'](_request: ClearSnapshotsRequest): Effect.Effect<void, Error> {
+    return Effect.fail(new Error());
   }
 
-  subscribeToNetworkTopics(_request: void): Stream<SubscribeToNetworkTopicsResponse> {
-    throw new Error();
+  ['DevtoolsHost.getNetworkPeers'](_request: GetNetworkPeersRequest): Effect.Effect<GetNetworkPeersResponse, Error> {
+    return Effect.fail(new Error());
   }
 
-  subscribeToSignalStatus(_request: void): Stream<SubscribeToSignalStatusResponse> {
-    return subscribeToNetworkStatus({ signalManager: this.params.context.signalManager });
+  ['DevtoolsHost.subscribeToNetworkTopics'](): EffectStream.Stream<SubscribeToNetworkTopicsResponse, Error> {
+    return EffectStream.fail(new Error());
   }
 
-  subscribeToSignal(): Stream<SignalResponse> {
-    return subscribeToSignal({ signalManager: this.params.context.signalManager });
+  ['DevtoolsHost.subscribeToSignalStatus'](): EffectStream.Stream<SubscribeToSignalStatusResponse, Error> {
+    return toEffectStream(subscribeToNetworkStatus({ signalManager: this.params.context.signalManager }));
   }
 
-  subscribeToSwarmInfo(): Stream<SubscribeToSwarmInfoResponse> {
-    return subscribeToSwarmInfo({ networkManager: this.params.context.networkManager });
+  ['DevtoolsHost.subscribeToSignal'](): EffectStream.Stream<SignalResponse, Error> {
+    return toEffectStream(subscribeToSignal({ signalManager: this.params.context.signalManager }));
   }
 
-  subscribeToMetadata(): Stream<SubscribeToMetadataResponse> {
-    return subscribeToMetadata({ context: this.params.context });
+  ['DevtoolsHost.subscribeToSwarmInfo'](
+    _request: SubscribeToSwarmInfoRequest,
+  ): EffectStream.Stream<SubscribeToSwarmInfoResponse, Error> {
+    return toEffectStream(subscribeToSwarmInfo({ networkManager: this.params.context.networkManager }));
   }
 
-  async exportSqliteDatabase(): Promise<ExportSqliteDatabaseResponse> {
-    return {
-      data: await this.params.exportSqliteDatabase(),
-    };
+  ['DevtoolsHost.exportSqliteDatabase'](): Effect.Effect<ExportSqliteDatabaseResponse, Error> {
+    return Effect.tryPromise({
+      try: async () => ({
+        data: await this.params.exportSqliteDatabase(),
+      }),
+      catch: (error) => error as Error,
+    });
   }
 
-  async runSqliteQuery(request: RunSqliteQueryRequest): Promise<RunSqliteQueryResponse> {
-    try {
-      const parsedParams = request.params ? JSON.parse(request.params) : undefined;
-      if (parsedParams !== undefined && !Array.isArray(parsedParams)) {
-        throw new Error('Query params must be a JSON array.');
+  ['DevtoolsHost.runSqliteQuery'](request: RunSqliteQueryRequest): Effect.Effect<RunSqliteQueryResponse, Error> {
+    return Effect.promise(async () => {
+      try {
+        const parsedParams = request.params ? JSON.parse(request.params) : undefined;
+        if (parsedParams !== undefined && !Array.isArray(parsedParams)) {
+          throw new Error('Query params must be a JSON array.');
+        }
+        const rows = await this.params.runSqliteQuery(request.query, parsedParams);
+        return { rows: JSON.stringify(rows) };
+      } catch (err) {
+        return { rows: '[]', error: err instanceof Error ? err.message : String(err) };
       }
-      const rows = await this.params.runSqliteQuery(request.query, parsedParams);
-      return { rows: JSON.stringify(rows) };
-    } catch (err) {
-      return { rows: '[]', error: err instanceof Error ? err.message : String(err) };
-    }
+    });
   }
 }
+
+/**
+ * Bridges a codec-protobuf {@link Stream} into an Effect {@link EffectStream.Stream}.
+ * The underlying stream is closed (disposing its resources) when the Effect stream terminates.
+ */
+const toEffectStream = <T>(stream: Stream<T>): EffectStream.Stream<T, Error> =>
+  EffectStream.async<T, Error>((emit) => {
+    stream.subscribe(
+      (message) => void emit.single(message),
+      (error) => (error ? void emit.fail(error) : void emit.end()),
+    );
+
+    return Effect.promise(() => stream.close());
+  });

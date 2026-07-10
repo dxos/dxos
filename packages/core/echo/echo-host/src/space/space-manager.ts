@@ -3,24 +3,27 @@
 //
 
 import { type AutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
+import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { Trigger, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { type FeedStore } from '@dxos/feed-store';
+import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type SwarmNetworkManager } from '@dxos/network-manager';
+import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import type { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Teleport } from '@dxos/teleport';
-import { type BlobStoreApi } from '@dxos/teleport-extension-object-sync';
+import { type BlobStoreApi, BlobStoreApiService } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
 import { createIdFromSpaceKey } from '../common/space-id';
-import { type IMetadataStore } from '../metadata';
+import { type IMetadataStore, IMetadataStoreService } from '../metadata';
 import { CredentialRetrieverExtension } from './admission-discovery-extension';
 import { Space } from './space';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol';
@@ -54,6 +57,14 @@ export type RequestSpaceAdmissionCredentialProps = {
   swarmIdentity: SwarmIdentity;
   timeout: number;
 };
+
+/**
+ * Effect service tag for {@link SpaceManager}.
+ */
+export class SpaceManagerService extends EffectContext.Tag('@dxos/echo-host/SpaceManager')<
+  SpaceManagerService,
+  SpaceManager
+>() {}
 
 /**
  * Manages a collection of ECHO (Data) Spaces.
@@ -182,3 +193,32 @@ export class SpaceManager {
     });
   }
 }
+
+export type SpaceManagerLayerOptions = Pick<SpaceManagerProps, 'disableP2pReplication'>;
+
+/**
+ * Effect Layer constructing a {@link SpaceManager} from ambient service dependencies.
+ */
+export const SpaceManagerLayer = (
+  options: SpaceManagerLayerOptions = {},
+): Layer.Layer<
+  SpaceManagerService,
+  never,
+  FeedStoreService | SwarmNetworkManagerService | IMetadataStoreService | BlobStoreApiService
+> =>
+  Layer.effect(
+    SpaceManagerService,
+    Effect.gen(function* () {
+      const feedStore = yield* FeedStoreService;
+      const networkManager = yield* SwarmNetworkManagerService;
+      const metadataStore = yield* IMetadataStoreService;
+      const blobStore = yield* BlobStoreApiService;
+      return new SpaceManager({
+        feedStore,
+        networkManager,
+        metadataStore,
+        blobStore,
+        disableP2pReplication: options.disableP2pReplication,
+      });
+    }),
+  );

@@ -6,12 +6,12 @@
 
 import * as Schema from 'effect/Schema';
 
+import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { DXN, Ref } from '@dxos/echo';
 import {
-  // eslint-disable-next-line unused-imports/no-unused-imports
-  type Connection,
+  Connection,
   GetSyncTargetsInput,
   GetSyncTargetsOutput,
   MaterializeTargetInput,
@@ -84,3 +84,33 @@ export const SyncDiscordChannel = Operation.make({
     }),
   }),
 }).pipe(Operation.visible);
+
+/**
+ * Incremental crawl of a set of Discord channels (optionally descending threads) through the
+ * `DiscordPipeline`: messages land in the session SQLite store, facts in the fact graph, and open
+ * questions are attempted as targets drain. Separate from feed sync — nothing is written to ECHO.
+ * Resumable: re-invoking continues from the per-target durable cursors.
+ */
+export const CrawlDiscordChannels = Operation.make({
+  meta: {
+    key: makeKey('crawlDiscordChannels'),
+    name: 'Crawl Discord Channels',
+    description: 'Incrementally crawl Discord channels through the fact-extraction pipeline.',
+    icon: 'ph--bulldozer--regular',
+  },
+  services: [Capability.Service, AiService.AiService],
+  input: Schema.Struct({
+    connection: Ref.Ref(Connection.Connection),
+    channels: Schema.Array(Schema.String),
+    descendThreads: Schema.optional(Schema.Boolean),
+    maxDays: Schema.optional(Schema.Number),
+    maxSteps: Schema.optional(Schema.Number),
+    /** Standing questions to register before the crawl (idempotent by text). */
+    questions: Schema.optional(Schema.Array(Schema.String)),
+  }),
+  output: Schema.Struct({
+    done: Schema.Boolean,
+    errored: Schema.Number,
+    steps: Schema.Number,
+  }),
+});

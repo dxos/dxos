@@ -45,3 +45,5 @@ export const RoutineSettings = ({ space }: RoutineSettingsProps) => {
     </Form.Root>
   );
 };
+
+RoutineSettings.displayName = 'RoutineSettings';

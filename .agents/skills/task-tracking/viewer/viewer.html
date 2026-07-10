@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TASKS.md</title>
+    <style>
+      :root {
+        --bg: #f6f7f9;
+        --surface: #ffffff;
+        --ink: #1b1f27;
+        --muted: #5b6270;
+        --faint: #868d9b;
+        --line: #e4e7ec;
+        --accent: #0d9488;
+        --done: #15803d;
+        --done-bg: #eafaf1;
+        --radius: 10px;
+        --mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+        --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0f1216;
+          --surface: #161a20;
+          --ink: #e7eaf0;
+          --muted: #9aa2b1;
+          --faint: #6b7280;
+          --line: #262b33;
+          --accent: #2dd4bf;
+          --done: #4ade80;
+          --done-bg: #14231a;
+        }
+      }
+      :root[data-theme='light'] {
+        --bg: #f6f7f9;
+        --surface: #ffffff;
+        --ink: #1b1f27;
+        --muted: #5b6270;
+        --faint: #868d9b;
+        --line: #e4e7ec;
+        --accent: #0d9488;
+        --done: #15803d;
+        --done-bg: #eafaf1;
+      }
+      :root[data-theme='dark'] {
+        --bg: #0f1216;
+        --surface: #161a20;
+        --ink: #e7eaf0;
+        --muted: #9aa2b1;
+        --faint: #6b7280;
+        --line: #262b33;
+        --accent: #2dd4bf;
+        --done: #4ade80;
+        --done-bg: #14231a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--sans);
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap {
+        max-width: 40rem;
+        margin: 0 auto;
+        padding: 2.75rem 1.5rem 4rem;
+      }
+
+      .eyebrow {
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        color: var(--faint);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.9rem;
+      }
+      .eyebrow .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 0 0 var(--accent);
+      }
+      .eyebrow .dot.pulse {
+        animation: pulse 0.9s ease-out;
+      }
+      @keyframes pulse {
+        from {
+          box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent);
+        }
+        to {
+          box-shadow: 0 0 0 8px transparent;
+        }
+      }
+
+      h1 {
+        font-size: 1.6rem;
+        font-weight: 650;
+        letter-spacing: -0.015em;
+        text-wrap: balance;
+        margin: 0 0 1.25rem;
+      }
+      .meter {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        margin-bottom: 2.5rem;
+      }
+      .track {
+        flex: 1;
+        height: 7px;
+        background: var(--line);
+        border-radius: 99px;
+        overflow: hidden;
+      }
+      .fill {
+        height: 100%;
+        background: var(--accent);
+        border-radius: 99px;
+        transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .count {
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+
+      section.phase {
+        margin-bottom: 2.25rem;
+      }
+      h2 {
+        font-size: 1.02rem;
+        font-weight: 620;
+        letter-spacing: -0.01em;
+        margin: 0 0 0.35rem;
+        padding-bottom: 0.6rem;
+        border-bottom: 1px solid var(--line);
+      }
+      .phase-note {
+        color: var(--muted);
+        font-size: 0.92rem;
+        margin: 0.6rem 0 0.35rem;
+      }
+      .label {
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--faint);
+        margin: 1.4rem 0 0.75rem;
+      }
+
+      ul.tasks {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+      }
+      li.task {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 0.85rem 1rem;
+      }
+      li.task.done {
+        background: var(--done-bg);
+        border-color: transparent;
+      }
+      .task-head {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.7rem;
+      }
+      .box {
+        flex: none;
+        width: 18px;
+        height: 18px;
+        margin-top: 0.12rem;
+        border: 1.5px solid var(--faint);
+        border-radius: 5px;
+        display: grid;
+        place-items: center;
+      }
+      .done .box {
+        background: var(--done);
+        border-color: var(--done);
+      }
+      .box svg {
+        width: 11px;
+        height: 11px;
+        display: none;
+      }
+      .done .box svg {
+        display: block;
+      }
+      .headline {
+        font-weight: 560;
+        font-size: 0.96rem;
+      }
+      .done .headline {
+        color: var(--done);
+      }
+      .done .headline .txt {
+        text-decoration: line-through;
+        text-decoration-color: color-mix(in srgb, var(--done) 45%, transparent);
+      }
+      .done-note {
+        color: var(--muted);
+        font-weight: 400;
+      }
+
+      ul.sub {
+        list-style: none;
+        margin: 0.55rem 0 0;
+        padding: 0 0 0 1.6rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+      }
+      ul.sub li {
+        position: relative;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+      ul.sub li::before {
+        content: '';
+        position: absolute;
+        left: -1rem;
+        top: 0.62em;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--faint);
+      }
+      code {
+        font-family: var(--mono);
+        font-size: 0.82em;
+        background: color-mix(in srgb, var(--ink) 8%, transparent);
+        padding: 0.08em 0.35em;
+        border-radius: 4px;
+      }
+
+      ul.refs {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+      ul.refs li {
+        font-size: 0.88rem;
+      }
+      ul.refs a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      ul.refs a:hover {
+        text-decoration: underline;
+      }
+
+      footer {
+        margin-top: 3rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--line);
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        color: var(--faint);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .fill {
+          transition: none;
+        }
+        .eyebrow .dot.pulse {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="eyebrow"><span class="dot" id="dot"></span><span id="path">TASKS.md</span></div>
+      <div id="app"></div>
+      <footer id="foot">connecting…</footer>
+    </div>
+
+    <script>
+      const esc = (str) =>
+        str.replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+      const inline = (str) =>
+        esc(str)
+          .replace(/`([^`]+)`/g, '<code>$1</code>')
+          .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+      // Parse the markdown into the container; return { title, done, total }.
+      const render = (source, app) => {
+        app.textContent = '';
+        const lines = source.split('\n');
+        let title = 'Tasks';
+        let section = null,
+          listEl = null,
+          listKind = null,
+          currentTask = null;
+        let total = 0,
+          done = 0;
+        const closeList = () => {
+          listEl = null;
+          listKind = null;
+          currentTask = null;
+        };
+
+        for (const raw of lines) {
+          const line = raw.replace(/\s+$/, '');
+          if (!line.trim()) {
+            continue;
+          }
+
+          if (line.startsWith('# ')) {
+            title = line.slice(2);
+            continue;
+          }
+
+          if (line.startsWith('## ')) {
+            closeList();
+            section = document.createElement('section');
+            section.className = 'phase';
+            const heading = document.createElement('h2');
+            heading.textContent = line.slice(3);
+            section.appendChild(heading);
+            app.appendChild(section);
+            continue;
+          }
+
+          if (line.startsWith('### ')) {
+            closeList();
+            const label = document.createElement('div');
+            label.className = 'label';
+            label.textContent = line.slice(4);
+            listKind = /reference/i.test(line) ? 'refs' : 'tasks';
+            (section || app).appendChild(label);
+            continue;
+          }
+
+          const task = line.match(/^- \[( |x)\] (.*)$/);
+          if (task) {
+            if (!listEl || listKind !== 'tasks') {
+              listEl = document.createElement('ul');
+              listEl.className = 'tasks';
+              listKind = 'tasks';
+              (section || app).appendChild(listEl);
+            }
+            const isDone = task[1] === 'x';
+            total++;
+            if (isDone) done++;
+            const li = document.createElement('li');
+            li.className = 'task' + (isDone ? ' done' : '');
+            const boldMatch = task[2].match(/^\*\*(.+?)\*\*(\s+—\s+(.*))?$/);
+            const bodyText = boldMatch
+              ? `<span class="txt">${inline('**' + boldMatch[1] + '**')}</span>` +
+                (boldMatch[3] ? ` <span class="done-note">— ${inline(boldMatch[3])}</span>` : '')
+              : inline(task[2]);
+            li.innerHTML =
+              `<div class="task-head"><span class="box"><svg viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.2 4.7 8.5 9.5 3.4"/></svg></span>` +
+              `<span class="headline">${bodyText}</span></div>`;
+            listEl.appendChild(li);
+            currentTask = li;
+            continue;
+          }
+
+          const sub = line.match(/^\s{2,}- (.*)$/);
+          if (sub && currentTask) {
+            let subUl = currentTask.querySelector('ul.sub');
+            if (!subUl) {
+              subUl = document.createElement('ul');
+              subUl.className = 'sub';
+              currentTask.appendChild(subUl);
+            }
+            const item = document.createElement('li');
+            item.innerHTML = inline(sub[1]);
+            subUl.appendChild(item);
+            continue;
+          }
+
+          const ref = line.match(/^- (.*)$/);
+          if (ref && listKind === 'refs') {
+            const item = document.createElement('li');
+            item.innerHTML = inline(ref[1]).replace(
+              /(https?:\/\/[^\s]+)/g,
+              '<a href="$1" target="_blank" rel="noopener">$1</a>',
+            );
+            listEl.appendChild(item);
+            continue;
+          }
+
+          if (listKind !== 'tasks' && listKind !== 'refs') {
+            const note = document.createElement('p');
+            note.className = 'phase-note';
+            note.innerHTML = inline(line);
+            (section || app).appendChild(note);
+          }
+        }
+
+        const heading = document.createElement('h1');
+        heading.textContent = title;
+        app.insertBefore(heading, app.firstChild);
+
+        const meter = document.createElement('div');
+        meter.className = 'meter';
+        const pct = total ? Math.round((done / total) * 100) : 0;
+        meter.innerHTML = `<div class="track"><div class="fill" style="width:0%"></div></div><div class="count">${done} / ${total} done</div>`;
+        app.insertBefore(meter, heading.nextSibling);
+        requestAnimationFrame(() => {
+          meter.querySelector('.fill').style.width = pct + '%';
+        });
+
+        document.title = title;
+        return { title, done, total };
+      };
+
+      const app = document.getElementById('app');
+      const dot = document.getElementById('dot');
+      const foot = document.getElementById('foot');
+      let last = null;
+
+      const tick = async () => {
+        try {
+          const res = await fetch('/tasks.md', { cache: 'no-store' });
+          const md = await res.text();
+          if (md !== last) {
+            last = md;
+            render(md, app);
+            dot.classList.remove('pulse');
+            void dot.offsetWidth; // restart the pulse animation.
+            dot.classList.add('pulse');
+            const now = new Date().toLocaleTimeString();
+            foot.textContent = `live · TASKS.md · updated ${now}`;
+          }
+        } catch (err) {
+          foot.textContent = 'disconnected — is the viewer server running?';
+        }
+      };
+
+      tick();
+      setInterval(tick, 1500);
+    </script>
+  </body>
+</html>

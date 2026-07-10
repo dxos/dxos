@@ -235,6 +235,9 @@
       "path": "../../plugins/plugin-bookmarks"
     },
     {
+      "path": "../../plugins/plugin-brain"
+    },
+    {
       "path": "../../plugins/plugin-calls"
     },
     {
@@ -332,9 +335,6 @@
     },
     {
       "path": "../../plugins/plugin-markdown"
-    },
-    {
-      "path": "../../plugins/plugin-masonry"
     },
     {
       "path": "../../plugins/plugin-meeting"

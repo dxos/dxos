@@ -227,3 +227,5 @@ const createCollectionObjects = Atom.family((collection: Collection.Collection) 
     return snapshot.objects.map((ref) => get(Obj.atomReactive(ref))).filter(isNonNullable);
   }),
 );
+
+StackArticle.displayName = 'StackArticle';

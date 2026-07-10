@@ -7,7 +7,7 @@ import React from 'react';
 import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { Markdown } from '@dxos/plugin-markdown';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import {
@@ -18,9 +18,7 @@ import {
   outliner,
 } from '@dxos/ui-editor';
 
-import { type ModuleProps } from './types';
-
-export const TasksModule = ({ space }: ModuleProps) => {
+export const TasksModule = ({ space }: { space: Space }) => {
   const { themeMode } = useThemeContext();
   const [document] = useQuery(space.db, Filter.type(Markdown.Document));
   if (!document?.content.target) {

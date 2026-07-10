@@ -34,6 +34,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/sql-sqlite"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -44,6 +47,15 @@
     },
     {
       "path": "../../core/compute/crawler"
+    },
+    {
+      "path": "../../core/compute/pipeline"
+    },
+    {
+      "path": "../../core/compute/pipeline-discord"
+    },
+    {
+      "path": "../../core/compute/pipeline-rdf"
     },
     {
       "path": "../../core/echo/echo"
