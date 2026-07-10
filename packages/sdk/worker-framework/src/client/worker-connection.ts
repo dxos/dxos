@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AsyncTask, Event, Trigger } from '@dxos/async';
+import { AsyncTask, Event, Trigger, sleepWithContext } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -33,6 +33,12 @@ export interface LeaderTimeoutOptions {
    * Duration a follower waits for a port from the leader before re-evaluating leadership.
    */
   portTimeout?: number;
+  /**
+   * Backoff before re-entering leader election after the leader session itself fails (as opposed
+   * to the lock being stolen), so a persistently failing worker doesn't spin the election in a
+   * tight loop.
+   */
+  retryBackoff?: number;
 }
 
 export type WorkerConnectionHandle = {
@@ -59,6 +65,12 @@ const DEFAULT_LEADER_HEARTBEAT_INTERVAL = 1_000;
 // since the heartbeat runs on the leader's main thread while data work runs in the worker.
 const DEFAULT_LEADER_STALE_TIMEOUT = 5_000;
 const DEFAULT_LEADER_PORT_TIMEOUT = 15_000;
+// Backoff before re-entering leader election after the leader session itself fails (as opposed to
+// the lock being stolen), so a persistently failing worker doesn't spin the election in a tight loop.
+const DEFAULT_LEADER_RETRY_BACKOFF = 1_000;
+// Cap on the exponential backoff below, so a worker that fails indefinitely still retries on a
+// bounded interval rather than backing off forever.
+const MAX_LEADER_RETRY_BACKOFF = 30_000;
 
 /**
  * Manages leader election, coordinator port exchange, and worker lifecycle for dedicated workers.
@@ -75,6 +87,7 @@ export class WorkerConnection extends Resource {
   readonly #leaderHeartbeatInterval: number;
   readonly #leaderStaleTimeout: number;
   readonly #leaderPortTimeout: number;
+  readonly #leaderRetryBackoff: number;
 
   #connectionHandle: WorkerConnectionHandle | undefined;
   #leaderSession: LeaderSession | undefined;
@@ -84,6 +97,9 @@ export class WorkerConnection extends Resource {
   #lastLeaderHeartbeat = 0;
   // Timestamp (ms) of the last steal attempt; gates against thrashing re-election.
   #lastStealAttempt = 0;
+  // Consecutive leader-session open failures; grows the retry backoff and resets once a session
+  // opens successfully.
+  #leaderFailureCount = 0;
   // Resolves the leader-lock hold; woken on close, worker termination, or when our lock is stolen.
   #leaderDone: Trigger | undefined;
 
@@ -104,6 +120,7 @@ export class WorkerConnection extends Resource {
     this.#leaderHeartbeatInterval = options.leaderTimeouts?.heartbeatInterval ?? DEFAULT_LEADER_HEARTBEAT_INTERVAL;
     this.#leaderStaleTimeout = options.leaderTimeouts?.staleTimeout ?? DEFAULT_LEADER_STALE_TIMEOUT;
     this.#leaderPortTimeout = options.leaderTimeouts?.portTimeout ?? DEFAULT_LEADER_PORT_TIMEOUT;
+    this.#leaderRetryBackoff = options.leaderTimeouts?.retryBackoff ?? DEFAULT_LEADER_RETRY_BACKOFF;
   }
 
   onReconnect = (callback: () => Promise<void>) => {
@@ -174,6 +191,7 @@ export class WorkerConnection extends Resource {
             });
             try {
               await waitWithLockOrRpcTimeout(this.#leaderSession.open(), 'opening worker leader session');
+              this.#leaderFailureCount = 0;
               await done.wait();
             } finally {
               clearInterval(heartbeat);
@@ -183,20 +201,45 @@ export class WorkerConnection extends Resource {
         );
         log('worker-connection: leader lock released');
       } catch (error: any) {
+        if (isAbortError(error) && this._ctx.disposed) {
+          // Normal shutdown: the leader-lock request was aborted because the resource is closing.
+          log('worker-connection: leader watch aborted (closing)');
+          return;
+        }
+        this.#leaderDone?.wake();
+        const session = this.#leaderSession;
+        this.#leaderSession = undefined;
+        await session?.close();
+        if (this._ctx.disposed) {
+          return;
+        }
         if (isAbortError(error)) {
-          if (this._ctx.disposed) {
-            log('worker-connection: leader watch aborted (closing)');
-            return;
-          }
+          // Our exclusive lock was stolen by another tab that judged this leader stale. The lock
+          // callback keeps running per spec, so tear down our leader session and re-enter election.
           log.warn('worker-connection: leader lock stolen, tearing down and re-watching', { clientId: this.#clientId });
-          this.#leaderDone?.wake();
-          const session = this.#leaderSession;
-          this.#leaderSession = undefined;
-          await session?.close();
           this.#watchLeader();
           return;
         }
-        log.catch(error);
+        // The leader session itself failed (e.g. worker init/crash). The lock is released once this
+        // callback rejects, so re-enter the election after a backoff — otherwise this tab can never
+        // host or reconnect to a worker again, leaving followers retrying `provide-port` forever.
+        // Exponential backoff (capped) with jitter avoids a tight retry loop and lockstep retries.
+        const backoff = Math.min(this.#leaderRetryBackoff * 2 ** this.#leaderFailureCount, MAX_LEADER_RETRY_BACKOFF);
+        const jitteredBackoff = backoff * (0.5 + Math.random() * 0.5);
+        this.#leaderFailureCount++;
+        log.warn('worker-connection: leader session failed, backing off and re-watching', {
+          clientId: this.#clientId,
+          error,
+          failureCount: this.#leaderFailureCount,
+          backoff: jitteredBackoff,
+        });
+        try {
+          await sleepWithContext(this._ctx, jitteredBackoff);
+        } catch {
+          // Disposed while backing off.
+          return;
+        }
+        this.#watchLeader();
       }
     });
   }
