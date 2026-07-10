@@ -70,4 +70,35 @@ describe('counter worker e2e', () => {
     const updated = await connectionA.increment();
     await waitForCondition({ condition: () => countA === updated && countB === updated, timeout: 5_000 });
   });
+
+  test('re-creates the worker when the original owner closes', { timeout: 20_000 }, async () => {
+    // The first connection to open wins leader election and owns the spawned worker.
+    const owner = new CounterConnection();
+    const follower = new CounterConnection();
+    await owner.open();
+    await follower.open();
+    let ownerClosed = false;
+    onTestFinished(async () => {
+      await Promise.all([ownerClosed ? Promise.resolve() : owner.close(), follower.close()]);
+    });
+
+    // Prime the live worker with a non-zero count so re-creation is observable (the worker holds
+    // the count in module state, so a freshly-spawned worker starts from zero).
+    expect(await owner.increment()).toBe(1);
+    expect(await nextSubscribedValue(follower)).toBe(1);
+
+    // Closing the owner terminates its worker; the remaining client must fail over — win leader
+    // election and spawn a replacement worker.
+    const reconnected = new Trigger();
+    follower.reconnected.on(() => {
+      reconnected.wake();
+    });
+    await owner.close();
+    ownerClosed = true;
+    await asyncTimeout(reconnected.wait(), 15_000);
+
+    // The replacement worker starts from zero, so the next increment returns 1 rather than 2 —
+    // proving a new worker was created rather than the original one reused.
+    expect(await follower.increment()).toBe(1);
+  });
 });

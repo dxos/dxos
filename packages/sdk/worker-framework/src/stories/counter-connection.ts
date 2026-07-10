@@ -64,6 +64,13 @@ export class CounterConnection extends Resource {
     return this.#rpc;
   }
 
+  /**
+   * Fires after the connection fails over to a freshly-elected leader (and its re-created worker).
+   */
+  get reconnected(): WorkerConnection['reconnected'] {
+    return this.#connection.reconnected;
+  }
+
   override async _open(): Promise<void> {
     this.#scope = Effect.runSync(Scope.make());
     await this.#connection.open();
