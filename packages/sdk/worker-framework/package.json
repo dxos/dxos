@@ -1,7 +1,6 @@
 {
   "name": "@dxos/worker-framework",
   "version": "0.10.0",
-  "private": true,
   "description": "Generic worker management framework for DXOS client services.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

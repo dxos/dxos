@@ -148,12 +148,10 @@ export class ClientRpcServer {
       return;
     }
 
-    this.#server = serveRpcGroup(
-      this.#params.port,
-      ClientServicesRpcs,
-      makeClientServicesHandlers(this.#params),
-      { disableTracing: true, concurrency: 'unbounded' },
-    );
+    this.#server = serveRpcGroup(this.#params.port, ClientServicesRpcs, makeClientServicesHandlers(this.#params), {
+      disableTracing: true,
+      concurrency: 'unbounded',
+    });
     await this.#server.open();
   }
 

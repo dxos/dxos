@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 
-import { SingleClientCoordinator } from './single-client-coordinator';
 import type { WorkerCoordinatorMessage } from '../internal/messages';
+import { SingleClientCoordinator } from './single-client-coordinator';
 
 describe('SingleClientCoordinator', () => {
   test('echoes messages back to sender', async ({ expect }) => {

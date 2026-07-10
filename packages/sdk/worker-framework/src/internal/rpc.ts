@@ -25,8 +25,7 @@ const WORKER_CLIENT_CONCURRENCY = Number.MAX_SAFE_INTEGER;
 
 // Merged rpc groups (e.g. ClientServicesRpcs) do not structurally satisfy RpcGroup<Rpc.Any>
 // in @effect/rpc's type parameter; runtime dispatch accepts any RpcGroup instance.
-const asRpcGroup = <G>(group: G): Parameters<typeof RpcClient.make>[0] =>
-  group as Parameters<typeof RpcClient.make>[0];
+const asRpcGroup = <G>(group: G): Parameters<typeof RpcClient.make>[0] => group as Parameters<typeof RpcClient.make>[0];
 
 /**
  * Builds an effect-native RPC client over a caller-supplied {@link RpcClient.Protocol} layer.
