@@ -112,7 +112,7 @@ export const onconnect = async (event: MessageEvent<any>) => {
   const workerRuntime = await workerRuntimePromise;
   await workerRuntime.createSession({
     systemPort: createWorkerPort({ port: systemChannel.port2 }),
-    appPort: createWorkerPort({ port: appChannel.port2 }),
+    appPort: appChannel.port2,
   });
 };
 

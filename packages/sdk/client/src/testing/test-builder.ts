@@ -29,7 +29,6 @@ import {
 import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { createLinkedPorts } from '@dxos/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
@@ -144,11 +143,11 @@ export class TestBuilder {
    * Create client/server.
    */
   createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ClientRpcServer] {
-    const [proxyPort, hostPort] = createLinkedPorts();
-    const client = new Client({ config: this.config, services: new ClientServicesProxy(proxyPort) });
+    const channel = new MessageChannel();
+    const client = new Client({ config: this.config, services: new ClientServicesProxy(channel.port1) });
     const server = new ClientRpcServer({
       services: () => host.services,
-      port: hostPort,
+      port: channel.port2,
     });
 
     this._ctx.onDispose(() => server.close());

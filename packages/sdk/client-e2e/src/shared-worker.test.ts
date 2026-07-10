@@ -29,20 +29,20 @@ const setup = (configProvider: Provider<MaybePromise<Config>>) => {
   });
 
   const systemPorts = createLinkedPorts();
-  const appPorts = createLinkedPorts();
-  const shellPorts = createLinkedPorts();
+  const appChannel = new MessageChannel();
+  const shellChannel = new MessageChannel();
   void workerRuntime.createSession({
     systemPort: systemPorts[1],
-    appPort: appPorts[1],
-    shellPort: shellPorts[1],
+    appPort: appChannel.port2,
+    shellPort: shellChannel.port2,
   });
   const clientProxy = new SharedWorkerConnection({
     config: configProvider,
     systemPort: systemPorts[0],
-    shellPort: shellPorts[0],
+    shellPort: shellChannel.port1,
   });
   const client = new Client({
-    services: new ClientServicesProxy(appPorts[0]),
+    services: new ClientServicesProxy(appChannel.port1),
   });
   onTestFinished(async () => {
     await client.destroy();

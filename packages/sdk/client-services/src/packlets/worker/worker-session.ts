@@ -21,9 +21,9 @@ import { type ClientServicesHost } from '../services';
 export type WorkerSessionProps = {
   serviceHost: ClientServicesHost;
   systemPort: RpcPort;
-  appPort: RpcPort;
+  appPort: MessagePort;
   // TODO(wittjosiah): Remove shellPort.
-  shellPort?: RpcPort;
+  shellPort?: MessagePort;
   readySignal: Trigger<Error | undefined>;
 };
 

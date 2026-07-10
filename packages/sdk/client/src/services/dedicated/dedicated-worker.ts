@@ -62,7 +62,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         createSession: async ({ appPort, systemPort, clientId, isOwner, onClose }) => {
           const session = await runtime.createSession({
             systemPort: createWorkerPort({ port: systemPort }),
-            appPort: createWorkerPort({ port: appPort }),
+            appPort,
             onClose,
           });
           if (isOwner) {

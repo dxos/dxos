@@ -20,7 +20,6 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
-import { type RpcPort } from '@dxos/rpc';
 
 /**
  * Implements services that are not local to the app.
@@ -33,7 +32,7 @@ export class ClientServicesProxy implements ClientServicesProvider {
   private _services?: Partial<ClientServices>;
 
   constructor(
-    private readonly _port: RpcPort,
+    private readonly _port: MessagePort,
     // NOTE: With lower timeout the shared worker does not have enough time to start.
     // TODO(dmaretskyi): Find better ways to detected when the worker has finished loading. It might take a while on slow connections.
     private readonly _timeout = 30_000,

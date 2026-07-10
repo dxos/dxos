@@ -65,7 +65,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
           origin: typeof location !== 'undefined' ? location.origin : 'unknown',
         });
 
-        this.#services = new ClientServicesProxy(createWorkerPort({ port: appPort }));
+        this.#services = new ClientServicesProxy(appPort);
         await this.#services.open();
 
         this.#loggingStreamCleanup?.();

@@ -26,9 +26,6 @@
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/mesh/rpc"
     }
   ]
 }

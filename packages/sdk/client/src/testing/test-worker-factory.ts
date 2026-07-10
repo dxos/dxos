@@ -58,7 +58,7 @@ export class TestWorkerFactory extends Resource {
           createSession: async ({ appPort, systemPort, clientId, isOwner }) => {
             const session = await runtime.createSession({
               systemPort: createWorkerPort({ port: systemPort }),
-              appPort: createWorkerPort({ port: appPort }),
+              appPort,
             });
             if (isOwner) {
               runtime.connectWebrtcBridge(session);

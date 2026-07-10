@@ -96,7 +96,7 @@ export class WorkerClientServices implements ClientServicesProvider {
     });
     await this._runtime.open({ origin: location.origin });
 
-    this._services = new ClientServicesProxy(createWorkerPort({ port: appPort }));
+    this._services = new ClientServicesProxy(appPort);
     await this._services.open();
     void navigator.locks.request(STORAGE_LOCK_KEY, () => {
       log('terminated');

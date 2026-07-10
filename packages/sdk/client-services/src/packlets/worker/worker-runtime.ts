@@ -35,11 +35,11 @@ import { type MaybePromise } from '@dxos/util';
 import { ClientServicesHost } from '../services';
 import { WorkerSession } from './worker-session';
 
-// NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
+// NOTE: systemPort stays RpcPort (protobuf peer); app/shell ports use native MessagePort effect-rpc.
 export type CreateSessionProps = {
-  appPort: RpcPort;
+  appPort: MessagePort;
   systemPort: RpcPort;
-  shellPort?: RpcPort;
+  shellPort?: MessagePort;
   onClose?: () => Promise<void>;
 };
 

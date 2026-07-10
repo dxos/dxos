@@ -31,10 +31,11 @@ import {
   SpacesService,
   SystemService,
 } from '@dxos/protocols/rpc';
-import { type RpcPort } from '@dxos/rpc';
 import { makeRpcClient, serveRpcGroup } from '@dxos/worker-framework';
 
 import { type ClientServices } from './service';
+
+export type MessagePortLike = MessagePort;
 
 /**
  * All client service RPCs served over a single connection.
@@ -112,7 +113,7 @@ const resolveServiceMethod = (
 //
 
 export type ClientRpcServerParams = {
-  port: RpcPort;
+  port: MessagePortLike;
   /**
    * Resolved per call so the served set follows the host lifecycle (services host open/close).
    */
@@ -124,7 +125,7 @@ export type ClientRpcServerParams = {
 };
 
 /**
- * Serves {@link ClientServices} implementations over an {@link RpcPort} via effect-rpc.
+ * Serves {@link ClientServices} implementations over a {@link MessagePort} via effect-rpc.
  */
 export class ClientRpcServer {
   readonly #params: ClientRpcServerParams;
@@ -224,10 +225,10 @@ export interface ClientServicesRpc
     DevtoolsHost.Client {}
 
 /**
- * Builds the effect-native {@link ClientServicesRpc} over an {@link RpcPort}.
+ * Builds the effect-native {@link ClientServicesRpc} over a {@link MessagePort}.
  * The returned scope owns the connection; closing it releases the transport.
  */
-export const makeClientServicesRpc = (port: RpcPort): Effect.Effect<ClientServicesRpc, never, Scope.Scope> =>
+export const makeClientServicesRpc = (port: MessagePortLike): Effect.Effect<ClientServicesRpc, never, Scope.Scope> =>
   makeRpcClient(port, ClientServicesRpcs, { disableTracing: true }).pipe(
     Effect.map((client) => client as ClientServicesRpc),
   );
