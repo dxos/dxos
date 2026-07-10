@@ -8,9 +8,9 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Space } from '@dxos/client/echo';
-import { Obj, type Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { URI } from '@dxos/keys';
-import { useObject } from '@dxos/react-client/echo';
+import { useResolveRef } from '@dxos/react-client/echo';
 import { Icon, IconButton } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
@@ -76,13 +76,8 @@ export const PreviewComponent = ({ space, dxn, label: alt, onOpen, view, range }
   const uri = useMemo(() => (dxn ? URI.make(dxn) : undefined), [dxn]);
   // Resolve relative to the containing document's own space so space-relative embeds
   // (bare `echo:/<id>` URIs, used so links survive being imported into a new space) resolve.
-  const ref: Ref.Ref<Obj.Unknown> | undefined = useMemo(
-    () => (uri && space ? space.db.makeRef<Obj.Unknown>(uri) : undefined),
-    [uri, space],
-  );
-  // Trigger a re-render once the ref resolves — reading `.target` alone does not subscribe.
-  useObject(ref);
-  const subject = ref?.target;
+  const ref = useMemo(() => (uri && space ? space.db.makeRef<Obj.Unknown>(uri) : undefined), [uri, space]);
+  const subject = useResolveRef(ref);
 
   // px per rem; ResizeHandle works in rem while the persisted height is in px.
   const remSize = useMemo(() => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16, []);
