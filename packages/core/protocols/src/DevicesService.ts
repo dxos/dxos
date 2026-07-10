@@ -14,7 +14,7 @@ import { protoMessage, serviceError } from './service-rpc.ts';
 //
 
 export const QueryDevicesResponse = Schema.Struct({
-  devices: Schema.Array(protoMessage('dxos.client.services.Device')),
+  devices: Schema.optional(Schema.mutable(Schema.Array(protoMessage('dxos.client.services.Device')))),
 });
 export interface QueryDevicesResponse extends Schema.Schema.Type<typeof QueryDevicesResponse> {}
 

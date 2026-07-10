@@ -8,7 +8,7 @@ import type * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 
 import { protoMessage, serviceError } from './service-rpc.ts';
-import { publicKey } from './service-schemas.ts';
+import { publicKey, timeframe } from './service-schemas.ts';
 
 //
 // RPC message schemas.
@@ -21,7 +21,7 @@ export const MembershipPolicy = Schema.Enums({
 export type MembershipPolicy = Schema.Schema.Type<typeof MembershipPolicy>;
 
 export const CreateSpaceRequest = Schema.Struct({
-  tags: Schema.optional(Schema.Array(Schema.String)),
+  tags: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   membershipPolicy: MembershipPolicy,
 });
 export interface CreateSpaceRequest extends Schema.Schema.Type<typeof CreateSpaceRequest> {}
@@ -71,7 +71,7 @@ export interface SubscribeMessagesRequest extends Schema.Schema.Type<typeof Subs
 
 export const WriteCredentialsRequest = Schema.Struct({
   spaceKey: publicKey,
-  credentials: Schema.optional(Schema.Array(protoMessage('dxos.halo.credentials.Credential'))),
+  credentials: Schema.optional(Schema.mutable(Schema.Array(protoMessage('dxos.halo.credentials.Credential')))),
 });
 export interface WriteCredentialsRequest extends Schema.Schema.Type<typeof WriteCredentialsRequest> {}
 
@@ -109,7 +109,7 @@ export const CreateEpochResponse = Schema.Struct({
   /**
    * Control pipeline timeframe.
    */
-  controlTimeframe: Schema.optional(protoMessage('dxos.echo.timeframe.TimeframeVector')),
+  controlTimeframe: Schema.optional(timeframe),
 });
 export interface CreateEpochResponse extends Schema.Schema.Type<typeof CreateEpochResponse> {}
 
@@ -171,12 +171,15 @@ export const ImportSpaceRequest = Schema.Struct({
   /**
    * Immutable tags to set on the imported space at creation time.
    */
-  tags: Schema.optional(Schema.Array(Schema.String)),
+  tags: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
 });
 export interface ImportSpaceRequest extends Schema.Schema.Type<typeof ImportSpaceRequest> {}
 
 export const ImportSpaceResponse = Schema.Struct({
-  spaceId: Schema.String,
+  /**
+   * The ID of the new space.
+   */
+  newSpaceId: Schema.String,
 });
 export interface ImportSpaceResponse extends Schema.Schema.Type<typeof ImportSpaceResponse> {}
 

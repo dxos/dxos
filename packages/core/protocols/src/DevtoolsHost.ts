@@ -8,7 +8,7 @@ import type * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 
 import { protoMessage, serviceError } from './service-rpc.ts';
-import { protoTimestamp, publicKey } from './service-schemas.ts';
+import { protoTimestamp, publicKey, timeframe } from './service-schemas.ts';
 
 //
 // RPC message schemas.
@@ -43,7 +43,7 @@ export const KeyRecord = Schema.Struct({
 export interface KeyRecord extends Schema.Schema.Type<typeof KeyRecord> {}
 
 export const SubscribeToKeyringKeysResponse = Schema.Struct({
-  keys: Schema.Array(KeyRecord),
+  keys: Schema.optional(Schema.mutable(Schema.Array(KeyRecord))),
 });
 export interface SubscribeToKeyringKeysResponse extends Schema.Schema.Type<typeof SubscribeToKeyringKeysResponse> {}
 
@@ -53,12 +53,12 @@ export const SubscribeToCredentialMessagesRequest = Schema.Struct({
 export interface SubscribeToCredentialMessagesRequest extends Schema.Schema.Type<typeof SubscribeToCredentialMessagesRequest> {}
 
 export const SubscribeToCredentialMessagesResponse = Schema.Struct({
-  messages: Schema.Array(protoMessage('dxos.halo.signed.SignedMessage')),
+  messages: Schema.optional(Schema.mutable(Schema.Array(protoMessage('dxos.halo.signed.SignedMessage')))),
 });
 export interface SubscribeToCredentialMessagesResponse extends Schema.Schema.Type<typeof SubscribeToCredentialMessagesResponse> {}
 
 export const SubscribeToSpacesRequest = Schema.Struct({
-  spaceKeys: Schema.Array(publicKey),
+  spaceKeys: Schema.optional(Schema.mutable(Schema.Array(publicKey))),
 });
 export interface SubscribeToSpacesRequest extends Schema.Schema.Type<typeof SubscribeToSpacesRequest> {}
 
@@ -71,7 +71,7 @@ export const SubscribeToItemsResponse = Schema.Struct({
 export interface SubscribeToItemsResponse extends Schema.Schema.Type<typeof SubscribeToItemsResponse> {}
 
 export const SubscribeToFeedsRequest = Schema.Struct({
-  feedKeys: Schema.Array(publicKey),
+  feedKeys: Schema.optional(Schema.mutable(Schema.Array(publicKey))),
 });
 export interface SubscribeToFeedsRequest extends Schema.Schema.Type<typeof SubscribeToFeedsRequest> {}
 
@@ -91,11 +91,11 @@ export const MutationMeta = Schema.Struct({
   feedKey: Schema.optional(publicKey),
   seq: Schema.optional(Schema.Number),
   memberKey: Schema.optional(publicKey),
-  timeframe: Schema.optional(protoMessage('dxos.echo.timeframe.TimeframeVector')),
+  timeframe: Schema.optional(timeframe),
   /**
    * If this mutation was created by this client, this field will be set to the tag in the mutation.
    */
-  clientTag: Schema.Array(Schema.String),
+  clientTag: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
 });
 export interface MutationMeta extends Schema.Schema.Type<typeof MutationMeta> {}
 
@@ -150,7 +150,7 @@ export const EchoObject = Schema.Struct({
   /**
    * May be present in snapshots. In that case the mutations must be applied on top of the snapshot.
    */
-  mutations: Schema.Array(Mutation),
+  mutations: Schema.optional(Schema.mutable(Schema.Array(Mutation))),
 });
 export interface EchoObject extends Schema.Schema.Type<typeof EchoObject> {}
 
@@ -158,7 +158,7 @@ export interface EchoObject extends Schema.Schema.Type<typeof EchoObject> {}
  * Database Snapshot
  */
 export const EchoSnapshot = Schema.Struct({
-  items: Schema.Array(EchoObject),
+  items: Schema.optional(Schema.mutable(Schema.Array(EchoObject))),
 });
 export interface EchoSnapshot extends Schema.Schema.Type<typeof EchoSnapshot> {}
 
@@ -172,7 +172,7 @@ export interface EchoSnapshot extends Schema.Schema.Type<typeof EchoSnapshot> {}
  */
 export const SpaceSnapshot = Schema.Struct({
   spaceKey: Schema.Uint8Array,
-  timeframe: Schema.optional(protoMessage('dxos.echo.timeframe.TimeframeVector')),
+  timeframe: Schema.optional(timeframe),
   timestamp: Schema.optional(Schema.Number),
   database: EchoSnapshot,
 });
@@ -204,12 +204,12 @@ export interface GetNetworkPeersRequest extends Schema.Schema.Type<typeof GetNet
 export const PeerInfo = Schema.Struct({
   id: publicKey,
   state: Schema.String,
-  connections: Schema.Array(Schema.Uint8Array),
+  connections: Schema.optional(Schema.mutable(Schema.Array(Schema.Uint8Array))),
 });
 export interface PeerInfo extends Schema.Schema.Type<typeof PeerInfo> {}
 
 export const GetNetworkPeersResponse = Schema.Struct({
-  peers: Schema.Array(PeerInfo),
+  peers: Schema.optional(Schema.mutable(Schema.Array(PeerInfo))),
 });
 export interface GetNetworkPeersResponse extends Schema.Schema.Type<typeof GetNetworkPeersResponse> {}
 
@@ -220,7 +220,7 @@ export const Topic = Schema.Struct({
 export interface Topic extends Schema.Schema.Type<typeof Topic> {}
 
 export const SubscribeToNetworkTopicsResponse = Schema.Struct({
-  topics: Schema.Array(Topic),
+  topics: Schema.optional(Schema.mutable(Schema.Array(Topic))),
 });
 export interface SubscribeToNetworkTopicsResponse extends Schema.Schema.Type<typeof SubscribeToNetworkTopicsResponse> {}
 
@@ -251,9 +251,9 @@ export const ConnectionInfo = Schema.Struct({
   sessionId: publicKey,
   remotePeerId: publicKey,
   transport: Schema.optional(Schema.String),
-  protocolExtensions: Schema.Array(Schema.String),
-  events: Schema.Array(ConnectionEvent),
-  streams: Schema.Array(StreamStats),
+  protocolExtensions: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
+  events: Schema.optional(Schema.mutable(Schema.Array(ConnectionEvent))),
+  streams: Schema.optional(Schema.mutable(Schema.Array(StreamStats))),
   closeReason: Schema.optional(Schema.String),
   identity: Schema.optional(Schema.String),
   readBufferSize: Schema.optional(Schema.Number),
@@ -272,12 +272,12 @@ export const SwarmInfo = Schema.Struct({
   topic: publicKey,
   label: Schema.optional(Schema.String),
   isActive: Schema.Boolean,
-  connections: Schema.Array(ConnectionInfo),
+  connections: Schema.optional(Schema.mutable(Schema.Array(ConnectionInfo))),
 });
 export interface SwarmInfo extends Schema.Schema.Type<typeof SwarmInfo> {}
 
 export const SubscribeToSwarmInfoResponse = Schema.Struct({
-  data: Schema.Array(SwarmInfo),
+  data: Schema.optional(Schema.mutable(Schema.Array(SwarmInfo))),
 });
 export interface SubscribeToSwarmInfoResponse extends Schema.Schema.Type<typeof SubscribeToSwarmInfoResponse> {}
 

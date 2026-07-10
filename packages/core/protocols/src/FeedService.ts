@@ -22,7 +22,7 @@ export const FeedQuery = Schema.Struct({
   /**
    * Queries the whole space if missing.
    */
-  feedIds: Schema.optional(Schema.Array(Schema.String)),
+  feedIds: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   /**
    * Filter items after this cursor. Exclusive.
    */
@@ -32,17 +32,17 @@ export const FeedQuery = Schema.Struct({
    */
   before: Schema.optional(Schema.String),
   /**
-   * Filter items after this position. Inclusive.
+   * Filter items after this position. Inclusive. Encoded as a stringified int64.
    */
-  beginPosition: Schema.optional(Schema.Number),
+  beginPosition: Schema.optional(Schema.String),
   /**
-   * Filter items before this position. Exclusive.
+   * Filter items before this position. Exclusive. Encoded as a stringified int64.
    */
-  endPosition: Schema.optional(Schema.Number),
+  endPosition: Schema.optional(Schema.String),
   limit: Schema.optional(Schema.Number),
   reverse: Schema.optional(Schema.Boolean),
   // TODO(dmaretskyi): Remove this field -- raw feeds dont index object IDs anymore.
-  objectIds: Schema.optional(Schema.Array(Schema.String)),
+  objectIds: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
 });
 export interface FeedQuery extends Schema.Schema.Type<typeof FeedQuery> {}
 
@@ -57,7 +57,7 @@ export const FeedQueryResult = Schema.Struct({
    * We use JSON strings instead of google.protobuf.Struct because Struct
    * coerces `undefined` to `null`, corrupting optional fields.
    */
-  objects: Schema.optional(Schema.Array(Schema.String)),
+  objects: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   /**
    * Cursor to query the next items. Can be passed to `after` in query to keep querying.
    */
@@ -73,7 +73,7 @@ export const InsertIntoFeedRequest = Schema.Struct({
   /**
    * JSON-encoded object payloads. Each entry is a serialized ObjectJSON.
    */
-  objects: Schema.optional(Schema.Array(Schema.String)),
+  objects: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
 });
 export interface InsertIntoFeedRequest extends Schema.Schema.Type<typeof InsertIntoFeedRequest> {}
 
@@ -81,7 +81,7 @@ export const DeleteFromFeedRequest = Schema.Struct({
   subspaceTag: Schema.String,
   spaceId: Schema.String,
   feedId: Schema.String,
-  objectIds: Schema.optional(Schema.Array(Schema.String)),
+  objectIds: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
 });
 export interface DeleteFromFeedRequest extends Schema.Schema.Type<typeof DeleteFromFeedRequest> {}
 
@@ -105,29 +105,29 @@ export const GetSyncStateRequest = Schema.Struct({
   /**
    * If empty, returns state for all namespaces synced by the client.
    */
-  namespaces: Schema.optional(Schema.Array(Schema.String)),
+  namespaces: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
 });
 export interface GetSyncStateRequest extends Schema.Schema.Type<typeof GetSyncStateRequest> {}
 
 export const FeedNamespaceSyncState = Schema.Struct({
   namespace: Schema.String,
   /**
-   * Blocks still to pull from remote. 0 when caught up.
+   * Blocks still to pull from remote. 0 when caught up. Encoded as a stringified int64.
    */
-  blocksToPull: Schema.Number,
+  blocksToPull: Schema.String,
   /**
-   * Unpositioned blocks still to push to remote. 0 when caught up.
+   * Unpositioned blocks still to push to remote. 0 when caught up. Encoded as a stringified int64.
    */
-  blocksToPush: Schema.Number,
+  blocksToPush: Schema.String,
   /**
-   * Total blocks stored locally for this namespace in the space.
+   * Total blocks stored locally for this namespace in the space. Encoded as a stringified int64.
    */
-  totalBlocks: Schema.Number,
+  totalBlocks: Schema.String,
 });
 export interface FeedNamespaceSyncState extends Schema.Schema.Type<typeof FeedNamespaceSyncState> {}
 
 export const GetSyncStateResponse = Schema.Struct({
-  namespaces: Schema.Array(FeedNamespaceSyncState),
+  namespaces: Schema.optional(Schema.mutable(Schema.Array(FeedNamespaceSyncState))),
 });
 export interface GetSyncStateResponse extends Schema.Schema.Type<typeof GetSyncStateResponse> {}
 

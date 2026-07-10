@@ -57,7 +57,7 @@ export interface KeyPair extends Schema.Schema.Type<typeof KeyPair> {}
 
 export const Metrics = Schema.Struct({
   timestamp: protoTimestamp,
-  values: Schema.Array(KeyPair),
+  values: Schema.optional(Schema.mutable(Schema.Array(KeyPair))),
 });
 export interface Metrics extends Schema.Schema.Type<typeof Metrics> {}
 
