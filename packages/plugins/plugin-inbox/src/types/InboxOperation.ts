@@ -89,6 +89,26 @@ export const DraftEmail = Operation.make({
   services: [Database.Service],
 }).pipe(Operation.visible);
 
+/** Creates a reply/reply-all/forward draft and appends it inline to the open conversation (no navigation). */
+export const DraftReply = Operation.make({
+  meta: {
+    key: makeKey('draftReply'),
+    name: 'Draft reply',
+    description: 'Creates a reply, reply-all, or forward draft in the same thread as the source message.',
+    icon: 'ph--arrow-bend-up-left--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    db: Database.Database,
+    mode: Schema.Literal('reply', 'reply-all', 'forward'),
+    message: Type.getSchema(Message.Message),
+    mailbox: Schema.optional(Type.getSchema(Mailbox.Mailbox)),
+  }),
+  output: Schema.Struct({
+    draftId: Schema.String,
+  }),
+});
+
 // TODO(wittjosiah): Reconcile with above.
 export const DraftEmailAndOpen = Operation.make({
   meta: {

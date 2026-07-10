@@ -14,6 +14,7 @@ export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./delete-event'),
   () => import('./draft-email-and-open'),
   () => import('./draft-email'),
+  () => import('./draft-reply'),
   () => import('./enrich/enrich-mailbox'),
   () => import('./extractor/contact-extractor'),
   () => import('./extractor/extract-contact'),

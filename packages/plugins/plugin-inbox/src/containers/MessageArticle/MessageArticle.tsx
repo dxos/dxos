@@ -2,27 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { Panel, ScrollArea } from '@dxos/react-ui';
+import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 import { type Message as MessageType } from '@dxos/types';
 
-import { Message, type MessageHeaderProps, type ViewMode } from '#components';
-import { useActorContact } from '#hooks';
-import { InboxOperation, Mailbox } from '#types';
+import { EditMessage, Message, type MessageHeaderProps, type ViewMode } from '#components';
+import { useActorContact, useEmailComposer } from '#hooks';
+import { meta } from '#meta';
+import { DraftMessage, InboxOperation, Mailbox } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 
 /**
  * `subject` is either a single message or its whole conversation (thread). The companion graph node
  * assigns the thread directly (see the `mailboxMessage` connector) so the article renders it without
- * re-querying; section/other callers may pass a single message.
+ * re-querying; section/other callers may pass a single message. The thread already includes any
+ * inline reply/forward drafts (the connector merges synced feed messages and local drafts in one
+ * combined-scope query), interleaved chronologically.
  */
 export type MessageArticleProps = AppSurface.ArticleProps<
   MessageType.Message | MessageType.Message[],
@@ -42,7 +45,7 @@ const keyOf = (message: MessageOrRef): string => (Ref.isRef(message) ? String(me
  * Message/conversation detail view. Renders the opened conversation as a vertical stack — each member
  * resolved by its own leaf (see {@link ThreadMessageItem}) so subscriptions stay granular. `subject`
  * is the whole thread (assigned by the companion graph node) or a single message. Toolbar actions
- * (reply/forward/delete) act on the newest message (last, chronological order).
+ * (reply/forward/delete) act on the newest synced message — never an inline draft.
  */
 export const MessageArticle = ({
   role,
@@ -54,13 +57,17 @@ export const MessageArticle = ({
   const toolbarAttendableId = attendableId && isLinkedSegment(attendableId) ? getParentId(attendableId) : attendableId;
   const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : mailboxProp;
 
-  // Normalize the singular-or-plural subject to a conversation; the newest message (last) anchors the
-  // toolbar and header actions.
+  // Normalize the singular-or-plural subject to a conversation (chronological, drafts interleaved).
   const messages: MessageType.Message[] = Array.isArray(subject) ? subject : [subject];
-  const message = messages[messages.length - 1];
 
-  const db = Obj.getDatabase(message);
-  const sender = useActorContact(db, message.sender);
+  // Reply/forward act on the newest real (non-draft) message — the tail may be an unsent draft.
+  const anchorMessage = useMemo(
+    () => [...messages].reverse().find((candidate) => !DraftMessage.instanceOf(candidate)) ?? messages[messages.length - 1],
+    [messages],
+  );
+
+  const db = Obj.getDatabase(anchorMessage);
+  const sender = useActorContact(db, anchorMessage.sender);
 
   // View mode is owned here and shared (controlled) across the toolbar and every message body, which
   // render in separate `Message.Root`s — so the toolbar's switch applies to all bodies.
@@ -80,16 +87,20 @@ export const MessageArticle = ({
     if (!mailbox || !db) {
       return;
     }
-    void invokePromise(LayoutOperation.Open, { subject: [getMailboxMessagePath(db.spaceId, mailbox.id, message.id)] });
-  }, [mailbox, db, message.id, invokePromise]);
+    void invokePromise(LayoutOperation.Open, {
+      subject: [getMailboxMessagePath(db.spaceId, mailbox.id, anchorMessage.id)],
+    });
+  }, [mailbox, db, anchorMessage.id, invokePromise]);
 
   const openDraft = useCallback(
     (mode: 'reply' | 'reply-all' | 'forward') => {
       if (db) {
-        void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode, message, mailbox });
+        // Appends the draft inline (shares the thread's `threadId`); the thread query in the
+        // `mailboxMessage` connector picks it up reactively, so no navigation is needed here.
+        void invokePromise(InboxOperation.DraftReply, { db, mode, message: anchorMessage, mailbox });
       }
     },
-    [db, invokePromise, message, mailbox],
+    [db, invokePromise, anchorMessage, mailbox],
   );
   const handleReply = useCallback(() => openDraft('reply'), [openDraft]);
   const handleReplyAll = useCallback(() => openDraft('reply-all'), [openDraft]);
@@ -99,9 +110,21 @@ export const MessageArticle = ({
   // feed). `spaceId` scopes the spawned operation process so its space-affinity services materialize.
   const handleDelete = useCallback(() => {
     if (mailbox) {
-      void invokePromise(InboxOperation.DeleteEmail, { mailbox, message }, { spaceId: db?.spaceId });
+      void invokePromise(InboxOperation.DeleteEmail, { mailbox, message: anchorMessage }, { spaceId: db?.spaceId });
     }
-  }, [invokePromise, db, mailbox, message]);
+  }, [invokePromise, db, mailbox, anchorMessage]);
+
+  // Scroll to a newly-appended draft (each Reply/Reply All/Forward press appends one at the tail); the
+  // composer itself autofocuses (`Form.Root autoFocus` in `EditMessage`) once scrolled into view.
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const tail = messages[messages.length - 1];
+  const tailId = keyOf(tail);
+  const tailIsDraft = DraftMessage.instanceOf(tail);
+  useEffect(() => {
+    if (tailIsDraft) {
+      viewportRef.current?.scrollTo({ top: viewportRef.current.scrollHeight, behavior: 'smooth' });
+    }
+  }, [tailId, tailIsDraft]);
 
   return (
     <Panel.Root role={role}>
@@ -109,7 +132,7 @@ export const MessageArticle = ({
         attendableId={toolbarAttendableId}
         viewMode={viewMode}
         setViewMode={setViewMode}
-        message={message}
+        message={anchorMessage}
         mailbox={mailbox}
         sender={sender}
         onOpen={companionTo ? handleOpen : undefined}
@@ -124,17 +147,23 @@ export const MessageArticle = ({
       </Message.Root>
       <Panel.Content asChild>
         <ScrollArea.Root padding thin>
-          <ScrollArea.Viewport>
+          <ScrollArea.Viewport ref={viewportRef}>
             <div className='dx-document flex flex-col'>
               {messages.map((messageOrRef) => (
                 <div key={keyOf(messageOrRef)} className='border-be border-separator'>
-                  <ThreadMessageItem
-                    message={messageOrRef}
-                    mailbox={mailbox}
-                    viewMode={viewMode}
-                    setViewMode={setViewMode}
-                    onContactCreate={handleContactCreate}
-                  />
+                  {/* An unsent draft renders as a live composer inline in the stack; once sent
+                      (`properties.sentAt` set) it locks and falls back to the read-only leaf. */}
+                  {DraftMessage.instanceOf(messageOrRef) && !messageOrRef.properties?.sentAt ? (
+                    <DraftComposerItem message={messageOrRef} mailbox={mailbox} />
+                  ) : (
+                    <ThreadMessageItem
+                      message={messageOrRef}
+                      mailbox={mailbox}
+                      viewMode={viewMode}
+                      setViewMode={setViewMode}
+                      onContactCreate={handleContactCreate}
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -142,6 +171,32 @@ export const MessageArticle = ({
         </ScrollArea.Root>
       </Panel.Content>
     </Panel.Root>
+  );
+};
+
+/** An unsent draft rendered as a live composer inline in the conversation stack (see `useEmailComposer`). */
+const DraftComposerItem = ({ message, mailbox }: { message: MessageType.Message; mailbox?: Mailbox.Mailbox }) => {
+  const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = useOperationInvoker();
+  const { extensions, onSend } = useEmailComposer(message);
+  const handleDelete = useCallback(() => {
+    if (mailbox) {
+      void invokePromise(
+        InboxOperation.DeleteEmail,
+        { mailbox, message },
+        { spaceId: Obj.getDatabase(mailbox)?.spaceId },
+      );
+    }
+  }, [invokePromise, mailbox, message]);
+
+  return (
+    <EditMessage
+      message={message}
+      extensions={extensions}
+      onSend={onSend}
+      title={t('draft-message.title')}
+      onDelete={mailbox ? handleDelete : undefined}
+    />
   );
 };
 

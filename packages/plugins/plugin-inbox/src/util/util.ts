@@ -102,6 +102,9 @@ export const createDraftMessage = (options: CreateDraftOptions): Obj.MakeProps<t
   return {
     created: new Date().toISOString(),
     sender: { name: 'Me' },
+    // Top-level `threadId` (not just `properties.threadId`) is what the thread-grouping query and the
+    // mailbox conversation aggregate key on; without it a reply draft never joins its thread.
+    ...(message?.threadId && mode !== 'compose' ? { threadId: message.threadId } : {}),
     blocks: [{ _tag: 'text' as const, text: draftBody }],
     properties: {
       to,

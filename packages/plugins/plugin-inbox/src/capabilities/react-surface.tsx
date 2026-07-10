@@ -39,7 +39,9 @@ const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
 
 /** A single non-draft message or a non-empty conversation (thread) of them. */
 const isMessageOrThread = (subject: unknown): subject is Message.Message | Message.Message[] =>
-  Array.isArray(subject) ? subject.length > 0 && subject.every(isNonDraftMessage) : isNonDraftMessage(subject);
+  Array.isArray(subject)
+    ? subject.length > 0 && subject.every(Obj.instanceOf(Message.Message))
+    : isNonDraftMessage(subject);
 
 export default Capability.makeModule(() =>
   Effect.succeed(

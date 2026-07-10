@@ -70,4 +70,32 @@ describe('createDraftMessage', () => {
     const forwardBody = props.blocks[0] && props.blocks[0]._tag === 'text' ? props.blocks[0].text : '';
     expect(forwardBody).toContain('Original');
   });
+
+  test('reply mode copies the source message top-level threadId (the thread-grouping key)', ({ expect }) => {
+    const replyTo = Obj.make(Message.Message, {
+      created: '2025-01-01T00:00:00.000Z',
+      sender: { name: 'Alice', email: 'alice@example.com' },
+      threadId: 'gmail-thread-456',
+      blocks: [{ _tag: 'text' as const, text: 'Original body' }],
+      properties: { subject: 'Topic', threadId: 'gmail-thread-456' },
+    });
+    const props = createDraftMessage({ mode: 'reply', message: replyTo });
+    expect(props.threadId).toBe('gmail-thread-456');
+  });
+
+  test('reply mode leaves threadId unset when the source message has none', ({ expect }) => {
+    const replyTo = Obj.make(Message.Message, {
+      created: '2025-01-01T00:00:00.000Z',
+      sender: { name: 'Alice', email: 'alice@example.com' },
+      blocks: [{ _tag: 'text' as const, text: 'Original body' }],
+      properties: { subject: 'Topic' },
+    });
+    const props = createDraftMessage({ mode: 'reply', message: replyTo });
+    expect(props.threadId).toBeUndefined();
+  });
+
+  test('compose mode sets no threadId', ({ expect }) => {
+    const props = createDraftMessage({ mode: 'compose', subject: 'Hi', body: 'Hello' });
+    expect(props.threadId).toBeUndefined();
+  });
 });

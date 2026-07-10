@@ -156,6 +156,8 @@ export const translations = [
         'send-email-button.label': 'Send',
         'send-email-error.title': 'Failed to send email',
         'send-email-error-unknown.message': 'An unknown error occurred',
+        'draft-message.title': 'Draft',
+        'delete-draft-button.label': 'Delete draft',
         'send-as-email.label': 'Send as email',
 
         'draft-subject.label': 'Subject',
