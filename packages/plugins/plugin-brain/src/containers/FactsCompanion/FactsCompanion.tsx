@@ -70,4 +70,4 @@ export const useFacts = (registry: FactStoreRegistry, spaceId: string | undefine
   return facts;
 };
 
-MailboxFactsCompanion.displayName = 'MailboxFactsCompanion';
+FactsCompanion.displayName = 'FactsCompanion';
