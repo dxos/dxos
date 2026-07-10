@@ -17,11 +17,13 @@ can be recorded there without a schema change. The Gmail sync mapper
     task); surfaced as a message action.
   - Network action → confirm before sending (see safety rules).
 - [ ] **Auto/bulk detection → gate draft creation**
-  - In the sync mapper, detect a no-reply sender (local-part `no-reply` /
-    `donotreply` / …) and read the `List-Unsubscribe` header; record
-    `properties.noReply` and `properties.listUnsubscribe`.
-  - Shared `isReplyable(message)` helper (false when no-reply or unsubscribe
-    present) to skip draft creation for bulk/automated mail.
+  - [x] Sync mapper detects a no-reply sender and reads the `List-Unsubscribe`
+        header, recording `properties.noReply` / `properties.listUnsubscribe`
+        (`Mailbox.isNoReplyAddress`, `mapper.ts`).
+  - [x] Shared `Mailbox.isReplyable(message)` helper (false when no-reply or
+        unsubscribe present; falls back to sender address for older fixtures).
+  - [ ] Wire `isReplyable` into the draft flow (harness `pipelines/draft.ts`
+        first) so bulk/automated mail is skipped rather than drafted.
 - [ ] **User-editable Instructions inform reply drafting**
   - Reuse the existing `@dxos/compute` `Instructions` type (`text` markdown +
     `skills` + `objects`) — do NOT define a new one. It is already used with

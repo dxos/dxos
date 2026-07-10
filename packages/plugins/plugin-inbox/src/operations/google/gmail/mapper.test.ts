@@ -11,6 +11,7 @@ import * as InboxResolver from '@dxos/extractor-lib';
 import { Message } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
+import { Mailbox } from '../../../types';
 import { decodeBody, mapMessage } from './mapper';
 
 const makeGmailMessage = (overrides?: Partial<GoogleMail.Message>): GoogleMail.Message => ({
@@ -184,6 +185,41 @@ describe('mapMessage', () => {
       );
       expect(textBlocks.some((block) => block.mimeType === 'text/markdown')).toBe(false);
       expect(textBlocks.some((block) => block.mimeType === 'text/plain')).toBe(true);
+    }, Effect.provide(InboxResolver.Mock())),
+  );
+
+  it.effect(
+    'flags a no-reply sender and a List-Unsubscribe header so the message is not replyable',
+    Effect.fnUntraced(function* ({ expect }) {
+      const template = makeGmailMessage();
+      const result = yield* mapMessage({
+        ...template,
+        payload: {
+          ...template.payload,
+          headers: [
+            { name: 'From', value: 'Acme Billing <no-reply@acme.com>' },
+            { name: 'Subject', value: 'Your invoice' },
+            { name: 'List-Unsubscribe', value: '<https://acme.com/unsub?id=1>, <mailto:unsub@acme.com>' },
+          ],
+        },
+      });
+      expect(result).toBeDefined();
+      const properties = result!.message.properties!;
+      expect(properties.noReply).toBe(true);
+      expect(properties.listUnsubscribe).toBe('<https://acme.com/unsub?id=1>, <mailto:unsub@acme.com>');
+      expect(Mailbox.isReplyable(result!.message)).toBe(false);
+    }, Effect.provide(InboxResolver.Mock())),
+  );
+
+  it.effect(
+    'leaves a normal person-to-person message replyable (no bulk signals)',
+    Effect.fnUntraced(function* ({ expect }) {
+      const result = yield* mapMessage(makeGmailMessage());
+      expect(result).toBeDefined();
+      const properties = result!.message.properties!;
+      expect(properties.noReply).toBeUndefined();
+      expect(properties.listUnsubscribe).toBeUndefined();
+      expect(Mailbox.isReplyable(result!.message)).toBe(true);
     }, Effect.provide(InboxResolver.Mock())),
   );
 });

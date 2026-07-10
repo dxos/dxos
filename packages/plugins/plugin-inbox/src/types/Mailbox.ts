@@ -212,3 +212,25 @@ export type MessageLike = Message.Message | Obj.Snapshot<Message.Message>;
 /** Returns the tag uris currently applied to a single message. */
 export const getTagsForMessage = (mailbox: Mailbox, message: MessageLike): string[] =>
   Tagging.get(message, { index: mailbox.tags.target });
+
+// Local-part patterns for senders that don't accept replies (transactional / bulk mail).
+const NO_REPLY_RE = /(^|[._+-])(no-?reply|do-?not-?reply|donotreply|noreply|mailer-daemon)([._+-]|$)/i;
+
+/** Whether an email address is a no-reply / do-not-reply / mailer-daemon sender. */
+export const isNoReplyAddress = (email: string | undefined): boolean =>
+  !!email && NO_REPLY_RE.test(email.split('@')[0] ?? '');
+
+/**
+ * Whether a message is worth drafting a reply to. Bulk/automated mail — a no-reply sender or a
+ * message carrying an unsubscribe affordance — is not. Reads the signals the Gmail sync mapper
+ * records on `properties` (`noReply`, `listUnsubscribe`), falling back to the sender address for
+ * messages mapped before those signals existed (e.g. an older fixture).
+ */
+export const isReplyable = (message: MessageLike): boolean => {
+  const properties = message.properties ?? {};
+  const hasUnsubscribe = typeof properties.listUnsubscribe === 'string' && properties.listUnsubscribe.length > 0;
+  if (properties.noReply === true || hasUnsubscribe) {
+    return false;
+  }
+  return !isNoReplyAddress(message.sender?.email);
+};

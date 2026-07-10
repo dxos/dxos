@@ -12,6 +12,7 @@ import { ContentBlock, Message, Person } from '@dxos/types';
 
 import { type GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
+import { Mailbox } from '../../../types';
 import { parseFromHeader } from '../../util';
 
 /**
@@ -153,6 +154,11 @@ export const mapToMessage = (decoded: DecodedMessage, contact: Person.Person | u
   // TODO(wittjosiah): This comparison should be done via foreignId probably.
   const sender = { ...from, ...(contact ? { contact: Ref.make(contact) } : {}) };
 
+  // Reply-worthiness signals: a no-reply sender and/or a List-Unsubscribe affordance (RFC 2369) mark
+  // the message as bulk/automated so draft creation can skip it (see `Mailbox.isReplyable`).
+  const noReply = Mailbox.isNoReplyAddress(from?.email);
+  const listUnsubscribe = raw.payload.headers.find((header) => header.name.toLowerCase() === 'list-unsubscribe')?.value;
+
   // Store the raw HTML and plaintext bodies as separately-typed blocks; the markdown view derives
   // from the HTML in-component.
   const blocks: ContentBlock.Text[] = [];
@@ -186,6 +192,8 @@ export const mapToMessage = (decoded: DecodedMessage, contact: Person.Person | u
       references: raw.payload.headers.find(({ name }) => name === 'References')?.value,
       to: raw.payload.headers.find(({ name }) => name === 'To')?.value,
       cc: raw.payload.headers.find(({ name }) => name === 'Cc')?.value,
+      ...(noReply ? { noReply: true } : {}),
+      ...(listUnsubscribe ? { listUnsubscribe } : {}),
     },
 
     blocks,
