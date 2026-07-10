@@ -8,7 +8,7 @@ export * from './leveldb-storage-adapter';
 export * from './sqlite-storage-adapter';
 export * from './sqlite-heads-store';
 export * from './mesh-echo-replicator';
-export type * from './echo-replicator';
+export * from './echo-replicator';
 export { diffCollectionState } from './collection-synchronizer';
 export * from './space-collection';
 export * from './echo-data-monitor';
