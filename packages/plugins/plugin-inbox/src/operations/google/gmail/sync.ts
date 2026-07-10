@@ -33,7 +33,7 @@ import {
   type GoogleMailApiError,
   type GoogleMailApiService,
 } from '../../../services';
-import { EmailStage, type SyncDirection, reconcileDrafts, resolveSyncWindow } from '../../../sync';
+import { EmailStage, type SyncDirection, resolveSyncWindow } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
 import { readBindingOptions } from '../../../util';
 import { parseFromHeader } from '../../util';
@@ -143,6 +143,9 @@ export const runGmailSync = ({
     const feed = yield* Database.load(mailbox.feed);
     // Resolve the child tag index so provider-label tags can be applied synchronously during commit.
     const tagIndex = yield* Database.load(mailbox.tags);
+    // Pool already-sent drafts once for this run; `EmailStage.reconcileDrafts` matches each incoming
+    // message against it so the canonical copy's arrival removes its now-redundant draft in the commit.
+    const draftPool = yield* EmailStage.queryDraftPool(mailbox);
     const labelMap = yield* syncLabels(mailbox, userId).pipe(
       Effect.catchAll((error) => {
         log.catch(error);
@@ -201,6 +204,7 @@ export const runGmailSync = ({
       EmailStage.processAttachments(),
       EmailStage.onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
+      EmailStage.reconcileDrafts(draftPool),
       EmailStage.toCommitUnit(),
       Stream.grouped(STREAMING_CONFIG.pageSize),
       Pipeline.run({ sink: SyncBinding.commit }),
@@ -215,11 +219,6 @@ export const runGmailSync = ({
         }),
       ),
     );
-
-    // Deferred cleanup: drop any locally-sent draft whose canonical copy just synced into the feed
-    // (see `reconcileDrafts`). Not required for correctness — the thread connector already suppresses
-    // a matched sent draft from the rendered conversation.
-    yield* reconcileDrafts(mailbox, feed);
 
     // Flush indexes once, at the end of the run, so cross-run dedup / contact resolution observe this
     // run's writes (per-page commits no longer flush — see `SyncBinding.commit`).

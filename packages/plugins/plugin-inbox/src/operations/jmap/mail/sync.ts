@@ -25,7 +25,7 @@ import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { type JmapApiError } from '../../../errors';
 import { JmapCredentials, JmapMailApi } from '../../../services';
-import { EmailStage, type SyncDirection, type SyncWindow, reconcileDrafts, resolveSyncWindow } from '../../../sync';
+import { EmailStage, type SyncDirection, type SyncWindow, resolveSyncWindow } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
 import { readBindingOptions } from '../../../util';
 import { type AttachmentMetadata, type DecodedEmail, decodeBody, mapToMessage } from './mapper';
@@ -88,6 +88,9 @@ export const runJmapSync = ({
     const { db } = yield* Database.Service;
     const feed = yield* Database.load(mailbox.feed);
     const tagIndex = yield* Database.load(mailbox.tags);
+    // Pool already-sent drafts once for this run; `EmailStage.reconcileDrafts` matches each incoming
+    // message against it so the canonical copy's arrival removes its now-redundant draft in the commit.
+    const draftPool = yield* EmailStage.queryDraftPool(mailbox);
 
     // TODO(wittjosiah): Migrate this folder→Tag sync onto a pipeline too (source: folders; sink:
     //   find-or-create Tag), rather than the imperative loop below.
@@ -155,6 +158,7 @@ export const runJmapSync = ({
       EmailStage.processAttachments(),
       EmailStage.onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
+      EmailStage.reconcileDrafts(draftPool),
       EmailStage.toCommitUnit(),
       Stream.grouped(COMMIT_PAGE_SIZE),
       Pipeline.run({ sink: SyncBinding.commit }),
@@ -162,11 +166,6 @@ export const runJmapSync = ({
         SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: JMAP_MESSAGE_SOURCE, cursorKey, stats }),
       ),
     );
-
-    // Deferred cleanup: drop any locally-sent draft whose canonical copy just synced into the feed
-    // (see `reconcileDrafts`). Not required for correctness — the thread connector already suppresses
-    // a matched sent draft from the rendered conversation.
-    yield* reconcileDrafts(mailbox, feed);
 
     // Flush indexes once at the end of the run (per-page commits no longer flush — see
     // `SyncBinding.commit`) so cross-run dedup / contact resolution observe this run's writes.
