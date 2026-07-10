@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -57,19 +57,11 @@ export const MessageArticle = ({
 
   // Normalize the singular-or-plural subject to a conversation; the newest message (last) anchors the
   // toolbar and header actions.
-  const messages = useMemo<MessageType.Message[]>(() => (Array.isArray(subject) ? subject : [subject]), [subject]);
+  const messages: MessageType.Message[] = Array.isArray(subject) ? subject : [subject];
   const message = messages[messages.length - 1];
 
   const db = Obj.getDatabase(message);
   const sender = useActorContact(db, message.sender);
-
-  // Opening a conversation marks its whole thread viewed on mount, clearing the mailbox's unread
-  // (bold) state for every message shown here (see {@link Mailbox.markThreadViewed}).
-  useEffect(() => {
-    if (mailbox) {
-      Mailbox.markThreadViewed(mailbox, messages);
-    }
-  }, [mailbox, messages]);
 
   // View mode is owned here and shared (controlled) across the toolbar and every message body, which
   // render in separate `Message.Root`s — so the toolbar's switch applies to all bodies.

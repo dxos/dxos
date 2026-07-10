@@ -8,7 +8,7 @@ import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
-import { StateMap, TagIndex } from '@dxos/schema';
+import { TagIndex } from '@dxos/schema';
 import { Event, Message } from '@dxos/types';
 
 import {
@@ -43,7 +43,6 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       Message.Message,
       ExtractedFrom.ExtractedFrom,
       TagIndex.TagIndex,
-      StateMap.StateMap,
     ],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),

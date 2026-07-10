@@ -9,21 +9,16 @@ import React, { useEffect } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useCapability } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppPlugin, LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { useCapability } from '@dxos/app-framework/ui';
+import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { Feed, Filter, Order, Query } from '@dxos/echo';
-import { useResolveRef } from '@dxos/echo-react';
+import { Feed, Filter } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { StorybookCapabilities, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
-import { useAttentionAttributes, useSelection } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
@@ -33,10 +28,7 @@ import { InboxCapabilities, Mailbox } from '#types';
 import { InboxPlugin } from '../../InboxPlugin';
 import { MailboxArticle } from './MailboxArticle';
 
-// `showItem` (in the 'storybook' layout mode) dispatches `LayoutOperation.UpdateCompanion` after
-// `Select`; `Select` is handled by AttentionPlugin (writes the selection this story reads), but no
-// installed plugin handles `UpdateCompanion` (that is DeckPlugin's), so stub it as a no-op. Mirrors
-// the `stories-inbox` MailboxSync playground.
+// No-op handlers for layout operations invoked from article components; avoids pulling in DeckPlugin.
 const MockDeckOperationsPlugin = Plugin.define(
   Plugin.makeMeta({
     key: DXN.make('org.dxos.plugin.inbox.story.mockDeckOperations'),
@@ -48,7 +40,10 @@ const MockDeckOperationsPlugin = Plugin.define(
       Effect.succeed(
         Capability.contributes(
           Capabilities.OperationHandler,
-          OperationHandlerSet.make(Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void)),
+          OperationHandlerSet.make(
+            Operation.withHandler(LayoutOperation.Select, () => Effect.void),
+            Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
+          ),
         ),
       ),
   }),
@@ -84,79 +79,6 @@ const DefaultStory = ({ conversations }: StoryArgs) => {
   return <MailboxArticle role='article' subject={mailbox} attendableId='story' />;
 };
 
-// Shared attention context for the mailbox pane and its message companion.
-const MAILBOX_CONTEXT_ID = 'story';
-
-/**
- * The mailbox article beside its message-article companion — the master/detail layout the deck renders
- * in-app. Selecting a message in the mailbox pane opens it in the companion: `MailboxArticle` dispatches
- * `LayoutOperation.Select` (handled by AttentionPlugin) which updates the shared selection view-state
- * this story reads back via {@link useSelection}. Mirrors the `stories-inbox` MailboxSync playground.
- */
-const CompanionStory = () => {
-  const [space] = useSpaces();
-  const db = space?.db;
-  const [mailbox] = useQuery(db, Filter.type(Mailbox.Mailbox));
-  const feed = useResolveRef(mailbox?.feed);
-
-  // Surfaces resolve the active space from the layout workspace path; StorybookPlugin defaults it to
-  // 'default', so point it at the seeded space (mirrors the MailboxSync playground).
-  const layoutState = useCapability(StorybookCapabilities.LayoutState);
-  const setLayout = useAtomSet(layoutState);
-  useEffect(() => {
-    if (space) {
-      setLayout((state) => ({ ...state, workspace: Paths.getSpacePath(space.id) }));
-    }
-  }, [space, setLayout]);
-  const messages = useQuery(
-    db,
-    feed
-      ? Query.select(Filter.type(Message.Message)).from(feed).orderBy(Order.property('created', 'desc'))
-      : Query.select(Filter.nothing()),
-  );
-
-  // Follow the mailbox pane's selection: `MailboxArticle` writes it under MAILBOX_CONTEXT_ID via
-  // `LayoutOperation.Select`. The companion opens the selected message's whole conversation, mirroring
-  // the app's `mailboxMessage` connector: messages sharing the `threadId` in chronological (oldest-first)
-  // order; a message without a `threadId` is a one-message thread.
-  const selectedId = useSelection(MAILBOX_CONTEXT_ID, 'single');
-  const selected = messages.find((candidate) => candidate.id === selectedId);
-  const thread = selected
-    ? selected.threadId
-      ? messages
-          .filter((candidate) => candidate.threadId === selected.threadId)
-          .sort((a, b) => a.created.localeCompare(b.created))
-      : [selected]
-    : [];
-
-  const attentionAttrs = useAttentionAttributes(MAILBOX_CONTEXT_ID);
-
-  if (!db || !mailbox) {
-    return <Loading data={{ db: !!db, mailbox: !!mailbox }} />;
-  }
-
-  return (
-    <Panel.Root>
-      <Panel.Content className='dx-container grid grid-cols-[1fr_1fr]' {...attentionAttrs}>
-        <Surface.Surface
-          type={AppSurface.Article}
-          data={{ subject: mailbox, attendableId: MAILBOX_CONTEXT_ID }}
-          limit={1}
-        />
-        {thread.length > 0 ? (
-          <Surface.Surface
-            type={AppSurface.Article}
-            data={{ subject: thread, companionTo: mailbox, attendableId: MAILBOX_CONTEXT_ID }}
-            limit={1}
-          />
-        ) : (
-          <div className='grid place-items-center text-description'>Select a message</div>
-        )}
-      </Panel.Content>
-    </Panel.Root>
-  );
-};
-
 const meta = {
   title: 'plugins/plugin-inbox/containers/MailboxArticle',
   render: DefaultStory,
@@ -176,7 +98,6 @@ const meta = {
             }),
         }),
 
-        SpacePlugin({}),
         StorybookPlugin({}),
         InboxPlugin(),
         PreviewPlugin(),
@@ -216,14 +137,4 @@ export const Empty: Story = {
   args: {
     count: 0,
   },
-};
-
-// Master/detail: the mailbox article beside the message-article companion (a message is pre-selected).
-export const WithCompanion: Story = {
-  render: () => <CompanionStory />,
-  args: {
-    count: 100,
-    threads: 20,
-  },
-  decorators: [withLayout({ layout: 'fullscreen' })],
 };
