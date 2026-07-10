@@ -3,7 +3,7 @@
 //
 
 import { type ViewUpdate } from '@codemirror/view';
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { Paths } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
