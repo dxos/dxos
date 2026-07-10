@@ -50,6 +50,7 @@ import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { type Client, Config } from '@dxos/react-client';
 import { AccessToken } from '@dxos/types';
 
+import { moduleSurfaces } from './modules';
 import { initClientFromSpaceSnapshot } from './snapshot';
 
 // TODO(burdon): Factor out.
@@ -233,7 +234,7 @@ const PluginManagerHost = ({
  * Create storybook decorators.
  * Supports lazy plugin loading via the `lazyPlugins` option.
  */
-export const getDecorators = ({ lazyPlugins, ...props }: DecoratorsProps) => {
+export const createDecorators = ({ lazyPlugins, ...props }: DecoratorsProps) => {
   if (lazyPlugins) {
     return [
       ((Story: FC, context: { id: string }) => {
@@ -311,6 +312,11 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     name: 'Testing',
   }),
 ).pipe(
+  Plugin.addModule({
+    id: 'com.example.plugin.testing.module.surfaces',
+    activatesOn: ActivationEvents.SetupReactSurface,
+    activate: () => Effect.succeed(Capability.contributes(Capabilities.ReactSurface, moduleSurfaces)),
+  }),
   Plugin.addModule({
     id: 'com.example.plugin.testing.module.testing',
     activatesOn: AppActivationEvents.SetupArtifactDefinition,

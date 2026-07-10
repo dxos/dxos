@@ -1145,7 +1145,7 @@
         },
         {
           "type": "json",
-          "path": "packages/stories/stories-ui/package.json",
+          "path": "packages/stories/story-modules/package.json",
           "jsonpath": "$.version"
         },
         {

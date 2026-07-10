@@ -66,7 +66,7 @@ const DefaultStory = ({ imageCount, enableDelete }: StoryArgs) => {
     const refs = SEEDS.slice(0, imageCount).map(({ seed, w, h }) => {
       const url = `https://picsum.photos/seed/${seed}/${w}/${h}`;
       const blob = space.db.add(Blob.make({ type: 'image/jpeg', size: 0, data: Blob.externalData(url) }));
-      const file = space.db.add(File.make({ name: `${seed}.jpg`, type: 'image/jpeg', size: 0, data: Ref.make(blob) }));
+      const file = space.db.add(File.make({ name: `${seed}.jpg`, data: Ref.make(blob) }));
       return Ref.make(file);
     });
     setImages(refs);

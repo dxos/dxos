@@ -2,16 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import { beforeEach, describe, expect, test } from 'vitest';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as Runtime from 'effect/Runtime';
+import * as Stream from 'effect/Stream';
+import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { type QueryStatusResponse, type SystemService, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { EffectEx } from '@dxos/effect';
+import { subscribeStream } from '@dxos/protocols';
+import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 
 import { SystemServiceImpl } from './system-service';
 
 describe('SystemService', () => {
-  let systemService: SystemService;
+  let systemService: SystemServiceImpl;
   let config: Config;
   let statusUpdate: Event<void>;
   let currentStatus: SystemStatus;
@@ -45,35 +51,47 @@ describe('SystemService', () => {
   });
 
   test('getConfig returns config', async () => {
-    expect(await systemService.getConfig()).to.deep.equal(config.values);
+    expect(await EffectEx.runPromise(systemService['SystemService.getConfig']())).to.deep.equal(config.values);
   });
 
   test('updateStatus triggers callback', async () => {
-    await systemService.updateStatus({ status: SystemStatus.INACTIVE });
+    await EffectEx.runPromise(systemService['SystemService.updateStatus']({ status: SystemStatus.INACTIVE }));
     const result = await updateStatus.wait();
     expect(result).to.equal(SystemStatus.INACTIVE);
   });
 
   test('queryStatus returns initial status', async () => {
-    const status = new Trigger<QueryStatusResponse>();
-    systemService.queryStatus({}).subscribe((response) => {
-      status.wake(response);
-    });
-    expect(await status.wait()).to.deep.equal({ status: SystemStatus.ACTIVE });
+    const response = await EffectEx.runPromise(
+      systemService['SystemService.queryStatus']({}).pipe(Stream.runHead, Effect.map(Option.getOrThrow)),
+    );
+    expect(response).to.deep.equal({ status: SystemStatus.ACTIVE });
   });
 
   test('queryStatus streams status changes', async () => {
     const statuses: SystemStatus[] = [];
-    systemService.queryStatus({}).subscribe(({ status }) => {
-      statuses.push(status);
+    const first = new Trigger();
+    const done = new Trigger();
+    const cleanup = subscribeStream(Runtime.defaultRuntime, systemService['SystemService.queryStatus']({}), {
+      onData: ({ status }) => {
+        statuses.push(status);
+        first.wake();
+        if (statuses.length === 3) {
+          done.wake();
+        }
+      },
     });
+    onTestFinished(cleanup);
+
+    // Wait for the initial emission so the status subscription is active before mutating.
+    await first.wait();
     changeStatus(SystemStatus.INACTIVE);
     changeStatus(SystemStatus.ACTIVE);
+    await done.wait();
     expect(statuses).to.deep.equal([SystemStatus.ACTIVE, SystemStatus.INACTIVE, SystemStatus.ACTIVE]);
   });
 
   test('reset triggers callback', async () => {
-    await systemService.reset();
+    await EffectEx.runPromise(systemService['SystemService.reset']());
     const result = await reset.wait();
     expect(result).to.be.true;
   });

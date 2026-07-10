@@ -46,6 +46,11 @@ export interface JmapMailApiService {
     ids: readonly string[],
     properties?: readonly string[],
   ) => Effect.Effect<JmapMail.EmailGetResult, JmapApiError>;
+  readonly downloadBlob: (
+    target: JmapMail.Target,
+    blobId: string,
+    options?: { name?: string; type?: string },
+  ) => Effect.Effect<Uint8Array, JmapApiError>;
   readonly identityGet: (target: JmapMail.Target) => Effect.Effect<JmapMail.IdentityGetResult, JmapApiError>;
   readonly emailSetUpdate: (
     target: JmapMail.Target,
@@ -82,6 +87,8 @@ export interface JmapDataset {
   readonly folders: readonly JmapMail.Mailbox[];
   /** Full emails, ordered ascending by `receivedAt` (the mock sorts/paginates a window over them). */
   readonly emails: readonly JmapMail.Email[];
+  /** Attachment bytes keyed by `blobId`, served by `downloadBlob` for emails that carry one. */
+  readonly blobs?: Readonly<Record<string, Uint8Array>>;
 }
 
 /** Narrows an `unknown` filter value to a plain object so the mock can walk its conditions. */
@@ -159,6 +166,8 @@ export class JmapMailApi extends Context.Tag('@dxos/plugin-inbox/JmapMailApi')<J
         mailboxGet: (target) => Effect.provide(JmapMail.mailboxGet(target), context),
         emailQuery: (target, options) => Effect.provide(JmapMail.emailQuery(target, options), context),
         emailGet: (target, ids, properties) => Effect.provide(JmapMail.emailGet(target, ids, properties), context),
+        downloadBlob: (target, blobId, options) =>
+          Effect.provide(JmapMail.downloadBlob(target, blobId, options), context),
         identityGet: (target) => Effect.provide(JmapMail.identityGet(target), context),
         emailSetUpdate: (target, emailId, patch) =>
           Effect.provide(JmapMail.emailSetUpdate(target, emailId, patch), context),
@@ -193,6 +202,12 @@ export class JmapMailApi extends Context.Tag('@dxos/plugin-inbox/JmapMailApi')<J
           }),
         emailGet: (_target, ids) =>
           Effect.sync(() => ({ list: ids.map((id) => byId.get(id)).filter(Predicate.isNotNullable) })),
+        downloadBlob: (_target, blobId) => {
+          const bytes = dataset.blobs?.[blobId];
+          return bytes
+            ? Effect.succeed(bytes)
+            : Effect.die(new Error(`mock JmapMailApi: blob not in dataset: ${blobId}`));
+        },
         identityGet: () => Effect.die(new Error('mock JmapMailApi: identityGet not supported')),
         emailSetUpdate: () => Effect.die(new Error('mock JmapMailApi: emailSetUpdate not supported')),
         submitEmail: () => Effect.die(new Error('mock JmapMailApi: submitEmail not supported')),
