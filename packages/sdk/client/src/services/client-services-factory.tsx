@@ -6,7 +6,7 @@ import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
-import { type DedicatedWorkerClientServicesOptions, DedicatedWorkerClientServices } from './dedicated';
+import { DedicatedWorkerClientServices, type DedicatedWorkerClientServicesOptions } from './dedicated';
 import { SharedWorkerCoordinator, SingleClientCoordinator } from './dedicated';
 import { type LocalClientServicesParams, fromHost } from './local-client-services';
 import { fromSocket } from './socket';
