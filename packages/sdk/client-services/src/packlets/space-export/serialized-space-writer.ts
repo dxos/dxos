@@ -169,6 +169,11 @@ export const objectStructureToObjJson = (objectId: string, structure: EntityStru
       // a type loaded from an archive would fall back to its object id.
       ...(structure.meta.key !== undefined ? { key: structure.meta.key } : {}),
       ...(structure.meta.version !== undefined ? { version: structure.meta.version } : {}),
+      // Preserve annotations (e.g. `AppAnnotation.RootCollectionAnnotation` on a space's
+      // properties object) so archives round-trip app-level metadata, not just schema data.
+      ...(structure.meta.annotations && Object.keys(structure.meta.annotations).length > 0
+        ? { annotations: structure.meta.annotations }
+        : {}),
     };
   }
   if (structure.system?.deleted) {

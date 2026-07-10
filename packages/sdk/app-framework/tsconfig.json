@@ -38,6 +38,9 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/storybook-addon-logger"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
