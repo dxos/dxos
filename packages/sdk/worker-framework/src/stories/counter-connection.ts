@@ -1,0 +1,102 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
+import * as Scope from 'effect/Scope';
+import * as Stream from 'effect/Stream';
+
+import { Resource } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
+import { WorkerConnection, makeRpcClient } from '@dxos/worker-framework';
+import { SharedWorkerCoordinator } from '@dxos/worker-framework/coordinator';
+
+import { COUNTER_LEADER_LOCK_KEY } from './counter-constants';
+import { CounterRpcs } from './counter-service';
+
+export type CounterRpc = {
+  increment: () => Effect.Effect<number>;
+  subscribe: (input: Record<string, never>) => Stream.Stream<number>;
+};
+
+/**
+ * Client-side connection to the shared counter worker via {@link WorkerConnection}.
+ */
+export class CounterConnection extends Resource {
+  readonly #connection: WorkerConnection;
+  #scope: Scope.CloseableScope | undefined;
+  #rpc: CounterRpc | undefined;
+  readonly #subscribeCleanups = new Set<() => Promise<void>>();
+
+  constructor() {
+    super();
+    this.#connection = new WorkerConnection({
+      createWorker: () => new Worker(new URL('./counter-worker.ts', import.meta.url), { type: 'module' }),
+      createCoordinator: () =>
+        new SharedWorkerCoordinator({
+          createWorker: () =>
+            new SharedWorker(new URL('./coordinator-worker.ts', import.meta.url), {
+              type: 'module',
+              name: 'worker-framework-counter-coordinator',
+            }),
+        }),
+      leaderLockKey: COUNTER_LEADER_LOCK_KEY,
+      onConnect: async ({ appPort }) => {
+        invariant(this.#scope, 'counter rpc scope not initialized');
+        // makeRpcClient returns Effect<unknown>; CounterRpc is the demo group's client shape.
+        this.#rpc = (await EffectEx.runPromise(
+          makeRpcClient(appPort, CounterRpcs).pipe(Scope.extend(this.#scope)),
+        )) as CounterRpc;
+        return {
+          close: async () => {
+            this.#rpc = undefined;
+          },
+        };
+      },
+    });
+  }
+
+  get rpc(): CounterRpc {
+    invariant(this.#rpc, 'counter rpc not connected');
+    return this.#rpc;
+  }
+
+  override async _open(): Promise<void> {
+    this.#scope = Effect.runSync(Scope.make());
+    await this.#connection.open();
+  }
+
+  override async _close(): Promise<void> {
+    await Promise.all([...this.#subscribeCleanups].map((cleanup) => cleanup()));
+    this.#subscribeCleanups.clear();
+    await this.#connection.close();
+    if (this.#scope) {
+      await EffectEx.runPromise(Scope.close(this.#scope, Exit.void));
+      this.#scope = undefined;
+    }
+    this.#rpc = undefined;
+  }
+
+  increment = async (): Promise<number> => EffectEx.runPromise(this.rpc.increment());
+
+  /**
+   * Subscribes to counter updates. Returns cleanup that interrupts only this subscription.
+   */
+  subscribe = (onValue: (value: number) => void): (() => Promise<void>) => {
+    invariant(this.#rpc, 'counter rpc not connected');
+    const fiber = Effect.runFork(
+      this.rpc.subscribe({}).pipe(Stream.runForEach((value) => Effect.sync(() => onValue(value)))),
+    );
+    const cleanup = async () => {
+      await EffectEx.runPromise(Fiber.interrupt(fiber));
+    };
+    this.#subscribeCleanups.add(cleanup);
+    return async () => {
+      await cleanup();
+      this.#subscribeCleanups.delete(cleanup);
+    };
+  };
+}

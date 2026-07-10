@@ -51,3 +51,10 @@ export const createCoordinatorOnConnect = (): ((ev: MessageEvent<MessageEventIni
     port.start();
   };
 };
+
+/**
+ * Installs the coordinator handler on `globalThis.onconnect` for a SharedWorker entrypoint.
+ */
+export const runCoordinator = (): void => {
+  globalThis.onconnect = createCoordinatorOnConnect();
+};

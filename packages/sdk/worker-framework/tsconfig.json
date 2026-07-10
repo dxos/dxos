@@ -25,7 +25,16 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/storybook-utils"
+    },
+    {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/ui-theme"
     }
   ]
 }
