@@ -8,7 +8,6 @@ export { asyncTaskTaggingLayer } from './internal/async-task-tagging';
 export { contextFromScope } from './internal/context';
 export {
   causeToError,
-  promiseWithCauseCapture,
   runAndForwardErrors,
   runInRuntime,
   runPromise,

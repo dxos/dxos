@@ -9,7 +9,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type URI } from '@dxos/keys';
 
@@ -296,7 +295,7 @@ export const resolve: {
   Effect.gen(function* () {
     const { db } = yield* Service;
     const dxn = typeof ref === 'string' ? ref : ref.uri;
-    const object = yield* EffectEx.promiseWithCauseCapture(() =>
+    const object = yield* Effect.promise(() =>
       db.graph
         .createRefResolver({
           context: {
@@ -327,7 +326,7 @@ export const resolve: {
  */
 export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError, never> = Effect.fn('Database.load')(
   function* (ref) {
-    const object = yield* EffectEx.promiseWithCauseCapture(() => ref.tryLoad());
+    const object = yield* Effect.promise(() => ref.tryLoad());
     if (!object) {
       return yield* Effect.fail(new Err.EntityNotFoundError(ref.uri));
     }
@@ -347,7 +346,7 @@ export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Eff
  * @see {@link Database.addType}
  */
 export const addType = <T extends Type.AnyEntity>(type: T): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.addType(type)))).pipe(
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.addType(type)))).pipe(
     Effect.withSpan('Database.addType'),
   );
 
@@ -364,7 +363,7 @@ export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, ne
  */
 export const appendToFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
   Service.pipe(
-    Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.appendToFeed(feed, entities))),
+    Effect.flatMap(({ db }) => Effect.promise(() => db.appendToFeed(feed, entities))),
   ).pipe(Effect.withSpan('Database.appendToFeed'));
 
 /**
@@ -373,7 +372,7 @@ export const appendToFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effec
  */
 export const deleteFromFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
   Service.pipe(
-    Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.deleteFromFeed(feed, entities))),
+    Effect.flatMap(({ db }) => Effect.promise(() => db.deleteFromFeed(feed, entities))),
   ).pipe(Effect.withSpan('Database.deleteFromFeed'));
 
 /**
@@ -381,7 +380,7 @@ export const deleteFromFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Eff
  * @see {@link Database.flush}
  */
 export const flush = (opts?: FlushOptions) =>
-  Service.pipe(Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.flush(opts)))).pipe(
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.flush(opts)))).pipe(
     Effect.withSpan('Database.flush'),
   );
 
