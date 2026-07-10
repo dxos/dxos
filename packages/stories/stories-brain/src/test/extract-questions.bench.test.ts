@@ -27,16 +27,19 @@ describe.skipIf(!fixtureExists())('extract questions/requests per message (multi
         perItem: extractQuestions,
         renderResponse: (result) =>
           `_${result.subject || result.messageId}_\n\n` +
-          (result.questions.length
-            ? result.questions.map((question, index) => `${index + 1}. ${question}`).join('\n')
-            : '_(no questions)_'),
+          (result.items.length
+            ? result.items.map((item, index) => `${index + 1}. [${item.kind}] ${item.text}`).join('\n')
+            : '_(nothing)_'),
         evaluate: (_variant, results) => {
-          const total = results.reduce((sum, result) => sum + result.questions.length, 0);
+          const items = results.flatMap((result) => result.items);
+          const countOf = (kind: string) => items.filter((item) => item.kind === kind).length;
           return {
             messages: results.length,
-            messagesWithQuestions: results.filter((result) => result.questions.length > 0).length,
-            totalQuestions: total,
-            questionsPerMessage: round(total / Math.max(1, results.length)),
+            messagesWithItems: results.filter((result) => result.items.length > 0).length,
+            questions: countOf('question'),
+            requests: countOf('request'),
+            notifications: countOf('notification'),
+            itemsPerMessage: round(items.length / Math.max(1, results.length)),
           };
         },
       });
