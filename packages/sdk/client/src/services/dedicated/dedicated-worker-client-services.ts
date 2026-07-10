@@ -14,12 +14,8 @@ import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/servi
 import { type ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import type { MaybePromise } from '@dxos/util';
-import {
-  type LeaderTimeoutOptions,
-  WorkerConnection,
-  type WorkerCoordinator,
-  type WorkerOrPort,
-} from '@dxos/worker-framework';
+import { type WorkerCoordinator, type WorkerOrPort } from '@dxos/worker-framework';
+import { type LeaderTimeoutOptions, WorkerConnection } from '@dxos/worker-framework/client';
 
 import { ClientServicesProxy } from '../service-proxy';
 import { SharedWorkerConnection } from '../shared-worker-connection';

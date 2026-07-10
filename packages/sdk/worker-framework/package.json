@@ -19,6 +19,12 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./client": {
+      "source": "./src/client/index.ts",
+      "types": "./dist/types/src/client/index.d.ts",
+      "browser": "./dist/lib/browser/client/index.mjs",
+      "node": "./dist/lib/node-esm/client/index.mjs"
+    },
     "./worker": {
       "source": "./src/worker/index.ts",
       "types": "./dist/types/src/worker/index.d.ts",
