@@ -91,6 +91,21 @@ Short paragraph of context — what this phase delivers and why.
 5. **Commit it** — `TASKS.md` is committed alongside the work it tracks. Do not
    leave it as an uncommitted local edit (see "commit nothing silently").
 
+## Live viewer (optional)
+
+`viewer/serve.mjs` serves a self-contained live view of any `TASKS.md`, for the
+Claude Code preview (Browser) pane:
+
+```bash
+node .agents/skills/task-tracking/viewer/serve.mjs <path/to/TASKS.md> --port 8788
+```
+
+Then open `http://127.0.0.1:8788/` in the preview pane. The page polls the file
+every ~1.5s and re-renders on change — progress meter, phases, checkboxes,
+sub-steps. It is read-only and loopback-bound. A private claude.ai artifact does
+**not** load in the preview pane (that browser isn't signed in), which is why the
+viewer serves over local HTTP instead.
+
 ## Common Mistakes
 
 | Mistake | Fix |
