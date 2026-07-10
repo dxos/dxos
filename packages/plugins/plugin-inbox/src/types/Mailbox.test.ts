@@ -95,7 +95,9 @@ describe('Mailbox message viewed state', () => {
     expect(thread.map((message) => state.get(message.id).viewedAt)).toEqual(stamps);
   });
 
-  test('newMessageCountAtom counts unread feed messages and reacts to markThreadViewed', async ({ expect }) => {
+  test('newMessageCountAtom counts unread conversations (thread-level) and reacts to markThreadViewed', async ({
+    expect,
+  }) => {
     const { db } = await builder.createDatabase({
       types: [Feed.Feed, StateMap.StateMap, Mailbox.Mailbox, Message.Message, TagIndex.TagIndex],
     });
@@ -103,8 +105,12 @@ describe('Mailbox message viewed state', () => {
     await db.flush();
     const feed = mailbox.feed.target!;
 
-    const { messages } = new Builder().createMessages(3).build();
-    await EffectEx.runAndForwardErrors(Feed.append(feed, messages).pipe(Effect.provide(Database.layer(db))));
+    // Two conversations: a 2-message thread and a 1-message thread — 3 messages, 2 threads.
+    const threadA = new Builder().createMessages(2, { threadId: 'thread-a' }).build().messages;
+    const threadB = new Builder().createMessages(1, { threadId: 'thread-b' }).build().messages;
+    await EffectEx.runAndForwardErrors(
+      Feed.append(feed, [...threadA, ...threadB]).pipe(Effect.provide(Database.layer(db))),
+    );
     await db.flush();
 
     const registry = Registry.make();
@@ -123,12 +129,12 @@ describe('Mailbox message viewed state', () => {
         check();
       });
 
-    // All three feed messages start unread.
-    await waitForCount(3);
-
-    // Opening a conversation drops the count reactively.
-    Mailbox.markThreadViewed(mailbox, [messages[0]]);
+    // Two unread conversations (the 2-message thread counts once).
     await waitForCount(2);
+
+    // Opening the 2-message conversation drops the count to one unread conversation.
+    Mailbox.markThreadViewed(mailbox, threadA);
+    await waitForCount(1);
   });
 
   test('the per-message viewed slice reacts to markThreadViewed', async ({ expect }) => {

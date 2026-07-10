@@ -167,9 +167,10 @@ export const markThreadViewed = (
 };
 
 /**
- * Reactive count of new (not-yet-viewed) messages in a mailbox, keyed by the mailbox. Resolves the
- * feed and the per-message state map through their atoms so the count re-derives when messages sync
- * or a conversation is marked viewed. Bounded to the newest {@link NEW_MESSAGE_COUNT_WINDOW} messages.
+ * Reactive count of new (unread) *conversations* in a mailbox, keyed by the mailbox — Gmail-style: a
+ * thread counts once if any of its messages is unviewed (not the number of unread messages). Resolves
+ * the feed and per-message state map through their atoms so the count re-derives when messages sync or
+ * a conversation is marked viewed. Bounded to the newest {@link NEW_MESSAGE_COUNT_WINDOW} messages.
  */
 export const newMessageCountAtom = Atom.family((mailbox: Mailbox) =>
   Atom.make((get) => {
@@ -182,16 +183,20 @@ export const newMessageCountAtom = Atom.family((mailbox: Mailbox) =>
       db.query(Query.select(Filter.type(Message.Message)).from(feed).limit(NEW_MESSAGE_COUNT_WINDOW)).atom,
     );
     const stateMap = get(mailbox.messageState.atom);
-    if (!stateMap) {
-      return messages.length;
-    }
     // Subscribe to viewed-state changes so the count re-derives when a conversation is opened.
-    get(Obj.atom(stateMap));
-    const accessor = StateMap.bind<MessageState>(stateMap);
-    return messages.reduce(
-      (count, message) => (accessor.get(message.id).viewedAt === undefined ? count + 1 : count),
-      0,
-    );
+    if (stateMap) {
+      get(Obj.atom(stateMap));
+    }
+    const accessor = stateMap ? StateMap.bind<MessageState>(stateMap) : undefined;
+    // Count distinct threads with at least one unread message; a message without a `threadId` is its
+    // own conversation.
+    const unreadThreads = new Set<string>();
+    for (const message of messages) {
+      if (!accessor || accessor.get(message.id).viewedAt === undefined) {
+        unreadThreads.add(message.threadId ?? message.id);
+      }
+    }
+    return unreadThreads.size;
   }),
 );
 
