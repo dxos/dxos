@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
+
 import {
   Event,
   PersistentLifecycle,
@@ -61,6 +63,14 @@ export interface EdgeConnection extends Required<Lifecycle> {
    */
   onReconnected(listener: ReconnectListener, opts?: { emitCurrentState?: boolean }): () => void;
 }
+
+/**
+ * Effect service tag for {@link EdgeConnection}.
+ */
+export class EdgeConnectionService extends EffectContext.Tag('@dxos/edge-client/EdgeConnection')<
+  EdgeConnectionService,
+  EdgeConnection
+>() {}
 
 /**
  * Messenger client for EDGE:

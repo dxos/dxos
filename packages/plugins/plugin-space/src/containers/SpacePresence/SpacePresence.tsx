@@ -261,3 +261,5 @@ export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPr
     </Tooltip.Trigger>
   );
 };
+
+SpacePresence.displayName = 'SpacePresence';

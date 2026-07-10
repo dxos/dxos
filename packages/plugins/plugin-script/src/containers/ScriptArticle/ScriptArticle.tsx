@@ -83,3 +83,5 @@ export const ScriptArticle = ({
     </Panel.Root>
   );
 };
+
+ScriptArticle.displayName = 'ScriptArticle';

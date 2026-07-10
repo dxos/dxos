@@ -6,7 +6,7 @@ import { subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { Database, Feed, Filter, Obj, Query, Ref, Scope, Tag } from '@dxos/echo';
+import { Blob, Database, Feed, Filter, Obj, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Message, Person } from '@dxos/types';
@@ -167,5 +167,39 @@ describe('runJmapSync against a mock JMAP API', () => {
     const ids = await feedIds();
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids.length).toBe(mid.emails.length + recent.emails.length + older.emails.length);
+  });
+
+  test('attachments land as Blobs on the feed with resolvable attachment refs', async ({ expect }) => {
+    const end = subDays(new Date(), 3);
+    const base = generateJmapDataset({ count: 1, seed: 5, start: subDays(end, 1), end });
+    const bytes = new Uint8Array([1, 2, 3, 4]);
+    const dataset = {
+      session: { ...base.session, downloadUrl: 'https://jmap.test/download/{accountId}/{blobId}/{name}?type={type}' },
+      folders: base.folders,
+      emails: [{ ...base.emails[0], attachments: [{ blobId: 'blob-1', name: 'photo.png', type: 'image/png' }] }],
+      blobs: { 'blob-1': bytes },
+    };
+    const after = subDays(new Date(), 14).toISOString();
+
+    const { db, mailbox, binding } = await seed();
+    await EffectEx.runPromise(
+      runJmapSync({ binding: Ref.make(binding), after }).pipe(Effect.provide(inboxJmapSyncTestServices(db, dataset))),
+    );
+
+    const feedMessages = await queryFeedMessages(db, mailbox);
+    expect(feedMessages).toHaveLength(1);
+    const [attachment] = feedMessages[0].attachments ?? [];
+    if (!attachment) {
+      throw new Error('expected an attachment');
+    }
+    expect(attachment.name).toBe('photo.png');
+
+    const blobs = await db
+      .query(Query.select(Filter.type(Blob.Blob)).from(Scope.feed(Feed.getFeedUri(mailbox.feed.target!)!)))
+      .run();
+    expect(blobs).toHaveLength(1);
+
+    const loadedBlob = await attachment.ref.load();
+    expect(loadedBlob.id).toEqual(blobs[0].id);
   });
 });

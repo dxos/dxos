@@ -34,6 +34,18 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 - Mailbox testing builder `threads` option is the SIZE OF THE THREAD-ID POOL (default 10) — with conversation grouping that's 10 conversations TOTAL = exactly one page; grouped stories must seed `threads` >> page size or pagination appears broken.
 - `MessageStack` takes `items?: (Message.Message | MessageGroup)[]` (mixed allowed; `isMessageGroup` guard) and dispatches per-entry to MessageTile/ConversationTile via a single `StackTile` — kills the `Tile as any`/`items as any` casts a mode-switched `Tile` prop needed.
 
+## 2026-07-07 — plugin-brain (new plugin) + plugin-inbox (GenerateReply)
+
+- New-plugin scaffold gotchas: `moon run <p>:test` fails with `No projects matched the filter "node"` until a `vitest.config.ts` (createConfig from `vitest.base.config`) exists; `CI=true pnpm install` silently SKIPS adding new workspace deps (frozen lockfile) — use `HUSKY=0 pnpm install --no-frozen-lockfile` and verify `<pkg>/node_modules/@dxos/` links.
+- Cross-plugin service seam: put the Effect `Context.Tag` in a core package (`FactStore` in @dxos/pipeline-rdf); the providing plugin (plugin-brain) contributes a registry capability + space-affinity LayerSpec; consumer plugins declare `services: [Tag]` with NO plugin→plugin dependency.
+- Capability key + named type export: `Capability.make<import('./Module').X>(...)` (inline import type) avoids TS2395 merged-declaration errors when the capability const shares the type's name; export the type itself from `types/` for external consumers.
+- AppGraphBuilder modules: `GraphBuilder.createExtension` returns an Effect — assemble with `const extensions = yield* Effect.all([...])` then `Capability.contributes(AppCapabilities.AppGraphBuilder, extensions)`; contributing the raw array fails `BuilderExtensions` typecheck.
+- `AppSurface` imports from `@dxos/app-toolkit/ui`, NOT `@dxos/app-toolkit`.
+- Generic companion pattern (any-object): graph extension matches `Obj.isObject(node.data)` → `AppNode.makeCompanion({ id: linkedSegment('x'), data: SENTINEL })`; surface filter = `allOf(subject(Article, v => v === SENTINEL), companion(Article))`; component reads `data.companionTo`.
+- `useOperationInvoker().invokePromise` resolves to `{ data?, error? }` — read `result?.data?.field`, not `result?.field`.
+- Stub AiService for handler tests: mirror pipeline-rdf `mockAiService` shape (`Layer.succeed(AiService.AiService, { model: () => Layer.succeed(LanguageModel.LanguageModel, {...} as any) })`) with a prompt-capturing `generateText` to assert grounding; test the handler's core via a NAMED export (precedent: `runFactPipeline` in enrich-mailbox.ts) instead of Operation.invoke when services are hand-provided.
+- Editor content set programmatically (e.g. AI-generated draft body): `Editor.View` only reads `initialValue` — bump a `key` on the editing component after `Obj.update` to remount with the new text.
+
 ## 2026-07-05 — plugin-chess-com (operation handlers)
 
 - Operation handler files: `export default Op.pipe(Operation.withHandler(...), Operation.opaqueHandler)` as the default export — mirror `plugin-trip/src/operations/add-segment.ts`; no separate `const handler` alias.

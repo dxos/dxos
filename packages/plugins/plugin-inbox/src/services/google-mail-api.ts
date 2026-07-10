@@ -51,6 +51,11 @@ export interface GoogleMailApiService {
     pageToken?: string,
   ) => Effect.Effect<GoogleMail.ListMessagesResponse, GoogleMailApiError>;
   readonly getMessage: (userId: string, messageId: string) => Effect.Effect<GoogleMail.Message, GoogleMailApiError>;
+  readonly getAttachment: (
+    userId: string,
+    messageId: string,
+    attachmentId: string,
+  ) => Effect.Effect<GoogleMail.MessagePartBody, GoogleMailApiError>;
   readonly sendMessage: (
     userId: string,
     message: { raw: string; threadId?: string },
@@ -69,6 +74,8 @@ export interface GmailDataset {
   readonly labels: readonly GoogleMail.Label[];
   /** Full messages, ordered ascending by `internalDate` (the mock paginates a date window over them). */
   readonly messages: readonly GoogleMail.Message[];
+  /** Attachment bytes keyed by `attachmentId`, served by `getAttachment` for messages that carry one. */
+  readonly attachments?: Readonly<Record<string, GoogleMail.MessagePartBody>>;
 }
 
 /** Parses Gmail's `after:YYYY/MM/DD` / `before:YYYY/MM/DD` window (epoch-ms) from a list query. */
@@ -99,6 +106,8 @@ export class GoogleMailApi extends Context.Tag('@dxos/plugin-inbox/GoogleMailApi
         listMessages: (userId, q, pageSize, pageToken) =>
           Effect.provide(GoogleMail.listMessages(userId, q, pageSize, pageToken), context),
         getMessage: (userId, messageId) => Effect.provide(GoogleMail.getMessage(userId, messageId), context),
+        getAttachment: (userId, messageId, attachmentId) =>
+          Effect.provide(GoogleMail.getAttachment(userId, messageId, attachmentId), context),
         sendMessage: (userId, message) => Effect.provide(GoogleMail.sendMessage(userId, message), context),
         trashMessage: (userId, messageId) => Effect.provide(GoogleMail.trashMessage(userId, messageId), context),
       });
@@ -120,10 +129,16 @@ export class GoogleMailApi extends Context.Tag('@dxos/plugin-inbox/GoogleMailApi
         listMessages: (_userId, query, pageSize, pageToken) =>
           Effect.sync(() => {
             const { after, before } = parseDateWindow(query);
-            const matching = dataset.messages.filter((message) => {
-              const at = Number(message.internalDate);
-              return (after === undefined || at >= after) && (before === undefined || at < before);
-            });
+            // Real Gmail returns matches newest-first (undocumented but consistently-observed
+            // behavior) — sort descending rather than relying on `dataset.messages`'s own (ascending,
+            // fixture-construction) order, so the mock exercises `fetchMessagesForDateRange`'s
+            // direction-conditional within-chunk ordering realistically.
+            const matching = dataset.messages
+              .filter((message) => {
+                const at = Number(message.internalDate);
+                return (after === undefined || at >= after) && (before === undefined || at < before);
+              })
+              .sort((left, right) => Number(right.internalDate) - Number(left.internalDate));
             const offset = pageToken ? Number.parseInt(pageToken, 10) : 0;
             const page = matching.slice(offset, offset + pageSize);
             const nextOffset = offset + page.length;
@@ -138,6 +153,12 @@ export class GoogleMailApi extends Context.Tag('@dxos/plugin-inbox/GoogleMailApi
           return message
             ? Effect.succeed(message)
             : Effect.die(new Error(`mock GoogleMailApi: message not in dataset: ${messageId}`));
+        },
+        getAttachment: (_userId, _messageId, attachmentId) => {
+          const body = dataset.attachments?.[attachmentId];
+          return body
+            ? Effect.succeed(body)
+            : Effect.die(new Error(`mock GoogleMailApi: attachment not in dataset: ${attachmentId}`));
         },
         sendMessage: () => Effect.die(new Error('mock GoogleMailApi: sendMessage not supported')),
         trashMessage: () => Effect.die(new Error('mock GoogleMailApi: trashMessage not supported')),

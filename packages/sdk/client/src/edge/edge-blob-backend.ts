@@ -18,6 +18,9 @@ const parseNiUri = (uri: string): string => {
   return digestHex(uri);
 };
 
+/** Largest blob the edge blob service accepts, in bytes. */
+export const MAX_EDGE_BLOB_SIZE = 50 * 1024 * 1024;
+
 /**
  * Blob backend that stores bytes in the edge blob service, addressed by RFC 6920 `ni:` URIs over a
  * SHA-256 digest of the complete blob. The edge blob service itself is a flat key-value store keyed
@@ -33,6 +36,7 @@ const parseNiUri = (uri: string): string => {
  */
 export const createEdgeBlobBackend = ({ edgeClient }: CreateEdgeBlobBackendOptions): BlobBackend => ({
   schemes: [Blob.Scheme.ni],
+  maxSize: MAX_EDGE_BLOB_SIZE,
 
   put: async ({ data, contentType, contentHash }) => {
     await edgeClient.putBlob(Context.default(), contentHash, data, { contentType });

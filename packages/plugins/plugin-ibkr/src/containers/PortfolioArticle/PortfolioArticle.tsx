@@ -107,3 +107,5 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
     </Panel.Root>
   );
 };
+
+PortfolioArticle.displayName = 'PortfolioArticle';

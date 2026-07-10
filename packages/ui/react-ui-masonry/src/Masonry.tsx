@@ -143,7 +143,13 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     // width for any ScrollArea density (thin/scrollbars/padding) without duplicating
     // the theme's gutter math.
     const viewportRef = useRef<HTMLDivElement | null>(null);
-    const { width: contentWidth = 0 } = useResizeDetector({ targetRef: viewportRef });
+    // Throttle width changes: each update recomputes the column count and the full tile layout,
+    // so coalesce rapid resizes (drag, ScrollArea reflow) into at most one relayout per interval.
+    const { width: contentWidth = 0 } = useResizeDetector({
+      targetRef: viewportRef,
+      refreshMode: 'throttle',
+      refreshRate: 200,
+    });
     const columnCount = useColumnCount(contentWidth, columns, maxColumns, minColumnWidth, maxColumnWidth, gap);
 
     // The grid fills the measured content box; the layout caps columns at

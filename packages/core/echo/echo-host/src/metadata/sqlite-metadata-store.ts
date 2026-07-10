@@ -6,6 +6,7 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import CRC32 from 'crc-32';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { Event, scheduleTaskInterval, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -29,7 +30,7 @@ import { SqlTransaction } from '@dxos/sql-sqlite';
 import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/util';
 
-import { type IMetadataStore, hasInvitationExpired } from './metadata-store';
+import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from './metadata-store';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
@@ -390,3 +391,19 @@ export class SqliteMetadataStore implements IMetadataStore {
     return codec.decode(payload);
   }
 }
+
+/**
+ * Effect Layer constructing a {@link SqliteMetadataStore} from the ambient SQL runtime.
+ */
+export const SqliteMetadataStoreLayer = (): Layer.Layer<
+  IMetadataStoreService,
+  never,
+  SqlClient.SqlClient | SqlTransactionTag
+> =>
+  Layer.effect(
+    IMetadataStoreService,
+    Effect.gen(function* () {
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+      return new SqliteMetadataStore({ runtime });
+    }),
+  );
