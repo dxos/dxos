@@ -30,6 +30,9 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'Blogger',
         'publications.label': 'Publications',
+        'post-card.untitled.label': 'Untitled post',
+        'post-card.drafts.label_one': '{{count}} draft',
+        'post-card.drafts.label_other': '{{count}} drafts',
       },
     },
   },
