@@ -30,7 +30,8 @@ import {
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { Mosaic, type MosaicEventHandler, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { type DndContainerHandler } from '@dxos/react-ui-dnd';
+import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type Message as MessageType } from '@dxos/types';
 import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
@@ -53,7 +54,7 @@ export type ThreadRootProps = PropsWithChildren<
 
 /**
  * Headless root of a thread. Provides message-tile context (metadata resolver,
- * injected renderers, callbacks). Requires an ambient `Mosaic.Root` ancestor,
+ * injected renderers, callbacks). Requires an ambient `Dnd.Root` ancestor,
  * within which `Thread.Messages` renders its virtual stack. Renders no DOM of
  * its own — wrap the visible thread chrome in `Thread.Content`.
  */
@@ -370,7 +371,7 @@ const ThreadMessages = ({
   );
   // Per-instance id keeps concurrent threads (incl. the same thread mounted twice) distinct in the Mosaic registry.
   const instanceId = useId();
-  const eventHandler = useMemo<MosaicEventHandler>(
+  const eventHandler = useMemo<DndContainerHandler>(
     () => ({ id: `thread:${id ?? 'anon'}:${instanceId}`, canDrop: () => false }),
     [id, instanceId],
   );

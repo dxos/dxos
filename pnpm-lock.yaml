@@ -12140,6 +12140,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-dnd
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -14638,6 +14641,9 @@ importers:
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../../ui/react-ui-components
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-dnd
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
@@ -15295,6 +15301,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-dnd
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
@@ -15649,6 +15658,9 @@ importers:
       '@dxos/react-ui-dashboard':
         specifier: workspace:*
         version: link:../../ui/react-ui-dashboard
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-dnd
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -15937,6 +15949,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-dnd
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -16422,6 +16437,9 @@ importers:
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-dnd
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -17062,6 +17080,9 @@ importers:
       '@dxos/react-ui-calendar':
         specifier: workspace:*
         version: link:../../ui/react-ui-calendar
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-dnd
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -22917,6 +22938,9 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../react-ui-dnd
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor

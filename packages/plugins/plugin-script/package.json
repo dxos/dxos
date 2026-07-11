@@ -161,6 +161,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
+    "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",

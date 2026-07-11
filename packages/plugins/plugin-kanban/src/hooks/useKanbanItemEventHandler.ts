@@ -4,7 +4,8 @@
 
 import { useMemo } from 'react';
 
-import type { BoardModel, MosaicEventHandler, MosaicTileData } from '@dxos/react-ui-mosaic';
+import type { DndContainerHandler, DndTileData } from '@dxos/react-ui-dnd';
+import type { BoardModel } from '@dxos/react-ui-mosaic';
 
 import {
   type ArrangedCards,
@@ -29,7 +30,7 @@ function findColumn<T extends BaseKanbanItem>(
  * @param columnFieldPath - Item property path for the pivot field (used when moving to another column).
  * @param model - Board model for getColumns / getItems.
  * @param change - Callback to persist arrangement and item field updates.
- * @returns MosaicEventHandler for item tiles in this column.
+ * @returns DndContainerHandler for item tiles in this column.
  */
 export function useKanbanItemEventHandler<T extends BaseKanbanItem>({
   column,
@@ -41,8 +42,8 @@ export function useKanbanItemEventHandler<T extends BaseKanbanItem>({
   columnFieldPath: string | undefined;
   model: BoardModel<ColumnStructure, T>;
   change: KanbanChangeCallback<T>;
-}): MosaicEventHandler<T> {
-  return useMemo<MosaicEventHandler<T>>(
+}): DndContainerHandler<T> {
+  return useMemo<DndContainerHandler<T>>(
     () => ({
       id: column.columnValue,
       canDrop: ({ source }) => model.isItem(source.data),
@@ -91,9 +92,7 @@ export function useKanbanItemEventHandler<T extends BaseKanbanItem>({
         // 5. Compute insert index in target column, then insert.
         const existingTargetIndex =
           target?.type === 'tile'
-            ? targetColumnInWorking.cards.findIndex(
-                (card) => model.getItemId(card) === (target as MosaicTileData<T>).id,
-              )
+            ? targetColumnInWorking.cards.findIndex((card) => model.getItemId(card) === (target as DndTileData<T>).id)
             : -1;
         const closestEdge: 'top' | 'bottom' =
           target?.type === 'placeholder' && typeof target.location === 'number'
