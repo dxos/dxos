@@ -4,11 +4,16 @@
 
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentPropsWithoutRef,
+  type MutableRefObject,
   type PropsWithChildren,
+  forwardRef,
+  useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
@@ -46,11 +51,23 @@ type GridContextValue = {
   gap: number;
   rows: number;
   containerId: string;
+  /** Scroll viewport element; set by `Grid.Container`, used by the controller to center. */
+  viewportRef: MutableRefObject<HTMLDivElement | null>;
+  /** Scroll the viewport so the grid is centered. */
+  center: () => void;
   onAdd?: (position: GridItem) => void;
   onResize: (id: string, size: { w: number; h: number }, constraints?: GridConstraints) => void;
 };
 
 const [GridContextProvider, useGridContext] = createContext<GridContextValue>('GridContext');
+
+/**
+ * Imperative handle exposed by `Grid.Root` via ref.
+ */
+export type GridController = {
+  /** Scroll the viewport so the grid content is centered. */
+  center: () => void;
+};
 
 //
 // Root
@@ -74,70 +91,79 @@ type GridRootProps = PropsWithChildren<{
 const defaultCellSize: GridCellSize = { width: cardDefaultInlineSize, height: cardDefaultInlineSize };
 const defaultGap = 1;
 
-const GridRoot = ({
-  children,
-  layout,
-  mode = 'pack',
-  cellSize = defaultCellSize,
-  gap = defaultGap,
-  readonly,
-  onChange,
-  onAdd,
-}: GridRootProps) => {
-  const remInPx = usePx(1);
-  const cellSizePx = useMemo<GridCellSize>(
-    () => ({ width: cellSize.width * remInPx, height: cellSize.height * remInPx }),
-    [remInPx, cellSize.width, cellSize.height],
-  );
-  const gapPx = gap * remInPx;
-  const rows = useMemo(() => getRowCount(layout), [layout]);
+const GridRoot = forwardRef<GridController, GridRootProps>(
+  (
+    { children, layout, mode = 'pack', cellSize = defaultCellSize, gap = defaultGap, readonly, onChange, onAdd },
+    forwardedRef,
+  ) => {
+    const remInPx = usePx(1);
+    const cellSizePx = useMemo<GridCellSize>(
+      () => ({ width: cellSize.width * remInPx, height: cellSize.height * remInPx }),
+      [remInPx, cellSize.width, cellSize.height],
+    );
+    const gapPx = gap * remInPx;
+    const rows = useMemo(() => getRowCount(layout), [layout]);
 
-  const containerId = useContainerId('grid');
-  const onResize = useMemo(
-    () => (id: string, size: { w: number; h: number }, constraints?: GridConstraints) => {
-      onChange?.(resizeItem(layout, id, size, constraints, mode));
-    },
-    [layout, mode, onChange],
-  );
+    const containerId = useContainerId('grid');
 
-  // Register this grid's container handler. Re-registers (by the stable `containerId` key) whenever
-  // `layout`/`mode`/`onChange` change so `onDrop` always closes over the current layout.
-  // NOTE: `addContainer`/`removeContainer` are re-created every `Dnd.Root` render; they are
-  // intentionally left out of the deps below (mirroring `Mosaic.Container`) so this effect only
-  // reruns when the grid's own state changes, not on every drag frame.
-  const { addContainer, removeContainer } = useDndRootContext(GRID_ROOT_NAME);
-  useEffect(() => {
-    const handler: DndContainerHandler = {
-      id: containerId,
-      canDrop: ({ source }) => source.containerId === containerId,
-      onDrop: ({ source, target }) => {
-        if (target?.type !== 'placeholder') {
-          return;
-        }
-        onChange?.(moveItem(layout, source.id, target.location, mode));
+    // Scroll viewport (set by Grid.Container) + imperative centering, exposed via the Root ref.
+    const viewportRef = useRef<HTMLDivElement | null>(null);
+    const center = useCallback(() => {
+      const el = viewportRef.current;
+      if (el) {
+        el.scrollTo({ left: (el.scrollWidth - el.clientWidth) / 2, top: (el.scrollHeight - el.clientHeight) / 2 });
+      }
+    }, []);
+    useImperativeHandle(forwardedRef, () => ({ center }), [center]);
+
+    const onResize = useMemo(
+      () => (id: string, size: { w: number; h: number }, constraints?: GridConstraints) => {
+        onChange?.(resizeItem(layout, id, size, constraints, mode));
       },
-    };
-    addContainer(handler);
-    return () => removeContainer(containerId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [containerId, layout, mode, onChange]);
+      [layout, mode, onChange],
+    );
 
-  return (
-    <GridContextProvider
-      readonly={readonly ?? false}
-      layout={layout}
-      mode={mode}
-      cellSize={cellSizePx}
-      gap={gapPx}
-      rows={rows}
-      containerId={containerId}
-      onAdd={readonly ? undefined : onAdd}
-      onResize={onResize}
-    >
-      {children}
-    </GridContextProvider>
-  );
-};
+    // Register this grid's container handler. Re-registers (by the stable `containerId` key) whenever
+    // `layout`/`mode`/`onChange` change so `onDrop` always closes over the current layout.
+    // NOTE: `addContainer`/`removeContainer` are re-created every `Dnd.Root` render; they are
+    // intentionally left out of the deps below (mirroring `Mosaic.Container`) so this effect only
+    // reruns when the grid's own state changes, not on every drag frame.
+    const { addContainer, removeContainer } = useDndRootContext(GRID_ROOT_NAME);
+    useEffect(() => {
+      const handler: DndContainerHandler = {
+        id: containerId,
+        canDrop: ({ source }) => source.containerId === containerId,
+        onDrop: ({ source, target }) => {
+          if (target?.type !== 'placeholder') {
+            return;
+          }
+          onChange?.(moveItem(layout, source.id, target.location, mode));
+        },
+      };
+      addContainer(handler);
+      return () => removeContainer(containerId);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [containerId, layout, mode, onChange]);
+
+    return (
+      <GridContextProvider
+        readonly={readonly ?? false}
+        layout={layout}
+        mode={mode}
+        cellSize={cellSizePx}
+        gap={gapPx}
+        rows={rows}
+        containerId={containerId}
+        viewportRef={viewportRef}
+        center={center}
+        onAdd={readonly ? undefined : onAdd}
+        onResize={onResize}
+      >
+        {children}
+      </GridContextProvider>
+    );
+  },
+);
 
 GridRoot.displayName = GRID_ROOT_NAME;
 
@@ -154,7 +180,9 @@ const GridViewport = ({ classNames, children }: GridViewportProps) => {
   const bounds = useMemo(() => gridBounds(layout.columns, rows, cellSize, gap), [layout.columns, rows, cellSize, gap]);
 
   return (
-    <div className={mx('relative', classNames)} style={{ width: bounds.width, height: bounds.height }}>
+    // `m-auto` centers the grid within the (flex) scroll container when it fits, and stays fully
+    // scrollable when it overflows (unlike justify-center, which would clip the top/left).
+    <div className={mx('relative m-auto', classNames)} style={{ width: bounds.width, height: bounds.height }}>
       {children}
     </div>
   );
@@ -172,17 +200,28 @@ const GRID_CONTAINER_NAME = 'Grid.Container';
 type GridContainerProps = ThemedClassName<PropsWithChildren>;
 
 const GridContainer = ({ classNames, children }: GridContainerProps) => {
-  const ref = useRef<HTMLDivElement>(null);
+  const { viewportRef, center, layout, rows } = useGridContext(GRID_CONTAINER_NAME);
+  const localRef = useRef<HTMLDivElement>(null);
+  const ref = composeRefs(localRef, viewportRef);
+
   // Auto-scroll attaches to the scrolling element (the ScrollArea viewport). `autoScrollForElements`
   // is global — it fires on any pragmatic-dnd drag, so it covers both tile moves and the resize drag.
   useEffect(() => {
-    invariant(ref.current);
-    return autoScrollForElements({ element: ref.current });
+    invariant(localRef.current);
+    return autoScrollForElements({ element: localRef.current });
   }, []);
+
+  // Center the grid by default (and whenever its overall size changes).
+  useEffect(() => {
+    center();
+  }, [center, layout.columns, rows]);
 
   return (
     <ScrollArea.Root orientation='all' classNames={classNames}>
-      <ScrollArea.Viewport ref={ref}>{children}</ScrollArea.Viewport>
+      {/* `flex` so the viewport's `m-auto` centers the grid; overflow still scrolls both axes. */}
+      <ScrollArea.Viewport ref={ref} classNames='flex'>
+        {children}
+      </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
 };

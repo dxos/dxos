@@ -93,6 +93,22 @@ The nits are all Minor/Trivial and do NOT block the queue — Phase 1 can merge 
 - ✅ Grid hugged top-left with a margin only bottom-right → `cellRect` given a leading gap so the
   gutter is symmetric on all edges (verified 16px on all four) (`<pending commit>`).
 
+### Later batch (done, headless-verified where possible)
+
+- ✅ `Grid.Container` uses DXOS `ScrollArea` (custom scrollbar) + drag/resize auto-scroll; outer border removed.
+- ✅ Centered by default (scroll centered on mount; `m-auto` in a flex scroll viewport). Verified scrollLeft==center.
+- ✅ `Grid.Root` is `forwardRef<GridController>` exposing `center()` (imperative handle).
+- ✅ Magnetic **move** ghost: snapped ring outline at the target cell, jumps cell-to-cell.
+- ✅ Resize handle reachable at the tile edge (sibling, straddles corner, z-20, corner-bracket).
+- ✅ Story variants: Default / Pack / Compact (half size) / Media (random poster images).
+- ✅ `TESTING.md` manual test plan added at `src/components/Grid/TESTING.md`.
+
+### Phase 5 — DECLINED to do unattended
+
+Migrating react-ui-list (useReorder/Tree) onto the core changes drag behavior across ~159 consumers,
+is native-drag (I can't self-verify), and would ship unverified changes to a working system solo.
+Left for a live session. (User said "if you can" — I can't do it safely alone.)
+
 ### FOLLOW-UP — Grid interaction enhancements (need interactive drag-testing with user)
 
 1. Resize from **any corner or side** (8 handles, not just bottom-right); top/left handles must move

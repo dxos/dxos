@@ -18,15 +18,20 @@ import { Grid, type GridRootProps } from './Grid';
 type TestItem = {
   id: string;
   title: string;
+  image?: string;
 };
 
-const testItems: TestItem[] = [
-  { id: '0', title: 'Sales' },
-  { id: '1', title: 'Revenue' },
-  { id: '2', title: 'Users' },
-  { id: '3', title: 'Latency' },
-  { id: '4', title: 'Errors' },
-];
+const titles = ['Sales', 'Revenue', 'Users', 'Latency', 'Errors'];
+
+const testItems: TestItem[] = titles.map((title, index) => ({ id: String(index), title }));
+
+// Same items with a random poster image per tile (seeded for stable stories).
+const posterItems: TestItem[] = ((seed = 42) =>
+  titles.map((title, index) => {
+    // Deterministic pseudo-random id for picsum so stories are stable without Math.random.
+    const pic = (seed * (index + 7)) % 1000;
+    return { id: String(index), title, image: `https://picsum.photos/seed/${pic}/600/400` };
+  }))();
 
 const defaultLayout: GridLayout = {
   columns: 8,
@@ -65,8 +70,8 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, ...props }: 
               {items.map((item) => {
                 const itemLayout = layout.items.find((entry) => entry.id === item.id);
                 return itemLayout ? (
-                  <Grid.Cell item={item} layout={itemLayout} key={item.id}>
-                    <Card.Text>{item.title}</Card.Text>
+                  <Grid.Cell item={item} layout={itemLayout} key={item.id} title={<Card.Text>{item.title}</Card.Text>}>
+                    {item.image ? <img src={item.image} alt='' className='size-full object-cover' /> : null}
                   </Grid.Cell>
                 ) : null;
               })}
@@ -115,5 +120,14 @@ export const Compact: Story = {
     layout: defaultLayout,
     mode: 'float' satisfies GridMode,
     cellSize: { width: cardDefaultInlineSize / 2, height: cardDefaultInlineSize / 2 },
+  },
+};
+
+/** Tiles with a poster image filling the body (title still in the header). */
+export const Media: Story = {
+  args: {
+    items: posterItems,
+    layout: defaultLayout,
+    mode: 'float' satisfies GridMode,
   },
 };

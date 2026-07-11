@@ -8,7 +8,7 @@ import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/elemen
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unhandled';
 import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
-import React, { type CSSProperties, type PropsWithChildren, useEffect, useRef, useState } from 'react';
+import React, { type CSSProperties, type PropsWithChildren, type ReactNode, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { type Type } from '@dxos/echo';
@@ -32,6 +32,8 @@ export type GridCellProps<T extends Type.AnyObj = any> = ThemedClassName<
     item: T;
     /** This item's current position/size in grid cells (an entry of `GridLayout.items`). */
     layout: GridItem;
+    /** Rendered in the header row next to the drag handle. */
+    title?: ReactNode;
     draggable?: boolean;
     /** Resize bounds in cells; enforced when the user drags the resize handle. */
     constraints?: GridConstraints;
@@ -49,6 +51,7 @@ export const GridCell = ({
   children,
   item,
   layout,
+  title,
   draggable: isDraggable,
   constraints,
 }: GridCellProps) => {
@@ -171,8 +174,9 @@ export const GridCell = ({
       >
         <Card.Header>
           <Card.DragHandle ref={dragHandleRef} />
-          {children}
+          {title}
         </Card.Header>
+        {children}
       </Card.Root>
 
       {/* Resize handle: a sibling (not clipped by the card's overflow/rounding) straddling the
@@ -212,8 +216,9 @@ export const GridCell = ({
           >
             <Card.Header>
               <Card.DragHandle />
-              {children}
+              {title}
             </Card.Header>
+            {children}
           </Card.Root>,
           preview.container,
         )}
