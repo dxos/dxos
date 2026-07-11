@@ -819,8 +819,8 @@ const BoardMap = ({ classNames }: BoardMapProps) => {
         return (
           <div
             key={id}
-            // Neutral fill, accent only for selected tiles.
-            className={mx('absolute rounded-[1px]', selected.has(id) ? 'bg-accent-bg' : 'bg-neutral-500')}
+            // Neutral fill (the separator token, matching the cell borders), accent only when selected.
+            className={mx('absolute rounded-[1px]', selected.has(id) ? 'bg-accent-bg' : 'bg-separator')}
             style={{
               left: `${(rect.left / bounds.width) * 100}%`,
               top: `${(rect.top / bounds.height) * 100}%`,
