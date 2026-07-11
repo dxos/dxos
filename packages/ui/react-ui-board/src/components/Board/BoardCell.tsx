@@ -263,8 +263,9 @@ export const BoardCell = ({
           // Transparent to pointer events during ANY drag so a tile can be dropped onto an occupied
           // cell (pushing the occupant) or back onto its own footprint.
           !!dragging && 'pointer-events-none',
-          // `dx-selected` styles the tile when `aria-selected` is set (the two must pair — see state.css).
-          selectable && 'dx-selected cursor-pointer',
+          // Selection is shown as the accent (blue) ring — same as the drag/resize ghost outline.
+          selectable && 'cursor-pointer',
+          isSelected && 'ring-2 ring-accent-bg',
           classNames,
         )}
         style={{ ...rect, ...sizeOverride }}
