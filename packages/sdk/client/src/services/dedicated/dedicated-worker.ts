@@ -5,7 +5,6 @@
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
-import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import { runWorker } from '@dxos/worker-framework/worker';
 
@@ -63,8 +62,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         stop: async () => runtime.stop(),
         createSession: async ({ appPort, systemPort, clientId, isOwner, onClose }) => {
           const session = await runtime.createSession({
-            // TODO(dmaretskyi): Eliminate RpcPort for worker-related code and rely on MessagePort instead.
-            systemPort: createWorkerPort({ port: systemPort }),
+            systemPort,
             appPort,
             onClose,
           });

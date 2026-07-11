@@ -26,7 +26,6 @@ import {
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { makeInProcessClient } from '@dxos/protocols';
 import { DevicesService, IdentityService } from '@dxos/protocols/rpc';
-import { type RpcPort } from '@dxos/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
@@ -35,10 +34,11 @@ import { type MaybePromise } from '@dxos/util';
 import { ClientServicesHost } from '../services';
 import { WorkerSession } from './worker-session';
 
-// NOTE: systemPort stays RpcPort (protobuf peer); app/shell ports use native MessagePort effect-rpc.
+// All session ports are native MessagePorts served via effect-rpc: appPort carries the client
+// services (+ WorkerService); systemPort carries the reverse-direction BridgeService.
 export type CreateSessionProps = {
   appPort: MessagePort;
-  systemPort: RpcPort;
+  systemPort: MessagePort;
   shellPort?: MessagePort;
   onClose?: () => Promise<void>;
 };

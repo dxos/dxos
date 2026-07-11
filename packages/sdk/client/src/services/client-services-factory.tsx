@@ -10,11 +10,10 @@ import { DedicatedWorkerClientServices, type DedicatedWorkerClientServicesOption
 import { SharedWorkerCoordinator, SingleClientCoordinator } from './dedicated';
 import { type LocalClientServicesParams, fromHost } from './local-client-services';
 import { fromSocket } from './socket';
-import { type WorkerClientServicesProps, fromWorker } from './worker-client-services';
 
 export type CreateClientServicesOptions = {
-  /** Factory for creating a shared worker. Required for {@link Runtime.Client.ServicesMode.SHARED_WORKER}. */
-  createWorker?: WorkerClientServicesProps['createWorker'];
+  /** @deprecated The SHARED_WORKER services mode was removed; retained only for source compatibility. */
+  createWorker?: () => SharedWorker;
   /** Factory for creating a dedicated worker. Required for {@link Runtime.Client.ServicesMode.DEDICATED_WORKER}. */
   createDedicatedWorker?: DedicatedWorkerClientServicesOptions['createWorker'];
   /** Factory for creating the coordinator SharedWorker (for dedicated worker mode). Use for a custom entrypoint that e.g. initializes observability. */
@@ -37,7 +36,7 @@ export const createClientServices = async (
   config: Config,
   options: CreateClientServicesOptions = {},
 ): Promise<ClientServicesProvider> => {
-  const { createWorker, createDedicatedWorker, createCoordinatorWorker, createOpfsWorker, sqlitePath } = options;
+  const { createDedicatedWorker, createCoordinatorWorker, createOpfsWorker, sqlitePath } = options;
 
   // Remote services take precedence (proxy to a remote vault over a socket, etc.).
   const remote = config.values.runtime?.client?.remoteSource;
@@ -75,12 +74,12 @@ export const createClientServices = async (
     }
 
     case Runtime.Client.ServicesMode.SHARED_WORKER: {
-      if (!createWorker) {
-        throw new Error(
-          'createClientServices: runtime.client.services_mode=SHARED_WORKER requires a createWorker option.',
-        );
-      }
-      return fromWorker(config, { createWorker });
+      // The shared-worker services mode was removed in favour of the dedicated-worker framework
+      // (leader election + coordinator). Its client/host plumbing still rides the legacy protobuf
+      // system peer and is no longer wired up.
+      throw new Error(
+        'createClientServices: runtime.client.services_mode=SHARED_WORKER is no longer supported; use DEDICATED_WORKER.',
+      );
     }
 
     case Runtime.Client.ServicesMode.DEDICATED_WORKER: {

@@ -12,7 +12,6 @@ import { Config } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
-import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
@@ -111,7 +110,7 @@ export const onconnect = async (event: MessageEvent<any>) => {
 
   const workerRuntime = await workerRuntimePromise;
   await workerRuntime.createSession({
-    systemPort: createWorkerPort({ port: systemChannel.port2 }),
+    systemPort: systemChannel.port2,
     appPort: appChannel.port2,
   });
 };

@@ -6,7 +6,6 @@ import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
-import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import { runWorker } from '@dxos/worker-framework/worker';
 
@@ -62,7 +61,7 @@ export class TestWorkerFactory extends Resource {
           stop: async () => runtime.stop(),
           createSession: async ({ appPort, systemPort, clientId, isOwner }) => {
             const session = await runtime.createSession({
-              systemPort: createWorkerPort({ port: systemPort }),
+              systemPort,
               appPort,
             });
             if (isOwner) {
