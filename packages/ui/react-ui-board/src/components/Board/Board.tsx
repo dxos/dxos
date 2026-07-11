@@ -82,8 +82,8 @@ type BoardContextValue = {
   resizing: boolean;
   /** Scroll viewport element; set by `Board.Container`, used by the controller to center. */
   viewportRef: MutableRefObject<HTMLDivElement | null>;
-  /** Scroll the viewport so the board is centered. */
-  center: () => void;
+  /** Scroll the viewport to center the board, or a specific cell when its id is given. */
+  center: (cell?: string) => void;
   onAdd?: (position: GridPosition) => void;
   onDelete?: (id: string) => void;
   onResize: (id: string, size: { w: number; h: number }, constraints?: GridConstraints) => void;
@@ -217,24 +217,27 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
         if (!el) {
           return;
         }
+        // Anchor point in unscaled content coords: a cell's centre, or the whole board's centre.
         const position = cell ? layout.items[cell] : undefined;
+        let anchorX: number;
+        let anchorY: number;
         if (position) {
-          // Center the viewport on the given cell's rect.
           const rect = cellRect(
             { x: position.x, y: position.y, w: position.w ?? 1, h: position.h ?? 1 },
             cellSizePx,
             gapPx,
           );
-          el.scrollTo({
-            left: rect.left + rect.width / 2 - el.clientWidth / 2,
-            top: rect.top + rect.height / 2 - el.clientHeight / 2,
-            behavior: 'smooth',
-          });
+          anchorX = rect.left + rect.width / 2;
+          anchorY = rect.top + rect.height / 2;
         } else {
-          el.scrollTo({ left: (el.scrollWidth - el.clientWidth) / 2, top: (el.scrollHeight - el.clientHeight) / 2 });
+          anchorX = el.scrollWidth / 2;
+          anchorY = el.scrollHeight / 2;
         }
+        // The content scales from its top-left (transform-origin 0 0), so a content point maps to
+        // `point * zoom` on screen; place the anchor at the viewport centre.
+        el.scrollTo({ left: anchorX * zoom - el.clientWidth / 2, top: anchorY * zoom - el.clientHeight / 2 });
       },
-      [layout, cellSizePx, gapPx],
+      [layout, cellSizePx, gapPx, zoom],
     );
     useImperativeHandle(forwardedRef, () => ({ center }), [center]);
 
@@ -419,7 +422,14 @@ const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
     // A zoom < 1 gives a scaled overview; drag/resize are disabled in that mode (see BoardCell).
     <div
       className={mx('relative m-auto transition-transform duration-300', classNames)}
-      style={{ width: bounds.width, height: bounds.height, transform: zoom !== 1 ? `scale(${zoom})` : undefined }}
+      style={{
+        width: bounds.width,
+        height: bounds.height,
+        // Scale from the top-left so a content point maps to `point * zoom` on screen; Board.Container
+        // compensates scroll on zoom to keep the anchor (selected tile / current centre) fixed.
+        transform: zoom !== 1 ? `scale(${zoom})` : undefined,
+        transformOrigin: '0 0',
+      }}
     >
       {children}
     </div>
@@ -438,13 +448,46 @@ const BOARD_CONTAINER_NAME = 'Board.Container';
 type BoardContainerProps = ThemedClassName<PropsWithChildren>;
 
 const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
-  const { viewportRef, center, resizing } = useBoardContext(BOARD_CONTAINER_NAME);
+  const { viewportRef, center, resizing, zoom, selected } = useBoardContext(BOARD_CONTAINER_NAME);
   const localRef = useRef<HTMLDivElement>(null);
   const ref = composeRefs(localRef, viewportRef);
 
   // Read the live resizing flag from a ref so the mount-once auto-scroll effect always sees it.
   const resizingRef = useRef(resizing);
   resizingRef.current = resizing;
+
+  // Latest selection + centre helper, read from a ref so the zoom-anchor effect depends only on `zoom`
+  // (so selecting a tile at a constant zoom does NOT move the board).
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
+  const centerRef = useRef(center);
+  centerRef.current = center;
+
+  // Keep the board anchored across a zoom change: center on the (first) selected tile if any,
+  // otherwise hold the current viewport centre fixed. Runs on zoom changes only (skips mount).
+  const prevZoomRef = useRef(zoom);
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    const element = localRef.current;
+    const prevZoom = prevZoomRef.current;
+    prevZoomRef.current = zoom;
+    if (!element || !mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
+    const selectedId = selectedRef.current.values().next().value;
+    if (selectedId) {
+      centerRef.current(selectedId);
+    } else {
+      // Convert the current on-screen centre back to content coords (÷ prevZoom), then re-place it.
+      const contentX = (element.scrollLeft + element.clientWidth / 2) / prevZoom;
+      const contentY = (element.scrollTop + element.clientHeight / 2) / prevZoom;
+      element.scrollTo({
+        left: contentX * zoom - element.clientWidth / 2,
+        top: contentY * zoom - element.clientHeight / 2,
+      });
+    }
+  }, [zoom]);
 
   // Custom edge auto-scroll: engage only within a narrow edge band and ramp speed gently, so
   // scrolling starts near the edge (not early) and is smooth — pragmatic's `autoScrollForElements`

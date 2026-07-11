@@ -4,12 +4,11 @@
 
 ### Tasks
 
-- [ ] **Zoom keeps the board anchored**
-  - Zooming in/out should not move the board (no jump / scroll shift).
-  - If a card is currently selected, center the viewport on it while zooming;
-    otherwise keep the current center fixed.
-  - Depends on tracking a "selected card" (no selection state today — `onSelect`
-    was dropped in the Board unification; see `Board.tsx`).
+- [x] **Zoom keeps the board anchored** — done.
+  - Zoom scales from the top-left (`transform-origin: 0 0`); `Board.Container`
+    compensates scroll on each zoom change: centers on the first selected tile if
+    any, otherwise holds the current viewport centre fixed. (Selection state now
+    exists — added with the single/multi-select feature.)
 
 - [ ] **`Board.Map` renders empty**
   - The overview map shows no tiles in use. Storybook render had 5 tile children
