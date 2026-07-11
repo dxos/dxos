@@ -61,14 +61,6 @@ ended: []
 session** is resolved by name (`$resume <name>`) or, with no argument, by the
 entry whose `branch` matches the current one — never a guess.
 
-### Reconcile with superpowers
-
-`docs/superpowers/` holds the same pieces under the superpowers convention:
-`specs/` ≈ a session's `design`, `plans/` ≈ its `tasks`, `handoffs/` ≈ the
-`$hydrate` resume pointer. The registry is the index that unifies them per
-session — reference those files from a session's `design`/`tasks` rather than
-duplicating; new design/plan output for a tracked session goes in its session docs.
-
 ## When to Use
 
 - Work spans **3+ distinct steps**, multiple files, or phases.
