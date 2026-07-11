@@ -8,7 +8,6 @@ import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
 import {
-  type Judge,
   type LadderResult,
   type ModelVariant,
   buildGoldPoints,

@@ -68,3 +68,9 @@ Cross-cutting:
 
 _TBD — per-task verdict vs H0, recommended model per task, the accuracy-vs-latency frontier, the
 reasoning-model tax, and any surprises. Kept generic (no private mailbox content)._
+
+## 5. Next
+
+- Topics
+  - packages/core/compute/pipeline-email/src/types/Topic.ts
+  - packages/core/compute/pipeline-email/src/corpus/digest.ts
