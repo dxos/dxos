@@ -59,6 +59,7 @@ type GridContextValue = {
   /** Scroll the viewport so the grid is centered. */
   center: () => void;
   onAdd?: (position: GridItem) => void;
+  onDelete?: (id: string) => void;
   onResize: (id: string, size: { w: number; h: number }, constraints?: GridConstraints) => void;
 };
 
@@ -86,9 +87,12 @@ type GridRootProps = PropsWithChildren<{
   cellSize?: GridCellSize;
   /** Gap between cells in rem. */
   gap?: number;
+  /** Minimum number of rows to render (the backdrop shows at least this many, even when sparse). */
+  minRows?: number;
   readonly?: boolean;
   onChange?: (layout: GridLayout) => void;
   onAdd?: (position: GridItem) => void;
+  onDelete?: (id: string) => void;
 }>;
 
 // Default to a compact cell (~half a default card) so a grid fits more tiles on screen; consumers
@@ -98,7 +102,18 @@ const defaultGap = 1;
 
 const GridRoot = forwardRef<GridController, GridRootProps>(
   (
-    { children, layout, mode = 'pack', cellSize = defaultCellSize, gap = defaultGap, readonly, onChange, onAdd },
+    {
+      children,
+      layout,
+      mode = 'pack',
+      cellSize = defaultCellSize,
+      gap = defaultGap,
+      minRows = 0,
+      readonly,
+      onChange,
+      onAdd,
+      onDelete,
+    },
     forwardedRef,
   ) => {
     const remInPx = usePx(1);
@@ -107,7 +122,7 @@ const GridRoot = forwardRef<GridController, GridRootProps>(
       [remInPx, cellSize.width, cellSize.height],
     );
     const gapPx = gap * remInPx;
-    const rows = useMemo(() => getRowCount(layout), [layout]);
+    const rows = useMemo(() => Math.max(getRowCount(layout), minRows), [layout, minRows]);
 
     const containerId = useContainerId('grid');
 
@@ -178,6 +193,7 @@ const GridRoot = forwardRef<GridController, GridRootProps>(
         viewportRef={viewportRef}
         center={center}
         onAdd={readonly ? undefined : onAdd}
+        onDelete={readonly ? undefined : onDelete}
         onResize={onResize}
       >
         {children}

@@ -33,9 +33,9 @@ const posterItems: TestItem[] = ((seed = 42) =>
     return { id: String(index), title, image: `https://picsum.photos/seed/${pic}/600/400` };
   }))();
 
-// Initial sizes capped at 2x2.
+// 12-column board; initial tile sizes capped at 2x2.
 const defaultLayout: GridLayout = {
-  columns: 8,
+  columns: 12,
   items: [
     { id: '0', x: 0, y: 0, w: 2, h: 2 },
     { id: '1', x: 2, y: 0, w: 2, h: 1 },
@@ -44,6 +44,9 @@ const defaultLayout: GridLayout = {
     { id: '4', x: 2, y: 1, w: 2, h: 1 },
   ],
 };
+
+// A 12x12 initial board.
+const MIN_ROWS = 12;
 
 type StoryArgs = GridRootProps & { items: TestItem[] };
 
@@ -60,9 +63,22 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, ...props }: 
     [items],
   );
 
+  const handleDelete = useCallback<NonNullable<GridRootProps['onDelete']>>((id: string) => {
+    setItems((items) => items.filter((item) => item.id !== id));
+    setLayout((layout) => ({ ...layout, items: layout.items.filter((entry) => entry.id !== id) }));
+  }, []);
+
   return (
     <Dnd.Root>
-      <Grid.Root {...props} layout={layout} mode={mode} onChange={setLayout} onAdd={handleAdd}>
+      <Grid.Root
+        {...props}
+        layout={layout}
+        mode={mode}
+        minRows={MIN_ROWS}
+        onChange={setLayout}
+        onAdd={handleAdd}
+        onDelete={handleDelete}
+      >
         {/* Scroll viewport: sized to the full grid bounds; auto-scrolls when dragging/resizing near an edge. */}
         <Grid.Container classNames='absolute inset-0'>
           <Grid.Viewport>

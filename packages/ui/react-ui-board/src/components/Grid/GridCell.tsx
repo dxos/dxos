@@ -12,7 +12,7 @@ import { createPortal } from 'react-dom';
 
 import { type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Card, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Card, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type DndTileData, useDndRootContext } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
@@ -55,7 +55,8 @@ export const GridCell = ({
   constraints,
 }: GridCellProps) => {
   const { t } = useTranslation(translationKey);
-  const { cellSize, gap, containerId, readonly, onResize, previewLayout, viewportRef } = useGridContext(GRID_CELL_NAME);
+  const { cellSize, gap, containerId, readonly, onResize, onDelete, previewLayout, viewportRef } =
+    useGridContext(GRID_CELL_NAME);
   // Any active drag makes every tile transparent to pointer events so the backdrop drop-target cells
   // beneath them (incl. cells under an occupied tile) receive the drag — required for push-on-drop.
   const { dragging } = useDndRootContext(GRID_CELL_NAME);
@@ -182,21 +183,13 @@ export const GridCell = ({
   // Non-dragged tiles render at their previewed position during a drag (animating out of the way),
   // and spring back to `layout` when the drag ends. The dragged tile itself stays put (its preview
   // clone follows the cursor), so it uses its committed layout.
-  const isDragSource = dragging?.source.data.id === item.id;
-  const effectiveLayout =
-    !isDragSource && previewLayout ? (previewLayout.items.find((entry) => entry.id === item.id) ?? layout) : layout;
+  // Every tile — including the one being dragged — renders at its previewed position so it glides
+  // to where it will land (cell-to-cell) during the drag and is already there on drop, rather than
+  // snapping back from its original cell. The cursor-following clone is the "picked up" copy.
+  const effectiveLayout = previewLayout
+    ? (previewLayout.items.find((entry) => entry.id === item.id) ?? layout)
+    : layout;
   const rect = cellRect(effectiveLayout, cellSize, gap);
-
-  // Magnetic move: while this tile is the drag source, outline the tile-sized footprint at the cell
-  // under the cursor (the current drop target). It jumps cell-to-cell as the target changes, so the
-  // snapped landing position is always visible during the drag.
-  const moveTarget =
-    dragging && dragging.source.data.id === item.id && dragging.target?.data.type === 'placeholder'
-      ? dragging.target.data.location
-      : undefined;
-  const moveGhost = moveTarget
-    ? cellRect({ x: moveTarget.x, y: moveTarget.y, w: layout.w, h: layout.h }, cellSize, gap)
-    : undefined;
 
   return (
     <>
@@ -215,8 +208,23 @@ export const GridCell = ({
         ref={rootRef}
       >
         <Card.Header>
-          <Card.DragHandle ref={dragHandleRef} />
+          {/* Hide the handle while dragging without unmounting it (drag stays bound) or shifting the
+              header: `contents` keeps it in the grid flow, `invisible` hides via inherited visibility. */}
+          <span className={mx('contents', dragState === 'dragging' && 'invisible')}>
+            <Card.DragHandle ref={dragHandleRef} />
+          </span>
           {title}
+          {onDelete && (
+            <Card.Block end>
+              <IconButton
+                variant='ghost'
+                icon='ph--x--regular'
+                iconOnly
+                label={t('delete-object.button')}
+                onClick={() => onDelete(item.id)}
+              />
+            </Card.Block>
+          )}
         </Card.Header>
         {/* Body spans all of the card's column tracks (it has gutter columns) so content — e.g. a
             poster image — fills the full tile width, not just the first gutter track. */}
@@ -235,11 +243,6 @@ export const GridCell = ({
         >
           <span className='absolute bottom-1.5 right-1.5 size-2 border-separator opacity-50 transition-opacity border-b-2 border-r-2 group-hover/resize:opacity-100' />
         </button>
-      )}
-
-      {/* Magnetic move outline: snapped footprint at the cell under the cursor while dragging. */}
-      {moveGhost && (
-        <div className='pointer-events-none absolute z-10 rounded-lg ring-2 ring-accent-bg' style={moveGhost} />
       )}
 
       {/* Resize outline: previews the target size while dragging the handle; the tile snaps to whole
