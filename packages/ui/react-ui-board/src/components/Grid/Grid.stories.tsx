@@ -63,9 +63,7 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, ...props }: 
               const itemLayout = layout.items.find((entry) => entry.id === item.id);
               return itemLayout ? (
                 <Grid.Cell item={item} layout={itemLayout} key={item.id}>
-                  <Card.Row>
-                    <Card.Text>{item.title}</Card.Text>
-                  </Card.Row>
+                  <Card.Text>{item.title}</Card.Text>
                 </Grid.Cell>
               ) : null;
             })}

@@ -59,9 +59,10 @@ export const GridCell = ({
   const dragHandleRef = useRef<HTMLButtonElement | null>(null);
   const resizeHandleRef = useRef<HTMLButtonElement | null>(null);
   const [dragState, setDragState] = useState<DragState>('idle');
-  const [previewSize, setPreviewSize] = useState<{ w: number; h: number } | null>(null);
   // The native drag preview follows the cursor; captured at the source's px size so it can't rescale.
   const [preview, setPreview] = useState<{ container: HTMLElement; width: number; height: number } | null>(null);
+  // Live resize outline (px) shown while dragging the resize handle; the tile itself only resizes on release.
+  const [resizeGhost, setResizeGhost] = useState<{ width: number; height: number } | null>(null);
 
   // Move: originate a Dnd tile drag; the actual move is applied by Grid.Root's container handler.
   useEffect(() => {
@@ -110,6 +111,8 @@ export const GridCell = ({
       return;
     }
 
+    // Outline size at the start of the gesture, in px.
+    const base = cellRect(layout, cellSize, gap);
     return draggable({
       element: resizeHandleRef.current,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
@@ -117,32 +120,44 @@ export const GridCell = ({
         preventUnhandled.start();
       },
       onDragStart: () => {
-        setPreviewSize({ w: layout.w, h: layout.h });
+        setResizeGhost({ width: base.width, height: base.height });
       },
       onDrag: ({ location }) => {
-        setPreviewSize(nextSize(layout, cellSize, gap, location, constraints));
+        const dx = location.current.input.clientX - location.initial.input.clientX;
+        const dy = location.current.input.clientY - location.initial.input.clientY;
+        // Raw (unsnapped) outline following the cursor, floored at one cell so it never collapses;
+        // snapping to whole cells happens only on drop.
+        setResizeGhost({
+          width: Math.max(cellSize.width, base.width + dx),
+          height: Math.max(cellSize.height, base.height + dy),
+        });
       },
       onDrop: ({ location }) => {
-        const size = nextSize(layout, cellSize, gap, location, constraints);
-        setPreviewSize(null);
-        onResize(item.id, size, constraints);
+        setResizeGhost(null);
+        onResize(item.id, nextSize(layout, cellSize, gap, location, constraints), constraints);
       },
     });
-  }, [readonly, layout.w, layout.h, cellSize, gap, item.id, constraints, onResize]);
+  }, [readonly, layout, cellSize, gap, item.id, constraints, onResize]);
 
-  const rect = cellRect({ ...layout, ...previewSize }, cellSize, gap);
+  const rect = cellRect(layout, cellSize, gap);
 
   return (
     <>
       <Card.Root
-        classNames={mx('absolute grid-rows-[auto_1fr]', dragState === 'dragging' && 'opacity-50', classNames)}
+        classNames={mx(
+          'absolute grid-rows-[auto_1fr]',
+          // While dragging, drop pointer events so the backdrop cells beneath the (large) source
+          // footprint receive the drag — otherwise a tile can't be dropped back onto its own area.
+          dragState === 'dragging' && 'opacity-50 pointer-events-none',
+          classNames,
+        )}
         style={{ ...rect, ...sizeOverride }}
         ref={rootRef}
       >
         <Card.Header>
           <Card.DragHandle ref={dragHandleRef} />
+          {children}
         </Card.Header>
-        {children}
         {!readonly && (
           <button
             ref={resizeHandleRef}
@@ -153,6 +168,15 @@ export const GridCell = ({
         )}
       </Card.Root>
 
+      {/* Resize outline: previews the target size while dragging the handle; the tile snaps to whole
+          cells only on release (see the resize draggable's onDrop). */}
+      {resizeGhost && (
+        <div
+          className='pointer-events-none absolute z-10 rounded-lg ring-2 ring-accent-bg'
+          style={{ left: rect.left, top: rect.top, width: resizeGhost.width, height: resizeGhost.height }}
+        />
+      )}
+
       {/* Drag preview: a same-sized clone following the cursor (see onGenerateDragPreview). */}
       {preview &&
         createPortal(
@@ -162,8 +186,8 @@ export const GridCell = ({
           >
             <Card.Header>
               <Card.DragHandle />
+              {children}
             </Card.Header>
-            {children}
           </Card.Root>,
           preview.container,
         )}
