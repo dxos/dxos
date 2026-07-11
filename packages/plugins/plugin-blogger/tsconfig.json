@@ -1,0 +1,79 @@
+{
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "dx.config.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-masonry"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-connector"
+    },
+    {
+      "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
+    }
+  ]
+}
