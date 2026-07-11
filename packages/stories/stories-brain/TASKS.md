@@ -54,8 +54,11 @@ deterministic (no LLM) → foreground stays fast; all LLM cost is batchable enri
       no-reply/unsubscribe).
 - [ ] **Minimize non-people summarization** — one-line label ("this is a bill") instead of a full
       summary for org mail; reserve summary budget for person mail.
-- [ ] **Default draft `Instructions`** — plain/direct/concise, no obsequious hedging ("if I may be so
-      bold"). Ship the object + re-score drafts with it.
+- [x] **Default draft `Instructions`** — shipped `DEFAULT_DRAFT_INSTRUCTIONS` (plain/direct, no
+      obsequious hedging) in `pipelines/draft.ts`; `draftReply` applies it by default (omit → default;
+      `''` opts out; a custom string overrides). Extracted a pure `buildDraftPrompt` + unit test
+      (`draft-instructions.test.ts`). `DRAFT_INSTRUCTIONS` env still overrides. **Re-score** = run
+      `draft-responses.bench.test.ts` over the corpus (needs models).
 - [ ] **Model-policy map** — declarative `stageId → model DXN`, overridable per run, defaults seeded
       from the ladder (generalize `ExtractOptions.model`).
 - [ ] **Two-tier latency** — foreground (sync + classify + tag) vs background prioritized batching of

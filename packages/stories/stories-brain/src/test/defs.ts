@@ -80,7 +80,11 @@ export const EVAL_SCORE = process.env.EVAL_SCORE !== '0';
 /** Default message count for the intentionally-small html-vs-text benchmark. */
 export const DEFAULT_HTML_VS_TEXT_N = 10;
 
-/** Optional user instructions steering the draft-responses benchmark (a proxy for the Mailbox Instructions object). */
+/**
+ * Overrides the reply-style instructions for the draft-responses benchmark (a proxy for the Mailbox
+ * Instructions object). Unset → the pipeline's `DEFAULT_DRAFT_INSTRUCTIONS` (plain/direct/no hedging);
+ * set to empty to draft with the base rules only.
+ */
 export const DRAFT_INSTRUCTIONS = process.env.DRAFT_INSTRUCTIONS?.trim();
 
 /** Preferred subject when none is given and it is present in the fact store. */
