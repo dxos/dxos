@@ -45,6 +45,14 @@ tasks:
       cache: false
       runInCI: false
       interactive: true
+  # The bench suite with CLI flags (models/limit/tests/…) — CLI > env > .env > default.
+  #   moon run stories-brain:bench -- --models qwen --limit 10 --tests tags,facts
+  bench:
+    command: 'node scripts/bench.mjs'
+    options:
+      cache: false
+      runInCI: false
+      interactive: true
   # The trivial, LLM-free feed-stats pipeline over the fixture (skips if the fixture is absent). A
   # single-file run, since the shared `test` task's bash wrapper ignores a `-- <file>` filter.
   stats:
