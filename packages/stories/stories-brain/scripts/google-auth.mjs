@@ -28,9 +28,10 @@
 //   node scripts/google-auth.mjs            # ensure a refresh token (consent if needed), print status
 //   node scripts/google-auth.mjs --token    # print a fresh access token to stdout (for piping)
 //   node scripts/google-auth.mjs --force    # re-consent even if a refresh token exists
+//   node scripts/google-auth.mjs --revoke   # revoke the grant at Google and delete the local token
 
 import { exec, execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -175,6 +176,34 @@ const refreshAccessToken = async (refreshToken) => {
   return json.access_token;
 };
 
+/** Revokes the grant at Google and deletes the local token file. */
+const revoke = async () => {
+  const saved = loadToken();
+  const token = saved?.refresh_token ?? saved?.access_token;
+  if (token) {
+    try {
+      const response = await fetch('https://oauth2.googleapis.com/revoke', {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ token }),
+      });
+      console.error(
+        response.ok
+          ? 'Revoked the grant at Google.'
+          : `revoke returned ${response.status} (removing local token anyway).`,
+      );
+    } catch (err) {
+      console.error(`revoke request failed: ${err.message} (removing local token anyway).`);
+    }
+  }
+  if (existsSync(TOKEN_PATH)) {
+    rmSync(TOKEN_PATH);
+    console.error(`Deleted ${TOKEN_PATH}`);
+  } else {
+    console.error('No local token to delete.');
+  }
+};
+
 /** Ensures a refresh token exists (consenting if needed) and returns a fresh access token. */
 export const getAccessToken = async ({ force = false } = {}) => {
   loadEnvTemplate();
@@ -198,12 +227,16 @@ export const getAccessToken = async ({ force = false } = {}) => {
 
 // CLI entry (skipped when imported by fetch-fixture.mjs).
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const force = process.argv.includes('--force');
-  const printToken = process.argv.includes('--token');
-  const token = await getAccessToken({ force });
-  if (printToken) {
-    process.stdout.write(token);
+  if (process.argv.includes('--revoke')) {
+    await revoke();
   } else {
-    console.error('OK — access token acquired (use --token to print it for piping).');
+    const force = process.argv.includes('--force');
+    const printToken = process.argv.includes('--token');
+    const token = await getAccessToken({ force });
+    if (printToken) {
+      process.stdout.write(token);
+    } else {
+      console.error('OK — access token acquired (use --token to print it for piping).');
+    }
   }
 }
