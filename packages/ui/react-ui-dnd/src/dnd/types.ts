@@ -59,13 +59,13 @@ export type DndTargetData = DndTileData | DndPlaceholderData;
  */
 export interface DndContainerHandler<TData = any, TObject = any> {
   /**
-   * Container identifier. Must be unique per live container instance across the whole Mosaic root
-   * (append a `useId()` discriminator when the same object may mount in multiple containers).
+   * Container identifier. Must be unique per live container instance across the whole `Dnd.Root`
+   * (use `useContainerId` to append a discriminator when the same object may mount in multiple containers).
    */
   id: string;
 
   /**
-   * Open, container-defined descriptor of what this container holds. Not interpreted by Mosaic;
+   * Open, container-defined descriptor of what this container holds. Not interpreted by the core;
    * surfaced to the other container's `canDrop`/`onDrop` so cross-container drop rules can decide
    * whether a source is acceptable without parsing the opaque `id`.
    */
