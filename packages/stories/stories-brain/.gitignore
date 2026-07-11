@@ -1,5 +1,3 @@
 # Local research fixtures, fact stores, and results — private mailbox data. Never commit.
-/fixtures/
-
-# Local 1Password env template (points at a personal vault); rendered with `op inject`.
-.env.tpl
+# Everything under fixtures/ is ignored EXCEPT the tracked static/ test data.
+/fixtures/local/*

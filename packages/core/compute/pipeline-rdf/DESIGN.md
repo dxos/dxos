@@ -48,16 +48,16 @@ not), plus two special values when polarity or the whole commitment is unknown. 
 the uncertainty as **epistemic** (limited knowledge — "I think") or **aleatory** (inherent chance —
 "maybe it rains").
 
-| value | modality    | polarity | reads as                                    | cue                        |
-| ----- | ----------- | -------- | ------------------------------------------- | -------------------------- |
-| `CT+` | certain     | positive | it is the case                              | plain assertion            |
-| `CT-` | certain     | negative | it is not the case                          | "not", "never", "no"       |
-| `PR+` | probable    | positive | it probably is                              | "probably", "likely"       |
-| `PR-` | probable    | negative | it probably is not                          | "probably not", "doubt"    |
-| `PS+` | possible    | positive | it possibly is                              | "might", "maybe", "could"  |
-| `PS-` | possible    | negative | it possibly is not                          | "might not"                |
-| `CTu` | certain     | unknown  | definitely one way, but which is unknown    | "whether or not it holds"  |
-| `Uu`  | uncommitted | —        | the author commits to nothing about it      | questions, requests, hypotheticals |
+| value | modality    | polarity | reads as                                 | cue                                |
+| ----- | ----------- | -------- | ---------------------------------------- | ---------------------------------- |
+| `CT+` | certain     | positive | it is the case                           | plain assertion                    |
+| `CT-` | certain     | negative | it is not the case                       | "not", "never", "no"               |
+| `PR+` | probable    | positive | it probably is                           | "probably", "likely"               |
+| `PR-` | probable    | negative | it probably is not                       | "probably not", "doubt"            |
+| `PS+` | possible    | positive | it possibly is                           | "might", "maybe", "could"          |
+| `PS-` | possible    | negative | it possibly is not                       | "might not"                        |
+| `CTu` | certain     | unknown  | definitely one way, but which is unknown | "whether or not it holds"          |
+| `Uu`  | uncommitted | —        | the author commits to nothing about it   | questions, requests, hypotheticals |
 
 `Uu` is the value directive facts carry (see [Illocutions](#illocutions-speech-acts)): a question or
 request states no truth, so its proposition is uncommitted rather than asserted.
