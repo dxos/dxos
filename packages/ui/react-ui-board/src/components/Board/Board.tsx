@@ -511,17 +511,12 @@ const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
         cancelAnimationFrame(frame);
         frame = 0;
       }
-      // Restore scroll-snap (removed while auto-scrolling — see tick) so manual scrolling snaps to grid.
-      element.style.scrollSnapType = '';
     };
     const tick = () => {
       if (!velocityX && !velocityY) {
         frame = 0;
         return;
       }
-      // Disable scroll-snap while auto-scrolling: with snap on, each incremental scrollBy re-snaps to
-      // the next grid line and the viewport jumps a whole cell at a time instead of scrolling smoothly.
-      element.style.scrollSnapType = 'none';
       element.scrollBy({ left: velocityX, top: velocityY });
       frame = requestAnimationFrame(tick);
     };
@@ -585,9 +580,10 @@ const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
 
   return (
     <ScrollArea.Root orientation='all' classNames={classNames}>
-      {/* `flex` so the viewport's `m-auto` centers the board; overflow scrolls both axes. `snap-*`
-          makes scrolling magnetically settle on the grid lines (snap points are the backdrop cells). */}
-      <ScrollArea.Viewport ref={ref} classNames='flex snap-both snap-proximity'>
+      {/* `flex` so the viewport's `m-auto` centers the board; overflow scrolls both axes. (Scroll-snap
+          was removed: proximity snapping re-snapped the viewport after programmatic scrolls, fighting
+          the zoom-anchor / auto-scroll compensation.) */}
+      <ScrollArea.Viewport ref={ref} classNames='flex'>
         {children}
       </ScrollArea.Viewport>
     </ScrollArea.Root>
@@ -680,8 +676,7 @@ const BoardDropTarget = ({ position, rect, containerId, onAddClick }: BoardDropT
     <div
       ref={ref}
       style={rect}
-      // `snap-start` aligns each cell's leading edge to the viewport, so scrolling snaps to the grid.
-      className='group/cell absolute flex snap-start items-center justify-center rounded-sm border border-dashed border-separator opacity-50'
+      className='group/cell absolute flex items-center justify-center rounded-sm border border-dashed border-separator opacity-50'
     >
       {onAddClick && (
         <IconButton
