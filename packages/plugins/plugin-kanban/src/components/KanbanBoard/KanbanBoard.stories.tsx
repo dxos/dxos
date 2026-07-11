@@ -50,9 +50,7 @@ const DefaultStory = () => {
     // schema mutations (e.g. reordering pivot-field options during a column drag) persist and read
     // back. `createDirectChangeCallback` mutates it in place — the ECHO callback would throw
     // "Schema is not mutable" for these non-ECHO, in-memory story objects.
-    const jsonSchema = JsonSchema.toJsonSchema(Organization.Organization) as Parameters<
-      typeof createDirectChangeCallback
-    >[1];
+    const jsonSchema = JsonSchema.toJsonSchema(Organization.Organization);
     const view = ViewModel.make({
       query: Query.select(Filter.type(Organization.Organization)),
       jsonSchema,
