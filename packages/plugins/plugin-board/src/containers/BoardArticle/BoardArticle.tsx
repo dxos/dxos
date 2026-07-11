@@ -67,7 +67,7 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
   const controller = useRef<BoardController>(null);
   const addTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [pickerState, setPickerState] = useState<{ position: Position } | null>(null);
-  const [zoom, setZoom] = useState(false);
+  const [zoom, setZoom] = useState(1);
 
   const layout = useMemo<Layout>(() => ({ items: normalizeCells(board.layout.cells) }), [board.layout.cells]);
   const bounds = useMemo(
@@ -176,11 +176,11 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
                 onClick={() => controller.current?.center()}
               />
               <Toolbar.IconButton
-                icon={zoom ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
+                icon={zoom < 1 ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
                 iconOnly
                 label={t('toggle-zoom.button')}
                 disabled={!hasAttention}
-                onClick={() => setZoom((value) => !value)}
+                onClick={() => setZoom((value) => (value < 1 ? 1 : 0.5))}
               />
               <Toolbar.IconButton
                 icon='ph--plus--regular'

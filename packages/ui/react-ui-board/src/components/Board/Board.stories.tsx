@@ -54,9 +54,10 @@ const defaultBounds = { columns: 12, rows: 12 };
 
 type StoryArgs = BoardRootProps & { items: TestItem[] };
 
-const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, ...props }: StoryArgs) => {
+const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomProp, ...props }: StoryArgs) => {
   const [items, setItems] = useState(itemsProp ?? testItems);
   const [layout, setLayout] = useState<Layout>(layoutProp ?? defaultLayout);
+  const [zoom, setZoom] = useState(zoomProp ?? 1);
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
     (position) => {
@@ -87,6 +88,8 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, ...props }: 
         layout={layout}
         mode={mode}
         bounds={defaultBounds}
+        zoom={zoom}
+        onZoomChange={setZoom}
         onChange={setLayout}
         onAdd={handleAdd}
         onDelete={handleDelete}
@@ -107,6 +110,11 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, ...props }: 
             </Board.Content>
           </Board.Viewport>
         </Board.Container>
+        {/* Overlaid overview map + zoom control (bottom-right). */}
+        <div className='absolute bottom-4 right-4 z-10 flex flex-col items-end gap-2'>
+          <Board.Map classNames='w-40' />
+          <Board.Zoom />
+        </div>
       </Board.Root>
     </Dnd.Root>
   );
@@ -192,12 +200,15 @@ export const RejectIfNoFit: Story = {
   },
 };
 
-/** Overview mode: the board is scaled down and drag/resize are disabled (controlled via `zoom`). */
+/**
+ * Starts zoomed out (overview): the board is scaled down and drag/resize are disabled. Use the −/+
+ * control (bottom-right) to zoom back to 1:1, which re-enables dragging; the map shows the tiles.
+ */
 export const Zoom: Story = {
   args: {
     items: testItems,
     layout: defaultLayout,
     mode: 'float' satisfies GridMode,
-    zoom: true,
+    zoom: 0.5,
   },
 };

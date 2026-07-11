@@ -90,7 +90,7 @@ export const BoardCell = ({
     return draggable({
       element: rootRef.current,
       dragHandle: dragHandleRef.current,
-      canDrag: () => isDraggable !== false && !readonly && !zoom,
+      canDrag: () => isDraggable !== false && !readonly && zoom >= 1,
       getInitialData: () =>
         ({
           type: 'tile',
@@ -139,7 +139,7 @@ export const BoardCell = ({
   useEffect(() => {
     const handle = resizeHandleRef.current;
     if (handle) {
-      handle.style.visibility = dragging || resizeGhost || zoom ? 'hidden' : '';
+      handle.style.visibility = dragging || resizeGhost || zoom < 1 ? 'hidden' : '';
     }
   }, [dragging, resizeGhost, zoom]);
 
@@ -150,7 +150,7 @@ export const BoardCell = ({
   useEffect(() => {
     const handle = resizeHandleRef.current;
     const viewport = viewportRef.current;
-    if (!handle || readonly || zoom) {
+    if (!handle || readonly || zoom < 1) {
       return;
     }
 

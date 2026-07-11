@@ -55,8 +55,13 @@ type BoardContextValue = {
   readonly: boolean;
   layout: Layout;
   mode: GridMode;
-  /** Overview mode: the board is scaled down and drag/resize are disabled. */
-  zoom: boolean;
+  /** Scale factor in (0, 1]: 1 is actual size (draggable); below 1 is an overview (drag/resize off). */
+  zoom: number;
+  /** Smallest zoom the controls will step down to. */
+  minZoom: number;
+  /** Step the zoom in/out by `zoomStep`, clamped to [minZoom, 1]. */
+  zoomIn: () => void;
+  zoomOut: () => void;
   /** Cell size and gap in px (converted from the `cellSize`/`gap` props, which are in rem). */
   cellSize: GridCellSize;
   gap: number;
@@ -112,8 +117,14 @@ type BoardRootProps = PropsWithChildren<{
    * reject (the tile springs back). Defaults to {@link pushToFit} (push occupants out of the way).
    */
   resolver?: DropResolver;
-  /** Overview mode (controlled): scales the board down and disables drag/resize. */
-  zoom?: boolean;
+  /** Zoom scale in (0, 1] (controlled): 1 is actual size; below 1 is an overview (drag/resize off). */
+  zoom?: number;
+  /** Called by the zoom controls (`Board.Zoom`) with the next clamped scale. */
+  onZoomChange?: (zoom: number) => void;
+  /** Smallest scale the zoom controls step down to (default 0.25). */
+  minZoom?: number;
+  /** Zoom in/out step (default 0.25). */
+  zoomStep?: number;
   /** Cell size in rem. */
   cellSize?: GridCellSize;
   /** Gap between cells in rem. */
@@ -143,7 +154,10 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
       mode = 'pack',
       bounds,
       resolver = pushToFit,
-      zoom = false,
+      zoom = 1,
+      onZoomChange,
+      minZoom = 0.25,
+      zoomStep = 0.25,
       cellSize = defaultCellSize,
       gap = defaultGap,
       settleDelay = 500,
@@ -200,6 +214,16 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
       [layout, cellSizePx, gapPx],
     );
     useImperativeHandle(forwardedRef, () => ({ center }), [center]);
+
+    // Zoom stepping (clamped to [minZoom, 1]); the scale is controlled by the consumer via onZoomChange.
+    const zoomIn = useCallback(
+      () => onZoomChange?.(Math.min(1, Math.round((zoom + zoomStep) * 100) / 100)),
+      [onZoomChange, zoom, zoomStep],
+    );
+    const zoomOut = useCallback(
+      () => onZoomChange?.(Math.max(minZoom, Math.round((zoom - zoomStep) * 100) / 100)),
+      [onZoomChange, zoom, zoomStep, minZoom],
+    );
 
     const onResize = useCallback(
       (id: string, size: { w: number; h: number }, constraints?: GridConstraints) => {
@@ -297,6 +321,9 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
         layout={layout}
         mode={mode}
         zoom={zoom}
+        minZoom={minZoom}
+        zoomIn={zoomIn}
+        zoomOut={zoomOut}
         cellSize={cellSizePx}
         gap={gapPx}
         columns={columns}
@@ -335,10 +362,10 @@ const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
     // `m-auto` centers the board within the (flex) scroll container when it fits, and stays fully
     // scrollable when it overflows (unlike justify-center, which would clip the top/left). Scroll
     // snap points live on the backdrop cells (snap-to-grid), not here (see Board.Container / Backdrop).
-    // `scale-50` (zoom) gives an overview; drag/resize are disabled in that mode (see BoardCell).
+    // A zoom < 1 gives a scaled overview; drag/resize are disabled in that mode (see BoardCell).
     <div
-      className={mx('relative m-auto transition-transform duration-300', zoom && 'scale-50', classNames)}
-      style={{ width: bounds.width, height: bounds.height }}
+      className={mx('relative m-auto transition-transform duration-300', classNames)}
+      style={{ width: bounds.width, height: bounds.height, transform: zoom !== 1 ? `scale(${zoom})` : undefined }}
     >
       {children}
     </div>
@@ -573,6 +600,70 @@ const BoardDropTarget = ({ position, rect, containerId, onAddClick }: BoardDropT
 };
 
 //
+// Zoom
+//
+
+const BOARD_ZOOM_NAME = 'Board.Zoom';
+
+type BoardZoomProps = ThemedClassName<{}>;
+
+// A compact −/+ zoom control (reusing the shared IconButton). Stepping is clamped to [minZoom, 1].
+const BoardZoom = ({ classNames }: BoardZoomProps) => {
+  const { t } = useTranslation(translationKey);
+  const { zoom, minZoom, zoomIn, zoomOut } = useBoardContext(BOARD_ZOOM_NAME);
+  return (
+    <div role='group' className={mx('flex items-center rounded-sm bg-modalSurface', classNames)}>
+      <IconButton
+        icon='ph--minus--regular'
+        iconOnly
+        label={t('zoom-out.button')}
+        disabled={zoom <= minZoom}
+        onClick={zoomOut}
+      />
+      <IconButton icon='ph--plus--regular' iconOnly label={t('zoom-in.button')} disabled={zoom >= 1} onClick={zoomIn} />
+    </div>
+  );
+};
+
+BoardZoom.displayName = BOARD_ZOOM_NAME;
+
+//
+// Map
+// NOTE: A compact overview: every tile drawn as a proportional rect within the board's column/row extent.
+//
+
+const BOARD_MAP_NAME = 'Board.Map';
+
+type BoardMapProps = ThemedClassName<{}>;
+
+const BoardMap = ({ classNames }: BoardMapProps) => {
+  const { layout, columns, rows } = useBoardContext(BOARD_MAP_NAME);
+  const tiles = useMemo(() => Object.entries(layout.items), [layout.items]);
+
+  return (
+    <div
+      className={mx('relative overflow-hidden rounded-sm border border-separator bg-modalSurface', classNames)}
+      style={{ aspectRatio: `${columns} / ${rows}` }}
+    >
+      {tiles.map(([id, position]) => (
+        <div
+          key={id}
+          className='absolute rounded-[1px] bg-accentSurface'
+          style={{
+            left: `${(position.x / columns) * 100}%`,
+            top: `${(position.y / rows) * 100}%`,
+            width: `${((position.w ?? 1) / columns) * 100}%`,
+            height: `${((position.h ?? 1) / rows) * 100}%`,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+BoardMap.displayName = BOARD_MAP_NAME;
+
+//
 // Board
 //
 
@@ -583,6 +674,8 @@ export const Board = {
   Content: BoardContent,
   Backdrop: BoardBackdrop,
   Cell: BoardCell,
+  Zoom: BoardZoom,
+  Map: BoardMap,
 };
 
 export type {
@@ -590,8 +683,10 @@ export type {
   BoardCellProps,
   BoardContainerProps,
   BoardContentProps,
+  BoardMapProps,
   BoardRootProps,
   BoardViewportProps,
+  BoardZoomProps,
 };
 
 export { useBoardContext };
