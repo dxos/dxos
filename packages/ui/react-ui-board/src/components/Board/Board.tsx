@@ -803,7 +803,7 @@ const BOARD_MAP_NAME = 'Board.Map';
 type BoardMapProps = ThemedClassName<{}>;
 
 const BoardMap = ({ classNames }: BoardMapProps) => {
-  const { layout, columns, rows, cellSize, gap } = useBoardContext(BOARD_MAP_NAME);
+  const { layout, columns, rows, cellSize, gap, selected } = useBoardContext(BOARD_MAP_NAME);
   // Match the grid's pixel aspect (not the viewport's), and place tiles by their exact rects so the
   // map is a faithful scale model of the board.
   const bounds = useMemo(() => gridBounds(columns, rows, cellSize, gap), [columns, rows, cellSize, gap]);
@@ -819,7 +819,8 @@ const BoardMap = ({ classNames }: BoardMapProps) => {
         return (
           <div
             key={id}
-            className='absolute rounded-[1px] bg-accent-bg'
+            // Neutral fill, accent only for selected tiles.
+            className={mx('absolute rounded-[1px]', selected.has(id) ? 'bg-accent-bg' : 'bg-neutral-500')}
             style={{
               left: `${(rect.left / bounds.width) * 100}%`,
               top: `${(rect.top / bounds.height) * 100}%`,
