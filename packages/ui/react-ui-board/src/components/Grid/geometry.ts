@@ -9,16 +9,17 @@ export type GridCellSize = { width: number; height: number };
 
 /**
  * Pixel rect for a grid cell/item given its integer cell coordinates and size. Unlike Board (which
- * centers cell (0,0)), Grid coordinates are 0-indexed with a top-left origin, so the rect's origin
- * is a simple multiple of the cell pitch.
+ * centers cell (0,0)), Grid coordinates are 0-indexed with a top-left origin. A leading `gap` is
+ * included before the first cell so the gutter is symmetric on all four edges (matching the trailing
+ * `gap` in {@link gridBounds}); without it the grid hugs the top-left but has a margin bottom-right.
  */
 export const cellRect = (
   { x, y, w, h }: { x: number; y: number; w: number; h: number },
   cellSize: GridCellSize,
   gap: number,
 ): Rect => ({
-  left: x * (cellSize.width + gap),
-  top: y * (cellSize.height + gap),
+  left: gap + x * (cellSize.width + gap),
+  top: gap + y * (cellSize.height + gap),
   width: w * cellSize.width + Math.max(0, w - 1) * gap,
   height: h * cellSize.height + Math.max(0, h - 1) * gap,
 });

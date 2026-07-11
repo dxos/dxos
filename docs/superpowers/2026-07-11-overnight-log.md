@@ -81,6 +81,7 @@ kept diff focused). **Morning: reply/resolve the 4 threads once these land, or n
 The nits are all Minor/Trivial and do NOT block the queue — Phase 1 can merge without them.
 
 ### Grid drag-test findings + fixes (morning, live with user)
+
 - ✅ Tiles overflowed cells → Card min/max inline-size neutralized (`a2d1cd4173`).
 - ✅ Title moved into header row next to drag handle (`e5773f4ce9`).
 - ✅ Drag preview kept ballooning → custom preview sized to source (`a2d1cd4173`).
@@ -89,12 +90,19 @@ The nits are all Minor/Trivial and do NOT block the queue — Phase 1 can merge 
 - ✅ Container didn't scroll → story viewport wrapped in `overflow-auto` (`17bf144b81`).
 - ✅ `+` add buttons work.
 
-### FOLLOW-UP — Grid resize enhancements (needs interactive drag-testing with user)
+- ✅ Grid hugged top-left with a margin only bottom-right → `cellRect` given a leading gap so the
+  gutter is symmetric on all edges (verified 16px on all four) (`<pending commit>`).
+
+### FOLLOW-UP — Grid interaction enhancements (need interactive drag-testing with user)
+
 1. Resize from **any corner or side** (8 handles, not just bottom-right); top/left handles must move
    x/y as well as w/h — extend `engine.resizeItem` to take a new `{x,y,w,h}` (keep pure + unit-tested).
 2. **Magnetic** resize ghost: snap to the nearest cell boundary when within ~⅓ cell, else move freely;
    commit snapped size on release. (Current ghost is raw-follow + snap-only-on-release.)
-   Both live in `GridCell.tsx` (resize handle) + `engine.ts`. Couldn't spawn a task chip (MCP offline).
+3. **Directional push:** collisions currently always push occupants DOWN. Decide push axis
+   (right vs down) from the drag direction / dominant overlap axis (gridstack-style). Engine change in
+   `resolveCollisions` + needs drag-tuning for feel.
+   All live in `GridCell.tsx` + `engine.ts`. Couldn't spawn a task chip (MCP offline).
 
 ### Suggested next (morning, after #12165 merges)
 
