@@ -12,12 +12,12 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Scope from 'effect/Scope';
 
 import {
+  type RpcTimingOptions,
   applyRpcTimingMiddleware,
   isRpcTimingEnabled,
   resolveRpcTimingOptions,
   rpcTimingClientLayer,
   rpcTimingServerLayer,
-  type RpcTimingOptions,
 } from './rpc-timing';
 
 export type ServeRpcGroupOptions = {

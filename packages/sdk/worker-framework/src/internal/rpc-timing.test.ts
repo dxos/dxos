@@ -10,6 +10,8 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
+
 import { makeRpcClient, serveRpcGroup } from './rpc';
 import { RpcTimingMetadata, applyRpcTimingMiddleware } from './rpc-timing';
 
@@ -44,15 +46,15 @@ describe('rpc timing middleware', () => {
     onTestFinished(() => server.close());
 
     const scope = Effect.runSync(Scope.make());
-    onTestFinished(() => Effect.runPromise(Scope.close(scope, Exit.void)));
+    onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
 
-    const client = (await Effect.runPromise(
+    const client = (await EffectEx.runPromise(
       makeRpcClient(channel.port2, TimingRpcs, { timing: true }).pipe(Scope.extend(scope)),
     )) as {
       reportTiming: (payload: Record<string, never>) => Effect.Effect<{ queueWaitMs: number }>;
     };
 
-    const result = await Effect.runPromise(client.reportTiming({}));
+    const result = await EffectEx.runPromise(client.reportTiming({}));
     expect(result.queueWaitMs).toBeGreaterThanOrEqual(0);
   });
 

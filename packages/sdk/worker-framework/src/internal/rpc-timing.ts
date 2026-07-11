@@ -13,8 +13,6 @@ import * as Option from 'effect/Option';
 
 import { log } from '@dxos/log';
 
-// @import-as-namespace
-
 /** Cross-thread comparable send timestamp stamped by the client middleware. */
 export const RPC_TIMING_SENT_AT_HEADER = 'x-dxos-rpc-sent-at';
 
