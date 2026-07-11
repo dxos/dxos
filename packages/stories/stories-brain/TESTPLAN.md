@@ -60,10 +60,13 @@ pnpm --filter @dxos/plugin-brain exec vitest run --project=node src/operations/o
 MailboxSync storybook (Archive → Download), or fetch it headlessly with the reusable tool:
 
 ```
-# one-time: create a Google Cloud OAuth "Desktop app" client (Gmail API + gmail.readonly scope)
-export GOOGLE_CLIENT_ID=...  GOOGLE_CLIENT_SECRET=...
-node scripts/fetch-fixture.mjs          # first run opens the browser for one consent, then writes the fixture
+# one-time: create a Google Cloud OAuth "Desktop app" client (Gmail API + gmail.readonly scope);
+# put its id/secret in a git-ignored .env.tpl as op:// refs (see scripts/google-auth.mjs header).
+moon run stories-brain:fetch-fixture     # or: node scripts/fetch-fixture.mjs
 ```
+
+First run resolves the creds via `op inject`, opens the browser for one consent, saves a refresh
+token, syncs, and writes the fixture; later runs are non-interactive.
 
 `google-auth.mjs` runs a local-loopback OAuth flow (one browser consent, then a saved refresh token
 in `fixtures/local/.google-token.json` mints access tokens automatically); `fetch-fixture.mjs` runs

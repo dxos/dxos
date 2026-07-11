@@ -10,3 +10,12 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+  # Regenerate the private mailbox fixture from a live Gmail account (OAuth loopback + in-process sync).
+  # Interactive + network + writes git-ignored fixtures — never cached, never in CI. See scripts/README
+  # comments and TESTPLAN.md for the one-time Google OAuth client setup.
+  fetch-fixture:
+    command: 'node scripts/fetch-fixture.mjs'
+    options:
+      cache: false
+      runInCI: false
+      interactive: true
