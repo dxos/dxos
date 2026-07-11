@@ -52,6 +52,18 @@ const defaultLayout: Layout = {
 // A 12x12 initial board.
 const defaultBounds = { columns: 12, rows: 12 };
 
+// Tiles pushed to the four corners (and centre) of the 12x12 board — with overscroll on, selecting a
+// corner tile and zooming brings it to the centre, which the padding makes reachable.
+const cornerLayout: Layout = {
+  items: {
+    '0': { x: 0, y: 0, w: 2, h: 2 },
+    '1': { x: 10, y: 0, w: 2, h: 2 },
+    '2': { x: 0, y: 10, w: 2, h: 2 },
+    '3': { x: 10, y: 10, w: 2, h: 2 },
+    '4': { x: 5, y: 5, w: 2, h: 2 },
+  },
+};
+
 type StoryArgs = BoardRootProps & { items: TestItem[] };
 
 const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomProp, ...props }: StoryArgs) => {
@@ -210,7 +222,7 @@ export const RejectIfNoFit: Story = {
 export const Overscroll: Story = {
   args: {
     items: testItems,
-    layout: defaultLayout,
+    layout: cornerLayout,
     mode: 'float' satisfies GridMode,
     selectionMode: 'single',
     overscroll: true,
