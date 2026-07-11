@@ -284,12 +284,17 @@ const GridContainer = ({ classNames, children }: GridContainerProps) => {
         cancelAnimationFrame(frame);
         frame = 0;
       }
+      // Restore scroll-snap (removed while auto-scrolling — see tick) so manual scrolling snaps to grid.
+      element.style.scrollSnapType = '';
     };
     const tick = () => {
       if (!velocityX && !velocityY) {
         frame = 0;
         return;
       }
+      // Disable scroll-snap while auto-scrolling: with snap on, each incremental scrollBy re-snaps to
+      // the next grid line and the viewport jumps a whole cell at a time instead of scrolling smoothly.
+      element.style.scrollSnapType = 'none';
       element.scrollBy({ left: velocityX, top: velocityY });
       frame = requestAnimationFrame(tick);
     };
