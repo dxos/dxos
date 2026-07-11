@@ -81,6 +81,7 @@ export const extractFactsForVariant = (
   db: Database.Database,
   pageSize = 1,
   onMessage?: () => void,
+  concurrency = 1,
 ): Promise<FactsRunResult> =>
   EffectEx.runPromise(
     Effect.gen(function* () {
@@ -105,7 +106,7 @@ export const extractFactsForVariant = (
           ),
         );
 
-      const { processed } = yield* runFactPipeline({ feed, cursors: makeCursors(), extract, pageSize });
+      const { processed } = yield* runFactPipeline({ feed, cursors: makeCursors(), extract, pageSize, concurrency });
       const store = yield* FactStore;
       const facts = yield* store.query({});
       return { processed, facts } satisfies FactsRunResult;

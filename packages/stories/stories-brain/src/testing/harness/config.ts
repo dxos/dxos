@@ -32,6 +32,13 @@ export const FACT_STORE_FIXTURE =
 /** Cap on messages, for fast iteration (`LIMIT=10`). Undefined → all messages. */
 export const LIMIT = process.env.LIMIT ? Math.max(0, Number(process.env.LIMIT)) : undefined;
 
+/**
+ * In-flight parallelism for per-message fact extraction. Undefined → the bench picks a per-variant
+ * default (parallel for network-bound remote models, serial for local ollama). `CONCURRENCY=n`
+ * forces a fixed value for every variant.
+ */
+export const CONCURRENCY = process.env.CONCURRENCY ? Math.max(1, Number(process.env.CONCURRENCY)) : undefined;
+
 //
 // Results.
 //

@@ -61,20 +61,20 @@ All local, uncached, never in CI.
 Benches `bench --tests <name>` can select (dependency order — `extract-facts` writes the fact store the
 fact tests read):
 
-| Bench (`--tests`)    | Does                                                                                  | Model  |
-| -------------------- | ------------------------------------------------------------------------------------- | ------ |
-| `extract-facts`      | Extract RDF facts — incl. questions/requests as directive facts — → `fact-store.json` | models |
-| `extract-contacts`   | Extract actors / senders as contact objects                                           | models |
-| `feed-stats`         | Message / thread / sender counts                                                      | —      |
-| `subject-facts`      | All facts for `SUBJECT` + their source messages (fact→source bridge)                  | —      |
-| `list-questions`     | The directive facts (questions / requests) in the store                               | —      |
-| `tags`               | Tag each message (topics + spam)                                                      | models |
-| `summarize-messages` | Per-message summary (terse bullets)                                                   | models |
-| `summarize-threads`  | Per-thread summary                                                                    | models |
-| `extract-questions`  | Classify each act — question / request / notification                                 | models |
-| `draft-responses`    | Draft a reply per message (skips non-replyable mail)                                  | models |
-| `html-vs-text`       | Fact extraction over native `text/html` vs `text/plain`                               | models |
-| `html-to-markdown`   | HTML→markdown conversion throughput                                                   | —      |
+| Bench (`--tests`)    | Does                                                                                    | Model  |
+| -------------------- | --------------------------------------------------------------------------------------- | ------ |
+| `extract-facts`      | Extract RDF facts — incl. questions/requests as directive facts — → `fact-store.json`   | models |
+| `extract-contacts`   | Extract actors / senders as contact objects                                             | models |
+| `feed-stats`         | Message / thread / sender counts                                                        | —      |
+| `subject-facts`      | All facts for `SUBJECT` + their source messages (fact→source bridge)                    | —      |
+| `list-questions`     | The directive facts (questions / requests) in the store                                 | —      |
+| `tags`               | Tag each message (topics + spam)                                                        | models |
+| `summarize-messages` | Per-message summary (terse bullets)                                                     | models |
+| `summarize-threads`  | Per-thread summary                                                                      | models |
+| `extract-questions`  | Classify each act — question / request / notification                                   | models |
+| `draft-responses`    | Draft a reply per message (skips non-replyable mail)                                    | models |
+| `html-vs-text`       | Fact extraction over native `text/html` vs `text/plain`                                 | models |
+| `html-to-markdown`   | HTML→markdown conversion throughput                                                     | —      |
 | `brain-vs-rag-eval`  | Ablate database / brain / rag / hybrid on a subject prompt; blind judge scores each arm | models |
 
 `brain-vs-rag-eval` is the facts-help test: a fixed judge model grades every arm against one gold
@@ -86,17 +86,18 @@ the cheap response-only eval; `JUDGE=<name>` picks the grader (default `claude-s
 
 **Env knobs** (`bench` also accepts each as a `--flag`; CLI overrides env overrides `.env`):
 
-| Var                  | Effect                                                            |
-| -------------------- | ----------------------------------------------------------------- |
-| `MODELS`             | Model set: `local` \| `remote` \| comma-separated name substrings |
-| `LIMIT`              | Message cap; results go to `results/partial/`                     |
-| `TESTS`              | Comma-separated bench names (subset of the suite)                 |
-| `SUBJECT`            | Subject for subject-facts / brain-vs-rag                          |
+| Var                  | Effect                                                             |
+| -------------------- | ------------------------------------------------------------------ |
+| `MODELS`             | Model set: `local` \| `remote` \| comma-separated name substrings  |
+| `LIMIT`              | Message cap; results go to `results/partial/`                      |
+| `CONCURRENCY`        | extract-facts in-flight parallelism (default 10 remote / 1 local)  |
+| `TESTS`              | Comma-separated bench names (subset of the suite)                  |
+| `SUBJECT`            | Subject for subject-facts / brain-vs-rag                           |
 | `SKILL_MODES`        | brain-vs-rag arms to run (subset of database,brain,rag,hybrid)     |
 | `JUDGE`              | brain-vs-rag grading model (name substring; default claude-sonnet) |
-| `EVAL_SCORE`         | `0` skips brain-vs-rag judge scoring (response-only)              |
-| `SAMPLES`            | Max per-variant result rows written to JSON                       |
-| `DRAFT_INSTRUCTIONS` | User instructions steering the draft bench                        |
-| `FETCH_AFTER`        | `yyyy-mm-dd` sync-back start for `sync`                           |
+| `EVAL_SCORE`         | `0` skips brain-vs-rag judge scoring (response-only)               |
+| `SAMPLES`            | Max per-variant result rows written to JSON                        |
+| `DRAFT_INSTRUCTIONS` | User instructions steering the draft bench                         |
+| `FETCH_AFTER`        | `yyyy-mm-dd` sync-back start for `sync`                            |
 
 Results write to `fixtures/local/results/` (git-ignored): `<name>.json` (stats) + `<name>.md` (responses).

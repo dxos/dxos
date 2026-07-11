@@ -11,6 +11,7 @@ import { type RDF } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
 import {
+  CONCURRENCY,
   FACT_STORE_FIXTURE,
   extractFactsForVariant,
   fixtureExists,
@@ -27,6 +28,11 @@ import { FACT_STORE_MODEL } from './defs';
 
 // Which model's extracted fact set to persist as the Phase-2 fixture (falls back to the largest).
 const SAVE_MODEL = FACT_STORE_MODEL;
+
+// Default extraction parallelism per variant: remote models are network-bound (parallelize freely),
+// local ollama is GPU-bound (serial avoids thrashing). `CONCURRENCY` overrides both.
+const REMOTE_CONCURRENCY = 10;
+const concurrencyFor = (preset: string): number => CONCURRENCY ?? (preset === 'ollama' ? 1 : REMOTE_CONCURRENCY);
 
 describe.skipIf(!fixtureExists())('extract facts to fact store (multi-model)', () => {
   test(
@@ -54,6 +60,7 @@ describe.skipIf(!fixtureExists())('extract facts to fact store (multi-model)', (
             db,
             Math.max(1, messages.length),
             () => progress.advance(),
+            concurrencyFor(variant.preset),
           );
           progress.done();
           const durationMs = Math.round(performance.now() - start);

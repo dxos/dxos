@@ -58,6 +58,12 @@ const FLAGS = [
     help: 'comma-separated bench names (subset)',
   },
   {
+    flag: 'concurrency',
+    env: 'CONCURRENCY',
+    short: 'c',
+    help: 'extract-facts in-flight parallelism (default: 10 remote / 1 local)',
+  },
+  {
     flag: 'subject',
     env: 'SUBJECT',
     short: 's',
