@@ -56,9 +56,13 @@ export const makeDraft = ({
   return draft;
 };
 
-export const makePost = ({ name, summary }: { name?: string; summary?: string } = {}): Post => {
+export const makePost = ({
+  name,
+  summary,
+  createdAt,
+}: { name?: string; summary?: string; createdAt?: string } = {}): Post => {
   const outline = Markdown.make({});
-  const draft = makeDraft({ label: 'Draft 1' });
+  const draft = makeDraft({ label: 'Draft 1', createdAt });
   const post = Obj.make(Post, { name, summary, outline: Ref.make(outline), drafts: [Ref.make(draft)] });
   Obj.setParent(outline, post);
   Obj.setParent(draft, post);

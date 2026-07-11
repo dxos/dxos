@@ -1,0 +1,34 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import { CollectionModel } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
+import { Database, Obj, Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+
+import { Blogger } from '#types';
+
+import { AddPublication } from './definitions';
+
+const handler: Operation.WithHandler<typeof AddPublication> = AddPublication.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ name, target }) {
+      const publication = Blogger.makePublication({ name });
+
+      const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
+      invariant(db, 'Database not found.');
+
+      yield* CollectionModel.add({
+        object: publication,
+        target: Database.isDatabase(target) ? undefined : target,
+      }).pipe(Effect.provide(Database.layer(db)));
+
+      return Ref.make(publication);
+    }),
+  ),
+);
+
+export default handler;
