@@ -3,6 +3,18 @@
 Running log of autonomous work + decisions taken on best judgment (user offline until morning).
 Landing PR #12165 stays with the user; everything here is pushed to the same branch.
 
+## ⚠️ MORNING: PR #12165 is in the MERGE QUEUE (branch locked, can't push)
+
+You queued #12165 (Phase 1) for merge, so the remote branch is locked — all Phase 2/3 work below is
+**LOCAL COMMITS ONLY** on this branch, stacked on top of the Phase-1 commits. The remote branch will
+likely auto-delete on merge; the local worktree + commits survive.
+
+**Recovery (after #12165 merges to main):** the Phase 2/3 commits are all NEW files under
+`packages/ui/react-ui-board/src/components/Grid/` (+ docs), zero overlap with Phase 1 — so:
+`git fetch origin && git switch -c <new-branch> origin/main && git cherry-pick <sha>..<sha>` (SHAs
+listed under Status below), then open a Phase 2/3 PR. I cannot create branches or push, so this last
+step is yours.
+
 ## Standing constraints
 
 - Grow PR #12165 on this branch; do NOT merge.
