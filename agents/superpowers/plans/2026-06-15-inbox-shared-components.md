@@ -4,7 +4,7 @@
 
 **Goal:** Factor the duplicated Event/Message presentation in `plugin-inbox` into one shared set of primitives (`Row.*` Card rows, `Tile.*` mosaic shell, `Header.Root` chrome, `ObjectArticle` scaffold, shared toolbar groups), rename the inbox "thread" grouping to "conversation", and drop the bespoke `InboxSettings` surface.
 
-**Architecture:** Presentation-only components in `src/components/` (no app-framework deps) compose `@dxos/react-ui` `Card`/`Panel`/`Mosaic`. Containers in `src/containers/` keep their capability hooks and render through the shared components. Design source of truth: `docs/superpowers/specs/2026-06-15-inbox-shared-components-design.md`.
+**Architecture:** Presentation-only components in `src/components/` (no app-framework deps) compose `@dxos/react-ui` `Card`/`Panel`/`Mosaic`. Containers in `src/containers/` keep their capability hooks and render through the shared components. Design source of truth: `agents/superpowers/specs/2026-06-15-inbox-shared-components-design.md`.
 
 **Tech Stack:** React + TypeScript, `@dxos/react-ui`, `@dxos/react-ui-mosaic`, `@dxos/react-ui-menu`, moon, vitest + storybook.
 

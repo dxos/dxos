@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Effect Schema, `@dxos/echo`, `@dxos/echo-client` (Automerge doc loader, `QueueFactory`, `HypergraphImpl`), `@dxos/async` `Event`, vitest.
 
-**Spec:** `docs/superpowers/specs/2026-06-15-strong-deps-refresolver-design.md`. Read it first.
+**Spec:** `agents/superpowers/specs/2026-06-15-strong-deps-refresolver-design.md`. Read it first.
 
 **Commands:** `moon run echo:test`, `moon run echo-client:test`, single file via `moon run echo-client:test -- path/to/x.test.ts`. Lint: `moon run :lint -- --fix`.
 

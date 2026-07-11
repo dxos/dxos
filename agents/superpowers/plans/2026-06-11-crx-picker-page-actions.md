@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Effect Schema, vitest, webextension-polyfill, moon task runner.
 
-**Spec:** `docs/superpowers/specs/2026-06-11-crx-picker-page-actions-design.md`
+**Spec:** `agents/superpowers/specs/2026-06-11-crx-picker-page-actions-design.md`
 
 **Conventions (read first):**
 

@@ -1,4 +1,4 @@
-# task-tracking Skill — Tasks
+# task-planning Skill — Tasks
 
 ## Follow-ups
 

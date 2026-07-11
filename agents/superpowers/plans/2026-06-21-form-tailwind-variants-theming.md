@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, React, tailwind-variants, tailwind-merge, vitest, moon.
 
-**Spec:** `docs/superpowers/specs/2026-06-21-form-tailwind-variants-theming-design.md`
+**Spec:** `agents/superpowers/specs/2026-06-21-form-tailwind-variants-theming-design.md`
 
 **Conventions for every task:** run builds/tests with proto's moon:
 `export PROTO_HOME="$HOME/.proto" && export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"` (prefix once per shell). Filter out the `DEPOT_TOKEN` warning. Commit messages end with the Co-Authored-By trailer.

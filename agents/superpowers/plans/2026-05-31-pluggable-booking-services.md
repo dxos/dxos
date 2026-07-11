@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Effect `Schema`, `@dxos/echo` (`Obj`/`Ref`), `@dxos/app-framework` capabilities, `@dxos/react-ui` + `@dxos/react-ui-form`, `@dxos/edge-client` (`proxyFetchLegacy`), vitest via `moon`, Storybook.
 
-**Reference design:** `docs/superpowers/specs/2026-05-31-pluggable-booking-services-design.md`
+**Reference design:** `agents/superpowers/specs/2026-05-31-pluggable-booking-services-design.md`
 
 **Conventions (from CLAUDE.md):** single quotes; arrow functions; no `as` casts to silence types; `@dxos` workspace deps are `workspace:*` (never catalog); new packages set `"private": true`; comments end with a period; barrel imports; tests use `describe`/`test('x', ({ expect }) => ...)`.
 

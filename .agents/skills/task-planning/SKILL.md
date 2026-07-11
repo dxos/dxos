@@ -1,9 +1,9 @@
 ---
-name: task-tracking
-description: Use when work spans multiple steps, phases, or sessions, when resuming a task started earlier, when the user asks for a plan/roadmap/progress tracking, or when they use the `$track` / `track:` sentinel. Covers maintaining a durable TASKS.md in the active package or directory.
+name: task-planning
+description: Use when work spans multiple steps, phases, or sessions, when resuming a task started earlier, when the user asks for a plan/roadmap/progress tracking, or when they use the `$track` / `track:`, `$hydrate`, `$resume`, or `$session` sentinel. Covers the session registry (`.agents/sessions/registry.yml`), maintaining a durable TASKS.md + DESIGN.md per work-stream, and checkpointing/reloading session state across sessions and PRs.
 ---
 
-# Task Tracking
+# Task Planning
 
 ## Overview
 
@@ -20,6 +20,46 @@ repo. Use your judgment about when a task warrants one — err toward creating i
 **Never reach for a background task chip (`spawn_task`) to record a follow-up on
 the work you're doing — that follow-up belongs in `TASKS.md`.** Task chips are
 only for genuinely separate work that should spin off into its own session.
+
+## Sessions (registry)
+
+A **session** is a work-stream — one coherent effort, usually one branch/worktree
+— with its own `TASKS.md` (the ledger) and `DESIGN.md` (the _why_: spec +
+decisions). All sessions are listed in a committed registry so you and any future
+session can see everything in flight and resume the right one.
+
+**Registry:** `.agents/sessions/registry.yml` — one entry per session, recording
+where its docs and PRs live:
+
+```yaml
+sessions:
+  - name: mailbox-research # stable slug
+    status: active # active | paused | blocked | ended
+    branch: claude/mailboxsync-…
+    created: 2026-07-05
+    summary: One line — what this stream delivers.
+    tasks: path/to/TASKS.md # a package file, or .agents/sessions/<name>/TASKS.md
+    design: path/to/DESIGN.md # spec + decisions (a REPORT.md counts)
+    prs: [12163]
+    resume: 'The single next action.'
+ended: []
+```
+
+- The registry records the **location** of each doc, so an existing effort points
+  at its package files and a brand-new session defaults to
+  `.agents/sessions/<name>/{TASKS.md,DESIGN.md}`. Keep it committed and current.
+
+### The `$session` sentinel
+
+- `$session new <name> [summary]` — add an `active` entry (branch = current);
+  scaffold `.agents/sessions/<name>/{TASKS.md,DESIGN.md}` unless the docs already
+  live somewhere (record that path instead). Confirm in one line.
+- `$session list` — print the active sessions from the registry.
+- `$session end <name>` — move the entry to `ended`, recording the final PR/status.
+
+`$resume` / `$hydrate` (see "Session handoff") key off this registry: **which
+session** is resolved by name (`$resume <name>`) or, with no argument, by the
+entry whose `branch` matches the current one — never a guess.
 
 ## When to Use
 
@@ -42,6 +82,18 @@ A `UserPromptSubmit` hook (`.claude/hooks/track.sh`) detects it and injects a
 directive to append `<text>` to the active `TASKS.md`. When you see that
 directive, add the item and confirm in one line.
 
+### The `$hydrate` / `$resume` sentinels
+
+The same hook detects two session-handoff sentinels (see "Session handoff"
+below for what each does):
+
+- `$hydrate` (also `$checkpoint`) — **checkpoint** the session before you stop or
+  open a PR: reconcile `TASKS.md`, refresh the resume pointer, account for
+  uncommitted work.
+- `$resume` (also `$rehydrate`) — **reload** state at the start of a session:
+  read `TASKS.md` + any linked doc, check `git status`, report where things
+  stand, then continue.
+
 **When NOT to use:**
 
 - Throwaway one-offs (a single edit, a quick answer) — just do them.
@@ -53,7 +105,7 @@ directive, add the item and confirm in one line.
 One file per unit of work: `<root>/TASKS.md`, where `<root>` is the package root
 when there is one (e.g. `packages/plugins/plugin-magazine/TASKS.md`), or
 otherwise the directory you're working in (e.g.
-`.agents/skills/task-tracking/TASKS.md`). Match the existing convention:
+`.agents/skills/task-planning/TASKS.md`). Match the existing convention:
 
 ```markdown
 # <Package> — Tasks
@@ -90,6 +142,36 @@ Short paragraph of context — what this phase delivers and why.
    item is actually complete, and no completed work is left unchecked.
 5. **Commit it** — `TASKS.md` is committed alongside the work it tracks. Do not
    leave it as an uncommitted local edit (see "commit nothing silently").
+
+## Session handoff (`$hydrate` / `$resume`)
+
+`TASKS.md` is the handoff medium — no separate `HANDOFF.md` (keep plans in the
+original doc). The two sentinels are the explicit checkpoint/reload verbs.
+
+### `$hydrate` — checkpoint before stopping or opening a PR
+
+1. **Reconcile `TASKS.md`** — check off what's done; add a one-line status note to
+   each in-progress item (what's blocked, what's next).
+2. **Refresh the resume pointer** — a single italic line under the title:
+   `_Resume: <the one next action>. Uncommitted: <none | files>. Last: <what just landed>._`
+3. **Push the _why_ into the design doc** (if the work has one — `REPORT.md`,
+   `DESIGN.md`, a spec): decisions and findings live there; `TASKS.md` stays the
+   ledger. Save durable, cross-session direction to memory (it auto-loads next
+   session) — not to a doc.
+4. **Account for uncommitted work** — `git status`; commit everything or state
+   plainly in the resume pointer what's left uncommitted. Uncommitted work is the
+   number-one thing a resumed session loses.
+5. **Confirm** the checkpoint in one short block (done / in-progress / next /
+   uncommitted).
+
+### `$resume` — reload at the start of a session
+
+1. **Read** the active `TASKS.md` (and any doc it links); memory is already
+   loaded.
+2. **Check the tree** — `git status` + recent `git log`; surface uncommitted work
+   and the last commits.
+3. **Report** a concise state: done / in-progress / **next action** / uncommitted.
+4. **Continue** with the next action, or wait for direction if the user gave any.
 
 ## Viewing
 

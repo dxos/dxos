@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Effect (`Stream`/`Layer`/`Effect`), `@dxos/pipeline`, `@dxos/pipeline-rdf` (`FactStore`, `extractFactsStage`), `@dxos/crawler` (`extractTopics`), `@dxos/pipeline-email` (`buildThreads`, `emailToMessage`), `@dxos/extractor-lib` (`extractContact`), `@dxos/echo` + `@dxos/plugin-client/testing` (ECHO space), `@dxos/react-ui*`, Storybook + Playwright.
 
-**Spec:** `docs/superpowers/specs/2026-07-06-email-pipeline-story-design.md`. Part of DX-1078.
+**Spec:** `agents/superpowers/specs/2026-07-06-email-pipeline-story-design.md`. Part of DX-1078.
 
 ---
 
