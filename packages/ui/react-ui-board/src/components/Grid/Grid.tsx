@@ -93,6 +93,12 @@ type GridRootProps = PropsWithChildren<{
   gap?: number;
   /** Minimum number of rows to render (the backdrop shows at least this many, even when sparse). */
   minRows?: number;
+  /**
+   * Milliseconds the drag must dwell on a target cell before the engine pushes the occupants out of
+   * the way. While sweeping across cells faster than this, the other tiles stay put — so a tile can
+   * be dragged over/past existing ones and only displaces them once the drag settles. 0 = immediate.
+   */
+  settleDelay?: number;
   readonly?: boolean;
   onChange?: (layout: GridLayout) => void;
   onAdd?: (position: GridItem) => void;
@@ -113,6 +119,7 @@ const GridRoot = forwardRef<GridController, GridRootProps>(
       cellSize = defaultCellSize,
       gap = defaultGap,
       minRows = 0,
+      settleDelay = 250,
       readonly,
       onChange,
       onAdd,
@@ -160,23 +167,39 @@ const GridRoot = forwardRef<GridController, GridRootProps>(
       setResizePreview(size ? { id, ...size } : null);
     }, []);
 
+    // The cell the drag is currently over (this grid's own tile, over a placeholder), or undefined.
+    const dragTarget =
+      dragging && dragging.source.data.containerId === containerId && dragging.target?.data.type === 'placeholder'
+        ? dragging.target.data.location
+        : undefined;
+
+    // Debounce the drag target: only adopt it as the "settled" cell after the drag has dwelt on it for
+    // `settleDelay` ms. Sweeping across cells faster than that keeps the last settled cell, so the
+    // other tiles don't scatter while the tile passes over them (and it can reach the far side).
+    const [settledTarget, setSettledTarget] = useState<{ x: number; y: number } | undefined>(undefined);
+    useEffect(() => {
+      if (!dragTarget || settleDelay <= 0) {
+        setSettledTarget(dragTarget);
+        return;
+      }
+      const timer = setTimeout(() => setSettledTarget(dragTarget), settleDelay);
+      return () => clearTimeout(timer);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dragTarget?.x, dragTarget?.y, settleDelay]);
+
     // The layout the grid would settle into during an in-progress move or resize, so the other tiles
-    // animate out of the way live (and spring back to `layout` when the gesture ends). Resize takes
-    // precedence (it isn't a Dnd drag, so `dragging` is unset during it).
+    // animate out of the way (and spring back to `layout` when the gesture ends). Resize takes
+    // precedence (it isn't a Dnd drag, so `dragging` is unset during it); the move uses the settled
+    // (debounced) target so pushes only happen once the drag pauses on a cell.
     const previewLayout = useMemo<GridLayout | undefined>(() => {
       if (resizePreview) {
         return resizeItem(layout, resizePreview.id, { w: resizePreview.w, h: resizePreview.h }, undefined, mode);
       }
-      if (
-        dragging &&
-        dragging.source.data.containerId === containerId &&
-        dragging.target?.data.type === 'placeholder'
-      ) {
-        const to = dragging.target.data.location;
-        return moveItem(layout, dragging.source.data.id, to, mode);
+      if (dragging && dragging.source.data.containerId === containerId && settledTarget) {
+        return moveItem(layout, dragging.source.data.id, settledTarget, mode);
       }
       return undefined;
-    }, [resizePreview, dragging, containerId, layout, mode]);
+    }, [resizePreview, dragging, containerId, settledTarget, layout, mode]);
 
     useEffect(() => {
       const handler: DndContainerHandler = {
