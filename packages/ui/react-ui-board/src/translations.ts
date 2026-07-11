@@ -14,6 +14,7 @@ export const translations = [
         'toggle-zoom.button': 'Toggle zoom',
         'add-object.button': 'Add object',
         'delete-object.button': 'Remove object',
+        'resize-object.button': 'Resize object',
       },
     },
   },
