@@ -203,6 +203,20 @@ export const RejectIfNoFit: Story = {
   },
 };
 
+/**
+ * Overscroll: the board is padded by half the viewport, so any cell — including the corners — can be
+ * scrolled to the centre (select a card and it centres; drag to an edge and keep going).
+ */
+export const Overscroll: Story = {
+  args: {
+    items: testItems,
+    layout: defaultLayout,
+    mode: 'float' satisfies GridMode,
+    selectionMode: 'single',
+    overscroll: true,
+  },
+};
+
 /** Single-select: clicking a card selects it (clicking it again clears); at most one is selected. */
 export const SingleSelect: Story = {
   args: {

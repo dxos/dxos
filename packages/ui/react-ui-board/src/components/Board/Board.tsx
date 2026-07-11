@@ -74,6 +74,10 @@ type BoardContextValue = {
   /** Column/row extent to render (the backdrop shows at least this; grows with content). */
   columns: number;
   rows: number;
+  /** When true, the board is padded by half the viewport so any cell can be scrolled to the centre. */
+  overscroll: boolean;
+  /** Overscroll padding in px (half the viewport on each axis), or 0 when disabled. */
+  overscrollPad: { x: number; y: number };
   containerId: string;
   /** During an active drag, the layout the board would settle into — tiles animate to these
    * positions and spring back to `layout` when the drag ends without a drop. Undefined when idle. */
@@ -149,6 +153,11 @@ type BoardRootProps = PropsWithChildren<{
   /** Gap between cells in rem. */
   gap?: number;
   /**
+   * Pads the scrollable area by half the viewport on each side so any cell — including the corners —
+   * can be scrolled to the centre of the viewport. Off by default.
+   */
+  overscroll?: boolean;
+  /**
    * Milliseconds the drag must dwell on a target cell before the resolver runs against it. While
    * sweeping across cells faster than this, the other tiles stay put — so a tile can be dragged
    * over/past existing ones and only displaces them once the drag settles. 0 = immediate.
@@ -183,6 +192,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
       onSelectedChange,
       cellSize = defaultCellSize,
       gap = defaultGap,
+      overscroll = false,
       settleDelay = 500,
       readonly,
       onChange,
@@ -211,13 +221,35 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
 
     // Scroll viewport (set by Board.Container) + imperative centering, exposed via the Root ref.
     const viewportRef = useRef<HTMLDivElement | null>(null);
+
+    // Overscroll padding: half the viewport on each side, measured from the scroll element so the
+    // board can pad itself (see Board.Viewport) enough for any cell to reach the centre.
+    const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
+    useEffect(() => {
+      const el = viewportRef.current;
+      if (!el || !overscroll) {
+        setViewportSize({ width: 0, height: 0 });
+        return;
+      }
+      const update = () => setViewportSize({ width: el.clientWidth, height: el.clientHeight });
+      update();
+      const observer = new ResizeObserver(update);
+      observer.observe(el);
+      return () => observer.disconnect();
+    }, [overscroll]);
+    const overscrollPad = useMemo(
+      () => (overscroll ? { x: viewportSize.width / 2, y: viewportSize.height / 2 } : { x: 0, y: 0 }),
+      [overscroll, viewportSize.width, viewportSize.height],
+    );
+
     const center = useCallback(
       (cell?: string) => {
         const el = viewportRef.current;
         if (!el) {
           return;
         }
-        // Anchor point in unscaled content coords: a cell's centre, or the whole board's centre.
+        // Anchor point in unscaled content coords (relative to the board box): a cell's centre, or the
+        // whole board's centre.
         const position = cell ? layout.items[cell] : undefined;
         let anchorX: number;
         let anchorY: number;
@@ -230,14 +262,21 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
           anchorX = rect.left + rect.width / 2;
           anchorY = rect.top + rect.height / 2;
         } else {
-          anchorX = el.scrollWidth / 2;
-          anchorY = el.scrollHeight / 2;
+          const board = gridBounds(columns, rows, cellSizePx, gapPx);
+          anchorX = board.width / 2;
+          anchorY = board.height / 2;
         }
-        // The content scales from its top-left (transform-origin 0 0), so a content point maps to
-        // `point * zoom` on screen; place the anchor at the viewport centre.
-        el.scrollTo({ left: anchorX * zoom - el.clientWidth / 2, top: anchorY * zoom - el.clientHeight / 2 });
+        // The board box sits at the overscroll padding offset and scales from its top-left
+        // (transform-origin 0 0), so a content point maps to `pad + point * zoom` on screen; place
+        // the anchor at the viewport centre.
+        const padX = overscroll ? el.clientWidth / 2 : 0;
+        const padY = overscroll ? el.clientHeight / 2 : 0;
+        el.scrollTo({
+          left: padX + anchorX * zoom - el.clientWidth / 2,
+          top: padY + anchorY * zoom - el.clientHeight / 2,
+        });
       },
-      [layout, cellSizePx, gapPx, zoom],
+      [layout, cellSizePx, gapPx, columns, rows, zoom, overscroll],
     );
     useImperativeHandle(forwardedRef, () => ({ center }), [center]);
 
@@ -385,6 +424,8 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
         gap={gapPx}
         columns={columns}
         rows={rows}
+        overscroll={overscroll}
+        overscrollPad={overscrollPad}
         containerId={containerId}
         previewLayout={previewLayout}
         resizing={!!resizePreview}
@@ -412,14 +453,16 @@ const BOARD_VIEWPORT_NAME = 'Board.Viewport';
 type BoardViewportProps = ThemedClassName<PropsWithChildren>;
 
 const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
-  const { cellSize, gap, columns, rows, zoom } = useBoardContext(BOARD_VIEWPORT_NAME);
+  const { cellSize, gap, columns, rows, zoom, overscrollPad } = useBoardContext(BOARD_VIEWPORT_NAME);
   const bounds = useMemo(() => gridBounds(columns, rows, cellSize, gap), [columns, rows, cellSize, gap]);
+  const overscroll = overscrollPad.x > 0 || overscrollPad.y > 0;
 
   return (
     // `m-auto` centers the board within the (flex) scroll container when it fits, and stays fully
-    // scrollable when it overflows (unlike justify-center, which would clip the top/left). Scroll
-    // snap points live on the backdrop cells (snap-to-grid), not here (see Board.Container / Backdrop).
+    // scrollable when it overflows (unlike justify-center, which would clip the top/left).
     // A zoom < 1 gives a scaled overview; drag/resize are disabled in that mode (see BoardCell).
+    // With overscroll, an explicit margin (half the viewport) replaces `m-auto` so any cell can be
+    // scrolled to the centre.
     <div
       className={mx('relative m-auto transition-transform duration-300', classNames)}
       style={{
@@ -429,6 +472,7 @@ const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
         // compensates scroll on zoom to keep the anchor (selected tile / current centre) fixed.
         transform: zoom !== 1 ? `scale(${zoom})` : undefined,
         transformOrigin: '0 0',
+        margin: overscroll ? `${overscrollPad.y}px ${overscrollPad.x}px` : undefined,
       }}
     >
       {children}
@@ -448,7 +492,7 @@ const BOARD_CONTAINER_NAME = 'Board.Container';
 type BoardContainerProps = ThemedClassName<PropsWithChildren>;
 
 const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
-  const { viewportRef, center, resizing, zoom, selected } = useBoardContext(BOARD_CONTAINER_NAME);
+  const { viewportRef, center, resizing, zoom, selected, overscroll } = useBoardContext(BOARD_CONTAINER_NAME);
   const localRef = useRef<HTMLDivElement>(null);
   const ref = composeRefs(localRef, viewportRef);
 
@@ -462,6 +506,8 @@ const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
   selectedRef.current = selected;
   const centerRef = useRef(center);
   centerRef.current = center;
+  const overscrollRef = useRef(overscroll);
+  overscrollRef.current = overscroll;
 
   // Keep the board anchored across a zoom change: center on the (first) selected tile if any,
   // otherwise hold the current viewport centre fixed. Runs on zoom changes only (skips mount).
@@ -479,12 +525,15 @@ const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
     if (selectedId) {
       centerRef.current(selectedId);
     } else {
-      // Convert the current on-screen centre back to content coords (÷ prevZoom), then re-place it.
-      const contentX = (element.scrollLeft + element.clientWidth / 2) / prevZoom;
-      const contentY = (element.scrollTop + element.clientHeight / 2) / prevZoom;
+      // Convert the current on-screen centre back to board-content coords (subtract the overscroll
+      // pad, ÷ prevZoom), then re-place it at the new zoom.
+      const padX = overscrollRef.current ? element.clientWidth / 2 : 0;
+      const padY = overscrollRef.current ? element.clientHeight / 2 : 0;
+      const contentX = (element.scrollLeft + element.clientWidth / 2 - padX) / prevZoom;
+      const contentY = (element.scrollTop + element.clientHeight / 2 - padY) / prevZoom;
       element.scrollTo({
-        left: contentX * zoom - element.clientWidth / 2,
-        top: contentY * zoom - element.clientHeight / 2,
+        left: padX + contentX * zoom - element.clientWidth / 2,
+        top: padY + contentY * zoom - element.clientHeight / 2,
       });
     }
   }, [zoom]);
