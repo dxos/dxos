@@ -71,12 +71,12 @@ Run: 6 contestants × 4 tasks, N=25 messages, judge=opus, bar=haiku. Full matrix
 
 ### Verdict per task (bar = haiku; "clears" = ≥95% of bar)
 
-| Task | Bar (haiku) | Best open weight | Clears? | Recommended |
-| --- | --- | --- | --- | --- |
-| labeling (agreement) | 1.00 | qwen3-30b 0.70 | ✗ (none close) | **haiku** |
-| message summary (coverage) | 0.50 | qwen3-8b 0.46 / gpt-oss-20b 0.45 | ✗ (just under) | haiku, but open is a whisker away |
-| thread summary (coverage) | 0.55 | gpt-oss-20b 0.46 | ✗ | **haiku** |
-| **drafts (rubric)** | 0.98 | **gemma-12b 0.94 · qwen3-30b 0.94** | **✓** | **gemma-12b / qwen3-30b** (or gpt-oss-20b 0.91 for speed) |
+| Task                       | Bar (haiku) | Best open weight                    | Clears?        | Recommended                                               |
+| -------------------------- | ----------- | ----------------------------------- | -------------- | --------------------------------------------------------- |
+| labeling (agreement)       | 1.00        | qwen3-30b 0.70                      | ✗ (none close) | **haiku**                                                 |
+| message summary (coverage) | 0.50        | qwen3-8b 0.46 / gpt-oss-20b 0.45    | ✗ (just under) | haiku, but open is a whisker away                         |
+| thread summary (coverage)  | 0.55        | gpt-oss-20b 0.46                    | ✗              | **haiku**                                                 |
+| **drafts (rubric)**        | 0.98        | **gemma-12b 0.94 · qwen3-30b 0.94** | **✓**          | **gemma-12b / qwen3-30b** (or gpt-oss-20b 0.91 for speed) |
 
 ### The surprise — H0 is inverted
 
@@ -84,8 +84,8 @@ Run: 6 contestants × 4 tasks, N=25 messages, judge=opus, bar=haiku. Full matrix
 need premier). **The opposite happened:** open weights did **worst on labeling** (the "simplest" task)
 and **best on drafts** (the "hardest"). Two reasons:
 
-- **Metric shape, not capability.** Labeling is scored as *agreement with haiku*, so a model that
-  labels reasonably but differently is punished; drafts are scored on *absolute quality* (rubric), which
+- **Metric shape, not capability.** Labeling is scored as _agreement with haiku_, so a model that
+  labels reasonably but differently is punished; drafts are scored on _absolute quality_ (rubric), which
   rewards genuine capability. Extractive-agreement is a harsher bar than generative-quality.
 - **Drafting is a generation task open weights handle well.** gemma-12b and qwen3-30b match haiku's
   draft quality within tolerance, with **near-perfect correctness (0.99)** — they don't invent facts.
@@ -94,7 +94,7 @@ and **best on drafts** (the "hardest"). Two reasons:
 
 - **Faithfulness is universally high (0.89–0.99)** across every open model and task — they do **not**
   hallucinate more than haiku. The gap on summaries is **coverage** (missing salient points), not fidelity.
-- **Reasoning tax confirmed and non-monotonic** (as predicted): qwen3-8b is the *slowest* model on
+- **Reasoning tax confirmed and non-monotonic** (as predicted): qwen3-8b is the _slowest_ model on
   labeling/summaries (12–14 s) despite being the smallest; gemma-12b is shockingly slow on summaries
   (34–38 s p50) despite being non-reasoning. Latency does not track size.
 - **gpt-oss-20b is the best open all-rounder** (prediction held): consistently near the top on accuracy
@@ -111,7 +111,7 @@ labeling-agreement are.
 
 ### Caveats / what would sharpen this
 
-- Labeling uses *haiku-agreement*, not ground truth — a model can label well yet score low. A
+- Labeling uses _haiku-agreement_, not ground truth — a model can label well yet score low. A
   human-labeled spam/tag gold set would separate "different" from "wrong".
 - Coverage gold sets are strict (haiku itself only scores 0.50) — the ceiling is low, compressing the
   spread. Worth calibrating the gold-set size.
@@ -135,23 +135,23 @@ Verified across the product pipelines. **`—` = deterministic (no LLM).** Model
 §4 (tested: summarize, draft, labeling) and are marked **needs-eval** where tonight didn't measure the
 stage (fact extraction, person/org classification).
 
-| Pipeline | Stage | LLM? | Model / note |
-| --- | --- | --- | --- |
-| **Gmail sync** (plugin-inbox) | fetch · dedup · decode-body · map-to-message · collect-stats · resolve-contact · record-threads · commit | **no** | — (keep the sync path 100% deterministic → fast foreground) |
-| | on-arrival extractors (optional) | opt | small/local (`@dxos/extractor`); off by default |
-| **EmailPipeline** (pipeline-email) | summarize (per message) | **yes** | haiku; open close (gpt-oss-20b) at a coverage discount |
-| | extract-contacts (actors) · stats · build-threads | **no** | — |
-| | extract-facts | **yes** | **needs-eval** (structured extraction — not measured in §4) |
-| **Fact pipeline** (runFactPipeline) | facts-dedup · commit | **no** | — |
-| | extract-facts-unit | **yes** | **needs-eval** |
-| **pipeline-rdf** (extract) | extract-chunk (propositions) | **yes** | **needs-eval** |
-| | normalize-predicates · index-facts | **no** | — |
-| **Corpus** (pipeline-email/corpus) | cluster-threads | **no** | — (Jaccard; fix hash/number tokenizer, see §topics) |
-| | summarize-topics · narrate-digest | **yes** | small/haiku (cheap prose over a deterministic skeleton) |
-| | materialize-topics · build-digest · rollups · ledger | **no** | — |
-| **Proposed (from review)** | classify-sender (person/org) | **yes (cheap) / heuristic** | small/local — gates all downstream |
-| | tag/label (spam, topic) | **yes** | haiku (open weak on labeling-agreement, §4) |
-| | draft (people only) | **yes** | gemma-12b / qwen3-30b clear the bar (§4); gpt-oss-20b for speed; + default Instructions |
+| Pipeline                            | Stage                                                                                                    | LLM?                        | Model / note                                                                            |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------- | --------------------------------------------------------------------------------------- |
+| **Gmail sync** (plugin-inbox)       | fetch · dedup · decode-body · map-to-message · collect-stats · resolve-contact · record-threads · commit | **no**                      | — (keep the sync path 100% deterministic → fast foreground)                             |
+|                                     | on-arrival extractors (optional)                                                                         | opt                         | small/local (`@dxos/extractor`); off by default                                         |
+| **EmailPipeline** (pipeline-email)  | summarize (per message)                                                                                  | **yes**                     | haiku; open close (gpt-oss-20b) at a coverage discount                                  |
+|                                     | extract-contacts (actors) · stats · build-threads                                                        | **no**                      | —                                                                                       |
+|                                     | extract-facts                                                                                            | **yes**                     | **needs-eval** (structured extraction — not measured in §4)                             |
+| **Fact pipeline** (runFactPipeline) | facts-dedup · commit                                                                                     | **no**                      | —                                                                                       |
+|                                     | extract-facts-unit                                                                                       | **yes**                     | **needs-eval**                                                                          |
+| **pipeline-rdf** (extract)          | extract-chunk (propositions)                                                                             | **yes**                     | **needs-eval**                                                                          |
+|                                     | normalize-predicates · index-facts                                                                       | **no**                      | —                                                                                       |
+| **Corpus** (pipeline-email/corpus)  | cluster-threads                                                                                          | **no**                      | — (Jaccard; fix hash/number tokenizer, see §topics)                                     |
+|                                     | summarize-topics · narrate-digest                                                                        | **yes**                     | small/haiku (cheap prose over a deterministic skeleton)                                 |
+|                                     | materialize-topics · build-digest · rollups · ledger                                                     | **no**                      | —                                                                                       |
+| **Proposed (from review)**          | classify-sender (person/org)                                                                             | **yes (cheap) / heuristic** | small/local — gates all downstream                                                      |
+|                                     | tag/label (spam, topic)                                                                                  | **yes**                     | haiku (open weak on labeling-agreement, §4)                                             |
+|                                     | draft (people only)                                                                                      | **yes**                     | gemma-12b / qwen3-30b clear the bar (§4); gpt-oss-20b for speed; + default Instructions |
 
 **Structural takeaway:** sync has **zero** LLM stages, so the foreground (sync + cheap labeling) is
 already fast; **all** LLM cost lives in batchable enrichment (summarize / facts / topics / drafts).

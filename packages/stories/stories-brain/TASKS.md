@@ -27,14 +27,14 @@ categorization) but fall below on synthetic tasks (thread/topic summaries, draft
       (spam F1, tag Jaccard); summaries → coverage + faithfulness (reuses `judge.ts`); drafts →
       0–5 rubric (relevance/correctness/completeness/tone). Bench: `model-ladder.bench.test.ts`.
 - [ ] **Categorization bench** — DEFERRED (labeling/summaries/drafts landed). Group messages/threads
-      into topics; cluster agreement vs haiku. (The topics *artifact* now uses the corpus pipeline.)
+      into topics; cluster agreement vs haiku. (The topics _artifact_ now uses the corpus pipeline.)
 - [x] **`overnight.mjs` driver** + `overnight` moon task — non-interactive, reuses `bench --stats`.
       `generateText` gained retry+backoff, a generous `LLM_TIMEOUT`, and `catchAllCause` (a defect —
       @effect/ai ParseError while constructing its own AiError — was crashing the run mid-way).
 - [x] **RAN** (2026-07-11, N=25, opus judge). Results: `results/model-ladder.md` +
       `topics.md` / `profiles.md` / `drafts-sample.md`. **Analysis + audit → `fixtures/REPORT.md`.**
-      Headline: **H0 inverted** — open weights strongest on *drafts* (gemma-12b/qwen3-30b clear the
-      bar), weakest on *labeling*; faithfulness universally high; gpt-oss-20b best all-rounder.
+      Headline: **H0 inverted** — open weights strongest on _drafts_ (gemma-12b/qwen3-30b clear the
+      bar), weakest on _labeling_; faithfulness universally high; gpt-oss-20b best all-rounder.
 
 ## Next — model routing & sender-type triage (from REPORT §5)
 
