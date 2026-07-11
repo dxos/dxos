@@ -39,3 +39,9 @@ tasks:
       cache: false
       runInCI: false
       interactive: true
+  overnight:
+    command: 'node scripts/overnight.mjs'
+    options:
+      cache: false
+      runInCI: false
+      interactive: true

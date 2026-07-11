@@ -20,6 +20,18 @@ export const SKILL_MODES = process.env.SKILL_MODES?.trim();
 /** Grading model for the brain-vs-rag eval (name substring); a fixed strong judge applied to every arm. */
 export const JUDGE = process.env.JUDGE?.trim();
 
+/** Message cap for the model-ladder bench (kept small — every message is graded across every model). */
+export const LADDER_N = process.env.LADDER_N ? Math.max(1, Number(process.env.LADDER_N)) : 25;
+
+/** Which ladder tasks to run (comma-separated: labeling, summarize-messages, summarize-threads, drafts). */
+export const LADDER_TASKS = process.env.LADDER_TASKS?.trim();
+
+/** Reference model the labeling task is scored against (the "bar"); a name substring. */
+export const LADDER_REFERENCE = process.env.LADDER_REFERENCE?.trim() ?? 'haiku';
+
+/** Accuracy tolerance: the smallest model within this fraction of the reference is "sufficient". */
+export const LADDER_TOLERANCE = process.env.LADDER_TOLERANCE ? Number(process.env.LADDER_TOLERANCE) : 0.95;
+
 /** Disable the LLM-judge scoring pass (`EVAL_SCORE=0`) to run the cheap response-only eval. */
 export const EVAL_SCORE = process.env.EVAL_SCORE !== '0';
 

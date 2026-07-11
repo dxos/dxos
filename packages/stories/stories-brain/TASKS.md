@@ -21,17 +21,19 @@ categorization) but fall below on synthetic tasks (thread/topic summaries, draft
       `LOCAL_VARIANTS` in `models.ts`. Validated via `ladder-probe.test.ts`: all 5 local models
       resolve + parse JSON. Warm latency (trivial prompt): llama-3b 192ms, gpt-oss-20b 1.4s,
       gemma-12b 2.4s, qwen3-30b 3.4s, qwen3-8b 4.2s (reasoning tax is non-monotonic in size).
-- [ ] **Timing capture** — per-item `durationMs` → p50/p95/mean + throughput per (task,model); warm
-      each local model once before timing (cold VRAM load ≈ 10–30s); record JSON-parse-failure rate.
-      (Warmup + latency + jsonOk pattern established in `ladder-probe.test.ts`.)
-- [ ] **Grading layer** (generalize `judge.ts`): labeling → deterministic agreement vs haiku
-      (spam/noreply F1, tag Jaccard; noreply also vs header gold); summaries → coverage + faithfulness
-      (opus); drafts-KB → rubric 0–5 + blind pairwise vs haiku (opus).
-- [ ] **Categorization bench** (new) — group messages/threads into topics; cluster agreement vs haiku.
-- [ ] **`overnight.mjs` driver** — non-interactive, retry+backoff (no silent empty-on-error), warmup,
-      streams `progress.json`, writes `overnight-report.md` (accuracy × latency × size + verdict +
-      recommended tier per task).
-- [ ] **Runtime + token/cost estimate** — print for approval BEFORE launch.
+- [x] **Timing capture** — `internal/ladder.ts` `runLadder`: warms each model (excludes cold load),
+      runs items serially model-by-model (no VRAM thrash), reports p50/p95/mean + throughput.
+- [x] **Grading layer** (`internal/grade.ts`): labeling → deterministic agreement vs the reference
+      (spam F1, tag Jaccard); summaries → coverage + faithfulness (reuses `judge.ts`); drafts →
+      0–5 rubric (relevance/correctness/completeness/tone). Bench: `model-ladder.bench.test.ts`.
+- [ ] **Categorization bench** — DEFERRED to the follow-up night (labeling/summaries/drafts land
+      tonight). Group messages/threads into topics; cluster agreement vs haiku.
+- [x] **`overnight.mjs` driver** + `overnight` moon task — non-interactive, reuses `bench --stats`
+      (live table + teed logs). `generateText` gained retry+backoff + a generous `LLM_TIMEOUT`
+      (slow models finish rather than time-out-as-inaccurate); `OLLAMA_MAX_LOADED_MODELS=1`.
+- [x] Smoke-tested (2 models, local judge, N=2): pipeline works end-to-end; report renders.
+      Surfaced + fixed the 60s-timeout-poisons-accuracy issue.
+- [ ] **Runtime + token/cost estimate** — presented in chat; awaiting go before launch.
 
 Risks: reasoning models (qwen3, gpt-oss) → higher latency + may break strict JSON (parse leniently,
 record failure rate; `/no_think` sensitivity = future experiment). Ollama up all night; opus/haiku
