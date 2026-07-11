@@ -819,7 +819,7 @@ const BoardMap = ({ classNames }: BoardMapProps) => {
         return (
           <div
             key={id}
-            className='absolute rounded-[1px] bg-accentSurface'
+            className='absolute rounded-[1px] bg-accent-bg'
             style={{
               left: `${(rect.left / bounds.width) * 100}%`,
               top: `${(rect.top / bounds.height) * 100}%`,
