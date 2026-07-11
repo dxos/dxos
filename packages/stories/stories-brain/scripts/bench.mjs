@@ -15,13 +15,17 @@
 // Flags fall back to the matching env var (MODELS, LIMIT, TESTS, SUBJECT, SAMPLES, DRAFT_INSTRUCTIONS),
 // which may in turn come from a local `.env` file (plain KEY=VALUE; shell env wins over it).
 
-import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { spawn, spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, openSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
+import { allTerminal, renderProgress } from './progress-view.mjs';
+
 const PACKAGE_ROOT = resolve(fileURLToPath(new URL('../', import.meta.url)));
+const PROGRESS_FILE = resolve(PACKAGE_ROOT, 'fixtures/local/results/progress.json');
+const LOG_FILE = resolve(PACKAGE_ROOT, 'fixtures/local/results/bench.log');
 
 // Seed process.env from a local `.env` (git-ignored) — shell env already set wins over the file.
 const loadDotEnv = () => {
@@ -87,6 +91,7 @@ const usage = () => {
     const names = [short ? `-${short}` : null, `--${flag}`].filter(Boolean).join(', ');
     console.error(`  ${names.padEnd(24)} ${help} (env ${env})`);
   }
+  console.error('  --stats                  render the live progress table; tee vitest logs to a file');
   console.error('  -h, --help               show this help');
 };
 
@@ -97,6 +102,7 @@ try {
   ({ values } = parseArgs({
     options: {
       ...Object.fromEntries(FLAGS.map(({ flag, short }) => [flag, { type: 'string', ...(short ? { short } : {}) }])),
+      stats: { type: 'boolean' },
       help: { type: 'boolean', short: 'h' },
     },
   }));
@@ -118,5 +124,58 @@ for (const { flag, env } of FLAGS) {
   }
 }
 
-const result = spawnSync('node', ['scripts/run-suite.mjs'], { cwd: PACKAGE_ROOT, stdio: 'inherit', env: process.env });
-process.exit(result.status ?? 1);
+// Default: stream vitest output to this terminal. With `--stats`, tee that (noisy) output to a log
+// file instead and render the live progress table in the foreground — one terminal, live stats.
+if (!values.stats) {
+  const result = spawnSync('node', ['scripts/run-suite.mjs'], {
+    cwd: PACKAGE_ROOT,
+    stdio: 'inherit',
+    env: process.env,
+  });
+  process.exit(result.status ?? 1);
+}
+
+mkdirSync(dirname(LOG_FILE), { recursive: true });
+const logFd = openSync(LOG_FILE, 'w');
+const label = PROGRESS_FILE.replace(PACKAGE_ROOT, '');
+const tty = Boolean(process.stdout.isTTY);
+
+const child = spawn('node', ['scripts/run-suite.mjs'], {
+  cwd: PACKAGE_ROOT,
+  env: process.env,
+  stdio: ['ignore', logFd, logFd],
+});
+
+// On a TTY, redraw in place via the alternate-screen buffer; otherwise append frames.
+if (tty) {
+  process.stdout.write('\x1b[?1049h');
+}
+const restore = () => tty && process.stdout.write('\x1b[?1049l');
+const draw = () => {
+  if (tty) {
+    process.stdout.write('\x1b[H\x1b[2J');
+  }
+  process.stdout.write(renderProgress(PROGRESS_FILE, Date.now(), label) + '\n');
+};
+const timer = setInterval(() => {
+  draw();
+  // The child's own exit is the authoritative stop; `allTerminal` just avoids a final stale frame.
+  if (allTerminal(PROGRESS_FILE)) {
+    draw();
+  }
+}, 1000);
+draw();
+
+process.on('SIGINT', () => {
+  clearInterval(timer);
+  restore();
+  child.kill('SIGINT');
+});
+
+child.on('exit', (code) => {
+  clearInterval(timer);
+  restore();
+  console.log(renderProgress(PROGRESS_FILE, Date.now(), label));
+  console.log(`\nvitest output → ${LOG_FILE}`);
+  process.exit(code ?? 1);
+});
