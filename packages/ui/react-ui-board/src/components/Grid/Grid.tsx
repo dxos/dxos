@@ -51,6 +51,9 @@ type GridContextValue = {
   gap: number;
   rows: number;
   containerId: string;
+  /** During an active drag, the layout the grid would settle into — tiles animate to these
+   * positions and spring back to `layout` when the drag ends without a drop. Undefined when idle. */
+  previewLayout?: GridLayout;
   /** Scroll viewport element; set by `Grid.Container`, used by the controller to center. */
   viewportRef: MutableRefObject<HTMLDivElement | null>;
   /** Scroll the viewport so the grid is centered. */
@@ -130,7 +133,22 @@ const GridRoot = forwardRef<GridController, GridRootProps>(
     // NOTE: `addContainer`/`removeContainer` are re-created every `Dnd.Root` render; they are
     // intentionally left out of the deps below (mirroring `Mosaic.Container`) so this effect only
     // reruns when the grid's own state changes, not on every drag frame.
-    const { addContainer, removeContainer } = useDndRootContext(GRID_ROOT_NAME);
+    const { addContainer, removeContainer, dragging } = useDndRootContext(GRID_ROOT_NAME);
+
+    // While one of this grid's tiles is dragged over a cell, compute where everything would settle
+    // so the other tiles can animate out of the way (and spring back to `layout` when the drag ends).
+    const previewLayout = useMemo<GridLayout | undefined>(() => {
+      if (
+        dragging &&
+        dragging.source.data.containerId === containerId &&
+        dragging.target?.data.type === 'placeholder'
+      ) {
+        const to = dragging.target.data.location;
+        return moveItem(layout, dragging.source.data.id, to, mode);
+      }
+      return undefined;
+    }, [dragging, containerId, layout, mode]);
+
     useEffect(() => {
       const handler: DndContainerHandler = {
         id: containerId,
@@ -156,6 +174,7 @@ const GridRoot = forwardRef<GridController, GridRootProps>(
         gap={gapPx}
         rows={rows}
         containerId={containerId}
+        previewLayout={previewLayout}
         viewportRef={viewportRef}
         center={center}
         onAdd={readonly ? undefined : onAdd}

@@ -56,7 +56,7 @@ export const GridCell = ({
   constraints,
 }: GridCellProps) => {
   const { t } = useTranslation(translationKey);
-  const { cellSize, gap, containerId, readonly, onResize } = useGridContext(GRID_CELL_NAME);
+  const { cellSize, gap, containerId, readonly, onResize, previewLayout } = useGridContext(GRID_CELL_NAME);
   // Any active drag makes every tile transparent to pointer events so the backdrop drop-target cells
   // beneath them (incl. cells under an occupied tile) receive the drag — required for push-on-drop.
   const { dragging } = useDndRootContext(GRID_CELL_NAME);
@@ -145,7 +145,13 @@ export const GridCell = ({
     });
   }, [readonly, layout, cellSize, gap, item.id, constraints, onResize]);
 
-  const rect = cellRect(layout, cellSize, gap);
+  // Non-dragged tiles render at their previewed position during a drag (animating out of the way),
+  // and spring back to `layout` when the drag ends. The dragged tile itself stays put (its preview
+  // clone follows the cursor), so it uses its committed layout.
+  const isDragSource = dragging?.source.data.id === item.id;
+  const effectiveLayout =
+    !isDragSource && previewLayout ? (previewLayout.items.find((entry) => entry.id === item.id) ?? layout) : layout;
+  const rect = cellRect(effectiveLayout, cellSize, gap);
 
   // Magnetic move: while this tile is the drag source, outline the tile-sized footprint at the cell
   // under the cursor (the current drop target). It jumps cell-to-cell as the target changes, so the
@@ -163,6 +169,8 @@ export const GridCell = ({
       <Card.Root
         classNames={mx(
           'absolute grid-rows-[auto_1fr]',
+          // Animate position changes so displaced tiles glide out of the way and spring back.
+          'transition-[left,top] duration-200 ease-out',
           dragState === 'dragging' && 'opacity-50',
           // Transparent to pointer events during ANY drag so a tile can be dropped onto an occupied
           // cell (pushing the occupant) or back onto its own footprint.
