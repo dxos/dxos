@@ -5,7 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { OperationHandler, ReactSurface } from '#capabilities';
+import { CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Blogger } from '#types';
@@ -15,6 +15,7 @@ export const BloggerPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   Plugin.make,
 );
 
