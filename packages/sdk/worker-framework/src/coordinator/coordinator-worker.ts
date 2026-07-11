@@ -6,46 +6,79 @@ import { log } from '@dxos/log';
 
 import type { WorkerCoordinatorMessage } from '../internal/messages';
 
-const ports = new Set<MessagePort>();
-
-// We need to transfer ports to the correct client since they cannot be cloned.
-const portsByClient = new Map<string, MessagePort>();
-
 /**
  * Returns the onconnect handler for the coordinator SharedWorker. Exported so apps can use
  * a custom coordinator entrypoint (e.g. to initialize observability) then attach this handler.
+ *
+ * Routing state (connected ports and the per-client reverse map) lives in the returned closure
+ * rather than in module globals so a single coordinator instance owns exactly one routing table —
+ * this keeps the state testable in isolation and avoids accidental cross-instance sharing.
  */
 export const createCoordinatorOnConnect = (): ((ev: MessageEvent) => void) => {
+  // All tab ports connected to this coordinator. Broadcast targets for leadership/heartbeat traffic.
+  const ports = new Set<MessagePort>();
+  // Reverse map from clientId to the tab port that requested a session, so directed `provide-port`
+  // replies (which carry non-cloneable MessagePorts) reach only the requesting tab.
+  const portsByClient = new Map<string, MessagePort>();
+  // Distinguishes coordinator instances in logs. A second tab connecting to a *shared* coordinator
+  // must log the same instanceId with a growing port count; a fresh instanceId (or a port count that
+  // resets to 1) means the SharedWorker was not shared across the tabs.
+  const instanceId = `coordinator-${crypto.randomUUID().slice(0, 8)}`;
+  log('coordinator: created', { instanceId });
+
   return (ev: MessageEvent) => {
     const port = ev.ports[0];
     ports.add(port);
+    log('coordinator: tab connected', { instanceId, ports: ports.size });
 
     port.onmessage = (event: MessageEvent<WorkerCoordinatorMessage>) => {
-      switch (event.data.type) {
+      const message = event.data;
+      switch (message.type) {
         case 'request-port': {
-          portsByClient.set(event.data.clientId, port);
+          portsByClient.set(message.clientId, port);
+          log('coordinator: request-port', {
+            instanceId,
+            clientId: message.clientId,
+            ports: ports.size,
+            clients: portsByClient.size,
+          });
           break;
         }
         case 'provide-port': {
-          const clientPort = portsByClient.get(event.data.clientId);
+          const clientPort = portsByClient.get(message.clientId);
           if (clientPort) {
-            clientPort.postMessage(event.data, {
-              transfer: [event.data.appPort, event.data.systemPort],
+            log('coordinator: routing provide-port', {
+              instanceId,
+              clientId: message.clientId,
+              leaderId: message.leaderId,
+            });
+            clientPort.postMessage(message, {
+              transfer: [message.appPort, message.systemPort],
             });
           } else {
-            log.error('no port for client', { clientId: event.data.clientId });
+            log.error('coordinator: no port for client', {
+              instanceId,
+              clientId: message.clientId,
+              knownClients: [...portsByClient.keys()],
+            });
           }
           return;
         }
       }
-      for (const p of ports) {
+
+      // Broadcast leadership/heartbeat/request traffic to every connected tab (including the sender,
+      // which receivers filter by id). `provide-port` returned above — it is directed, not broadcast.
+      let delivered = 0;
+      for (const peer of ports) {
         try {
-          p.postMessage(event.data);
+          peer.postMessage(message);
+          delivered++;
         } catch (err) {
           log.catch(err);
-          ports.delete(p);
+          ports.delete(peer);
         }
       }
+      log('coordinator: broadcast', { instanceId, type: message.type, delivered, ports: ports.size });
     };
 
     port.start();

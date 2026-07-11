@@ -266,7 +266,13 @@ export class WorkerConnection extends Resource {
             if (message.type === 'provide-port' && message.clientId === this.#clientId) {
               unsubscribe();
               resolve(message);
-            } else if (message.type === 'new-leader') {
+            } else if (message.type === 'new-leader' || message.type === 'leader-heartbeat') {
+              // Re-request on any sign of a live leader. A late-joining follower misses the one-shot
+              // `new-leader` broadcast, so its single initial `request-port` is its only chance —
+              // if that races the leader's handler registration or is dropped, the follower would
+              // otherwise stall for the full port timeout (observed as a second tab that never starts).
+              // Heartbeats (~1s) give it a recurring, idempotent retry; the worker de-dupes sessions
+              // by clientId, so repeated requests are harmless once a session exists.
               this.#coordinator?.sendMessage({
                 type: 'request-port',
                 clientId: this.#clientId,
