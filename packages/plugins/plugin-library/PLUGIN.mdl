@@ -1,0 +1,76 @@
+---
+id: org.dxos.plugin.library
+name: LibraryPlugin
+version: 0.1.0
+---
+
+Library is a personal reading list built on ECHO. A book has a public, catalog-eligible face
+(title, authors, reading status, rating, review, genres) and a private face that never leaves the
+space (notes, ownership, personal tags). The public face maps to a `buzz.bookhive.book` atproto
+record so the generic atproto companion can publish it to the user's PDS.
+
+## Extensions
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+
+## Types
+
+```mdl
+type Book
+  desc: A book in the reading list. Public fields map to buzz.bookhive.book; private fields are ECHO-only.
+  fields:
+    title: string                                   # public
+    authors: string[]                               # public
+    status?: finished | reading | wantToRead | abandoned   # public
+    stars?: number                                  # public, 1..10
+    review?: string                                 # public
+    startedAt?: string                              # public
+    finishedAt?: string                             # public
+    genres: string[]                                # public
+    hiveId?: string                                 # public, BookHive catalog id
+    hiveBookUri?: string                            # public
+    coverUrl?: string                               # public
+    notes?: string                                  # private
+    owned?: boolean                                 # private
+    format?: string                                 # private
+    purchasePrice?: number                          # private
+    purchaseDate?: string                           # private
+    shelfLocation?: string                          # private
+    personalTags: string[]                          # private
+```
+
+## Features
+
+```mdl
+feat F-1: Reading list CRUD in the content group
+  req F-1.1: The Book type appears as a section in the navigation tree's content group.
+  req F-1.2: A book can be created, renamed, opened as a full-page editable form, and deleted.
+  req F-1.3: Collection tiles render a card body (cover, authors, status, rating).
+
+feat F-2: BookHive-backed create autocomplete
+  req F-2.1: The create form offers a type-ahead over the public buzz.bookhive.searchBooks endpoint.
+  req F-2.2: Selecting a result autofills title, authors, coverUrl, genres, hiveId, hiveBookUri.
+
+feat F-3: Publishable public face
+  req F-3.1: The Book type carries an AtprotoRecordAnnotation (buzz.bookhive.book + generated codec).
+  req F-3.2: Only fields marked AtprotoPublishAnnotation are eligible to publish; all others are private.
+  req F-3.3: The codec provably never emits private fields (notes, ownership, personal tags).
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create a book via autocomplete
+  given: a space with the library plugin enabled
+  when: the user searches "dune" and selects a result
+  then: a Book is created with title, authors, coverUrl, genres, and hiveId populated
+
+test T-2: Private fields never publish
+  given: a Book with notes, owned, and personalTags set
+  when: the codec encodes the book to a buzz.bookhive.book record
+  then: the encoded record contains no notes, ownership, or personalTags data
+```

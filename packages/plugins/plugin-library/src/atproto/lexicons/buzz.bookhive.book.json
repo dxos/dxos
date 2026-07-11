@@ -1,0 +1,27 @@
+{
+  "lexicon": 1,
+  "id": "buzz.bookhive.book",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "description": "A book in the user's library (BookHive). Panproto-parseable subset of the upstream lexicon: the `cover` blob and def-ref fields (identifiers, bookProgress) are omitted; publish v1 references the hive book by `hiveId`/`hiveBookUri` rather than uploading a cover blob.",
+      "record": {
+        "type": "object",
+        "required": ["title", "authors", "hiveId", "createdAt"],
+        "properties": {
+          "title": { "type": "string" },
+          "authors": { "type": "string", "description": "Tab-separated author names." },
+          "hiveId": { "type": "string" },
+          "createdAt": { "type": "string", "format": "datetime" },
+          "status": { "type": "string" },
+          "stars": { "type": "integer", "minimum": 1, "maximum": 10 },
+          "review": { "type": "string", "maxGraphemes": 15000 },
+          "startedAt": { "type": "string", "format": "datetime" },
+          "finishedAt": { "type": "string", "format": "datetime" },
+          "hiveBookUri": { "type": "string", "format": "at-uri" }
+        }
+      }
+    }
+  }
+}

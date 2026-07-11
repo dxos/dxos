@@ -600,6 +600,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-atproto/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-attention/package.json",
           "jsonpath": "$.version"
         },
@@ -756,6 +761,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-kanban/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-library/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -343,6 +343,9 @@
       "path": "packages/plugins/plugin-assistant/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-atproto/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-attention/tsconfig.json"
     },
     {
@@ -437,6 +440,9 @@
     },
     {
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-library/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-linear/tsconfig.json"

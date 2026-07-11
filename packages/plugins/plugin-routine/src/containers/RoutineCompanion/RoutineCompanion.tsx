@@ -12,10 +12,11 @@ import { Database, Filter, Obj, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
-import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { IconButton, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '@dxos/react-ui-list';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon, RoutineForm } from '#components';
+import { RoutineForm } from '#components';
 import { meta } from '#meta';
 import { Routine, RoutineCapabilities } from '#types';
 
@@ -200,7 +201,9 @@ export const RoutineCompanion = ({ subject: object, attendableId }: RoutineCompa
                 selectedId={selectedId}
                 detail={detail}
                 onSelect={handleSelect}
-                getMenu={getMenu}
+                renderActions={(routine) => (
+                  <RoutineRowActions routine={routine} getMenu={getMenu} label={t('routine-actions.label')} />
+                )}
                 getIcon={getIcon}
                 getLabel={getLabel}
                 getAdornment={getAdornment}
@@ -281,6 +284,34 @@ const routineEnabled = Atom.family(
       };
     }),
 );
+
+/** Per-row overflow menu for a routine, rendered into the MasterDetail `renderActions` slot. */
+const RoutineRowActions = ({
+  routine,
+  getMenu,
+  label,
+}: {
+  routine: Routine.Routine;
+  getMenu: (get: Atom.Context, routine: Routine.Routine) => ActionGraphProps;
+  label: string;
+}) => {
+  const menu = useMenuBuilder((get) => getMenu(get, routine), [getMenu, routine]);
+  return (
+    <Menu.Root {...menu}>
+      <Menu.Trigger asChild>
+        <IconButton
+          iconOnly
+          variant='ghost'
+          icon='ph--dots-three-vertical--regular'
+          label={label}
+          // Open the menu without toggling row selection.
+          onClick={(event) => event.stopPropagation()}
+        />
+      </Menu.Trigger>
+      <Menu.Content />
+    </Menu.Root>
+  );
+};
 
 type GetMenuOptions = {
   t: ReturnType<typeof useTranslation>['t'];

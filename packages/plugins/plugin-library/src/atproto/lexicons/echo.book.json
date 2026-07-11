@@ -1,0 +1,27 @@
+{
+  "lexicon": 1,
+  "id": "echo.book",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "description": "ATProto-shaped projection of the public face of an ECHO Book. The source schema for the Panproto lens; `authors` is a tab-separated string at this boundary (see book-codec.ts).",
+      "record": {
+        "type": "object",
+        "required": ["title", "authors", "hiveId", "createdAt"],
+        "properties": {
+          "title": { "type": "string" },
+          "authors": { "type": "string" },
+          "hiveId": { "type": "string" },
+          "createdAt": { "type": "string", "format": "datetime" },
+          "status": { "type": "string" },
+          "stars": { "type": "integer", "minimum": 1, "maximum": 10 },
+          "review": { "type": "string" },
+          "startedAt": { "type": "string", "format": "datetime" },
+          "finishedAt": { "type": "string", "format": "datetime" },
+          "hiveBookUri": { "type": "string" }
+        }
+      }
+    }
+  }
+}
