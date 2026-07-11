@@ -4,22 +4,31 @@
 
 import * as Schema from 'effect/Schema';
 
-export const GridItem = Schema.Struct({
-  id: Schema.String,
+/**
+ * Position of a tile in grid cells. `w`/`h` (column/row span) are optional and default to 1, so a
+ * bare `{ x, y }` is a 1×1 tile — this is the shape `plugin-board` already persists.
+ */
+export const GridPosition = Schema.Struct({
   x: Schema.Number,
   y: Schema.Number,
-  w: Schema.Number,
-  h: Schema.Number,
+  w: Schema.optional(Schema.Number),
+  h: Schema.optional(Schema.Number),
 });
 
-export type GridItem = Schema.Schema.Type<typeof GridItem>;
+export type GridPosition = Schema.Schema.Type<typeof GridPosition>;
 
-export const GridLayout = Schema.Struct({
-  columns: Schema.Number,
-  items: Schema.mutable(Schema.Array(GridItem)),
-});
+/**
+ * A board layout: object positions keyed by object id. Generic over the position type so consumers
+ * can use their own (as long as they supply a matching projection + resolver); the built-in resolvers
+ * require `Pos extends GridPosition`.
+ */
+export type Layout<Pos = GridPosition> = { items: Record<string, Pos> };
 
-export type GridLayout = Schema.Schema.Type<typeof GridLayout>;
+/**
+ * Board extent in cells. `columns` bounds the horizontal axis (used for clamping and right-push
+ * fallback); `rows` is a soft minimum — the board grows past it as tiles are placed lower.
+ */
+export type Bounds = { columns?: number; rows?: number };
 
 /**
  * Constraints on an item's size in grid cells; not persisted (derived from the tile's definition).
@@ -34,21 +43,58 @@ export type GridMode = 'pack' | 'float';
 /** Axis along which displaced items are pushed to clear a collision. */
 export type PushDirection = 'down' | 'right';
 
+/** Options threaded to a resolver: the board extent, the moved item's size limits, and the compaction mode. */
+export type ResolveOptions = { bounds?: Bounds; constraints?: GridConstraints; mode?: GridMode };
+
+/**
+ * Decides what a drop does. Given the current layout, the id being placed and its target position
+ * (carrying the desired `x,y,w,h`), returns the resulting layout — or `null` to reject the drop, in
+ * which case the tile springs back. Built-in resolvers never produce overlaps.
+ */
+export type DropResolver<Pos = GridPosition> = (
+  layout: Layout<Pos>,
+  id: string,
+  to: Pos,
+  options?: ResolveOptions,
+) => Layout<Pos> | null;
+
 const clamp = (value: number, min: number, max: number): number => Math.min(Math.max(value, min), max);
+
+/** Normalized cell rect (span resolved) tagged with its id, for internal engine math. */
+type Cell = { id: string; x: number; y: number; w: number; h: number };
+
+const rectOf = (position: GridPosition): { x: number; y: number; w: number; h: number } => ({
+  x: position.x,
+  y: position.y,
+  w: position.w ?? 1,
+  h: position.h ?? 1,
+});
+
+const toCells = <Pos extends GridPosition>(layout: Layout<Pos>): Cell[] =>
+  Object.entries(layout.items).map(([id, position]) => ({ id, ...rectOf(position) }));
+
+// Rebuild a layout from normalized cells, preserving any extra fields on the original positions.
+const fromCells = <Pos extends GridPosition>(layout: Layout<Pos>, cells: Cell[]): Layout<Pos> => ({
+  ...layout,
+  items: Object.fromEntries(
+    cells.map((cell) => [cell.id, { ...layout.items[cell.id], x: cell.x, y: cell.y, w: cell.w, h: cell.h } as Pos]),
+  ),
+});
 
 /**
  * Rectangle overlap in grid cells. Edge-adjacent (touching) rectangles do not overlap.
  */
-export const overlaps = (a: GridItem, b: GridItem): boolean =>
+export const overlaps = (a: Cell, b: Cell): boolean =>
   a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 
 /**
- * Clamps an item's width to the grid's column count, then its x so it never spills past the right edge.
+ * Clamps a cell's width to the column count, then its x so it never spills past the right edge.
+ * `columns` of `Infinity` (unbounded) leaves it untouched apart from flooring x at 0.
  */
-export const clampToColumns = (item: GridItem, columns: number): GridItem => {
-  const w = clamp(item.w, 1, columns);
-  const x = clamp(item.x, 0, columns - w);
-  return { ...item, x, w };
+const clampToColumns = (cell: Cell, columns: number): Cell => {
+  const w = clamp(cell.w, 1, columns);
+  const x = clamp(cell.x, 0, columns === Infinity ? cell.x : columns - w);
+  return { ...cell, x, w };
 };
 
 /**
@@ -69,26 +115,35 @@ export const applyConstraints = (
   };
 };
 
+// Push direction for a move/resize: rightward when the tile moved/grew primarily along x, else down.
+const deriveDirection = (from: Cell, to: Cell): PushDirection => {
+  const rightish = Math.max(to.x - from.x, 0) + Math.max(to.w - from.w, 0);
+  const downish = Math.max(to.y - from.y, 0) + Math.max(to.h - from.h, 0);
+  return rightish > 0 && rightish >= downish ? 'right' : 'down';
+};
+
 /**
  * Fixes the `movedId` item in place and pushes every other item that overlaps it (directly or by
  * cascade) to clear the overlap, along `direction`. `down` increases y; `right` increases x but
- * falls back to pushing down when the item would spill past the right edge (columns are bounded,
- * rows are not). Candidates are processed in a deterministic sweep ordered along the push axis.
+ * falls back to pushing down when the item would spill past `columns` (bounded horizontally, rows
+ * grow freely). Candidates are processed in a deterministic sweep ordered along the push axis.
  */
-export const resolveCollisions = (
-  layout: GridLayout,
+export const resolveCollisions = <Pos extends GridPosition>(
+  layout: Layout<Pos>,
   movedId: string,
   direction: PushDirection = 'down',
-): GridLayout => {
-  const moved = layout.items.find((entry) => entry.id === movedId);
+  columns: number = Infinity,
+): Layout<Pos> => {
+  const cells = toCells(layout);
+  const moved = cells.find((entry) => entry.id === movedId);
   if (!moved) {
     return layout;
   }
 
   // Settled items are fixed for the rest of the sweep; the moved item anchors the sweep. Sort along
   // the push axis so a pushed item only ever collides with items later in the sweep.
-  const settled: GridItem[] = [moved];
-  const remaining = layout.items.filter((entry) => entry.id !== movedId);
+  const settled: Cell[] = [moved];
+  const remaining = cells.filter((entry) => entry.id !== movedId);
   const sorted = [...remaining].sort((a, b) =>
     direction === 'right' ? a.x - b.x || a.y - b.y : a.y - b.y || a.x - b.x,
   );
@@ -97,7 +152,7 @@ export const resolveCollisions = (
     let current = entry;
     let collision = settled.find((other) => overlaps(current, other));
     while (collision) {
-      if (direction === 'right' && collision.x + collision.w + current.w <= layout.columns) {
+      if (direction === 'right' && collision.x + collision.w + current.w <= columns) {
         current = { ...current, x: collision.x + collision.w };
       } else {
         // Down push, or right push that would overflow the columns → fall back to down.
@@ -108,17 +163,16 @@ export const resolveCollisions = (
     settled.push(current);
   }
 
-  const byId = new Map(settled.map((entry) => [entry.id, entry]));
-  return { ...layout, items: layout.items.map((entry) => byId.get(entry.id) ?? entry) };
+  return fromCells(layout, settled);
 };
 
 /**
  * Gravity-up compaction: processes items in a deterministic (y, x) sweep and moves each one to the
  * smallest y >= 0 where it doesn't overlap an already-placed item, keeping its x/w unchanged.
  */
-export const compact = (layout: GridLayout): GridLayout => {
-  const sorted = [...layout.items].sort((a, b) => a.y - b.y || a.x - b.x);
-  const settled: GridItem[] = [];
+export const compact = <Pos extends GridPosition>(layout: Layout<Pos>): Layout<Pos> => {
+  const sorted = toCells(layout).sort((a, b) => a.y - b.y || a.x - b.x);
+  const settled: Cell[] = [];
 
   for (const entry of sorted) {
     let y = 0;
@@ -128,57 +182,80 @@ export const compact = (layout: GridLayout): GridLayout => {
     settled.push({ ...entry, y });
   }
 
-  const byId = new Map(settled.map((entry) => [entry.id, entry]));
-  return { ...layout, items: layout.items.map((entry) => byId.get(entry.id) ?? entry) };
+  return fromCells(layout, settled);
 };
 
-/**
- * Moves an item to a new position, pushing anything it overlaps out of the way, then optionally
- * compacting the whole layout upward. Returns the input layout unchanged if the item isn't found
- * or the drop target is the item's own current cell.
- */
-export const moveItem = (layout: GridLayout, id: string, to: { x: number; y: number }, mode: GridMode): GridLayout => {
-  const item = layout.items.find((entry) => entry.id === id);
-  if (!item) {
-    return layout;
-  }
-  if (item.x === to.x && item.y === to.y) {
-    return layout;
-  }
-
-  const moved = clampToColumns({ ...item, x: to.x, y: to.y }, layout.columns);
-  const updated: GridLayout = { ...layout, items: layout.items.map((entry) => (entry.id === id ? moved : entry)) };
-  // Push right when the item moved primarily rightward, else down.
-  const direction: PushDirection =
-    moved.x > item.x && moved.x - item.x >= Math.abs(moved.y - item.y) ? 'right' : 'down';
-  const resolved = resolveCollisions(updated, id, direction);
-  return mode === 'pack' ? compact(resolved) : resolved;
-};
+//
+// Drop resolvers (none produce overlaps).
+//
 
 /**
- * Resizes an item, pushing anything it now overlaps out of the way, then optionally compacting the
- * whole layout upward. Returns the input layout unchanged if the item isn't found.
+ * Places the tile at `to` and pushes any occupants it now overlaps out of the way (right when the
+ * tile moved/grew primarily along x, else down), then optionally compacts upward. This is the
+ * gridstack behaviour and the default resolver. Returns the input unchanged if the id is unknown.
  */
-export const resizeItem = (
-  layout: GridLayout,
-  id: string,
-  size: { w: number; h: number },
-  constraints: GridConstraints | undefined,
-  mode: GridMode,
-): GridLayout => {
-  const item = layout.items.find((entry) => entry.id === id);
+export const pushToFit: DropResolver = (layout, id, to, options = {}) => {
+  const item = layout.items[id];
   if (!item) {
     return layout;
   }
 
-  const constrained = applyConstraints(size, constraints);
-  // Resize keeps the item's x fixed and caps width at the space remaining to the right edge, rather
-  // than shifting x left (which clampToColumns would do) — growing a tile shouldn't relocate it.
-  const maxWidth = Math.max(1, layout.columns - item.x);
-  const resized = { ...item, w: Math.min(constrained.w, maxWidth), h: constrained.h };
-  const updated: GridLayout = { ...layout, items: layout.items.map((entry) => (entry.id === id ? resized : entry)) };
-  // Push right when the tile grew primarily in width, else down.
-  const direction: PushDirection = resized.w - item.w > resized.h - item.h ? 'right' : 'down';
-  const resolved = resolveCollisions(updated, id, direction);
-  return mode === 'pack' ? compact(resolved) : resolved;
+  const columns = options.bounds?.columns ?? Infinity;
+  const from = { id, ...rectOf(item) };
+  const size = applyConstraints({ w: to.w ?? 1, h: to.h ?? 1 }, options.constraints);
+  const target = clampToColumns({ id, x: to.x, y: to.y, ...size }, columns);
+  const updated = fromCells(layout, [target, ...toCells(layout).filter((cell) => cell.id !== id)]);
+  const resolved = resolveCollisions(updated, id, deriveDirection(from, target), columns);
+  return options.mode === 'pack' ? compact(resolved) : resolved;
+};
+
+/**
+ * Places the tile at `to`, shrinking it (width first, then height) until it no longer overlaps a
+ * neighbour. Returns `null` if not even a 1×1 tile fits at that spot (reject → springs back).
+ */
+export const resizeToFit: DropResolver = (layout, id, to, options = {}) => {
+  const item = layout.items[id];
+  if (!item) {
+    return layout;
+  }
+
+  const columns = options.bounds?.columns ?? Infinity;
+  const size = applyConstraints({ w: to.w ?? 1, h: to.h ?? 1 }, options.constraints);
+  let candidate = clampToColumns({ id, x: to.x, y: to.y, ...size }, columns);
+  const others = toCells(layout).filter((cell) => cell.id !== id);
+  while (candidate.w > 1 && others.some((other) => overlaps(candidate, other))) {
+    candidate = { ...candidate, w: candidate.w - 1 };
+  }
+  while (candidate.h > 1 && others.some((other) => overlaps(candidate, other))) {
+    candidate = { ...candidate, h: candidate.h - 1 };
+  }
+  if (others.some((other) => overlaps(candidate, other))) {
+    return null;
+  }
+
+  return fromCells(layout, [candidate, ...others]);
+};
+
+/**
+ * Places the tile at `to` only if its footprint fits in free space within the columns; otherwise
+ * rejects the drop (`null`). Never moves or resizes other tiles.
+ */
+export const rejectIfNoFit: DropResolver = (layout, id, to, options = {}) => {
+  const item = layout.items[id];
+  if (!item) {
+    return layout;
+  }
+
+  const columns = options.bounds?.columns ?? Infinity;
+  const size = applyConstraints({ w: to.w ?? 1, h: to.h ?? 1 }, options.constraints);
+  const candidate: Cell = { id, x: to.x, y: to.y, ...size };
+  if (candidate.x < 0 || candidate.y < 0 || candidate.x + candidate.w > columns) {
+    return null;
+  }
+  const others = toCells(layout).filter((cell) => cell.id !== id);
+  if (others.some((other) => overlaps(candidate, other))) {
+    return null;
+  }
+
+  return fromCells(layout, [candidate, ...others]);
 };

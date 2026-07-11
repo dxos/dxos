@@ -18,7 +18,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { type GridConstraints, type GridItem, applyConstraints } from './engine';
+import { type GridConstraints, type GridPosition, applyConstraints } from './engine';
 import { cellRect } from './geometry';
 import { useGridContext } from './Grid';
 
@@ -29,8 +29,8 @@ const GRID_CELL_NAME = 'Grid.Cell';
 export type GridCellProps<T extends Type.AnyObj = any> = ThemedClassName<
   PropsWithChildren<{
     item: T;
-    /** This item's current position/size in grid cells (an entry of `GridLayout.items`). */
-    layout: GridItem;
+    /** This item's current position/size in grid cells (its entry in the board layout). */
+    layout: GridPosition;
     /** Rendered in the header row next to the drag handle. */
     title?: ReactNode;
     draggable?: boolean;
@@ -55,8 +55,18 @@ export const GridCell = ({
   constraints,
 }: GridCellProps) => {
   const { t } = useTranslation(translationKey);
-  const { cellSize, gap, containerId, readonly, onResize, onResizePreview, onDelete, previewLayout, viewportRef } =
-    useGridContext(GRID_CELL_NAME);
+  const {
+    cellSize,
+    gap,
+    columns,
+    containerId,
+    readonly,
+    onResize,
+    onResizePreview,
+    onDelete,
+    previewLayout,
+    viewportRef,
+  } = useGridContext(GRID_CELL_NAME);
   // Any active drag makes every tile transparent to pointer events so the backdrop drop-target cells
   // beneath them (incl. cells under an occupied tile) receive the drag — required for push-on-drop.
   const { dragging } = useDndRootContext(GRID_CELL_NAME);
@@ -156,15 +166,19 @@ export const GridCell = ({
         height: Math.max(cellSize.height, pointer.y - tile.top),
       };
     };
-    // Raw px → constrained whole-cell size.
-    const cellsFor = (raw: { width: number; height: number }) =>
-      applyConstraints(
+    // Raw px → constrained whole-cell size. Width is capped to the space remaining to the right edge
+    // so growing a tile at the edge caps its width rather than shifting it left (which the resolver's
+    // clamp would otherwise do).
+    const cellsFor = (raw: { width: number; height: number }) => {
+      const size = applyConstraints(
         {
           w: Math.max(1, Math.round((raw.width + gap) / (cellSize.width + gap))),
           h: Math.max(1, Math.round((raw.height + gap) / (cellSize.height + gap))),
         },
         constraints,
       );
+      return { w: Math.min(size.w, Math.max(1, columns - layout.x)), h: size.h };
+    };
     // Update the free (magnetic) outline AND report the snapped size so the engine runs live and the
     // other tiles move out of the way during the resize — the same behaviour as a move.
     const update = () => {
@@ -210,7 +224,7 @@ export const GridCell = ({
       onResizePreview(item.id, null);
       cleanup();
     };
-  }, [readonly, cellSize, gap, item.id, constraints, onResize, onResizePreview, viewportRef]);
+  }, [readonly, cellSize, gap, columns, layout.x, item.id, constraints, onResize, onResizePreview, viewportRef]);
 
   // Non-dragged tiles render at their previewed position during a drag (animating out of the way),
   // and spring back to `layout` when the drag ends. The dragged tile itself stays put (its preview
@@ -218,10 +232,8 @@ export const GridCell = ({
   // Every tile — including the one being dragged — renders at its previewed position so it glides
   // to where it will land (cell-to-cell) during the drag and is already there on drop, rather than
   // snapping back from its original cell. The cursor-following clone is the "picked up" copy.
-  const effectiveLayout = previewLayout
-    ? (previewLayout.items.find((entry) => entry.id === item.id) ?? layout)
-    : layout;
-  const rect = cellRect(effectiveLayout, cellSize, gap);
+  const effectiveLayout = previewLayout ? (previewLayout.items[item.id] ?? layout) : layout;
+  const rect = cellRect(span(effectiveLayout), cellSize, gap);
 
   // While this tile is dragged, outline the FULL w×h footprint it will occupy at the target cell
   // (not just the 1x1 cell under the cursor) so the landing area reads as one blue-bordered region.
@@ -230,7 +242,7 @@ export const GridCell = ({
       ? dragging.target.data.location
       : undefined;
   const moveGhost = moveTarget
-    ? cellRect({ x: moveTarget.x, y: moveTarget.y, w: layout.w, h: layout.h }, cellSize, gap)
+    ? cellRect({ x: moveTarget.x, y: moveTarget.y, w: layout.w ?? 1, h: layout.h ?? 1 }, cellSize, gap)
     : undefined;
 
   return (
@@ -328,6 +340,14 @@ const sizeOverride: CSSProperties = {
 };
 
 GridCell.displayName = GRID_CELL_NAME;
+
+// Resolve a position's optional span to a concrete w×h rect for geometry.
+const span = (position: GridPosition): { x: number; y: number; w: number; h: number } => ({
+  x: position.x,
+  y: position.y,
+  w: position.w ?? 1,
+  h: position.h ?? 1,
+});
 
 /**
  * Pull a raw px extent to the nearest whole-cell extent only when it comes within `snapPx` of it,

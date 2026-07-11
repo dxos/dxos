@@ -12,7 +12,7 @@ import { cardDefaultInlineSize } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
-import { type GridItem, type GridLayout, type GridMode } from './engine';
+import { type GridMode, type Layout, rejectIfNoFit, resizeToFit } from './engine';
 import { Grid, type GridRootProps } from './Grid';
 
 type TestItem = {
@@ -35,38 +35,40 @@ const posterItems: TestItem[] = ((seed = 42) =>
 
 // 12-column board; tile sizes capped at 2x2, clustered around the board centre (6,6) rather than the
 // top-left, so the initial view (centred on mount) shows the tiles.
-const defaultLayout: GridLayout = {
-  columns: 12,
-  items: [
-    { id: '0', x: 4, y: 4, w: 2, h: 2 },
-    { id: '1', x: 6, y: 4, w: 2, h: 1 },
-    { id: '2', x: 4, y: 6, w: 2, h: 2 },
-    { id: '3', x: 6, y: 6, w: 2, h: 2 },
-    { id: '4', x: 6, y: 5, w: 2, h: 1 },
-  ],
+const defaultLayout: Layout = {
+  items: {
+    '0': { x: 4, y: 4, w: 2, h: 2 },
+    '1': { x: 6, y: 4, w: 2, h: 1 },
+    '2': { x: 4, y: 6, w: 2, h: 2 },
+    '3': { x: 6, y: 6, w: 2, h: 2 },
+    '4': { x: 6, y: 5, w: 2, h: 1 },
+  },
 };
 
 // A 12x12 initial board.
-const MIN_ROWS = 12;
+const defaultBounds = { columns: 12, rows: 12 };
 
 type StoryArgs = GridRootProps & { items: TestItem[] };
 
 const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, ...props }: StoryArgs) => {
   const [items, setItems] = useState(itemsProp ?? testItems);
-  const [layout, setLayout] = useState<GridLayout>(layoutProp ?? defaultLayout);
+  const [layout, setLayout] = useState<Layout>(layoutProp ?? defaultLayout);
 
   const handleAdd = useCallback<NonNullable<GridRootProps['onAdd']>>(
-    (position: GridItem) => {
+    (position) => {
       const id = items.length.toString();
       setItems([...items, { id, title: `Widget ${id}` }]);
-      setLayout((layout) => ({ ...layout, items: [...layout.items, { ...position, id }] }));
+      setLayout((layout) => ({ ...layout, items: { ...layout.items, [id]: position } }));
     },
     [items],
   );
 
   const handleDelete = useCallback<NonNullable<GridRootProps['onDelete']>>((id: string) => {
     setItems((items) => items.filter((item) => item.id !== id));
-    setLayout((layout) => ({ ...layout, items: layout.items.filter((entry) => entry.id !== id) }));
+    setLayout((layout) => {
+      const { [id]: _removed, ...rest } = layout.items;
+      return { ...layout, items: rest };
+    });
   }, []);
 
   return (
@@ -75,7 +77,7 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, ...props }: 
         {...props}
         layout={layout}
         mode={mode}
-        minRows={MIN_ROWS}
+        bounds={defaultBounds}
         onChange={setLayout}
         onAdd={handleAdd}
         onDelete={handleDelete}
@@ -86,7 +88,7 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, ...props }: 
             <Grid.Backdrop />
             <Grid.Content>
               {items.map((item) => {
-                const itemLayout = layout.items.find((entry) => entry.id === item.id);
+                const itemLayout = layout.items[item.id];
                 return itemLayout ? (
                   <Grid.Cell item={item} layout={itemLayout} key={item.id} title={<Card.Text>{item.title}</Card.Text>}>
                     {item.image ? <img src={item.image} alt='' className='size-full object-cover' /> : null}
@@ -115,6 +117,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/** Default resolver (`pushToFit`): dropping/resizing pushes occupants out of the way. */
 export const Default: Story = {
   args: {
     items: testItems,
@@ -123,6 +126,7 @@ export const Default: Story = {
   },
 };
 
+/** `pack` mode: after a move/resize the layout compacts upward. */
 export const Pack: Story = {
   args: {
     items: testItems,
@@ -147,5 +151,31 @@ export const Media: Story = {
     items: posterItems,
     layout: defaultLayout,
     mode: 'float' satisfies GridMode,
+  },
+};
+
+/**
+ * `resizeToFit` resolver: a tile dropped/resized onto a neighbour shrinks to the free space rather
+ * than pushing others (rejects if not even 1×1 fits).
+ */
+export const ResizeToFit: Story = {
+  args: {
+    items: testItems,
+    layout: defaultLayout,
+    mode: 'float' satisfies GridMode,
+    resolver: resizeToFit,
+  },
+};
+
+/**
+ * `rejectIfNoFit` resolver: a drop is only accepted where the tile fits in free space; otherwise the
+ * tile springs back and nothing else moves.
+ */
+export const RejectIfNoFit: Story = {
+  args: {
+    items: testItems,
+    layout: defaultLayout,
+    mode: 'float' satisfies GridMode,
+    resolver: rejectIfNoFit,
   },
 };

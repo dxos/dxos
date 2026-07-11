@@ -37,11 +37,23 @@ export const gridBounds = (
   height: rows * (cellSize.height + gap) + gap,
 });
 
+/** A tile position (span optional, defaulting to 1×1) as stored in a layout keyed by id. */
+type Position = { x: number; y: number; w?: number; h?: number };
+
 /**
  * Number of rows to render: the lowest occupied row edge plus a few spare rows so there's always
  * room to drag/add below the current content.
  */
-export const getRowCount = (layout: { items: readonly { y: number; h: number }[] }, spareRows = 3): number => {
-  const maxBottom = layout.items.reduce((bottom, item) => Math.max(bottom, item.y + item.h), 0);
+export const getRowCount = (layout: { items: Record<string, Position> }, spareRows = 3): number => {
+  const maxBottom = Object.values(layout.items).reduce((bottom, item) => Math.max(bottom, item.y + (item.h ?? 1)), 0);
   return maxBottom + spareRows;
+};
+
+/**
+ * Number of columns to render when no explicit column bound is given: the right-most occupied edge
+ * plus a couple of spare columns (used for the backdrop extent of an unbounded board).
+ */
+export const getColumnCount = (layout: { items: Record<string, Position> }, spareColumns = 2): number => {
+  const maxRight = Object.values(layout.items).reduce((right, item) => Math.max(right, item.x + (item.w ?? 1)), 0);
+  return maxRight + spareColumns;
 };

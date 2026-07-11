@@ -5,50 +5,41 @@
 import { describe, test } from 'vitest';
 
 import {
-  GridItem,
-  GridLayout,
+  type GridPosition,
+  type Layout,
+  type ResolveOptions,
   applyConstraints,
-  clampToColumns,
   compact,
-  moveItem,
   overlaps,
-  resizeItem,
+  pushToFit,
+  rejectIfNoFit,
+  resizeToFit,
   resolveCollisions,
 } from './engine';
 
-const item = (id: string, x: number, y: number, w: number, h: number): GridItem => ({ id, x, y, w, h });
-
-const layout = (columns: number, items: GridItem[]): GridLayout => ({ columns, items });
+const pos = (x: number, y: number, w = 1, h = 1): GridPosition => ({ x, y, w, h });
+const layout = (items: Record<string, GridPosition>): Layout => ({ items });
+const cell = (id: string, x: number, y: number, w: number, h: number) => ({ id, x, y, w, h });
+const opts = (columns: number, mode: ResolveOptions['mode'] = 'float'): ResolveOptions => ({
+  bounds: { columns },
+  mode,
+});
 
 describe('overlaps', () => {
   test('overlapping rectangles', ({ expect }) => {
-    expect(overlaps(item('a', 0, 0, 2, 2), item('b', 1, 1, 2, 2))).toBe(true);
+    expect(overlaps(cell('a', 0, 0, 2, 2), cell('b', 1, 1, 2, 2))).toBe(true);
   });
 
   test('disjoint rectangles', ({ expect }) => {
-    expect(overlaps(item('a', 0, 0, 1, 1), item('b', 5, 5, 1, 1))).toBe(false);
+    expect(overlaps(cell('a', 0, 0, 1, 1), cell('b', 5, 5, 1, 1))).toBe(false);
   });
 
   test('edge-adjacent horizontally is not an overlap', ({ expect }) => {
-    expect(overlaps(item('a', 0, 0, 1, 1), item('b', 1, 0, 1, 1))).toBe(false);
+    expect(overlaps(cell('a', 0, 0, 1, 1), cell('b', 1, 0, 1, 1))).toBe(false);
   });
 
   test('edge-adjacent vertically is not an overlap', ({ expect }) => {
-    expect(overlaps(item('a', 0, 0, 1, 1), item('b', 0, 1, 1, 1))).toBe(false);
-  });
-});
-
-describe('clampToColumns', () => {
-  test('clamps x past the right edge so x + w <= columns', ({ expect }) => {
-    expect(clampToColumns(item('a', 10, 0, 2, 1), 4)).toEqual(item('a', 2, 0, 2, 1));
-  });
-
-  test('clamps negative x to 0', ({ expect }) => {
-    expect(clampToColumns(item('a', -5, 0, 2, 1), 4)).toEqual(item('a', 0, 0, 2, 1));
-  });
-
-  test('clamps w wider than columns down to columns', ({ expect }) => {
-    expect(clampToColumns(item('a', 0, 0, 10, 1), 4)).toEqual(item('a', 0, 0, 4, 1));
+    expect(overlaps(cell('a', 0, 0, 1, 1), cell('b', 0, 1, 1, 1))).toBe(false);
   });
 });
 
@@ -71,150 +62,190 @@ describe('applyConstraints', () => {
   });
 });
 
-describe('moveItem', () => {
+describe('pushToFit (move)', () => {
   test('moving onto an empty cell leaves other items unchanged (float)', ({ expect }) => {
-    const before = layout(4, [item('a', 0, 0, 1, 1), item('b', 2, 2, 1, 1)]);
-    const after = moveItem(before, 'a', { x: 3, y: 3 }, 'float');
-    expect(after.items.find((entry) => entry.id === 'a')).toEqual(item('a', 3, 3, 1, 1));
-    expect(after.items.find((entry) => entry.id === 'b')).toEqual(item('b', 2, 2, 1, 1));
+    const before = layout({ a: pos(0, 0), b: pos(2, 2) });
+    const after = pushToFit(before, 'a', pos(3, 3), opts(4))!;
+    expect(after.items.a).toEqual(pos(3, 3));
+    expect(after.items.b).toEqual(pos(2, 2));
   });
 
   test('moving onto an occupied cell pushes the occupant down by exactly the overlap (float)', ({ expect }) => {
-    // "a" occupies rows 1-3 once moved; "b" occupies rows 2-4, overlapping rows 2-3 (1 row).
-    const before = layout(4, [item('a', 0, 0, 2, 2), item('b', 0, 2, 2, 2)]);
-    const after = moveItem(before, 'a', { x: 0, y: 1 }, 'float');
-    expect(after.items.find((entry) => entry.id === 'a')).toEqual(item('a', 0, 1, 2, 2));
-    // Pushed from y=2 to y=3: exactly the 1-row overlap, no further gap.
-    expect(after.items.find((entry) => entry.id === 'b')).toEqual(item('b', 0, 3, 2, 2));
+    const before = layout({ a: pos(0, 0, 2, 2), b: pos(0, 2, 2, 2) });
+    const after = pushToFit(before, 'a', pos(0, 1, 2, 2), opts(4))!;
+    expect(after.items.a).toEqual(pos(0, 1, 2, 2));
+    expect(after.items.b).toEqual(pos(0, 3, 2, 2));
   });
 
   test('cascade push: moving A onto B pushes B onto C', ({ expect }) => {
-    const before = layout(4, [item('a', 0, 0, 1, 1), item('b', 0, 1, 1, 1), item('c', 0, 2, 1, 1)]);
-    const after = moveItem(before, 'a', { x: 0, y: 1 }, 'float');
-    expect(after.items.find((entry) => entry.id === 'a')).toEqual(item('a', 0, 1, 1, 1));
-    expect(after.items.find((entry) => entry.id === 'b')).toEqual(item('b', 0, 2, 1, 1));
-    expect(after.items.find((entry) => entry.id === 'c')).toEqual(item('c', 0, 3, 1, 1));
+    const before = layout({ a: pos(0, 0), b: pos(0, 1), c: pos(0, 2) });
+    const after = pushToFit(before, 'a', pos(0, 1), opts(4))!;
+    expect(after.items.a).toEqual(pos(0, 1));
+    expect(after.items.b).toEqual(pos(0, 2));
+    expect(after.items.c).toEqual(pos(0, 3));
   });
 
   test('clamps x past the right edge on drop', ({ expect }) => {
-    const before = layout(4, [item('a', 0, 0, 2, 1)]);
-    const after = moveItem(before, 'a', { x: 10, y: 0 }, 'float');
-    expect(after.items[0]).toEqual(item('a', 2, 0, 2, 1));
+    const before = layout({ a: pos(0, 0, 2, 1) });
+    const after = pushToFit(before, 'a', pos(10, 0, 2, 1), opts(4))!;
+    expect(after.items.a).toEqual(pos(2, 0, 2, 1));
   });
 
   test('clamps negative x on drop', ({ expect }) => {
-    const before = layout(4, [item('a', 0, 0, 2, 1)]);
-    const after = moveItem(before, 'a', { x: -5, y: 0 }, 'float');
-    expect(after.items[0]).toEqual(item('a', 0, 0, 2, 1));
+    const before = layout({ a: pos(0, 0, 2, 1) });
+    const after = pushToFit(before, 'a', pos(-5, 0, 2, 1), opts(4))!;
+    expect(after.items.a).toEqual(pos(0, 0, 2, 1));
   });
 
   test('pack compacts a gap left above an item; float leaves it', ({ expect }) => {
-    const before = layout(4, [item('a', 0, 0, 1, 1), item('b', 0, 1, 1, 1)]);
+    const before = layout({ a: pos(0, 0), b: pos(0, 1) });
 
-    const floated = moveItem(before, 'b', { x: 0, y: 5 }, 'float');
-    expect(floated.items.find((entry) => entry.id === 'a')).toEqual(item('a', 0, 0, 1, 1));
-    expect(floated.items.find((entry) => entry.id === 'b')).toEqual(item('b', 0, 5, 1, 1));
+    const floated = pushToFit(before, 'b', pos(0, 5), opts(4, 'float'))!;
+    expect(floated.items.a).toEqual(pos(0, 0));
+    expect(floated.items.b).toEqual(pos(0, 5));
 
-    const packed = moveItem(before, 'b', { x: 0, y: 5 }, 'pack');
-    expect(packed.items.find((entry) => entry.id === 'a')).toEqual(item('a', 0, 0, 1, 1));
-    expect(packed.items.find((entry) => entry.id === 'b')).toEqual(item('b', 0, 1, 1, 1));
-  });
-
-  test('dropping on the own current cell is a no-op', ({ expect }) => {
-    const before = layout(4, [item('a', 0, 0, 1, 1), item('b', 1, 0, 1, 1)]);
-    const after = moveItem(before, 'a', { x: 0, y: 0 }, 'float');
-    expect(after).toEqual(before);
+    const packed = pushToFit(before, 'b', pos(0, 5), opts(4, 'pack'))!;
+    expect(packed.items.a).toEqual(pos(0, 0));
+    expect(packed.items.b).toEqual(pos(0, 1));
   });
 
   test('unknown id returns the layout unchanged', ({ expect }) => {
-    const before = layout(4, [item('a', 0, 0, 1, 1)]);
-    const after = moveItem(before, 'missing', { x: 2, y: 2 }, 'float');
+    const before = layout({ a: pos(0, 0) });
+    const after = pushToFit(before, 'missing', pos(2, 2), opts(4));
     expect(after).toEqual(before);
   });
 });
 
-describe('resizeItem', () => {
+describe('pushToFit (resize)', () => {
   test('resizing larger downward pushes the item directly below', ({ expect }) => {
-    const before = layout(4, [item('a', 0, 0, 1, 1), item('b', 0, 1, 1, 1)]);
-    const after = resizeItem(before, 'a', { w: 1, h: 2 }, undefined, 'float');
-    expect(after.items.find((entry) => entry.id === 'a')).toEqual(item('a', 0, 0, 1, 2));
-    expect(after.items.find((entry) => entry.id === 'b')).toEqual(item('b', 0, 2, 1, 1));
+    const before = layout({ a: pos(0, 0), b: pos(0, 1) });
+    const after = pushToFit(before, 'a', pos(0, 0, 1, 2), opts(4))!;
+    expect(after.items.a).toEqual(pos(0, 0, 1, 2));
+    expect(after.items.b).toEqual(pos(0, 2));
   });
 
-  test('cannot resize below minW/minH', ({ expect }) => {
-    const before = layout(4, [item('a', 0, 0, 2, 2)]);
-    const after = resizeItem(before, 'a', { w: 1, h: 1 }, { minW: 2, minH: 2 }, 'float');
-    expect(after.items[0]).toEqual(item('a', 0, 0, 2, 2));
+  test('cannot resize below minW/minH (constraints)', ({ expect }) => {
+    const before = layout({ a: pos(0, 0, 2, 2) });
+    const after = pushToFit(before, 'a', pos(0, 0, 1, 1), {
+      bounds: { columns: 4 },
+      constraints: { minW: 2, minH: 2 },
+    })!;
+    expect(after.items.a).toEqual(pos(0, 0, 2, 2));
   });
 
-  test('cannot resize above maxW/maxH', ({ expect }) => {
-    const before = layout(4, [item('a', 0, 0, 1, 1)]);
-    const after = resizeItem(before, 'a', { w: 10, h: 10 }, { maxW: 3, maxH: 2 }, 'float');
-    expect(after.items[0]).toEqual(item('a', 0, 0, 3, 2));
+  test('cannot resize above maxW/maxH (constraints)', ({ expect }) => {
+    const before = layout({ a: pos(0, 0) });
+    const after = pushToFit(before, 'a', pos(0, 0, 10, 10), {
+      bounds: { columns: 4 },
+      constraints: { maxW: 3, maxH: 2 },
+    })!;
+    expect(after.items.a).toEqual(pos(0, 0, 3, 2));
   });
 
-  test('pack compacts after a resize shrink leaves a gap above another item', ({ expect }) => {
-    const before = layout(4, [item('a', 0, 0, 1, 2), item('b', 0, 2, 1, 1)]);
+  test('resizing wider pushes the neighbour right', ({ expect }) => {
+    const before = layout({ a: pos(0, 0), b: pos(1, 0, 2, 1) });
+    const after = pushToFit(before, 'a', pos(0, 0, 2, 1), opts(8))!;
+    expect(after.items.a).toEqual(pos(0, 0, 2, 1));
+    expect(after.items.b).toEqual(pos(2, 0, 2, 1));
+  });
+});
 
-    const floated = resizeItem(before, 'a', { w: 1, h: 1 }, undefined, 'float');
-    expect(floated.items.find((entry) => entry.id === 'b')).toEqual(item('b', 0, 2, 1, 1));
-
-    const packed = resizeItem(before, 'a', { w: 1, h: 1 }, undefined, 'pack');
-    expect(packed.items.find((entry) => entry.id === 'b')).toEqual(item('b', 0, 1, 1, 1));
+describe('pushToFit (directional push)', () => {
+  test('moving a tile rightward onto its neighbour pushes the neighbour right', ({ expect }) => {
+    const before = layout({ a: pos(0, 0, 2, 2), b: pos(2, 0, 2, 2) });
+    const after = pushToFit(before, 'a', pos(2, 0, 2, 2), opts(8))!;
+    expect(after.items.a).toEqual(pos(2, 0, 2, 2));
+    expect(after.items.b).toEqual(pos(4, 0, 2, 2));
   });
 
-  test('growing width at the right edge caps w and keeps x fixed (does not shift left)', ({ expect }) => {
-    const before = layout(6, [item('a', 2, 0, 1, 1)]);
-    const after = resizeItem(before, 'a', { w: 5, h: 1 }, undefined, 'float');
-    // x stays at 2; w capped at columns - x = 4 (not shifted to x=1, w=5).
-    expect(after.items[0]).toEqual(item('a', 2, 0, 4, 1));
+  test('rightward push falls back to down when it would overflow the columns', ({ expect }) => {
+    const before = layout({ a: pos(0, 0, 2, 2), b: pos(2, 0, 2, 2) });
+    const after = pushToFit(before, 'a', pos(2, 0, 2, 2), opts(4))!;
+    expect(after.items.b).toEqual(pos(2, 2, 2, 2));
+  });
+});
+
+describe('resizeToFit', () => {
+  test('shrinks the dropped tile until it no longer overlaps a neighbour', ({ expect }) => {
+    const before = layout({ a: pos(0, 0), b: pos(2, 0) });
+    const after = resizeToFit(before, 'a', pos(0, 0, 4, 1), opts(8))!;
+    // a would span x 0..4 and hit b at x=2, so it shrinks to w=2 (x 0..2, edge-adjacent to b).
+    expect(after.items.a).toEqual(pos(0, 0, 2, 1));
+    expect(after.items.b).toEqual(pos(2, 0));
   });
 
-  test('unknown id returns the layout unchanged', ({ expect }) => {
-    const before = layout(4, [item('a', 0, 0, 1, 1)]);
-    const after = resizeItem(before, 'missing', { w: 2, h: 2 }, undefined, 'float');
-    expect(after).toEqual(before);
+  test('rejects when not even a 1x1 fits at the target', ({ expect }) => {
+    const before = layout({ a: pos(0, 0), b: pos(2, 0) });
+    const after = resizeToFit(before, 'a', pos(2, 0), opts(8));
+    expect(after).toBeNull();
+  });
+
+  test('never moves other tiles', ({ expect }) => {
+    const before = layout({ a: pos(0, 0), b: pos(3, 0), c: pos(5, 0) });
+    const after = resizeToFit(before, 'a', pos(0, 0, 6, 1), opts(8))!;
+    expect(after.items.b).toEqual(pos(3, 0));
+    expect(after.items.c).toEqual(pos(5, 0));
+  });
+});
+
+describe('rejectIfNoFit', () => {
+  test('places when the footprint fits in free space', ({ expect }) => {
+    const before = layout({ a: pos(0, 0), b: pos(2, 2) });
+    const after = rejectIfNoFit(before, 'a', pos(5, 5), opts(8))!;
+    expect(after.items.a).toEqual(pos(5, 5));
+    expect(after.items.b).toEqual(pos(2, 2));
+  });
+
+  test('rejects when the footprint overlaps a neighbour', ({ expect }) => {
+    const before = layout({ a: pos(0, 0), b: pos(2, 2) });
+    const after = rejectIfNoFit(before, 'a', pos(2, 2), opts(8));
+    expect(after).toBeNull();
+  });
+
+  test('rejects when the footprint spills past the columns', ({ expect }) => {
+    const before = layout({ a: pos(0, 0, 2, 1) });
+    const after = rejectIfNoFit(before, 'a', pos(3, 0, 2, 1), opts(4));
+    expect(after).toBeNull();
   });
 });
 
 describe('resolveCollisions', () => {
   test('cascades pushes deterministically sorted by y then x', ({ expect }) => {
-    const before = layout(4, [item('moved', 0, 0, 1, 1), item('x', 1, 0, 1, 1), item('y', 0, 0, 1, 1)]);
-    // Both "x" and "y" overlap the anchor at (0,0); only "y" (same cell) actually overlaps.
+    const before = layout({ moved: pos(0, 0), x: pos(1, 0), y: pos(0, 0) });
     const after = resolveCollisions(before, 'moved');
-    expect(after.items.find((entry) => entry.id === 'x')).toEqual(item('x', 1, 0, 1, 1));
-    expect(after.items.find((entry) => entry.id === 'y')).toEqual(item('y', 0, 1, 1, 1));
+    expect(after.items.x).toEqual(pos(1, 0));
+    expect(after.items.y).toEqual(pos(0, 1));
   });
 });
 
 describe('compact', () => {
   test('pulls items upward, deterministically ordered by (y, x)', ({ expect }) => {
-    const before = layout(4, [item('a', 0, 5, 1, 1), item('b', 0, 10, 1, 1)]);
+    const before = layout({ a: pos(0, 5), b: pos(0, 10) });
     const after = compact(before);
-    expect(after.items.find((entry) => entry.id === 'a')).toEqual(item('a', 0, 0, 1, 1));
-    expect(after.items.find((entry) => entry.id === 'b')).toEqual(item('b', 0, 1, 1, 1));
+    expect(after.items.a).toEqual(pos(0, 0));
+    expect(after.items.b).toEqual(pos(0, 1));
   });
 
   test('does not move items across different columns', ({ expect }) => {
-    const before = layout(4, [item('a', 0, 5, 1, 1), item('b', 1, 3, 1, 1)]);
+    const before = layout({ a: pos(0, 5), b: pos(1, 3) });
     const after = compact(before);
-    expect(after.items.find((entry) => entry.id === 'a')).toEqual(item('a', 0, 0, 1, 1));
-    expect(after.items.find((entry) => entry.id === 'b')).toEqual(item('b', 1, 0, 1, 1));
+    expect(after.items.a).toEqual(pos(0, 0));
+    expect(after.items.b).toEqual(pos(1, 0));
   });
 });
 
 describe('purity and determinism', () => {
-  const frozenLayout = (columns: number, items: GridItem[]): GridLayout => {
-    const frozenItems = items.map((entry) => Object.freeze({ ...entry }));
-    return Object.freeze({ columns, items: Object.freeze(frozenItems) as GridItem[] }) as GridLayout;
+  const frozenLayout = (items: Record<string, GridPosition>): Layout => {
+    const frozen = Object.fromEntries(Object.entries(items).map(([id, entry]) => [id, Object.freeze({ ...entry })]));
+    return Object.freeze({ items: Object.freeze(frozen) }) as Layout;
   };
 
   test('does not mutate a frozen input layout', ({ expect }) => {
-    const before = frozenLayout(4, [item('a', 0, 0, 1, 1), item('b', 0, 1, 1, 1)]);
+    const before = frozenLayout({ a: pos(0, 0), b: pos(0, 1) });
     const snapshot = JSON.parse(JSON.stringify(before));
 
-    expect(() => moveItem(before, 'a', { x: 0, y: 1 }, 'pack')).not.toThrow();
-    expect(() => resizeItem(before, 'a', { w: 2, h: 2 }, undefined, 'pack')).not.toThrow();
+    expect(() => pushToFit(before, 'a', pos(0, 1), opts(4, 'pack'))).not.toThrow();
+    expect(() => resizeToFit(before, 'a', pos(0, 0, 2, 2), opts(4))).not.toThrow();
     expect(() => resolveCollisions(before, 'a')).not.toThrow();
     expect(() => compact(before)).not.toThrow();
 
@@ -222,32 +253,9 @@ describe('purity and determinism', () => {
   });
 
   test('same inputs produce deep-equal outputs across repeated calls', ({ expect }) => {
-    const before = layout(4, [item('a', 0, 0, 1, 1), item('b', 0, 1, 1, 1), item('c', 0, 2, 1, 1)]);
-    const first = moveItem(before, 'a', { x: 0, y: 1 }, 'pack');
-    const second = moveItem(before, 'a', { x: 0, y: 1 }, 'pack');
+    const before = layout({ a: pos(0, 0), b: pos(0, 1), c: pos(0, 2) });
+    const first = pushToFit(before, 'a', pos(0, 1), opts(4, 'pack'));
+    const second = pushToFit(before, 'a', pos(0, 1), opts(4, 'pack'));
     expect(first).toEqual(second);
-  });
-});
-
-describe('directional push', () => {
-  test('moving a tile rightward onto its neighbour pushes the neighbour right', ({ expect }) => {
-    const before = layout(8, [item('a', 0, 0, 2, 2), item('b', 2, 0, 2, 2)]);
-    const after = moveItem(before, 'a', { x: 2, y: 0 }, 'float');
-    expect(after.items.find((entry) => entry.id === 'a')).toEqual(item('a', 2, 0, 2, 2));
-    expect(after.items.find((entry) => entry.id === 'b')).toEqual(item('b', 4, 0, 2, 2));
-  });
-
-  test('rightward push falls back to down when it would overflow the columns', ({ expect }) => {
-    const before = layout(4, [item('a', 0, 0, 2, 2), item('b', 2, 0, 2, 2)]);
-    const after = moveItem(before, 'a', { x: 2, y: 0 }, 'float');
-    // b cannot go right (would exceed 4 columns) so it is pushed down instead.
-    expect(after.items.find((entry) => entry.id === 'b')).toEqual(item('b', 2, 2, 2, 2));
-  });
-
-  test('resizing wider pushes the neighbour right', ({ expect }) => {
-    const before = layout(8, [item('a', 0, 0, 1, 1), item('b', 1, 0, 2, 1)]);
-    const after = resizeItem(before, 'a', { w: 2, h: 1 }, undefined, 'float');
-    expect(after.items.find((entry) => entry.id === 'a')).toEqual(item('a', 0, 0, 2, 1));
-    expect(after.items.find((entry) => entry.id === 'b')).toEqual(item('b', 2, 0, 2, 1));
   });
 });

@@ -31,8 +31,16 @@ import { cardDefaultInlineSize, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { type GridConstraints, type GridItem, type GridLayout, type GridMode, moveItem, resizeItem } from './engine';
-import { type GridCellSize, type Rect, cellRect, getRowCount, gridBounds } from './geometry';
+import {
+  type Bounds,
+  type DropResolver,
+  type GridConstraints,
+  type GridMode,
+  type GridPosition,
+  type Layout,
+  pushToFit,
+} from './engine';
+import { type GridCellSize, type Rect, cellRect, getColumnCount, getRowCount, gridBounds } from './geometry';
 import { GridCell, type GridCellProps } from './GridCell';
 
 // TODO(burdon): Multi-select + keyboard move/resize.
@@ -43,23 +51,25 @@ import { GridCell, type GridCellProps } from './GridCell';
 
 type GridContextValue = {
   readonly: boolean;
-  layout: GridLayout;
+  layout: Layout;
   mode: GridMode;
   /** Cell size and gap in px (converted from the `cellSize`/`gap` props, which are in rem). */
   cellSize: GridCellSize;
   gap: number;
+  /** Column/row extent to render (the backdrop shows at least this; grows with content). */
+  columns: number;
   rows: number;
   containerId: string;
   /** During an active drag, the layout the grid would settle into — tiles animate to these
    * positions and spring back to `layout` when the drag ends without a drop. Undefined when idle. */
-  previewLayout?: GridLayout;
+  previewLayout?: Layout;
   /** True while a tile is being resized (a pointer drag, not a Dnd drag); gates the resize auto-scroll. */
   resizing: boolean;
   /** Scroll viewport element; set by `Grid.Container`, used by the controller to center. */
   viewportRef: MutableRefObject<HTMLDivElement | null>;
   /** Scroll the viewport so the grid is centered. */
   center: () => void;
-  onAdd?: (position: GridItem) => void;
+  onAdd?: (position: GridPosition) => void;
   onDelete?: (id: string) => void;
   onResize: (id: string, size: { w: number; h: number }, constraints?: GridConstraints) => void;
   /** Report an in-progress resize (snapped cells) so the engine runs live and other tiles move;
@@ -85,23 +95,32 @@ export type GridController = {
 const GRID_ROOT_NAME = 'Grid.Root';
 
 type GridRootProps = PropsWithChildren<{
-  layout: GridLayout;
+  layout: Layout;
   mode?: GridMode;
+  /**
+   * Board extent in cells: `columns` bounds the horizontal axis (clamp + right-push fallback);
+   * `rows` is a minimum (the backdrop shows at least this, and the board grows past it). Omit
+   * `columns` for a board whose width is derived from its content.
+   */
+  bounds?: Bounds;
+  /**
+   * Strategy applied when a tile is dropped or resized. Returns the resulting layout, or `null` to
+   * reject (the tile springs back). Defaults to {@link pushToFit} (push occupants out of the way).
+   */
+  resolver?: DropResolver;
   /** Cell size in rem. */
   cellSize?: GridCellSize;
   /** Gap between cells in rem. */
   gap?: number;
-  /** Minimum number of rows to render (the backdrop shows at least this many, even when sparse). */
-  minRows?: number;
   /**
-   * Milliseconds the drag must dwell on a target cell before the engine pushes the occupants out of
-   * the way. While sweeping across cells faster than this, the other tiles stay put — so a tile can
-   * be dragged over/past existing ones and only displaces them once the drag settles. 0 = immediate.
+   * Milliseconds the drag must dwell on a target cell before the resolver runs against it. While
+   * sweeping across cells faster than this, the other tiles stay put — so a tile can be dragged
+   * over/past existing ones and only displaces them once the drag settles. 0 = immediate.
    */
   settleDelay?: number;
   readonly?: boolean;
-  onChange?: (layout: GridLayout) => void;
-  onAdd?: (position: GridItem) => void;
+  onChange?: (layout: Layout) => void;
+  onAdd?: (position: GridPosition) => void;
   onDelete?: (id: string) => void;
 }>;
 
@@ -116,9 +135,10 @@ const GridRoot = forwardRef<GridController, GridRootProps>(
       children,
       layout,
       mode = 'pack',
+      bounds,
+      resolver = pushToFit,
       cellSize = defaultCellSize,
       gap = defaultGap,
-      minRows = 0,
       settleDelay = 500,
       readonly,
       onChange,
@@ -133,7 +153,15 @@ const GridRoot = forwardRef<GridController, GridRootProps>(
       [remInPx, cellSize.width, cellSize.height],
     );
     const gapPx = gap * remInPx;
-    const rows = useMemo(() => Math.max(getRowCount(layout), minRows), [layout, minRows]);
+    const columns = useMemo(() => bounds?.columns ?? getColumnCount(layout), [bounds?.columns, layout]);
+    const rows = useMemo(() => Math.max(getRowCount(layout), bounds?.rows ?? 0), [layout, bounds?.rows]);
+
+    // Apply the resolver with the board's bounds/mode; returns the next layout or null (reject).
+    const resolve = useCallback(
+      (id: string, to: GridPosition, constraints?: GridConstraints): Layout | null =>
+        resolver(layout, id, to, { bounds, constraints, mode }),
+      [resolver, layout, bounds, mode],
+    );
 
     const containerId = useContainerId('grid');
 
@@ -147,11 +175,19 @@ const GridRoot = forwardRef<GridController, GridRootProps>(
     }, []);
     useImperativeHandle(forwardedRef, () => ({ center }), [center]);
 
-    const onResize = useMemo(
-      () => (id: string, size: { w: number; h: number }, constraints?: GridConstraints) => {
-        onChange?.(resizeItem(layout, id, size, constraints, mode));
+    const onResize = useCallback(
+      (id: string, size: { w: number; h: number }, constraints?: GridConstraints) => {
+        const current = layout.items[id];
+        if (!current) {
+          return;
+        }
+        // Resize keeps x/y and applies the new span through the same resolver as a move.
+        const next = resolve(id, { ...current, w: size.w, h: size.h }, constraints);
+        if (next) {
+          onChange?.(next);
+        }
       },
-      [layout, mode, onChange],
+      [layout, resolve, onChange],
     );
 
     // Register this grid's container handler. Re-registers (by the stable `containerId` key) whenever
@@ -191,15 +227,20 @@ const GridRoot = forwardRef<GridController, GridRootProps>(
     // animate out of the way (and spring back to `layout` when the gesture ends). Resize takes
     // precedence (it isn't a Dnd drag, so `dragging` is unset during it); the move uses the settled
     // (debounced) target so pushes only happen once the drag pauses on a cell.
-    const previewLayout = useMemo<GridLayout | undefined>(() => {
+    const previewLayout = useMemo<Layout | undefined>(() => {
       if (resizePreview) {
-        return resizeItem(layout, resizePreview.id, { w: resizePreview.w, h: resizePreview.h }, undefined, mode);
+        const current = layout.items[resizePreview.id];
+        return current
+          ? (resolve(resizePreview.id, { ...current, w: resizePreview.w, h: resizePreview.h }) ?? undefined)
+          : undefined;
       }
       if (dragging && dragging.source.data.containerId === containerId && settledTarget) {
-        return moveItem(layout, dragging.source.data.id, settledTarget, mode);
+        const id = dragging.source.data.id;
+        const current = layout.items[id];
+        return current ? (resolve(id, { ...current, x: settledTarget.x, y: settledTarget.y }) ?? undefined) : undefined;
       }
       return undefined;
-    }, [resizePreview, dragging, containerId, settledTarget, layout, mode]);
+    }, [resizePreview, dragging, containerId, settledTarget, layout, resolve]);
 
     useEffect(() => {
       const handler: DndContainerHandler = {
@@ -209,13 +250,20 @@ const GridRoot = forwardRef<GridController, GridRootProps>(
           if (target?.type !== 'placeholder') {
             return;
           }
-          onChange?.(moveItem(layout, source.id, target.location, mode));
+          const current = layout.items[source.id];
+          if (!current) {
+            return;
+          }
+          const next = resolve(source.id, { ...current, x: target.location.x, y: target.location.y });
+          if (next) {
+            onChange?.(next);
+          }
         },
       };
       addContainer(handler);
       return () => removeContainer(containerId);
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [containerId, layout, mode, onChange]);
+    }, [containerId, resolve, onChange]);
 
     return (
       <GridContextProvider
@@ -224,6 +272,7 @@ const GridRoot = forwardRef<GridController, GridRootProps>(
         mode={mode}
         cellSize={cellSizePx}
         gap={gapPx}
+        columns={columns}
         rows={rows}
         containerId={containerId}
         previewLayout={previewLayout}
@@ -252,8 +301,8 @@ const GRID_VIEWPORT_NAME = 'Grid.Viewport';
 type GridViewportProps = ThemedClassName<PropsWithChildren>;
 
 const GridViewport = ({ classNames, children }: GridViewportProps) => {
-  const { layout, cellSize, gap, rows } = useGridContext(GRID_VIEWPORT_NAME);
-  const bounds = useMemo(() => gridBounds(layout.columns, rows, cellSize, gap), [layout.columns, rows, cellSize, gap]);
+  const { cellSize, gap, columns, rows } = useGridContext(GRID_VIEWPORT_NAME);
+  const bounds = useMemo(() => gridBounds(columns, rows, cellSize, gap), [columns, rows, cellSize, gap]);
 
   return (
     // `m-auto` centers the grid within the (flex) scroll container when it fits, and stays fully
@@ -417,18 +466,18 @@ const GRID_BACKDROP_NAME = 'Grid.Backdrop';
 type GridBackdropProps = {};
 
 const GridBackdrop = (_props: GridBackdropProps) => {
-  const { layout, cellSize, gap, rows, containerId, readonly, onAdd } = useGridContext(GRID_BACKDROP_NAME);
+  const { cellSize, gap, columns, rows, containerId, readonly, onAdd } = useGridContext(GRID_BACKDROP_NAME);
 
   const cells = useMemo(() => {
     const cells: { position: { x: number; y: number }; rect: Rect }[] = [];
     for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < layout.columns; x++) {
+      for (let x = 0; x < columns; x++) {
         cells.push({ position: { x, y }, rect: cellRect({ x, y, w: 1, h: 1 }, cellSize, gap) });
       }
     }
 
     return cells;
-  }, [layout.columns, rows, cellSize, gap]);
+  }, [columns, rows, cellSize, gap]);
 
   return (
     <div className='absolute inset-0'>
@@ -438,7 +487,7 @@ const GridBackdrop = (_props: GridBackdropProps) => {
           position={position}
           rect={rect}
           containerId={containerId}
-          onAddClick={readonly ? undefined : () => onAdd?.({ id: '', x: position.x, y: position.y, w: 1, h: 1 })}
+          onAddClick={readonly ? undefined : () => onAdd?.({ x: position.x, y: position.y, w: 1, h: 1 })}
         />
       ))}
     </div>
