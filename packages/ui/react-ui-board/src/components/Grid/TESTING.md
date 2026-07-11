@@ -13,7 +13,7 @@ cd tools/storybook-react && pnpm exec storybook dev --port=9010 --no-open
 ```
 
 Open: `http://localhost:9010/?path=/story/ui-react-ui-board-grid--default`
-Stories: **Default** (float) · **Pack** (compacts up) · **Compact** (~half-size cells) · **Media** (poster images).
+Stories: **Default** (compact cells, float) · **Pack** (compacts up) · **Large** (card-size cells) · **Media** (poster images, ≤2×2).
 
 Engine logic (collision/push/compact/resize/clamp) has **30 unit tests** — run:
 `moon run react-ui-board:test`.
@@ -33,7 +33,10 @@ Engine logic (collision/push/compact/resize/clamp) has **30 unit tests** — run
 
 - [ ] Dragging shows a **preview that keeps the tile's size** (doesn't balloon).
 - [ ] A **magnetic ring outline** appears at the snapped target cell and jumps cell-to-cell as you move.
-- [ ] Dropping on an **occupied cell pushes the occupant down** (Default/float).
+- [ ] **Other tiles animate out of the way** live as you hover over them, moving **as a group**, and
+      **spring back** to their original spots if you don't drop (release outside / press Esc).
+- [ ] Dropping on an occupied cell **pushes** the occupant; direction is **right** when you're moving
+      the tile rightward, otherwise **down** (falls back to down at the right edge).
 - [ ] You can drop a tile **back onto its own footprint** / overlapping cells (not just outside).
 - [ ] Dragging a wide tile toward the **right edge clamps** it within the columns.
 - [ ] **Pack** mode: after a move that leaves a gap above a tile, the layout **compacts upward**.
@@ -41,8 +44,8 @@ Engine logic (collision/push/compact/resize/clamp) has **30 unit tests** — run
 ### Resize (drag a tile's bottom-right corner)
 
 - [ ] The **resize cursor + corner mark appear at the tile edge** (bottom-right); handle is reachable.
-- [ ] Dragging shows a **ghost outline**; the tile **snaps to whole cells only on release**.
-- [ ] Resize **pushes neighbours** and respects min/max (can't shrink below 1 cell / grow past the grid).
+- [ ] The ghost outline **follows freely but magnetizes** to whole cells within ~16px; snaps on release.
+- [ ] Resize **pushes neighbours** (right when growing wider, down when growing taller) and respects min/max.
 
 ### Auto-scroll
 
@@ -55,9 +58,8 @@ Engine logic (collision/push/compact/resize/clamp) has **30 unit tests** — run
 
 ## NOT expected to work yet (logged follow-ups — need live iteration)
 
-- **Directional push**: collisions always push DOWN (no right-vs-down heuristic yet).
 - **Resize from any corner/side**: only the bottom-right handle exists (no 8-way handles).
-- **Magnetic _resize_ snap**: the resize ghost follows raw and snaps on release (not magnetic mid-drag).
+- **Pinch-to-zoom** (trackpad): not implemented; complicates the drag/resize pixel math (scaled space).
 - **List/Tree still use their own DnD** (Phase 5 migration not done — needs a live session).
 
 ## If something's off
