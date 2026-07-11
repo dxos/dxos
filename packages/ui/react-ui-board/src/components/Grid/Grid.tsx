@@ -15,7 +15,7 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { IconButton, type ThemedClassName, usePx, useTranslation } from '@dxos/react-ui';
+import { IconButton, ScrollArea, type ThemedClassName, usePx, useTranslation } from '@dxos/react-ui';
 import {
   type DndContainerHandler,
   type DndPlaceholderData,
@@ -173,17 +173,17 @@ type GridContainerProps = ThemedClassName<PropsWithChildren>;
 
 const GridContainer = ({ classNames, children }: GridContainerProps) => {
   const ref = useRef<HTMLDivElement>(null);
-  // `autoScrollForElements` is global — it activates on any pragmatic-dnd drag over this element,
-  // so it covers both tile moves and the resize-handle drag.
+  // Auto-scroll attaches to the scrolling element (the ScrollArea viewport). `autoScrollForElements`
+  // is global — it fires on any pragmatic-dnd drag, so it covers both tile moves and the resize drag.
   useEffect(() => {
     invariant(ref.current);
     return autoScrollForElements({ element: ref.current });
   }, []);
 
   return (
-    <div ref={ref} className={mx('overflow-auto', classNames)}>
-      {children}
-    </div>
+    <ScrollArea.Root orientation='all' classNames={classNames}>
+      <ScrollArea.Viewport ref={ref}>{children}</ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 
