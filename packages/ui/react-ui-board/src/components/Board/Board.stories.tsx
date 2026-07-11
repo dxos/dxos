@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import { Card } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
@@ -12,7 +12,7 @@ import { cardDefaultInlineSize } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
-import { Board, type BoardRootProps } from './Board';
+import { Board, type BoardController, type BoardRootProps } from './Board';
 import { type GridMode, type Layout, rejectIfNoFit, resizeToFit } from './engine';
 
 type TestItem = {
@@ -71,6 +71,16 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
   const [layout, setLayout] = useState<Layout>(layoutProp ?? defaultLayout);
   const [zoom, setZoom] = useState(zoomProp ?? 1);
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
+  const controller = useRef<BoardController>(null);
+
+  // Center the newly-selected cell (a story-level choice — the component itself doesn't move on select).
+  const handleSelectedChange = useCallback<NonNullable<BoardRootProps['onSelectedChange']>>((next) => {
+    setSelected(next);
+    const id = next.values().next().value;
+    if (id) {
+      controller.current?.center(id);
+    }
+  }, []);
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
     (position) => {
@@ -98,13 +108,14 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
     <Dnd.Root>
       <Board.Root
         {...props}
+        ref={controller}
         layout={layout}
         mode={mode}
         bounds={defaultBounds}
         zoom={zoom}
         onZoomChange={setZoom}
         selected={selected}
-        onSelectedChange={setSelected}
+        onSelectedChange={handleSelectedChange}
         onChange={setLayout}
         onAdd={handleAdd}
         onDelete={handleDelete}
