@@ -25,12 +25,25 @@ Landing PR #12165 stays with the user; everything here is pushed to the same bra
 2. **Grid engine is the priority + fully headless-tested.** The collision/push/compact/resize/float
    engine is pure functions → exhaustive unit tests → real verified value by morning. The React
    interaction layer (drag/resize gestures) is the only part gated on your morning drag-test.
+3. **Fixed a resize edge case in the engine:** growing a tile's width at the right edge now caps `w`
+   and keeps `x` fixed (was shifting `x` left via the shared clamp). Added a test. (commit amended.)
+4. **Grid component wires `Dnd.Root` directly (mirrors existing `Board.tsx`), engine drives onDrop/resize.**
+   So the generic `useDndContainer`/`useDndTile` hooks (Phase 2.3) are NOT needed for a working Grid —
+   deferred as an ergonomics refinement. The Grid still consumes the shared core (Dnd.Root monitor +
+   handler + payload). LayoutModel interface (2.2) also deferred (Grid uses the engine directly).
 
 ## DRAG-TEST CHECKLIST (for the morning — things I could not self-verify)
 
-- _pending._
+Storybook: `moon run storybook-react:serve` from THIS worktree (or `pnpm exec storybook dev --port=9010`
+in tools/storybook-react). Grid story id: `ui-react-ui-board-grid--default` (once built).
+- [ ] Grid renders: tiles at correct cells, empty cells show `+` buttons.
+- [ ] Drag a tile onto an occupied cell → occupant pushes down (float) / layout compacts (pack).
+- [ ] Drag near right edge → tile clamps within columns.
+- [ ] Resize a tile (drag handle) → snaps to whole cells, pushes neighbours, respects min/max.
+- [ ] No console errors during drag/resize.
 
 ## Status
 
-- Phase 2: not started.
-- Phase 3: not started.
+- Engine (3.1): DONE + verified (30 unit tests). commit b2afc8e382.
+- Grid component (3.2) + story (3.3): in progress.
+- Phase 2 hooks/LayoutModel: deferred (see decision #4).
