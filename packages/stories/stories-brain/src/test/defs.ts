@@ -33,6 +33,18 @@ export const LADDER_REFERENCE = process.env.LADDER_REFERENCE?.trim() ?? 'haiku';
 export const LADDER_TOLERANCE = process.env.LADDER_TOLERANCE ? Number(process.env.LADDER_TOLERANCE) : 0.95;
 
 //
+// Sender-type triage (classify-sender ground-truth eval).
+//
+
+/** Model used to bootstrap the candidate sender-label gold set (a name substring; strongest by default). */
+export const SENDER_LABEL_MODEL = process.env.SENDER_LABEL_MODEL?.trim() ?? 'opus';
+
+/** Confidence at/above which the hybrid arm trusts the heuristic instead of calling the model. */
+export const SENDER_HYBRID_THRESHOLD = process.env.SENDER_HYBRID_THRESHOLD
+  ? Number(process.env.SENDER_HYBRID_THRESHOLD)
+  : 0.9;
+
+//
 // Qualitative artifacts (topics / profiles / sample drafts) — a wider corpus slice, single model.
 //
 

@@ -41,8 +41,15 @@ categorization) but fall below on synthetic tasks (thread/topic summaries, draft
 **Direction:** triage by sender type first, spend LLM effort only where it pays off. Sync is 100%
 deterministic (no LLM) → foreground stays fast; all LLM cost is batchable enrichment.
 
-- [ ] **`classify-sender` (person/org) stage + ground-truth eval** — the gate for everything
-      downstream; currently "needs-eval". (My recommended next step — unblocks the triage design.)
+- [x] **`classify-sender` (person/org) stage + ground-truth eval** — shipped. Stage
+      (`pipelines/classify-sender.ts`): `uniqueSenders` (per-sender dedup), `classifySenderHeuristic`
+      (deterministic role-address/company/person-name signals + confidence), `classifySender` (LLM),
+      `classifySenderHybrid` (heuristic-when-confident-else-LLM). Scorer `scoreSenders` in `grade.ts`
+      (accuracy + per-class/macro F1 + directional confusion). Eval `classify-sender.bench.test.ts`:
+      a bootstrap test seeds a candidate gold set via the strong model → human reviews + promotes to
+      `fixtures/local/sender-labels.json` → the eval scores heuristic / hybrid / each model vs gold.
+      Deterministic unit test (`classify-sender.test.ts`, 8 cases) passes in CI; build+lint+fmt clean.
+      **To run the measurement:** bootstrap over the private corpus, review labels, re-run the eval.
 - [ ] **`Mailbox.isReplyable` → person-only** — draft replies only to people (person AND not
       no-reply/unsubscribe).
 - [ ] **Minimize non-people summarization** — one-line label ("this is a bill") instead of a full
@@ -55,10 +62,16 @@ deterministic (no LLM) → foreground stays fast; all LLM cost is batchable enri
       summarize/facts/draft, gated by labels.
 - [ ] **Single per-message LLM pass** — fold tag + summarize + facts into one pass (shared context) to
       cut latency + tokens.
-- [ ] **Topics clustering fix** (`corpus/topics.ts`) — strip hex/numeric tokens; normalize subjects
-      (drop trailing hashes/ids) so automated mail collapses to one topic (currently ~11).
-- [ ] **eval-only cleanup** — `analyze-results.mjs` doesn't recognize the `model-ladder.json` schema
-      (false EMPTY → exit 1); one-line fix.
+- [x] **Topics clustering fix** (`corpus/topics.ts`) — `tokenize` now drops id tokens (pure numbers,
+      hex hashes, digit-heavy codes) via `isIdToken`, gated by a `dropIdTokens` option (default true);
+      short version tokens (`q4`, `v2`) are kept. Subjects are already reply-prefix/whitespace-
+      normalized at threading time (`internal/threading.ts` `normalizeSubject`), so the per-message
+      invoice/order ids were the remaining fragmenter. Tests: automated invoices with unique hashes
+      now collapse to one topic; ids no longer leak into keywords. Full pipeline-email suite green.
+- [x] **eval-only cleanup** — `analyze-results.mjs` now counts graded-row schemas (`model-ladder`,
+      `classify-sender`): `primaryCount` falls back to `r.n ?? r.scored ?? rows.length` (was summing
+      only `facts`/`processed` → false EMPTY), and both are added to `NON_FEED_TESTS` (capped/unique-
+      sender corpora, so `< feedCount` isn't PARTIAL). Verified end-to-end on synthetic results → OK.
 
 Risks: reasoning models (qwen3, gpt-oss) → higher latency + may break strict JSON (parse leniently).
 Ollama up during runs; opus/haiku need `.env` (`moon run stories-brain:env` renders it via 1Password).
@@ -80,9 +93,10 @@ Ollama up during runs; opus/haiku need `.env` (`moon run stories-brain:env` rend
 
 ## Requested follow-ups
 
-- [ ] **Use `@dxos/markdown` `htmlToMarkdown` in `pickBody`** instead of the regex `stripHtml`.
-      Benchmark (`html-to-markdown.bench.test.ts`) shows it's ~free: 99 msgs, ~4.1 ms/msg, ~9.8M
-      chars/sec, compressing HTML to 15% — structured markdown at negligible cost.
+- [x] **Use `@dxos/markdown` `htmlToMarkdown` in `pickBody`** — already satisfied: harness `pickBody`
+      (`fixture.ts`) calls `@dxos/markdown` `normalizeText` (turndown), not a regex `stripHtml` (the
+      remaining `stripHtml` lives only in the unrelated plugin-feed/plugin-magazine). No change needed.
+      Benchmark (`html-to-markdown.bench.test.ts`) confirms it's ~free (99 msgs, ~4.1 ms/msg, HTML→15%).
 - [ ] **Summary prompt tweak** — drop the "The email…" preamble, make summaries terser, use bullet
       lists (`summarize-messages` + `summarize-threads`).
 - [ ] **New "draft responses" test** — generate draft replies to messages.

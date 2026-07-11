@@ -42,6 +42,38 @@ describe('topics', () => {
     expect(q2?.label.length).toBeGreaterThan(0);
   });
 
+  test('automated mail with unique ids collapses into one topic', ({ expect }) => {
+    // Each invoice carries a unique hash/number; without id-stripping every one is a singleton topic.
+    const invoices = buildThreads(
+      [
+        msg('Invoice #A3F9B2 from Acme', 'billing@acme.com', '2001-05-01T10:00:00.000Z'),
+        msg('Invoice #7C21D0 from Acme', 'billing@acme.com', '2001-05-02T10:00:00.000Z'),
+        msg('Invoice #48213 from Acme', 'billing@acme.com', '2001-05-03T10:00:00.000Z'),
+      ],
+      { ownerEmail: OWNER, now: NOW },
+    );
+    const drafts = clusterThreads(invoices);
+    expect(drafts).toHaveLength(1);
+    expect(drafts[0].threadIds).toHaveLength(3);
+    expect(drafts[0].keywords).toContain('invoice');
+    expect(drafts[0].keywords).toContain('acme');
+    // The per-message ids must not leak into the keywords.
+    expect(drafts[0].keywords).not.toContain('a3f9b2');
+    expect(drafts[0].keywords).not.toContain('48213');
+  });
+
+  test('dropIdTokens flag controls whether identifiers surface as keywords', ({ expect }) => {
+    const one = buildThreads([msg('Invoice A3F9B2', 'billing@acme.com', '2001-05-01T10:00:00.000Z')], {
+      ownerEmail: OWNER,
+      now: NOW,
+    });
+    const [kept] = clusterThreads(one, { dropIdTokens: false });
+    expect(kept.keywords).toContain('a3f9b2');
+    const [dropped] = clusterThreads(one, { dropIdTokens: true });
+    expect(dropped.keywords).not.toContain('a3f9b2');
+    expect(dropped.keywords).toContain('invoice');
+  });
+
   test('blank-subject threads still get a non-empty topic label', ({ expect }) => {
     const blank = buildThreads([msg('', 'a@x.com', '2001-05-01T10:00:00.000Z')], { ownerEmail: OWNER, now: NOW });
     const [draft] = clusterThreads(blank);

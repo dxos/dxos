@@ -5,6 +5,7 @@
 import { trim } from '@dxos/util';
 
 import { parseJsonObject } from '../llm';
+import { type SenderClass, type SenderResult } from '../pipelines/classify-sender';
 import { type TagResult } from '../pipelines/tags';
 import { type Judge, gradeCoverage, gradeFaithfulness } from './judge';
 
@@ -71,6 +72,76 @@ export const tagJaccard = (model: readonly TagResult[], reference: readonly TagR
     total += union > 0 ? intersection / union : 0;
   }
   return Math.round((total / count) * 1000) / 1000;
+};
+
+//
+// Sender classification — scored against a human-reviewed ground-truth gold set (person/org).
+//
+
+export type SenderScore = {
+  /** Senders in the gold set that this arm also predicted. */
+  readonly scored: number;
+  /** Fraction correct over the scored senders. */
+  readonly accuracy: number;
+  /** Unweighted mean of the person + org F1 (fair under class imbalance). */
+  readonly macroF1: number;
+  readonly personF1: number;
+  readonly orgF1: number;
+  /** Confusion counts (gold → predicted), for auditing which direction the errors run. */
+  readonly confusion: {
+    readonly personAsPerson: number;
+    readonly personAsOrg: number;
+    readonly orgAsOrg: number;
+    readonly orgAsPerson: number;
+  };
+};
+
+const f1For = (truePos: number, falsePos: number, falseNeg: number): number => {
+  const precision = truePos + falsePos > 0 ? truePos / (truePos + falsePos) : 0;
+  const recall = truePos + falseNeg > 0 ? truePos / (truePos + falseNeg) : 0;
+  return precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0;
+};
+
+/**
+ * Scores predicted sender classes against the ground-truth gold set. Only senders present in `gold`
+ * are scored; the rest are ignored (the gold set may cover a subset). Reports accuracy plus per-class
+ * and macro F1 so class imbalance (org mail typically dominates) doesn't flatter a majority-class
+ * guesser, and a confusion breakdown so we can see whether errors sink real people or waste budget on
+ * bulk mail.
+ */
+export const scoreSenders = (
+  predictions: readonly SenderResult[],
+  gold: ReadonlyMap<string, SenderClass>,
+): SenderScore => {
+  const confusion = { personAsPerson: 0, personAsOrg: 0, orgAsOrg: 0, orgAsPerson: 0 };
+  let scored = 0;
+  let correct = 0;
+  for (const prediction of predictions) {
+    const actual = gold.get(prediction.email.toLowerCase());
+    if (!actual) {
+      continue;
+    }
+    scored++;
+    if (prediction.class === actual) {
+      correct++;
+    }
+    if (actual === 'person') {
+      prediction.class === 'person' ? confusion.personAsPerson++ : confusion.personAsOrg++;
+    } else {
+      prediction.class === 'org' ? confusion.orgAsOrg++ : confusion.orgAsPerson++;
+    }
+  }
+  const personF1 = f1For(confusion.personAsPerson, confusion.orgAsPerson, confusion.personAsOrg);
+  const orgF1 = f1For(confusion.orgAsOrg, confusion.personAsOrg, confusion.orgAsPerson);
+  const round3 = (value: number): number => Math.round(value * 1000) / 1000;
+  return {
+    scored,
+    accuracy: scored ? round3(correct / scored) : 0,
+    macroF1: round3((personF1 + orgF1) / 2),
+    personF1: round3(personF1),
+    orgF1: round3(orgF1),
+    confusion,
+  };
 };
 
 //
