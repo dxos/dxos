@@ -56,8 +56,23 @@ pnpm --filter @dxos/pipeline-rdf exec vitest run --project=node src/types/Fact.t
 pnpm --filter @dxos/plugin-brain exec vitest run --project=node src/operations/operations.test.ts
 ```
 
+**Fetching the private fixture** (`fixtures/local/mailbox-feed.json`). Either export it from the
+MailboxSync storybook (Archive → Download), or fetch it headlessly with the reusable tool:
+
+```
+# one-time: create a Google Cloud OAuth "Desktop app" client (Gmail API + gmail.readonly scope)
+export GOOGLE_CLIENT_ID=...  GOOGLE_CLIENT_SECRET=...
+node scripts/fetch-fixture.mjs          # first run opens the browser for one consent, then writes the fixture
+```
+
+`google-auth.mjs` runs a local-loopback OAuth flow (one browser consent, then a saved refresh token
+in `fixtures/local/.google-token.json` mints access tokens automatically); `fetch-fixture.mjs` runs
+the Gmail sync in-process (`inboxSyncLiveServices`) and exports the feed. `FETCH_AFTER=yyyy-MM-dd`
+overrides the sync-back start.
+
 **Model-driven benches** (local only; need the fixture + models). Prerequisites:
-- `fixtures/local/mailbox-feed.json` present.
+
+- `fixtures/local/mailbox-feed.json` present (see above).
 - Local tier: Ollama running (`OLLAMA_ORIGINS="*" ollama serve`) with the models pulled.
 - Remote tier: `export DX_ANTHROPIC_API_KEY=<key>` (never commit it).
 
