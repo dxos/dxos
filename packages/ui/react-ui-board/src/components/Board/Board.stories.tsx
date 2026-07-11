@@ -72,12 +72,13 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
     (position) => {
-      const index = items.length;
-      const id = index.toString();
-      // In media mode (existing tiles carry images) give new tiles a poster too; seed it from the index
+      // Derive the id from the max numeric id + 1 so ids stay unique after deletions (not items.length).
+      const next = items.reduce((max, item) => Math.max(max, Number.parseInt(item.id) || 0), 0) + 1;
+      const id = next.toString();
+      // In media mode (existing tiles carry images) give new tiles a poster too; seed it from the id
       // so it's stable per add (matching the seeded posterItems, no Math.random).
       const media = items.some((item) => item.image);
-      const image = media ? `https://picsum.photos/seed/${(index * 137 + 7) % 1000}/600/400` : undefined;
+      const image = media ? `https://picsum.photos/seed/${(next * 137 + 7) % 1000}/600/400` : undefined;
       setItems([...items, { id, title: `Widget ${id}`, image }]);
       setLayout((layout) => ({ ...layout, items: { ...layout.items, [id]: position } }));
     },

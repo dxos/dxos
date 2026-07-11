@@ -97,10 +97,11 @@ export const ResizeHandle = ({
     if (!buttonRef.current) {
       return;
     }
+    const buttonElement = buttonRef.current;
 
     // TODO(thure): This should handle StackItem state vs local state better.
     return draggable({
-      element: buttonRef.current,
+      element: buttonElement,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
         // We will be moving the line to indicate a drag; we can disable the native drag preview.
         disableNativeDragPreview({ nativeSetDragImage });
@@ -111,10 +112,9 @@ export const ResizeHandle = ({
       onDragStart: () => {
         dragStartSize.current =
           dragStartSize.current === 'min-content'
-            ? measureSubject(buttonRef.current!, fallbackSize)[orientation === 'horizontal' ? 'width' : 'height'] /
-              getRem()
+            ? measureSubject(buttonElement, fallbackSize)[orientation === 'horizontal' ? 'width' : 'height'] / getRem()
             : dragStartSize.current;
-        buttonRef.current?.closest(`[${RESIZE_SUBJECT}]`)?.setAttribute(RESIZE_SUBJECT_DRAGGING, 'true');
+        buttonElement.closest(`[${RESIZE_SUBJECT}]`)?.setAttribute(RESIZE_SUBJECT_DRAGGING, 'true');
       },
       // NOTE: Throttling here doesn't prevent the warning:
       //  Measure loop restarted more than 5 times
@@ -132,7 +132,7 @@ export const ResizeHandle = ({
         setSize(nextSize);
         onSizeChange?.(nextSize, true);
         dragStartSize.current = nextSize;
-        buttonRef.current?.closest(`[${RESIZE_SUBJECT}]`)?.removeAttribute(RESIZE_SUBJECT_DRAGGING);
+        buttonElement.closest(`[${RESIZE_SUBJECT}]`)?.removeAttribute(RESIZE_SUBJECT_DRAGGING);
       },
     });
   }, [

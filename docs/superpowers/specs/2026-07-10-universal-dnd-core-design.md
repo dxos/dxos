@@ -196,7 +196,7 @@ Phase 1 is load-bearing: everything depends on `Dnd.Root` existing.
    types. Add mandatory `containerId` discriminator. Cut over the 3 app shells;
    keep Stack/Board/Kanban green with the closest-edge hitbox as the only
    strategy. **No behaviour change.** (The `useDndContainer`/`useDndTile` hooks
-   are deferred to Phase 2 — see the phase1 plan's phasing note.)
+   are deferred to Phase 2 — see the Phase 1 plan's phasing note.)
 2. **Pluggable hitbox + `LayoutModel` + one `DropIndicator`.** Introduce the
    hitbox strategy seam and the resolver; collapse the 3 drop indicators.
 3. **Grid container + collision/pack engine.** Headless engine first (unit tests

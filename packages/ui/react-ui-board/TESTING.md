@@ -7,8 +7,8 @@ resizable tiles. It was unified from the former `Board` (free-placement canvas) 
 
 Interactive drag/resize can't be synthesized in automation (native HTML5 DnD), so gestures ship a
 **manual** test plan: [`src/components/Board/TESTING.md`](./src/components/Board/TESTING.md).
-Everything else (engine, geometry, render, wiring) is covered headless by build/lint/unit tests
-(**32 engine unit tests** — `moon run react-ui-board:test`).
+Everything else (engine, geometry, render, wiring) is covered headless by build/lint and the engine
+unit suite — `moon run react-ui-board:test`.
 
 ## Composite
 

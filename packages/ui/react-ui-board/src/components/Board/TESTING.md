@@ -6,17 +6,18 @@ the drag/resize **gestures**, which are what this plan is for.
 
 ## Setup
 
-From THIS worktree (`.../.claude/worktrees/cloudflare-dashboard-source-e3fa9a`):
+From the repository root:
 
-```
+```shell
 cd tools/storybook-react && pnpm exec storybook dev --port=9010 --no-open
 ```
 
 Open: `http://localhost:9010/?path=/story/ui-react-ui-board-board--default`
 Stories: **Default** (`pushToFit`, float) · **Pack** (compacts up) · **Large** (card-size cells) ·
-**Media** (poster images) · **ResizeToFit** / **RejectIfNoFit** (alternate resolvers) · **Zoom** (overview).
+**Media** (poster images) · **ResizeToFit** / **RejectIfNoFit** (alternate resolvers) ·
+**Overscroll** · **SingleSelect** / **MultiSelect**.
 
-Engine logic (collision/push/compact/resolvers/clamp) has **32 unit tests** — run:
+Engine logic (collision/push/compact/resolvers/clamp) is covered by the unit suite — run:
 `moon run react-ui-board:test`.
 
 ## Checklist

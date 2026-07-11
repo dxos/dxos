@@ -17,14 +17,6 @@ import {
   resolveCollisions,
 } from './engine';
 
-const pos = (x: number, y: number, w = 1, h = 1): GridPosition => ({ x, y, w, h });
-const layout = (items: Record<string, GridPosition>): Layout => ({ items });
-const cell = (id: string, x: number, y: number, w: number, h: number) => ({ id, x, y, w, h });
-const opts = (columns: number, mode: ResolveOptions['mode'] = 'float'): ResolveOptions => ({
-  bounds: { columns },
-  mode,
-});
-
 describe('overlaps', () => {
   test('overlapping rectangles', ({ expect }) => {
     expect(overlaps(cell('a', 0, 0, 2, 2), cell('b', 1, 1, 2, 2))).toBe(true);
@@ -286,4 +278,16 @@ describe('purity and determinism', () => {
     const second = pushToFit(before, 'a', pos(0, 1), opts(4, 'pack'));
     expect(first).toEqual(second);
   });
+});
+
+//
+// Helpers
+//
+
+const pos = (x: number, y: number, w = 1, h = 1): GridPosition => ({ x, y, w, h });
+const layout = (items: Record<string, GridPosition>): Layout => ({ items });
+const cell = (id: string, x: number, y: number, w: number, h: number) => ({ id, x, y, w, h });
+const opts = (columns: number, mode: ResolveOptions['mode'] = 'float'): ResolveOptions => ({
+  bounds: { columns },
+  mode,
 });
