@@ -10,7 +10,7 @@ import { Filter, JsonSchema, Obj, Query, type View } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { ProjectionModel, ViewModel, createEchoChangeCallback } from '@dxos/schema';
+import { ProjectionModel, ViewModel, createDirectChangeCallback, createEchoChangeCallback } from '@dxos/schema';
 import { withRegistry } from '@dxos/storybook-utils';
 import { Organization } from '@dxos/types';
 
@@ -46,9 +46,16 @@ const DefaultStory = () => {
   }>();
 
   useEffect(() => {
+    // Single mutable schema shared by the view, the projection base, and the change callback so
+    // schema mutations (e.g. reordering pivot-field options during a column drag) persist and read
+    // back. `createDirectChangeCallback` mutates it in place — the ECHO callback would throw
+    // "Schema is not mutable" for these non-ECHO, in-memory story objects.
+    const jsonSchema = JsonSchema.toJsonSchema(Organization.Organization) as Parameters<
+      typeof createDirectChangeCallback
+    >[1];
     const view = ViewModel.make({
       query: Query.select(Filter.type(Organization.Organization)),
-      jsonSchema: JsonSchema.toJsonSchema(Organization.Organization),
+      jsonSchema,
       pivotFieldName: 'status',
     });
     const kanban = Kanban.make({ view });
@@ -56,8 +63,14 @@ const DefaultStory = () => {
     const projection = new ProjectionModel({
       registry,
       view,
-      baseSchema: JsonSchema.toJsonSchema(Organization.Organization),
-      change: createEchoChangeCallback(view),
+      baseSchema: jsonSchema,
+      // Hybrid change callback: the view is reactive (nested in the Kanban object) so its
+      // projection must be mutated via Obj.update, but the plain in-memory jsonSchema is
+      // mutated directly. Neither factory alone fits, so compose the correct mutator from each.
+      change: {
+        projection: createEchoChangeCallback(view).projection,
+        schema: createDirectChangeCallback(view.projection, jsonSchema).schema,
+      },
     });
     projection.normalizeView();
 
