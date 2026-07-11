@@ -14,8 +14,12 @@ export {};
 // IDB log store and its `log` processor must be registered exactly once for the
 // lifetime of the worker.
 let logStoreInstalled = false;
+// Routing state must also be shared across every tab port — a fresh handler per connect
+// isolates broadcast/delivery so followers never see leader heartbeats or request-port.
+let onConnectHandler: ((ev: MessageEvent) => void) | undefined;
 
 onconnect = async (ev) => {
+  // TODO(dmaretskyi): Replace with direct import from '@dxos/worker-framework/coordinator' -- runCoordinator();
   const { createCoordinatorOnConnect } = await import('@dxos/client/coordinator-worker-onconnect');
 
   if (!logStoreInstalled) {
@@ -27,8 +31,8 @@ onconnect = async (ev) => {
     log.addProcessor(logStore.processor);
   }
 
-  const handler = createCoordinatorOnConnect();
-  return handler(ev);
+  onConnectHandler ??= createCoordinatorOnConnect();
+  return onConnectHandler(ev);
 };
 
 // const initializeObservability = async () => {s

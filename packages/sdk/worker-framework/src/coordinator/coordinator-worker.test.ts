@@ -132,6 +132,16 @@ describe('coordinator worker routing', () => {
     expect(leader.received.some((message) => message.type === 'provide-port')).toBe(false);
   });
 
+  test('isolates tabs when each connect creates a new handler (regression)', async () => {
+    const leader = connectTab(createCoordinatorOnConnect());
+    const follower = connectTab(createCoordinatorOnConnect());
+
+    leader.send({ type: 'new-leader', leaderId: 'leader-1' });
+
+    await sleep(20);
+    expect(follower.received.some((message) => message.type === 'new-leader')).toBe(false);
+  });
+
   test('does not throw when provide-port targets an unknown client', async () => {
     const onConnect = createCoordinatorOnConnect();
     const leader = connectTab(onConnect);
