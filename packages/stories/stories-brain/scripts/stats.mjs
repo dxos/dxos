@@ -9,17 +9,18 @@
 // watch a run started elsewhere, e.g. in another terminal or backgrounded.)
 //
 // Usage (from packages/stories/stories-brain):
-//   node scripts/stats.mjs                 # live, redraws every second (Ctrl-C to exit)
+//   node scripts/stats.mjs                 # live, redraws in place (Ctrl-C to exit)
 //   node scripts/stats.mjs --once          # print one snapshot and exit (good for scripts / non-TTY)
 //   node scripts/stats.mjs --interval 500  # custom refresh (ms)
 //   node scripts/stats.mjs --file <path>   # a different progress.json
 //   moon run stories-brain:stats
 
+import logUpdate from 'log-update';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
-import { renderProgress, allTerminal } from './progress-view.mjs';
+import { allTerminal, renderProgress } from './progress-view.mjs';
 
 const PACKAGE_ROOT = resolve(fileURLToPath(new URL('../', import.meta.url)));
 const DEFAULT_FILE = resolve(PACKAGE_ROOT, 'fixtures/local/results/progress.json');
@@ -53,26 +54,20 @@ if (!WATCH) {
   process.exit(0);
 }
 
-// Live: alternate-screen buffer so the terminal scrollback is preserved on exit.
-process.stdout.write('\x1b[?1049h');
-const restore = () => process.stdout.write('\x1b[?1049l');
 process.on('SIGINT', () => {
-  restore();
+  logUpdate.done();
   process.exit(0);
 });
 
+// log-update rewrites the same block in place each tick (handles clearing + resize).
 let settleFrames = 0;
 const tick = () => {
-  process.stdout.write('\x1b[H\x1b[2J');
-  process.stdout.write(renderProgress(FILE, Date.now(), label) + '\n');
+  logUpdate(renderProgress(FILE, Date.now(), label));
   // Stay up two frames after everything is terminal so the final numbers are visible, then exit.
-  if (allTerminal(FILE)) {
-    if (++settleFrames >= 2) {
-      restore();
-      console.log(renderProgress(FILE, Date.now(), label));
-      process.exit(0);
-    }
-  } else {
+  if (allTerminal(FILE) && ++settleFrames >= 2) {
+    logUpdate.done();
+    process.exit(0);
+  } else if (!allTerminal(FILE)) {
     settleFrames = 0;
   }
 };

@@ -4,22 +4,21 @@
 
 // Pure renderer for the bench's shared progress file (fixtures/local/results/progress.json, written
 // by testing/harness/progress.ts). Shared by the standalone `stats` CLI and by `bench --stats`, so
-// both draw the identical per-task bar / rate / ETA table.
+// both draw the identical table. Suite-level tasks (the run-suite manifest stubs, e.g. `extract-facts`)
+// are collapsed to a status line; the real per-run progress lives on the `<name>:<variant>` leaves.
 
+import chalk from 'chalk';
 import { existsSync, readFileSync } from 'node:fs';
 
-const ICON = { pending: '◦', running: '▶', done: '✔', error: '✗' };
 const BAR_WIDTH = 16;
 
-const pad = (text, width) => {
-  const string = String(text);
-  return string.length >= width ? string.slice(0, width) : string + ' '.repeat(width - string.length);
+const STATUS = {
+  pending: { icon: '◦', color: chalk.dim },
+  running: { icon: '▶', color: chalk.cyan },
+  done: { icon: '✔', color: chalk.green },
+  error: { icon: '✗', color: chalk.red },
 };
-
-const padLeft = (text, width) => {
-  const string = String(text);
-  return string.length >= width ? string : ' '.repeat(width - string.length) + string;
-};
+const statusOf = (name) => STATUS[name] ?? { icon: '?', color: chalk.white };
 
 /** `93s` under a minute, else `1m03s`, else `1h02m`. */
 export const duration = (ms) => {
@@ -33,10 +32,10 @@ export const duration = (ms) => {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   if (minutes < 60) {
-    return `${minutes}m${padLeft(seconds, 2).replace(' ', '0')}s`;
+    return `${minutes}m${String(seconds).padStart(2, '0')}s`;
   }
   const hours = Math.floor(minutes / 60);
-  return `${hours}h${padLeft(minutes % 60, 2).replace(' ', '0')}m`;
+  return `${hours}h${String(minutes % 60).padStart(2, '0')}m`;
 };
 
 const bar = (current, total) => {
@@ -44,7 +43,7 @@ const bar = (current, total) => {
     return ' '.repeat(BAR_WIDTH);
   }
   const filled = Math.max(0, Math.min(BAR_WIDTH, Math.round((current / total) * BAR_WIDTH)));
-  return '█'.repeat(filled) + '·'.repeat(BAR_WIDTH - filled);
+  return chalk.green('█'.repeat(filled)) + chalk.dim('·'.repeat(BAR_WIDTH - filled));
 };
 
 // Elapsed for an in-flight task: its own `elapsedMs` if the reporter set one, else now − startedAt.
@@ -72,22 +71,37 @@ const readSnapshot = (file) => {
 export const renderProgress = (file, nowMs, label = file) => {
   const { snapshot, error } = readSnapshot(file);
   if (error) {
-    return error;
+    return chalk.dim(error);
   }
   const tasks = Array.isArray(snapshot.tasks) ? snapshot.tasks : [];
   if (tasks.length === 0) {
-    return 'no tasks yet.';
+    return chalk.dim('no tasks yet.');
   }
 
-  const nameWidth = Math.min(32, Math.max(12, ...tasks.map((task) => task.name.length)));
-  const header =
-    `${pad('', 2)} ${pad('TASK', nameWidth)}  ${pad('PROGRESS', BAR_WIDTH)} ${pad('', 11)} ` +
-    `${pad('RATE', 9)} ${pad('ELAPSED', 8)} ${pad('ETA', 8)}`;
+  // A no-colon task is a suite-level stub only if a `<name>:<variant>` leaf reports its real progress;
+  // otherwise (e.g. `tags`, `feed-stats`) the no-colon task IS the progress and keeps its bar.
+  const names = new Set(tasks.map((task) => task.name));
+  const hasLeaf = (name) => [...names].some((other) => other.startsWith(`${name}:`));
+  const isStub = (task) => !task.name.includes(':') && hasLeaf(task.name);
+
+  const nameWidth = Math.min(34, Math.max(14, ...tasks.map((task) => task.name.length)));
+
+  const header = chalk.dim(
+    `   ${'TASK'.padEnd(nameWidth)}  ${'PROGRESS'.padEnd(BAR_WIDTH)} ${''.padEnd(11)} ` +
+      `${'RATE'.padEnd(9)} ${'ELAPSED'.padEnd(8)} ${'ETA'.padEnd(8)}`,
+  );
 
   const lines = tasks.map((task) => {
     const { current = 0, total, status = 'pending', name } = task;
-    const icon = ICON[status] ?? '?';
+    const { icon, color } = statusOf(status);
     const elapsedMs = elapsedOf(task, nowMs);
+
+    // Suite-level stub: status + elapsed only — no bar/rate/ETA (its `current` never advances).
+    if (isStub(task)) {
+      const elapsed = status === 'pending' ? '' : duration(elapsedMs);
+      return color(`${icon}  ${chalk.dim(name.padEnd(nameWidth))}  ${status.padEnd(BAR_WIDTH)} ${chalk.dim(elapsed)}`);
+    }
+
     const rate = Number.isFinite(elapsedMs) && elapsedMs > 0 ? current / (elapsedMs / 1000) : NaN;
     const remaining = total && current < total && rate > 0 ? ((total - current) / rate) * 1000 : NaN;
     const count = total ? `${current}/${total}` : `${current}`;
@@ -95,24 +109,26 @@ export const renderProgress = (file, nowMs, label = file) => {
     const rateText = Number.isFinite(rate) ? `${rate.toFixed(2)}/s` : '—';
     const elapsedText = status === 'pending' ? '—' : duration(elapsedMs);
     const etaText = status === 'running' ? duration(remaining) : status === 'pending' ? '—' : 'done';
-    const note = task.note ? `  ${task.note}` : task.error ? `  ⚠ ${task.error}` : '';
+    const note = task.note ? chalk.dim(`  ${task.note}`) : task.error ? chalk.red(`  ⚠ ${task.error}`) : '';
     return (
-      `${icon}  ${pad(name, nameWidth)}  ${bar(current, total)} ${pad(`${count} ${percent}`, 11)} ` +
-      `${pad(rateText, 9)} ${pad(elapsedText, 8)} ${pad(etaText, 8)}${note}`
+      `${color(icon)}  ${name.padEnd(nameWidth)}  ${bar(current, total)} ${`${count} ${percent}`.padEnd(11)} ` +
+      `${rateText.padEnd(9)} ${elapsedText.padEnd(8)} ${etaText.padEnd(8)}${note}`
     );
   });
 
-  const leaves = tasks.filter((task) => Number.isFinite(task.total) && task.name.includes(':'));
+  const leaves = tasks.filter((task) => Number.isFinite(task.total) && !isStub(task));
   const doneCount = tasks.filter((task) => task.status === 'done').length;
   const errorCount = tasks.filter((task) => task.status === 'error').length;
   const curSum = leaves.reduce((sum, task) => sum + (task.current ?? 0), 0);
   const totalSum = leaves.reduce((sum, task) => sum + (task.total ?? 0), 0);
-  const summary =
-    `${doneCount} done, ${errorCount} error, ${tasks.length} tasks` +
-    (totalSum ? ` · ${curSum}/${totalSum} items` : '') +
-    ` · updated ${snapshot.updatedAt ?? '—'}`;
+  const summary = chalk.dim(
+    `${doneCount} done, ${errorCount ? chalk.red(`${errorCount} error`) : '0 error'}, ${tasks.length} tasks` +
+      (totalSum ? ` · ${curSum}/${totalSum} items` : '') +
+      ` · updated ${snapshot.updatedAt ?? '—'}`,
+  );
 
-  return [`research bench — live stats   (${label})`, '', header, ...lines, '', summary].join('\n');
+  const title = chalk.bold('research bench — live stats') + chalk.dim(`   (${label})`);
+  return [title, '', header, ...lines, '', summary].join('\n');
 };
 
 /** True once every task has reached a terminal state (so a watcher can stop). */

@@ -53,7 +53,9 @@
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
+    "chalk": "catalog:",
     "effect": "catalog:",
+    "log-update": "catalog:",
     "usearch": "catalog:"
   },
   "devDependencies": {

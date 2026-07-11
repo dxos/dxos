@@ -15,13 +15,14 @@
 // Flags fall back to the matching env var (MODELS, LIMIT, TESTS, SUBJECT, SAMPLES, DRAFT_INSTRUCTIONS),
 // which may in turn come from a local `.env` file (plain KEY=VALUE; shell env wins over it).
 
+import logUpdate from 'log-update';
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, openSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
-import { allTerminal, renderProgress } from './progress-view.mjs';
+import { renderProgress } from './progress-view.mjs';
 
 const PACKAGE_ROOT = resolve(fileURLToPath(new URL('../', import.meta.url)));
 const PROGRESS_FILE = resolve(PACKAGE_ROOT, 'fixtures/local/results/progress.json');
@@ -138,7 +139,6 @@ if (!values.stats) {
 mkdirSync(dirname(LOG_FILE), { recursive: true });
 const logFd = openSync(LOG_FILE, 'w');
 const label = PROGRESS_FILE.replace(PACKAGE_ROOT, '');
-const tty = Boolean(process.stdout.isTTY);
 
 const child = spawn('node', ['scripts/run-suite.mjs'], {
   cwd: PACKAGE_ROOT,
@@ -146,36 +146,21 @@ const child = spawn('node', ['scripts/run-suite.mjs'], {
   stdio: ['ignore', logFd, logFd],
 });
 
-// On a TTY, redraw in place via the alternate-screen buffer; otherwise append frames.
-if (tty) {
-  process.stdout.write('\x1b[?1049h');
-}
-const restore = () => tty && process.stdout.write('\x1b[?1049l');
-const draw = () => {
-  if (tty) {
-    process.stdout.write('\x1b[H\x1b[2J');
-  }
-  process.stdout.write(renderProgress(PROGRESS_FILE, Date.now(), label) + '\n');
-};
-const timer = setInterval(() => {
-  draw();
-  // The child's own exit is the authoritative stop; `allTerminal` just avoids a final stale frame.
-  if (allTerminal(PROGRESS_FILE)) {
-    draw();
-  }
-}, 1000);
+// log-update redraws the table in place each tick; the child's exit is the authoritative stop.
+const draw = () => logUpdate(renderProgress(PROGRESS_FILE, Date.now(), label));
+const timer = setInterval(draw, 1000);
 draw();
 
 process.on('SIGINT', () => {
   clearInterval(timer);
-  restore();
+  logUpdate.done();
   child.kill('SIGINT');
 });
 
 child.on('exit', (code) => {
   clearInterval(timer);
-  restore();
-  console.log(renderProgress(PROGRESS_FILE, Date.now(), label));
+  draw();
+  logUpdate.done();
   console.log(`\nvitest output → ${LOG_FILE}`);
   process.exit(code ?? 1);
 });
