@@ -7,7 +7,6 @@ import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/elem
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unhandled';
-import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
 import React, { type CSSProperties, type PropsWithChildren, type ReactNode, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -56,7 +55,7 @@ export const GridCell = ({
   constraints,
 }: GridCellProps) => {
   const { t } = useTranslation(translationKey);
-  const { cellSize, gap, containerId, readonly, onResize, previewLayout } = useGridContext(GRID_CELL_NAME);
+  const { cellSize, gap, containerId, readonly, onResize, previewLayout, viewportRef } = useGridContext(GRID_CELL_NAME);
   // Any active drag makes every tile transparent to pointer events so the backdrop drop-target cells
   // beneath them (incl. cells under an occupied tile) receive the drag — required for push-on-drop.
   const { dragging } = useDndRootContext(GRID_CELL_NAME);
@@ -69,6 +68,8 @@ export const GridCell = ({
   const [preview, setPreview] = useState<{ container: HTMLElement; width: number; height: number } | null>(null);
   // Live resize outline (px) shown while dragging the resize handle; the tile itself only resizes on release.
   const [resizeGhost, setResizeGhost] = useState<{ width: number; height: number } | null>(null);
+  // Last pointer position during a resize, so the outline can be recomputed on scroll (no pointer move).
+  const lastPointer = useRef<{ x: number; y: number } | null>(null);
 
   // Move: originate a Dnd tile drag; the actual move is applied by Grid.Root's container handler.
   useEffect(() => {
@@ -110,40 +111,73 @@ export const GridCell = ({
     });
   }, [isDraggable, readonly, containerId, item, layout.x, layout.y]);
 
-  // Resize: a plain pointer-delta drag (not a Dnd tile) on a corner handle; snaps to whole cells and
-  // commits via `onResize` (which routes through `engine.resizeItem`) on drop.
+  // Resize: a plain pointer drag (not a Dnd tile) on a corner handle. The size is derived from the
+  // LIVE positions of the tile and the pointer (both viewport coords via getBoundingClientRect), so
+  // auto-scroll is accounted for automatically — a `scroll` listener recomputes while scrolling even
+  // without pointer movement. The outline magnetizes to whole cells; the final snap happens on drop.
   useEffect(() => {
-    if (!resizeHandleRef.current || readonly) {
+    const handle = resizeHandleRef.current;
+    const viewport = viewportRef.current;
+    if (!handle || readonly) {
       return;
     }
 
-    // Outline size at the start of the gesture, in px.
-    const base = cellRect(layout, cellSize, gap);
-    return draggable({
-      element: resizeHandleRef.current,
+    // Raw px extent from the tile's top-left corner to the pointer, floored at one cell.
+    const rawSize = () => {
+      const el = rootRef.current;
+      const pointer = lastPointer.current;
+      if (!el || !pointer) {
+        return null;
+      }
+      const tile = el.getBoundingClientRect();
+      return {
+        width: Math.max(cellSize.width, pointer.x - tile.left),
+        height: Math.max(cellSize.height, pointer.y - tile.top),
+      };
+    };
+    const updateGhost = () => {
+      const raw = rawSize();
+      if (raw) {
+        setResizeGhost({
+          width: magnetize(raw.width, cellSize.width, gap),
+          height: magnetize(raw.height, cellSize.height, gap),
+        });
+      }
+    };
+
+    const cleanup = draggable({
+      element: handle,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
         disableNativeDragPreview({ nativeSetDragImage });
         preventUnhandled.start();
       },
-      onDragStart: () => {
-        setResizeGhost({ width: base.width, height: base.height });
+      onDragStart: ({ location }) => {
+        lastPointer.current = { x: location.current.input.clientX, y: location.current.input.clientY };
+        viewport?.addEventListener('scroll', updateGhost);
+        updateGhost();
       },
       onDrag: ({ location }) => {
-        const dx = location.current.input.clientX - location.initial.input.clientX;
-        const dy = location.current.input.clientY - location.initial.input.clientY;
-        // Magnetic outline: follows the cursor freely but is pulled to the nearest whole-cell size
-        // when it comes within `snapZone` of it; floored at one cell. Final snap happens on drop.
-        setResizeGhost({
-          width: magnetize(Math.max(cellSize.width, base.width + dx), cellSize.width, gap),
-          height: magnetize(Math.max(cellSize.height, base.height + dy), cellSize.height, gap),
-        });
+        lastPointer.current = { x: location.current.input.clientX, y: location.current.input.clientY };
+        updateGhost();
       },
-      onDrop: ({ location }) => {
+      onDrop: () => {
+        viewport?.removeEventListener('scroll', updateGhost);
+        const raw = rawSize();
         setResizeGhost(null);
-        onResize(item.id, nextSize(layout, cellSize, gap, location, constraints), constraints);
+        lastPointer.current = null;
+        if (raw) {
+          const w = Math.max(1, Math.round((raw.width + gap) / (cellSize.width + gap)));
+          const h = Math.max(1, Math.round((raw.height + gap) / (cellSize.height + gap)));
+          onResize(item.id, applyConstraints({ w, h }, constraints), constraints);
+        }
       },
     });
-  }, [readonly, layout, cellSize, gap, item.id, constraints, onResize]);
+
+    return () => {
+      viewport?.removeEventListener('scroll', updateGhost);
+      cleanup();
+    };
+  }, [readonly, cellSize, gap, item.id, constraints, onResize, viewportRef]);
 
   // Non-dragged tiles render at their previewed position during a drag (animating out of the way),
   // and spring back to `layout` when the drag ends. The dragged tile itself stays put (its preview
@@ -256,19 +290,4 @@ const magnetize = (raw: number, cell: number, gap: number, snapPx = 16): number 
   const cells = Math.max(1, Math.round((raw + gap) / pitch));
   const snapped = cells * cell + (cells - 1) * gap;
   return Math.abs(raw - snapped) <= snapPx ? snapped : raw;
-};
-
-/** Pointer delta (px) since drag start, converted to a whole-cell size delta and clamped to constraints. */
-const nextSize = (
-  layout: GridItem,
-  cellSize: { width: number; height: number },
-  gap: number,
-  location: DragLocationHistory,
-  constraints: GridConstraints | undefined,
-): { w: number; h: number } => {
-  const dx = location.current.input.clientX - location.initial.input.clientX;
-  const dy = location.current.input.clientY - location.initial.input.clientY;
-  const deltaW = Math.round(dx / (cellSize.width + gap));
-  const deltaH = Math.round(dy / (cellSize.height + gap));
-  return applyConstraints({ w: layout.w + deltaW, h: layout.h + deltaH }, constraints);
 };
