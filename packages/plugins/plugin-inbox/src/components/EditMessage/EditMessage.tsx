@@ -140,9 +140,9 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
               <Editor.View
                 classNames='dx-expander border border-separator'
                 extensions={extension}
-                // `value` (not `initialValue`): `Editor.View`'s controlled-value sync clears the doc to
-                // '' when `value` is undefined, which would wipe an `initialValue`. Fall back to '' so a
-                // missing text block doesn't flip undefined→'' after mount.
+                // `Editor.View` is controlled: `value` seeds the doc and is synced to it thereafter, so
+                // always feed a string — like a controlled `<input>`. (It treats `undefined` as "clear to
+                // empty", so a missing text block coalesces to '' rather than wiping the doc.)
                 value={message.blocks?.find((b) => b._tag === 'text')?.text ?? ''}
                 onChange={(value) => {
                   handleBodyChanged(value);
