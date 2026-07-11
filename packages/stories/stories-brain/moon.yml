@@ -13,6 +13,15 @@ tasks:
   # Regenerate the private mailbox fixture from a live Gmail account (OAuth loopback + in-process sync).
   # Interactive + network + writes git-ignored fixtures — never cached, never in CI. See scripts/README
   # comments and TESTPLAN.md for the one-time Google OAuth client setup.
+  # Google OAuth helper. Forwards flags: `-- --token` prints an access token, `-- --force` re-consents,
+  # `-- --revoke` revokes the grant at Google and deletes the local token.
+  #   moon run stories-brain:auth -- --revoke
+  auth:
+    command: 'node scripts/google-auth.mjs'
+    options:
+      cache: false
+      runInCI: false
+      interactive: true
   fetch-fixture:
     command: 'node scripts/fetch-fixture.mjs'
     options:
