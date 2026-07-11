@@ -9,7 +9,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import { generateText, parseJsonObject, selectVariants } from '../testing/harness';
+import { fixtureExists, generateText, parseJsonObject, selectVariants } from '../testing/harness';
 
 // Smoke + baseline for the model ladder. For each selected variant: warms the model once (a cold
 // Ollama load is a 10–30s VRAM spike that would poison timing), then times a single structured call
@@ -18,7 +18,9 @@ import { generateText, parseJsonObject, selectVariants } from '../testing/harnes
 //
 //   MODELS=local pnpm exec vitest run --project=node src/test/ladder-probe.test.ts
 
-describe('model ladder probe', () => {
+// Requires the private mailbox fixture + local Ollama models + credentials; skipped in CI (as with the
+// benches) so an unresolved-model assertion doesn't red the Check where those aren't present.
+describe.skipIf(!fixtureExists())('model ladder probe', () => {
   test(
     'each variant resolves, times, and parses JSON',
     async ({ expect }) => {
