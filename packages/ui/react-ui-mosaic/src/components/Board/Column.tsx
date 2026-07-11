@@ -134,9 +134,16 @@ const BoardColumnHeader = composable<HTMLDivElement, BoardColumnHeaderProps>(
 
     return (
       <Menu.Root>
-        <Toolbar.Root {...composableProps(props)} data-testid='board-column-header' ref={forwardedRef}>
+        {/* TODO(burdon): Use Card.Header. */}
+        <Toolbar.Root
+          {...composableProps(props, { classNames: 'gap-0' })}
+          data-testid='board-column-header'
+          ref={forwardedRef}
+        >
           <Toolbar.DragHandle ref={dragHandleRef} testId='mosaicBoard.columnDragHandle' />
-          <Toolbar.Text data-testid='mosaicBoard.columnTitle'>{label}</Toolbar.Text>
+          <Toolbar.Text classNames='grow px-0' data-testid='mosaicBoard.columnTitle'>
+            {label}
+          </Toolbar.Text>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
           <Menu.Trigger asChild disabled={!columnMenuItems?.length}>
             <Toolbar.IconButton

@@ -11,6 +11,7 @@ import * as InboxResolver from '@dxos/extractor-lib';
 import { Message } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
+import { Mailbox } from '../../../types';
 import { decodeBody, mapMessage } from './mapper';
 
 const makeGmailMessage = (overrides?: Partial<GoogleMail.Message>): GoogleMail.Message => ({
@@ -96,6 +97,129 @@ describe('mapMessage', () => {
       }
       expect(properties.snippet).toBe("It's a 'test' & \"quoted\"");
       expect(properties.subject).toBe("O'Reilly & co.");
+    }, Effect.provide(InboxResolver.Mock())),
+  );
+
+  it.effect(
+    'synthesizes a markdown block from HTML when the message has no plaintext part',
+    Effect.fnUntraced(function* ({ expect }) {
+      const template = makeGmailMessage();
+      const result = yield* mapMessage({
+        ...template,
+        payload: {
+          ...template.payload,
+          body: { size: 0 },
+          parts: [
+            {
+              mimeType: 'text/html',
+              body: { size: 32, data: Buffer.from('<p>Hello <strong>world</strong></p>').toString('base64') },
+            },
+          ],
+        },
+      });
+      expect(result).toBeDefined();
+
+      const textBlocks = result!.message.blocks.filter(
+        (block): block is Extract<typeof block, { _tag: 'text' }> => block._tag === 'text',
+      );
+      const byType = (mimeType: string) => textBlocks.find((block) => block.mimeType === mimeType);
+
+      // The raw html is kept and a markdown body is synthesized; no plaintext part was provided.
+      expect(byType('text/html')?.text).toBe('<p>Hello <strong>world</strong></p>');
+      expect(byType('text/plain')).toBeUndefined();
+      expect(byType('text/markdown')?.text).toBe('Hello **world**');
+    }, Effect.provide(InboxResolver.Mock())),
+  );
+
+  it.effect(
+    'treats a whitespace-only plaintext part as absent and synthesizes markdown from the HTML',
+    Effect.fnUntraced(function* ({ expect }) {
+      const template = makeGmailMessage();
+      const result = yield* mapMessage({
+        ...template,
+        payload: {
+          ...template.payload,
+          body: { size: 0 },
+          parts: [
+            { mimeType: 'text/plain', body: { size: 3, data: Buffer.from('   ').toString('base64') } },
+            {
+              mimeType: 'text/html',
+              body: { size: 18, data: Buffer.from('<p>Real body</p>').toString('base64') },
+            },
+          ],
+        },
+      });
+      expect(result).toBeDefined();
+
+      const textBlocks = result!.message.blocks.filter(
+        (block): block is Extract<typeof block, { _tag: 'text' }> => block._tag === 'text',
+      );
+      // The blank plaintext part is dropped, not stored, and a markdown body is synthesized instead.
+      expect(textBlocks.some((block) => block.mimeType === 'text/plain')).toBe(false);
+      expect(textBlocks.find((block) => block.mimeType === 'text/markdown')?.text).toBe('Real body');
+    }, Effect.provide(InboxResolver.Mock())),
+  );
+
+  it.effect(
+    'does not synthesize a markdown block when a plaintext part is present',
+    Effect.fnUntraced(function* ({ expect }) {
+      const template = makeGmailMessage();
+      const result = yield* mapMessage({
+        ...template,
+        payload: {
+          ...template.payload,
+          body: { size: 0 },
+          parts: [
+            { mimeType: 'text/plain', body: { size: 11, data: Buffer.from('Hello world').toString('base64') } },
+            {
+              mimeType: 'text/html',
+              body: { size: 16, data: Buffer.from('<p>Hello world</p>').toString('base64') },
+            },
+          ],
+        },
+      });
+      expect(result).toBeDefined();
+
+      const textBlocks = result!.message.blocks.filter(
+        (block): block is Extract<typeof block, { _tag: 'text' }> => block._tag === 'text',
+      );
+      expect(textBlocks.some((block) => block.mimeType === 'text/markdown')).toBe(false);
+      expect(textBlocks.some((block) => block.mimeType === 'text/plain')).toBe(true);
+    }, Effect.provide(InboxResolver.Mock())),
+  );
+
+  it.effect(
+    'flags a no-reply sender and a List-Unsubscribe header so the message is not replyable',
+    Effect.fnUntraced(function* ({ expect }) {
+      const template = makeGmailMessage();
+      const result = yield* mapMessage({
+        ...template,
+        payload: {
+          ...template.payload,
+          headers: [
+            { name: 'From', value: 'Acme Billing <no-reply@acme.com>' },
+            { name: 'Subject', value: 'Your invoice' },
+            { name: 'List-Unsubscribe', value: '<https://acme.com/unsub?id=1>, <mailto:unsub@acme.com>' },
+          ],
+        },
+      });
+      expect(result).toBeDefined();
+      const properties = result!.message.properties!;
+      expect(properties.noReply).toBe(true);
+      expect(properties.listUnsubscribe).toBe('<https://acme.com/unsub?id=1>, <mailto:unsub@acme.com>');
+      expect(Mailbox.isReplyable(result!.message)).toBe(false);
+    }, Effect.provide(InboxResolver.Mock())),
+  );
+
+  it.effect(
+    'leaves a normal person-to-person message replyable (no bulk signals)',
+    Effect.fnUntraced(function* ({ expect }) {
+      const result = yield* mapMessage(makeGmailMessage());
+      expect(result).toBeDefined();
+      const properties = result!.message.properties!;
+      expect(properties.noReply).toBeUndefined();
+      expect(properties.listUnsubscribe).toBeUndefined();
+      expect(Mailbox.isReplyable(result!.message)).toBe(true);
     }, Effect.provide(InboxResolver.Mock())),
   );
 });

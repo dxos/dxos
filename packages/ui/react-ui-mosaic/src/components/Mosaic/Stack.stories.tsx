@@ -40,7 +40,7 @@ const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <div className='flex grow justify-center'>Items: {items.length}</div>
+            <Toolbar.Text>Items: {items.length}</Toolbar.Text>
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>

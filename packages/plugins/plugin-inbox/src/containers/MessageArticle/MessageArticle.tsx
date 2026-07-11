@@ -24,6 +24,13 @@ import { DraftMessage, InboxOperation, Mailbox } from '#types';
 import { getMailboxMessagePath } from '../../paths';
 import { createDraftMessage } from '../../util';
 
+/** Messages default to rendering the raw email HTML; markdown/plain are opt-in toolbar views. */
+const DEFAULT_VIEW_MODE: ViewMode = 'html';
+
+type MessageOrRef = MessageType.Message | Ref.Ref<MessageType.Message>;
+
+const keyOf = (message: MessageOrRef): string => (Ref.isRef(message) ? String(message.uri) : Obj.getURI(message));
+
 /**
  * `subject` is either a single message or its whole conversation (thread). The companion graph node
  * assigns the thread directly (see the `mailboxMessage` connector) so the article renders it without
@@ -35,15 +42,9 @@ export type MessageArticleProps = AppSurface.ArticleProps<
   MessageType.Message | MessageType.Message[],
   {
     mailbox?: Mailbox.Mailbox;
+    testId?: string;
   }
 >;
-
-/** Messages default to rendering the raw email HTML; markdown/plain are opt-in toolbar views. */
-const DEFAULT_VIEW_MODE: ViewMode = 'html';
-
-type MessageOrRef = MessageType.Message | Ref.Ref<MessageType.Message>;
-
-const keyOf = (message: MessageOrRef): string => (Ref.isRef(message) ? String(message.uri) : Obj.getURI(message));
 
 /**
  * Message/conversation detail view. Renders the opened conversation as a vertical stack — each member
@@ -57,6 +58,7 @@ export const MessageArticle = ({
   attendableId,
   companionTo,
   mailbox: mailboxProp,
+  testId,
 }: MessageArticleProps) => {
   const toolbarAttendableId = attendableId && isLinkedSegment(attendableId) ? getParentId(attendableId) : attendableId;
   const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : mailboxProp;
@@ -159,7 +161,7 @@ export const MessageArticle = ({
   }, [tailId, tailIsDraft]);
 
   return (
-    <Panel.Root role={role}>
+    <Panel.Root role={role} data-testid={testId}>
       <Message.Root
         attendableId={toolbarAttendableId}
         viewMode={viewMode}
@@ -185,6 +187,7 @@ export const MessageArticle = ({
                 forward act on that specific message, rather than a single article-level toolbar that
                 always targets the newest one. */}
             <div className='dx-document flex flex-col'>
+              {/* TODO(burdon): Better UI for threads. */}
               {messages.map((messageOrRef) =>
                 DraftMessage.instanceOf(messageOrRef) ? (
                   // Drafts resolve their own live object and switch composer↔read-only reactively (see
