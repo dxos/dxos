@@ -30,7 +30,11 @@ const posterItems: TestItem[] = ((seed = 42) =>
   titles.map((title, index) => {
     // Deterministic pseudo-random id for picsum so stories are stable without Math.random.
     const pic = (seed * (index + 7)) % 1000;
-    return { id: String(index), title, image: `https://picsum.photos/seed/${pic}/600/400` };
+    return {
+      id: String(index),
+      title,
+      image: `https://picsum.photos/seed/${pic}/600/400`,
+    };
   }))();
 
 // 12-column board; tile sizes capped at 2x2, clustered around the board centre (6,6) rather than the
@@ -56,8 +60,13 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, ...props }: 
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
     (position) => {
-      const id = items.length.toString();
-      setItems([...items, { id, title: `Widget ${id}` }]);
+      const index = items.length;
+      const id = index.toString();
+      // In media mode (existing tiles carry images) give new tiles a poster too; seed it from the index
+      // so it's stable per add (matching the seeded posterItems, no Math.random).
+      const media = items.some((item) => item.image);
+      const image = media ? `https://picsum.photos/seed/${(index * 137 + 7) % 1000}/600/400` : undefined;
+      setItems([...items, { id, title: `Widget ${id}`, image }]);
       setLayout((layout) => ({ ...layout, items: { ...layout.items, [id]: position } }));
     },
     [items],
@@ -141,7 +150,10 @@ export const Large: Story = {
     items: testItems,
     layout: defaultLayout,
     mode: 'float' satisfies GridMode,
-    cellSize: { width: cardDefaultInlineSize, height: cardDefaultInlineSize },
+    cellSize: {
+      width: cardDefaultInlineSize,
+      height: cardDefaultInlineSize,
+    },
   },
 };
 
