@@ -16,8 +16,12 @@ const handler: Operation.WithHandler<typeof AddDraft> = AddDraft.pipe(
     Effect.fnUntraced(function* ({ post: postRef, createdAt }) {
       const post = yield* Database.load(postRef);
       const draft = Blogger.makeDraft({ label: `Draft ${(post.drafts?.length ?? 0) + 1}`, createdAt });
-      yield* Database.add(draft);
 
+      // No explicit `Database.add(draft)` here: `post` is already attached to the database
+      // (every `AddDraft.post` is created via `AddPost`), so pushing `Ref.make(draft)` onto
+      // `post.drafts` below attaches `draft` to the same database as a side effect of the
+      // reference assignment. An explicit add here was confirmed dead code by regression —
+      // removing it changed no observable behavior.
       Obj.update(post, (post) => {
         post.drafts = [...(post.drafts ?? []), Ref.make(draft)];
       });

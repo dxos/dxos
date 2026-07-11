@@ -68,7 +68,6 @@ export const AddDraft = Operation.make({
     description: 'Create a new draft version of a post.',
     icon: 'ph--file-plus--regular',
   },
-  services: [Database.Service],
   input: Schema.Struct({
     post: Ref.Ref(Blogger.Post).annotations({ description: 'The post to add the draft to.' }),
     createdAt: Schema.optional(Schema.String).annotations({ description: 'ISO 8601 timestamp for the draft.' }),

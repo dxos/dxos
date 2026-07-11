@@ -18,12 +18,13 @@ const handler: Operation.WithHandler<typeof AddPublication> = AddPublication.pip
     Effect.fnUntraced(function* ({ name, target }) {
       const publication = Blogger.makePublication({ name });
 
-      const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
+      const targetIsDatabase = Database.isDatabase(target);
+      const db = targetIsDatabase ? target : Obj.getDatabase(target);
       invariant(db, 'Database not found.');
 
       yield* CollectionModel.add({
         object: publication,
-        target: Database.isDatabase(target) ? undefined : target,
+        target: targetIsDatabase ? undefined : target,
       }).pipe(Effect.provide(Database.layer(db)));
 
       return Ref.make(publication);

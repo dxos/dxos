@@ -19,12 +19,13 @@ const handler: Operation.WithHandler<typeof AddPost> = AddPost.pipe(
       const publication = yield* Database.load(publicationRef);
       const post = Blogger.makePost({ name, createdAt });
 
-      const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
+      const targetIsDatabase = Database.isDatabase(target);
+      const db = targetIsDatabase ? target : Obj.getDatabase(target);
       invariant(db, 'Database not found.');
 
       yield* CollectionModel.add({
         object: post,
-        target: Database.isDatabase(target) ? undefined : target,
+        target: targetIsDatabase ? undefined : target,
       }).pipe(Effect.provide(Database.layer(db)));
 
       Obj.update(publication, (publication) => {
