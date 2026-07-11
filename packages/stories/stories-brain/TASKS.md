@@ -26,18 +26,42 @@ categorization) but fall below on synthetic tasks (thread/topic summaries, draft
 - [x] **Grading layer** (`internal/grade.ts`): labeling → deterministic agreement vs the reference
       (spam F1, tag Jaccard); summaries → coverage + faithfulness (reuses `judge.ts`); drafts →
       0–5 rubric (relevance/correctness/completeness/tone). Bench: `model-ladder.bench.test.ts`.
-- [ ] **Categorization bench** — DEFERRED to the follow-up night (labeling/summaries/drafts land
-      tonight). Group messages/threads into topics; cluster agreement vs haiku.
-- [x] **`overnight.mjs` driver** + `overnight` moon task — non-interactive, reuses `bench --stats`
-      (live table + teed logs). `generateText` gained retry+backoff + a generous `LLM_TIMEOUT`
-      (slow models finish rather than time-out-as-inaccurate); `OLLAMA_MAX_LOADED_MODELS=1`.
-- [x] Smoke-tested (2 models, local judge, N=2): pipeline works end-to-end; report renders.
-      Surfaced + fixed the 60s-timeout-poisons-accuracy issue.
-- [ ] **Runtime + token/cost estimate** — presented in chat; awaiting go before launch.
+- [ ] **Categorization bench** — DEFERRED (labeling/summaries/drafts landed). Group messages/threads
+      into topics; cluster agreement vs haiku. (The topics *artifact* now uses the corpus pipeline.)
+- [x] **`overnight.mjs` driver** + `overnight` moon task — non-interactive, reuses `bench --stats`.
+      `generateText` gained retry+backoff, a generous `LLM_TIMEOUT`, and `catchAllCause` (a defect —
+      @effect/ai ParseError while constructing its own AiError — was crashing the run mid-way).
+- [x] **RAN** (2026-07-11, N=25, opus judge). Results: `results/model-ladder.md` +
+      `topics.md` / `profiles.md` / `drafts-sample.md`. **Analysis + audit → `fixtures/REPORT.md`.**
+      Headline: **H0 inverted** — open weights strongest on *drafts* (gemma-12b/qwen3-30b clear the
+      bar), weakest on *labeling*; faithfulness universally high; gpt-oss-20b best all-rounder.
 
-Risks: reasoning models (qwen3, gpt-oss) → higher latency + may break strict JSON (parse leniently,
-record failure rate; `/no_think` sensitivity = future experiment). Ollama up all night; opus/haiku
-need `DX_ANTHROPIC_API_KEY`. Do NOT launch until the estimate is approved.
+## Next — model routing & sender-type triage (from REPORT §5)
+
+**Direction:** triage by sender type first, spend LLM effort only where it pays off. Sync is 100%
+deterministic (no LLM) → foreground stays fast; all LLM cost is batchable enrichment.
+
+- [ ] **`classify-sender` (person/org) stage + ground-truth eval** — the gate for everything
+      downstream; currently "needs-eval". (My recommended next step — unblocks the triage design.)
+- [ ] **`Mailbox.isReplyable` → person-only** — draft replies only to people (person AND not
+      no-reply/unsubscribe).
+- [ ] **Minimize non-people summarization** — one-line label ("this is a bill") instead of a full
+      summary for org mail; reserve summary budget for person mail.
+- [ ] **Default draft `Instructions`** — plain/direct/concise, no obsequious hedging ("if I may be so
+      bold"). Ship the object + re-score drafts with it.
+- [ ] **Model-policy map** — declarative `stageId → model DXN`, overridable per run, defaults seeded
+      from the ladder (generalize `ExtractOptions.model`).
+- [ ] **Two-tier latency** — foreground (sync + classify + tag) vs background prioritized batching of
+      summarize/facts/draft, gated by labels.
+- [ ] **Single per-message LLM pass** — fold tag + summarize + facts into one pass (shared context) to
+      cut latency + tokens.
+- [ ] **Topics clustering fix** (`corpus/topics.ts`) — strip hex/numeric tokens; normalize subjects
+      (drop trailing hashes/ids) so automated mail collapses to one topic (currently ~11).
+- [ ] **eval-only cleanup** — `analyze-results.mjs` doesn't recognize the `model-ladder.json` schema
+      (false EMPTY → exit 1); one-line fix.
+
+Risks: reasoning models (qwen3, gpt-oss) → higher latency + may break strict JSON (parse leniently).
+Ollama up during runs; opus/haiku need `.env` (`moon run stories-brain:env` renders it via 1Password).
 
 ## Bugs
 
