@@ -8,6 +8,7 @@ import React, { useCallback, useState } from 'react';
 import { Card } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { cardDefaultInlineSize } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
@@ -104,5 +105,15 @@ export const Pack: Story = {
     items: testItems,
     layout: defaultLayout,
     mode: 'pack' satisfies GridMode,
+  },
+};
+
+/** Approximately half-size cells to check the layout at a denser grid scale. */
+export const Compact: Story = {
+  args: {
+    items: testItems,
+    layout: defaultLayout,
+    mode: 'float' satisfies GridMode,
+    cellSize: { width: cardDefaultInlineSize / 2, height: cardDefaultInlineSize / 2 },
   },
 };

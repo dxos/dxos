@@ -144,6 +144,17 @@ export const GridCell = ({
 
   const rect = cellRect(layout, cellSize, gap);
 
+  // Magnetic move: while this tile is the drag source, outline the tile-sized footprint at the cell
+  // under the cursor (the current drop target). It jumps cell-to-cell as the target changes, so the
+  // snapped landing position is always visible during the drag.
+  const moveTarget =
+    dragging && dragging.source.data.id === item.id && dragging.target?.data.type === 'placeholder'
+      ? dragging.target.data.location
+      : undefined;
+  const moveGhost = moveTarget
+    ? cellRect({ x: moveTarget.x, y: moveTarget.y, w: layout.w, h: layout.h }, cellSize, gap)
+    : undefined;
+
   return (
     <>
       <Card.Root
@@ -162,15 +173,26 @@ export const GridCell = ({
           <Card.DragHandle ref={dragHandleRef} />
           {children}
         </Card.Header>
-        {!readonly && (
-          <button
-            ref={resizeHandleRef}
-            type='button'
-            aria-label={t('resize-object.button')}
-            className='absolute bottom-0 right-0 size-4 cursor-nwse-resize touch-none opacity-0 transition-opacity duration-300 hover:opacity-100'
-          />
-        )}
       </Card.Root>
+
+      {/* Resize handle: a sibling (not clipped by the card's overflow/rounding) straddling the
+          bottom-right corner so the resize cursor appears right at the tile's edge. Hidden mid-drag. */}
+      {!readonly && !dragging && (
+        <button
+          ref={resizeHandleRef}
+          type='button'
+          aria-label={t('resize-object.button')}
+          className='group/resize absolute z-20 size-6 cursor-nwse-resize touch-none'
+          style={{ left: rect.left + rect.width - 12, top: rect.top + rect.height - 12 }}
+        >
+          <span className='absolute bottom-1.5 right-1.5 size-2 border-separator opacity-50 transition-opacity border-b-2 border-r-2 group-hover/resize:opacity-100' />
+        </button>
+      )}
+
+      {/* Magnetic move outline: snapped footprint at the cell under the cursor while dragging. */}
+      {moveGhost && (
+        <div className='pointer-events-none absolute z-10 rounded-lg ring-2 ring-accent-bg' style={moveGhost} />
+      )}
 
       {/* Resize outline: previews the target size while dragging the handle; the tile snaps to whole
           cells only on release (see the resize draggable's onDrop). */}
