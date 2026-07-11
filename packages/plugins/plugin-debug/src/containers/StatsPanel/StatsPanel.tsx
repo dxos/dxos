@@ -3,7 +3,7 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import React from 'react';
+import React, { Fragment } from 'react';
 
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
@@ -52,17 +52,19 @@ export const StatsPanel = () => {
     <ScrollArea.Root thin centered padding>
       <ScrollArea.Viewport>
         {compartments.map(([pluginKey, value]) => (
-          <table key={pluginKey} className='w-full border-collapse'>
-            <caption className='text-start font-mono text-xs text-description pbe-1'>{pluginKey}</caption>
-            <tbody>
+          <section key={pluginKey} className='w-full'>
+            <h3 className='text-start font-mono text-xs text-description pbe-1'>{pluginKey}</h3>
+            <dl className='grid grid-cols-[auto_minmax(0,1fr)] w-full'>
               {flatten(value).map(([key, cell]) => (
-                <tr key={key} className='border-be border-separator'>
-                  <td className='pbe-1 pbs-1 pie-2 text-description align-top'>{key}</td>
-                  <td className='pbe-1 pbs-1 font-mono text-end'>{formatValue(cell)}</td>
-                </tr>
+                <Fragment key={key}>
+                  <dt className='border-be border-separator pbe-1 pbs-1 pie-2 text-description self-start'>{key}</dt>
+                  <dd className='border-be border-separator pbe-1 pbs-1 truncate font-mono text-end'>
+                    {formatValue(cell)}
+                  </dd>
+                </Fragment>
               ))}
-            </tbody>
-          </table>
+            </dl>
+          </section>
         ))}
       </ScrollArea.Viewport>
     </ScrollArea.Root>
