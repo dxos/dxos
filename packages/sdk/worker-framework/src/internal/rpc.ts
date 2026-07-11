@@ -63,19 +63,15 @@ export const makeRpcClientOverProtocol = <G, ProtocolError, ProtocolRequirements
 ): Effect.Effect<unknown, never, Scope.Scope | ProtocolRequirements> =>
   Effect.gen(function* () {
     const timingEnabled = isRpcTimingEnabled(options?.timing);
-    const rpcGroup = timingEnabled
-      ? applyRpcTimingMiddleware(asRpcGroup(group))
-      : asRpcGroup(group);
-    const protocolLayer = timingEnabled
-      ? protocol.pipe(Layer.provideMerge(rpcTimingClientLayer()))
-      : protocol;
+    const rpcGroup = timingEnabled ? applyRpcTimingMiddleware(asRpcGroup(group)) : asRpcGroup(group);
+    const protocolLayer = timingEnabled ? protocol.pipe(Layer.provideMerge(rpcTimingClientLayer())) : protocol;
 
     // Build the transport into the caller's scope (extended via `Scope.extend`) rather than
     // `Effect.provide`-ing the layer directly: that would bind the transport's lifetime to this
     // construction effect, tearing the worker connection down the instant the client is returned
     // (the client is used later by the caller). `Layer.build` keeps it alive for the caller's scope.
     const context = yield* Layer.build(protocolLayer);
-    return yield* RpcClient.make(rpcGroup, { disableTracing: options?.disableTracing ?? true }).pipe(
+    return yield* RpcClient.make(asRpcGroup(rpcGroup), { disableTracing: options?.disableTracing ?? true }).pipe(
       Effect.provide(context),
     );
   }).pipe(Effect.orDie);
@@ -120,17 +116,17 @@ export const serveRpcGroup = <G, H extends Layer.Layer<never, never, never>>(
       }
 
       const timingEnabled = isRpcTimingEnabled(options?.timing);
-      const rpcGroup = timingEnabled
-        ? applyRpcTimingMiddleware(asRpcGroup(group))
-        : asRpcGroup(group);
-      const serverLayer = RpcServer.layer(rpcGroup, {
+      const rpcGroup = timingEnabled ? applyRpcTimingMiddleware(asRpcGroup(group)) : asRpcGroup(group);
+      // Merge the timing middleware layer into the handler layer (rather than a conditional
+      // `.pipe(...)` element) so the pipeline stays a fixed tuple.
+      const handlersLayer = timingEnabled
+        ? Layer.merge(handlers, rpcTimingServerLayer(resolveRpcTimingOptions(options?.timing)))
+        : handlers;
+      const serverLayer = RpcServer.layer(asRpcGroup(rpcGroup), {
         disableTracing: options?.disableTracing ?? true,
         concurrency: options?.concurrency ?? 'unbounded',
       }).pipe(
-        Layer.provide(handlers),
-        ...(timingEnabled
-          ? [Layer.provide(rpcTimingServerLayer(resolveRpcTimingOptions(options?.timing)))]
-          : []),
+        Layer.provide(handlersLayer),
         Layer.provide(
           RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port))),
         ),

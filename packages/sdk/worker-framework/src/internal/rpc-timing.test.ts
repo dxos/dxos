@@ -5,12 +5,13 @@
 import * as Rpc from '@effect/rpc/Rpc';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { makeRpcClient, serveRpcGroup } from './internal/rpc';
-import { RpcTimingMetadata, applyRpcTimingMiddleware } from './internal/rpc-timing';
+import { makeRpcClient, serveRpcGroup } from './rpc';
+import { RpcTimingMetadata, applyRpcTimingMiddleware } from './rpc-timing';
 
 class TimingRpcs extends RpcGroup.make(
   Rpc.make('reportTiming', {
@@ -43,11 +44,11 @@ describe('rpc timing middleware', () => {
     onTestFinished(() => server.close());
 
     const scope = Effect.runSync(Scope.make());
-    onTestFinished(() => Effect.runPromise(Scope.close(scope, Effect.exitVoid)));
+    onTestFinished(() => Effect.runPromise(Scope.close(scope, Exit.void)));
 
-    const client = await Effect.runPromise(
+    const client = (await Effect.runPromise(
       makeRpcClient(channel.port2, TimingRpcs, { timing: true }).pipe(Scope.extend(scope)),
-    ) as {
+    )) as {
       reportTiming: (payload: Record<string, never>) => Effect.Effect<{ queueWaitMs: number }>;
     };
 

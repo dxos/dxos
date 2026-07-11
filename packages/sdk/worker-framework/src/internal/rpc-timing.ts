@@ -9,6 +9,7 @@ import * as RpcMiddleware from '@effect/rpc/RpcMiddleware';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 
 import { log } from '@dxos/log';
 
@@ -47,10 +48,11 @@ export type RpcTimingOptions = {
 const DEFAULT_MIN_LOG_MS = 100;
 
 const resolveOptions = (options?: boolean | RpcTimingOptions): RpcTimingOptions =>
-  options === true || options === undefined ? {} : options;
+  typeof options === 'object' ? options : {};
 
 const parseSentAt = (headers: Headers.Headers): number | undefined => {
-  const raw = Headers.get(headers, RPC_TIMING_SENT_AT_HEADER);
+  // `Headers.get` returns an `Option`, not a raw value.
+  const raw = Option.getOrUndefined(Headers.get(headers, RPC_TIMING_SENT_AT_HEADER));
   if (raw === undefined) {
     return undefined;
   }
@@ -67,15 +69,27 @@ const shouldLog = (
   return (queueWaitMs ?? 0) >= minLogMs || (serviceMs ?? 0) >= minLogMs;
 };
 
+// Maps a group to its timing-wrapped variant so re-application returns the same wrapped group and the
+// middleware is never stacked twice. Keyed by both the original and the wrapped group so passing an
+// already-wrapped group back in is a no-op.
+const timedGroups = new WeakMap<object, unknown>();
+
 /**
- * Attaches {@link RpcTimingMiddleware} to every RPC in a group. Idempotent when already applied.
+ * Attaches {@link RpcTimingMiddleware} to every RPC in a group. Idempotent — applying it to an
+ * already-wrapped group returns the same instance.
  */
-export const applyRpcTimingMiddleware = <G extends RpcGroup.RpcGroup<Rpc.Any>>(group: G): G => {
-  const first = group.requests.values().next().value;
-  if (first?.middlewares.has(RpcTimingMiddleware)) {
-    return group;
+export const applyRpcTimingMiddleware = <Rpcs extends Rpc.Any>(
+  group: RpcGroup.RpcGroup<Rpcs>,
+): RpcGroup.RpcGroup<Rpc.AddMiddleware<Rpcs, typeof RpcTimingMiddleware>> => {
+  const cached = timedGroups.get(group);
+  if (cached !== undefined) {
+    // Cache holds the wrapped group; its element type already carries the middleware.
+    return cached as RpcGroup.RpcGroup<Rpc.AddMiddleware<Rpcs, typeof RpcTimingMiddleware>>;
   }
-  return group.middleware(RpcTimingMiddleware) as G;
+  const wrapped = group.middleware(RpcTimingMiddleware);
+  timedGroups.set(group, wrapped);
+  timedGroups.set(wrapped, wrapped);
+  return wrapped;
 };
 
 /**
