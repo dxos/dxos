@@ -26,7 +26,7 @@ type DragState = 'idle' | 'dragging';
 
 const BOARD_CELL_NAME = 'Board.Cell';
 
-export type BoardCellProps<T extends Type.AnyObj = Type.AnyObj> = ThemedClassName<
+export type BoardCellProps<T extends Type.AnyObj = any> = ThemedClassName<
   PropsWithChildren<{
     item: T;
     /** This item's current position/size in grid cells (its entry in the board layout). */
