@@ -10,71 +10,25 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-  # Regenerate the private mailbox fixture from a live Gmail account (OAuth loopback + in-process sync).
-  # Interactive + network + writes git-ignored fixtures — never cached, never in CI. See scripts/README
-  # comments and TESTPLAN.md for the one-time Google OAuth client setup.
-  # Google OAuth helper. Forwards flags: `-- --token` prints an access token, `-- --force` re-consents,
-  # `-- --revoke` revokes the grant at Google and deletes the local token.
-  #   moon run stories-brain:auth -- --revoke
+  # Research workflow (all interactive + network + write git-ignored fixtures — never cached / in CI):
+  #   auth  → Google OAuth helper: `-- --token` prints a token, `-- --force` re-consents, `-- --revoke` cancels.
+  #   sync  → one consent + in-process Gmail sync → fixtures/local/mailbox-feed.json (FETCH_AFTER=yyyy-mm-dd).
+  #   bench → run the bench suite (extract facts + all benches); `-- --models qwen --limit 10 --tests tags,facts`.
   auth:
     command: 'node scripts/google-auth.mjs'
     options:
       cache: false
       runInCI: false
       interactive: true
-  fetch-fixture:
+  sync:
     command: 'node scripts/fetch-fixture.mjs'
     options:
       cache: false
       runInCI: false
       interactive: true
-  # Full unattended run: front-loads the OAuth consent, regenerates the fixture, then runs every bench
-  # sequentially (stats → fixtures/local/results). Narrow with MODELS=/LIMIT=/TESTS=; SKIP_FETCH=1 reuses
-  # the existing fixture.
-  run-all:
-    command: 'node scripts/run-all.mjs'
-    options:
-      cache: false
-      runInCI: false
-      interactive: true
-  # Ingest only: auth → sync → extract facts/questions (no benches). Narrow the extractor with MODELS=;
-  # SKIP_FETCH=1 reuses the existing fixture.
-  ingest:
-    command: 'node scripts/ingest.mjs'
-    options:
-      cache: false
-      runInCI: false
-      interactive: true
-  # The bench suite with CLI flags (models/limit/tests/…) — CLI > env > .env > default.
-  #   moon run stories-brain:bench -- --models qwen --limit 10 --tests tags,facts
   bench:
     command: 'node scripts/bench.mjs'
     options:
       cache: false
       runInCI: false
       interactive: true
-  # The trivial, LLM-free feed-stats pipeline over the fixture (skips if the fixture is absent). A
-  # single-file run, since the shared `test` task's bash wrapper ignores a `-- <file>` filter.
-  stats:
-    command: 'pnpm exec vitest run --project=node src/test/feed-stats.test.ts'
-    deps:
-      - esbuild-plugins:compile
-      - node-std:compile
-      - vite-plugin-import-source:compile
-      - '^:compile'
-    options:
-      cache: false
-      runInCI: false
-  # Extracts facts from the fixture across models and saves the fact-store fixture (fact-store.json)
-  # that subject-facts / brain-vs-rag consume. LLM-driven — needs models: run Ollama and/or set
-  # DX_ANTHROPIC_API_KEY, and narrow with `MODELS=qwen LIMIT=10 moon run stories-brain:facts`.
-  facts:
-    command: 'pnpm exec vitest run --project=node src/test/extract-facts.bench.test.ts'
-    deps:
-      - esbuild-plugins:compile
-      - node-std:compile
-      - vite-plugin-import-source:compile
-      - '^:compile'
-    options:
-      cache: false
-      runInCI: false
