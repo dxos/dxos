@@ -8,7 +8,7 @@
 
 **Tech Stack:** Effect-TS (`effect/Stream`, `effect/Effect`, `Layer`, `Context`), `@dxos/pipeline` (`Stage`, `Pipeline`), `@dxos/plugin-connector` (`SyncBinding`), `@dxos/pipeline-rdf` (`FactStore`, `RDF`), `@dxos/pipeline-email` (`extractFactsStage`, `messageSource`), `@dxos/compute` (`Operation`, `ServiceResolver`), `@dxos/app-framework` (`Capability`, `AppSurface`, `Surface`), `@dxos/echo` (`Feed`, `Database`, `Filter`, `Relation`, `Ref`), React (`@dxos/react-ui*`), vitest.
 
-**Spec:** `docs/superpowers/specs/2026-07-07-enrich-mailbox-fact-indexing-design.md`
+**Spec:** `agents/superpowers/specs/2026-07-07-enrich-mailbox-fact-indexing-design.md`
 
 ---
 

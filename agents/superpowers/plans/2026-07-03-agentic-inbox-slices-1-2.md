@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Effect-TS, `@dxos/pipeline` (`Stage`/`Pipeline`), `@dxos/semantic-index` (`SemanticPipeline`/`SemanticStore`/`Fact`), `@dxos/echo` + `@dxos/types` (ECHO objects, `Message`), vitest.
 
-**Spec:** [`docs/superpowers/specs/2026-07-03-agentic-inbox-discovery-design.md`](../specs/2026-07-03-agentic-inbox-discovery-design.md) — slices §9.1–9.2.
+**Spec:** [`agents/superpowers/specs/2026-07-03-agentic-inbox-discovery-design.md`](../specs/2026-07-03-agentic-inbox-discovery-design.md) — slices §9.1–9.2.
 
 ## Global Constraints
 

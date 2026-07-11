@@ -4,7 +4,7 @@ Extracts attributed propositions from text and answers SPARQL queries over them.
 semantic graph lives **outside ECHO** (it references ECHO objects by DXN) and runs in the
 browser and on Cloudflare Workers.
 
-Full design rationale and prior-art evaluation: `docs/superpowers/specs/2026-06-27-semantic-index-design.md`.
+Full design rationale and prior-art evaluation: `agents/superpowers/specs/2026-06-27-semantic-index-design.md`.
 
 ## Purpose
 

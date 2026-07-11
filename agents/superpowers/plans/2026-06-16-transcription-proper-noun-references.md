@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Effect, `@effect/ai` `LanguageModel`, `@dxos/compute` Operations, `@dxos/echo` `Filter.text`, Storybook, vitest + `AssistantTestLayer` memoized LLM.
 
-**Spec:** `docs/superpowers/specs/2026-06-16-transcription-proper-noun-references-design.md`
+**Spec:** `agents/superpowers/specs/2026-06-16-transcription-proper-noun-references-design.md`
 
 ---
 

@@ -599,7 +599,7 @@ After implementation:
 
 - `AUDIT.md` in `packages/ui/react-ui-list/` — the three-layer model and
   Phase 6 plan this design extends.
-- `docs/superpowers/specs/2026-06-12-ordered-list-component-design.md` — the
+- `agents/superpowers/specs/2026-06-12-ordered-list-component-design.md` — the
   preceding `OrderedList` design.
 - `https://atlassian.design/components/pragmatic-drag-and-drop/` — pragmatic-dnd docs.
 - `https://www.w3.org/WAI/ARIA/apg/patterns/listbox/` — WAI-ARIA listbox pattern.

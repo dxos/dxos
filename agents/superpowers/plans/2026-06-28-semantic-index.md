@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Effect, `effect/Schema`, `@dxos/ai` (`@effect/ai` `LanguageModel.generateObject`), `@dxos/sql-sqlite` (`@effect/sql`), `@comunica/query-sparql-rdfjs`, `n3` (DataFactory), `asynciterator` (RDF/JS streams), `@effect/vitest` + `vitest`.
 
-**Design spec:** `docs/superpowers/specs/2026-06-27-semantic-index-design.md`.
+**Design spec:** `agents/superpowers/specs/2026-06-27-semantic-index-design.md`.
 
 **Conventions reference:** mirror `packages/core/compute/extractor` and `packages/core/compute/transcription-pipeline` for package.json/moon.yml/tsconfig/test style.
 
