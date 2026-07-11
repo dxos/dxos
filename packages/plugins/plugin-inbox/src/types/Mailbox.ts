@@ -47,8 +47,6 @@ export enum MessageState {
 export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.mailbox', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
-    // ISO timestamp of when the mailbox was last viewed. Messages with a later `created` time are counted as new.
-    viewedAt: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
     feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
     // Inverse tag index for immutable feed Messages: tag id (a `Tag` object's URI) → message ids.
     // Messages are immutable Queue items, so their tag associations live in a child `TagIndex` object
@@ -82,26 +80,6 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
 
 /** Checks if a value is a Mailbox object. */
 export const instanceOf = (value: unknown): value is Mailbox => Obj.instanceOf(Mailbox, value);
-
-/** Number of messages created after the mailbox was last viewed (see {@link markViewed}). */
-export const getNewMessageCount = (
-  mailbox: Mailbox | Obj.Snapshot<Mailbox>,
-  messages: readonly Message.Message[],
-): number => {
-  const viewedAt = mailbox.viewedAt;
-  if (!viewedAt) {
-    return messages.length;
-  }
-  return messages.reduce((count, message) => (message.created > viewedAt ? count + 1 : count), 0);
-};
-
-/** Advances the `viewedAt` cursor to now, clearing the new-message count. */
-export const markViewed = (mailbox: Mailbox): void => {
-  const now = new Date().toISOString();
-  Obj.update(mailbox, (mailbox) => {
-    mailbox.viewedAt = now;
-  });
-};
 
 export const CreateMailboxSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),

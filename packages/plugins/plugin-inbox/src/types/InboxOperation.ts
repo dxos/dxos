@@ -108,6 +108,18 @@ export const DraftEmailAndOpen = Operation.make({
   output: Schema.Void,
 });
 
+/**
+ * The provider's "sent" tag, returned by the send ops so the caller can tag the local draft with the
+ * same tag its canonical synced copy will carry — Gmail's `SENT` label (a well-known id) or the JMAP
+ * account's Sent folder (a server-assigned id resolved by folder role). The `source`/`id` form the
+ * tag's foreign key; `label` is a fallback used only when the tag doesn't exist yet (pre first sync).
+ */
+const SentTagOutput = Schema.Struct({
+  source: Schema.String,
+  id: Schema.String,
+  label: Schema.String,
+});
+
 export const GmailSend = Operation.make({
   meta: {
     key: makeKey('googleMailSend'),
@@ -125,6 +137,7 @@ export const GmailSend = Operation.make({
   output: Schema.Struct({
     id: Schema.String,
     threadId: Schema.String,
+    sentTag: SentTagOutput,
   }),
   services: [Credential.CredentialsService],
 }).pipe(Operation.visible);
@@ -264,6 +277,7 @@ export const JmapSend = Operation.make({
   output: Schema.Struct({
     id: Schema.String,
     threadId: Schema.String,
+    sentTag: SentTagOutput,
   }),
 }).pipe(Operation.visible);
 

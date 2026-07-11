@@ -143,6 +143,9 @@ export const runGmailSync = ({
     const feed = yield* Database.load(mailbox.feed);
     // Resolve the child tag index so provider-label tags can be applied synchronously during commit.
     const tagIndex = yield* Database.load(mailbox.tags);
+    // Pool already-sent drafts once for this run; `EmailStage.reconcileDrafts` matches each incoming
+    // message against it so the canonical copy's arrival removes its now-redundant draft in the commit.
+    const draftPool = yield* EmailStage.queryDraftPool(mailbox);
     const labelMap = yield* syncLabels(mailbox, userId).pipe(
       Effect.catchAll((error) => {
         log.catch(error);
@@ -201,6 +204,7 @@ export const runGmailSync = ({
       EmailStage.processAttachments(),
       EmailStage.onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
+      EmailStage.reconcileDrafts(draftPool),
       EmailStage.toCommitUnit(),
       Stream.grouped(STREAMING_CONFIG.pageSize),
       Pipeline.run({ sink: SyncBinding.commit }),
