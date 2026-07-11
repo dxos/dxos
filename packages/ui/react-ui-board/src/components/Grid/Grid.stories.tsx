@@ -33,15 +33,16 @@ const posterItems: TestItem[] = ((seed = 42) =>
     return { id: String(index), title, image: `https://picsum.photos/seed/${pic}/600/400` };
   }))();
 
-// 12-column board; initial tile sizes capped at 2x2.
+// 12-column board; tile sizes capped at 2x2, clustered around the board centre (6,6) rather than the
+// top-left, so the initial view (centred on mount) shows the tiles.
 const defaultLayout: GridLayout = {
   columns: 12,
   items: [
-    { id: '0', x: 0, y: 0, w: 2, h: 2 },
-    { id: '1', x: 2, y: 0, w: 2, h: 1 },
-    { id: '2', x: 4, y: 0, w: 2, h: 2 },
-    { id: '3', x: 6, y: 0, w: 2, h: 2 },
-    { id: '4', x: 2, y: 1, w: 2, h: 1 },
+    { id: '0', x: 4, y: 4, w: 2, h: 2 },
+    { id: '1', x: 6, y: 4, w: 2, h: 1 },
+    { id: '2', x: 4, y: 6, w: 2, h: 2 },
+    { id: '3', x: 6, y: 6, w: 2, h: 2 },
+    { id: '4', x: 6, y: 5, w: 2, h: 1 },
   ],
 };
 

@@ -249,7 +249,7 @@ export const GridCell = ({
           cells only on release (see the resize draggable's onDrop). */}
       {resizeGhost && (
         <div
-          className='pointer-events-none absolute z-10 rounded-lg ring-2 ring-accent-bg'
+          className='pointer-events-none absolute z-10 rounded-sm ring-2 ring-accent-bg'
           style={{ left: rect.left, top: rect.top, width: resizeGhost.width, height: resizeGhost.height }}
         />
       )}
