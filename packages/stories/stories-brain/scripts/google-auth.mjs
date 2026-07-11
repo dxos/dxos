@@ -9,6 +9,8 @@
 // One-time setup — create a Desktop-app OAuth client (Google Cloud Console, https://console.cloud.google.com):
 //   1. Create or select a project (top-left project picker).
 //   2. Enable the Gmail API: APIs & Services → Library → search "Gmail API" → Enable.
+//      Or via the CLI (also avoids the console's "insufficient permissions to check enablement" hiccup):
+//        gcloud services enable gmail.googleapis.com --project <PROJECT_ID>
 //   3. Configure the consent screen: APIs & Services → OAuth consent screen → User type "External" →
 //      fill app name + your email. Add the scope ".../auth/gmail.readonly". Under "Test users", add
 //      your own Google account (while the app stays in "Testing", only test users may consent).
