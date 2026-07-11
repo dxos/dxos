@@ -119,6 +119,60 @@ labeling-agreement are.
 
 ## 5. Next
 
-- Topics
-  - packages/core/compute/pipeline-email/src/types/Topic.ts
-  - packages/core/compute/pipeline-email/src/corpus/digest.ts
+### Product direction (from review)
+
+- **Sender-type triage first.** Classify each sender as **person vs organization** (e.g. an Anthropic
+  invoice is org). Cheap, and it gates everything downstream.
+- **Only draft replies to people** (extend `Mailbox.isReplyable`: person AND not no-reply/unsubscribe).
+- **Minimize summarization for non-people** — a one-line label ("this is a bill") instead of a full
+  summary; reserve real summarization budget for person mail.
+- **Default draft `Instructions`** — the current drafts are too flowery ("if I may be so bold"). Ship a
+  default Instructions object: plain, direct, concise; no obsequious hedging.
+
+### Pipeline-stage audit (which stages use an LLM → which model)
+
+Verified across the product pipelines. **`—` = deterministic (no LLM).** Model recommendations lean on
+§4 (tested: summarize, draft, labeling) and are marked **needs-eval** where tonight didn't measure the
+stage (fact extraction, person/org classification).
+
+| Pipeline | Stage | LLM? | Model / note |
+| --- | --- | --- | --- |
+| **Gmail sync** (plugin-inbox) | fetch · dedup · decode-body · map-to-message · collect-stats · resolve-contact · record-threads · commit | **no** | — (keep the sync path 100% deterministic → fast foreground) |
+| | on-arrival extractors (optional) | opt | small/local (`@dxos/extractor`); off by default |
+| **EmailPipeline** (pipeline-email) | summarize (per message) | **yes** | haiku; open close (gpt-oss-20b) at a coverage discount |
+| | extract-contacts (actors) · stats · build-threads | **no** | — |
+| | extract-facts | **yes** | **needs-eval** (structured extraction — not measured in §4) |
+| **Fact pipeline** (runFactPipeline) | facts-dedup · commit | **no** | — |
+| | extract-facts-unit | **yes** | **needs-eval** |
+| **pipeline-rdf** (extract) | extract-chunk (propositions) | **yes** | **needs-eval** |
+| | normalize-predicates · index-facts | **no** | — |
+| **Corpus** (pipeline-email/corpus) | cluster-threads | **no** | — (Jaccard; fix hash/number tokenizer, see §topics) |
+| | summarize-topics · narrate-digest | **yes** | small/haiku (cheap prose over a deterministic skeleton) |
+| | materialize-topics · build-digest · rollups · ledger | **no** | — |
+| **Proposed (from review)** | classify-sender (person/org) | **yes (cheap) / heuristic** | small/local — gates all downstream |
+| | tag/label (spam, topic) | **yes** | haiku (open weak on labeling-agreement, §4) |
+| | draft (people only) | **yes** | gemma-12b / qwen3-30b clear the bar (§4); gpt-oss-20b for speed; + default Instructions |
+
+**Structural takeaway:** sync has **zero** LLM stages, so the foreground (sync + cheap labeling) is
+already fast; **all** LLM cost lives in batchable enrichment (summarize / facts / topics / drafts).
+
+### Design issues
+
+- **Model-per-stage representation.** A declarative **model policy**: `stageId → model DXN`, resolved at
+  runtime, overridable per run, defaults seeded from the §4 ladder. (Mirrors `ExtractOptions.model` /
+  the harness `ModelVariant` — generalize it to a policy map so routing isn't hard-coded per stage.)
+- **Latency — two-tier.** Foreground: sync + `classify-sender` + `tag` (deterministic or a small/fast
+  model) → the inbox is usable immediately. Background: **prioritized batching** of summarize / facts /
+  draft, gated by labels (skip non-people summaries; draft only replyable person mail; batch by
+  priority signal). The audit shows this split is natural — the deterministic stages are exactly the
+  foreground ones.
+- **Efficient execution.** Per-message LLM stages (tag + summarize + facts) currently live in separate
+  passes that each re-read the message; group them into **one per-message LLM pass** (shared context,
+  one prompt or one session) to cut both latency and token cost. Sync stays a separate, LLM-free path.
+
+### Topics work (clustering quality — see §topics)
+
+- `packages/core/compute/pipeline-email/src/corpus/topics.ts` — strip hex/numeric tokens in `tokenize`;
+  normalize subjects (drop trailing hashes/ids) before tokenizing so near-identical automated mail
+  collapses to one topic instead of ~11.
+- `packages/core/compute/pipeline-email/src/types/Topic.ts` · `.../corpus/digest.ts`
