@@ -40,8 +40,8 @@ export type GridConstraints = { minW?: number; minH?: number; maxW?: number; max
  */
 export type GridMode = 'pack' | 'float';
 
-/** Axis along which displaced items are pushed to clear a collision. */
-export type PushDirection = 'down' | 'right';
+/** Direction along which displaced items are pushed to clear a collision. */
+export type PushDirection = 'down' | 'up' | 'right' | 'left';
 
 /** Options threaded to a resolver: the board extent, the moved item's size limits, and the compaction mode. */
 export type ResolveOptions = { bounds?: Bounds; constraints?: GridConstraints; mode?: GridMode };
@@ -115,18 +115,28 @@ export const applyConstraints = (
   };
 };
 
-// Push direction for a move/resize: rightward when the tile moved/grew primarily along x, else down.
+// Push occupants in the direction the tile is moving/growing: the dominant axis decides horizontal vs
+// vertical, its sign decides the way. Horizontal/vertical intent is the signed positional delta plus
+// any (rightward/downward) growth from a resize. Ties and no-motion default to down.
 const deriveDirection = (from: Cell, to: Cell): PushDirection => {
-  const rightish = Math.max(to.x - from.x, 0) + Math.max(to.w - from.w, 0);
-  const downish = Math.max(to.y - from.y, 0) + Math.max(to.h - from.h, 0);
-  return rightish > 0 && rightish >= downish ? 'right' : 'down';
+  const horizontal = to.x - from.x + Math.max(to.w - from.w, 0);
+  const vertical = to.y - from.y + Math.max(to.h - from.h, 0);
+  if (horizontal !== 0 && Math.abs(horizontal) >= Math.abs(vertical)) {
+    return horizontal > 0 ? 'right' : 'left';
+  }
+  if (vertical !== 0) {
+    return vertical > 0 ? 'down' : 'up';
+  }
+  return 'down';
 };
 
 /**
  * Fixes the `movedId` item in place and pushes every other item that overlaps it (directly or by
- * cascade) to clear the overlap, along `direction`. `down` increases y; `right` increases x but
- * falls back to pushing down when the item would spill past `columns` (bounded horizontally, rows
- * grow freely). Candidates are processed in a deterministic sweep ordered along the push axis.
+ * cascade) to clear the overlap, along `direction`. Each direction places a displaced item flush to
+ * the far side of what it hit (`right`→+x, `left`→−x, `down`→+y, `up`→−y). A push that would cross a
+ * bound (past `columns` on the right, or before 0 on the left/top) falls back to pushing down, since
+ * rows grow freely. Candidates are processed in a deterministic sweep ordered along the push axis so
+ * a pushed item only ever collides with items later in the sweep.
  */
 export const resolveCollisions = <Pos extends GridPosition>(
   layout: Layout<Pos>,
@@ -140,13 +150,21 @@ export const resolveCollisions = <Pos extends GridPosition>(
     return layout;
   }
 
-  // Settled items are fixed for the rest of the sweep; the moved item anchors the sweep. Sort along
-  // the push axis so a pushed item only ever collides with items later in the sweep.
+  // Settled items are fixed for the rest of the sweep; the moved item anchors the sweep.
   const settled: Cell[] = [moved];
   const remaining = cells.filter((entry) => entry.id !== movedId);
-  const sorted = [...remaining].sort((a, b) =>
-    direction === 'right' ? a.x - b.x || a.y - b.y : a.y - b.y || a.x - b.x,
-  );
+  const sorted = [...remaining].sort((a, b) => {
+    switch (direction) {
+      case 'right':
+        return a.x - b.x || a.y - b.y;
+      case 'left':
+        return b.x - a.x || a.y - b.y;
+      case 'up':
+        return b.y - a.y || a.x - b.x;
+      default:
+        return a.y - b.y || a.x - b.x; // down
+    }
+  });
 
   for (const entry of sorted) {
     let current = entry;
@@ -154,8 +172,12 @@ export const resolveCollisions = <Pos extends GridPosition>(
     while (collision) {
       if (direction === 'right' && collision.x + collision.w + current.w <= columns) {
         current = { ...current, x: collision.x + collision.w };
+      } else if (direction === 'left' && collision.x - current.w >= 0) {
+        current = { ...current, x: collision.x - current.w };
+      } else if (direction === 'up' && collision.y - current.h >= 0) {
+        current = { ...current, y: collision.y - current.h };
       } else {
-        // Down push, or right push that would overflow the columns → fall back to down.
+        // Down push, or a horizontal/upward push that would cross a bound → fall back to down.
         current = { ...current, y: collision.y + collision.h };
       }
       collision = settled.find((other) => overlaps(current, other));

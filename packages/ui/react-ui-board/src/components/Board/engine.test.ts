@@ -163,6 +163,34 @@ describe('pushToFit (directional push)', () => {
     const after = pushToFit(before, 'a', pos(2, 0, 2, 2), opts(4))!;
     expect(after.items.b).toEqual(pos(2, 2, 2, 2));
   });
+
+  test('moving a tile leftward onto its neighbour pushes the neighbour left', ({ expect }) => {
+    const before = layout({ a: pos(4, 0, 2, 2), b: pos(2, 0, 2, 2) });
+    const after = pushToFit(before, 'a', pos(2, 0, 2, 2), opts(8))!;
+    expect(after.items.a).toEqual(pos(2, 0, 2, 2));
+    expect(after.items.b).toEqual(pos(0, 0, 2, 2));
+  });
+
+  test('leftward push cascades: A onto B pushes B onto C, both leftward', ({ expect }) => {
+    const before = layout({ a: pos(6, 0, 2, 1), b: pos(4, 0, 2, 1), c: pos(2, 0, 2, 1) });
+    const after = pushToFit(before, 'a', pos(4, 0, 2, 1), opts(8))!;
+    expect(after.items.a).toEqual(pos(4, 0, 2, 1));
+    expect(after.items.b).toEqual(pos(2, 0, 2, 1));
+    expect(after.items.c).toEqual(pos(0, 0, 2, 1));
+  });
+
+  test('leftward push falls back to down at the left edge', ({ expect }) => {
+    const before = layout({ a: pos(2, 0, 2, 2), b: pos(0, 0, 2, 2) });
+    const after = pushToFit(before, 'a', pos(0, 0, 2, 2), opts(8))!;
+    expect(after.items.b).toEqual(pos(0, 2, 2, 2));
+  });
+
+  test('moving a tile upward onto its neighbour pushes the neighbour up', ({ expect }) => {
+    const before = layout({ a: pos(0, 2, 2, 1), b: pos(0, 1, 2, 1) });
+    const after = pushToFit(before, 'a', pos(0, 1, 2, 1), opts(8))!;
+    expect(after.items.a).toEqual(pos(0, 1, 2, 1));
+    expect(after.items.b).toEqual(pos(0, 0, 2, 1));
+  });
 });
 
 describe('resizeToFit', () => {
