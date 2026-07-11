@@ -271,7 +271,7 @@ const GridContainer = ({ classNames, children }: GridContainerProps) => {
     const element = localRef.current;
     invariant(element);
 
-    const edge = 56;
+    const edge = 88;
     const maxSpeed = 8;
     let velocityX = 0;
     let velocityY = 0;
