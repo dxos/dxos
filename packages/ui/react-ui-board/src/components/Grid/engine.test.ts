@@ -228,3 +228,26 @@ describe('purity and determinism', () => {
     expect(first).toEqual(second);
   });
 });
+
+describe('directional push', () => {
+  test('moving a tile rightward onto its neighbour pushes the neighbour right', ({ expect }) => {
+    const before = layout(8, [item('a', 0, 0, 2, 2), item('b', 2, 0, 2, 2)]);
+    const after = moveItem(before, 'a', { x: 2, y: 0 }, 'float');
+    expect(after.items.find((entry) => entry.id === 'a')).toEqual(item('a', 2, 0, 2, 2));
+    expect(after.items.find((entry) => entry.id === 'b')).toEqual(item('b', 4, 0, 2, 2));
+  });
+
+  test('rightward push falls back to down when it would overflow the columns', ({ expect }) => {
+    const before = layout(4, [item('a', 0, 0, 2, 2), item('b', 2, 0, 2, 2)]);
+    const after = moveItem(before, 'a', { x: 2, y: 0 }, 'float');
+    // b cannot go right (would exceed 4 columns) so it is pushed down instead.
+    expect(after.items.find((entry) => entry.id === 'b')).toEqual(item('b', 2, 2, 2, 2));
+  });
+
+  test('resizing wider pushes the neighbour right', ({ expect }) => {
+    const before = layout(8, [item('a', 0, 0, 1, 1), item('b', 1, 0, 2, 1)]);
+    const after = resizeItem(before, 'a', { w: 2, h: 1 }, undefined, 'float');
+    expect(after.items.find((entry) => entry.id === 'a')).toEqual(item('a', 0, 0, 2, 1));
+    expect(after.items.find((entry) => entry.id === 'b')).toEqual(item('b', 2, 0, 2, 1));
+  });
+});

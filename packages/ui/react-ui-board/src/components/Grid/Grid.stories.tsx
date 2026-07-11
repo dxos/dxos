@@ -114,13 +114,13 @@ export const Pack: Story = {
   },
 };
 
-/** Approximately half-size cells to check the layout at a denser grid scale. */
-export const Compact: Story = {
+/** Card-sized cells (the default is compact/half-size). */
+export const Large: Story = {
   args: {
     items: testItems,
     layout: defaultLayout,
     mode: 'float' satisfies GridMode,
-    cellSize: { width: cardDefaultInlineSize / 2, height: cardDefaultInlineSize / 2 },
+    cellSize: { width: cardDefaultInlineSize, height: cardDefaultInlineSize },
   },
 };
 

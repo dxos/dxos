@@ -31,6 +31,9 @@ export type GridConstraints = { minW?: number; minH?: number; maxW?: number; max
  */
 export type GridMode = 'pack' | 'float';
 
+/** Axis along which displaced items are pushed to clear a collision. */
+export type PushDirection = 'down' | 'right';
+
 const clamp = (value: number, min: number, max: number): number => Math.min(Math.max(value, min), max);
 
 /**
@@ -67,28 +70,39 @@ export const applyConstraints = (
 };
 
 /**
- * Fixes the `movedId` item in place and pushes every other item that overlaps it (directly or by cascade)
- * downward by the minimal amount needed to clear the overlap. Candidates are processed in a deterministic
- * (y, x) sweep so the same input always yields the same output.
+ * Fixes the `movedId` item in place and pushes every other item that overlaps it (directly or by
+ * cascade) to clear the overlap, along `direction`. `down` increases y; `right` increases x but
+ * falls back to pushing down when the item would spill past the right edge (columns are bounded,
+ * rows are not). Candidates are processed in a deterministic sweep ordered along the push axis.
  */
-export const resolveCollisions = (layout: GridLayout, movedId: string): GridLayout => {
+export const resolveCollisions = (
+  layout: GridLayout,
+  movedId: string,
+  direction: PushDirection = 'down',
+): GridLayout => {
   const moved = layout.items.find((entry) => entry.id === movedId);
   if (!moved) {
     return layout;
   }
 
-  // Settled items are fixed for the rest of the sweep; the moved item anchors the sweep.
+  // Settled items are fixed for the rest of the sweep; the moved item anchors the sweep. Sort along
+  // the push axis so a pushed item only ever collides with items later in the sweep.
   const settled: GridItem[] = [moved];
   const remaining = layout.items.filter((entry) => entry.id !== movedId);
-  const sorted = [...remaining].sort((a, b) => a.y - b.y || a.x - b.x);
+  const sorted = [...remaining].sort((a, b) =>
+    direction === 'right' ? a.x - b.x || a.y - b.y : a.y - b.y || a.x - b.x,
+  );
 
   for (const entry of sorted) {
     let current = entry;
     let collision = settled.find((other) => overlaps(current, other));
-    // Push down until clear; each push targets the exact bottom edge of the item it collided with,
-    // which is always the minimal shift that clears that overlap.
     while (collision) {
-      current = { ...current, y: collision.y + collision.h };
+      if (direction === 'right' && collision.x + collision.w + current.w <= layout.columns) {
+        current = { ...current, x: collision.x + collision.w };
+      } else {
+        // Down push, or right push that would overflow the columns → fall back to down.
+        current = { ...current, y: collision.y + collision.h };
+      }
       collision = settled.find((other) => overlaps(current, other));
     }
     settled.push(current);
@@ -134,7 +148,10 @@ export const moveItem = (layout: GridLayout, id: string, to: { x: number; y: num
 
   const moved = clampToColumns({ ...item, x: to.x, y: to.y }, layout.columns);
   const updated: GridLayout = { ...layout, items: layout.items.map((entry) => (entry.id === id ? moved : entry)) };
-  const resolved = resolveCollisions(updated, id);
+  // Push right when the item moved primarily rightward, else down.
+  const direction: PushDirection =
+    moved.x > item.x && moved.x - item.x >= Math.abs(moved.y - item.y) ? 'right' : 'down';
+  const resolved = resolveCollisions(updated, id, direction);
   return mode === 'pack' ? compact(resolved) : resolved;
 };
 
@@ -160,6 +177,8 @@ export const resizeItem = (
   const maxWidth = Math.max(1, layout.columns - item.x);
   const resized = { ...item, w: Math.min(constrained.w, maxWidth), h: constrained.h };
   const updated: GridLayout = { ...layout, items: layout.items.map((entry) => (entry.id === id ? resized : entry)) };
-  const resolved = resolveCollisions(updated, id);
+  // Push right when the tile grew primarily in width, else down.
+  const direction: PushDirection = resized.w - item.w > resized.h - item.h ? 'right' : 'down';
+  const resolved = resolveCollisions(updated, id, direction);
   return mode === 'pack' ? compact(resolved) : resolved;
 };

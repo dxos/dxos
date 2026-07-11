@@ -240,14 +240,14 @@ const sizeOverride: CSSProperties = {
 GridCell.displayName = GRID_CELL_NAME;
 
 /**
- * Pull a raw px extent to the nearest whole-cell extent when it comes within a snap zone of it,
- * otherwise leave it free — "magnetic to the grid". The snap zone is a fraction of the cell pitch.
+ * Pull a raw px extent to the nearest whole-cell extent only when it comes within `snapPx` of it,
+ * otherwise leave it free — a light "magnetic to the grid" pull near cell boundaries.
  */
-const magnetize = (raw: number, cell: number, gap: number, snapFraction = 0.25): number => {
+const magnetize = (raw: number, cell: number, gap: number, snapPx = 16): number => {
   const pitch = cell + gap;
   const cells = Math.max(1, Math.round((raw + gap) / pitch));
   const snapped = cells * cell + (cells - 1) * gap;
-  return Math.abs(raw - snapped) <= pitch * snapFraction ? snapped : raw;
+  return Math.abs(raw - snapped) <= snapPx ? snapped : raw;
 };
 
 /** Pointer delta (px) since drag start, converted to a whole-cell size delta and clamped to constraints. */

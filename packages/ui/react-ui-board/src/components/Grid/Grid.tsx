@@ -88,7 +88,9 @@ type GridRootProps = PropsWithChildren<{
   onAdd?: (position: GridItem) => void;
 }>;
 
-const defaultCellSize: GridCellSize = { width: cardDefaultInlineSize, height: cardDefaultInlineSize };
+// Default to a compact cell (~half a default card) so a grid fits more tiles on screen; consumers
+// can pass a larger `cellSize` for a card-sized grid.
+const defaultCellSize: GridCellSize = { width: cardDefaultInlineSize / 2, height: cardDefaultInlineSize / 2 };
 const defaultGap = 1;
 
 const GridRoot = forwardRef<GridController, GridRootProps>(
