@@ -29,7 +29,7 @@ export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
   const icon = Obj.getIcon(post)?.icon ?? 'ph--article--regular';
 
   return (
-    <Card.Root fullWidth classNames={onClick && 'dx-hover'} onClick={onClick}>
+    <Card.Root fullWidth classNames={onClick && 'dx-hover'} onClick={onClick} role={onClick ? 'button' : undefined}>
       <Card.Header>
         <Card.Block>
           <Icon icon={icon} />
