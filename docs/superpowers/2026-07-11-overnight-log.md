@@ -67,10 +67,20 @@ in tools/storybook-react). Grid story id: `ui-react-ui-board-grid--default` (onc
   for a working Grid; ergonomics refinement for a later drag-testable phase.
 
 ### Local commits to integrate (all NEW files, cherry-pick cleanly onto post-merge main)
+
 `b2afc8e382` engine · `570c6f1133` Grid component+story · (+ docs `f8a82343ac`, `10a4f3c2bb`, this log).
 None pushed (branch locked by merge queue). See the MERGE QUEUE recovery note at top.
 
+### CodeRabbit review on #12165 (addressed locally, commit `0286fc821d`)
+Branch is merge-queue-locked so I could NOT push to #12165 or reply on its threads. Fixed locally
+(rides along with the Phase 2/3 integration): plan `Root.test.tsx`→`.ts`; spec Phase-1 scope drops the
+deferred hooks; Thread.tsx "Mosaic registry"→"DnD registry" comment; types.test.ts `as any`→typed
+`ElementDragPayload` helper. Skipped (nitpick): `ObjectCardStack` → `useContainerId` adoption (low value,
+kept diff focused). **Morning: reply/resolve the 4 threads once these land, or note them as follow-ups.**
+The nits are all Minor/Trivial and do NOT block the queue — Phase 1 can merge without them.
+
 ### Suggested next (morning, after #12165 merges)
+
 1. Integrate the local Grid commits (recovery note) → Phase 2/3 PR.
 2. Drag-test the Grid (checklist above); fix any gesture wiring (resize delta→cells is the least-certain bit).
 3. Then Phase 2 proper (migrate Mosaic/List onto the hooks + one DropIndicator) and Phase 4/5 — all
