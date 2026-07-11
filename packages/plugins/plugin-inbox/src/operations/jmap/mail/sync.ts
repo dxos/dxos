@@ -88,6 +88,9 @@ export const runJmapSync = ({
     const { db } = yield* Database.Service;
     const feed = yield* Database.load(mailbox.feed);
     const tagIndex = yield* Database.load(mailbox.tags);
+    // Pool already-sent drafts once for this run; `EmailStage.reconcileDrafts` matches each incoming
+    // message against it so the canonical copy's arrival removes its now-redundant draft in the commit.
+    const draftPool = yield* EmailStage.queryDraftPool(mailbox);
 
     // TODO(wittjosiah): Migrate this folder→Tag sync onto a pipeline too (source: folders; sink:
     //   find-or-create Tag), rather than the imperative loop below.
@@ -155,6 +158,7 @@ export const runJmapSync = ({
       EmailStage.processAttachments(),
       EmailStage.onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
+      EmailStage.reconcileDrafts(draftPool),
       EmailStage.toCommitUnit(),
       Stream.grouped(COMMIT_PAGE_SIZE),
       Pipeline.run({ sink: SyncBinding.commit }),
