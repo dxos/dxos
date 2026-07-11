@@ -46,7 +46,7 @@ describe.skipIf(!fixtureExists())('benchmark text/html vs text/plain email input
         { mode: 'text/plain', messages: pairs.map(([, plain]) => plain) },
       ];
 
-      const rows: Record<string, unknown>[] = [];
+      const rows: BenchRow[] = [];
       for (const { mode, messages } of inputs) {
         const progress = trackProgress(`html-vs-text:${mode}`, messages.length);
         const start = performance.now();
@@ -69,11 +69,14 @@ describe.skipIf(!fixtureExists())('benchmark text/html vs text/plain email input
       }
 
       // Head-to-head ratio (plain as the baseline).
-      const html = rows.find((row) => row.mode === 'text/html')!;
-      const plain = rows.find((row) => row.mode === 'text/plain')!;
+      const html = rows.find((row) => row.mode === 'text/html');
+      const plain = rows.find((row) => row.mode === 'text/plain');
+      if (!html || !plain) {
+        throw new Error('Expected both text/html and text/plain rows.');
+      }
       const ratio = {
-        inputCharsHtmlOverPlain: round((html.inputChars as number) / Math.max(1, plain.inputChars as number)),
-        durationHtmlOverPlain: round((html.durationMs as number) / Math.max(1, plain.durationMs as number)),
+        inputCharsHtmlOverPlain: round(html.inputChars / Math.max(1, plain.inputChars)),
+        durationHtmlOverPlain: round(html.durationMs / Math.max(1, plain.durationMs)),
       };
 
       writeResults('html-vs-text', {
@@ -90,3 +93,16 @@ describe.skipIf(!fixtureExists())('benchmark text/html vs text/plain email input
     30 * 60_000,
   );
 });
+
+/** One benchmarked input mode (native `text/html` vs `text/plain`) for a model. */
+type BenchRow = {
+  mode: string;
+  model: string;
+  messages: number;
+  inputChars: number;
+  avgInputChars: number;
+  facts: number;
+  factsPerMessage: number;
+  durationMs: number;
+  msPerMessage: number;
+};

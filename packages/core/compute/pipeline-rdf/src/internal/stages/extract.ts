@@ -30,7 +30,8 @@ const softEnum = <const A extends string>(...values: readonly A[]) =>
   Schema.optional(
     Schema.transform(Schema.Unknown, Schema.UndefinedOr(Schema.Literal(...values)), {
       strict: false,
-      decode: (value) => (values.includes(value as A) ? (value as A) : undefined),
+      decode: (value) =>
+        typeof value === 'string' && (values as readonly string[]).includes(value) ? (value as A) : undefined,
       encode: (value) => value,
     }),
   );

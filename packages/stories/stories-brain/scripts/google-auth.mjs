@@ -96,7 +96,7 @@ const openBrowser = (url) => {
 
 const saveToken = (data) => {
   mkdirSync(dirname(TOKEN_PATH), { recursive: true });
-  writeFileSync(TOKEN_PATH, JSON.stringify(data, null, 2));
+  writeFileSync(TOKEN_PATH, JSON.stringify(data, null, 2), { mode: 0o600 });
 };
 
 const loadToken = () => (existsSync(TOKEN_PATH) ? JSON.parse(readFileSync(TOKEN_PATH, 'utf8')) : undefined);

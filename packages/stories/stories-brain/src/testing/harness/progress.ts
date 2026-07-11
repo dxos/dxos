@@ -18,7 +18,13 @@ import { PROGRESS_PATH } from './config';
  */
 const writeProgressFile = (snapshot: Progress.ProgressSnapshot, path: string): void => {
   mkdirSync(dirname(path), { recursive: true });
-  const existing: { tasks?: { name: string }[] } = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : {};
+  // A partial write from a crashed process can leave malformed JSON; a bad file just starts fresh.
+  let existing: { tasks?: { name: string }[] } = {};
+  if (existsSync(path)) {
+    try {
+      existing = JSON.parse(readFileSync(path, 'utf8'));
+    } catch {}
+  }
   const byName = new Map<string, unknown>((existing.tasks ?? []).map((task) => [task.name, task]));
   for (const task of snapshot.tasks) {
     byName.set(task.name, task);

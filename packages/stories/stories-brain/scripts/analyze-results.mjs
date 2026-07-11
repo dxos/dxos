@@ -117,11 +117,15 @@ for (const file of files) {
 // Cross-check the live progress snapshot.
 const progressPath = join(resultsDir, 'progress.json');
 if (existsSync(progressPath)) {
-  const tasks = (JSON.parse(readFileSync(progressPath, 'utf8')).tasks ?? []).filter(
-    (t) => t.status === 'error' || (t.status === 'running' && t.current < (t.total ?? Infinity)),
-  );
-  for (const task of tasks) {
-    console.log(`progress: ${task.name} ${task.status} ${task.current}/${task.total ?? '?'}`);
+  try {
+    const tasks = (JSON.parse(readFileSync(progressPath, 'utf8')).tasks ?? []).filter(
+      (t) => t.status === 'error' || (t.status === 'running' && t.current < (t.total ?? Infinity)),
+    );
+    for (const task of tasks) {
+      console.log(`progress: ${task.name} ${task.status} ${task.current}/${task.total ?? '?'}`);
+    }
+  } catch {
+    console.error(`malformed progress file: ${progressPath}`);
   }
 }
 
