@@ -4,9 +4,12 @@
 
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
+import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
+import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unhandled';
 import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
-import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
+import React, { type CSSProperties, type PropsWithChildren, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -57,6 +60,8 @@ export const GridCell = ({
   const resizeHandleRef = useRef<HTMLButtonElement | null>(null);
   const [dragState, setDragState] = useState<DragState>('idle');
   const [previewSize, setPreviewSize] = useState<{ w: number; h: number } | null>(null);
+  // The native drag preview follows the cursor; captured at the source's px size so it can't rescale.
+  const [preview, setPreview] = useState<{ container: HTMLElement; width: number; height: number } | null>(null);
 
   // Move: originate a Dnd tile drag; the actual move is applied by Grid.Root's container handler.
   useEffect(() => {
@@ -74,6 +79,21 @@ export const GridCell = ({
           data: item,
           location: { x: layout.x, y: layout.y },
         }) satisfies DndTileData,
+      // Render a custom preview sized to the source tile so the dragged image keeps the tile's exact
+      // dimensions (the native preview rescales on high-DPI displays, making the tile appear larger).
+      onGenerateDragPreview: ({ location, nativeSetDragImage }) => {
+        const element = rootRef.current;
+        invariant(element);
+        const bounds = element.getBoundingClientRect();
+        setCustomNativeDragPreview({
+          nativeSetDragImage,
+          getOffset: preserveOffsetOnSource({ element, input: location.current.input }),
+          render: ({ container }) => {
+            setPreview({ container, width: bounds.width, height: bounds.height });
+            return () => setPreview(null);
+          },
+        });
+      },
       onDragStart: () => {
         setDragState('dragging');
       },
@@ -113,25 +133,51 @@ export const GridCell = ({
   const rect = cellRect({ ...layout, ...previewSize }, cellSize, gap);
 
   return (
-    <Card.Root
-      classNames={mx('absolute grid-rows-[auto_1fr]', dragState === 'dragging' && 'opacity-50', classNames)}
-      style={rect}
-      ref={rootRef}
-    >
-      <Card.Header>
-        <Card.DragHandle ref={dragHandleRef} />
-      </Card.Header>
-      {children}
-      {!readonly && (
-        <button
-          ref={resizeHandleRef}
-          type='button'
-          aria-label={t('resize-object.button')}
-          className='absolute bottom-0 right-0 size-4 cursor-nwse-resize touch-none opacity-0 transition-opacity duration-300 hover:opacity-100'
-        />
-      )}
-    </Card.Root>
+    <>
+      <Card.Root
+        classNames={mx('absolute grid-rows-[auto_1fr]', dragState === 'dragging' && 'opacity-50', classNames)}
+        style={{ ...rect, ...sizeOverride }}
+        ref={rootRef}
+      >
+        <Card.Header>
+          <Card.DragHandle ref={dragHandleRef} />
+        </Card.Header>
+        {children}
+        {!readonly && (
+          <button
+            ref={resizeHandleRef}
+            type='button'
+            aria-label={t('resize-object.button')}
+            className='absolute bottom-0 right-0 size-4 cursor-nwse-resize touch-none opacity-0 transition-opacity duration-300 hover:opacity-100'
+          />
+        )}
+      </Card.Root>
+
+      {/* Drag preview: a same-sized clone following the cursor (see onGenerateDragPreview). */}
+      {preview &&
+        createPortal(
+          <Card.Root
+            classNames={mx('grid-rows-[auto_1fr]', classNames)}
+            style={{ width: preview.width, height: preview.height, ...sizeOverride }}
+          >
+            <Card.Header>
+              <Card.DragHandle />
+            </Card.Header>
+            {children}
+          </Card.Root>,
+          preview.container,
+        )}
+    </>
   );
+};
+
+// The grid controls tile size via an explicit px rect; neutralize `Card.Root`'s readable-width
+// (min/max inline-size) and min-height defaults so a multi-cell tile isn't clamped to a single card.
+const sizeOverride: CSSProperties = {
+  minInlineSize: 0,
+  maxInlineSize: 'none',
+  minBlockSize: 0,
+  maxBlockSize: 'none',
 };
 
 GridCell.displayName = GRID_CELL_NAME;
