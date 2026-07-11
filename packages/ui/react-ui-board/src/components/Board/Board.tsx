@@ -274,6 +274,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
         el.scrollTo({
           left: padX + anchorX * zoom - el.clientWidth / 2,
           top: padY + anchorY * zoom - el.clientHeight / 2,
+          behavior: 'smooth',
         });
       },
       [layout, cellSizePx, gapPx, columns, rows, zoom, overscroll],
@@ -780,26 +781,32 @@ const BOARD_MAP_NAME = 'Board.Map';
 type BoardMapProps = ThemedClassName<{}>;
 
 const BoardMap = ({ classNames }: BoardMapProps) => {
-  const { layout, columns, rows } = useBoardContext(BOARD_MAP_NAME);
+  const { layout, columns, rows, cellSize, gap } = useBoardContext(BOARD_MAP_NAME);
+  // Match the grid's pixel aspect (not the viewport's), and place tiles by their exact rects so the
+  // map is a faithful scale model of the board.
+  const bounds = useMemo(() => gridBounds(columns, rows, cellSize, gap), [columns, rows, cellSize, gap]);
   const tiles = useMemo(() => Object.entries(layout.items), [layout.items]);
 
   return (
     <div
       className={mx('relative overflow-hidden rounded-sm border border-separator bg-modalSurface', classNames)}
-      style={{ aspectRatio: `${columns} / ${rows}` }}
+      style={{ aspectRatio: `${bounds.width} / ${bounds.height}` }}
     >
-      {tiles.map(([id, position]) => (
-        <div
-          key={id}
-          className='absolute rounded-[1px] bg-accentSurface'
-          style={{
-            left: `${(position.x / columns) * 100}%`,
-            top: `${(position.y / rows) * 100}%`,
-            width: `${((position.w ?? 1) / columns) * 100}%`,
-            height: `${((position.h ?? 1) / rows) * 100}%`,
-          }}
-        />
-      ))}
+      {tiles.map(([id, position]) => {
+        const rect = cellRect({ x: position.x, y: position.y, w: position.w ?? 1, h: position.h ?? 1 }, cellSize, gap);
+        return (
+          <div
+            key={id}
+            className='absolute rounded-[1px] bg-accentSurface'
+            style={{
+              left: `${(rect.left / bounds.width) * 100}%`,
+              top: `${(rect.top / bounds.height) * 100}%`,
+              width: `${(rect.width / bounds.width) * 100}%`,
+              height: `${(rect.height / bounds.height) * 100}%`,
+            }}
+          />
+        );
+      })}
     </div>
   );
 };
