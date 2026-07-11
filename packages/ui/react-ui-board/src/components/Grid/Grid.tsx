@@ -221,7 +221,7 @@ const GRID_CONTAINER_NAME = 'Grid.Container';
 type GridContainerProps = ThemedClassName<PropsWithChildren>;
 
 const GridContainer = ({ classNames, children }: GridContainerProps) => {
-  const { viewportRef, center, layout, rows } = useGridContext(GRID_CONTAINER_NAME);
+  const { viewportRef, center } = useGridContext(GRID_CONTAINER_NAME);
   const localRef = useRef<HTMLDivElement>(null);
   const ref = composeRefs(localRef, viewportRef);
 
@@ -232,10 +232,11 @@ const GridContainer = ({ classNames, children }: GridContainerProps) => {
     return autoScrollForElements({ element: localRef.current });
   }, []);
 
-  // Center the grid by default (and whenever its overall size changes).
+  // Center the grid once on mount only. Deliberately NOT re-centering when the layout/size changes,
+  // so the viewport doesn't jump after a drag or resize (`center` is stable; runs a single time).
   useEffect(() => {
     center();
-  }, [center, layout.columns, rows]);
+  }, [center]);
 
   return (
     <ScrollArea.Root orientation='all' classNames={classNames}>
