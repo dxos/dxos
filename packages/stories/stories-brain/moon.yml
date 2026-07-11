@@ -37,6 +37,14 @@ tasks:
       cache: false
       runInCI: false
       interactive: true
+  # Ingest only: auth → sync → extract facts/questions (no benches). Narrow the extractor with MODELS=;
+  # SKIP_FETCH=1 reuses the existing fixture.
+  ingest:
+    command: 'node scripts/ingest.mjs'
+    options:
+      cache: false
+      runInCI: false
+      interactive: true
   # The trivial, LLM-free feed-stats pipeline over the fixture (skips if the fixture is absent). A
   # single-file run, since the shared `test` task's bash wrapper ignores a `-- <file>` filter.
   stats:
