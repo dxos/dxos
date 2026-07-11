@@ -9,8 +9,9 @@ import { useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
-import { Dnd } from '@dxos/react-ui-dnd';
+import { Dnd, type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { arrayMove } from '@dxos/util';
 
 import { useContainerDebug } from '../../hooks';
 import { DefaultStackTile, TestItem } from '../../testing';
@@ -31,9 +32,42 @@ const createTestItems = (n: number) =>
     }),
   );
 
-const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
+// Stateful items plus a same-container reorder handler so the stories actually apply drops
+// (the container is headless — reordering is the consumer's responsibility).
+const useReorderableStack = () => {
   // Create items at render time to avoid Storybook serialization issues with ECHO objects.
-  const items = useMemo(() => createTestItems(NUM_ITEMS), []);
+  const [items, setItems] = useState(() => createTestItems(NUM_ITEMS));
+  const eventHandler = useMemo<DndContainerHandler<Obj.Any>>(
+    () => ({
+      id: 'test',
+      canDrop: () => true,
+      onDrop: ({ source, target }) => {
+        const to =
+          (target?.type === 'tile' || target?.type === 'placeholder') && typeof target.location === 'number'
+            ? Math.floor(target.location)
+            : undefined;
+        if (to === undefined || to < 0) {
+          return;
+        }
+        setItems((prev) => {
+          const from = prev.findIndex((item) => item.id === source.id);
+          if (from === -1) {
+            return prev;
+          }
+          const next = prev.slice();
+          arrayMove(next, from, to);
+          return next;
+        });
+      },
+    }),
+    [],
+  );
+
+  return { items, eventHandler };
+};
+
+const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
+  const { items, eventHandler } = useReorderableStack();
   const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   return (
@@ -50,7 +84,7 @@ const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
               asChild
               orientation='vertical'
               autoScroll={viewport}
-              eventHandler={{ id: 'test', canDrop: () => true }}
+              eventHandler={eventHandler}
               debug={debugHandler}
               placeholderDebug={props.debug}
             >
@@ -73,8 +107,7 @@ const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
 };
 
 const VirtualStackStory = (props: MosaicStackProps<Obj.Any>) => {
-  // Create items at render time to avoid Storybook serialization issues with ECHO objects.
-  const items = useMemo(() => createTestItems(NUM_ITEMS), []);
+  const { items, eventHandler } = useReorderableStack();
   const [info, setInfo] = useState<any>(null);
   const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
@@ -91,7 +124,7 @@ const VirtualStackStory = (props: MosaicStackProps<Obj.Any>) => {
             asChild
             orientation='vertical'
             autoScroll={viewport}
-            eventHandler={{ id: 'test', canDrop: () => true }}
+            eventHandler={eventHandler}
             debug={debugHandler}
             placeholderDebug={props.debug}
           >
