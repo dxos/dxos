@@ -6,9 +6,17 @@
 // the refresh token to fixtures/local/.google-token.json (git-ignored) and mints access tokens from
 // it on every subsequent run — no further browser interaction.
 //
-// Prerequisites (one-time, in Google Cloud Console): an OAuth 2.0 "Desktop app" client with the
-// Gmail API enabled and the https://www.googleapis.com/auth/gmail.readonly scope. Export its id/secret:
-//   export GOOGLE_CLIENT_ID=...  GOOGLE_CLIENT_SECRET=...
+// One-time setup — create a Desktop-app OAuth client (Google Cloud Console, https://console.cloud.google.com):
+//   1. Create or select a project (top-left project picker).
+//   2. Enable the Gmail API: APIs & Services → Library → search "Gmail API" → Enable.
+//   3. Configure the consent screen: APIs & Services → OAuth consent screen → User type "External" →
+//      fill app name + your email. Add the scope ".../auth/gmail.readonly". Under "Test users", add
+//      your own Google account (while the app stays in "Testing", only test users may consent).
+//   4. Create the client: APIs & Services → Credentials → Create credentials → OAuth client ID →
+//      Application type "Desktop app". (A Desktop client trusts the http://localhost loopback
+//      redirect automatically — no redirect URI to register.) Copy the Client ID + Client secret.
+//   5. Export them before running this tool:
+//        export GOOGLE_CLIENT_ID=...  GOOGLE_CLIENT_SECRET=...
 //
 // Usage:
 //   node scripts/google-auth.mjs            # ensure a refresh token (consent if needed), print status
