@@ -207,8 +207,17 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
       [remInPx, cellSize.width, cellSize.height],
     );
     const gapPx = gap * remInPx;
-    const columns = useMemo(() => bounds?.columns ?? getColumnCount(layout), [bounds?.columns, layout]);
-    const rows = useMemo(() => Math.max(getRowCount(layout), bounds?.rows ?? 0), [layout, bounds?.rows]);
+    // Rendered extent = at least the bounds, growing to fit content. A BOUNDED axis gets no growth
+    // spare (so a tile at the last row/column sits flush in the corner); an UNBOUNDED axis adds a few
+    // spare cells past the content for room to drag/add beyond it.
+    const columns = useMemo(
+      () => Math.max(getColumnCount(layout, bounds?.columns != null ? 0 : 2), bounds?.columns ?? 0),
+      [layout, bounds?.columns],
+    );
+    const rows = useMemo(
+      () => Math.max(getRowCount(layout, bounds?.rows != null ? 0 : 3), bounds?.rows ?? 0),
+      [layout, bounds?.rows],
+    );
 
     // Apply the resolver with the board's bounds/mode; returns the next layout or null (reject).
     const resolve = useCallback(
