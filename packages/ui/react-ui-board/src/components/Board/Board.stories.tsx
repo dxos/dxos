@@ -37,24 +37,9 @@ const posterItems: TestItem[] = ((seed = 42) =>
     };
   }))();
 
-// 12-column board; tile sizes capped at 2x2, clustered around the board centre (6,6) rather than the
-// top-left, so the initial view (centred on mount) shows the tiles.
+// 12x12 board with a tile in each corner and one in the centre — exercises the edges (auto-scroll,
+// overscroll, centering a far cell) rather than a central cluster.
 const defaultLayout: Layout = {
-  items: {
-    '0': { x: 4, y: 4, w: 2, h: 2 },
-    '1': { x: 6, y: 4, w: 2, h: 1 },
-    '2': { x: 4, y: 6, w: 2, h: 2 },
-    '3': { x: 6, y: 6, w: 2, h: 2 },
-    '4': { x: 6, y: 5, w: 2, h: 1 },
-  },
-};
-
-// A 12x12 initial board.
-const defaultBounds = { columns: 12, rows: 12 };
-
-// Tiles pushed to the four corners (and centre) of the 12x12 board — with overscroll on, selecting a
-// corner tile and zooming brings it to the centre, which the padding makes reachable.
-const cornerLayout: Layout = {
   items: {
     '0': { x: 0, y: 0, w: 2, h: 2 },
     '1': { x: 10, y: 0, w: 2, h: 2 },
@@ -63,6 +48,9 @@ const cornerLayout: Layout = {
     '4': { x: 5, y: 5, w: 2, h: 2 },
   },
 };
+
+// A 12x12 initial board.
+const defaultBounds = { columns: 12, rows: 12 };
 
 type StoryArgs = BoardRootProps & { items: TestItem[] };
 
@@ -233,7 +221,7 @@ export const RejectIfNoFit: Story = {
 export const Overscroll: Story = {
   args: {
     items: testItems,
-    layout: cornerLayout,
+    layout: defaultLayout,
     mode: 'float' satisfies GridMode,
     selectionMode: 'single',
     overscroll: true,
