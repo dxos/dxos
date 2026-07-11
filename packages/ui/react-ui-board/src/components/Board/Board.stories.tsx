@@ -58,6 +58,7 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
   const [items, setItems] = useState(itemsProp ?? testItems);
   const [layout, setLayout] = useState<Layout>(layoutProp ?? defaultLayout);
   const [zoom, setZoom] = useState(zoomProp ?? 1);
+  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
     (position) => {
@@ -90,6 +91,8 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
         bounds={defaultBounds}
         zoom={zoom}
         onZoomChange={setZoom}
+        selected={selected}
+        onSelectedChange={setSelected}
         onChange={setLayout}
         onAdd={handleAdd}
         onDelete={handleDelete}
@@ -197,6 +200,26 @@ export const RejectIfNoFit: Story = {
     layout: defaultLayout,
     mode: 'float' satisfies GridMode,
     resolver: rejectIfNoFit,
+  },
+};
+
+/** Single-select: clicking a card selects it (clicking it again clears); at most one is selected. */
+export const SingleSelect: Story = {
+  args: {
+    items: testItems,
+    layout: defaultLayout,
+    mode: 'float' satisfies GridMode,
+    selectionMode: 'single',
+  },
+};
+
+/** Multi-select: click selects only that card; shift-click adds/removes cards from the selection. */
+export const MultiSelect: Story = {
+  args: {
+    items: testItems,
+    layout: defaultLayout,
+    mode: 'float' satisfies GridMode,
+    selectionMode: 'multi',
   },
 };
 

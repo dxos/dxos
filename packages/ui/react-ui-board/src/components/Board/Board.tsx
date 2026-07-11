@@ -55,6 +55,12 @@ type BoardContextValue = {
   readonly: boolean;
   layout: Layout;
   mode: GridMode;
+  /** Selection mode, or undefined when selection is disabled. */
+  selectionMode?: SelectionMode;
+  /** Currently selected tile ids (empty when nothing is selected / selection disabled). */
+  selected: ReadonlySet<string>;
+  /** Toggle a tile's selection on click; `additive` (shift-click, multi only) preserves the rest. */
+  toggleSelection: (id: string, additive: boolean) => void;
   /** Scale factor in (0, 1]: 1 is actual size (draggable); below 1 is an overview (drag/resize off). */
   zoom: number;
   /** Smallest zoom the controls will step down to. */
@@ -87,6 +93,9 @@ type BoardContextValue = {
 };
 
 const [BoardContextProvider, useBoardContext] = createContext<BoardContextValue>('BoardContext');
+
+/** Selection behaviour (mirrors `react-ui-list`'s `ListSelectionMode`). */
+export type SelectionMode = 'single' | 'multi';
 
 /**
  * Imperative handle exposed by `Board.Root` via ref.
@@ -125,6 +134,16 @@ type BoardRootProps = PropsWithChildren<{
   minZoom?: number;
   /** Zoom in/out step (default 0.25). */
   zoomStep?: number;
+  /**
+   * Enables tile selection: `single` keeps at most one selected; `multi` allows a set and enables
+   * shift-click to add/remove. Undefined disables selection (clicks do nothing).
+   */
+  selectionMode?: SelectionMode;
+  /** Controlled set of selected tile ids. */
+  selected?: ReadonlySet<string>;
+  /** Uncontrolled initial selection. */
+  defaultSelected?: ReadonlySet<string>;
+  onSelectedChange?: (selected: ReadonlySet<string>) => void;
   /** Cell size in rem. */
   cellSize?: GridCellSize;
   /** Gap between cells in rem. */
@@ -158,6 +177,10 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
       onZoomChange,
       minZoom = 0.25,
       zoomStep = 0.25,
+      selectionMode,
+      selected: selectedProp,
+      defaultSelected,
+      onSelectedChange,
       cellSize = defaultCellSize,
       gap = defaultGap,
       settleDelay = 500,
@@ -223,6 +246,34 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
     const zoomOut = useCallback(
       () => onZoomChange?.(Math.max(minZoom, Math.round((zoom - zoomStep) * 100) / 100)),
       [onZoomChange, zoom, zoomStep, minZoom],
+    );
+
+    // Selection (hand-rolled controlled/uncontrolled; Radix useControllableState mishandles clearing).
+    const emptySelection = useMemo<ReadonlySet<string>>(() => new Set(), []);
+    const [uncontrolledSelected, setUncontrolledSelected] = useState<ReadonlySet<string>>(
+      defaultSelected ?? emptySelection,
+    );
+    const selected = selectionMode ? (selectedProp ?? uncontrolledSelected) : emptySelection;
+    const toggleSelection = useCallback(
+      (id: string, additive: boolean) => {
+        if (!selectionMode) {
+          return;
+        }
+        let next: Set<string>;
+        if (selectionMode === 'multi' && additive) {
+          // Shift-click: add/remove this tile, keeping the rest of the set.
+          next = new Set(selected);
+          next.has(id) ? next.delete(id) : next.add(id);
+        } else {
+          // Plain click: select only this tile, or clear when it is already the sole selection.
+          next = selected.size === 1 && selected.has(id) ? new Set() : new Set([id]);
+        }
+        if (selectedProp === undefined) {
+          setUncontrolledSelected(next);
+        }
+        onSelectedChange?.(next);
+      },
+      [selectionMode, selected, selectedProp, onSelectedChange],
     );
 
     const onResize = useCallback(
@@ -320,6 +371,9 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
         readonly={readonly ?? false}
         layout={layout}
         mode={mode}
+        selectionMode={selectionMode}
+        selected={selected}
+        toggleSelection={toggleSelection}
         zoom={zoom}
         minZoom={minZoom}
         zoomIn={zoomIn}

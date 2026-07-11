@@ -60,6 +60,9 @@ export const BoardCell = ({
     gap,
     columns,
     zoom,
+    selectionMode,
+    selected,
+    toggleSelection,
     containerId,
     readonly,
     onResize,
@@ -68,6 +71,8 @@ export const BoardCell = ({
     previewLayout,
     viewportRef,
   } = useBoardContext(BOARD_CELL_NAME);
+  const selectable = !!selectionMode;
+  const isSelected = selectable && selected.has(item.id);
   // Any active drag makes every tile transparent to pointer events so the backdrop drop-target cells
   // beneath them (incl. cells under an occupied tile) receive the drag — required for push-on-drop.
   const { dragging } = useDndRootContext(BOARD_CELL_NAME);
@@ -258,10 +263,14 @@ export const BoardCell = ({
           // Transparent to pointer events during ANY drag so a tile can be dropped onto an occupied
           // cell (pushing the occupant) or back onto its own footprint.
           !!dragging && 'pointer-events-none',
+          // `dx-selected` styles the tile when `aria-selected` is set (the two must pair — see state.css).
+          selectable && 'dx-selected cursor-pointer',
           classNames,
         )}
         style={{ ...rect, ...sizeOverride }}
         ref={rootRef}
+        aria-selected={selectable ? isSelected : undefined}
+        onClick={selectable ? (event) => toggleSelection(item.id, event.shiftKey) : undefined}
       >
         <Card.Header>
           <Card.DragHandle ref={dragHandleRef} />
@@ -273,7 +282,10 @@ export const BoardCell = ({
                 icon='ph--x--regular'
                 iconOnly
                 label={t('delete-object.button')}
-                onClick={() => onDelete(item.id)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onDelete(item.id);
+                }}
               />
             </Card.Block>
           )}
