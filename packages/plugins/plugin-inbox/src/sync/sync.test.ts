@@ -481,9 +481,7 @@ describe('reconcileDrafts stage', () => {
     );
     await db.flush({ indexes: true });
 
-    const pool = await EffectEx.runPromise(
-      EmailStage.queryDraftPool(mailbox).pipe(Effect.provide(Database.layer(db))),
-    );
+    const pool = await EffectEx.runPromise(EmailStage.queryDraftPool(mailbox).pipe(Effect.provide(Database.layer(db))));
 
     expect([...pool.keys()]).toEqual(['gmail-msg-1']);
     expect(pool.get('gmail-msg-1')).toHaveLength(1);

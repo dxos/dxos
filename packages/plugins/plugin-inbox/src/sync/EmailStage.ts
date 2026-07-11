@@ -167,9 +167,8 @@ export const onArrivalExtractors =
  */
 export const queryDraftPool = Effect.fn('queryDraftPool')(function* (mailbox: Mailbox.Mailbox) {
   const mailboxUri = Obj.getURI(mailbox);
-  const drafts = (
-    yield* Database.query(Filter.type(Message.Message, { properties: { mailbox: mailboxUri } })).run
-  ).filter((candidate) => DraftMessage.belongsTo(candidate, mailboxUri) && candidate.properties?.sentMessageId);
+  const drafts = (yield* Database.query(Filter.type(Message.Message, { properties: { mailbox: mailboxUri } }))
+    .run).filter((candidate) => DraftMessage.belongsTo(candidate, mailboxUri) && candidate.properties?.sentMessageId);
 
   const pool = new Map<string, Message.Message[]>();
   for (const draft of drafts) {
