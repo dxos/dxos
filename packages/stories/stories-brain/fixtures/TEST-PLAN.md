@@ -46,67 +46,57 @@ Check the browser console for errors after each step.
 
 ## 3. Running tests
 
-**moon tasks (the loop).** Local, uncached, never in CI:
+All local, uncached, never in CI.
+**Needs** legend:
+**oauth** = a Google OAuth client (`.env.tpl` or `GOOGLE_CLIENT_ID`+`SECRET`, one-time — see `scripts/google-auth.mjs`);
+**fixture** = `fixtures/local/mailbox-feed.json` present (fetch it, or export from the MailboxSync storybook → Archive → Download);
+**models** = Ollama running (`OLLAMA_ORIGINS="*" ollama serve`) for local tiers and/or `DX_ANTHROPIC_API_KEY` for remote.
 
-```bash
-moon run stories-brain:auth -- --revoke   # Google OAuth: --token prints a token, --force re-consents, --revoke cancels
-moon run stories-brain:fetch-fixture      # OAuth + in-process sync → fixtures/local/mailbox-feed.json
-moon run stories-brain:stats              # LLM-free feed stats over the fixture (skips if absent)
-MODELS=qwen LIMIT=10 moon run stories-brain:facts   # extract facts → fixtures/local/fact-store.json (LLM; needs models)
-```
+| Command                                                               | Does                                                                                                                                                                                                       | Needs           |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| `moon run stories-brain:auth -- --token` (also `--force`, `--revoke`) | Google OAuth helper — print an access token / re-consent / revoke + delete local token                                                                                                                     | oauth           |
+| `moon run stories-brain:sync`                                         | One consent + in-process Gmail sync → `fixtures/local/mailbox-feed.json` (`FETCH_AFTER=yyyy-mm-dd` sets the start)                                                                                         | oauth           |
+| `moon run stories-brain:bench -- --models … --limit … --tests …`      | Run the bench suite (extract facts + all benches); `--tests <name>` for a subset (e.g. `extract-facts`, `feed-stats`, `list-questions`). Stats → `results/`; seeds `progress.json`; runs `analyze-results` | fixture, models |
 
-**Deterministic unit tests** (fast, no model, safe in CI). Run a single file with vitest directly —
-do NOT use `moon <pkg>:test -- <file>`, which ignores the filter and runs the whole suite:
+Benches `bench --tests <name>` can select (dependency order — `extract-facts` writes the fact store the
+fact tests read):
 
-```bash
-pnpm --filter @dxos/plugin-inbox exec vitest run --project=node src/operations/google/gmail/mapper.test.ts
-pnpm --filter @dxos/plugin-inbox exec vitest run --project=node src/operations/google/gmail/sync.test.ts
-pnpm --filter @dxos/pipeline-rdf exec vitest run --project=node src/types/Fact.test.ts
-pnpm --filter @dxos/plugin-brain exec vitest run --project=node src/operations/operations.test.ts
-```
+| Bench (`--tests`)    | Does                                                                                  | Model  |
+| -------------------- | ------------------------------------------------------------------------------------- | ------ |
+| `extract-facts`      | Extract RDF facts — incl. questions/requests as directive facts — → `fact-store.json` | models |
+| `extract-contacts`   | Extract actors / senders as contact objects                                           | models |
+| `feed-stats`         | Message / thread / sender counts                                                      | —      |
+| `subject-facts`      | All facts for `SUBJECT` + their source messages (fact→source bridge)                  | —      |
+| `list-questions`     | The directive facts (questions / requests) in the store                               | —      |
+| `tags`               | Tag each message (topics + spam)                                                      | models |
+| `summarize-messages` | Per-message summary (terse bullets)                                                   | models |
+| `summarize-threads`  | Per-thread summary                                                                    | models |
+| `extract-questions`  | Classify each act — question / request / notification                                 | models |
+| `draft-responses`    | Draft a reply per message (skips non-replyable mail)                                  | models |
+| `html-vs-text`       | Fact extraction over native `text/html` vs `text/plain`                               | models |
+| `html-to-markdown`   | HTML→markdown conversion throughput                                                   | —      |
+| `brain-vs-rag-eval`  | Ablate database / brain / rag / hybrid on a subject prompt; blind judge scores each arm | models |
 
-**Fetching the private fixture** (`fixtures/local/mailbox-feed.json`). Either export it from the
-MailboxSync storybook (Archive → Download), or fetch it headlessly with the reusable tool:
+`brain-vs-rag-eval` is the facts-help test: a fixed judge model grades every arm against one gold
+salient-point set (**coverage**) and the source corpus (**faithfulness**), plus a blind pairwise vote
+vs. the `database` baseline. Scores + the summaries are written **side-by-side** to
+`results/brain-vs-rag-eval.md`; the matrix + pairwise win-rate go to `brain-vs-rag-eval.json`. Facts
+help iff a fact arm beats the baseline on coverage without losing faithfulness. `EVAL_SCORE=0` runs
+the cheap response-only eval; `JUDGE=<name>` picks the grader (default `claude-sonnet`).
 
-```bash
-# one-time: create a Google Cloud OAuth "Desktop app" client (Gmail API + gmail.readonly scope);
-# put its id/secret in a git-ignored .env.tpl as op:// refs (see scripts/google-auth.mjs header).
-moon run stories-brain:fetch-fixture     # or: node scripts/fetch-fixture.mjs
-```
+**Env knobs** (`bench` also accepts each as a `--flag`; CLI overrides env overrides `.env`):
 
-First run resolves the creds via `op inject`, opens the browser for one consent, saves a refresh
-token, syncs, and writes the fixture; later runs are non-interactive.
+| Var                  | Effect                                                            |
+| -------------------- | ----------------------------------------------------------------- |
+| `MODELS`             | Model set: `local` \| `remote` \| comma-separated name substrings |
+| `LIMIT`              | Message cap; results go to `results/partial/`                     |
+| `TESTS`              | Comma-separated bench names (subset of the suite)                 |
+| `SUBJECT`            | Subject for subject-facts / brain-vs-rag                          |
+| `SKILL_MODES`        | brain-vs-rag arms to run (subset of database,brain,rag,hybrid)     |
+| `JUDGE`              | brain-vs-rag grading model (name substring; default claude-sonnet) |
+| `EVAL_SCORE`         | `0` skips brain-vs-rag judge scoring (response-only)              |
+| `SAMPLES`            | Max per-variant result rows written to JSON                       |
+| `DRAFT_INSTRUCTIONS` | User instructions steering the draft bench                        |
+| `FETCH_AFTER`        | `yyyy-mm-dd` sync-back start for `sync`                           |
 
-`google-auth.mjs` runs a local-loopback OAuth flow (one browser consent, then a saved refresh token
-in `fixtures/local/.google-token.json` mints access tokens automatically); `fetch-fixture.mjs` runs
-the Gmail sync in-process (`inboxSyncLiveServices`) and exports the feed. `FETCH_AFTER=yyyy-MM-dd`
-overrides the sync-back start.
-
-**Model-driven benches** (local only; need the fixture + models). Prerequisites:
-
-- `fixtures/local/mailbox-feed.json` present (see above).
-- Local tier: Ollama running (`OLLAMA_ORIGINS="*" ollama serve`) with the models pulled.
-- Remote tier: `export DX_ANTHROPIC_API_KEY=<key>` (never commit it).
-
-```bash
-# one bench, narrowed + capped (writes to fixtures/local/results/partial/)
-MODELS=local LIMIT=5 pnpm --filter @dxos/stories-brain exec vitest run --project=node \
-  src/test/draft-responses.bench.test.ts
-
-# instruction-steered drafts
-DRAFT_INSTRUCTIONS="Sign off as 'Rich'. One sentence." MODELS=qwen LIMIT=5 \
-  pnpm --filter @dxos/stories-brain exec vitest run --project=node src/test/draft-responses.bench.test.ts
-
-# full suite via the orchestrator (seeds progress.json, runs the analyzer)
-node scripts/run-suite.mjs                          # all benches, all models
-TESTS=draft-responses,extract-questions LIMIT=10 node scripts/run-suite.mjs   # subset
-```
-
-- Results land in `fixtures/local/results/` (git-ignored) as `<name>.json` (stats) + `<name>.md` (responses).
-- Env knobs:
-  - `MODELS` (`local` | `remote` | name substrings)
-  - `LIMIT` (message cap → `partial/`)
-  - `TESTS` (comma-separated bench names)
-  - `SUBJECT`
-  - `SAMPLES`
-  - `DRAFT_INSTRUCTIONS`
+Results write to `fixtures/local/results/` (git-ignored): `<name>.json` (stats) + `<name>.md` (responses).

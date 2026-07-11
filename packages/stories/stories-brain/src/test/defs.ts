@@ -17,6 +17,12 @@ export const SUBJECT = process.env.SUBJECT;
 /** Skill-mode filter for the brain-vs-rag eval (comma-separated). */
 export const SKILL_MODES = process.env.SKILL_MODES?.trim();
 
+/** Grading model for the brain-vs-rag eval (name substring); a fixed strong judge applied to every arm. */
+export const JUDGE = process.env.JUDGE?.trim();
+
+/** Disable the LLM-judge scoring pass (`EVAL_SCORE=0`) to run the cheap response-only eval. */
+export const EVAL_SCORE = process.env.EVAL_SCORE !== '0';
+
 /** Default message count for the intentionally-small html-vs-text benchmark. */
 export const DEFAULT_HTML_VS_TEXT_N = 10;
 

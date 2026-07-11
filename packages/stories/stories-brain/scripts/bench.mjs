@@ -39,12 +39,40 @@ const loadDotEnv = () => {
 
 // Each flag maps to the env var the benches read; `short` mirrors common usage.
 const FLAGS = [
-  { flag: 'models', env: 'MODELS', short: 'm', help: 'model set: local | remote | name substrings' },
-  { flag: 'limit', env: 'LIMIT', short: 'l', help: 'message cap (results → results/partial/)' },
-  { flag: 'tests', env: 'TESTS', short: 't', help: 'comma-separated bench names (subset)' },
-  { flag: 'subject', env: 'SUBJECT', short: 's', help: 'subject for subject-facts / brain-vs-rag' },
-  { flag: 'samples', env: 'SAMPLES', help: 'max per-variant result rows written to JSON' },
-  { flag: 'draft-instructions', env: 'DRAFT_INSTRUCTIONS', help: 'user instructions steering the draft bench' },
+  {
+    flag: 'models',
+    env: 'MODELS',
+    short: 'm',
+    help: 'model set: local | remote | name substrings',
+  },
+  {
+    flag: 'limit',
+    env: 'LIMIT',
+    short: 'l',
+    help: 'message cap (results → results/partial/)',
+  },
+  {
+    flag: 'tests',
+    env: 'TESTS',
+    short: 't',
+    help: 'comma-separated bench names (subset)',
+  },
+  {
+    flag: 'subject',
+    env: 'SUBJECT',
+    short: 's',
+    help: 'subject for subject-facts / brain-vs-rag',
+  },
+  {
+    flag: 'samples',
+    env: 'SAMPLES',
+    help: 'max per-variant result rows written to JSON',
+  },
+  {
+    flag: 'draft-instructions',
+    env: 'DRAFT_INSTRUCTIONS',
+    help: 'user instructions steering the draft bench',
+  },
 ];
 
 const usage = () => {

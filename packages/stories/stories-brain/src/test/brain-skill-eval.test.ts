@@ -11,22 +11,29 @@ import {
   FACT_STORE_FIXTURE,
   FIXTURE,
   type SkillMode,
+  type VariantScore,
+  buildGoldPoints,
   factEntities,
   factStoreFixtureExists,
   fixtureExists,
   loadFacts,
   loadFixtureMessages,
+  renderComparison,
+  resolveJudge,
   runAgentEval,
+  scoreVariant,
   selectVariants,
   slugify,
-  startResponseLog,
+  subjectCorpus,
   toRelative,
   trackProgress,
+  writeResponses,
   writeResults,
 } from '../testing/harness';
-import { DEFAULT_SUBJECT, SKILL_MODES, SUBJECT } from './defs';
+import { DEFAULT_SUBJECT, EVAL_SCORE, JUDGE, SKILL_MODES, SUBJECT } from './defs';
 
 const ALL_MODES: readonly SkillMode[] = ['database', 'brain', 'rag', 'hybrid'];
+const BASELINE_MODE: SkillMode = 'database';
 
 // Which skill configurations to compare. `SKILL_MODES=database,brain` narrows the set.
 const selectModes = (): readonly SkillMode[] => {
@@ -43,7 +50,12 @@ const selectModes = (): readonly SkillMode[] => {
  * the agent's answer to "summarize messages from <SUBJECT>", relative to the Database-only baseline.
  * For each model variant the same prompt runs once per skill mode, over the same message feed, with
  * the pre-computed fact-store fixture (brain) or a freshly-embedded vector index (rag) injected.
- * Both the response and a rough grounding signal (mentions of the subject) are written to JSON.
+ *
+ * A blind LLM-judge then grades every arm against the SAME ground truth — coverage of a gold
+ * salient-point set and faithfulness to the source corpus — plus a blind pairwise vote vs. the
+ * database baseline. Facts "help" iff a fact-backed arm beats the baseline on coverage without
+ * losing faithfulness. Scores + the raw summaries are written side-by-side to `<name>.md`; disable
+ * the (expensive) grading pass with `EVAL_SCORE=0`.
  */
 describe.skipIf(!fixtureExists() || !factStoreFixtureExists())('brain vs. rag skill evaluation (multi-model)', () => {
   test(
@@ -78,10 +90,10 @@ describe.skipIf(!fixtureExists() || !factStoreFixtureExists())('brain vs. rag sk
 
       const variants = selectVariants();
       const modes = selectModes();
-      // Responses stream to the sister markdown as each (model, mode) run completes.
-      const responseLog = startResponseLog('brain-vs-rag-eval');
       const progress = trackProgress('brain-vs-rag-eval', variants.length * modes.length);
       const results: (AgentEvalResult & { subjectMentions: number; error?: string })[] = [];
+      // Arms grouped by model so the judge can compare a model's modes against each other.
+      const armsByModel = new Map<string, { mode: SkillMode; response: string }[]>();
       for (const variant of variants) {
         for (const mode of modes) {
           try {
@@ -92,9 +104,9 @@ describe.skipIf(!fixtureExists() || !factStoreFixtureExists())('brain vs. rag sk
               0,
             );
             results.push({ ...result, subjectMentions });
-            if (result.response.length > 0) {
-              responseLog.append({ title: `${variant.name} · ${mode}`, body: result.response });
-            }
+            const arms = armsByModel.get(variant.name) ?? [];
+            arms.push({ mode, response: result.response });
+            armsByModel.set(variant.name, arms);
             log.info('eval result', {
               model: variant.name,
               mode,
@@ -115,11 +127,37 @@ describe.skipIf(!fixtureExists() || !factStoreFixtureExists())('brain vs. rag sk
               subjectMentions: 0,
               error: message,
             });
+            const arms = armsByModel.get(variant.name) ?? [];
+            arms.push({ mode, response: '' });
+            armsByModel.set(variant.name, arms);
           }
           progress.advance();
         }
       }
       progress.done();
+
+      // Blind-judge scoring pass: grade every arm against one gold set + corpus, then render the
+      // summaries and their scores side-by-side. Skipped (cheap mode) with EVAL_SCORE=0.
+      const scores: VariantScore[] = [];
+      let goldPoints: readonly string[] = [];
+      let judgeName: string | undefined;
+      if (EVAL_SCORE) {
+        const judge = resolveJudge(JUDGE);
+        judgeName = judge.name;
+        const corpus = subjectCorpus(subject, messages);
+        goldPoints = await buildGoldPoints(subject, corpus, judge);
+        log.info('judge gold set', { judge: judge.name, goldPoints: goldPoints.length, corpusChars: corpus.length });
+        const scoreProgress = trackProgress('brain-vs-rag-score', armsByModel.size);
+        for (const [model, arms] of armsByModel) {
+          scores.push(await scoreVariant({ model, subject, corpus, goldPoints, arms, judge, baseline: BASELINE_MODE }));
+          scoreProgress.advance();
+        }
+        scoreProgress.done();
+        writeResponses(
+          'brain-vs-rag-eval',
+          renderComparison({ subject, prompt, judge: judge.name, goldPoints, scores, baseline: BASELINE_MODE }),
+        );
+      }
 
       writeResults('brain-vs-rag-eval', {
         name: 'brain-vs-rag-eval',
@@ -127,12 +165,19 @@ describe.skipIf(!fixtureExists() || !factStoreFixtureExists())('brain vs. rag sk
         subject,
         subjectInFactStore: entities.has(slugify(subject)),
         prompt,
+        judge: judgeName,
+        baseline: BASELINE_MODE,
+        goldPoints,
         factStore: toRelative(FACT_STORE_FIXTURE),
         feed: toRelative(FIXTURE),
         factCount: facts.length,
         messages: messages.length,
         corpusSize: messages.length,
         modes,
+        scores: scores.map(({ arms, ...rest }) => ({
+          ...rest,
+          arms: arms.map(({ response: _response, ...arm }) => arm),
+        })),
         stats: results.map(({ response: _response, prompt: _prompt, ...rest }) => rest),
       });
 
