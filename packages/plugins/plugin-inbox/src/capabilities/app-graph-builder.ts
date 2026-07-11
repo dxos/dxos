@@ -10,7 +10,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { type Feed, Filter, Key, Obj, Order, Query, Ref, Type } from '@dxos/echo';
+import { Feed, Filter, Key, Obj, Order, Query, Ref, Scope, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -295,32 +295,50 @@ export default Capability.makeModule(
         id: 'mailboxMessage',
         match: (node) =>
           Mailbox.instanceOf(node.data) ? Option.some({ mailbox: node.data, nodeId: node.id }) : Option.none(),
-        connector: (matched, get) => {
-          const mailbox = matched.mailbox;
+        connector: ({ mailbox, nodeId }, get) => {
           const db = Obj.getDatabase(mailbox);
-          const feed = mailbox.feed ? (get(mailbox.feed.atom) as Feed.Feed | undefined) : undefined;
+          const feed = get(mailbox.feed.atom);
           if (!db || !feed) {
             return Effect.succeed([]);
           }
 
-          const messageId = get(selectedId(matched.nodeId));
+          const messageId = get(selectedId(nodeId));
           const message = get(
             db.query(Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed)).atom,
           )[0];
-          // Resolve the selected message's whole conversation and assign it to the companion node as
-          // the subject, so the article renders the thread directly without re-querying. Chronological
-          // (oldest-first) reading order; a message without a `threadId` is a one-message conversation.
-          const thread = message
-            ? message.threadId
-              ? get(
-                  db.query(
-                    Query.select(Filter.type(Message.Message, { threadId: message.threadId }))
-                      .from(feed)
-                      .orderBy(Order.property('created', 'asc')),
-                  ).atom,
-                )
-              : [message]
-            : [];
+          // The selected message's whole conversation, assigned to the companion so the article renders
+          // it directly. One combined-scope query (db-root drafts + this mailbox's feed) assembles it
+          // via a single reactive subscription, oldest-first, correlated by `threadId`. Two same-shape
+          // subscriptions here deadlock the connector's recompute, so keep it to one query.
+          const conversation = !message
+            ? []
+            : get(
+                db.query(
+                  Query.select(Filter.type(Message.Message, { threadId: message.threadId }))
+                    .from([Scope.space(), Scope.feed(Obj.getURI(feed, { prefer: 'absolute' }))])
+                    .orderBy(Order.property('created', 'asc')),
+                ).atom,
+              );
+
+          // Synced messages (no `properties.mailbox`) always pass; drafts pass only when scoped to this
+          // mailbox and not yet superseded by their sent copy in the feed (matched on the provider id
+          // set at send time). Deleting the superseded draft is deferred to sync (`reconcileDrafts`).
+          const mailboxUri = Obj.getURI(mailbox);
+          const syncedIds = new Set(
+            conversation
+              .filter((item) => !DraftMessage.instanceOf(item))
+              .flatMap((item) => Obj.getMeta(item).keys.map((key) => key.id)),
+          );
+          const thread = conversation.filter((item) => {
+            if (!DraftMessage.instanceOf(item)) {
+              return true;
+            }
+            if (!DraftMessage.belongsTo(item, mailboxUri)) {
+              return false;
+            }
+            return !(item.properties?.sentMessageId && syncedIds.has(item.properties.sentMessageId));
+          });
+
           return Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('message'),
