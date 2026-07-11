@@ -48,14 +48,30 @@ step is yours.
 
 Storybook: `moon run storybook-react:serve` from THIS worktree (or `pnpm exec storybook dev --port=9010`
 in tools/storybook-react). Grid story id: `ui-react-ui-board-grid--default` (once built).
+
 - [ ] Grid renders: tiles at correct cells, empty cells show `+` buttons.
 - [ ] Drag a tile onto an occupied cell → occupant pushes down (float) / layout compacts (pack).
 - [ ] Drag near right edge → tile clamps within columns.
 - [ ] Resize a tile (drag handle) → snaps to whole cells, pushes neighbours, respects min/max.
 - [ ] No console errors during drag/resize.
 
-## Status
+## Status — OVERNIGHT RUN COMPLETE
 
-- Engine (3.1): DONE + verified (30 unit tests). commit b2afc8e382.
-- Grid component (3.2) + story (3.3): in progress.
-- Phase 2 hooks/LayoutModel: deferred (see decision #4).
+- Engine (3.1): **DONE + fully verified** — 30 unit tests (collision/push/cascade/compact/resize/
+  clamp/pack-vs-float/purity/determinism). commit `b2afc8e382`.
+- Grid component (3.2) + story (3.3): **DONE + render-verified** — story `ui-react-ui-board-grid--default`
+  mounts cleanly (tiles positioned on grid, dashed empty-cell backdrop, drag handles; only console error
+  is a harmless favicon 404). Drag/resize gestures NOT self-verifiable → see DRAG-TEST CHECKLIST.
+  commit `570c6f1133`.
+- Phase 2 hooks (`useDndContainer`/`useDndTile`) + `LayoutModel`: **deferred** (decision #4) — not needed
+  for a working Grid; ergonomics refinement for a later drag-testable phase.
+
+### Local commits to integrate (all NEW files, cherry-pick cleanly onto post-merge main)
+`b2afc8e382` engine · `570c6f1133` Grid component+story · (+ docs `f8a82343ac`, `10a4f3c2bb`, this log).
+None pushed (branch locked by merge queue). See the MERGE QUEUE recovery note at top.
+
+### Suggested next (morning, after #12165 merges)
+1. Integrate the local Grid commits (recovery note) → Phase 2/3 PR.
+2. Drag-test the Grid (checklist above); fix any gesture wiring (resize delta→cells is the least-certain bit).
+3. Then Phase 2 proper (migrate Mosaic/List onto the hooks + one DropIndicator) and Phase 4/5 — all
+   drag-testable-with-you.
