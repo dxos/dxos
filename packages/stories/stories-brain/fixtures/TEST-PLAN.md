@@ -57,6 +57,7 @@ All local, uncached, never in CI.
 | `moon run stories-brain:auth -- --token` (also `--force`, `--revoke`) | Google OAuth helper — print an access token / re-consent / revoke + delete local token                                                                                                                     | oauth           |
 | `moon run stories-brain:sync`                                         | One consent + in-process Gmail sync → `fixtures/local/mailbox-feed.json` (`FETCH_AFTER=yyyy-mm-dd` sets the start)                                                                                         | oauth           |
 | `moon run stories-brain:bench -- --models … --limit … --tests …`      | Run the bench suite (extract facts + all benches); `--tests <name>` for a subset (e.g. `extract-facts`, `feed-stats`, `list-questions`). Stats → `results/`; seeds `progress.json`; runs `analyze-results` | fixture, models |
+| `moon run stories-brain:stats` (also `-- --once`)                     | Live table of `progress.json` — per-task bar, rate, and ETA (run in a second terminal while `bench` runs); `--once` prints one snapshot                                                                    | —               |
 
 Benches `bench --tests <name>` can select (dependency order — `extract-facts` writes the fact store the
 fact tests read):

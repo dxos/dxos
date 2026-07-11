@@ -14,6 +14,7 @@ tasks:
   #   auth  → Google OAuth helper: `-- --token` prints a token, `-- --force` re-consents, `-- --revoke` cancels.
   #   sync  → one consent + in-process Gmail sync → fixtures/local/mailbox-feed.json (FETCH_AFTER=yyyy-mm-dd).
   #   bench → run the bench suite (extract facts + all benches); `-- --models qwen --limit 10 --tests tags,facts`.
+  #   stats → live table of the bench progress file (rate + ETA); `-- --once` for a single snapshot.
   auth:
     command: 'node scripts/google-auth.mjs'
     options:
@@ -28,6 +29,12 @@ tasks:
       interactive: true
   bench:
     command: 'node scripts/bench.mjs'
+    options:
+      cache: false
+      runInCI: false
+      interactive: true
+  stats:
+    command: 'node scripts/stats.mjs'
     options:
       cache: false
       runInCI: false
