@@ -1,7 +1,7 @@
 # Meeting-as-Hub (R2) — Follow-up Issues
 
 Tracking doc for the deferred work surfaced by the R2 "Meeting as hub" change
-(`docs/superpowers/plans/2026-06-13-meeting-hub-R2.md`). Each item is independently
+(`agents/superpowers/plans/2026-06-13-meeting-hub-R2.md`). Each item is independently
 shippable; none block the current PR. Design reference: `packages/plugins/plugin-transcription/AUDIT.md`.
 
 ## Status of R2 itself (shipped)

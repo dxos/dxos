@@ -8,7 +8,7 @@
 
 **Tech Stack:** React + `@radix-ui/react-slot` + `@radix-ui/react-primitive`, `tx()` theme functions (`@dxos/ui-theme`), `slottable()`/`composable()` utils, Storybook, vitest, moon.
 
-Spec: `docs/superpowers/specs/2026-06-13-card-row-slots-design.md`
+Spec: `agents/superpowers/specs/2026-06-13-card-row-slots-design.md`
 
 **Conventions:** package `@dxos/react-ui` at `packages/ui/react-ui`. Build: `moon run react-ui:build`. Lint: `moon run react-ui:lint -- --fix`. Storybook already runs on :9009 (reuse, never kill). Commit per task.
 

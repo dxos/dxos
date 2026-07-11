@@ -4,7 +4,7 @@
 >
 > **REQUIRED repo skills:** consult `composer-plugins` (and its `MEMORY.md`) before any plugin task, `composer-ui` before any container/component task, `operations` before any operation task. Search `mcp__dxos-introspect__list_idioms` before writing containers/capabilities/operations.
 
-**Goal:** Merge plugin-extension into plugin-crx (M0), then build the page-action mechanism end-to-end with plugin-bookmarks as the first consumer (M1), per the approved spec at `docs/superpowers/specs/2026-06-09-crx-page-actions-design.md`.
+**Goal:** Merge plugin-extension into plugin-crx (M0), then build the page-action mechanism end-to-end with plugin-bookmarks as the first consumer (M1), per the approved spec at `agents/superpowers/specs/2026-06-09-crx-page-actions-design.md`.
 
 **Architecture:** Plugins contribute `CrxCapabilities.PageAction` entries (serializable descriptor + live `Operation` definition). plugin-crx answers registry-list and invoke requests over window CustomEvents (same bridge style as clips). composer-crx caches descriptors in `chrome.storage.local`, shows matching actions in the popup, captures inputs via a bundled `snapshot` extractor, and delivers an invoke request to a Composer tab (auto-opening one if needed). plugin-bookmarks registers "Add bookmark" → `BookmarkOperation.AddFromSnapshot`.
 

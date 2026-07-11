@@ -8,7 +8,7 @@
 
 **Tech Stack:** Effect (Stream/Layer/Context), `@dxos/pipeline`, `@dxos/pipeline-rdf` (FactStore, extraction, `generateQuery`), `@effect/sql` + `@effect/sql-sqlite-node` / `@dxos/sql-sqlite` (wasm), dfx (Discord REST via existing `discordSourceLayer`), vitest + `@effect/vitest`.
 
-**Spec:** `docs/superpowers/specs/2026-07-07-discord-crawler-pipeline-design.md`
+**Spec:** `agents/superpowers/specs/2026-07-07-discord-crawler-pipeline-design.md`
 
 **Conventions that apply to every task:**
 
@@ -3853,7 +3853,7 @@ Every hit must be a pre-existing pattern or carry a boundary justification comme
 
 - [ ] **Step 11.4: Update the spec status + memory**
 
-In `docs/superpowers/specs/2026-07-07-discord-crawler-pipeline-design.md` set `Status: Implemented (phase 2)`. Update the crawler project memory file (`~/.claude/projects/-Users-burdon-Code-dxos-dxos/memory/project_crawler.md`) to reflect the stream refactor and `@dxos/pipeline-discord`.
+In `agents/superpowers/specs/2026-07-07-discord-crawler-pipeline-design.md` set `Status: Implemented (phase 2)`. Update the crawler project memory file (`~/.claude/projects/-Users-burdon-Code-dxos-dxos/memory/project_crawler.md`) to reflect the stream refactor and `@dxos/pipeline-discord`.
 
 - [ ] **Step 11.5: Final commit**
 
