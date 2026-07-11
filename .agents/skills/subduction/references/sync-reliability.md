@@ -95,6 +95,19 @@ all future alarms; and treats a **past-time `getAlarm()` as absent** (a stale al
 suppresses re-arm forever). A past-invocation send that never settles is re-issued by the unacked
 sweep; a settled _failure_ is final.
 
+**workerd can also silently drop an armed alarm outright** (proven with instrumented bundles under
+miniflare: enqueue-time `setAlarm` committed, the handler was never invoked, `getAlarm()` read null
+afterwards — no error anywhere). A DO whose only wake-up source is the next inbound enqueue then
+strands its queue until the client's 60 s round timeout happens to produce one. Mitigation: quiet
+slices keep a **5 s heartbeat alarm** chained while inbound activity is recent (30 s window), so any
+dropped alarm self-heals in seconds and idle DOs still quiesce.
+
+**A one-pass-per-alarm pump does not survive load.** A simplification (dequeue 20 → feed WASM →
+await recv-drain → await batched sends → return) passed every small-scale suite but the per-pass
+alarm re-arm latency on deployed workerd (~0.2–0.9 s) is paid per page, so with ~100 rounds in
+flight tail replies cross the 60 s round deadline. The slice pump (many back-to-back passes per
+invocation) exists precisely to amortize that gap; keep it.
+
 ## 7. Keepalive watchdog must be starvation-aware (`edge-ws-connection.ts`)
 
 The 12 s inactivity watchdog must **not** restart on wall-clock silence alone: bulk-sync CPU pins the
@@ -105,10 +118,15 @@ false restarts → ~200 stranded rounds on 60 s timeouts → failed run.
 
 ## 8. Frame batching
 
-Transport-layer coalescing (per-pass/per-connection on the edge, size+time-bounded on the client),
-always on. Cut the 1000-doc pull from ~66 s to ~17–21 s. Contract + bounds:
+Transport-layer coalescing (per-pass/per-connection on the edge, size+time-bounded on the client).
+Cut the 1000-doc pull from ~66 s to ~17–21 s. Contract + bounds:
 `db-service/.../subduction/frame-batching-spec.md`. Decoders always accept single and batched frames;
-handshake is always single.
+handshake is always single. Edge **emission is capability-inferred**: the DO coalesces replies only
+to a connection that has itself sent a `subduction-batch` envelope (a batching client always ships
+the decoder); everyone else gets plain single frames. This matters because clients on published
+packages predate the decoder and **silently drop** batch envelopes — under the old timing they
+mostly received singles by luck, and any change that makes multi-frame flushes more likely (e.g.
+waiting for recv-drain before flushing) turns that into a deterministic stall.
 
 ## 9. Recovery semantics to remember
 
@@ -126,6 +144,14 @@ handshake is always single.
 `SYNC_TIMEOUT` room for a heal cycle (≥180 s at ≥1000 docs). The edge worker is bundled from
 `out/main.js` — rebuild (`pnpm -s bundle`) after worker edits or you test stale code. Any
 `serviceOption`/layer-wiring change **must** be validated with a real run, not typecheck (see §5).
+
+**A stress verdict against the deployed dev edge needs a same-session baseline control.** The dev
+environment itself degrades (observed: a full day where every build — including the previous day's
+green artifact redeployed byte-identical — froze mid-push with ~85 s server-silence watchdog
+restarts, while SigNoz ingestion was simultaneously dead). Before attributing a stress failure to
+your change, redeploy the last known-green artifact and re-run; if it fails too, the verdict is
+contaminated. Also: the worker bundle must be built under **committed** deps (a bundle produced
+under `link-packages` node_modules is broken) — bundle first, then link for the client side.
 
 ## Upstream issues (Linear, `Automerge` label)
 
