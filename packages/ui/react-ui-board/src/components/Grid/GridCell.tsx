@@ -131,11 +131,11 @@ export const GridCell = ({
       onDrag: ({ location }) => {
         const dx = location.current.input.clientX - location.initial.input.clientX;
         const dy = location.current.input.clientY - location.initial.input.clientY;
-        // Raw (unsnapped) outline following the cursor, floored at one cell so it never collapses;
-        // snapping to whole cells happens only on drop.
+        // Magnetic outline: follows the cursor freely but is pulled to the nearest whole-cell size
+        // when it comes within `snapZone` of it; floored at one cell. Final snap happens on drop.
         setResizeGhost({
-          width: Math.max(cellSize.width, base.width + dx),
-          height: Math.max(cellSize.height, base.height + dy),
+          width: magnetize(Math.max(cellSize.width, base.width + dx), cellSize.width, gap),
+          height: magnetize(Math.max(cellSize.height, base.height + dy), cellSize.height, gap),
         });
       },
       onDrop: ({ location }) => {
@@ -176,7 +176,9 @@ export const GridCell = ({
           <Card.DragHandle ref={dragHandleRef} />
           {title}
         </Card.Header>
-        {children}
+        {/* Body spans all of the card's column tracks (it has gutter columns) so content — e.g. a
+            poster image — fills the full tile width, not just the first gutter track. */}
+        {children && <div className='relative col-[1/-1] min-h-0 overflow-hidden'>{children}</div>}
       </Card.Root>
 
       {/* Resize handle: a sibling (not clipped by the card's overflow/rounding) straddling the
@@ -218,7 +220,7 @@ export const GridCell = ({
               <Card.DragHandle />
               {title}
             </Card.Header>
-            {children}
+            {children && <div className='relative col-[1/-1] min-h-0 overflow-hidden'>{children}</div>}
           </Card.Root>,
           preview.container,
         )}
@@ -236,6 +238,17 @@ const sizeOverride: CSSProperties = {
 };
 
 GridCell.displayName = GRID_CELL_NAME;
+
+/**
+ * Pull a raw px extent to the nearest whole-cell extent when it comes within a snap zone of it,
+ * otherwise leave it free — "magnetic to the grid". The snap zone is a fraction of the cell pitch.
+ */
+const magnetize = (raw: number, cell: number, gap: number, snapFraction = 0.25): number => {
+  const pitch = cell + gap;
+  const cells = Math.max(1, Math.round((raw + gap) / pitch));
+  const snapped = cells * cell + (cells - 1) * gap;
+  return Math.abs(raw - snapped) <= pitch * snapFraction ? snapped : raw;
+};
 
 /** Pointer delta (px) since drag start, converted to a whole-cell size delta and clamped to constraints. */
 const nextSize = (

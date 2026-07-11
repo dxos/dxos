@@ -33,14 +33,15 @@ const posterItems: TestItem[] = ((seed = 42) =>
     return { id: String(index), title, image: `https://picsum.photos/seed/${pic}/600/400` };
   }))();
 
+// Initial sizes capped at 2x2.
 const defaultLayout: GridLayout = {
   columns: 8,
   items: [
-    { id: '0', x: 0, y: 0, w: 3, h: 2 },
-    { id: '1', x: 3, y: 0, w: 2, h: 1 },
-    { id: '2', x: 5, y: 0, w: 3, h: 2 },
-    { id: '3', x: 0, y: 2, w: 4, h: 2 },
-    { id: '4', x: 4, y: 2, w: 4, h: 2 },
+    { id: '0', x: 0, y: 0, w: 2, h: 2 },
+    { id: '1', x: 2, y: 0, w: 2, h: 1 },
+    { id: '2', x: 4, y: 0, w: 2, h: 2 },
+    { id: '3', x: 6, y: 0, w: 2, h: 2 },
+    { id: '4', x: 2, y: 1, w: 2, h: 1 },
   ],
 };
 
