@@ -11,6 +11,9 @@
 //   export GOOGLE_CLIENT_ID=...  GOOGLE_CLIENT_SECRET=...   # one-time (see google-auth.mjs)
 //   node scripts/fetch-fixture.mjs                          # sync + write the fixture
 //   FETCH_AFTER=2025-01-01 node scripts/fetch-fixture.mjs   # override the sync-back start date
+//
+//   or, using Moon:
+//   moon run stories-brain:fetch-fixture
 
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
