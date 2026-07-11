@@ -14,7 +14,18 @@ import { mx, surfaceZIndex } from '@dxos/ui-theme';
 
 import { type Side, type Size } from '../types';
 
-const REM = parseFloat(getComputedStyle(document.documentElement).fontSize);
+// Root font size in px, read lazily and guarded for non-DOM environments (e.g. node tests) so that
+// merely importing this module doesn't touch the DOM at load time.
+let remCache: number | undefined;
+const getRem = (): number => {
+  if (remCache === undefined) {
+    remCache =
+      typeof document !== 'undefined' && typeof getComputedStyle !== 'undefined'
+        ? parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+        : 16;
+  }
+  return remCache;
+};
 
 const measureSubject = (element: HTMLButtonElement, fallbackSize: number): { width: number; height: number } => {
   const stackItemElement = element.closest('[data-dx-resize-subject]');
@@ -34,7 +45,8 @@ const getNextSize = (
     Math.max(
       minSize,
       startSize +
-        ((location.current.input[client] - location.initial.input[client]) / REM) * (side.endsWith('start') ? -1 : 1),
+        ((location.current.input[client] - location.initial.input[client]) / getRem()) *
+          (side.endsWith('start') ? -1 : 1),
     ),
   );
 };
@@ -99,7 +111,8 @@ export const ResizeHandle = ({
       onDragStart: () => {
         dragStartSize.current =
           dragStartSize.current === 'min-content'
-            ? measureSubject(buttonRef.current!, fallbackSize)[orientation === 'horizontal' ? 'width' : 'height'] / REM
+            ? measureSubject(buttonRef.current!, fallbackSize)[orientation === 'horizontal' ? 'width' : 'height'] /
+              getRem()
             : dragStartSize.current;
         buttonRef.current?.closest(`[${RESIZE_SUBJECT}]`)?.setAttribute(RESIZE_SUBJECT_DRAGGING, 'true');
       },
