@@ -8,8 +8,9 @@ import { type Database, Filter, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
+import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { ObjectForm } from '@dxos/react-ui-form';
-import { Mosaic, type MosaicEventHandler } from '@dxos/react-ui-mosaic';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -35,7 +36,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
 
     // Per-instance discriminator so the same object opened twice doesn't collide in the Mosaic registry.
     const instanceId = useId();
-    const eventHandler = useMemo<MosaicEventHandler>(
+    const eventHandler = useMemo<DndContainerHandler>(
       () => ({ id: `object-card-stack:${objectId}:${instanceId}`, canDrop: () => true }),
       [objectId, instanceId],
     );
