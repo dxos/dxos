@@ -17,12 +17,12 @@
 //   4. Create the client: APIs & Services → Credentials → Create credentials → OAuth client ID →
 //      Application type "Desktop app". (A Desktop client trusts the http://localhost loopback
 //      redirect automatically — no redirect URI to register.) Copy the Client ID + Client secret.
-//   5. Provide the client id + secret via env — either the raw values, or 1Password secret
-//      references (resolved with `op read`, so nothing is stored in your shell history/rc):
-//        export GOOGLE_CLIENT_ID=...  GOOGLE_CLIENT_SECRET=...
-//        # or, from 1Password (requires the `op` CLI, signed in):
-//        export GOOGLE_CLIENT_ID="op://Private/dxos-testing Google OAuth/client id"
-//        export GOOGLE_CLIENT_SECRET="op://Private/dxos-testing Google OAuth/client secret"
+//   5. Provide the client id + secret. Easiest: a `.env.tpl` (git-ignored) with 1Password references,
+//      auto-loaded via `op inject` on run — nothing lands in your shell history/rc:
+//        # packages/stories/stories-brain/.env.tpl
+//        export GOOGLE_CLIENT_ID=op://DXOS/google.console.dxos-testing/GOOGLE_CLIENT_ID
+//        export GOOGLE_CLIENT_SECRET=op://DXOS/google.console.dxos-testing/credential
+//      Alternatively export the raw values, or export them as `op://…` refs (resolved with `op read`).
 //
 // Usage:
 //   node scripts/google-auth.mjs            # ensure a refresh token (consent if needed), print status
@@ -40,6 +40,30 @@ const REDIRECT_PORT = 4180;
 const REDIRECT_URI = `http://localhost:${REDIRECT_PORT}/callback`;
 const PACKAGE_ROOT = resolve(fileURLToPath(new URL('../', import.meta.url)));
 const TOKEN_PATH = resolve(PACKAGE_ROOT, 'fixtures/local/.google-token.json');
+const ENV_TEMPLATE = resolve(PACKAGE_ROOT, '.env.tpl');
+
+/**
+ * Populates process.env from `.env.tpl` (git-ignored) by rendering its 1Password references with
+ * `op inject`. Existing env values win, so an explicit export overrides the template. A no-op when the
+ * template is absent or the `op` CLI is unavailable — the raw-env / op:// paths still apply.
+ */
+const loadEnvTemplate = () => {
+  if (!existsSync(ENV_TEMPLATE)) {
+    return;
+  }
+  let rendered;
+  try {
+    rendered = execFileSync('op', ['inject', '-i', ENV_TEMPLATE], { encoding: 'utf8' });
+  } catch {
+    return;
+  }
+  for (const line of rendered.split('\n')) {
+    const match = line.match(/^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+    if (match && process.env[match[1]] === undefined) {
+      process.env[match[1]] = match[2].trim().replace(/^["']|["']$/g, '');
+    }
+  }
+};
 
 /** Resolves a value that may be a 1Password secret reference (`op://…`) via the `op` CLI. */
 const resolveSecret = (value) => {
@@ -55,7 +79,7 @@ const resolveSecret = (value) => {
   }
 };
 
-// Resolved lazily (inside getAccessToken) so `op read` only runs when the tool is actually used.
+// Resolved lazily (inside getAccessToken) so `op` only runs when the tool is actually used.
 let clientId;
 let clientSecret;
 
@@ -153,8 +177,9 @@ const refreshAccessToken = async (refreshToken) => {
 
 /** Ensures a refresh token exists (consenting if needed) and returns a fresh access token. */
 export const getAccessToken = async ({ force = false } = {}) => {
+  loadEnvTemplate();
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-    die('GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set (raw or op:// refs; see the header).');
+    die('GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set (via .env.tpl, raw, or op:// refs; see the header).');
   }
   clientId = resolveSecret(process.env.GOOGLE_CLIENT_ID);
   clientSecret = resolveSecret(process.env.GOOGLE_CLIENT_SECRET);
