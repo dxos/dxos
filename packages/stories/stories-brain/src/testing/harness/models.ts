@@ -19,11 +19,15 @@ export type ModelVariant = {
   readonly provider: DXN.DXN;
   readonly preset: AiServicePreset;
   readonly strict: boolean;
+  /** Emits chain-of-thought (qwen3, gpt-oss): higher latency, may break strict JSON. Recorded, not hidden. */
+  readonly reasoning?: boolean;
 };
 
-// Three local models (Ollama, from pipeline-email/scripts/pull-models.sh) and three remote Claude
-// tiers (Anthropic direct via DX_ANTHROPIC_API_KEY). Anthropic models declare `provider: edge` in
-// the catalog; the `direct` preset just points the client at the Anthropic endpoint.
+// The open-weight ladder (Ollama, from pipeline-email/scripts/pull-models.sh) — an ascending size
+// sweep, 3B→30B — plus three remote Claude tiers (Anthropic direct via DX_ANTHROPIC_API_KEY).
+// Anthropic models declare `provider: edge` in the catalog; the `direct` preset just points the
+// client at the Anthropic endpoint. `reasoning` marks models that emit chain-of-thought (higher
+// latency, may break strict JSON — recorded, not hidden).
 export const LOCAL_VARIANTS: readonly ModelVariant[] = [
   {
     name: 'llama-3.2-3b',
@@ -33,11 +37,12 @@ export const LOCAL_VARIANTS: readonly ModelVariant[] = [
     strict: false,
   },
   {
-    name: 'qwen-2.5-7b',
-    model: 'com.alibaba.model.qwen-2-5-7b.instruct',
+    name: 'qwen3-8b',
+    model: 'com.alibaba.model.qwen-3-8b.default',
     provider: Provider.ollama.id,
     preset: 'ollama',
     strict: false,
+    reasoning: true,
   },
   {
     name: 'gemma-4-12b',
@@ -45,6 +50,22 @@ export const LOCAL_VARIANTS: readonly ModelVariant[] = [
     provider: Provider.ollama.id,
     preset: 'ollama',
     strict: false,
+  },
+  {
+    name: 'gpt-oss-20b',
+    model: 'com.openai.model.gpt-oss-20b.default',
+    provider: Provider.ollama.id,
+    preset: 'ollama',
+    strict: false,
+    reasoning: true,
+  },
+  {
+    name: 'qwen3-30b',
+    model: 'com.alibaba.model.qwen-3-30b.default',
+    provider: Provider.ollama.id,
+    preset: 'ollama',
+    strict: false,
+    reasoning: true,
   },
 ];
 

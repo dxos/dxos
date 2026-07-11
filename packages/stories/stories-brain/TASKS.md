@@ -3,6 +3,40 @@
 Outstanding work for the mailbox-feed research harness (`src/test/harness/*`, tests in `src/test/*`).
 Results/fixtures are local-only under the git-ignored `fixtures/local/`.
 
+## Overnight model-ladder experiment
+
+**Goal:** per task, find the smallest open-weight model that matches a cheap premier model (haiku) —
+measuring **size × latency × accuracy**. Hypothesis (H0, capability ladder): model tier required
+rises with task complexity; open weights ≤ ~20B match haiku on extractive tasks (labeling,
+categorization) but fall below on synthetic tasks (thread/topic summaries, drafts).
+
+**Setup:** contestants = llama-3.2-3b · qwen3-8b · gemma-4-12b · gpt-oss-20b · qwen3-30b ·
+**haiku (bar)**; **grader = opus** (summaries/drafts only, never a contestant). Scope-B tasks:
+(a) labeling, (b) categorization, (c) summaries [message/thread], (d1) drafts-from-knowledge.
+
+### Tasks
+
+- [x] Update `pipeline-email/scripts/pull-models.sh` to the modern ladder.
+- [x] **Catalog + ladder** — added `qwen3-8b` / `qwen3-30b` to `Model.ts`; wired the 5-tier
+      `LOCAL_VARIANTS` in `models.ts`. Validated via `ladder-probe.test.ts`: all 5 local models
+      resolve + parse JSON. Warm latency (trivial prompt): llama-3b 192ms, gpt-oss-20b 1.4s,
+      gemma-12b 2.4s, qwen3-30b 3.4s, qwen3-8b 4.2s (reasoning tax is non-monotonic in size).
+- [ ] **Timing capture** — per-item `durationMs` → p50/p95/mean + throughput per (task,model); warm
+      each local model once before timing (cold VRAM load ≈ 10–30s); record JSON-parse-failure rate.
+      (Warmup + latency + jsonOk pattern established in `ladder-probe.test.ts`.)
+- [ ] **Grading layer** (generalize `judge.ts`): labeling → deterministic agreement vs haiku
+      (spam/noreply F1, tag Jaccard; noreply also vs header gold); summaries → coverage + faithfulness
+      (opus); drafts-KB → rubric 0–5 + blind pairwise vs haiku (opus).
+- [ ] **Categorization bench** (new) — group messages/threads into topics; cluster agreement vs haiku.
+- [ ] **`overnight.mjs` driver** — non-interactive, retry+backoff (no silent empty-on-error), warmup,
+      streams `progress.json`, writes `overnight-report.md` (accuracy × latency × size + verdict +
+      recommended tier per task).
+- [ ] **Runtime + token/cost estimate** — print for approval BEFORE launch.
+
+Risks: reasoning models (qwen3, gpt-oss) → higher latency + may break strict JSON (parse leniently,
+record failure rate; `/no_think` sensitivity = future experiment). Ollama up all night; opus/haiku
+need `DX_ANTHROPIC_API_KEY`. Do NOT launch until the estimate is approved.
+
 ## Bugs
 
 - [x] **`subject-facts` returned 0 for Nicole.** Fixed: the subject index now matches by
