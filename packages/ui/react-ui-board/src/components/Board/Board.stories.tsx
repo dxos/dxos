@@ -1,95 +1,105 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
-import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
+import { Dnd } from '@dxos/react-ui-dnd';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { cardDefaultInlineSize } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
-import { Board, type BoardContentProps, type BoardController, type BoardRootProps } from './Board';
-import { defaultGrid } from './defs';
-import { type BoardLayout } from './types';
+import { Board, type BoardRootProps } from './Board';
+import { type GridMode, type Layout, rejectIfNoFit, resizeToFit } from './engine';
 
 type TestItem = {
   id: string;
   title: string;
-  description: string;
+  image?: string;
 };
 
-type StoryArgs = BoardRootProps & BoardContentProps & { items: TestItem[] };
+const titles = ['Sales', 'Revenue', 'Users', 'Latency', 'Errors'];
 
-const DefaultStory = ({ layout: _layout, items: _items, grid, ...props }: StoryArgs) => {
-  const [items, setItems] = useState(_items ?? []);
-  const [layout, setLayout] = useState<BoardLayout>(_layout ?? { size: { width: 4, height: 4 }, cells: {} });
+const testItems: TestItem[] = titles.map((title, index) => ({ id: String(index), title }));
 
-  const controller = useRef<BoardController>(null);
+// Same items with a random poster image per tile (seeded for stable stories).
+const posterItems: TestItem[] = ((seed = 42) =>
+  titles.map((title, index) => {
+    // Deterministic pseudo-random id for picsum so stories are stable without Math.random.
+    const pic = (seed * (index + 7)) % 1000;
+    return { id: String(index), title, image: `https://picsum.photos/seed/${pic}/600/400` };
+  }))();
+
+// 12-column board; tile sizes capped at 2x2, clustered around the board centre (6,6) rather than the
+// top-left, so the initial view (centred on mount) shows the tiles.
+const defaultLayout: Layout = {
+  items: {
+    '0': { x: 4, y: 4, w: 2, h: 2 },
+    '1': { x: 6, y: 4, w: 2, h: 1 },
+    '2': { x: 4, y: 6, w: 2, h: 2 },
+    '3': { x: 6, y: 6, w: 2, h: 2 },
+    '4': { x: 6, y: 5, w: 2, h: 1 },
+  },
+};
+
+// A 12x12 initial board.
+const defaultBounds = { columns: 12, rows: 12 };
+
+type StoryArgs = BoardRootProps & { items: TestItem[] };
+
+const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, ...props }: StoryArgs) => {
+  const [items, setItems] = useState(itemsProp ?? testItems);
+  const [layout, setLayout] = useState<Layout>(layoutProp ?? defaultLayout);
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
-    (_element, position = { x: 0, y: 0 }) => {
+    (position) => {
       const id = items.length.toString();
-      setItems([...items, { id, title: 'New item', description: 'New description' }]);
-      setLayout((layout) => ({
-        ...layout,
-        cells: { ...layout.cells, [id]: position },
-      }));
-      controller.current?.center(position);
+      setItems([...items, { id, title: `Widget ${id}` }]);
+      setLayout((layout) => ({ ...layout, items: { ...layout.items, [id]: position } }));
     },
-    [items, layout, controller],
+    [items],
   );
 
-  const handleDelete = useCallback<NonNullable<BoardRootProps['onDelete']>>(
-    (id) => {
-      setItems(items.filter((item) => item.id !== id));
-      setLayout((layout) => ({
-        ...layout,
-        cells: Object.fromEntries(Object.entries(layout.cells).filter(([cellId]) => cellId !== id)),
-      }));
-    },
-    [items, layout],
-  );
-
-  const handleMove = useCallback<NonNullable<BoardRootProps['onMove']>>(
-    (id, position) => {
-      // TODO(burdon): Preserve size (if space available, otherwise shrink to fit -- or prevent drop).
-      setLayout((layout) => ({
-        ...layout,
-        cells: { ...layout.cells, [id]: position },
-      }));
-      controller.current?.center(position);
-    },
-    [layout, controller],
-  );
+  const handleDelete = useCallback<NonNullable<BoardRootProps['onDelete']>>((id: string) => {
+    setItems((items) => items.filter((item) => item.id !== id));
+    setLayout((layout) => {
+      const { [id]: _removed, ...rest } = layout.items;
+      return { ...layout, items: rest };
+    });
+  }, []);
 
   return (
-    <Board.Root
-      {...props}
-      layout={layout}
-      onAdd={handleAdd}
-      onDelete={handleDelete}
-      onMove={handleMove}
-      ref={controller}
-    >
-      <Board.Toolbar classNames='absolute top-3 left-3 z-10 min-h-0 w-auto!' />
-      <Board.Container>
-        <Board.Viewport>
-          <Board.Backdrop />
-          <Board.Content>
-            {items.map((item: TestItem, index: number) => (
-              <Board.Cell item={item} key={index} layout={layout?.cells[item.id] ?? { x: 0, y: 0 }}>
-                <Card.Row>
-                  <Card.Text>{item.description}</Card.Text>
-                </Card.Row>
-              </Board.Cell>
-            ))}
-          </Board.Content>
-        </Board.Viewport>
-      </Board.Container>
-    </Board.Root>
+    <Dnd.Root>
+      <Board.Root
+        {...props}
+        layout={layout}
+        mode={mode}
+        bounds={defaultBounds}
+        onChange={setLayout}
+        onAdd={handleAdd}
+        onDelete={handleDelete}
+      >
+        {/* Scroll viewport: sized to the full grid bounds; auto-scrolls when dragging/resizing near an edge. */}
+        <Board.Container classNames='absolute inset-0'>
+          <Board.Viewport>
+            <Board.Backdrop />
+            <Board.Content>
+              {items.map((item) => {
+                const itemLayout = layout.items[item.id];
+                return itemLayout ? (
+                  <Board.Cell item={item} layout={itemLayout} key={item.id} title={<Card.Text>{item.title}</Card.Text>}>
+                    {item.image ? <img src={item.image} alt='' className='size-full object-cover' /> : null}
+                  </Board.Cell>
+                ) : null;
+              })}
+            </Board.Content>
+          </Board.Viewport>
+        </Board.Container>
+      </Board.Root>
+    </Dnd.Root>
   );
 };
 
@@ -107,29 +117,65 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/** Default resolver (`pushToFit`): dropping/resizing pushes occupants out of the way. */
 export const Default: Story = {
   args: {
-    items: [
-      { id: '0', title: 'Item 0', description: random.lorem.paragraph(3) },
-      { id: '1', title: 'Item 1', description: random.lorem.paragraph(3) },
-      { id: '2', title: 'Item 2', description: random.lorem.paragraph(3) },
-      { id: '3', title: 'Item 3', description: random.lorem.paragraph(3) },
-      { id: '4', title: 'Item 4', description: random.lorem.paragraph(3) },
-      { id: '5', title: 'Item 5', description: random.lorem.paragraph(3) },
-      { id: '6', title: 'Item 6', description: random.lorem.paragraph(3) },
-    ],
-    grid: defaultGrid,
-    layout: {
-      size: { width: 7, height: 5 },
-      cells: {
-        0: { x: 0, y: 0 },
-        1: { x: -3, y: -2 },
-        2: { x: 3, y: 2 },
-        3: { x: -2, y: 0, width: 2, height: 2 },
-        4: { x: -1, y: -1, width: 3 },
-        5: { x: 1, y: 0 },
-        6: { x: 0, y: 1, width: 2 },
-      },
-    },
+    items: testItems,
+    layout: defaultLayout,
+    mode: 'float' satisfies GridMode,
+  },
+};
+
+/** `pack` mode: after a move/resize the layout compacts upward. */
+export const Pack: Story = {
+  args: {
+    items: testItems,
+    layout: defaultLayout,
+    mode: 'pack' satisfies GridMode,
+  },
+};
+
+/** Card-sized cells (the default is compact/half-size). */
+export const Large: Story = {
+  args: {
+    items: testItems,
+    layout: defaultLayout,
+    mode: 'float' satisfies GridMode,
+    cellSize: { width: cardDefaultInlineSize, height: cardDefaultInlineSize },
+  },
+};
+
+/** Tiles with a poster image filling the body (title still in the header). */
+export const Media: Story = {
+  args: {
+    items: posterItems,
+    layout: defaultLayout,
+    mode: 'float' satisfies GridMode,
+  },
+};
+
+/**
+ * `resizeToFit` resolver: a tile dropped/resized onto a neighbour shrinks to the free space rather
+ * than pushing others (rejects if not even 1×1 fits).
+ */
+export const ResizeToFit: Story = {
+  args: {
+    items: testItems,
+    layout: defaultLayout,
+    mode: 'float' satisfies GridMode,
+    resolver: resizeToFit,
+  },
+};
+
+/**
+ * `rejectIfNoFit` resolver: a drop is only accepted where the tile fits in free space; otherwise the
+ * tile springs back and nothing else moves.
+ */
+export const RejectIfNoFit: Story = {
+  args: {
+    items: testItems,
+    layout: defaultLayout,
+    mode: 'float' satisfies GridMode,
+    resolver: rejectIfNoFit,
   },
 };
