@@ -59,6 +59,7 @@ export const BoardCell = ({
     cellSize,
     gap,
     columns,
+    zoom,
     containerId,
     readonly,
     onResize,
@@ -89,7 +90,7 @@ export const BoardCell = ({
     return draggable({
       element: rootRef.current,
       dragHandle: dragHandleRef.current,
-      canDrag: () => isDraggable !== false && !readonly,
+      canDrag: () => isDraggable !== false && !readonly && !zoom,
       getInitialData: () =>
         ({
           type: 'tile',
@@ -120,7 +121,7 @@ export const BoardCell = ({
         setDragState('idle');
       },
     });
-  }, [isDraggable, readonly, containerId, item, layout.x, layout.y]);
+  }, [isDraggable, readonly, zoom, containerId, item, layout.x, layout.y]);
 
   // Hide the drag handle while this tile is being dragged, toggling the element's visibility directly
   // (no wrapper) so the header grid layout is untouched and the drag stays bound to the handle.
@@ -138,9 +139,9 @@ export const BoardCell = ({
   useEffect(() => {
     const handle = resizeHandleRef.current;
     if (handle) {
-      handle.style.visibility = dragging || resizeGhost ? 'hidden' : '';
+      handle.style.visibility = dragging || resizeGhost || zoom ? 'hidden' : '';
     }
-  }, [dragging, resizeGhost]);
+  }, [dragging, resizeGhost, zoom]);
 
   // Resize: a plain pointer drag (not a Dnd tile) on a corner handle. The size is derived from the
   // LIVE positions of the tile and the pointer (both viewport coords via getBoundingClientRect), so
@@ -149,7 +150,7 @@ export const BoardCell = ({
   useEffect(() => {
     const handle = resizeHandleRef.current;
     const viewport = viewportRef.current;
-    if (!handle || readonly) {
+    if (!handle || readonly || zoom) {
       return;
     }
 
@@ -224,7 +225,7 @@ export const BoardCell = ({
       onResizePreview(item.id, null);
       cleanup();
     };
-  }, [readonly, cellSize, gap, columns, layout.x, item.id, constraints, onResize, onResizePreview, viewportRef]);
+  }, [readonly, zoom, cellSize, gap, columns, layout.x, item.id, constraints, onResize, onResizePreview, viewportRef]);
 
   // Non-dragged tiles render at their previewed position during a drag (animating out of the way),
   // and spring back to `layout` when the drag ends. The dragged tile itself stays put (its preview

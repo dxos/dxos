@@ -1,4 +1,4 @@
-# Grid — Manual Test Plan
+# Board — Manual Test Plan
 
 Interactive drag/resize can't be synthesized in automation (native HTML5 DnD), so this is a manual
 pass. Everything below was verified headless (build/lint/unit tests + DOM measurements + render) EXCEPT
@@ -12,10 +12,11 @@ From THIS worktree (`.../.claude/worktrees/cloudflare-dashboard-source-e3fa9a`):
 cd tools/storybook-react && pnpm exec storybook dev --port=9010 --no-open
 ```
 
-Open: `http://localhost:9010/?path=/story/ui-react-ui-board-grid--default`
-Stories: **Default** (compact cells, float) · **Pack** (compacts up) · **Large** (card-size cells) · **Media** (poster images, ≤2×2).
+Open: `http://localhost:9010/?path=/story/ui-react-ui-board-board--default`
+Stories: **Default** (`pushToFit`, float) · **Pack** (compacts up) · **Large** (card-size cells) ·
+**Media** (poster images) · **ResizeToFit** / **RejectIfNoFit** (alternate resolvers) · **Zoom** (overview).
 
-Engine logic (collision/push/compact/resize/clamp) has **30 unit tests** — run:
+Engine logic (collision/push/compact/resolvers/clamp) has **32 unit tests** — run:
 `moon run react-ui-board:test`.
 
 ## Checklist

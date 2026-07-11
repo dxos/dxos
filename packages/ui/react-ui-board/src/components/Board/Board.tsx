@@ -55,6 +55,8 @@ type BoardContextValue = {
   readonly: boolean;
   layout: Layout;
   mode: GridMode;
+  /** Overview mode: the board is scaled down and drag/resize are disabled. */
+  zoom: boolean;
   /** Cell size and gap in px (converted from the `cellSize`/`gap` props, which are in rem). */
   cellSize: GridCellSize;
   gap: number;
@@ -85,8 +87,8 @@ const [BoardContextProvider, useBoardContext] = createContext<BoardContextValue>
  * Imperative handle exposed by `Board.Root` via ref.
  */
 export type BoardController = {
-  /** Scroll the viewport so the board content is centered. */
-  center: () => void;
+  /** Scroll the viewport to center the board, or a specific cell when its id is given. */
+  center: (cell?: string) => void;
 };
 
 //
@@ -110,6 +112,8 @@ type BoardRootProps = PropsWithChildren<{
    * reject (the tile springs back). Defaults to {@link pushToFit} (push occupants out of the way).
    */
   resolver?: DropResolver;
+  /** Overview mode (controlled): scales the board down and disables drag/resize. */
+  zoom?: boolean;
   /** Cell size in rem. */
   cellSize?: GridCellSize;
   /** Gap between cells in rem. */
@@ -139,6 +143,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
       mode = 'pack',
       bounds,
       resolver = pushToFit,
+      zoom = false,
       cellSize = defaultCellSize,
       gap = defaultGap,
       settleDelay = 500,
@@ -169,12 +174,31 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
 
     // Scroll viewport (set by Board.Container) + imperative centering, exposed via the Root ref.
     const viewportRef = useRef<HTMLDivElement | null>(null);
-    const center = useCallback(() => {
-      const el = viewportRef.current;
-      if (el) {
-        el.scrollTo({ left: (el.scrollWidth - el.clientWidth) / 2, top: (el.scrollHeight - el.clientHeight) / 2 });
-      }
-    }, []);
+    const center = useCallback(
+      (cell?: string) => {
+        const el = viewportRef.current;
+        if (!el) {
+          return;
+        }
+        const position = cell ? layout.items[cell] : undefined;
+        if (position) {
+          // Center the viewport on the given cell's rect.
+          const rect = cellRect(
+            { x: position.x, y: position.y, w: position.w ?? 1, h: position.h ?? 1 },
+            cellSizePx,
+            gapPx,
+          );
+          el.scrollTo({
+            left: rect.left + rect.width / 2 - el.clientWidth / 2,
+            top: rect.top + rect.height / 2 - el.clientHeight / 2,
+            behavior: 'smooth',
+          });
+        } else {
+          el.scrollTo({ left: (el.scrollWidth - el.clientWidth) / 2, top: (el.scrollHeight - el.clientHeight) / 2 });
+        }
+      },
+      [layout, cellSizePx, gapPx],
+    );
     useImperativeHandle(forwardedRef, () => ({ center }), [center]);
 
     const onResize = useCallback(
@@ -272,6 +296,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
         readonly={readonly ?? false}
         layout={layout}
         mode={mode}
+        zoom={zoom}
         cellSize={cellSizePx}
         gap={gapPx}
         columns={columns}
@@ -303,14 +328,18 @@ const BOARD_VIEWPORT_NAME = 'Board.Viewport';
 type BoardViewportProps = ThemedClassName<PropsWithChildren>;
 
 const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
-  const { cellSize, gap, columns, rows } = useBoardContext(BOARD_VIEWPORT_NAME);
+  const { cellSize, gap, columns, rows, zoom } = useBoardContext(BOARD_VIEWPORT_NAME);
   const bounds = useMemo(() => gridBounds(columns, rows, cellSize, gap), [columns, rows, cellSize, gap]);
 
   return (
     // `m-auto` centers the board within the (flex) scroll container when it fits, and stays fully
     // scrollable when it overflows (unlike justify-center, which would clip the top/left). Scroll
     // snap points live on the backdrop cells (snap-to-grid), not here (see Board.Container / Backdrop).
-    <div className={mx('relative m-auto', classNames)} style={{ width: bounds.width, height: bounds.height }}>
+    // `scale-50` (zoom) gives an overview; drag/resize are disabled in that mode (see BoardCell).
+    <div
+      className={mx('relative m-auto transition-transform duration-300', zoom && 'scale-50', classNames)}
+      style={{ width: bounds.width, height: bounds.height }}
+    >
       {children}
     </div>
   );
@@ -423,10 +452,12 @@ const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
   }, []);
 
   // Center the board once on mount only. Deliberately NOT re-centering when the layout/size changes,
-  // so the viewport doesn't jump after a drag or resize (`center` is stable; runs a single time).
+  // so the viewport doesn't jump after a drag or resize (`center` now closes over `layout`, so it is
+  // intentionally excluded from the deps — this must run a single time).
   useEffect(() => {
     center();
-  }, [center]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <ScrollArea.Root orientation='all' classNames={classNames}>

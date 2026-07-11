@@ -179,3 +179,13 @@ export const RejectIfNoFit: Story = {
     resolver: rejectIfNoFit,
   },
 };
+
+/** Overview mode: the board is scaled down and drag/resize are disabled (controlled via `zoom`). */
+export const Zoom: Story = {
+  args: {
+    items: testItems,
+    layout: defaultLayout,
+    mode: 'float' satisfies GridMode,
+    zoom: true,
+  },
+};
