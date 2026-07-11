@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { createContext } from '@radix-ui/react-context';
 import React, {
@@ -153,16 +154,40 @@ const GridViewport = ({ classNames, children }: GridViewportProps) => {
   const bounds = useMemo(() => gridBounds(layout.columns, rows, cellSize, gap), [layout.columns, rows, cellSize, gap]);
 
   return (
-    <div
-      className={mx('relative border border-separator rounded-lg', classNames)}
-      style={{ width: bounds.width, height: bounds.height }}
-    >
+    <div className={mx('relative', classNames)} style={{ width: bounds.width, height: bounds.height }}>
       {children}
     </div>
   );
 };
 
 GridViewport.displayName = GRID_VIEWPORT_NAME;
+
+//
+// Container
+// NOTE: Scroll viewport; registers pragmatic-dnd auto-scroll so dragging/resizing near an edge scrolls.
+//
+
+const GRID_CONTAINER_NAME = 'Grid.Container';
+
+type GridContainerProps = ThemedClassName<PropsWithChildren>;
+
+const GridContainer = ({ classNames, children }: GridContainerProps) => {
+  const ref = useRef<HTMLDivElement>(null);
+  // `autoScrollForElements` is global — it activates on any pragmatic-dnd drag over this element,
+  // so it covers both tile moves and the resize-handle drag.
+  useEffect(() => {
+    invariant(ref.current);
+    return autoScrollForElements({ element: ref.current });
+  }, []);
+
+  return (
+    <div ref={ref} className={mx('overflow-auto', classNames)}>
+      {children}
+    </div>
+  );
+};
+
+GridContainer.displayName = GRID_CONTAINER_NAME;
 
 //
 // Content
@@ -280,12 +305,20 @@ const GridDropTarget = ({ position, rect, containerId, onAddClick }: GridDropTar
 
 export const Grid = {
   Root: GridRoot,
+  Container: GridContainer,
   Viewport: GridViewport,
   Content: GridContent,
   Backdrop: GridBackdrop,
   Cell: GridCell,
 };
 
-export type { GridBackdropProps, GridCellProps, GridContentProps, GridRootProps, GridViewportProps };
+export type {
+  GridBackdropProps,
+  GridCellProps,
+  GridContainerProps,
+  GridContentProps,
+  GridRootProps,
+  GridViewportProps,
+};
 
 export { useGridContext };

@@ -56,8 +56,8 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, ...props }: 
   return (
     <Dnd.Root>
       <Grid.Root {...props} layout={layout} mode={mode} onChange={setLayout} onAdd={handleAdd}>
-        {/* Scroll container: the viewport is sized to the full grid bounds and may exceed the screen. */}
-        <div className='absolute inset-0 overflow-auto p-2'>
+        {/* Scroll viewport: sized to the full grid bounds; auto-scrolls when dragging/resizing near an edge. */}
+        <Grid.Container classNames='absolute inset-0'>
           <Grid.Viewport>
             <Grid.Backdrop />
             <Grid.Content>
@@ -71,7 +71,7 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, ...props }: 
               })}
             </Grid.Content>
           </Grid.Viewport>
-        </div>
+        </Grid.Container>
       </Grid.Root>
     </Dnd.Root>
   );
