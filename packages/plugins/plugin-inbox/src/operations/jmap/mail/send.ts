@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { Jmap, JmapMail } from '../../../apis';
 import { JmapApiError, JmapSendIdentityNotFoundError, JmapSendMessageInvalidError } from '../../../errors';
 import { JmapCredentials } from '../../../services';
-import { InboxOperation } from '../../../types';
+import { InboxOperation, Mailbox } from '../../../types';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
@@ -79,7 +79,13 @@ export default InboxOperation.JmapSend.pipe(
       });
 
       log('email sent via jmap', { id: result.id });
-      return { id: result.id, threadId: result.threadId ?? '' };
+      return {
+        id: result.id,
+        threadId: result.threadId ?? '',
+        // The Sent folder the submission filed the message into; the same tag its canonical synced copy
+        // will carry, so the caller can tag the local draft to match.
+        sentTag: { source: Mailbox.JMAP_TAG_SOURCE, id: sent.id, label: sent.name },
+      };
     }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(JmapCredentials.fromConnection(connectionRef))),
   ),
   // Erase the inferred handler type (which surfaces Message/Connection from the input schema) so the

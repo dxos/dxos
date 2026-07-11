@@ -11,7 +11,6 @@ export * as InboxCapabilities from './InboxCapabilities';
 export * as InboxEvents from './InboxEvents';
 export * as InboxOperation from './InboxOperation';
 export * as Mailbox from './Mailbox';
-export * as Sent from './Sent';
 export * as Settings from './Settings';
 export * as DraftEvent from './DraftEvent';
 export * as Starred from './Starred';

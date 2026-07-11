@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -10,15 +10,16 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery, useResolveRef } from '@dxos/react-client/echo';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
+import { TagIndex } from '@dxos/schema';
 import { type Message as MessageType } from '@dxos/types';
 
 import { EditMessage, Message, type MessageHeaderProps, type ViewMode } from '#components';
 import { useActorContact, useEmailComposerExtensions, useSendEmail } from '#hooks';
 import { meta } from '#meta';
-import { DraftMessage, InboxOperation, Mailbox, Sent } from '#types';
+import { DraftMessage, InboxOperation, Mailbox } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 import { createDraftMessage } from '../../util';
@@ -242,10 +243,13 @@ const DraftThreadItem = ({ message, mailbox, ...rest }: DraftThreadItemProps) =>
   return <DraftThreadItemContent message={live} mailbox={mailbox} {...rest} />;
 };
 
+// Stable fallback while the mailbox tag index is unresolved, so the tag-uris atom is unconditional.
+const EMPTY_TAG_URIS_ATOM = Atom.make<string[]>(() => []);
+
 /**
  * Renders a resolved live draft: the inline composer while unsent, locking to the read-only leaf once
- * the {@link Sent.TAG_SENT} tag is applied (on send) — reactively, via the tag-index membership atom —
- * until the sync reconciliation stage swaps in the canonical feed message.
+ * the provider's sent tag is applied (on send) — reactively, via the tag-index membership — until the
+ * sync reconciliation stage swaps in the canonical feed message.
  */
 const DraftThreadItemContent = ({ message, mailbox, viewMode, setViewMode, onContactCreate }: DraftThreadItemProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -253,9 +257,17 @@ const DraftThreadItemContent = ({ message, mailbox, viewMode, setViewMode, onCon
   const extensions = useEmailComposerExtensions(message);
   const onSend = useSendEmail(message);
 
-  // Read the sent flag reactively (a tag membership atom re-fires the instant the tag is applied on
-  // send; reading a message property would not).
-  const sent = useAtomValue(Sent.atom(mailbox, message.id));
+  // Sent once the draft carries the provider sent tag `useSendEmail` recorded on it (`sentTagUri`).
+  // Read membership reactively from the tag index: the tag-uri list re-fires the instant the tag is
+  // applied on send, whereas reading the message property alone would not.
+  const tagIndex = useResolveRef(mailbox?.tags);
+  const tagUrisAtom = useMemo(
+    () => (tagIndex ? TagIndex.atom(tagIndex)(message.id) : EMPTY_TAG_URIS_ATOM),
+    [tagIndex, message.id],
+  );
+  const tagUris = useAtomValue(tagUrisAtom);
+  const sentTagUri = message.properties?.sentTagUri;
+  const sent = typeof sentTagUri === 'string' && tagUris.includes(sentTagUri);
 
   const handleDelete = useCallback(() => {
     if (mailbox) {
