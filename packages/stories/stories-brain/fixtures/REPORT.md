@@ -64,10 +64,58 @@ Cross-cutting:
 - `gpt-oss-20b` the best open all-rounder; `gemma-12b` wins the summary _frontier_ (non-reasoning → faster).
 - Would **invalidate H0:** a 3B model matching haiku on drafts, or a 30B open model failing labeling.
 
-## 4. Analysis (filled after the run)
+## 4. Analysis
 
-_TBD — per-task verdict vs H0, recommended model per task, the accuracy-vs-latency frontier, the
-reasoning-model tax, and any surprises. Kept generic (no private mailbox content)._
+Run: 6 contestants × 4 tasks, N=25 messages, judge=opus, bar=haiku. Full matrix in
+`results/model-ladder.md`. **N=25, one corpus, one judge, one run — directional, not definitive.**
+
+### Verdict per task (bar = haiku; "clears" = ≥95% of bar)
+
+| Task | Bar (haiku) | Best open weight | Clears? | Recommended |
+| --- | --- | --- | --- | --- |
+| labeling (agreement) | 1.00 | qwen3-30b 0.70 | ✗ (none close) | **haiku** |
+| message summary (coverage) | 0.50 | qwen3-8b 0.46 / gpt-oss-20b 0.45 | ✗ (just under) | haiku, but open is a whisker away |
+| thread summary (coverage) | 0.55 | gpt-oss-20b 0.46 | ✗ | **haiku** |
+| **drafts (rubric)** | 0.98 | **gemma-12b 0.94 · qwen3-30b 0.94** | **✓** | **gemma-12b / qwen3-30b** (or gpt-oss-20b 0.91 for speed) |
+
+### The surprise — H0 is inverted
+
+**H0 predicted the crossover rises with task complexity** (labeling easiest → open OK; drafts hardest →
+need premier). **The opposite happened:** open weights did **worst on labeling** (the "simplest" task)
+and **best on drafts** (the "hardest"). Two reasons:
+
+- **Metric shape, not capability.** Labeling is scored as *agreement with haiku*, so a model that
+  labels reasonably but differently is punished; drafts are scored on *absolute quality* (rubric), which
+  rewards genuine capability. Extractive-agreement is a harsher bar than generative-quality.
+- **Drafting is a generation task open weights handle well.** gemma-12b and qwen3-30b match haiku's
+  draft quality within tolerance, with **near-perfect correctness (0.99)** — they don't invent facts.
+
+### Cross-cutting findings
+
+- **Faithfulness is universally high (0.89–0.99)** across every open model and task — they do **not**
+  hallucinate more than haiku. The gap on summaries is **coverage** (missing salient points), not fidelity.
+- **Reasoning tax confirmed and non-monotonic** (as predicted): qwen3-8b is the *slowest* model on
+  labeling/summaries (12–14 s) despite being the smallest; gemma-12b is shockingly slow on summaries
+  (34–38 s p50) despite being non-reasoning. Latency does not track size.
+- **gpt-oss-20b is the best open all-rounder** (prediction held): consistently near the top on accuracy
+  with the best latency profile of the capable models (1.6–7.7 s) — the frontier pick when a fast open
+  model is needed.
+- **llama-3.2-3b** is fast (0.5 s) but too weak everywhere except as a draft baseline (0.74).
+
+### Takeaway
+
+Where open weights are ready **today**: **drafts** (gemma-12b / qwen3-30b clear the bar; gpt-oss-20b for
+speed) and, at a small coverage discount, **message summaries** (gpt-oss-20b / qwen3-8b). Keep **premier
+(haiku)** for **labeling** and **thread summaries**. Faithfulness is not the risk — coverage and
+labeling-agreement are.
+
+### Caveats / what would sharpen this
+
+- Labeling uses *haiku-agreement*, not ground truth — a model can label well yet score low. A
+  human-labeled spam/tag gold set would separate "different" from "wrong".
+- Coverage gold sets are strict (haiku itself only scores 0.50) — the ceiling is low, compressing the
+  spread. Worth calibrating the gold-set size.
+- N=25, single run. Re-run at higher N and average across runs before acting on the draft result.
 
 ## 5. Next
 
