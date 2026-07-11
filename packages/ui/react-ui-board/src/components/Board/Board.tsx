@@ -464,7 +464,9 @@ const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
     // With overscroll, an explicit margin (half the viewport) replaces `m-auto` so any cell can be
     // scrolled to the centre.
     <div
-      className={mx('relative m-auto transition-transform duration-300', classNames)}
+      // `shrink-0`: as a flex item the board must keep its full width, else the row container shrinks
+      // it and the right-hand overflow (incl. the overscroll margin) collapses.
+      className={mx('relative m-auto shrink-0 transition-transform duration-300', classNames)}
       style={{
         width: bounds.width,
         height: bounds.height,
