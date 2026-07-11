@@ -10,4 +10,7 @@ export const BloggerOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-draft'),
   () => import('./add-post'),
   () => import('./add-publication'),
+  () => import('./import-drafts'),
+  () => import('./publish-draft'),
+  () => import('./unpublish-draft'),
 );

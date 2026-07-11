@@ -43,5 +43,18 @@ export interface PublisherService {
   deleteDraft(connection: Ref.Ref<Connection.Connection>, id: string): Promise<void>;
 }
 
-export class PublisherError extends Error {}
-export class MissingCredentialError extends PublisherError {}
+/** Thrown by a `PublisherService` when publish/import/unpublish fails against the remote backend. */
+export class PublisherError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PublisherError';
+  }
+}
+
+/** Thrown by a `PublisherService` when its credentials (e.g. a Connection's access token) are missing. */
+export class MissingCredentialError extends PublisherError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'MissingCredentialError';
+  }
+}
