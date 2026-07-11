@@ -9,6 +9,7 @@ import { type AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
+import { buildThreads, clusterThreads, materializeTopics, summarizeTopics } from '@dxos/pipeline-email';
 import { type RDF } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
@@ -21,11 +22,8 @@ import {
   factStoreFixtureExists,
   fixtureExists,
   generateText,
-  groupThreads,
   loadFacts,
   loadFixtureMessages,
-  parseJsonArray,
-  summarizeThread,
   trackProgress,
   writeResponses,
 } from '../testing/harness';
@@ -35,8 +33,8 @@ import {
   ARTIFACT_MODEL,
   ARTIFACT_N,
   ARTIFACT_OWNER,
+  ARTIFACT_OWNER_EMAIL,
   ARTIFACT_PROFILES,
-  ARTIFACT_THREAD_CAP,
 } from './defs';
 
 // Qualitative artifacts for the overnight report — the outputs to eyeball, not graded scores:
@@ -113,37 +111,31 @@ describe.skipIf(!fixtureExists())('overnight artifacts (topics / profiles / samp
         messages: messages.length,
       });
 
-      // --- Topics: summarize each thread, then cluster the summaries into named topics. ---
+      // --- Topics: the canonical corpus pipeline — deterministic thread clustering (subject-token
+      // Jaccard + shared participants), LLM-enriched per-topic summaries, materialized as `Topic`
+      // ECHO objects. Reuses @dxos/pipeline-email rather than ad-hoc LLM clustering. ---
       {
-        const threads = groupThreads(messages).slice(0, ARTIFACT_THREAD_CAP);
-        const progress = trackProgress('artifacts:topics', threads.length + 1);
-        const summaries: { threadId: string; subject: string; summary: string }[] = [];
-        for (const thread of threads) {
-          const result = await runWith(model, summarizeThread(thread, model));
-          summaries.push({
-            threadId: thread.threadId,
-            subject: subjectOf(thread.messages[0]),
-            summary: result.summary,
-          });
-          progress.advance();
-        }
-        const clusterPrompt =
-          'Cluster the email threads below into 8–15 coherent topics. For each topic give a short name, ' +
-          'a one-paragraph summary, and the list of threadIds that belong to it. Return ONLY a JSON array ' +
-          'of {"topic": string, "summary": string, "threadIds": string[]}.\n\n' +
-          summaries.map((entry) => `[${entry.threadId}] ${entry.subject}: ${entry.summary}`).join('\n');
-        const raw = await runWith(model, generateText(model.model, model.provider, clusterPrompt, '300 seconds'));
-        progress.advance();
+        const threads = buildThreads(messages, { ownerEmail: ARTIFACT_OWNER_EMAIL, now: new Date().toISOString() });
+        const drafts = clusterThreads(threads);
+        const progress = trackProgress('artifacts:topics', drafts.length);
+        // The corpus algorithm's LLM boundary: a plain async closure over the artifact model.
+        const summarizer = (prompt: string): Promise<string> =>
+          runWith(model, generateText(model.model, model.provider, prompt, '300 seconds'));
+        const enriched = await summarizeTopics(drafts, summarizer);
+        progress.advance(drafts.length);
         progress.done();
-        const topics = parseJsonArray<{ topic?: string; summary?: string; threadIds?: string[] }>(raw);
-        const subjectById = new Map(summaries.map((entry) => [entry.threadId, entry.subject]));
-        const sections = topics.map((topic, index) => {
-          const threadList = (topic.threadIds ?? []).map((id) => `- ${subjectById.get(id) ?? id}`).join('\n');
-          return {
-            title: topic.topic ?? `Topic ${index + 1}`,
-            body: `${(topic.summary ?? '').trim()}\n\n**Threads (${(topic.threadIds ?? []).length}):**\n${threadList}`,
-          };
-        });
+        const topics = materializeTopics(enriched);
+        const subjectById = new Map(threads.map((thread) => [thread.threadId, thread.subject]));
+        const sections = [...topics]
+          .sort((left, right) => right.threadIds.length - left.threadIds.length)
+          .map((topic) => ({
+            title: `${topic.label} (${topic.threadIds.length} threads)`,
+            body:
+              `${topic.summary.trim()}\n\n` +
+              `**Keywords:** ${topic.keywords.join(', ') || '—'}\n` +
+              `**Participants:** ${topic.participants.join(', ') || '—'}\n\n` +
+              `**Threads:**\n${topic.threadIds.map((id) => `- ${subjectById.get(id) ?? id}`).join('\n')}`,
+          }));
         writeResponses('topics', sections.length ? sections : [{ title: 'topics', body: '_(no topics produced)_' }]);
         log.info('topics', { threads: threads.length, topics: topics.length });
       }

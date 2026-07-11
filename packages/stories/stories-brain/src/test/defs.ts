@@ -59,6 +59,9 @@ export const ARTIFACT_THREAD_CAP = process.env.ARTIFACT_THREAD_CAP
 /** Owner/self entity slugs excluded from profile subject selection. */
 export const ARTIFACT_OWNER = (process.env.ARTIFACT_OWNER ?? 'rich-burdon,recipient').split(',').map((s) => s.trim());
 
+/** Mailbox owner email — steers `buildThreads` thread-state inference (awaiting-mine vs theirs). */
+export const ARTIFACT_OWNER_EMAIL = process.env.ARTIFACT_OWNER_EMAIL?.trim() ?? 'rich@braneframe.com';
+
 /** Disable the LLM-judge scoring pass (`EVAL_SCORE=0`) to run the cheap response-only eval. */
 export const EVAL_SCORE = process.env.EVAL_SCORE !== '0';
 
