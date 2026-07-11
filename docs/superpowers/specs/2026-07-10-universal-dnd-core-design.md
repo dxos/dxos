@@ -32,7 +32,7 @@ Three packages were audited (`react-ui-mosaic`, `react-ui-list`,
 
 1. **Mosaic already is a working universal core.** `Mosaic.Root` runs a single
    `monitorForElements`; containers self-register in a `Record<containerId,
-   handler>` registry; drops route to same-container `onDrop` or cross-container
+handler>` registry; drops route to same-container `onDrop` or cross-container
    `onTake`→`onDrop`. Kanban proves cross-container drag works today (cards move
    between per-column containers). Nothing about this orchestration is
    Stack-specific.
@@ -120,7 +120,7 @@ the default adapter today.
 ### Layer 3 — Hooks + thin components (List's ergonomics)
 
 - `useDndContainer({ id, hitbox, canDrop, onDrop, onTake, autoScroll }) →
-  controller` — reference-stable (mutable inputs held in refs, per `useReorder`);
+controller` — reference-stable (mutable inputs held in refs, per `useReorder`);
   self-registers into `Dnd.Root`; owns the container drop-target + optional
   `autoScrollForElements`.
 - `useDndTile(controller, id) → { rootRef, handleRef, state, ... }` — binds
@@ -142,10 +142,10 @@ Interface a container implements so the core and tiles stay layout-agnostic:
 
 ```ts
 interface LayoutModel<TLocation> {
-  get(id: string): TLocation | undefined;      // item → location
-  move(id: string, to: TLocation): void;        // apply a resolved placement
-  resize?(id: string, size: Size2D): void;       // grid only
-  serialize(): unknown;                           // persistable form
+  get(id: string): TLocation | undefined; // item → location
+  move(id: string, to: TLocation): void; // apply a resolved placement
+  resize?(id: string, size: Size2D): void; // grid only
+  serialize(): unknown; // persistable form
 }
 ```
 
@@ -160,14 +160,14 @@ interface LayoutModel<TLocation> {
 
 ## Consumers after the core lands
 
-| Container | Hitbox | Location | Notes |
-|---|---|---|---|
-| Stack (mosaic) | closest-edge | index | migrate off local Root/context |
-| OrderedList (list) | closest-edge | index | migrate; adopt central monitor + shared indicator; keep per-row local-state |
-| Tree (list) | tree-instruction | path | **fast-follow**, not this project |
-| **Grid** (board) | grid-cell | `{x,y,w,h}` | **new**: collision/push engine + 2-D resize |
-| **Board** (board) | grid-cell | `{x,y,w,h}` | Grid `float` + canvas viewport (re-implement existing Board) |
-| Kanban (plugin) | closest-edge | index | unchanged — already on Board |
+| Container          | Hitbox           | Location    | Notes                                                                       |
+| ------------------ | ---------------- | ----------- | --------------------------------------------------------------------------- |
+| Stack (mosaic)     | closest-edge     | index       | migrate off local Root/context                                              |
+| OrderedList (list) | closest-edge     | index       | migrate; adopt central monitor + shared indicator; keep per-row local-state |
+| Tree (list)        | tree-instruction | path        | **fast-follow**, not this project                                           |
+| **Grid** (board)   | grid-cell        | `{x,y,w,h}` | **new**: collision/push engine + 2-D resize                                 |
+| **Board** (board)  | grid-cell        | `{x,y,w,h}` | Grid `float` + canvas viewport (re-implement existing Board)                |
+| Kanban (plugin)    | closest-edge     | index       | unchanged — already on Board                                                |
 
 ## Resolved decisions
 

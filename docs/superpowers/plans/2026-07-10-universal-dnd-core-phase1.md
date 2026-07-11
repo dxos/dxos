@@ -16,26 +16,27 @@
 
 ## Rename table (apply consistently everywhere)
 
-| Old (in `react-ui-mosaic`) | New (in `react-ui-dnd`) |
-|---|---|
-| `Mosaic.Root` (component) | `Dnd.Root` |
-| `MosaicRootContextValue` | `DndRootContextValue` |
-| `useMosaicRootContext` | `useDndRootContext` |
-| `MosaicEventHandler` | `DndContainerHandler` |
-| `MosaicTileData` | `DndTileData` |
-| `MosaicPlaceholderData` | `DndPlaceholderData` |
-| `MosaicContainerData` | `DndContainerData` |
-| `MosaicData` | `DndData` |
-| `MosaicTargetData` | `DndTargetData` |
-| `MosaicDraggingState` | `DndDraggingState` |
-| `LocationType` | `DndLocation` |
-| `getSourceData` | `getSourceData` (unchanged) |
+| Old (in `react-ui-mosaic`) | New (in `react-ui-dnd`)     |
+| -------------------------- | --------------------------- |
+| `Mosaic.Root` (component)  | `Dnd.Root`                  |
+| `MosaicRootContextValue`   | `DndRootContextValue`       |
+| `useMosaicRootContext`     | `useDndRootContext`         |
+| `MosaicEventHandler`       | `DndContainerHandler`       |
+| `MosaicTileData`           | `DndTileData`               |
+| `MosaicPlaceholderData`    | `DndPlaceholderData`        |
+| `MosaicContainerData`      | `DndContainerData`          |
+| `MosaicData`               | `DndData`                   |
+| `MosaicTargetData`         | `DndTargetData`             |
+| `MosaicDraggingState`      | `DndDraggingState`          |
+| `LocationType`             | `DndLocation`               |
+| `getSourceData`            | `getSourceData` (unchanged) |
 
 > `DndLocation` keeps `string | number` in Phase 1 (behaviour-preserving). It becomes opaque + comparable in Phase 2.
 
 ## File structure
 
 **Create (in `@dxos/react-ui-dnd`):**
+
 - `packages/ui/react-ui-dnd/src/dnd/types.ts` — core DnD types (moved from mosaic `Mosaic/types.ts`, renamed). One responsibility: the drag payload union + handler contract + location.
 - `packages/ui/react-ui-dnd/src/dnd/Root.tsx` — `Dnd.Root` + `useDndRootContext` (moved from mosaic `Mosaic/Root.tsx`, renamed).
 - `packages/ui/react-ui-dnd/src/dnd/useContainerId.ts` — mandatory per-instance container-id helper (new).
@@ -44,6 +45,7 @@
 - `packages/ui/react-ui-dnd/src/dnd/useContainerId.test.tsx` — unit test (new).
 
 **Modify:**
+
 - `packages/ui/react-ui-dnd/package.json` — add deps.
 - `packages/ui/react-ui-dnd/src/index.ts` — export `./dnd`.
 - `packages/ui/react-ui-mosaic/package.json` — add `@dxos/react-ui-dnd` (already a dep for ResizeHandle; confirm).
@@ -54,9 +56,11 @@
 - `packages/ui/react-ui-mosaic/src/components/Mosaic/index.ts` — stop exporting the moved Root/types.
 
 **Delete:**
+
 - `packages/ui/react-ui-mosaic/src/components/Mosaic/Root.tsx` (moved).
 
 **Call-site cutover (`Mosaic.Root` → `Dnd.Root`), exact sites:**
+
 - `packages/plugins/plugin-deck/src/containers/DeckLayout/DeckLayout.tsx:38,60`
 - `packages/plugins/plugin-deck/src/components/Matrix/Matrix.stories.tsx:153,172`
 - `packages/plugins/plugin-testing/src/components/Layout/Layout.tsx:130,204`
@@ -72,6 +76,7 @@
 ### Task 1: Add core DnD dependencies to react-ui-dnd
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-dnd/package.json`
 
 - [ ] **Step 1: Add the pragmatic-dnd + radix deps the core needs**
@@ -105,6 +110,7 @@ git commit -m "chore(react-ui-dnd): add pragmatic-dnd + radix deps for core"
 ### Task 2: Move the core types into react-ui-dnd
 
 **Files:**
+
 - Create: `packages/ui/react-ui-dnd/src/dnd/types.ts`
 - Create: `packages/ui/react-ui-dnd/src/dnd/types.test.ts`
 
@@ -153,6 +159,7 @@ git commit -m "refactor(react-ui-dnd): move DnD core types from mosaic (renamed)
 ### Task 3: Add the mandatory container-id helper
 
 **Files:**
+
 - Create: `packages/ui/react-ui-dnd/src/dnd/useContainerId.ts`
 - Create: `packages/ui/react-ui-dnd/src/dnd/useContainerId.test.tsx`
 
@@ -226,6 +233,7 @@ git commit -m "feat(react-ui-dnd): add useContainerId per-instance discriminator
 ### Task 4: Move Root into react-ui-dnd as `Dnd.Root`
 
 **Files:**
+
 - Create: `packages/ui/react-ui-dnd/src/dnd/Root.tsx`
 - Create: `packages/ui/react-ui-dnd/src/dnd/Root.test.tsx`
 - Create: `packages/ui/react-ui-dnd/src/dnd/index.ts`
@@ -344,6 +352,7 @@ git commit -m "refactor(react-ui-dnd): move Mosaic.Root to Dnd.Root with pure re
 ### Task 5: Re-point react-ui-mosaic at the core; delete moved files
 
 **Files:**
+
 - Delete: `packages/ui/react-ui-mosaic/src/components/Mosaic/Root.tsx`
 - Modify: `packages/ui/react-ui-mosaic/src/components/Mosaic/types.ts`
 - Modify: `packages/ui/react-ui-mosaic/src/components/Mosaic/Container.tsx`
