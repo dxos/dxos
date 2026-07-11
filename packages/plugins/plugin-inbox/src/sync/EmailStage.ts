@@ -9,7 +9,7 @@ import * as Stream from 'effect/Stream';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Blob, Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Blob, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { type ContactLookup, buildContactFromActor, buildContactLookup } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { normalizeText } from '@dxos/markdown';
@@ -17,7 +17,7 @@ import { Stage } from '@dxos/pipeline';
 import { SyncBinding } from '@dxos/plugin-connector';
 import { Message, Person } from '@dxos/types';
 
-import { type Mailbox } from '../types';
+import { DraftMessage, type Mailbox } from '../types';
 import { runOnArrivalExtractors } from '../util/mailbox-sync';
 
 /**
@@ -52,6 +52,8 @@ export type Mapped = {
   readonly attachments?: readonly Attachment[];
   /** Contact resolved by {@link extractContacts}, added to the database by {@link toCommitUnit}. */
   readonly contact?: Person.Person;
+  /** Local drafts this synced message supersedes ({@link reconcileDrafts}), removed by {@link toCommitUnit}. */
+  readonly supersededDrafts?: readonly Message.Message[];
 };
 
 /** A decoded email attachment, ready for {@link processAttachments} to turn into a Blob. */
@@ -157,6 +159,54 @@ export const onArrivalExtractors =
     )(self);
 
 /**
+ * Queries the mailbox's already-sent drafts once per sync run and pools them by the provider message id
+ * captured at send time (`properties.sentMessageId`) — the key {@link reconcileDrafts} matches each
+ * incoming message's `foreignId` against. Doing this once (rather than per item) keeps reconciliation
+ * off the database as messages stream through. Unsent drafts (no `sentMessageId`) are never pooled and
+ * thus never eligible for removal.
+ */
+export const queryDraftPool = Effect.fn('queryDraftPool')(function* (mailbox: Mailbox.Mailbox) {
+  const mailboxUri = Obj.getURI(mailbox);
+  const drafts = (yield* Database.query(Filter.type(Message.Message, { properties: { mailbox: mailboxUri } }))
+    .run).filter((candidate) => DraftMessage.belongsTo(candidate, mailboxUri) && candidate.properties?.sentMessageId);
+
+  const pool = new Map<string, Message.Message[]>();
+  for (const draft of drafts) {
+    const sentMessageId = draft.properties?.sentMessageId;
+    if (!sentMessageId) {
+      continue;
+    }
+    const existing = pool.get(sentMessageId);
+    if (existing) {
+      existing.push(draft);
+    } else {
+      pool.set(sentMessageId, [draft]);
+    }
+  }
+  return pool;
+});
+
+/**
+ * Records the local drafts each incoming message supersedes — matched by the provider message id the
+ * draft captured at send time (`properties.sentMessageId`), which equals the synced message's
+ * `foreignId` — from a pool built once per run and keyed by that id. Writes nothing itself;
+ * {@link toCommitUnit} defers the `db.remove` to commit, so the canonical message is appended to the
+ * feed before its now-redundant drafts are deleted. A stage factory: pass the run's draft pool once.
+ *
+ * The pool is queried a single time by the caller (per sync operation), so this stage never touches
+ * the database or feed per item.
+ */
+export const reconcileDrafts = (
+  draftPool: ReadonlyMap<string, readonly Message.Message[]>,
+): Stage.Stage<Mapped, Mapped, never, never> =>
+  Stage.map('reconcile-drafts', (mapped: Mapped) =>
+    Effect.sync(() => {
+      const drafts = draftPool.get(mapped.foreignId);
+      return drafts?.length ? { ...mapped, supersededDrafts: drafts } : mapped;
+    }),
+  );
+
+/**
  * Terminal stage converting a run's {@link Mapped} item into the {@link SyncBinding.CommitUnit} the
  * commit sink consumes. The one place that turns what upstream stages recorded into deferred writes:
  * `message.attachments` (populated by {@link processAttachments}) becomes a feed-append commit effect
@@ -184,6 +234,18 @@ export const toCommitUnit = (): Stage.Stage<Mapped, SyncBinding.CommitUnit, neve
         commitEffects.push(
           Effect.fn('sync.commit.addContact')(function* () {
             yield* Database.add(contact);
+          }),
+        );
+      }
+
+      if (mapped.supersededDrafts?.length) {
+        const drafts = mapped.supersededDrafts;
+        commitEffects.push(
+          Effect.fn('sync.commit.removeDrafts')(function* () {
+            const { db } = yield* Database.Service;
+            for (const draft of drafts) {
+              db.remove(draft);
+            }
           }),
         );
       }
