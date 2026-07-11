@@ -7,10 +7,12 @@
 // mailbox fixture from live Gmail and runs every pipeline bench sequentially, each writing its stats
 // to fixtures/local/results (JSON + .md; progress in progress.json; analyze-results at the end).
 //
+// Always runs the FULL corpus — `LIMIT` is cleared so a stray cap never truncates the canonical run.
+//
 // Usage (from packages/stories/stories-brain):
-//   MODELS=qwen node scripts/run-all.mjs           # narrow the model set
-//   SKIP_FETCH=1 node scripts/run-all.mjs          # reuse the existing fixture (no re-fetch)
-//   LIMIT=20 TESTS=tags,draft-responses node scripts/run-all.mjs   # subset, capped
+//   MODELS=qwen node scripts/run-all.mjs                        # narrow the model set
+//   SKIP_FETCH=1 node scripts/run-all.mjs                       # reuse the existing fixture (no re-fetch)
+//   TESTS=tags,draft-responses node scripts/run-all.mjs         # run a subset of benches
 //
 // Prereqs: the OAuth client (.env.tpl / GOOGLE_CLIENT_ID+SECRET), Ollama running for local models,
 // and DX_ANTHROPIC_API_KEY for the remote tier. See google-auth.mjs and TESTPLAN.md.
@@ -22,6 +24,10 @@ import { fileURLToPath } from 'node:url';
 import { getAccessToken } from './google-auth.mjs';
 
 const PACKAGE_ROOT = resolve(fileURLToPath(new URL('../', import.meta.url)));
+
+// The canonical run covers the whole fixture — never a capped subset — so drop any inherited LIMIT.
+delete process.env.LIMIT;
+
 const run = (script) => spawnSync('node', [script], { cwd: PACKAGE_ROOT, stdio: 'inherit', env: process.env });
 
 // 1. Front-load the browser consent so everything after it is unattended (subsequent auth reuses the
