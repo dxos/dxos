@@ -16,6 +16,7 @@ import React, {
   useImperativeHandle,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
@@ -60,6 +61,9 @@ type GridContextValue = {
   onAdd?: (position: GridItem) => void;
   onDelete?: (id: string) => void;
   onResize: (id: string, size: { w: number; h: number }, constraints?: GridConstraints) => void;
+  /** Report an in-progress resize (snapped cells) so the engine runs live and other tiles move;
+   * pass null on drop/cancel. */
+  onResizePreview: (id: string, size: { w: number; h: number } | null) => void;
 };
 
 const [GridContextProvider, useGridContext] = createContext<GridContextValue>('GridContext');
@@ -149,9 +153,19 @@ const GridRoot = forwardRef<GridController, GridRootProps>(
     // reruns when the grid's own state changes, not on every drag frame.
     const { addContainer, removeContainer, dragging } = useDndRootContext(GRID_ROOT_NAME);
 
-    // While one of this grid's tiles is dragged over a cell, compute where everything would settle
-    // so the other tiles can animate out of the way (and spring back to `layout` when the drag ends).
+    // In-progress resize (snapped cells), reported by the resizing cell; drives a live preview.
+    const [resizePreview, setResizePreview] = useState<{ id: string; w: number; h: number } | null>(null);
+    const onResizePreview = useCallback((id: string, size: { w: number; h: number } | null) => {
+      setResizePreview(size ? { id, ...size } : null);
+    }, []);
+
+    // The layout the grid would settle into during an in-progress move or resize, so the other tiles
+    // animate out of the way live (and spring back to `layout` when the gesture ends). Resize takes
+    // precedence (it isn't a Dnd drag, so `dragging` is unset during it).
     const previewLayout = useMemo<GridLayout | undefined>(() => {
+      if (resizePreview) {
+        return resizeItem(layout, resizePreview.id, { w: resizePreview.w, h: resizePreview.h }, undefined, mode);
+      }
       if (
         dragging &&
         dragging.source.data.containerId === containerId &&
@@ -161,7 +175,7 @@ const GridRoot = forwardRef<GridController, GridRootProps>(
         return moveItem(layout, dragging.source.data.id, to, mode);
       }
       return undefined;
-    }, [dragging, containerId, layout, mode]);
+    }, [resizePreview, dragging, containerId, layout, mode]);
 
     useEffect(() => {
       const handler: DndContainerHandler = {
@@ -194,6 +208,7 @@ const GridRoot = forwardRef<GridController, GridRootProps>(
         onAdd={readonly ? undefined : onAdd}
         onDelete={readonly ? undefined : onDelete}
         onResize={onResize}
+        onResizePreview={onResizePreview}
       >
         {children}
       </GridContextProvider>
@@ -218,7 +233,11 @@ const GridViewport = ({ classNames, children }: GridViewportProps) => {
   return (
     // `m-auto` centers the grid within the (flex) scroll container when it fits, and stays fully
     // scrollable when it overflows (unlike justify-center, which would clip the top/left).
-    <div className={mx('relative m-auto', classNames)} style={{ width: bounds.width, height: bounds.height }}>
+    // `snap-center` makes the board's centre the scroll snap point (see Grid.Container).
+    <div
+      className={mx('relative m-auto snap-center', classNames)}
+      style={{ width: bounds.width, height: bounds.height }}
+    >
       {children}
     </div>
   );
@@ -255,8 +274,9 @@ const GridContainer = ({ classNames, children }: GridContainerProps) => {
 
   return (
     <ScrollArea.Root orientation='all' classNames={classNames}>
-      {/* `flex` so the viewport's `m-auto` centers the grid; overflow still scrolls both axes. */}
-      <ScrollArea.Viewport ref={ref} classNames='flex'>
+      {/* `flex` so the viewport's `m-auto` centers the grid; overflow scrolls both axes. `snap-*`
+          makes the board a proximity snap point so scrolling magnetically settles on its centre. */}
+      <ScrollArea.Viewport ref={ref} classNames='flex snap-both snap-proximity'>
         {children}
       </ScrollArea.Viewport>
     </ScrollArea.Root>

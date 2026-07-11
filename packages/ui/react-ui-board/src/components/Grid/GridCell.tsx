@@ -55,7 +55,7 @@ export const GridCell = ({
   constraints,
 }: GridCellProps) => {
   const { t } = useTranslation(translationKey);
-  const { cellSize, gap, containerId, readonly, onResize, onDelete, previewLayout, viewportRef } =
+  const { cellSize, gap, containerId, readonly, onResize, onResizePreview, onDelete, previewLayout, viewportRef } =
     useGridContext(GRID_CELL_NAME);
   // Any active drag makes every tile transparent to pointer events so the backdrop drop-target cells
   // beneath them (incl. cells under an occupied tile) receive the drag — required for push-on-drop.
@@ -121,6 +121,15 @@ export const GridCell = ({
     }
   }, [dragState]);
 
+  // Hide the resize corner while a resize is in progress (an active resizeGhost) without unmounting
+  // it, so the resize drag stays bound to the handle element.
+  useEffect(() => {
+    const handle = resizeHandleRef.current;
+    if (handle) {
+      handle.style.visibility = resizeGhost ? 'hidden' : '';
+    }
+  }, [resizeGhost]);
+
   // Resize: a plain pointer drag (not a Dnd tile) on a corner handle. The size is derived from the
   // LIVE positions of the tile and the pointer (both viewport coords via getBoundingClientRect), so
   // auto-scroll is accounted for automatically — a `scroll` listener recomputes while scrolling even
@@ -145,13 +154,25 @@ export const GridCell = ({
         height: Math.max(cellSize.height, pointer.y - tile.top),
       };
     };
-    const updateGhost = () => {
+    // Raw px → constrained whole-cell size.
+    const cellsFor = (raw: { width: number; height: number }) =>
+      applyConstraints(
+        {
+          w: Math.max(1, Math.round((raw.width + gap) / (cellSize.width + gap))),
+          h: Math.max(1, Math.round((raw.height + gap) / (cellSize.height + gap))),
+        },
+        constraints,
+      );
+    // Update the free (magnetic) outline AND report the snapped size so the engine runs live and the
+    // other tiles move out of the way during the resize — the same behaviour as a move.
+    const update = () => {
       const raw = rawSize();
       if (raw) {
         setResizeGhost({
           width: magnetize(raw.width, cellSize.width, gap),
           height: magnetize(raw.height, cellSize.height, gap),
         });
+        onResizePreview(item.id, cellsFor(raw));
       }
     };
 
@@ -163,31 +184,31 @@ export const GridCell = ({
       },
       onDragStart: ({ location }) => {
         lastPointer.current = { x: location.current.input.clientX, y: location.current.input.clientY };
-        viewport?.addEventListener('scroll', updateGhost);
-        updateGhost();
+        viewport?.addEventListener('scroll', update);
+        update();
       },
       onDrag: ({ location }) => {
         lastPointer.current = { x: location.current.input.clientX, y: location.current.input.clientY };
-        updateGhost();
+        update();
       },
       onDrop: () => {
-        viewport?.removeEventListener('scroll', updateGhost);
+        viewport?.removeEventListener('scroll', update);
         const raw = rawSize();
         setResizeGhost(null);
         lastPointer.current = null;
+        onResizePreview(item.id, null);
         if (raw) {
-          const w = Math.max(1, Math.round((raw.width + gap) / (cellSize.width + gap)));
-          const h = Math.max(1, Math.round((raw.height + gap) / (cellSize.height + gap)));
-          onResize(item.id, applyConstraints({ w, h }, constraints), constraints);
+          onResize(item.id, cellsFor(raw), constraints);
         }
       },
     });
 
     return () => {
-      viewport?.removeEventListener('scroll', updateGhost);
+      viewport?.removeEventListener('scroll', update);
+      onResizePreview(item.id, null);
       cleanup();
     };
-  }, [readonly, cellSize, gap, item.id, constraints, onResize, viewportRef]);
+  }, [readonly, cellSize, gap, item.id, constraints, onResize, onResizePreview, viewportRef]);
 
   // Non-dragged tiles render at their previewed position during a drag (animating out of the way),
   // and spring back to `layout` when the drag ends. The dragged tile itself stays put (its preview
@@ -215,8 +236,9 @@ export const GridCell = ({
       <Card.Root
         classNames={mx(
           'absolute grid-rows-[auto_1fr]',
-          // Animate position changes so displaced tiles glide out of the way and spring back.
-          'transition-[left,top] duration-200 ease-out',
+          // Animate position/size changes so displaced tiles glide out of the way (and spring back),
+          // and a resized tile grows smoothly.
+          'transition-[left,top,width,height] duration-200 ease-out',
           dragState === 'dragging' && 'opacity-50',
           // Transparent to pointer events during ANY drag so a tile can be dropped onto an occupied
           // cell (pushing the occupant) or back onto its own footprint.
