@@ -53,7 +53,7 @@ export const scoreVariant = async (options: {
   readonly baseline?: SkillMode;
 }): Promise<VariantScore> => {
   const { model, subject, corpus, goldPoints, arms, judge } = options;
-  const baseline = options.baseline ?? 'database';
+  const baseline = options.baseline ?? 'source';
 
   const scored: ArmScore[] = [];
   for (const arm of arms) {

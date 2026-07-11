@@ -62,21 +62,21 @@ All local, uncached, never in CI.
 Benches `bench --tests <name>` can select (dependency order — `extract-facts` writes the fact store the
 fact tests read):
 
-| Bench (`--tests`)    | Does                                                                                    | Model  |
-| -------------------- | --------------------------------------------------------------------------------------- | ------ |
-| `extract-facts`      | Extract RDF facts — incl. questions/requests as directive facts — → `fact-store.json`   | models |
-| `extract-contacts`   | Extract actors / senders as contact objects                                             | models |
-| `feed-stats`         | Message / thread / sender counts                                                        | —      |
-| `subject-facts`      | All facts for `SUBJECT` + their source messages (fact→source bridge)                    | —      |
-| `list-questions`     | The directive facts (questions / requests) in the store                                 | —      |
-| `tags`               | Tag each message (topics + spam)                                                        | models |
-| `summarize-messages` | Per-message summary (terse bullets)                                                     | models |
-| `summarize-threads`  | Per-thread summary                                                                      | models |
-| `extract-questions`  | Classify each act — question / request / notification                                   | models |
-| `draft-responses`    | Draft a reply per message (skips non-replyable mail)                                    | models |
-| `html-vs-text`       | Fact extraction over native `text/html` vs `text/plain`                                 | models |
-| `html-to-markdown`   | HTML→markdown conversion throughput                                                     | —      |
-| `brain-vs-rag-eval`  | Ablate database / brain / rag / hybrid on a subject prompt; blind judge scores each arm | models |
+| Bench (`--tests`)    | Does                                                                                  | Model  |
+| -------------------- | ------------------------------------------------------------------------------------- | ------ |
+| `extract-facts`      | Extract RDF facts — incl. questions/requests as directive facts — → `fact-store.json` | models |
+| `extract-contacts`   | Extract actors / senders as contact objects                                           | models |
+| `feed-stats`         | Message / thread / sender counts                                                      | —      |
+| `subject-facts`      | All facts for `SUBJECT` + their source messages (fact→source bridge)                  | —      |
+| `list-questions`     | The directive facts (questions / requests) in the store                               | —      |
+| `tags`               | Tag each message (topics + spam)                                                      | models |
+| `summarize-messages` | Per-message summary (terse bullets)                                                   | models |
+| `summarize-threads`  | Per-thread summary                                                                    | models |
+| `extract-questions`  | Classify each act — question / request / notification                                 | models |
+| `draft-responses`    | Draft a reply per message (skips non-replyable mail)                                  | models |
+| `html-vs-text`       | Fact extraction over native `text/html` vs `text/plain`                               | models |
+| `html-to-markdown`   | HTML→markdown conversion throughput                                                   | —      |
+| `brain-vs-rag-eval`  | Ablate source / facts / rag / hybrid on a subject prompt; blind judge scores each arm | models |
 
 `brain-vs-rag-eval` is the facts-help test: a fixed judge model grades every arm against one gold
 salient-point set (**coverage**) and the source corpus (**faithfulness**), plus a blind pairwise vote
@@ -94,7 +94,7 @@ the cheap response-only eval; `JUDGE=<name>` picks the grader (default `claude-s
 | `CONCURRENCY`        | extract-facts in-flight parallelism (default 10 remote / 1 local)  |
 | `TESTS`              | Comma-separated bench names (subset of the suite)                  |
 | `SUBJECT`            | Subject for subject-facts / brain-vs-rag                           |
-| `SKILL_MODES`        | brain-vs-rag arms to run (subset of database,brain,rag,hybrid)     |
+| `SKILL_MODES`        | brain-vs-rag arms to run (subset of source,facts,rag,hybrid)       |
 | `JUDGE`              | brain-vs-rag grading model (name substring; default claude-sonnet) |
 | `EVAL_SCORE`         | `0` skips brain-vs-rag judge scoring (response-only)               |
 | `SAMPLES`            | Max per-variant result rows written to JSON                        |

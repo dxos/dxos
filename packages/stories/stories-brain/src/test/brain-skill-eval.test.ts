@@ -32,8 +32,8 @@ import {
 } from '../testing/harness';
 import { DEFAULT_SUBJECT, EVAL_SCORE, JUDGE, SKILL_MODES, SUBJECT } from './defs';
 
-const ALL_MODES: readonly SkillMode[] = ['database', 'brain', 'rag', 'hybrid'];
-const BASELINE_MODE: SkillMode = 'database';
+const ALL_MODES: readonly SkillMode[] = ['source', 'facts', 'rag', 'hybrid'];
+const BASELINE_MODE: SkillMode = 'source';
 
 // Which skill configurations to compare. `SKILL_MODES=database,brain` narrows the set.
 const selectModes = (): readonly SkillMode[] => {

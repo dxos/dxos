@@ -26,20 +26,20 @@ import { subjectIndexLayer } from './subject-index';
 import { vectorStoreLayer } from './vector';
 
 /**
- * The skill configuration under test:
- * - `database` — baseline: only the Database skill (queries the ECHO space + feed).
- * - `brain`    — Database + Brain skill (fact-store QueryFacts/SummarizeSubject tools).
- * - `rag`      — Database + RAG skill (vector-index snippet retrieval).
- * - `hybrid`   — Database + fact→source bridge: facts index into the actual source messages.
+ * The skill configuration under test (each arm adds a retrieval layer on top of the source arm):
+ * - `source` — baseline: only the Database skill (reads the ECHO space + feed).
+ * - `facts`  — source + Brain skill (fact-store QueryFacts/SummarizeSubject tools).
+ * - `rag`    — source + RAG skill (vector-index snippet retrieval).
+ * - `hybrid` — source + fact→source bridge: facts index into the actual source messages.
  */
-export type SkillMode = 'database' | 'brain' | 'rag' | 'hybrid';
+export type SkillMode = 'source' | 'facts' | 'rag' | 'hybrid';
 
-const usesFactStore = (mode: SkillMode): boolean => mode === 'brain';
+const usesFactStore = (mode: SkillMode): boolean => mode === 'facts';
 
 export type AgentEvalConfig = {
   readonly variant: ModelVariant;
   readonly mode: SkillMode;
-  /** Facts injected into a `FactStore` for the Brain skill (used only when mode = 'brain'). */
+  /** Facts injected into a `FactStore` for the Brain skill (used only when mode = 'facts'). */
   readonly facts: readonly RDF.Fact[];
   /** Messages seeded onto the feed (Database skill) and embedded into the vector index (RAG skill). */
   readonly messages: readonly Message.Message[];
@@ -65,7 +65,7 @@ export type AgentEvalResult = {
 export const runAgentEval = async (config: AgentEvalConfig, testContext: TestContext): Promise<AgentEvalResult> => {
   const skills = [
     DatabaseSkill.make(),
-    ...(config.mode === 'brain' ? [BrainSkill.make()] : []),
+    ...(config.mode === 'facts' ? [BrainSkill.make()] : []),
     ...(config.mode === 'rag' ? [RagSkill.make()] : []),
     ...(config.mode === 'hybrid' ? [HybridSkill.make()] : []),
   ];
