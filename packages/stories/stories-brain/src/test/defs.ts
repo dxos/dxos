@@ -32,6 +32,33 @@ export const LADDER_REFERENCE = process.env.LADDER_REFERENCE?.trim() ?? 'haiku';
 /** Accuracy tolerance: the smallest model within this fraction of the reference is "sufficient". */
 export const LADDER_TOLERANCE = process.env.LADDER_TOLERANCE ? Number(process.env.LADDER_TOLERANCE) : 0.95;
 
+//
+// Qualitative artifacts (topics / profiles / sample drafts) — a wider corpus slice, single model.
+//
+
+/** Messages drawn for the artifact pass (wider than the graded LADDER_N so topics/profiles aren't thin). */
+export const ARTIFACT_N = process.env.ARTIFACT_N ? Math.max(1, Number(process.env.ARTIFACT_N)) : 300;
+
+/** Canonical model for the topic + profile artifacts (a name substring; the bar by default). */
+export const ARTIFACT_MODEL = process.env.ARTIFACT_MODEL?.trim() ?? 'haiku';
+
+/** Open-weight model shown beside the bar in the sample drafts (a name substring). */
+export const ARTIFACT_BEST_OPEN = process.env.ARTIFACT_BEST_OPEN?.trim() ?? 'gpt-oss-20b';
+
+/** How many contact profiles to write. */
+export const ARTIFACT_PROFILES = process.env.ARTIFACT_PROFILES ? Math.max(1, Number(process.env.ARTIFACT_PROFILES)) : 3;
+
+/** How many sample drafts to write. */
+export const ARTIFACT_DRAFTS = process.env.ARTIFACT_DRAFTS ? Math.max(1, Number(process.env.ARTIFACT_DRAFTS)) : 10;
+
+/** Cap on threads fed to the topic-clustering prompt (keeps it inside context). */
+export const ARTIFACT_THREAD_CAP = process.env.ARTIFACT_THREAD_CAP
+  ? Math.max(1, Number(process.env.ARTIFACT_THREAD_CAP))
+  : 60;
+
+/** Owner/self entity slugs excluded from profile subject selection. */
+export const ARTIFACT_OWNER = (process.env.ARTIFACT_OWNER ?? 'rich-burdon,recipient').split(',').map((s) => s.trim());
+
 /** Disable the LLM-judge scoring pass (`EVAL_SCORE=0`) to run the cheap response-only eval. */
 export const EVAL_SCORE = process.env.EVAL_SCORE !== '0';
 

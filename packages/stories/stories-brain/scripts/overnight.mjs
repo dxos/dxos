@@ -40,16 +40,18 @@ for (const [key, value] of Object.entries(DEFAULTS)) {
   }
 }
 
-console.error('===== overnight model-ladder =====');
+console.error('===== overnight model-ladder + artifacts =====');
 console.error(`  models:    ${process.env.MODELS}`);
 console.error(`  judge:     ${process.env.JUDGE}   reference: ${process.env.LADDER_REFERENCE}`);
 console.error(
-  `  messages:  ${process.env.LADDER_N}   tasks: ${process.env.LADDER_TASKS ?? 'labeling,summarize-messages,summarize-threads,drafts'}`,
+  `  messages:  graded ${process.env.LADDER_N} / artifacts ${process.env.ARTIFACT_N ?? 300}   tasks: ${process.env.LADDER_TASKS ?? 'labeling,summarize-messages,summarize-threads,drafts'}`,
 );
-console.error('  report →   fixtures/local/results/model-ladder.md\n');
+console.error('  reports →  fixtures/local/results/{model-ladder,topics,profiles,drafts-sample}.md\n');
 
-// Reuse bench.mjs: it loads .env, seeds progress.json, renders the live stats table, and tees logs.
-const result = spawnSync('node', ['scripts/bench.mjs', '--tests', 'model-ladder', '--stats'], {
+// Reuse bench.mjs: it loads .env, seeds progress.json, and tees vitest logs. Render the live stats
+// table only on a TTY; a detached/background run logs plainly (no alt-screen redraw into a file).
+const stats = process.stdout.isTTY ? ['--stats'] : [];
+const result = spawnSync('node', ['scripts/bench.mjs', '--tests', 'model-ladder,artifacts', ...stats], {
   cwd: PACKAGE_ROOT,
   stdio: 'inherit',
   env: process.env,

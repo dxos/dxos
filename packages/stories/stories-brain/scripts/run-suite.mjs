@@ -39,6 +39,7 @@ const MANIFEST = [
   { name: 'html-to-markdown', file: 'src/test/html-to-markdown.bench.test.ts' },
   { name: 'brain-vs-rag-eval', file: 'src/test/brain-skill-eval.test.ts' },
   { name: 'model-ladder', file: 'src/test/model-ladder.bench.test.ts' },
+  { name: 'artifacts', file: 'src/test/artifacts.bench.test.ts' },
 ];
 
 const only = process.env.TESTS?.split(',')
