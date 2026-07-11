@@ -40,6 +40,28 @@ statement/notification) and present for questions/requests/promises — see
 The model is defined with Effect Schema and is JSON-serializable. Conflicting or
 time-varying facts are simply multiple Facts — never merged at write time.
 
+### Factuality values
+
+`factuality.value` is the author's committed epistemic stance, from **FactBank**: a modality (how
+certain — `CT` certain, `PR` probable, `PS` possible) crossed with a polarity (`+` it holds, `-` it does
+not), plus two special values when polarity or the whole commitment is unknown. `nature` further tags
+the uncertainty as **epistemic** (limited knowledge — "I think") or **aleatory** (inherent chance —
+"maybe it rains").
+
+| value | modality    | polarity | reads as                                    | cue                        |
+| ----- | ----------- | -------- | ------------------------------------------- | -------------------------- |
+| `CT+` | certain     | positive | it is the case                              | plain assertion            |
+| `CT-` | certain     | negative | it is not the case                          | "not", "never", "no"       |
+| `PR+` | probable    | positive | it probably is                              | "probably", "likely"       |
+| `PR-` | probable    | negative | it probably is not                          | "probably not", "doubt"    |
+| `PS+` | possible    | positive | it possibly is                              | "might", "maybe", "could"  |
+| `PS-` | possible    | negative | it possibly is not                          | "might not"                |
+| `CTu` | certain     | unknown  | definitely one way, but which is unknown    | "whether or not it holds"  |
+| `Uu`  | uncommitted | —        | the author commits to nothing about it      | questions, requests, hypotheticals |
+
+`Uu` is the value directive facts carry (see [Illocutions](#illocutions-speech-acts)): a question or
+request states no truth, so its proposition is uncommitted rather than asserted.
+
 ## Illocutions (speech acts)
 
 Not every utterance asserts a fact. _"The meeting is at 3"_ **informs**; _"can you move it?"_ **asks**;
