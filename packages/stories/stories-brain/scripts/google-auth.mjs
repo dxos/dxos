@@ -17,15 +17,19 @@
 //   4. Create the client: APIs & Services → Credentials → Create credentials → OAuth client ID →
 //      Application type "Desktop app". (A Desktop client trusts the http://localhost loopback
 //      redirect automatically — no redirect URI to register.) Copy the Client ID + Client secret.
-//   5. Export them before running this tool:
+//   5. Provide the client id + secret via env — either the raw values, or 1Password secret
+//      references (resolved with `op read`, so nothing is stored in your shell history/rc):
 //        export GOOGLE_CLIENT_ID=...  GOOGLE_CLIENT_SECRET=...
+//        # or, from 1Password (requires the `op` CLI, signed in):
+//        export GOOGLE_CLIENT_ID="op://Private/dxos-testing Google OAuth/client id"
+//        export GOOGLE_CLIENT_SECRET="op://Private/dxos-testing Google OAuth/client secret"
 //
 // Usage:
 //   node scripts/google-auth.mjs            # ensure a refresh token (consent if needed), print status
 //   node scripts/google-auth.mjs --token    # print a fresh access token to stdout (for piping)
 //   node scripts/google-auth.mjs --force    # re-consent even if a refresh token exists
 
-import { exec } from 'node:child_process';
+import { exec, execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { dirname, resolve } from 'node:path';
@@ -37,8 +41,23 @@ const REDIRECT_URI = `http://localhost:${REDIRECT_PORT}/callback`;
 const PACKAGE_ROOT = resolve(fileURLToPath(new URL('../', import.meta.url)));
 const TOKEN_PATH = resolve(PACKAGE_ROOT, 'fixtures/local/.google-token.json');
 
-const clientId = process.env.GOOGLE_CLIENT_ID;
-const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+/** Resolves a value that may be a 1Password secret reference (`op://…`) via the `op` CLI. */
+const resolveSecret = (value) => {
+  if (!value?.startsWith('op://')) {
+    return value;
+  }
+  try {
+    return execFileSync('op', ['read', value], { encoding: 'utf8' }).trim();
+  } catch (err) {
+    throw new Error(
+      `failed to read ${value} from 1Password — is the \`op\` CLI installed and signed in? (${err.message})`,
+    );
+  }
+};
+
+// Resolved lazily (inside getAccessToken) so `op read` only runs when the tool is actually used.
+let clientId;
+let clientSecret;
 
 const die = (message) => {
   console.error(`error: ${message}`);
@@ -134,9 +153,11 @@ const refreshAccessToken = async (refreshToken) => {
 
 /** Ensures a refresh token exists (consenting if needed) and returns a fresh access token. */
 export const getAccessToken = async ({ force = false } = {}) => {
-  if (!clientId || !clientSecret) {
-    die('GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set (see the header of this file).');
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    die('GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set (raw or op:// refs; see the header).');
   }
+  clientId = resolveSecret(process.env.GOOGLE_CLIENT_ID);
+  clientSecret = resolveSecret(process.env.GOOGLE_CLIENT_SECRET);
   let saved = force ? undefined : loadToken();
   if (!saved?.refresh_token) {
     const tokens = await consent();
