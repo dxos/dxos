@@ -11,10 +11,34 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Scope from 'effect/Scope';
 
+import {
+  applyRpcTimingMiddleware,
+  isRpcTimingEnabled,
+  resolveRpcTimingOptions,
+  rpcTimingClientLayer,
+  rpcTimingServerLayer,
+  type RpcTimingOptions,
+} from './rpc-timing';
+
 export type ServeRpcGroupOptions = {
   disableTracing?: boolean;
   concurrency?: number | 'unbounded';
+  /**
+   * When enabled, stamps each outbound RPC with a `Date.now()` send time and logs queue-wait /
+   * service durations on the worker above {@link RpcTimingOptions.minLogMs} (default 100 ms).
+   */
+  timing?: boolean | RpcTimingOptions;
 };
+
+export type { RpcTimingMetadataService, RpcTimingOptions } from './rpc-timing';
+export {
+  RPC_TIMING_SENT_AT_HEADER,
+  RpcTimingMetadata,
+  RpcTimingMiddleware,
+  applyRpcTimingMiddleware,
+  rpcTimingClientLayer,
+  rpcTimingServerLayer,
+} from './rpc-timing';
 
 // A worker RPC client runs over a single MessagePort that multiplexes every request by id, so there
 // is no real per-connection concurrency limit. The `@effect/rpc` worker protocol backs the client
@@ -35,15 +59,23 @@ const asRpcGroup = <G>(group: G): Parameters<typeof RpcClient.make>[0] => group 
 export const makeRpcClientOverProtocol = <G, ProtocolError, ProtocolRequirements>(
   protocol: Layer.Layer<RpcClient.Protocol, ProtocolError, ProtocolRequirements>,
   group: G,
-  options?: Pick<ServeRpcGroupOptions, 'disableTracing'>,
+  options?: Pick<ServeRpcGroupOptions, 'disableTracing' | 'timing'>,
 ): Effect.Effect<unknown, never, Scope.Scope | ProtocolRequirements> =>
   Effect.gen(function* () {
+    const timingEnabled = isRpcTimingEnabled(options?.timing);
+    const rpcGroup = timingEnabled
+      ? applyRpcTimingMiddleware(asRpcGroup(group))
+      : asRpcGroup(group);
+    const protocolLayer = timingEnabled
+      ? protocol.pipe(Layer.provideMerge(rpcTimingClientLayer()))
+      : protocol;
+
     // Build the transport into the caller's scope (extended via `Scope.extend`) rather than
     // `Effect.provide`-ing the layer directly: that would bind the transport's lifetime to this
     // construction effect, tearing the worker connection down the instant the client is returned
     // (the client is used later by the caller). `Layer.build` keeps it alive for the caller's scope.
-    const context = yield* Layer.build(protocol);
-    return yield* RpcClient.make(asRpcGroup(group), { disableTracing: options?.disableTracing ?? true }).pipe(
+    const context = yield* Layer.build(protocolLayer);
+    return yield* RpcClient.make(rpcGroup, { disableTracing: options?.disableTracing ?? true }).pipe(
       Effect.provide(context),
     );
   }).pipe(Effect.orDie);
@@ -55,7 +87,7 @@ export const makeRpcClientOverProtocol = <G, ProtocolError, ProtocolRequirements
 export const makeRpcClient = <G>(
   port: MessagePort,
   group: G,
-  options?: Pick<ServeRpcGroupOptions, 'disableTracing'>,
+  options?: Pick<ServeRpcGroupOptions, 'disableTracing' | 'timing'>,
 ): Effect.Effect<unknown, never, Scope.Scope> =>
   makeRpcClientOverProtocol(
     RpcClient.layerProtocolWorker({ size: 1, concurrency: WORKER_CLIENT_CONCURRENCY }).pipe(
@@ -87,11 +119,18 @@ export const serveRpcGroup = <G, H extends Layer.Layer<never, never, never>>(
         return;
       }
 
-      const serverLayer = RpcServer.layer(asRpcGroup(group), {
+      const timingEnabled = isRpcTimingEnabled(options?.timing);
+      const rpcGroup = timingEnabled
+        ? applyRpcTimingMiddleware(asRpcGroup(group))
+        : asRpcGroup(group);
+      const serverLayer = RpcServer.layer(rpcGroup, {
         disableTracing: options?.disableTracing ?? true,
         concurrency: options?.concurrency ?? 'unbounded',
       }).pipe(
         Layer.provide(handlers),
+        ...(timingEnabled
+          ? [Layer.provide(rpcTimingServerLayer(resolveRpcTimingOptions(options?.timing)))]
+          : []),
         Layer.provide(
           RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(port))),
         ),
