@@ -40,3 +40,16 @@ tasks:
     options:
       cache: false
       runInCI: false
+  # Extracts facts from the fixture across models and saves the fact-store fixture (fact-store.json)
+  # that subject-facts / brain-vs-rag consume. LLM-driven — needs models: run Ollama and/or set
+  # DX_ANTHROPIC_API_KEY, and narrow with `MODELS=qwen LIMIT=10 moon run stories-brain:facts`.
+  facts:
+    command: 'pnpm exec vitest run --project=node src/test/extract-facts.bench.test.ts'
+    deps:
+      - esbuild-plugins:compile
+      - node-std:compile
+      - vite-plugin-import-source:compile
+      - '^:compile'
+    options:
+      cache: false
+      runInCI: false
