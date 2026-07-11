@@ -19,7 +19,15 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { IconButton, ScrollArea, type ThemedClassName, usePx, useTranslation } from '@dxos/react-ui';
+import {
+  IconButton,
+  ScrollArea,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  usePx,
+  useTranslation,
+} from '@dxos/react-ui';
 import {
   type DndContainerHandler,
   type DndPlaceholderData,
@@ -532,7 +540,7 @@ const BOARD_CONTAINER_NAME = 'Board.Container';
 
 type BoardContainerProps = ThemedClassName<PropsWithChildren>;
 
-const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
+const BoardContainer = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { viewportRef, center, resizing, zoom, selected, overscroll, layout, cellSize, gap } =
     useBoardContext(BOARD_CONTAINER_NAME);
   const localRef = useRef<HTMLDivElement>(null);
@@ -713,7 +721,9 @@ const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
   }, []);
 
   return (
-    <ScrollArea.Root orientation='all' classNames={classNames}>
+    // Forward the composable props + ref to ScrollArea.Root so this can be the `asChild` target of a
+    // parent slot (e.g. `<Panel.Content asChild><Board.Container/></Panel.Content>`).
+    <ScrollArea.Root orientation='all' {...composableProps(props)} ref={forwardedRef}>
       {/* `flex` so the viewport's `m-auto` centers the board; overflow scrolls both axes. (Scroll-snap
           was removed: proximity snapping re-snapped the viewport after programmatic scrolls, fighting
           the zoom-anchor / auto-scroll compensation.) */}
@@ -722,7 +732,7 @@ const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
-};
+});
 
 BoardContainer.displayName = BOARD_CONTAINER_NAME;
 

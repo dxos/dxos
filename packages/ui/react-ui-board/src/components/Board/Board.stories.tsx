@@ -121,7 +121,7 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content asChild>
-            <Board.Container classNames='absolute inset-0'>
+            <Board.Container>
               <Board.Viewport>
                 <Board.Backdrop />
                 <Board.Content>
@@ -140,10 +140,11 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
                   })}
                 </Board.Content>
               </Board.Viewport>
-              {/* Overlaid overview map + zoom control (bottom-right). */}
+              <div className='absolute bottom-4 left-4 z-10 flex flex-col items-end gap-2'>
+                <Board.Zoom />
+              </div>
               <div className='absolute bottom-4 right-4 z-10 flex flex-col items-end gap-2'>
                 <Board.Map classNames='w-40' />
-                <Board.Zoom />
               </div>
             </Board.Container>
           </Panel.Content>
