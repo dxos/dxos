@@ -121,14 +121,16 @@ export const GridCell = ({
     }
   }, [dragState]);
 
-  // Hide the resize corner while a resize is in progress (an active resizeGhost) without unmounting
-  // it, so the resize drag stays bound to the handle element.
+  // Hide the resize corner during a move (`dragging`) or an in-progress resize (`resizeGhost`) by
+  // toggling visibility only. The handle must stay MOUNTED — the resize draggable binds to it once and
+  // isn't re-created when a move ends, so unmounting it (e.g. `!dragging` in JSX) would leave a
+  // re-appeared handle with no drag binding.
   useEffect(() => {
     const handle = resizeHandleRef.current;
     if (handle) {
-      handle.style.visibility = resizeGhost ? 'hidden' : '';
+      handle.style.visibility = dragging || resizeGhost ? 'hidden' : '';
     }
-  }, [resizeGhost]);
+  }, [dragging, resizeGhost]);
 
   // Resize: a plain pointer drag (not a Dnd tile) on a corner handle. The size is derived from the
   // LIVE positions of the tile and the pointer (both viewport coords via getBoundingClientRect), so
@@ -269,8 +271,9 @@ export const GridCell = ({
       </Card.Root>
 
       {/* Resize handle: a sibling (not clipped by the card's overflow/rounding) straddling the
-          bottom-right corner so the resize cursor appears right at the tile's edge. Hidden mid-drag. */}
-      {!readonly && !dragging && (
+          bottom-right corner so the resize cursor appears right at the tile's edge. Always mounted
+          (its drag binding must persist); hidden via visibility during move/resize (see effect). */}
+      {!readonly && (
         <button
           ref={resizeHandleRef}
           type='button'

@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
@@ -54,6 +53,8 @@ type GridContextValue = {
   /** During an active drag, the layout the grid would settle into — tiles animate to these
    * positions and spring back to `layout` when the drag ends without a drop. Undefined when idle. */
   previewLayout?: GridLayout;
+  /** True while a tile is being resized (a pointer drag, not a Dnd drag); gates the resize auto-scroll. */
+  resizing: boolean;
   /** Scroll viewport element; set by `Grid.Container`, used by the controller to center. */
   viewportRef: MutableRefObject<HTMLDivElement | null>;
   /** Scroll the viewport so the grid is centered. */
@@ -203,6 +204,7 @@ const GridRoot = forwardRef<GridController, GridRootProps>(
         rows={rows}
         containerId={containerId}
         previewLayout={previewLayout}
+        resizing={!!resizePreview}
         viewportRef={viewportRef}
         center={center}
         onAdd={readonly ? undefined : onAdd}
@@ -232,12 +234,9 @@ const GridViewport = ({ classNames, children }: GridViewportProps) => {
 
   return (
     // `m-auto` centers the grid within the (flex) scroll container when it fits, and stays fully
-    // scrollable when it overflows (unlike justify-center, which would clip the top/left).
-    // `snap-center` makes the board's centre the scroll snap point (see Grid.Container).
-    <div
-      className={mx('relative m-auto snap-center', classNames)}
-      style={{ width: bounds.width, height: bounds.height }}
-    >
+    // scrollable when it overflows (unlike justify-center, which would clip the top/left). Scroll
+    // snap points live on the backdrop cells (snap-to-grid), not here (see Grid.Container / Backdrop).
+    <div className={mx('relative m-auto', classNames)} style={{ width: bounds.width, height: bounds.height }}>
       {children}
     </div>
   );
@@ -255,15 +254,88 @@ const GRID_CONTAINER_NAME = 'Grid.Container';
 type GridContainerProps = ThemedClassName<PropsWithChildren>;
 
 const GridContainer = ({ classNames, children }: GridContainerProps) => {
-  const { viewportRef, center } = useGridContext(GRID_CONTAINER_NAME);
+  const { viewportRef, center, resizing } = useGridContext(GRID_CONTAINER_NAME);
   const localRef = useRef<HTMLDivElement>(null);
   const ref = composeRefs(localRef, viewportRef);
 
-  // Auto-scroll attaches to the scrolling element (the ScrollArea viewport). `autoScrollForElements`
-  // is global — it fires on any pragmatic-dnd drag, so it covers both tile moves and the resize drag.
+  // Read the live resizing flag from a ref so the mount-once auto-scroll effect always sees it.
+  const resizingRef = useRef(resizing);
+  resizingRef.current = resizing;
+
+  // Custom edge auto-scroll: engage only within a narrow edge band and ramp speed gently, so
+  // scrolling starts near the edge (not early) and is smooth — pragmatic's `autoScrollForElements`
+  // uses a large percentage-based hitbox at a fixed speed, with no public knob to soften either.
+  // `dragover` drives it for tile moves (native HTML5 drag); `pointermove` (only while a resize is
+  // active) drives it for the resize gesture. Both are gated so idle hover/scrollbar drags don't scroll.
   useEffect(() => {
-    invariant(localRef.current);
-    return autoScrollForElements({ element: localRef.current });
+    const element = localRef.current;
+    invariant(element);
+
+    const edge = 56;
+    const maxSpeed = 10;
+    let velocityX = 0;
+    let velocityY = 0;
+    let frame = 0;
+
+    const stop = () => {
+      velocityX = 0;
+      velocityY = 0;
+      if (frame) {
+        cancelAnimationFrame(frame);
+        frame = 0;
+      }
+    };
+    const tick = () => {
+      if (!velocityX && !velocityY) {
+        frame = 0;
+        return;
+      }
+      element.scrollBy({ left: velocityX, top: velocityY });
+      frame = requestAnimationFrame(tick);
+    };
+    // Ramp from 0 at the band's inner edge to maxSpeed at the very edge.
+    const speed = (depth: number) => (Math.min(depth, edge) / edge) * maxSpeed;
+    const track = (clientX: number, clientY: number) => {
+      const rect = element.getBoundingClientRect();
+      velocityX =
+        clientX < rect.left + edge
+          ? -speed(rect.left + edge - clientX)
+          : clientX > rect.right - edge
+            ? speed(clientX - (rect.right - edge))
+            : 0;
+      velocityY =
+        clientY < rect.top + edge
+          ? -speed(rect.top + edge - clientY)
+          : clientY > rect.bottom - edge
+            ? speed(clientY - (rect.bottom - edge))
+            : 0;
+      if ((velocityX || velocityY) && !frame) {
+        frame = requestAnimationFrame(tick);
+      }
+    };
+
+    const onDragOver = (event: DragEvent) => track(event.clientX, event.clientY);
+    const onPointerMove = (event: PointerEvent) => {
+      if (resizingRef.current) {
+        track(event.clientX, event.clientY);
+      }
+    };
+
+    element.addEventListener('dragover', onDragOver);
+    element.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('drop', stop);
+    document.addEventListener('dragend', stop);
+    document.addEventListener('pointerup', stop);
+    document.addEventListener('pointercancel', stop);
+    return () => {
+      stop();
+      element.removeEventListener('dragover', onDragOver);
+      element.removeEventListener('pointermove', onPointerMove);
+      document.removeEventListener('drop', stop);
+      document.removeEventListener('dragend', stop);
+      document.removeEventListener('pointerup', stop);
+      document.removeEventListener('pointercancel', stop);
+    };
   }, []);
 
   // Center the grid once on mount only. Deliberately NOT re-centering when the layout/size changes,
@@ -275,7 +347,7 @@ const GridContainer = ({ classNames, children }: GridContainerProps) => {
   return (
     <ScrollArea.Root orientation='all' classNames={classNames}>
       {/* `flex` so the viewport's `m-auto` centers the grid; overflow scrolls both axes. `snap-*`
-          makes the board a proximity snap point so scrolling magnetically settles on its centre. */}
+          makes scrolling magnetically settle on the grid lines (snap points are the backdrop cells). */}
       <ScrollArea.Viewport ref={ref} classNames='flex snap-both snap-proximity'>
         {children}
       </ScrollArea.Viewport>
@@ -369,7 +441,8 @@ const GridDropTarget = ({ position, rect, containerId, onAddClick }: GridDropTar
     <div
       ref={ref}
       style={rect}
-      className='group/cell absolute flex items-center justify-center rounded-sm border border-dashed border-separator opacity-50'
+      // `snap-start` aligns each cell's leading edge to the viewport, so scrolling snaps to the grid.
+      className='group/cell absolute flex snap-start items-center justify-center rounded-sm border border-dashed border-separator opacity-50'
     >
       {onAddClick && (
         <IconButton
