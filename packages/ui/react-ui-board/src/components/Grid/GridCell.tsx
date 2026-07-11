@@ -14,7 +14,7 @@ import { createPortal } from 'react-dom';
 import { type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Card, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { type DndTileData } from '@dxos/react-ui-dnd';
+import { type DndTileData, useDndRootContext } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -54,6 +54,9 @@ export const GridCell = ({
 }: GridCellProps) => {
   const { t } = useTranslation(translationKey);
   const { cellSize, gap, containerId, readonly, onResize } = useGridContext(GRID_CELL_NAME);
+  // Any active drag makes every tile transparent to pointer events so the backdrop drop-target cells
+  // beneath them (incl. cells under an occupied tile) receive the drag — required for push-on-drop.
+  const { dragging } = useDndRootContext(GRID_CELL_NAME);
 
   const rootRef = useRef<HTMLDivElement | null>(null);
   const dragHandleRef = useRef<HTMLButtonElement | null>(null);
@@ -146,9 +149,10 @@ export const GridCell = ({
       <Card.Root
         classNames={mx(
           'absolute grid-rows-[auto_1fr]',
-          // While dragging, drop pointer events so the backdrop cells beneath the (large) source
-          // footprint receive the drag — otherwise a tile can't be dropped back onto its own area.
-          dragState === 'dragging' && 'opacity-50 pointer-events-none',
+          dragState === 'dragging' && 'opacity-50',
+          // Transparent to pointer events during ANY drag so a tile can be dropped onto an occupied
+          // cell (pushing the occupant) or back onto its own footprint.
+          !!dragging && 'pointer-events-none',
           classNames,
         )}
         style={{ ...rect, ...sizeOverride }}

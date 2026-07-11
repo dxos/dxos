@@ -56,19 +56,22 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, ...props }: 
   return (
     <Dnd.Root>
       <Grid.Root {...props} layout={layout} mode={mode} onChange={setLayout} onAdd={handleAdd}>
-        <Grid.Viewport>
-          <Grid.Backdrop />
-          <Grid.Content>
-            {items.map((item) => {
-              const itemLayout = layout.items.find((entry) => entry.id === item.id);
-              return itemLayout ? (
-                <Grid.Cell item={item} layout={itemLayout} key={item.id}>
-                  <Card.Text>{item.title}</Card.Text>
-                </Grid.Cell>
-              ) : null;
-            })}
-          </Grid.Content>
-        </Grid.Viewport>
+        {/* Scroll container: the viewport is sized to the full grid bounds and may exceed the screen. */}
+        <div className='absolute inset-0 overflow-auto p-2'>
+          <Grid.Viewport>
+            <Grid.Backdrop />
+            <Grid.Content>
+              {items.map((item) => {
+                const itemLayout = layout.items.find((entry) => entry.id === item.id);
+                return itemLayout ? (
+                  <Grid.Cell item={item} layout={itemLayout} key={item.id}>
+                    <Card.Text>{item.title}</Card.Text>
+                  </Grid.Cell>
+                ) : null;
+              })}
+            </Grid.Content>
+          </Grid.Viewport>
+        </div>
       </Grid.Root>
     </Dnd.Root>
   );
