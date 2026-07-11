@@ -47,7 +47,10 @@ export const ArchiveModule = ({ space }: ModuleProps) => {
 
       setBusy(true);
       try {
-        const serialized = JSON.parse(await file.text()) as unknown[];
+        const serialized: unknown = JSON.parse(await file.text());
+        if (!Array.isArray(serialized)) {
+          throw new TypeError('Mailbox feed archive must contain an array.');
+        }
         const count = await replaceFeed(mailbox, serialized, space.db);
         setStatus({ action: 'uploaded', count });
       } catch (error) {
@@ -75,6 +78,8 @@ export const ArchiveModule = ({ space }: ModuleProps) => {
 
       await replaceFeed(mailbox, [], space.db);
       setStatus({ action: 'reset', count: 0 });
+    } catch (error) {
+      log.warn('feed reset failed', { error });
     } finally {
       setBusy(false);
     }

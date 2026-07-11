@@ -211,20 +211,25 @@ const DownloadIconButton = forwardRef<HTMLButtonElement, DownloadIconButtonProps
   ({ filename, onDownload, label, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const handleDownload = useCallback(async () => {
-      const blob = await onDownload();
-      if (!blob) {
-        return;
+      try {
+        const blob = await onDownload();
+        if (!blob) {
+          return;
+        }
+
+        const url = URL.createObjectURL(blob);
+
+        // TODO(burdon): Use Domino.
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+
+        URL.revokeObjectURL(url);
+      } catch {
+        // Best-effort: blob generation or the download click may fail; swallow to avoid an unhandled
+        // promise rejection (the click handler discards the returned promise with `void`).
       }
-
-      const url = URL.createObjectURL(blob);
-
-      // TODO(burdon): Use Domino.
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-
-      URL.revokeObjectURL(url);
     }, [onDownload, filename]);
     return (
       <IconButton

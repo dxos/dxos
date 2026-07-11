@@ -37,7 +37,23 @@ const isUsablePlain = (text: string): boolean => {
  * `html` force a specific part (for the HTML-vs-text benchmark). Returns '' when the requested part
  * is absent.
  */
-const pickBody = (blocks: any[], mode: BodyMode): string => {
+/** A MIME text block from a serialized fixture message. */
+type FixtureBlock = {
+  readonly _tag: string;
+  readonly text: string;
+  readonly mimeType?: string;
+};
+
+/** A serialized fixture entry loaded from the fixture JSON. */
+type FixtureEntry = {
+  readonly created: string;
+  readonly sender: { readonly email?: string; readonly name?: string };
+  readonly blocks?: FixtureBlock[];
+  readonly threadId?: string;
+  readonly properties?: Record<string, unknown>;
+};
+
+const pickBody = (blocks: FixtureBlock[], mode: BodyMode): string => {
   const textBlocks = blocks.filter((block) => block?._tag === 'text' && typeof block.text === 'string');
   const html = textBlocks.find((block) => block.mimeType === 'text/html');
   const plain = textBlocks.find((block) => block.mimeType === 'text/plain');
@@ -61,7 +77,7 @@ const pickBody = (blocks: any[], mode: BodyMode): string => {
 // text blocks into ONE clean text block per `mode` (so `Message.extractText` no longer concatenates
 // the html + plain alternatives). Retains sender, timestamp, thread, and properties (subject, to, cc,
 // references, snippet). Cross-object refs (`attachments`) are dropped — not in the fixture.
-const reconstructMessage = (json: any, mode: BodyMode): Message.Message =>
+const reconstructMessage = (json: FixtureEntry, mode: BodyMode): Message.Message =>
   Message.make({
     created: json.created,
     sender: json.sender,
@@ -79,7 +95,7 @@ const reconstructMessage = (json: any, mode: BodyMode): Message.Message =>
  */
 export const loadFixtureMessages = (options: { limit?: number; body?: BodyMode } = {}): Message.Message[] => {
   const { limit = LIMIT, body = 'auto' } = options;
-  const entries = JSON.parse(readFileSync(FIXTURE, 'utf8')) as unknown[];
+  const entries = JSON.parse(readFileSync(FIXTURE, 'utf8')) as FixtureEntry[];
   const messages = entries
     .map((entry) => reconstructMessage(entry, body))
     .sort((a, b) => a.created.localeCompare(b.created));

@@ -124,7 +124,7 @@ export type StatsPanelStore = Readonly<{
   /** Reactive map of all compartments keyed by plugin key (full read access). */
   statsAtom: Atom.Writable<Record<string, unknown>>;
   /** Read one plugin's compartment. */
-  get: (pluginKey: string) => unknown | undefined;
+  get: (pluginKey: string) => unknown;
   /** A writer scoped to one plugin's compartment — the only write path. */
   compartment: (pluginKey: string) => StatsCompartment;
 }>;

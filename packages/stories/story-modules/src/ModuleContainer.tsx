@@ -49,10 +49,11 @@ export type ModuleContainerProps = {
 const toCell = (spec: ModuleSpec): { type: Role.Role<any>; data?: Record<string, any>; id?: string } =>
   'type' in spec ? spec : { type: spec };
 
-/** A stable attendable id for a cell: its explicit `id`, else the role NSID. */
-const cellAttendableId = (spec: ModuleSpec): string => {
+/** A stable, unique attendable id for a cell: its explicit `id`, else the role NSID + grid position
+ * (two cells sharing a role would otherwise collapse into one attention target). */
+const cellAttendableId = (spec: ModuleSpec, columnIndex: number, moduleIndex: number): string => {
   const cell = toCell(spec);
-  return cell.id ?? cell.type.role;
+  return cell.id ?? `${cell.type.role}:${columnIndex}:${moduleIndex}`;
 };
 
 /**
@@ -97,7 +98,7 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
         >
           {column.map((spec, moduleIndex) => {
             const { type, data } = toCell(spec);
-            const attendableId = cellAttendableId(spec);
+            const attendableId = cellAttendableId(spec, columnIndex, moduleIndex);
             return (
               <AttendableContainer
                 key={moduleIndex}
