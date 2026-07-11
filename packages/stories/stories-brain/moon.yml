@@ -28,6 +28,15 @@ tasks:
       cache: false
       runInCI: false
       interactive: true
+  # Full unattended run: front-loads the OAuth consent, regenerates the fixture, then runs every bench
+  # sequentially (stats → fixtures/local/results). Narrow with MODELS=/LIMIT=/TESTS=; SKIP_FETCH=1 reuses
+  # the existing fixture.
+  run-all:
+    command: 'node scripts/run-all.mjs'
+    options:
+      cache: false
+      runInCI: false
+      interactive: true
   # The trivial, LLM-free feed-stats pipeline over the fixture (skips if the fixture is absent). A
   # single-file run, since the shared `test` task's bash wrapper ignores a `-- <file>` filter.
   stats:
