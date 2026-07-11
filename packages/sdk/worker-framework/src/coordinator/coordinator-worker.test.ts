@@ -6,8 +6,8 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 
-import { createCoordinatorOnConnect } from './coordinator-worker';
 import type { WorkerCoordinatorMessage } from '../internal/messages';
+import { createCoordinatorOnConnect } from './coordinator-worker';
 
 /**
  * Simulated tab connected to a coordinator: sends messages on its own port and records everything

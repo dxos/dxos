@@ -6,9 +6,9 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, Trigger, asyncTimeout } from '@dxos/async';
 
-import { WorkerConnection } from './worker-connection';
 import type { WorkerCoordinator, WorkerCoordinatorMessage, WorkerOrPort } from '../internal/messages';
 import { runWorker } from '../worker/run-worker';
+import { WorkerConnection } from './worker-connection';
 
 /**
  * In-process coordinator hub emulating the SharedWorker: broadcasts leadership/heartbeat/request
