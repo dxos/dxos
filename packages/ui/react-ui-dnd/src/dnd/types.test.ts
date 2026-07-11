@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { getSourceData, type DndTileData } from './types';
+import { type DndTileData, getSourceData } from './types';
 
 describe('getSourceData', () => {
   test('returns tile payload when type is tile', () => {
