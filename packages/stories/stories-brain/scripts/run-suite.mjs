@@ -29,6 +29,7 @@ const MANIFEST = [
   { name: 'extract-contacts', file: 'src/test/extract-contacts.test.ts' },
   { name: 'feed-stats', file: 'src/test/feed-stats.test.ts' },
   { name: 'subject-facts', file: 'src/test/subject-facts.test.ts' },
+  { name: 'list-questions', file: 'src/test/list-questions.test.ts' },
   { name: 'tags', file: 'src/test/tags.bench.test.ts', total: messageTotal },
   { name: 'summarize-messages', file: 'src/test/summarize-messages.bench.test.ts', total: messageTotal },
   { name: 'summarize-threads', file: 'src/test/summarize-threads.bench.test.ts' },
