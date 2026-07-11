@@ -236,6 +236,30 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
     // Scroll viewport (set by Board.Container) + imperative centering, exposed via the Root ref.
     const viewportRef = useRef<HTMLDivElement | null>(null);
 
+    // Smooth scroll via rAF (instant per-frame assignment): the ScrollArea viewport ignores native
+    // `scrollTo({ behavior: 'smooth' })`, so we animate the scroll ourselves.
+    const scrollFrameRef = useRef(0);
+    const smoothScrollTo = useCallback((el: HTMLElement, left: number, top: number) => {
+      cancelAnimationFrame(scrollFrameRef.current);
+      const startLeft = el.scrollLeft;
+      const startTop = el.scrollTop;
+      const deltaLeft = left - startLeft;
+      const deltaTop = top - startTop;
+      const duration = 200;
+      let startTime: number | undefined;
+      const step = (time: number) => {
+        startTime ??= time;
+        const t = Math.min(1, (time - startTime) / duration);
+        const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+        el.scrollLeft = startLeft + deltaLeft * eased;
+        el.scrollTop = startTop + deltaTop * eased;
+        if (t < 1) {
+          scrollFrameRef.current = requestAnimationFrame(step);
+        }
+      };
+      scrollFrameRef.current = requestAnimationFrame(step);
+    }, []);
+
     // Overscroll padding: half the viewport on each side, measured from the scroll element so the
     // board can pad itself (see Board.Viewport) enough for any cell to reach the centre.
     const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
@@ -285,13 +309,9 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
         // the anchor at the viewport centre.
         const padX = overscroll ? el.clientWidth / 2 : 0;
         const padY = overscroll ? el.clientHeight / 2 : 0;
-        el.scrollTo({
-          left: padX + anchorX * zoom - el.clientWidth / 2,
-          top: padY + anchorY * zoom - el.clientHeight / 2,
-          behavior: 'smooth',
-        });
+        smoothScrollTo(el, padX + anchorX * zoom - el.clientWidth / 2, padY + anchorY * zoom - el.clientHeight / 2);
       },
-      [layout, cellSizePx, gapPx, columns, rows, zoom, overscroll],
+      [layout, cellSizePx, gapPx, columns, rows, zoom, overscroll, smoothScrollTo],
     );
     useImperativeHandle(forwardedRef, () => ({ center }), [center]);
 
@@ -483,7 +503,9 @@ const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
       // `shrink-0`: as a flex item the board must keep its full width, else the row container shrinks
       // it and the right-hand overflow (incl. the overscroll margin) collapses.
       data-dx-board-viewport='true'
-      className={mx('relative m-auto shrink-0 transition-transform duration-300', classNames)}
+      // No CSS transform transition — Board.Container drives the zoom (scale + scroll together) per
+      // frame so the focal point stays fixed while zooming.
+      className={mx('relative m-auto shrink-0', classNames)}
       style={{
         width: bounds.width,
         height: bounds.height,
@@ -525,10 +547,10 @@ const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
   const anchorState = useRef({ selected, overscroll, layout, cellSize, gap });
   anchorState.current = { selected, overscroll, layout, cellSize, gap };
 
-  // Keep the board anchored while zooming. The scale animates via CSS (transition-transform on
-  // Board.Viewport); we read the LIVE scale each frame and set the scroll so the anchor stays at the
-  // viewport centre for the whole animation (no post-animation shift). The anchor is the centre of
-  // mass of the selected tiles, or — if nothing is selected — the current viewport centre held fixed.
+  // Keep the board anchored while zooming: animate the scale AND the scroll together each frame so the
+  // anchor stays at the viewport centre for the whole animation (no post-animation shift). The anchor
+  // is the centre of mass of the selected tiles, or — if nothing is selected — the current viewport
+  // centre held fixed. Runs on zoom changes only (skips mount).
   const prevZoomRef = useRef(zoom);
   const mountedRef = useRef(false);
   useEffect(() => {
@@ -541,8 +563,12 @@ const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
     }
 
     const { selected, overscroll, layout, cellSize, gap } = anchorState.current;
-    const padX = overscroll ? element.clientWidth / 2 : 0;
-    const padY = overscroll ? element.clientHeight / 2 : 0;
+    // Capture the viewport size once — stable during the animation in a real pane (and avoids a
+    // fluctuating measurement mid-animation).
+    const clientWidth = element.clientWidth;
+    const clientHeight = element.clientHeight;
+    const padX = overscroll ? clientWidth / 2 : 0;
+    const padY = overscroll ? clientHeight / 2 : 0;
 
     // Anchor point in unscaled, board-relative content coords.
     let anchorX: number;
@@ -562,31 +588,38 @@ const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
       anchorY = sumY / ids.length;
     } else {
       // Nothing selected: hold whatever is currently at the viewport centre.
-      anchorX = (element.scrollLeft + element.clientWidth / 2 - padX) / prevZoom;
-      anchorY = (element.scrollTop + element.clientHeight / 2 - padY) / prevZoom;
+      anchorX = (element.scrollLeft + clientWidth / 2 - padX) / prevZoom;
+      anchorY = (element.scrollTop + clientHeight / 2 - padY) / prevZoom;
     }
 
+    // Drive the zoom ourselves (scale + scroll together) each frame, so the anchor stays at the
+    // viewport centre for the whole animation — the selected tiles are the focal point, not the
+    // board's top-left. We set the scale imperatively (overriding React's inline transform for the
+    // ~duration); it lands on React's value at the end.
     const board = element.querySelector<HTMLElement>('[data-dx-board-viewport]');
-    const currentScale = (): number => {
-      const transform = board && getComputedStyle(board).transform;
-      if (!transform || transform === 'none') {
-        return 1;
+    const from = prevZoom;
+    const to = zoom;
+    const duration = 200;
+    const apply = (scale: number) => {
+      if (board) {
+        board.style.transform = scale === 1 ? '' : `scale(${scale})`;
       }
-      const matrix = transform.match(/matrix\(([^)]+)\)/);
-      return matrix ? parseFloat(matrix[1].split(',')[0]) : 1;
+      element.scrollLeft = padX + anchorX * scale - clientWidth / 2;
+      element.scrollTop = padY + anchorY * scale - clientHeight / 2;
     };
 
     let frame = 0;
-    const sync = () => {
-      const scale = currentScale();
-      element.scrollLeft = padX + anchorX * scale - element.clientWidth / 2;
-      element.scrollTop = padY + anchorY * scale - element.clientHeight / 2;
-      // Keep syncing until the CSS transform settles on the target zoom.
-      if (Math.abs(scale - zoom) > 0.001) {
-        frame = requestAnimationFrame(sync);
+    let startTime: number | undefined;
+    const step = (time: number) => {
+      startTime ??= time;
+      const t = Math.min(1, (time - startTime) / duration);
+      const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      apply(from + (to - from) * eased);
+      if (t < 1) {
+        frame = requestAnimationFrame(step);
       }
     };
-    sync();
+    frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
   }, [zoom]);
 

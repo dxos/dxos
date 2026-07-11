@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { Card } from '@dxos/react-ui';
+import { Card, Panel, Toolbar } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { cardDefaultInlineSize } from '@dxos/ui-theme';
@@ -109,26 +109,45 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
         onDelete={handleDelete}
       >
         {/* Scroll viewport: sized to the full grid bounds; auto-scrolls when dragging/resizing near an edge. */}
-        <Board.Container classNames='absolute inset-0'>
-          <Board.Viewport>
-            <Board.Backdrop />
-            <Board.Content>
-              {items.map((item) => {
-                const itemLayout = layout.items[item.id];
-                return itemLayout ? (
-                  <Board.Cell item={item} layout={itemLayout} key={item.id} title={<Card.Text>{item.title}</Card.Text>}>
-                    {item.image ? <img src={item.image} alt='' className='size-full object-cover' /> : null}
-                  </Board.Cell>
-                ) : null;
-              })}
-            </Board.Content>
-          </Board.Viewport>
-        </Board.Container>
-        {/* Overlaid overview map + zoom control (bottom-right). */}
-        <div className='absolute bottom-4 right-4 z-10 flex flex-col items-end gap-2'>
-          <Board.Map classNames='w-40' />
-          <Board.Zoom />
-        </div>
+        <Panel.Root>
+          <Panel.Toolbar>
+            <Toolbar.Root>
+              <Toolbar.IconButton
+                icon='ph--crosshair--regular'
+                iconOnly
+                label='Center board'
+                onClick={() => controller.current?.center()}
+              />
+            </Toolbar.Root>
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <Board.Container classNames='absolute inset-0'>
+              <Board.Viewport>
+                <Board.Backdrop />
+                <Board.Content>
+                  {items.map((item) => {
+                    const itemLayout = layout.items[item.id];
+                    return itemLayout ? (
+                      <Board.Cell
+                        item={item}
+                        layout={itemLayout}
+                        key={item.id}
+                        title={<Card.Text>{item.title}</Card.Text>}
+                      >
+                        {item.image ? <img src={item.image} alt='' className='size-full object-cover' /> : null}
+                      </Board.Cell>
+                    ) : null;
+                  })}
+                </Board.Content>
+              </Board.Viewport>
+              {/* Overlaid overview map + zoom control (bottom-right). */}
+              <div className='absolute bottom-4 right-4 z-10 flex flex-col items-end gap-2'>
+                <Board.Map classNames='w-40' />
+                <Board.Zoom />
+              </div>
+            </Board.Container>
+          </Panel.Content>
+        </Panel.Root>
       </Board.Root>
     </Dnd.Root>
   );
@@ -236,6 +255,7 @@ export const SingleSelect: Story = {
     layout: defaultLayout,
     mode: 'float' satisfies GridMode,
     selectionMode: 'single',
+    debug: true,
   },
 };
 
@@ -246,18 +266,5 @@ export const MultiSelect: Story = {
     layout: defaultLayout,
     mode: 'float' satisfies GridMode,
     selectionMode: 'multi',
-  },
-};
-
-/**
- * Starts zoomed out (overview): the board is scaled down and drag/resize are disabled. Use the −/+
- * control (bottom-right) to zoom back to 1:1, which re-enables dragging; the map shows the tiles.
- */
-export const Zoom: Story = {
-  args: {
-    items: testItems,
-    layout: defaultLayout,
-    mode: 'float' satisfies GridMode,
-    zoom: 0.5,
   },
 };
