@@ -154,6 +154,7 @@ export const Default: Story = {
     items: testItems,
     layout: defaultLayout,
     mode: 'float' satisfies GridMode,
+    debug: true,
   },
 };
 

@@ -74,6 +74,8 @@ type BoardContextValue = {
   /** Column/row extent to render (the backdrop shows at least this; grows with content). */
   columns: number;
   rows: number;
+  /** When true, backdrop cells render their `x,y` coordinate (debugging aid). */
+  debug: boolean;
   /** When true, the board is padded by half the viewport so any cell can be scrolled to the centre. */
   overscroll: boolean;
   /** Overscroll padding in px (half the viewport on each axis), or 0 when disabled. */
@@ -152,6 +154,8 @@ type BoardRootProps = PropsWithChildren<{
   cellSize?: GridCellSize;
   /** Gap between cells in rem. */
   gap?: number;
+  /** Render each backdrop cell's `x,y` coordinate (debugging aid). Off by default. */
+  debug?: boolean;
   /**
    * Pads the scrollable area by half the viewport on each side so any cell — including the corners —
    * can be scrolled to the centre of the viewport. Off by default.
@@ -192,6 +196,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
       onSelectedChange,
       cellSize = defaultCellSize,
       gap = defaultGap,
+      debug = false,
       overscroll = false,
       settleDelay = 500,
       readonly,
@@ -434,6 +439,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
         gap={gapPx}
         columns={columns}
         rows={rows}
+        debug={debug}
         overscroll={overscroll}
         overscrollPad={overscrollPad}
         containerId={containerId}
@@ -680,7 +686,7 @@ const BOARD_BACKDROP_NAME = 'Board.Backdrop';
 type BoardBackdropProps = {};
 
 const BoardBackdrop = (_props: BoardBackdropProps) => {
-  const { cellSize, gap, columns, rows, containerId, readonly, onAdd } = useBoardContext(BOARD_BACKDROP_NAME);
+  const { cellSize, gap, columns, rows, debug, containerId, readonly, onAdd } = useBoardContext(BOARD_BACKDROP_NAME);
 
   const cells = useMemo(() => {
     const cells: { position: { x: number; y: number }; rect: Rect }[] = [];
@@ -701,6 +707,7 @@ const BoardBackdrop = (_props: BoardBackdropProps) => {
           position={position}
           rect={rect}
           containerId={containerId}
+          debug={debug}
           onAddClick={readonly ? undefined : () => onAdd?.({ x: position.x, y: position.y, w: 1, h: 1 })}
         />
       ))}
@@ -714,10 +721,11 @@ type BoardDropTargetProps = {
   position: { x: number; y: number };
   rect: Rect;
   containerId: string;
+  debug?: boolean;
   onAddClick?: () => void;
 };
 
-const BoardDropTarget = ({ position, rect, containerId, onAddClick }: BoardDropTargetProps) => {
+const BoardDropTarget = ({ position, rect, containerId, debug, onAddClick }: BoardDropTargetProps) => {
   const { t } = useTranslation(translationKey);
 
   const ref = useRef<HTMLDivElement | null>(null);
@@ -739,12 +747,17 @@ const BoardDropTarget = ({ position, rect, containerId, onAddClick }: BoardDropT
       style={rect}
       className='group/cell absolute flex items-center justify-center rounded-sm border border-dashed border-separator opacity-50'
     >
+      {debug && (
+        <span className='pointer-events-none select-none font-mono text-xs opacity-40 transition-opacity group-hover/cell:opacity-0'>
+          {position.x},{position.y}
+        </span>
+      )}
       {onAddClick && (
         <IconButton
           icon='ph--plus--regular'
           iconOnly
           label={t('add-object.button')}
-          classNames='aspect-square opacity-0 transition-opacity duration-300 group-hover/cell:opacity-100'
+          classNames='absolute aspect-square opacity-0 transition-opacity duration-300 group-hover/cell:opacity-100'
           onClick={onAddClick}
         />
       )}
