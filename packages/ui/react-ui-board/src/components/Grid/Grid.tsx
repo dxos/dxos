@@ -272,7 +272,7 @@ const GridContainer = ({ classNames, children }: GridContainerProps) => {
     invariant(element);
 
     const edge = 56;
-    const maxSpeed = 10;
+    const maxSpeed = 8;
     let velocityX = 0;
     let velocityY = 0;
     let frame = 0;
@@ -314,7 +314,12 @@ const GridContainer = ({ classNames, children }: GridContainerProps) => {
       }
     };
 
-    const onDragOver = (event: DragEvent) => track(event.clientX, event.clientY);
+    const onDragOver = (event: DragEvent) => {
+      // Mark the drag as handled so the browser's own (fast, jumpy) native autoscroll stays off and
+      // only this custom, ramped scroll runs — otherwise the two compound into large uncontrolled jumps.
+      event.preventDefault();
+      track(event.clientX, event.clientY);
+    };
     const onPointerMove = (event: PointerEvent) => {
       if (resizingRef.current) {
         track(event.clientX, event.clientY);
