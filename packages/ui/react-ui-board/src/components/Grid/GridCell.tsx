@@ -112,6 +112,15 @@ export const GridCell = ({
     });
   }, [isDraggable, readonly, containerId, item, layout.x, layout.y]);
 
+  // Hide the drag handle while this tile is being dragged, toggling the element's visibility directly
+  // (no wrapper) so the header grid layout is untouched and the drag stays bound to the handle.
+  useEffect(() => {
+    const handle = dragHandleRef.current;
+    if (handle) {
+      handle.style.visibility = dragState === 'dragging' ? 'hidden' : '';
+    }
+  }, [dragState]);
+
   // Resize: a plain pointer drag (not a Dnd tile) on a corner handle. The size is derived from the
   // LIVE positions of the tile and the pointer (both viewport coords via getBoundingClientRect), so
   // auto-scroll is accounted for automatically — a `scroll` listener recomputes while scrolling even
@@ -191,6 +200,16 @@ export const GridCell = ({
     : layout;
   const rect = cellRect(effectiveLayout, cellSize, gap);
 
+  // While this tile is dragged, outline the FULL w×h footprint it will occupy at the target cell
+  // (not just the 1x1 cell under the cursor) so the landing area reads as one blue-bordered region.
+  const moveTarget =
+    dragging && dragging.source.data.id === item.id && dragging.target?.data.type === 'placeholder'
+      ? dragging.target.data.location
+      : undefined;
+  const moveGhost = moveTarget
+    ? cellRect({ x: moveTarget.x, y: moveTarget.y, w: layout.w, h: layout.h }, cellSize, gap)
+    : undefined;
+
   return (
     <>
       <Card.Root
@@ -208,11 +227,7 @@ export const GridCell = ({
         ref={rootRef}
       >
         <Card.Header>
-          {/* Hide the handle while dragging without unmounting it (drag stays bound) or shifting the
-              header: `contents` keeps it in the grid flow, `invisible` hides via inherited visibility. */}
-          <span className={mx('contents', dragState === 'dragging' && 'invisible')}>
-            <Card.DragHandle ref={dragHandleRef} />
-          </span>
+          <Card.DragHandle ref={dragHandleRef} />
           {title}
           {onDelete && (
             <Card.Block end>
@@ -243,6 +258,11 @@ export const GridCell = ({
         >
           <span className='absolute bottom-1.5 right-1.5 size-2 border-separator opacity-50 transition-opacity border-b-2 border-r-2 group-hover/resize:opacity-100' />
         </button>
+      )}
+
+      {/* Move outline: the full footprint the tile will occupy at the target cell. */}
+      {moveGhost && (
+        <div className='pointer-events-none absolute z-10 rounded-sm ring-2 ring-accent-bg' style={moveGhost} />
       )}
 
       {/* Resize outline: previews the target size while dragging the handle; the tile snaps to whole

@@ -16,7 +16,6 @@ import React, {
   useImperativeHandle,
   useMemo,
   useRef,
-  useState,
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
@@ -333,7 +332,6 @@ type GridDropTargetProps = {
 const GridDropTarget = ({ position, rect, containerId, onAddClick }: GridDropTargetProps) => {
   const { t } = useTranslation(translationKey);
 
-  const [active, setActive] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     invariant(ref.current);
@@ -341,16 +339,9 @@ const GridDropTarget = ({ position, rect, containerId, onAddClick }: GridDropTar
       element: ref.current,
       getData: () => ({ type: 'placeholder', containerId, location: position }) satisfies DndPlaceholderData,
       // Only this grid's own tiles may be dropped here (same-container move; no cross-container yet).
+      // The active-target highlight is drawn as the dragged tile's full footprint outline (see GridCell),
+      // so individual cells don't need their own ring.
       canDrop: ({ source }) => getSourceData(source)?.containerId === containerId,
-      onDragEnter: () => {
-        setActive(true);
-      },
-      onDragLeave: () => {
-        setActive(false);
-      },
-      onDrop: () => {
-        setActive(false);
-      },
     });
   }, [containerId, position.x, position.y]);
 
@@ -358,10 +349,7 @@ const GridDropTarget = ({ position, rect, containerId, onAddClick }: GridDropTar
     <div
       ref={ref}
       style={rect}
-      className={mx(
-        'group/cell absolute flex items-center justify-center border rounded-sm opacity-50',
-        active ? 'border-transparent ring ring-accent-bg' : 'border-separator border-dashed',
-      )}
+      className='group/cell absolute flex items-center justify-center rounded-sm border border-dashed border-separator opacity-50'
     >
       {onAddClick && (
         <IconButton
