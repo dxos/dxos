@@ -119,7 +119,7 @@ const GridRoot = forwardRef<GridController, GridRootProps>(
       cellSize = defaultCellSize,
       gap = defaultGap,
       minRows = 0,
-      settleDelay = 250,
+      settleDelay = 500,
       readonly,
       onChange,
       onAdd,
