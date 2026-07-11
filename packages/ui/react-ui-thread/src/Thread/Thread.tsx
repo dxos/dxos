@@ -369,7 +369,7 @@ const ThreadMessages = ({
     () => groupMessages(messages.filter(Boolean), { groupWindowMs, dayDivider, gapDividerMs, dtLocale }),
     [messages, groupWindowMs, dayDivider, gapDividerMs, dtLocale],
   );
-  // Per-instance id keeps concurrent threads (incl. the same thread mounted twice) distinct in the Mosaic registry.
+  // Per-instance id keeps concurrent threads (incl. the same thread mounted twice) distinct in the DnD registry.
   const instanceId = useId();
   const eventHandler = useMemo<DndContainerHandler>(
     () => ({ id: `thread:${id ?? 'anon'}:${instanceId}`, canDrop: () => false }),

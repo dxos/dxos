@@ -41,7 +41,7 @@
 - `packages/ui/react-ui-dnd/src/dnd/Root.tsx` — `Dnd.Root` + `useDndRootContext` (moved from mosaic `Mosaic/Root.tsx`, renamed).
 - `packages/ui/react-ui-dnd/src/dnd/useContainerId.ts` — mandatory per-instance container-id helper (new).
 - `packages/ui/react-ui-dnd/src/dnd/index.ts` — barrel for the above.
-- `packages/ui/react-ui-dnd/src/dnd/Root.test.tsx` — characterization test for the transfer handshake (new).
+- `packages/ui/react-ui-dnd/src/dnd/Root.test.ts` — characterization test for the transfer handshake (new).
 - `packages/ui/react-ui-dnd/src/dnd/useContainerId.test.tsx` — unit test (new).
 
 **Modify:**
@@ -235,7 +235,7 @@ git commit -m "feat(react-ui-dnd): add useContainerId per-instance discriminator
 **Files:**
 
 - Create: `packages/ui/react-ui-dnd/src/dnd/Root.tsx`
-- Create: `packages/ui/react-ui-dnd/src/dnd/Root.test.tsx`
+- Create: `packages/ui/react-ui-dnd/src/dnd/Root.test.ts`
 - Create: `packages/ui/react-ui-dnd/src/dnd/index.ts`
 - Modify: `packages/ui/react-ui-dnd/src/index.ts`
 
@@ -244,7 +244,7 @@ git commit -m "feat(react-ui-dnd): add useContainerId per-instance discriminator
 This is the guardrail proving the moved orchestration still routes same-container vs cross-container drops correctly. Exercise the `Dnd.Root` context directly (register two handlers, invoke the resolved routing).
 
 ```tsx
-// packages/ui/react-ui-dnd/src/dnd/Root.test.tsx
+// packages/ui/react-ui-dnd/src/dnd/Root.test.ts
 import { render } from '@testing-library/react';
 import React, { useEffect } from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -281,7 +281,7 @@ describe('Dnd.Root transfer routing', () => {
 
 - [ ] **Step 2: Run it to verify it fails**
 
-Run: `pnpm --filter @dxos/react-ui-dnd exec vitest run --project=node src/dnd/Root.test.tsx`
+Run: `pnpm --filter @dxos/react-ui-dnd exec vitest run --project=node src/dnd/Root.test.ts`
 Expected: FAIL — cannot find module `./Root`.
 
 - [ ] **Step 3: Move Root.tsx, renaming, and extract the pure routing helper**
@@ -314,7 +314,7 @@ Call `resolveDrop(...)` from the monitor `onDrop`. Keep `useDndRootContext` expo
 
 Replace the Step-1 NOTE assertion with direct `resolveDrop` calls: same-handler calls `onDrop` not `onTake`; different handlers call source `onTake` then target `onDrop` with the transferred object.
 
-Run: `pnpm --filter @dxos/react-ui-dnd exec vitest run --project=node src/dnd/Root.test.tsx`
+Run: `pnpm --filter @dxos/react-ui-dnd exec vitest run --project=node src/dnd/Root.test.ts`
 Expected: PASS.
 
 - [ ] **Step 5: Add the barrel and package export**
@@ -343,7 +343,7 @@ Expected: success (types emit; no unresolved imports).
 - [ ] **Step 7: Commit**
 
 ```bash
-git add packages/ui/react-ui-dnd/src/dnd/Root.tsx packages/ui/react-ui-dnd/src/dnd/Root.test.tsx packages/ui/react-ui-dnd/src/dnd/index.ts packages/ui/react-ui-dnd/src/index.ts
+git add packages/ui/react-ui-dnd/src/dnd/Root.tsx packages/ui/react-ui-dnd/src/dnd/Root.test.ts packages/ui/react-ui-dnd/src/dnd/index.ts packages/ui/react-ui-dnd/src/index.ts
 git commit -m "refactor(react-ui-dnd): move Mosaic.Root to Dnd.Root with pure resolveDrop"
 ```
 

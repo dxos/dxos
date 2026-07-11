@@ -192,10 +192,11 @@ interface LayoutModel<TLocation> {
 Phase 1 is load-bearing: everything depends on `Dnd.Root` existing.
 
 1. **Core extraction + Root promotion (own PR).** Move monitor/registry/
-   handler/payload/transfer into `@dxos/react-ui-dnd` as `Dnd.Root` +
-   `useDndContainer`/`useDndTile`. Rename types. Add mandatory `containerId`
-   discriminator. Cut over the 3 app shells; keep Stack/Board/Kanban green with
-   the closest-edge hitbox as the only strategy. **No behaviour change.**
+   handler/payload/transfer into `@dxos/react-ui-dnd` as `Dnd.Root`. Rename
+   types. Add mandatory `containerId` discriminator. Cut over the 3 app shells;
+   keep Stack/Board/Kanban green with the closest-edge hitbox as the only
+   strategy. **No behaviour change.** (The `useDndContainer`/`useDndTile` hooks
+   are deferred to Phase 2 — see the phase1 plan's phasing note.)
 2. **Pluggable hitbox + `LayoutModel` + one `DropIndicator`.** Introduce the
    hitbox strategy seam and the resolver; collapse the 3 drop indicators.
 3. **Grid container + collision/pack engine.** Headless engine first (unit tests
