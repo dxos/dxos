@@ -17,6 +17,8 @@ export default Config2.make({
     `,
     icon: { key: 'ph--paper-plane-tilt--regular', hue: 'sky' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-typefully',
+    spec: 'PLUGIN.mdl',
     tags: ['labs'],
+    dependsOn: ['org.dxos.plugin.blogger'],
   },
 });
