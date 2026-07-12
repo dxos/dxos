@@ -5,11 +5,11 @@
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import { serveRpcGroup } from '@dxos/worker-framework';
+import { getRpcTimingStatsSnapshot, serveRpcGroup } from '@dxos/worker-framework';
 import { runWorker } from '@dxos/worker-framework/worker';
 
 import { COUNTER_LIVENESS_LOCK_KEY, COUNTER_STORAGE_LOCK_KEY } from './counter-constants';
-import { CounterRpcs } from './counter-service';
+import { CounterRpcs, TimingStatsSample, TimingStatsSnapshot } from './counter-service';
 
 let count = 0;
 const listeners = new Set<(value: number) => void>();
@@ -18,6 +18,14 @@ const notify = (): void => {
   for (const listener of listeners) {
     listener(count);
   }
+};
+
+const blockCpuSync = (durationMs: number): number => {
+  const end = Date.now() + durationMs;
+  while (Date.now() < end) {
+    // Busy spin — intentionally blocks the worker event loop for lag demos.
+  }
+  return durationMs;
 };
 
 const counterHandlers = CounterRpcs.toLayer(
@@ -35,6 +43,25 @@ const counterHandlers = CounterRpcs.toLayer(
         void emit.single(count);
         return Effect.sync(() => listeners.delete(listener));
       }),
+    ping: () => Effect.void,
+    getTimingStats: () =>
+      Effect.sync(() => {
+        const snapshot = getRpcTimingStatsSnapshot();
+        return new TimingStatsSnapshot({
+          maxQueueWaitMs: snapshot.maxQueueWaitMs,
+          maxServiceMs: snapshot.maxServiceMs,
+          samples: snapshot.samples.map(
+            (sample) =>
+              new TimingStatsSample({
+                tag: sample.tag,
+                queueWaitMs: sample.queueWaitMs,
+                serviceMs: sample.serviceMs,
+                at: sample.at,
+              }),
+          ),
+        });
+      }),
+    blockCpu: ({ durationMs }) => Effect.sync(() => blockCpuSync(durationMs)),
   }),
 );
 
@@ -49,7 +76,9 @@ runWorker({
     return {
       livenessLockKey: COUNTER_LIVENESS_LOCK_KEY,
       createSession: async ({ appPort }) => {
-        const server = serveRpcGroup(appPort, CounterRpcs, counterHandlers);
+        const server = serveRpcGroup(appPort, CounterRpcs, counterHandlers, {
+          timing: { minLogMs: 20 },
+        });
         await server.open();
       },
     };

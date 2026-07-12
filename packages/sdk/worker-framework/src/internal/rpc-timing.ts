@@ -43,6 +43,46 @@ export type RpcTimingOptions = {
   readonly minLogMs?: number;
 };
 
+export type RpcTimingSample = {
+  readonly tag: string;
+  readonly queueWaitMs: number | undefined;
+  readonly serviceMs: number;
+  readonly at: number;
+};
+
+export type RpcTimingStatsSnapshot = {
+  readonly samples: ReadonlyArray<RpcTimingSample>;
+  readonly maxQueueWaitMs: number;
+  readonly maxServiceMs: number;
+};
+
+const MAX_TIMING_SAMPLES = 100;
+const timingSamples: RpcTimingSample[] = [];
+
+/** Records one completed RPC for {@link getRpcTimingStatsSnapshot}. */
+export const recordRpcTimingSample = (sample: RpcTimingSample): void => {
+  timingSamples.push(sample);
+  if (timingSamples.length > MAX_TIMING_SAMPLES) {
+    timingSamples.splice(0, timingSamples.length - MAX_TIMING_SAMPLES);
+  }
+};
+
+/** Returns a snapshot of samples collected by the server timing middleware. */
+export const getRpcTimingStatsSnapshot = (): RpcTimingStatsSnapshot => {
+  const maxQueueWaitMs = timingSamples.reduce((max, sample) => Math.max(max, sample.queueWaitMs ?? 0), 0);
+  const maxServiceMs = timingSamples.reduce((max, sample) => Math.max(max, sample.serviceMs), 0);
+  return {
+    samples: [...timingSamples],
+    maxQueueWaitMs,
+    maxServiceMs,
+  };
+};
+
+/** Clears collected timing samples. Intended for tests. */
+export const resetRpcTimingStats = (): void => {
+  timingSamples.length = 0;
+};
+
 const DEFAULT_MIN_LOG_MS = 100;
 
 const resolveOptions = (options?: boolean | RpcTimingOptions): RpcTimingOptions =>
@@ -111,6 +151,13 @@ export const rpcTimingServerLayer = (options?: RpcTimingOptions): Layer.Layer<Rp
           serviceMs: undefined,
         });
         const serviceMs = Math.max(0, Date.now() - serviceStart);
+
+        recordRpcTimingSample({
+          tag: rpc._tag,
+          queueWaitMs,
+          serviceMs,
+          at: dispatchedAt,
+        });
 
         if (shouldLog(timingOptions, queueWaitMs, serviceMs)) {
           log('rpc timing', {

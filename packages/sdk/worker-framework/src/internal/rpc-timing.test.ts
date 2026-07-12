@@ -13,7 +13,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 
 import { makeRpcClient, serveRpcGroup } from './rpc';
-import { RpcTimingMetadata, applyRpcTimingMiddleware } from './rpc-timing';
+import { RpcTimingMetadata, applyRpcTimingMiddleware, getRpcTimingStatsSnapshot, resetRpcTimingStats } from './rpc-timing';
 
 class TimingRpcs extends RpcGroup.make(
   Rpc.make('reportTiming', {
@@ -35,6 +35,7 @@ const timingHandlers = applyRpcTimingMiddleware(TimingRpcs).toLayer(
 
 describe('rpc timing middleware', () => {
   test('client stamps sent-at and server reports queue wait', async () => {
+    resetRpcTimingStats();
     const channel = new MessageChannel();
     onTestFinished(() => {
       channel.port1.close();
@@ -56,6 +57,10 @@ describe('rpc timing middleware', () => {
 
     const result = await EffectEx.runPromise(client.reportTiming({}));
     expect(result.queueWaitMs).toBeGreaterThanOrEqual(0);
+
+    const stats = getRpcTimingStatsSnapshot();
+    expect(stats.samples.length).toBeGreaterThan(0);
+    expect(stats.samples.some((sample) => sample.tag === 'reportTiming')).toBe(true);
   });
 
   test('applyRpcTimingMiddleware is idempotent', () => {

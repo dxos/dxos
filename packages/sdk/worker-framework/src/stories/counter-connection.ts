@@ -17,17 +17,27 @@ import { WorkerConnection } from '@dxos/worker-framework/client';
 import { SharedWorkerCoordinator } from '@dxos/worker-framework/coordinator';
 
 import { COUNTER_LEADER_LOCK_KEY } from './counter-constants';
-import { CounterRpcs } from './counter-service';
+import { CounterRpcs, type TimingStatsSnapshot } from './counter-service';
 
 export type CounterRpc = {
   increment: () => Effect.Effect<number>;
   subscribe: (input: Record<string, never>) => Stream.Stream<number>;
+  ping: (input: Record<string, never>) => Effect.Effect<void>;
+  getTimingStats: (input: Record<string, never>) => Effect.Effect<TimingStatsSnapshot>;
+  blockCpu: (input: { durationMs: number }) => Effect.Effect<number>;
 };
 
 export type CounterSessionInfo = {
   clientId: string;
   leaderId: string;
   isOwner: boolean;
+};
+
+export type PingMeasurement = {
+  readonly rttMs: number;
+  readonly queueWaitMs: number | undefined;
+  readonly serviceMs: number;
+  readonly at: number;
 };
 
 /**
@@ -41,6 +51,7 @@ export class CounterConnection extends Resource {
   #sessionInfo: CounterSessionInfo | undefined;
 
   readonly sessionChanged = new Event<CounterSessionInfo>();
+  readonly pingUpdated = new Event<PingMeasurement>();
 
   constructor() {
     super();
@@ -59,9 +70,8 @@ export class CounterConnection extends Resource {
         invariant(this.#scope, 'counter rpc scope not initialized');
         this.#sessionInfo = { clientId: this.#connection.clientId, leaderId, isOwner };
         this.sessionChanged.emit(this.#sessionInfo);
-        // makeRpcClient returns Effect<unknown>; CounterRpc is the demo group's client shape.
         this.#rpc = (await EffectEx.runPromise(
-          makeRpcClient(appPort, CounterRpcs).pipe(Scope.extend(this.#scope)),
+          makeRpcClient(appPort, CounterRpcs, { timing: { minLogMs: 20 } }).pipe(Scope.extend(this.#scope)),
         )) as CounterRpc;
         return {
           close: async () => {
@@ -114,6 +124,26 @@ export class CounterConnection extends Resource {
   }
 
   increment = async (): Promise<number> => EffectEx.runPromise(this.rpc.increment());
+
+  ping = async (): Promise<PingMeasurement> => {
+    const sentAt = Date.now();
+    await EffectEx.runPromise(this.rpc.ping({}));
+    const stats = await this.getTimingStats();
+    const lastPing = [...stats.samples].reverse().find((sample) => sample.tag === 'ping');
+    const measurement: PingMeasurement = {
+      rttMs: Math.max(0, Date.now() - sentAt),
+      queueWaitMs: lastPing?.queueWaitMs,
+      serviceMs: lastPing?.serviceMs ?? 0,
+      at: sentAt,
+    };
+    this.pingUpdated.emit(measurement);
+    return measurement;
+  };
+
+  getTimingStats = async (): Promise<TimingStatsSnapshot> => EffectEx.runPromise(this.rpc.getTimingStats({}));
+
+  blockCpu = async (durationMs: number): Promise<number> =>
+    EffectEx.runPromise(this.rpc.blockCpu({ durationMs }));
 
   /**
    * Subscribes to counter updates. Returns cleanup that interrupts only this subscription.

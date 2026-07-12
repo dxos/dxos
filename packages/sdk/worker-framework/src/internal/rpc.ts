@@ -36,9 +36,13 @@ export {
   RpcTimingMetadata,
   RpcTimingMiddleware,
   applyRpcTimingMiddleware,
+  getRpcTimingStatsSnapshot,
+  recordRpcTimingSample,
+  resetRpcTimingStats,
   rpcTimingClientLayer,
   rpcTimingServerLayer,
 } from './rpc-timing';
+export type { RpcTimingSample, RpcTimingStatsSnapshot } from './rpc-timing';
 
 // A worker RPC client runs over a single MessagePort that multiplexes every request by id, so there
 // is no real per-connection concurrency limit. The `@effect/rpc` worker protocol backs the client

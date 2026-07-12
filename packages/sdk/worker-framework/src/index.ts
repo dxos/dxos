@@ -9,9 +9,13 @@ export {
   RpcTimingMetadata,
   RpcTimingMiddleware,
   applyRpcTimingMiddleware,
+  getRpcTimingStatsSnapshot,
+  recordRpcTimingSample,
+  resetRpcTimingStats,
   rpcTimingClientLayer,
   rpcTimingServerLayer,
 } from './internal/rpc-timing';
+export type { RpcTimingSample, RpcTimingStatsSnapshot } from './internal/rpc-timing';
 export type {
   DedicatedWorkerMessage,
   WorkerCoordinator,
