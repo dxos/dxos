@@ -87,6 +87,17 @@ type ImageArtifact
 ```
 
 ```mdl
+type Gallery
+  desc: >
+    An ordered collection of Images that it OWNS (typename org.dxos.type.gallery).
+    Each image is parented to the gallery (cascade-delete / deep-clone). Unlike
+    ImageArtifact it has no prompt — images are added by upload.
+  fields:
+    name?: string
+    images: Ref<Image>[]                  # owned images (parented on add)
+```
+
+```mdl
 type ImageGenerationRequest
   desc: Provider-agnostic generation request (Effect Schema in ImageCapabilities).
   fields:
@@ -229,6 +240,23 @@ component ImageView
     image?: { url?; file?: Ref<File.File>; prompt?; model?; resolution?; seed? }
 ```
 
+```mdl
+component GalleryArticle
+  desc: >
+    Article surface for a Gallery: a masonry of its owned images with a toolbar to add (upload)
+    images and delete the multi-selected ones. Selection state is owned here via `useListSelection`
+    (multi, from @dxos/react-ui-list); the masonry renders the outline and emits tile clicks.
+  props:
+    role: string
+    subject: Gallery
+  state:
+    selectedIds: ReadonlySet<string>      # keyed by Image.id
+  actions:
+    addImage()                            # upload → file-backed Image parented to the gallery
+    deleteSelected()                      # remove selected refs + db.remove the owned Images
+    toggle(id)                            # bind(id).toggle() from useListSelection
+```
+
 ## Cross-package additions
 
 ### Vendored gallery (from plugin-gallery)
@@ -252,11 +280,23 @@ component ImageGallery (plugin-image, vendored)
   desc: >
     Masonry of images. Each tile calls useImageSource(item) → src (url, else
     loaded-file blob) and renders a presentation-only GalleryImage. Lives in
-    src/components (no app-framework deps).
+    src/components (no app-framework deps). Forwards selection to the masonry.
   props:
-    images: ReadonlyArray<ImageSource>
+    images: ReadonlyArray<ImageSource>    # ImageSource gains an `id` (the Image id) used as key + selection id
     emptyMessage?: ReactNode
+    selectedIds?: ReadonlySet<string>
+    onSelect?: (id, event) => void
 ```
+
+### @dxos/react-ui-masonry — selection support (detour)
+
+`Masonry.Viewport` gained optional `selectedIds?: ReadonlySet<string>` +
+`onSelect?: (id, event) => void`: selected tiles render an inset ring +
+`aria-selected`, clicking a tile emits `onSelect`, and the `Tile` receives a
+`selected` prop. Masonry stays low-level — selection STATE (single/multi) is
+owned by the consumer, following `@dxos/react-ui-list`'s `useListSelection`
+pattern (the `Gallery` article uses it in `multi` mode). Additive + backward
+compatible.
 
 ### plugin-ideogram — provider + connector (headless)
 
@@ -326,6 +366,22 @@ feat F-3: Review images via toolbar tabs
     when: user selects the "All" tab
     then: all images render in the vendored masonry gallery (URLs + uploaded file blobs).
   req F-3.4: With no images yet, only the "All" tab is shown (empty state).
+```
+
+```mdl
+feat F-Gallery: Gallery article (masonry + multi-select)
+
+  req F-G.1: A Gallery opens in an article showing its owned images in a masonry.
+  req F-G.2:
+    when: user clicks the Add (upload) toolbar button
+    then: selected image files upload and are appended as file-backed Images owned by the gallery.
+  req F-G.3:
+    when: user clicks image tiles
+    then: they toggle multi-selection (masonry shows an outline + check on selected tiles).
+  req F-G.4:
+    when: user clicks Delete with a non-empty selection
+    then: the selected Images are removed from the gallery and deleted from the space; selection clears.
+  req F-G.5: The Delete toolbar button is disabled when nothing is selected.
 ```
 
 ## Acceptance

@@ -12,6 +12,8 @@ import { useImageUrl } from './useImageUrl';
 
 /** A gallery item — a remote URL (generated) and/or an uploaded file blob. */
 export type ImageSource = {
+  /** Stable id (the backing Image object's id); used as the tile key + selection id. */
+  id?: string;
   url?: string;
   file?: Ref.Ref<File.File>;
   name?: string;

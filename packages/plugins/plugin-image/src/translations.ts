@@ -6,11 +6,22 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Image, ImageArtifact } from '#types';
+import { Gallery, Image, ImageArtifact } from '#types';
 
 export const translations = [
   {
     'en-US': {
+      [Type.getTypename(Gallery.Gallery)]: {
+        'typename.label': 'Gallery',
+        'typename.label_zero': 'Galleries',
+        'typename.label_one': 'Gallery',
+        'typename.label_other': 'Galleries',
+        'object-name.placeholder': 'New gallery',
+        'add-object.label': 'Add gallery',
+        'rename-object.label': 'Rename gallery',
+        'delete-object.label': 'Delete gallery',
+        'object-deleted.label': 'Gallery deleted',
+      },
       [Type.getTypename(ImageArtifact.ImageArtifact)]: {
         'typename.label': 'Image',
         'typename.label_zero': 'Images',

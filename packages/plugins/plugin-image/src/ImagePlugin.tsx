@@ -8,7 +8,7 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Image, ImageArtifact } from '#types';
+import { Gallery, Image, ImageArtifact } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -16,7 +16,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 export const ImagePlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [ImageArtifact.ImageArtifact, Image.Image] }),
+  AppPlugin.addSchemaModule({ schema: [ImageArtifact.ImageArtifact, Gallery.Gallery, Image.Image] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({
