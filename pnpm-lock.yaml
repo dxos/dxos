@@ -4036,6 +4036,43 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
 
+  packages/common/graph-engine:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../async
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../debug
+      '@dxos/graph':
+        specifier: workspace:*
+        version: link:../graph
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.5.0(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)(react@19.2.6)(scheduler@0.27.0)
+      d3:
+        specifier: 'catalog:'
+        version: 7.9.0
+      d3-force:
+        specifier: 'catalog:'
+        version: 3.0.0
+    devDependencies:
+      '@types/d3':
+        specifier: 'catalog:'
+        version: 7.4.3
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.14
+
   packages/common/hypercore:
     dependencies:
       '@dxos/async':
@@ -21895,6 +21932,9 @@ importers:
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
+      '@dxos/graph-engine':
+        specifier: workspace:*
+        version: link:../../common/graph-engine
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

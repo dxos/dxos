@@ -18,6 +18,9 @@
       "path": "../../common/graph"
     },
     {
+      "path": "../../common/graph-engine"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
