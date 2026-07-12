@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
 
 import { type Progress } from '@dxos/progress';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -11,7 +10,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { ProgressMeter } from './ProgressMeter';
 
 const meta = {
-  title: 'sdk/app-toolkit/ProgressMeter',
+  title: 'sdk/app-toolkit/components/ProgressMeter',
   component: ProgressMeter,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },
@@ -33,10 +32,23 @@ const base = (overrides: Partial<Progress.TaskProgress>): Progress.TaskProgress 
   ...overrides,
 });
 
-export const Determinate: Story = { args: { state: base({}), classNames: 'w-[240px]' } };
+export const Determinate: Story = {
+  args: {
+    state: base({}),
+    classNames: 'w-[240px]',
+  },
+};
 
-export const Indeterminate: Story = { args: { state: base({ total: undefined }), classNames: 'w-[240px]' } };
+export const Indeterminate: Story = {
+  args: {
+    state: base({ total: undefined }),
+    classNames: 'w-[240px]',
+  },
+};
 
 export const Error: Story = {
-  args: { state: base({ status: 'error', error: 'Network unreachable' }), classNames: 'w-[240px]' },
+  args: {
+    state: base({ status: 'error', error: 'Network unreachable' }),
+    classNames: 'w-[240px]',
+  },
 };
