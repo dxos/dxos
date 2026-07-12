@@ -1,6 +1,6 @@
 ---
 name: task-planning
-description: Use when work spans multiple steps, phases, or sessions, when resuming a task started earlier, when the user asks for a plan/roadmap/progress tracking, or when they use the `$track` / `track:`, `$hydrate`, `$resume`, or `$session` sentinel. Covers the session registry (`.agents/sessions/registry.yml`), maintaining a durable TASKS.md + DESIGN.md per work-stream, and checkpointing/reloading session state across sessions and PRs.
+description: Use when work spans multiple steps, phases, or sessions, when resuming a task started earlier, when the user asks for a plan/roadmap/progress tracking, or when they use the `$track` / `track:`, `$hydrate`, `$resume`, or `$project` sentinel. Covers the project registry (`.agents/projects/registry.yml`), maintaining a durable TASKS.md + DESIGN.md per work-stream, and checkpointing/reloading project state across sessions and PRs.
 ---
 
 # Task Planning
@@ -21,24 +21,25 @@ repo. Use your judgment about when a task warrants one — err toward creating i
 the work you're doing — that follow-up belongs in `TASKS.md`.** Task chips are
 only for genuinely separate work that should spin off into its own session.
 
-## Sessions (registry)
+## Projects (registry)
 
-A **session** is a work-stream — one coherent effort, usually one branch/worktree
+A **project** is a work-stream — one coherent effort, usually one branch/worktree
 — with its own `TASKS.md` (the ledger) and `DESIGN.md` (the _why_: spec +
-decisions). All sessions are listed in a committed registry so you and any future
+decisions). All projects are listed in a committed registry so you and any future
 session can see everything in flight and resume the right one.
 
-**Registry:** `.agents/sessions/registry.yml` — one entry per session, recording
+**Registry:** `.agents/projects/registry.yml` — one entry per project, recording
 where its docs and PRs live:
 
 ```yaml
-sessions:
+projects:
   - name: mailbox-research # stable slug
     status: active # active | paused | blocked | ended
+    user: burdon # owner (git/system username, e.g. `whoami`)
     branch: claude/mailboxsync-…
     created: 2026-07-05
     summary: One line — what this stream delivers.
-    tasks: path/to/TASKS.md # a package file, or .agents/sessions/<name>/TASKS.md
+    tasks: path/to/TASKS.md # a package file, or .agents/projects/<name>/TASKS.md
     design: path/to/DESIGN.md # spec + decisions (a REPORT.md counts)
     prs: [12163]
     resume: 'The single next action.'
@@ -46,20 +47,29 @@ ended: []
 ```
 
 - The registry records the **location** of each doc, so an existing effort points
-  at its package files and a brand-new session defaults to
-  `.agents/sessions/<name>/{TASKS.md,DESIGN.md}`. Keep it committed and current.
+  at its package files and a brand-new project defaults to
+  `.agents/projects/<name>/{TASKS.md,DESIGN.md}`. Keep it committed and current.
 
-### The `$session` sentinel
+### The `$project` sentinel
 
-- `$session new <name> [summary]` — add an `active` entry (branch = current);
-  scaffold `.agents/sessions/<name>/{TASKS.md,DESIGN.md}` unless the docs already
-  live somewhere (record that path instead). Confirm in one line.
-- `$session list` — print the active sessions from the registry.
-- `$session end <name>` — move the entry to `ended`, recording the final PR/status.
+- `$project` (bare) or `$project list` — render the active projects as a
+  **numbered markdown table**: the first column is a 1-based row number, followed
+  by `name`, `status`, `user`, `branch`, and a one-line summary. **By default show
+  only the current user's projects** (`user` == `whoami`); `$project list all`
+  (or `$project all`) lists every user. Then tell the user they can reply with a
+  row number to resume that project. **A lone number in the user's next message
+  means "resume the project at that row"** — run the "Project handoff" → resume
+  steps for that entry (equivalent to `$resume <that name>`).
+- `$project new <name> [summary]` — add an `active` entry (branch = current,
+  `user` = `whoami`); scaffold `.agents/projects/<name>/{TASKS.md,DESIGN.md}`
+  unless the docs already live somewhere (record that path instead). Confirm in
+  one line.
+- `$project end <name>` — move the entry to `ended`, recording the final PR/status.
 
-`$resume` / `$hydrate` (see "Session handoff") key off this registry: **which
-session** is resolved by name (`$resume <name>`) or, with no argument, by the
-entry whose `branch` matches the current one — never a guess.
+`$resume` / `$hydrate` (see "Project handoff") key off this registry: **which
+project** is resolved by name (`$resume <name>`), by the row number from the most
+recent `$project` table, or — with no argument — by the entry whose `branch`
+matches the current one. Never a guess.
 
 ## When to Use
 
@@ -84,10 +94,10 @@ directive, add the item and confirm in one line.
 
 ### The `$hydrate` / `$resume` sentinels
 
-The same hook detects two session-handoff sentinels (see "Session handoff"
+The same hook detects two project-handoff sentinels (see "Project handoff"
 below for what each does):
 
-- `$hydrate` (also `$checkpoint`) — **checkpoint** the session before you stop or
+- `$hydrate` (also `$checkpoint`) — **checkpoint** the project before you stop or
   open a PR: reconcile `TASKS.md`, refresh the resume pointer, account for
   uncommitted work.
 - `$resume` (also `$rehydrate`) — **reload** state at the start of a session:
@@ -143,7 +153,7 @@ Short paragraph of context — what this phase delivers and why.
 5. **Commit it** — `TASKS.md` is committed alongside the work it tracks. Do not
    leave it as an uncommitted local edit (see "commit nothing silently").
 
-## Session handoff (`$hydrate` / `$resume`)
+## Project handoff (`$hydrate` / `$resume`)
 
 `TASKS.md` is the handoff medium — no separate `HANDOFF.md` (keep plans in the
 original doc). The two sentinels are the explicit checkpoint/reload verbs.

@@ -121,7 +121,7 @@ Deeper conventions:
 ## Where things live
 
 - **`.agents/` vs `agents/`** — `.agents/` (dot) holds agent **control state**
-  (skills, the session registry); `agents/` (no dot) holds **user-visible
+  (skills, the project registry); `agents/` (no dot) holds **user-visible
   artifacts** (instructions, prompts, superpowers specs/plans/handoffs).
 - **Superpowers artifacts** — brainstorming specs, writing-plans plans, and
   handoffs live in **`agents/superpowers/{specs,plans,handoffs}/`**, NEVER
