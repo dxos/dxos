@@ -587,6 +587,46 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
+        id: 'analyzeTopicsMailbox',
+        // Filter nodes store the parent mailbox as node.data; exclude them so the action only appears
+        // on the mailbox itself (peer of the `sync` action).
+        match: (node) =>
+          node.type === Type.getTypename(Mailbox.Mailbox) && Mailbox.instanceOf(node.data)
+            ? Option.some(node.data)
+            : Option.none(),
+        actions: (mailbox) => {
+          const db = Obj.getDatabase(mailbox);
+          if (!db) {
+            return Effect.succeed([]);
+          }
+          // Tags the mailbox's messages and clusters its threads into Topic objects. Available whenever
+          // the mailbox has a db (no connection required — it runs over already-synced messages).
+          return Effect.succeed([
+            {
+              id: 'analyze-topics',
+              data: () =>
+                Operation.invoke(
+                  InboxOperation.AnalyzeTopics,
+                  { mailbox: Ref.make(mailbox) },
+                  {
+                    spaceId: db.spaceId,
+                    notify: {
+                      success: ['analyze-topics-success.title', { ns: meta.profile.key }],
+                      error: ['analyze-topics-error.title', { ns: meta.profile.key }],
+                    },
+                  },
+                ),
+              properties: {
+                label: ['analyze-topics.label', { ns: meta.profile.key }],
+                icon: 'ph--stack--regular',
+                disposition: 'list-item',
+              },
+            },
+          ]);
+        },
+      }),
+
+      GraphBuilder.createExtension({
         id: 'syncCalendar',
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (calendar, get) => {
