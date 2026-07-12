@@ -1883,26 +1883,19 @@ Inside the `MailboxArticle` component, after `const id = attendableId ?? Obj.get
   const progress = useProgress(mailboxUri);
 ```
 
-- [ ] **Step 3: Render the meter under the toolbar**
+- [ ] **Step 3: Render the meter in the panel statusbar**
 
-In the returned JSX, insert the meter between the `Panel.Toolbar` (the `ElevationProvider`/`Menu.Root` block) and `Panel.Content`. Find:
-
-```tsx
-      </ElevationProvider>
-      <Panel.Content asChild>
-```
-
-Replace with:
+Per the user's preferred placement, render the meter in a `Panel.Statusbar` at the bottom of the panel (NOT under the toolbar). The user has already sketched this region with a mock `state`; replace the mock with the real hook value and guard on an active monitor. Find the `<Panel.Statusbar>` block (currently holding a literal `state={{ … }}` mock) just before `</Panel.Root>` and replace it with:
 
 ```tsx
-      </ElevationProvider>
       {progress && (progress.status === 'running' || progress.status === 'error') && (
-        <ProgressMeter state={progress} classNames='px-2 py-1 border-be border-subduedSeparator' />
+        <Panel.Statusbar>
+          <ProgressMeter state={progress} classNames='is-full p-2 border-bs border-separator' />
+        </Panel.Statusbar>
       )}
-      <Panel.Content asChild>
 ```
 
-> Verify `border-be` / `border-subduedSeparator` resolve (the rail uses `border-subdued-separator` in `ComplementarySidebar.tsx`; match that token spelling — likely `border-subdued-separator`). Adjust the border classes to the repo's actual token in Step 5.
+> Coordinate with the user before editing this file — they may be actively iterating on its visuals. Confirm the border/spacing tokens resolve in the theme (`border-separator` is valid per Task 4; `border-bs` is the block-start logical border — verify against `@dxos/react-ui`/Tailwind logical-border utilities and adjust if needed). Keep the `Obj.getURI(mailbox).toString()` key identical to the one `runGmailSync` registers (Task 7).
 
 - [ ] **Step 4: Build**
 
