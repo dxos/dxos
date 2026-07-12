@@ -45,6 +45,17 @@ export enum MessageState {
 }
 
 /** Mailbox object schema. */
+/**
+ * A message filter — an exclusion rule applied across the mailbox UI, sync, and analysis. Kept
+ * intentionally small; expected to grow (subject, labels, date, …), so match logic lives in the
+ * {@link matchesFilter} / {@link isFiltered} helpers rather than at call sites.
+ */
+export const Filter = Schema.Struct({
+  /** Regex (case-insensitive) matched against the sender email; a message matches when its sender does. */
+  from: Schema.optional(Schema.String),
+});
+export interface Filter extends Schema.Schema.Type<typeof Filter> {}
+
 export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.mailbox', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
@@ -57,6 +68,9 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
       enabled: Schema.Array(Schema.String),
       threshold: Schema.Number.pipe(Schema.between(0, 1)),
     }).pipe(FormInputAnnotation.set(false), Schema.optional),
+    // Exclusion filters (see {@link Filter}) honored across the UI, sync, and analysis — messages
+    // matching any filter are hidden and never committed / enriched.
+    messageFilters: Schema.optional(Schema.Array(Filter)),
     // Optional per-mailbox reply guidance (tone, standing facts, sign-off, skills). A shared
     // `Instructions` object can be referenced by several mailboxes, or a distinct one created per
     // mailbox; the reply generator merges its text + skills into the session prompt.
@@ -228,17 +242,82 @@ const NO_REPLY_RE = /(^|[._+-])(no-?reply|do-?not-?reply|donotreply|noreply|mail
 export const isNoReplyAddress = (email: string | undefined): boolean =>
   !!email && NO_REPLY_RE.test(email.split('@')[0] ?? '');
 
+/** Minimal message shape a {@link Filter} matches against (satisfied by a live message or a snapshot). */
+type Filterable = { readonly sender?: { readonly email?: string } };
+
 /**
- * Whether a message is worth drafting a reply to. Bulk/automated mail — a no-reply sender or a
- * message carrying an unsubscribe affordance — is not. Reads the signals the Gmail sync mapper
- * records on `properties` (`noReply`, `listUnsubscribe`), falling back to the sender address for
- * messages mapped before those signals existed (e.g. an older fixture).
+ * Whether a single filter matches a message. Currently sender-only: the `from` regex is tested
+ * (case-insensitive) against the sender email, falling back to a literal substring match when the
+ * pattern is not a valid regex. Grows here as {@link Filter} gains fields.
  */
-export const isReplyable = (message: MessageLike): boolean => {
+export const matchesFilter = (filter: Filter, message: Filterable): boolean => {
+  if (filter.from) {
+    const email = message.sender?.email ?? '';
+    if (email.length === 0) {
+      return false;
+    }
+    try {
+      return new RegExp(filter.from, 'i').test(email);
+    } catch {
+      return email.toLowerCase().includes(filter.from.toLowerCase());
+    }
+  }
+  return false;
+};
+
+/** Whether a message is excluded by any of the mailbox's filters (hidden from the UI, sync, analysis). */
+export const isFiltered = (mailbox: Pick<Mailbox, 'messageFilters'>, message: Filterable): boolean =>
+  (mailbox.messageFilters ?? []).some((filter) => matchesFilter(filter, message));
+
+/** Adds a sender-exclusion filter for `email` (idempotent — no-op if already ignored). */
+export const ignoreSender = (mailbox: Mailbox, email: string): void => {
+  if (email.length === 0 || (mailbox.messageFilters ?? []).some((filter) => filter.from === email)) {
+    return;
+  }
+  Obj.update(mailbox, (mailbox) => {
+    (mailbox.messageFilters ??= []).push({ from: email });
+  });
+};
+
+// Local-part patterns for role / automated mailboxes — an organization, not an individual (support,
+// billing, notifications, …). A leading role word, optionally followed by a separator (`support`,
+// `billing+eu`, `no.reply`).
+const ROLE_LOCALPART_RE =
+  /^(support|help(desk)?|info|hello|contact|team|sales|billing|invoices?|receipts?|payments?|accounts?|admin|postmaster|mailer|marketing|promo(tions)?|offers|deals|careers?|jobs|feedback|survey|orders?|shipping|service|members?|membership|community|digest|notifications?|notify|alerts?|updates?|news(letter)?|security|welcome|webmaster)([._+-]|$)/i;
+
+// Display-name markers that signal an organizational sender rather than a person.
+const ORG_NAME_RE = /\b(inc|llc|ltd|gmbh|corp|team|support|notifications?|newsletter|billing|no-?reply)\b/i;
+
+/**
+ * Whether a sender is an organization / automated role mailbox rather than an individual — a
+ * strong-signal, deterministic check (a role local part or an org-shaped display name). Deliberately
+ * conservative: it errs toward `false` (treat as a person) so a genuine individual is never wrongly
+ * excluded from replies. The richer, confidence-scored person/org triage lives in the research
+ * harness; this is the cheap foreground gate {@link isReplyable} needs.
+ */
+export const isOrgSender = (message: MessageLike): boolean => {
+  const localPart = (message.sender?.email ?? '').split('@')[0] ?? '';
+  if (localPart && ROLE_LOCALPART_RE.test(localPart)) {
+    return true;
+  }
+  const name = message.sender?.name;
+  return !!name && ORG_NAME_RE.test(name);
+};
+
+/**
+ * Whether a message is worth drafting a reply to. Replies go only to people: bulk/automated mail — a
+ * no-reply sender, an unsubscribe affordance, or an organizational / role sender — is skipped. Reads
+ * the signals the Gmail sync mapper records on `properties` (`noReply`, `listUnsubscribe`), falling
+ * back to the sender address for messages mapped before those signals existed (e.g. an older
+ * fixture). When the caller has a classified sender type (e.g. the background classify-sender stage),
+ * pass `senderClass` to use it instead of the heuristic.
+ */
+export const isReplyable = (message: MessageLike, options: { senderClass?: 'person' | 'org' } = {}): boolean => {
   const properties = message.properties ?? {};
   const hasUnsubscribe = typeof properties.listUnsubscribe === 'string' && properties.listUnsubscribe.length > 0;
-  if (properties.noReply === true || hasUnsubscribe) {
+  if (properties.noReply === true || hasUnsubscribe || isNoReplyAddress(message.sender?.email)) {
     return false;
   }
-  return !isNoReplyAddress(message.sender?.email);
+  // A classified type (from the LLM stage) wins over the heuristic; otherwise fall back to it.
+  return options.senderClass ? options.senderClass === 'person' : !isOrgSender(message);
 };

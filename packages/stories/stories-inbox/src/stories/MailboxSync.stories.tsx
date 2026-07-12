@@ -51,7 +51,7 @@ const SYNC_STORY_CLIENT_SERVICES = persistentClientServices(configPreset({ edge:
 
 const DefaultStory = () => (
   <ModuleContainer
-    layout={[[Module.Mailbox], [Module.Message], [Module.Connector, Module.Archive, Module.Stats]]}
+    layout={[[Module.Mailbox], [Module.Message], [Module.Topics], [Module.Connector, Module.Archive, Module.Stats]]}
     compact
   />
 );

@@ -1,6 +1,6 @@
 # Test plan — mailbox sync, stats, and reply/research
 
-Covers the features on the `claude/mailboxsync-feed-export-4feb3d` branch (PR #12163).
+Covers the mailbox sync / stats / reply / research features (PRs #12163 and #12167).
 Deterministic unit tests run in CI; the model-driven benches and the storybook are local-only
 (the private mailbox fixture is git-ignored under `fixtures/local/`).
 
@@ -46,7 +46,8 @@ Check the browser console for errors after each step.
 
 ## 3. Running tests
 
-All local, uncached, never in CI.
+All local, uncached, never in CI. Output paths below (`results/`, `results/partial/`) are relative to
+the git-ignored `fixtures/local/`.
 **Needs** legend:
 **oauth** = a Google OAuth client (`.env.tpl` or `GOOGLE_CLIENT_ID`+`SECRET`, one-time — see `scripts/google-auth.mjs`);
 **fixture** = `fixtures/local/mailbox-feed.json` present (fetch it, or export from the MailboxSync storybook → Archive → Download);

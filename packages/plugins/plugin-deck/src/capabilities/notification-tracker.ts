@@ -11,6 +11,7 @@ import { Capabilities, Capability, type PluginManager } from '@dxos/app-framewor
 import { type LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { Process } from '@dxos/compute';
 import { Annotation } from '@dxos/echo';
+import { log } from '@dxos/log';
 
 import { meta } from '#meta';
 import { DeckCapabilities } from '#types';
@@ -69,10 +70,14 @@ export default Capability.makeModule(
         } else if (process.state === Process.State.SUCCEEDED && notify.success) {
           addToast({ id: `notify-success-${process.pid}`, title: notify.success, duration: NOTIFY_TOAST_DURATION });
         } else if (process.state === Process.State.FAILED && notify.error) {
+          // Surface only the curated `notify.error` title. The raw exception (provider errors, stack
+          // traces, auth tokens) is logged for debugging, never forwarded to the toast.
+          if (process.error) {
+            log.warn('operation failed', { pid: process.pid, error: process.error });
+          }
           addToast({
             id: `notify-error-${process.pid}`,
             title: notify.error,
-            ...(process.error ? { description: process.error } : {}),
             icon: 'ph--warning--regular',
             duration: ERROR_TOAST_DURATION,
           });

@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
 import { buildThreads } from '../internal/threads';
-import { Topic } from '../types';
+import { Thread, Topic } from '../types';
 import { clusterThreads, materializeTopics, summarizeTopics } from './topics';
 
 const OWNER = 'me@enron.com';
@@ -40,6 +40,59 @@ describe('topics', () => {
     const q2 = drafts.find((draft) => draft.threadIds.includes('q2 report draft'));
     expect(q2?.summary).toContain('Draft circulated.');
     expect(q2?.label.length).toBeGreaterThan(0);
+  });
+
+  test('automated mail with unique ids collapses into one topic', ({ expect }) => {
+    // Each invoice carries a unique hash/number; without id-stripping every one is a singleton topic.
+    const invoices = buildThreads(
+      [
+        msg('Invoice #A3F9B2 from Acme', 'billing@acme.com', '2001-05-01T10:00:00.000Z'),
+        msg('Invoice #7C21D0 from Acme', 'billing@acme.com', '2001-05-02T10:00:00.000Z'),
+        msg('Invoice #48213 from Acme', 'billing@acme.com', '2001-05-03T10:00:00.000Z'),
+      ],
+      { ownerEmail: OWNER, now: NOW },
+    );
+    const drafts = clusterThreads(invoices);
+    expect(drafts).toHaveLength(1);
+    expect(drafts[0].threadIds).toHaveLength(3);
+    expect(drafts[0].keywords).toContain('invoice');
+    expect(drafts[0].keywords).toContain('acme');
+    // The per-message ids must not leak into the keywords.
+    expect(drafts[0].keywords).not.toContain('a3f9b2');
+    expect(drafts[0].keywords).not.toContain('48213');
+  });
+
+  test('rolls up and dedupes questions and action items from member threads', ({ expect }) => {
+    const thread = (threadId: string, openQuestions: string[], actionItems: string[]) =>
+      Obj.make(Thread, {
+        threadId,
+        subject: 'Q2 report update',
+        summary: '',
+        state: 'awaiting-mine',
+        participants: ['a@x.com'],
+        messageIds: [threadId],
+        openQuestions,
+        actionItems,
+      });
+    // Same subject → the two threads cluster into one topic.
+    const [draft] = clusterThreads([
+      thread('t1', ['When is the deadline?'], ['Send draft']),
+      thread('t2', ['When is the deadline?', 'Who approves?'], ['Review budget']),
+    ]);
+    expect([...draft.questions].sort()).toEqual(['When is the deadline?', 'Who approves?']);
+    expect([...draft.tasks].sort()).toEqual(['Review budget', 'Send draft']);
+  });
+
+  test('dropIdTokens flag controls whether identifiers surface as keywords', ({ expect }) => {
+    const one = buildThreads([msg('Invoice A3F9B2', 'billing@acme.com', '2001-05-01T10:00:00.000Z')], {
+      ownerEmail: OWNER,
+      now: NOW,
+    });
+    const [kept] = clusterThreads(one, { dropIdTokens: false });
+    expect(kept.keywords).toContain('a3f9b2');
+    const [dropped] = clusterThreads(one, { dropIdTokens: true });
+    expect(dropped.keywords).not.toContain('a3f9b2');
+    expect(dropped.keywords).toContain('invoice');
   });
 
   test('blank-subject threads still get a non-empty topic label', ({ expect }) => {

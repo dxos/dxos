@@ -167,10 +167,10 @@ FormContent.displayName = FORM_CONTENT_NAME;
 
 const FORM_FIELDSET_NAME = 'Form.FieldSet';
 
-export type FormFieldSetControllerProps = ThemedClassName<NaturalFormFieldSetProps<any>>;
+export type FormFieldSetContainerProps = ThemedClassName<NaturalFormFieldSetProps<any>>;
 
 /** Context-reading binding for `Form.FieldSet`: pulls the schema + field context off the form and delegates to {@link FormFieldSet}. */
-export const FormFieldSetController = ({ classNames, ...props }: FormFieldSetControllerProps) => {
+export const FormFieldSetContainer = ({ classNames, ...props }: FormFieldSetContainerProps) => {
   const { form, variant = 'default', ...contextProps } = useFormContext(FORM_FIELDSET_NAME);
   const styles = formTheme.styles({ variant });
   return (
@@ -183,7 +183,7 @@ export const FormFieldSetController = ({ classNames, ...props }: FormFieldSetCon
   );
 };
 
-FormFieldSetController.displayName = FORM_FIELDSET_NAME;
+FormFieldSetContainer.displayName = FORM_FIELDSET_NAME;
 
 //
 // Layout

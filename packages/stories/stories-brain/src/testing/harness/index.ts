@@ -7,6 +7,7 @@ export * from './bench';
 export * from './config';
 export * from './fixture';
 export * from './llm';
+export * from './model-policy';
 export * from './models';
 export * from './progress';
 export * from './results';

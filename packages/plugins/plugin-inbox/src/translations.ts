@@ -146,6 +146,13 @@ export const translations = [
         'drafts.label': 'Drafts',
         'drafts.article.description': 'Draft list (coming soon).',
         'drafts.empty.message': 'No drafts yet.',
+        'topics.label': 'Topics',
+        'analyze-topics.label': 'Analyze Topics',
+        'analyze-topics-success.title': 'Topics updated.',
+        'analyze-topics-error.title': 'Failed to analyze topics.',
+        'topics.empty.message': 'No topics yet. Run "Analyze Topics" from the mailbox toolbar.',
+        'topics.count.label':
+          '{{threads}} threads · {{participants}} participants · {{questions}} questions · {{tasks}} tasks',
         'create-draft.label': 'Create draft',
 
         'related-contacts.title': 'Related contacts',
