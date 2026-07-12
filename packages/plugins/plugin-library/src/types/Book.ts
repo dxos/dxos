@@ -6,10 +6,15 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Blob, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { AtprotoPolicyAnnotation, AtprotoRecordAnnotation, AtprotoVisibilityAnnotation, Text } from '@dxos/schema';
+import {
+  AtprotoPolicyAnnotation,
+  AtprotoRecordAnnotation,
+  AtprotoVisibilityAnnotation,
+  CardAnnotation,
+  Text,
+} from '@dxos/schema';
 
 import { bookLens, canPublishBook, enrichBook, inspectBook } from '../atproto';
 
@@ -57,7 +62,9 @@ export const Progress = Schema.Struct({
   // Exact reading position (a foliate CFI) for precise restore. Private — kept for posterity but never
   // published: the `buzz.bookhive.defs#bookProgress` lexicon has no location anchor, and it is a
   // reader-local detail. The `private` override sits inside the otherwise-published `progress` struct.
-  cfi: Schema.optional(Schema.String.annotations({ title: 'Location' }).pipe(AtprotoVisibilityAnnotation.set('private'))),
+  cfi: Schema.optional(
+    Schema.String.annotations({ title: 'Location' }).pipe(AtprotoVisibilityAnnotation.set('private')),
+  ),
 });
 export type Progress = Schema.Schema.Type<typeof Progress>;
 
@@ -72,7 +79,9 @@ export type Progress = Schema.Schema.Type<typeof Progress>;
  */
 export const Catalog = Schema.Struct({
   title: Schema.String.annotations({ title: 'Title' }).pipe(AtprotoVisibilityAnnotation.set('publish')),
-  authors: Schema.Array(Schema.String).annotations({ title: 'Authors' }).pipe(AtprotoVisibilityAnnotation.set('publish')),
+  authors: Schema.Array(Schema.String)
+    .annotations({ title: 'Authors' })
+    .pipe(AtprotoVisibilityAnnotation.set('publish')),
   identifiers: Schema.optional(
     Identifiers.annotations({ title: 'Identifiers' }).pipe(AtprotoVisibilityAnnotation.set('publish')),
   ),
@@ -127,8 +136,14 @@ export class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.book', '
       AtprotoVisibilityAnnotation.set('publish'),
       Schema.optional,
     ),
-    owned: Schema.Boolean.annotations({ title: 'Owned' }).pipe(AtprotoVisibilityAnnotation.set('publish'), Schema.optional),
-    progress: Progress.annotations({ title: 'Progress' }).pipe(AtprotoVisibilityAnnotation.set('publish'), Schema.optional),
+    owned: Schema.Boolean.annotations({ title: 'Owned' }).pipe(
+      AtprotoVisibilityAnnotation.set('publish'),
+      Schema.optional,
+    ),
+    progress: Progress.annotations({ title: 'Progress' }).pipe(
+      AtprotoVisibilityAnnotation.set('publish'),
+      Schema.optional,
+    ),
 
     // Private (ECHO-only) fields — unmarked, never published.
     notes: Ref.Ref(Text.Text)
@@ -146,7 +161,7 @@ export class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.book', '
   }).pipe(
     LabelAnnotation.set(['catalog.title']),
     Annotation.IconAnnotation.set({ icon: 'ph--book-open--regular', hue: 'indigo' }),
-    AppAnnotation.CardAnnotation.set(true),
+    CardAnnotation.set(true),
     AtprotoRecordAnnotation.set({
       collection: 'buzz.bookhive.book',
       rkey: 'tid',

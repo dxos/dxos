@@ -55,8 +55,17 @@ export const Adapter: Schema.Schema<Adapter> = Schema.Union(
   Schema.Struct({ kind: Schema.Literal('meta'), wire: Schema.String, metaField: Schema.String }),
   Schema.Struct({ kind: Schema.Literal('prefix'), wire: Schema.String, echo: Path, prefix: Schema.String }),
   Schema.Struct({ kind: Schema.Literal('dateOnly'), wire: Schema.String, echo: Path }),
-  Schema.Struct({ kind: Schema.Literal('timestamp'), wire: Schema.String, echo: Path, fallbackMeta: Schema.optional(Schema.String) }),
-  Schema.Struct({ kind: Schema.Literal('struct'), wire: Schema.String, fields: Schema.Array(Schema.suspend(() => Adapter)) }),
+  Schema.Struct({
+    kind: Schema.Literal('timestamp'),
+    wire: Schema.String,
+    echo: Path,
+    fallbackMeta: Schema.optional(Schema.String),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal('struct'),
+    wire: Schema.String,
+    fields: Schema.Array(Schema.suspend(() => Adapter)),
+  }),
   Schema.Struct({ kind: Schema.Literal('derive'), wire: Schema.String, from: Path, template: Schema.String }),
 );
 
@@ -72,7 +81,12 @@ export type Adapter =
   | { readonly kind: 'meta'; readonly wire: string; readonly metaField: string }
   | { readonly kind: 'prefix'; readonly wire: string; readonly echo: readonly string[]; readonly prefix: string }
   | { readonly kind: 'dateOnly'; readonly wire: string; readonly echo: readonly string[] }
-  | { readonly kind: 'timestamp'; readonly wire: string; readonly echo: readonly string[]; readonly fallbackMeta?: string }
+  | {
+      readonly kind: 'timestamp';
+      readonly wire: string;
+      readonly echo: readonly string[];
+      readonly fallbackMeta?: string;
+    }
   | { readonly kind: 'struct'; readonly wire: string; readonly fields: readonly Adapter[] }
   | { readonly kind: 'derive'; readonly wire: string; readonly from: readonly string[]; readonly template: string };
 

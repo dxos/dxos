@@ -5,9 +5,9 @@
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
-import { getHiveId } from './hive';
 import { lookupHiveBook } from '../operations/bookhive';
 import { browserCorsProxy } from '../operations/cors';
+import { getHiveId } from './hive';
 
 /** Set a catalog field only when it is currently empty — never overwrite a local edit. */
 const setIfEmpty = (book: Obj.Unknown, path: readonly string[], value: unknown): void => {

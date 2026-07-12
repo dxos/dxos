@@ -44,7 +44,13 @@ const propEdges = (schema: BuiltSchema): readonly Edge[] => schema.edges.filter(
  * themselves, and each declared rename remaps one property. This is the sole panproto call; scalar
  * value coercions and ECHO effects are the runner's concern (they are not expressible in the engine).
  */
-export const migrate = async ({ sourceLexicon, targetLexicon, sourceVertex, renames = [], record }: MigrateOptions): Promise<Record<string, unknown>> => {
+export const migrate = async ({
+  sourceLexicon,
+  targetLexicon,
+  sourceVertex,
+  renames = [],
+  record,
+}: MigrateOptions): Promise<Record<string, unknown>> => {
   const panproto = await engine();
   const source = panproto.parseLexicon(sourceLexicon);
   const target = panproto.parseLexicon(targetLexicon);

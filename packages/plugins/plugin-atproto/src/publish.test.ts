@@ -10,10 +10,9 @@ import { Database, DXN, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Panproto } from '@dxos/echo-panproto';
 import { EffectEx } from '@dxos/effect';
+import { Connection } from '@dxos/plugin-connector';
 import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
-
-import { Connection } from '@dxos/plugin-connector';
 
 import { AtprotoPublication } from '#types';
 
@@ -47,9 +46,18 @@ describe('publish', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.add([Connection.Connection, AccessToken.AccessToken, AtprotoPublication.AtprotoPublication, TestDoc]);
-    const token = db.add(Obj.make(AccessToken.AccessToken, { source: 'bsky.app', token: 'tok', account: 'alice.test' }));
-    const connection = db.add(Obj.make(Connection.Connection, { connectorId: 'bluesky', accessToken: Ref.make(token) }));
+    graph.registry.add([
+      Connection.Connection,
+      AccessToken.AccessToken,
+      AtprotoPublication.AtprotoPublication,
+      TestDoc,
+    ]);
+    const token = db.add(
+      Obj.make(AccessToken.AccessToken, { source: 'bsky.app', token: 'tok', account: 'alice.test' }),
+    );
+    const connection = db.add(
+      Obj.make(Connection.Connection, { connectorId: 'bluesky', accessToken: Ref.make(token) }),
+    );
     const doc = db.add(Obj.make(TestDoc, { text: 'hello', secret: 'do-not-publish' }));
     return { db, connection, doc };
   };
@@ -124,9 +132,7 @@ describe('publish', () => {
     );
     expect(mock.records.size).toBe(1);
 
-    await EffectEx.runPromise(
-      unpublishObject({ publication, db }).pipe(Effect.provide(AtprotoRepo.layerMock(mock))),
-    );
+    await EffectEx.runPromise(unpublishObject({ publication, db }).pipe(Effect.provide(AtprotoRepo.layerMock(mock))));
 
     expect(mock.records.size).toBe(0);
     const found = await publications(db, doc);

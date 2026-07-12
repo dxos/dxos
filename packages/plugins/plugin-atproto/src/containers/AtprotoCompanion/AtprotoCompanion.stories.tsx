@@ -27,7 +27,6 @@ import { AtprotoCapabilities, AtprotoPublication } from '#types';
 
 import { hashRecord } from '../../hash';
 import * as AtprotoRepo from '../../services/AtprotoRepo';
-
 import { AtprotoCompanion } from './AtprotoCompanion';
 
 const NOTE_COLLECTION = 'com.example.note';

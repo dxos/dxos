@@ -147,7 +147,11 @@ const WriteResponse = Schema.Struct({ uri: Schema.String, cid: Schema.String });
 const DescribeRepoResponse = Schema.Struct({ collections: Schema.Array(Schema.String) });
 const ListRecordsResponse = Schema.Struct({
   records: Schema.Array(
-    Schema.Struct({ uri: Schema.String, cid: Schema.String, value: Schema.Record({ key: Schema.String, value: Schema.Unknown }) }),
+    Schema.Struct({
+      uri: Schema.String,
+      cid: Schema.String,
+      value: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+    }),
   ),
   cursor: Schema.optional(Schema.String),
 });
@@ -155,9 +159,10 @@ const ListRecordsResponse = Schema.Struct({
 const rkeyFromUri = (uri: string): string => uri.slice(uri.lastIndexOf('/') + 1);
 
 const getJson = <A>(client: HttpClient.HttpClient, url: string, schema: Schema.Schema<A>) =>
-  client
-    .execute(HttpClientRequest.get(url))
-    .pipe(Effect.flatMap((response) => Effect.flatMap(response.json, Schema.decodeUnknown(schema))), Effect.scoped);
+  client.execute(HttpClientRequest.get(url)).pipe(
+    Effect.flatMap((response) => Effect.flatMap(response.json, Schema.decodeUnknown(schema))),
+    Effect.scoped,
+  );
 
 /** Resolve the PDS service endpoint from a handle or DID via public resolveHandle + DID document. */
 const resolvePds = (handleOrDid: string, client: HttpClient.HttpClient): Effect.Effect<string, PdsResolutionError> =>
@@ -241,8 +246,8 @@ const proxyWrite = <A>(
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: `DPoP ${creds.accessTokenValue}`,
+          'Accept': 'application/json',
+          'Authorization': `DPoP ${creds.accessTokenValue}`,
         },
         // The Edge proxy forwards this verbatim as the fetch body, so it must be a pre-serialized JSON
         // string (an object would reach the PDS as "[object Object]").
@@ -270,11 +275,19 @@ const proxyWrite = <A>(
 };
 
 // Public XRPC GET reads against the PDS — no auth/Edge proxy needed; shared by live and public repos.
-const makeReader = (client: HttpClient.HttpClient, pdsBaseUrl: string, repo: string): Pick<Repo, 'describeRepo' | 'listRecords'> => {
+const makeReader = (
+  client: HttpClient.HttpClient,
+  pdsBaseUrl: string,
+  repo: string,
+): Pick<Repo, 'describeRepo' | 'listRecords'> => {
   const base = pdsBaseUrl.replace(/\/$/, '');
   return {
     describeRepo: () =>
-      getJson(client, `${base}/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(repo)}`, DescribeRepoResponse).pipe(
+      getJson(
+        client,
+        `${base}/xrpc/com.atproto.repo.describeRepo?repo=${encodeURIComponent(repo)}`,
+        DescribeRepoResponse,
+      ).pipe(
         Effect.map((response) => [...response.collections]),
         Effect.mapError((cause) => new AtprotoRepoError({ message: 'describeRepo failed', cause })),
       ),
@@ -283,7 +296,11 @@ const makeReader = (client: HttpClient.HttpClient, pdsBaseUrl: string, repo: str
       if (cursor) {
         params.set('cursor', cursor);
       }
-      return getJson(client, `${base}/xrpc/com.atproto.repo.listRecords?${params.toString()}`, ListRecordsResponse).pipe(
+      return getJson(
+        client,
+        `${base}/xrpc/com.atproto.repo.listRecords?${params.toString()}`,
+        ListRecordsResponse,
+      ).pipe(
         Effect.map((response) => ({
           records: response.records.map((record) => ({
             uri: record.uri,
@@ -312,13 +329,18 @@ const makeLive = (client: HttpClient.HttpClient, creds: Credentials): Repo => ({
       WriteResponse,
     ),
   deleteRecord: ({ collection, rkey }) =>
-    proxyWrite(client, creds, 'com.atproto.repo.deleteRecord', { repo: creds.handle, collection, rkey }, Schema.Struct({})).pipe(
-      Effect.asVoid,
-    ),
+    proxyWrite(
+      client,
+      creds,
+      'com.atproto.repo.deleteRecord',
+      { repo: creds.handle, collection, rkey },
+      Schema.Struct({}),
+    ).pipe(Effect.asVoid),
 });
 
 // Public (unauthenticated) repo: reads work; writes fail — there are no credentials.
-const readOnly = () => Effect.fail(new AtprotoRepoError({ message: 'Repo is read-only (public access; no credentials).' }));
+const readOnly = () =>
+  Effect.fail(new AtprotoRepoError({ message: 'Repo is read-only (public access; no credentials).' }));
 
 const makePublic = (client: HttpClient.HttpClient, pdsBaseUrl: string, handle: string): Repo => ({
   did: handle,

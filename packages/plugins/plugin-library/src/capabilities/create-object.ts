@@ -82,7 +82,9 @@ export default Capability.makeModule(
               description: suggestion?.description,
               genres: suggestion?.genres,
               // The hive id is a catalog identifier (what gates publishing), alongside ISBN/Goodreads.
-              identifiers: props.hiveId ? { hiveId: props.hiveId, ...suggestion?.identifiers } : suggestion?.identifiers,
+              identifiers: props.hiveId
+                ? { hiveId: props.hiveId, ...suggestion?.identifiers }
+                : suggestion?.identifiers,
               language: suggestion?.language,
               numPages: suggestion?.numPages,
               publicationYear: suggestion?.publicationYear,

@@ -6,9 +6,9 @@ import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type PublishFieldNote, type PublishInspection } from '@dxos/schema';
 
-import { getHiveId } from './hive';
 import { type BookSuggestion, lookupHiveBook } from '../operations/bookhive';
 import { browserCorsProxy } from '../operations/cors';
+import { getHiveId } from './hive';
 
 const isEmpty = (value: unknown): boolean =>
   value == null || value === '' || (Array.isArray(value) && value.length === 0);
@@ -65,7 +65,11 @@ export const inspectBook = async (object: unknown): Promise<PublishInspection> =
   // ineligibility) and the mirror-resolution is left unchecked.
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     return {
-      eligibility: { ok: false, reason: 'No network connection — cannot verify the BookHive catalog.', unverifiable: true },
+      eligibility: {
+        ok: false,
+        reason: 'No network connection — cannot verify the BookHive catalog.',
+        unverifiable: true,
+      },
     };
   }
 

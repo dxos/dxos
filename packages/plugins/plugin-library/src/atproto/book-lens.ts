@@ -48,7 +48,12 @@ export const bookLens: Panproto.Lens = {
     { kind: 'meta', wire: 'createdAt', metaField: 'createdAt' },
     { kind: 'prefix', wire: 'status', echo: ['status'], prefix: 'buzz.bookhive.defs#' },
     { kind: 'scalar', wire: 'stars', echo: ['stars'] },
-    { kind: 'ref', wire: 'review', echo: ['review'], ref: { refType: 'text', format: 'markdown-html', alwaysCreate: true } },
+    {
+      kind: 'ref',
+      wire: 'review',
+      echo: ['review'],
+      ref: { refType: 'text', format: 'markdown-html', alwaysCreate: true },
+    },
     { kind: 'dateOnly', wire: 'startedAt', echo: ['startedAt'] },
     { kind: 'dateOnly', wire: 'finishedAt', echo: ['finishedAt'] },
     { kind: 'scalar', wire: 'owned', echo: ['owned'] },

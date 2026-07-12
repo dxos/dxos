@@ -7,8 +7,9 @@ import type * as Layer from 'effect/Layer';
 import { Capability } from '@dxos/app-framework';
 import { type Connection } from '@dxos/plugin-connector';
 
-import type * as AtprotoRepo from '../services/AtprotoRepo';
 import { meta } from '#meta';
+
+import type * as AtprotoRepo from '../services/AtprotoRepo';
 
 /**
  * Builds an {@link AtprotoRepo.Service} layer for a connection. The default (live) factory resolves

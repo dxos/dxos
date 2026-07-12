@@ -16,7 +16,9 @@ class Thing extends Type.makeObject<Thing>(DXN.make('org.dxos.test.LensThing', '
     catalog: Schema.Struct({
       title: Schema.String,
       authors: Schema.Array(Schema.String),
-      identifiers: Schema.optional(Schema.Struct({ hiveId: Schema.optional(Schema.String), isbn13: Schema.optional(Schema.String) })),
+      identifiers: Schema.optional(
+        Schema.Struct({ hiveId: Schema.optional(Schema.String), isbn13: Schema.optional(Schema.String) }),
+      ),
     }),
     status: Schema.optional(Schema.String),
     startedAt: Schema.optional(Schema.String),
@@ -34,7 +36,12 @@ const lens: Panproto.Lens = {
     { kind: 'dateOnly', wire: 'startedAt', echo: ['startedAt'] },
     { kind: 'ref', wire: 'review', echo: ['review'], ref: { refType: 'stub', format: 'upper' } },
     { kind: 'meta', wire: 'createdAt', metaField: 'createdAt' },
-    { kind: 'derive', wire: 'hiveBookUri', from: ['catalog', 'identifiers', 'hiveId'], template: 'at://svc/catalogBook/{0}' },
+    {
+      kind: 'derive',
+      wire: 'hiveBookUri',
+      from: ['catalog', 'identifiers', 'hiveId'],
+      template: 'at://svc/catalogBook/{0}',
+    },
     {
       kind: 'struct',
       wire: 'identifiers',
@@ -61,7 +68,10 @@ const makeThing = () =>
 describe('Panproto runner', () => {
   // The `upper`/`stub` codecs stand in for the real `markdown-html` text format and `text` ref factory
   // that plugin-library registers; here they make the round-trip observable without `@dxos/schema`.
-  Panproto.registerTextFormat('upper', { encode: (value) => value.toUpperCase(), decode: (value) => value.toLowerCase() });
+  Panproto.registerTextFormat('upper', {
+    encode: (value) => value.toUpperCase(),
+    decode: (value) => value.toLowerCase(),
+  });
   Panproto.registerRefType('stub', {
     read: async (ref) => (typeof ref === 'string' ? ref : undefined),
     make: (content) => ({ stub: content }),

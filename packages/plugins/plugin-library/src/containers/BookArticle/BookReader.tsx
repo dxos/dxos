@@ -168,7 +168,16 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
     return <Spinner />;
   }
   if (!contentRef) {
-    return <UploadPrompt busy={busy} inputRef={inputRef} onFile={handleFile} label={t('upload-content.label')} accept={ACCEPT} message={t('no-content.message')} />;
+    return (
+      <UploadPrompt
+        busy={busy}
+        inputRef={inputRef}
+        onFile={handleFile}
+        label={t('upload-content.label')}
+        accept={ACCEPT}
+        message={t('no-content.message')}
+      />
+    );
   }
   if (resolved) {
     if (resolved.type === EPUB_TYPE) {
@@ -184,7 +193,13 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
       );
     }
     if (resolved.type === PDF_TYPE) {
-      return <iframe src={resolved.url} title={live.catalog?.title ?? t('view-read.label')} className='is-full bs-full border-0' />;
+      return (
+        <iframe
+          src={resolved.url}
+          title={live.catalog?.title ?? t('view-read.label')}
+          className='is-full bs-full border-0'
+        />
+      );
     }
     return (
       <div role='none' className='grid bs-full place-items-center p-4'>
@@ -197,7 +212,16 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
     );
   }
   if (error) {
-    return <UploadPrompt busy={busy} inputRef={inputRef} onFile={handleFile} label={t('upload-content.label')} accept={ACCEPT} message={t('content-unavailable.message')} />;
+    return (
+      <UploadPrompt
+        busy={busy}
+        inputRef={inputRef}
+        onFile={handleFile}
+        label={t('upload-content.label')}
+        accept={ACCEPT}
+        message={t('content-unavailable.message')}
+      />
+    );
   }
   return <Spinner />;
 });

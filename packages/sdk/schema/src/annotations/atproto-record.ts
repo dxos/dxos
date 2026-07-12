@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createAnnotationHelper } from '@dxos/echo/internal';
 import { type Panproto } from '@dxos/echo-panproto';
+import { createAnnotationHelper } from '@dxos/echo/internal';
 
 /** An external-record foreign key (`{ source, id }`) to stamp on an object's meta. */
 export type AtprotoForeignKey = { source: string; id: string };

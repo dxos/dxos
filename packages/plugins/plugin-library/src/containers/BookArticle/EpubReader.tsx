@@ -53,92 +53,92 @@ const READER_CSS = `
  */
 export const EpubReader = forwardRef<EpubReaderHandle, EpubReaderProps>(
   ({ url, title, initialCfi, initialFraction, onRelocate }, forwardedRef) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const viewRef = useRef<FoliateView | undefined>(undefined);
-  // Latest relocate callback, read from the effect without re-opening the book when it changes.
-  const onRelocateRef = useRef(onRelocate);
-  onRelocateRef.current = onRelocate;
-  const [failed, setFailed] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const viewRef = useRef<FoliateView | undefined>(undefined);
+    // Latest relocate callback, read from the effect without re-opening the book when it changes.
+    const onRelocateRef = useRef(onRelocate);
+    onRelocateRef.current = onRelocate;
+    const [failed, setFailed] = useState(false);
 
-  // Paging drives the live `<foliate-view>` instance (created in the effect); no-op until it is opened.
-  useImperativeHandle(
-    forwardedRef,
-    () => ({
-      goLeft: () => viewRef.current?.goLeft(),
-      goRight: () => viewRef.current?.goRight(),
-    }),
-    [],
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-    let view: FoliateView | undefined;
-    void (async () => {
-      try {
-        // Registers the `<foliate-view>` custom element as a side effect.
-        await import('foliate-js/view.js');
-        const container = containerRef.current;
-        if (cancelled || !container) {
-          return;
-        }
-        const response = await fetch(url);
-        const file = new File([await response.blob()], `${title ?? 'book'}.epub`, {
-          type: 'application/epub+zip',
-        });
-        // `document.createElement` returns a bare `HTMLElement`; the custom element adds `open`.
-        view = document.createElement('foliate-view') as FoliateView;
-        // The custom element has no intrinsic size (renders 0×0); size it to fill the container so
-        // foliate paginates against real dimensions.
-        view.style.display = 'block';
-        view.style.inlineSize = '100%';
-        view.style.blockSize = '100%';
-        container.appendChild(view);
-        // Report the reading position on every page turn / navigation.
-        view.addEventListener('relocate', (event) => {
-          const detail = (
-            event as CustomEvent<{ fraction?: number; cfi?: string; location?: { current?: number; total?: number } }>
-          ).detail;
-          if (typeof detail?.fraction === 'number') {
-            onRelocateRef.current?.({
-              fraction: detail.fraction,
-              cfi: detail.cfi,
-              current: detail.location?.current,
-              total: detail.location?.total,
-            });
-          }
-        });
-        await view.open(file);
-        view.renderer.setStyles?.(READER_CSS);
-        // `open()` paints nothing until a page is requested. Restore the exact CFI when we have one
-        // (fraction restore snaps to the nearest page); otherwise the saved fraction, else the start.
-        if (initialCfi) {
-          await view.goTo(initialCfi);
-        } else {
-          await view.goToFraction(initialFraction ?? 0);
-        }
-        viewRef.current = view;
-      } catch {
-        if (!cancelled) {
-          setFailed(true);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-      viewRef.current = undefined;
-      view?.remove();
-    };
-  }, [url, title]);
-
-  if (failed) {
-    return (
-      <div role='none' className='grid bs-full place-items-center gap-2 p-4 text-center text-description'>
-        <Icon icon='ph--warning--regular' size={6} />
-      </div>
+    // Paging drives the live `<foliate-view>` instance (created in the effect); no-op until it is opened.
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
+        goLeft: () => viewRef.current?.goLeft(),
+        goRight: () => viewRef.current?.goRight(),
+      }),
+      [],
     );
-  }
 
-  return <div ref={containerRef} role='none' className='is-full bs-full overflow-hidden' />;
+    useEffect(() => {
+      let cancelled = false;
+      let view: FoliateView | undefined;
+      void (async () => {
+        try {
+          // Registers the `<foliate-view>` custom element as a side effect.
+          await import('foliate-js/view.js');
+          const container = containerRef.current;
+          if (cancelled || !container) {
+            return;
+          }
+          const response = await fetch(url);
+          const file = new File([await response.blob()], `${title ?? 'book'}.epub`, {
+            type: 'application/epub+zip',
+          });
+          // `document.createElement` returns a bare `HTMLElement`; the custom element adds `open`.
+          view = document.createElement('foliate-view') as FoliateView;
+          // The custom element has no intrinsic size (renders 0×0); size it to fill the container so
+          // foliate paginates against real dimensions.
+          view.style.display = 'block';
+          view.style.inlineSize = '100%';
+          view.style.blockSize = '100%';
+          container.appendChild(view);
+          // Report the reading position on every page turn / navigation.
+          view.addEventListener('relocate', (event) => {
+            const detail = (
+              event as CustomEvent<{ fraction?: number; cfi?: string; location?: { current?: number; total?: number } }>
+            ).detail;
+            if (typeof detail?.fraction === 'number') {
+              onRelocateRef.current?.({
+                fraction: detail.fraction,
+                cfi: detail.cfi,
+                current: detail.location?.current,
+                total: detail.location?.total,
+              });
+            }
+          });
+          await view.open(file);
+          view.renderer.setStyles?.(READER_CSS);
+          // `open()` paints nothing until a page is requested. Restore the exact CFI when we have one
+          // (fraction restore snaps to the nearest page); otherwise the saved fraction, else the start.
+          if (initialCfi) {
+            await view.goTo(initialCfi);
+          } else {
+            await view.goToFraction(initialFraction ?? 0);
+          }
+          viewRef.current = view;
+        } catch {
+          if (!cancelled) {
+            setFailed(true);
+          }
+        }
+      })();
+      return () => {
+        cancelled = true;
+        viewRef.current = undefined;
+        view?.remove();
+      };
+    }, [url, title]);
+
+    if (failed) {
+      return (
+        <div role='none' className='grid bs-full place-items-center gap-2 p-4 text-center text-description'>
+          <Icon icon='ph--warning--regular' size={6} />
+        </div>
+      );
+    }
+
+    return <div ref={containerRef} role='none' className='is-full bs-full overflow-hidden' />;
   },
 );
 

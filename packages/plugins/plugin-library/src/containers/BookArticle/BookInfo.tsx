@@ -65,7 +65,10 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
   // External catalog links shown next to the publication line.
   const externalLinks: { label: string; href: string }[] = [];
   if (catalog?.identifiers?.goodreadsId) {
-    externalLinks.push({ label: 'Goodreads', href: `https://www.goodreads.com/book/show/${catalog.identifiers.goodreadsId}` });
+    externalLinks.push({
+      label: 'Goodreads',
+      href: `https://www.goodreads.com/book/show/${catalog.identifiers.goodreadsId}`,
+    });
   }
   if (catalog?.identifiers?.hiveId) {
     externalLinks.push({ label: 'BookHive', href: `https://bookhive.buzz/books/${catalog.identifiers.hiveId}` });

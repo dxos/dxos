@@ -17,7 +17,10 @@ import { type Adapter, type Lens } from './lens';
 export type TextFormat = { readonly encode: (input: string) => string; readonly decode: (input: string) => string };
 
 /** A ref codec named by an adapter's `refType` (e.g. `text`). Owns the ECHO/`@dxos/schema` specifics. */
-export type RefType = { readonly read: (ref: unknown) => Promise<string | undefined>; readonly make: (content: string) => unknown };
+export type RefType = {
+  readonly read: (ref: unknown) => Promise<string | undefined>;
+  readonly make: (content: string) => unknown;
+};
 
 const textFormats = new Map<string, TextFormat>();
 const refTypes = new Map<string, RefType>();

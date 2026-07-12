@@ -64,7 +64,12 @@ export type BookSuggestion = {
 };
 
 const splitAuthors = (authors?: string): string[] =>
-  authors ? authors.split('\t').map((author) => author.trim()).filter(Boolean) : [];
+  authors
+    ? authors
+        .split('\t')
+        .map((author) => author.trim())
+        .filter(Boolean)
+    : [];
 
 const toSuggestion = (book: Schema.Schema.Type<typeof HiveBook>): BookSuggestion => ({
   hiveId: book.id,
@@ -103,7 +108,10 @@ export const searchBooks = (query: string, options?: FetchOptions): Effect.Effec
 /**
  * Resolve a single catalog book by its hive id (used to autofill the create form after selection).
  */
-export const lookupHiveBook = (hiveId: string, options?: FetchOptions): Effect.Effect<BookSuggestion | undefined, never> =>
+export const lookupHiveBook = (
+  hiveId: string,
+  options?: FetchOptions,
+): Effect.Effect<BookSuggestion | undefined, never> =>
   hiveId.trim().length === 0
     ? Effect.succeed(undefined)
     : getJson(SearchBooksResponse, lookupEndpoint(hiveId.trim()), options?.corsProxy).pipe(

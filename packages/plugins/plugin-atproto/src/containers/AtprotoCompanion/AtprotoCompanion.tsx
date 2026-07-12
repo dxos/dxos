@@ -9,13 +9,12 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { Connection } from '@dxos/plugin-connector';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Button, Message, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
 import { Treegrid } from '@dxos/react-ui-list';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type PublishFieldNote } from '@dxos/schema';
-
-import { Connection } from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
 import { AtprotoCapabilities, AtprotoPublication } from '#types';
@@ -189,7 +188,8 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
   const reasonValence = status === 'unknown' ? 'info' : 'warning';
   // Whether the object has any Mirrored fields whose upstream link failed to resolve — those fields
   // are then visible nowhere despite their tag.
-  const mirroredUnresolved = mirrorResolved === false && fields.some((field) => !field.group && field.visibility === 'mirror');
+  const mirroredUnresolved =
+    mirrorResolved === false && fields.some((field) => !field.group && field.visibility === 'mirror');
   // Published field values at last publish; a Published field whose current value differs has diverged
   // (and is what puts the object out of sync). Absent on older publications.
   const publishedValues = publication?.publishedValues;
@@ -280,7 +280,10 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                       <Treegrid.Row
                         key={field.path}
                         id={field.path.replaceAll('.', '~')}
-                        classNames={['grid grid-cols-subgrid col-span-full items-center py-0.5', field.group ? 'font-medium' : 'font-normal']}
+                        classNames={[
+                          'grid grid-cols-subgrid col-span-full items-center py-0.5',
+                          field.group ? 'font-medium' : 'font-normal',
+                        ]}
                       >
                         <Treegrid.Cell
                           classNames='flex items-center'
