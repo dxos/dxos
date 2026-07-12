@@ -23,7 +23,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'gallery-article',
+        id: 'galleryArticle',
         filter: AppSurface.object(AppSurface.Article, Gallery.Gallery),
         component: ({ role, data }) => (
           <GalleryArticle role={role} subject={data.subject} attendableId={data.attendableId} />
