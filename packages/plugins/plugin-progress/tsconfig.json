@@ -38,6 +38,9 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-status-bar"
     }
   ]
 }

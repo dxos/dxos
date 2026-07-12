@@ -3,3 +3,4 @@
 //
 
 export { default as ProgressRegistry } from './progress-registry';
+export { default as ReactSurface } from './react-surface';
