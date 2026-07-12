@@ -20,6 +20,8 @@ import { Mailbox } from '@dxos/plugin-inbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
+import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import { translations as progressTranslations } from '@dxos/plugin-progress/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -83,6 +85,7 @@ const meta = {
         ConnectorPlugin(),
         DebugPlugin({}),
         PreviewPlugin(),
+        ProgressPlugin(),
         StorySyncPlugin(),
         StoryModulesPlugin(),
         StorybookPlugin({}),
@@ -92,7 +95,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...inboxTranslations, ...connectorTranslations],
+    translations: [...inboxTranslations, ...connectorTranslations, ...progressTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 

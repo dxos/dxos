@@ -19,6 +19,7 @@ import type { Credential, Operation, Skill } from '@dxos/compute';
 import type { Database, Type } from '@dxos/echo';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { EID, type URI } from '@dxos/keys';
+import { Progress } from '@dxos/progress';
 import type { AnchoredTo } from '@dxos/types';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
@@ -318,3 +319,29 @@ export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<O
 export const NavigationPathResolver = Capability$.make<NavigationPathResolver>(
   'org.dxos.app-framework.capability.navigationPathResolver',
 );
+
+/** A transient progress monitor handle — the update side of one registry entry. */
+export type ProgressMonitor = Progress.TaskHandle;
+
+/**
+ * A registry of live progress providers, exposed as reactive atoms. Producers `register` a monitor
+ * (keyed by a stable `name`, with a display `label`), advance/complete it, and `remove()` it when
+ * done. Consumers read the aggregate `snapshotAtom` (e.g. the R0 rail popover) or a single provider's
+ * `monitorAtom(name)` (e.g. an article's inline meter). Contributed by an always-loaded host
+ * (`plugin-progress`); backed by the shared `@dxos/progress` core.
+ */
+export type ProgressRegistry = Readonly<{
+  /** Aggregate snapshot of all active providers. */
+  snapshotAtom: Atom.Atom<Progress.ProgressSnapshot>;
+  /** One provider's reactive state, by name (stable/memoized per name). */
+  monitorAtom: (name: string) => Atom.Atom<Progress.TaskProgress | undefined>;
+  /** Register (or resume) a provider and mark it running. */
+  register: (name: string, options?: { label?: string; total?: number }) => ProgressMonitor;
+  /** Non-reactive read of the current snapshot. */
+  snapshot: () => Progress.ProgressSnapshot;
+}>;
+
+/**
+ * @category Capability
+ */
+export const ProgressRegistry = Capability$.make<ProgressRegistry>('org.dxos.app-toolkit.capability.progressRegistry');

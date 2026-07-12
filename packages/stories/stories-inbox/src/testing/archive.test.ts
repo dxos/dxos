@@ -5,14 +5,15 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Database, Feed, Filter, Tag } from '@dxos/echo';
+import { Database, Feed, Filter, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { Connection } from '@dxos/plugin-connector';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { TagIndex } from '@dxos/schema';
-import { Message } from '@dxos/types';
+import { AccessToken, Message } from '@dxos/types';
 
-import { exportFeedMessages, replaceFeed } from './archive';
+import { exportFeedMessages, replaceFeed, resetMailbox } from './archive';
 
 describe('feed archive', () => {
   let builder: EchoTestBuilder;
@@ -92,6 +93,41 @@ describe('feed archive', () => {
 
     const next = await mailbox.feed!.tryLoad();
     expect(next!.id).not.toBe(original.id);
+    const remaining = await EffectEx.runPromise(
+      Feed.query(next!, Filter.type(Message.Message)).run.pipe(Effect.provide(Database.layer(db))),
+    );
+    expect(remaining).toHaveLength(0);
+  });
+
+  test('resetMailbox clears saved connections, access tokens, and empties the feed', async ({ expect }) => {
+    const { db } = await builder.createDatabase({
+      types: [
+        Feed.Feed,
+        Tag.Tag,
+        Mailbox.Mailbox,
+        Message.Message,
+        TagIndex.TagIndex,
+        AccessToken.AccessToken,
+        Connection.Connection,
+      ],
+    });
+    const mailbox = db.add(Mailbox.make());
+    await db.flush();
+    await seedFeed(db, mailbox);
+
+    // A saved account left behind by a prior connect (the case that accumulates in the Connect menu).
+    const token = db.add(AccessToken.make({ source: 'mail.google.com', account: 'a@example.com', token: 'secret' }));
+    db.add(Connection.make({ connectorId: 'gmail', accessToken: Ref.make(token) }));
+    await db.flush({ indexes: true });
+    expect(await db.query(Filter.type(Connection.Connection)).run()).toHaveLength(1);
+
+    await resetMailbox(mailbox, db);
+    await db.flush({ indexes: true });
+
+    // The connection and its token are gone (clean slate), and the feed is empty.
+    expect(await db.query(Filter.type(Connection.Connection)).run()).toHaveLength(0);
+    expect(await db.query(Filter.type(AccessToken.AccessToken)).run()).toHaveLength(0);
+    const next = await mailbox.feed!.tryLoad();
     const remaining = await EffectEx.runPromise(
       Feed.query(next!, Filter.type(Message.Message)).run.pipe(Effect.provide(Database.layer(db))),
     );

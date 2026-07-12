@@ -31,7 +31,8 @@
   ],
   "scripts": {},
   "dependencies": {
-    "@dxos/log": "workspace:*"
+    "@dxos/log": "workspace:*",
+    "@dxos/progress": "workspace:*"
   },
   "devDependencies": {
     "@dxos/effect": "workspace:*",
