@@ -17262,6 +17262,10 @@ importers:
       effect:
         specifier: 3.21.4
         version: 3.21.4
+    devDependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
 
   packages/plugins/plugin-video:
     dependencies:
