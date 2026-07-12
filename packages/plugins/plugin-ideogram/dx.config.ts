@@ -19,6 +19,7 @@ export default Config2.make({
     `,
     icon: { key: 'ph--sparkle--regular', hue: 'amber' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-ideogram',
+    dependsOn: ['org.dxos.plugin.image'],
     tags: ['labs'],
   },
 });
