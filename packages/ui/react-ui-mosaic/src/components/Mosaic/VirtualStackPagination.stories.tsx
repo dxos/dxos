@@ -13,6 +13,7 @@ import { type Client, useClient } from '@dxos/react-client';
 import { usePagination, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { persistentClientServices, withClientProvider } from '@dxos/react-client/testing';
 import { Button, Card, Input, Panel, ScrollArea, Select, Toolbar } from '@dxos/react-ui';
+import { Dnd } from '@dxos/react-ui-dnd';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Focus } from '../Focus';
@@ -104,7 +105,7 @@ const VirtualStackPaginationStory = () => {
   const range = items.length > 0 ? `${items[0].index}–${items[items.length - 1].index}` : '–';
 
   return (
-    <Mosaic.Root>
+    <Dnd.Root>
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
@@ -132,7 +133,7 @@ const VirtualStackPaginationStory = () => {
           </Mosaic.Container>
         </Panel.Content>
       </Panel.Root>
-    </Mosaic.Root>
+    </Dnd.Root>
   );
 };
 
@@ -284,7 +285,7 @@ const FeedPaginationStory = () => {
   const total = counter.next;
 
   return (
-    <Mosaic.Root>
+    <Dnd.Root>
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
@@ -364,7 +365,7 @@ const FeedPaginationStory = () => {
           </Mosaic.Container>
         </Panel.Content>
       </Panel.Root>
-    </Mosaic.Root>
+    </Dnd.Root>
   );
 };
 

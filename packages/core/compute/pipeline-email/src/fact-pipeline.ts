@@ -79,9 +79,11 @@ export const runFactPipeline = (options: {
   readonly cursors: FeedCursorsApi;
   readonly extract: FactExtractor;
   readonly pageSize: number;
+  /** In-flight parallelism for the per-message extraction stage (defaults to 1 = serial). */
+  readonly concurrency?: number;
 }): Effect.Effect<{ processed: number; facts: number }, never, FactStore | Database.Service> =>
   Effect.gen(function* () {
-    const { feed, cursors, extract, pageSize } = options;
+    const { feed, cursors, extract, pageSize, concurrency = 1 } = options;
     const store = yield* FactStore;
 
     // Sources (== `messageSource`) already indexed — the precise skip; the cursor is only a coarse
@@ -110,7 +112,7 @@ export const runFactPipeline = (options: {
           Date.parse(message.created) < cursorKey || indexedSources.has(messageSource(message)) ? undefined : message,
         ),
       ),
-      extractFactsUnitStage(extract),
+      extractFactsUnitStage(extract, concurrency),
       // Observability stage: confirms units flow through and how many facts each carries.
       Stage.map('facts-log', (unit: FactUnit) =>
         Effect.sync(() => {

@@ -31,6 +31,7 @@ Do NOT cast to silence a build error; fix the type where it originates.
   Justify or remove each; do not defer to review.
 - Casts accumulate fastest during large codemods — treat each as a deliberate
   decision, never an autopilot stopgap.
+- Use @dxos/util `trim` to create multi-line strings (e.g., prompts).
 
 ## Namespace-export packages
 

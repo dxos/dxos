@@ -28,6 +28,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Booking, Segment, Trip } from '@dxos/plugin-trip';
 import { TripPlugin } from '@dxos/plugin-trip/testing';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Message as MessageType, Person } from '@dxos/types';
@@ -198,14 +199,25 @@ const DefaultStory = () => {
     return <Loading data={{ db: !!space?.db, message: !!message }} />;
   }
 
-  return <MessageArticle role='article' subject={message} attendableId='story' mailbox={mailbox} />;
+  return (
+    <div className='h-full overflow-auto grid grid-cols-2 gap-2'>
+      <MessageArticle
+        testId='message-article'
+        role='article'
+        subject={message}
+        attendableId='story'
+        mailbox={mailbox}
+      />
+      <JsonHighlighter data={{ message }} />
+    </div>
+  );
 };
 
 const meta = {
   title: 'stories/stories-inbox/ExtractMessage',
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'column' }),
+    withLayout({ layout: 'fullscreen' }),
     withTheme(),
     withPluginManager({
       setupEvents: [
@@ -307,11 +319,14 @@ export const Test: Story = {
       throw new Error(`timed out waiting (last=${String(last)})`);
     };
 
+    const article = await waitFor(() => canvas.queryByTestId('message-article'));
+    const articleScope = within(article as HTMLElement);
+
     // Wait for the seeded message to render.
-    await waitFor(() => canvas.queryByText(/Your flight confirmation/i));
+    await waitFor(() => articleScope.queryByText(/Your flight confirmation/i));
 
     // Open the toolbar Extract dropdown.
-    const extractTrigger = await waitFor(() => canvas.queryByRole('button', { name: /extract/i }));
+    const extractTrigger = await waitFor(() => articleScope.queryByRole('button', { name: /extract/i }));
     await userEvent.click(extractTrigger as HTMLElement);
 
     // Assert the summarize extractor is registered and matches the seeded body. The dropdown
@@ -337,7 +352,7 @@ export const Test: Story = {
     // Scope all chip assertions to the MessageHeader so we don't accidentally match strings
     // from the seeded message body (e.g. `From: SFO`). The header contains both the per-object
     // `extracted-tag-<id>` rows (Trip) and the `extracted-tags` chip row (travel/important).
-    const header = await waitFor(() => canvas.queryByTestId('message-header'));
+    const header = await waitFor(() => articleScope.queryByTestId('message-header'));
     void expect(header).toBeInTheDocument();
     const headerScope = within(header as HTMLElement);
 

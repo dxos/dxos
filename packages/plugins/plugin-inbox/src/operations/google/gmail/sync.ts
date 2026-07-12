@@ -11,7 +11,8 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { type Capability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
@@ -23,10 +24,11 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 // InboxOperation.GoogleMailSync's schema; the import lets TypeScript name it in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Connection, SyncBinding } from '@dxos/plugin-connector';
-import { Cursor, Person } from '@dxos/types';
+import { ContentBlock, Cursor, Person } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
+import { meta } from '../../../meta';
 import {
   GoogleCredentials,
   GoogleMailApi,
@@ -180,6 +182,75 @@ export const runGmailSync = ({
     // fetch → dedup → decode → map → extract-contacts → (optional) on-arrival extractors →
     // record-threads → commit each page. The SyncBinding layer advances the binding cursor per page.
     const stats: SyncBinding.Stats = { newMessages: 0 };
+
+    // Coarse sync telemetry (message/thread/sender counts + body-part coverage) written to the
+    // transient stats store, keyed by mailbox, so a surface (plugin-debug) can display it live. The
+    // store is optional — `getAll` yields nothing without a host plugin, so this is a no-op in
+    // production; only body-part coverage (which parts each message carried) is Gmail-specific.
+    // Write only this plugin's compartment (indexed by plugin key); other plugins own their own slots.
+    const statsCompartments = (yield* Capability.getAll(AppCapabilities.StatsPanel)).map((store) =>
+      store.compartment(meta.profile.key),
+    );
+    const startedAt = new Date().toISOString();
+    const startMs = Date.now();
+    const threads = new Set<string>();
+    const senders = new Set<string>();
+    const coverage = { plain: 0, synthesizedMarkdown: 0, htmlOnly: 0, none: 0 };
+    let processed = 0;
+    let attachmentCount = 0;
+    let finishedAt: string | undefined;
+    let finishedMs: number | undefined;
+    const publishStats = () => {
+      if (statsCompartments.length === 0) {
+        return;
+      }
+      const snapshot = {
+        startedAt,
+        ...(finishedAt ? { finishedAt } : {}),
+        durationMs: (finishedMs ?? Date.now()) - startMs,
+        range: {
+          syncBackDays: targetOptions.syncBackDays,
+          direction: resolvedDirection,
+          start: format(start, 'yyyy-MM-dd'),
+          end: format(rangeEnd, 'yyyy-MM-dd'),
+        },
+        processed,
+        newMessages: stats.newMessages,
+        threads: threads.size,
+        senders: senders.size,
+        coverage,
+        attachments: attachmentCount,
+      };
+      statsCompartments.forEach((compartment) => compartment.set(snapshot));
+    };
+    // Pass-through stage: accumulates telemetry as each mapped message flows by, publishing a fresh
+    // snapshot so a subscribed surface ticks up live during the sync.
+    const collectStats = Stage.map('collect-stats', (mapped: EmailStage.Mapped) =>
+      Effect.sync(() => {
+        processed += 1;
+        if (mapped.message.threadId) {
+          threads.add(mapped.message.threadId);
+        }
+        if (mapped.message.sender?.email) {
+          senders.add(mapped.message.sender.email);
+        }
+        const textBlocks = mapped.message.blocks.filter((block): block is ContentBlock.Text => block._tag === 'text');
+        const has = (mimeType: string) => textBlocks.some((block) => block.mimeType === mimeType);
+        if (has('text/plain')) {
+          coverage.plain += 1;
+        } else if (has('text/markdown')) {
+          coverage.synthesizedMarkdown += 1;
+        } else if (has('text/html')) {
+          coverage.htmlOnly += 1;
+        } else {
+          coverage.none += 1;
+        }
+        attachmentCount += mapped.attachments?.length ?? 0;
+        publishStats();
+        return mapped;
+      }),
+    );
+
     yield* gmailSource({
       userId,
       label,
@@ -201,6 +272,7 @@ export const runGmailSync = ({
       //   (docs/superpowers/specs/2026-07-04-mail-sync-performance-exploration.md) quantifies it.
       // EmailStage.htmlToMarkdown,
       mapToMessageStage,
+      collectStats,
       EmailStage.processAttachments(),
       EmailStage.onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
@@ -223,6 +295,13 @@ export const runGmailSync = ({
     // Flush indexes once, at the end of the run, so cross-run dedup / contact resolution observe this
     // run's writes (per-page commits no longer flush — see `SyncBinding.commit`).
     yield* Database.flush({ indexes: true });
+
+    // Final publish so the committed `newMessages` count (advanced per page by the commit sink) is
+    // reflected after the last item's mid-stream snapshot, and the run's end time / total duration
+    // are recorded.
+    finishedMs = Date.now();
+    finishedAt = new Date(finishedMs).toISOString();
+    publishStats();
 
     log('gmail sync complete', { newMessages: stats.newMessages });
     return { newMessages: stats.newMessages };

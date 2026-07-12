@@ -1,5 +1,5 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import { type ElementDragPayload } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
@@ -9,22 +9,22 @@ export type GetId<TData = any> = (data: TData) => string;
 /**
  * NOTE: Must implement value equivalence.
  */
-export type LocationType = string | number;
+export type DndLocation = string | number;
 
 /**
  * Get the source data from the drag payload.
  */
 export const getSourceData = <TData = any, TLocation = any>(
   source: ElementDragPayload,
-): MosaicTileData<TData, TLocation> | null => {
-  return source.data.type === 'tile' ? (source.data as MosaicTileData<TData, TLocation>) : null;
+): DndTileData<TData, TLocation> | null => {
+  return source.data.type === 'tile' ? (source.data as DndTileData<TData, TLocation>) : null;
 };
 
 /**
  * Draggable item.
  * Tiles may contain arbitrary data (which may not be an ECHO object; e.g., search result).
  */
-export type MosaicTileData<TData = any, TLocation = any> = {
+export type DndTileData<TData = any, TLocation = any> = {
   type: 'tile';
   containerId: string;
   id: string;
@@ -36,7 +36,7 @@ export type MosaicTileData<TData = any, TLocation = any> = {
 /**
  * Drop target placeholder.
  */
-export type MosaicPlaceholderData<TLocation = any> = {
+export type DndPlaceholderData<TLocation = any> = {
   type: 'placeholder';
   containerId: string;
   location: TLocation;
@@ -45,27 +45,27 @@ export type MosaicPlaceholderData<TLocation = any> = {
 /**
  * Drop target container.
  */
-export type MosaicContainerData = {
+export type DndContainerData = {
   type: 'container';
   id: string;
 };
 
-export type MosaicData = MosaicTileData | MosaicPlaceholderData | MosaicContainerData;
+export type DndData = DndTileData | DndPlaceholderData | DndContainerData;
 
-export type MosaicTargetData = MosaicTileData | MosaicPlaceholderData;
+export type DndTargetData = DndTileData | DndPlaceholderData;
 
 /**
  * Handler implemented by drop containers.
  */
-export interface MosaicEventHandler<TData = any, TObject = any> {
+export interface DndContainerHandler<TData = any, TObject = any> {
   /**
-   * Container identifier. Must be unique per live container instance across the whole Mosaic root
-   * (append a `useId()` discriminator when the same object may mount in multiple containers).
+   * Container identifier. Must be unique per live container instance across the whole `Dnd.Root`
+   * (use `useContainerId` to append a discriminator when the same object may mount in multiple containers).
    */
   id: string;
 
   /**
-   * Open, container-defined descriptor of what this container holds. Not interpreted by Mosaic;
+   * Open, container-defined descriptor of what this container holds. Not interpreted by the core;
    * surfaced to the other container's `canDrop`/`onDrop` so cross-container drop rules can decide
    * whether a source is acceptable without parsing the opaque `id`.
    */
@@ -75,17 +75,17 @@ export interface MosaicEventHandler<TData = any, TObject = any> {
    * Determine if the item can be dropped into this container.
    * NOTE: This is continuously called while dragging (doesn't require mouse movement).
    */
-  canDrop?: (props: { source: MosaicTileData<TData> }) => boolean;
+  canDrop?: (props: { source: DndTileData<TData> }) => boolean;
 
   /**
    * Called during drag for custom visualization.
    */
-  onDrag?: (props: { source: MosaicTileData<TData>; position: { x: number; y: number } }) => void;
+  onDrag?: (props: { source: DndTileData<TData>; position: { x: number; y: number } }) => void;
 
   /**
    * Insert/rearrange the item at the given location.
    */
-  onDrop?: (props: { source: MosaicTileData<TData>; target?: MosaicData }) => void;
+  onDrop?: (props: { source: DndTileData<TData>; target?: DndData }) => void;
 
   /**
    * Request the object to be dropped.
@@ -93,7 +93,7 @@ export interface MosaicEventHandler<TData = any, TObject = any> {
    * If the callback returns true, then the callback may decide to remove the item from the source container,
    * completing the transfer.
    */
-  onTake?: (props: { source: MosaicTileData<TData> }, cb: (object: TObject) => Promise<boolean>) => void;
+  onTake?: (props: { source: DndTileData<TData> }, cb: (object: TObject) => Promise<boolean>) => void;
 
   /**
    * Dragging ended.
