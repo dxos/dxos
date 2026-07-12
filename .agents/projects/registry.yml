@@ -25,7 +25,7 @@ projects:
     summary: Rename the $session sentinel/concept to $project and add a numbered pick-to-resume table.
     tasks: .agents/skills/task-planning/TASKS.md
     design: .agents/skills/task-planning/SKILL.md
-    prs: []
-    resume: 'Rename + $project picker complete and hook-verified. Next: commit the 6-file change, then open a PR.'
+    prs: [12174]
+    resume: 'PR #12174 opened. Next: watch the Check workflow to green and address any review comments.'
 
 ended: []
