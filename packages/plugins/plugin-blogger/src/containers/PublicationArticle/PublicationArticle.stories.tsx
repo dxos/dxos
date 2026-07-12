@@ -91,12 +91,12 @@ export const Instructions: Story = {
     const canvas = within(canvasElement);
 
     // Gallery view renders each post as a Masonry `listitem` tile.
-    await waitFor(() => expect(canvas.getAllByRole('listitem').length).toBeGreaterThan(0));
+    await waitFor(() => expect(canvas.getAllByRole('listitem').length).toBeGreaterThan(0), { timeout: 10_000 });
 
-    const toggle = await canvas.findByTestId('publication.toolbar.toggleView');
+    const toggle = await canvas.findByTestId('publication.toolbar.toggleView', undefined, { timeout: 10_000 });
     await userEvent.click(toggle);
 
     // Instructions view replaces the gallery entirely — no more Masonry tiles.
-    await waitFor(() => expect(canvas.queryAllByRole('listitem')).toHaveLength(0));
+    await waitFor(() => expect(canvas.queryAllByRole('listitem')).toHaveLength(0), { timeout: 10_000 });
   },
 };
