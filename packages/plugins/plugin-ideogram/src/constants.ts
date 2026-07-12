@@ -13,3 +13,6 @@ export const IDEOGRAM_SOURCE = 'ideogram.ai';
 
 /** Ideogram image-generation endpoint. */
 export const IDEOGRAM_GENERATE_URL = 'https://api.ideogram.ai/generate';
+
+/** Abort the `/generate` request after this many ms so a hung call cannot block the caller. */
+export const IDEOGRAM_TIMEOUT_MS = 30_000;

@@ -54,7 +54,7 @@ describe('generateWithIdeogram', () => {
   });
 
   test('POSTs to /generate with the Api-Key header and image_request body', async ({ expect }) => {
-    let captured: { url: string; headers: Record<string, string>; body: any } | undefined;
+    let captured: { url: string; headers: Record<string, string>; body: Record<string, unknown> } | undefined;
     globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
       captured = {
         url: String(input),

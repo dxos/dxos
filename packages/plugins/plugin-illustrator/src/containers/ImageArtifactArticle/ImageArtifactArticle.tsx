@@ -90,12 +90,15 @@ export const ImageArtifactArticle = ({ role, subject: artifact, attendableId }: 
     Surface.isAvailable(pluginManager.capabilities, { type: ConnectorAuth, data: connectorData });
 
   const handleGenerate = useCallback(async () => {
+    if (!db) {
+      return;
+    }
     setGenerating(true);
     try {
       await invokePromise(
         ImageArtifactOperation.GenerateImage,
         { artifact: Ref.make(artifact) },
-        { spaceId: db?.spaceId },
+        { spaceId: db.spaceId },
       );
       setSelected('all');
     } catch (error) {
@@ -132,8 +135,12 @@ export const ImageArtifactArticle = ({ role, subject: artifact, attendableId }: 
           <Button variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
             {t('all.tab.label')}
           </Button>
-          {images.map((_image, index) => (
-            <Button key={index} variant={selected === index ? 'primary' : 'ghost'} onClick={() => setSelected(index)}>
+          {images.map((image, index) => (
+            <Button
+              key={image.id}
+              variant={selected === index ? 'primary' : 'ghost'}
+              onClick={() => setSelected(index)}
+            >
               {index + 1}
             </Button>
           ))}
@@ -152,7 +159,7 @@ export const ImageArtifactArticle = ({ role, subject: artifact, attendableId }: 
               icon={generating ? 'ph--spinner-gap--regular' : 'ph--sparkle--regular'}
               iconClassNames={generating ? 'animate-spin' : undefined}
               label={generating ? t('generating.label') : t('generate.label')}
-              disabled={!provider || !hasAttention || generating}
+              disabled={!db || !provider || !hasAttention || generating}
               onClick={() => {
                 void handleGenerate();
               }}

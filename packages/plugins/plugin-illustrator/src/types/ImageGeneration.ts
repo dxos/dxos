@@ -7,6 +7,8 @@
 import type * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
 
+import { BaseError } from '@dxos/errors';
+
 /**
  * Transient image-generation types shared by plugin-illustrator and provider implementations
  * (e.g. plugin-ideogram). These are NOT ECHO objects — they are plain Effect schemas / interfaces
@@ -70,26 +72,29 @@ export interface ImageGenerationService {
   ): Promise<ImageGenerationResult>;
 }
 
-/** Thrown when no {@link ImageGenerationService} is registered (or none matches the requested id). */
-export class NoImageGenerationServiceError extends Error {
-  constructor(public readonly provider?: string) {
-    super(provider ? `No image-generation service: ${provider}` : 'No image-generation service registered');
-    this.name = 'NoImageGenerationServiceError';
+/** No {@link ImageGenerationService} is registered (or none matches the requested id). */
+export class NoImageGenerationServiceError extends BaseError.extend(
+  'NoImageGenerationServiceError',
+  'No image-generation service registered',
+) {
+  constructor(provider?: string) {
+    super(provider ? { message: `No image-generation service: ${provider}`, context: { provider } } : {});
   }
 }
 
-/** Thrown when a provider needs a credential (`source`) but none is connected. */
-export class MissingCredentialError extends Error {
-  constructor(public readonly source: string) {
-    super(`Missing credential for image-generation service: ${source}`);
-    this.name = 'MissingCredentialError';
+/** A provider needs a credential (`source`) but none is connected. */
+export class MissingCredentialError extends BaseError.extend(
+  'MissingCredentialError',
+  'Missing credential for image-generation service',
+) {
+  constructor(source: string) {
+    super({ message: `Missing credential for image-generation service: ${source}`, context: { source } });
   }
 }
 
-/** Thrown when generation fails. */
-export class GenerationError extends Error {
+/** Image generation failed. */
+export class GenerationError extends BaseError.extend('GenerationError', 'Image generation failed') {
   constructor(message: string) {
-    super(message);
-    this.name = 'GenerationError';
+    super({ message });
   }
 }

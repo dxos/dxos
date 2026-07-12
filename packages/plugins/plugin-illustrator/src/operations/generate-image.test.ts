@@ -75,8 +75,8 @@ describe('generateImage', () => {
       Effect.provideService(Capability.Service, capabilityService(service)),
       Effect.provide(Database.layer(db)),
       Effect.provide(configuredCredentialsLayer(creds)),
-      // opaqueHandler erases the context to `any`; the layers above satisfy it at runtime.
-      (effect) => effect as Effect.Effect<{ count: number }, any, never>,
+      // opaqueHandler erases the context; the layers above satisfy it at runtime.
+      (effect) => effect as Effect.Effect<{ count: number }, unknown, never>,
       EffectEx.runPromise,
     );
 

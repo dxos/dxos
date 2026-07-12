@@ -6,7 +6,13 @@ import * as Redacted from 'effect/Redacted';
 
 import { ImageGeneration } from '@dxos/plugin-illustrator/types';
 
-import { IDEOGRAM_CONNECTOR_ID, IDEOGRAM_GENERATE_URL, IDEOGRAM_ID, IDEOGRAM_SOURCE } from '../constants';
+import {
+  IDEOGRAM_CONNECTOR_ID,
+  IDEOGRAM_GENERATE_URL,
+  IDEOGRAM_ID,
+  IDEOGRAM_SOURCE,
+  IDEOGRAM_TIMEOUT_MS,
+} from '../constants';
 import { type IdeogramGenerateResponse, mapIdeogramResponse } from './ideogram-mapping';
 
 /** Builds the Ideogram `/generate` request body (fields nested under `image_request`). */
@@ -35,21 +41,35 @@ export const generateWithIdeogram = async (
     throw new ImageGeneration.MissingCredentialError(IDEOGRAM_SOURCE);
   }
 
-  const response = await fetch(IDEOGRAM_GENERATE_URL, {
-    method: 'POST',
-    headers: {
-      'Api-Key': Redacted.value(apiKey),
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(toRequestBody(request)),
-  });
+  // Bound the external call so a hung request cannot block the caller indefinitely.
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), IDEOGRAM_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch(IDEOGRAM_GENERATE_URL, {
+      method: 'POST',
+      headers: {
+        'Api-Key': Redacted.value(apiKey),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(toRequestBody(request)),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
     const detail = await response.text().catch(() => '');
     throw new ImageGeneration.GenerationError(`Ideogram request failed (${response.status}): ${detail}`);
   }
 
-  const json = (await response.json()) as IdeogramGenerateResponse;
+  // `Response.json()` is typed `any`; assign to the response type (no cast) and guard the shape so an
+  // unexpected envelope fails loudly rather than mapping to silent garbage.
+  const json: IdeogramGenerateResponse = await response.json();
+  if (typeof json !== 'object' || json === null) {
+    throw new ImageGeneration.GenerationError('Ideogram returned an unexpected response shape.');
+  }
   return { images: mapIdeogramResponse(json, request) };
 };
 
