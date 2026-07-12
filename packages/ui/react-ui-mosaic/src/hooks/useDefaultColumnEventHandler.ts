@@ -3,8 +3,8 @@
 //
 
 import { type Obj } from '@dxos/echo';
+import { type DndContainerHandler, type GetId } from '@dxos/react-ui-dnd';
 
-import { type GetId, type MosaicEventHandler } from '../components';
 import { useEventHandlerAdapter } from './useEventHandlerAdapter';
 
 /**
@@ -23,7 +23,7 @@ export const useDefaultColumnEventHandler = <TColumn extends Obj.Unknown = Obj.U
   id: string,
   model: DefaultColumnEventHandlerModel<TColumn>,
   items: TColumn[],
-): MosaicEventHandler<TColumn> =>
+): DndContainerHandler<TColumn> =>
   useEventHandlerAdapter<TColumn, TColumn>({
     id,
     items,

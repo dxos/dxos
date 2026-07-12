@@ -61,7 +61,7 @@ export const translations = [
 
         'no-connections.label': 'No connections configured',
 
-        'sync-mailbox.label': 'Sync mailbox',
+        'sync-mailbox.label': 'Sync',
         'sync-mailbox-error.title': 'Failed to sync mailbox',
         'sync-mailbox-success.title': 'Mailbox sync complete',
         'empty-mailbox.message': 'Mailbox empty',
@@ -157,8 +157,10 @@ export const translations = [
         'compose-email-dialog.title': 'Compose Email',
         'close.label': 'Close',
         'send-email-button.label': 'Send',
+        'send-email-success.title': 'Message sent',
         'send-email-error.title': 'Failed to send email',
-        'send-email-error-unknown.message': 'An unknown error occurred',
+        'draft-message.title': 'Draft',
+        'delete-draft-button.label': 'Delete draft',
         'send-as-email.label': 'Send as email',
 
         'draft-subject.label': 'Subject',

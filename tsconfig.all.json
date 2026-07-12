@@ -229,6 +229,9 @@
       "path": "packages/core/compute/pipeline-transcription/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/progress/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo/tsconfig.json"
     },
     {
@@ -497,6 +500,9 @@
     },
     {
       "path": "packages/plugins/plugin-preview/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-progress/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-pwa/tsconfig.json"

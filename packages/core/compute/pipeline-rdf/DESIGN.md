@@ -4,7 +4,7 @@ Extracts attributed propositions from text and answers SPARQL queries over them.
 semantic graph lives **outside ECHO** (it references ECHO objects by DXN) and runs in the
 browser and on Cloudflare Workers.
 
-Full design rationale and prior-art evaluation: `docs/superpowers/specs/2026-06-27-semantic-index-design.md`.
+Full design rationale and prior-art evaluation: `agents/superpowers/specs/2026-06-27-semantic-index-design.md`.
 
 ## Purpose
 
@@ -23,19 +23,92 @@ We record one fact with three separable parts:
 
 A **Fact** is the unit of storage: one extracted proposition plus its metadata.
 
-| Part        | Fields                                                                                        | Grounded in         |
-| ----------- | --------------------------------------------------------------------------------------------- | ------------------- |
-| Assertion   | subject, predicate, object (entity-ref or literal), validFrom/validTo, quote                  | RDF triple          |
-| Factuality  | value (`CT+`/`PR+`/`PS+`/… 8 values), polarity, confidence (0–1), nature (epistemic/aleatory) | FactBank factuality |
-| Attribution | agent, source (DXN), generatedAtTime, wasDerivedFrom, span                                    | PROV-O              |
-| Provenance  | id, recordedAt (transaction time), extractor {id, model, version}, sourceHash                 | —                   |
+| Part                    | Fields                                                                                                    | Grounded in         |
+| ----------------------- | --------------------------------------------------------------------------------------------------------- | ------------------- |
+| Assertion               | subject, predicate, object (entity-ref or literal), validFrom/validTo, quote                              | RDF triple          |
+| Factuality              | value (`CT+`/`PR+`/`PS+`/… 8 values), polarity, confidence (0–1), nature (epistemic/aleatory)             | FactBank factuality |
+| Illocution _(optional)_ | force (assertive/directive/commissive/expressive), mood (declarative/interrogative/imperative), addressee | Searle speech acts  |
+| Attribution             | agent, source (DXN), generatedAtTime, wasDerivedFrom, span                                                | PROV-O              |
+| Provenance              | id, recordedAt (transaction time), extractor {id, model, version}, sourceHash                             | —                   |
 
 An **Entity** is a mention (person/org/place/event/concept/thing) with a label, aliases, and
 an optional `ref` (DXN of a canonical ECHO object once linked). Predicates are open strings
-in v1 (see [Normalization](#normalization)).
+in v1 (see [Normalization](#normalization)). The **Illocution** is absent for a plain assertion (a
+statement/notification) and present for questions/requests/promises — see
+[Illocutions](#illocutions-speech-acts).
 
 The model is defined with Effect Schema and is JSON-serializable. Conflicting or
 time-varying facts are simply multiple Facts — never merged at write time.
+
+### Factuality values
+
+`factuality.value` is the author's committed epistemic stance, from **FactBank**: a modality (how
+certain — `CT` certain, `PR` probable, `PS` possible) crossed with a polarity (`+` it holds, `-` it does
+not), plus two special values when polarity or the whole commitment is unknown. `nature` further tags
+the uncertainty as **epistemic** (limited knowledge — "I think") or **aleatory** (inherent chance —
+"maybe it rains").
+
+| value | modality    | polarity | reads as                                 | cue                                |
+| ----- | ----------- | -------- | ---------------------------------------- | ---------------------------------- |
+| `CT+` | certain     | positive | it is the case                           | plain assertion                    |
+| `CT-` | certain     | negative | it is not the case                       | "not", "never", "no"               |
+| `PR+` | probable    | positive | it probably is                           | "probably", "likely"               |
+| `PR-` | probable    | negative | it probably is not                       | "probably not", "doubt"            |
+| `PS+` | possible    | positive | it possibly is                           | "might", "maybe", "could"          |
+| `PS-` | possible    | negative | it possibly is not                       | "might not"                        |
+| `CTu` | certain     | unknown  | definitely one way, but which is unknown | "whether or not it holds"          |
+| `Uu`  | uncommitted | —        | the author commits to nothing about it   | questions, requests, hypotheticals |
+
+`Uu` is the value directive facts carry (see [Illocutions](#illocutions-speech-acts)): a question or
+request states no truth, so its proposition is uncommitted rather than asserted.
+
+## Illocutions (speech acts)
+
+Not every utterance asserts a fact. _"The meeting is at 3"_ **informs**; _"can you move it?"_ **asks**;
+_"please move it"_ **requests**. These are different **speech acts** — what the author is _doing_ with
+the utterance — and the distinction is orthogonal to whether the propositional content is true. Without
+this axis a question and a statement collapse into the same triple, and the store can't tell "what was I
+told" from "what am I being asked".
+
+The **Illocution** (optional on every Fact — absent ⇒ `assertive`, so existing facts are unchanged)
+adds one axis, `{ force, mood?, addressee? }`, following Searle's illocutionary points minus
+`declarative` (which does not occur in mail):
+
+| force          | meaning                              | mail example             |
+| -------------- | ------------------------------------ | ------------------------ |
+| **assertive**  | inform / state (the default)         | "The meeting is at 3."   |
+| **directive**  | get the addressee to act or answer   | requests and questions   |
+| **commissive** | commit the author to a future action | "I'll send it tomorrow." |
+| **expressive** | convey a psychological state         | "Thanks!"                |
+
+`mood` sub-divides a directive without a second axis: **interrogative** ⇒ a **question** (seeks
+information), **imperative** ⇒ a **request** (seeks action). `addressee` is who is asked to act/answer
+(defaults to the recipient).
+
+**Factuality interplay.** A directive's content is not asserted true, so it takes factuality `Uu`
+(uncommitted): a question's proposition carries the sought unknown, a request's the not-yet-true action.
+The propositional content is still a normal subject–predicate–object assertion (e.g. a request
+_"please send the report"_ ⇒ subject `you`, predicate `send`, object `report`), so illocution reuses the
+existing triple + grounding rules rather than adding a parallel representation. There is **no deontic
+axis** — obligation/permission is left to reified `sx:` predicates if ever needed.
+
+**Extraction.** The extractor classifies each proposition's force and mood in the **same pass** as the
+assertion (no separate questions pipeline): non-assertive facts record an `illocution`, assertions omit
+it. Grounding is unchanged — a question/request is emitted only when both subject and object are
+concrete and named.
+
+**N3 / storage mapping.** The illocutionary force reifies the propositional content as a quoted graph,
+related to the source utterance by an `sx:` (speech-act) predicate — the same reification the store
+already uses (see [Reification](#reification-storage-shape)):
+
+```
+:msg-42 sx:states   { :meeting :startsAt "15:00" } .   # assertive (default)
+:msg-42 sx:asks     { :meeting :startsAt ?t } .        # directive / interrogative
+:msg-42 sx:requests { :bob :send :report } .           # directive / imperative
+```
+
+So the graph stays a triple store; the speech act is a predicate over the message and the reified inner
+triple, and the store can answer "what am I asked to do?" distinctly from "what was I told?".
 
 ## Normalization
 
@@ -180,3 +253,40 @@ and unblocks the typed UI the story already wants (entity column / graph filtere
 
 Sequenced after v1: relation-vocabulary mapping (lever 2), then the corpus-wide normalize/prune pass
 (lever 3) gated on the F1 numbers.
+
+## Glossary
+
+- **Fact** — the unit of storage: one extracted proposition plus its metadata (Assertion + Factuality +
+  optional Illocution + Attribution + Provenance).
+- **Assertion** — the proposition itself: a subject–predicate–object **triple**, with optional
+  valid-time (`validFrom`/`validTo`) and the source `quote`.
+- **Term** — a subject or object: either an **entity reference** (`{ entity, label? }`) or a **literal**
+  (`{ literal }`).
+- **Entity** — a normalized mention (person/org/place/event/concept/thing). The `entity` slug is the
+  join key (`DXOS` and `dxos` collapse); `label` keeps the display surface form.
+- **Predicate** — the relation (a short verb phrase). Open strings in v1; a normalized **relation key**
+  for matching paraphrases (`works at` = `employed by`) is planned.
+- **Factuality** — the author's epistemic stance on the proposition: a **FactBank** value
+  (`CT`/`PR`/`PS` × `±`, plus `CTu` polarity-unknown and `Uu` uncommitted), `polarity`, `confidence`
+  (0–1), and `nature` (epistemic = knowledge, aleatory = chance).
+- **Illocution** — the **speech act**: `force` (assertive/directive/commissive/expressive) + `mood`
+  (declarative/interrogative/imperative) + `addressee`. Absent ⇒ assertive. `directive` = a question
+  (interrogative) or request (imperative). See [Illocutions](#illocutions-speech-acts).
+- **Attribution** — provenance of the assertion (PROV-O): `agent` (who asserted), `source` (the message
+  DXN — where), `generatedAtTime` (when), optional `wasDerivedFrom` / `span`.
+- **Provenance record** — bookkeeping fields: `id`, `recordedAt` (transaction time), `extractor`
+  (`{ id, model, version }`), `sourceHash`.
+- **Valid time vs transaction time** — `validFrom`/`validTo` is when the asserted _state_ holds;
+  `recordedAt` is when the fact was _ingested_.
+- **DXN** — a DXOS resource name; facts reference ECHO objects (messages, linked entities) by DXN
+  instead of embedding them, so the graph lives outside ECHO.
+- **Reification** — storing a statement as a node with `sx:subject`/`sx:predicate`/`sx:object` (plus
+  metadata) rather than a bare triple, so a fact can carry attribution/factuality/illocution.
+- **`sx:`** — this package's namespace for its own predicates (subject/predicate/object, factuality,
+  speech acts). **PROV-O** terms are reused verbatim so the graph is valid provenance.
+- **Source / `sourceHash`** — the origin document (DXN) and a content hash used as an incremental
+  cursor: an unchanged source is a no-op, a changed one re-extracts.
+- **as-of / according-to** — the two query-time conflict-resolution axes (state _at a time_ × _per a
+  source_); conflicts are never merged at write time.
+- **Comunica / Source** — the SPARQL engine (`@comunica/query-sparql-rdfjs`) and the swappable RDF/JS
+  backend it queries (N3 in-memory, or SQLite over OPFS / file / Durable Object).

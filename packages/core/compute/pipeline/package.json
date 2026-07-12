@@ -30,7 +30,10 @@
     "src"
   ],
   "scripts": {},
-  "dependencies": {},
+  "dependencies": {
+    "@dxos/log": "workspace:*",
+    "@dxos/progress": "workspace:*"
+  },
   "devDependencies": {
     "@dxos/effect": "workspace:*",
     "effect": "catalog:",
