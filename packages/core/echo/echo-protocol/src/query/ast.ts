@@ -425,8 +425,11 @@ export const QuerySkipClause: Schema.Schema<QuerySkipClause> = QuerySkipClause_;
  * tagged union per kind — `property`/`limit` are present exactly when the kind uses them, so
  * read sites narrow by `kind` instead of guarding an unused optional field.
  * - `group` partitions members by a scalar `property`; its coerced key value is the field's value.
- *   Composite keys are formed from multiple `group` entries. A query with no `group` entries
- *   aggregates its entire input into a single row.
+ *   Composite keys are formed from multiple `group`/`date-bucket` entries. A query with no such
+ *   entries aggregates its entire input into a single row.
+ * - `date-bucket` partitions members by a system timestamp (`createdAt`/`updatedAt`) floored to a
+ *   `resolution` bucket; its key value is the bucket-start unix ms. Like `group`, it is a grouping
+ *   key rather than a reduction.
  * - `max`/`min` reduce a scalar member `property`.
  * - `items` collects the group's members, optionally capped to `limit`. Opt-in — a row carries no
  *   members otherwise.
@@ -436,6 +439,12 @@ const GroupAggregateGroup_ = Schema.Struct({
   name: Schema.String,
   kind: Schema.Literal('group'),
   property: Schema.String,
+});
+const GroupAggregateDateBucket_ = Schema.Struct({
+  name: Schema.String,
+  kind: Schema.Literal('date-bucket'),
+  field: Schema.Literal('createdAt', 'updatedAt'),
+  resolution: Schema.Literal('hour', 'day', 'week', 'month'),
 });
 const GroupAggregateMax_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('max'), property: Schema.String });
 const GroupAggregateMin_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('min'), property: Schema.String });
@@ -448,6 +457,7 @@ const GroupAggregateCount_ = Schema.Struct({ name: Schema.String, kind: Schema.L
 
 const GroupAggregate_ = Schema.Union(
   GroupAggregateGroup_,
+  GroupAggregateDateBucket_,
   GroupAggregateMax_,
   GroupAggregateMin_,
   GroupAggregateItems_,

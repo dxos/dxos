@@ -133,6 +133,9 @@ const QueryItem = Object.freeze({
     for (const aggregate of aggregates) {
       if (aggregate.kind === 'group') {
         key[aggregate.name] = GroupBy.coerceKeyComponent(QueryItem.getProperty(item, [aggregate.property]));
+      } else if (aggregate.kind === 'date-bucket') {
+        const timestamp = aggregate.field === 'updatedAt' ? item.updatedAt : item.createdAt;
+        key[aggregate.name] = GroupBy.bucketTimestamp(timestamp, aggregate.resolution);
       }
     }
     return key;

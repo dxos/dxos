@@ -337,8 +337,8 @@ const _assembleGroups = (
     // Group-key fields are already keyed by their result-field name; spread them flat.
     const record: GroupResult = { ...keys.get(serializedKey)! };
     for (const aggregate of aggregates) {
-      if (aggregate.kind === 'group') {
-        continue; // Group-key fields come from the spread above.
+      if (aggregate.kind === 'group' || aggregate.kind === 'date-bucket') {
+        continue; // Grouping-key fields come from the spread above.
       }
       record[aggregate.name] = _computeAggregate(aggregate, groupMembers, counts.get(serializedKey)!);
     }
@@ -352,7 +352,8 @@ const _assembleGroups = (
 const _computeAggregate = (aggregate: QueryAST.GroupAggregate, members: readonly unknown[], count: number): unknown => {
   switch (aggregate.kind) {
     case 'group':
-      return undefined; // Group-key fields are assembled from the source key, not here.
+    case 'date-bucket':
+      return undefined; // Grouping-key fields are assembled from the source key, not here.
     case 'items':
       return aggregate.limit !== undefined ? members.slice(0, aggregate.limit) : members;
     case 'count':

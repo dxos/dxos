@@ -13,8 +13,12 @@ import type * as Query from './Query';
  * union per kind so `property`/`limit` are present exactly when the kind uses them (no unused
  * optional fields to guard against at read sites).
  */
+/** Bucket size for {@link dateBucket}: the timestamp is floored to the start of this interval. */
+export type TimeResolution = 'hour' | 'day' | 'week' | 'month';
+
 export type Spec =
   | { kind: 'group'; property: string }
+  | { kind: 'date-bucket'; field: 'createdAt' | 'updatedAt'; resolution: TimeResolution }
   | { kind: 'max'; property: string }
   | { kind: 'min'; property: string }
   | { kind: 'items'; limit?: number }
@@ -65,6 +69,18 @@ class AggregateClass<T, V> implements Aggregate<T, V> {
  */
 export const group = <T, K extends keyof T & string>(property: K): Aggregate<T, T[K] | null> =>
   new AggregateClass({ kind: 'group', property });
+
+/**
+ * Group members by a system timestamp (`createdAt`/`updatedAt`) floored to a `resolution` bucket —
+ * the GitHub-style activity-calendar shape (bucket by day, then {@link count}). Like {@link group},
+ * it is a grouping key: the record field named after it carries the bucket-start as unix ms, `null`
+ * for members with no such timestamp. Buckets are floored in local time (hour/day/month starts;
+ * weeks start Monday), matching how a calendar view lays days out.
+ */
+export const dateBucket = <T>(
+  field: 'createdAt' | 'updatedAt',
+  options: { resolution: TimeResolution },
+): Aggregate<T, number | null> => new AggregateClass({ kind: 'date-bucket', field, resolution: options.resolution });
 
 /**
  * Aggregate the maximum of a scalar property across the group's members.
