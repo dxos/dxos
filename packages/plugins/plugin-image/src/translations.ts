@@ -41,6 +41,7 @@ export const translations = [
         'plugin.name': 'Image',
         'generate.label': 'Generate',
         'generating.label': 'Generating…',
+        'create.label': 'Create image',
         'generate-error.title': 'Image generation failed',
         'upload.label': 'Upload image',
         'close.label': 'Close',

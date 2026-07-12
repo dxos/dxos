@@ -89,12 +89,14 @@ type ImageArtifact
 ```mdl
 type Gallery
   desc: >
-    An ordered collection of Images that it OWNS (typename org.dxos.type.gallery).
-    Each image is parented to the gallery (cascade-delete / deep-clone). Unlike
-    ImageArtifact it has no prompt — images are added by upload.
+    An ordered collection of ImageArtifacts that it OWNS (typename
+    org.dxos.type.gallery). Each artifact is parented to the gallery
+    (cascade-delete / deep-clone) — one "image" (prompt + generated/uploaded
+    content). The gallery shows their thumbnails; the (hidden) leaf Image type
+    is internal to each ImageArtifact.
   fields:
     name?: string
-    images: Ref<Image>[]                  # owned images (parented on add)
+    images: Ref<ImageArtifact>[]          # owned ImageArtifacts (parented on create)
 ```
 
 ```mdl
@@ -243,17 +245,18 @@ component ImageView
 ```mdl
 component GalleryArticle
   desc: >
-    Article surface for a Gallery: a masonry of its owned images with a toolbar to add (upload)
-    images and delete the multi-selected ones. Selection state is owned here via `useListSelection`
-    (multi, from @dxos/react-ui-list); the masonry renders the outline and emits tile clicks.
+    Article surface for a Gallery: a masonry of its owned ImageArtifacts rendered as thumbnails (the
+    first image of each). Toolbar creates a new empty ImageArtifact and deletes the multi-selected
+    ones. Selection state is owned here via `useListSelection` (multi, from @dxos/react-ui-list); the
+    masonry renders the outline + a check and emits tile clicks.
   props:
     role: string
     subject: Gallery
   state:
-    selectedIds: ReadonlySet<string>      # keyed by Image.id
+    selectedIds: ReadonlySet<string>      # keyed by ImageArtifact.id
   actions:
-    addImage()                            # upload → file-backed Image parented to the gallery
-    deleteSelected()                      # remove selected refs + db.remove the owned Images
+    createImage()                         # new empty ImageArtifact parented to the gallery, then LayoutOperation.Open
+    deleteSelected()                      # remove selected refs + db.remove the owned ImageArtifacts
     toggle(id)                            # bind(id).toggle() from useListSelection
 ```
 
@@ -371,16 +374,16 @@ feat F-3: Review images via toolbar tabs
 ```mdl
 feat F-Gallery: Gallery article (masonry + multi-select)
 
-  req F-G.1: A Gallery opens in an article showing its owned images in a masonry.
+  req F-G.1: A Gallery opens in an article showing its owned ImageArtifacts as thumbnails in a masonry.
   req F-G.2:
-    when: user clicks the Add (upload) toolbar button
-    then: selected image files upload and are appended as file-backed Images owned by the gallery.
+    when: user clicks the Create toolbar button
+    then: a new empty ImageArtifact is created, parented to the gallery, and opened for authoring.
   req F-G.3:
     when: user clicks image tiles
     then: they toggle multi-selection (masonry shows an outline + check on selected tiles).
   req F-G.4:
     when: user clicks Delete with a non-empty selection
-    then: the selected Images are removed from the gallery and deleted from the space; selection clears.
+    then: the selected ImageArtifacts are removed from the gallery and deleted from the space; selection clears.
   req F-G.5: The Delete toolbar button is disabled when nothing is selected.
 ```
 
@@ -437,6 +440,15 @@ test T-6: Upload appends a file-backed Image
   given: an ImageArtifact; a registered FileUploader backend
   when: user uploads an image file
   then: artifact.images gains an Image whose `file` refs the uploaded File.File
+```
+
+```mdl
+test T-7: Gallery create + delete
+  given: a Gallery open in an article
+  when: user clicks Create
+  then: gallery.images gains a new empty ImageArtifact (parented) and it opens
+  when: user selects tiles and clicks Delete
+  then: the selected ImageArtifacts are removed from gallery.images and deleted; selection clears
 ```
 
 ## Out of scope (v1)
