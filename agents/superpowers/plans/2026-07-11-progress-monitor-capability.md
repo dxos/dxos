@@ -30,7 +30,7 @@
 
 ## File Structure
 
-**New package `@dxos/progress`** (`packages/common/progress/`) — pure primitives:
+**New package `@dxos/progress`** (`packages/core/compute/progress/`) — pure primitives:
 - `src/Progress.ts` — types (`TaskProgress`, `ProgressSnapshot`, `TaskHandle`, `ProgressApi`), `make()`, `deriveEta()`.
 - `src/index.ts` — namespace re-export.
 - `src/Progress.test.ts` — unit tests.
@@ -70,14 +70,14 @@
 ## Task 1: `@dxos/progress` leaf package (shared core)
 
 **Files:**
-- Create: `packages/common/progress/package.json`
-- Create: `packages/common/progress/moon.yml`
-- Create: `packages/common/progress/tsconfig.json`
-- Create: `packages/common/progress/vitest.config.ts`
-- Create: `packages/common/progress/README.md`
-- Create: `packages/common/progress/src/index.ts`
-- Create: `packages/common/progress/src/Progress.ts`
-- Test: `packages/common/progress/src/Progress.test.ts`
+- Create: `packages/core/compute/progress/package.json`
+- Create: `packages/core/compute/progress/moon.yml`
+- Create: `packages/core/compute/progress/tsconfig.json`
+- Create: `packages/core/compute/progress/vitest.config.ts`
+- Create: `packages/core/compute/progress/README.md`
+- Create: `packages/core/compute/progress/src/index.ts`
+- Create: `packages/core/compute/progress/src/Progress.ts`
+- Test: `packages/core/compute/progress/src/Progress.test.ts`
 
 **Interfaces:**
 - Produces:
@@ -91,7 +91,7 @@
 
 - [ ] **Step 1: Scaffold the package files**
 
-Create `packages/common/progress/package.json`:
+Create `packages/core/compute/progress/package.json`:
 
 ```json
 {
@@ -132,7 +132,7 @@ Create `packages/common/progress/package.json`:
 }
 ```
 
-Create `packages/common/progress/moon.yml`:
+Create `packages/core/compute/progress/moon.yml`:
 
 ```yaml
 layer: library
@@ -148,11 +148,11 @@ tasks:
       - '--platform=neutral'
 ```
 
-Create `packages/common/progress/tsconfig.json`:
+Create `packages/core/compute/progress/tsconfig.json`:
 
 ```json
 {
-  "extends": "../../../tsconfig.base.json",
+  "extends": "../../../../tsconfig.base.json",
   "include": [
     "src"
   ],
@@ -160,7 +160,7 @@ Create `packages/common/progress/tsconfig.json`:
 }
 ```
 
-Create `packages/common/progress/vitest.config.ts`:
+Create `packages/core/compute/progress/vitest.config.ts`:
 
 ```ts
 //
@@ -170,7 +170,7 @@ Create `packages/common/progress/vitest.config.ts`:
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { createConfig } from '../../../vitest.base.config';
+import { createConfig } from '../../../../vitest.base.config';
 
 export default createConfig({
   dirname: typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url)),
@@ -178,7 +178,7 @@ export default createConfig({
 });
 ```
 
-Create `packages/common/progress/README.md`:
+Create `packages/core/compute/progress/README.md`:
 
 ```markdown
 # @dxos/progress
@@ -188,11 +188,11 @@ derived-ETA helper. Consumed by `@dxos/pipeline` (its `Progress` Effect service)
 and `@dxos/app-toolkit` (the `ProgressRegistry` capability).
 ```
 
-Copy `LICENSE` from a sibling: `cp packages/core/compute/pipeline/LICENSE packages/common/progress/LICENSE`.
+Copy `LICENSE` from a sibling: `cp packages/core/compute/pipeline/LICENSE packages/core/compute/progress/LICENSE`.
 
 - [ ] **Step 2: Write the failing test**
 
-Create `packages/common/progress/src/Progress.test.ts`:
+Create `packages/core/compute/progress/src/Progress.test.ts`:
 
 ```ts
 //
@@ -310,7 +310,7 @@ Expected: FAIL — cannot resolve `./Progress` (module not created yet).
 
 - [ ] **Step 4: Write the implementation**
 
-Create `packages/common/progress/src/Progress.ts`:
+Create `packages/core/compute/progress/src/Progress.ts`:
 
 ```ts
 //
@@ -484,7 +484,7 @@ export const deriveEta = (task: TaskProgress): number | undefined => {
 };
 ```
 
-Create `packages/common/progress/src/index.ts`:
+Create `packages/core/compute/progress/src/index.ts`:
 
 ```ts
 //
@@ -507,9 +507,9 @@ Expected: adds `@dxos/progress` to the workspace (no errors).
 - [ ] **Step 6: Format, build, commit**
 
 ```bash
-npx oxfmt --write packages/common/progress
+npx oxfmt --write packages/core/compute/progress
 moon run progress:build
-git add packages/common/progress pnpm-lock.yaml
+git add packages/core/compute/progress pnpm-lock.yaml
 git commit -m "feat(progress): shared progress primitives leaf package"
 ```
 
@@ -537,7 +537,7 @@ Add the project reference to `packages/core/compute/pipeline/tsconfig.json` `ref
 
 ```json
     {
-      "path": "../../../common/progress"
+      "path": "../progress"
     }
 ```
 
@@ -667,11 +667,11 @@ Expected: build + tests green; commit created.
 Run: `pnpm add --filter "@dxos/app-toolkit" "@dxos/progress@workspace:*"`
 Expected: `@dxos/progress: workspace:*` added to app-toolkit `dependencies`.
 
-Add to `packages/sdk/app-toolkit/tsconfig.json` `references` (match the relative depth of existing `@dxos` references in that file, e.g. `../../common/progress`):
+Add to `packages/sdk/app-toolkit/tsconfig.json` `references` (match the relative depth of existing `@dxos` references in that file, e.g. `../../core/compute/progress`):
 
 ```json
     {
-      "path": "../../common/progress"
+      "path": "../../core/compute/progress"
     }
 ```
 
@@ -1207,12 +1207,12 @@ Create `packages/plugins/plugin-progress/tsconfig.json` (copy the `references` s
 
 ```json
 {
-  "extends": "../../../tsconfig.base.json",
+  "extends": "../../../../tsconfig.base.json",
   "include": [
     "src"
   ],
   "references": [
-    { "path": "../../common/progress" },
+    { "path": "../../core/compute/progress" },
     { "path": "../../common/util" },
     { "path": "../../sdk/app-framework" },
     { "path": "../../sdk/app-toolkit" },

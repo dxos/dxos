@@ -25,19 +25,8 @@ export type TaskProgress = {
   readonly error?: string;
 };
 
-type MutableTask = {
-  name: string;
-  label?: string;
-  current: number;
-  total?: number;
-  status: TaskStatus;
-  startedAt?: string;
-  updatedAt: string;
-  elapsedMs?: number;
-  estimatedMs?: number;
-  note?: string;
-  error?: string;
-};
+/** The registry's mutable working copy of a {@link TaskProgress} (drops `readonly` to mutate in place). */
+type MutableTask = { -readonly [Key in keyof TaskProgress]: TaskProgress[Key] };
 
 export type ProgressSnapshot = {
   readonly updatedAt: string;

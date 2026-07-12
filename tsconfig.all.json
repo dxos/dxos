@@ -112,9 +112,6 @@
       "path": "packages/common/process/tsconfig.json"
     },
     {
-      "path": "packages/common/progress/tsconfig.json"
-    },
-    {
       "path": "packages/common/protobuf-compiler/tsconfig.json"
     },
     {
@@ -230,6 +227,9 @@
     },
     {
       "path": "packages/core/compute/pipeline-transcription/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/progress/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo/tsconfig.json"
