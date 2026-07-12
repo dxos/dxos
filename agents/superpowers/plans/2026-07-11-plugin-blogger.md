@@ -71,9 +71,11 @@ packages/plugins/plugin-typefully/
 ## Task 1: Scaffold plugin-blogger (buildable skeleton)
 
 **Files:**
+
 - Create: all `packages/plugins/plugin-blogger/` root files + minimal `src/{meta,translations,plugin,index,BloggerPlugin}.ts(x)`, `src/capabilities/{index.ts,react-surface.tsx}`, `src/containers/{index.ts}`, one placeholder container, `src/components/index.ts`, `src/types/index.ts`.
 
 **Interfaces:**
+
 - Produces: `meta` (`org.dxos.plugin.blogger`), `BloggerPlugin` (lazy), buildable package `@dxos/plugin-blogger`.
 
 - [ ] **Step 1: Copy the exemplar structure.** Copy `packages/plugins/plugin-chess`'s root files (`package.json`, `moon.yml`, `tsconfig.json`, `vitest.config.ts`, `dx.config.ts`, `LICENSE`, `README.md`) into `packages/plugins/plugin-blogger`. In `package.json` set `"name": "@dxos/plugin-blogger"`, `"private": true`, `"description": "Author blog posts with agent assistance."`, keep the `#*` import aliases + `.`/`./plugin`/`./types`/`./translations` export subpaths. Replace chess-specific deps; dependencies must include: `@dxos/app-framework`, `@dxos/app-toolkit`, `@dxos/compute`, `@dxos/echo`, `@dxos/keys`, `@dxos/plugin-client`, `@dxos/plugin-space`, `@dxos/plugin-graph`, `@dxos/plugin-markdown`, `@dxos/plugin-connector`, `@dxos/react-ui`, `@dxos/react-ui-menu`, `@dxos/react-ui-masonry`, `@dxos/schema`, `@dxos/util`, `effect` (catalog). devDeps: `@dxos/plugin-testing`, `@dxos/plugin-preview`, `@dxos/storybook-utils`, `@dxos/ui-theme`, `@types/react`, `@types/react-dom`, `react`, `react-dom`, `vite`.
@@ -113,9 +115,11 @@ git commit -m "feat(plugin-blogger): scaffold plugin skeleton"
 ## Task 2: ECHO schema — Publication, Post, Draft
 
 **Files:**
+
 - Create: `src/types/Blogger.ts`, `src/types/index.ts` (namespace re-export), `src/types/Blogger.test.ts`.
 
 **Interfaces:**
+
 - Produces: `Blogger.Publication`, `Blogger.Post`, `Blogger.Draft` classes; factories `Blogger.makePublication(props)`, `Blogger.makePost(props)`, `Blogger.makeDraft(props)`. Ref shapes: `Publication.posts: Ref.Ref<Post>[]`, `Publication.instructions: Ref.Ref<Markdown.Document>`, `Post.outline: Ref.Ref<Markdown.Document>`, `Post.drafts: Ref.Ref<Draft>[]`, `Draft.content: Ref.Ref<Markdown.Document>`.
 
 - [ ] **Step 1: Write the failing test** — `src/types/Blogger.test.ts`
@@ -182,30 +186,26 @@ export class Post extends Type.makeObject<Post>(DXN.make('org.dxos.type.blogger.
     summary: Schema.optional(Schema.String),
     outline: Ref.Ref(Markdown.Document).pipe(FormInputAnnotation.set(false)),
     drafts: Schema.Array(Ref.Ref(Draft)).pipe(FormInputAnnotation.set(false), Schema.optional),
-  }).pipe(
-    LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'amber' }),
-  ),
+  }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'amber' })),
 ) {}
 
 // A collection of posts with shared base instructions for the assistant agent.
-export class Publication extends Type.makeObject<Publication>(
-  DXN.make('org.dxos.type.blogger.publication', '0.1.0'),
-)(
+export class Publication extends Type.makeObject<Publication>(DXN.make('org.dxos.type.blogger.publication', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
     instructions: Ref.Ref(Markdown.Document).pipe(FormInputAnnotation.set(false)),
     posts: Schema.Array(Ref.Ref(Post)).pipe(FormInputAnnotation.set(false), Schema.optional),
-  }).pipe(
-    LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--books--regular', hue: 'amber' }),
-  ),
+  }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--books--regular', hue: 'amber' })),
 ) {}
 
 // Build the child document and its ref BEFORE Obj.make (mirrors Markdown.make),
 // then set parent ownership after — no casts, all required refs supplied at make.
 
-export const makeDraft = ({ label, createdAt, content = '' }: { label?: string; createdAt?: string; content?: string } = {}): Draft => {
+export const makeDraft = ({
+  label,
+  createdAt,
+  content = '',
+}: { label?: string; createdAt?: string; content?: string } = {}): Draft => {
   const doc = Markdown.make({ content });
   const draft = Obj.make(Draft, { label, createdAt, content: Ref.make(doc) });
   Obj.setParent(doc, draft);
@@ -255,9 +255,11 @@ Expected: PASS (3 tests).
 ## Task 3: Publisher capability contract (`./types`)
 
 **Files:**
+
 - Create: `src/types/Publisher.ts`, `src/types/BloggerCapabilities.ts`; update `src/types/index.ts`; `src/types/Publisher.test.ts`.
 
 **Interfaces:**
+
 - Produces:
   - `Publisher.PublisherDraft` — Effect `Schema.Struct` `{ id: string; text: string; title?: string; status?: string; scheduledAt?: string; url?: string }` + `type PublisherDraft`.
   - `Publisher.PublisherDraftInput` — `{ text: string; title?: string; scheduledAt?: string }`.
@@ -365,9 +367,11 @@ export const PublisherService = Capability.make<PublisherService>(`${meta.id}.ca
 ## Task 4: Content operations — AddPublication, AddPost, AddDraft
 
 **Files:**
+
 - Create: `src/operations/definitions.ts`, `add-publication.ts`, `add-post.ts`, `add-draft.ts`, `index.ts`, `src/operations/operations.test.ts`.
 
 **Interfaces:**
+
 - Produces: `BloggerOperation.AddPublication` (`{ target }` → `Publication`), `BloggerOperation.AddPost` (`{ publication: Publication, target }` → `Post`), `BloggerOperation.AddDraft` (`{ post: Post }` → `Draft`). A lazy `OperationHandlerSet` re-exported from `plugin.ts`.
 - Consumes: `Blogger.*` factories (Task 2); `SpaceOperation.AddObject` (`@dxos/plugin-space`).
 
@@ -416,7 +420,7 @@ export const AddDraft = Operation.make({
 
 > Verify the exact `Operation.make` field names (`key`/`meta`/`input`/`output`/`services`) against `plugin-chess/src/operations/definitions.ts` and the `operations` skill — adjust to match (the skill is authoritative on `Operation.make` shape).
 
-- [ ] **Step 4: Implement each handler** (`add-publication.ts` etc.) as `export default Op.pipe(Operation.withHandler(...), Operation.opaqueHandler)` mirroring `plugin-trip/src/operations/add-segment.ts`. `AddPost`: `const post = Blogger.makePost({ name }); publication.posts.push(Ref.make(post));` inside `Obj.update`, then persist via `SpaceOperation.AddObject`. `AddDraft`: `const draft = Blogger.makeDraft({ label: \`Draft ${post.drafts.length + 1}\`, createdAt: <passed-in ISO> }); Obj.update(post, (p) => p.drafts.push(Ref.make(draft)));` — `createdAt` comes from the operation input or is omitted (Date.now is unavailable in some contexts; accept an optional `createdAt` input, default undefined).
+- [ ] **Step 4: Implement each handler** (`add-publication.ts` etc.) as `export default Op.pipe(Operation.withHandler(...), Operation.opaqueHandler)` mirroring `plugin-trip/src/operations/add-segment.ts`. `AddPost`: `const post = Blogger.makePost({ name }); publication.posts.push(Ref.make(post));` inside `Obj.update`, then persist via `SpaceOperation.AddObject`. `AddDraft`: `const draft = Blogger.makeDraft({ label: \`Draft ${post.drafts.length + 1}\`, createdAt: <passed-in ISO> }); Obj.update(post, (p) => p.drafts.push(Ref.make(draft)));`—`createdAt`comes from the operation input or is omitted (Date.now is unavailable in some contexts; accept an optional`createdAt` input, default undefined).
 
 - [ ] **Step 5: `operations/index.ts`** exports the definitions and a lazy `OperationHandlerSet` (mirror `plugin-chess/src/operations/index.ts`). Re-export `OperationHandlerSet` from `plugin.ts`. Wire `AppPlugin.addOperationHandlerModule({ activate: OperationHandler })` in `BloggerPlugin.tsx`.
 
@@ -429,9 +433,11 @@ export const AddDraft = Operation.make({
 ## Task 5: Sync operations — PublishDraft, ImportDrafts, UnpublishDraft
 
 **Files:**
+
 - Create: `src/operations/publish-draft.ts`, `import-drafts.ts`, `unpublish-draft.ts`; extend `definitions.ts`, `index.ts`; `src/operations/sync.test.ts`.
 
 **Interfaces:**
+
 - Produces: `BloggerOperation.PublishDraft` (`{ draft: Draft, connection: Ref<Connection>, publisherId?: string }` → `Draft`), `ImportDrafts` (`{ post: Post, connection: Ref<Connection>, publisherId?: string }` → `Post`), `UnpublishDraft` (`{ draft: Draft, connection, publisherId? }` → `Draft`).
 - Consumes: `BloggerCapabilities.PublisherService` via `Capability.getAll` (Task 3); `Obj.getKeys`/`Obj.setKeys` for foreign-key mapping; `Blogger.Draft` content doc text.
 
@@ -440,12 +446,22 @@ export const AddDraft = Operation.make({
 ```ts
 const calls: string[] = [];
 const stub: Publisher.PublisherService = {
-  id: 'stub', label: 'Stub', source: 'stub.test',
+  id: 'stub',
+  label: 'Stub',
+  source: 'stub.test',
   listDrafts: async () => [{ id: 'x1', text: 'remote' }],
   getDraft: async (_c, id) => ({ id, text: 'remote body' }),
-  createDraft: async (_c, input) => { calls.push('create'); return { id: 'new1', text: input.text }; },
-  updateDraft: async (_c, id, input) => { calls.push('update'); return { id, text: input.text }; },
-  deleteDraft: async () => { calls.push('delete'); },
+  createDraft: async (_c, input) => {
+    calls.push('create');
+    return { id: 'new1', text: input.text };
+  },
+  updateDraft: async (_c, id, input) => {
+    calls.push('update');
+    return { id, text: input.text };
+  },
+  deleteDraft: async () => {
+    calls.push('delete');
+  },
 };
 // Provide Capability.contributes(BloggerCapabilities.PublisherService, stub) into the handler's capability set.
 ```
@@ -460,8 +476,7 @@ Assert: (a) `PublishDraft` on an unlinked draft calls `create` and writes a fore
 
 ```ts
 // Foreign-key helpers keyed by the publisher's `source`.
-const linkedId = (draft: Blogger.Draft, source: string): string | undefined =>
-  Obj.getKeys(draft, source)[0]?.id;
+const linkedId = (draft: Blogger.Draft, source: string): string | undefined => Obj.getKeys(draft, source)[0]?.id;
 
 const draftText = (draft: Blogger.Draft): string => draft.content.target?.content.target?.content ?? '';
 ```
@@ -483,9 +498,11 @@ Bridge Promises into Effect with `Effect.tryPromise` (mirror `plugin-trip/src/op
 ## Task 6: create-object capability
 
 **Files:**
+
 - Create: `src/capabilities/create-object.ts`; update `capabilities/index.ts`, `BloggerPlugin.tsx`; `src/capabilities/create-object.test.ts` (optional smoke).
 
 **Interfaces:**
+
 - Produces: `SpaceCapabilities.CreateObjectEntry` for `Blogger.Publication` and `Blogger.Post`.
 
 - [ ] **Step 1: Implement** (mirror `plugin-inbox/src/capabilities/create-object.ts:19-73`):
@@ -533,9 +550,11 @@ export default Capability.makeModule(
 ## Task 7: Global "Publications" navtree root
 
 **Files:**
+
 - Create: `src/capabilities/app-graph-builder.ts`; update `capabilities/index.ts`, `BloggerPlugin.tsx`.
 
 **Interfaces:**
+
 - Produces: an `AppCapabilities.AppGraphBuilder` extension contributing a top-level branch node `blogger-publications` whose children are `Publication` objects, each expanding to its `Post` children; create-actions `+ Publication` (root) and `+ Post` (per Publication).
 
 - [ ] **Step 1: Implement** using `GraphBuilder.createExtension` (mirror `plugin-inbox/src/capabilities/app-graph-builder.ts:161-292` for a branch node with inline child nodes + actions, and `plugin-brain` per MEMORY.md 2026-07-07 for `Effect.all([...])` assembly). The root connector sources `Publication` objects — **see Open Question 1**: implement a `getPublications()` seam that currently queries the default space (`client.spaces.default.db` `Filter.type(Blogger.Publication)`), isolated in one function so it can be widened to all-spaces later. Children connector matches `NodeMatcher.whenNodeType(<publication node type>)` and lists `post` children.
@@ -563,9 +582,11 @@ export default Capability.makeModule(
 ## Task 8: PostCard component (presentation)
 
 **Files:**
+
 - Create: `src/components/PostCard/{index.ts,PostCard.tsx,PostCard.stories.tsx}`, update `components/index.ts`.
 
 **Interfaces:**
+
 - Produces: `PostCard` — props `{ post: Blogger.Post; onClick?: () => void }`. No app-framework deps. Renders title, summary excerpt, draft count, and (if present) updated time using `Card.*` primitives from `@dxos/react-ui` (see composer-ui skill). Reactive via `useObject(post)`.
 
 - [ ] **Step 1: Story-first.** Write `PostCard.stories.tsx` with an ECHO `Post` built in `useMemo([], () => Blogger.makePost({ name: 'Sample', summary: 'A summary' }))` inside a `render` fn; decorators `withTheme()` + translations. (Mirror `plugin-gallery` tile story / composer-ui guidance.)
@@ -579,9 +600,11 @@ export default Capability.makeModule(
 ## Task 9: PublicationArticle container (gallery ⇄ instructions toggle)
 
 **Files:**
+
 - Create: `src/containers/PublicationArticle/{index.ts,PublicationArticle.tsx,PublicationArticle.stories.tsx}`, update `containers/index.ts`.
 
 **Interfaces:**
+
 - Produces: `PublicationArticle` — props `AppSurface.ObjectArticleProps<Blogger.Publication>` (`{ subject, attendableId, role }`). A `Panel.Root` + `Menu.Toolbar` (MenuBuilder) with a **view toggle** (gallery/instructions) + **`+ Post`**. Gallery view = `Masonry.Root/Content/Viewport` of `PostCard` tiles (one per `subject.posts`); instructions view = `<Surface>` for `subject.instructions.target` (markdown editor). Reactive via `useObject(subject)`.
 - Consumes: `PostCard` (Task 8); `BloggerOperation.AddPost` via `useOperationInvoker`; `Masonry` (`@dxos/react-ui-masonry`); `Menu`/`MenuBuilder`/`useMenuBuilder` (`@dxos/react-ui-menu`).
 
@@ -596,9 +619,11 @@ export default Capability.makeModule(
 ## Task 10: PostArticle container (outline + draft tabs + sync actions)
 
 **Files:**
+
 - Create: `src/containers/PostArticle/{index.ts,PostArticle.tsx,PostArticle.stories.tsx}`, update `containers/index.ts`.
 
 **Interfaces:**
+
 - Produces: `PostArticle` — props `AppSurface.ObjectArticleProps<Blogger.Post>`. Layout: `Panel.Root` → outline `<Surface>` (top) → `Panel.Toolbar` with a tab button per `subject.drafts` (MenuBuilder, `disposition:'toolbar'`) + `+` new-draft (invokes `AddDraft`) + Publish (invokes `PublishDraft`) + Import (invokes `ImportDrafts`) → selected draft `<Surface>` (below). Selected-draft index via local `useState`, defaulting to last.
 - Consumes: `BloggerOperation.{AddDraft,PublishDraft,ImportDrafts}`; `useCapabilities(BloggerCapabilities.PublisherService)` (for enable/disable of Publish/Import + publisher label); markdown editor `Surface`.
 
@@ -606,7 +631,7 @@ export default Capability.makeModule(
 
 > Selecting the correct editor-surface role: render `<Surface role={AppSurface.Section} data={{ subject: draft.content.target }} />` (verify the role the markdown editor registers for — the `PreviewComponent`/MarkdownArticle uses `AppSurface.Section` for embeds; MEMORY.md 2026-06-30). Confirm and use the role that yields an editable editor in-story.
 
-- [ ] **Step 2: Implement** the Panel/Menu shell (gallery-article pattern), draft tabs from `subject.drafts.map((_, i) => action(\`draft-${i}\`, { label: draft.label ?? \`Draft ${i+1}\`, disposition:'toolbar' }, () => setIndex(i)))`. Publish/Import actions disabled when `useCapabilities(BloggerCapabilities.PublisherService)` is empty; on click resolve a `Connection` (Open Question 2: first matching connection by `service.source`) and invoke the op.
+- [ ] **Step 2: Implement** the Panel/Menu shell (gallery-article pattern), draft tabs from `subject.drafts.map((_, i) => action(\`draft-${i}\`, { label: draft.label ?? \`Draft ${i+1}\`, disposition:'toolbar' }, () => setIndex(i)))`. Publish/Import actions disabled when `useCapabilities(BloggerCapabilities.PublisherService)`is empty; on click resolve a`Connection`(Open Question 2: first matching connection by`service.source`) and invoke the op.
 
 - [ ] **Step 3: Verify in storybook (Task 12)** + lint. Commit — `git commit -am "feat(plugin-blogger): PostArticle (drafts + sync actions)"`
 
@@ -615,9 +640,11 @@ export default Capability.makeModule(
 ## Task 11: react-surface wiring + register with composer-app
 
 **Files:**
+
 - Modify: `src/capabilities/react-surface.tsx`, `src/containers/index.ts`; `packages/apps/composer-app/src/plugin-defs.tsx` (register `BloggerPlugin`).
 
 **Interfaces:**
+
 - Produces: surfaces `AppSurface.object(AppSurface.Article, Blogger.Publication)` → `PublicationArticle`, `AppSurface.object(AppSurface.Article, Blogger.Post)` → `PostArticle`.
 
 - [ ] **Step 1: Implement react-surface.tsx** (mirror `plugin-inbox/src/capabilities/react-surface.tsx:67-75`). Import `AppSurface` from `@dxos/app-toolkit/ui` (NOT `@dxos/app-toolkit` — MEMORY.md 2026-07-07). Container lazy exports in `containers/index.ts` with `: ComponentType<any>`.
@@ -639,9 +666,11 @@ export default Capability.makeModule(
 ## Task 13: Scaffold plugin-typefully
 
 **Files:**
+
 - Create: `packages/plugins/plugin-typefully/` root + `src/{meta,translations,plugin,index,TypefullyPlugin}.ts(x)`, `src/capabilities/index.ts`, `src/services/index.ts`.
 
 **Interfaces:**
+
 - Produces: `meta` (`org.dxos.plugin.typefully`), buildable `@dxos/plugin-typefully`.
 
 - [ ] **Step 1:** Copy `plugin-chess` root files; `package.json` name `@dxos/plugin-typefully`, `"private": true`, deps: `@dxos/app-framework`, `@dxos/app-toolkit`, `@dxos/compute`, `@dxos/echo`, `@dxos/plugin-blogger` (`workspace:*`), `@dxos/plugin-connector`, `@dxos/types`, `@dxos/util`, `@effect/platform` (catalog), `effect` (catalog). moon.yml entrypoints for `src/index.ts`, `src/plugin.ts`, `src/capabilities/index.ts`, `src/services/index.ts`.
@@ -653,9 +682,11 @@ export default Capability.makeModule(
 ## Task 14: Typefully connector (API-key credential form)
 
 **Files:**
+
 - Create: `src/capabilities/connector.ts`, update `capabilities/index.ts`, `TypefullyPlugin.tsx`; `src/capabilities/connector.test.ts`.
 
 **Interfaces:**
+
 - Produces: a `ConnectorEntry` (`id:'typefully'`, `source:'typefully.com'`) with a non-OAuth `credentialForm` whose `onSubmit` builds `AccessToken.make({ source:'typefully.com', token })` + a `Connection` and returns `{ kind:'complete', accessToken, connection }`. Activated on `AppActivationEvents.SetupConnectors`.
 
 - [ ] **Step 1: Failing test** — assert `credentialForm.onSubmit({ apiKey: 'k' })` yields `kind:'complete'` with `accessToken.token === 'k'` and `accessToken.source === 'typefully.com'`. (Test the `onSubmit`/`credentialForm` object directly; no plugin manager.)
@@ -668,9 +699,11 @@ export default Capability.makeModule(
 ## Task 15: Typefully PublisherService implementation
 
 **Files:**
+
 - Create: `src/services/typefully-api.ts`, `src/capabilities/publisher-service.ts`, update `capabilities/index.ts`, `services/index.ts`, `TypefullyPlugin.tsx`; `src/services/typefully-api.test.ts`.
 
 **Interfaces:**
+
 - Produces: `TypefullyCredentials` (Context.Tag with `fromConnection(ref)` → `{ token }`), a `makeTypefullyPublisherService(): Publisher.PublisherService`, and a capability contributing `BloggerCapabilities.PublisherService`.
 - Consumes: `Publisher.PublisherService`/`PublisherDraft`/`PublisherDraftInput` + `BloggerCapabilities.PublisherService` from `@dxos/plugin-blogger/types`; `Connection`/`AccessToken`; `@effect/platform` HttpClient.
 
@@ -695,6 +728,7 @@ export default Capability.makeModule(
 ## Task 17: Author PLUGIN.mdl for both plugins (pre-PR, REQUIRED)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-blogger/PLUGIN.mdl`, `packages/plugins/plugin-typefully/PLUGIN.mdl`.
 
 - [ ] **Step 1:** Using `packages/reflect/deus/lang/PLUGIN-.template.mdl` as the template and `packages/plugins/plugin-chess/PLUGIN.mdl` as a reference, write `plugin-blogger/PLUGIN.mdl`: `type` blocks (Publication, Post, Draft, PublisherDraft), `component` blocks (PublicationArticle, PostArticle, PostCard), `op` blocks (AddPublication, AddPost, AddDraft, PublishDraft, ImportDrafts, UnpublishDraft), a `service` block (PublisherService), `feat`/`req` blocks (Publications root, authoring, drafting, comments, publish/pull sync), and `test` acceptance blocks derived from the implemented behavior.

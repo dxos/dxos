@@ -42,6 +42,7 @@ and makes the comments plugin attach automatically (comments anchor to
 `Markdown.Document` subjects via an `AnchoredTo` relation — no extra wiring).
 
 ### `Publication`
+
 ```
 name:         string (label)
 instructions: Ref<Markdown.Document>          // base instructions for the assistant agent
@@ -49,6 +50,7 @@ posts:        Schema.Array(Ref<Post>)
 ```
 
 ### `Post`
+
 ```
 name:    string (title, label)
 summary: string (optional; shown on PostCard)
@@ -57,6 +59,7 @@ drafts:  Schema.Array(Ref<Draft>)             // versions, order = version order
 ```
 
 ### `Draft` (wrapper object so versions carry metadata)
+
 ```
 label:     string (optional; e.g. "Draft 1")
 createdAt: string (ISO timestamp)
@@ -70,6 +73,7 @@ call `Obj.setParent(child, parent)` so docs are owned by their container (mirror
 ## Operations (`src/operations/`, per the `operations` skill)
 
 `BloggerOperation`:
+
 - **`AddPublication`** — create a `Publication` (+ empty instructions doc).
 - **`AddPost`** — create a `Post` (+ outline doc + an initial `Draft`), push onto
   `Publication.posts`.
@@ -87,6 +91,7 @@ call `Obj.setParent(child, parent)` so docs are owned by their container (mirror
 ## Publishing & external sync (provider-agnostic capability)
 
 ### Contract — `plugin-blogger/src/types/` (exposed via the `./types` subpath)
+
 Modelled on `plugin-trip`'s `RoutingService` (plain TS interface + Effect schemas,
 **not** ECHO objects), consumed like `plugin-osrm`.
 
@@ -107,14 +112,14 @@ Modelled on `plugin-trip`'s `RoutingService` (plain TS interface + Effect schema
 - **Errors** — `Publisher.PublisherError`, `Publisher.MissingCredentialError`.
 - **`BloggerCapabilities.PublisherService`** —
   `Capability.make<Publisher.PublisherService>(\`${meta.id}.capability.publisher-service\`)`.
-  Namespace-exported from `types/index.ts`; `package.json` gets a `./types`
-  subpath and `moon.yml` a `--entryPoint=src/types/index.ts`.
+Namespace-exported from `types/index.ts`; `package.json`gets a`./types`subpath and`moon.yml`a`--entryPoint=src/types/index.ts`.
 
 Consumers resolve via `Capability.getAll(BloggerCapabilities.PublisherService)` in
 operation handlers (pick by `id`/`source`) and `useCapabilities(...)` in
 containers (for a publisher picker / empty state).
 
 ### `plugin-typefully` (new plugin)
+
 Depends on `@dxos/plugin-blogger` (for the capability key + types),
 `@dxos/plugin-connector`, `@dxos/types`.
 
@@ -139,12 +144,15 @@ Depends on `@dxos/plugin-blogger` (for the capability key + types),
 ## Capabilities
 
 ### `capabilities/create-object.ts`
+
 `SpaceCapabilities.CreateObjectEntry` for `Publication` and `Post`. `Draft` is
 created only via `AddDraft` from within `PostArticle` (no top-level create entry).
 
 ### `capabilities/app-graph-builder.ts`
+
 A single **global** top-level **"Publications"** branch node contributed via
 `GraphBuilder.createExtension` + `AppCapabilities.AppGraphBuilder`:
+
 - Children = `Publication` objects.
 - Each `Publication` node expands to its `Post` children
   (`NodeMatcher.whenNodeType(Publication)` connector).
@@ -155,6 +163,7 @@ space query vs. all-spaces aggregation). Written so this is a localized change.
 See Open questions.
 
 ### `capabilities/react-surface.tsx`
+
 - `AppSurface.object(Article, Publication)` → **`PublicationArticle`**.
 - `AppSurface.object(Article, Post)` → **`PostArticle`**.
 
@@ -166,6 +175,7 @@ pieces (`PostCard`, the masonry wrapper) live in `components/`; capability-using
 surfaces (`PublicationArticle`, `PostArticle`) live in `containers/`.
 
 ### `PublicationArticle` (container)
+
 - Toolbar **toggles the view** between two modes (full swap, not a stacked
   panel):
   1. **Gallery** (default) — a `Masonry` (`@dxos/react-ui-masonry`,
@@ -175,6 +185,7 @@ surfaces (`PublicationArticle`, `PostArticle`) live in `containers/`.
 - Toolbar also has `+ Post`.
 
 ### `PostArticle` (container)
+
 - Top: the **outline** doc, delegated to the markdown editor `Surface`.
 - Toolbar: **one tab button per draft** + a `+` **new-draft** button
   (`MenuBuilder`, `disposition: 'toolbar'`). Selecting a tab sets the current
@@ -185,6 +196,7 @@ surfaces (`PublicationArticle`, `PostArticle`) live in `containers/`.
   (comments work automatically).
 
 ### `PostCard` (component)
+
 Summary tile: title, `summary` excerpt, draft count, updated time. Rendered
 directly as the Masonry `Tile`.
 
@@ -200,7 +212,8 @@ consistent.
 `meta.ts`, `BloggerPlugin.tsx` (contributes the capability modules via
 `AppPlugin.add*Module`), `plugin.ts` (`Plugin.lazy`), `translations.ts`, barrels
 `index.ts` / `types/index.ts`. Two-entrypoint rule: `index.ts` exports only meta
-+ types/operations, never the plugin instance. Register with `composer-app`.
+
+- types/operations, never the plugin instance. Register with `composer-app`.
 
 ## Dependencies
 
