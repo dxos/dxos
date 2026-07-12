@@ -67,6 +67,9 @@ export const SAMPLES = process.env.SAMPLES ? Number(process.env.SAMPLES) : undef
 /** Model-variant filter (`local` | `remote` | comma-separated name substrings). */
 export const MODELS = process.env.MODELS?.trim();
 
+/** Per-stage model overrides for the policy map (`stage=variant,...`, e.g. `draft=gpt-oss-20b,tag=haiku`). */
+export const MODEL_POLICY = process.env.MODEL_POLICY?.trim();
+
 /** Ollama embedding model + endpoint for the vector index. */
 export const EMBED_MODEL = process.env.EMBED_MODEL ?? 'nomic-embed-text';
 

@@ -59,8 +59,12 @@ deterministic (no LLM) → foreground stays fast; all LLM cost is batchable enri
       `''` opts out; a custom string overrides). Extracted a pure `buildDraftPrompt` + unit test
       (`draft-instructions.test.ts`). `DRAFT_INSTRUCTIONS` env still overrides. **Re-score** = run
       `draft-responses.bench.test.ts` over the corpus (needs models).
-- [ ] **Model-policy map** — declarative `stageId → model DXN`, overridable per run, defaults seeded
-      from the ladder (generalize `ExtractOptions.model`).
+- [x] **Model-policy map** — `harness/model-policy.ts`: `StageId` (the 7 LLM stages), `ModelPolicy`
+      (`stage → variant name`), `DEFAULT_MODEL_POLICY` seeded from §4/§5, `resolveModel`/`resolveModelName`
+      (default ← per-run policy ← `MODEL_POLICY` env; substring match vs `ALL_VARIANTS`; throws on typo).
+      Unit test (`model-policy.test.ts`, 8 cases: every default resolves, override precedence, env parse).
+      FOLLOW-UP: migrate single-run tests off `OLLAMA_MODEL`/`ARTIFACT_MODEL` onto `resolveModel(stage)` —
+      deferred because it changes those tests' default model (deliberate step, not silent).
 - [ ] **Two-tier latency** — foreground (sync + classify + tag) vs background prioritized batching of
       summarize/facts/draft, gated by labels.
 - [ ] **Single per-message LLM pass** — fold tag + summarize + facts into one pass (shared context) to
