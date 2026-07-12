@@ -36,6 +36,7 @@ import { InboxOperation } from '#types';
 import { InboxCapabilities, Mailbox, Starred } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
+import { createSyncProgressKey } from '../../operations/google/gmail/sync';
 import { InitializeMailbox, InitializeMailboxAction } from './InitializeMailbox';
 
 /** Messages per page for the lazily-loaded message window. */
@@ -61,7 +62,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   // The sync operation registers a monitor keyed by the mailbox URI (see runGmailSync); subscribe so
   // the statusbar meter appears live during a sync and disappears when the run's monitor is removed.
-  const progress = useProgress(Obj.getURI(mailbox).toString());
+  const progress = useProgress(createSyncProgressKey(mailbox));
 
   const filterEditorRef = useRef<EditorController>(null);
   const filterSaveButtonRef = useRef<HTMLButtonElement>(null);

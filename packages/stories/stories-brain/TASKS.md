@@ -94,6 +94,52 @@ deterministic (no LLM) → foreground stays fast; all LLM cost is batchable enri
 Risks: reasoning models (qwen3, gpt-oss) → higher latency + may break strict JSON (parse leniently).
 Ollama up during runs; opus/haiku need `.env` (`moon run stories-brain:env` renders it via 1Password).
 
+## Next phase: Topics pipeline (productization)
+
+**Direction:** turn the research topics work into a product feature — tag messages, cluster into
+`Topic` objects with summaries, run it from the mailbox UI with a progress meter, and browse the
+result. Reuses `@dxos/pipeline-email` corpus (`buildThreads`→`clusterThreads`→`summarizeTopics`→
+`materializeTopics`), the #12171 progress-monitor capability, and the `InboxCapabilities.MailboxAction`
+toolbar-injection seam. First real consumer of the incremental design (`DESIGN.md`) — one-shot v1 will
+hit the operation max-run-time on large mailboxes; bound it now, generalize later.
+
+### Decisions (locked)
+
+1. **Orchestration** — a headless **`@dxos/pipeline-email` runnable**; the plugin-inbox operation wraps it.
+2. **Tagger** — **promote the research tagger** (free-form multi-tag + spam) into pipeline-email; the
+   runnable returns per-message tag results, the operation applies them via `Mailbox.applyTag`.
+3. **Progress key** — distinct **`${mailboxUri}#topics`** via an exported `createTopicsProgressKey(mailbox)`
+   helper (following `createSyncProgressKey` in `sync.ts` — one factory ties producer + consumer +
+   tests together); `MailboxArticle` also subscribes so the inline statusbar meter shows the run.
+4. **Model routing** — **promote the `model-policy` map to a product package** (prerequisite; move it
+   out of the stories-brain harness with product-appropriate variants) and resolve stage→model there.
+5. **Scale** — **one-shot, resumable-lite**: idempotent, skip messages/threads already tagged /
+   materialized so re-invoking the toolbar action resumes. Full trigger/cursor incremental (`DESIGN.md`)
+   is a later phase.
+
+### Tasks
+
+- [ ] **(prereq) Promote `model-policy` map** to a product package with product variants; `resolveModel`.
+- [ ] **(prereq) Promote the tagger** (`classifyTags`/`enrichMessage`, free-form multi-tag + spam) into
+      `@dxos/pipeline-email` as a product module returning per-message tag results.
+- [ ] **Topics runnable** (`@dxos/pipeline-email`) — tag → `buildThreads` → `clusterThreads` →
+      `summarizeTopics` (Summarizer over the AI service, model via the policy map) → `materializeTopics`;
+      **idempotent/resumable-lite** (skip already-tagged messages + already-materialized topics).
+- [ ] **`AnalyzeTopics` operation** (plugin-inbox) — input `{ mailbox }`, space-scoped; wraps the
+      runnable, applies tags via `Mailbox.applyTag`, persists `Topic`s + the Mailbox→Topic relation,
+      registers a ProgressRegistry monitor under `${mailboxUri}#topics` (advance per message then per
+      topic; `done()+remove()`).
+- [ ] **Mailbox → Topic `Relation`** — on materialize, create a relation from the Mailbox to each Topic
+      (navigable/queryable from the mailbox).
+- [ ] **Toolbar menu option** — contribute an `InboxCapabilities.MailboxAction` (`createInvocation` →
+      `{ operation: AnalyzeTopics, input: { mailbox } }`); auto-renders in the extract dropdown.
+- [ ] **`MailboxArticle` inline meter** — subscribe to the `${mailboxUri}#topics` monitor alongside sync.
+- [ ] **App-graph node** — plugin-inbox adds a Topics node under the mailbox node (peer of Drafts).
+- [ ] **`TopicsArticle`** — a `react-ui-mosaic` stack of topics (per-topic card: label, summary,
+      thread count / participants). Rendered by the Topics app-graph node.
+- [ ] **`TopicsModule`** (stories-inbox) — lists the mailbox's topics; registered in
+      `testing/modules.tsx` + a column in `MailboxSync.stories.tsx` (mirrors `FactsModule`/`StatsModule`).
+
 ## Bugs
 
 - [x] **`subject-facts` returned 0 for Nicole.** Fixed: the subject index now matches by

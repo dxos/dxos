@@ -17,7 +17,7 @@ import { GMAIL_SOURCE } from '../../../constants';
 import { generateGmailDataset } from '../../../testing/gmail-fixtures';
 import { inboxSyncTestServices, seedMailboxBinding } from '../../../testing/sync-fixture';
 import { Mailbox } from '../../../types';
-import { runGmailSync } from './sync';
+import { createSyncProgressKey, runGmailSync } from './sync';
 
 /** Reads all synced messages from a seeded mailbox's feed. */
 const queryFeedMessages = (db: Database.Database, mailbox: Mailbox.Mailbox) =>
@@ -122,7 +122,7 @@ describe('runGmailSync against a mock Gmail API', () => {
     // capture `current` as the run advances it, one message at a time.
     const seen: number[] = [];
     const unsubscribe = registry.subscribe(progress.snapshotAtom, (snapshot) => {
-      const task = snapshot.tasks.find((task) => task.name === Obj.getURI(mailbox).toString());
+      const task = snapshot.tasks.find((task) => task.name === createSyncProgressKey(mailbox));
       if (task) {
         seen.push(task.current);
       }

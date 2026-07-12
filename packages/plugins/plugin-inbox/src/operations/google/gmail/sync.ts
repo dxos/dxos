@@ -64,6 +64,8 @@ const STREAMING_CONFIG = {
   pageSize: 10,
 } as const;
 
+export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#sync';
+
 /**
  * Runs the Gmail sync pipeline for a binding against the {@link GoogleMailApi} service (plus the
  * ambient operation services). It *requires* the service rather than providing HTTP/credentials
@@ -194,9 +196,8 @@ export const runGmailSync = ({
 
     // Live progress monitor (optional — no host in headless/test runs, so `getAll` yields nothing).
     // Keyed by the mailbox URI so MailboxArticle and the R0 popover can subscribe to this run.
-    const mailboxUri = Obj.getURI(mailbox).toString();
     const progressMonitors = (yield* Capability.getAll(AppCapabilities.ProgressRegistry)).map((registry) =>
-      registry.register(mailboxUri, { label: mailbox.name ?? 'Mailbox' }),
+      registry.register(createSyncProgressKey(mailbox), { label: mailbox.name ?? 'Mailbox' }),
     );
     const advanceProgress = (by: number) => progressMonitors.forEach((monitor) => monitor.advance(by));
     const startedAt = new Date().toISOString();
