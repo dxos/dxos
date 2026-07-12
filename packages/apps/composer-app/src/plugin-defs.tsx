@@ -89,6 +89,7 @@ import { TicTacToePlugin } from '@dxos/plugin-tictactoe/plugin';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { TrelloPlugin } from '@dxos/plugin-trello/plugin';
 import { TripPlugin } from '@dxos/plugin-trip/plugin';
+import { TypefullyPlugin } from '@dxos/plugin-typefully/plugin';
 import { VideoPlugin } from '@dxos/plugin-video/plugin';
 import { VoxelPlugin } from '@dxos/plugin-voxel/plugin';
 import { WnfsPlugin } from '@dxos/plugin-wnfs/plugin';
@@ -161,6 +162,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       SandboxPlugin.meta.profile.key,
       SidekickPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,
+      TypefullyPlugin.meta.profile.key,
       VideoPlugin.meta.profile.key,
       ZenPlugin.meta.profile.key,
     ],
@@ -291,6 +293,7 @@ export const getPlugins = ({
     TicTacToePlugin(),
     TrelloPlugin(),
     TripPlugin(),
+    TypefullyPlugin(),
     VideoPlugin(),
     VoxelPlugin(),
     FilePlugin(),

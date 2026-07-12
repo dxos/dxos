@@ -460,6 +460,9 @@
       "path": "../../plugins/plugin-trip"
     },
     {
+      "path": "../../plugins/plugin-typefully"
+    },
+    {
       "path": "../../plugins/plugin-video"
     },
     {

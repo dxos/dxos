@@ -2760,6 +2760,9 @@ importers:
       '@dxos/plugin-trip':
         specifier: workspace:*
         version: link:../../plugins/plugin-trip
+      '@dxos/plugin-typefully':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-typefully
       '@dxos/plugin-video':
         specifier: workspace:*
         version: link:../../plugins/plugin-video
