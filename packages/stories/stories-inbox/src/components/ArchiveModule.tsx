@@ -4,16 +4,15 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Filter, Query } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, SystemIconButton, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
-import { type ModuleProps, exportFeedMessages, replaceFeed } from '../testing';
+import { type ModuleProps, exportFeedMessages, replaceFeed, resetMailbox } from '../testing';
 
 /**
  * Download the mailbox feed to a local JSON file, replace it from one, or reset it. The exported
@@ -71,25 +70,7 @@ export const ArchiveModule = ({ space }: ModuleProps) => {
 
     setBusy(true);
     try {
-      // Remove the sync binding(s) targeting the mailbox so reset returns it to a fully
-      // disconnected state (a fresh sync would otherwise resume against the emptied feed).
-      const bindings = await space.db
-        .query(Query.select(Filter.id(mailbox.id)).targetOf(SyncBinding.SyncBinding))
-        .run();
-      bindings.filter(SyncBinding.instanceOf).forEach((binding) => space.db.remove(binding));
-
-      // Delete the saved Connection accounts (and their AccessTokens) so reset is a true clean
-      // slate; the Connect menu lists Connection objects, which the binding removal above leaves behind.
-      const connections = await space.db.query(Filter.type(Connection.Connection)).run();
-      for (const connection of connections) {
-        const token = await connection.accessToken?.tryLoad();
-        if (token) {
-          space.db.remove(token);
-        }
-        space.db.remove(connection);
-      }
-
-      await replaceFeed(mailbox, [], space.db);
+      await resetMailbox(mailbox, space.db);
       setStatus({ action: 'reset', count: 0 });
     } catch (error) {
       log.warn('feed reset failed', { error });
