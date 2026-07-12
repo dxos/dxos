@@ -16,6 +16,7 @@ const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = Pat
 const Segments = {
   mailboxes: 'mailboxes',
   drafts: 'drafts',
+  topics: 'topics',
 } as const;
 
 /** Canonical segment ID for the mailboxes section node. */
@@ -31,6 +32,9 @@ export const getMailboxPath = (spaceId: string, mailboxId: string): string =>
 
 /** Canonical segment ID for the drafts child node. */
 export const getDraftsId = (): string => Segments.drafts;
+
+/** Canonical segment ID for the topics child node. */
+export const getTopicsId = (): string => Segments.topics;
 
 /** Canonical qualified path to a mailbox's drafts view. */
 export const getMailboxDraftsPath = (spaceId: string, mailboxId: string): string =>

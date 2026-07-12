@@ -25,8 +25,14 @@ import { meta } from '#meta';
 import { InboxOperation } from '#types';
 import { Calendar, DraftMessage, Mailbox } from '#types';
 
-import { MAILBOX_DRAFTS_NODE_DATA, MAILBOX_DRAFTS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
-import { getCalendarsPath, getDraftsId, getMailboxesPath, getMailboxesSectionId } from '../paths';
+import {
+  MAILBOX_DRAFTS_NODE_DATA,
+  MAILBOX_DRAFTS_TYPE,
+  MAILBOX_TOPICS_NODE_DATA,
+  MAILBOX_TOPICS_TYPE,
+  MAILBOXES_SECTION_TYPE,
+} from '../constants';
+import { getCalendarsPath, getDraftsId, getMailboxesPath, getMailboxesSectionId, getTopicsId } from '../paths';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
@@ -190,6 +196,17 @@ export default Capability.makeModule(
                     properties: {
                       label: ['drafts.label', { ns: meta.profile.key }],
                       icon: 'ph--pencil-simple--regular',
+                      iconHue: 'rose',
+                      mailbox,
+                    },
+                  }),
+                  Node.make({
+                    id: getTopicsId(),
+                    type: MAILBOX_TOPICS_TYPE,
+                    data: MAILBOX_TOPICS_NODE_DATA,
+                    properties: {
+                      label: ['topics.label', { ns: meta.profile.key }],
+                      icon: 'ph--stack--regular',
                       iconHue: 'rose',
                       mailbox,
                     },
