@@ -119,26 +119,32 @@ hit the operation max-run-time on large mailboxes; bound it now, generalize late
 
 ### Tasks
 
-- [ ] **(prereq) Promote `model-policy` map** to a product package with product variants; `resolveModel`.
-- [ ] **(prereq) Promote the tagger** (`classifyTags`/`enrichMessage`, free-form multi-tag + spam) into
-      `@dxos/pipeline-email` as a product module returning per-message tag results.
-- [ ] **Topics runnable** (`@dxos/pipeline-email`) — tag → `buildThreads` → `clusterThreads` →
-      `summarizeTopics` (Summarizer over the AI service, model via the policy map) → `materializeTopics`;
-      **idempotent/resumable-lite** (skip already-tagged messages + already-materialized topics).
-- [ ] **`AnalyzeTopics` operation** (plugin-inbox) — input `{ mailbox }`, space-scoped; wraps the
-      runnable, applies tags via `Mailbox.applyTag`, persists `Topic`s + the Mailbox→Topic relation,
-      registers a ProgressRegistry monitor under `${mailboxUri}#topics` (advance per message then per
-      topic; `done()+remove()`).
-- [ ] **Mailbox → Topic `Relation`** — on materialize, create a relation from the Mailbox to each Topic
-      (navigable/queryable from the mailbox).
-- [ ] **Toolbar menu option** — contribute an `InboxCapabilities.MailboxAction` (`createInvocation` →
-      `{ operation: AnalyzeTopics, input: { mailbox } }`); auto-renders in the extract dropdown.
-- [ ] **`MailboxArticle` inline meter** — subscribe to the `${mailboxUri}#topics` monitor alongside sync.
-- [ ] **App-graph node** — plugin-inbox adds a Topics node under the mailbox node (peer of Drafts).
-- [ ] **`TopicsArticle`** — a `react-ui-mosaic` stack of topics (per-topic card: label, summary,
-      thread count / participants). Rendered by the Topics app-graph node.
-- [ ] **`TopicsModule`** (stories-inbox) — lists the mailbox's topics; registered in
-      `testing/modules.tsx` + a column in `MailboxSync.stories.tsx` (mirrors `FactsModule`/`StatsModule`).
+- [x] **(prereq) Promote `model-policy` map** — `pipeline-email/model-policy.ts` (Anthropic tiers,
+      `resolveModel`); unit-tested.
+- [x] **(prereq) Promote the tagger** — `pipeline-email/stages/tag.ts` (`tagMessage` + pure
+      `parseTagResult`, model via the policy); unit-tested.
+- [x] **Topics runnable** — `pipeline-email/topics-pipeline.ts` `runTopicsPipeline`: tag → buildThreads
+      → clusterThreads → summarizeTopics → materializeTopics; LLM steps injected (pure/testable);
+      idempotent (limit / skipMessage / skipTopic) + progress hook. Unit-tested with stubs.
+- [x] **`AnalyzeTopics` operation** — `plugin-inbox/operations/analyze/analyze-topics.ts`: wires the
+      runnable to AiService, applies tags via `Mailbox.applyTag`, persists Topics, registers the
+      `${mailboxUri}#topics` monitor (`createTopicsProgressKey`). Registered in the handler set.
+- [x] **Mailbox → Topic `Relation`** — each Topic persisted with an `AnchoredTo` relation (source=Topic,
+      target=Mailbox). ⚠️ REVIEW: idiomatic AnchoredTo direction (Topic anchored to Mailbox), not the
+      literal "Mailbox ⇒ Topic".
+- [x] **Toolbar menu option** — `InboxCapabilities.MailboxAction` "Analyze Topics" contributed from
+      `InboxPlugin` (auto-renders in the extract dropdown).
+- [x] **`MailboxArticle` inline meter** — subscribes to `${mailboxUri}#topics` too; shows whichever
+      run (sync/topics) is active.
+- [x] **App-graph node** — Topics node under the mailbox (peer of Drafts) in `app-graph-builder.ts`.
+- [x] **`TopicsArticle`** — `react-ui-mosaic` stack of Topic cards (label, summary, thread/participant
+      count); wired via a react-surface. `Topic` schema registered in the plugin.
+- [x] **`TopicsModule`** (stories-inbox) — renders the Topics article surface; registered in
+      `testing/modules.tsx` + a column in `MailboxSync.stories.tsx`.
+
+**All 9 tasks landed (build/lint/fmt/tests green).** Verified to build + unit-test level; end-to-end
+(running AnalyzeTopics to see real topics) needs models + the storybook. Follow-ups: scope the Topics
+query to the mailbox via the AnchoredTo relation; confirm the relation direction.
 
 ## Bugs
 
