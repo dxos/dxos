@@ -1,0 +1,53 @@
+name: Storybook Deploy
+
+# Builds and deploys the DXOS Storybook to Cloudflare Pages on every push to main.
+# https://dxos-storybook.pages.dev
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          cache-scope: publish
+          verify-integrity: 'true'
+
+      - name: Bundle storybook
+        run: moon run storybook-react:bundle
+        env:
+          NODE_ENV: production
+          LOG_FILTER: error
+
+      - name: Install wrangler
+        run: npm install --global wrangler@4
+
+      - name: Deploy to Cloudflare Pages
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        working-directory: tools/storybook-react
+        # wrangler.toml sets name = "dxos-storybook" and pages_build_output_dir.
+        # --branch main ensures the deploy targets the production URL (dxos-storybook.pages.dev).
+        run: wrangler pages deploy --branch main

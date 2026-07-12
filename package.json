@@ -162,7 +162,7 @@
     "typescript": "catalog:",
     "unplugin": "catalog:",
     "uuid": "catalog:",
-    "vite": "catalog:",
+    "vite": "^8.1.0",
     "vite-node": "catalog:",
     "vite-plugin-devtools-json": "catalog:",
     "vite-plugin-glslify": "catalog:",

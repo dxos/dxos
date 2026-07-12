@@ -22,7 +22,7 @@ const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 
 // Browsers targeted for syntax transforms (also applied to `oxc` below so that dev-server
 // transforms downlevel syntax WebKit doesn't parse yet, e.g. `using`/`await using`).
-const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'];
+const browserTargets = ['chrome132', 'edge132', 'firefox134', 'safari18'];
 
 const baseDir = resolve(__dirname, '../');
 const rootDir = resolve(baseDir, '../../');
@@ -59,6 +59,46 @@ export const content = [
 if (isTrue(process.env.DX_DEBUG)) {
   console.log(JSON.stringify({ stories, content }, null, 2));
 }
+
+/**
+ * Rolldown wraps circular-dependency module init code in `(()=>{})` callbacks but forgets
+ * `async` when the body contains top-level `await`, producing invalid syntax.
+ * Walk `code` char-by-char and promote every `(()=>{` whose balanced body holds `await `
+ * to `(async ()=>{`.
+ */
+const fixAsyncWrappers = (code: string): string => {
+  const MARKER = '(()=>{';
+  const ASYNC_MARKER = '(async ()=>{';
+  let result = '';
+  let pos = 0;
+  while (pos < code.length) {
+    const idx = code.indexOf(MARKER, pos);
+    if (idx === -1) {
+      result += code.slice(pos);
+      break;
+    }
+    // Scan the balanced body starting at idx + MARKER.length - 1 (the '{')
+    const bodyStart = idx + MARKER.length;
+    let depth = 1;
+    let cur = bodyStart;
+    let hasAwait = false;
+    while (cur < code.length && depth > 0) {
+      const ch = code[cur];
+      if (ch === '{') {
+        depth++;
+      } else if (ch === '}') {
+        depth--;
+      } else if (depth === 1 && code.startsWith('await ', cur)) {
+        hasAwait = true;
+      }
+      cur++;
+    }
+    result += code.slice(pos, idx);
+    result += hasAwait ? ASYNC_MARKER : MARKER;
+    pos = bodyStart;
+  }
+  return result;
+};
 
 /**
  * Storybook and Vite configuration.
@@ -142,7 +182,8 @@ export const createConfig = ({
         },
         build: {
           assetsInlineLimit: 0,
-          // Target modern browsers that support top-level await natively.
+          // Target browsers with native `using` (TC39 Explicit Resource Management) support.
+          // Chrome 132 (Jan 2025), Edge 132, Firefox 134 (Jan 2025), Safari 18.2 (Dec 2024).
           target: browserTargets,
           rolldownOptions: {
             output: {
@@ -335,6 +376,28 @@ export const createConfig = ({
           }),
 
           ThemePlugin({}),
+
+          // Rolldown bug workaround: circular-import lazy-init wrappers omit `async` when
+          // the factory body contains top-level `await`, producing invalid syntax. Scan every
+          // output chunk and fix `(()=>{…await…})` → `(async ()=>{…await…})`.
+          // Remove once https://github.com/rolldown/rolldown/issues/9502 is resolved.
+          {
+            name: 'fix-rolldown-async-lazy-init',
+            generateBundle(_opts, bundle) {
+              for (const chunk of Object.values(bundle)) {
+                if (chunk.type !== 'chunk') {
+                  continue;
+                }
+                if (!chunk.code.includes('await ')) {
+                  continue;
+                }
+                // Replace every sync arrow-function wrapper that contains an `await` expression.
+                // Regex: find `(()=>{` blocks where the interior holds `await ` before the
+                // matching `})`  — we do a single-pass replace using a stateful scanner.
+                chunk.code = fixAsyncWrappers(chunk.code);
+              }
+            },
+          },
         ],
       },
     ) as InlineConfig;
