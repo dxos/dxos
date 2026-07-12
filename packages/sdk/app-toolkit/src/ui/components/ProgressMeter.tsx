@@ -5,22 +5,23 @@
 import React from 'react';
 
 import { Progress } from '@dxos/progress';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-export type ProgressMeterProps = ThemedClassName<{
+export type ProgressMeterProps = {
   state: Progress.TaskProgress;
-}>;
+};
 
 /** Renders one progress provider's state as a labelled bar with count and ETA. */
-export const ProgressMeter = ({ state, classNames }: ProgressMeterProps) => {
+export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(({ state, ...props }, forwardedRef) => {
   const { current, total, label, name, status } = state;
   const indeterminate = total === undefined;
   const fraction = indeterminate ? 0 : total === 0 ? 1 : Math.min(1, current / total);
   const eta = Progress.deriveEta(state);
+  const rootProps = composableProps(props, { classNames: 'flex flex-col gap-1', role: 'group' });
 
   return (
-    <div role='group' className={mx('flex flex-col gap-1', classNames)}>
+    <div {...rootProps} ref={forwardedRef}>
       <div className='flex justify-between gap-2 text-xs text-description'>
         <span className='truncate'>{label ?? name}</span>
         <span className='font-mono shrink-0'>{total !== undefined ? `${current} / ${total}` : `${current}`}</span>
@@ -51,7 +52,7 @@ export const ProgressMeter = ({ state, classNames }: ProgressMeterProps) => {
       )}
     </div>
   );
-};
+});
 
 ProgressMeter.displayName = 'ProgressMeter';
 
