@@ -125,8 +125,9 @@ const QueryItem = Object.freeze({
   },
 
   /**
-   * Computes the composite group key for this item from the aggregate's `group`-kind entries, keyed
-   * by result field name. No `group` entries yields `{}` — a single group over the whole input.
+   * Computes the composite group key for this item from the aggregate's `group` and `date-bucket`
+   * entries, keyed by result field name. No such entries yields `{}` — a single group over the whole
+   * input.
    */
   getGroupKey: (item: QueryItem, aggregates: readonly QueryAST.GroupAggregate[]): GroupKeyValue => {
     const key: GroupKeyValue = {};

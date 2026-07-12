@@ -180,10 +180,11 @@ export const GroupBy = Object.freeze({
   },
 
   /**
-   * Computes each group's scalar aggregates (`group`/`max`/`min`/`count`) and returns the same items
-   * with those values stamped on every member (all members of a group share them), so a following
-   * group-level `OrderStep` can order by them — including by a `group` field whose result name differs
-   * from its source property. The `items` aggregate is not stamped — it collects the members and is
+   * Computes each group's scalar aggregates (`group`/`date-bucket`/`max`/`min`/`count`) and returns
+   * the same items with those values stamped on every member (all members of a group share them), so
+   * a following group-level `OrderStep` can order by them — including by a `group`/`date-bucket` field
+   * whose result name differs from its source. The `items` aggregate is not stamped — it collects the
+   * members and is
    * materialised at result assembly. Assumes `items` are already partitioned into contiguous groups
    * (see {@link partitionByGroupKey}).
    */
