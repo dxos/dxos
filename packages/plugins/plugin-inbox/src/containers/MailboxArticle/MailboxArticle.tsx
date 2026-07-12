@@ -7,7 +7,7 @@ import React, { type Ref, useCallback, useEffect, useMemo, useRef, useState } fr
 
 import { useAtomCapability, useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
+import { type AppSurface, ProgressMeter, useProgress, useShowItem } from '@dxos/app-toolkit/ui';
 import { Aggregate, type Database, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
@@ -58,6 +58,9 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const currentId = useSelection(id, 'single');
   const db = Obj.getDatabase(mailbox);
   const showItem = useShowItem();
+  // The sync operation registers a monitor keyed by the mailbox URI (see runGmailSync); subscribe so
+  // the statusbar meter appears live during a sync and disappears when the run's monitor is removed.
+  const progress = useProgress(Obj.getURI(mailbox).toString());
 
   const filterEditorRef = useRef<EditorController>(null);
   const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
@@ -268,6 +271,11 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
           />
         )}
       </Panel.Content>
+      {progress && (progress.status === 'running' || progress.status === 'error') && (
+        <Panel.Statusbar asChild>
+          <ProgressMeter state={progress} classNames='h-16 p-2' />
+        </Panel.Statusbar>
+      )}
     </Panel.Root>
   );
 };
