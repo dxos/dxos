@@ -5,6 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
@@ -103,6 +104,14 @@ export const ImageArtifactArticle = ({ role, subject: artifact, attendableId }: 
       setSelected('all');
     } catch (error) {
       log.catch(error);
+      void invokePromise(LayoutOperation.AddToast, {
+        id: `${meta.profile.key}/generate-error`,
+        icon: 'ph--warning--regular',
+        duration: 5_000,
+        title: ['generate-error.title', { ns: meta.profile.key }],
+        description: error instanceof Error ? error.message : String(error),
+        closeLabel: ['close.label', { ns: meta.profile.key }],
+      });
     } finally {
       setGenerating(false);
     }
