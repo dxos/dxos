@@ -36,6 +36,7 @@ The following extension dialects are used in this document.
 ### `@dxos/worker-framework` (root)
 
 ```mdl
+# TODO(dmaretskyi): Eliminate this Rpc module. seems like composition code that could live outside this package
 module Rpc
   desc: |
     Effect-native RPC over a worker MessagePort: build clients and serve
@@ -139,7 +140,7 @@ module Coordinator
 ### Shared protocol types
 
 ```mdl
-module Messages
+module WorkerProtocol # renamed from Messages
   desc: |
     The wire protocol shared across the Client, Worker, and Coordinator modules.
     Types only; re-exported from every entrypoint that references them.
