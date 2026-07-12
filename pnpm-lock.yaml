@@ -19628,6 +19628,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/pipeline-email':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline-email
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-rdf

@@ -43,6 +43,9 @@
       "path": "../../core/compute/extractor"
     },
     {
+      "path": "../../core/compute/pipeline-email"
+    },
+    {
       "path": "../../core/compute/pipeline-rdf"
     },
     {

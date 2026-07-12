@@ -13,7 +13,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Topic, resolveModel, runTopicsPipeline, tagMessage } from '@dxos/pipeline-email';
-import { AnchoredTo, Message } from '@dxos/types';
+import { AnchoredTo, Message, Person } from '@dxos/types';
 
 import { InboxOperation, Mailbox } from '../../types';
 
@@ -61,6 +61,15 @@ const handler = InboxOperation.AnalyzeTopics.pipe(
       const existingTopics = yield* Effect.promise(() => db.query(Filter.type(Topic)).run());
       const existingLabels = new Set(existingTopics.map((topic) => topic.label));
 
+      // Only topic senders the user has a relationship with: collect every known Person email so a
+      // cluster is kept only when a participant matches one (bulk / org-only threads are dropped).
+      const people = yield* Effect.promise(() => db.query(Filter.type(Person.Person)).run());
+      const personEmails = new Set(
+        people.flatMap((person) => (person.emails ?? []).map((entry) => entry.value.toLowerCase())),
+      );
+      const hasKnownPerson = (participants: readonly string[]) =>
+        participants.some((email) => personEmails.has(email.toLowerCase()));
+
       // Wire the pipeline's injected LLM steps to the operation's AiService.
       const tag = (message: Message.Message) =>
         EffectEx.runPromise(tagMessage(message).pipe(Effect.provideService(AiService.AiService, aiService)));
@@ -85,6 +94,7 @@ const handler = InboxOperation.AnalyzeTopics.pipe(
             limit,
             skipMessage: (id) => (tagIndex[id]?.length ?? 0) > 0,
             skipTopic: (label) => existingLabels.has(label),
+            keepTopic: (draft) => hasKnownPerson(draft.participants),
             signal: controller.signal,
             onProgress: (phase, current, total) => {
               for (const monitor of monitors) {

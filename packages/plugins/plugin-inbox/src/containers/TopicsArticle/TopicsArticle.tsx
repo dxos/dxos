@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
@@ -21,13 +21,20 @@ export type TopicsArticleProps = AppSurface.SpaceArticleProps<{
   mailbox: Mailbox.Mailbox;
 }>;
 
-type TopicTileData = { readonly topic: Topic };
+type TopicTileData = { readonly topic: Topic; readonly onDelete?: (topic: Topic) => void };
 
 /** Mosaic tile for one `Topic`: label, summary, and a thread/participant count. */
 const TopicTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<TopicTileData>, 'data' | 'location' | 'current'>>(
   ({ data, location, current }, forwardedRef) => {
-    const { topic } = data;
+    const { topic, onDelete } = data;
     const { t } = useTranslation(meta.profile.key);
+    const menuItems = useMemo(
+      () =>
+        onDelete
+          ? [{ label: t('topics.delete.label'), icon: 'ph--trash--regular', onClick: () => onDelete(topic) }]
+          : undefined,
+      [onDelete, topic, t],
+    );
     return (
       <Mosaic.Tile
         asChild
@@ -42,18 +49,25 @@ const TopicTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<TopicTileData>
               <Card.Block>
                 <Icon icon='ph--stack--regular' />
               </Card.Block>
-              <Card.Title classNames='truncate'>{topic.label}</Card.Title>
+              <Card.Title>{topic.label}</Card.Title>
+              <Card.Menu items={menuItems} />
             </Card.Header>
             <Card.Body>
-              {topic.summary.length > 0 && <Card.Text variant='description'>{topic.summary}</Card.Text>}
-              <Card.Text variant='description'>
-                {t('topics.count.label', {
-                  threads: topic.threadIds.length,
-                  participants: topic.participants.length,
-                  questions: topic.questions.length,
-                  tasks: topic.tasks.length,
-                })}
-              </Card.Text>
+              {topic.summary.length > 0 && (
+                <Card.Row>
+                  <Card.Text variant='description'>{topic.summary}</Card.Text>
+                </Card.Row>
+              )}
+              <Card.Row>
+                <Card.Text variant='description'>
+                  {t('topics.count.label', {
+                    threads: topic.threadIds.length,
+                    participants: topic.participants.length,
+                    questions: topic.questions.length,
+                    tasks: topic.tasks.length,
+                  })}
+                </Card.Text>
+              </Card.Row>
             </Card.Body>
           </Card.Root>
         </Focus.Item>
@@ -74,7 +88,8 @@ export const TopicsArticle = ({ role, space, attendableId, mailbox }: TopicsArti
   const id = attendableId ?? Obj.getURI(mailbox);
   const currentId = useSelection(id, 'single');
   const topics = useQuery(space.db, Filter.type(Topic));
-  const items = useMemo(() => topics.map((topic) => ({ topic })), [topics]);
+  const handleDelete = useCallback((topic: Topic) => space.db.remove(topic), [space.db]);
+  const items = useMemo(() => topics.map((topic) => ({ topic, onDelete: handleDelete })), [topics, handleDelete]);
 
   return (
     <Panel.Root role={role}>

@@ -25,6 +25,7 @@
     "@dxos/extractor": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/pipeline-email": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-brain": "workspace:*",
     "@dxos/plugin-client": "workspace:*",

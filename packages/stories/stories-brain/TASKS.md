@@ -153,6 +153,47 @@ query to the mailbox via the AnchoredTo relation; confirm the relation direction
       sync state (cursor / seen-message set) independent of the connection lifecycle, and the sync
       operation must dedup so re-syncing never creates duplicates. (plugin-inbox Gmail sync + cursor.)
 
+## Next phase: Topics quality + triage v2 (from live review 2026-07-12)
+
+**Direction:** first pass shipped Topics but quality/utility is low — most mail is _bulk_ (receipts,
+login notices) that needs no action, and topics get created for senders with no relationship. Tighten
+triage, make topics opt-in suggestions rather than eager objects, and finish the master/detail UI.
+
+### Tagging & triage
+
+- [x] **`bulk` tag for no-action mail** — `pipeline-email/stages/tag.ts`: `classifyBulk` (pure —
+      subject + sender local part; `'action'` for invoices/payment-requests wins over any bulk signal,
+      so they're never bulk) + `applyBulkTag` (adds `bulk` the model missed, strips it from action
+      mail). `tagMessage` folds the deterministic gate over the LLM tags; `TagResult` gains `bulk`.
+      Prompt updated. 13 tests in `tag.test.ts` (incl. the user's examples). Build clean.
+- [x] **Only topic Person senders** — `runTopicsPipeline` gains a `keepTopic?(draft)` predicate
+      (applied to fresh clusters before summarization); `analyze-topics.ts` queries `Person` records,
+      builds a lowercased email set, and keeps a topic only when a participant matches (bulk/org-only
+      threads dropped). Tagging is unaffected. Test in `topics-pipeline.test.ts`; both packages build.
+
+### Topic suggestions (opt-in)
+
+- [ ] **Lightweight topic suggestions on Mailbox** — add an array of suggestion descriptors (NOT
+      separate `Topic` objects) to `Mailbox`; render them for the user to select/delete; a selected
+      suggestion is promoted to a real `Topic`. AnalyzeTopics writes suggestions, not objects.
+- [ ] **Message → "Create Topic" menu** — a Message context-menu action kicks off an operation that
+      finds related information across other threads and triggers the fact-extraction pipeline (shown
+      in the companion).
+
+### UI
+
+- [x] **Fix "Ignore sender" menu item** — root cause: `DraftsArticle` (and any consumer not handling
+      `ignore-sender`) still rendered the item, so it no-oped there. `MessageStack` now gates the item
+      behind an `enableIgnoreSender` prop (default off); only `MailboxArticle` — which handles the
+      action and DOES add the `messageFilters` filter (verified) — sets it. Added a `ph--prohibit`
+      icon. `Card.Menu` / `TileMenuItem` / `ToolbarMenuItem` gained an optional `icon` field.
+- [x] **Delete option on topic card** — `TopicsArticle` `TopicTile` gains a `Card.Menu` "Delete topic"
+      item (`ph--trash` icon) → `space.db.remove(topic)`. New `topics.delete.label` translation. Verified
+      by a storybook play test (`Topics.stories.tsx` — seeds two topics, deletes one, asserts removal).
+      FOLLOW-UP: also remove the `AnchoredTo` relation when deleting (currently orphaned).
+- [ ] **`TopicArticle` + master/detail** — add a `TopicArticle` surface and implement master/detail
+      for topics (mirroring the `MailboxArticle` / `MessageArticle` pattern).
+
 ### Follow-ups (landed)
 
 - [x] **Questions + tasks per topic** — `Topic` gains `questions` / `tasks`; `clusterThreads` rolls

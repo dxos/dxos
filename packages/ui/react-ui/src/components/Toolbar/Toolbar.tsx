@@ -303,6 +303,8 @@ ToolbarActionIconButton.displayName = 'Toolbar.ActionIconButton';
 
 type ToolbarMenuItem<T extends any | void = void> = {
   label: string;
+  /** Optional leading icon (e.g. `ph--trash--regular`). */
+  icon?: string;
   onClick: (context: T) => void;
 };
 

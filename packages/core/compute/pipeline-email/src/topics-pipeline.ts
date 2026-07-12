@@ -42,6 +42,12 @@ export type TopicsPipelineInput = {
   readonly skipMessage?: (messageId: string) => boolean;
   /** Skip a topic already materialized by a previous run (dedupe on re-run). */
   readonly skipTopic?: (label: string) => boolean;
+  /**
+   * Keep a clustered topic only when this returns true (applied before summarization). Used to create
+   * topics only for senders the user has a relationship with (an existing `Person` record); undefined
+   * keeps every topic.
+   */
+  readonly keepTopic?: (draft: TopicDraft) => boolean;
   readonly topicOptions?: TopicOptions;
   /** Progress hook: phase `'tag'` (per message) or `'topic'` (per summarized topic). */
   readonly onProgress?: (phase: 'tag' | 'topic', current: number, total: number) => void;
@@ -73,7 +79,8 @@ export const runTopicsPipeline = async (
   input: TopicsPipelineInput,
   deps: TopicsPipelineDeps,
 ): Promise<TopicsPipelineResult> => {
-  const { messages, ownerEmail, now, limit, skipMessage, skipTopic, topicOptions, onProgress, signal } = input;
+  const { messages, ownerEmail, now, limit, skipMessage, skipTopic, keepTopic, topicOptions, onProgress, signal } =
+    input;
 
   // Phase 1 — tag each not-yet-tagged message, bounded by `limit`. Stop early if cancelled.
   const pending = messages.filter((message) => !skipMessage?.(messageIdOf(message)));
@@ -94,7 +101,7 @@ export const runTopicsPipeline = async (
   // Phase 2 — cluster threads into topic drafts (deterministic), summarize the new ones, materialize.
   const threads = buildThreads(messages, { ownerEmail, now });
   const drafts = clusterThreads(threads, topicOptions);
-  const fresh = drafts.filter((draft: TopicDraft) => !skipTopic?.(draft.label));
+  const fresh = drafts.filter((draft: TopicDraft) => !skipTopic?.(draft.label) && (keepTopic?.(draft) ?? true));
   const summarized = await summarizeTopics(fresh, deps.summarize);
   summarized.forEach((_, index) => onProgress?.('topic', index + 1, summarized.length));
   const topics = materializeTopics(summarized);

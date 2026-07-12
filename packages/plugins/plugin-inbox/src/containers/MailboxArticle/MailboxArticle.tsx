@@ -297,6 +297,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             tagsAtom={tagsAtom}
             starredAtom={starredAtom}
             pagination={feed ? pagination : undefined}
+            enableIgnoreSender
             onAction={handleAction}
           />
         )}

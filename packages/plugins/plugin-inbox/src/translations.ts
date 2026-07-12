@@ -153,6 +153,7 @@ export const translations = [
         'topics.empty.message': 'No topics yet. Run "Analyze Topics" from the mailbox toolbar.',
         'topics.count.label':
           '{{threads}} threads · {{participants}} participants · {{questions}} questions · {{tasks}} tasks',
+        'topics.delete.label': 'Delete topic',
         'create-draft.label': 'Create draft',
 
         'related-contacts.title': 'Related contacts',

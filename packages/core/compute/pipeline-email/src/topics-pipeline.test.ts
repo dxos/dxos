@@ -30,7 +30,7 @@ const messages = () => [
   msg('Invoice #A3F9B2 from Acme', 'billing@acme.com', '2026-01-03T10:00:00.000Z'),
 ];
 
-const stubTag = async (): Promise<TagResult> => ({ tags: ['work'], spam: false });
+const stubTag = async (): Promise<TagResult> => ({ tags: ['work'], spam: false, bulk: false });
 const stubSummarize = async (): Promise<string> => 'A topic summary.';
 
 describe('runTopicsPipeline', () => {
@@ -75,5 +75,24 @@ describe('runTopicsPipeline', () => {
     );
     expect(result.topics.some((topic) => topic.label === firstLabel)).toBe(false);
     expect(result.topics.length).toBe(all.topics.length - 1);
+  });
+
+  test('keepTopic drops clusters with no known-person participant', async ({ expect }) => {
+    // Only alice is a known person; the billing@acme thread is dropped.
+    const known = new Set(['alice@x.com']);
+    const result = await runTopicsPipeline(
+      {
+        messages: messages(),
+        ownerEmail: OWNER,
+        now: NOW,
+        keepTopic: (draft) => draft.participants.some((email) => known.has(email)),
+      },
+      { tag: stubTag, summarize: stubSummarize },
+    );
+    expect(result.topics.length).toBeGreaterThan(0);
+    expect(result.topics.every((topic) => topic.participants.includes('alice@x.com'))).toBe(true);
+    expect(result.topics.some((topic) => topic.participants.includes('billing@acme.com'))).toBe(false);
+    // Tagging is unaffected by the topic gate — every message is still tagged.
+    expect(result.messageTags).toHaveLength(4);
   });
 });

@@ -82,6 +82,11 @@ export type MessageStackProps = {
    * destructuring and re-bundling it themselves, which would defeat its referential stability.
    */
   pagination?: PaginationResult<unknown>;
+  /**
+   * Show the "Ignore sender" tile menu item. Off by default — only the mailbox view handles the
+   * `ignore-sender` action, so other consumers (e.g. drafts) must not render a no-op menu item.
+   */
+  enableIgnoreSender?: boolean;
   onAction?: MessageStackActionHandler;
 };
 
@@ -89,7 +94,10 @@ export type MessageStackProps = {
  * Card-based message stack component using mosaic layout.
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
-  ({ items, tagsAtom, currentId, selectedIds, starredAtom, pagination, onAction, ...props }, forwardedRef) => {
+  (
+    { items, tagsAtom, currentId, selectedIds, starredAtom, pagination, enableIgnoreSender, onAction, ...props },
+    forwardedRef,
+  ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
     const tileItems = useMemo(
@@ -103,16 +111,18 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
                   total: item.total,
                   // Conversations show the latest message; star reflects/toggles that message.
                   starredAtom: starredAtom?.(item.messages[0]?.id),
+                  enableIgnoreSender,
                   onAction,
                 }
               : {
                   message: item,
                   tagsAtom: tagsAtom?.(item.id),
                   starredAtom: starredAtom?.(item.id),
+                  enableIgnoreSender,
                   onAction,
                 },
         ),
-      [items, tagsAtom, starredAtom, onAction],
+      [items, tagsAtom, starredAtom, enableIgnoreSender, onAction],
     );
 
     // The incoming `currentId` is a message ID (set when a specific message becomes selected),
@@ -234,13 +244,14 @@ type MessageTileData = {
   message: Message.Message;
   tagsAtom?: Atom.Atom<MessageStackTag[]>;
   starredAtom?: Atom.Atom<boolean>;
+  enableIgnoreSender?: boolean;
   onAction?: MessageStackActionHandler;
 };
 
 type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current'>;
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
-  const { message, tagsAtom, starredAtom, onAction } = data;
+  const { message, tagsAtom, starredAtom, enableIgnoreSender, onAction } = data;
   const { date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
   const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
   const tags = useAtomValue(tagsAtom ?? EMPTY_TAGS_ATOM);
@@ -272,10 +283,16 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
 
   const menuItems = useMemo(
     () =>
-      onAction && message.sender?.email
-        ? [{ label: 'Ignore sender', onClick: () => onAction({ type: 'ignore-sender', messageId: message.id }) }]
+      enableIgnoreSender && onAction && message.sender?.email
+        ? [
+            {
+              label: 'Ignore sender',
+              icon: 'ph--prohibit--regular',
+              onClick: () => onAction({ type: 'ignore-sender', messageId: message.id }),
+            },
+          ]
         : undefined,
-    [onAction, message.sender?.email, message.id],
+    [enableIgnoreSender, onAction, message.sender?.email, message.id],
   );
 
   return (
@@ -326,6 +343,7 @@ type ConversationTileData = {
   /** Full thread size when `messages` is a capped preview; drives the "+N more" affordance. */
   total?: number;
   starredAtom?: Atom.Atom<boolean>;
+  enableIgnoreSender?: boolean;
   onAction?: MessageStackActionHandler;
 };
 
@@ -333,7 +351,7 @@ type ConversationTileProps = Pick<MosaicTileProps<ConversationTileData>, 'data' 
 
 const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
   ({ data, location, current }, forwardedRef) => {
-    const { conversationId, messages, total, starredAtom, onAction } = data;
+    const { conversationId, messages, total, starredAtom, enableIgnoreSender, onAction } = data;
     const latest = messages[0];
     // `messages` is already the capped preview; `total` (when larger) is the full thread size.
     const remaining = total !== undefined ? total - messages.length : 0;
@@ -385,8 +403,14 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
         <Tile.Header
           menu
           menuItems={
-            onAction && latest.sender?.email
-              ? [{ label: 'Ignore sender', onClick: () => onAction({ type: 'ignore-sender', messageId: latest.id }) }]
+            enableIgnoreSender && onAction && latest.sender?.email
+              ? [
+                  {
+                    label: 'Ignore sender',
+                    icon: 'ph--prohibit--regular',
+                    onClick: () => onAction({ type: 'ignore-sender', messageId: latest.id }),
+                  },
+                ]
               : undefined
           }
           starred={starred}
