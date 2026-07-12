@@ -159,7 +159,7 @@ feat F-1: Leader election
 
   req F-1.1:
     when: a tab opens a Client.Connection
-    then: it requests the `leaderLockKey` Web Lock; the tab that acquires it is
+    then: it requests the LEADER Web Lock; the tab that acquires it is
           the leader and hosts the worker, all others are followers
 
   req F-1.2:
