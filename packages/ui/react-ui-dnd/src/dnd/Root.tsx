@@ -1,5 +1,5 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
@@ -10,65 +10,96 @@ import React, { type PropsWithChildren, useCallback, useEffect, useState } from 
 
 import { log } from '@dxos/log';
 
-import { type MosaicData, type MosaicEventHandler, type MosaicTileData } from './types';
+import { type DndContainerHandler, type DndData, type DndTileData } from './types';
 
 //
 // Context
 //
 
-type MosaicDraggingSource = {
-  data: MosaicTileData;
-  handler?: MosaicEventHandler;
+type DndDraggingSource = {
+  data: DndTileData;
+  handler?: DndContainerHandler;
   container?: Element;
 };
 
-type MosaicDraggingTarget = {
-  data: MosaicData;
-  handler?: MosaicEventHandler;
+type DndDraggingTarget = {
+  data: DndData;
+  handler?: DndContainerHandler;
 };
 
-type MosaicDraggingState = {
-  source: MosaicDraggingSource;
-  target?: MosaicDraggingTarget;
+type DndDraggingState = {
+  source: DndDraggingSource;
+  target?: DndDraggingTarget;
 };
 
-type MosaicRootContextValue = {
-  containers: Record<string, MosaicEventHandler>;
-  addContainer: (container: MosaicEventHandler) => void;
+type DndRootContextValue = {
+  containers: Record<string, DndContainerHandler>;
+  addContainer: (container: DndContainerHandler) => void;
   removeContainer: (id: string) => void;
-  dragging?: MosaicDraggingState;
+  dragging?: DndDraggingState;
 };
 
-const [MosaicRootContextProvider, useMosaicRootContext] = createContext<MosaicRootContextValue>('MosaicRoot');
+const [DndRootContextProvider, useDndRootContext] = createContext<DndRootContextValue>('DndRoot');
 
 //
 // Root
 //
 
-const MOSAIC_ROOT_NAME = 'Mosaic.Root';
+const DND_ROOT_NAME = 'Dnd.Root';
 
-type MosaicRootProps = PropsWithChildren;
+type DndRootProps = PropsWithChildren;
+
+/**
+ * Resolve a completed drop by routing it to the appropriate container handler(s).
+ * Same handler: the target handles the drop directly (e.g., reorder within a container).
+ * Different handlers: the source is asked to relinquish the object (`onTake`), and only once
+ * it supplies the (possibly transformed) object does the target receive the drop.
+ */
+export const resolveDrop = (
+  sourceHandler: DndContainerHandler | undefined,
+  targetHandler: DndContainerHandler | undefined,
+  source: DndTileData,
+  target?: DndData,
+): void => {
+  if (!sourceHandler || !targetHandler) {
+    return;
+  }
+
+  if (sourceHandler === targetHandler) {
+    targetHandler.onDrop?.({ source, target });
+  } else {
+    if (!sourceHandler.onTake) {
+      log.warn('invalid source', { source });
+      return;
+    }
+
+    sourceHandler.onTake({ source }, async (object) => {
+      targetHandler.onDrop?.({ source: { ...source, data: object }, target });
+      return true;
+    });
+  }
+};
 
 /**
  * Headless: provides drag-and-drop orchestration and context only, renders no DOM of its own.
- * Consumers wrap the visible chrome they control (typically via `Mosaic.Container`).
+ * Consumers wrap the visible chrome they control (typically via `Dnd.Container`).
  */
-const MosaicRoot = ({ children }: MosaicRootProps) => {
-  const [handlers, setHandlers] = useState<Record<string, MosaicEventHandler>>({});
-  const [dragging, setDragging] = useState<MosaicDraggingState | undefined>();
+const DndRoot = ({ children }: DndRootProps) => {
+  const [handlers, setHandlers] = useState<Record<string, DndContainerHandler>>({});
+  const [dragging, setDragging] = useState<DndDraggingState | undefined>();
 
   const getSourceHandler = useCallback(
-    (source: ElementDragPayload): { data: MosaicTileData; handler?: MosaicEventHandler } => {
-      const data = source.data as MosaicTileData;
+    (source: ElementDragPayload): { data: DndTileData; handler?: DndContainerHandler } => {
+      const data = source.data as DndTileData;
       return { data, handler: handlers[data.containerId] };
     },
     [handlers],
   );
 
   const getTargetHandler = useCallback(
-    (location: DragLocationHistory): { data?: MosaicData; handler?: MosaicEventHandler } => {
+    (location: DragLocationHistory): { data?: DndData; handler?: DndContainerHandler } => {
       for (const target of location.current.dropTargets) {
-        const data = target.data as MosaicData;
+        const data = target.data as DndData;
         let containerId: string;
         switch (data.type) {
           case 'tile':
@@ -128,7 +159,7 @@ const MosaicRoot = ({ children }: MosaicRootProps) => {
     // Main controller.
     return combine(
       monitorForElements({
-        // Only monitor Mosaic tile drags; other pragmatic-dnd sources under this root are not ours to handle.
+        // Only monitor Dnd tile drags; other pragmatic-dnd sources under this root are not ours to handle.
         canMonitor: ({ source }) => source.data.type === 'tile',
         /**
          * Dragging started within any container.
@@ -213,26 +244,7 @@ const MosaicRoot = ({ children }: MosaicRootProps) => {
               }
 
               // TODO(burdon): Check object doesn't already exist in the collection.
-              if (sourceHandler === targetHandler) {
-                targetHandler.onDrop?.({
-                  source: sourceData,
-                  target: targetData,
-                });
-              } else {
-                if (!sourceHandler.onTake) {
-                  log.warn('invalid source', { source: sourceData });
-                  return;
-                }
-
-                sourceHandler.onTake?.({ source: sourceData }, async (object) => {
-                  targetHandler.onDrop?.({
-                    source: { ...sourceData, data: object },
-                    target: targetData,
-                  });
-
-                  return true;
-                });
-              }
+              resolveDrop(sourceHandler, targetHandler, sourceData, targetData);
             }
           } finally {
             handleCancel();
@@ -243,7 +255,7 @@ const MosaicRoot = ({ children }: MosaicRootProps) => {
   }, [handlers, getSourceHandler, getTargetHandler]);
 
   return (
-    <MosaicRootContextProvider
+    <DndRootContextProvider
       containers={handlers}
       addContainer={(container) =>
         setHandlers((containers) => ({
@@ -260,12 +272,14 @@ const MosaicRoot = ({ children }: MosaicRootProps) => {
       dragging={dragging}
     >
       {children}
-    </MosaicRootContextProvider>
+    </DndRootContextProvider>
   );
 };
 
-MosaicRoot.displayName = MOSAIC_ROOT_NAME;
+DndRoot.displayName = DND_ROOT_NAME;
 
-export { MosaicRoot, useMosaicRootContext };
+export const Dnd = { Root: DndRoot };
 
-export type { MosaicDraggingState, MosaicRootProps };
+export { useDndRootContext };
+
+export type { DndDraggingState, DndRootContextValue, DndRootProps };

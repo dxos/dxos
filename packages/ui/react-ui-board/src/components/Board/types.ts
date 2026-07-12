@@ -37,3 +37,6 @@ export const BoardLayout = Schema.Struct({
 });
 
 export type BoardLayout = Schema.Schema.Type<typeof BoardLayout>;
+
+/** A 7×5 board with no items — the persisted default for a new board. */
+export const defaultLayout: BoardLayout = { size: { width: 7, height: 5 }, cells: {} };
