@@ -2,6 +2,7 @@
   "name": "@dxos/plugin-devtools",
   "version": "0.10.0",
   "description": "DXOS developer inspector plugin.",
+  "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
