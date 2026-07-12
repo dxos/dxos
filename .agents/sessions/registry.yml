@@ -16,14 +16,4 @@ sessions:
     prs: [12163]
     resume: 'Build classify-sender (person/org) stage + a ground-truth eval — the gate for sender-type triage.'
 
-  - name: flaky-e2e-quarantine
-    status: active
-    branch: '' # spawned session, separate worktree (task_e2acb467)
-    created: 2026-07-11
-    summary: Quarantine / harden the flaky assistant-e2e opus-agent tests (crm-mailbox, database create/query/Person).
-    tasks: '' # to be created in the spawned session
-    design: ''
-    prs: []
-    resume: 'Decide quarantine (Trunk) vs. hardening the LLM-output assertions; see PR #12163 CI history.'
-
 ended: []
