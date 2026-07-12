@@ -26,7 +26,9 @@ export type TaskProgress = {
 };
 
 /** The registry's mutable working copy of a {@link TaskProgress} (drops `readonly` to mutate in place). */
-type MutableTask = { -readonly [Key in keyof TaskProgress]: TaskProgress[Key] };
+type MutableTask = {
+  -readonly [Key in keyof TaskProgress]: TaskProgress[Key];
+};
 
 export type ProgressSnapshot = {
   readonly updatedAt: string;
