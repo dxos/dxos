@@ -75,8 +75,11 @@ deterministic (no LLM) → foreground stays fast; all LLM cost is batchable enri
       deferred because it changes those tests' default model (deliberate step, not silent).
 - [ ] **Two-tier latency** — foreground (sync + classify + tag) vs background prioritized batching of
       summarize/facts/draft, gated by labels.
-- [ ] **Single per-message LLM pass** — fold tag + summarize + facts into one pass (shared context) to
-      cut latency + tokens.
+- [x] **Single per-message LLM pass** — `pipelines/enrich.ts`: `enrichMessage` folds tag + spam +
+      triage-appropriate summary/label + salient facts into ONE model call (message read once).
+      Pure `buildEnrichPrompt` (summary vs label by triage `kind`) + `parseEnrichResponse` (lenient
+      JSON, spam inference/dedup, degrades to empty) are unit-tested (`enrich.test.ts`, 7 cases). The
+      structured RDF fact pipeline stays separate. Latency/token comparison vs 3 passes = a bench run.
 - [x] **Topics clustering fix** (`corpus/topics.ts`) — `tokenize` now drops id tokens (pure numbers,
       hex hashes, digit-heavy codes) via `isIdToken`, gated by a `dropIdTokens` option (default true);
       short version tokens (`q4`, `v2`) are kept. Subjects are already reply-prefix/whitespace-
