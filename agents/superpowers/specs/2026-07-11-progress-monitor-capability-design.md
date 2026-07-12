@@ -7,8 +7,8 @@
 ## Problem
 
 Plugins run background work (e.g. `plugin-inbox` Gmail sync) whose progress is
-invisible to the UI. There is no shared way for a plugin to *provide* progress
-and for a surface (an article, a toolbar/rail button) to *subscribe* and show
+invisible to the UI. There is no shared way for a plugin to _provide_ progress
+and for a surface (an article, a toolbar/rail button) to _subscribe_ and show
 it. Separately, `@dxos/pipeline` already defines a `Progress` mechanism
 (`Progress.ts` / `ProgressReporter.ts`) with nearly the shape we need
 (`current`/`total`/`elapsedMs`, `subscribe`/`snapshot`). We want one common
@@ -78,10 +78,10 @@ export type ProgressState = {
   readonly current: number;
   readonly total?: number;
   readonly status: ProgressStatus;
-  readonly startedAt?: string;      // ISO
-  readonly updatedAt: string;       // ISO
-  readonly elapsedMs?: number;      // snapshot of elapsed at updatedAt
-  readonly estimatedMs?: number;    // producer-supplied remaining-time estimate
+  readonly startedAt?: string; // ISO
+  readonly updatedAt: string; // ISO
+  readonly elapsedMs?: number; // snapshot of elapsed at updatedAt
+  readonly estimatedMs?: number; // producer-supplied remaining-time estimate
   readonly note?: string;
   readonly error?: string;
 };
@@ -95,13 +95,13 @@ export type ProgressSnapshot = {
 export interface ProgressMonitor {
   readonly id: string;
   readonly set: (current: number) => void;
-  readonly advance: (by?: number) => void;   // default 1
+  readonly advance: (by?: number) => void; // default 1
   readonly total: (total: number) => void;
   readonly estimate: (remainingMs: number) => void;
   readonly note: (text: string) => void;
   readonly done: () => void;
   readonly fail: (error: string) => void;
-  readonly remove: () => void;                // drop from the registry
+  readonly remove: () => void; // drop from the registry
 }
 
 export interface ProgressRegistryApi {
@@ -110,10 +110,14 @@ export interface ProgressRegistryApi {
   readonly subscribe: (listener: (snapshot: ProgressSnapshot) => void) => () => void;
 }
 
-export const makeRegistry = (): ProgressRegistryApi => { /* map + listeners + emit */ };
+export const makeRegistry = (): ProgressRegistryApi => {
+  /* map + listeners + emit */
+};
 
 /** Producer estimate if present, else linear elapsedMs/current × (total−current); undefined if unknowable. */
-export const deriveEta = (state: ProgressState): number | undefined => { /* ... */ };
+export const deriveEta = (state: ProgressState): number | undefined => {
+  /* ... */
+};
 ```
 
 `elapsedMs` is snapshotted on each mutation (as pipeline already does); a live
@@ -147,8 +151,7 @@ export type ProgressRegistry = Readonly<{
   snapshot: () => ProgressSnapshot;
 }>;
 
-export const ProgressRegistry =
-  Capability$.make<ProgressRegistry>('org.dxos.app-toolkit.capability.progressRegistry');
+export const ProgressRegistry = Capability$.make<ProgressRegistry>('org.dxos.app-toolkit.capability.progressRegistry');
 ```
 
 - `entryAtom(id)` is a memoized `Atom.map(snapshotAtom, s => s.entries.find(e => e.id === id))`.
@@ -186,6 +189,7 @@ export const useProgress = (id: string): ProgressState | undefined => { ... };
 ### 4. Host: `plugin-progress` (new, always-on, `private: true`)
 
 Small plugin, always loaded (like the base plugins), that:
+
 - contributes `AppCapabilities.ProgressRegistry` (a capability module that
   builds the atom-backed registry from `Capabilities.AtomRegistry`, kept alive
   with `Atom.keepAlive` so a background writer can populate it before any
@@ -193,7 +197,7 @@ Small plugin, always loaded (like the base plugins), that:
 - contributes the `AppSurface.StatusIndicator` react-surface rendering
   `<ProgressStatusIndicator/>`.
 
-*Open implementation detail (does not affect the interface):* the host may
+_Open implementation detail (does not affect the interface):_ the host may
 instead be folded into an existing always-loaded base plugin rather than a new
 package. Recommendation is the dedicated `plugin-progress` for isolation.
 
@@ -223,7 +227,7 @@ its monitor directly.
 runGmailSync ─register/advance─▶ ProgressRegistry (writable snapshot atom)
                                         │  set(snapshotAtom, next)
         ┌───────────────────────────────┼───────────────────────────────┐
-        ▼ entryAtom(mailboxUri)          ▼ snapshotAtom                    
+        ▼ entryAtom(mailboxUri)          ▼ snapshotAtom
   MailboxArticle <ProgressMeter/>   ProgressStatusIndicator (R0 popover)
 ```
 

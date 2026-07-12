@@ -8,6 +8,7 @@
 export type TaskStatus = 'pending' | 'running' | 'done' | 'error';
 
 /** Live progress for one task: `current`/`total` is the item (e.g. message) index. */
+// TODO(burdon): Implement pause/resume/cancel functionality.
 export type TaskProgress = {
   /** Stable key within a registry. */
   readonly name: string;

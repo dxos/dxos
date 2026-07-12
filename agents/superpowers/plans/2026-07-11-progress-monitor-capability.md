@@ -20,7 +20,7 @@
   // Copyright 2026 DXOS.org
   //
   ```
-- Comments state *why*, end with a period, JSDoc public functions.
+- Comments state _why_, end with a period, JSDoc public functions.
 - Format with `npx oxfmt --write` before every commit (CI checks `oxfmt --check`, not prettier).
 - TDD: write the failing test first, watch it fail, implement minimally, watch it pass, commit.
 - Build one package: `moon run <package>:build`. Test one file: `moon run <package>:test -- path/to/file.test.ts`. Lint & fix: `moon run :lint -- --fix`.
@@ -31,16 +31,19 @@
 ## File Structure
 
 **New package `@dxos/progress`** (`packages/core/compute/progress/`) — pure primitives:
+
 - `src/Progress.ts` — types (`TaskProgress`, `ProgressSnapshot`, `TaskHandle`, `ProgressApi`), `make()`, `deriveEta()`.
 - `src/index.ts` — namespace re-export.
 - `src/Progress.test.ts` — unit tests.
 - `package.json`, `moon.yml`, `tsconfig.json`, `vitest.config.ts`, `README.md`, `LICENSE`.
 
 **Modified `@dxos/pipeline`** (`packages/core/compute/pipeline/`):
+
 - `src/Progress.ts` — delete the duplicated pure impl; re-export `@dxos/progress` and keep only the Effect `Progress` Tag + `layer`.
 - `package.json`, `tsconfig.json` — add `@dxos/progress` dependency + reference.
 
 **Modified `@dxos/app-toolkit`** (`packages/sdk/app-toolkit/`):
+
 - `src/app-framework/AppCapabilities.ts` — add `ProgressRegistry` capability type + tag.
 - `src/app-framework/progress-registry.ts` — `createProgressRegistry(registry)` factory.
 - `src/app-framework/progress-registry.test.ts` — factory tests.
@@ -52,6 +55,7 @@
 - `package.json`, `tsconfig.json` — add `@dxos/progress`.
 
 **New package `@dxos/plugin-progress`** (`packages/plugins/plugin-progress/`):
+
 - `dx.config.ts`, `src/meta.ts`, `src/plugin.ts`, `src/ProgressPlugin.ts`, `src/index.ts`.
 - `src/capabilities/{index.ts,progress-registry.ts,react-surface.tsx}`.
 - `src/components/{index.ts,ProgressStatusIndicator.tsx,ProgressStatusIndicator.stories.tsx}`.
@@ -59,9 +63,11 @@
 - `package.json`, `moon.yml`, `tsconfig.json`, `vitest.config.ts`, `README.md`, `LICENSE`.
 
 **Modified `@dxos/composer-app`** (`packages/apps/composer-app/`):
+
 - `src/plugin-defs.tsx` — import + register `ProgressPlugin` and its meta key (always-on).
 
 **Modified `@dxos/plugin-inbox`** (`packages/plugins/plugin-inbox/`):
+
 - `src/operations/google/gmail/sync.ts` — register/advance/remove a progress monitor.
 - `src/containers/MailboxArticle/MailboxArticle.tsx` — render `ProgressMeter`.
 
@@ -70,6 +76,7 @@
 ## Task 1: `@dxos/progress` leaf package (shared core)
 
 **Files:**
+
 - Create: `packages/core/compute/progress/package.json`
 - Create: `packages/core/compute/progress/moon.yml`
 - Create: `packages/core/compute/progress/tsconfig.json`
@@ -80,6 +87,7 @@
 - Test: `packages/core/compute/progress/src/Progress.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `type TaskStatus = 'pending' | 'running' | 'done' | 'error'`
   - `type TaskProgress = { name: string; label?: string; current: number; total?: number; status: TaskStatus; startedAt?: string; updatedAt: string; elapsedMs?: number; estimatedMs?: number; note?: string; error?: string }`
@@ -117,10 +125,7 @@ Create `packages/core/compute/progress/package.json`:
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
+  "files": ["dist", "src"],
   "scripts": {},
   "dependencies": {},
   "devDependencies": {
@@ -153,9 +158,7 @@ Create `packages/core/compute/progress/tsconfig.json`:
 ```json
 {
   "extends": "../../../../tsconfig.base.json",
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": []
 }
 ```
@@ -520,11 +523,13 @@ Expected: build succeeds; commit created.
 ## Task 2: Rewire `@dxos/pipeline` to consume `@dxos/progress`
 
 **Files:**
+
 - Modify: `packages/core/compute/pipeline/src/Progress.ts`
 - Modify: `packages/core/compute/pipeline/package.json`
 - Modify: `packages/core/compute/pipeline/tsconfig.json`
 
 **Interfaces:**
+
 - Consumes: `@dxos/progress` (`Progress.make`, `Progress.ProgressApi`, `Progress.TaskProgress`, etc.).
 - Produces (unchanged public surface): `Progress.Progress` (Effect Tag), `Progress.layer`, and re-exported `make`/types via `export * as Progress from './Progress'` in the pipeline index.
 
@@ -536,9 +541,9 @@ Expected: `@dxos/progress: workspace:*` added to pipeline `dependencies`.
 Add the project reference to `packages/core/compute/pipeline/tsconfig.json` `references` array:
 
 ```json
-    {
-      "path": "../progress"
-    }
+{
+  "path": "../progress"
+}
 ```
 
 (Place it alongside the existing `../../../common/effect` and `../../../common/log` references.)
@@ -644,6 +649,7 @@ Expected: build + tests green; commit created.
 ## Task 3: `ProgressRegistry` capability + factory + hooks (app-toolkit)
 
 **Files:**
+
 - Modify: `packages/sdk/app-toolkit/src/app-framework/AppCapabilities.ts`
 - Create: `packages/sdk/app-toolkit/src/app-framework/progress-registry.ts`
 - Test: `packages/sdk/app-toolkit/src/app-framework/progress-registry.test.ts`
@@ -653,6 +659,7 @@ Expected: build + tests green; commit created.
 - Modify: `packages/sdk/app-toolkit/tsconfig.json`
 
 **Interfaces:**
+
 - Consumes: `Progress` from `@dxos/progress`; `Atom`, `Registry` from `@effect-atom/atom-react`; `Capability` from `@dxos/app-framework`.
 - Produces:
   - `type ProgressMonitor = Progress.TaskHandle`
@@ -670,9 +677,9 @@ Expected: `@dxos/progress: workspace:*` added to app-toolkit `dependencies`.
 Add to `packages/sdk/app-toolkit/tsconfig.json` `references` (match the relative depth of existing `@dxos` references in that file, e.g. `../../core/compute/progress`):
 
 ```json
-    {
-      "path": "../../core/compute/progress"
-    }
+{
+  "path": "../../core/compute/progress"
+}
 ```
 
 - [ ] **Step 2: Write the failing factory test**
@@ -770,9 +777,7 @@ export type ProgressRegistry = Readonly<{
 /**
  * @category Capability
  */
-export const ProgressRegistry = Capability$.make<ProgressRegistry>(
-  'org.dxos.app-toolkit.capability.progressRegistry',
-);
+export const ProgressRegistry = Capability$.make<ProgressRegistry>('org.dxos.app-toolkit.capability.progressRegistry');
 ```
 
 > `Atom` is already imported at the top of `AppCapabilities.ts` (`import { Atom } from '@effect-atom/atom-react'`).
@@ -884,11 +889,13 @@ Expected: build + test green; commit created.
 ## Task 4: `ProgressMeter` component (app-toolkit/ui)
 
 **Files:**
+
 - Create: `packages/sdk/app-toolkit/src/ui/components/ProgressMeter.tsx`
 - Create: `packages/sdk/app-toolkit/src/ui/components/ProgressMeter.stories.tsx`
 - Modify: `packages/sdk/app-toolkit/src/ui/components/index.ts`
 
 **Interfaces:**
+
 - Consumes: `Progress` from `@dxos/progress`, `ThemedClassName`/`mx` from react-ui/theme, `useProgress` (stories only).
 - Produces: `const ProgressMeter: (props: { state: Progress.TaskProgress } & ThemedClassName) => JSX.Element`, `const formatDuration: (ms: number) => string`.
 
@@ -934,7 +941,10 @@ export const ProgressMeter = ({ state, classNames }: ProgressMeterProps) => {
           <div className='absolute inset-y-0 w-1/3 rounded bg-accentSurface animate-pulse' />
         ) : (
           <div
-            className={mx('absolute inset-y-0 start-0 rounded', status === 'error' ? 'bg-errorSurface' : 'bg-accentSurface')}
+            className={mx(
+              'absolute inset-y-0 start-0 rounded',
+              status === 'error' ? 'bg-errorSurface' : 'bg-accentSurface',
+            )}
             style={{ width: `${fraction * 100}%` }}
           />
         )}
@@ -1056,6 +1066,7 @@ Expected: build green; commit created.
 ## Task 5: `plugin-progress` package — scaffold + registry capability + register in app
 
 **Files:**
+
 - Create: `packages/plugins/plugin-progress/package.json`
 - Create: `packages/plugins/plugin-progress/moon.yml`
 - Create: `packages/plugins/plugin-progress/tsconfig.json`
@@ -1072,6 +1083,7 @@ Expected: build green; commit created.
 - Modify: `packages/apps/composer-app/src/plugin-defs.tsx`
 
 **Interfaces:**
+
 - Consumes: `createProgressRegistry`, `AppCapabilities.ProgressRegistry` from `@dxos/app-toolkit`; `Capabilities.AtomRegistry`, `Capability`, `Plugin`, `ActivationEvents` from `@dxos/app-framework`; `AppPlugin` from `@dxos/app-toolkit`.
 - Produces: `const ProgressPlugin` (a `Plugin`), `meta` (with `profile.key === 'org.dxos.plugin.progress'`).
 
@@ -1145,11 +1157,7 @@ Create `packages/plugins/plugin-progress/package.json`:
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "files": [
-    "dist",
-    "dx.config.ts",
-    "src"
-  ],
+  "files": ["dist", "dx.config.ts", "src"],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
@@ -1208,9 +1216,7 @@ Create `packages/plugins/plugin-progress/tsconfig.json` (copy the `references` s
 ```json
 {
   "extends": "../../../../tsconfig.base.json",
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [
     { "path": "../../core/compute/progress" },
     { "path": "../../common/util" },
@@ -1449,6 +1455,7 @@ Expected: both builds green; commit created.
 ## Task 6: R0 status-indicator popover (plugin-progress)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-progress/src/components/ProgressStatusIndicator.tsx`
 - Create: `packages/plugins/plugin-progress/src/components/ProgressStatusIndicator.stories.tsx`
 - Create: `packages/plugins/plugin-progress/src/components/index.ts`
@@ -1457,6 +1464,7 @@ Expected: both builds green; commit created.
 - Modify: `packages/plugins/plugin-progress/src/ProgressPlugin.ts`
 
 **Interfaces:**
+
 - Consumes: `useProgressMonitors` + `ProgressMeter` + `AppSurface` from `@dxos/app-toolkit` / `@dxos/app-toolkit/ui`; `Popover`, `IconButton`, `Icon` from `@dxos/react-ui`; `Surface`, `Capabilities`, `Capability` from `@dxos/app-framework` / `/ui`.
 - Produces: `const ProgressStatusIndicator` component; a `ReactSurface` capability module contributing an `AppSurface.StatusIndicator` surface.
 
@@ -1676,9 +1684,11 @@ The rail button only appears while a provider is active; a full app check happen
 ## Task 7: Wire `runGmailSync` to a progress monitor (plugin-inbox)
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-inbox/src/operations/google/gmail/sync.ts`
 
 **Interfaces:**
+
 - Consumes: `AppCapabilities.ProgressRegistry` (via `Capability.getAll`, null-safe like the existing `StatsPanel` usage in this file), `Obj.getURI`.
 - Produces: registers a monitor keyed by the mailbox URI, advances it per committed page, removes it at the end.
 
@@ -1687,13 +1697,13 @@ The rail button only appears while a provider is active; a full app check happen
 In `runGmailSync` (`sync.ts`), immediately after the existing block that resolves the `StatsPanel` compartments (around line 191, after `const statsCompartments = ...`), add:
 
 ```ts
-    // Live progress monitor (optional — no host in headless/test runs, so `getAll` yields nothing).
-    // Keyed by the mailbox URI so `MailboxArticle` and the R0 popover can subscribe to this run.
-    const mailboxUri = Obj.getURI(mailbox).toString();
-    const progressMonitors = (yield* Capability.getAll(AppCapabilities.ProgressRegistry)).map((registry) =>
-      registry.register(mailboxUri, { label: mailbox.name ?? 'Mailbox' }),
-    );
-    const advanceProgress = (by: number) => progressMonitors.forEach((monitor) => monitor.advance(by));
+// Live progress monitor (optional — no host in headless/test runs, so `getAll` yields nothing).
+// Keyed by the mailbox URI so `MailboxArticle` and the R0 popover can subscribe to this run.
+const mailboxUri = Obj.getURI(mailbox).toString();
+const progressMonitors = (yield * Capability.getAll(AppCapabilities.ProgressRegistry)).map((registry) =>
+  registry.register(mailboxUri, { label: mailbox.name ?? 'Mailbox' }),
+);
+const advanceProgress = (by: number) => progressMonitors.forEach((monitor) => monitor.advance(by));
 ```
 
 - [ ] **Step 2: Advance the monitor as pages commit**
@@ -1703,18 +1713,18 @@ In the `collectStats` stage's `Effect.sync` (which runs `processed += 1` per map
 Find:
 
 ```ts
-        attachmentCount += mapped.attachments?.length ?? 0;
-        publishStats();
-        return mapped;
+attachmentCount += mapped.attachments?.length ?? 0;
+publishStats();
+return mapped;
 ```
 
 Replace with:
 
 ```ts
-        attachmentCount += mapped.attachments?.length ?? 0;
-        publishStats();
-        advanceProgress(1);
-        return mapped;
+attachmentCount += mapped.attachments?.length ?? 0;
+publishStats();
+advanceProgress(1);
+return mapped;
 ```
 
 - [ ] **Step 3: Complete and remove the monitor at the end of the run**
@@ -1722,37 +1732,36 @@ Replace with:
 After the final `publishStats();` and before `log('gmail sync complete', ...)` (near line 304), add:
 
 ```ts
-    progressMonitors.forEach((monitor) => {
-      monitor.done();
-      monitor.remove();
-    });
+progressMonitors.forEach((monitor) => {
+  monitor.done();
+  monitor.remove();
+});
 ```
 
 And in the operation handler's error path: the pipeline `runGmailSync` is wrapped in `Effect.withSpan('gmail-sync')`. Wrap the monitor lifecycle so a failure still removes it. Change the two-line completion above to run in an `Effect.ensuring` finalizer instead — replace the just-added block with a finalizer registered right after the monitors are created (Step 1). Add after `advanceProgress` definition in Step 1:
 
 ```ts
-    yield* Effect.addFinalizer(() =>
-      Effect.sync(() => progressMonitors.forEach((monitor) => monitor.remove())),
-    );
+yield * Effect.addFinalizer(() => Effect.sync(() => progressMonitors.forEach((monitor) => monitor.remove())));
 ```
 
 And keep a `done()` on the success path (before `log('gmail sync complete', ...)`):
 
 ```ts
-    progressMonitors.forEach((monitor) => monitor.done());
+progressMonitors.forEach((monitor) => monitor.done());
 ```
 
 > `Effect.addFinalizer` requires a `Scope` in the effect's context. `runGmailSync` returns `Effect.Effect<..., ..., GoogleMailApi | Database.Service | Resolver | Capability.Service | Operation.Service>` — it has no `Scope`. Rather than widen the signature, use `Effect.ensuring` around the pipeline run instead of `addFinalizer`. Concretely: do NOT add `addFinalizer`; instead wrap the whole `Effect.gen` body's tail. The simplest correct form given this file's structure: keep the success-path `done()` + `remove()` from the earlier version, and additionally attach `.pipe(Effect.tapError(() => Effect.sync(() => progressMonitors.forEach((m) => m.remove()))))` to the final returned effect. Implement it as:
 
 Remove the `addFinalizer` idea. Use this final shape:
+
 - Step 1 adds only the `progressMonitors` + `advanceProgress` (no finalizer).
 - Step 3 (success path, before the final `log`):
 
 ```ts
-    progressMonitors.forEach((monitor) => {
-      monitor.done();
-      monitor.remove();
-    });
+progressMonitors.forEach((monitor) => {
+  monitor.done();
+  monitor.remove();
+});
 ```
 
 - Wrap the outer pipe (the existing `.pipe(Effect.withSpan('gmail-sync'))` at the end of `runGmailSync`) to also clear monitors on error:
@@ -1787,19 +1796,18 @@ Find the start:
 Wrap the whole `yield* gmailSource(...).pipe(...)` expression by assigning it and tapping its error. Change `yield* gmailSource({ ... }).pipe( ... );` to:
 
 ```ts
-    yield* gmailSource({
-      userId,
-      label,
-      direction: resolvedDirection,
-      start,
-      end: rangeEnd,
-      searchFilter: targetOptions.filter,
-    }).pipe(
-      // ... existing stages unchanged ...
-      Effect.tapError((error) =>
-        Effect.sync(() => progressMonitors.forEach((monitor) => monitor.fail(String(error)))),
-      ),
-    );
+yield *
+  gmailSource({
+    userId,
+    label,
+    direction: resolvedDirection,
+    start,
+    end: rangeEnd,
+    searchFilter: targetOptions.filter,
+  }).pipe(
+    // ... existing stages unchanged ...
+    Effect.tapError((error) => Effect.sync(() => progressMonitors.forEach((monitor) => monitor.fail(String(error))))),
+  );
 ```
 
 Add `Effect.tapError(...)` as the LAST entry in the existing `.pipe(...)` chain (after the `Effect.provide(SyncBinding.layer(...))` call). This keeps `progressMonitors` in scope. Then the success-path `done()` + `remove()` (added before the final `log`) runs only when the stream completes without error; on error the monitor is marked failed and left visible (per the spec's error handling). A separate always-remove is unnecessary — a failed transient monitor is intentionally retained until the next successful run replaces it or the surface unmounts.
@@ -1856,9 +1864,11 @@ Expected: build + tests green; commit created.
 ## Task 8: Show the meter in `MailboxArticle` (plugin-inbox) + end-to-end check
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-inbox/src/containers/MailboxArticle/MailboxArticle.tsx`
 
 **Interfaces:**
+
 - Consumes: `useProgress` from `@dxos/app-toolkit/ui`, `ProgressMeter` from `@dxos/app-toolkit/ui`, `Obj.getURI`.
 - Produces: an inline meter rendered while the mailbox's monitor is active.
 
@@ -1877,10 +1887,10 @@ import { type AppSurface, ProgressMeter, useProgress, useShowItem } from '@dxos/
 Inside the `MailboxArticle` component, after `const id = attendableId ?? Obj.getURI(mailbox);`, add:
 
 ```ts
-  // The sync operation registers a monitor keyed by the mailbox URI (see runGmailSync); subscribe so
-  // the meter appears live during a sync and disappears when it completes (the monitor is removed).
-  const mailboxUri = Obj.getURI(mailbox).toString();
-  const progress = useProgress(mailboxUri);
+// The sync operation registers a monitor keyed by the mailbox URI (see runGmailSync); subscribe so
+// the meter appears live during a sync and disappears when it completes (the monitor is removed).
+const mailboxUri = Obj.getURI(mailbox).toString();
+const progress = useProgress(mailboxUri);
 ```
 
 - [ ] **Step 3: Render the meter in the panel statusbar**
@@ -1888,11 +1898,13 @@ Inside the `MailboxArticle` component, after `const id = attendableId ?? Obj.get
 Per the user's preferred placement, render the meter in a `Panel.Statusbar` at the bottom of the panel (NOT under the toolbar). The user has already sketched this region with a mock `state`; replace the mock with the real hook value and guard on an active monitor. Find the `<Panel.Statusbar>` block (currently holding a literal `state={{ … }}` mock) just before `</Panel.Root>` and replace it with:
 
 ```tsx
-      {progress && (progress.status === 'running' || progress.status === 'error') && (
-        <Panel.Statusbar>
-          <ProgressMeter state={progress} classNames='is-full p-2 border-bs border-separator' />
-        </Panel.Statusbar>
-      )}
+{
+  progress && (progress.status === 'running' || progress.status === 'error') && (
+    <Panel.Statusbar>
+      <ProgressMeter state={progress} classNames='is-full p-2 border-bs border-separator' />
+    </Panel.Statusbar>
+  );
+}
 ```
 
 > Coordinate with the user before editing this file — they may be actively iterating on its visuals. Confirm the border/spacing tokens resolve in the theme (`border-separator` is valid per Task 4; `border-bs` is the block-start logical border — verify against `@dxos/react-ui`/Tailwind logical-border utilities and adjust if needed). Keep the `Obj.getURI(mailbox).toString()` key identical to the one `runGmailSync` registers (Task 7).
@@ -1944,6 +1956,7 @@ Expected: lint clean; all listed test suites pass. Address any failures before o
 ## Self-Review
 
 **Spec coverage:**
+
 - Capability that lets plugins provide + subscribe → Task 3 (`ProgressRegistry`, hooks). ✓
 - Registry of providers exposing an atom → Task 3 (`snapshotAtom`, `monitorAtom`). ✓
 - current/total/elapsed/estimate + display name → Task 1 (`TaskProgress` fields + `deriveEta`), `label` = display name. ✓
