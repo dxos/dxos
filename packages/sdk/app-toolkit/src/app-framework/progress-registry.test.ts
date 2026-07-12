@@ -36,6 +36,26 @@ describe('createProgressRegistry', () => {
     expect(registry.get(progress.monitorAtom('sync/b'))?.current).toBe(5);
   });
 
+  test('re-registering a name starts fresh (drops prior errored state)', () => {
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+
+    const first = progress.register('sync/a', { label: 'A' });
+    first.advance(5);
+    first.fail('boom');
+    let state = registry.get(progress.monitorAtom('sync/a'));
+    expect(state?.status).toBe('error');
+    expect(state?.current).toBe(5);
+
+    // A retry re-registers the same name; it must not resume the failed run's count/error.
+    progress.register('sync/a', { label: 'A' });
+    state = registry.get(progress.monitorAtom('sync/a'));
+    expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(1);
+    expect(state?.current).toBe(0);
+    expect(state?.status).toBe('running');
+    expect(state?.error).toBeUndefined();
+  });
+
   test('remove drops the task from the snapshot', () => {
     const registry = Registry.make();
     const progress = createProgressRegistry(registry);

@@ -299,7 +299,12 @@ export const runGmailSync = ({
           stats,
         }),
       ),
-      Effect.tapError((error) => Effect.sync(() => progressMonitors.forEach((monitor) => monitor.fail(String(error))))),
+      Effect.tapError((error) =>
+        Effect.sync(() => {
+          const message = error instanceof Error ? error.message : String(error);
+          progressMonitors.forEach((monitor) => monitor.fail(message));
+        }),
+      ),
     );
 
     // Flush indexes once, at the end of the run, so cross-run dedup / contact resolution observe this
