@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { buildEnrichPrompt, parseEnrichResponse } from '../testing/harness';
 
@@ -10,14 +10,14 @@ import { buildEnrichPrompt, parseEnrichResponse } from '../testing/harness';
 // (the model-graded quality/latency comparison lives in the bench).
 
 describe('buildEnrichPrompt', () => {
-  test('asks for a full bullet summary for person mail', () => {
+  test('asks for a full bullet summary for person mail', ({ expect }) => {
     const prompt = buildEnrichPrompt('summary');
     expect(prompt).toContain('bullet list');
     expect(prompt).toContain('"tags"');
     expect(prompt).toContain('"facts"');
   });
 
-  test('asks for a one-line label for org / bulk mail', () => {
+  test('asks for a one-line label for org / bulk mail', ({ expect }) => {
     const prompt = buildEnrichPrompt('label');
     expect(prompt).toContain('ONE short line');
     expect(prompt).not.toContain('bullet list');
@@ -25,7 +25,7 @@ describe('buildEnrichPrompt', () => {
 });
 
 describe('parseEnrichResponse', () => {
-  test('parses a clean JSON object', () => {
+  test('parses a clean JSON object', ({ expect }) => {
     const result = parseEnrichResponse(
       '{"tags":["Invoice","Finance"],"spam":false,"summary":"Invoice from Acme","facts":["Due 2026-02-01","$42.00"]}',
       'label',
@@ -37,7 +37,7 @@ describe('parseEnrichResponse', () => {
     expect(result.facts).toEqual(['Due 2026-02-01', '$42.00']);
   });
 
-  test('extracts JSON wrapped in prose / fences (local models)', () => {
+  test('extracts JSON wrapped in prose / fences (local models)', ({ expect }) => {
     const raw = 'Sure! Here is the analysis:\n```json\n{"tags":["personal"],"summary":"- Confirms lunch"}\n```';
     const result = parseEnrichResponse(raw, 'summary');
     expect(result.tags).toEqual(['personal']);
@@ -45,19 +45,19 @@ describe('parseEnrichResponse', () => {
     expect(result.facts).toEqual([]); // Missing → empty.
   });
 
-  test('infers spam from a spam tag and dedups it', () => {
+  test('infers spam from a spam tag and dedups it', ({ expect }) => {
     const result = parseEnrichResponse('{"tags":["spam","marketing"],"summary":"x"}', 'label');
     expect(result.spam).toBe(true);
     expect(result.tags.filter((tag) => tag === 'spam')).toHaveLength(1);
   });
 
-  test('adds the spam tag when the flag is set but the tag is missing', () => {
+  test('adds the spam tag when the flag is set but the tag is missing', ({ expect }) => {
     const result = parseEnrichResponse('{"tags":["promo"],"spam":true,"summary":"x"}', 'label');
     expect(result.spam).toBe(true);
     expect(result.tags).toContain('spam');
   });
 
-  test('degrades to empty on unparseable output', () => {
+  test('degrades to empty on unparseable output', ({ expect }) => {
     const result = parseEnrichResponse('the model refused', 'summary');
     expect(result.tags).toEqual([]);
     expect(result.spam).toBe(false);

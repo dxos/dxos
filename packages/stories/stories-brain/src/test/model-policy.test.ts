@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import {
   DEFAULT_MODEL_POLICY,
@@ -15,7 +15,7 @@ import {
 // Deterministic coverage for the model-policy map — no fixture / model required.
 
 describe('DEFAULT_MODEL_POLICY', () => {
-  test('every default entry resolves to a real variant (no typos)', () => {
+  test('every default entry resolves to a real variant (no typos)', ({ expect }) => {
     for (const stage of Object.keys(DEFAULT_MODEL_POLICY) as StageId[]) {
       expect(() => resolveModel(stage), stage).not.toThrow();
     }
@@ -23,37 +23,37 @@ describe('DEFAULT_MODEL_POLICY', () => {
 });
 
 describe('resolveModel', () => {
-  test('resolves a stage to its default variant', () => {
+  test('resolves a stage to its default variant', ({ expect }) => {
     expect(resolveModel('draft').name).toBe('gemma-4-12b');
     expect(resolveModel('tag').name).toBe('claude-haiku');
   });
 
-  test('a per-run policy overrides the default', () => {
+  test('a per-run policy overrides the default', ({ expect }) => {
     expect(resolveModelName('draft', { draft: 'gpt-oss-20b' })).toBe('gpt-oss-20b');
     expect(resolveModel('draft', { draft: 'gpt-oss-20b' }).name).toBe('gpt-oss-20b');
     // Unrelated stages keep their defaults.
     expect(resolveModelName('tag', { draft: 'gpt-oss-20b' })).toBe('claude-haiku');
   });
 
-  test('the name is matched as a substring (haiku → claude-haiku)', () => {
+  test('the name is matched as a substring (haiku → claude-haiku)', ({ expect }) => {
     expect(resolveModel('tag', { tag: 'haiku' }).name).toBe('claude-haiku');
   });
 
-  test('an unknown variant name throws loudly', () => {
+  test('an unknown variant name throws loudly', ({ expect }) => {
     expect(() => resolveModel('draft', { draft: 'no-such-model' })).toThrow(/no variant matches/);
   });
 });
 
 describe('parseModelPolicyEnv', () => {
-  test('parses stage=variant pairs', () => {
+  test('parses stage=variant pairs', ({ expect }) => {
     expect(parseModelPolicyEnv('draft=gpt-oss-20b,tag=haiku')).toEqual({ draft: 'gpt-oss-20b', tag: 'haiku' });
   });
 
-  test('ignores unknown stages and blanks', () => {
+  test('ignores unknown stages and blanks', ({ expect }) => {
     expect(parseModelPolicyEnv('bogus=x,draft=gemma, ,')).toEqual({ draft: 'gemma' });
   });
 
-  test('empty / undefined → empty policy', () => {
+  test('empty / undefined → empty policy', ({ expect }) => {
     expect(parseModelPolicyEnv('')).toEqual({});
     expect(parseModelPolicyEnv(undefined)).toEqual({});
   });

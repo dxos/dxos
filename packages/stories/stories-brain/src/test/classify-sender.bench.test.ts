@@ -64,7 +64,10 @@ describe.skipIf(!fixtureExists() || existsSync(SENDER_LABELS))('classify-sender 
     'label every sender with the strong model for human review',
     async ({ expect }) => {
       const senders = uniqueSenders(loadFixtureMessages({ limit: undefined }));
-      const variant = ALL_VARIANTS.find((entry) => entry.name.includes(SENDER_LABEL_MODEL)) ?? ALL_VARIANTS.at(-1)!;
+      const variant = ALL_VARIANTS.find((entry) => entry.name.includes(SENDER_LABEL_MODEL)) ?? ALL_VARIANTS.at(-1);
+      if (!variant) {
+        throw new Error('No model variants available for sender labeling.');
+      }
       log.info('bootstrapping sender labels', { senders: senders.length, model: variant.name });
 
       const progress = trackProgress('classify-sender:bootstrap', senders.length);

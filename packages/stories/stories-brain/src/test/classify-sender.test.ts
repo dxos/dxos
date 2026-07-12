@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { Message } from '@dxos/types';
 
@@ -12,15 +12,8 @@ import { type SenderClass, classifySenderHeuristic, scoreSenders, uniqueSenders 
 // runs in CI (the model-graded eval lives in classify-sender.bench.test.ts and skips without the
 // private corpus).
 
-const sender = (email: string, name?: string, subjects: string[] = []) => ({
-  email,
-  name,
-  count: 1,
-  subjects,
-});
-
 describe('classifySenderHeuristic', () => {
-  test('flags automated / role mailboxes as org', () => {
+  test('flags automated / role mailboxes as org', ({ expect }) => {
     for (const email of [
       'no-reply@example.com',
       'noreply@stripe.com',
@@ -36,12 +29,12 @@ describe('classifySenderHeuristic', () => {
     }
   });
 
-  test('flags company display names as org', () => {
+  test('flags company display names as org', ({ expect }) => {
     const result = classifySenderHeuristic(sender('hi@acme.com', 'Acme Inc'));
     expect(result.class).toBe('org');
   });
 
-  test('classifies human-shaped senders as person', () => {
+  test('classifies human-shaped senders as person', ({ expect }) => {
     for (const [email, name] of [
       ['jane.doe@gmail.com', 'Jane Doe'],
       ['rich@braneframe.com', 'Rich Burdon'],
@@ -52,20 +45,20 @@ describe('classifySenderHeuristic', () => {
     }
   });
 
-  test('a person name overrides a corporate domain', () => {
+  test('a person name overrides a corporate domain', ({ expect }) => {
     const result = classifySenderHeuristic(sender('r.b@braneframe.com', 'Rich Burdon'));
     expect(result.class).toBe('person');
     expect(result.confidence).toBeGreaterThanOrEqual(0.9);
   });
 
-  test('opaque / numeric local parts fall back to org', () => {
+  test('opaque / numeric local parts fall back to org', ({ expect }) => {
     const result = classifySenderHeuristic(sender('u8837261@marketing.example.com'));
     expect(result.class).toBe('org');
   });
 });
 
 describe('uniqueSenders', () => {
-  test('dedups by email, counts, and keeps the freshest name + subjects', () => {
+  test('dedups by email, counts, and keeps the freshest name + subjects', ({ expect }) => {
     const make = (email: string, name: string, subject: string, created: string) =>
       Message.make({ created, sender: { email, name }, blocks: [{ _tag: 'text', text: '' }], properties: { subject } });
     // Oldest-first, mirroring loadFixtureMessages.
@@ -76,10 +69,10 @@ describe('uniqueSenders', () => {
     ];
     const senders = uniqueSenders(messages);
     expect(senders).toHaveLength(2);
-    const first = senders.find((entry) => entry.email === 'a@x.com')!;
-    expect(first.count).toBe(2);
-    expect(first.name).toBe('New Name'); // Freshest wins.
-    expect(first.subjects[0]).toBe('Second'); // Newest subject first.
+    const first = senders.find((entry) => entry.email === 'a@x.com');
+    expect(first?.count).toBe(2);
+    expect(first?.name).toBe('New Name'); // Freshest wins.
+    expect(first?.subjects[0]).toBe('Second'); // Newest subject first.
   });
 });
 
@@ -91,7 +84,7 @@ describe('scoreSenders', () => {
     ['o2@x.com', 'org'],
   ]);
 
-  test('perfect predictions score 1', () => {
+  test('perfect predictions score 1', ({ expect }) => {
     const predictions = [...gold.entries()].map(([email, klass]) => ({
       email,
       class: klass,
@@ -104,7 +97,7 @@ describe('scoreSenders', () => {
     expect(score.macroF1).toBe(1);
   });
 
-  test('confusion is directional and unlabelled senders are ignored', () => {
+  test('confusion is directional and unlabelled senders are ignored', ({ expect }) => {
     const predictions = [
       { email: 'p1@x.com', class: 'person' as const, confidence: 1, method: 'heuristic' as const },
       { email: 'p2@x.com', class: 'org' as const, confidence: 1, method: 'heuristic' as const }, // person→org
@@ -120,4 +113,11 @@ describe('scoreSenders', () => {
     expect(score.confusion.personAsPerson).toBe(1);
     expect(score.confusion.orgAsOrg).toBe(1);
   });
+});
+
+const sender = (email: string, name?: string, subjects: string[] = []) => ({
+  email,
+  name,
+  count: 1,
+  subjects,
 });
