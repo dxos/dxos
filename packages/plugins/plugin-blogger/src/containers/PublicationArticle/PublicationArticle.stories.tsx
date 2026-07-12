@@ -34,8 +34,7 @@ const makeStoryPublication = (): Blogger.Publication => {
       summary: `Summary for post ${i + 1}.`,
     });
     Obj.update(publication, (publication) => {
-      const publicationMutable = publication as Obj.Mutable<Blogger.Publication>;
-      publicationMutable.posts = [...(publicationMutable.posts ?? []), Ref.make(post)];
+      publication.posts = [...(publication.posts ?? []), Ref.make(post)];
     });
   }
 

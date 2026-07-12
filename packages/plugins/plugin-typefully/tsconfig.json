@@ -25,9 +25,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute/compute"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {

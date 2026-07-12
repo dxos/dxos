@@ -17241,9 +17241,6 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
-      '@dxos/compute':
-        specifier: workspace:*
-        version: link:../../core/compute/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo

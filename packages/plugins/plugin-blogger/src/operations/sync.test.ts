@@ -6,6 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { Connection } from '@dxos/plugin-connector/types';
 import { AccessToken } from '@dxos/types';
 
@@ -79,9 +80,10 @@ describe('Blogger sync operations', () => {
     const post = Blogger.makePost();
     const initialDraft = post.drafts?.[0]?.target;
     expect(initialDraft).toBeDefined();
+    invariant(initialDraft);
     // Link the post's initial draft to remote id 'x1' so the stub's matching listDrafts entry is skipped.
-    Obj.update(initialDraft!, (mutableDraft) => {
-      Obj.getMeta(mutableDraft).keys.push({ source: 'stub.test', id: 'x1' });
+    Obj.update(initialDraft, (initialDraft) => {
+      Obj.getMeta(initialDraft).keys.push({ source: 'stub.test', id: 'x1' });
     });
 
     const { stub, calls } = makeStub();
@@ -98,8 +100,9 @@ describe('Blogger sync operations', () => {
     const importedRef = result.drafts?.[result.drafts.length - 1];
     const imported = importedRef?.target;
     expect(imported).toBeDefined();
-    expect(imported?.content.target?.content.target?.content).toBe('remote body');
-    expect(Obj.getKeys(imported!, stub.source).map((key) => key.id)).toEqual(['x2']);
+    invariant(imported);
+    expect(imported.content.target?.content.target?.content).toBe('remote body');
+    expect(Obj.getKeys(imported, stub.source).map((key) => key.id)).toEqual(['x2']);
   });
 
   test('UnpublishDraft deletes the remote draft and clears the foreign key', async () => {

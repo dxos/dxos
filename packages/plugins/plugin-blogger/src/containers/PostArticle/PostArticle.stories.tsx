@@ -41,8 +41,7 @@ const makeStoryPost = (): Blogger.Post => {
 
   const draft2 = Blogger.makeDraft({ label: 'Draft 2', content: 'Second draft body.' });
   Obj.update(post, (post) => {
-    const postMutable = post as Obj.Mutable<Blogger.Post>;
-    postMutable.drafts = [...(postMutable.drafts ?? []), Ref.make(draft2)];
+    post.drafts = [...(post.drafts ?? []), Ref.make(draft2)];
   });
   Obj.setParent(draft2, post);
   return post;
