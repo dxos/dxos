@@ -41,4 +41,5 @@ export class Image extends Type.makeObject<Image>(DXN.make('org.dxos.type.image'
   ),
 ) {}
 
+/** Creates an {@link Image} from the given props. */
 export const make = (props: Obj.MakeProps<typeof Image>): Image => Obj.make(Image, props);

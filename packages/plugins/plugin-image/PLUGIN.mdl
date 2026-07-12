@@ -154,6 +154,7 @@ op generateImage
   input:
     artifact: Ref<ImageArtifact>
     provider?: string           # ImageGenerationService.id; default = first registered
+    count?: number              # number of images to generate (default 1)
   output:
     count: number               # number of images appended
   errors:
@@ -169,7 +170,7 @@ op generateImage
     - Load the artifact and its instructions; read the prompt from
       instructions.text (Ref<Text>).
     - Pick the service; if service.source set, apiKey =
-      CredentialsService.getApiKey({ service: service.source }).
+      CredentialsService.getCredential({ service: service.source }).apiKey.
     - Build the ImageGenerationRequest from the prompt (+ artifact options
       later); await service.generate(request, { apiKey }).
     - For each result, Image.make({ url, … }) and push Ref.make(image)
