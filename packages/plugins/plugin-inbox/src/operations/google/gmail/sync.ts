@@ -164,6 +164,11 @@ export const runGmailSync = ({
         Effect.gen(function* () {
           const fromHeader = decoded.raw.payload.headers.find(({ name }) => name === 'From');
           const from = fromHeader ? parseFromHeader(fromHeader.value) : undefined;
+          // Drop messages from skipped senders (mailbox `syncFilters`) before the costly attachment
+          // fetch; returning undefined removes the item from the pipeline (see `decodeBodyStage`).
+          if (Mailbox.shouldSkipSender(mailbox, from?.email)) {
+            return undefined;
+          }
           const contact = from?.email ? yield* resolve(Person.Person, { email: from.email }) : undefined;
           const mapped = mapToMessage(decoded, contact ?? undefined);
           const tagUris = mapped.labelIds.flatMap((labelId) => {

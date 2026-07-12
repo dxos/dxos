@@ -72,6 +72,10 @@ export type TopicDraft = {
   readonly threadIds: readonly string[];
   readonly participants: readonly string[];
   readonly keywords: readonly string[];
+  /** Open questions rolled up (deduped) from the member threads. */
+  readonly questions: readonly string[];
+  /** Action items rolled up (deduped) from the member threads. */
+  readonly tasks: readonly string[];
 };
 
 type Signature = {
@@ -189,6 +193,10 @@ export const clusterThreads = (threads: readonly Thread[], options?: TopicOption
       member.thread.summary.length > 0 ? [member.thread.summary] : [],
     );
 
+    // Roll up open questions / action items from the member threads (deduped, order-preserving).
+    const questions = [...new Set(cluster.members.flatMap((member) => member.thread.openQuestions ?? []))];
+    const tasks = [...new Set(cluster.members.flatMap((member) => member.thread.actionItems ?? []))];
+
     // Label from top keywords; a keyword-less cluster (e.g. blank subjects) falls back through the
     // first thread's subject to its threadId so the label is never empty.
     const first = cluster.members[0].thread;
@@ -198,6 +206,8 @@ export const clusterThreads = (threads: readonly Thread[], options?: TopicOption
       threadIds: cluster.members.map((member) => member.thread.threadId),
       participants: [...cluster.participants].sort(),
       keywords,
+      questions,
+      tasks,
     };
   });
 };
@@ -236,5 +246,7 @@ export const materializeTopics = (drafts: readonly TopicDraft[]): Topic[] =>
       threadIds: [...draft.threadIds],
       participants: [...draft.participants],
       keywords: [...draft.keywords],
+      questions: [...draft.questions],
+      tasks: [...draft.tasks],
     }),
   );

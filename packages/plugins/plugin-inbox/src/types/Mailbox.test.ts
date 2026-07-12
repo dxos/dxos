@@ -96,3 +96,18 @@ describe('replyability (person-only)', () => {
     expect(Mailbox.isReplyable(msg({ email: 'no-reply@acme.com' }), { senderClass: 'person' })).toBe(false);
   });
 });
+
+describe('shouldSkipSender (sync filters)', () => {
+  test('no rules → never skips', ({ expect }) => {
+    expect(Mailbox.shouldSkipSender({}, 'anyone@x.com')).toBe(false);
+    expect(Mailbox.shouldSkipSender({ syncFilters: { skipSenders: [] } }, 'anyone@x.com')).toBe(false);
+  });
+
+  test('matches a bare domain or a full address (case-insensitive substring)', ({ expect }) => {
+    const mailbox = { syncFilters: { skipSenders: ['npmjs.com', 'noreply@github.com'] } };
+    expect(Mailbox.shouldSkipSender(mailbox, 'support@npmjs.com')).toBe(true);
+    expect(Mailbox.shouldSkipSender(mailbox, 'NoReply@GitHub.com')).toBe(true);
+    expect(Mailbox.shouldSkipSender(mailbox, 'alice@example.com')).toBe(false);
+    expect(Mailbox.shouldSkipSender(mailbox, undefined)).toBe(false);
+  });
+});

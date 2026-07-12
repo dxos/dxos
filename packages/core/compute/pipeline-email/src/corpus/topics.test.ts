@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
 import { buildThreads } from '../internal/threads';
-import { Topic } from '../types';
+import { Thread, Topic } from '../types';
 import { clusterThreads, materializeTopics, summarizeTopics } from './topics';
 
 const OWNER = 'me@enron.com';
@@ -60,6 +60,27 @@ describe('topics', () => {
     // The per-message ids must not leak into the keywords.
     expect(drafts[0].keywords).not.toContain('a3f9b2');
     expect(drafts[0].keywords).not.toContain('48213');
+  });
+
+  test('rolls up and dedupes questions and action items from member threads', ({ expect }) => {
+    const thread = (threadId: string, openQuestions: string[], actionItems: string[]) =>
+      Obj.make(Thread, {
+        threadId,
+        subject: 'Q2 report update',
+        summary: '',
+        state: 'awaiting-mine',
+        participants: ['a@x.com'],
+        messageIds: [threadId],
+        openQuestions,
+        actionItems,
+      });
+    // Same subject → the two threads cluster into one topic.
+    const [draft] = clusterThreads([
+      thread('t1', ['When is the deadline?'], ['Send draft']),
+      thread('t2', ['When is the deadline?', 'Who approves?'], ['Review budget']),
+    ]);
+    expect([...draft.questions].sort()).toEqual(['When is the deadline?', 'Who approves?']);
+    expect([...draft.tasks].sort()).toEqual(['Review budget', 'Send draft']);
   });
 
   test('dropIdTokens flag controls whether identifiers surface as keywords', ({ expect }) => {

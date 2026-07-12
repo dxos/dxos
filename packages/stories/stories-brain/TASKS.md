@@ -146,6 +146,17 @@ hit the operation max-run-time on large mailboxes; bound it now, generalize late
 (running AnalyzeTopics to see real topics) needs models + the storybook. Follow-ups: scope the Topics
 query to the mailbox via the AnchoredTo relation; confirm the relation direction.
 
+### Follow-ups (landed)
+
+- [x] **Questions + tasks per topic** — `Topic` gains `questions` / `tasks`; `clusterThreads` rolls
+      them up (deduped) from each member thread's `openQuestions` / `actionItems`; `TopicsArticle` shows
+      the counts. (Threads carry the fields but aren't populated until thread-level extraction runs, so
+      topics inherit whatever the threads have.)
+- [x] **Mailbox sync filters** — `Mailbox.syncFilters.skipSenders` (email/domain substrings) + a
+      `shouldSkipSender` helper; the Gmail sync `map-to-message` stage drops matching senders before the
+      attachment fetch (never committed to the feed). Unit-tested. FOLLOW-UP: a settings/toolbar UI to
+      edit the skip list (currently set programmatically on the Mailbox).
+
 ## Bugs
 
 - [x] **`subject-facts` returned 0 for Nicole.** Fixed: the subject index now matches by

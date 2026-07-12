@@ -57,6 +57,11 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
       enabled: Schema.Array(Schema.String),
       threshold: Schema.Number.pipe(Schema.between(0, 1)),
     }).pipe(FormInputAnnotation.set(false), Schema.optional),
+    // Sync-time skip rules: sender patterns (email or domain substrings, e.g. "npmjs.com") whose
+    // messages are dropped during sync rather than committed to the feed.
+    syncFilters: Schema.Struct({
+      skipSenders: Schema.Array(Schema.String),
+    }).pipe(Schema.optional),
     // Optional per-mailbox reply guidance (tone, standing facts, sign-off, skills). A shared
     // `Instructions` object can be referenced by several mailboxes, or a distinct one created per
     // mailbox; the reply generator merges its text + skills into the session prompt.
@@ -227,6 +232,20 @@ const NO_REPLY_RE = /(^|[._+-])(no-?reply|do-?not-?reply|donotreply|noreply|mail
 /** Whether an email address is a no-reply / do-not-reply / mailer-daemon sender. */
 export const isNoReplyAddress = (email: string | undefined): boolean =>
   !!email && NO_REPLY_RE.test(email.split('@')[0] ?? '');
+
+/**
+ * Whether a sender's messages should be skipped on sync, per the mailbox's `syncFilters.skipSenders`
+ * (case-insensitive substring match against the full address, so a pattern can be a full email or a
+ * bare domain like "npmjs.com"). Empty/absent rules never skip.
+ */
+export const shouldSkipSender = (mailbox: Pick<Mailbox, 'syncFilters'>, email: string | undefined): boolean => {
+  const patterns = mailbox.syncFilters?.skipSenders;
+  if (!email || !patterns || patterns.length === 0) {
+    return false;
+  }
+  const address = email.toLowerCase();
+  return patterns.some((pattern) => pattern.length > 0 && address.includes(pattern.toLowerCase()));
+};
 
 // Local-part patterns for role / automated mailboxes — an organization, not an individual (support,
 // billing, notifications, …). A leading role word, optionally followed by a separator (`support`,

@@ -47,7 +47,12 @@ const TopicTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<TopicTileData>
             <Card.Body>
               {topic.summary.length > 0 && <Card.Text variant='description'>{topic.summary}</Card.Text>}
               <Card.Text variant='description'>
-                {t('topics.count.label', { threads: topic.threadIds.length, participants: topic.participants.length })}
+                {t('topics.count.label', {
+                  threads: topic.threadIds.length,
+                  participants: topic.participants.length,
+                  questions: topic.questions.length,
+                  tasks: topic.tasks.length,
+                })}
               </Card.Text>
             </Card.Body>
           </Card.Root>

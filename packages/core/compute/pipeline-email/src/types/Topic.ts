@@ -18,5 +18,8 @@ export class Topic extends Type.makeObject<Topic>(DXN.make('org.dxos.type.topic'
     threadIds: Schema.Array(Schema.String),
     participants: Schema.Array(Schema.String),
     keywords: Schema.Array(Schema.String),
+    // Open questions and action items rolled up from the topic's member threads.
+    questions: Schema.Array(Schema.String),
+    tasks: Schema.Array(Schema.String),
   }),
 ) {}
