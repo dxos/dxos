@@ -29,6 +29,9 @@ export const ComboboxField = ({ lookup, type, readonly, placeholder, onValueChan
   const values = useFormValues<AnyProperties>(ComboboxField.displayName);
   const ownKey = props.jsonPath;
   const [query, setQuery] = useState('');
+  // The stored value is often an opaque id; remember the selected option's label so the trigger shows
+  // it (the query-driven suggestions no longer include the option once selected).
+  const [selectedLabel, setSelectedLabel] = useState<string | undefined>();
 
   // When the combobox searches on its own field (its name is among `deps`), feed the live query to the
   // loader so remote suggestions track typing; otherwise the loader reads the committed sibling values.
@@ -54,7 +57,13 @@ export const ComboboxField = ({ lookup, type, readonly, placeholder, onValueChan
   );
   const hasExact = results.some((option) => option.value === trimmed);
 
-  const handleValueChange = useCallback((next: string) => onValueChange(type, next), [onValueChange, type]);
+  const handleValueChange = useCallback(
+    (next: string) => {
+      setSelectedLabel((data ?? []).find((option) => option.value === next)?.label);
+      onValueChange(type, next);
+    },
+    [onValueChange, type, data],
+  );
   const handleOpenChange = useCallback((open: boolean) => {
     if (!open) {
       setQuery('');
@@ -64,12 +73,13 @@ export const ComboboxField = ({ lookup, type, readonly, placeholder, onValueChan
   return (
     <FormRow<string>
       readonly={readonly}
-      renderStatic={(value) => <p className='truncate min-w-0'>{value ?? ''}</p>}
+      renderStatic={(value) => <p className='truncate min-w-0'>{selectedLabel ?? value ?? ''}</p>}
       {...props}
     >
       {({ value = '' }) => (
         <Combobox.Root
           value={value}
+          displayValue={selectedLabel}
           onValueChange={handleValueChange}
           onOpenChange={handleOpenChange}
           placeholder={placeholder}

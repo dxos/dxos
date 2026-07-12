@@ -10,6 +10,7 @@ import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import { AtprotoPlugin } from '@dxos/plugin-atproto/plugin';
 import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
 import { BlueskyPlugin } from '@dxos/plugin-bluesky/plugin';
 import { BoardPlugin } from '@dxos/plugin-board/plugin';
@@ -43,6 +44,7 @@ import { IbkrPlugin } from '@dxos/plugin-ibkr/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
 import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
+import { LibraryPlugin } from '@dxos/plugin-library/plugin';
 import { LinearPlugin } from '@dxos/plugin-linear/plugin';
 import { MagazinePlugin } from '@dxos/plugin-magazine/plugin';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid/plugin';
@@ -147,6 +149,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       MeetingPlugin.meta.profile.key,
       CodePlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
+      LibraryPlugin.meta.profile.key,
       MagazinePlugin.meta.profile.key,
       GalleryPlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
@@ -210,6 +213,8 @@ export const getPlugins = ({
           }
         }),
     }),
+    AtprotoPlugin(),
+    LibraryPlugin(),
     ConductorPlugin(),
     ConnectorPlugin(),
     !isTauri && CrxPlugin(),

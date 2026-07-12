@@ -1,0 +1,82 @@
+{
+  "lexicon": 1,
+  "id": "buzz.bookhive.defs",
+  "defs": {
+    "finished": {
+      "type": "token",
+      "description": "User has finished reading the book"
+    },
+    "reading": {
+      "type": "token",
+      "description": "User is currently reading the book"
+    },
+    "wantToRead": {
+      "type": "token",
+      "description": "User wants to read the book"
+    },
+    "abandoned": {
+      "type": "token",
+      "description": "User has abandoned the book"
+    },
+    "bookProgress": {
+      "type": "object",
+      "description": "Reading progress tracking data",
+      "required": ["updatedAt"],
+      "properties": {
+        "percent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "How far through the book the reader is (0-100)"
+        },
+        "totalPages": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Total number of pages in the book"
+        },
+        "currentPage": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Current page the user is on"
+        },
+        "totalChapters": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Total number of chapters in the book"
+        },
+        "currentChapter": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Current chapter the user is on"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the progress was last updated"
+        }
+      }
+    },
+    "bookIdentifiers": {
+      "type": "object",
+      "description": "External identifiers for a book",
+      "properties": {
+        "hiveId": {
+          "type": "string",
+          "description": "BookHive's internal ID"
+        },
+        "isbn10": {
+          "type": "string",
+          "description": "10-digit ISBN"
+        },
+        "isbn13": {
+          "type": "string",
+          "description": "13-digit ISBN"
+        },
+        "goodreadsId": {
+          "type": "string",
+          "description": "Goodreads book ID"
+        }
+      }
+    }
+  }
+}

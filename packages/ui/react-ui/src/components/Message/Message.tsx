@@ -33,9 +33,11 @@ type MessageRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.d
   asChild?: boolean;
   titleId?: string;
   descriptionId?: string;
+  /** Overrides the default valence icon; consumed by {@link MessageTitle}. */
+  icon?: string;
 };
 
-type MessageContextValue = { titleId?: string; descriptionId: string; valence: MessageValence };
+type MessageContextValue = { titleId?: string; descriptionId: string; valence: MessageValence; icon?: string };
 
 const MESSAGE_NAME = 'Message';
 
@@ -90,6 +92,7 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
       classNames,
       titleId: propsTitleId,
       descriptionId: propsDescriptionId,
+      icon,
       children,
       ...props
     },
@@ -101,7 +104,7 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
     const elevation = useElevationContext(propsElevation);
 
     return (
-      <MessageProvider {...{ titleId, descriptionId, valence }}>
+      <MessageProvider {...{ titleId, descriptionId, valence, icon }}>
         <Column.Root
           asChild={asChild}
           role={valence === 'neutral' ? 'paragraph' : 'alert'}
@@ -136,8 +139,8 @@ const MessageTitle = forwardRef<HTMLDivElement, MessageTitleProps>(
   ({ classNames, children, icon: iconProp, onClose }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { tx } = useThemeContext();
-    const { titleId, valence } = useMessageContext(MESSAGE_TITLE_NAME);
-    const icon = iconProp ?? messageIcons[valence];
+    const { titleId, valence, icon: contextIcon } = useMessageContext(MESSAGE_TITLE_NAME);
+    const icon = iconProp ?? contextIcon ?? messageIcons[valence];
     return (
       <Column.Row classNames={tx('message.header', {}, classNames)} ref={forwardedRef}>
         {icon && (

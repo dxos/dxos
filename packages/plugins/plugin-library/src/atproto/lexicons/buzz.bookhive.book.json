@@ -1,0 +1,91 @@
+{
+  "lexicon": 1,
+  "id": "buzz.bookhive.book",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "description": "A book in the user's library (BookHive). Vendored verbatim from bookhive as the authoritative wire shape the codec targets. Publish v1 emits the mapped fields only: it references the hive book by hiveId/hiveBookUri rather than uploading the `cover` blob, and stamps `bookProgress.updatedAt` from the object's creation time.",
+      "record": {
+        "type": "object",
+        "required": ["title", "authors", "hiveId", "createdAt"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title of the book",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "authors": {
+            "type": "string",
+            "description": "The authors of the book (tab separated)",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "hiveId": {
+            "type": "string",
+            "description": "The book's hive id, used to correlate user's books with the hive"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "The date the user started reading the book"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "The date the user finished reading the book"
+          },
+          "cover": {
+            "type": "blob",
+            "description": "Cover image of the book",
+            "accept": ["image/png", "image/jpeg"],
+            "maxSize": 1000000
+          },
+          "status": {
+            "type": "string",
+            "knownValues": [
+              "buzz.bookhive.defs#finished",
+              "buzz.bookhive.defs#reading",
+              "buzz.bookhive.defs#wantToRead",
+              "buzz.bookhive.defs#abandoned"
+            ]
+          },
+          "stars": {
+            "type": "integer",
+            "description": "Number of stars given to the book (1-10) which will be mapped to 1-5 stars",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "review": {
+            "type": "string",
+            "description": "The book's review",
+            "maxGraphemes": 15000
+          },
+          "bookProgress": {
+            "description": "Progress tracking details for the book",
+            "type": "ref",
+            "ref": "buzz.bookhive.defs#bookProgress"
+          },
+          "identifiers": {
+            "description": "External identifiers for the book",
+            "type": "ref",
+            "ref": "buzz.bookhive.defs#bookIdentifiers"
+          },
+          "owned": {
+            "type": "boolean",
+            "description": "Whether the user owns this book"
+          },
+          "hiveBookUri": {
+            "type": "string",
+            "description": "AT-URI of the canonical catalogBook record in @bookhive.buzz"
+          }
+        }
+      }
+    }
+  }
+}

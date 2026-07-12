@@ -28,6 +28,7 @@ catalog:
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
   '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': 3.2.10
   '@atproto/api': ^0.19.5
+  '@atproto/lexicon': ^0.7.7
   '@automerge/automerge': 3.3.0-fragments.2
   '@automerge/automerge-repo': 2.6.0-subduction.40
   '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.40
@@ -156,6 +157,7 @@ catalog:
   '@opentui/solid': 0.1.61
   '@oxc-project/runtime': ^0.129.0
   '@oxc-project/types': 0.128.0
+  '@panproto/core': 0.56.1
   '@peermetrics/webrtc-stats': 5.7.1
   '@phosphor-icons/core': ^2.1.1
   '@phosphor-icons/react': 2.1.10
@@ -434,6 +436,7 @@ catalog:
   fetch-mock: ^11.0.0
   find-process: ^1.4.7
   flame-chart-js: ^3.3.0
+  foliate-js: 1.0.1
   flubber: ^0.4.2
   force-graph: ^1.49.4
   fuzzy: ^0.1.3

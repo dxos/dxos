@@ -45,6 +45,9 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-panproto"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {

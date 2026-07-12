@@ -61,6 +61,8 @@ type ComboboxContextValue = {
   open: boolean;
   onOpenChange: (nextOpen: boolean) => void;
   value: string;
+  /** Human-readable text shown on the trigger for the current value (defaults to the value itself). */
+  displayValue?: string;
   onValueChange: (nextValue: string) => void;
 };
 
@@ -90,6 +92,7 @@ const ComboboxRoot = ({
   onOpenChange: propsOnOpenChange,
   value: valueProp,
   defaultValue,
+  displayValue,
   onValueChange: propsOnValueChange,
   placeholder,
 }: ComboboxRootProps) => {
@@ -114,6 +117,7 @@ const ComboboxRoot = ({
         open={open}
         onOpenChange={onOpenChange}
         value={value}
+        displayValue={displayValue}
         onValueChange={onValueChange}
       >
         {children}
@@ -157,7 +161,7 @@ type ComboboxTriggerProps = ButtonProps;
 
 const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
   ({ children, onClick, ...props }, forwardedRef) => {
-    const { modalId, open, onOpenChange, placeholder, value } = useComboboxContext(COMBOBOX_TRIGGER_NAME);
+    const { modalId, open, onOpenChange, placeholder, value, displayValue } = useComboboxContext(COMBOBOX_TRIGGER_NAME);
     const handleClick = useCallback(
       (event: Parameters<Exclude<ButtonProps['onClick'], undefined>>[0]) => {
         onClick?.(event);
@@ -180,7 +184,7 @@ const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
           {children ?? (
             <>
               <span className={styles.comboboxTriggerText({ class: !value && 'text-subdued' })}>
-                {value || placeholder}
+                {displayValue || value || placeholder}
               </span>
               <Icon icon='ph--caret-down--bold' size={3} />
             </>

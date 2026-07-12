@@ -1,0 +1,27 @@
+{
+  "lexicon": 1,
+  "id": "echo.book",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "description": "Flat, scalar-only projection of the public face of an ECHO Book. The lexicon the Panproto bridge parses to run its scalar value transforms: `status` (buzz.bookhive.defs#<value> <-> bare literal) and `startedAt`/`finishedAt` (ISO datetime <-> date-only). Structural/ref-typed fields (bookProgress, identifiers) and Ref/array adaptation are handled by book-codec.ts, not the bridge, so they are absent here. `authors` is a tab-separated string at this boundary. `startedAt`/`finishedAt` carry date-only values on the ECHO side (the bridge widens them to datetime on encode).",
+      "record": {
+        "type": "object",
+        "required": ["title", "authors", "hiveId", "createdAt"],
+        "properties": {
+          "title": { "type": "string" },
+          "authors": { "type": "string" },
+          "hiveId": { "type": "string" },
+          "createdAt": { "type": "string", "format": "datetime" },
+          "status": { "type": "string" },
+          "stars": { "type": "integer", "minimum": 1, "maximum": 10 },
+          "review": { "type": "string" },
+          "startedAt": { "type": "string" },
+          "finishedAt": { "type": "string" },
+          "owned": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

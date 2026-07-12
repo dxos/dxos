@@ -440,6 +440,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/echo-panproto/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/echo-protocol/package.json",
           "jsonpath": "$.version"
         },
@@ -610,6 +615,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-atproto/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-attention/package.json",
           "jsonpath": "$.version"
         },
@@ -771,6 +781,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-kanban/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-library/package.json",
           "jsonpath": "$.version"
         },
         {

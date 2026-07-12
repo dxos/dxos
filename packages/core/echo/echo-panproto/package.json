@@ -1,0 +1,44 @@
+{
+  "name": "@dxos/echo-panproto",
+  "version": "0.10.0",
+  "private": true,
+  "description": "Declarative, serializable ECHO <-> foreign-record lenses executed by panproto.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./wasm": {
+      "source": "./src/wasm.ts",
+      "types": "./dist/types/src/wasm.d.ts",
+      "browser": "./dist/lib/browser/wasm.mjs",
+      "node": "./dist/lib/node-esm/wasm.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@panproto/core": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "vite": "catalog:"
+  }
+}

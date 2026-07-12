@@ -35,6 +35,7 @@
     "@dxos/client-protocol": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-panproto": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
