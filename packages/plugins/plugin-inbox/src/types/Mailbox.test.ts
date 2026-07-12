@@ -97,17 +97,27 @@ describe('replyability (person-only)', () => {
   });
 });
 
-describe('shouldSkipSender (sync filters)', () => {
-  test('no rules → never skips', ({ expect }) => {
-    expect(Mailbox.shouldSkipSender({}, 'anyone@x.com')).toBe(false);
-    expect(Mailbox.shouldSkipSender({ syncFilters: { skipSenders: [] } }, 'anyone@x.com')).toBe(false);
+describe('message filters', () => {
+  const sender = (email?: string) => ({ sender: email ? { email } : undefined });
+
+  test('matchesFilter tests the from regex (case-insensitive) against the sender email', ({ expect }) => {
+    expect(Mailbox.matchesFilter({ from: 'npmjs\\.com' }, sender('bot@npmjs.com'))).toBe(true);
+    expect(Mailbox.matchesFilter({ from: 'npmjs\\.com' }, sender('alice@example.com'))).toBe(false);
+    expect(Mailbox.matchesFilter({ from: 'ALICE' }, sender('alice@example.com'))).toBe(true);
+    expect(Mailbox.matchesFilter({ from: 'x' }, sender(undefined))).toBe(false);
+    // An empty filter matches nothing.
+    expect(Mailbox.matchesFilter({}, sender('a@b.com'))).toBe(false);
   });
 
-  test('matches a bare domain or a full address (case-insensitive substring)', ({ expect }) => {
-    const mailbox = { syncFilters: { skipSenders: ['npmjs.com', 'noreply@github.com'] } };
-    expect(Mailbox.shouldSkipSender(mailbox, 'support@npmjs.com')).toBe(true);
-    expect(Mailbox.shouldSkipSender(mailbox, 'NoReply@GitHub.com')).toBe(true);
-    expect(Mailbox.shouldSkipSender(mailbox, 'alice@example.com')).toBe(false);
-    expect(Mailbox.shouldSkipSender(mailbox, undefined)).toBe(false);
+  test('an invalid regex falls back to a substring match', ({ expect }) => {
+    expect(Mailbox.matchesFilter({ from: 'a(b' }, sender('xa(bx@y.com'))).toBe(true);
+  });
+
+  test('isFiltered matches any of the mailbox filters', ({ expect }) => {
+    const mailbox = { messageFilters: [{ from: 'npmjs' }, { from: 'github' }] };
+    expect(Mailbox.isFiltered(mailbox, sender('bot@npmjs.com'))).toBe(true);
+    expect(Mailbox.isFiltered(mailbox, sender('a@github.com'))).toBe(true);
+    expect(Mailbox.isFiltered(mailbox, sender('a@x.com'))).toBe(false);
+    expect(Mailbox.isFiltered({}, sender('a@x.com'))).toBe(false);
   });
 });

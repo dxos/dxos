@@ -144,8 +144,15 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         result.push({ id: entry.threadId, messages: entry.items, total: entry.count });
       }
     }
-    return result;
-  }, [pagination.items]);
+    // Drop messages excluded by the mailbox's filters (e.g. "Ignore sender"); collapse now-empty groups.
+    return result.flatMap((item): MessageStackItem[] => {
+      if (isMessageGroup(item)) {
+        const messages = item.messages.filter((message) => !Mailbox.isFiltered(mailbox, message));
+        return messages.length > 0 ? [{ ...item, messages }] : [];
+      }
+      return Mailbox.isFiltered(mailbox, item) ? [] : [item];
+    });
+  }, [pagination.items, mailbox, mailbox.messageFilters]);
 
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
@@ -205,6 +212,16 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
           const message = messages.find((message) => message.id === action.messageId);
           if (message && db) {
             void Starred.toggleStarred(mailbox, message, db);
+          }
+          break;
+        }
+
+        case 'ignore-sender': {
+          const message = messages.find((message) => message.id === action.messageId);
+          const email = message?.sender?.email;
+          if (email && db) {
+            Mailbox.ignoreSender(mailbox, email);
+            void db.flush();
           }
           break;
         }

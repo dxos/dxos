@@ -39,9 +39,10 @@ const handler = InboxOperation.AnalyzeTopics.pipe(
       const feed = yield* Database.load(mailbox.feed);
       const aiService = yield* AiService.AiService;
 
-      const messages = yield* Effect.promise(() =>
+      // Exclude filtered senders (mailbox message filters) from tagging + topic clustering.
+      const messages = (yield* Effect.promise(() =>
         db.query(Query.select(Filter.type(Message.Message)).from(feed)).run(),
-      );
+      )).filter((message) => !Mailbox.isFiltered(mailbox, message));
 
       // Cooperative cancellation: the meter's cancel control invokes `onCancel`, which aborts the
       // controller; `runTopicsPipeline` checks the signal between messages and stops.
