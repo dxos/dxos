@@ -231,10 +231,14 @@ runGmailSync ─register/advance─▶ ProgressRegistry (writable snapshot atom)
 
 - `fail(error)` sets `status: 'error'` + `error`; the meter shows the error
   state; the entry stays until `remove()` (so a failed sync remains visible).
-- Producers always `remove()` in a finalizer so a crashed/aborted run does not
-  leave a stuck monitor.
-- The registry capability is always present, so producers use `Capability.get`
-  (not the `getAll` no-op pattern `StatsPanel` uses).
+- On error the producer marks the monitor `fail()` and leaves it visible until a
+  later run replaces it or the surface unmounts; on success it `done()`s then
+  `remove()`s the transient monitor.
+- Although the registry is always present in the app, producers resolve it with
+  `Capability.getAll(...)` (no-op when absent) so operations run unchanged in
+  headless/test contexts — matching the `StatsPanel` usage already in the sync
+  operation. UI consumers, which only run inside the app, use `Capability.get`
+  via the hooks.
 
 ## Testing
 
