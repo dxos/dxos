@@ -36,6 +36,7 @@ projects:
   - name: mailbox-research # stable slug
     status: active # active | paused | blocked | ended
     user: burdon # owner (git/system username, e.g. `whoami`)
+    host: burdon-mbp-2022 # machine the project lives on (`hostname -s`)
     branch: claude/mailboxsync-…
     created: 2026-07-05
     summary: One line — what this stream delivers.
@@ -61,9 +62,9 @@ ended: []
   means "resume the project at that row"** — run the "Project handoff" → resume
   steps for that entry (equivalent to `$resume <that name>`).
 - `$project new <name> [summary]` — add an `active` entry (branch = current,
-  `user` = `whoami`); scaffold `.agents/projects/<name>/{TASKS.md,DESIGN.md}`
-  unless the docs already live somewhere (record that path instead). Confirm in
-  one line.
+  `user` = `whoami`, `host` = `hostname -s`); scaffold
+  `.agents/projects/<name>/{TASKS.md,DESIGN.md}` unless the docs already live
+  somewhere (record that path instead). Confirm in one line.
 - `$project end <name>` — move the entry to `ended`, recording the final PR/status.
 
 `$resume` / `$hydrate` (see "Project handoff") key off this registry: **which

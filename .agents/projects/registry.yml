@@ -9,6 +9,7 @@ projects:
   - name: mailbox-research
     status: active
     user: burdon
+    host: burdon-mbp-2022
     branch: claude/mailbox-research-d44635
     created: 2026-07-05
     summary: Open-weight vs premier model routing for the mailbox pipelines (labeling / summaries / drafts).
@@ -20,6 +21,7 @@ projects:
   - name: task-planning-skill-update
     status: active
     user: burdon
+    host: burdon-mbp-2022
     branch: claude/task-planning-skill-update-dbeb64
     created: 2026-07-12
     summary: Rename the $session sentinel/concept to $project and add a numbered pick-to-resume table.
