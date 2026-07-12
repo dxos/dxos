@@ -8,6 +8,7 @@ import { Trigger } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesProvider,
+  Rpc,
   clientServiceBundle,
   serveBridgeService,
 } from '@dxos/client-protocol';
@@ -21,7 +22,7 @@ import { subscribeStream } from '@dxos/protocols';
 import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { type ServiceBundle } from '@dxos/rpc';
 import type { MaybePromise } from '@dxos/util';
-import { Messages, Rpc } from '@dxos/worker-framework';
+import { WorkerProtocol } from '@dxos/worker-framework';
 import * as Client from '@dxos/worker-framework/client';
 
 import { ClientServicesProxy } from '../service-proxy';
@@ -31,8 +32,8 @@ export const LEADER_LOCK_KEY = '@dxos/client/DedicatedWorkerClientServices/Leade
 export type LeaderTimeoutOptions = Client.LeaderTimeouts;
 
 export interface DedicatedWorkerClientServicesOptions {
-  createWorker: () => Messages.WorkerOrPort;
-  createCoordinator: () => MaybePromise<Messages.WorkerCoordinator>;
+  createWorker: () => WorkerProtocol.WorkerOrPort;
+  createCoordinator: () => MaybePromise<WorkerProtocol.WorkerCoordinator>;
   config?: Config;
   leaderTimeouts?: LeaderTimeoutOptions;
 }

@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 
-import * as Messages from '../Messages';
+import * as WorkerProtocol from '../WorkerProtocol';
 
 // The DOM `SharedWorker` global, referenced through `globalThis` because the exported class below
 // shadows the bare `SharedWorker` name within this module.
@@ -14,21 +14,21 @@ export type SharedWorkerOptions = {
   createWorker: () => SharedWorkerGlobal;
 };
 
-export class SharedWorker implements Messages.WorkerCoordinator {
+export class SharedWorker implements WorkerProtocol.WorkerCoordinator {
   // SharedWorker lifecycle is managed by the browser, we don't need to terminate it.
   readonly #worker: SharedWorkerGlobal;
 
   constructor(options: SharedWorkerOptions) {
     this.#worker = options.createWorker();
-    this.#worker.port.onmessage = (event: MessageEvent<Messages.CoordinatorMessage>) => {
+    this.#worker.port.onmessage = (event: MessageEvent<WorkerProtocol.CoordinatorMessage>) => {
       this.onMessage.emit(event.data);
     };
     this.#worker.port.start();
   }
 
-  readonly onMessage = new Event<Messages.CoordinatorMessage>();
+  readonly onMessage = new Event<WorkerProtocol.CoordinatorMessage>();
 
-  sendMessage(message: Messages.CoordinatorMessage): void {
+  sendMessage(message: WorkerProtocol.CoordinatorMessage): void {
     switch (message.type) {
       case 'provide-port':
         this.#worker.port.postMessage(message, {

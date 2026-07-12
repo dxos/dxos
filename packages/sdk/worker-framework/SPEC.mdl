@@ -35,21 +35,10 @@ The following extension dialects are used in this document.
 
 ### `@dxos/worker-framework` (root)
 
-```mdl
-# TODO(dmaretskyi): Eliminate this Rpc module. seems like composition code that could live outside this package
-module Rpc
-  desc: |
-    Effect-native RPC over a worker MessagePort: build clients and serve
-    RpcGroups across the dedicated-worker boundary, with optional RpcTiming
-    middleware. Requests run at unbounded concurrency over the single worker
-    port so a long-lived stream never blocks other calls.
-  api:
-    makeClient: (port, group, options?) => Effect            # over the Worker platform protocol.
-    makeClientOverProtocol: (protocol, group, options?) => Effect  # transport-agnostic.
-    serve: (port, group, handlers, options?) => GroupServer  # serve a group on a MessagePort.
-    ServeOptions: {...}                                      # disableTracing?, concurrency?, timing?.
-    GroupServer: { open(): Promise, close(): Promise }
-```
+The generic effect-rpc-over-`MessagePort` composition (client/serve helpers) is intentionally NOT
+part of this package. It lives as the `Rpc` namespace in `@dxos/client-protocol`, keeping
+worker-framework to transport plumbing (ports, leader election, coordinator, protocol). A minimal
+internal copy under `src/internal/rpc.ts` backs only the package's own stories and the RpcTiming test.
 
 ```mdl
 module RpcTiming
@@ -82,7 +71,7 @@ module RpcTiming
     getStatsSnapshot: () => StatsSnapshot  # snapshot of samples from the server middleware.
     resetStats: () => void                # clear collected samples (tests).
 
-    # Option helpers (consumed by the sibling Rpc module)
+    # Option helpers (consumed by the RPC composition helpers)
     isEnabled: (timing?) => boolean       # whether timing is on for a serve/client options bag.
     resolveOptions: (timing?) => Options  # normalize boolean | Options to an Options bag.
 ```
@@ -140,7 +129,7 @@ module Coordinator
 ### Shared protocol types
 
 ```mdl
-module WorkerProtocol # renamed from Messages
+module WorkerProtocol
   desc: |
     The wire protocol shared across the Client, Worker, and Coordinator modules.
     Types only; re-exported from every entrypoint that references them.

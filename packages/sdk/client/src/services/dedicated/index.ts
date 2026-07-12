@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Messages } from '@dxos/worker-framework';
+import { WorkerProtocol } from '@dxos/worker-framework';
 
 export {
   Memory as MemoryWorkerCoordiantor,
@@ -10,10 +10,10 @@ export {
   createOnConnect as createCoordinatorOnConnect,
 } from '@dxos/worker-framework/coordinator';
 
-export type DedicatedWorkerMessage = Messages.DedicatedWorkerMessage;
-export type WorkerCoordinator = Messages.WorkerCoordinator;
-export type WorkerCoordinatorMessage = Messages.CoordinatorMessage;
-export type WorkerOrPort = Messages.WorkerOrPort;
+export type DedicatedWorkerMessage = WorkerProtocol.DedicatedWorkerMessage;
+export type WorkerCoordinator = WorkerProtocol.WorkerCoordinator;
+export type WorkerCoordinatorMessage = WorkerProtocol.CoordinatorMessage;
+export type WorkerOrPort = WorkerProtocol.WorkerOrPort;
 
 export { type RunDedicatedWorkerOptions, runDedicatedWorker } from './dedicated-worker';
 export {

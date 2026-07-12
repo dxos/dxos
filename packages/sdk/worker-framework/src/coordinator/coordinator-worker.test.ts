@@ -6,27 +6,27 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 
-import * as Messages from '../Messages';
+import * as WorkerProtocol from '../WorkerProtocol';
 import { createOnConnect } from './coordinator-worker';
 
 /**
  * Simulated tab connected to a coordinator: sends messages on its own port and records everything
  * the coordinator delivers back. Models one browser tab's SharedWorker port pair.
  */
-type Predicate = (message: Messages.CoordinatorMessage) => boolean;
+type Predicate = (message: WorkerProtocol.CoordinatorMessage) => boolean;
 
 type Tab = {
-  send: (message: Messages.CoordinatorMessage) => void;
-  received: Messages.CoordinatorMessage[];
-  waitFor: (predicate: Predicate) => Promise<Messages.CoordinatorMessage>;
+  send: (message: WorkerProtocol.CoordinatorMessage) => void;
+  received: WorkerProtocol.CoordinatorMessage[];
+  waitFor: (predicate: Predicate) => Promise<WorkerProtocol.CoordinatorMessage>;
 };
 
 const connectTab = (onConnect: (ev: MessageEvent) => void): Tab => {
   const channel = new MessageChannel();
-  const received: Messages.CoordinatorMessage[] = [];
-  const waiters = new Set<{ predicate: Predicate; trigger: Trigger<Messages.CoordinatorMessage> }>();
+  const received: WorkerProtocol.CoordinatorMessage[] = [];
+  const waiters = new Set<{ predicate: Predicate; trigger: Trigger<WorkerProtocol.CoordinatorMessage> }>();
 
-  channel.port2.onmessage = (event: MessageEvent<Messages.CoordinatorMessage>) => {
+  channel.port2.onmessage = (event: MessageEvent<WorkerProtocol.CoordinatorMessage>) => {
     received.push(event.data);
     for (const waiter of waiters) {
       if (waiter.predicate(event.data)) {
@@ -53,7 +53,7 @@ const connectTab = (onConnect: (ev: MessageEvent) => void): Tab => {
       if (existing) {
         return Promise.resolve(existing);
       }
-      const trigger = new Trigger<Messages.CoordinatorMessage>();
+      const trigger = new Trigger<WorkerProtocol.CoordinatorMessage>();
       waiters.add({ predicate, trigger });
       return trigger.wait();
     },
@@ -61,7 +61,7 @@ const connectTab = (onConnect: (ev: MessageEvent) => void): Tab => {
 };
 
 const byType =
-  (type: Messages.CoordinatorMessage['type']): Predicate =>
+  (type: WorkerProtocol.CoordinatorMessage['type']): Predicate =>
   (message) =>
     message.type === type;
 
@@ -120,7 +120,7 @@ describe('coordinator worker routing', () => {
       isOwner: false,
     });
 
-    const provided = (await follower.waitFor(byType('provide-port'))) as Messages.CoordinatorMessage & {
+    const provided = (await follower.waitFor(byType('provide-port'))) as WorkerProtocol.CoordinatorMessage & {
       type: 'provide-port';
     };
     expect(provided.clientId).toBe('follower-client');

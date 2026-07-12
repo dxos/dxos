@@ -5,7 +5,7 @@
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import * as Messages from '../Messages';
+import * as WorkerProtocol from '../WorkerProtocol';
 
 export type RuntimeHandle = {
   createSession(args: {
@@ -26,7 +26,7 @@ export type Options = {
   /**
    * Worker endpoint. Defaults to `self` in a DedicatedWorkerGlobalScope.
    */
-  endpoint?: Messages.WorkerEndpoint;
+  endpoint?: WorkerProtocol.WorkerEndpoint;
   /**
    * Web Lock key gating storage ownership for a single worker instance.
    */
@@ -45,8 +45,8 @@ export type Options = {
   }) => Promise<RuntimeHandle>;
 };
 
-const defaultEndpoint = (): Messages.WorkerEndpoint => {
-  const scope = self as unknown as Messages.WorkerEndpoint & { close(): void };
+const defaultEndpoint = (): WorkerProtocol.WorkerEndpoint => {
+  const scope = self as unknown as WorkerProtocol.WorkerEndpoint & { close(): void };
   return {
     postMessage: (message, transfer) => scope.postMessage(message, transfer),
     addEventListener: (type, listener) => scope.addEventListener(type, listener),
@@ -125,7 +125,7 @@ export const run = ({
 
     const requestShutdown = () => void shutdown();
 
-    const handleMessage = async (ev: MessageEvent<Messages.DedicatedWorkerMessage>) => {
+    const handleMessage = async (ev: MessageEvent<WorkerProtocol.DedicatedWorkerMessage>) => {
       const message = ev.data;
       log('worker message received', { type: message.type });
       switch (message.type) {
@@ -137,7 +137,7 @@ export const run = ({
           endpoint.postMessage({
             type: 'ready',
             livenessLockKey,
-          } satisfies Messages.DedicatedWorkerMessage);
+          } satisfies WorkerProtocol.DedicatedWorkerMessage);
           break;
         }
         case 'start-session': {
@@ -158,7 +158,7 @@ export const run = ({
               systemPort: systemChannel.port1,
               clientId: message.clientId,
               isOwner: message.clientId === owningClientId,
-            } satisfies Messages.DedicatedWorkerMessage,
+            } satisfies WorkerProtocol.DedicatedWorkerMessage,
             [appChannel.port1, systemChannel.port1],
           );
 
@@ -187,7 +187,7 @@ export const run = ({
     };
 
     endpoint.addEventListener('message', handleMessage);
-    endpoint.postMessage({ type: 'listening' } satisfies Messages.DedicatedWorkerMessage);
+    endpoint.postMessage({ type: 'listening' } satisfies WorkerProtocol.DedicatedWorkerMessage);
 
     await storageLockHeld;
     endpoint.removeEventListener('message', handleMessage);

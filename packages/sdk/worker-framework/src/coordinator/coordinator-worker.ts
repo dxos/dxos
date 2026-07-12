@@ -4,7 +4,7 @@
 
 import { log } from '@dxos/log';
 
-import * as Messages from '../Messages';
+import * as WorkerProtocol from '../WorkerProtocol';
 
 /**
  * Returns the onconnect handler for the coordinator SharedWorker. Exported so apps can use
@@ -31,7 +31,7 @@ export const createOnConnect = (): ((ev: MessageEvent) => void) => {
     ports.add(port);
     log('coordinator: tab connected', { instanceId, ports: ports.size });
 
-    port.onmessage = (event: MessageEvent<Messages.CoordinatorMessage>) => {
+    port.onmessage = (event: MessageEvent<WorkerProtocol.CoordinatorMessage>) => {
       const message = event.data;
       switch (message.type) {
         case 'request-port': {

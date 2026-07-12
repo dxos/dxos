@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import type { MaybePromise } from '@dxos/util';
 
 import { isAbortError, requestExclusiveLockWithTimeout, waitWithLockOrRpcTimeout } from '../internal/locks';
-import * as Messages from '../Messages';
+import * as WorkerProtocol from '../WorkerProtocol';
 
 // Sentinel resolved when a follower gives up waiting for a port from the leader.
 const LEADER_TIMEOUT = Symbol('leader-timeout');
@@ -41,8 +41,8 @@ export type Handle = {
 };
 
 export type Options = {
-  createWorker: () => Messages.WorkerOrPort;
-  createCoordinator: () => MaybePromise<Messages.WorkerCoordinator>;
+  createWorker: () => WorkerProtocol.WorkerOrPort;
+  createCoordinator: () => MaybePromise<WorkerProtocol.WorkerCoordinator>;
   leaderLockKey: string;
   config?: Record<string, any>;
   leaderTimeouts?: LeaderTimeouts;
@@ -72,8 +72,8 @@ const MAX_LEADER_RETRY_BACKOFF = 30_000;
  * Service-specific wiring is injected via {@link Options.onConnect}.
  */
 export class Connection extends Resource {
-  readonly #createWorker: () => Messages.WorkerOrPort;
-  readonly #createCoordinator: () => MaybePromise<Messages.WorkerCoordinator>;
+  readonly #createWorker: () => WorkerProtocol.WorkerOrPort;
+  readonly #createCoordinator: () => MaybePromise<WorkerProtocol.WorkerCoordinator>;
   readonly #leaderLockKey: string;
   readonly #config: Record<string, any> | undefined;
   readonly #onConnect: Options['onConnect'];
@@ -86,7 +86,7 @@ export class Connection extends Resource {
 
   #connectionHandle: Handle | undefined;
   #leaderSession: LeaderSession | undefined;
-  #coordinator: Messages.WorkerCoordinator | undefined;
+  #coordinator: WorkerProtocol.WorkerCoordinator | undefined;
 
   // Timestamp (ms) of the last heartbeat seen from any leader; 0 if none observed yet.
   #lastLeaderHeartbeat = 0;
@@ -254,7 +254,7 @@ export class Connection extends Resource {
     try {
       log('worker-connection: requesting port from leader');
       const result = await new Promise<
-        (Messages.CoordinatorMessage & { type: 'provide-port' }) | typeof LEADER_TIMEOUT
+        (WorkerProtocol.CoordinatorMessage & { type: 'provide-port' }) | typeof LEADER_TIMEOUT
       >((resolve) => {
         invariant(this.#coordinator);
 
@@ -388,18 +388,18 @@ export class Connection extends Resource {
  * Represents a tab becoming a leader and running the worker.
  */
 class LeaderSession extends Resource {
-  readonly #createWorker: () => Messages.WorkerOrPort;
-  readonly #coordinator: Messages.WorkerCoordinator;
+  readonly #createWorker: () => WorkerProtocol.WorkerOrPort;
+  readonly #coordinator: WorkerProtocol.WorkerCoordinator;
   readonly #config: Record<string, any> | undefined;
   readonly #ownerClientId: string;
   readonly #leaderId = `leader-${crypto.randomUUID()}`;
 
-  #worker!: Messages.WorkerOrPort;
+  #worker!: WorkerProtocol.WorkerOrPort;
   #livenessLockKey!: string;
 
   constructor(
-    createWorker: () => Messages.WorkerOrPort,
-    coordinator: Messages.WorkerCoordinator,
+    createWorker: () => WorkerProtocol.WorkerOrPort,
+    coordinator: WorkerProtocol.WorkerCoordinator,
     config: Record<string, any> | undefined,
     ownerClientId: string,
   ) {
@@ -417,8 +417,8 @@ class LeaderSession extends Resource {
     this.#worker = this.#createWorker();
     performance.mark('worker-connection:spawned');
     const listening = new Trigger();
-    const ready = new Trigger<Messages.DedicatedWorkerMessage & { type: 'ready' }>();
-    this.#worker.onmessage = (event: MessageEvent<Messages.DedicatedWorkerMessage>) => {
+    const ready = new Trigger<WorkerProtocol.DedicatedWorkerMessage & { type: 'ready' }>();
+    this.#worker.onmessage = (event: MessageEvent<WorkerProtocol.DedicatedWorkerMessage>) => {
       switch (event.data.type) {
         case 'listening':
           listening.wake();
@@ -498,11 +498,11 @@ class LeaderSession extends Resource {
     }
   }
 
-  #sendMessage(msg: Messages.DedicatedWorkerMessage) {
+  #sendMessage(msg: WorkerProtocol.DedicatedWorkerMessage) {
     this.#worker.postMessage(msg);
   }
 }
 
-const isWorker = (worker: Messages.WorkerOrPort): worker is Worker => {
+const isWorker = (worker: WorkerProtocol.WorkerOrPort): worker is Worker => {
   return typeof Worker !== 'undefined' && worker instanceof Worker;
 };
