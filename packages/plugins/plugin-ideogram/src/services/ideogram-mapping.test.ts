@@ -53,14 +53,11 @@ describe('generateWithIdeogram', () => {
     globalThis.fetch = originalFetch;
   });
 
-  test('POSTs to /generate with the Api-Key header and image_request body', async ({ expect }) => {
-    let captured: { url: string; headers: Record<string, string>; body: Record<string, unknown> } | undefined;
+  test('routes through the CORS proxy with the Api-Key header and image_request body', async ({ expect }) => {
+    let captured: { url: string; apiKey: string | null; body: Record<string, unknown> } | undefined;
     globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
-      captured = {
-        url: String(input),
-        headers: init?.headers as Record<string, string>,
-        body: JSON.parse(String(init?.body)),
-      };
+      const headers = new Headers(init?.headers);
+      captured = { url: String(input), apiKey: headers.get('Api-Key'), body: JSON.parse(String(init?.body)) };
       return new Response(
         JSON.stringify({ request_id: 'r', data: [{ url: 'https://img/a.png' }, { url: 'https://img/b.png' }] }),
       );
@@ -72,8 +69,10 @@ describe('generateWithIdeogram', () => {
     );
 
     expect(result.images.map((image) => image.url)).toEqual(['https://img/a.png', 'https://img/b.png']);
-    expect(captured?.url).toBe(IDEOGRAM_GENERATE_URL);
-    expect(captured?.headers['Api-Key']).toBe('sk-test');
+    // Proxied via the edge CORS proxy: URL rewritten to /<host><path>, Api-Key passed through.
+    expect(captured?.url).toContain(new URL(IDEOGRAM_GENERATE_URL).host);
+    expect(captured?.url).toContain('/generate');
+    expect(captured?.apiKey).toBe('sk-test');
     expect(captured?.body.image_request).toMatchObject({ prompt: 'a cat', num_images: 2, aspect_ratio: '1x1' });
   });
 

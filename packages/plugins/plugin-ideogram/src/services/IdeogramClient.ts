@@ -4,6 +4,7 @@
 
 import * as Redacted from 'effect/Redacted';
 
+import { proxyFetchLegacy } from '@dxos/edge-client';
 import { ImageGeneration } from '@dxos/plugin-image/types';
 
 import {
@@ -41,12 +42,14 @@ export const generateWithIdeogram = async (
     throw new ImageGeneration.MissingCredentialError(IDEOGRAM_SOURCE);
   }
 
-  // Bound the external call so a hung request cannot block the caller indefinitely.
+  // Route through the DXOS edge CORS proxy — api.ideogram.ai does not permit browser CORS. The
+  // `Api-Key` header passes through unchanged (the proxy only special-cases `Authorization`).
+  // Bound the call so a hung request cannot block the caller indefinitely.
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), IDEOGRAM_TIMEOUT_MS);
   let response: Response;
   try {
-    response = await fetch(IDEOGRAM_GENERATE_URL, {
+    response = await proxyFetchLegacy(new URL(IDEOGRAM_GENERATE_URL), {
       method: 'POST',
       headers: {
         'Api-Key': Redacted.value(apiKey),

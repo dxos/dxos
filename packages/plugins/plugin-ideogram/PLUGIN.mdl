@@ -90,8 +90,9 @@ feat IdeogramImageGenerationService
       - non-2xx → throw GenerationError with status + body.
     notes:
       - Provider image URLs are ephemeral (documented by Ideogram).
-      - Browser CORS to api.ideogram.ai is not guaranteed; a later
-        milestone may route through an edge proxy. Out of scope for v1.
+      - api.ideogram.ai does not permit browser CORS, so the request is routed
+        through the DXOS edge CORS proxy (`proxyFetchLegacy` from
+        `@dxos/edge-client`); the `Api-Key` header passes through unchanged.
 ```
 
 ## File layout (mirrors plugin-osrm)
@@ -167,4 +168,5 @@ test T-4: Missing key
 - OAuth (Ideogram uses a static API key).
 - Edit / upscale / remix / describe endpoints; only `/generate`.
 - Multi-account and per-artifact provider configuration.
-- Edge-proxy transport for CORS-restricted browsers (documented upgrade path).
+- A server-side (edge function) transport that keeps the API key off the client
+  entirely; v1 resolves the key client-side and proxies the call.

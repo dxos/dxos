@@ -58,6 +58,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-image": "workspace:*",
     "@dxos/types": "workspace:*",
