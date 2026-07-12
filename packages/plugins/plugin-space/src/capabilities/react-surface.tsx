@@ -29,7 +29,6 @@ import {
   InlineSyncStatus,
   JoinDialog,
   MembersContainer,
-  MenuFooter,
   ObjectCardStack,
   RecordArticle,
   RelatedArticle,
@@ -369,11 +368,6 @@ export default Capability.makeModule(
         id: RENAME_POPOVER,
         filter: AppSurface.component<RenameSubject>(AppSurface.Popover, RENAME_POPOVER),
         component: ({ data }) => <RenamePopover subject={data.props} />,
-      }),
-      Surface.create({
-        id: 'menuFooter',
-        filter: AppSurface.subject(AppSurface.MenuFooter, Obj.isObject),
-        component: ({ data }) => <MenuFooter object={data.subject} />,
       }),
       Surface.create({
         id: 'navtreePresence',
