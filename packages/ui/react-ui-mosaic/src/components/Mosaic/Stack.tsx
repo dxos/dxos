@@ -19,6 +19,7 @@ import React, {
 
 import { invariant } from '@dxos/invariant';
 import { type Axis, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { type GetId } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
 import { type VirtualizerPaginationController, useVirtualizerPagination, useVisibleItems } from '../../hooks';
@@ -26,7 +27,6 @@ import { useMosaicContainerContext } from './Container';
 import { MosaicPlaceholder, type MosaicPlaceholderProps } from './Placeholder';
 import { styles } from './styles';
 import { type MosaicTileProps } from './Tile';
-import { type GetId } from './types';
 
 //
 // Mosaic Drag-and-drop
