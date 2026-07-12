@@ -25,6 +25,20 @@ export type TaskProgress = {
   readonly error?: string;
 };
 
+type MutableTask = {
+  name: string;
+  label?: string;
+  current: number;
+  total?: number;
+  status: TaskStatus;
+  startedAt?: string;
+  updatedAt: string;
+  elapsedMs?: number;
+  estimatedMs?: number;
+  note?: string;
+  error?: string;
+};
+
 export type ProgressSnapshot = {
   readonly updatedAt: string;
   readonly tasks: readonly TaskProgress[];
@@ -60,20 +74,6 @@ export interface ProgressApi {
   /** Subscribe to snapshots; returns an unsubscribe. The listener fires on every change. */
   readonly subscribe: (listener: (snapshot: ProgressSnapshot) => void) => () => void;
 }
-
-type MutableTask = {
-  name: string;
-  label?: string;
-  current: number;
-  total?: number;
-  status: TaskStatus;
-  startedAt?: string;
-  updatedAt: string;
-  elapsedMs?: number;
-  estimatedMs?: number;
-  note?: string;
-  error?: string;
-};
 
 /** Construct a standalone progress registry. */
 export const make = (): ProgressApi => {
