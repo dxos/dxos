@@ -4,22 +4,23 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Filter, Query } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { SyncBinding } from '@dxos/plugin-connector';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, SystemIconButton, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
-import { type ModuleProps, exportFeedMessages, replaceFeed } from '../testing';
+import { type ModuleProps, exportFeedMessages, replaceFeed, resetMailbox } from '../testing';
 
 /**
  * Download the mailbox feed to a local JSON file, replace it from one, or reset it. The exported
  * file is for local development testing only and is never committed. Upload and reset both swap the
  * mailbox's backing feed for a fresh one (seeded from the file, or empty) and delete the previous
- * feed; reset additionally removes the sync binding so the mailbox returns to a disconnected state.
+ * feed; reset additionally removes the sync binding(s) and every saved Connection (with its
+ * AccessToken) so the mailbox returns to a fully disconnected, clean-slate state — otherwise
+ * disconnected Connection accounts accumulate in the Connect menu across reconnects.
  */
 export const ArchiveModule = ({ space }: ModuleProps) => {
   const [mailbox] = useQuery(space.db, Filter.type(Mailbox.Mailbox));
@@ -69,14 +70,7 @@ export const ArchiveModule = ({ space }: ModuleProps) => {
 
     setBusy(true);
     try {
-      // Remove the sync binding(s) targeting the mailbox so reset returns it to a fully
-      // disconnected state (a fresh sync would otherwise resume against the emptied feed).
-      const bindings = await space.db
-        .query(Query.select(Filter.id(mailbox.id)).targetOf(SyncBinding.SyncBinding))
-        .run();
-      bindings.filter(SyncBinding.instanceOf).forEach((binding) => space.db.remove(binding));
-
-      await replaceFeed(mailbox, [], space.db);
+      await resetMailbox(mailbox, space.db);
       setStatus({ action: 'reset', count: 0 });
     } catch (error) {
       log.warn('feed reset failed', { error });

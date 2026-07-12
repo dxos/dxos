@@ -119,17 +119,16 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     count: 500,
+  },
+};
+
+export const Conversations: Story = {
+  args: {
+    count: 500,
     // A thread pool comfortably larger than the page size (10 conversations) so scrolling
     // exercises group-level pagination — with the default pool of 10 everything fits on one page.
     threads: 100,
     conversations: true,
-  },
-};
-
-export const Flat: Story = {
-  args: {
-    count: 500,
-    conversations: false,
   },
 };
 

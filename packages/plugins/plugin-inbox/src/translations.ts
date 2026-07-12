@@ -61,7 +61,7 @@ export const translations = [
 
         'no-connections.label': 'No connections configured',
 
-        'sync-mailbox.label': 'Sync mailbox',
+        'sync-mailbox.label': 'Sync',
         'sync-mailbox-error.title': 'Failed to sync mailbox',
         'sync-mailbox-success.title': 'Mailbox sync complete',
         'empty-mailbox.message': 'Mailbox empty',
