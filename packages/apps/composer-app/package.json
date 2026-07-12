@@ -54,6 +54,7 @@
     "@dxos/observability": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
+    "@dxos/plugin-blogger": "workspace:*",
     "@dxos/plugin-bluesky": "workspace:*",
     "@dxos/plugin-board": "workspace:*",
     "@dxos/plugin-bookmarks": "workspace:*",
