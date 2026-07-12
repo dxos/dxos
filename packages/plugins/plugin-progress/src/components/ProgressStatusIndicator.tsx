@@ -32,7 +32,7 @@ export const ProgressStatusIndicator = () => {
             variant='ghost'
             icon='ph--spinner-gap--regular'
             iconOnly
-            label={t('progress indicator label')}
+            label={t('progress-indicator.label')}
             classNames='animate-spin-slow'
           />
         </StatusBar.Item>

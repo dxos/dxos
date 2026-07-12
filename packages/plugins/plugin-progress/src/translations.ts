@@ -11,8 +11,8 @@ export const translations = [
     'en-US': {
       [meta.profile.key]: {
         'plugin.name': 'Progress',
-        'progress indicator label': 'Active progress',
-        'no active progress label': 'No active tasks',
+        'progress-indicator.label': 'Active progress',
+        'no-active-progress.label': 'No active tasks',
       },
     },
   },
