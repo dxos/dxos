@@ -36,6 +36,7 @@ import { InboxOperation } from '#types';
 import { InboxCapabilities, Mailbox, Starred } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
+import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics';
 import { createSyncProgressKey } from '../../operations/google/gmail/sync';
 import { InitializeMailbox, InitializeMailboxAction } from './InitializeMailbox';
 
@@ -60,9 +61,12 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const db = Obj.getDatabase(mailbox);
   const showItem = useShowItem();
 
-  // The sync operation registers a monitor keyed by the mailbox URI (see runGmailSync); subscribe so
-  // the statusbar meter appears live during a sync and disappears when the run's monitor is removed.
-  const progress = useProgress(createSyncProgressKey(mailbox));
+  // Mailbox-scoped operations register a monitor keyed by the mailbox URI (`#sync` for Gmail sync,
+  // `#topics` for topic analysis); subscribe to both and show whichever run is active in the statusbar.
+  const syncProgress = useProgress(createSyncProgressKey(mailbox));
+  const topicsProgress = useProgress(createTopicsProgressKey(mailbox));
+  const progress =
+    topicsProgress?.status === 'running' || topicsProgress?.status === 'error' ? topicsProgress : syncProgress;
 
   const filterEditorRef = useRef<EditorController>(null);
   const filterSaveButtonRef = useRef<HTMLButtonElement>(null);

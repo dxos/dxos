@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Ref } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
 import { TagIndex } from '@dxos/schema';
@@ -24,7 +25,7 @@ import {
 import { meta } from '#meta';
 import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
 import { translations } from '#translations';
-import { Calendar, ExtractedFrom, InboxCapabilities, InboxEvents, Mailbox } from '#types';
+import { Calendar, ExtractedFrom, InboxCapabilities, InboxEvents, InboxOperation, Mailbox } from '#types';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
@@ -66,6 +67,23 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvents.Startup,
     activate: () =>
       Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, SummarizeMessageExtractor)),
+  }),
+  // Injects the "Analyze Topics" action into the mailbox toolbar's extract dropdown.
+  Plugin.addModule({
+    id: 'analyze-topics-action',
+    activatesOn: ActivationEvents.Startup,
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(InboxCapabilities.MailboxAction, {
+          id: 'analyze-topics',
+          label: 'Analyze Topics',
+          icon: 'ph--stack--regular',
+          createInvocation: (mailbox) => ({
+            operation: InboxOperation.AnalyzeTopics,
+            input: { mailbox: Ref.make(mailbox) },
+          }),
+        }),
+      ),
   }),
   Plugin.make,
 );
