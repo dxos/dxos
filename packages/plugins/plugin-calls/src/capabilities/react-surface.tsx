@@ -9,7 +9,6 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { DevtoolsOverview } from '@dxos/plugin-devtools';
 
 import { CallArticle, CallDebugPanel, CallSidebar } from '#containers';
 import { CallsCapabilities } from '#types';
@@ -31,7 +30,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'devtoolsOverview',
-        filter: Surface.makeFilter(DevtoolsOverview),
+        filter: Surface.makeFilter(AppSurface.DevtoolsOverview),
         component: () => {
           const call = useCapability(CallsCapabilities.Manager);
           const state = useAtomValue(call.stateAtom);

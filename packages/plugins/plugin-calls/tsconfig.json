@@ -107,9 +107,6 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-devtools"
-    },
-    {
       "path": "../plugin-graph"
     },
     {

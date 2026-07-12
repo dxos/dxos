@@ -9192,9 +9192,6 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/plugin-devtools':
-        specifier: workspace:*
-        version: link:../plugin-devtools
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
