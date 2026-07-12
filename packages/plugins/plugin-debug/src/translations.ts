@@ -1,26 +1,20 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import { type Resource } from '@dxos/react-ui';
-import { translations as introspectTranslations } from '@dxos/react-ui-introspect/translations';
 
 import { meta } from '#meta';
 
 export const translations = [
-  ...introspectTranslations,
   {
     'en-US': {
       [meta.profile.key]: {
         'plugin.name': 'Debug',
-        'open-devtools.label': 'Open DevTools',
-        'devtools.label': 'DevTools',
-        'devtools-overview.label': 'Stats',
-        'space-objects.label': 'Database',
         'debug.label': 'Debug',
         'generate-objects.label': 'Generate Objects',
-        'debug-app-graph.label': 'App Graph',
-        'debug-tools-explorer.label': 'SDK Explorer',
+        'space-objects.label': 'Database',
+        'open-debug-panel.label': 'Show Debug',
 
         'settings.wireframe.label': 'Show wireframes.',
         'settings.wireframe.description': 'Overlay wireframe outlines on UI components for debugging layout.',
@@ -50,49 +44,6 @@ export const translations = [
           'Warning: Swapping the storage adapter will make your data unavailable.',
 
         'settings.data-store.label': 'Data Store',
-
-        'reset-data.label': 'Reset data (ERASES ALL DATA)',
-        'open-debug-panel.label': 'Show Debug',
-        'client.label': 'Client',
-        'config.label': 'Config',
-        'storage.label': 'Storage',
-        'sqlite.label': 'SQLite',
-        'logs.label': 'Logs',
-        'diagnostics.label': 'Diagnostics',
-        'tracing.label': 'Tracing',
-        'halo.label': 'HALO',
-        'identity.label': 'Identity',
-        'devices.label': 'Devices',
-        'keyring.label': 'Keyring',
-        'credentials.label': 'Credentials',
-        'echo.label': 'ECHO',
-        'spaces.label': 'Spaces',
-        'space.label': 'Space',
-        'feeds.label': 'Feeds',
-        'objects.label': 'Objects',
-        'schema.label': 'Schema',
-        'registry.label': 'Registry',
-        'automerge.label': 'Automerge',
-        'queues.label': 'Queues',
-        'members.label': 'Members',
-        'metadata.label': 'Metadata',
-        'mesh.label': 'MESH',
-        'signal.label': 'Signal',
-        'swarm.label': 'Swarm',
-        'network.label': 'Network',
-        'agent.label': 'Agent',
-        'dashboard.label': 'Dashboard',
-        'search.label': 'Search',
-        'edge.label': 'EDGE',
-        'workflows.label': 'Workflows',
-        'traces.label': 'Traces',
-        'testing.label': 'Testing',
-        // GitHub (deck-companion--github surface).
-        'github-loading.message': 'Loading…',
-        'github-unavailable.message': 'GitHub feed unavailable.',
-        'recent-prs.label_one': '{{count}} recent PR',
-        'recent-prs.label_other': '{{count}} recent PRs',
-        'view-on-github.button': 'View on GitHub',
       },
     },
   },

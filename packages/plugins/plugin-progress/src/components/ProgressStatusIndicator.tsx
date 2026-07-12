@@ -23,33 +23,31 @@ export const ProgressStatusIndicator = () => {
   const monitors = useProgressMonitors();
   const active = monitors.filter((monitor) => monitor.status === 'running' || monitor.status === 'pending');
 
-  if (active.length === 0) {
-    return null;
-  }
-
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
         <StatusBar.Item>
           <IconButton
             variant='ghost'
-            icon='ph--spinner-gap--regular'
+            icon='ph--circle-notch--regular'
             iconOnly
             label={t('progress-indicator.label')}
-            classNames='animate-spin-slow'
+            iconClassNames={active.length > 0 && 'animate-spin-slow'}
           />
         </StatusBar.Item>
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content side='left'>
-          <div className='flex flex-col gap-3 w-[260px] p-2'>
-            {active.map((monitor) => (
-              <ProgressMeter key={monitor.name} state={monitor} onCancel={() => registry.cancel(monitor.name)} />
-            ))}
-          </div>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+      {active.length > 0 && (
+        <Popover.Portal>
+          <Popover.Content side='left'>
+            <div className='flex flex-col gap-3 w-[260px] p-2'>
+              {active.map((monitor) => (
+                <ProgressMeter key={monitor.name} state={monitor} onCancel={() => registry.cancel(monitor.name)} />
+              ))}
+            </div>
+            <Popover.Arrow />
+          </Popover.Content>
+        </Popover.Portal>
+      )}
     </Popover.Root>
   );
 };

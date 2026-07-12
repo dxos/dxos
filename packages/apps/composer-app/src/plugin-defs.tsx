@@ -28,6 +28,7 @@ import { CrmPlugin } from '@dxos/plugin-crm/plugin';
 import { CrxPlugin } from '@dxos/plugin-crx/plugin';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
 import { DeckPlugin } from '@dxos/plugin-deck/plugin';
+import { DevtoolsPlugin } from '@dxos/plugin-devtools/plugin';
 import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
 import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
 import { DuffelPlugin } from '@dxos/plugin-duffel/plugin';
@@ -127,7 +128,6 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     InboxPlugin.meta.profile.key,
     KanbanPlugin.meta.profile.key,
     MarkdownPlugin.meta.profile.key,
-    ProgressPlugin.meta.profile.key,
     SearchPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
     SketchPlugin.meta.profile.key,
@@ -135,7 +135,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     ThreadPlugin.meta.profile.key,
 
     // Dev
-    isDev && DebugPlugin.meta.profile.key,
+    isDev && [DebugPlugin.meta.profile.key, DevtoolsPlugin.meta.profile.key],
 
     // Local
     isLocal && SamplePlugin.meta.profile.key,
@@ -214,6 +214,7 @@ export const getPlugins = ({
     ConnectorPlugin(),
     !isTauri && CrxPlugin(),
     DebugPlugin({ logStore }),
+    DevtoolsPlugin(),
     DiscordPlugin(),
     DoctorPlugin(),
     DuffelPlugin(),
