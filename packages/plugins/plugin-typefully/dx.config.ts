@@ -11,9 +11,9 @@ export default Config2.make({
     name: 'Typefully',
     author: 'DXOS',
     description: trim`
-      Sync blog post drafts to Typefully. It implements the plugin-blogger PublisherService
+      Publish blog post drafts to Typefully. It implements the plugin-blogger PublisherService
       capability, authenticating via a plugin-connector Connection, so drafts authored in
-      Composer can be created, updated, and deleted on Typefully.
+      Composer can be created and listed on Typefully.
     `,
     icon: { key: 'ph--paper-plane-tilt--regular', hue: 'sky' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-typefully',

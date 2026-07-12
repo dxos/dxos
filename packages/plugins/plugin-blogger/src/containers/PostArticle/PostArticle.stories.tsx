@@ -11,6 +11,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
 import { Obj, Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown/types';
@@ -31,7 +32,9 @@ import { PostArticle } from './PostArticle';
  */
 const makeStoryPost = (): Blogger.Post => {
   const post = Blogger.makePost({ name: 'My Post' });
-  const draft1 = post.drafts![0].target!;
+  const [draftRef] = post.drafts ?? [];
+  invariant(draftRef);
+  const draft1 = draftRef.target!;
   Obj.update(draft1.content.target!.content.target!, (text) => {
     text.content = 'First draft body.';
   });

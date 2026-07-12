@@ -294,6 +294,9 @@ op ImportDrafts
     PublisherError: no publisher configured, or the remote call failed
   effects: [echo:write]
   requires: [PublisherService]
+  note: >
+    Resolves via Capability.getAll(BloggerCapabilities.PublisherService),
+    preferring publisherId when given.
 ```
 
 ```mdl
@@ -310,6 +313,9 @@ op UnpublishDraft
     PublisherError: no publisher configured, or the remote call failed
   effects: [echo:write]
   requires: [PublisherService]
+  note: >
+    Resolves via Capability.getAll(BloggerCapabilities.PublisherService),
+    preferring publisherId when given.
 ```
 
 ## Features
