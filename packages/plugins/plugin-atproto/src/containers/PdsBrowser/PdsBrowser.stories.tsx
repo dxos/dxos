@@ -12,6 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Panproto } from '@dxos/echo-panproto';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Connection } from '@dxos/plugin-connector';
@@ -19,7 +20,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
-import { type AtprotoCodec, AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
+import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
 import { translations } from '#translations';
@@ -36,16 +37,14 @@ const MOCK_HANDLE = 'alice.test';
 const NOTE_COLLECTION = 'com.example.note';
 const POST_COLLECTION = 'app.bsky.feed.post';
 
-const demoCodec: AtprotoCodec = {
-  encode: async (object) => ({ text: (object as { title?: string }).title ?? '' }),
-  decode: async (record) => ({ title: typeof record.text === 'string' ? record.text : '' }),
-};
+// Maps the public `title` to/from the wire `text` (the scalar adapter is symmetric).
+const demoLens: Panproto.Lens = { adapters: [{ kind: 'scalar', wire: 'text', echo: ['title'] }] };
 
 // A mapped type (its collection is "mapped" in the browser); registered per-story.
 class DemoNote extends Type.makeObject<DemoNote>(DXN.make('org.dxos.plugin.atproto.pdsDemoNote', '0.1.0'))(
   Schema.Struct({ title: Schema.String.pipe(AtprotoVisibilityAnnotation.set('publish')) }).pipe(
     LabelAnnotation.set(['title']),
-    AtprotoRecordAnnotation.set({ collection: NOTE_COLLECTION, rkey: 'tid', codec: demoCodec }),
+    AtprotoRecordAnnotation.set({ collection: NOTE_COLLECTION, rkey: 'tid', lens: demoLens }),
   ),
 ) {}
 

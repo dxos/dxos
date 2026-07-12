@@ -9,9 +9,9 @@ import * as Schema from 'effect/Schema';
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Blob, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation, Text } from '@dxos/schema';
+import { AtprotoPolicyAnnotation, AtprotoRecordAnnotation, AtprotoVisibilityAnnotation, Text } from '@dxos/schema';
 
-import { bookCodec, canPublishBook, inspectBook } from '../atproto';
+import { bookLens, canPublishBook, enrichBook, inspectBook } from '../atproto';
 
 /**
  * Reading status, mirroring the `buzz.bookhive.defs` known values
@@ -150,9 +150,12 @@ export class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.book', '
     AtprotoRecordAnnotation.set({
       collection: 'buzz.bookhive.book',
       rkey: 'tid',
-      codec: bookCodec,
+      lens: bookLens,
+    }),
+    AtprotoPolicyAnnotation.set({
       canPublish: canPublishBook,
       inspect: inspectBook,
+      onImport: enrichBook,
     }),
   ),
 ) {}

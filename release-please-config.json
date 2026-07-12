@@ -430,6 +430,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/echo-panproto/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/echo-protocol/package.json",
           "jsonpath": "$.version"
         },
@@ -1096,11 +1101,6 @@
         {
           "type": "json",
           "path": "packages/sdk/config/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/sdk/echo-panproto/package.json",
           "jsonpath": "$.version"
         },
         {

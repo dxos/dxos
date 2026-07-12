@@ -363,6 +363,9 @@ catalogs:
     '@oxc-project/types':
       specifier: 0.128.0
       version: 0.128.0
+    '@panproto/core':
+      specifier: 0.56.1
+      version: 0.56.1
     '@peermetrics/webrtc-stats':
       specifier: 5.7.1
       version: 5.7.1
@@ -6408,6 +6411,25 @@ importers:
         specifier: 'catalog:'
         version: 3.1.1
 
+  packages/core/echo/echo-panproto:
+    dependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@panproto/core':
+        specifier: 'catalog:'
+        version: 0.56.1
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
+    devDependencies:
+      vite:
+        specifier: '>=8.0.16'
+        version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
+
   packages/core/echo/echo-protocol:
     dependencies:
       '@dxos/crypto':
@@ -8623,6 +8645,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-panproto':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-panproto
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -12216,7 +12241,7 @@ importers:
         version: link:../../core/echo/echo
       '@dxos/echo-panproto':
         specifier: workspace:*
-        version: link:../../sdk/echo-panproto
+        version: link:../../core/echo/echo-panproto
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -18657,12 +18682,6 @@ importers:
         specifier: 'catalog:'
         version: 5.105.2(@swc/core@1.15.43(@swc/helpers@0.5.17))(esbuild@0.28.0)
 
-  packages/sdk/echo-panproto:
-    devDependencies:
-      vite:
-        specifier: '>=8.0.16'
-        version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
-
   packages/sdk/examples:
     dependencies:
       '@dxos/echo':
@@ -18996,6 +19015,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/echo-panproto':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-panproto
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -28043,6 +28065,10 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@msgpack/msgpack@3.1.3':
+    resolution: {integrity: sha512-47XIizs9XZXvuJgoaJUIE2lFoID8ugvc0jzSHP+Ptfk8nTbnR8g788wv48N03Kx0UkAv559HWRQ3yzOgzlRNUA==}
+    engines: {node: '>= 18'}
+
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     resolution: {integrity: sha512-QZHtlVgbAdy2zAqNA9Gu1UpIuI8Xvsd1v8ic6B2pZmeFnFcMWiPLfWXh7TVw4eGEZ/C9TH281KwhVoeQUKbyjw==}
     cpu: [arm64]
@@ -29064,6 +29090,10 @@ packages:
     resolution: {integrity: sha512-Fa2Iyw7kaDRzGMfNYNUXNW2zbL5FQVDgSOcbDHdzBrDEdpqOqg8TcZ68F22ol6NJ9IGzvUdmeyZypLW5dyhqsg==}
     cpu: [x64]
     os: [win32]
+
+  '@panproto/core@0.56.1':
+    resolution: {integrity: sha512-AY3FG9gnK9zPvhzJbCMKnoXdZwaEsLjlYUeeKZaqPryGJKP4dIIPZI/w0f72fptVJ4Ek+3BKKooDedv2AiMP4A==}
+    engines: {node: '>=20'}
 
   '@parcel/watcher-android-arm64@2.5.1':
     resolution: {integrity: sha512-KF8+j9nNbUN8vzOFDpRMsaKBHZ/mcjEjMToVMJOhTozkDonQFFrRcfdLWn6yWKCmJKmdVxSgHiYvTCef4/qcBA==}
@@ -50929,6 +50959,8 @@ snapshots:
   '@moonrepo/core-windows-x64-msvc@2.3.0':
     optional: true
 
+  '@msgpack/msgpack@3.1.3': {}
+
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
     optional: true
 
@@ -51804,6 +51836,10 @@ snapshots:
 
   '@pagefind/windows-x64@1.5.2':
     optional: true
+
+  '@panproto/core@0.56.1':
+    dependencies:
+      '@msgpack/msgpack': 3.1.3
 
   '@parcel/watcher-android-arm64@2.5.1':
     optional: true

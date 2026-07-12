@@ -12,13 +12,14 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
 import { DXN, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Panproto } from '@dxos/echo-panproto';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Connection } from '@dxos/plugin-connector';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
-import { type AtprotoCodec, AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
+import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
 import { translations } from '#translations';
@@ -31,11 +32,8 @@ import { AtprotoCompanion } from './AtprotoCompanion';
 
 const NOTE_COLLECTION = 'com.example.note';
 
-// A minimal atproto-annotated type: public `title`, private `secret`.
-const demoCodec: AtprotoCodec = {
-  encode: async (object) => ({ text: (object as { title?: string }).title ?? '' }),
-  decode: async (record) => record,
-};
+// A minimal atproto-annotated type: public `title` (mapped to the wire `text`), private `secret`.
+const demoLens: Panproto.Lens = { adapters: [{ kind: 'scalar', wire: 'text', echo: ['title'] }] };
 
 class DemoNote extends Type.makeObject<DemoNote>(DXN.make('org.dxos.plugin.atproto.demoNote', '0.1.0'))(
   Schema.Struct({
@@ -43,7 +41,7 @@ class DemoNote extends Type.makeObject<DemoNote>(DXN.make('org.dxos.plugin.atpro
     secret: Schema.optional(Schema.String),
   }).pipe(
     LabelAnnotation.set(['title']),
-    AtprotoRecordAnnotation.set({ collection: NOTE_COLLECTION, rkey: 'tid', codec: demoCodec }),
+    AtprotoRecordAnnotation.set({ collection: NOTE_COLLECTION, rkey: 'tid', lens: demoLens }),
   ),
 ) {}
 
@@ -66,7 +64,7 @@ const makeSeed =
           Obj.make(Connection.Connection, { name: 'alice.test', connectorId: 'bluesky', accessToken: Ref.make(token) }),
         );
         if (publication) {
-          const encoded = yield* Effect.promise(() => demoCodec.encode(note));
+          const encoded = yield* Effect.promise(() => Panproto.encode(note, demoLens));
           space.db.add(
             AtprotoPublication.make({
               [Relation.Source]: connection,

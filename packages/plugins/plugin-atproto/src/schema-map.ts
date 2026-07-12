@@ -6,11 +6,12 @@ import * as Option from 'effect/Option';
 
 import { Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { type AtprotoRecord, AtprotoRecordAnnotation } from '@dxos/schema';
+import { type AtprotoPolicy, AtprotoPolicyAnnotation, type AtprotoRecord, AtprotoRecordAnnotation } from '@dxos/schema';
 
 export type MappedType = {
   type: Type.AnyObj;
   record: AtprotoRecord;
+  policy?: AtprotoPolicy;
 };
 
 /**
@@ -27,7 +28,8 @@ export const getMappedCollections = (space: Space): Map<string, MappedType> => {
     }
     const record = Option.getOrUndefined(AtprotoRecordAnnotation.get(Type.getSchema(type)));
     if (record) {
-      map.set(record.collection, { type, record });
+      const policy = Option.getOrUndefined(AtprotoPolicyAnnotation.get(Type.getSchema(type)));
+      map.set(record.collection, { type, record, policy });
     }
   }
   return map;

@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, DXN, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { Panproto } from '@dxos/echo-panproto';
 import { EffectEx } from '@dxos/effect';
 import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
@@ -20,18 +21,15 @@ import { computePublishedValues } from './field-values';
 import { computeStatus, deriveDisplayStatus, publishObject, unpublishObject } from './publish';
 import * as AtprotoRepo from './services/AtprotoRepo';
 
-// A minimal atproto-annotated type. Its codec projects only the public `text` field, exercising the
+// A minimal atproto-annotated type. Its lens projects only the public `text` field, exercising the
 // generic publish machinery without depending on a specific content plugin.
-const testCodec = {
-  encode: async (object: unknown) => ({ text: (object as { text?: string }).text ?? '' }),
-  decode: async (record: Record<string, unknown>) => record,
-};
+const testLens: Panproto.Lens = { adapters: [{ kind: 'scalar', wire: 'text', echo: ['text'] }] };
 
 class TestDoc extends Type.makeObject<TestDoc>(DXN.make('org.dxos.test.atprotoDoc', '0.1.0'))(
   Schema.Struct({
     text: Schema.String.pipe(AtprotoVisibilityAnnotation.set('publish')),
     secret: Schema.optional(Schema.String),
-  }).pipe(AtprotoRecordAnnotation.set({ collection: 'com.example.doc', rkey: 'tid', codec: testCodec })),
+  }).pipe(AtprotoRecordAnnotation.set({ collection: 'com.example.doc', rkey: 'tid', lens: testLens })),
 ) {}
 
 const NOW = 1_700_000_000_000;

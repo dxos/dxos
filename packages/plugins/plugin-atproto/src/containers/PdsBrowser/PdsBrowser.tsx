@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
+import { Panproto } from '@dxos/echo-panproto';
 import { EffectEx } from '@dxos/effect';
 import { Connection } from '@dxos/plugin-connector';
 import { type Space, useQuery } from '@dxos/react-client/echo';
@@ -136,14 +137,15 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
       return;
     }
     let cancelled = false;
-    const codec = mappedForCollection.record.codec;
+    const { lens } = mappedForCollection.record;
+    const { policy } = mappedForCollection;
     void (async () => {
-      const decoded = await codec.decode(record.value);
+      const decoded = await Panproto.decode(record.value, lens);
       if (cancelled) {
         return;
       }
       const object = Obj.make(mappedForCollection.type, decoded);
-      await codec.onImport?.(object);
+      await policy?.onImport?.(object);
       if (!cancelled) {
         setPreview(object);
       }
@@ -163,7 +165,8 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
     void EffectEx.runPromise(
       importRecord({
         type: mappedForCollection.type,
-        codec: mappedForCollection.record.codec,
+        lens: mappedForCollection.record.lens,
+        policy: mappedForCollection.policy,
         collection,
         record,
         connection,

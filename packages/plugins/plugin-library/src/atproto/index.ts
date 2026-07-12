@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export { bookCodec, canPublishBook } from './book-codec';
+export { bookLens } from './book-lens';
 export { enrichBook } from './enrich';
-export { getHiveId } from './hive';
+export { canPublishBook, getHiveId } from './hive';
 export { inspectBook } from './inspect';

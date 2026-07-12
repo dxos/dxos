@@ -7,15 +7,31 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { Obj, Type } from '@dxos/echo';
-import { type AtprotoRecord, AtprotoRecordAnnotation, type AtprotoVisibility, AtprotoVisibilityAnnotation } from '@dxos/schema';
+import {
+  type AtprotoPolicy,
+  AtprotoPolicyAnnotation,
+  type AtprotoRecord,
+  AtprotoRecordAnnotation,
+  type AtprotoVisibility,
+  AtprotoVisibilityAnnotation,
+} from '@dxos/schema';
 
-/** Read the atproto record annotation off an object's type, if any. */
+/** Read the atproto record (lens) annotation off an object's type, if any. */
 export const getRecordAnnotation = (object: Obj.Unknown): AtprotoRecord | undefined => {
   const type = Obj.getType(object);
   if (!type) {
     return undefined;
   }
   return Option.getOrUndefined(AtprotoRecordAnnotation.get(Type.getSchema(type)));
+};
+
+/** Read the atproto publish-policy annotation off an object's type, if any. */
+export const getPolicyAnnotation = (object: Obj.Unknown): AtprotoPolicy | undefined => {
+  const type = Obj.getType(object);
+  if (!type) {
+    return undefined;
+  }
+  return Option.getOrUndefined(AtprotoPolicyAnnotation.get(Type.getSchema(type)));
 };
 
 export type FieldPublishFlag = {

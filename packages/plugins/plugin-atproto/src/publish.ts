@@ -5,10 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { type Database, Obj, Relation, type Type } from '@dxos/echo';
+import { Panproto } from '@dxos/echo-panproto';
 import { type Connection } from '@dxos/plugin-connector';
-import { type AtprotoCodec, type PublishEligibility, type PublishInspection } from '@dxos/schema';
+import { type AtprotoPolicy, type PublishEligibility, type PublishInspection } from '@dxos/schema';
 
-import { getRecordAnnotation } from './annotation';
+import { getPolicyAnnotation, getRecordAnnotation } from './annotation';
 import { AtprotoRepoError, NotPublishableError } from './errors';
 import { computePublishedValues } from './field-values';
 import { ATPROTO_SOURCE, atprotoForeignKey } from './foreign-key';
@@ -46,36 +47,37 @@ export const deriveDisplayStatus = (status: PublishStatus, eligibility: PublishE
   return eligibility.ok ? 'ready' : 'ineligible';
 };
 
-/** Encode an object to its public atproto record via its type's codec, if publishable. */
-export const encodeRecord = async (object: Obj.Unknown): Promise<Record<string, unknown> | undefined> =>
-  getRecordAnnotation(object)?.codec.encode(object);
-
-/**
- * Whether an object may be published right now. An object with no atproto record annotation is not
- * publishable; otherwise its type's optional {@link AtprotoRecord.canPublish} gate decides (absent ⇒
- * eligible). Used by the companion to enable/disable publish and by {@link publishObject} to refuse.
- */
-export const getPublishEligibility = (object: Obj.Unknown): PublishEligibility => {
+/** Encode an object to its public atproto record via its type's declarative lens, if publishable. */
+export const encodeRecord = async (object: Obj.Unknown): Promise<Record<string, unknown> | undefined> => {
   const annotation = getRecordAnnotation(object);
-  if (!annotation) {
-    return { ok: false, reason: 'This object cannot be published.' };
-  }
-  return annotation.canPublish?.(object) ?? { ok: true };
+  return annotation ? Panproto.encode(object, annotation.lens) : undefined;
 };
 
 /**
- * Network-aware publish inspection for the companion: prefers the type's async {@link AtprotoRecord.inspect}
+ * Whether an object may be published right now. An object with no atproto record annotation is not
+ * publishable; otherwise its type's optional {@link AtprotoPolicy.canPublish} gate decides (absent ⇒
+ * eligible). Used by the companion to enable/disable publish and by {@link publishObject} to refuse.
+ */
+export const getPublishEligibility = (object: Obj.Unknown): PublishEligibility => {
+  if (!getRecordAnnotation(object)) {
+    return { ok: false, reason: 'This object cannot be published.' };
+  }
+  return getPolicyAnnotation(object)?.canPublish?.(object) ?? { ok: true };
+};
+
+/**
+ * Network-aware publish inspection for the companion: prefers the type's async {@link AtprotoPolicy.inspect}
  * (refined eligibility + per-field notes), falling back to the synchronous {@link getPublishEligibility}.
  */
 export const inspectPublish = async (object: Obj.Unknown): Promise<PublishInspection> => {
-  const annotation = getRecordAnnotation(object);
-  if (!annotation) {
+  if (!getRecordAnnotation(object)) {
     return { eligibility: { ok: false, reason: 'This object cannot be published.' } };
   }
-  if (annotation.inspect) {
-    return annotation.inspect(object);
+  const policy = getPolicyAnnotation(object);
+  if (policy?.inspect) {
+    return policy.inspect(object);
   }
-  return { eligibility: annotation.canPublish?.(object) ?? { ok: true } };
+  return { eligibility: policy?.canPublish?.(object) ?? { ok: true } };
 };
 
 /** Compare a fresh encoding against the last-published hash to derive publish status. */
@@ -185,14 +187,14 @@ export const publishObject = ({
       return yield* Effect.fail(new NotPublishableError({}));
     }
     // Refuse ineligible objects (e.g. a Book not in the BookHive catalog) before touching the repo.
-    const eligibility = annotation.canPublish?.(object) ?? { ok: true };
+    const eligibility = getPolicyAnnotation(object)?.canPublish?.(object) ?? { ok: true };
     if (!eligibility.ok) {
       return yield* Effect.fail(new NotPublishableError({ message: eligibility.reason }));
     }
 
     const timestamp = now ?? Date.now();
     const record = yield* Effect.tryPromise({
-      try: () => annotation.codec.encode(object),
+      try: () => Panproto.encode(object, annotation.lens),
       catch: (cause) => new AtprotoRepoError({ message: 'Failed to encode record.', cause }),
     });
     const collection = annotation.collection;
@@ -242,7 +244,10 @@ export const unpublishObject = ({
 export type ImportOptions = {
   /** Registered ECHO type mapped to the record's collection. */
   type: Type.AnyObj;
-  codec: AtprotoCodec;
+  /** The declarative lens projecting the record to/from the ECHO object. */
+  lens: Panproto.Lens;
+  /** Optional publish policy (post-import enrichment, foreign keys). */
+  policy?: AtprotoPolicy;
   collection: string;
   record: AtprotoRepo.RepoRecord;
   /** Connection the record belongs to — when present, the import is bound as published to it. */
@@ -259,7 +264,8 @@ export type ImportOptions = {
  */
 export const importRecord = ({
   type,
-  codec,
+  lens,
+  policy,
   collection,
   record,
   connection,
@@ -272,18 +278,18 @@ export const importRecord = ({
 > =>
   Effect.gen(function* () {
     const decoded = yield* Effect.tryPromise({
-      try: () => codec.decode(record.value),
+      try: () => Panproto.decode(record.value, lens),
       catch: (cause) => new AtprotoRepoError({ message: 'Failed to decode record.', cause }),
     });
-    // The record's AT-URI plus any type-specific foreign keys the codec derives (e.g. an external
+    // The record's AT-URI plus any type-specific foreign keys the policy derives (e.g. an external
     // catalog id the object should stay linked to).
-    const foreignKeys = [atprotoForeignKey(record.uri), ...(codec.foreignKeys?.(record.value) ?? [])];
+    const foreignKeys = [atprotoForeignKey(record.uri), ...(policy?.foreignKeys?.(record.value) ?? [])];
     const object = db.add(Obj.make(type, { ...decoded, [Obj.Meta]: { keys: foreignKeys } }));
 
     // Best-effort enrichment: fill fields the lexicon does not carry from the object's source (e.g. a
     // book's catalog metadata from the linked hive record). Never fails the import.
-    if (codec.onImport) {
-      yield* Effect.tryPromise(() => codec.onImport!(object)).pipe(Effect.ignore);
+    if (policy?.onImport) {
+      yield* Effect.tryPromise(() => policy.onImport!(object)).pipe(Effect.ignore);
     }
 
     if (!connection) {
@@ -293,7 +299,7 @@ export const importRecord = ({
     }
     // Bind as in-sync against what WE would publish, so the companion reads "published (in sync)".
     const encoded = yield* Effect.tryPromise({
-      try: () => codec.encode(object),
+      try: () => Panproto.encode(object, lens),
       catch: (cause) => new AtprotoRepoError({ message: 'Failed to encode imported object.', cause }),
     });
     const publishedValues = yield* Effect.promise(() => computePublishedValues(object));

@@ -244,6 +244,9 @@
       "path": "packages/core/echo/echo-host/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-panproto/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo-protocol/tsconfig.json"
     },
     {
@@ -641,9 +644,6 @@
     },
     {
       "path": "packages/sdk/config/tsconfig.json"
-    },
-    {
-      "path": "packages/sdk/echo-panproto/tsconfig.json"
     },
     {
       "path": "packages/sdk/examples/tsconfig.json"
