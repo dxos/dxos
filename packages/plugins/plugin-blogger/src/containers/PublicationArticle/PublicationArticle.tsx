@@ -8,7 +8,7 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { useObject, useObjects } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -59,16 +59,32 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
     void invokePromise(BloggerOperation.AddPost, { publication: Ref.make(subject), target: db });
   }, [invokePromise, subject]);
 
+  const postRefs = publication.posts;
+  // `useObjects` subscribes to each post ref's resolution (and later mutations) via `Obj.atom(ref)`,
+  // re-rendering this component once cold-loaded refs resolve. We only need it as a recompute
+  // trigger below — the tile data still reads the live `.target` (not the snapshots `useObjects`
+  // returns) because `PostCard` re-subscribes to the live post itself via its own `useObject` call.
+  // Mirrors the identical `.target`-cold-load fix applied via `useObjects` in
+  // plugin-trip/TripArticle.tsx (see its comment on the same defect).
+  const loadedPosts = useObjects(postRefs ?? []);
+
   const tileItems = useMemo<PostTileData[]>(
     () =>
-      (publication.posts ?? [])
+      (postRefs ?? [])
         .map((ref) => ref.target)
         .filter((post): post is Blogger.Post => !!post)
         .map((post) => ({ post, onClick: () => handleOpenPost(post) })),
-    [publication.posts, handleOpenPost],
+    [postRefs, loadedPosts, handleOpenPost],
   );
 
-  const instructions = publication.instructions?.target;
+  const instructionsRef = publication.instructions;
+  // Reactive resolution trigger: `useObject` on a `Ref` subscribes via `Obj.atom(ref)` — the
+  // `org.dxos.echo-react.useObjectReactive` idiom — and calls `ref.load()` internally, re-rendering
+  // this component once the target resolves. The returned snapshot is discarded; we re-read the
+  // live `.target` below because `MarkdownArticle` needs the live object (`Obj.isObject` /
+  // `Obj.getDatabase`, used for file upload and `@`-link queries), not a snapshot.
+  useObject(instructionsRef);
+  const instructions = instructionsRef.target;
   const instructionsData = useMemo(
     () => (instructions ? { subject: instructions, attendableId } : undefined),
     [instructions, attendableId],
