@@ -5,9 +5,9 @@
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import type { DedicatedWorkerMessage, WorkerEndpoint } from '../internal/messages';
+import * as Messages from '../Messages';
 
-export type WorkerRuntimeHandle = {
+export type RuntimeHandle = {
   createSession(args: {
     appPort: MessagePort;
     systemPort: MessagePort;
@@ -22,11 +22,11 @@ export type WorkerRuntimeHandle = {
   stop?(): Promise<void>;
 };
 
-export type RunWorkerOptions = {
+export type Options = {
   /**
    * Worker endpoint. Defaults to `self` in a DedicatedWorkerGlobalScope.
    */
-  endpoint?: WorkerEndpoint;
+  endpoint?: Messages.WorkerEndpoint;
   /**
    * Web Lock key gating storage ownership for a single worker instance.
    */
@@ -42,11 +42,11 @@ export type RunWorkerOptions = {
   createRuntime: (args: {
     config: Record<string, any> | undefined;
     requestShutdown: () => void;
-  }) => Promise<WorkerRuntimeHandle>;
+  }) => Promise<RuntimeHandle>;
 };
 
-const defaultEndpoint = (): WorkerEndpoint => {
-  const scope = self as unknown as WorkerEndpoint & { close(): void };
+const defaultEndpoint = (): Messages.WorkerEndpoint => {
+  const scope = self as unknown as Messages.WorkerEndpoint & { close(): void };
   return {
     postMessage: (message, transfer) => scope.postMessage(message, transfer),
     addEventListener: (type, listener) => scope.addEventListener(type, listener),
@@ -63,16 +63,16 @@ const defaultEndpoint = (): WorkerEndpoint => {
  * for its whole lifetime (released on shutdown so clients observe termination), and broadcasts a stop
  * signal on startup so any previous worker for the same storage lock tears down.
  */
-export const runWorker = ({
+export const run = ({
   endpoint = defaultEndpoint(),
   storageLockKey,
   displaceChannel = `${storageLockKey}/displace`,
   createRuntime,
-}: RunWorkerOptions): void => {
+}: Options): void => {
   void navigator.locks.request(storageLockKey, async () => {
     log('lock acquired');
 
-    let runtime: WorkerRuntimeHandle | undefined;
+    let runtime: RuntimeHandle | undefined;
     let owningClientId: string;
     const tabsProcessed = new Set<string>();
 
@@ -125,7 +125,7 @@ export const runWorker = ({
 
     const requestShutdown = () => void shutdown();
 
-    const handleMessage = async (ev: MessageEvent<DedicatedWorkerMessage>) => {
+    const handleMessage = async (ev: MessageEvent<Messages.DedicatedWorkerMessage>) => {
       const message = ev.data;
       log('worker message received', { type: message.type });
       switch (message.type) {
@@ -137,7 +137,7 @@ export const runWorker = ({
           endpoint.postMessage({
             type: 'ready',
             livenessLockKey,
-          } satisfies DedicatedWorkerMessage);
+          } satisfies Messages.DedicatedWorkerMessage);
           break;
         }
         case 'start-session': {
@@ -158,7 +158,7 @@ export const runWorker = ({
               systemPort: systemChannel.port1,
               clientId: message.clientId,
               isOwner: message.clientId === owningClientId,
-            } satisfies DedicatedWorkerMessage,
+            } satisfies Messages.DedicatedWorkerMessage,
             [appChannel.port1, systemChannel.port1],
           );
 
@@ -187,7 +187,7 @@ export const runWorker = ({
     };
 
     endpoint.addEventListener('message', handleMessage);
-    endpoint.postMessage({ type: 'listening' } satisfies DedicatedWorkerMessage);
+    endpoint.postMessage({ type: 'listening' } satisfies Messages.DedicatedWorkerMessage);
 
     await storageLockHeld;
     endpoint.removeEventListener('message', handleMessage);

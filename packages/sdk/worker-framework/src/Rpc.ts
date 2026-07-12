@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as BrowserWorker from '@effect/platform-browser/BrowserWorker';
 import * as BrowserWorkerRunner from '@effect/platform-browser/BrowserWorkerRunner';
 import * as RpcClient from '@effect/rpc/RpcClient';
@@ -11,38 +13,17 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Scope from 'effect/Scope';
 
-import {
-  type RpcTimingOptions,
-  applyRpcTimingMiddleware,
-  isRpcTimingEnabled,
-  resolveRpcTimingOptions,
-  rpcTimingClientLayer,
-  rpcTimingServerLayer,
-} from './rpc-timing';
+import * as RpcTiming from './RpcTiming';
 
-export type ServeRpcGroupOptions = {
+export type ServeOptions = {
   disableTracing?: boolean;
   concurrency?: number | 'unbounded';
   /**
    * When enabled, stamps each outbound RPC with a `Date.now()` send time and logs queue-wait /
-   * service durations on the worker above {@link RpcTimingOptions.minLogMs} (default 100 ms).
+   * service durations on the worker above {@link RpcTiming.Options.minLogMs} (default 100 ms).
    */
-  timing?: boolean | RpcTimingOptions;
+  timing?: boolean | RpcTiming.Options;
 };
-
-export type { RpcTimingMetadataService, RpcTimingOptions } from './rpc-timing';
-export {
-  RPC_TIMING_SENT_AT_HEADER,
-  RpcTimingMetadata,
-  RpcTimingMiddleware,
-  applyRpcTimingMiddleware,
-  getRpcTimingStatsSnapshot,
-  recordRpcTimingSample,
-  resetRpcTimingStats,
-  rpcTimingClientLayer,
-  rpcTimingServerLayer,
-} from './rpc-timing';
-export type { RpcTimingSample, RpcTimingStatsSnapshot } from './rpc-timing';
 
 // A worker RPC client runs over a single MessagePort that multiplexes every request by id, so there
 // is no real per-connection concurrency limit. The `@effect/rpc` worker protocol backs the client
@@ -57,18 +38,18 @@ const asRpcGroup = <G>(group: G): Parameters<typeof RpcClient.make>[0] => group 
 
 /**
  * Builds an effect-native RPC client over a caller-supplied {@link RpcClient.Protocol} layer.
- * Transport-agnostic: consumers provide the Worker-platform protocol (see {@link makeRpcClient}) or a
+ * Transport-agnostic: consumers provide the Worker-platform protocol (see {@link makeClient}) or a
  * byte protocol over a legacy transport (e.g. `@dxos/rpc`'s RpcPort layer for iframe/devtools bridges).
  */
-export const makeRpcClientOverProtocol = <G, ProtocolError, ProtocolRequirements>(
+export const makeClientOverProtocol = <G, ProtocolError, ProtocolRequirements>(
   protocol: Layer.Layer<RpcClient.Protocol, ProtocolError, ProtocolRequirements>,
   group: G,
-  options?: Pick<ServeRpcGroupOptions, 'disableTracing' | 'timing'>,
+  options?: Pick<ServeOptions, 'disableTracing' | 'timing'>,
 ): Effect.Effect<unknown, never, Scope.Scope | ProtocolRequirements> =>
   Effect.gen(function* () {
-    const timingEnabled = isRpcTimingEnabled(options?.timing);
-    const rpcGroup = timingEnabled ? applyRpcTimingMiddleware(asRpcGroup(group)) : asRpcGroup(group);
-    const protocolLayer = timingEnabled ? protocol.pipe(Layer.provideMerge(rpcTimingClientLayer())) : protocol;
+    const timingEnabled = RpcTiming.isEnabled(options?.timing);
+    const rpcGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
+    const protocolLayer = timingEnabled ? protocol.pipe(Layer.provideMerge(RpcTiming.clientLayer())) : protocol;
 
     // Build the transport into the caller's scope (extended via `Scope.extend`) rather than
     // `Effect.provide`-ing the layer directly: that would bind the transport's lifetime to this
@@ -84,12 +65,12 @@ export const makeRpcClientOverProtocol = <G, ProtocolError, ProtocolRequirements
  * Builds an effect-native RPC client over a {@link MessagePort} using the native Worker platform
  * protocol (structured-clone frames, transferables supported).
  */
-export const makeRpcClient = <G>(
+export const makeClient = <G>(
   port: MessagePort,
   group: G,
-  options?: Pick<ServeRpcGroupOptions, 'disableTracing' | 'timing'>,
+  options?: Pick<ServeOptions, 'disableTracing' | 'timing'>,
 ): Effect.Effect<unknown, never, Scope.Scope> =>
-  makeRpcClientOverProtocol(
+  makeClientOverProtocol(
     RpcClient.layerProtocolWorker({ size: 1, concurrency: WORKER_CLIENT_CONCURRENCY }).pipe(
       Layer.provide(BrowserWorker.layerPlatform(() => port)),
     ),
@@ -97,7 +78,7 @@ export const makeRpcClient = <G>(
     options,
   );
 
-export type RpcGroupServer = {
+export type GroupServer = {
   open(): Promise<void>;
   close(): Promise<void>;
 };
@@ -105,12 +86,12 @@ export type RpcGroupServer = {
 /**
  * Serves an {@link RpcGroup} on a {@link MessagePort} via the native Worker runner protocol.
  */
-export const serveRpcGroup = <G, H extends Layer.Layer<never, never, never>>(
+export const serve = <G, H extends Layer.Layer<never, never, never>>(
   port: MessagePort,
   group: G,
   handlers: H,
-  options?: ServeRpcGroupOptions,
-): RpcGroupServer => {
+  options?: ServeOptions,
+): GroupServer => {
   let runtime: ManagedRuntime.ManagedRuntime<never, never> | undefined;
 
   return {
@@ -119,12 +100,12 @@ export const serveRpcGroup = <G, H extends Layer.Layer<never, never, never>>(
         return;
       }
 
-      const timingEnabled = isRpcTimingEnabled(options?.timing);
-      const rpcGroup = timingEnabled ? applyRpcTimingMiddleware(asRpcGroup(group)) : asRpcGroup(group);
+      const timingEnabled = RpcTiming.isEnabled(options?.timing);
+      const rpcGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
       // Merge the timing middleware layer into the handler layer (rather than a conditional
       // `.pipe(...)` element) so the pipeline stays a fixed tuple.
       const handlersLayer = timingEnabled
-        ? Layer.merge(handlers, rpcTimingServerLayer(resolveRpcTimingOptions(options?.timing)))
+        ? Layer.merge(handlers, RpcTiming.serverLayer(RpcTiming.resolveOptions(options?.timing)))
         : handlers;
       const serverLayer = RpcServer.layer(asRpcGroup(rpcGroup), {
         disableTracing: options?.disableTracing ?? true,

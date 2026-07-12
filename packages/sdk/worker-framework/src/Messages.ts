@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import type { Event } from '@dxos/async';
 
 /**
@@ -69,7 +71,7 @@ export type DedicatedWorkerMessage =
   | DedicatedWorkerStartSessionMessage
   | DedicatedWorkerSessionMessage;
 
-export type WorkerCoordinatorMessage =
+export type CoordinatorMessage =
   | {
       type: 'new-leader';
       leaderId: string;
@@ -110,6 +112,6 @@ export interface WorkerEndpoint {
  * Coordinator exchange ports and notify about a new leader.
  */
 export interface WorkerCoordinator {
-  readonly onMessage: Event<WorkerCoordinatorMessage>;
-  sendMessage(message: WorkerCoordinatorMessage): void;
+  readonly onMessage: Event<CoordinatorMessage>;
+  sendMessage(message: CoordinatorMessage): void;
 }

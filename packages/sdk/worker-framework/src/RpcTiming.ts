@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Headers from '@effect/platform/Headers';
 import type * as Rpc from '@effect/rpc/Rpc';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
@@ -14,28 +16,25 @@ import * as Option from 'effect/Option';
 import { log } from '@dxos/log';
 
 /** Cross-thread comparable send timestamp stamped by the client middleware. */
-export const RPC_TIMING_SENT_AT_HEADER = 'x-dxos-rpc-sent-at';
+export const SENT_AT_HEADER = 'x-dxos-rpc-sent-at';
 
-/** Per-request timing metadata available to handlers via {@link RpcTimingMetadata}. */
-export type RpcTimingMetadataService = {
+/** Per-request timing metadata available to handlers via {@link Metadata}. */
+export type MetadataService = {
   readonly sentAt: number | undefined;
   readonly dispatchedAt: number;
   readonly queueWaitMs: number | undefined;
   readonly serviceMs: number | undefined;
 };
 
-export class RpcTimingMetadata extends Context.Tag('RpcTimingMetadata')<
-  RpcTimingMetadata,
-  RpcTimingMetadataService
->() {}
+export class Metadata extends Context.Tag('RpcTimingMetadata')<Metadata, MetadataService>() {}
 
-export class RpcTimingMiddleware extends RpcMiddleware.Tag<RpcTimingMiddleware>()('RpcTimingMiddleware', {
+export class Middleware extends RpcMiddleware.Tag<Middleware>()('RpcTimingMiddleware', {
   wrap: true,
-  provides: RpcTimingMetadata,
+  provides: Metadata,
   requiredForClient: true,
 }) {}
 
-export type RpcTimingOptions = {
+export type Options = {
   /**
    * Minimum queue-wait or service duration (ms) before emitting a log line.
    * Defaults to 100 — tuned for 100–1000 ms worker lag signals, not sub-10 ms noise.
@@ -43,24 +42,24 @@ export type RpcTimingOptions = {
   readonly minLogMs?: number;
 };
 
-export type RpcTimingSample = {
+export type Sample = {
   readonly tag: string;
   readonly queueWaitMs: number | undefined;
   readonly serviceMs: number;
   readonly at: number;
 };
 
-export type RpcTimingStatsSnapshot = {
-  readonly samples: ReadonlyArray<RpcTimingSample>;
+export type StatsSnapshot = {
+  readonly samples: ReadonlyArray<Sample>;
   readonly maxQueueWaitMs: number;
   readonly maxServiceMs: number;
 };
 
 const MAX_TIMING_SAMPLES = 100;
-const timingSamples: RpcTimingSample[] = [];
+const timingSamples: Sample[] = [];
 
-/** Records one completed RPC for {@link getRpcTimingStatsSnapshot}. */
-export const recordRpcTimingSample = (sample: RpcTimingSample): void => {
+/** Records one completed RPC for {@link getStatsSnapshot}. */
+export const recordSample = (sample: Sample): void => {
   timingSamples.push(sample);
   if (timingSamples.length > MAX_TIMING_SAMPLES) {
     timingSamples.splice(0, timingSamples.length - MAX_TIMING_SAMPLES);
@@ -68,7 +67,7 @@ export const recordRpcTimingSample = (sample: RpcTimingSample): void => {
 };
 
 /** Returns a snapshot of samples collected by the server timing middleware. */
-export const getRpcTimingStatsSnapshot = (): RpcTimingStatsSnapshot => {
+export const getStatsSnapshot = (): StatsSnapshot => {
   const maxQueueWaitMs = timingSamples.reduce((max, sample) => Math.max(max, sample.queueWaitMs ?? 0), 0);
   const maxServiceMs = timingSamples.reduce((max, sample) => Math.max(max, sample.serviceMs), 0);
   return {
@@ -79,18 +78,18 @@ export const getRpcTimingStatsSnapshot = (): RpcTimingStatsSnapshot => {
 };
 
 /** Clears collected timing samples. Intended for tests. */
-export const resetRpcTimingStats = (): void => {
+export const resetStats = (): void => {
   timingSamples.length = 0;
 };
 
 const DEFAULT_MIN_LOG_MS = 100;
 
-const resolveOptions = (options?: boolean | RpcTimingOptions): RpcTimingOptions =>
-  typeof options === 'object' ? options : {};
+/** Normalizes a `boolean | Options` timing flag to an {@link Options} bag. */
+export const resolveOptions = (options?: boolean | Options): Options => (typeof options === 'object' ? options : {});
 
 const parseSentAt = (headers: Headers.Headers): number | undefined => {
   // `Headers.get` returns an `Option`, not a raw value.
-  const raw = Option.getOrUndefined(Headers.get(headers, RPC_TIMING_SENT_AT_HEADER));
+  const raw = Option.getOrUndefined(Headers.get(headers, SENT_AT_HEADER));
   if (raw === undefined) {
     return undefined;
   }
@@ -98,11 +97,7 @@ const parseSentAt = (headers: Headers.Headers): number | undefined => {
   return Number.isFinite(parsed) ? parsed : undefined;
 };
 
-const shouldLog = (
-  options: RpcTimingOptions,
-  queueWaitMs: number | undefined,
-  serviceMs: number | undefined,
-): boolean => {
+const shouldLog = (options: Options, queueWaitMs: number | undefined, serviceMs: number | undefined): boolean => {
   const minLogMs = options.minLogMs ?? DEFAULT_MIN_LOG_MS;
   return (queueWaitMs ?? 0) >= minLogMs || (serviceMs ?? 0) >= minLogMs;
 };
@@ -113,18 +108,18 @@ const shouldLog = (
 const timedGroups = new WeakMap<object, unknown>();
 
 /**
- * Attaches {@link RpcTimingMiddleware} to every RPC in a group. Idempotent — applying it to an
+ * Attaches {@link Middleware} to every RPC in a group. Idempotent — applying it to an
  * already-wrapped group returns the same instance.
  */
-export const applyRpcTimingMiddleware = <Rpcs extends Rpc.Any>(
+export const applyMiddleware = <Rpcs extends Rpc.Any>(
   group: RpcGroup.RpcGroup<Rpcs>,
-): RpcGroup.RpcGroup<Rpc.AddMiddleware<Rpcs, typeof RpcTimingMiddleware>> => {
+): RpcGroup.RpcGroup<Rpc.AddMiddleware<Rpcs, typeof Middleware>> => {
   const cached = timedGroups.get(group);
   if (cached !== undefined) {
     // Cache holds the wrapped group; its element type already carries the middleware.
-    return cached as RpcGroup.RpcGroup<Rpc.AddMiddleware<Rpcs, typeof RpcTimingMiddleware>>;
+    return cached as RpcGroup.RpcGroup<Rpc.AddMiddleware<Rpcs, typeof Middleware>>;
   }
-  const wrapped = group.middleware(RpcTimingMiddleware);
+  const wrapped = group.middleware(Middleware);
   timedGroups.set(group, wrapped);
   timedGroups.set(wrapped, wrapped);
   return wrapped;
@@ -133,10 +128,10 @@ export const applyRpcTimingMiddleware = <Rpcs extends Rpc.Any>(
 /**
  * Server-side wrap middleware: derives queue wait from the client header and service time around the handler.
  */
-export const rpcTimingServerLayer = (options?: RpcTimingOptions): Layer.Layer<RpcTimingMiddleware> =>
+export const serverLayer = (options?: Options): Layer.Layer<Middleware> =>
   Layer.succeed(
-    RpcTimingMiddleware,
-    RpcTimingMiddleware.of(({ rpc, headers, next }) => {
+    Middleware,
+    Middleware.of(({ rpc, headers, next }) => {
       const timingOptions = resolveOptions(options);
       const sentAt = parseSentAt(headers);
       const dispatchedAt = Date.now();
@@ -144,7 +139,7 @@ export const rpcTimingServerLayer = (options?: RpcTimingOptions): Layer.Layer<Rp
 
       return Effect.gen(function* () {
         const serviceStart = Date.now();
-        const result = yield* Effect.provideService(next, RpcTimingMetadata, {
+        const result = yield* Effect.provideService(next, Metadata, {
           sentAt,
           dispatchedAt,
           queueWaitMs,
@@ -152,7 +147,7 @@ export const rpcTimingServerLayer = (options?: RpcTimingOptions): Layer.Layer<Rp
         });
         const serviceMs = Math.max(0, Date.now() - serviceStart);
 
-        recordRpcTimingSample({
+        recordSample({
           tag: rpc._tag,
           queueWaitMs,
           serviceMs,
@@ -173,19 +168,16 @@ export const rpcTimingServerLayer = (options?: RpcTimingOptions): Layer.Layer<Rp
   );
 
 /**
- * Client middleware: stamps {@link RPC_TIMING_SENT_AT_HEADER} with `Date.now()` on every outbound RPC.
+ * Client middleware: stamps {@link SENT_AT_HEADER} with `Date.now()` on every outbound RPC.
  */
-export const rpcTimingClientLayer = (): Layer.Layer<RpcMiddleware.ForClient<RpcTimingMiddleware>> =>
-  RpcMiddleware.layerClient(RpcTimingMiddleware, ({ request }) =>
+export const clientLayer = (): Layer.Layer<RpcMiddleware.ForClient<Middleware>> =>
+  RpcMiddleware.layerClient(Middleware, ({ request }) =>
     Effect.succeed({
       ...request,
-      headers: Headers.set(request.headers, RPC_TIMING_SENT_AT_HEADER, String(Date.now())),
+      headers: Headers.set(request.headers, SENT_AT_HEADER, String(Date.now())),
     }),
   );
 
 /** Whether RPC timing middleware should be enabled for the given serve/client options bag. */
-export const isRpcTimingEnabled = (
-  timing: boolean | RpcTimingOptions | undefined,
-): timing is boolean | RpcTimingOptions => timing !== undefined && timing !== false;
-
-export const resolveRpcTimingOptions = resolveOptions;
+export const isEnabled = (timing: boolean | Options | undefined): timing is boolean | Options =>
+  timing !== undefined && timing !== false;

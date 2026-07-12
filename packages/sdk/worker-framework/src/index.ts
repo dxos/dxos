@@ -2,23 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export { makeRpcClient, makeRpcClientOverProtocol, serveRpcGroup } from './internal/rpc';
-export type { RpcGroupServer, RpcTimingMetadataService, RpcTimingOptions, ServeRpcGroupOptions } from './internal/rpc';
-export {
-  RPC_TIMING_SENT_AT_HEADER,
-  RpcTimingMetadata,
-  RpcTimingMiddleware,
-  applyRpcTimingMiddleware,
-  getRpcTimingStatsSnapshot,
-  recordRpcTimingSample,
-  resetRpcTimingStats,
-  rpcTimingClientLayer,
-  rpcTimingServerLayer,
-} from './internal/rpc-timing';
-export type { RpcTimingSample, RpcTimingStatsSnapshot } from './internal/rpc-timing';
-export type {
-  DedicatedWorkerMessage,
-  WorkerCoordinator,
-  WorkerCoordinatorMessage,
-  WorkerOrPort,
-} from './internal/messages';
+export * as Messages from './Messages';
+export * as Rpc from './Rpc';
+export * as RpcTiming from './RpcTiming';

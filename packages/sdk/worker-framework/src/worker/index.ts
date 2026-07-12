@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
+export * as Messages from '../Messages';
 export * from './run-worker';
-export type { DedicatedWorkerMessage, WorkerEndpoint } from '../internal/messages';

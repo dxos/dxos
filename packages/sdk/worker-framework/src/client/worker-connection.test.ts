@@ -6,9 +6,9 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, Trigger, asyncTimeout } from '@dxos/async';
 
-import type { WorkerCoordinator, WorkerCoordinatorMessage, WorkerOrPort } from '../internal/messages';
-import { runWorker } from '../worker/run-worker';
-import { WorkerConnection } from './worker-connection';
+import * as Messages from '../Messages';
+import * as Worker from '../worker';
+import { Connection } from './worker-connection';
 
 /**
  * In-process coordinator hub emulating the SharedWorker: broadcasts leadership/heartbeat/request
@@ -16,18 +16,18 @@ import { WorkerConnection } from './worker-connection';
  * coordinator it can be told to drop a tab's first `request-port`, modelling a lost/raced message.
  */
 const createHub = () => {
-  type Entry = { onMessage: Event<WorkerCoordinatorMessage> };
+  type Entry = { onMessage: Event<Messages.CoordinatorMessage> };
   const entries = new Set<Entry>();
   const portsByClient = new Map<string, Entry>();
   const dropOnceFor = new Set<string>();
 
-  const connect = (): WorkerCoordinator => {
-    const onMessage = new Event<WorkerCoordinatorMessage>();
+  const connect = (): Messages.WorkerCoordinator => {
+    const onMessage = new Event<Messages.CoordinatorMessage>();
     const entry: Entry = { onMessage };
     entries.add(entry);
     return {
       onMessage,
-      sendMessage: (message: WorkerCoordinatorMessage) => {
+      sendMessage: (message: Messages.CoordinatorMessage) => {
         if (message.type === 'request-port') {
           portsByClient.set(message.clientId, entry);
           if (dropOnceFor.has(message.clientId)) {
@@ -55,13 +55,13 @@ const createHub = () => {
 };
 
 /**
- * Minimal MessagePort-backed dedicated worker running the real {@link runWorker} loop with a no-op
+ * Minimal MessagePort-backed dedicated worker running the real {@link Worker.run} loop with a no-op
  * runtime — exercises leader election and port exchange without a service runtime.
  */
 const createWorkerFactory = (storageLockKey: string) => () => {
   const channel = new MessageChannel();
   channel.port1.start();
-  runWorker({
+  Worker.run({
     endpoint: {
       postMessage: (message, transfer) => channel.port1.postMessage(message, transfer ? { transfer } : undefined),
       addEventListener: (type, listener) => channel.port1.addEventListener(type, listener as EventListener),
@@ -74,7 +74,7 @@ const createWorkerFactory = (storageLockKey: string) => () => {
       stop: async () => {},
     }),
   });
-  return channel.port2 as WorkerOrPort;
+  return channel.port2 as Messages.WorkerOrPort;
 };
 
 type Connected = { appPort: MessagePort; systemPort: MessagePort; isOwner: boolean };
@@ -85,7 +85,7 @@ const makeConnection = (
   leaderTimeouts = { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 3_000 },
 ) => {
   const connectedTrigger = new Trigger<Connected>();
-  const connection = new WorkerConnection({
+  const connection = new Connection({
     createWorker: createWorkerFactory(keys.storageLockKey),
     createCoordinator: () => hub.connect(),
     leaderLockKey: keys.leaderLockKey,
@@ -98,7 +98,7 @@ const makeConnection = (
   return { connection, connected: connectedTrigger.wait() };
 };
 
-describe('WorkerConnection multi-client', () => {
+describe('Connection multi-client', () => {
   const uniqueKeys = () => {
     const id = crypto.randomUUID();
     return { leaderLockKey: `test-leader-${id}`, storageLockKey: `test-storage-${id}` };

@@ -17,8 +17,9 @@ Modules follow the DXOS namespace-module styleguide: PascalCase file in `src/`,
 marked `// @import-as-namespace`, re-exported from an `index.ts` as
 `export * as <Name> from './<Name>'`, and consumed by callers as a namespace
 (`RpcTiming.serverLayer`, never a bare `rpcTimingServerLayer`). Members are
-unprefixed; `# was:` comments below record each symbol's current name, since the
-package is being restyled onto this convention.
+unprefixed — the caller always reads `<Name>.<member>`. The subpath entrypoints
+(`client`, `worker`, `coordinator`) are each consumed as a namespace of the
+subpath (`import * as Client from '@dxos/worker-framework/client'`).
 
 ## Extensions
 
@@ -42,11 +43,11 @@ module Rpc
     middleware. Requests run at unbounded concurrency over the single worker
     port so a long-lived stream never blocks other calls.
   api:
-    makeClient: (port, group, options?) => Effect            # over the Worker platform protocol. was: makeRpcClient
-    makeClientOverProtocol: (protocol, group, options?) => Effect  # transport-agnostic. was: makeRpcClientOverProtocol
-    serve: (port, group, handlers, options?) => GroupServer  # serve a group on a MessagePort. was: serveRpcGroup
-    ServeOptions: {...}                                      # disableTracing?, concurrency?, timing?. was: ServeRpcGroupOptions
-    GroupServer: { open(): Promise, close(): Promise }       # was: RpcGroupServer
+    makeClient: (port, group, options?) => Effect            # over the Worker platform protocol.
+    makeClientOverProtocol: (protocol, group, options?) => Effect  # transport-agnostic.
+    serve: (port, group, handlers, options?) => GroupServer  # serve a group on a MessagePort.
+    ServeOptions: {...}                                      # disableTracing?, concurrency?, timing?.
+    GroupServer: { open(): Promise, close(): Promise }
 ```
 
 ```mdl
@@ -85,28 +86,9 @@ module RpcTiming
     resolveOptions: (timing?) => Options  # normalize boolean | Options to an Options bag.
 ```
 
-`RpcTiming` currently lives in `src/internal/rpc-timing.ts` with `RpcTiming`-prefixed,
-directly-exported symbols. The target is a single `src/RpcTiming.ts` namespace module;
-the api above is the post-rename (unprefixed) surface. The restyle renames the current
-symbols to their unprefixed namespace members:
-
-| Current (`src/internal/rpc-timing.ts`) | Target (`RpcTiming.*`) |
-|----------------------------------------|------------------------|
-| `RPC_TIMING_SENT_AT_HEADER`            | `SENT_AT_HEADER`       |
-| `RpcTimingOptions`                     | `Options`              |
-| `RpcTimingMetadataService`             | `MetadataService`      |
-| `RpcTimingSample`                      | `Sample`               |
-| `RpcTimingStatsSnapshot`               | `StatsSnapshot`        |
-| `RpcTimingMetadata`                    | `Metadata`             |
-| `RpcTimingMiddleware`                  | `Middleware`           |
-| `applyRpcTimingMiddleware`             | `applyMiddleware`      |
-| `rpcTimingServerLayer`                 | `serverLayer`          |
-| `rpcTimingClientLayer`                 | `clientLayer`          |
-| `recordRpcTimingSample`                | `recordSample`         |
-| `getRpcTimingStatsSnapshot`            | `getStatsSnapshot`     |
-| `resetRpcTimingStats`                  | `resetStats`           |
-| `isRpcTimingEnabled`                   | `isEnabled`            |
-| `resolveRpcTimingOptions`              | `resolveOptions`       |
+`RpcTiming` lives in `src/RpcTiming.ts`. The `Metadata` and `Middleware` Effect tags
+retain the stable global identifiers `'RpcTimingMetadata'` / `'RpcTimingMiddleware'`;
+only their exported member names are unprefixed.
 
 ### `@dxos/worker-framework/client`
 
@@ -117,10 +99,10 @@ module Client
     exchange, worker lifecycle, and reconnection; service wiring is injected via
     Options.onConnect. Entrypoint: @dxos/worker-framework/client.
   api:
-    Connection: class extends Resource  # ctor(Options); open()/close(); clientId; onReconnect(cb); closed + reconnected events. was: WorkerConnection
-    Options: {...}                      # createWorker, createCoordinator, leaderLockKey, config?, leaderTimeouts?, onConnect. was: WorkerConnectionOptions
-    Handle: { close(): Promise }        # per-connection handle returned by Options.onConnect. was: WorkerConnectionHandle
-    LeaderTimeouts: {...}               # heartbeatInterval?, staleTimeout?, portTimeout?, retryBackoff?. was: LeaderTimeoutOptions
+    Connection: class extends Resource  # ctor(Options); open()/close(); clientId; onReconnect(cb); closed + reconnected events.
+    Options: {...}                      # createWorker, createCoordinator, leaderLockKey, config?, leaderTimeouts?, onConnect.
+    Handle: { close(): Promise }        # per-connection handle returned by Options.onConnect.
+    LeaderTimeouts: {...}               # heartbeatInterval?, staleTimeout?, portTimeout?, retryBackoff?.
 ```
 
 ### `@dxos/worker-framework/worker`
@@ -132,9 +114,9 @@ module Worker
     of prior workers, and the init/ready/session protocol with owner detection.
     Entrypoint: @dxos/worker-framework/worker.
   api:
-    run: (options: Options) => void     # start the worker message loop (defaults endpoint to `self`). was: runWorker
-    Options: {...}                      # endpoint?, storageLockKey, displaceChannel?, createRuntime. was: RunWorkerOptions
-    RuntimeHandle: {...}                # createSession({ appPort, systemPort, clientId, isOwner, onClose }) + optional idempotent stop(). was: WorkerRuntimeHandle
+    run: (options: Options) => void     # start the worker message loop (defaults endpoint to `self`).
+    Options: {...}                      # endpoint?, storageLockKey, displaceChannel?, createRuntime.
+    RuntimeHandle: {...}                # createSession({ appPort, systemPort, clientId, isOwner, onClose }) + optional idempotent stop().
 ```
 
 ### `@dxos/worker-framework/coordinator`
@@ -146,12 +128,12 @@ module Coordinator
     implementations plus the SharedWorker entrypoint handler. Entrypoint:
     @dxos/worker-framework/coordinator.
   api:
-    SharedWorker: class implements WorkerCoordinator   # routes via a SharedWorker port; transfers session ports. was: SharedWorkerCoordinator
-    SharedWorkerOptions: { createWorker: () => SharedWorker }  # was: SharedWorkerCoordinatorOptions
-    SingleClient: class implements WorkerCoordinator   # echoes messages locally; native / single-window. was: SingleClientCoordinator
-    Memory: class implements WorkerCoordinator          # in-memory loopback for tests. was: MemoryWorkerCoordiantor (typo fixed)
-    createOnConnect: () => (ev: MessageEvent) => void   # SharedWorker onconnect handler owning one routing table. was: createCoordinatorOnConnect
-    run: () => void                                     # install createOnConnect() on globalThis.onconnect. was: runCoordinator
+    SharedWorker: class implements WorkerCoordinator   # routes via a SharedWorker port; transfers session ports.
+    SharedWorkerOptions: { createWorker: () => SharedWorker }
+    SingleClient: class implements WorkerCoordinator   # echoes messages locally; native / single-window.
+    Memory: class implements WorkerCoordinator          # in-memory loopback for tests.
+    createOnConnect: () => (ev: MessageEvent) => void   # SharedWorker onconnect handler owning one routing table.
+    run: () => void                                     # install createOnConnect() on globalThis.onconnect.
 ```
 
 ### Shared protocol types
@@ -163,7 +145,7 @@ module Messages
     Types only; re-exported from every entrypoint that references them.
   api:
     WorkerCoordinator: interface         # { onMessage: Event<CoordinatorMessage>; sendMessage(msg): void }.
-    CoordinatorMessage: union            # new-leader | leader-heartbeat | request-port | provide-port. was: WorkerCoordinatorMessage
+    CoordinatorMessage: union            # new-leader | leader-heartbeat | request-port | provide-port.
     DedicatedWorkerMessage: union        # listening | init | ready | start-session | session.
     WorkerEndpoint: interface            # postMessage / add + removeEventListener('message') / close?.
     WorkerOrPort: Worker | MessagePort   # worker handle usable from a leader tab or a test port.

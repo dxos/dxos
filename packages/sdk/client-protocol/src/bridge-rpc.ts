@@ -11,7 +11,7 @@ import { type Stream as PbStream } from '@dxos/codec-protobuf/stream';
 import { EffectEx } from '@dxos/effect';
 import { type BridgeService as BridgeServiceRpc } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { BridgeService } from '@dxos/protocols/rpc';
-import { type RpcGroupServer, makeRpcClient, serveRpcGroup } from '@dxos/worker-framework';
+import { Rpc } from '@dxos/worker-framework';
 
 import { pbStreamToStream, streamToPbStream } from './service-rpc';
 
@@ -31,7 +31,7 @@ const toError = (cause: unknown): Error => (cause instanceof Error ? cause : new
  * Serves a proto-shaped {@link BridgeServiceRpc} (the tab's `RtcTransportService`) over a
  * {@link MessagePort} via effect-rpc. The worker consumes it with {@link makeBridgeServiceClient}.
  */
-export const serveBridgeService = (port: MessagePort, service: BridgeServiceRpc): RpcGroupServer => {
+export const serveBridgeService = (port: MessagePort, service: BridgeServiceRpc): Rpc.GroupServer => {
   const unary =
     <Req, Res>(method: (request: Req) => Promise<Res>) =>
     (payload: Req) =>
@@ -56,7 +56,7 @@ export const serveBridgeService = (port: MessagePort, service: BridgeServiceRpc)
   };
 
   // Dispatched dynamically across the group; per-method handler types cannot be expressed statically.
-  return serveRpcGroup(port, BridgeService.Rpcs, BridgeService.Rpcs.toLayer(handlers as never), {
+  return Rpc.serve(port, BridgeService.Rpcs, BridgeService.Rpcs.toLayer(handlers as never), {
     disableTracing: true,
     concurrency: 'unbounded',
   });
@@ -72,7 +72,7 @@ export const makeBridgeServiceClient = async (
 ): Promise<{ bridgeService: BridgeServiceRpc; close: () => Promise<void> }> => {
   const scope = Effect.runSync(Scope.make());
   const client = (await EffectEx.runPromise(
-    makeRpcClient(port, BridgeService.Rpcs).pipe(Scope.extend(scope)),
+    Rpc.makeClient(port, BridgeService.Rpcs).pipe(Scope.extend(scope)),
   )) as BridgeService.Client;
 
   const bridge = client.BridgeService;

@@ -12,9 +12,9 @@ import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { makeRpcClient } from '@dxos/worker-framework';
-import { WorkerConnection } from '@dxos/worker-framework/client';
-import { SharedWorkerCoordinator } from '@dxos/worker-framework/coordinator';
+import { Rpc } from '@dxos/worker-framework';
+import * as Client from '@dxos/worker-framework/client';
+import * as Coordinator from '@dxos/worker-framework/coordinator';
 
 import { COUNTER_LEADER_LOCK_KEY } from './counter-constants';
 import { CounterRpcs, type TimingStatsSnapshot } from './counter-service';
@@ -41,10 +41,10 @@ export type PingMeasurement = {
 };
 
 /**
- * Client-side connection to the shared counter worker via {@link WorkerConnection}.
+ * Client-side connection to the shared counter worker via {@link Client.Connection}.
  */
 export class CounterConnection extends Resource {
-  readonly #connection: WorkerConnection;
+  readonly #connection: Client.Connection;
   #scope: Scope.CloseableScope | undefined;
   #rpc: CounterRpc | undefined;
   readonly #subscribeCleanups = new Set<() => Promise<void>>();
@@ -55,10 +55,10 @@ export class CounterConnection extends Resource {
 
   constructor() {
     super();
-    this.#connection = new WorkerConnection({
+    this.#connection = new Client.Connection({
       createWorker: () => new Worker(new URL('./counter-worker.ts', import.meta.url), { type: 'module' }),
       createCoordinator: () =>
-        new SharedWorkerCoordinator({
+        new Coordinator.SharedWorker({
           createWorker: () =>
             new SharedWorker(new URL('./coordinator-worker.ts', import.meta.url), {
               type: 'module',
@@ -71,7 +71,7 @@ export class CounterConnection extends Resource {
         this.#sessionInfo = { clientId: this.#connection.clientId, leaderId, isOwner };
         this.sessionChanged.emit(this.#sessionInfo);
         this.#rpc = (await EffectEx.runPromise(
-          makeRpcClient(appPort, CounterRpcs, { timing: { minLogMs: 20 } }).pipe(Scope.extend(this.#scope)),
+          Rpc.makeClient(appPort, CounterRpcs, { timing: { minLogMs: 20 } }).pipe(Scope.extend(this.#scope)),
         )) as CounterRpc;
         return {
           close: async () => {
@@ -90,7 +90,7 @@ export class CounterConnection extends Resource {
   /**
    * Fires after the connection fails over to a freshly-elected leader (and its re-created worker).
    */
-  get reconnected(): WorkerConnection['reconnected'] {
+  get reconnected(): Client.Connection['reconnected'] {
     return this.#connection.reconnected;
   }
 

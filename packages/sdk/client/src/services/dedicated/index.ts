@@ -2,19 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  MemoryWorkerCoordiantor,
-  SingleClientCoordinator,
-  createCoordinatorOnConnect,
-} from '@dxos/worker-framework/coordinator';
-export type {
-  DedicatedWorkerMessage,
-  WorkerCoordinator,
-  WorkerCoordinatorMessage,
-  WorkerOrPort,
+import { Messages } from '@dxos/worker-framework';
+
+export {
+  Memory as MemoryWorkerCoordiantor,
+  SingleClient as SingleClientCoordinator,
+  createOnConnect as createCoordinatorOnConnect,
 } from '@dxos/worker-framework/coordinator';
 
-export { MemoryWorkerCoordiantor, SingleClientCoordinator, createCoordinatorOnConnect };
+export type DedicatedWorkerMessage = Messages.DedicatedWorkerMessage;
+export type WorkerCoordinator = Messages.WorkerCoordinator;
+export type WorkerCoordinatorMessage = Messages.CoordinatorMessage;
+export type WorkerOrPort = Messages.WorkerOrPort;
 
 export { type RunDedicatedWorkerOptions, runDedicatedWorker } from './dedicated-worker';
 export {

@@ -3,7 +3,7 @@
 //
 
 import { log } from '@dxos/log';
-import { SharedWorkerCoordinator as BaseSharedWorkerCoordinator } from '@dxos/worker-framework/coordinator';
+import { SharedWorker as BaseSharedWorkerCoordinator } from '@dxos/worker-framework/coordinator';
 
 const defaultCreateWorker = () =>
   new SharedWorker(new URL('#coordinator-worker', import.meta.url), {

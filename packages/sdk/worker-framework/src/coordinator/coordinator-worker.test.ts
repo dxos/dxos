@@ -6,27 +6,27 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 
-import type { WorkerCoordinatorMessage } from '../internal/messages';
-import { createCoordinatorOnConnect } from './coordinator-worker';
+import * as Messages from '../Messages';
+import { createOnConnect } from './coordinator-worker';
 
 /**
  * Simulated tab connected to a coordinator: sends messages on its own port and records everything
  * the coordinator delivers back. Models one browser tab's SharedWorker port pair.
  */
-type Predicate = (message: WorkerCoordinatorMessage) => boolean;
+type Predicate = (message: Messages.CoordinatorMessage) => boolean;
 
 type Tab = {
-  send: (message: WorkerCoordinatorMessage) => void;
-  received: WorkerCoordinatorMessage[];
-  waitFor: (predicate: Predicate) => Promise<WorkerCoordinatorMessage>;
+  send: (message: Messages.CoordinatorMessage) => void;
+  received: Messages.CoordinatorMessage[];
+  waitFor: (predicate: Predicate) => Promise<Messages.CoordinatorMessage>;
 };
 
 const connectTab = (onConnect: (ev: MessageEvent) => void): Tab => {
   const channel = new MessageChannel();
-  const received: WorkerCoordinatorMessage[] = [];
-  const waiters = new Set<{ predicate: Predicate; trigger: Trigger<WorkerCoordinatorMessage> }>();
+  const received: Messages.CoordinatorMessage[] = [];
+  const waiters = new Set<{ predicate: Predicate; trigger: Trigger<Messages.CoordinatorMessage> }>();
 
-  channel.port2.onmessage = (event: MessageEvent<WorkerCoordinatorMessage>) => {
+  channel.port2.onmessage = (event: MessageEvent<Messages.CoordinatorMessage>) => {
     received.push(event.data);
     for (const waiter of waiters) {
       if (waiter.predicate(event.data)) {
@@ -41,7 +41,7 @@ const connectTab = (onConnect: (ev: MessageEvent) => void): Tab => {
   onConnect({ ports: [channel.port1] } as unknown as MessageEvent);
 
   return {
-    // Mirror SharedWorkerCoordinator.sendMessage: `provide-port` carries non-cloneable ports that
+    // Mirror Coordinator.SharedWorker.sendMessage: `provide-port` carries non-cloneable ports that
     // must be transferred, everything else is a plain structured clone.
     send: (message) =>
       message.type === 'provide-port'
@@ -53,7 +53,7 @@ const connectTab = (onConnect: (ev: MessageEvent) => void): Tab => {
       if (existing) {
         return Promise.resolve(existing);
       }
-      const trigger = new Trigger<WorkerCoordinatorMessage>();
+      const trigger = new Trigger<Messages.CoordinatorMessage>();
       waiters.add({ predicate, trigger });
       return trigger.wait();
     },
@@ -61,13 +61,13 @@ const connectTab = (onConnect: (ev: MessageEvent) => void): Tab => {
 };
 
 const byType =
-  (type: WorkerCoordinatorMessage['type']): Predicate =>
+  (type: Messages.CoordinatorMessage['type']): Predicate =>
   (message) =>
     message.type === type;
 
 describe('coordinator worker routing', () => {
   test('broadcasts new-leader to every connected tab including the sender', async () => {
-    const onConnect = createCoordinatorOnConnect();
+    const onConnect = createOnConnect();
     const leader = connectTab(onConnect);
     const follower = connectTab(onConnect);
 
@@ -83,7 +83,7 @@ describe('coordinator worker routing', () => {
 
   test('delivers a late-joining follower request-port to the existing leader', async () => {
     // Reproduces the second-tab timing: the leader is already established when the follower joins.
-    const onConnect = createCoordinatorOnConnect();
+    const onConnect = createOnConnect();
     const leader = connectTab(onConnect);
     leader.send({ type: 'request-port', clientId: 'leader-client' });
     await leader.waitFor((message) => message.type === 'request-port' && message.clientId === 'leader-client');
@@ -100,7 +100,7 @@ describe('coordinator worker routing', () => {
   });
 
   test('routes provide-port only to the requesting tab and transfers ports', async () => {
-    const onConnect = createCoordinatorOnConnect();
+    const onConnect = createOnConnect();
     const leader = connectTab(onConnect);
     const follower = connectTab(onConnect);
 
@@ -120,7 +120,7 @@ describe('coordinator worker routing', () => {
       isOwner: false,
     });
 
-    const provided = (await follower.waitFor(byType('provide-port'))) as WorkerCoordinatorMessage & {
+    const provided = (await follower.waitFor(byType('provide-port'))) as Messages.CoordinatorMessage & {
       type: 'provide-port';
     };
     expect(provided.clientId).toBe('follower-client');
@@ -133,8 +133,8 @@ describe('coordinator worker routing', () => {
   });
 
   test('isolates tabs when each connect creates a new handler (regression)', async () => {
-    const leader = connectTab(createCoordinatorOnConnect());
-    const follower = connectTab(createCoordinatorOnConnect());
+    const leader = connectTab(createOnConnect());
+    const follower = connectTab(createOnConnect());
 
     leader.send({ type: 'new-leader', leaderId: 'leader-1' });
 
@@ -143,7 +143,7 @@ describe('coordinator worker routing', () => {
   });
 
   test('does not throw when provide-port targets an unknown client', async () => {
-    const onConnect = createCoordinatorOnConnect();
+    const onConnect = createOnConnect();
     const leader = connectTab(onConnect);
     const appChannel = new MessageChannel();
     const systemChannel = new MessageChannel();

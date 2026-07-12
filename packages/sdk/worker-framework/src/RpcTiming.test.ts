@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Rpc from '@effect/rpc/Rpc';
+import * as EffectRpc from '@effect/rpc/Rpc';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -12,22 +12,22 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import { makeRpcClient, serveRpcGroup } from './rpc';
-import { RpcTimingMetadata, applyRpcTimingMiddleware, getRpcTimingStatsSnapshot, resetRpcTimingStats } from './rpc-timing';
+import * as Rpc from './Rpc';
+import * as RpcTiming from './RpcTiming';
 
 class TimingRpcs extends RpcGroup.make(
-  Rpc.make('reportTiming', {
+  EffectRpc.make('reportTiming', {
     success: Schema.Struct({
       queueWaitMs: Schema.Number,
     }),
   }),
 ) {}
 
-const timingHandlers = applyRpcTimingMiddleware(TimingRpcs).toLayer(
+const timingHandlers = RpcTiming.applyMiddleware(TimingRpcs).toLayer(
   Effect.succeed({
     reportTiming: () =>
       Effect.gen(function* () {
-        const metadata = yield* RpcTimingMetadata;
+        const metadata = yield* RpcTiming.Metadata;
         return { queueWaitMs: metadata.queueWaitMs ?? -1 };
       }),
   }),
@@ -35,14 +35,13 @@ const timingHandlers = applyRpcTimingMiddleware(TimingRpcs).toLayer(
 
 describe('rpc timing middleware', () => {
   test('client stamps sent-at and server reports queue wait', async () => {
-    resetRpcTimingStats();
     const channel = new MessageChannel();
     onTestFinished(() => {
       channel.port1.close();
       channel.port2.close();
     });
 
-    const server = serveRpcGroup(channel.port1, TimingRpcs, timingHandlers, { timing: true });
+    const server = Rpc.serve(channel.port1, TimingRpcs, timingHandlers, { timing: true });
     await server.open();
     onTestFinished(() => server.close());
 
@@ -50,22 +49,18 @@ describe('rpc timing middleware', () => {
     onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
 
     const client = (await EffectEx.runPromise(
-      makeRpcClient(channel.port2, TimingRpcs, { timing: true }).pipe(Scope.extend(scope)),
+      Rpc.makeClient(channel.port2, TimingRpcs, { timing: true }).pipe(Scope.extend(scope)),
     )) as {
       reportTiming: (payload: Record<string, never>) => Effect.Effect<{ queueWaitMs: number }>;
     };
 
     const result = await EffectEx.runPromise(client.reportTiming({}));
     expect(result.queueWaitMs).toBeGreaterThanOrEqual(0);
-
-    const stats = getRpcTimingStatsSnapshot();
-    expect(stats.samples.length).toBeGreaterThan(0);
-    expect(stats.samples.some((sample) => sample.tag === 'reportTiming')).toBe(true);
   });
 
-  test('applyRpcTimingMiddleware is idempotent', () => {
-    const once = applyRpcTimingMiddleware(TimingRpcs);
-    const twice = applyRpcTimingMiddleware(once);
+  test('applyMiddleware is idempotent', () => {
+    const once = RpcTiming.applyMiddleware(TimingRpcs);
+    const twice = RpcTiming.applyMiddleware(once);
     expect(twice).toBe(once);
   });
 });

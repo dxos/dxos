@@ -4,7 +4,7 @@
 
 import { log } from '@dxos/log';
 
-import type { WorkerCoordinatorMessage } from '../internal/messages';
+import * as Messages from '../Messages';
 
 /**
  * Returns the onconnect handler for the coordinator SharedWorker. Exported so apps can use
@@ -14,7 +14,7 @@ import type { WorkerCoordinatorMessage } from '../internal/messages';
  * rather than in module globals so a single coordinator instance owns exactly one routing table —
  * this keeps the state testable in isolation and avoids accidental cross-instance sharing.
  */
-export const createCoordinatorOnConnect = (): ((ev: MessageEvent) => void) => {
+export const createOnConnect = (): ((ev: MessageEvent) => void) => {
   // All tab ports connected to this coordinator. Broadcast targets for leadership/heartbeat traffic.
   const ports = new Set<MessagePort>();
   // Reverse map from clientId to the tab port that requested a session, so directed `provide-port`
@@ -31,7 +31,7 @@ export const createCoordinatorOnConnect = (): ((ev: MessageEvent) => void) => {
     ports.add(port);
     log('coordinator: tab connected', { instanceId, ports: ports.size });
 
-    port.onmessage = (event: MessageEvent<WorkerCoordinatorMessage>) => {
+    port.onmessage = (event: MessageEvent<Messages.CoordinatorMessage>) => {
       const message = event.data;
       switch (message.type) {
         case 'request-port': {
@@ -88,6 +88,6 @@ export const createCoordinatorOnConnect = (): ((ev: MessageEvent) => void) => {
 /**
  * Installs the coordinator handler on `globalThis.onconnect` for a SharedWorker entrypoint.
  */
-export const runCoordinator = (): void => {
-  globalThis.onconnect = createCoordinatorOnConnect();
+export const run = (): void => {
+  globalThis.onconnect = createOnConnect();
 };

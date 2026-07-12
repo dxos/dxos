@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 
-import type { WorkerCoordinator, WorkerCoordinatorMessage } from '../internal/messages';
+import * as Messages from '../Messages';
 
 /**
  * Coordinator for single-client mode (e.g. Tauri / single-window).
@@ -14,10 +14,10 @@ import type { WorkerCoordinator, WorkerCoordinatorMessage } from '../internal/me
 // - SharedWorkers crash on iOS WKWebView (Apple Bug FB11723920).
 // - ServiceWorkers require HTTP/HTTPS origins and cannot be used with custom URL schemes.
 // TODO(wittjosiah): To support multiple windows on native platforms, implement coordinator in the Tauri Rust backend.
-export class SingleClientCoordinator implements WorkerCoordinator {
-  readonly onMessage = new Event<WorkerCoordinatorMessage>();
+export class SingleClient implements Messages.WorkerCoordinator {
+  readonly onMessage = new Event<Messages.CoordinatorMessage>();
 
-  sendMessage(message: WorkerCoordinatorMessage): void {
+  sendMessage(message: Messages.CoordinatorMessage): void {
     // Echo messages back to self (single client, no cross-tab needed).
     queueMicrotask(() => this.onMessage.emit(message));
   }

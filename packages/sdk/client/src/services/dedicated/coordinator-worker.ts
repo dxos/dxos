@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { createCoordinatorOnConnect } from '@dxos/worker-framework/coordinator';
+export { createOnConnect as createCoordinatorOnConnect } from '@dxos/worker-framework/coordinator';

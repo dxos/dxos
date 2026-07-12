@@ -6,7 +6,7 @@ import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
-import { runWorker } from '@dxos/worker-framework/worker';
+import * as Worker from '@dxos/worker-framework/worker';
 
 import { STORAGE_LOCK_KEY } from '../../lock-key';
 
@@ -17,7 +17,7 @@ export type RunDedicatedWorkerOptions = {
 
 /** Runs the dedicated worker loop. Exported so apps can use a custom worker entrypoint and inject setup (e.g. observability). */
 export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): void => {
-  runWorker({
+  Worker.run({
     storageLockKey: STORAGE_LOCK_KEY,
     createRuntime: async ({ config: configValues, requestShutdown }) => {
       const config = new Config(configValues ?? {});
@@ -43,7 +43,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         acquireLock: async () => {},
         releaseLock: () => {},
         automaticallyConnectWebrtc: false,
-        // Liveness and displacement are owned by worker-framework's runWorker.
+        // Liveness and displacement are owned by worker-framework's Worker.run.
         manageLifecycle: false,
         sqliteLayer: opfsAvailable ? undefined : layerMemory,
       });

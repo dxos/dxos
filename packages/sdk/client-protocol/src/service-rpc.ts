@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Rpc from '@effect/rpc/Rpc';
+import type * as EffectRpc from '@effect/rpc/Rpc';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as RpcSchema from '@effect/rpc/RpcSchema';
 import * as RpcTest from '@effect/rpc/RpcTest';
@@ -33,7 +33,7 @@ import {
   WorkerService,
 } from '@dxos/protocols/rpc';
 import { type RpcPort, layerProtocolRpcPortClient } from '@dxos/rpc';
-import { makeRpcClient, makeRpcClientOverProtocol, serveRpcGroup } from '@dxos/worker-framework';
+import { Rpc } from '@dxos/worker-framework';
 
 import { type ClientServices } from './service';
 
@@ -146,7 +146,7 @@ export type ClientRpcServerParams = {
  */
 export class ClientRpcServer {
   readonly #params: ClientRpcServerParams;
-  #server?: ReturnType<typeof serveRpcGroup>;
+  #server?: ReturnType<typeof Rpc.serve>;
 
   constructor(params: ClientRpcServerParams) {
     this.#params = params;
@@ -157,7 +157,7 @@ export class ClientRpcServer {
       return;
     }
 
-    this.#server = serveRpcGroup(this.#params.port, ClientServicesRpcs, makeClientServicesHandlers(this.#params), {
+    this.#server = Rpc.serve(this.#params.port, ClientServicesRpcs, makeClientServicesHandlers(this.#params), {
       disableTracing: true,
       concurrency: 'unbounded',
     });
@@ -178,7 +178,7 @@ export class ClientRpcServer {
 export const makeClientServicesHandlers = ({
   services,
   onRequest,
-}: Pick<ClientRpcServerParams, 'services' | 'onRequest'>): Layer.Layer<Rpc.ToHandler<ClientServicesRpcUnion>> => {
+}: Pick<ClientRpcServerParams, 'services' | 'onRequest'>): Layer.Layer<EffectRpc.ToHandler<ClientServicesRpcUnion>> => {
   const gate = onRequest ? Effect.tryPromise({ try: onRequest, catch: toError }) : Effect.void;
 
   const handlers: Record<string, (payload: unknown) => unknown> = {};
@@ -250,8 +250,8 @@ export const makeClientServicesRpc = (
   // An RpcPort (byte transport) carries the legacy iframe/devtools bridges; a MessagePort uses the
   // native Worker-platform protocol.
   ('send' in port
-    ? makeRpcClientOverProtocol(layerProtocolRpcPortClient(port), ClientServicesRpcs, { disableTracing: true })
-    : makeRpcClient(port, ClientServicesRpcs, { disableTracing: true })
+    ? Rpc.makeClientOverProtocol(layerProtocolRpcPortClient(port), ClientServicesRpcs, { disableTracing: true })
+    : Rpc.makeClient(port, ClientServicesRpcs, { disableTracing: true })
   ).pipe(Effect.map((client) => client as ClientServicesRpc));
 
 /**

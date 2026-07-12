@@ -5,12 +5,12 @@
 import { Event } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import type { WorkerCoordinator, WorkerCoordinatorMessage } from '../internal/messages';
+import * as Messages from '../Messages';
 
-export class MemoryWorkerCoordiantor implements WorkerCoordinator {
-  readonly onMessage = new Event<WorkerCoordinatorMessage>();
+export class Memory implements Messages.WorkerCoordinator {
+  readonly onMessage = new Event<Messages.CoordinatorMessage>();
 
-  sendMessage(message: WorkerCoordinatorMessage): void {
+  sendMessage(message: Messages.CoordinatorMessage): void {
     log('memory coordinator got message', { type: message.type });
     setTimeout(() => this.onMessage.emit(message));
   }

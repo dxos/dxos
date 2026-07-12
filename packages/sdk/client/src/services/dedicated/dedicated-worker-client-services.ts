@@ -21,18 +21,18 @@ import { subscribeStream } from '@dxos/protocols';
 import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { type ServiceBundle } from '@dxos/rpc';
 import type { MaybePromise } from '@dxos/util';
-import { type RpcGroupServer, type WorkerCoordinator, type WorkerOrPort } from '@dxos/worker-framework';
-import { type LeaderTimeoutOptions, WorkerConnection } from '@dxos/worker-framework/client';
+import { Messages, Rpc } from '@dxos/worker-framework';
+import * as Client from '@dxos/worker-framework/client';
 
 import { ClientServicesProxy } from '../service-proxy';
 
 export const LEADER_LOCK_KEY = '@dxos/client/DedicatedWorkerClientServices/LeaderLock';
 
-export type { LeaderTimeoutOptions };
+export type LeaderTimeoutOptions = Client.LeaderTimeouts;
 
 export interface DedicatedWorkerClientServicesOptions {
-  createWorker: () => WorkerOrPort;
-  createCoordinator: () => MaybePromise<WorkerCoordinator>;
+  createWorker: () => Messages.WorkerOrPort;
+  createCoordinator: () => MaybePromise<Messages.WorkerCoordinator>;
   config?: Config;
   leaderTimeouts?: LeaderTimeoutOptions;
 }
@@ -42,9 +42,9 @@ export interface DedicatedWorkerClientServicesOptions {
  * Leader election is used to ensure only a single worker is running.
  */
 export class DedicatedWorkerClientServices extends Resource implements ClientServicesProvider {
-  readonly #connection: WorkerConnection;
+  readonly #connection: Client.Connection;
   #services: ClientServicesProxy | undefined;
-  #bridgeServer: RpcGroupServer | undefined;
+  #bridgeServer: Rpc.GroupServer | undefined;
   #releaseTabLock: (() => void) | undefined;
   #loggingStreamCleanup?: () => void;
   readonly #logFilter: LogFilter[];
@@ -52,7 +52,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
   constructor(options: DedicatedWorkerClientServicesOptions) {
     super();
     this.#logFilter = parseFilter('error,warn');
-    this.#connection = new WorkerConnection({
+    this.#connection = new Client.Connection({
       createWorker: options.createWorker,
       createCoordinator: options.createCoordinator,
       leaderLockKey: LEADER_LOCK_KEY,

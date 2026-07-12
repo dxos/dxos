@@ -7,7 +7,7 @@ import { Config } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
-import { runWorker } from '@dxos/worker-framework/worker';
+import * as Worker from '@dxos/worker-framework/worker';
 
 import { STORAGE_LOCK_KEY } from '../lock-key';
 
@@ -26,11 +26,11 @@ export class TestWorkerFactory extends Resource {
   make(): MessagePort {
     log('worker-entrypoint');
     const messageChannel = new MessageChannel();
-    // runWorker listens via addEventListener, which (unlike assigning onmessage) does not implicitly
+    // Worker.run listens via addEventListener, which (unlike assigning onmessage) does not implicitly
     // start the port, so dispatch it explicitly rather than relying on the host's auto-start.
     messageChannel.port1.start();
 
-    runWorker({
+    Worker.run({
       endpoint: {
         postMessage: (message, transfer) =>
           messageChannel.port1.postMessage(message, transfer ? { transfer } : undefined),
@@ -50,7 +50,7 @@ export class TestWorkerFactory extends Resource {
           acquireLock: async () => {},
           releaseLock: () => {},
           automaticallyConnectWebrtc: false,
-          // Liveness and displacement are owned by worker-framework's runWorker.
+          // Liveness and displacement are owned by worker-framework's Worker.run.
           manageLifecycle: false,
           sqliteLayer: sqliteLayerMemory,
         });

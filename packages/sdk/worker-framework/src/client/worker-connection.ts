@@ -8,18 +8,13 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { MaybePromise } from '@dxos/util';
 
+import * as Messages from '../Messages';
 import { isAbortError, requestExclusiveLockWithTimeout, waitWithLockOrRpcTimeout } from '../internal/locks';
-import type {
-  DedicatedWorkerMessage,
-  WorkerCoordinator,
-  WorkerCoordinatorMessage,
-  WorkerOrPort,
-} from '../internal/messages';
 
 // Sentinel resolved when a follower gives up waiting for a port from the leader.
 const LEADER_TIMEOUT = Symbol('leader-timeout');
 
-export interface LeaderTimeoutOptions {
+export interface LeaderTimeouts {
   /**
    * Interval at which a leader broadcasts liveness heartbeats while holding the lock.
    */
@@ -41,23 +36,23 @@ export interface LeaderTimeoutOptions {
   retryBackoff?: number;
 }
 
-export type WorkerConnectionHandle = {
+export type Handle = {
   close(): Promise<void>;
 };
 
-export type WorkerConnectionOptions = {
-  createWorker: () => WorkerOrPort;
-  createCoordinator: () => MaybePromise<WorkerCoordinator>;
+export type Options = {
+  createWorker: () => Messages.WorkerOrPort;
+  createCoordinator: () => MaybePromise<Messages.WorkerCoordinator>;
   leaderLockKey: string;
   config?: Record<string, any>;
-  leaderTimeouts?: LeaderTimeoutOptions;
+  leaderTimeouts?: LeaderTimeouts;
   onConnect: (args: {
     appPort: MessagePort;
     systemPort: MessagePort;
     leaderId: string;
     livenessLockKey: string;
     isOwner: boolean;
-  }) => Promise<WorkerConnectionHandle>;
+  }) => Promise<Handle>;
 };
 
 const DEFAULT_LEADER_HEARTBEAT_INTERVAL = 1_000;
@@ -74,14 +69,14 @@ const MAX_LEADER_RETRY_BACKOFF = 30_000;
 
 /**
  * Manages leader election, coordinator port exchange, and worker lifecycle for dedicated workers.
- * Service-specific wiring is injected via {@link WorkerConnectionOptions.onConnect}.
+ * Service-specific wiring is injected via {@link Options.onConnect}.
  */
-export class WorkerConnection extends Resource {
-  readonly #createWorker: () => WorkerOrPort;
-  readonly #createCoordinator: () => MaybePromise<WorkerCoordinator>;
+export class Connection extends Resource {
+  readonly #createWorker: () => Messages.WorkerOrPort;
+  readonly #createCoordinator: () => MaybePromise<Messages.WorkerCoordinator>;
   readonly #leaderLockKey: string;
   readonly #config: Record<string, any> | undefined;
-  readonly #onConnect: WorkerConnectionOptions['onConnect'];
+  readonly #onConnect: Options['onConnect'];
   readonly #clientId = `worker-connection-${crypto.randomUUID()}`;
 
   readonly #leaderHeartbeatInterval: number;
@@ -89,9 +84,9 @@ export class WorkerConnection extends Resource {
   readonly #leaderPortTimeout: number;
   readonly #leaderRetryBackoff: number;
 
-  #connectionHandle: WorkerConnectionHandle | undefined;
+  #connectionHandle: Handle | undefined;
   #leaderSession: LeaderSession | undefined;
-  #coordinator: WorkerCoordinator | undefined;
+  #coordinator: Messages.WorkerCoordinator | undefined;
 
   // Timestamp (ms) of the last heartbeat seen from any leader; 0 if none observed yet.
   #lastLeaderHeartbeat = 0;
@@ -110,7 +105,7 @@ export class WorkerConnection extends Resource {
   readonly closed = new Event<Error | undefined>();
   readonly reconnected = new Event<void>();
 
-  constructor(options: WorkerConnectionOptions) {
+  constructor(options: Options) {
     super();
     this.#createWorker = options.createWorker;
     this.#createCoordinator = options.createCoordinator;
@@ -258,7 +253,7 @@ export class WorkerConnection extends Resource {
 
     try {
       log('worker-connection: requesting port from leader');
-      const result = await new Promise<(WorkerCoordinatorMessage & { type: 'provide-port' }) | typeof LEADER_TIMEOUT>(
+      const result = await new Promise<(Messages.CoordinatorMessage & { type: 'provide-port' }) | typeof LEADER_TIMEOUT>(
         (resolve) => {
           invariant(this.#coordinator);
 
@@ -393,18 +388,18 @@ export class WorkerConnection extends Resource {
  * Represents a tab becoming a leader and running the worker.
  */
 class LeaderSession extends Resource {
-  readonly #createWorker: () => WorkerOrPort;
-  readonly #coordinator: WorkerCoordinator;
+  readonly #createWorker: () => Messages.WorkerOrPort;
+  readonly #coordinator: Messages.WorkerCoordinator;
   readonly #config: Record<string, any> | undefined;
   readonly #ownerClientId: string;
   readonly #leaderId = `leader-${crypto.randomUUID()}`;
 
-  #worker!: WorkerOrPort;
+  #worker!: Messages.WorkerOrPort;
   #livenessLockKey!: string;
 
   constructor(
-    createWorker: () => WorkerOrPort,
-    coordinator: WorkerCoordinator,
+    createWorker: () => Messages.WorkerOrPort,
+    coordinator: Messages.WorkerCoordinator,
     config: Record<string, any> | undefined,
     ownerClientId: string,
   ) {
@@ -422,8 +417,8 @@ class LeaderSession extends Resource {
     this.#worker = this.#createWorker();
     performance.mark('worker-connection:spawned');
     const listening = new Trigger();
-    const ready = new Trigger<DedicatedWorkerMessage & { type: 'ready' }>();
-    this.#worker.onmessage = (event: MessageEvent<DedicatedWorkerMessage>) => {
+    const ready = new Trigger<Messages.DedicatedWorkerMessage & { type: 'ready' }>();
+    this.#worker.onmessage = (event: MessageEvent<Messages.DedicatedWorkerMessage>) => {
       switch (event.data.type) {
         case 'listening':
           listening.wake();
@@ -503,11 +498,11 @@ class LeaderSession extends Resource {
     }
   }
 
-  #sendMessage(msg: DedicatedWorkerMessage) {
+  #sendMessage(msg: Messages.DedicatedWorkerMessage) {
     this.#worker.postMessage(msg);
   }
 }
 
-const isWorker = (worker: WorkerOrPort): worker is Worker => {
+const isWorker = (worker: Messages.WorkerOrPort): worker is Worker => {
   return typeof Worker !== 'undefined' && worker instanceof Worker;
 };

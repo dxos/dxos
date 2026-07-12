@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import { getRpcTimingStatsSnapshot, serveRpcGroup } from '@dxos/worker-framework';
-import { runWorker } from '@dxos/worker-framework/worker';
+import { Rpc, RpcTiming } from '@dxos/worker-framework';
+import * as Worker from '@dxos/worker-framework/worker';
 
 import { COUNTER_LIVENESS_LOCK_KEY, COUNTER_STORAGE_LOCK_KEY } from './counter-constants';
 import { CounterRpcs, TimingStatsSample, TimingStatsSnapshot } from './counter-service';
@@ -46,7 +46,7 @@ const counterHandlers = CounterRpcs.toLayer(
     ping: () => Effect.void,
     getTimingStats: () =>
       Effect.sync(() => {
-        const snapshot = getRpcTimingStatsSnapshot();
+        const snapshot = RpcTiming.getStatsSnapshot();
         return new TimingStatsSnapshot({
           maxQueueWaitMs: snapshot.maxQueueWaitMs,
           maxServiceMs: snapshot.maxServiceMs,
@@ -65,18 +65,18 @@ const counterHandlers = CounterRpcs.toLayer(
   }),
 );
 
-runWorker({
+Worker.run({
   storageLockKey: COUNTER_STORAGE_LOCK_KEY,
   createRuntime: async () => {
     // Hold the liveness lock for the worker's lifetime. The leader's blocked request on this key
     // is only granted once the worker is torn down (the browser auto-releases held locks), which
-    // is how {@link WorkerConnection} detects worker termination.
+    // is how the client Connection detects worker termination.
     void navigator.locks.request(COUNTER_LIVENESS_LOCK_KEY, () => new Promise<never>(() => {}));
 
     return {
       livenessLockKey: COUNTER_LIVENESS_LOCK_KEY,
       createSession: async ({ appPort }) => {
-        const server = serveRpcGroup(appPort, CounterRpcs, counterHandlers, {
+        const server = Rpc.serve(appPort, CounterRpcs, counterHandlers, {
           timing: { minLogMs: 20 },
         });
         await server.open();
