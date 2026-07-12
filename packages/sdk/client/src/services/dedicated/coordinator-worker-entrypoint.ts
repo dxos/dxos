@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createCoordinatorOnConnect } from '@dxos/worker-framework/coordinator';
+import { runCoordinator } from '@dxos/worker-framework/coordinator';
 
-globalThis.onconnect = createCoordinatorOnConnect();
+runCoordinator();
