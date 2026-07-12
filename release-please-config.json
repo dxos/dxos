@@ -405,6 +405,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/progress/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/echo/package.json",
           "jsonpath": "$.version"
         },
@@ -861,6 +866,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-preview/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-progress/package.json",
           "jsonpath": "$.version"
         },
         {

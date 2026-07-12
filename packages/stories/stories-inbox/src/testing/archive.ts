@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { type Mailbox } from '@dxos/plugin-inbox';
 import { Message } from '@dxos/types';
 
@@ -66,4 +67,26 @@ export const replaceFeed = async (
   await db.flush({ indexes: true });
 
   return messages.length;
+};
+
+/**
+ * Returns the mailbox to a clean slate: removes the sync binding(s) targeting it, deletes every saved
+ * {@link Connection} (and its {@link AccessToken}), and empties the feed. Used by the story's Reset
+ * control — the binding removal alone leaves Connection accounts behind, so they otherwise accumulate
+ * in the Connect menu across reconnects.
+ */
+export const resetMailbox = async (mailbox: Mailbox.Mailbox, db: Database.Database): Promise<void> => {
+  const bindings = await db.query(Query.select(Filter.id(mailbox.id)).targetOf(SyncBinding.SyncBinding)).run();
+  bindings.filter(SyncBinding.instanceOf).forEach((binding) => db.remove(binding));
+
+  const connections = await db.query(Filter.type(Connection.Connection)).run();
+  for (const connection of connections) {
+    const token = await connection.accessToken?.tryLoad();
+    if (token) {
+      db.remove(token);
+    }
+    db.remove(connection);
+  }
+
+  await replaceFeed(mailbox, [], db);
 };

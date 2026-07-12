@@ -191,6 +191,14 @@ export const runGmailSync = ({
     const statsCompartments = (yield* Capability.getAll(AppCapabilities.StatsPanel)).map((store) =>
       store.compartment(meta.profile.key),
     );
+
+    // Live progress monitor (optional — no host in headless/test runs, so `getAll` yields nothing).
+    // Keyed by the mailbox URI so MailboxArticle and the R0 popover can subscribe to this run.
+    const mailboxUri = Obj.getURI(mailbox).toString();
+    const progressMonitors = (yield* Capability.getAll(AppCapabilities.ProgressRegistry)).map((registry) =>
+      registry.register(mailboxUri, { label: mailbox.name ?? 'Mailbox' }),
+    );
+    const advanceProgress = (by: number) => progressMonitors.forEach((monitor) => monitor.advance(by));
     const startedAt = new Date().toISOString();
     const startMs = Date.now();
     const threads = new Set<string>();
@@ -247,6 +255,7 @@ export const runGmailSync = ({
         }
         attachmentCount += mapped.attachments?.length ?? 0;
         publishStats();
+        advanceProgress(1);
         return mapped;
       }),
     );
@@ -290,6 +299,12 @@ export const runGmailSync = ({
           stats,
         }),
       ),
+      Effect.tapError((error) =>
+        Effect.sync(() => {
+          const message = error instanceof Error ? error.message : String(error);
+          progressMonitors.forEach((monitor) => monitor.fail(message));
+        }),
+      ),
     );
 
     // Flush indexes once, at the end of the run, so cross-run dedup / contact resolution observe this
@@ -302,6 +317,11 @@ export const runGmailSync = ({
     finishedMs = Date.now();
     finishedAt = new Date(finishedMs).toISOString();
     publishStats();
+
+    progressMonitors.forEach((monitor) => {
+      monitor.done();
+      monitor.remove();
+    });
 
     log('gmail sync complete', { newMessages: stats.newMessages });
     return { newMessages: stats.newMessages };
