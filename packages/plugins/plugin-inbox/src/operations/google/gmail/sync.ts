@@ -312,8 +312,10 @@ export const runGmailSync = ({
       ),
       Effect.tapError((error) =>
         Effect.sync(() => {
-          const message = error instanceof Error ? error.message : String(error);
-          progressMonitors.forEach((monitor) => monitor.fail(message));
+          // Log the raw error for debugging; the meter shows only a short reason (the full exception —
+          // provider errors, auth tokens — must not reach the UI).
+          log.warn('gmail sync failed', { error });
+          progressMonitors.forEach((monitor) => monitor.fail('Sync failed'));
         }),
       ),
     );
