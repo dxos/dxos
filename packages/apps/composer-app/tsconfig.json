@@ -295,9 +295,6 @@
       "path": "../../plugins/plugin-freeq"
     },
     {
-      "path": "../../plugins/plugin-gallery"
-    },
-    {
       "path": "../../plugins/plugin-game"
     },
     {
@@ -311,6 +308,12 @@
     },
     {
       "path": "../../plugins/plugin-ibkr"
+    },
+    {
+      "path": "../../plugins/plugin-ideogram"
+    },
+    {
+      "path": "../../plugins/plugin-illustrator"
     },
     {
       "path": "../../plugins/plugin-inbox"

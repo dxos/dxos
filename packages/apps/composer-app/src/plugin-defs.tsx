@@ -34,12 +34,13 @@ import { DuffelPlugin } from '@dxos/plugin-duffel/plugin';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
 import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { FreeqPlugin } from '@dxos/plugin-freeq/plugin';
-import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
 import { GeneratorPlugin } from '@dxos/plugin-generator/plugin';
 import { GitHubPlugin } from '@dxos/plugin-github/plugin';
 import { GraphPlugin } from '@dxos/plugin-graph/plugin';
 import { IbkrPlugin } from '@dxos/plugin-ibkr/plugin';
+import { IdeogramPlugin } from '@dxos/plugin-ideogram/plugin';
+import { IllustratorPlugin } from '@dxos/plugin-illustrator/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
 import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
@@ -146,8 +147,9 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       CodePlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
       MagazinePlugin.meta.profile.key,
-      GalleryPlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
+      IdeogramPlugin.meta.profile.key,
+      IllustratorPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
       OsrmPlugin.meta.profile.key,
       OutlinerPlugin.meta.profile.key,
@@ -216,6 +218,8 @@ export const getPlugins = ({
     DoctorPlugin(),
     DuffelPlugin(),
     IbkrPlugin(),
+    IdeogramPlugin(),
+    IllustratorPlugin(),
     ExplorerPlugin(),
     MagazinePlugin(),
     GamePlugin(),
@@ -278,7 +282,6 @@ export const getPlugins = ({
     // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
     BlueskyPlugin(),
     FreeqPlugin(),
-    GalleryPlugin(),
     GitHubPlugin(),
     IrohBeaconPlugin(),
     LinearPlugin(),

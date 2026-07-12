@@ -20,7 +20,7 @@ export default Config2.make({
       space's ECHO properties so the file system state survives across sessions and devices.
 
       The plugin registers a \`BlobBackend\` on the ECHO Hypergraph (and a matching \`FileCapabilities.Backend\`
-      descriptor) so any plugin that uses \`plugin-file\` (e.g. \`plugin-gallery\`) can upload files and resolve
+      descriptor) so any plugin that uses \`plugin-file\` (e.g. \`plugin-illustrator\`) can upload files and resolve
       \`wnfs://\` URLs without coupling to the storage implementation. The blockstore automatically queues
       blocks while offline and flushes them when connectivity is restored.
     `,

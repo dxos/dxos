@@ -418,9 +418,6 @@
       "path": "packages/plugins/plugin-freeq/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-gallery/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-game/tsconfig.json"
     },
     {
@@ -434,6 +431,12 @@
     },
     {
       "path": "packages/plugins/plugin-ibkr/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-ideogram/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-illustrator/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"

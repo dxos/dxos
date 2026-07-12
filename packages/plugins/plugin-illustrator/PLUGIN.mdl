@@ -1,0 +1,395 @@
+---
+id: org.dxos.plugin.illustrator
+name: IllustratorPlugin
+version: 0.1.0
+---
+
+An image-creation plugin for `DXOS` Composer. An `ImageArtifact` pairs a
+prompt (`Instructions`) with an ordered set of `Image`s — each either
+**generated** (remote URL) or **uploaded** (a `File.File` blob). The user
+authors the prompt, generates against a pluggable `ImageGenerationService`
+and/or uploads their own images, and reviews the results — either one image
+at a time or all together in a gallery.
+
+The plugin is **provider-agnostic**: it defines the `ImageGenerationService`
+abstraction and never talks to a specific image API. Concrete providers
+(e.g. `plugin-ideogram`) register an implementation and manage their own
+credentials via the Connector system. Credentialed access is resolved at
+generation time through `CredentialsService` keyed by the provider's
+`source` (the same `AccessToken.source` a Connector stores), so the
+Illustrator plugin depends on no provider for generation; the toolbar surfaces
+the provider's `ConnectorAuth` "Connect" button until a credential exists.
+
+The gallery view uses a masonry gallery component **vendored from
+`plugin-gallery`** (`useImageUrl` + `@dxos/react-ui-masonry`) generalized to
+render **both** remote-URL images and `File.File` blobs.
+`plugin-illustrator` **supersedes and replaces `plugin-gallery`, which is
+deleted in this milestone.**
+
+## Scope of this milestone
+
+This milestone spans **two** new packages. Per convention the authoritative
+spec lives here; the `plugin-ideogram` additions are captured as a
+cross-package section and `plugin-ideogram` also ships its own `PLUGIN.mdl`.
+
+| Package             | Additions                                                                                                   |
+| ------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `plugin-illustrator`| New UI plugin: `ImageArtifact` + `Image` types, the `ImageGenerationService` abstraction, the `generateImage` op, upload, the `ImageArtifactArticle` surface, and a vendored masonry gallery (this spec's home). |
+| `plugin-ideogram`   | New headless plugin: a Connector for `ideogram.ai` (API-key credential form) + an `ImageGenerationService` implementation. Owns its own `PLUGIN.mdl`. |
+| `plugin-gallery`    | **Deleted** — superseded by `plugin-illustrator` (unregistered from composer-app; package + root-aggregate entries removed). |
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term        | URI                          |
+| ----------- | ---------------------------- |
+| `type`      | `org.dxos.mdl.type@1.0`      |
+| `feat`      | `org.dxos.mdl.feat@1.0`      |
+| `op`        | `org.dxos.mdl.op@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0` |
+| `test`      | `org.dxos.mdl.test@1.0`      |
+
+## Types
+
+```mdl
+type Image
+  desc: >
+    One image held by an ImageArtifact (typename org.dxos.type.image) —
+    either generated (remote `url` + provenance) or uploaded (a `file`
+    blob). Exactly one of `url` / `file` is populated. Note: generated URLs
+    are ephemeral and may expire; upload a file or re-materialize for
+    permanence.
+  fields:
+    url?: string                # remote image URL (Format.URL annotation); generated images
+    file?: Ref<File.File>       # uploaded image blob (via the file uploader)
+    prompt?: string             # resolved / magic prompt actually used
+    model?: string              # provider model id (e.g. ideogram V_2)
+    resolution?: string         # e.g. "1024x1024"
+    seed?: number
+    styleType?: string
+    isImageSafe?: boolean
+    metadata?: Record<string, unknown>   # provider-specific extras
+```
+
+```mdl
+type ImageArtifact
+  desc: >
+    Root ECHO object (typename org.dxos.type.imageArtifact). Pairs an
+    editable prompt with the images generated for / uploaded to it.
+  fields:
+    name?: string
+    instructions: Ref<Instructions>       # prompt body lives in Instructions.text (Ref<Text>)
+    images: Ref<Image>[]                  # ordered generated + uploaded images
+  factory:
+    # make() creates a child Instructions (which owns a Text body) and
+    # parents it to the artifact so it cascade-deletes / deep-clones.
+```
+
+```mdl
+type ImageGenerationRequest
+  desc: Provider-agnostic generation request (Effect Schema in IllustratorCapabilities).
+  fields:
+    prompt: string
+    negativePrompt?: string
+    aspectRatio?: string        # e.g. "1x1", "16x9"
+    model?: string
+    styleType?: string
+    seed?: number
+    count?: number              # number of images to generate (default 1)
+```
+
+```mdl
+type GeneratedImageData
+  desc: One image entry in a generation result (before it becomes an Image).
+  fields:
+    url: string
+    prompt?: string
+    model?: string
+    resolution?: string
+    seed?: number
+    styleType?: string
+    isImageSafe?: boolean
+    metadata?: Record<string, unknown>
+```
+
+```mdl
+type ImageGenerationResult
+  fields:
+    images: GeneratedImageData[]
+```
+
+```mdl
+type ImageGenerationService
+  desc: >
+    The image-creation abstraction. Contributed by provider plugins via
+    Capability.contributes(IllustratorCapabilities.ImageGenerationService,
+    [service]) and resolved (by id, else first) by the generateImage op.
+    generate() is credential-agnostic: the op resolves the API key from
+    the Connector-managed AccessToken (via CredentialsService keyed by
+    `source`) and passes it in. `source` is undefined for keyless
+    providers (e.g. the test mock).
+  fields:
+    id: string                  # e.g. "ideogram"
+    label: string               # e.g. "Ideogram"
+    source?: string             # AccessToken.source for the credential (e.g. "ideogram.ai")
+    connectorId?: string        # Connection.connectorId; lets the UI render the ConnectorAuth "Connect" button
+    generate: (request: ImageGenerationRequest, options: { apiKey?: Redacted<string> }) => Promise<ImageGenerationResult>
+  capability:
+    # Capability.make<ImageGenerationService>(`${meta.profile.key}.capability.image-generation-service`)
+    # (single-service contribution, resolved via Capability.getAll like TripCapabilities.RoutingService)
+```
+
+## Operations
+
+```mdl
+op generateImage
+  desc: >
+    Generate images for an ImageArtifact from its prompt and append them.
+    Resolves the ImageGenerationService (by `provider`, else the first
+    registered), resolves the provider's API key from the
+    Connector-managed AccessToken via CredentialsService when
+    `service.source` is set, calls service.generate(), and appends an
+    Image per result to artifact.images.
+  input:
+    artifact: Ref<ImageArtifact>
+    provider?: string           # ImageGenerationService.id; default = first registered
+  output:
+    count: number               # number of images appended
+  errors:
+    - NoImageGenerationService — no provider registered (or none matching `provider`).
+    - MissingCredential — provider needs a `source` credential but none is connected.
+    - GenerationError — bubbled provider failure.
+  services:
+    - Database.Service
+    - Capability.Service
+    - CredentialsService
+  effects: [echo:write]
+  behavior:
+    - Load the artifact and its instructions; read the prompt from
+      instructions.text (Ref<Text>).
+    - Pick the service; if service.source set, apiKey =
+      CredentialsService.getApiKey({ service: service.source }).
+    - Build the ImageGenerationRequest from the prompt (+ artifact options
+      later); await service.generate(request, { apiKey }).
+    - For each result, Image.make({ url, … }) and push Ref.make(image)
+      onto artifact.images.
+```
+
+## Components
+
+```mdl
+component ImageArtifactArticle
+  desc: >
+    Main article surface for an ImageArtifact. Panel + Toolbar (tabs) with
+    the prompt below and the selected image (or the gallery) below that.
+  props:
+    role: string
+    subject: ImageArtifact
+    attendableId?: string
+  state:
+    selected: 'all' | number    # 'all' → gallery; number → single image index
+    generating: boolean
+  actions:
+    generate()                  # invokes op:generateImage; shows generating state
+    upload()                    # opens a file picker; uploads via useFileUpload → file-backed Image
+    select(tab: 'all' | number)
+  layout: |
+    ┌──────────────────────────────────────────────────┐
+    │ [All] [1] [2] [3] …        [Upload] [Generate]   │  ← Toolbar tabs + upload + connect/generate
+    ├──────────────────────────────────────────────────┤
+    │ prompt: a serene mountain lake at dawn …          │  ← Instructions prompt (editable)
+    ├──────────────────────────────────────────────────┤
+    │                                                  │
+    │            selected image                        │  ← single image, or…
+    │        (or Masonry gallery for "All")            │  ← vendored ImageGallery
+    │                                                  │
+    └──────────────────────────────────────────────────┘
+  notes:
+    - When the resolved provider has a `connectorId` and no matching Connection
+      exists, the Generate slot renders the provider's `ConnectorAuth` surface
+      ("Connect …") instead of the Generate button.
+```
+
+```mdl
+component PromptEditor
+  desc: >
+    Renders and edits the ImageArtifact's prompt (the Instructions Text body),
+    live-bound to the Text object via useTextEditor.
+  props:
+    id: string
+    text?: Text.Text
+```
+
+```mdl
+component ImageView
+  desc: A single Image (generated URL or uploaded file) plus its provenance metadata.
+  props:
+    image?: { url?; file?: Ref<File.File>; prompt?; model?; resolution?; seed? }
+```
+
+## Cross-package additions
+
+### Vendored gallery (from plugin-gallery)
+
+`plugin-illustrator` vendors a masonry gallery (`ImageGallery`) adapted from
+`plugin-gallery`'s `Lightbox` (`@dxos/react-ui-masonry` grid of `GalleryImage`
+cards), plus the `useImageUrl` + `useFileUpload` hooks, so no `Gallery` ECHO
+object is required. Each tile resolves its own source via `useImageSource`
+(remote `url`, else the uploaded file's `data:`/`blob:` URL). plugin-gallery
+is deleted (see the scope table).
+
+```mdl
+type ImageSource (plugin-illustrator/hooks)
+  desc: A gallery item — a remote URL and/or an uploaded File.File ref.
+  fields:
+    url?: string
+    file?: Ref<File.File>
+    name?: string
+
+component ImageGallery (plugin-illustrator, vendored)
+  desc: >
+    Masonry of images. Each tile calls useImageSource(item) → src (url, else
+    loaded-file blob) and renders a presentation-only GalleryImage. Lives in
+    src/components (no app-framework deps).
+  props:
+    images: ReadonlyArray<ImageSource>
+    emptyMessage?: ReactNode
+```
+
+### plugin-ideogram — provider + connector (headless)
+
+Summarized here; authoritative in `plugin-ideogram/PLUGIN.mdl`.
+
+```mdl
+feat IdeogramProvider
+  desc: >
+    Headless plugin. (1) Registers a Connector entry (source "ideogram.ai",
+    API-key credential form) so the user can connect Ideogram through the
+    generic Connector UI; the token is stored as an AccessToken +
+    Connection in ECHO. (2) Contributes an ImageGenerationService whose
+    generate() POSTs https://api.ideogram.ai/generate with header
+    `Api-Key: <token>` and maps the response `data[]` to
+    GeneratedImageData. No React/UI dependencies.
+```
+
+## Features
+
+```mdl
+feat F-1: Author prompt
+
+  req F-1.1: An ImageArtifact opens in an article surface showing its prompt (Instructions text) editable below the toolbar.
+  req F-1.2: Edits to the prompt persist to the Instructions Text body reactively.
+```
+
+```mdl
+feat F-2: Generate images
+
+  req F-2.1:
+    when: user clicks Generate
+    then: op:generateImage runs against the resolved ImageGenerationService and appends the produced GeneratedImage(s) to artifact.images.
+
+  req F-2.2:
+    when: the resolved provider declares a `source` but no matching credential is connected
+    then: generation fails with MissingCredential (surfaced to the user); no images are appended.
+
+  req F-2.3:
+    when: no ImageGenerationService is registered
+    then: the Generate action is disabled.
+
+  req F-2.4:
+    when: the resolved provider has a `connectorId` and no matching Connection exists
+    then: the toolbar shows the provider's `ConnectorAuth` "Connect …" surface in place of Generate.
+```
+
+```mdl
+feat F-Upload: Upload images
+
+  req F-U.1:
+    when: user clicks Upload
+    then: a file picker opens (image/*); each selected file is uploaded via the
+          FileUploader capability and appended as a file-backed Image.
+  req F-U.2:
+    when: no FileUploader backend is registered
+    then: the Upload action is disabled.
+```
+
+```mdl
+feat F-3: Review images via toolbar tabs
+
+  req F-3.1: The toolbar shows one tab per image (generated or uploaded) plus an "All" tab.
+  req F-3.2:
+    when: user selects a numbered image tab
+    then: that single image is shown with its provenance metadata.
+  req F-3.3:
+    when: user selects the "All" tab
+    then: all images render in the vendored masonry gallery (URLs + uploaded file blobs).
+  req F-3.4: With no images yet, only the "All" tab is shown (empty state).
+```
+
+## Acceptance
+
+```mdl
+test T-1: Generate appends images (mock provider)
+  given: an ImageArtifact with a prompt; a mock ImageGenerationService registered (source undefined)
+  when: op:generateImage is invoked
+  then:
+    - service.generate is called with the prompt
+    - artifact.images gains one Image per result, each carrying the returned url + metadata
+    - output.count equals the number appended
+```
+
+```mdl
+test T-1b: Credential plumbing
+  given: an ImageArtifact; a provider with source "ideogram.ai"; a connected credential (apiKey)
+  when: op:generateImage is invoked
+  then: service.generate receives the resolved apiKey (Redacted) and an Image is appended
+```
+
+```mdl
+test T-2: Missing credential
+  given: an ImageArtifact; a provider whose source is "ideogram.ai"; no connected credential
+  when: op:generateImage is invoked
+  then: it fails with MissingCredential and appends nothing
+```
+
+```mdl
+test T-3: No provider registered
+  given: an ImageArtifact; no ImageGenerationService registered
+  then: the Generate toolbar action is disabled
+```
+
+```mdl
+test T-4: Tabs switch views
+  given: an ImageArtifact with 3 images open in an article
+  when: user selects the tab for image 2
+  then: only image 2 (and its metadata) is shown
+  when: user selects the "All" tab
+  then: all 3 images render in the gallery
+```
+
+```mdl
+test T-5: Gallery renders URL + uploaded images
+  given: ImageGallery given images = [{ url }, { file: Ref<File.File> }]
+  then: both render; the URL item uses its url directly, the file item resolves
+        its blob via useImageSource / useImageUrl
+```
+
+```mdl
+test T-6: Upload appends a file-backed Image
+  given: an ImageArtifact; a registered FileUploader backend
+  when: user uploads an image file
+  then: artifact.images gains an Image whose `file` refs the uploaded File.File
+```
+
+## Out of scope (v1)
+
+- Auto-materializing generated URLs into File.File blobs for permanence
+  (generated URLs are ephemeral; users can upload for a durable copy).
+- Multi-account credential selection / an in-artifact connection picker;
+  the first matching connected credential is used.
+- Editing / upscaling / remixing existing images, image-to-image, and
+  reference-image inputs.
+- Prompt options UI (aspect ratio, model, style, seed, count) beyond the
+  prompt text; the request schema reserves the fields.
+- AI-skill / agent tool exposure of generateImage.
