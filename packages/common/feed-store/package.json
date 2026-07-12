@@ -48,6 +48,7 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/vendor-hypercore": "workspace:*",
+    "effect": "catalog:",
     "lodash.defaultsdeep": "catalog:",
     "race-as-promised": "catalog:",
     "streamx": "catalog:"

@@ -124,3 +124,5 @@ const isExternalHttpUrl = (value?: string): boolean => {
     return false;
   }
 };
+
+BookmarkArticle.displayName = 'BookmarkArticle';

@@ -11,7 +11,7 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { ActivationEvents } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { Type } from '@dxos/echo';
+import { Blob, Obj, Ref, Type } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
 import { DXN } from '@dxos/keys';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -32,17 +32,30 @@ type StoryArgs = {
 };
 
 const DefaultStory = ({ text }: StoryArgs) => {
-  const message = useMemo(
-    () =>
-      MessageType.make({
-        sender: {
-          name: random.person.fullName(),
-          email: random.internet.email(),
+  const message = useMemo(() => {
+    const message = MessageType.make({
+      sender: {
+        name: random.person.fullName(),
+        email: random.internet.email(),
+      },
+      blocks: [{ _tag: 'text', text: text ?? random.lorem.paragraph(2) }],
+    });
+    // Stand-in refs to distinct dummy Blob objects (empty bytes): the story only exercises the
+    // attachment row's name/icon display, never resolving the ref (attachments aren't clickable yet).
+    Obj.update(message, (message) => {
+      message.attachments = [
+        {
+          name: 'invoice.pdf',
+          ref: Ref.make(Blob.make({ type: 'application/pdf', size: 0, data: Blob.inlineData(new Uint8Array()) })),
         },
-        blocks: [{ _tag: 'text', text: text ?? random.lorem.paragraph(2) }],
-      }),
-    [text],
-  );
+        {
+          name: 'boarding-pass.png',
+          ref: Ref.make(Blob.make({ type: 'image/png', size: 0, data: Blob.inlineData(new Uint8Array()) })),
+        },
+      ];
+    });
+    return message;
+  }, [text]);
 
   return (
     <Message.Root message={message} sender={undefined}>

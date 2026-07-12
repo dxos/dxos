@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom-react';
+import { type Registry } from '@effect-atom/atom-react';
 import * as Predicate from 'effect/Predicate';
 
 import { Obj, type View } from '@dxos/echo';
@@ -30,7 +30,6 @@ import { type TableModel, type TableRow } from './table-model';
  */
 export class TablePresentation<T extends TableRow = TableRow> {
   private readonly _registry: Registry.Registry;
-  private readonly _visibleRange: Atom.Writable<DxGridPlaneRange>;
   private fieldProjectionCache = new Map<string, ReturnType<typeof this.model.projection.getFieldProjection>>();
 
   constructor(
@@ -38,10 +37,6 @@ export class TablePresentation<T extends TableRow = TableRow> {
     private readonly model: TableModel<T>,
   ) {
     this._registry = registry;
-    this._visibleRange = Atom.make<DxGridPlaneRange>({
-      start: { row: 0, col: 0 },
-      end: { row: 0, col: 0 },
-    });
   }
 
   public getCells(range: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells {
@@ -52,7 +47,8 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
     switch (plane) {
       case 'grid':
-        this._registry.set(this._visibleRange, range);
+        // Report the visible range to the model so it can (re)subscribe to those rows' mutations.
+        this.model.setVisibleRange(range);
         cells = this.getMainGridCells(range);
         break;
       case 'frozenRowsStart':

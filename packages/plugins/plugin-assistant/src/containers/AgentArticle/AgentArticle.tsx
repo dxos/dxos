@@ -190,3 +190,5 @@ const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
 );
 
 StackTile.displayName = 'StackTile';
+
+AgentArticle.displayName = 'AgentArticle';

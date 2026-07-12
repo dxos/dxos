@@ -8,7 +8,7 @@ export * from './Source';
 export * from './StateStore';
 export * from './AgentRegistry';
 export * from './Stage';
-export * from './Crawler';
+export * as Crawler from './Crawler';
 export * from './stages/extract-facts';
 export * from './stages/agent-profile';
 export * from './stages/topics';

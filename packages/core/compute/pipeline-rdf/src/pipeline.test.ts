@@ -70,6 +70,22 @@ const LLM_OUTPUT = {
   ],
 };
 
+// A directive/interrogative extraction (a question the author asks) — maps to an `illocution`.
+const QUESTION_OUTPUT = {
+  facts: [
+    {
+      subject: 'Bob',
+      predicate: 'send',
+      object: 'report',
+      factuality: 'Uu',
+      polarity: '?',
+      force: 'directive',
+      mood: 'interrogative',
+      quote: 'Did Bob send the report?',
+    },
+  ],
+};
+
 const TestLayer = FactStore.layer.pipe(
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
   Layer.provideMerge(mockAiService(LLM_OUTPUT)),
@@ -83,8 +99,8 @@ const FailingLayer = FactStore.layer.pipe(
 describe('FactPipeline', () => {
   it('composes extraction rules, appending caller rules after the defaults', ({ expect }) => {
     const prompt = buildExtractionPrompt();
-    // The default set rejects questions (the immediate case driving this rule).
-    expect(prompt).toContain('Do not extract facts from questions');
+    // Questions and requests are extracted as directive facts, tagged by speech act.
+    expect(prompt).toContain('Classify each proposition by speech act');
     // Class membership uses the distinguished `is-a` predicate (rdf:type-like), never bare "is"/"was".
     expect(prompt).toContain('Use the exact predicate "is-a" for class membership');
     // Predicates are atemporal: tense flows into valid-time, and past tense alone does not end a fact.
@@ -325,6 +341,28 @@ describe('FactPipeline', () => {
         });
       },
       Effect.provide(queuedAiService([LLM_OUTPUT])),
+    ),
+  );
+
+  it.effect(
+    'maps a directive/interrogative extraction to an illocution (a question)',
+    Effect.fnUntraced(
+      function* () {
+        const facts = yield* extractFacts([{ text: 'Did Bob send the report?', source: 'editor:q', author: 'Ann' }]);
+        yield* Effect.sync(() => {
+          const [fact] = facts;
+          if (!fact) {
+            throw new Error('no fact extracted');
+          }
+          if (fact.illocution?.force !== 'directive' || fact.illocution?.mood !== 'interrogative') {
+            throw new Error(`illocution not mapped: ${JSON.stringify(fact.illocution)}`);
+          }
+          if (fact.factuality.value !== 'Uu') {
+            throw new Error(`question factuality should be Uu, got ${fact.factuality.value}`);
+          }
+        });
+      },
+      Effect.provide(queuedAiService([QUESTION_OUTPUT])),
     ),
   );
 

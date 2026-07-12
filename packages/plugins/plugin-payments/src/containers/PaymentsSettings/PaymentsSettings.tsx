@@ -96,3 +96,5 @@ export const PaymentsSettings = ({ settings, onSettingsChange }: PaymentsSetting
     </Form.Root>
   );
 };
+
+PaymentsSettings.displayName = 'PaymentsSettings';

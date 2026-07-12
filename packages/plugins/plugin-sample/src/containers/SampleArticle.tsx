@@ -112,3 +112,5 @@ const useMenuActions = (
 
   return { actions: menuActions, onAction };
 };
+
+SampleArticle.displayName = 'SampleArticle';

@@ -50,7 +50,7 @@ export default Capability.makeModule(
                 type: Devtools.id,
                 properties: {
                   label: ['devtools.label', { ns: meta.profile.key }],
-                  icon: 'ph--hammer--regular',
+                  icon: 'ph--toolbox--regular',
                   position: Position.last,
                 },
                 nodes: [

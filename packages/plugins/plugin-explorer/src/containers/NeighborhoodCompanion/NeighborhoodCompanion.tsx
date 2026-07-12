@@ -100,3 +100,5 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
     </Panel.Root>
   );
 };
+
+NeighborhoodCompanion.displayName = 'NeighborhoodCompanion';

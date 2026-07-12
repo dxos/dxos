@@ -111,3 +111,5 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
     </>
   );
 };
+
+RelatedToContact.displayName = 'RelatedToContact';

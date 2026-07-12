@@ -15,7 +15,6 @@ import {
   AppGraphBuilder,
   Connector,
   CreateObject,
-  FactStore,
   InboxSettings,
   NavigationResolver,
   OperationHandler,
@@ -56,10 +55,6 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupConnectors,
     activate: Connector,
-  }),
-  Plugin.addModule({
-    activatesOn: ActivationEvents.SetupProcessManager,
-    activate: FactStore,
   }),
   Plugin.addModule({
     id: 'contact-extractor',

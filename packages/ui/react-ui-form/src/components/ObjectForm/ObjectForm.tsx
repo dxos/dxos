@@ -5,6 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Obj, Ref, Tag, Type } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { HuePicker } from '@dxos/react-ui-pickers';
@@ -21,10 +22,13 @@ export type ObjectFormProps = {
 
 export const ObjectForm = ({ object, type }: ObjectFormProps) => {
   const db = Obj.getDatabase(object);
+  // Subscribe to the object so external/remote mutations re-render the form: ECHO reactivity is atom-based, so
+  // reading the raw object during render does not establish a subscription. `snapshot` is a fresh value on change.
+  const [snapshot] = useObject(object);
   const meta = Obj.getMeta(object);
   // `meta.tags` already holds `Ref<Tag>`s (materialized by the database handler).
   const tags = [...meta.tags];
-  const values = useMemo(() => ({ [META_TAGS_KEY]: tags, ...object }), [object, tags]);
+  const values = useMemo(() => ({ [META_TAGS_KEY]: tags, ...snapshot }), [snapshot, tags]);
   const formSchema = useMemo(() => withMetaTags(Type.getSchema(type)), [type]);
 
   const handleCreate = useCallback((type: Type.AnyEntity, values: any) => {
@@ -79,7 +83,7 @@ export const ObjectForm = ({ object, type }: ObjectFormProps) => {
   return (
     <Form.Root
       schema={formSchema}
-      defaultValues={values}
+      values={values}
       createTypename={Type.getTypename(Tag.Tag)}
       createOptionIcon='ph--plus--regular'
       createOptionLabel={['add-tag.label', { ns: translationKey }]}

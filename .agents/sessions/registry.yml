@@ -1,0 +1,29 @@
+# Session registry — every active work-stream, one entry each. Managed via the `task-planning` skill
+# ($session new/list/end; $resume/$hydrate key off it). Each session has a TASKS.md (ledger) and a
+# DESIGN.md (spec + decisions) — the `tasks`/`design` fields record where they live (a package file,
+# or .agents/sessions/<name>/{TASKS,DESIGN}.md). Keep this committed and current.
+#
+# status: active | paused | blocked | ended
+
+sessions:
+  - name: mailbox-research
+    status: active
+    branch: claude/mailboxsync-feed-export-4feb3d
+    created: 2026-07-05
+    summary: Open-weight vs premier model routing for the mailbox pipelines (labeling / summaries / drafts).
+    tasks: packages/stories/stories-brain/TASKS.md
+    design: packages/stories/stories-brain/fixtures/REPORT.md
+    prs: [12163]
+    resume: 'Build classify-sender (person/org) stage + a ground-truth eval — the gate for sender-type triage.'
+
+  - name: flaky-e2e-quarantine
+    status: active
+    branch: '' # spawned session, separate worktree (task_e2acb467)
+    created: 2026-07-11
+    summary: Quarantine / harden the flaky assistant-e2e opus-agent tests (crm-mailbox, database create/query/Person).
+    tasks: '' # to be created in the spawned session
+    design: ''
+    prs: []
+    resume: 'Decide quarantine (Trunk) vs. hardening the LLM-output assertions; see PR #12163 CI history.'
+
+ended: []

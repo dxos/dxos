@@ -26,13 +26,21 @@ const OptionalString = Schema.optionalWith(Schema.String, { nullable: true });
 
 // Soft enum: keep the known values, coerce anything else (a model's stray value like "Person", or a
 // null) to absent. A bad enrichment value must not discard an otherwise-valid fact.
-const Nature = Schema.optional(
-  Schema.transform(Schema.Unknown, Schema.UndefinedOr(Schema.Literal('epistemic', 'aleatory')), {
-    strict: false,
-    decode: (value) => (value === 'epistemic' || value === 'aleatory' ? value : undefined),
-    encode: (value) => value,
-  }),
-);
+const softEnum = <const A extends string>(...values: readonly A[]) =>
+  Schema.optional(
+    Schema.transform(Schema.Unknown, Schema.UndefinedOr(Schema.Literal(...values)), {
+      strict: false,
+      decode: (value) =>
+        typeof value === 'string' && (values as readonly string[]).includes(value) ? (value as A) : undefined,
+      encode: (value) => value,
+    }),
+  );
+
+const Nature = softEnum('epistemic', 'aleatory');
+// Illocutionary force + sentence mood — the speech act the author performs (see pipeline-rdf
+// `Illocution`). Soft enums so a stray value never discards the fact; default (absent) is assertive.
+const Force = softEnum('assertive', 'directive', 'commissive', 'expressive');
+const Mood = softEnum('declarative', 'interrogative', 'imperative');
 
 /**
  * One extracted fact as the model emits it (entities are surface strings; linking happens later).
@@ -50,6 +58,8 @@ export const ExtractedFact = Schema.Struct({
   polarity: Schema.Literal('+', '-', '?'),
   confidence: Schema.optionalWith(Schema.Number, { nullable: true }),
   nature: Nature,
+  force: Force,
+  mood: Mood,
   quote: OptionalString,
 });
 
@@ -60,7 +70,7 @@ export const ExtractPayload = Schema.Struct({
 export interface ExtractPayload extends Schema.Schema.Type<typeof ExtractPayload> {}
 
 const BASE_PROMPT = `You extract atomic propositions from a message as structured facts.
-For each proposition output: subject, predicate (a short verb phrase), object, optional validFrom/validTo (ISO dates), a FactBank factuality value (CT+ certain-positive, PR+ probable-positive, PS+ possible-positive, and their - and CTu/Uu variants), polarity (+/-/?), optional confidence 0..1, optional nature (epistemic/aleatory), and the source quote.`;
+For each proposition output: subject, predicate (a short verb phrase), object, optional validFrom/validTo (ISO dates), a FactBank factuality value (CT+ certain-positive, PR+ probable-positive, PS+ possible-positive, and their - and CTu/Uu variants), polarity (+/-/?), optional confidence 0..1, optional nature (epistemic/aleatory), the speech act as force (assertive|directive|commissive|expressive) and mood (declarative|interrogative|imperative), and the source quote.`;
 
 /**
  * The default extraction rules, one self-contained constraint per entry. Callers extend the set via
@@ -75,7 +85,7 @@ export const DEFAULT_EXTRACTION_RULES: readonly string[] = [
   'Prefer short, reusable predicates and reuse the SAME predicate for the same relation throughout ("works for" / "employed by" => pick one, e.g. "works at"). Never invent a synonym variant of a predicate you have already emitted.',
   'The object must be a single concrete entity (a person, project, org, place, or thing) or a literal value — never a raw id, snowflake, URL, or channel reference. Drop the proposition if the only object would be such an opaque token.',
   'Emit a proposition only when BOTH its subject and object are concrete and named. If either would be an unresolved pronoun (we/it/they/this/that) or otherwise unknown, omit the proposition entirely — never output "unknown" as a subject or object.',
-  'Do not extract facts from questions or requests: an interrogative or tag question ("… right?", "does X have Y?", "should we …?") asks for information and asserts nothing. Skip it unless the author also states a proposition they commit to.',
+  'Classify each proposition by speech act. A statement the author commits to => force "assertive", mood "declarative" (this is the default — omit force to mean assertive). A request that the recipient do something => force "directive", mood "imperative", factuality "Uu": subject = who is asked to act, predicate = the requested action, object = the thing. A question the author asks => force "directive", mood "interrogative", factuality "Uu": the proposition being asked about. The author\'s own promise/offer => force "commissive". Requests and questions are still subject to the previous rule: emit them ONLY when both subject and object are concrete and named.',
 ];
 
 /** Compose the system prompt from the base instruction and the (default + caller) rules. */

@@ -8,7 +8,7 @@ import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/react-client';
 
-import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface, StatsPanel } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { type DebugPluginOptions } from '#types';
@@ -28,6 +28,11 @@ export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
     activate: () => ReactSurface({ logStore }),
   })),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule(({ persistStats }) => ({
+    id: 'stats-panel',
+    activatesOn: ActivationEvents.Startup,
+    activate: () => StatsPanel({ persist: persistStats ?? true }),
+  })),
   Plugin.addModule({
     id: 'setup-devtools',
     activatesOn: ActivationEvents.Startup,

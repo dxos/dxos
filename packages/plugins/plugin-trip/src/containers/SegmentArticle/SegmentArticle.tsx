@@ -91,3 +91,5 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
     </Panel.Root>
   );
 };
+
+SegmentArticle.displayName = 'SegmentArticle';

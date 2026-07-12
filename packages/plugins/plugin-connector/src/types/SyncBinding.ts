@@ -111,13 +111,20 @@ export class SyncBindingV1 extends Type.makeRelation<SyncBindingV1>(DXN.make('or
 export type Stats = { newMessages: number };
 
 /**
+ * The minimal shape the sync lifecycle needs from a binding: its progress cursor. `SyncBinding`
+ * satisfies this structurally, as will sibling relation types (e.g. `DerivedBinding`) that have no
+ * `Connection` source but still track sync progress via a cursor.
+ */
+export type CursorHolder = { readonly cursor: Ref.Ref<Cursor.Cursor> };
+
+/**
  * Per-run sync state provided to the pipeline stages and the commit sink. Mutable fields (`dedupSet`,
  * `stats`) accumulate across the run; a caller that needs the result (e.g. `stats.newMessages`)
  * constructs those objects and reads them back after the run.
  */
 export type State = {
   /** The binding being synced; only its cursor is read by this machinery. */
-  readonly binding: SyncBinding;
+  readonly binding: CursorHolder;
   /** The binding's cursor object, advanced as pages commit (resolved from `binding.cursor`). */
   readonly cursor: Cursor.Cursor;
   /** Feed the mapped messages are appended to; absent for DB-target syncs (e.g. contacts upsert). */

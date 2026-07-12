@@ -81,3 +81,5 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
     </Clipboard.Provider>
   );
 };
+
+DebugObjectPanel.displayName = 'DebugObjectPanel';

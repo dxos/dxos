@@ -144,3 +144,5 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
     />
   );
 };
+
+MagazineArticle.displayName = 'MagazineArticle';

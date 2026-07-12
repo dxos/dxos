@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit';
 import * as Stream from 'effect/Stream';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { Database, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Blob, Database, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Pipeline, Stage } from '@dxos/pipeline';
@@ -17,6 +17,9 @@ import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { TagIndex } from '@dxos/schema';
 import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
 
+import { GMAIL_SOURCE } from '../constants';
+import { seedMailboxBinding } from '../testing/sync-fixture';
+import { DraftMessage, type Mailbox } from '../types';
 import { EmailStage } from './index';
 
 const TEST_SOURCE = 'test.mail';
@@ -73,6 +76,7 @@ describe('sync pipeline harness', () => {
         Connection.Connection,
         Cursor.Cursor,
         SyncBinding.SyncBinding,
+        Blob.Blob,
       ],
     });
     const feed = db.add(Feed.make({ name: 'mailbox' }));
@@ -123,6 +127,7 @@ describe('sync pipeline harness', () => {
       ),
       mapStage,
       EmailStage.extractContacts(),
+      EmailStage.toCommitUnit(),
     );
     const withFault = options.fault ? mapped.pipe(options.fault) : mapped;
     return withFault.pipe(
@@ -224,5 +229,308 @@ describe('sync pipeline harness', () => {
     expect(stats2.newMessages).toBe(0);
     expect((await feedForeignIds(db, feed)).length).toBe(RAWS.length);
     expect(await db.query(Filter.type(Person.Person)).run()).toHaveLength(3);
+  });
+
+  test('processAttachments creates a resolvable Blob on the feed and skips oversized attachments', async ({
+    expect,
+  }) => {
+    const { db, feed, tagIndex, binding } = await setup();
+
+    type AttachmentRaw = Raw & { readonly attachments?: readonly EmailStage.Attachment[] };
+    const smallBytes = new Uint8Array([1, 2, 3, 4]);
+    const oversizedBytes = new Uint8Array(Blob.MAX_INLINE_SIZE + 1);
+    const raws: readonly AttachmentRaw[] = [
+      {
+        id: 'a1',
+        key: 10,
+        email: 'dave@acme.com',
+        body: '<p>with attachment</p>',
+        attachments: [{ name: 'photo.png', mimeType: 'image/png', size: smallBytes.byteLength, bytes: smallBytes }],
+      },
+      {
+        id: 'a2',
+        key: 20,
+        email: 'dave@acme.com',
+        body: '<p>oversized attachment</p>',
+        attachments: [
+          {
+            name: 'huge.bin',
+            mimeType: 'application/octet-stream',
+            size: oversizedBytes.byteLength,
+            bytes: oversizedBytes,
+          },
+        ],
+      },
+    ];
+
+    const mapAttachmentStage: Stage.Stage<AttachmentRaw, EmailStage.Mapped, never, never> = Stage.map(
+      'map',
+      (raw: AttachmentRaw) =>
+        Effect.sync(() => ({
+          message: Obj.make(Message.Message, {
+            [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
+            created: new Date(raw.key).toISOString(),
+            sender: { email: raw.email },
+            blocks: [{ _tag: 'text', text: raw.body }],
+          }),
+          foreignId: raw.id,
+          key: raw.key,
+          tagUris: [],
+          attachments: raw.attachments,
+        })),
+    );
+
+    const stats: SyncBinding.Stats = { newMessages: 0 };
+    await EffectEx.runPromise(
+      Stream.fromIterable(raws).pipe(
+        mapAttachmentStage,
+        EmailStage.processAttachments(),
+        EmailStage.extractContacts(),
+        EmailStage.toCommitUnit(),
+        Stream.grouped(2),
+        Pipeline.run({ sink: SyncBinding.commit }),
+        Effect.provide(
+          SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats }),
+        ),
+        Effect.provide(Database.layer(db)),
+      ),
+    );
+
+    // Both messages commit — the oversized attachment is skipped, not fatal to its message.
+    expect(stats.newMessages).toBe(2);
+
+    // Only the small attachment produced a Blob on the feed.
+    const blobs = await db.query(Query.select(Filter.type(Blob.Blob)).from(feed)).run();
+    expect(blobs).toHaveLength(1);
+
+    const messages = await db.query(Query.select(Filter.type(Message.Message)).from(feed)).run();
+    const findByForeignId = (id: string): Message.Message => {
+      const message = messages.find((candidate) =>
+        Obj.getMeta(candidate).keys.some((key) => key.id === id && key.source === TEST_SOURCE),
+      );
+      if (!message) {
+        throw new Error(`expected a message with foreign id ${id}`);
+      }
+      return message;
+    };
+    const withAttachment = findByForeignId('a1');
+    const [attachment] = withAttachment.attachments ?? [];
+    if (!attachment) {
+      throw new Error('expected an attachment');
+    }
+    expect(attachment.name).toBe('photo.png');
+    // The attachment's ref resolves back to the very Blob appended to the feed alongside the message.
+    const loadedBlob = await attachment.ref.load();
+    expect(loadedBlob.id).toEqual(blobs[0].id);
+
+    const withoutAttachment = findByForeignId('a2');
+    expect(withoutAttachment.attachments ?? []).toHaveLength(0);
+  });
+
+  test('email stages compose in any order (Mapped → Mapped) ahead of the terminal toCommitUnit', async ({ expect }) => {
+    const { db, feed, tagIndex, binding } = await setup();
+
+    type AttachmentRaw = Raw & { readonly attachments?: readonly EmailStage.Attachment[] };
+    const bytes = new Uint8Array([9, 8, 7]);
+    const raw: AttachmentRaw = {
+      id: 'b1',
+      key: 10,
+      email: 'erin@acme.com',
+      body: '<p>with attachment</p>',
+      attachments: [{ name: 'note.txt', mimeType: 'text/plain', size: bytes.byteLength, bytes }],
+    };
+
+    const mapAttachmentStage: Stage.Stage<AttachmentRaw, EmailStage.Mapped, never, never> = Stage.map(
+      'map',
+      (item: AttachmentRaw) =>
+        Effect.sync(() => ({
+          message: Obj.make(Message.Message, {
+            [Obj.Meta]: { keys: [{ id: item.id, source: TEST_SOURCE }] },
+            created: new Date(item.key).toISOString(),
+            sender: { email: item.email },
+            blocks: [{ _tag: 'text', text: item.body }],
+          }),
+          foreignId: item.id,
+          key: item.key,
+          tagUris: [],
+          attachments: item.attachments,
+        })),
+    );
+
+    const stats: SyncBinding.Stats = { newMessages: 0 };
+    await EffectEx.runPromise(
+      Stream.fromIterable([raw]).pipe(
+        mapAttachmentStage,
+        // Swapped relative to the production pipelines (extractContacts before processAttachments) —
+        // both are Mapped → Mapped, so order doesn't matter; only toCommitUnit must run last.
+        EmailStage.extractContacts(),
+        EmailStage.processAttachments(),
+        EmailStage.toCommitUnit(),
+        Stream.grouped(2),
+        Pipeline.run({ sink: SyncBinding.commit }),
+        Effect.provide(
+          SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: TEST_SOURCE, cursorKey: 0, stats }),
+        ),
+        Effect.provide(Database.layer(db)),
+      ),
+    );
+
+    expect(stats.newMessages).toBe(1);
+    expect(await db.query(Filter.type(Person.Person)).run()).toHaveLength(1);
+
+    const blobs = await db.query(Query.select(Filter.type(Blob.Blob)).from(feed)).run();
+    expect(blobs).toHaveLength(1);
+
+    const [message] = await db.query(Query.select(Filter.type(Message.Message)).from(feed)).run();
+    const [attachment] = message.attachments ?? [];
+    if (!attachment) {
+      throw new Error('expected an attachment');
+    }
+    expect(attachment.name).toBe('note.txt');
+    const loadedBlob = await attachment.ref.load();
+    expect(loadedBlob.id).toEqual(blobs[0].id);
+  });
+});
+
+describe('reconcileDrafts stage', () => {
+  let builder: EchoTestBuilder;
+
+  beforeAll(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterAll(async () => {
+    await builder.close();
+  });
+
+  /** Reads the mailbox's local drafts (DB objects, not feed messages) back out. */
+  const queryDrafts = async (db: Database.Database, mailboxUri: string) =>
+    (await db.query(Filter.type(Message.Message, { properties: { mailbox: mailboxUri } })).run()).filter((message) =>
+      DraftMessage.belongsTo(message, mailboxUri),
+    );
+
+  const makeSentDraft = (mailboxUri: string, sentMessageId: string) =>
+    DraftMessage.make({
+      created: new Date().toISOString(),
+      sender: { name: 'Me' },
+      blocks: [{ _tag: 'text' as const, text: 'Reply body' }],
+      properties: {
+        to: 'alice@example.com',
+        subject: 'Re: Topic',
+        mailbox: mailboxUri,
+        sentMessageId,
+        sentAt: new Date().toISOString(),
+      },
+    });
+
+  /** A synced message flowing in from a provider, carrying its provider foreign id. */
+  const makeSyncedMapped = (foreignId: string, key: number): EmailStage.Mapped => ({
+    message: Obj.make(Message.Message, {
+      [Obj.Meta]: { keys: [{ id: foreignId, source: GMAIL_SOURCE }] },
+      created: new Date(key).toISOString(),
+      sender: { name: 'Alice', email: 'alice@example.com' },
+      blocks: [{ _tag: 'text' as const, text: 'Reply body' }],
+      properties: { subject: 'Re: Topic' },
+    }),
+    foreignId,
+    key,
+    tagUris: [],
+  });
+
+  /**
+   * Drives the reconcile-in-commit chain: pool sent drafts, flow the given synced messages through
+   * `reconcileDrafts` → `toCommitUnit` → the commit sink (which appends the canonical message and runs
+   * the deferred draft removal), exactly as the provider sync ops do.
+   */
+  const runReconcile = (
+    db: Database.Database,
+    mailbox: Mailbox.Mailbox,
+    binding: SyncBinding.SyncBinding,
+    synced: readonly EmailStage.Mapped[],
+  ) =>
+    EffectEx.runPromise(
+      Effect.gen(function* () {
+        const feed = yield* Database.load(mailbox.feed);
+        const tagIndex = yield* Database.load(mailbox.tags);
+        const draftPool = yield* EmailStage.queryDraftPool(mailbox);
+        const stats: SyncBinding.Stats = { newMessages: 0 };
+        yield* Stream.fromIterable(synced).pipe(
+          EmailStage.reconcileDrafts(draftPool),
+          EmailStage.toCommitUnit(),
+          Stream.grouped(2),
+          Pipeline.run({ sink: SyncBinding.commit }),
+          Effect.provide(
+            SyncBinding.layer({ binding, feed, tagIndex, foreignKeySource: GMAIL_SOURCE, cursorKey: 0, stats }),
+          ),
+        );
+      }).pipe(Effect.provide(Database.layer(db))),
+    );
+
+  test('queryDraftPool pools sent drafts by sentMessageId and excludes unsent drafts', async ({ expect }) => {
+    const { db, mailbox } = await seedMailboxBinding(builder);
+    const mailboxUri = Obj.getURI(mailbox);
+
+    db.add(makeSentDraft(mailboxUri, 'gmail-msg-1'));
+    db.add(
+      DraftMessage.make({
+        created: new Date().toISOString(),
+        sender: { name: 'Me' },
+        blocks: [{ _tag: 'text' as const, text: 'Unsent' }],
+        properties: { to: 'bob@example.com', subject: 'Hello', mailbox: mailboxUri },
+      }),
+    );
+    await db.flush({ indexes: true });
+
+    const pool = await EffectEx.runPromise(EmailStage.queryDraftPool(mailbox).pipe(Effect.provide(Database.layer(db))));
+
+    expect([...pool.keys()]).toEqual(['gmail-msg-1']);
+    expect(pool.get('gmail-msg-1')).toHaveLength(1);
+  });
+
+  test('removes a sent draft once its canonical copy syncs into the feed', async ({ expect }) => {
+    const { db, mailbox, binding } = await seedMailboxBinding(builder);
+    const mailboxUri = Obj.getURI(mailbox);
+
+    db.add(makeSentDraft(mailboxUri, 'gmail-msg-1'));
+    await db.flush({ indexes: true });
+
+    await runReconcile(db, mailbox, binding, [makeSyncedMapped('gmail-msg-1', 10)]);
+    await db.flush({ indexes: true });
+
+    expect(await queryDrafts(db, mailboxUri)).toHaveLength(0);
+  });
+
+  test('leaves an unsent draft untouched', async ({ expect }) => {
+    const { db, mailbox, binding } = await seedMailboxBinding(builder);
+    const mailboxUri = Obj.getURI(mailbox);
+
+    db.add(
+      DraftMessage.make({
+        created: new Date().toISOString(),
+        sender: { name: 'Me' },
+        blocks: [{ _tag: 'text' as const, text: 'Draft body' }],
+        properties: { to: 'bob@example.com', subject: 'Hello', mailbox: mailboxUri },
+      }),
+    );
+    await db.flush({ indexes: true });
+
+    await runReconcile(db, mailbox, binding, [makeSyncedMapped('gmail-msg-1', 10)]);
+    await db.flush({ indexes: true });
+
+    expect(await queryDrafts(db, mailboxUri)).toHaveLength(1);
+  });
+
+  test('leaves a sent draft untouched when no matching feed message arrives', async ({ expect }) => {
+    const { db, mailbox, binding } = await seedMailboxBinding(builder);
+    const mailboxUri = Obj.getURI(mailbox);
+
+    db.add(makeSentDraft(mailboxUri, 'gmail-msg-2'));
+    await db.flush({ indexes: true });
+
+    // A synced message with an unrelated foreign id — must not match the sent draft above.
+    await runReconcile(db, mailbox, binding, [makeSyncedMapped('gmail-msg-other', 10)]);
+    await db.flush({ indexes: true });
+
+    expect(await queryDrafts(db, mailboxUri)).toHaveLength(1);
   });
 });
