@@ -5,8 +5,13 @@
 import { Atom } from '@effect-atom/atom-react';
 import React, { type Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useAtomCapability, useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import {
+  useAtomCapability,
+  useAtomCapabilityState,
+  useOperationInvoker,
+  useOptionalCapability,
+} from '@dxos/app-framework/ui';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, ProgressMeter, useProgress, useShowItem } from '@dxos/app-toolkit/ui';
 import { Aggregate, type Database, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -67,6 +72,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const topicsProgress = useProgress(createTopicsProgressKey(mailbox));
   const progress =
     topicsProgress?.status === 'running' || topicsProgress?.status === 'error' ? topicsProgress : syncProgress;
+  // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
+  const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
 
   const filterEditorRef = useRef<EditorController>(null);
   const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
@@ -279,7 +286,11 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       </Panel.Content>
       {progress && (progress.status === 'running' || progress.status === 'error') && (
         <Panel.Statusbar asChild>
-          <ProgressMeter state={progress} classNames='h-16 p-2 border-t border-separator' />
+          <ProgressMeter
+            state={progress}
+            classNames='h-16 p-2 border-t border-separator'
+            onCancel={progressRegistry ? () => progressRegistry.cancel(progress.name) : undefined}
+          />
         </Panel.Statusbar>
       )}
     </Panel.Root>

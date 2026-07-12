@@ -204,12 +204,26 @@ export const runGmailSync = ({
       store.compartment(meta.profile.key),
     );
 
+    // Cooperative cancellation: the meter's cancel control aborts the controller; the `cancelStage`
+    // below then drops all further messages so the stream drains and the run stops without error.
+    const controller = new AbortController();
+
     // Live progress monitor (optional — no host in headless/test runs, so `getAll` yields nothing).
     // Keyed by the mailbox URI so MailboxArticle and the R0 popover can subscribe to this run.
     const progressMonitors = (yield* Capability.getAll(AppCapabilities.ProgressRegistry)).map((registry) =>
-      registry.register(createSyncProgressKey(mailbox), { label: mailbox.name ?? 'Mailbox' }),
+      registry.register(createSyncProgressKey(mailbox), {
+        label: mailbox.name ?? 'Mailbox',
+        onCancel: () => controller.abort(),
+      }),
     );
     const advanceProgress = (by: number) => progressMonitors.forEach((monitor) => monitor.advance(by));
+
+    // Drops every message once cancelled (returning undefined removes it — see `decodeBodyStage`), so
+    // the pipeline skips all remaining fetch/decode/commit work and completes promptly.
+    const cancelStage: Stage.Stage<GoogleMail.Message, GoogleMail.Message, never, never> = Stage.map(
+      'cancel',
+      (message: GoogleMail.Message) => Effect.sync(() => (controller.signal.aborted ? undefined : message)),
+    );
     const startedAt = new Date().toISOString();
     const startMs = Date.now();
     const threads = new Set<string>();
@@ -279,6 +293,7 @@ export const runGmailSync = ({
       end: rangeEnd,
       searchFilter: targetOptions.filter,
     }).pipe(
+      cancelStage,
       SyncBinding.dedupStage<GoogleMail.Message>(
         'dedup',
         (message) => message.id,
@@ -332,11 +347,15 @@ export const runGmailSync = ({
     publishStats();
 
     progressMonitors.forEach((monitor) => {
-      monitor.done();
+      if (controller.signal.aborted) {
+        monitor.note('Cancelled');
+      } else {
+        monitor.done();
+      }
       monitor.remove();
     });
 
-    log('gmail sync complete', { newMessages: stats.newMessages });
+    log('gmail sync complete', { newMessages: stats.newMessages, cancelled: controller.signal.aborted });
     return { newMessages: stats.newMessages };
   }).pipe(Effect.withSpan('gmail-sync'));
 

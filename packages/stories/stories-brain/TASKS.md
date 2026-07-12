@@ -146,6 +146,13 @@ hit the operation max-run-time on large mailboxes; bound it now, generalize late
 (running AnalyzeTopics to see real topics) needs models + the storybook. Follow-ups: scope the Topics
 query to the mailbox via the AnchoredTo relation; confirm the relation direction.
 
+### Follow-ups (open)
+
+- [ ] **Re-sync creates duplicate messages after deleting the connection.** Deleting the connection
+      and syncing again re-imports every message as a duplicate. The mailbox must retain the previous
+      sync state (cursor / seen-message set) independent of the connection lifecycle, and the sync
+      operation must dedup so re-syncing never creates duplicates. (plugin-inbox Gmail sync + cursor.)
+
 ### Follow-ups (landed)
 
 - [x] **Questions + tasks per topic** — `Topic` gains `questions` / `tasks`; `clusterThreads` rolls

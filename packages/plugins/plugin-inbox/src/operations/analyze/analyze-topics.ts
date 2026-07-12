@@ -43,9 +43,16 @@ const handler = InboxOperation.AnalyzeTopics.pipe(
         db.query(Query.select(Filter.type(Message.Message)).from(feed)).run(),
       );
 
+      // Cooperative cancellation: the meter's cancel control invokes `onCancel`, which aborts the
+      // controller; `runTopicsPipeline` checks the signal between messages and stops.
+      const controller = new AbortController();
+
       // Live monitor (optional — `getAll` yields nothing in headless/test runs, so this no-ops there).
       const monitors = (yield* Capability.getAll(AppCapabilities.ProgressRegistry)).map((registry) =>
-        registry.register(createTopicsProgressKey(mailbox), { label: `${mailbox.name ?? 'Mailbox'} — topics` }),
+        registry.register(createTopicsProgressKey(mailbox), {
+          label: `${mailbox.name ?? 'Mailbox'} — topics`,
+          onCancel: () => controller.abort(),
+        }),
       );
 
       // Resumable-lite: skip messages already carrying tags and topics whose label already exists.
@@ -77,6 +84,7 @@ const handler = InboxOperation.AnalyzeTopics.pipe(
             limit,
             skipMessage: (id) => (tagIndex[id]?.length ?? 0) > 0,
             skipTopic: (label) => existingLabels.has(label),
+            signal: controller.signal,
             onProgress: (phase, current, total) => {
               for (const monitor of monitors) {
                 if (phase === 'tag') {
@@ -113,8 +121,14 @@ const handler = InboxOperation.AnalyzeTopics.pipe(
       }
       yield* Effect.promise(() => db.flush());
 
+      // Persist whatever completed before a cancel (tags/topics are idempotent + resumable), then
+      // clear the monitor — cancelled, not done.
       for (const monitor of monitors) {
-        monitor.done();
+        if (controller.signal.aborted) {
+          monitor.note('Cancelled');
+        } else {
+          monitor.done();
+        }
         monitor.remove();
       }
 

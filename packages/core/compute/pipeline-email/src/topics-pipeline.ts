@@ -45,6 +45,8 @@ export type TopicsPipelineInput = {
   readonly topicOptions?: TopicOptions;
   /** Progress hook: phase `'tag'` (per message) or `'topic'` (per summarized topic). */
   readonly onProgress?: (phase: 'tag' | 'topic', current: number, total: number) => void;
+  /** Cooperative cancellation — checked between messages; aborting stops after the current item. */
+  readonly signal?: AbortSignal;
 };
 
 /** Effectful dependencies, injected so the orchestration stays pure and testable. */
@@ -71,17 +73,22 @@ export const runTopicsPipeline = async (
   input: TopicsPipelineInput,
   deps: TopicsPipelineDeps,
 ): Promise<TopicsPipelineResult> => {
-  const { messages, ownerEmail, now, limit, skipMessage, skipTopic, topicOptions, onProgress } = input;
+  const { messages, ownerEmail, now, limit, skipMessage, skipTopic, topicOptions, onProgress, signal } = input;
 
-  // Phase 1 — tag each not-yet-tagged message, bounded by `limit`.
+  // Phase 1 — tag each not-yet-tagged message, bounded by `limit`. Stop early if cancelled.
   const pending = messages.filter((message) => !skipMessage?.(messageIdOf(message)));
   const toTag = limit !== undefined ? pending.slice(0, limit) : pending;
   const messageTags: MessageTags[] = [];
-  for (let index = 0; index < toTag.length; index++) {
+  for (let index = 0; index < toTag.length && !signal?.aborted; index++) {
     const message = toTag[index];
     const result = await deps.tag(message);
     messageTags.push({ messageId: messageIdOf(message), tags: result.tags, spam: result.spam });
     onProgress?.('tag', index + 1, toTag.length);
+  }
+
+  // Cancelled during tagging — skip the (LLM) topic phase and return what was tagged.
+  if (signal?.aborted) {
+    return { messageTags, topics: [] };
   }
 
   // Phase 2 — cluster threads into topic drafts (deterministic), summarize the new ones, materialize.
