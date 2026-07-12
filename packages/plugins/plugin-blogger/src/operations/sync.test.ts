@@ -15,49 +15,6 @@ import { runImportDrafts } from './import-drafts';
 import { runPublishDraft } from './publish-draft';
 import { runUnpublishDraft } from './unpublish-draft';
 
-/**
- * The `connection` ref is opaque to every sync handler — it is only forwarded to the
- * `PublisherService` calls, never dereferenced — so a minimal, schema-valid Connection is enough.
- */
-const makeConnectionRef = (): Ref.Ref<Connection.Connection> => {
-  const accessToken = AccessToken.make({ source: 'stub.test', token: 'secret' });
-  return Ref.make(Connection.make({ accessToken: Ref.make(accessToken) }));
-};
-
-/**
- * `listDrafts` returns each remote draft's full body text by default; pass `listDraftsText` to
- * simulate a provider (e.g. Typefully v1) whose `listDrafts` omits it, forcing the `getDraft`
- * fallback.
- */
-const makeStub = (listDraftsText: string = 'remote body'): { stub: Publisher.PublisherService; calls: string[] } => {
-  const calls: string[] = [];
-  const stub: Publisher.PublisherService = {
-    id: 'stub',
-    label: 'Stub',
-    source: 'stub.test',
-    listDrafts: async () => [
-      { id: 'x1', text: 'already linked' },
-      { id: 'x2', text: listDraftsText },
-    ],
-    getDraft: async (_connection, id) => {
-      calls.push('getDraft');
-      return { id, text: 'fetched body' };
-    },
-    createDraft: async (_connection, input) => {
-      calls.push('create');
-      return { id: 'new1', text: input.text };
-    },
-    updateDraft: async (_connection, id, input) => {
-      calls.push('update');
-      return { id, text: input.text };
-    },
-    deleteDraft: async () => {
-      calls.push('delete');
-    },
-  };
-  return { stub, calls };
-};
-
 describe('Blogger sync operations', () => {
   test('PublishDraft creates the remote draft and stamps a foreign key on an unlinked draft', async () => {
     const { stub, calls } = makeStub();
@@ -158,3 +115,46 @@ describe('Blogger sync operations', () => {
     expect(calls).toEqual([]);
   });
 });
+
+/**
+ * The `connection` ref is opaque to every sync handler — it is only forwarded to the
+ * `PublisherService` calls, never dereferenced — so a minimal, schema-valid Connection is enough.
+ */
+const makeConnectionRef = (): Ref.Ref<Connection.Connection> => {
+  const accessToken = AccessToken.make({ source: 'stub.test', token: 'secret' });
+  return Ref.make(Connection.make({ accessToken: Ref.make(accessToken) }));
+};
+
+/**
+ * `listDrafts` returns each remote draft's full body text by default; pass `listDraftsText` to
+ * simulate a provider (e.g. Typefully v1) whose `listDrafts` omits it, forcing the `getDraft`
+ * fallback.
+ */
+const makeStub = (listDraftsText: string = 'remote body'): { stub: Publisher.PublisherService; calls: string[] } => {
+  const calls: string[] = [];
+  const stub: Publisher.PublisherService = {
+    id: 'stub',
+    label: 'Stub',
+    source: 'stub.test',
+    listDrafts: async () => [
+      { id: 'x1', text: 'already linked' },
+      { id: 'x2', text: listDraftsText },
+    ],
+    getDraft: async (_connection, id) => {
+      calls.push('getDraft');
+      return { id, text: 'fetched body' };
+    },
+    createDraft: async (_connection, input) => {
+      calls.push('create');
+      return { id: 'new1', text: input.text };
+    },
+    updateDraft: async (_connection, id, input) => {
+      calls.push('update');
+      return { id, text: input.text };
+    },
+    deleteDraft: async () => {
+      calls.push('delete');
+    },
+  };
+  return { stub, calls };
+};
