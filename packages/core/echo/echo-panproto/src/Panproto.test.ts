@@ -79,6 +79,13 @@ describe('Panproto runner', () => {
     expect(record.identifiers).toMatchObject({ hiveId: 'bk_dune', isbn13: '9780441013593' });
   });
 
+  test('a lens is serializable data (round-trips through JSON via its own schema)', ({ expect }) => {
+    // The whole mapping is data — codecs are referenced by name, never inlined as closures — so a lens
+    // survives JSON. This is what a function-valued codec could never do.
+    const json = JSON.parse(JSON.stringify(Schema.encodeSync(Panproto.Lens)(lens)));
+    expect(Schema.decodeSync(Panproto.Lens)(json)).toEqual(lens);
+  });
+
   test('decodes a wire record back to ECHO-shaped values', async ({ expect }) => {
     const record = {
       title: 'Dune',
