@@ -255,6 +255,34 @@ runGmailSync ─register/advance─▶ ProgressRegistry (writable snapshot atom)
 - **UI:** `ProgressMeter` and `ProgressStatusIndicator` stories in storybook
   (determinate, indeterminate, error, multi-provider popover).
 
+## Future work
+
+### Stream progress state from the EDGE service
+
+Today a provider and its consumers live in the same client runtime (the sync
+operation and the registry share a process). A pipeline running server-side on
+the **EDGE service** (e.g. a hosted mail sync or a long agent/workflow run) has
+no way to surface progress to a client. The extension:
+
+- The server-side pipeline drives a `@dxos/pipeline` `Progress` registry (already
+  the shared core), and a reporter sink serializes each `ProgressSnapshot` onto
+  an EDGE stream (alongside the existing EDGE status/trace channels).
+- The client contributes a bridge that subscribes to that stream and calls
+  `ProgressRegistry.register`/`advance`/`done`/`remove` for each remote entry,
+  namespacing the entry `name` by origin (e.g. `edge:<runId>`) so remote and
+  local monitors coexist in the same rail popover and meters.
+- `ProgressState` already carries everything needed to render remotely-produced
+  progress (`current`/`total`/`elapsedMs`/`estimatedMs`/`label`/`status`); the
+  producer-supplied `estimatedMs` matters more here since the client can't
+  observe the server's true rate.
+- Open questions to resolve when specced: the wire format and channel (reuse the
+  invocation-trace/EDGE status transport vs. a dedicated progress channel),
+  reconnect/replay semantics (a late subscriber should get the current snapshot),
+  and authz (which spaces/runs a client may observe).
+
+This is out of scope for the initial capability; it reuses the shared core and
+the atom-backed registry unchanged — only a transport + bridge are added.
+
 ## Migration / compatibility
 
 - No compatibility shims. `@dxos/pipeline`'s public API is preserved by
