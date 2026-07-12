@@ -57,8 +57,11 @@ deterministic (no LLM) → foreground stays fast; all LLM cost is batchable enri
       classify-sender result overrides the heuristic (no-reply gate still wins). 4 tests in
       `Mailbox.test.ts`; full plugin-inbox suite green. FOLLOW-UP: pass the classify-sender class into
       `isReplyable({ senderClass })` at the product draft-creation call site.
-- [ ] **Minimize non-people summarization** — one-line label ("this is a bill") instead of a full
-      summary for org mail; reserve summary budget for person mail.
+- [x] **Minimize non-people summarization** — `pipelines/summarize.ts`: `labelMessage` (one-line
+      category label, cheaper prompt), `summaryKindFor` (pure routing, reuses `Mailbox.isReplyable` so
+      summarize + reply agree on "person"), and `summarizeTriaged` (full summary for people, label for
+      org/bulk). `SummaryResult` gains `kind: 'summary' | 'label'`; `senderClass` overrides the
+      heuristic. 3 routing tests (`summarize-triage.test.ts`); build/lint/fmt clean.
 - [x] **Default draft `Instructions`** — shipped `DEFAULT_DRAFT_INSTRUCTIONS` (plain/direct, no
       obsequious hedging) in `pipelines/draft.ts`; `draftReply` applies it by default (omit → default;
       `''` opts out; a custom string overrides). Extracted a pure `buildDraftPrompt` + unit test
