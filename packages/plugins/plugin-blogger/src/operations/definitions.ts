@@ -52,9 +52,6 @@ export const AddPost = Operation.make({
   input: Schema.Struct({
     publication: Ref.Ref(Blogger.Publication).annotations({ description: 'The publication to add the post to.' }),
     name: Schema.optional(Schema.String).annotations({ description: 'The post name.' }),
-    createdAt: Schema.optional(Schema.String).annotations({
-      description: "ISO 8601 timestamp for the post's initial draft.",
-    }),
     target: TargetSchema,
   }),
   output: Ref.Ref(Blogger.Post),
@@ -72,7 +69,6 @@ export const AddDraft = Operation.make({
   },
   input: Schema.Struct({
     post: Ref.Ref(Blogger.Post).annotations({ description: 'The post to add the draft to.' }),
-    createdAt: Schema.optional(Schema.String).annotations({ description: 'ISO 8601 timestamp for the draft.' }),
   }),
   output: Ref.Ref(Blogger.Draft),
 });

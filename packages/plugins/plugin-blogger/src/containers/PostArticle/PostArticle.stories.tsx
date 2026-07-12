@@ -34,9 +34,14 @@ const makeStoryPost = (): Blogger.Post => {
   const post = Blogger.makePost({ name: 'My Post' });
   const [draftRef] = post.drafts ?? [];
   invariant(draftRef);
-  const draft1 = draftRef.target!;
-  Obj.update(draft1.content.target!.content.target!, (text) => {
-    text.content = 'First draft body.';
+  const draft1 = draftRef.target;
+  invariant(draft1);
+  const draft1Document = draft1.content.target;
+  invariant(draft1Document);
+  const draft1Text = draft1Document.content.target;
+  invariant(draft1Text);
+  Obj.update(draft1Text, (draft1Text) => {
+    draft1Text.content = 'First draft body.';
   });
 
   const draft2 = Blogger.makeDraft({ label: 'Draft 2', content: 'Second draft body.' });

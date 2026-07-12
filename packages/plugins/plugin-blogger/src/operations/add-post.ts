@@ -15,9 +15,9 @@ import { AddPost } from './definitions';
 
 const handler: Operation.WithHandler<typeof AddPost> = AddPost.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ publication: publicationRef, name, createdAt, target }) {
+    Effect.fnUntraced(function* ({ publication: publicationRef, name, target }) {
       const publication = yield* Database.load(publicationRef);
-      const post = Blogger.makePost({ name, createdAt });
+      const post = Blogger.makePost({ name });
 
       const targetIsDatabase = Database.isDatabase(target);
       const db = targetIsDatabase ? target : Obj.getDatabase(target);

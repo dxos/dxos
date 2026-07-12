@@ -46,7 +46,6 @@ type Draft
   typename: org.dxos.type.blogger.draft
   fields:
     label?: string
-    createdAt?: string             # ISO 8601 timestamp
     content: Ref<Markdown.Document>
   annotations:
     label: [label]
@@ -238,7 +237,6 @@ op AddPost
   input:
     publication: Ref<Publication>
     name?: string
-    createdAt?: string              # ISO 8601 timestamp for the initial draft
     target: Database | Collection
   output: Ref<Post>
   effects: [echo:write]
@@ -252,7 +250,6 @@ op AddDraft
     `post.drafts`.
   input:
     post: Ref<Post>
-    createdAt?: string
   output: Ref<Draft>
   effects: [echo:write]
 ```
@@ -391,10 +388,10 @@ test T-2: AddPost creates outline + one initial draft
 ```mdl
 test T-3: AddDraft appends and labels sequentially
   given: a Post with one existing Draft ("Draft 1")
-  when: op:AddDraft invoked with { post, createdAt: "2026-07-11T00:00:00Z" }
+  when: op:AddDraft invoked with { post }
   then:
     - post.drafts has length 2
-    - new Draft.label === "Draft 2"; Draft.createdAt === "2026-07-11T00:00:00Z"
+    - new Draft.label === "Draft 2"
     - new Draft is queryable from db via Filter.type(Draft)
 ```
 

@@ -5,7 +5,15 @@
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import DOMPurify from 'dompurify';
-import React, { CSSProperties, MouseEventHandler, type ReactNode, forwardRef, useId, useMemo } from 'react';
+import React, {
+  CSSProperties,
+  type KeyboardEventHandler,
+  MouseEventHandler,
+  type ReactNode,
+  forwardRef,
+  useId,
+  useMemo,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { iconSize } from '@dxos/ui-theme';
@@ -37,6 +45,7 @@ type CardRootProps = {
   'style'?: CSSProperties;
   'tabIndex'?: number;
   'onClick'?: MouseEventHandler<HTMLDivElement>;
+  'onKeyDown'?: KeyboardEventHandler<HTMLDivElement>;
   'data-selected'?: boolean;
   'data-testid'?: string;
 };
@@ -45,7 +54,7 @@ type CardRootProps = {
  * `Card.Root` does not support `asChild`. The Column grid is the root element
  * (one `<div>` carrying both the `dx-card` and `dx-column-root` classes
  * instead of the previous outer-card + inner-column pair), so caller-provided
- * HTML attributes — `onClick`, `tabIndex`, `style`, `data-*`, `grid-template-rows`
+ * HTML attributes — `onClick`, `onKeyDown`, `tabIndex`, `style`, `data-*`, `grid-template-rows`
  * overrides via `classNames` — land directly on the grid container.
  * Slot-parents (`Focus.Item asChild`, `Mosaic.Tile asChild`, etc.) continue to
  * work because `composable()` preserves the COMPOSABLE marker that slottable parents

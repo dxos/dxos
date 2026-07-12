@@ -117,7 +117,6 @@ describe('Blogger operations', () => {
 
         const draftRef = yield* Operation.invoke(BloggerOperation.AddDraft, {
           post: postRef,
-          createdAt: '2026-07-11T00:00:00Z',
         });
 
         const post = yield* Database.load(postRef);
@@ -125,7 +124,6 @@ describe('Blogger operations', () => {
 
         const draft = yield* Database.load(draftRef);
         expect(draft.label).toBe('Draft 2');
-        expect(draft.createdAt).toBe('2026-07-11T00:00:00Z');
 
         const content = yield* Database.load(draft.content);
         expect(Obj.instanceOf(Markdown.Document, content)).toBe(true);

@@ -14,7 +14,6 @@ import { Markdown } from '@dxos/plugin-markdown';
 export class Draft extends Type.makeObject<Draft>(DXN.make('org.dxos.type.blogger.draft', '0.1.0'))(
   Schema.Struct({
     label: Schema.optional(Schema.String),
-    createdAt: Schema.optional(Schema.String),
     content: Ref.Ref(Markdown.Document).pipe(FormInputAnnotation.set(false)),
   }).pipe(LabelAnnotation.set(['label'])),
 ) {}
@@ -45,30 +44,25 @@ export class Publication extends Type.makeObject<Publication>(DXN.make('org.dxos
 // Build the child document and its ref before Obj.make (mirrors Markdown.make), then set parent
 // ownership after construction so the ref is supplied at creation time, never deferred.
 
-export const makeDraft = ({
-  label,
-  createdAt,
-  content = '',
-}: { label?: string; createdAt?: string; content?: string } = {}): Draft => {
+/** Creates a `Draft` wrapping a fresh markdown document, owned by the draft. */
+export const makeDraft = ({ label, content = '' }: { label?: string; content?: string } = {}): Draft => {
   const doc = Markdown.make({ content });
-  const draft = Obj.make(Draft, { label, createdAt, content: Ref.make(doc) });
+  const draft = Obj.make(Draft, { label, content: Ref.make(doc) });
   Obj.setParent(doc, draft);
   return draft;
 };
 
-export const makePost = ({
-  name,
-  summary,
-  createdAt,
-}: { name?: string; summary?: string; createdAt?: string } = {}): Post => {
+/** Creates a `Post` with a fresh outline document and one initial draft. */
+export const makePost = ({ name, summary }: { name?: string; summary?: string } = {}): Post => {
   const outline = Markdown.make({});
-  const draft = makeDraft({ label: 'Draft 1', createdAt });
+  const draft = makeDraft({ label: 'Draft 1' });
   const post = Obj.make(Post, { name, summary, outline: Ref.make(outline), drafts: [Ref.make(draft)] });
   Obj.setParent(outline, post);
   Obj.setParent(draft, post);
   return post;
 };
 
+/** Creates a `Publication` with a fresh instructions document and no posts. */
 export const makePublication = ({ name }: { name?: string } = {}): Publication => {
   const instructions = Markdown.make({});
   const publication = Obj.make(Publication, { name, instructions: Ref.make(instructions), posts: [] });

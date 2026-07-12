@@ -13,9 +13,9 @@ import { AddDraft } from './definitions';
 
 const handler: Operation.WithHandler<typeof AddDraft> = AddDraft.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ post: postRef, createdAt }) {
+    Effect.fnUntraced(function* ({ post: postRef }) {
       const post = yield* Database.load(postRef);
-      const draft = Blogger.makeDraft({ label: `Draft ${(post.drafts?.length ?? 0) + 1}`, createdAt });
+      const draft = Blogger.makeDraft({ label: `Draft ${(post.drafts?.length ?? 0) + 1}` });
 
       // No explicit `Database.add(draft)` here: `post` is already attached to the database
       // (every `AddDraft.post` is created via `AddPost`), so pushing `Ref.make(draft)` onto

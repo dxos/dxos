@@ -174,7 +174,6 @@ import { Markdown } from '@dxos/plugin-markdown';
 export class Draft extends Type.makeObject<Draft>(DXN.make('org.dxos.type.blogger.draft', '0.1.0'))(
   Schema.Struct({
     label: Schema.optional(Schema.String),
-    createdAt: Schema.optional(Schema.String),
     content: Ref.Ref(Markdown.Document).pipe(FormInputAnnotation.set(false)),
   }).pipe(LabelAnnotation.set(['label'])),
 ) {}

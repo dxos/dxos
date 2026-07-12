@@ -24,7 +24,12 @@ const makeConnectionRef = (): Ref.Ref<Connection.Connection> => {
   return Ref.make(Connection.make({ accessToken: Ref.make(accessToken) }));
 };
 
-const makeStub = (): { stub: Publisher.PublisherService; calls: string[] } => {
+/**
+ * `listDrafts` returns each remote draft's full body text by default; pass `listDraftsText` to
+ * simulate a provider (e.g. Typefully v1) whose `listDrafts` omits it, forcing the `getDraft`
+ * fallback.
+ */
+const makeStub = (listDraftsText: string = 'remote body'): { stub: Publisher.PublisherService; calls: string[] } => {
   const calls: string[] = [];
   const stub: Publisher.PublisherService = {
     id: 'stub',
@@ -32,9 +37,12 @@ const makeStub = (): { stub: Publisher.PublisherService; calls: string[] } => {
     source: 'stub.test',
     listDrafts: async () => [
       { id: 'x1', text: 'already linked' },
-      { id: 'x2', text: 'remote body' },
+      { id: 'x2', text: listDraftsText },
     ],
-    getDraft: async (_connection, id) => ({ id, text: 'remote body' }),
+    getDraft: async (_connection, id) => {
+      calls.push('getDraft');
+      return { id, text: 'fetched body' };
+    },
     createDraft: async (_connection, input) => {
       calls.push('create');
       return { id: 'new1', text: input.text };
@@ -93,7 +101,8 @@ describe('Blogger sync operations', () => {
     const result = await EffectEx.runPromise(runImportDrafts(stub, post, connection));
 
     // Only the unlinked remote draft ('x2') was imported; 'x1' was skipped (already linked), so
-    // `createDraft`/`updateDraft` (which import never calls) never fired.
+    // `createDraft`/`updateDraft` (which import never calls) never fired. `getDraft` also never
+    // fired because the stub's `listDrafts` entry for 'x2' already carried its body text.
     expect(calls).toEqual([]);
     expect(result.drafts).toHaveLength(draftsBefore + 1);
 
@@ -103,6 +112,26 @@ describe('Blogger sync operations', () => {
     invariant(imported);
     expect(imported.content.target?.content.target?.content).toBe('remote body');
     expect(Obj.getKeys(imported, stub.source).map((key) => key.id)).toEqual(['x2']);
+  });
+
+  test('ImportDrafts falls back to getDraft when listDrafts omits the body text', async () => {
+    const post = Blogger.makePost();
+    const { stub, calls } = makeStub('');
+    const connection = makeConnectionRef();
+    const draftsBefore = post.drafts?.length ?? 0;
+
+    const result = await EffectEx.runPromise(runImportDrafts(stub, post, connection));
+
+    // 'x1' and 'x2' are both unlinked here (no draft was pre-linked), but only 'x2' had its body
+    // text blanked out by `makeStub('')`, so `getDraft` fires exactly once, for 'x2'.
+    expect(calls).toEqual(['getDraft']);
+    expect(result.drafts).toHaveLength(draftsBefore + 2);
+
+    const importedRef = result.drafts?.[result.drafts.length - 1];
+    const imported = importedRef?.target;
+    expect(imported).toBeDefined();
+    invariant(imported);
+    expect(imported.content.target?.content.target?.content).toBe('fetched body');
   });
 
   test('UnpublishDraft deletes the remote draft and clears the foreign key', async () => {

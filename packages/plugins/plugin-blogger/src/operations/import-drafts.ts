@@ -39,8 +39,10 @@ export const runImportDrafts = (
     const unlinked = remoteDrafts.filter((remote) => !linkedIds.has(remote.id));
 
     for (const remote of unlinked) {
-      const body = yield* tryPublisher(() => service.getDraft(connection, remote.id));
-      const draft = Blogger.makeDraft({ label: remote.title, content: body.text });
+      // `listDrafts` already returns full body text for most providers; only fall back to the
+      // (potentially unsupported, e.g. Typefully v1) `getDraft` call when it did not.
+      const text = remote.text || (yield* tryPublisher(() => service.getDraft(connection, remote.id))).text;
+      const draft = Blogger.makeDraft({ label: remote.title, content: text });
       Obj.update(draft, (draft) => {
         Obj.getMeta(draft).keys.push({ source: service.source, id: remote.id });
       });

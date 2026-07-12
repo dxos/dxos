@@ -61,9 +61,8 @@ drafts:  Schema.Array(Ref<Draft>)             // versions, order = version order
 ### `Draft` (wrapper object so versions carry metadata)
 
 ```
-label:     string (optional; e.g. "Draft 1")
-createdAt: string (ISO timestamp)
-content:   Ref<Markdown.Document>             // the draft body (commentable)
+label:   string (optional; e.g. "Draft 1")
+content: Ref<Markdown.Document>               // the draft body (commentable)
 ```
 
 `make()` factories construct child docs with `Ref.make(Markdown.make(...))` and

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { type KeyboardEventHandler, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -28,8 +28,32 @@ export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
   const draftCount = post.drafts?.length ?? 0;
   const icon = Obj.getIcon(post)?.icon ?? 'ph--article--regular';
 
+  // `Card.Root` renders `role='button'` when clickable but provides no keyboard handling itself, so
+  // Enter/Space activation is wired up here (mirrors native `<button>` key semantics).
+  const handleKeyDown = useCallback<KeyboardEventHandler<HTMLDivElement>>(
+    (event) => {
+      if (!onClick) {
+        return;
+      }
+      if (event.key === 'Enter' || event.key === ' ') {
+        if (event.key === ' ') {
+          event.preventDefault();
+        }
+        onClick();
+      }
+    },
+    [onClick],
+  );
+
   return (
-    <Card.Root fullWidth classNames={onClick && 'dx-hover'} onClick={onClick} role={onClick ? 'button' : undefined}>
+    <Card.Root
+      fullWidth
+      classNames={onClick && 'dx-hover'}
+      onClick={onClick}
+      onKeyDown={onClick ? handleKeyDown : undefined}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+    >
       <Card.Header>
         <Card.Block>
           <Icon icon={icon} />
