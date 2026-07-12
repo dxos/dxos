@@ -228,17 +228,45 @@ const NO_REPLY_RE = /(^|[._+-])(no-?reply|do-?not-?reply|donotreply|noreply|mail
 export const isNoReplyAddress = (email: string | undefined): boolean =>
   !!email && NO_REPLY_RE.test(email.split('@')[0] ?? '');
 
+// Local-part patterns for role / automated mailboxes — an organization, not an individual (support,
+// billing, notifications, …). A leading role word, optionally followed by a separator (`support`,
+// `billing+eu`, `no.reply`).
+const ROLE_LOCALPART_RE =
+  /^(support|help(desk)?|info|hello|contact|team|sales|billing|invoices?|receipts?|payments?|accounts?|admin|postmaster|mailer|marketing|promo(tions)?|offers|deals|careers?|jobs|feedback|survey|orders?|shipping|service|members?|membership|community|digest|notifications?|notify|alerts?|updates?|news(letter)?|security|welcome|webmaster)([._+-]|$)/i;
+
+// Display-name markers that signal an organizational sender rather than a person.
+const ORG_NAME_RE = /\b(inc|llc|ltd|gmbh|corp|team|support|notifications?|newsletter|billing|no-?reply)\b/i;
+
 /**
- * Whether a message is worth drafting a reply to. Bulk/automated mail — a no-reply sender or a
- * message carrying an unsubscribe affordance — is not. Reads the signals the Gmail sync mapper
- * records on `properties` (`noReply`, `listUnsubscribe`), falling back to the sender address for
- * messages mapped before those signals existed (e.g. an older fixture).
+ * Whether a sender is an organization / automated role mailbox rather than an individual — a
+ * strong-signal, deterministic check (a role local part or an org-shaped display name). Deliberately
+ * conservative: it errs toward `false` (treat as a person) so a genuine individual is never wrongly
+ * excluded from replies. The richer, confidence-scored person/org triage lives in the research
+ * harness; this is the cheap foreground gate {@link isReplyable} needs.
  */
-export const isReplyable = (message: MessageLike): boolean => {
+export const isOrgSender = (message: MessageLike): boolean => {
+  const localPart = (message.sender?.email ?? '').split('@')[0] ?? '';
+  if (localPart && ROLE_LOCALPART_RE.test(localPart)) {
+    return true;
+  }
+  const name = message.sender?.name;
+  return !!name && ORG_NAME_RE.test(name);
+};
+
+/**
+ * Whether a message is worth drafting a reply to. Replies go only to people: bulk/automated mail — a
+ * no-reply sender, an unsubscribe affordance, or an organizational / role sender — is skipped. Reads
+ * the signals the Gmail sync mapper records on `properties` (`noReply`, `listUnsubscribe`), falling
+ * back to the sender address for messages mapped before those signals existed (e.g. an older
+ * fixture). When the caller has a classified sender type (e.g. the background classify-sender stage),
+ * pass `senderClass` to use it instead of the heuristic.
+ */
+export const isReplyable = (message: MessageLike, options: { senderClass?: 'person' | 'org' } = {}): boolean => {
   const properties = message.properties ?? {};
   const hasUnsubscribe = typeof properties.listUnsubscribe === 'string' && properties.listUnsubscribe.length > 0;
-  if (properties.noReply === true || hasUnsubscribe) {
+  if (properties.noReply === true || hasUnsubscribe || isNoReplyAddress(message.sender?.email)) {
     return false;
   }
-  return !isNoReplyAddress(message.sender?.email);
+  // A classified type (from the LLM stage) wins over the heuristic; otherwise fall back to it.
+  return options.senderClass ? options.senderClass === 'person' : !isOrgSender(message);
 };

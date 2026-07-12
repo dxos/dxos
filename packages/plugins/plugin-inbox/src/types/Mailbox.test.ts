@@ -57,3 +57,42 @@ describe('Mailbox tags', () => {
     expect(Mailbox.getTagsForMessage(mailbox, message)).toEqual([]);
   });
 });
+
+describe('replyability (person-only)', () => {
+  const msg = (sender: { email?: string; name?: string }, properties: Record<string, unknown> = {}) =>
+    Message.make({
+      created: '2026-01-01T00:00:00.000Z',
+      sender,
+      blocks: [{ _tag: 'text', text: 'hi' }],
+      properties,
+    });
+
+  test('a person is replyable', ({ expect }) => {
+    expect(Mailbox.isReplyable(msg({ email: 'alice@unknown.com', name: 'Alice' }))).toBe(true);
+    expect(Mailbox.isReplyable(msg({ email: 'jane.doe@acme.com' }))).toBe(true);
+  });
+
+  test('no-reply / unsubscribe / mailer-daemon are not replyable', ({ expect }) => {
+    expect(Mailbox.isReplyable(msg({ email: 'no-reply@acme.com' }))).toBe(false);
+    expect(Mailbox.isReplyable(msg({ email: 'a@acme.com' }, { noReply: true }))).toBe(false);
+    expect(Mailbox.isReplyable(msg({ email: 'a@acme.com' }, { listUnsubscribe: '<https://x/unsub>' }))).toBe(false);
+  });
+
+  test('organizational / role senders are not replyable', ({ expect }) => {
+    for (const email of ['support@acme.com', 'billing@acme.com', 'notifications@github.com', 'careers@bigco.com']) {
+      expect(Mailbox.isReplyable(msg({ email })), email).toBe(false);
+    }
+    expect(Mailbox.isReplyable(msg({ email: 'hello@acme.com', name: 'Acme Inc' }))).toBe(false);
+    expect(Mailbox.isOrgSender(msg({ email: 'support@acme.com' }))).toBe(true);
+    expect(Mailbox.isOrgSender(msg({ email: 'alice@unknown.com', name: 'Alice' }))).toBe(false);
+  });
+
+  test('an explicit senderClass overrides the heuristic (but not the no-reply gate)', ({ expect }) => {
+    // A role address the LLM decided is actually a person still gets a reply.
+    expect(Mailbox.isReplyable(msg({ email: 'support@acme.com' }), { senderClass: 'person' })).toBe(true);
+    // A plain address the LLM classified as org does not.
+    expect(Mailbox.isReplyable(msg({ email: 'alice@unknown.com' }), { senderClass: 'org' })).toBe(false);
+    // A hard no-reply signal wins regardless of the classified type.
+    expect(Mailbox.isReplyable(msg({ email: 'no-reply@acme.com' }), { senderClass: 'person' })).toBe(false);
+  });
+});

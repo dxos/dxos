@@ -50,8 +50,13 @@ deterministic (no LLM) → foreground stays fast; all LLM cost is batchable enri
       `fixtures/local/sender-labels.json` → the eval scores heuristic / hybrid / each model vs gold.
       Deterministic unit test (`classify-sender.test.ts`, 8 cases) passes in CI; build+lint+fmt clean.
       **To run the measurement:** bootstrap over the private corpus, review labels, re-run the eval.
-- [ ] **`Mailbox.isReplyable` → person-only** — draft replies only to people (person AND not
-      no-reply/unsubscribe).
+- [x] **`Mailbox.isReplyable` → person-only** — extended in `plugin-inbox/types/Mailbox.ts`: added
+      `isOrgSender` (deterministic strong-signal role-localpart / org-name check, errs toward person so
+      real individuals aren't suppressed); `isReplyable` now returns false for no-reply/unsubscribe/
+      mailer-daemon OR an org sender, and accepts an optional `{ senderClass }` so the background
+      classify-sender result overrides the heuristic (no-reply gate still wins). 4 tests in
+      `Mailbox.test.ts`; full plugin-inbox suite green. FOLLOW-UP: pass the classify-sender class into
+      `isReplyable({ senderClass })` at the product draft-creation call site.
 - [ ] **Minimize non-people summarization** — one-line label ("this is a bill") instead of a full
       summary for org mail; reserve summary budget for person mail.
 - [x] **Default draft `Instructions`** — shipped `DEFAULT_DRAFT_INSTRUCTIONS` (plain/direct, no
