@@ -38,6 +38,9 @@ export class Image extends Type.makeObject<Image>(DXN.make('org.dxos.type.image'
   }).pipe(
     LabelAnnotation.set(['prompt']),
     Annotation.IconAnnotation.set({ icon: 'ph--image--regular', hue: 'purple' }),
+    // Owned child of an ImageArtifact / Gallery — hidden from the navtree and object picker so it
+    // does not appear as a standalone top-level type (mirrors Instructions).
+    Annotation.HiddenAnnotation.set(true),
   ),
 ) {}
 
