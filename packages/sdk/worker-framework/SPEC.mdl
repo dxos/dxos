@@ -1,0 +1,102 @@
+---
+id: org.dxos.worker-framework
+name: WorkerFramework
+version: 0.10.0
+---
+
+Generic worker management framework for DXOS client services. This spec captures
+the package's namespace modules and their public API.
+
+Modules follow the DXOS namespace-module styleguide: PascalCase file in `src/`,
+marked `// @import-as-namespace`, re-exported from `index.ts` as
+`export * as <Name> from './<Name>'`, and consumed by callers as a namespace
+(`RpcTiming.serverLayer`, never a bare `rpcTimingServerLayer`).
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term     | URI                          |
+|----------|------------------------------|
+| `module` | `org.dxos.mdl.module@1.0`    |
+
+## Modules
+
+```mdl
+module RpcTiming
+  desc: |
+    Effect RPC middleware that measures per-request queue-wait and service time
+    across the worker boundary. The client stamps a send timestamp header; the
+    server derives queue-wait from it, times the handler, records samples in a
+    bounded ring buffer, and logs slow requests.
+  api:
+    # Constants
+    SENT_AT_HEADER: string                # cross-thread send-time header ('x-dxos-rpc-sent-at').
+
+    # Types
+    Options: { minLogMs?: number }        # min queue-wait / service ms before logging (default 100).
+    MetadataService: {...}                # per-request timing: sentAt?, dispatchedAt, queueWaitMs?, serviceMs?.
+    Sample: {...}                         # one recorded RPC: tag, queueWaitMs?, serviceMs, at.
+    StatsSnapshot: {...}                  # samples[] + maxQueueWaitMs + maxServiceMs.
+
+    # Effect tags
+    Metadata: Context.Tag                 # request-scoped MetadataService tag.
+    Middleware: RpcMiddleware.Tag         # wrap middleware; provides Metadata; requiredForClient.
+
+    # Group wiring
+    applyMiddleware: (group) => group     # attaches Middleware to every RPC; idempotent.
+    serverLayer: (options?) => Layer      # derives queue-wait + service time, records + logs.
+    clientLayer: () => Layer              # stamps SENT_AT_HEADER on outbound RPCs.
+
+    # Stats collection
+    recordSample: (Sample) => void        # append one completed RPC (ring buffer, max 100).
+    getStatsSnapshot: () => StatsSnapshot  # snapshot of samples from the server middleware.
+    resetStats: () => void                # clear collected samples (tests).
+
+    # Option helpers (consumed by the sibling Rpc module)
+    isEnabled: (timing?) => boolean       # whether timing is on for a serve/client options bag.
+    resolveOptions: (timing?) => Options  # normalize boolean | Options to an Options bag.
+```
+
+`RpcTiming` currently lives in `src/internal/rpc-timing.ts` with `RpcTiming`-prefixed,
+directly-exported symbols. The target is a single `src/RpcTiming.ts` namespace module;
+the api above is the post-rename (unprefixed) surface. The restyle renames the current
+symbols to their unprefixed namespace members:
+
+| Current (`src/internal/rpc-timing.ts`) | Target (`RpcTiming.*`) |
+|----------------------------------------|------------------------|
+| `RPC_TIMING_SENT_AT_HEADER`            | `SENT_AT_HEADER`       |
+| `RpcTimingOptions`                     | `Options`              |
+| `RpcTimingMetadataService`             | `MetadataService`      |
+| `RpcTimingSample`                      | `Sample`               |
+| `RpcTimingStatsSnapshot`               | `StatsSnapshot`        |
+| `RpcTimingMetadata`                    | `Metadata`             |
+| `RpcTimingMiddleware`                  | `Middleware`           |
+| `applyRpcTimingMiddleware`             | `applyMiddleware`      |
+| `rpcTimingServerLayer`                 | `serverLayer`          |
+| `rpcTimingClientLayer`                 | `clientLayer`          |
+| `recordRpcTimingSample`                | `recordSample`         |
+| `getRpcTimingStatsSnapshot`            | `getStatsSnapshot`     |
+| `resetRpcTimingStats`                  | `resetStats`           |
+| `isRpcTimingEnabled`                   | `isEnabled`            |
+| `resolveRpcTimingOptions`              | `resolveOptions`       |
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext module
+  uri: org.dxos.mdl.module@1.0
+  desc: |
+    An ESM namespace module following the DXOS namespace-module styleguide:
+    PascalCase file in src/, marked `// @import-as-namespace`, and re-exported
+    from index.ts as `export * as <Name> from './<Name>'`. Callers import it as a
+    namespace, so members are unprefixed (`RpcTiming.Options`, not `RpcTimingOptions`).
+    The file path is inferred from the block name (`RpcTiming` → `src/RpcTiming.ts`).
+    The full rules live in the styleguide referenced below rather than inline here.
+  styleguide: ../../../docs/style/namespace-modules.md
+  fields:
+    desc?: Prose
+    api: ApiMap         # public members reached as `<Name>.<member>`  (name: TypeExpr # comment)
+```

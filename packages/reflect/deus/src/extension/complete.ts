@@ -18,7 +18,7 @@ const BLOCK_FIELDS: Record<string, string[]> = {
   component: ['desc', 'props', 'state', 'slots', 'actions', 'emits', 'layout'],
   service: ['desc', 'loading', 'ops', 'errors', 'note'],
   db: ['desc', 'backend', 'entities', 'queries', 'note'],
-  module: ['desc', 'api', 'note', 'styleguide'],
+  module: ['desc', 'api', 'styleguide'],
 };
 
 /**
