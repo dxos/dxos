@@ -502,6 +502,9 @@
       "path": "packages/plugins/plugin-preview/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-progress/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-pwa/tsconfig.json"
     },
     {
