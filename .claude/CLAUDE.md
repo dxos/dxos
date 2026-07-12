@@ -25,8 +25,8 @@
   user's projects (`list all` for everyone) — reply with a row number to resume.
 - Checkpoint project state with `$hydrate` (also `$checkpoint`) before stopping
   or opening a PR; reload a project with `$resume [name]` (also `$rehydrate`) at
-  the start of a session — the registry resolves _which_ project (by name, else
-  by the entry whose branch matches HEAD).
+  the start of a session — the registry resolves _which_ project (by name/row,
+  else the single active entry for the current user).
 - A `UserPromptSubmit` hook (`.claude/hooks/track.sh`) detects these and injects
   the matching directive — append to the active `TASKS.md` (never a background
   task chip), manage the registry, or run the hydrate/resume handoff. See the
