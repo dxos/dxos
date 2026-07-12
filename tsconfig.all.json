@@ -112,6 +112,9 @@
       "path": "packages/common/process/tsconfig.json"
     },
     {
+      "path": "packages/common/progress/tsconfig.json"
+    },
+    {
       "path": "packages/common/protobuf-compiler/tsconfig.json"
     },
     {
