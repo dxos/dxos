@@ -592,6 +592,9 @@
       "path": "packages/plugins/plugin-trip/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-typefully/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-video/tsconfig.json"
     },
     {

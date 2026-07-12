@@ -1015,6 +1015,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-typefully/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-video/package.json",
           "jsonpath": "$.version"
         },
