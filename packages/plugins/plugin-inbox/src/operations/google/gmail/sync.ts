@@ -64,6 +64,11 @@ const STREAMING_CONFIG = {
   pageSize: 10,
 } as const;
 
+/**
+ * Progress-registry key for a mailbox's Gmail sync monitor — the mailbox URI with a `#sync` suffix so
+ * distinct monitor types (e.g. `#topics`) can coexist for the same mailbox. Peer of
+ * `createTopicsProgressKey`; `MailboxArticle` subscribes to it to show the sync meter.
+ */
 export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#sync';
 
 /**
