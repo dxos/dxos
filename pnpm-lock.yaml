@@ -17244,6 +17244,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/plugin-blogger':
         specifier: workspace:*
         version: link:../plugin-blogger
@@ -17263,9 +17266,9 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
     devDependencies:
-      '@dxos/effect':
+      '@dxos/echo-client':
         specifier: workspace:*
-        version: link:../../common/effect
+        version: link:../../core/echo/echo-client
 
   packages/plugins/plugin-video:
     dependencies:
