@@ -33,6 +33,12 @@ export class AtprotoPublication extends Type.makeRelation<AtprotoPublication>(
     rkey: Schema.String,
     /** Hash of the last-published encoded record; drives the out-of-date check. */
     publishedHash: Schema.String,
+    /**
+     * Display value of each Published leaf field at publish time, keyed by JSONPath. Lets the companion
+     * flag which individual Published fields have since diverged (older publications lack it — the
+     * companion then shows no per-field Published divergence).
+     */
+    publishedValues: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.String })),
     /** ISO timestamp of the last publish. */
     publishedAt: Schema.String,
   }),

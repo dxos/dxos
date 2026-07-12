@@ -66,27 +66,26 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   orientation = 'vertical',
   detail,
 }: MasterDetailProps<T>) => {
-  const list =
-    (items.length === 0 && <Empty label={emptyLabel} />) || (
-      <OrderedList.Root<T> items={items}>
-        {({ items }) => (
-          <OrderedList.Content>
-            {items.map((item) => (
-              <MasterDetailRow
-                key={item.id}
-                item={item}
-                selected={item.id === selectedId}
-                getLabel={getLabel}
-                getIcon={getIcon}
-                getAdornment={getAdornment}
-                renderActions={renderActions}
-                onSelect={onSelect}
-              />
-            ))}
-          </OrderedList.Content>
-        )}
-      </OrderedList.Root>
-    );
+  const list = (items.length === 0 && <Empty label={emptyLabel} />) || (
+    <OrderedList.Root<T> items={items}>
+      {({ items }) => (
+        <OrderedList.Content>
+          {items.map((item) => (
+            <MasterDetailRow
+              key={item.id}
+              item={item}
+              selected={item.id === selectedId}
+              getLabel={getLabel}
+              getIcon={getIcon}
+              getAdornment={getAdornment}
+              renderActions={renderActions}
+              onSelect={onSelect}
+            />
+          ))}
+        </OrderedList.Content>
+      )}
+    </OrderedList.Root>
+  );
 
   if (orientation === 'horizontal') {
     // List and detail as side-by-side `Panel` panes. The master sizes to its content (`w-max`) capped at

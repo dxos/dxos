@@ -2,59 +2,80 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Panproto } from '@panproto/core';
+import { Panproto } from '@dxos/echo-panproto';
 
-import bookLexicon from './lexicons/buzz.bookhive.book.json';
-import echoLexicon from './lexicons/echo.book.json';
+import echoBookLexicon from './lexicons/echo.book.json';
 
-// Fields shared 1:1 between the ECHO projection and the buzz.bookhive.book record. `authors` is a
-// tab-separated string on BOTH sides (the array↔string join lives in the projection boundary), so
-// every field is a pure structural map — Panproto owns the whole record transformation.
-const SCALAR_FIELDS = [
-  'title',
-  'authors',
-  'hiveId',
-  'createdAt',
-  'status',
-  'stars',
-  'review',
-  'startedAt',
-  'finishedAt',
-  'hiveBookUri',
-] as const;
+/**
+ * The scalar value transforms in the Book <-> buzz.bookhive.book mapping, authored as declarative
+ * Panproto {@link Panproto.Expr} ASTs and executed by the vendored panproto engine — the reusable
+ * standard for ECHO <-> lexicon value rewrites. Structural adaptation (refs, arrays, nesting) is the
+ * codec's job (book-codec.ts), never the bridge's. Two transforms today:
+ *
+ * - `status`: bare literal in ECHO <-> `buzz.bookhive.defs#<value>` knownValue reference on the wire.
+ * - `startedAt`/`finishedAt`: date-only (`Format.Date`, `2018-11-13`) in ECHO <-> full ISO datetime
+ *   (`2018-11-13T00:00:00.000Z`, the lexicon's required `datetime` format) on the wire.
+ */
+const STATUS_PREFIX = 'buzz.bookhive.defs#';
 
-const ECHO_ROOT = 'echo.book';
-const BOOK_ROOT = 'buzz.bookhive.book';
+// A date-only value denotes midnight UTC when widened to the wire's datetime; decode slices it back.
+const MIDNIGHT_UTC = 'T00:00:00.000Z';
+const ISO_DATE_LENGTH = 10; // `YYYY-MM-DD`.
 
-export type StructuralCodec = {
-  encode: (boundary: Record<string, unknown>) => Record<string, unknown>;
-  decode: (record: Record<string, unknown>) => Record<string, unknown>;
-};
+const DATE_FIELDS = ['startedAt', 'finishedAt'] as const;
 
-let enginePromise: Promise<StructuralCodec> | undefined;
+// The vertex anchoring the flat scalar projection; matches `echo.book`'s record body.
+const ROOT_VERTEX = 'echo.book:body';
 
-const buildEngine = async (): Promise<StructuralCodec> => {
-  const panproto = await Panproto.init();
-  const echo = panproto.parseLexicon(echoLexicon);
-  const book = panproto.parseLexicon(bookLexicon);
+type Direction = 'encode' | 'decode';
 
-  const buildMigration = (from: ReturnType<typeof panproto.parseLexicon>, to: typeof echo, fromRoot: string, toRoot: string) => {
-    let builder = panproto.migration(from, to).map(fromRoot, toRoot).map(`${fromRoot}:body`, `${toRoot}:body`);
-    for (const field of SCALAR_FIELDS) {
-      builder = builder.map(`${fromRoot}:body.${field}`, `${toRoot}:body.${field}`);
+/**
+ * The field transforms applicable to a record, in the given direction. A transform is included only
+ * when its field is present — panproto binds the field by name, so a transform over an absent field
+ * would fail to resolve.
+ */
+const bookTransforms = (record: Record<string, unknown>, direction: Direction): Panproto.FieldTransform[] => {
+  const transforms: Panproto.FieldTransform[] = [];
+
+  if (typeof record.status === 'string') {
+    transforms.push({
+      vertex: ROOT_VERTEX,
+      key: 'status',
+      expr:
+        direction === 'encode'
+          ? Panproto.prefix(STATUS_PREFIX, Panproto.field('status'))
+          : Panproto.stripPrefix(STATUS_PREFIX, Panproto.field('status')),
+    });
+  }
+
+  for (const key of DATE_FIELDS) {
+    if (typeof record[key] === 'string') {
+      transforms.push({
+        vertex: ROOT_VERTEX,
+        key,
+        expr:
+          direction === 'encode'
+            ? Panproto.suffix(MIDNIGHT_UTC, Panproto.field(key)) // date -> datetime
+            : Panproto.slice(Panproto.field(key), 0, ISO_DATE_LENGTH), // datetime -> date
+      });
     }
-    return builder.compile();
-  };
+  }
 
-  const forward = buildMigration(echo, book, ECHO_ROOT, BOOK_ROOT);
-  const reverse = buildMigration(book, echo, BOOK_ROOT, ECHO_ROOT);
-
-  return {
-    // `liftJson` returns `unknown` (untyped WASM boundary); both directions are object records.
-    encode: (boundary) => forward.liftJson(boundary, `${ECHO_ROOT}:body`) as Record<string, unknown>,
-    decode: (record) => reverse.liftJson(record, `${BOOK_ROOT}:body`) as Record<string, unknown>,
-  };
+  return transforms;
 };
 
-/** Lazily initialize Panproto's WASM lens engine and build the structural migrations (memoized). */
-export const getStructuralCodec = (): Promise<StructuralCodec> => (enginePromise ??= buildEngine());
+const runBookTransforms = (record: Record<string, unknown>, direction: Direction): Promise<Record<string, unknown>> => {
+  const fieldTransforms = bookTransforms(record, direction);
+  if (fieldTransforms.length === 0) {
+    return Promise.resolve(record);
+  }
+  return Panproto.transform({ lexicon: echoBookLexicon, spec: { rootVertex: ROOT_VERTEX, fieldTransforms }, record });
+};
+
+/** Apply the ECHO -> wire scalar value transforms (status prefix, date widening). */
+export const encodeBookScalars = (record: Record<string, unknown>): Promise<Record<string, unknown>> =>
+  runBookTransforms(record, 'encode');
+
+/** Apply the wire -> ECHO scalar value transforms, inverse of {@link encodeBookScalars}. */
+export const decodeBookScalars = (record: Record<string, unknown>): Promise<Record<string, unknown>> =>
+  runBookTransforms(record, 'decode');

@@ -9,14 +9,15 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, DXN, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { AtprotoPublishAnnotation, AtprotoRecordAnnotation } from '@dxos/schema';
+import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
 import { Connection } from '@dxos/plugin-connector';
 
 import { AtprotoPublication } from '#types';
 
-import { computeStatus, publishObject, unpublishObject } from './publish';
+import { computePublishedValues } from './field-values';
+import { computeStatus, deriveDisplayStatus, publishObject, unpublishObject } from './publish';
 import * as AtprotoRepo from './services/AtprotoRepo';
 
 // A minimal atproto-annotated type. Its codec projects only the public `text` field, exercising the
@@ -28,7 +29,7 @@ const testCodec = {
 
 class TestDoc extends Type.makeObject<TestDoc>(DXN.make('org.dxos.test.atprotoDoc', '0.1.0'))(
   Schema.Struct({
-    text: Schema.String.pipe(AtprotoPublishAnnotation.set(true)),
+    text: Schema.String.pipe(AtprotoVisibilityAnnotation.set('publish')),
     secret: Schema.optional(Schema.String),
   }).pipe(AtprotoRecordAnnotation.set({ collection: 'com.example.doc', rkey: 'tid', codec: testCodec })),
 ) {}
@@ -82,6 +83,27 @@ describe('publish', () => {
     expect(await computeStatus(doc, publication)).toBe('published');
   });
 
+  test('snapshots published field values (and only those) on the publication', async ({ expect }) => {
+    const { db, connection, doc } = await setup();
+    const mock = AtprotoRepo.makeMock();
+
+    // The generic snapshot captures published leaves and excludes private fields.
+    expect(await computePublishedValues(doc)).toEqual({ text: 'hello' });
+
+    const publication = await EffectEx.runPromise(
+      publishObject({ object: doc, connection, db, now: NOW }).pipe(Effect.provide(AtprotoRepo.layerMock(mock))),
+    );
+
+    // The publication stores the snapshot so per-field divergence can be flagged later.
+    expect(publication.publishedValues).toEqual({ text: 'hello' });
+
+    // After editing the published field, the live value diverges from the stored snapshot.
+    Obj.update(doc, (doc) => {
+      doc.text = 'changed';
+    });
+    expect((await computePublishedValues(doc)).text).not.toBe(publication.publishedValues?.text);
+  });
+
   test('detects an out-of-date publication after the object changes', async ({ expect }) => {
     const { db, connection, doc } = await setup();
     const mock = AtprotoRepo.makeMock();
@@ -111,5 +133,29 @@ describe('publish', () => {
     expect(mock.records.size).toBe(0);
     const found = await publications(db, doc);
     expect(found.length).toBe(0);
+  });
+});
+
+describe('deriveDisplayStatus', () => {
+  const eligible = { ok: true } as const;
+  const ineligible = { ok: false, reason: 'no catalog link' } as const;
+  const unverifiable = { ok: false, reason: 'offline', unverifiable: true } as const;
+
+  test('unpublished splits into ready / ineligible by eligibility', ({ expect }) => {
+    expect(deriveDisplayStatus('unpublished', eligible)).toBe('ready');
+    expect(deriveDisplayStatus('unpublished', ineligible)).toBe('ineligible');
+  });
+
+  test('published / out-of-date pass through when verifiable', ({ expect }) => {
+    expect(deriveDisplayStatus('published', eligible)).toBe('published');
+    expect(deriveDisplayStatus('outOfDate', eligible)).toBe('outOfDate');
+    // A definitive ineligibility does not hide the publication state (the reason is surfaced separately).
+    expect(deriveDisplayStatus('published', ineligible)).toBe('published');
+  });
+
+  test('unverifiable eligibility overrides every publication state', ({ expect }) => {
+    expect(deriveDisplayStatus('unpublished', unverifiable)).toBe('unknown');
+    expect(deriveDisplayStatus('published', unverifiable)).toBe('unknown');
+    expect(deriveDisplayStatus('outOfDate', unverifiable)).toBe('unknown');
   });
 });

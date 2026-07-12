@@ -244,13 +244,28 @@ const proxyWrite = <A>(
           Accept: 'application/json',
           Authorization: `DPoP ${creds.accessTokenValue}`,
         },
-        body,
+        // The Edge proxy forwards this verbatim as the fetch body, so it must be a pre-serialized JSON
+        // string (an object would reach the PDS as "[object Object]").
+        body: JSON.stringify(body),
       },
     }),
     Effect.flatMap(client.execute),
-    Effect.flatMap((response) => Effect.flatMap(response.json, Schema.decodeUnknown(schema))),
+    Effect.flatMap((response) =>
+      Effect.gen(function* () {
+        if (response.status < 200 || response.status >= 300) {
+          // Surface the PDS/Edge error body (e.g. lexicon validation detail) instead of a bare "failed".
+          const text = yield* response.text.pipe(Effect.orElseSucceed(() => ''));
+          return yield* Effect.fail(
+            new AtprotoRepoError({ message: `${nsid} failed (${response.status})${text ? `: ${text}` : ''}` }),
+          );
+        }
+        return yield* Schema.decodeUnknown(schema)(yield* response.json);
+      }),
+    ),
     Effect.scoped,
-    Effect.mapError((cause) => new AtprotoRepoError({ message: `${nsid} failed`, cause })),
+    Effect.mapError((cause) =>
+      cause instanceof AtprotoRepoError ? cause : new AtprotoRepoError({ message: `${nsid} failed`, cause }),
+    ),
   );
 };
 
@@ -288,7 +303,14 @@ const makeLive = (client: HttpClient.HttpClient, creds: Credentials): Repo => ({
   did: creds.handle,
   ...makeReader(client, creds.pdsBaseUrl, creds.handle),
   putRecord: ({ collection, rkey, record }) =>
-    proxyWrite(client, creds, 'com.atproto.repo.putRecord', { repo: creds.handle, collection, rkey, record }, WriteResponse),
+    // atproto validates the record against the collection lexicon and requires its `$type` to match.
+    proxyWrite(
+      client,
+      creds,
+      'com.atproto.repo.putRecord',
+      { repo: creds.handle, collection, rkey, record: { $type: collection, ...record } },
+      WriteResponse,
+    ),
   deleteRecord: ({ collection, rkey }) =>
     proxyWrite(client, creds, 'com.atproto.repo.deleteRecord', { repo: creds.handle, collection, rkey }, Schema.Struct({})).pipe(
       Effect.asVoid,

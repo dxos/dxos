@@ -3,7 +3,7 @@
 //
 
 export * from './api-key';
-export * from './atproto-publish';
+export * from './atproto-visibility';
 export * from './atproto-record';
 export * from './collection-item';
 export * from './factory';

@@ -57,7 +57,7 @@ feat F-2: BookHive-backed create autocomplete
 
 feat F-3: Publishable public face
   req F-3.1: The Book type carries an AtprotoRecordAnnotation (buzz.bookhive.book + generated codec).
-  req F-3.2: Only fields marked AtprotoPublishAnnotation are eligible to publish; all others are private.
+  req F-3.2: Only fields marked publish via AtprotoVisibilityAnnotation are eligible to publish; mirror fields resolve from the upstream catalog; all others are private.
   req F-3.3: The codec provably never emits private fields (notes, ownership, personal tags).
 ```
 

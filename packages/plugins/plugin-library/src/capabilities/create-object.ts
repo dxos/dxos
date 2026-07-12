@@ -66,18 +66,28 @@ export default Capability.makeModule(
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Book.Book),
       inputSchema: CreateBook,
-      // Array/derived fields (authors, genres, coverUrl) come from the catalog record, resolved on submit.
+      // The embedded catalog is filled from the selected hive book on submit; its `hiveId` is what
+      // makes the book publishable (a custom book with no catalog match has none).
       createObject: (props, options) =>
         Effect.gen(function* () {
           const suggestion = props.hiveId
             ? yield* lookupHiveBook(props.hiveId, { corsProxy: browserCorsProxy() })
             : undefined;
-          const object = Book.makeBook({
-            title: props.title ?? suggestion?.title ?? '(untitled)',
-            authors: suggestion?.authors,
-            genres: suggestion?.genres,
-            coverUrl: suggestion?.coverUrl,
-            hiveId: props.hiveId,
+          const object = Book.make({
+            catalog: {
+              title: props.title ?? suggestion?.title ?? '(untitled)',
+              authors: suggestion?.authors ?? [],
+              cover: suggestion?.coverUrl,
+              thumbnail: suggestion?.thumbnail,
+              description: suggestion?.description,
+              genres: suggestion?.genres,
+              // The hive id is a catalog identifier (what gates publishing), alongside ISBN/Goodreads.
+              identifiers: props.hiveId ? { hiveId: props.hiveId, ...suggestion?.identifiers } : suggestion?.identifiers,
+              language: suggestion?.language,
+              numPages: suggestion?.numPages,
+              publicationYear: suggestion?.publicationYear,
+              publisher: suggestion?.publisher,
+            },
             status: props.status,
           });
           return yield* Operation.invoke(SpaceOperation.AddObject, {

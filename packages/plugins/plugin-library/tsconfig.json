@@ -47,6 +47,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/echo-panproto"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -65,6 +68,9 @@
       "path": "../../ui/react-ui-list"
     },
     {
+      "path": "../../ui/react-ui-markdown"
+    },
+    {
       "path": "../../ui/react-ui-masonry"
     },
     {
@@ -81,6 +87,9 @@
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-preview"

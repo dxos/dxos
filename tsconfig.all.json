@@ -643,6 +643,9 @@
       "path": "packages/sdk/config/tsconfig.json"
     },
     {
+      "path": "packages/sdk/echo-panproto/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/examples/tsconfig.json"
     },
     {

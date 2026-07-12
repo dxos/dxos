@@ -14,16 +14,26 @@ import { BookCard } from './BookCard';
 
 // NOTE: build the ECHO object inside `render` — never pass a reactive ECHO object as a story `arg`,
 // since Storybook deep-traverses/mutates args (which the ECHO proxy rejects outside `Obj.update`).
-type StoryArgs = { status: Book.Status; stars?: number; review?: string; coverUrl?: string };
+type StoryArgs = { cover?: string; stars?: number; publicationYear?: number };
 
 const meta = {
   title: 'plugins/plugin-library/BookCard',
-  render: ({ status, stars, review, coverUrl }: StoryArgs) => {
-    const book = Book.makeBook({ title: 'Dune', authors: ['Frank Herbert'], genres: ['Science Fiction'], status, stars, review, coverUrl });
+  render: ({ cover, stars, publicationYear }: StoryArgs) => {
+    const book = Book.make({
+      catalog: {
+        title: 'Dune',
+        authors: ['Frank Herbert'],
+        genres: ['Science Fiction'],
+        identifiers: { hiveId: 'bk_dune' },
+        cover,
+        publicationYear,
+      },
+      stars,
+    });
     return (
       <Card.Root>
         <Card.Header>
-          <Card.Title>{book.title}</Card.Title>
+          <Card.Title>{book.catalog.title}</Card.Title>
         </Card.Header>
         <BookCard subject={book} />
       </Card.Root>
@@ -37,13 +47,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Finished: Story = {
+export const WithCover: Story = {
   args: {
-    status: 'finished',
-    stars: 9,
-    review: 'A landmark of science fiction.',
-    coverUrl: 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1555447414i/44767458.jpg',
+    cover: 'https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1555447414i/44767458.jpg',
+    stars: 8,
+    publicationYear: 1965,
   },
 };
 
-export const Reading: Story = { args: { status: 'reading' } };
+export const NoCover: Story = { args: { stars: 9, publicationYear: 1965 } };

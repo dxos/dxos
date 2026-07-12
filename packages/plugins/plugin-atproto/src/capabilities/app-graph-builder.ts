@@ -18,6 +18,9 @@ import { getRecordAnnotation } from '../annotation';
 import { isAtprotoConnection } from '../connection';
 import { PDS_NODE_TYPE } from '../pds';
 
+/** The companion segment/variant for the publishing companion — shared with its surface binding. */
+export const ATPROTO_COMPANION_VARIANT = 'atproto';
+
 /**
  * Matches an object node when BOTH hold: (a) the object's type carries an atproto record annotation,
  * and (b) its space holds an atproto connection. Reactive via `get(...atom)`, so the companion
@@ -48,7 +51,7 @@ export default Capability.makeModule(
         connector: (object) =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment('atproto'),
+              id: linkedSegment(ATPROTO_COMPANION_VARIANT),
               label: ['companion.label', { ns: meta.profile.key }],
               icon: 'ph--broadcast--regular',
               data: object,

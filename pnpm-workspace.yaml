@@ -433,6 +433,7 @@ catalog:
   fetch-mock: ^11.0.0
   find-process: ^1.4.7
   flame-chart-js: ^3.3.0
+  foliate-js: 1.0.1
   flubber: ^0.4.2
   force-graph: ^1.49.4
   fuzzy: ^0.1.3

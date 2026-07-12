@@ -9,20 +9,19 @@ import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { Connection } from '@dxos/plugin-connector';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Button, Card, Icon, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type Space, useQuery } from '@dxos/react-client/echo';
-import { getStyles } from '@dxos/ui-theme';
-
-import { Connection } from '@dxos/plugin-connector';
 import { AccessToken } from '@dxos/types';
+import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { AtprotoCapabilities } from '#types';
 
 import { ATPROTO_SOURCES, isAtprotoConnection } from '../../connection';
-import { atprotoForeignKey } from '../../foreign-key';
+import { getAtprotoUris } from '../../foreign-key';
 import { importRecord } from '../../publish';
 import { getMappedCollections } from '../../schema-map';
 import * as AtprotoRepo from '../../services/AtprotoRepo';
@@ -47,7 +46,10 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
   const connections = useQuery(space.db, Filter.type(Connection.Connection));
   const tokens = useQuery(space.db, Filter.type(AccessToken.AccessToken));
   const connectedHandles = useMemo(
-    () => new Set(tokens.filter((token) => ATPROTO_SOURCES.has(token.source) && token.account).map((token) => token.account)),
+    () =>
+      new Set(
+        tokens.filter((token) => ATPROTO_SOURCES.has(token.source) && token.account).map((token) => token.account),
+      ),
     [tokens],
   );
   const defaultHandle = useMemo(
@@ -117,27 +119,35 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
   const mappedForCollection = collection ? mapped.get(collection) : undefined;
   const record = records.find((entry) => entry.uri === recordUri);
 
-  // An object bound to this record (via its atproto foreign key) already exists in the space.
-  const existing = useQuery(
+  // Query the mapped type normally (resolving its schema) and check foreign keys in memory, rather than
+  // a foreign-key index query — an index query over a code-defined (non-space-registered) schema logs
+  // "unable to resolve schema" and yields unresolved objects.
+  const mappedObjects = useQuery(
     space.db,
-    recordUri && mappedForCollection
-      ? Filter.foreignKeys(mappedForCollection.type, [atprotoForeignKey(recordUri)])
-      : Filter.nothing(),
+    mappedForCollection ? Filter.type(mappedForCollection.type) : Filter.nothing(),
   );
-  const alreadyImported = existing.length > 0;
+  const alreadyImported = !!recordUri && mappedObjects.some((object) => getAtprotoUris(object).includes(recordUri));
 
-  // Decode the selected record to an in-memory ECHO object for mapped collections.
+  // Decode the selected record to an in-memory ECHO object for mapped collections, and run the same
+  // post-import enrichment import does, so the preview card matches the imported object exactly.
   useEffect(() => {
     setPreview(undefined);
     if (!record || !mappedForCollection) {
       return;
     }
     let cancelled = false;
-    void mappedForCollection.record.codec.decode(record.value).then((decoded) => {
-      if (!cancelled) {
-        setPreview(Obj.make(mappedForCollection.type, decoded));
+    const codec = mappedForCollection.record.codec;
+    void (async () => {
+      const decoded = await codec.decode(record.value);
+      if (cancelled) {
+        return;
       }
-    });
+      const object = Obj.make(mappedForCollection.type, decoded);
+      await codec.onImport?.(object);
+      if (!cancelled) {
+        setPreview(object);
+      }
+    })();
     return () => {
       cancelled = true;
     };
@@ -149,9 +159,7 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
     }
     // Bind as published only when the repo is one of our connected accounts.
     const connection =
-      activeHandle && connectedHandles.has(activeHandle)
-        ? connections.find(isAtprotoConnection)
-        : undefined;
+      activeHandle && connectedHandles.has(activeHandle) ? connections.find(isAtprotoConnection) : undefined;
     void EffectEx.runPromise(
       importRecord({
         type: mappedForCollection.type,
@@ -183,7 +191,9 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
   );
 
   // Icon/hue from the decoded object's type, matching how the object renders as a card elsewhere.
-  const previewIcon = preview ? (Obj.getIcon(preview) ?? { icon: 'ph--circle-dashed--regular', hue: undefined }) : undefined;
+  const previewIcon = preview
+    ? (Obj.getIcon(preview) ?? { icon: 'ph--circle-dashed--regular', hue: undefined })
+    : undefined;
 
   const recordDetail = record ? (
     <ScrollArea.Root orientation='vertical' classNames='flex-1 min-bs-0 overflow-hidden'>
@@ -244,7 +254,11 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='flex flex-col min-bs-0 plb-2'>
-        {error && <div role='none' className='px-2 pbe-2 text-sm text-error-text'>{error}</div>}
+        {error && (
+          <div role='none' className='px-2 pbe-2 text-sm text-error-text'>
+            {error}
+          </div>
+        )}
         <MasterDetail<CollectionItem>
           orientation='horizontal'
           classNames='flex-1 min-bs-0'

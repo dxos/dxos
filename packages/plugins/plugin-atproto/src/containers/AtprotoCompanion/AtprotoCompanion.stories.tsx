@@ -18,7 +18,7 @@ import { Connection } from '@dxos/plugin-connector';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
-import { type AtprotoCodec, AtprotoPublishAnnotation, AtprotoRecordAnnotation } from '@dxos/schema';
+import { type AtprotoCodec, AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
 import { translations } from '#translations';
@@ -39,7 +39,7 @@ const demoCodec: AtprotoCodec = {
 
 class DemoNote extends Type.makeObject<DemoNote>(DXN.make('org.dxos.plugin.atproto.demoNote', '0.1.0'))(
   Schema.Struct({
-    title: Schema.String.pipe(AtprotoPublishAnnotation.set(true)),
+    title: Schema.String.pipe(AtprotoVisibilityAnnotation.set('publish')),
     secret: Schema.optional(Schema.String),
   }).pipe(
     LabelAnnotation.set(['title']),

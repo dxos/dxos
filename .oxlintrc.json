@@ -10,6 +10,7 @@
     "**/*.astro",
     "**/tailwind.ts",
     "**/gen/*",
+    "**/src/wasm/**",
     "**/typings/**",
     ".idea/**",
     ".vscode/**",

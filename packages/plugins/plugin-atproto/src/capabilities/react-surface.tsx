@@ -14,18 +14,22 @@ import { AtprotoCompanion, PdsBrowser } from '#containers';
 
 import { getRecordAnnotation } from '../annotation';
 import { isPdsSubject } from '../pds';
+import { ATPROTO_COMPANION_VARIANT } from './app-graph-builder';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'atprotoCompanion',
+        // Bound to its own companion segment (`linkedSegment('atproto')`) so it does not also match
+        // other companions of the same object (e.g. a book's notes).
         filter: AppSurface.allOf(
           AppSurface.subject(
             AppSurface.Article,
             (subject): subject is Obj.Unknown => Obj.isObject(subject) && !!getRecordAnnotation(subject),
           ),
           AppSurface.companion(AppSurface.Article),
+          Surface.makeFilter(AppSurface.Article, (data) => data.variant === ATPROTO_COMPANION_VARIANT),
         ),
         component: ({ data, role }) => (
           <AtprotoCompanion subject={data.subject} role={role} attendableId={data.attendableId} />

@@ -1100,6 +1100,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/echo-panproto/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/examples/package.json",
           "jsonpath": "$.version"
         },

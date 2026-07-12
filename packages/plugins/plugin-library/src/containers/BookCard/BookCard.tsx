@@ -5,52 +5,34 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Card, Icon } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 
 import { Book } from '#types';
 
-const STATUS_LABELS: Record<Book.Status, string> = {
-  finished: 'Finished',
-  reading: 'Reading',
-  wantToRead: 'Want to read',
-  abandoned: 'Abandoned',
-};
-
 /**
- * Collection-tile body for a book: cover, authors, status, rating.
- * The enclosing tile owns `Card.Root`/`Card.Header`; this renders only the body.
+ * Collection-tile body for a book, mirroring the Organization card: cover poster, authors, and a
+ * publication-year / personal-rating line. The enclosing tile owns `Card.Root`/`Card.Header`/
+ * `Card.Title`; this renders the body from the book's catalog metadata and the user's own rating.
  */
 export const BookCard = ({ subject }: AppSurface.ObjectCardProps<Book.Book>) => {
-  const { coverUrl, authors = [], status, stars } = subject;
+  const { catalog, stars } = subject;
+  const cover = catalog?.cover ?? catalog?.thumbnail;
+  const authors = catalog?.authors ?? [];
+  const meta = [catalog?.publicationYear, stars != null ? `★ ${stars}/10` : undefined].filter(Boolean).join(' · ');
+
   return (
     <Card.Body>
-      {coverUrl && (
-        <Card.Row>
-          <img src={coverUrl} alt='' className='is-16 rounded object-cover' />
-        </Card.Row>
-      )}
+      {cover && <Card.Poster image={cover} alt={catalog?.title ?? ''} aspect='auto' fit='contain' />}
       {authors.length > 0 && (
         <Card.Row>
-          <Card.Block>
-            <Icon icon='ph--user--regular' />
-          </Card.Block>
-          <Card.Text truncate>{authors.join(', ')}</Card.Text>
+          <Card.Text variant='description' truncate>
+            {authors.join(', ')}
+          </Card.Text>
         </Card.Row>
       )}
-      {status && (
+      {meta && (
         <Card.Row>
-          <Card.Block>
-            <Icon icon='ph--bookmark-simple--regular' />
-          </Card.Block>
-          <Card.Text>{STATUS_LABELS[status]}</Card.Text>
-        </Card.Row>
-      )}
-      {stars != null && (
-        <Card.Row>
-          <Card.Block>
-            <Icon icon='ph--star--regular' />
-          </Card.Block>
-          <Card.Text>{stars} / 10</Card.Text>
+          <Card.Text variant='description'>{meta}</Card.Text>
         </Card.Row>
       )}
     </Card.Body>

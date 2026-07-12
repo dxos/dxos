@@ -6,10 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import { type Database, Obj, Relation, type Type } from '@dxos/echo';
 import { type Connection } from '@dxos/plugin-connector';
-import { type AtprotoCodec } from '@dxos/schema';
+import { type AtprotoCodec, type PublishEligibility, type PublishInspection } from '@dxos/schema';
 
 import { getRecordAnnotation } from './annotation';
 import { AtprotoRepoError, NotPublishableError } from './errors';
+import { computePublishedValues } from './field-values';
 import { ATPROTO_SOURCE, atprotoForeignKey } from './foreign-key';
 import { hashRecord } from './hash';
 import * as AtprotoRepo from './services/AtprotoRepo';
@@ -18,9 +19,64 @@ import { AtprotoPublication } from '#types';
 /** Whether an object is unpublished, published-and-in-sync, or published-but-stale. */
 export type PublishStatus = 'unpublished' | 'published' | 'outOfDate';
 
+/**
+ * The headline state shown by the companion, combining the publication-relative {@link PublishStatus}
+ * with network-aware eligibility ({@link PublishInspection}):
+ * - `unknown` — eligibility is unverifiable (offline / upstream unreachable); we cannot determine the
+ *   true state, so this overrides `published`/`outOfDate`.
+ * - `ineligible` — not published and definitively not publishable (e.g. no catalog link).
+ * - `ready` — not published and eligible to publish now.
+ * - `published` — published and in sync with what we would publish.
+ * - `outOfDate` — published but a Published field has changed locally since.
+ */
+export type DisplayStatus = 'unknown' | 'ineligible' | 'ready' | 'published' | 'outOfDate';
+
+/**
+ * Derive the companion's headline {@link DisplayStatus} from the publication-relative status and the
+ * network-aware eligibility. Unverifiable eligibility wins (we cannot trust any determination); an
+ * unpublished object then splits into `ready`/`ineligible` by whether it may be published right now.
+ */
+export const deriveDisplayStatus = (status: PublishStatus, eligibility: PublishEligibility): DisplayStatus => {
+  if (!eligibility.ok && eligibility.unverifiable) {
+    return 'unknown';
+  }
+  if (status !== 'unpublished') {
+    return status;
+  }
+  return eligibility.ok ? 'ready' : 'ineligible';
+};
+
 /** Encode an object to its public atproto record via its type's codec, if publishable. */
 export const encodeRecord = async (object: Obj.Unknown): Promise<Record<string, unknown> | undefined> =>
   getRecordAnnotation(object)?.codec.encode(object);
+
+/**
+ * Whether an object may be published right now. An object with no atproto record annotation is not
+ * publishable; otherwise its type's optional {@link AtprotoRecord.canPublish} gate decides (absent ⇒
+ * eligible). Used by the companion to enable/disable publish and by {@link publishObject} to refuse.
+ */
+export const getPublishEligibility = (object: Obj.Unknown): PublishEligibility => {
+  const annotation = getRecordAnnotation(object);
+  if (!annotation) {
+    return { ok: false, reason: 'This object cannot be published.' };
+  }
+  return annotation.canPublish?.(object) ?? { ok: true };
+};
+
+/**
+ * Network-aware publish inspection for the companion: prefers the type's async {@link AtprotoRecord.inspect}
+ * (refined eligibility + per-field notes), falling back to the synchronous {@link getPublishEligibility}.
+ */
+export const inspectPublish = async (object: Obj.Unknown): Promise<PublishInspection> => {
+  const annotation = getRecordAnnotation(object);
+  if (!annotation) {
+    return { eligibility: { ok: false, reason: 'This object cannot be published.' } };
+  }
+  if (annotation.inspect) {
+    return annotation.inspect(object);
+  }
+  return { eligibility: annotation.canPublish?.(object) ?? { ok: true } };
+};
 
 /** Compare a fresh encoding against the last-published hash to derive publish status. */
 export const computeStatus = async (
@@ -36,9 +92,13 @@ export const computeStatus = async (
 
 const RKEY_ALPHABET = '234567abcdefghijklmnopqrstuvwxyz';
 
-/** Mint a 13-char, timestamp-sortable TID-style record key. */
+/**
+ * Mint a 13-char, timestamp-sortable atproto TID. The 64-bit value is a 53-bit microsecond timestamp in
+ * the high bits with a 10-bit clock identifier in the low bits (`micros << 10 | clockId`); omitting the
+ * shift produces a ~1024×-too-small timestamp that decodes to 1970.
+ */
 const mintTid = (nowMs: number): string => {
-  let value = BigInt(nowMs) * 1000n;
+  let value = ((BigInt(nowMs) * 1000n) << 10n) | BigInt(Math.floor(Math.random() * 1024));
   let key = '';
   for (let index = 0; index < 13; index++) {
     key = RKEY_ALPHABET[Number(value & 31n)] + key;
@@ -63,6 +123,8 @@ type Binding = {
   collection: string;
   rkey: string;
   publishedHash: string;
+  /** Display snapshot of each Published leaf field, for per-field divergence detection. */
+  publishedValues: Record<string, string>;
   publishedAt: string;
 };
 
@@ -122,6 +184,11 @@ export const publishObject = ({
     if (!annotation) {
       return yield* Effect.fail(new NotPublishableError({}));
     }
+    // Refuse ineligible objects (e.g. a Book not in the BookHive catalog) before touching the repo.
+    const eligibility = annotation.canPublish?.(object) ?? { ok: true };
+    if (!eligibility.ok) {
+      return yield* Effect.fail(new NotPublishableError({ message: eligibility.reason }));
+    }
 
     const timestamp = now ?? Date.now();
     const record = yield* Effect.tryPromise({
@@ -134,11 +201,22 @@ export const publishObject = ({
     const repo = yield* AtprotoRepo.Service;
     const { uri, cid } = yield* repo.putRecord({ collection, rkey, record });
 
+    // Snapshot the published field values (best-effort) so the companion can flag per-field divergence.
+    const publishedValues = yield* Effect.promise(() => computePublishedValues(object));
+
     return bindPublication(
       object,
       connection,
       db,
-      { uri, cid, collection, rkey, publishedHash: hashRecord(record), publishedAt: new Date(timestamp).toISOString() },
+      {
+        uri,
+        cid,
+        collection,
+        rkey,
+        publishedHash: hashRecord(record),
+        publishedValues,
+        publishedAt: new Date(timestamp).toISOString(),
+      },
       existing,
     );
   });
@@ -197,7 +275,17 @@ export const importRecord = ({
       try: () => codec.decode(record.value),
       catch: (cause) => new AtprotoRepoError({ message: 'Failed to decode record.', cause }),
     });
-    const object = db.add(Obj.make(type, { ...decoded, [Obj.Meta]: { keys: [atprotoForeignKey(record.uri)] } }));
+    // The record's AT-URI plus any type-specific foreign keys the codec derives (e.g. an external
+    // catalog id the object should stay linked to).
+    const foreignKeys = [atprotoForeignKey(record.uri), ...(codec.foreignKeys?.(record.value) ?? [])];
+    const object = db.add(Obj.make(type, { ...decoded, [Obj.Meta]: { keys: foreignKeys } }));
+
+    // Best-effort enrichment: fill fields the lexicon does not carry from the object's source (e.g. a
+    // book's catalog metadata from the linked hive record). Never fails the import.
+    if (codec.onImport) {
+      yield* Effect.tryPromise(() => codec.onImport!(object)).pipe(Effect.ignore);
+    }
+
     if (!connection) {
       // Imported from an arbitrary (not-connected) repo: keep the foreign key, but don't claim it as
       // published to one of our connections.
@@ -208,12 +296,14 @@ export const importRecord = ({
       try: () => codec.encode(object),
       catch: (cause) => new AtprotoRepoError({ message: 'Failed to encode imported object.', cause }),
     });
+    const publishedValues = yield* Effect.promise(() => computePublishedValues(object));
     const publication = bindPublication(object, connection, db, {
       uri: record.uri,
       cid: record.cid,
       collection,
       rkey: record.rkey,
       publishedHash: hashRecord(encoded),
+      publishedValues,
       publishedAt: new Date(now ?? Date.now()).toISOString(),
     });
     return { object, publication };
