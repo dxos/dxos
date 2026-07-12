@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Registry } from '@effect-atom/atom-react';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Capability, PluginManager } from '@dxos/app-framework';
+import { Capability, CapabilityManager } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Credential, Operation } from '@dxos/compute';
 import { Blob, Database, Ref, Relation, Tag } from '@dxos/echo';
 import { type EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -59,28 +61,41 @@ export const seedMailboxBinding = async (
 /**
  * The db + resolver + operation ambient services shared by both providers' mock-sync tests. The
  * seeded mailbox has no on-arrival extractors, so the `onArrivalExtractors` stage short-circuits and
- * never touches `Capability`/`Operation` — they are provided (empty manager, unavailable invoker)
- * only to satisfy the requirement channel.
+ * never touches `Operation` — it is provided (unavailable invoker) only to satisfy the requirement
+ * channel. `Capability.Service` is a bare `CapabilityManager` (no `PluginManager`/plugin-activation
+ * lifecycle needed) so a test can optionally contribute a `ProgressRegistry` to observe `runGmailSync`'s
+ * live progress monitor.
  */
-const ambientSyncServices = (db: Database.Database) =>
-  Layer.mergeAll(
+const ambientSyncServices = (
+  db: Database.Database,
+  options: { progressRegistry?: AppCapabilities.ProgressRegistry } = {},
+) => {
+  const capabilities = CapabilityManager.make({ registry: Registry.make() });
+  if (options.progressRegistry) {
+    capabilities.contribute({
+      module: 'test',
+      interface: AppCapabilities.ProgressRegistry,
+      implementation: options.progressRegistry,
+    });
+  }
+  return Layer.mergeAll(
     Database.layer(db),
     InboxResolver.Live.pipe(Layer.provide(Database.layer(db))),
-    Layer.succeed(
-      Capability.Service,
-      PluginManager.make({ pluginLoader: () => Effect.die('no plugins in test'), plugins: [], enabled: [] })
-        .capabilities,
-    ),
+    Layer.succeed(Capability.Service, capabilities),
     Layer.succeed(Operation.Service, {
       invoke: () => Effect.die('Operation.Service unused: mailbox has no on-arrival extractors'),
       schedule: () => Effect.die('Operation.Service unused: mailbox has no on-arrival extractors'),
       invokePromise: async () => ({ error: new Error('Operation.Service unused') }),
     }),
   );
+};
 
 /** The ambient services `runGmailSync` requires, backed by a mock Gmail API + a real db. */
-export const inboxSyncTestServices = (db: Database.Database, dataset: GmailDataset) =>
-  Layer.mergeAll(GoogleMailApi.mock(dataset), ambientSyncServices(db));
+export const inboxSyncTestServices = (
+  db: Database.Database,
+  dataset: GmailDataset,
+  options?: { progressRegistry?: AppCapabilities.ProgressRegistry },
+) => Layer.mergeAll(GoogleMailApi.mock(dataset), ambientSyncServices(db, options));
 
 /**
  * The ambient services `runGmailSync` requires, backed by the REAL Gmail HTTP API authenticated from

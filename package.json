@@ -44,7 +44,8 @@
     "test": "moon run :test -- --no-file-parallelism",
     "test-browser": "MOON_CONCURRENCY=4 moon run :test-browser -- --no-file-parallelism",
     "test-storybook": "MOON_CONCURRENCY=4 moon run :test-storybook -- --no-file-parallelism",
-    "toolbox": "vite-node tools/toolbox/src/main.ts"
+    "toolbox": "vite-node tools/toolbox/src/main.ts",
+    "publish-package": "node scripts/publish-package.mjs"
   },
   "dependencies": {
     "@dxos/app-toolkit": "workspace:*",

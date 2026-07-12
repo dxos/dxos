@@ -24,19 +24,6 @@ export default Capability.makeModule(() =>
       // TODO(burdon): Create helpers and factor out.
       //
 
-      Surface.create<{ subject: Person.Person }>({
-        id: 'schemaPopoverContact',
-        position: Position.first,
-        filter: AppSurface.object(AppSurface.CardContent, Person.Person),
-        component: ({ data, role }) => {
-          return (
-            <>
-              <PersonCard role={role} subject={data.subject} />
-              <Surface.Surface type={AppSurface.Related} data={data} limit={1} />
-            </>
-          );
-        },
-      }),
       Surface.create({
         id: 'schemaPopoverOrganization',
         position: Position.first,
@@ -45,6 +32,19 @@ export default Capability.makeModule(() =>
           return (
             <>
               <OrganizationCard role={role} subject={data.subject} />
+              <Surface.Surface type={AppSurface.Related} data={data} limit={1} />
+            </>
+          );
+        },
+      }),
+      Surface.create<{ subject: Person.Person }>({
+        id: 'schemaPopoverContact',
+        position: Position.first,
+        filter: AppSurface.object(AppSurface.CardContent, Person.Person),
+        component: ({ data, role }) => {
+          return (
+            <>
+              <PersonCard role={role} subject={data.subject} />
               <Surface.Surface type={AppSurface.Related} data={data} limit={1} />
             </>
           );

@@ -44,6 +44,7 @@ const ensureDebugApi = (): void => {
   if (typeof window === 'undefined') {
     return;
   }
+
   window.__DX__ = {
     ...window.__DX__,
     surfaces: (component?: string) =>
@@ -106,6 +107,7 @@ const ensureSurfaceElement = (): void => {
   if (elementRegistered || typeof customElements === 'undefined') {
     return;
   }
+
   elementRegistered = true;
   if (!customElements.get(DX_SURFACE_TAG)) {
     // Defined lazily (not at module scope) so importing this module never evaluates
@@ -411,6 +413,7 @@ export const DebugSurface = ({ info, children }: PropsWithChildren<{ info: Surfa
     if (element && component) {
       element.setAttribute('data-component', component);
     }
+
     return () => {
       if (id) {
         surfaceMetrics.recordUnmount(id, role);
@@ -422,9 +425,10 @@ export const DebugSurface = ({ info, children }: PropsWithChildren<{ info: Surfa
   return createElement(
     DX_SURFACE_TAG,
     {
-      'ref': elementRef,
+      'className': 'contents',
       'data-id': info.id,
       'data-role': info.role,
+      'ref': elementRef,
     },
     children,
   );

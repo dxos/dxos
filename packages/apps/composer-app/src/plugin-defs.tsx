@@ -62,6 +62,7 @@ import { PaymentsPlugin } from '@dxos/plugin-payments/plugin';
 import { PipelinePlugin } from '@dxos/plugin-pipeline/plugin';
 import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
+import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { PwaPlugin } from '@dxos/plugin-pwa/plugin';
 import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
@@ -127,6 +128,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     InboxPlugin.meta.profile.key,
     KanbanPlugin.meta.profile.key,
     MarkdownPlugin.meta.profile.key,
+    ProgressPlugin.meta.profile.key,
     SearchPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
     SketchPlugin.meta.profile.key,
@@ -248,6 +250,7 @@ export const getPlugins = ({
     PresenterPlugin(),
     PreviewPlugin(),
     ProcessManagerPlugin(),
+    ProgressPlugin(),
     CommercePlugin(),
     CrmPlugin(),
     !isTauri && isPwa && PwaPlugin(),
