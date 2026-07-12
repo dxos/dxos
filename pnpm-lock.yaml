@@ -2616,9 +2616,9 @@ importers:
       '@dxos/plugin-ideogram':
         specifier: workspace:*
         version: link:../../plugins/plugin-ideogram
-      '@dxos/plugin-illustrator':
+      '@dxos/plugin-image':
         specifier: workspace:*
-        version: link:../../plugins/plugin-illustrator
+        version: link:../../plugins/plugin-image
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../plugins/plugin-inbox
@@ -11685,9 +11685,9 @@ importers:
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
-      '@dxos/plugin-illustrator':
+      '@dxos/plugin-image':
         specifier: workspace:*
-        version: link:../plugin-illustrator
+        version: link:../plugin-image
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -11698,7 +11698,7 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
 
-  packages/plugins/plugin-illustrator:
+  packages/plugins/plugin-image:
     dependencies:
       '@dxos/app-framework':
         specifier: workspace:*

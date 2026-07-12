@@ -16,7 +16,7 @@ import { EffectEx } from '@dxos/effect';
 import { configuredCredentialsLayer } from '@dxos/functions';
 import { Text } from '@dxos/schema';
 
-import { IllustratorCapabilities, Image, ImageArtifact, type ImageGeneration } from '../types';
+import { Image, ImageArtifact, ImageCapabilities, type ImageGeneration } from '../types';
 import generateImageHandler from './generate-image';
 
 const IDEOGRAM_SOURCE = 'ideogram.ai';
@@ -39,7 +39,7 @@ const capabilityService = (service?: ImageGeneration.ImageGenerationService) => 
   const manager = CapabilityManager.make({ registry: Registry.make() });
   if (service) {
     manager.contribute({
-      interface: IllustratorCapabilities.ImageGenerationService,
+      interface: ImageCapabilities.ImageGenerationService,
       implementation: service,
       module: service.id,
     });

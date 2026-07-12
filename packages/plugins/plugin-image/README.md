@@ -1,4 +1,4 @@
-# @dxos/plugin-illustrator
+# @dxos/plugin-image
 
 Image-creation plugin for DXOS Composer.
 

@@ -1,6 +1,6 @@
 ---
-id: org.dxos.plugin.illustrator
-name: IllustratorPlugin
+id: org.dxos.plugin.image
+name: ImagePlugin
 version: 0.1.0
 ---
 
@@ -17,13 +17,13 @@ abstraction and never talks to a specific image API. Concrete providers
 credentials via the Connector system. Credentialed access is resolved at
 generation time through `CredentialsService` keyed by the provider's
 `source` (the same `AccessToken.source` a Connector stores), so the
-Illustrator plugin depends on no provider for generation; the toolbar surfaces
+Image plugin depends on no provider for generation; the toolbar surfaces
 the provider's `ConnectorAuth` "Connect" button until a credential exists.
 
 The gallery view uses a masonry gallery component **vendored from
 `plugin-gallery`** (`useImageUrl` + `@dxos/react-ui-masonry`) generalized to
 render **both** remote-URL images and `File.File` blobs.
-`plugin-illustrator` **supersedes and replaces `plugin-gallery`, which is
+`plugin-image` **supersedes and replaces `plugin-gallery`, which is
 deleted in this milestone.**
 
 ## Scope of this milestone
@@ -34,9 +34,9 @@ cross-package section and `plugin-ideogram` also ships its own `PLUGIN.mdl`.
 
 | Package             | Additions                                                                                                   |
 | ------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `plugin-illustrator`| New UI plugin: `ImageArtifact` + `Image` types, the `ImageGenerationService` abstraction, the `generateImage` op, upload, the `ImageArtifactArticle` surface, and a vendored masonry gallery (this spec's home). |
+| `plugin-image`| New UI plugin: `ImageArtifact` + `Image` types, the `ImageGenerationService` abstraction, the `generateImage` op, upload, the `ImageArtifactArticle` surface, and a vendored masonry gallery (this spec's home). |
 | `plugin-ideogram`   | New headless plugin: a Connector for `ideogram.ai` (API-key credential form) + an `ImageGenerationService` implementation. Owns its own `PLUGIN.mdl`. |
-| `plugin-gallery`    | **Deleted** — superseded by `plugin-illustrator` (unregistered from composer-app; package + root-aggregate entries removed). |
+| `plugin-gallery`    | **Deleted** — superseded by `plugin-image` (unregistered from composer-app; package + root-aggregate entries removed). |
 
 ## Extensions
 
@@ -88,7 +88,7 @@ type ImageArtifact
 
 ```mdl
 type ImageGenerationRequest
-  desc: Provider-agnostic generation request (Effect Schema in IllustratorCapabilities).
+  desc: Provider-agnostic generation request (Effect Schema in ImageCapabilities).
   fields:
     prompt: string
     negativePrompt?: string
@@ -123,7 +123,7 @@ type ImageGenerationResult
 type ImageGenerationService
   desc: >
     The image-creation abstraction. Contributed by provider plugins via
-    Capability.contributes(IllustratorCapabilities.ImageGenerationService,
+    Capability.contributes(ImageCapabilities.ImageGenerationService,
     [service]) and resolved (by id, else first) by the generateImage op.
     generate() is credential-agnostic: the op resolves the API key from
     the Connector-managed AccessToken (via CredentialsService keyed by
@@ -232,7 +232,7 @@ component ImageView
 
 ### Vendored gallery (from plugin-gallery)
 
-`plugin-illustrator` vendors a masonry gallery (`ImageGallery`) adapted from
+`plugin-image` vendors a masonry gallery (`ImageGallery`) adapted from
 `plugin-gallery`'s `Lightbox` (`@dxos/react-ui-masonry` grid of `GalleryImage`
 cards), plus the `useImageUrl` + `useFileUpload` hooks, so no `Gallery` ECHO
 object is required. Each tile resolves its own source via `useImageSource`
@@ -240,14 +240,14 @@ object is required. Each tile resolves its own source via `useImageSource`
 is deleted (see the scope table).
 
 ```mdl
-type ImageSource (plugin-illustrator/hooks)
+type ImageSource (plugin-image/hooks)
   desc: A gallery item — a remote URL and/or an uploaded File.File ref.
   fields:
     url?: string
     file?: Ref<File.File>
     name?: string
 
-component ImageGallery (plugin-illustrator, vendored)
+component ImageGallery (plugin-image, vendored)
   desc: >
     Masonry of images. Each tile calls useImageSource(item) → src (url, else
     loaded-file blob) and renders a presentation-only GalleryImage. Lives in

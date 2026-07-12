@@ -4,7 +4,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
-## 2026-07-11 — plugin-illustrator (new UI plugin) + plugin-ideogram (new headless provider)
+## 2026-07-11 — plugin-image (new UI plugin) + plugin-ideogram (new headless provider)
 
 - ECHO `DXN.make` typename FINAL segment must be camelCase, no hyphens — `org.dxos.type.imageArtifact`, NOT `org.dxos.type.image-artifact`. The compile error is a cryptic TS2345 `"Invalid NSID … final segment must be camelCase (no hyphens)"` (branded-string mismatch), surfaced at `:build`, not lint.
 - A sibling type module tagged `// @import-as-namespace` (e.g. `types/GeneratedImage.ts`) must be imported as `import * as GeneratedImage from './GeneratedImage'` and used `GeneratedImage.GeneratedImage`; `moon run <p>:lint -- --fix` auto-rewrites a named `import { GeneratedImage }` to the namespace form. Don't hand-write the named import for such modules.
@@ -17,7 +17,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 - Rendering images that may be a remote URL OR an uploaded `File.File`: vendor plugin-gallery's `useImageUrl` (resolves a `File.File` blob → `data:`/`blob:` URL) + `useFileUpload` (invokes `FileOperation.Create` from `@dxos/plugin-file/types` then `SpaceOperation.AddObject`). A `useImageSource({url,file})` wrapper loads the file ref live (`ref.load()`, keyed on `ref.uri`) then `useImageUrl` — needed because `useObject` returns a SNAPSHOT with no `Obj.getDatabase`, so `useImageUrl` fails on it. A `Ref`'s stable id accessor is **`ref.uri`** (string), NOT `ref.dxn` (TS type has no `.dxn`).
 - `useImageUrl` uses `@dxos/effect` (EffectEx) at runtime → it must be a `dependencies` entry, not devDependencies, or `:build` fails with esbuild "Missing dependency: @dxos/effect". Same for any `@dxos/types` (File) used in a production type/component.
 - Deleting a whole plugin package: `git rm -rf packages/plugins/<p>` (use `-f` if a tracked file has local mods), remove its `@dxos/<p>` dep + `plugin-defs.tsx` registration (import, `getDefaults` labs key, `getPlugins()` array — 3 spots), then MANUALLY remove its entries from the root aggregates `tsconfig.all.json` and `release-please-config.json` (the postinstall toolbox regenerates per-package `tsconfig.json` `references` from deps on `pnpm install`, but does NOT prune these two root files). Vendored-from comments referencing the deleted plugin are fine to leave.
-- plugin-illustrator SUPERSEDES + replaces plugin-gallery (now deleted): its `Image` type holds `url?` (generated) OR `file?: Ref<File.File>` (uploaded); the article toolbar has per-image tabs + Upload + Connect/Generate (the provider's `ConnectorAuth` surface shows until a Connection for `service.connectorId` exists).
+- plugin-image SUPERSEDES + replaces plugin-gallery (now deleted): its `Image` type holds `url?` (generated) OR `file?: Ref<File.File>` (uploaded); the article toolbar has per-image tabs + Upload + Connect/Generate (the provider's `ConnectorAuth` surface shows until a Connection for `service.connectorId` exists).
 
 ## 2026-07-09 — plugin-space / plugin-crm (fold CollectionArticle into TypeArticle, supersedes 2026-07-03/06-27 entries below)
 

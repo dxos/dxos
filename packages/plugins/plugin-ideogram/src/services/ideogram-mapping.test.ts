@@ -5,7 +5,7 @@
 import * as Redacted from 'effect/Redacted';
 import { afterEach, describe, test } from 'vitest';
 
-import { ImageGeneration } from '@dxos/plugin-illustrator/types';
+import { ImageGeneration } from '@dxos/plugin-image/types';
 
 import { IDEOGRAM_GENERATE_URL } from '../constants';
 import { mapIdeogramResponse } from './ideogram-mapping';

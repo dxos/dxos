@@ -13,7 +13,7 @@ import { Image, ImageArtifact } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
-export const IllustratorPlugin = Plugin.define(meta).pipe(
+export const ImagePlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [ImageArtifact.ImageArtifact, Image.Image] }),
@@ -25,4 +25,4 @@ export const IllustratorPlugin = Plugin.define(meta).pipe(
   Plugin.make,
 );
 
-export default IllustratorPlugin;
+export default ImagePlugin;

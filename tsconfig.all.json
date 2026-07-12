@@ -436,7 +436,7 @@
       "path": "packages/plugins/plugin-ideogram/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-illustrator/tsconfig.json"
+      "path": "packages/plugins/plugin-image/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"

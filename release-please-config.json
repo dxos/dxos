@@ -755,7 +755,7 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-illustrator/package.json",
+          "path": "packages/plugins/plugin-image/package.json",
           "jsonpath": "$.version"
         },
         {

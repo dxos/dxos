@@ -27,7 +27,7 @@ export const translations = [
         'typename.label_other': 'Images',
       },
       [meta.profile.key]: {
-        'plugin.name': 'Illustrator',
+        'plugin.name': 'Image',
         'generate.label': 'Generate',
         'generating.label': 'Generating…',
         'upload.label': 'Upload image',

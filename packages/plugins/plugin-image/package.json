@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/plugin-illustrator",
+  "name": "@dxos/plugin-image",
   "version": "0.10.0",
   "private": true,
   "description": "Image-creation plugin for Composer.",
@@ -40,9 +40,9 @@
       "default": "./dist/lib/neutral/operations/index.mjs"
     },
     "#plugin": {
-      "source": "./src/IllustratorPlugin.tsx",
-      "types": "./dist/types/src/IllustratorPlugin.d.ts",
-      "default": "./dist/lib/neutral/IllustratorPlugin.mjs"
+      "source": "./src/ImagePlugin.tsx",
+      "types": "./dist/types/src/ImagePlugin.d.ts",
+      "default": "./dist/lib/neutral/ImagePlugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",

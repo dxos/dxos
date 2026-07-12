@@ -10,7 +10,7 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/IllustratorPlugin.tsx'
+      - '--entryPoint=src/ImagePlugin.tsx'
       - '--entryPoint=src/capabilities/index.ts'
       - '--entryPoint=src/components/index.ts'
       - '--entryPoint=src/containers/index.ts'

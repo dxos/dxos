@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import type { OperationHandlerSet } from '@dxos/compute';
 
-import { IllustratorOperationHandlerSet } from '#operations';
+import { ImageOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(() =>
-  Effect.succeed(Capability.contributes(Capabilities.OperationHandler, IllustratorOperationHandlerSet)),
+  Effect.succeed(Capability.contributes(Capabilities.OperationHandler, ImageOperationHandlerSet)),
 );

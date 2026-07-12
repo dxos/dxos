@@ -13,13 +13,13 @@ contributes two things:
    `plugin-connector` UI. On submit the key is stored as an `AccessToken`
    (source `ideogram.ai`) plus a `Connection` in ECHO.
 2. An **`ImageGenerationService`** implementation (the abstraction owned by
-   `plugin-illustrator`) whose `generate()` calls the Ideogram HTTP API and
+   `plugin-image`) whose `generate()` calls the Ideogram HTTP API and
    maps the response to `GeneratedImageData[]`.
 
 The credential set up by the Connector is resolved back at generation time
-by `plugin-illustrator`'s `generateImage` operation through
+by `plugin-image`'s `generateImage` operation through
 `CredentialsService`, keyed by the provider's `source`. This plugin never
-reads the prompt UI and `plugin-illustrator` never reads Ideogram
+reads the prompt UI and `plugin-image` never reads Ideogram
 credentials — the Connector + `CredentialsService` are the seam.
 
 ## Extensions
@@ -57,9 +57,9 @@ feat IdeogramConnector
 feat IdeogramImageGenerationService
   desc: >
     Contributes an ImageGenerationService via
-    Capability.contributes(IllustratorCapabilities.ImageGenerationService,
+    Capability.contributes(ImageCapabilities.ImageGenerationService,
     [service]) on Startup. Provider-agnostic contract from
-    @dxos/plugin-illustrator/types.
+    @dxos/plugin-image/types.
   id: ideogram
   label: Ideogram
   source: ideogram.ai
@@ -111,7 +111,7 @@ packages/plugins/plugin-ideogram/
     capabilities/
       index.ts                       # Capability.lazy(Connector, ImageGenerationService)
       connector.ts                   # Capability.contributes(Connector, [entry])
-      image-generation-service.ts    # Capability.contributes(IllustratorCapabilities.ImageGenerationService, [service])
+      image-generation-service.ts    # Capability.contributes(ImageCapabilities.ImageGenerationService, [service])
     services/
       index.ts
       IdeogramClient.ts              # generate(request, { apiKey }) → GeneratedImageData[]
@@ -121,7 +121,7 @@ packages/plugins/plugin-ideogram/
 
 ## Dependencies
 
-- `@dxos/plugin-illustrator` (workspace:\*) — `/types` subpath for the
+- `@dxos/plugin-image` (workspace:\*) — `/types` subpath for the
   `ImageGenerationService` capability key + request/result schemas.
 - `@dxos/plugin-connector` (workspace:\*) — `Connector` capability key +
   `Connection` type; `@dxos/types` for `AccessToken`.

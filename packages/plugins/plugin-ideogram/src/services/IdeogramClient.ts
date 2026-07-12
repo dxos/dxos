@@ -4,7 +4,7 @@
 
 import * as Redacted from 'effect/Redacted';
 
-import { ImageGeneration } from '@dxos/plugin-illustrator/types';
+import { ImageGeneration } from '@dxos/plugin-image/types';
 
 import {
   IDEOGRAM_CONNECTOR_ID,

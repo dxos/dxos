@@ -7,11 +7,11 @@ import { trim } from '@dxos/util';
 
 export default Config2.make({
   plugin: {
-    key: 'org.dxos.plugin.illustrator',
-    name: 'Illustrator',
+    key: 'org.dxos.plugin.image',
+    name: 'Image',
     author: 'DXOS',
     description: trim`
-      Illustrator is an image-creation tool for Composer. An ImageArtifact pairs an editable prompt with the
+      Image is an image-creation tool for Composer. An ImageArtifact pairs an editable prompt with the
       images generated from it; the user authors the prompt, runs generation against a pluggable image-generation
       provider, and reviews the results one at a time or all together in a gallery.
 
@@ -20,7 +20,7 @@ export default Config2.make({
       own credentials via the Connector system; credentialed access is resolved at generation time through
       CredentialsService, keyed by the provider's source.
     `,
-    source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-illustrator',
+    source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-image',
     icon: { key: 'ph--paint-brush--regular', hue: 'purple' },
     spec: 'PLUGIN.mdl',
     screenshots: [],

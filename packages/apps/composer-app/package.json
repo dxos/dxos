@@ -83,7 +83,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-ibkr": "workspace:*",
     "@dxos/plugin-ideogram": "workspace:*",
-    "@dxos/plugin-illustrator": "workspace:*",
+    "@dxos/plugin-image": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-iroh-beacon": "workspace:*",
     "@dxos/plugin-kanban": "workspace:*",

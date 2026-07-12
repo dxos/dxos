@@ -18,7 +18,7 @@ import { type File } from '@dxos/types';
 
 import { ImageGallery, type ImageSource, ImageView, PromptEditor } from '#components';
 import { meta } from '#meta';
-import { IllustratorCapabilities, Image, type ImageArtifact, ImageArtifactOperation } from '#types';
+import { Image, type ImageArtifact, ImageArtifactOperation, ImageCapabilities } from '#types';
 
 import { useFileUpload } from '../../hooks';
 
@@ -38,7 +38,7 @@ export const ImageArtifactArticle = ({ role, subject: artifact, attendableId }: 
   const { invokePromise } = useOperationInvoker();
 
   const db = Obj.getDatabase(artifact);
-  const providers = useCapabilities(IllustratorCapabilities.ImageGenerationService);
+  const providers = useCapabilities(ImageCapabilities.ImageGenerationService);
   const provider = providers[0];
 
   // Reactive view of the artifact's images.
