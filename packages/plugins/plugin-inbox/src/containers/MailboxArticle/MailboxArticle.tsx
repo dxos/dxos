@@ -58,6 +58,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const currentId = useSelection(id, 'single');
   const db = Obj.getDatabase(mailbox);
   const showItem = useShowItem();
+
   // The sync operation registers a monitor keyed by the mailbox URI (see runGmailSync); subscribe so
   // the statusbar meter appears live during a sync and disappears when the run's monitor is removed.
   const progress = useProgress(Obj.getURI(mailbox).toString());
@@ -273,7 +274,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       </Panel.Content>
       {progress && (progress.status === 'running' || progress.status === 'error') && (
         <Panel.Statusbar asChild>
-          <ProgressMeter state={progress} classNames='h-16 p-2' />
+          <ProgressMeter state={progress} classNames='h-16 p-2 border-t border-separator' />
         </Panel.Statusbar>
       )}
     </Panel.Root>
