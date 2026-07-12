@@ -7,11 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import {
-  CounterConnection,
-  type CounterSessionInfo,
-  type PingMeasurement,
-} from './counter-connection';
+import { CounterConnection, type CounterSessionInfo, type PingMeasurement } from './counter-connection';
 import { type TimingStatsSnapshot } from './counter-service';
 
 const PING_INTERVAL_MS = 1_000;
@@ -22,8 +18,7 @@ const isInterruptedError = (err: unknown): boolean =>
 
 const shortId = (id: string): string => id.split('-').slice(-2).join('-');
 
-const formatMs = (value: number | undefined): string =>
-  value === undefined ? '—' : `${Math.round(value)} ms`;
+const formatMs = (value: number | undefined): string => (value === undefined ? '—' : `${Math.round(value)} ms`);
 
 type ConnectionStatus = {
   ready: boolean;
@@ -211,7 +206,9 @@ const SessionMeta = ({
 
 const LatencyPanel = ({ ping, ready }: { ping: PingMeasurement | undefined; ready: boolean }) => (
   <div className='rounded-md border border-separator p-3'>
-    <div className='mb-2 text-xs font-medium uppercase tracking-wide text-subdued'>Ping (auto {PING_INTERVAL_MS}ms)</div>
+    <div className='mb-2 text-xs font-medium uppercase tracking-wide text-subdued'>
+      Ping (auto {PING_INTERVAL_MS}ms)
+    </div>
     <dl className='grid grid-cols-3 gap-2 text-sm'>
       <div>
         <dt className='text-subdued'>RTT</dt>
@@ -305,18 +302,8 @@ const BlockWorkerPanel = ({
 };
 
 const CounterPanel = ({ label, connection }: CounterPanelProps) => {
-  const {
-    count,
-    ready,
-    error,
-    session,
-    reconnectCount,
-    ping,
-    timingStats,
-    blocking,
-    increment,
-    blockCpu,
-  } = useCounterConnection(connection);
+  const { count, ready, error, session, reconnectCount, ping, timingStats, blocking, increment, blockCpu } =
+    useCounterConnection(connection);
 
   return (
     <div className='flex w-full max-w-md flex-col gap-3 rounded-lg border border-separator p-4'>

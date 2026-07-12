@@ -8,8 +8,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { MaybePromise } from '@dxos/util';
 
-import * as Messages from '../Messages';
 import { isAbortError, requestExclusiveLockWithTimeout, waitWithLockOrRpcTimeout } from '../internal/locks';
+import * as Messages from '../Messages';
 
 // Sentinel resolved when a follower gives up waiting for a port from the leader.
 const LEADER_TIMEOUT = Symbol('leader-timeout');
@@ -253,43 +253,43 @@ export class Connection extends Resource {
 
     try {
       log('worker-connection: requesting port from leader');
-      const result = await new Promise<(Messages.CoordinatorMessage & { type: 'provide-port' }) | typeof LEADER_TIMEOUT>(
-        (resolve) => {
-          invariant(this.#coordinator);
+      const result = await new Promise<
+        (Messages.CoordinatorMessage & { type: 'provide-port' }) | typeof LEADER_TIMEOUT
+      >((resolve) => {
+        invariant(this.#coordinator);
 
-          const unsubscribe = this.#coordinator.onMessage.on((message) => {
-            if (message.type === 'provide-port' && message.clientId === this.#clientId) {
-              unsubscribe();
-              resolve(message);
-            } else if (message.type === 'new-leader' || message.type === 'leader-heartbeat') {
-              // Re-request on any sign of a live leader. A late-joining follower misses the one-shot
-              // `new-leader` broadcast, so its single initial `request-port` is its only chance —
-              // if that races the leader's handler registration or is dropped, the follower would
-              // otherwise stall for the full port timeout (observed as a second tab that never starts).
-              // Heartbeats (~1s) give it a recurring, idempotent retry; the worker de-dupes sessions
-              // by clientId, so repeated requests are harmless once a session exists.
-              this.#coordinator?.sendMessage({
-                type: 'request-port',
-                clientId: this.#clientId,
-              });
-            }
-          });
-
-          const timer = setTimeout(() => {
+        const unsubscribe = this.#coordinator.onMessage.on((message) => {
+          if (message.type === 'provide-port' && message.clientId === this.#clientId) {
             unsubscribe();
-            resolve(LEADER_TIMEOUT);
-          }, this.#leaderPortTimeout);
-          // Remove the coordinator listener if the context is disposed before provide-port/timeout,
-          // otherwise interrupted reconnect cycles accumulate listeners on the coordinator.
-          ctx.onDispose(() => clearTimeout(timer));
-          ctx.onDispose(() => unsubscribe());
+            resolve(message);
+          } else if (message.type === 'new-leader' || message.type === 'leader-heartbeat') {
+            // Re-request on any sign of a live leader. A late-joining follower misses the one-shot
+            // `new-leader` broadcast, so its single initial `request-port` is its only chance —
+            // if that races the leader's handler registration or is dropped, the follower would
+            // otherwise stall for the full port timeout (observed as a second tab that never starts).
+            // Heartbeats (~1s) give it a recurring, idempotent retry; the worker de-dupes sessions
+            // by clientId, so repeated requests are harmless once a session exists.
+            this.#coordinator?.sendMessage({
+              type: 'request-port',
+              clientId: this.#clientId,
+            });
+          }
+        });
 
-          this.#coordinator.sendMessage({
-            type: 'request-port',
-            clientId: this.#clientId,
-          });
-        },
-      );
+        const timer = setTimeout(() => {
+          unsubscribe();
+          resolve(LEADER_TIMEOUT);
+        }, this.#leaderPortTimeout);
+        // Remove the coordinator listener if the context is disposed before provide-port/timeout,
+        // otherwise interrupted reconnect cycles accumulate listeners on the coordinator.
+        ctx.onDispose(() => clearTimeout(timer));
+        ctx.onDispose(() => unsubscribe());
+
+        this.#coordinator.sendMessage({
+          type: 'request-port',
+          clientId: this.#clientId,
+        });
+      });
 
       if (result === LEADER_TIMEOUT) {
         log.warn('worker-connection: timed out waiting for provide-port', { clientId: this.#clientId });

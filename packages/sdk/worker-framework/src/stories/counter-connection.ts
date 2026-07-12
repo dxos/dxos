@@ -142,8 +142,7 @@ export class CounterConnection extends Resource {
 
   getTimingStats = async (): Promise<TimingStatsSnapshot> => EffectEx.runPromise(this.rpc.getTimingStats({}));
 
-  blockCpu = async (durationMs: number): Promise<number> =>
-    EffectEx.runPromise(this.rpc.blockCpu({ durationMs }));
+  blockCpu = async (durationMs: number): Promise<number> => EffectEx.runPromise(this.rpc.blockCpu({ durationMs }));
 
   /**
    * Subscribes to counter updates. Returns cleanup that interrupts only this subscription.
