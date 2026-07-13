@@ -18,7 +18,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createWriteStream } from 'node:fs';
 import { access, chmod, copyFile, lstat, mkdir, readFile, readlink, rm, symlink, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
@@ -124,6 +124,9 @@ const ensureSidecars = async () => {
 // launcher's hardcoded lookup path is unaffected while the real bytes live somewhere Tauri signs.
 const ensureMetalFramework = async () => {
   await mkdir(frameworkLibrariesDir, { recursive: true });
+  // Clean up the stub binary from a checkout that predates the resource-only framework — its
+  // unhardened signature is what notarization rejected, so a stale copy would defeat this fix.
+  await rm(join(frameworkDir, 'ollama-metal'), { force: true });
 
   if (!(await exists(frameworkInfoPlist))) {
     await writeFile(
@@ -145,7 +148,7 @@ const ensureMetalFramework = async () => {
   for (const variant of METAL_VARIANTS) {
     const metallib = join(runtimeDir, variant, 'mlx.metallib');
     const dest = join(frameworkLibrariesDir, `${variant}_metallib`);
-    const expectedTarget = `${metallibSymlinkPrefix}ollama-metal.framework/Libraries/${variant}_metallib`;
+    const expectedTarget = `${metallibSymlinkPrefix}${basename(frameworkDir)}/Libraries/${variant}_metallib`;
 
     const stat = await lstat(metallib).catch(() => null);
     if (!stat) {
