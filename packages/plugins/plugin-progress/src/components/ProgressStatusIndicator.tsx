@@ -32,7 +32,7 @@ export const ProgressStatusIndicator = () => {
             icon='ph--circle-notch--regular'
             iconOnly
             label={t('progress-indicator.label')}
-            iconClassNames={active.length > 0 && 'animate-spin-slow'}
+            iconClassNames={active.length > 0 && 'animate-spin-slow text-amber-500'}
           />
         </StatusBar.Item>
       </Popover.Trigger>

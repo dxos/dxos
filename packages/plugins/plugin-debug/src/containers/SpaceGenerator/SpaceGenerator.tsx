@@ -98,8 +98,8 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
 
     return (
       <Panel.Root {...composableProps(props)} ref={forwardedRef}>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
+        <Panel.Toolbar>
+          <Toolbar.Root classNames='dx-document'>
             <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
             <Toolbar.Separator />
             <Input.Root>
