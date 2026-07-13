@@ -6,7 +6,7 @@ import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
 import type { Storage } from '@dxos/random-access-storage';
 
-import { MetadataStore } from '../metadata';
+import { MetadataStore } from '../../metadata';
 
 const EchoMetadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
 

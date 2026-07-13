@@ -70,6 +70,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/feed": "workspace:*",
     "@dxos/feed-store": "workspace:*",
+    "@dxos/hypercore": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -86,6 +87,7 @@
     "@dxos/teleport": "workspace:*",
     "@dxos/teleport-extension-gossip": "workspace:*",
     "@dxos/teleport-extension-object-sync": "workspace:*",
+    "@dxos/teleport-extension-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -95,6 +97,7 @@
     "@effect/sql": "catalog:",
     "@obsidize/tar-browserify": "catalog:",
     "cbor-x": "catalog:",
+    "crc-32": "catalog:",
     "effect": "catalog:",
     "platform": "catalog:"
   },
@@ -105,6 +108,7 @@
     "@effect/vitest": "catalog:",
     "@types/platform": "catalog:",
     "@types/readable-stream": "catalog:",
+    "fast-check": "catalog:",
     "get-port-please": "catalog:"
   },
   "publishConfig": {

@@ -6,7 +6,7 @@ import { describe, onTestFinished, test } from 'vitest';
 
 import { createStorage } from '@dxos/random-access-storage';
 
-import { TestAgentBuilder, WebsocketNetworkManagerProvider } from '../testing';
+import { TestAgentBuilder, WebsocketNetworkManagerProvider } from './testing';
 
 // TODO(burdon): Config.
 // Signal server will be started by the setup script.// Signal server will be started by the setup script.

@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
-import { TestAgentBuilder, TestFeedBuilder, WebsocketNetworkManagerProvider } from '../testing';
+import { TestAgentBuilder, TestFeedBuilder, WebsocketNetworkManagerProvider } from './testing';
 
 // TODO(burdon): Config.
 // Signal server will be started by the setup script.

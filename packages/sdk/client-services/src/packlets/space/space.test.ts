@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Context } from '@dxos/context';
 import { CredentialGenerator } from '@dxos/credentials';
 
-import { TestAgentBuilder } from '../testing';
+import { TestAgentBuilder } from './testing';
 
 // TODO(burdon): Factor out?
 const run = <T>(cb: () => Promise<T>): Promise<T> => cb();
