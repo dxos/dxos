@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface, usePluginManager } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/ui';
 import { type Operation } from '@dxos/compute';
 import { type Obj, Ref } from '@dxos/echo';
 import { ConnectorAuth } from '@dxos/plugin-connector';
@@ -38,7 +38,7 @@ export const InitializeAction = <T extends Obj.Any>({
   syncLabel,
   notify,
 }: InitializeActionProps<T>) => {
-  const pluginManager = usePluginManager();
+  const isSurfaceAvailable = Surface.useIsAvailable();
   const { connection, sync, syncing } = useTargetSync(target, notify);
 
   // Stable Surface data so the downstream ConnectorAuth Surface (ConnectorAuthButton) doesn't
@@ -58,7 +58,7 @@ export const InitializeAction = <T extends Obj.Any>({
     );
   }
 
-  return Surface.isAvailable(pluginManager.capabilities, { type: ConnectorAuth, data }) ? (
+  return isSurfaceAvailable({ type: ConnectorAuth, data }) ? (
     <Surface.Surface type={ConnectorAuth} data={data} limit={1} />
   ) : null;
 };
