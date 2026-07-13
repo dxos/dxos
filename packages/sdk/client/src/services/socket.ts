@@ -28,10 +28,6 @@ export const fromSocket = async (url: string, authenticationToken?: string): Pro
       return closed;
     },
 
-    get descriptors() {
-      return clientServiceBundle;
-    },
-
     get rpc() {
       return rpc;
     },
