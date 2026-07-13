@@ -11,28 +11,27 @@ delivers Tier 4 (browser-e2e, task #7).**
 ### Tasks
 
 - [ ] **#7 Browser-e2e Playwright inbox spec — THIS BRANCH**
-  - `composer-app/src/playwright/inbox.spec.ts` + `plugins/inbox.ts` helper.
-  - Scenarios: interactivity-during-sync (T-10), no-false-empty-state (T-11), selection→companion.
-  - Run: `DX_PWA=false moon run composer-app:e2e`. Seed deterministically — never live creds here.
-  - **Approach (OAuth/mock).** Never drive Google's login UI: 2FA (TOTP/push/passkey) is
-    non-deterministic and Google blocks automation — a scripted `accounts.google.com` login rots
-    into permanent-red. Split the two OAuth seams instead:
-    - Seed the `accessToken` ECHO object directly (reuse `seedMailboxBinding`) so the app boots
-      "connected" — skips consent/2FA because it skips the reason they exist. (Token is persisted
-      by `capabilities/connector.ts` as `{ token, account, source }`.)
-    - Mock the API: small Effect `HttpApp` whose handlers `Schema.encode` the shared response
-      Schemas (`Message`, `ListMessagesResponse`, `LabelsResponse`, `ErrorResponse`) →
-      `HttpApp.toWebHandler`/`toWebHandlerLayer` (`Request => Promise<Response>`, no socket) →
-      bridged into `page.route('**/gmail.googleapis.com/**')` (build Fetch `Request`, call handler,
-      `route.fulfill`). No base-URL refactor, no port/CORS, real routing + schema-checked bodies,
-      same app reusable by node tests.
-    - Get right: provide fixtures via `toWebHandlerLayer(app, MockFixtureLayer)`; binary bodies
-      (base64url raw messages) via `arrayBuffer()`/`Buffer`; only browser-originated requests are
-      caught (Google calls are client-side per the `connector.ts` CORS comment); keep `DX_PWA=false`
-      to avoid the service-worker interception gap.
-    - **JMAP is the primary data path** — `target.apiUrl` is already per-binding, so point a seeded
-      binding at the same `HttpApp` bound to a port; zero interception, more contract reuse. Most
-      of T-10/T-11/companion-flow don't care whether bytes came from Gmail or JMAP.
+  - `composer-app/src/playwright/` specs + `plugins/inbox.ts` helper. Run: `moon run composer-app:e2e`.
+  - **Provider-parameterized structure.** Provider-specific behaviour (sync, reply) is tested for
+    BOTH providers via a shared test body + a per-provider adapter; generic mailbox behaviour
+    (select thread, open companion, etc.) is written once. Adding a future provider = one adapter.
+  - **JMAP suite — always runs.** Drives the REAL creation flow: fill the JMAP credential *form*
+    (host = mock URL, fake access token) — no OAuth, no env var, no ECHO seeding. Hosts:
+    JMAP sync + JMAP reply (provider-specific) AND all **generic mailbox tests** (thread select,
+    companion, T-10/T-11 perceived behaviour) so they always run in CI.
+  - **Gmail suite — gated; skipped unless its env var is set.** Can't drive OAuth, so: seed the
+    `accessToken` ECHO object (app boots "connected") + set the env var that swaps Gmail's base URL
+    to the mock. Tests Gmail sync + Gmail reply only. `test.skip` when the env var is absent.
+  - **Base-URL swap.** JMAP host comes from the form (`target.apiUrl`, already per-binding — no
+    change). Gmail hosts are hardcoded module consts → **refactor to read a base URL from an env var**
+    (only var needed; Gmail-only). Both providers point at one Effect `HttpApp` mock.
+  - **Mock.** Effect `HttpApp` whose handlers `Schema.encode` the shared response Schemas
+    (`Message`, `ListMessagesResponse`, `LabelsResponse`, `ErrorResponse`); JMAP bound to a port and
+    referenced by the form host; Gmail reached via the env-var base URL. Never drive Google's login
+    UI (2FA is non-deterministic + blocked). Keep `DX_PWA=false` to avoid the SW interception gap.
+  - Build order: (a) Gmail base-URL env refactor; (b) mock `HttpApp` (both contracts) + fixtures;
+    (c) `plugins/inbox.ts` helper (JMAP form-fill + Gmail token-seed) + provider adapter;
+    (d) JMAP suite (sync + generic + reply); (e) Gmail suite (env-gated: sync + reply).
 - [ ] **#6 Unskip inbox agent-e2e** — `assistant-e2e/src/testing/inbox-enable.test.ts`
     (register the skill), then add read/draft scenario tests. Enforces F-6.
 - [ ] **#8 Latency benchmarks with budget assertions** — F-11.3/F-11.4 at N=1k/4k/10k; fail above
