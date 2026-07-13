@@ -9,10 +9,9 @@ import { type Database, Filter, type Obj, type Ref, Relation } from '@dxos/echo'
 import { EffectEx } from '@dxos/effect';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
-import { Connection, SyncBinding } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Connector, ConnectorCoordinator, type ConnectorEntry } from '#types';
+import { Connection, Connector, ConnectorCoordinator, type ConnectorEntry, SyncBinding } from '#types';
 
 export type ConnectorAuthButtonProps = {
   /**

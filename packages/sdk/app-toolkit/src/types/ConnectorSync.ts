@@ -5,7 +5,6 @@
 // @import-as-namespace
 
 import { Relation } from '@dxos/echo';
-import { SyncBinding } from '@dxos/types';
 
 /**
  * Three-way merge primitives shared by connector sync handlers (Trello, Linear,
@@ -14,7 +13,10 @@ import { SyncBinding } from '@dxos/types';
  * field, whether the local or the remote side has changed since the last
  * successful sync.
  *
- * The merge primitives are pure; the snapshot accessors operate on a `SyncBinding`.
+ * The merge primitives are pure; the snapshot accessors operate on any ECHO
+ * relation that exposes `.snapshots: Record<string, unknown>` — typically the
+ * `SyncBinding` relation in `@dxos/plugin-connector` — but app-toolkit does not
+ * import that schema directly to avoid a cycle.
  */
 
 /** Result of {@link mergeField} / {@link mergeDeep}. */
@@ -109,8 +111,17 @@ export const mergeDeep = <T>(local: T, remote: T, snapshot: Snapshot<T>): MergeR
   return { value: remote, source: 'remote' };
 };
 
+/**
+ * Structural stand-in for the `SyncBinding` relation from `@dxos/plugin-connector`: the merge
+ * helpers read and write `SyncBinding.snapshots`, but app-toolkit cannot import that schema —
+ * plugin-connector depends on app-toolkit, so importing it back would form a dependency cycle.
+ * This captures the one field the helpers touch (`.snapshots`); every `SyncBinding` satisfies it,
+ * and the connector sync handlers pass their `SyncBinding` instances directly.
+ */
+export type SyncBindingLike = Relation.Unknown & { snapshots?: Record<string, unknown> };
+
 /** Reads `binding.snapshots[foreignId]` typed as `T`. Returns undefined if absent. */
-export const readSnapshot = <T extends object>(binding: SyncBinding.SyncBinding, foreignId: string): T | undefined => {
+export const readSnapshot = <T extends object>(binding: SyncBindingLike, foreignId: string): T | undefined => {
   const snapshots = (binding.snapshots ?? {}) as Record<string, unknown>;
   return snapshots[foreignId] as T | undefined;
 };
@@ -135,7 +146,7 @@ export const snapshotOf = <T>(present: boolean, value: T): Snapshot<T> => (prese
  * Writes `binding.snapshots[foreignId] = snapshot` inside a `Relation.update`. Allocates
  * a fresh map so the assignment is safe under ECHO's structural-sharing semantics.
  */
-export const writeSnapshot = (binding: SyncBinding.SyncBinding, foreignId: string, snapshot: object): void => {
+export const writeSnapshot = (binding: SyncBindingLike, foreignId: string, snapshot: object): void => {
   Relation.update(binding, (binding) => {
     const existing = (binding.snapshots ?? {}) as Record<string, unknown>;
     binding.snapshots = { ...existing, [foreignId]: snapshot };

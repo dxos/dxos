@@ -9,9 +9,9 @@ import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { OAuthProvider } from '@dxos/protocols';
-import { AccessToken, Connection } from '@dxos/types';
+import { AccessToken } from '@dxos/types';
 
-import { Connector, type ConnectorEntry, type CredentialForm } from '#types';
+import { Connection, Connector, type ConnectorEntry, type CredentialForm } from '#types';
 
 import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, ATPROTO_OAUTH_SCOPES, CUSTOM_PROVIDER_ID } from '../constants';
 

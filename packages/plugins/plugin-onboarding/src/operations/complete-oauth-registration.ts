@@ -12,8 +12,8 @@ import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE } from '@dxos/plugin-connector';
-import { AccessToken, Connection } from '@dxos/types';
+import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, Connection } from '@dxos/plugin-connector';
+import { AccessToken } from '@dxos/types';
 
 import { CompleteOAuthRegistration } from './definitions';
 import { createEdgeHttpClient } from './shared';

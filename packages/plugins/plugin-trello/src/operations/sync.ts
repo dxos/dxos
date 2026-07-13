@@ -12,9 +12,10 @@ import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { SyncBinding } from '@dxos/plugin-connector';
 import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
-import { Cursor, SyncBinding } from '@dxos/types';
+import { Cursor } from '@dxos/types';
 
 import { meta } from '#meta';
 

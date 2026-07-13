@@ -4,9 +4,10 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { Connection, SyncBinding } from '@dxos/types';
 
 import { meta } from '#meta';
+
+import { Connection, SyncBinding } from './types';
 
 export const translations = [
   {

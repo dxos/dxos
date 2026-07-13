@@ -10,12 +10,12 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { ConnectorAuth } from '@dxos/plugin-connector';
+import { Connection, ConnectorAuth } from '@dxos/plugin-connector';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type Text } from '@dxos/schema';
-import { Connection, type File } from '@dxos/types';
+import { type File } from '@dxos/types';
 
 import { PromptEditor, VariantGallery } from '#components';
 import { meta } from '#meta';

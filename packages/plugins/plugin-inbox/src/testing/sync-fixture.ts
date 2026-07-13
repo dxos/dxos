@@ -13,8 +13,9 @@ import { Credential, Operation } from '@dxos/compute';
 import { Blob, Database, Ref, Relation, Tag } from '@dxos/echo';
 import { type EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as InboxResolver from '@dxos/extractor-lib';
+import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { TagIndex } from '@dxos/schema';
-import { AccessToken, Connection, Cursor, Message, Organization, Person, SyncBinding } from '@dxos/types';
+import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
 
 import { GMAIL_SOURCE } from '../constants';
 import { type GmailDataset, GoogleCredentials, GoogleMailApi, type JmapDataset, JmapMailApi } from '../services';

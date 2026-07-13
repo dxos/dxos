@@ -13,8 +13,9 @@ import { Database, Feed as EchoFeed, Obj, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { type Connection, SyncBinding } from '@dxos/plugin-connector';
 import { Subscription } from '@dxos/plugin-magazine';
-import { type Connection, Cursor, SyncBinding } from '@dxos/types';
+import { Cursor } from '@dxos/types';
 
 import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants';
 import { BlueskyApi } from '../services';

@@ -22,7 +22,8 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Stage } from '@dxos/pipeline';
-import { Message, type SyncBinding } from '@dxos/types';
+import { type SyncBinding } from '@dxos/plugin-connector';
+import { Message } from '@dxos/types';
 
 import { isAiServiceUnavailable } from '../operations/extractor';
 import { InboxCapabilities, InboxOperation, type Mailbox } from '../types';

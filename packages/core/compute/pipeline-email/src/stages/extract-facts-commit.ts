@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Stage } from '@dxos/pipeline';
-import { FactCommit, type RDF } from '@dxos/pipeline-rdf';
+import { type FactUnit, type RDF } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
 import { messageSource } from './facts';
@@ -25,14 +25,14 @@ export type FactExtractor = (message: Message.Message) => Promise<RDF.Fact[]>;
 export const extractFactsUnitStage = (
   extract: FactExtractor,
   concurrency = 1,
-): Stage.Stage<Message.Message, FactCommit.FactUnit> =>
+): Stage.Stage<Message.Message, FactUnit> =>
   Stage.map(
     'extract-facts-unit',
     (message) =>
       Effect.tryPromise(() => extract(message)).pipe(
         Effect.tapError((error) => Effect.logWarning('extract-facts-unit failed; degrading to no facts', error)),
         Effect.orElse(() => Effect.succeed<RDF.Fact[]>([])),
-        Effect.map((facts): FactCommit.FactUnit => ({ facts, foreignId: messageSource(message), key: keyOf(message) })),
+        Effect.map((facts): FactUnit => ({ facts, foreignId: messageSource(message), key: keyOf(message) })),
       ),
     { concurrency },
   );

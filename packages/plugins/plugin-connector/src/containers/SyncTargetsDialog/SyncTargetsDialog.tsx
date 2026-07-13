@@ -12,11 +12,12 @@ import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Dialog, Input, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Empty, Listbox } from '@dxos/react-ui-list';
-import { type Connection, SyncBinding } from '@dxos/types';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { ConnectorCoordinator, type RemoteTarget } from '#types';
+
+import { type Connection, SyncBinding } from '../../types';
 
 export type SyncTargetsDialogProps = {
   connection: Connection.Connection;

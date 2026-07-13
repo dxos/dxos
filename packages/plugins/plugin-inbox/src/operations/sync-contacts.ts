@@ -8,7 +8,7 @@ import { LayoutOperation, SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { type Database, Obj, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { SyncBinding } from '@dxos/types';
+import { SyncBinding } from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
 

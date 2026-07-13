@@ -7,9 +7,9 @@ import React from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
+import { SyncBinding } from '@dxos/plugin-connector';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { useQuery } from '@dxos/react-client/echo';
-import { SyncBinding } from '@dxos/types';
 
 import { type ModuleProps } from '../testing';
 

@@ -13,8 +13,9 @@ import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { AccessToken, Connection } from '@dxos/types';
+import { AccessToken } from '@dxos/types';
 
+import { Connection } from '../../types';
 import { performOAuthFlow } from './oauth';
 import { OAUTH_PRESETS, type OAuthPreset, printTokenAdded } from './util';
 

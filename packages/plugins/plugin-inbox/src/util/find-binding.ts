@@ -8,7 +8,7 @@ import { Database, Filter, type Obj, Query } from '@dxos/echo';
 // Connection is referenced in the inferred type of findBindingForTarget (via SyncBinding's source
 // relation); the import lets TypeScript name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { type Connection, SyncBinding } from '@dxos/types';
+import { type Connection, SyncBinding } from '@dxos/plugin-connector';
 
 /**
  * Finds the {@link SyncBinding} whose local target is the given object (mailbox,

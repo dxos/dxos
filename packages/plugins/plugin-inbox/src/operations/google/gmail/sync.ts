@@ -24,7 +24,8 @@ import { EmailStage } from '@dxos/pipeline-email';
 // Connection is referenced in the inferred type of this module's default export via
 // InboxOperation.GoogleMailSync's schema; the import lets TypeScript name it in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { type Connection, ContentBlock, Cursor, Person, SyncBinding } from '@dxos/types';
+import { type Connection, SyncBinding } from '@dxos/plugin-connector';
+import { ContentBlock, Cursor, Person } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
@@ -35,6 +36,7 @@ import {
   type GoogleMailApiError,
   type GoogleMailApiService,
 } from '../../../services';
+import { toCommitUnit } from '../../../sync/to-commit-unit';
 import { InboxOperation, Mailbox } from '../../../types';
 import { onArrivalExtractors, readBindingOptions } from '../../../util';
 import { parseFromHeader } from '../../util';
@@ -311,7 +313,7 @@ export const runGmailSync = ({
       onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
       EmailStage.reconcileDrafts(draftPool),
-      EmailStage.toCommitUnit(),
+      toCommitUnit(),
       Stream.grouped(STREAMING_CONFIG.pageSize),
       Pipeline.run({ sink: SyncBinding.commit }),
       Effect.provide(

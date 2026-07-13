@@ -8,9 +8,10 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
-import { AccessToken, Connection, Cursor, SyncBinding } from '@dxos/types';
+import { AccessToken, Cursor } from '@dxos/types';
 
 import { TRELLO_SOURCE } from '../constants';
 import { TrelloApi } from '../services';

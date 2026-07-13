@@ -7,8 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Feed, Obj, Ref, Relation, Type } from '@dxos/echo';
-
-import * as Cursor from './Cursor';
+import { Cursor } from '@dxos/types';
 
 /**
  * One derived feed-processing binding. Source = the local {@link Feed} a `SyncBinding` sync

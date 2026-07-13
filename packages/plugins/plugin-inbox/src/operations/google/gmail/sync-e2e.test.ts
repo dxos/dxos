@@ -18,9 +18,10 @@ import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { AccessToken, Connection, Cursor, Message, SyncBinding } from '@dxos/types';
+import { AccessToken, Cursor, Message } from '@dxos/types';
 
 import { GMAIL_CONNECTOR_ID } from '../../../constants';
 import { Mailbox } from '../../../types';

@@ -19,12 +19,14 @@ import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
-import { Cursor, Person, SyncBinding } from '@dxos/types';
+import { SyncBinding } from '@dxos/plugin-connector';
+import { Cursor, Person } from '@dxos/types';
 
 import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { type JmapApiError } from '../../../errors';
 import { JmapCredentials, JmapMailApi } from '../../../services';
+import { toCommitUnit } from '../../../sync/to-commit-unit';
 import { InboxOperation, Mailbox } from '../../../types';
 import { onArrivalExtractors, readBindingOptions } from '../../../util';
 import { type AttachmentMetadata, type DecodedEmail, decodeBody, mapToMessage } from './mapper';
@@ -158,7 +160,7 @@ export const runJmapSync = ({
       onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
       EmailStage.reconcileDrafts(draftPool),
-      EmailStage.toCommitUnit(),
+      toCommitUnit(),
       Stream.grouped(COMMIT_PAGE_SIZE),
       Pipeline.run({ sink: SyncBinding.commit }),
       Effect.provide(

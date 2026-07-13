@@ -10,10 +10,10 @@ import { Ref } from '@dxos/echo';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { AccessToken, Connection } from '@dxos/types';
+import { AccessToken } from '@dxos/types';
 
 import { translations } from '#translations';
-import { type RemoteTarget } from '#types';
+import { Connection, type RemoteTarget } from '#types';
 
 import { SyncTargetsDialog, type SyncTargetsDialogProps } from './SyncTargetsDialog';
 

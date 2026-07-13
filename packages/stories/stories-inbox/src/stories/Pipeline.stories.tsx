@@ -14,6 +14,7 @@ import { useResolveRef } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { BrainPlugin } from '@dxos/plugin-brain/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import { Mailbox } from '@dxos/plugin-inbox';
@@ -27,7 +28,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/story-modules';
-import { AccessToken, Connection, Cursor, Message, Organization, Person, SyncBinding } from '@dxos/types';
+import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
 
 import { Module, StoryAiPlugin, StoryModulesPlugin, StorySyncPlugin, seedDemoMessages } from '../testing';
 

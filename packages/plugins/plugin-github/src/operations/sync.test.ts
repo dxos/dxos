@@ -8,7 +8,8 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { AccessToken, Connection, Cursor, Organization, Person, Project, SyncBinding, Task } from '@dxos/types';
+import { Connection, SyncBinding } from '@dxos/plugin-connector';
+import { AccessToken, Cursor, Organization, Person, Project, Task } from '@dxos/types';
 
 import { GITHUB_SOURCE } from '../constants';
 import { GitHubApi } from '../services';

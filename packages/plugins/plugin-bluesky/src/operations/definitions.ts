@@ -8,16 +8,14 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { DXN, Ref } from '@dxos/echo';
 import {
+  // eslint-disable-next-line unused-imports/no-unused-imports
+  type Connection,
   GetSyncTargetsInput,
   GetSyncTargetsOutput,
   MaterializeTargetInput,
   MaterializeTargetOutput,
-} from '@dxos/plugin-connector';
-import {
-  // eslint-disable-next-line unused-imports/no-unused-imports
-  type Connection,
   SyncBinding,
-} from '@dxos/types';
+} from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
 

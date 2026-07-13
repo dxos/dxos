@@ -6,9 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
-import { type Connection, SyncBinding } from '@dxos/types';
 
-import { type ConnectorEntry } from '../types';
+import { type Connection, type ConnectorEntry, SyncBinding } from '../types';
 
 /** A user-chosen remote target to bind. */
 export type SyncTargetSelection = { remoteId: string; name?: string };

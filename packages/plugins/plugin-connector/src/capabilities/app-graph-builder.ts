@@ -13,13 +13,12 @@ import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
-import { Connection, SyncBinding } from '@dxos/types';
 
 import { meta } from '#meta';
 import { Connector } from '#types';
 
 import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants';
-import { ConnectorOperation } from '../types';
+import { Connection, ConnectorOperation, SyncBinding } from '../types';
 
 /**
  * Resolve the {@link SyncBinding} relations sourced by a connection. Used by the

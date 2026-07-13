@@ -11,9 +11,10 @@ import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { InternalError } from '@dxos/errors';
+import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { Kanban } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
-import { AccessToken, Connection, Cursor, SyncBinding } from '@dxos/types';
+import { AccessToken, Cursor } from '@dxos/types';
 
 import { TRELLO_SOURCE } from '../constants';
 import { TrelloApi } from '../services';

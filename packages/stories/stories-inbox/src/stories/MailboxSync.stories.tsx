@@ -13,6 +13,7 @@ import { Operation, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Feed, Tag } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
@@ -28,7 +29,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/story-modules';
-import { AccessToken, Connection, Cursor, Message, Organization, Person, SyncBinding } from '@dxos/types';
+import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
 
 import { MailboxTriggerRelation, Module, StoryModulesPlugin, StorySyncPlugin, SyncTriggerRunner } from '../testing';
 

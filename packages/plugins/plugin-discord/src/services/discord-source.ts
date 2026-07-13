@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import { CrawlError, Source, type SourceApi, type ThreadRef, type Type } from '@dxos/crawler';
 import { type Err, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { type Connection } from '@dxos/types';
+import { type Connection } from '@dxos/plugin-connector';
 
 import { DEFAULT_DAYS, snowflakeForTimestamp } from '../constants';
 import { makeDiscordLayer, makeDiscordLayerFromToken } from './discord';

@@ -12,7 +12,9 @@ import { log } from '@dxos/log';
 // Connection and Message are referenced in the inferred type of this module's default export via
 // InboxOperation.GmailSend's schema; the imports let TypeScript name them in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { type Connection, type Message } from '@dxos/types';
+import { type Connection } from '@dxos/plugin-connector';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type Message } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
 import { GmailSendMessageInvalidError } from '../../../errors';

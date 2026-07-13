@@ -10,7 +10,10 @@ import { Capability } from '@dxos/app-framework';
 import type { Operation } from '@dxos/compute';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import type { OAuthProvider } from '@dxos/protocols';
-import { type AccessToken, Connection, SyncBinding } from '@dxos/types';
+import type { AccessToken } from '@dxos/types';
+
+import * as Connection from './Connection';
+import * as SyncBinding from './SyncBinding';
 
 /** Descriptor for one remote target returned by discovery operations. */
 export const RemoteTarget = Schema.Struct({

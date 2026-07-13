@@ -14,12 +14,14 @@ import { EffectEx } from '@dxos/effect';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
 import { captureSink } from '@dxos/pipeline/testing';
+import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { TagIndex } from '@dxos/schema';
-import { AccessToken, Connection, Cursor, DraftMessage, Message, Organization, Person, SyncBinding } from '@dxos/types';
+import { AccessToken, Cursor, DraftMessage, Message, Organization, Person } from '@dxos/types';
 
 import { GMAIL_SOURCE } from '../constants';
 import { seedMailboxBinding } from '../testing/sync-fixture';
 import { type Mailbox } from '../types';
+import { toCommitUnit } from './to-commit-unit';
 
 const TEST_SOURCE = 'test.mail';
 
@@ -126,7 +128,7 @@ describe('sync pipeline harness', () => {
       ),
       mapStage,
       EmailStage.extractContacts(),
-      EmailStage.toCommitUnit(),
+      toCommitUnit(),
     );
     const withFault = options.fault ? mapped.pipe(options.fault) : mapped;
     return withFault.pipe(
@@ -285,7 +287,7 @@ describe('sync pipeline harness', () => {
         mapAttachmentStage,
         EmailStage.processAttachments(),
         EmailStage.extractContacts(),
-        EmailStage.toCommitUnit(),
+        toCommitUnit(),
         Stream.grouped(2),
         Pipeline.run({ sink: SyncBinding.commit }),
         Effect.provide(
@@ -364,7 +366,7 @@ describe('sync pipeline harness', () => {
         // both are Mapped → Mapped, so order doesn't matter; only toCommitUnit must run last.
         EmailStage.extractContacts(),
         EmailStage.processAttachments(),
-        EmailStage.toCommitUnit(),
+        toCommitUnit(),
         Stream.grouped(2),
         Pipeline.run({ sink: SyncBinding.commit }),
         Effect.provide(
@@ -455,7 +457,7 @@ describe('reconcileDrafts stage', () => {
         const stats: SyncBinding.Stats = { newMessages: 0 };
         yield* Stream.fromIterable(synced).pipe(
           EmailStage.reconcileDrafts(draftPool),
-          EmailStage.toCommitUnit(),
+          toCommitUnit(),
           Stream.grouped(2),
           Pipeline.run({ sink: SyncBinding.commit }),
           Effect.provide(

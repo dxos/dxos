@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 import { Pipeline } from '@dxos/pipeline';
-import { type FactCommit, type RDF } from '@dxos/pipeline-rdf';
+import { type FactUnit, type RDF } from '@dxos/pipeline-rdf';
 import { captureSink } from '@dxos/pipeline/testing';
 import { Message } from '@dxos/types';
 
@@ -46,7 +46,7 @@ describe('extractFactsUnitStage', () => {
     const message = makeMessage();
     const extract: FactExtractor = () => Promise.resolve([ALICE_FACT]);
 
-    const { sink, items } = captureSink<FactCommit.FactUnit>();
+    const { sink, items } = captureSink<FactUnit>();
     await EffectEx.runPromise(
       Stream.fromIterable([message]).pipe(extractFactsUnitStage(extract), Pipeline.run({ sink })),
     );
@@ -62,7 +62,7 @@ describe('extractFactsUnitStage', () => {
     const message = makeMessage();
     const extract: FactExtractor = () => Promise.reject(new Error('extraction failed'));
 
-    const { sink, items } = captureSink<FactCommit.FactUnit>();
+    const { sink, items } = captureSink<FactUnit>();
     await EffectEx.runPromise(
       Stream.fromIterable([message]).pipe(extractFactsUnitStage(extract), Pipeline.run({ sink })),
     );

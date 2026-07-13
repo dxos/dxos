@@ -8,11 +8,11 @@ import { type Database, Filter, type Obj, type Ref, Relation } from '@dxos/echo'
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import { Connection, SyncBinding } from '@dxos/types';
 
 import { useConnector } from '#hooks';
 import { meta } from '#meta';
 
+import { Connection, SyncBinding } from '../../types';
 import { ConnectorAuthButton } from '../ConnectorAuthButton';
 
 export type ConnectorPickerProps = {
