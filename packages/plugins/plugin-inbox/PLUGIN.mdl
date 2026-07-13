@@ -711,8 +711,10 @@ feat F-11: Responsiveness & Sync Integrity
 
   desc: |
     Perceived performance and correctness guarantees for the mailbox experience. Latency budgets are
-    p95 targets measured from user action (or surface mount) to first meaningful paint of the
-    requested content, and must hold WHILE a background sync is running.
+    p95, measured from user action (or surface mount) to first meaningful paint of the requested
+    content, and must hold WHILE a background sync is running. Each budget has two levels: a target
+    (the number to design for) and a ceiling (the max acceptable). A scenario fails above the ceiling,
+    and is not yet meeting goal until it reaches the target.
 
   req F-11.1:
     when: an initial sync is running (first-time or backfill)
@@ -724,11 +726,11 @@ feat F-11: Responsiveness & Sync Integrity
 
   req F-11.3:
     when: a mailbox is opened
-    then: the first page of messages is painted within 400ms (p95)
+    then: the first page of messages is painted within 400ms (p95 ceiling); target 100ms
 
   req F-11.4:
     when: an email thread is selected
-    then: the thread renders in the companion within 400ms (p95), including while a sync is running
+    then: the thread renders in the companion within 400ms (p95 ceiling), including while a sync is running; target 100ms
 
   req F-11.5:
     when: mail sync runs (any provider, any number of concurrent/overlapping runs)
@@ -865,8 +867,8 @@ test T-12: Latency budgets
   given: a set-up Mailbox (measured at p95, including while a sync is running)
   when: the mailbox is opened, then an email thread is selected
   then:
-    - first page of messages painted within 400ms
-    - selected thread rendered in the companion within 400ms
+    - first page of messages painted within 400ms (target 100ms)
+    - selected thread rendered in the companion within 400ms (target 100ms)
   tags: [performance, bench, browser-e2e]
 ```
 

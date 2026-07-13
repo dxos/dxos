@@ -2,38 +2,63 @@
 
 ## Test suite — PLUGIN.mdl enforcement
 
-Layered suite enforcing every `PLUGIN.mdl` acceptance scenario (`test T-#`) — see
-`DESIGN.md` for tier architecture, the spec↔tier coverage map, and the browser-e2e
-OAuth/mock design (§6). **Current branch delivers Tier 4 (browser-e2e, task #7).**
-The F-11 code deficiencies (#1–#5) are tracked separately and gate a few scenarios
-(T-10/T-11/T-12) — noted where relevant.
+Layered suite (tiers: unit → storybook → harness → agent-e2e → browser-e2e → bench →
+live) enforcing every `PLUGIN.mdl` acceptance scenario (`test T-#`); each test carries
+its spec id / `spec:T-#` tag and each acceptance block carries a harness tag so a
+traceability check (#10) fails when a scenario loses enforcement. **Current branch
+delivers Tier 4 (browser-e2e, task #7).**
 
 ### Tasks
 
 - [ ] **#7 Browser-e2e Playwright inbox spec — THIS BRANCH**
   - `composer-app/src/playwright/inbox.spec.ts` + `plugins/inbox.ts` helper.
-  - Helper: seed the `accessToken` ECHO object (reuse `seedMailboxBinding`) so the app
-    boots connected — no Google login / 2FA driven.
-  - Mock provider: small Effect `HttpApp` over the shared response Schemas →
-    `HttpApp.toWebHandler` → bridged into Playwright `page.route('**/gmail.googleapis.com/**')`.
-    Primary data path via JMAP (`target.apiUrl` → same app bound to a port). Keep `DX_PWA=false`.
   - Scenarios: interactivity-during-sync (T-10), no-false-empty-state (T-11), selection→companion.
-  - Run: `DX_PWA=false moon run composer-app:e2e`.
+  - Run: `DX_PWA=false moon run composer-app:e2e`. Seed deterministically — never live creds here.
+  - **Approach (OAuth/mock).** Never drive Google's login UI: 2FA (TOTP/push/passkey) is
+    non-deterministic and Google blocks automation — a scripted `accounts.google.com` login rots
+    into permanent-red. Split the two OAuth seams instead:
+    - Seed the `accessToken` ECHO object directly (reuse `seedMailboxBinding`) so the app boots
+      "connected" — skips consent/2FA because it skips the reason they exist. (Token is persisted
+      by `capabilities/connector.ts` as `{ token, account, source }`.)
+    - Mock the API: small Effect `HttpApp` whose handlers `Schema.encode` the shared response
+      Schemas (`Message`, `ListMessagesResponse`, `LabelsResponse`, `ErrorResponse`) →
+      `HttpApp.toWebHandler`/`toWebHandlerLayer` (`Request => Promise<Response>`, no socket) →
+      bridged into `page.route('**/gmail.googleapis.com/**')` (build Fetch `Request`, call handler,
+      `route.fulfill`). No base-URL refactor, no port/CORS, real routing + schema-checked bodies,
+      same app reusable by node tests.
+    - Get right: provide fixtures via `toWebHandlerLayer(app, MockFixtureLayer)`; binary bodies
+      (base64url raw messages) via `arrayBuffer()`/`Buffer`; only browser-originated requests are
+      caught (Google calls are client-side per the `connector.ts` CORS comment); keep `DX_PWA=false`
+      to avoid the service-worker interception gap.
+    - **JMAP is the primary data path** — `target.apiUrl` is already per-binding, so point a seeded
+      binding at the same `HttpApp` bound to a port; zero interception, more contract reuse. Most
+      of T-10/T-11/companion-flow don't care whether bytes came from Gmail or JMAP.
 - [ ] **#6 Unskip inbox agent-e2e** — `assistant-e2e/src/testing/inbox-enable.test.ts`
     (register the skill), then add read/draft scenario tests. Enforces F-6.
-- [ ] **#8 Latency benchmarks with budget assertions** — assert F-11.3/F-11.4 400ms budgets at
-    N=1k/4k/10k; budgets in `src/testing/budgets.ts` shared with `PLUGIN.mdl`. Depends on #2/#3.
+- [ ] **#8 Latency benchmarks with budget assertions** — F-11.3/F-11.4 at N=1k/4k/10k; fail above
+    the 400ms p95 ceiling and track against the 100ms target. Budgets in `src/testing/budgets.ts`
+    shared with `PLUGIN.mdl`. Depends on F-11 code fixes (below).
 - [ ] **#9 Overlapping-sync duplicate test** — Tier 0 executable spec of T-13's concurrency clause;
-    expected-fail until the F-11.5 mailbox lock (#4) lands.
+    expected-fail until the F-11.5 mailbox lock lands.
 - [ ] **#10 Spec↔test traceability check** — moon task parsing `PLUGIN.mdl` `test T-#` ids; fails
     when an id has neither an automated test nor a runbook entry.
-- [ ] **#11 Live-validation runbook** — normalize credential-gated suites (`GOOGLE_ACCESS_TOKEN`,
-    `JMAP_TOKEN`, `functions-e2e` tag) into one documented Tier 6 with human-verified assertions.
+- [ ] **#11 Live-validation runbook** — normalize credential-gated suites into one Tier 6:
+    `GOOGLE_ACCESS_TOKEN` (a human clears 2FA once with `access_type=offline&prompt=consent`; store
+    the **refresh token** as a secret, exchange at runtime), `JMAP_TOKEN` (+ vitest tag),
+    `functions-e2e`. Runbook enumerates human-verified assertions → T-1/T-3/T-6/T-7/T-8/T-13.
+
+### F-11 responsiveness — implementation ideas (gate T-10/T-11/T-12)
+
+Product-code fixes the perceived-latency scenarios depend on (approaches, not yet tasked to this
+branch): false empty state → render cached/skeleton over persisted messages (F-11.2); first-page
+budget → index-backed pagination (F-11.3); companion budget → synchronous companion seed on select
+(F-11.4); overlap safety → run sync on edge with a mailbox lock, feed-level dedup by foreign key as
+interim backstop (F-11.5); sync main-thread contention (F-11.1).
 
 ### References
 
-- `DESIGN.md` §1–6 (audit, tiers, coverage map, sync convention, OAuth/mock design).
-- `PLUGIN.mdl` — acceptance scenarios T-1..T-13, `feat F-11` responsiveness reqs.
+- `PLUGIN.mdl` — acceptance scenarios T-1..T-13, `feat F-11` responsiveness reqs (400ms ceiling /
+  100ms target). Spec is the single source of truth for requirements; this ledger holds approach.
 
 ## Mailbox reply & triage
 

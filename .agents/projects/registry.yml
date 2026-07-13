@@ -35,8 +35,8 @@ projects:
     created: 2026-07-13
     summary: Layered test suite enforcing plugin-inbox PLUGIN.mdl (unit→storybook→harness→agent-e2e→browser-e2e→bench→live); current branch delivers Tier 4 Playwright browser-e2e (task #7).
     tasks: packages/plugins/plugin-inbox/TASKS.md
-    design: packages/plugins/plugin-inbox/DESIGN.md
+    design: packages/plugins/plugin-inbox/PLUGIN.mdl
     prs: []
-    resume: 'Build composer-app Playwright inbox spec + plugins/inbox.ts helper. Design settled (DESIGN.md §6): seed accessToken in ECHO, Effect HttpApp.toWebHandler bridged into page.route, JMAP primary via target.apiUrl, never drive Google login/2FA.'
+    resume: 'Build composer-app Playwright inbox spec + plugins/inbox.ts helper. Approach in TASKS.md #7: seed accessToken in ECHO, Effect HttpApp.toWebHandler bridged into page.route, JMAP primary via target.apiUrl, never drive Google login/2FA.'
 
 ended: []
