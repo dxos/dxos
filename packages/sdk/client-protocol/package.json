@@ -43,6 +43,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "@dxos/rpc-tunnel": "workspace:*",
     "@effect/platform": "catalog:",
     "@effect/rpc": "catalog:",
     "base-x": "catalog:",

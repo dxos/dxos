@@ -7,14 +7,14 @@ import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
 import {
-  ClientRpcServer,
+  type ClientRpcServer,
   type ClientServicesProvider,
-  DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
   SpaceProperties,
   STATUS_TIMEOUT,
   makeHandlersFromRpc,
+  serveClientServicesOverIFrame,
 } from '@dxos/client-protocol';
 import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -34,8 +34,6 @@ import {
   subscribeStream,
 } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type RpcPort } from '@dxos/rpc';
-import { createIFramePort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
@@ -601,15 +599,15 @@ export class Client {
 
       // Re-serve the client services to the shell iframe over effect-rpc, matching the shell's
       // `ClientServicesProxy` consumer. Handlers are derived from the already-open effect-native
-      // `rpc` surface so calls forward straight to the underlying provider (worker or host).
+      // `rpc` surface so calls forward straight to the underlying provider (worker or host). The
+      // server is constructed inside `@dxos/client-protocol` so the `RpcPort` binding resolves there
+      // rather than in this package's `sharedworker`-lib type universe.
       const shellServicesHandlers = makeHandlersFromRpc(this._services.rpc);
-      const shellPort: RpcPort = createIFramePort({ channel: DEFAULT_CLIENT_CHANNEL, iframe: shellIframe, origin });
-      this._shellClientServer = new ClientRpcServer({
+      this._shellClientServer = await serveClientServicesOverIFrame({
+        iframe: shellIframe,
+        origin,
         services: () => shellServicesHandlers,
-        port: shellPort,
       });
-
-      await this._shellClientServer.open();
     }
 
     log('opened');
