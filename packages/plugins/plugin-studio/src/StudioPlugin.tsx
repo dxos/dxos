@@ -13,7 +13,7 @@ import { Gallery, Image, ImageArtifact } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
-export const ImagePlugin = Plugin.define(meta).pipe(
+export const StudioPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [ImageArtifact.ImageArtifact, Gallery.Gallery, Image.Image] }),
@@ -25,4 +25,4 @@ export const ImagePlugin = Plugin.define(meta).pipe(
   Plugin.make,
 );
 
-export default ImagePlugin;
+export default StudioPlugin;

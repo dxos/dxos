@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ImageGeneration } from '@dxos/plugin-image/types';
+import { type ImageGeneration } from '@dxos/plugin-studio/types';
 
 /** One `data[]` entry in an Ideogram `/generate` response. */
 export type IdeogramImageData = {

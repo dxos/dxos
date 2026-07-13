@@ -765,11 +765,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-image/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-inbox/package.json",
           "jsonpath": "$.version"
         },
@@ -971,6 +966,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-status-bar/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-studio/package.json",
           "jsonpath": "$.version"
         },
         {

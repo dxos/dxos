@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/plugin-image",
+  "name": "@dxos/plugin-studio",
   "version": "0.10.0",
   "private": true,
   "description": "Image-creation plugin for Composer.",
@@ -40,9 +40,9 @@
       "default": "./dist/lib/neutral/operations/index.mjs"
     },
     "#plugin": {
-      "source": "./src/ImagePlugin.tsx",
-      "types": "./dist/types/src/ImagePlugin.d.ts",
-      "default": "./dist/lib/neutral/ImagePlugin.mjs"
+      "source": "./src/StudioPlugin.tsx",
+      "types": "./dist/types/src/StudioPlugin.d.ts",
+      "default": "./dist/lib/neutral/StudioPlugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",

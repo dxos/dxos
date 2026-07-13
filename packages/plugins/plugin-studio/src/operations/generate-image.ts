@@ -9,13 +9,13 @@ import { Capability } from '@dxos/app-framework';
 import { Credential, Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 
-import { Image, ImageArtifactOperation, ImageCapabilities, ImageGeneration } from '../types';
+import { Image, ImageArtifactOperation, ImageGeneration, StudioCapabilities } from '../types';
 
 const handler: Operation.WithHandler<typeof ImageArtifactOperation.GenerateImage> =
   ImageArtifactOperation.GenerateImage.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ artifact, provider, count }) {
-        const services = yield* Capability.getAll(ImageCapabilities.ImageGenerationService);
+        const services = yield* Capability.getAll(StudioCapabilities.ImageGenerationService);
         const service = provider ? services.find((candidate) => candidate.id === provider) : services[0];
         if (!service) {
           return yield* Effect.fail(new ImageGeneration.NoImageGenerationServiceError(provider));

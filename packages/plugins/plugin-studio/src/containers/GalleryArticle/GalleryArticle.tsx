@@ -20,9 +20,10 @@ import { type Gallery, type Image, ImageArtifact } from '#types';
 
 import { useImageSource } from '../../hooks';
 
-export type GalleryArticleProps = AppSurface.ObjectArticleProps<Gallery.Gallery>;
-
-type TileData = { artifact: Obj.Snapshot<ImageArtifact.ImageArtifact>; index: number };
+type TileData = {
+  artifact: Obj.Snapshot<ImageArtifact.ImageArtifact>;
+  index: number;
+};
 
 /** Resolve an ImageArtifact's thumbnail: the source of its first generated/uploaded Image. */
 const useArtifactThumbnail = (artifact?: Obj.Snapshot<ImageArtifact.ImageArtifact>): string | undefined => {
@@ -59,16 +60,12 @@ const ArtifactTile = ({ data, selected }: { data?: TileData; selected?: boolean 
   return (
     <div className='relative'>
       <GalleryImage src={src} alt={data.artifact.name} />
-      {selected && (
-        <Icon
-          icon='ph--check-circle--fill'
-          size={6}
-          classNames='absolute block-start-1 inline-end-1 text-primary-500 bg-baseSurface rounded-full'
-        />
-      )}
+      {selected && <Icon icon='ph--check-circle--fill' size={6} classNames='absolute top-1 right-1 text-primary-500' />}
     </div>
   );
 };
+
+export type GalleryArticleProps = AppSurface.ObjectArticleProps<Gallery.Gallery>;
 
 /**
  * Article surface for a Gallery: a masonry of its owned ImageArtifacts (rendered as thumbnails). The

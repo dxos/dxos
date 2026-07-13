@@ -60,7 +60,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
-    "@dxos/plugin-image": "workspace:*",
+    "@dxos/plugin-studio": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"

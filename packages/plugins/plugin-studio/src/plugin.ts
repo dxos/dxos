@@ -6,4 +6,4 @@ import { Plugin } from '@dxos/app-framework';
 
 import { meta } from './meta';
 
-export const ImagePlugin = Plugin.lazy(meta, () => import('#plugin'));
+export const StudioPlugin = Plugin.lazy(meta, () => import('#plugin'));

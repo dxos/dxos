@@ -41,7 +41,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-image/containers/GalleryArticle',
+  title: 'plugins/plugin-studio/containers/GalleryArticle',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),

@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import { BaseError } from '@dxos/errors';
 
 /**
- * Transient image-generation types shared by plugin-image and provider implementations
+ * Transient image-generation types shared by plugin-studio and provider implementations
  * (e.g. plugin-ideogram). These are NOT ECHO objects — they are plain Effect schemas / interfaces
  * passed across the {@link ImageGenerationService} capability boundary. The shape parallels
  * `plugin-trip`'s `Routing`.
@@ -51,7 +51,7 @@ export interface ImageGenerationResult extends Schema.Schema.Type<typeof ImageGe
 
 /**
  * A pluggable image-generation provider. Plugins contribute implementations via the
- * {@link ImageCapabilities.ImageGenerationService} capability; the `generateImage` operation
+ * {@link StudioCapabilities.ImageGenerationService} capability; the `generateImage` operation
  * resolves them. `generate` is credential-agnostic: the operation resolves the API key from the
  * Connector-managed `AccessToken` (via `CredentialsService`, keyed by {@link source}) and passes it
  * in. `source` is undefined for keyless providers (e.g. the test mock).

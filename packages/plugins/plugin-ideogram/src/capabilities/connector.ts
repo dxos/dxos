@@ -22,7 +22,7 @@ type IdeogramTokenFormValues = Schema.Schema.Type<typeof IdeogramTokenForm>;
 
 /**
  * Builds the Ideogram connector entry: stores the API key as `AccessToken.token` (source
- * `ideogram.ai`) so `plugin-image`'s generate operation can resolve it via
+ * `ideogram.ai`) so `plugin-studio`'s generate operation can resolve it via
  * `CredentialsService`. Mirrors plugin-ibkr's non-OAuth `credentialForm` connector.
  */
 export const createIdeogramConnectorEntry = () => ({

@@ -41,7 +41,7 @@ import { GitHubPlugin } from '@dxos/plugin-github/plugin';
 import { GraphPlugin } from '@dxos/plugin-graph/plugin';
 import { IbkrPlugin } from '@dxos/plugin-ibkr/plugin';
 import { IdeogramPlugin } from '@dxos/plugin-ideogram/plugin';
-import { ImagePlugin } from '@dxos/plugin-image/plugin';
+import { StudioPlugin } from '@dxos/plugin-studio/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
 import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
@@ -151,7 +151,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       MagazinePlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
-      ImagePlugin.meta.profile.key,
+      StudioPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
       OsrmPlugin.meta.profile.key,
       OutlinerPlugin.meta.profile.key,
@@ -222,7 +222,7 @@ export const getPlugins = ({
     DuffelPlugin(),
     IbkrPlugin(),
     IdeogramPlugin(),
-    ImagePlugin(),
+    StudioPlugin(),
     ExplorerPlugin(),
     MagazinePlugin(),
     GamePlugin(),

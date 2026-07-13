@@ -5,7 +5,7 @@
 import * as Redacted from 'effect/Redacted';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
-import { ImageGeneration } from '@dxos/plugin-image/types';
+import { ImageGeneration } from '@dxos/plugin-studio/types';
 
 import {
   IDEOGRAM_CONNECTOR_ID,

@@ -442,9 +442,6 @@
       "path": "packages/plugins/plugin-ideogram/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-image/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
     },
     {
@@ -566,6 +563,9 @@
     },
     {
       "path": "packages/plugins/plugin-status-bar/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-studio/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-support/tsconfig.json"

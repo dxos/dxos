@@ -7,8 +7,8 @@ import { trim } from '@dxos/util';
 
 export default Config2.make({
   plugin: {
-    key: 'org.dxos.plugin.image',
-    name: 'Image',
+    key: 'org.dxos.plugin.studio',
+    name: 'Studio',
     author: 'DXOS',
     description: trim`
       Image is an image-creation tool for Composer. An ImageArtifact pairs an editable prompt with the
@@ -20,7 +20,7 @@ export default Config2.make({
       own credentials via the Connector system; credentialed access is resolved at generation time through
       CredentialsService, keyed by the provider's source.
     `,
-    source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-image',
+    source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-studio',
     icon: { key: 'ph--paint-brush--regular', hue: 'purple' },
     spec: 'PLUGIN.mdl',
     screenshots: [],

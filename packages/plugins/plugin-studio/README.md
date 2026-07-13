@@ -1,4 +1,4 @@
-# @dxos/plugin-image
+# @dxos/plugin-studio
 
 Image-creation plugin for DXOS Composer.
 

@@ -27,24 +27,27 @@ export type ImageGalleryProps = {
 const sourceId = (image: ImageSource, index: number): string =>
   image.id ?? image.url ?? image.file?.uri ?? String(index);
 
-type TileData = { image: ImageSource; index: number };
+type TileData = {
+  image: ImageSource;
+  index: number;
+};
 
-const Tile = ({ data, selected }: { data?: TileData; selected?: boolean }) => {
+type TileProps = {
+  data?: TileData;
+  selected?: boolean;
+};
+
+const Tile = ({ data, selected }: TileProps) => {
   // Resolve the source (URL or uploaded-file blob). Hook is called unconditionally.
   const src = useImageSource(data?.image);
   if (!data) {
     return null;
   }
+
   return (
     <div className='relative'>
       <GalleryImage src={src} alt={data.image.name} />
-      {selected && (
-        <Icon
-          icon='ph--check-circle--fill'
-          size={6}
-          classNames='absolute block-start-1 inline-end-1 text-primary-500 bg-baseSurface rounded-full'
-        />
-      )}
+      {selected && <Icon icon='ph--check-circle--fill' size={6} classNames='absolute top-1 right-1 text-primary-500' />}
     </div>
   );
 };

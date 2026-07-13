@@ -316,9 +316,6 @@
       "path": "../../plugins/plugin-ideogram"
     },
     {
-      "path": "../../plugins/plugin-image"
-    },
-    {
       "path": "../../plugins/plugin-inbox"
     },
     {
@@ -440,6 +437,9 @@
     },
     {
       "path": "../../plugins/plugin-status-bar"
+    },
+    {
+      "path": "../../plugins/plugin-studio"
     },
     {
       "path": "../../plugins/plugin-support"

@@ -19,7 +19,7 @@ import { type File } from '@dxos/types';
 
 import { ImageGallery, type ImageSource, ImageView, PromptEditor } from '#components';
 import { meta } from '#meta';
-import { Image, type ImageArtifact, ImageArtifactOperation, ImageCapabilities } from '#types';
+import { Image, type ImageArtifact, ImageArtifactOperation, StudioCapabilities } from '#types';
 
 import { useFileUpload } from '../../hooks';
 
@@ -39,7 +39,7 @@ export const ImageArtifactArticle = ({ role, subject: artifact, attendableId }: 
   const { invokePromise } = useOperationInvoker();
 
   const db = Obj.getDatabase(artifact);
-  const providers = useCapabilities(ImageCapabilities.ImageGenerationService);
+  const providers = useCapabilities(StudioCapabilities.ImageGenerationService);
   const provider = providers[0];
 
   // Reactive view of the artifact's images.
@@ -176,7 +176,7 @@ export const ImageArtifactArticle = ({ role, subject: artifact, attendableId }: 
           )}
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='flex flex-col gap-2 p-2'>
+      <Panel.Content classNames='grid grid-rows-[8rem_1fr] p-2'>
         <PromptEditor
           id={`${artifactId}/prompt`}
           text={promptText}

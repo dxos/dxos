@@ -38,7 +38,7 @@ export const translations = [
         'typename.label_other': 'Images',
       },
       [meta.profile.key]: {
-        'plugin.name': 'Image',
+        'plugin.name': 'Studio',
         'generate.label': 'Generate',
         'generating.label': 'Generating…',
         'create.label': 'Create image',
@@ -47,7 +47,7 @@ export const translations = [
         'close.label': 'Close',
         'all.tab.label': 'All',
         'empty.message': 'No images yet.',
-        'delete-image.label': 'Delete image',
+        'delete-image.label': 'Delete',
         'prompt.placeholder': 'Describe the image to generate…',
         'model.label': 'Model',
         'resolution.label': 'Resolution',
