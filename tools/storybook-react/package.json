@@ -1,6 +1,5 @@
 {
   "name": "@dxos/storybook-react",
-  "version": "0.10.0",
   "private": true,
   "description": "Storybook config package for the DXOS monorepo.",
   "homepage": "https://dxos.org",

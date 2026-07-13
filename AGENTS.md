@@ -54,6 +54,10 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
 - **Workspace deps use `workspace:*`.** Any in-repo `@dxos` package is added with
   `workspace:*`, never from the catalog. The catalog is for external packages
   only. Add deps with `pnpm add --filter "<project>" --save-catalog "<package>"`.
+  **`peerDependencies` use `workspace:^`** (caret, not `*`) — a `*` pin reads as
+  out-of-range on any bump and would cascade the fixed publish group to a
+  spurious major. Do not "simplify" it to `*`. Why it matters:
+  `.github/RELEASE-SPEC.md`.
 - **Never edit the main checkout.** All file edits target the assigned worktree
   path, never the bare repo root or another worktree (the `guard-worktree.sh`
   hook denies these).

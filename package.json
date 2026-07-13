@@ -18,6 +18,10 @@
     "beast": "beast docs",
     "build": "moon run :build",
     "changed-packages": "scripts/changed",
+    "changeset": "changeset",
+    "changeset:publish": "changeset publish",
+    "changeset:version": "changeset version && node scripts/sync-versions.mjs && pnpm install --lockfile-only",
+    "check-changeset": "node scripts/check-changeset.mjs",
     "check-cycles": "node scripts/check-cycles.mjs",
     "check-packages-published": "node scripts/check-packages-published.mjs",
     "check-public-dependencies": "node scripts/check-public-dependencies.mjs",
@@ -53,6 +57,8 @@
     "tslib": "catalog:"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "catalog:",
+    "@changesets/cli": "catalog:",
     "@cloudflare/vitest-pool-workers": "catalog:",
     "@cloudflare/workers-types": "catalog:",
     "@dxos/async": "workspace:*",
@@ -132,6 +138,7 @@
     "husky": "catalog:",
     "jsdom": "catalog:",
     "jsdom-global": "catalog:",
+    "json5": "catalog:",
     "json-stringify-safe": "catalog:",
     "knip": "catalog:",
     "loupe": "catalog:",

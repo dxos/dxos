@@ -83,7 +83,7 @@ const tagFamily = Atom.family((key: TagKey) =>
     });
     get.addFinalizer(() => unsubscribe());
     return previous;
-  }),
+  }).pipe(Atom.keepAlive),
 );
 
 const objectTagsFamily = Atom.family((key: TagKey) =>
@@ -100,7 +100,7 @@ const objectTagsFamily = Atom.family((key: TagKey) =>
     });
     get.addFinalizer(() => unsubscribe());
     return previous;
-  }),
+  }).pipe(Atom.keepAlive),
 );
 
 /**
