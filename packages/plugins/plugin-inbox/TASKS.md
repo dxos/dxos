@@ -52,17 +52,16 @@ delivers Tier 4 (browser-e2e, task #7).**
     `page.route` bridge `composer-app/src/playwright/plugins/inbox.ts` (`installInboxMock`). Typechecks.
     [x] (c) `plugins/inbox.ts` page-object (JMAP form-fill, sync, select-thread, reply) — Gmail
     connection bridge + provider adapter still to come with (e).
-    [~] (d) JMAP suite (`composer-app/src/playwright/inbox.spec.ts`): connect+sync ✓, select-thread ✓
-    (generic, always-runs) — both green in chromium against the mock. Reply is `test.fixme`: send
-    fails with JmapSendMessageInvalidError because Playwright input into the EditMessage form/CodeMirror
-    doesn't reach the ECHO message (`message.properties.to`/body empty at send) — needs trace-viewer
-    debugging of the form→object write-back.
+    [x] (d) JMAP suite (`composer-app/src/playwright/inbox.spec.ts`): connect+sync ✓, select-thread ✓
+    (generic, always-runs), reply ✓ (round-trips through the mock's JMAP submission). All 3 green in
+    chromium. Reply body is the last `.cm-content` (CodeMirror, not a role=textbox / not in the
+    edit-email-form testid); assert on the mock's recorded `EmailSubmission/set`.
     [ ] (e) Gmail suite (gated on DX_E2E): add the `window.composer` connection-injection bridge
     (DX_E2E runtime flag), provider adapter to share the generic bodies, Gmail sync + reply.
-  - Validation: ran `DX_PWA=false ... playwright test inbox.spec.ts` locally (chromium) — 2 passed,
-    1 fixme. Bundle built with `DX_PWA=false DX_E2E=1`.
-  - Follow-ups: reply form→ECHO propagation (unblocks reply for both providers); Gmail bridge + suite;
-    provider-parameterized adapter (introduce when Gmail gives the shared bodies a second consumer).
+  - Validation: `DX_PWA=false ... playwright test inbox.spec.ts` (chromium) — 3 passed. Bundle built
+    with `DX_PWA=false DX_E2E=1`.
+  - Follow-ups (deferred per user): Gmail bridge + suite; provider-parameterized adapter (introduce
+    when Gmail gives the shared generic bodies a second consumer).
 - [ ] **#6 Unskip inbox agent-e2e** — `assistant-e2e/src/testing/inbox-enable.test.ts`
     (register the skill), then add read/draft scenario tests. Enforces F-6.
 - [ ] **#8 Latency benchmarks with budget assertions** — F-11.3/F-11.4 at N=1k/4k/10k; fail above
