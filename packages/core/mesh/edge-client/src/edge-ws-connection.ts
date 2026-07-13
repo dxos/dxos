@@ -184,16 +184,17 @@ export class EdgeWsConnection extends Resource {
         return;
       }
 
-      // Serialize processing so bytes reach `muxer.receiveData` in arrival order. The lock
-      // releases even if `_receiveMessage` throws, so a single bad message is logged and
-      // dropped instead of stalling every message queued after it.
-      void this._receiveMutex
-        .executeSynchronized(() => this._receiveMessage(event.data, muxer))
-        .catch((err) => log.catch(err));
+      // `_receiveMessage` serializes on `_receiveMutex`; `acquire` enqueues synchronously,
+      // so locks are taken in arrival order regardless of async conversion timing.
+      void this._receiveMessage(event.data, muxer).catch((err) => log.catch(err));
     };
   }
 
   private async _receiveMessage(data: WebSocket.Data, muxer: WebSocketMuxer): Promise<void> {
+    // Serialize processing so bytes reach `muxer.receiveData` in arrival order. The guard
+    // releases on scope exit even if processing throws, so a single bad message is logged
+    // and dropped instead of stalling every message queued after it.
+    using _guard = await this._receiveMutex.acquire();
     const bytes = await toUint8Array(data);
     this._recordBytes(0, bytes.byteLength);
     if (!this.isOpen) {
