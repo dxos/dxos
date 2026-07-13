@@ -11,12 +11,12 @@ resume from by row number.
 ### Tasks
 
 - [x] **Rename `$session`→`$project` (full concept rename)** — SKILL.md,
-  registry (`.agents/sessions`→`.agents/projects`, `sessions:`→`projects:`),
-  track.sh, .claude/CLAUDE.md, AGENTS.md. "session" kept only where it means a
-  Claude conversation.
+      registry (`.agents/sessions`→`.agents/projects`, `sessions:`→`projects:`),
+      track.sh, .claude/CLAUDE.md, AGENTS.md. "session" kept only where it means a
+      Claude conversation.
 - [x] **`$project` picker** — bare `$project`/`$project list` renders a numbered
-  markdown table; replying with a row number resumes that project (in-context, no
-  bare-number hook). Verified hook fires on bare/`list`/`new`, silent on `$projects`.
+      markdown table; replying with a row number resumes that project (in-context, no
+      bare-number hook). Verified hook fires on bare/`list`/`new`, silent on `$projects`.
 
 ## Follow-ups
 
