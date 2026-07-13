@@ -3,29 +3,27 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { type FC, type ReactNode } from 'react';
+import React from 'react';
 
 import { ActivationEvents, Capabilities, Capability, Plugin, Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { DXN } from '@dxos/keys';
-import { type Space } from '@dxos/react-client/echo';
+import { withModuleProps } from '@dxos/story-modules';
 
-import { ConnectorModule, ControlsModule, FactsModule, MailboxModule, MessageModule } from '../components';
+import {
+  ArchiveModule,
+  ConnectorModule,
+  ControlsModule,
+  FactsModule,
+  MailboxModule,
+  MessageModule,
+  StatsModule,
+  TopicsModule,
+} from '../components';
 
-export type ModuleProps = {
-  space: Space;
-  attendableId: string;
-};
-
-/**
- * Resolves the active space at the surface boundary and mounts the module with it, so module bodies
- * never call hooks conditionally — mirrors the `useActiveSpace()` pattern used by plugin surfaces.
- */
-const withActiveSpace = (Component: FC<ModuleProps>) => (): ReactNode => {
-  const space = useActiveSpace();
-  return space ? <Component space={space} attendableId='test' /> : null;
-};
+// `ModuleProps` (space + attendableId) and the `withModuleProps` adapter now live in the shared
+// `@dxos/story-modules` package — the container owns space resolution and attention registration.
+export type { ModuleProps } from '@dxos/story-modules';
 
 /**
  * Role tokens for the MailboxSync story columns. Each module is contributed as a dedicated
@@ -37,7 +35,10 @@ export const Module = {
   Mailbox: Role.make<Record<string, any>>('org.dxos.storybook.inbox.mailbox'),
   Message: Role.make<Record<string, any>>('org.dxos.storybook.inbox.message'),
   Facts: Role.make<Record<string, any>>('org.dxos.storybook.inbox.facts'),
+  Topics: Role.make<Record<string, any>>('org.dxos.storybook.inbox.topics'),
   Connector: Role.make<Record<string, any>>('org.dxos.storybook.inbox.connector'),
+  Archive: Role.make<Record<string, any>>('org.dxos.storybook.inbox.archive'),
+  Stats: Role.make<Record<string, any>>('org.dxos.storybook.inbox.stats'),
 };
 
 /** React surfaces for the MailboxSync story columns, one per `Module` role token. */
@@ -45,27 +46,43 @@ const moduleSurfaces: Surface.Definition[] = [
   Surface.create({
     id: 'inbox.controls',
     filter: Surface.makeFilter(Module.Controls),
-    component: withActiveSpace(ControlsModule),
+    component: withModuleProps(ControlsModule),
   }),
   Surface.create({
     id: 'inbox.mailbox',
     filter: Surface.makeFilter(Module.Mailbox),
-    component: withActiveSpace(MailboxModule),
+    component: withModuleProps(MailboxModule),
   }),
   Surface.create({
     id: 'inbox.message',
     filter: Surface.makeFilter(Module.Message),
-    component: withActiveSpace(MessageModule),
+    component: withModuleProps(MessageModule),
   }),
   Surface.create({
     id: 'inbox.facts',
     filter: Surface.makeFilter(Module.Facts),
-    component: withActiveSpace(FactsModule),
+    component: withModuleProps(FactsModule),
+  }),
+  Surface.create({
+    id: 'inbox.topics',
+    filter: Surface.makeFilter(Module.Topics),
+    component: withModuleProps(TopicsModule),
   }),
   Surface.create({
     id: 'inbox.connector',
     filter: Surface.makeFilter(Module.Connector),
-    component: withActiveSpace(ConnectorModule),
+    component: withModuleProps(ConnectorModule),
+  }),
+  Surface.create({
+    id: 'inbox.archive',
+    filter: Surface.makeFilter(Module.Archive),
+    component: withModuleProps(ArchiveModule),
+  }),
+  // The stats panel reads plugin-debug's transient store directly — no active space needed.
+  Surface.create({
+    id: 'inbox.stats',
+    filter: Surface.makeFilter(Module.Stats),
+    component: () => <StatsModule />,
   }),
 ];
 

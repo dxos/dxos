@@ -8,19 +8,22 @@ import React from 'react';
 
 import { withPluginManager, withSurfaceDebug } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
+import { persistentClientServices } from '@dxos/client/testing';
 import { configPreset } from '@dxos/config';
 import { Feed, Tag } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
+import { DebugPlugin } from '@dxos/plugin-debug/plugin';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
+import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import { translations as progressTranslations } from '@dxos/plugin-progress/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { Config } from '@dxos/react-client';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/story-modules';
@@ -42,7 +45,16 @@ const SYNC_STORY_TYPES = [
   TagIndex.TagIndex,
 ];
 
-const DefaultStory = () => <ModuleContainer layout={[[Module.Mailbox], [Module.Message], [Module.Connector]]} />;
+// Computed once at module scope (not inside the `withPluginManager` initializer, which re-runs on
+// every render) so the story doesn't spawn a fresh dedicated worker/coordinator on each re-render.
+const SYNC_STORY_CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'dev' }));
+
+const DefaultStory = () => (
+  <ModuleContainer
+    layout={[[Module.Mailbox], [Module.Message], [Module.Topics], [Module.Connector, Module.Archive, Module.Stats]]}
+    compact
+  />
+);
 
 const meta = {
   title: 'stories/stories-inbox/MailboxSync',
@@ -56,17 +68,7 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: SYNC_STORY_TYPES,
-          config: new Config(
-            {
-              runtime: {
-                client: { storage: { persistent: true } },
-              },
-            },
-            configPreset({ edge: 'dev' }).values,
-          ),
-          // OPFS-backed storage so identity/spaces survive a page reload; without a worker the
-          // client silently falls back to in-memory storage regardless of `storage.persistent`.
-          createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
+          ...SYNC_STORY_CLIENT_SERVICES,
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               if (client.halo.identity.get()) {
@@ -81,7 +83,9 @@ const meta = {
         SpacePlugin({}),
         InboxPlugin(),
         ConnectorPlugin(),
+        DebugPlugin({}),
         PreviewPlugin(),
+        ProgressPlugin(),
         StorySyncPlugin(),
         StoryModulesPlugin(),
         StorybookPlugin({}),
@@ -91,7 +95,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations: [...inboxTranslations, ...connectorTranslations],
+    translations: [...inboxTranslations, ...connectorTranslations, ...progressTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 

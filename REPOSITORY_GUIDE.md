@@ -217,12 +217,13 @@ New packages are created with `"private": true` in their `package.json` (see [Ne
 
 1. Build the package and its dependencies: `moon run <package-name>:build` (this also builds upstream deps via `moon`'s task graph).
 2. Set the package's `version` to `0.0.0` and remove `"private": true` from its `package.json` at the same time — a private package cannot be published.
-3. From the package's directory, manually run `npm publish`. This must be a real public release (not `npm publish --tag ...` for staging), since the package needs to exist on npm before a trusted publisher can be configured for it.
+3. Run `npm login && pnpm publish-package @dxos/<PACKAGE>`
 4. On npmjs.com, go to the package's **Settings → Trusted Publisher** and add GitHub Actions as a trusted publisher:
    - Repository: `dxos/dxos`
    - Workflow file: `publish-all.yml`
    - Environment: leave blank unless the workflow specifies one.
    - Allowed actions: `npm publish` only — do not enable `npm stage publish` (staged/review release flow that `publish-all.yml` does not use).
+   - Click "Setup Connection"
 5. Revert the package's `version` back to align with the rest of the packages in the monorepo, now that the trusted publisher is configured and `publish-all.yml` will handle future releases.
 
 For bulk setup (roughly **10+ packages** at once), the [npm-trusted-publisher](https://github.com/wittjosiah/npm-trusted-publisher) Chrome extension automates step 4 across many packages. Below that threshold, doing it manually per package is faster.

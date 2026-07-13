@@ -8,11 +8,11 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { DevtoolsApp } from '@dxos/devtools';
-import { meta as debugMeta } from '@dxos/plugin-debug';
+import { meta as devtoolsMeta } from '@dxos/plugin-devtools';
 
 const main = async () => {
   const enter =
-    localStorage.getItem(`${debugMeta.profile.key}.devtools`) === 'true' ||
+    localStorage.getItem(`${devtoolsMeta.profile.key}.devtools`) === 'true' ||
     window.confirm('Continue to DXOS developer tools?');
   if (!enter) {
     window.location.pathname = '/';

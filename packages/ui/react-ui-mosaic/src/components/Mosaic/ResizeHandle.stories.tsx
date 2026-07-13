@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type Axis, ScrollArea } from '@dxos/react-ui';
-import { type Size } from '@dxos/react-ui-dnd';
+import { Dnd, type Size } from '@dxos/react-ui-dnd';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Mosaic, type MosaicTileProps } from './Mosaic';
@@ -70,7 +70,7 @@ const DefaultStory = ({ orientation = 'vertical' }: { orientation?: Axis }) => {
   );
 
   return (
-    <Mosaic.Root>
+    <Dnd.Root>
       <Mosaic.Container
         asChild
         orientation={orientation}
@@ -89,7 +89,7 @@ const DefaultStory = ({ orientation = 'vertical' }: { orientation?: Axis }) => {
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Mosaic.Container>
-    </Mosaic.Root>
+    </Dnd.Root>
   );
 };
 

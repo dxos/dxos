@@ -124,6 +124,14 @@ Deeper conventions:
 
 ## Where things live
 
+- **`.agents/` vs `agents/`** — `.agents/` (dot) holds agent **control state**
+  (skills, the project registry); `agents/` (no dot) holds **user-visible
+  artifacts** (instructions, prompts, superpowers specs/plans/handoffs).
+- **Superpowers artifacts** — brainstorming specs, writing-plans plans, and
+  handoffs live in **`agents/superpowers/{specs,plans,handoffs}/`**, NEVER
+  `docs/superpowers/`. This **overrides the superpowers plugin's default path**:
+  whenever a superpowers skill says to write to or read from `docs/superpowers/…`,
+  use `agents/superpowers/…` instead.
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
   operations, testing, code-style, submit-pr, land, …).

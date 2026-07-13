@@ -11,7 +11,8 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { type Capability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
@@ -23,10 +24,11 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 // InboxOperation.GoogleMailSync's schema; the import lets TypeScript name it in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Connection, SyncBinding } from '@dxos/plugin-connector';
-import { Cursor, Person } from '@dxos/types';
+import { ContentBlock, Cursor, Person } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
+import { meta } from '../../../meta';
 import {
   GoogleCredentials,
   GoogleMailApi,
@@ -61,6 +63,13 @@ const STREAMING_CONFIG = {
   /** Commit page size — kept ≤ 15 so each `Feed.append` is a single atomic queue insert. */
   pageSize: 10,
 } as const;
+
+/**
+ * Progress-registry key for a mailbox's Gmail sync monitor — the mailbox URI with a `#sync` suffix so
+ * distinct monitor types (e.g. `#topics`) can coexist for the same mailbox. Peer of
+ * `createTopicsProgressKey`; `MailboxArticle` subscribes to it to show the sync meter.
+ */
+export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#sync';
 
 /**
  * Runs the Gmail sync pipeline for a binding against the {@link GoogleMailApi} service (plus the
@@ -143,6 +152,9 @@ export const runGmailSync = ({
     const feed = yield* Database.load(mailbox.feed);
     // Resolve the child tag index so provider-label tags can be applied synchronously during commit.
     const tagIndex = yield* Database.load(mailbox.tags);
+    // Pool already-sent drafts once for this run; `EmailStage.reconcileDrafts` matches each incoming
+    // message against it so the canonical copy's arrival removes its now-redundant draft in the commit.
+    const draftPool = yield* EmailStage.queryDraftPool(mailbox);
     const labelMap = yield* syncLabels(mailbox, userId).pipe(
       Effect.catchAll((error) => {
         log.catch(error);
@@ -157,6 +169,11 @@ export const runGmailSync = ({
         Effect.gen(function* () {
           const fromHeader = decoded.raw.payload.headers.find(({ name }) => name === 'From');
           const from = fromHeader ? parseFromHeader(fromHeader.value) : undefined;
+          // Drop messages excluded by the mailbox's filters before the costly attachment fetch;
+          // returning undefined removes the item from the pipeline (see `decodeBodyStage`).
+          if (Mailbox.isFiltered(mailbox, { sender: from })) {
+            return undefined;
+          }
           const contact = from?.email ? yield* resolve(Person.Person, { email: from.email }) : undefined;
           const mapped = mapToMessage(decoded, contact ?? undefined);
           const tagUris = mapped.labelIds.flatMap((labelId) => {
@@ -177,6 +194,97 @@ export const runGmailSync = ({
     // fetch → dedup → decode → map → extract-contacts → (optional) on-arrival extractors →
     // record-threads → commit each page. The SyncBinding layer advances the binding cursor per page.
     const stats: SyncBinding.Stats = { newMessages: 0 };
+
+    // Coarse sync telemetry (message/thread/sender counts + body-part coverage) written to the
+    // transient stats store, keyed by mailbox, so a surface (plugin-debug) can display it live. The
+    // store is optional — `getAll` yields nothing without a host plugin, so this is a no-op in
+    // production; only body-part coverage (which parts each message carried) is Gmail-specific.
+    // Write only this plugin's compartment (indexed by plugin key); other plugins own their own slots.
+    const statsCompartments = (yield* Capability.getAll(AppCapabilities.StatsPanel)).map((store) =>
+      store.compartment(meta.profile.key),
+    );
+
+    // Cooperative cancellation: the meter's cancel control aborts the controller; the `cancelStage`
+    // below then drops all further messages so the stream drains and the run stops without error.
+    const controller = new AbortController();
+
+    // Live progress monitor (optional — no host in headless/test runs, so `getAll` yields nothing).
+    // Keyed by the mailbox URI so MailboxArticle and the R0 popover can subscribe to this run.
+    const progressMonitors = (yield* Capability.getAll(AppCapabilities.ProgressRegistry)).map((registry) =>
+      registry.register(createSyncProgressKey(mailbox), {
+        label: mailbox.name ?? 'Mailbox',
+        onCancel: () => controller.abort(),
+      }),
+    );
+    const advanceProgress = (by: number) => progressMonitors.forEach((monitor) => monitor.advance(by));
+
+    // Drops every message once cancelled (returning undefined removes it — see `decodeBodyStage`), so
+    // the pipeline skips all remaining fetch/decode/commit work and completes promptly.
+    const cancelStage: Stage.Stage<GoogleMail.Message, GoogleMail.Message, never, never> = Stage.map(
+      'cancel',
+      (message: GoogleMail.Message) => Effect.sync(() => (controller.signal.aborted ? undefined : message)),
+    );
+    const startedAt = new Date().toISOString();
+    const startMs = Date.now();
+    const threads = new Set<string>();
+    const senders = new Set<string>();
+    const coverage = { plain: 0, synthesizedMarkdown: 0, htmlOnly: 0, none: 0 };
+    let processed = 0;
+    let attachmentCount = 0;
+    let finishedAt: string | undefined;
+    let finishedMs: number | undefined;
+    const publishStats = () => {
+      if (statsCompartments.length === 0) {
+        return;
+      }
+      const snapshot = {
+        startedAt,
+        ...(finishedAt ? { finishedAt } : {}),
+        durationMs: (finishedMs ?? Date.now()) - startMs,
+        range: {
+          syncBackDays: targetOptions.syncBackDays,
+          direction: resolvedDirection,
+          start: format(start, 'yyyy-MM-dd'),
+          end: format(rangeEnd, 'yyyy-MM-dd'),
+        },
+        processed,
+        newMessages: stats.newMessages,
+        threads: threads.size,
+        senders: senders.size,
+        coverage,
+        attachments: attachmentCount,
+      };
+      statsCompartments.forEach((compartment) => compartment.set(snapshot));
+    };
+    // Pass-through stage: accumulates telemetry as each mapped message flows by, publishing a fresh
+    // snapshot so a subscribed surface ticks up live during the sync.
+    const collectStats = Stage.map('collect-stats', (mapped: EmailStage.Mapped) =>
+      Effect.sync(() => {
+        processed += 1;
+        if (mapped.message.threadId) {
+          threads.add(mapped.message.threadId);
+        }
+        if (mapped.message.sender?.email) {
+          senders.add(mapped.message.sender.email);
+        }
+        const textBlocks = mapped.message.blocks.filter((block): block is ContentBlock.Text => block._tag === 'text');
+        const has = (mimeType: string) => textBlocks.some((block) => block.mimeType === mimeType);
+        if (has('text/plain')) {
+          coverage.plain += 1;
+        } else if (has('text/markdown')) {
+          coverage.synthesizedMarkdown += 1;
+        } else if (has('text/html')) {
+          coverage.htmlOnly += 1;
+        } else {
+          coverage.none += 1;
+        }
+        attachmentCount += mapped.attachments?.length ?? 0;
+        publishStats();
+        advanceProgress(1);
+        return mapped;
+      }),
+    );
+
     yield* gmailSource({
       userId,
       label,
@@ -185,6 +293,7 @@ export const runGmailSync = ({
       end: rangeEnd,
       searchFilter: targetOptions.filter,
     }).pipe(
+      cancelStage,
       SyncBinding.dedupStage<GoogleMail.Message>(
         'dedup',
         (message) => message.id,
@@ -198,9 +307,11 @@ export const runGmailSync = ({
       //   (docs/superpowers/specs/2026-07-04-mail-sync-performance-exploration.md) quantifies it.
       // EmailStage.htmlToMarkdown,
       mapToMessageStage,
+      collectStats,
       EmailStage.processAttachments(),
       EmailStage.onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
+      EmailStage.reconcileDrafts(draftPool),
       EmailStage.toCommitUnit(),
       Stream.grouped(STREAMING_CONFIG.pageSize),
       Pipeline.run({ sink: SyncBinding.commit }),
@@ -214,13 +325,37 @@ export const runGmailSync = ({
           stats,
         }),
       ),
+      Effect.tapError((error) =>
+        Effect.sync(() => {
+          // Log the raw error for debugging; the meter shows only a short reason (the full exception —
+          // provider errors, auth tokens — must not reach the UI).
+          log.warn('gmail sync failed', { error });
+          progressMonitors.forEach((monitor) => monitor.fail('Sync failed'));
+        }),
+      ),
     );
 
     // Flush indexes once, at the end of the run, so cross-run dedup / contact resolution observe this
     // run's writes (per-page commits no longer flush — see `SyncBinding.commit`).
     yield* Database.flush({ indexes: true });
 
-    log('gmail sync complete', { newMessages: stats.newMessages });
+    // Final publish so the committed `newMessages` count (advanced per page by the commit sink) is
+    // reflected after the last item's mid-stream snapshot, and the run's end time / total duration
+    // are recorded.
+    finishedMs = Date.now();
+    finishedAt = new Date(finishedMs).toISOString();
+    publishStats();
+
+    progressMonitors.forEach((monitor) => {
+      if (controller.signal.aborted) {
+        monitor.note('Cancelled');
+      } else {
+        monitor.done();
+      }
+      monitor.remove();
+    });
+
+    log('gmail sync complete', { newMessages: stats.newMessages, cancelled: controller.signal.aborted });
     return { newMessages: stats.newMessages };
   }).pipe(Effect.withSpan('gmail-sync'));
 

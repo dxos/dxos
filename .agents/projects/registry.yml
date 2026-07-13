@@ -1,0 +1,31 @@
+# Project registry — every active work-stream, one entry each. Managed via the `task-planning` skill
+# ($project new/list/end; $resume/$hydrate key off it). Each project has a TASKS.md (ledger) and a
+# DESIGN.md (spec + decisions) — the `tasks`/`design` fields record where they live (a package file,
+# or .agents/projects/<name>/{TASKS,DESIGN}.md). Keep this committed and current.
+#
+# status: active | paused | blocked | ended
+
+projects:
+  - name: mailbox-research
+    status: active
+    user: burdon
+    host: burdon-mbp-2022
+    created: 2026-07-05
+    summary: Open-weight vs premier model routing for the mailbox pipelines (labeling / summaries / drafts).
+    tasks: packages/stories/stories-brain/TASKS.md
+    design: packages/stories/stories-brain/fixtures/REPORT.md
+    prs: [12163, 12167]
+    resume: 'REPORT §5 actionable items shipped in PR #12167 (classify-sender, isReplyable person-only, triage summarize, single enrichment pass, draft Instructions, model-policy map, topics fix). Next: run the private-corpus evals (classify-sender bootstrap→review, draft re-score) + design two-tier foreground/background latency.'
+
+  - name: task-planning-skill-update
+    status: active
+    user: burdon
+    host: burdon-mbp-2022
+    created: 2026-07-12
+    summary: Rename the $session sentinel/concept to $project and add a numbered pick-to-resume table.
+    tasks: .agents/skills/task-planning/TASKS.md
+    design: .agents/skills/task-planning/SKILL.md
+    prs: [12174]
+    resume: 'PR #12174 opened. Next: watch the Check workflow to green and address any review comments.'
+
+ended: []

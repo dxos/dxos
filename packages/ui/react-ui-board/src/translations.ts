@@ -12,8 +12,11 @@ export const translations = [
       [translationKey]: {
         'move-to-center.button': 'Center board',
         'toggle-zoom.button': 'Toggle zoom',
+        'zoom-in.button': 'Zoom in',
+        'zoom-out.button': 'Zoom out',
         'add-object.button': 'Add object',
         'delete-object.button': 'Remove object',
+        'resize-object.button': 'Resize object',
       },
     },
   },

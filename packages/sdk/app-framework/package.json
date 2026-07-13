@@ -124,6 +124,7 @@
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/storybook-addon-logger": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",

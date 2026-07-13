@@ -12,7 +12,6 @@ import { FeedbackForm } from '@dxos/plugin-support/components';
 import {
   AlertDialog,
   type AlertDialogRootProps,
-  Button,
   DropdownMenu,
   IconButton,
   Message,
@@ -214,9 +213,13 @@ export const ResetDialog = ({
             {onReset && (
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
-                  <Button data-testid='resetDialog.reset' variant='destructive'>
-                    {t('reset-app.label')}
-                  </Button>
+                  <IconButton
+                    icon='ph--trash--regular'
+                    iconOnly
+                    label={t('reset-app.label')}
+                    data-testid='resetDialog.reset'
+                    variant='destructive'
+                  />
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content side='top'>

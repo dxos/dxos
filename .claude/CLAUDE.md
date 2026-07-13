@@ -15,11 +15,19 @@
   every prompt. State lives in the untracked `.claude/.response-mode`.
 - When the injected `RESPONSE MODE: CONCISE` directive is present, follow it.
 
-## Task tracking
+## Task planning
 
 - Record a follow-up task with the `$track <text>` sentinel (anywhere in a
   message) or a line beginning `track: <text>`.
-- A `UserPromptSubmit` hook (`.claude/hooks/track.sh`) detects it and injects a
-  directive to append the item to the active `TASKS.md` (the package or
-  directory being worked in) — never a background task chip. See the
-  `task-tracking` skill for the file format and workflow.
+- Manage the project registry (`.agents/projects/registry.yml`) with
+  `$project new|list|end <name>`; each project has a `TASKS.md` + `DESIGN.md`.
+  Bare `$project` (or `$project list`) prints a numbered table of the current
+  user's projects (`list all` for everyone) — reply with a row number to resume.
+- Checkpoint project state with `$hydrate` (also `$checkpoint`) before stopping
+  or opening a PR; reload a project with `$resume [name]` (also `$rehydrate`) at
+  the start of a session — the registry resolves _which_ project (by name/row,
+  else the single active entry for the current user).
+- A `UserPromptSubmit` hook (`.claude/hooks/track.sh`) detects these and injects
+  the matching directive — append to the active `TASKS.md` (never a background
+  task chip), manage the registry, or run the hydrate/resume handoff. See the
+  `task-planning` skill for the file format, workflow, registry, and handoff steps.

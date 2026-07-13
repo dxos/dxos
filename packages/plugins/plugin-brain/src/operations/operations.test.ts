@@ -98,6 +98,9 @@ describe('SummarizeSubject', () => {
     );
     expect(result.factCount).toBe(2);
     expect(result.summary).toContain('[f-1]');
+    // Fact→source bridge: distinct source message DXNs for the matched facts.
+    expect(result.sources.length).toBeGreaterThan(0);
+    expect(new Set(result.sources).size).toBe(result.sources.length);
   });
 
   test('returns empty summary without invoking the LLM when no facts match', async ({ expect }) => {
@@ -117,6 +120,6 @@ describe('SummarizeSubject', () => {
         ),
       ),
     );
-    expect(result).toEqual({ summary: '', factCount: 0 });
+    expect(result).toEqual({ summary: '', factCount: 0, sources: [] });
   });
 });
