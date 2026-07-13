@@ -22,7 +22,7 @@ import {
 } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-import { RECOVERY_PATH, setSafeModeUrl } from '../../util';
+import { RECOVERY_PATH, composerLogFileName, exportManualLogDownload, setSafeModeUrl } from '../../util';
 
 // TODO(burdon): Factor out.
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {
@@ -96,10 +96,8 @@ export const ResetDialog = ({
   }, [error]);
 
   const handleDownloadLogs = useCallback(async () => {
-    const ndjson = await logStore.export();
-    const file = new Blob([ndjson], { type: 'application/x-ndjson' });
-    const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
-    download(file, fileName);
+    const file = await exportManualLogDownload(logStore);
+    download(file, composerLogFileName());
   }, [download, logStore]);
 
   const handleSaveFeedback = useCallback(

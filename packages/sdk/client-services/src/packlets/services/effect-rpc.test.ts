@@ -32,7 +32,6 @@ import { IdentityNotInitializedError, TimeoutError } from '@dxos/protocols';
 import { type QueryStatusResponse, SpaceState, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpacesService, SystemService } from '@dxos/protocols/rpc';
-import { createLinkedPorts } from '@dxos/rpc';
 
 //
 // Helpers & Schema for test suite 2
@@ -93,7 +92,9 @@ const setupRpc = async (
   services: () => Partial<ClientServicesHandlers>,
   options?: { onRequest?: () => Promise<void> },
 ): Promise<ClientServicesRpc> => {
-  const [proxyPort, serverPort] = createLinkedPorts();
+  const channel = new MessageChannel();
+  const proxyPort = channel.port1;
+  const serverPort = channel.port2;
 
   const server = new ClientRpcServer({ services, port: serverPort, onRequest: options?.onRequest });
   await server.open();
