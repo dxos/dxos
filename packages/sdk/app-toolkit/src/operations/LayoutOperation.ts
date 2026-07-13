@@ -232,7 +232,7 @@ export const setNotifyOverride = (override: NotifyOverride): { notifyOverride: N
   notifyOverride: override,
 });
 
-/** Extracts a {@link NotifyOverride} from a process's raw failure value (`Process.Info.failure`), if present. */
+/** Extracts a {@link NotifyOverride} from a process's raw failure value (`Process.Info.error.value`), if present. */
 export const getNotifyOverride = (failure: unknown): NotifyOverride | null => {
   if (!Predicate.isRecord(failure) || !Predicate.isRecord(failure.context)) {
     return null;

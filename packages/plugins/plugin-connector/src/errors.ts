@@ -53,7 +53,7 @@ export class ConnectionNotReauthenticatableError extends BaseError.extend(
 /**
  * A connector's remote API call failed with HTTP 401: the stored credential is invalid or expired.
  * Carries a `notifyOverride` in `context` so the generic sync-failure toast (driven by
- * `Process.Info.failure` + `LayoutOperation.getNotifyOverride`) shows a reauthentication message and a
+ * `Process.Info.error.value` + `LayoutOperation.getNotifyOverride`) shows a reauthentication message and a
  * button to the connection instead of the raw provider error. `action` is a serialized operation invocation
  * (the error crosses the process failure boundary, so it can't carry a live callback); the caller
  * supplies the navigate-to-connection invocation.

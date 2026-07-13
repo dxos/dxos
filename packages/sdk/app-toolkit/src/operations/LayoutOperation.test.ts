@@ -16,7 +16,7 @@ describe('notify override', () => {
       }
     }
 
-    // `getNotifyOverride` takes the raw failure value (`Process.Info.failure`), which the process
+    // `getNotifyOverride` takes the raw failure value (`Process.Info.error.value`), which the process
     // runtime unwraps from the fail/die channel before the notify layer ever sees it.
     const override = LayoutOperation.getNotifyOverride(new ExampleError());
     expect(override?.title).toBe('Nicer title');

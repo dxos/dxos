@@ -198,21 +198,18 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   }
   snapshotProcessInfo(): Process.Info {
     const status = this.#currentStatus;
-    const error = Option.getOrNull(
+    // `message` is the pretty-printed cause (display/log); `value` is the raw fail/die payload so
+    // consumers can inspect the typed error. Every operation handler is wrapped in `Effect.orDie`
+    // before running as a process, so a typed error thrown in a nested invoke arrives as a defect,
+    // not a `Fail` — check both channels for the value.
+    const error: Process.Failure | null = Option.getOrNull(
       Option.flatMap(status.exit, (ex) =>
         Exit.match(ex, {
-          onFailure: (cause) => Option.some(Cause.pretty(cause)),
-          onSuccess: () => Option.none(),
-        }),
-      ),
-    );
-    // The raw failed value (fail or die payload) — every operation handler is wrapped in `Effect.orDie`
-    // before running as a process, so a typed error thrown in a nested invoke arrives as a defect, not
-    // a `Fail`; check both channels. Consumers (e.g. the notify layer) inspect this for typed errors.
-    const failure = Option.getOrNull(
-      Option.flatMap(status.exit, (ex) =>
-        Exit.match(ex, {
-          onFailure: (cause) => Cause.failureOption(cause).pipe(Option.orElse(() => Cause.dieOption(cause))),
+          onFailure: (cause) =>
+            Option.some({
+              message: Cause.pretty(cause),
+              value: Cause.failureOption(cause).pipe(Option.orElse(() => Cause.dieOption(cause)), Option.getOrNull),
+            }),
           onSuccess: () => Option.none(),
         }),
       ),
@@ -224,7 +221,6 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       params: this.params,
       state: status.state,
       error,
-      failure,
       startedAt: status.startedAt.getTime(),
       completedAt: Option.map(status.completedAt, (date) => date.getTime()),
       metrics: {

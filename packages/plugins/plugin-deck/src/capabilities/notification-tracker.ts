@@ -86,12 +86,12 @@ export default Capability.makeModule(
           // Surface only the curated `notify.error` title. The raw exception (provider errors, stack
           // traces, auth tokens) is logged for debugging, never forwarded to the toast.
           if (process.error) {
-            log.warn('operation failed', { pid: process.pid, error: process.error });
+            log.warn('operation failed', { pid: process.pid, error: process.error.message });
           }
           // A failing error may still carry `context.notifyOverride` (see `LayoutOperation.getNotifyOverride`)
           // to replace the generic title with a specific, curated message and an action — e.g. a
           // connector reporting an expired credential. Its fields are safe to display (no raw error).
-          const override = LayoutOperation.getNotifyOverride(process.failure);
+          const override = LayoutOperation.getNotifyOverride(process.error?.value);
           const actionLabel = override?.actionLabel;
           const action = override?.action;
           addToast({
