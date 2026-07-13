@@ -36,9 +36,9 @@ import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
 import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { FreeqPlugin } from '@dxos/plugin-freeq/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
-import { GeneratorPlugin } from '@dxos/plugin-generator/plugin';
 import { GitHubPlugin } from '@dxos/plugin-github/plugin';
 import { GraphPlugin } from '@dxos/plugin-graph/plugin';
+import { HeyGenPlugin } from '@dxos/plugin-heygen/plugin';
 import { IbkrPlugin } from '@dxos/plugin-ibkr/plugin';
 import { IdeogramPlugin } from '@dxos/plugin-ideogram/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
@@ -151,6 +151,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       MagazinePlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
+      HeyGenPlugin.meta.profile.key,
       StudioPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
       OsrmPlugin.meta.profile.key,
@@ -222,11 +223,11 @@ export const getPlugins = ({
     DuffelPlugin(),
     IbkrPlugin(),
     IdeogramPlugin(),
+    HeyGenPlugin(),
     StudioPlugin(),
     ExplorerPlugin(),
     MagazinePlugin(),
     GamePlugin(),
-    GeneratorPlugin(),
     GraphPlugin(),
     InboxPlugin(),
     KanbanPlugin(),

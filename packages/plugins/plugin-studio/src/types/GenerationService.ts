@@ -43,15 +43,40 @@ export const GenerationResult = Schema.Struct({
 });
 export interface GenerationResult extends Schema.Schema.Type<typeof GenerationResult> {}
 
+/** Indeterminate/step progress reported by a provider during generation. */
+export type GenerationProgress = {
+  /** Human-readable status (e.g. "Rendering", "Processing"). */
+  readonly status?: string;
+  /** Completed units, when the provider reports a quantized progress. */
+  readonly current?: number;
+  /** Expected total units, when known. */
+  readonly total?: number;
+};
+
+/** Options passed to every provider call by the generate operation. */
+export interface GenerateOptions {
+  /** API key resolved from the Connector-managed credential (absent for keyless providers). */
+  readonly apiKey?: Redacted.Redacted<string>;
+  /** Aborts an in-flight request (e.g. on cancel). */
+  readonly signal?: AbortSignal;
+  /** Called as the provider makes progress; drives the studio progress monitor. */
+  readonly onProgress?: (progress: GenerationProgress) => void;
+}
+
 /**
  * A pluggable generation provider for one `kind`. Plugins contribute implementations via the
  * {@link StudioCapabilities.GenerationService} capability; the `generate` operation resolves them by
- * kind (+ optional provider id). `generate` is credential-agnostic: the operation resolves the API
- * key from the Connector-managed `AccessToken` (via `CredentialsService`, keyed by {@link source})
- * and passes it in. `source` is undefined for keyless providers (e.g. the test mock).
+ * kind (+ optional provider id) and is credential-agnostic — it resolves the API key from the
+ * Connector-managed `AccessToken` (via `CredentialsService`, keyed by {@link source}) and passes it
+ * in. `source` is undefined for keyless providers (e.g. the test mock).
+ *
+ * A provider is either **synchronous** (implements {@link generate}, e.g. a single request/response
+ * like Ideogram) or **asynchronous/job-based** (implements {@link enqueue} + {@link awaitResult},
+ * e.g. HeyGen: submit → poll). The generate operation persists the job id on the Artifact between
+ * enqueue and completion so a long poll resumes across navigation/remount.
  */
 export interface GenerationService {
-  /** Media discriminator this provider serves: 'image' | 'video' | …. */
+  /** Media discriminator this provider serves: 'image' | 'video' | 'audio' | …. */
   readonly kind: string;
   /** Provider id, e.g. 'ideogram'. */
   readonly id: string;
@@ -69,7 +94,12 @@ export interface GenerationService {
   readonly requestSchema: Schema.Schema.AnyNoContext;
   /** Default config values seeded into a new artifact / the form. */
   readonly defaultRequest?: Record<string, unknown>;
-  generate(request: GenerationRequest, options: { apiKey?: Redacted.Redacted<string> }): Promise<GenerationResult>;
+  /** One-shot generation (synchronous providers). Mutually exclusive with enqueue/awaitResult. */
+  generate?(request: GenerationRequest, options: GenerateOptions): Promise<GenerationResult>;
+  /** Submit a job; returns the provider job id to persist (asynchronous providers). */
+  enqueue?(request: GenerationRequest, options: GenerateOptions): Promise<{ jobId: string }>;
+  /** Poll a submitted job to completion; may report progress (asynchronous providers). */
+  awaitResult?(jobId: string, options: GenerateOptions): Promise<GenerationResult>;
 }
 
 /** No {@link GenerationService} is registered for the requested kind (or provider id). */

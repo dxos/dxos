@@ -740,17 +740,17 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-generator/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-github/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/plugins/plugin-graph/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-heygen/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -11,9 +11,9 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Obj } from '@dxos/echo';
 
 import { ArtifactCard, GenerateForm as GenerateFormComponent, ImageVariant, VideoVariant } from '#components';
-import { ArtifactArticle, GalleryArticle } from '#containers';
+import { ArtifactArticle, GalleryArticle, LightboxArticle } from '#containers';
 import { GenerateForm, VariantRenderer } from '#surfaces';
-import { Artifact } from '#types';
+import { Artifact, Lightbox } from '#types';
 
 const isArtifact = Obj.instanceOf(Artifact.Artifact);
 
@@ -51,6 +51,14 @@ export default Capability.makeModule(() =>
         ),
         component: ({ role, data }) => (
           <GalleryArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
+      }),
+
+      Surface.create({
+        id: 'lightboxArticle',
+        filter: AppSurface.object(AppSurface.Article, Lightbox.Lightbox),
+        component: ({ role, data }) => (
+          <LightboxArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
 

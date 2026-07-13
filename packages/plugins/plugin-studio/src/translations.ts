@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Artifact, Variant } from '#types';
+import { Artifact, Lightbox, Variant } from '#types';
 
 export const translations = [
   {
@@ -25,6 +25,17 @@ export const translations = [
       [Type.getTypename(Variant.Variant)]: {
         'typename.label': 'Variant',
         'typename.label_other': 'Variants',
+      },
+      [Type.getTypename(Lightbox.Lightbox)]: {
+        'typename.label': 'Lightbox',
+        'typename.label_zero': 'Lightboxes',
+        'typename.label_one': 'Lightbox',
+        'typename.label_other': 'Lightboxes',
+        'object-name.placeholder': 'New lightbox',
+        'add-object.label': 'Add lightbox',
+        'rename-object.label': 'Rename lightbox',
+        'delete-object.label': 'Delete lightbox',
+        'object-deleted.label': 'Lightbox deleted',
       },
       [meta.profile.key]: {
         'plugin.name': 'Studio',

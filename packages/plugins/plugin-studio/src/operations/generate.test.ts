@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Capability, CapabilityManager } from '@dxos/app-framework';
 import { Instructions } from '@dxos/compute';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
@@ -43,6 +43,26 @@ const mockService = (
   requestSchema: RequestSchema,
   generate: async (request, { apiKey }) => {
     options.calls?.push({ request, apiKey: apiKey ? Redacted.value(apiKey) : undefined });
+    return { variants: [...variants] };
+  },
+});
+
+/** A mock asynchronous (job-based) provider: enqueue returns a job id, awaitResult returns variants. */
+const mockAsyncService = (
+  variants: readonly GenerationService.VariantData[],
+  calls: { op: 'enqueue' | 'awaitResult'; jobId?: string }[] = [],
+): GenerationService.GenerationService => ({
+  kind: 'video',
+  id: 'async-mock',
+  label: 'Async Mock',
+  contentType: 'video/mp4',
+  requestSchema: RequestSchema,
+  enqueue: async () => {
+    calls.push({ op: 'enqueue' });
+    return { jobId: 'job-123' };
+  },
+  awaitResult: async (jobId) => {
+    calls.push({ op: 'awaitResult', jobId });
     return { variants: [...variants] };
   },
 });
@@ -158,5 +178,63 @@ describe('generate', () => {
     await expect(run(artifact, { services: [mockService([], { kind: 'video' })] })).rejects.toThrow(
       /No generation service/,
     );
+  });
+
+  test('async provider: enqueues, persists then clears jobId, appends the awaited variant', async ({ expect }) => {
+    const artifact = addArtifact('A dancing avatar.', 'video');
+    await db.flush();
+
+    const calls: { op: 'enqueue' | 'awaitResult'; jobId?: string }[] = [];
+    const result = await run(artifact, {
+      services: [mockAsyncService([{ url: 'https://example.com/v.mp4' }], calls)],
+    });
+    expect(result.count).toBe(1);
+    expect(calls).toEqual([{ op: 'enqueue' }, { op: 'awaitResult', jobId: 'job-123' }]);
+
+    await db.flush();
+    // jobId is cleared once the result is appended.
+    expect(artifact.jobId).toBeUndefined();
+    expect(artifact.variants ?? []).toHaveLength(1);
+  });
+
+  test('async provider: resumes an in-flight jobId (awaitResult only, no re-enqueue)', async ({ expect }) => {
+    const artifact = addArtifact('A dancing avatar.', 'video');
+    Obj.update(artifact, (artifact) => {
+      artifact.jobId = 'job-123';
+    });
+    await db.flush();
+
+    const calls: { op: 'enqueue' | 'awaitResult'; jobId?: string }[] = [];
+    const result = await run(artifact, {
+      services: [mockAsyncService([{ url: 'https://example.com/v.mp4' }], calls)],
+    });
+    expect(result.count).toBe(1);
+    // Resumed: only awaitResult was called with the persisted job id (no enqueue).
+    expect(calls).toEqual([{ op: 'awaitResult', jobId: 'job-123' }]);
+    await db.flush();
+    expect(artifact.jobId).toBeUndefined();
+  });
+
+  test('async provider: clears jobId when awaitResult fails (no resume loop / cancel restart)', async ({ expect }) => {
+    const artifact = addArtifact('A dancing avatar.', 'video');
+    await db.flush();
+
+    const failing: GenerationService.GenerationService = {
+      kind: 'video',
+      id: 'async-mock',
+      label: 'Async Mock',
+      contentType: 'video/mp4',
+      requestSchema: RequestSchema,
+      enqueue: async () => ({ jobId: 'job-9' }),
+      awaitResult: async () => {
+        throw new Error('boom');
+      },
+    };
+
+    await expect(run(artifact, { services: [failing] })).rejects.toThrow(/boom/);
+    await db.flush();
+    // jobId is cleared on failure so the article's resume effect won't loop.
+    expect(artifact.jobId).toBeUndefined();
+    expect(artifact.variants ?? []).toHaveLength(0);
   });
 });

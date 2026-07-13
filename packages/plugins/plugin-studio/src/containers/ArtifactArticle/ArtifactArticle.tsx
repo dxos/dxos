@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -140,6 +140,20 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
       setGenerating(false);
     }
   }, [invokePromise, artifact, db]);
+
+  // Resume an in-flight asynchronous generation (persisted jobId) on mount so a long provider poll
+  // survives navigation/remount. The generate op detects the stored jobId and polls (no re-enqueue).
+  const resumingRef = useRef(false);
+  const inFlightJobId = artifactSnapshot?.jobId;
+  useEffect(() => {
+    if (!db || !inFlightJobId || generating || resumingRef.current) {
+      return;
+    }
+    resumingRef.current = true;
+    void handleGenerate().finally(() => {
+      resumingRef.current = false;
+    });
+  }, [db, inFlightJobId, generating, handleGenerate]);
 
   // Uploaded files become content-backed Variant objects owned by the artifact.
   const handleUpload = useCallback(
