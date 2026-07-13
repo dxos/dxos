@@ -575,7 +575,7 @@ export type CreateExtensionRawOptions = {
  * @example Valid:   'about', 'devtools', 'integrationsSection'
  * @example Invalid: 'integration-article', 'plugin-spec'
  */
-const isValidLocalId = (id: string): boolean => /^[a-zA-Z][a-zA-Z0-9]*$/.test(id.split('.').pop()!);
+const isValidLocalId = (id: string): boolean => /^[a-zA-Z][a-zA-Z0-9]*$/.test(id.split('.').pop() ?? '');
 
 /**
  * Create a graph builder extension (low-level API that works directly with Atoms).

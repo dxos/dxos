@@ -243,7 +243,7 @@ const expandBindings = <T extends Record<string, any>>(
  * @example Valid:   'about', 'integrationArticle', 'article.journal'
  * @example Invalid: 'integration-article', 'plugin-spec'
  */
-export const isValidLocalId = (id: string): boolean => /^[a-zA-Z][a-zA-Z0-9]*$/.test(id.split('.').pop()!);
+export const isValidLocalId = (id: string): boolean => /^[a-zA-Z][a-zA-Z0-9]*$/.test(id.split('.').pop() ?? '');
 
 /**
  * Creates a React surface definition from a typed filter.
