@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { Operation, Trigger } from '@dxos/compute';
 import { DXN, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';

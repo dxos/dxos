@@ -9,8 +9,8 @@ import React, { type FC } from 'react';
 import { withPluginManager, withSurfaceDebug } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { persistentClientServices } from '@dxos/client/testing';
-import { configPreset } from '@dxos/config';
 import { Operation, Trigger } from '@dxos/compute';
+import { configPreset } from '@dxos/config';
 import { Feed, Tag } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Connection, SyncBinding } from '@dxos/plugin-connector';
@@ -31,7 +31,7 @@ import { TagIndex } from '@dxos/schema';
 import { ModuleContainer } from '@dxos/story-modules';
 import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
 
-import { Module, MailboxTriggerRelation, StoryModulesPlugin, StorySyncPlugin, SyncTriggerRunner } from '../testing';
+import { MailboxTriggerRelation, Module, StoryModulesPlugin, StorySyncPlugin, SyncTriggerRunner } from '../testing';
 
 const SYNC_STORY_TYPES = [
   AccessToken.AccessToken,

@@ -4,7 +4,6 @@
 
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 
-
 // Errors from @dxos/operation.
 
 export class InvokerNotInitializedError extends BaseError.extend(
