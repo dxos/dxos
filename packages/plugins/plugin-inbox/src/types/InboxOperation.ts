@@ -719,6 +719,26 @@ export const CreateTopicFromMessage = Operation.make({
   }),
 });
 
+export const UnsubscribeSender = Operation.make({
+  meta: {
+    key: makeKey('unsubscribeSender'),
+    name: 'Unsubscribe',
+    description: 'Adds a skip-sender filter and fires the List-Unsubscribe one-click request for a bulk sender.',
+    icon: 'ph--prohibit--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({ description: 'Mailbox to add the skip-sender filter to.' }),
+    email: Schema.String.annotations({ description: 'Sender email to unsubscribe from and filter.' }),
+    unsubscribe: Schema.String.annotations({ description: 'The raw List-Unsubscribe header value.' }),
+  }),
+  output: Schema.Struct({
+    filtered: Schema.Boolean,
+    /** True when a List-Unsubscribe one-click HTTP request was sent successfully. */
+    unsubscribed: Schema.Boolean,
+  }),
+});
+
 /** Default number of thread messages included in the {@link GenerateReply} prompt. */
 export const DEFAULT_GENERATE_REPLY_THREAD_LIMIT = 5;
 
