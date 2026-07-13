@@ -40,6 +40,21 @@ export const Inbox = {
     await Inbox.rows(page).first().click();
     await page.getByTestId('message-header').first().waitFor();
   },
+
+  /** Draft and send a reply to the currently-open thread. */
+  reply: async (page: Page, { to, body }: { to: string; body: string }) => {
+    await page.getByTestId('inbox.message.reply').first().click();
+    const form = page.getByTestId('edit-email-form');
+    await form.waitFor();
+    // Ensure a recipient (reply-mode prefill depends on a loaded sender contact); then the body,
+    // which is a CodeMirror editor rendered after the form fields.
+    await form.getByLabel('To').fill(to);
+    // The body is a CodeMirror editor — fill() is unreliable on contenteditable, so type into it.
+    const bodyEditor = form.getByRole('textbox').last();
+    await bodyEditor.click();
+    await bodyEditor.pressSequentially(body);
+    await page.getByTestId('save-button').click();
+  },
 };
 
 // Intercept the browser's provider HTTP and answer it from the fixture-backed mock. `page.route`

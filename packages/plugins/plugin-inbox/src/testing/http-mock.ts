@@ -38,6 +38,8 @@ export type InboxHttpMockOptions = {
 export type InboxHttpMock = {
   gmail: GmailDataset;
   jmap: JmapDataset;
+  /** Log of handled requests (Gmail path or JMAP method names), for test assertions/diagnostics. */
+  calls: string[];
   /** Returns a response for a recognized Gmail/JMAP request, or `undefined` to let it pass through. */
   handle: (request: MockRequest) => MockResponse | undefined;
 };
@@ -55,10 +57,19 @@ export const createInboxHttpMock = (options: InboxHttpMockOptions = {}): InboxHt
   const jmap = options.jmap ?? generateJmapDataset();
   const account = options.account ?? jmap.session.username ?? 'me@example.com';
   const accountId = jmap.session.primaryAccounts[JMAP_MAIL_CAPABILITY];
+  const calls: string[] = [];
 
   const handle = (request: MockRequest): MockResponse | undefined => {
     const url = new URL(request.url);
     const method = request.method.toUpperCase();
+    if (method === 'POST' && request.body?.includes('methodCalls')) {
+      const parsed = JSON.parse(request.body) as { methodCalls?: JmapMethodCall[] };
+      for (const [name] of parsed.methodCalls ?? []) {
+        calls.push(name);
+      }
+    } else {
+      calls.push(`${method} ${url.pathname}`);
+    }
 
     // JMAP session discovery — any host, fixed well-known path.
     if (method === 'GET' && url.pathname === '/.well-known/jmap') {
@@ -84,7 +95,7 @@ export const createInboxHttpMock = (options: InboxHttpMockOptions = {}): InboxHt
     return undefined;
   };
 
-  return { gmail, jmap, handle };
+  return { gmail, jmap, calls, handle };
 };
 
 //
