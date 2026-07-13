@@ -37,6 +37,9 @@
       "path": "../../common/feed-store"
     },
     {
+      "path": "../../common/hypercore"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -116,6 +119,9 @@
     },
     {
       "path": "../../core/mesh/teleport-extension-object-sync"
+    },
+    {
+      "path": "../../core/mesh/teleport-extension-replicator"
     },
     {
       "path": "../../core/mesh/websocket-rpc"

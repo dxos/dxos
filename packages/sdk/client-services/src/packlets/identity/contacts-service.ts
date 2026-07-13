@@ -8,12 +8,12 @@ import * as EffectStream from 'effect/Stream';
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type MemberInfo } from '@dxos/credentials';
-import { type SpaceManager } from '@dxos/echo-host';
 import { PublicKey } from '@dxos/keys';
 import { type Contact, type ContactBook } from '@dxos/protocols/proto/dxos/client/services';
 import { type ContactsService } from '@dxos/protocols/rpc';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
+import { type SpaceManager } from '../space';
 import { type DataSpaceManager } from '../spaces';
 import { type IdentityManager } from './identity-manager';
 
