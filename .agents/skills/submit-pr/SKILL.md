@@ -29,10 +29,9 @@ runs in. To land (merge) an existing PR, use the `land` skill.
    for when one is needed, which package to name, and bump levels.
 7. **Push**, then verify `git status` shows a clean working tree. If anything
    remains, commit it or confirm before proceeding.
-8. **Open the PR** with `gh`. Title uses `scope: description` (see
-   `AGENTS.md`). In the description, summarize the changes and the reasoning
-   behind major decisions, and link any Linear issue as `closes DX-123` or
-   `part of DX-123`.
+8. **Open the PR** with `gh`. Title uses `scope: description`. In the
+   description, summarize the changes and the reasoning behind major
+   decisions, and link any Linear issue as `closes DX-123` or `part of DX-123`.
 9. **Monitor CI every 5 minutes:**
    `gh run list --branch <branch> --limit 3 --workflow "Check"` and
    `pnpm -w gh-action --verify --watch`. Diagnose and, where possible, fix ALL
