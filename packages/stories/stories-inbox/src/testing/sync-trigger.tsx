@@ -23,7 +23,7 @@ export class MailboxTriggerRelation extends Type.makeRelation<MailboxTriggerRela
 })(Schema.Struct({})) {}
 
 /**
- * Watches for a Gmail sync binding and creates an hourly cron trigger wired to
+ * Watches for a Gmail sync binding and creates a manual trigger wired to
  * {@link InboxOperation.GoogleMailSync}. Idempotent — skips when a
  * {@link MailboxTriggerRelation} already links the mailbox to a trigger.
  */
