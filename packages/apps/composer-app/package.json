@@ -71,6 +71,7 @@
     "@dxos/plugin-crx": "workspace:*",
     "@dxos/plugin-debug": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
+    "@dxos/plugin-devtools": "workspace:*",
     "@dxos/plugin-discord": "workspace:*",
     "@dxos/plugin-doctor": "workspace:*",
     "@dxos/plugin-duffel": "workspace:*",
