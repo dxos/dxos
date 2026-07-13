@@ -29,9 +29,15 @@ delivers Tier 4 (browser-e2e, task #7).**
     (`Message`, `ListMessagesResponse`, `LabelsResponse`, `ErrorResponse`); JMAP bound to a port and
     referenced by the form host; Gmail reached via the env-var base URL. Never drive Google's login
     UI (2FA is non-deterministic + blocked). Keep `DX_PWA=false` to avoid the SW interception gap.
-  - Build order: (a) Gmail base-URL env refactor; (b) mock `HttpApp` (both contracts) + fixtures;
-    (c) `plugins/inbox.ts` helper (JMAP form-fill + Gmail token-seed) + provider adapter;
-    (d) JMAP suite (sync + generic + reply); (e) Gmail suite (env-gated: sync + reply).
+  - **Conventions:** follow the `browser-e2e-tests` skill — target by `data-testid` only, never
+    labels/roles. Inbox UI is missing them: reply/AI-reply/forward/generate toolbar actions expose
+    no testid (add `properties.testId` — `@dxos/react-ui-menu` only emits one when set), and message
+    tiles (`MessageStack`) / mailbox list have none. Add testids as a first step.
+  - Build order: (a) add inbox testids per the skill; (b) mock (Gmail + JMAP contracts) + fixtures;
+    (c) `plugins/inbox.ts` helper + provider adapter; (d) JMAP suite (sync + generic + reply);
+    (e) Gmail suite (gated: sync + reply). NOTE: mock mechanism (page.route vs env-var/real-server)
+    and sync-trigger path (prod sync is an edge function — needs a client-side trigger/bridge) are
+    open decisions pending review — see the design synthesis.
 - [ ] **#6 Unskip inbox agent-e2e** — `assistant-e2e/src/testing/inbox-enable.test.ts`
     (register the skill), then add read/draft scenario tests. Enforces F-6.
 - [ ] **#8 Latency benchmarks with budget assertions** — F-11.3/F-11.4 at N=1k/4k/10k; fail above
