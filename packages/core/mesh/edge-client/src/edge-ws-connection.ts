@@ -48,6 +48,15 @@ export class EdgeWsConnection extends Resource {
   private _messagesSent = 0;
   private _messagesReceived = 0;
 
+  /**
+   * WebSocket frames arrive in order, but converting frame data to bytes is async
+   * (the `Blob` fallback path awaits `blob.arrayBuffer()`), and concurrent conversions
+   * are not guaranteed to complete in arrival order. Segmented-message reassembly in
+   * `WebSocketMuxer` requires chunks to reach `receiveData` in arrival order, so every
+   * message is processed by chaining onto this promise instead of running independently.
+   */
+  private _receiveChain: Promise<void> = Promise.resolve();
+
   constructor(
     private readonly _identity: EdgeIdentity,
     private readonly _connectionInfo: { url: URL; protocolHeader?: string; headers?: Record<string, string> },
@@ -123,6 +132,10 @@ export class EdgeWsConnection extends Resource {
         : [...baseProtocols],
       this._connectionInfo.headers ? { headers: this._connectionInfo.headers } : undefined,
     );
+    // Deliver frame data as `ArrayBuffer` rather than `Blob` so bytes are available
+    // synchronously; avoids the async `blob.arrayBuffer()` reads that can otherwise
+    // complete out of arrival order (see `_receiveChain`).
+    this._ws.binaryType = 'arraybuffer';
     const muxer = new WebSocketMuxer(this._ws);
     this._wsMuxer = muxer;
 
@@ -155,7 +168,7 @@ export class EdgeWsConnection extends Resource {
     /**
      * https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent/data
      */
-    this._ws.onmessage = async (event: WebSocket.MessageEvent) => {
+    this._ws.onmessage = (event: WebSocket.MessageEvent) => {
       if (!this.isOpen) {
         log.verbose('message ignored on closed connection', { event: event.type });
         return;
@@ -170,23 +183,34 @@ export class EdgeWsConnection extends Resource {
         this._rescheduleHeartbeatTimeout();
         return;
       }
-      const bytes = await toUint8Array(event.data);
-      this._recordBytes(0, bytes.byteLength);
-      if (!this.isOpen) {
-        return;
-      }
 
-      this._messagesReceived++;
-
-      const message = this._ws?.protocol?.includes(EdgeWebsocketProtocol.V0)
-        ? buf.fromBinary(MessageSchema, bytes)
-        : muxer.receiveData(bytes);
-
-      if (message) {
-        log('received', { from: message.source, payload: protocol.getPayloadType(message) });
-        this._callbacks.onMessage(message);
-      }
+      // Chain each message onto the previous one so bytes reach `muxer.receiveData` in
+      // arrival order. Catching within the chained callback (rather than on
+      // `_receiveChain` itself) keeps `_receiveChain` resolved, so a single bad message
+      // is logged and dropped instead of stalling every message queued after it.
+      this._receiveChain = this._receiveChain.then(() =>
+        this._receiveMessage(event.data, muxer).catch((err) => log.catch(err)),
+      );
     };
+  }
+
+  private async _receiveMessage(data: WebSocket.Data, muxer: WebSocketMuxer): Promise<void> {
+    const bytes = await toUint8Array(data);
+    this._recordBytes(0, bytes.byteLength);
+    if (!this.isOpen) {
+      return;
+    }
+
+    this._messagesReceived++;
+
+    const message = this._ws?.protocol?.includes(EdgeWebsocketProtocol.V0)
+      ? buf.fromBinary(MessageSchema, bytes)
+      : muxer.receiveData(bytes);
+
+    if (message) {
+      log('received', { from: message.source, payload: protocol.getPayloadType(message) });
+      this._callbacks.onMessage(message);
+    }
   }
 
   protected override async _close(): Promise<void> {
