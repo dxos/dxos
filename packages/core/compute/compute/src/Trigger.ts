@@ -93,6 +93,7 @@ export const specSubscription = (
 /**
  * Manual invocation only; never scheduled by the dispatcher.
  */
+// TODO(dmaretskyi): Rename to "DirectSpec", spec: "direct"
 export const ManualSpec = Schema.Struct({
   kind: Schema.Literal('manual').annotations(kindLiteralAnnotations),
 });

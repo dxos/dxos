@@ -52,7 +52,7 @@ export const SyncTriggerRunner = () => {
         [Obj.Parent]: mailbox,
         enabled: true,
         runnable: Ref.make(Operation.serialize(InboxOperation.GoogleMailSync)),
-        spec: Trigger.specTimer(MAILBOX_SYNC_CRON),
+        spec: Trigger.specManual(),
         input: { binding: Ref.make(binding) },
       }),
     );
