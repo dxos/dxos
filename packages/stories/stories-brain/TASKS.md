@@ -90,6 +90,29 @@ another package):
 
 Diagnosis posted as a PR comment. Everything else on the PR is green/verified.
 
+## Triage v3 + live framework (2026-07-13 pivot)
+
+Feedback: auto "active topics" still surfaces marketing/bulk; pivot to manual curation + triage.
+Only invoices (crabnebula, kirk) matter → action tags, not topics. `unsubscribe` is a deterministic
+bulk tell.
+
+- [x] **Deterministic unsubscribe ⇒ bulk** — `classifyBulk` returns bulk when a `List-Unsubscribe`
+      header (real mail) or an unsubscribe link in the body (fixture) is present, outranking action
+      subjects. `tagMessage` passes `properties.listUnsubscribe` + body. 14 tests. (`70820f4b`)
+- [x] **Subscription helpers** — `Mailbox.deriveSubscriptions` + `parseUnsubscribe` (one-click http +
+      mailto), 10 tests. (`ad9d2543`)
+- [x] **`UnsubscribeSender` operation** — skip-sender filter + RFC 8058 one-click POST (best-effort;
+      mailto-only → filter only). (`2222f4ce`)
+- [x] **Subscriptions view** — `SubscriptionsArticle` (bulk senders + checkboxes → Remove), folder node
+      (peer of Topics) + surface + translations. Build-verified; live verification via the framework
+      below (feed can't be seeded headlessly). (`d799497a`)
+- [ ] **Priority 1 — manual topics + management + task tracking** — `CreateTopicFromMessage` seeds;
+      build out topic management + task tracking surfaces. (Auto active-topics ranking deprioritized.)
+- [ ] **Priority 2 — live-space test framework** — run the harness against the user's REAL space
+      (messages/contacts/topics), not the fixture; a headless Node client into the space, evolving into
+      an edge service with Space-DB / pipeline / operation access. NEEDS: space-access mechanism
+      (identity/space id / local profile vs device-join vs EDGE creds) — user decision.
+
 ## Roadmap, CRM spec & parallel-experiment plan (asks 2026-07-13)
 
 **Direction:** the north star is an **AI-assisted, Topic-anchored CRM** — analyze personal/team email,
