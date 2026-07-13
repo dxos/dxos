@@ -31,7 +31,7 @@ export const AppToolbar = ({ onHome, onProfile, onDevtools }: AppToolbarProps) =
       />
       <IconButton
         classNames='px-[5px] text-primary-500'
-        icon='ph--hammer--regular'
+        icon='ph--toolbox--regular'
         iconOnly
         label='Developer tools'
         onClick={onDevtools}

@@ -26,6 +26,8 @@ export interface BlobPutResponse {
 export interface BlobBackend {
   /** URI schemes this backend resolves at read time. */
   readonly schemes: readonly string[];
+  /** Largest `data.byteLength` this backend accepts, in bytes. `undefined` means unlimited. */
+  readonly maxSize?: number;
   put(request: BlobPutRequest): Promise<BlobPutResponse>;
   /** `undefined` means the URI was not found. Rejects on transport failure (e.g. offline). */
   get(request: { spaceId: SpaceId; uri: string }): Promise<Uint8Array | undefined>;

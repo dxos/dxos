@@ -15,12 +15,13 @@ import { JmapApiError } from '../../../errors';
 import { JmapCredentials } from '../../../services/jmap-credentials';
 import { MethodError, Response, Session } from './types';
 
-const REQUEST_TIMEOUT = '10 seconds';
-const REQUEST_RETRY = Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)));
+/** Shared per-attempt timeout/retry policy for JMAP HTTP requests (session, batched API, blob download). */
+export const REQUEST_TIMEOUT = '10 seconds';
+export const REQUEST_RETRY = Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)));
 
 // Retry transient failures (network, 5xx, timeout) but not 4xx — a bad host/token or malformed
 // request will fail identically on retry, so retrying only adds latency.
-const shouldRetry = (error: unknown): boolean =>
+export const shouldRetry = (error: unknown): boolean =>
   !(error instanceof JmapApiError && error.status !== undefined && error.status >= 400 && error.status < 500);
 
 /** Capability set for read/write mail requests. */

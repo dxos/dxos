@@ -7,8 +7,10 @@ import * as Reactivity from '@effect/experimental/Reactivity';
 import * as SqlClient from '@effect/sql/SqlClient';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Scope from 'effect/Scope';
 import isEqual from 'fast-deep-equal';
 
 import { waitForCondition } from '@dxos/async';
@@ -17,8 +19,11 @@ import { Filter, Obj, Query, type Type } from '@dxos/echo';
 import { EchoHost } from '@dxos/echo-host';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { makeInProcessClient } from '@dxos/protocols';
+import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 import { layerFile, layerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
@@ -83,6 +88,8 @@ export class EchoTestPeer extends Resource {
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
+  /** Owns the in-process effect-rpc clients bridged from the host handlers. */
+  private _serviceScope?: Scope.CloseableScope;
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
   private _lastDatabaseRootUrl?: string = undefined;
 
@@ -153,13 +160,26 @@ export class EchoTestPeer extends Resource {
 
   protected override async _open(ctx: Context): Promise<void> {
     this._initEcho();
-    this._echoClient.connectToService({
-      dataService: this._echoHost.dataService,
-      queryService: this._echoHost.queryService,
-      feedService: this._echoHost.feedService,
-    });
+    this._serviceScope = Effect.runSync(Scope.make());
+    await this._connectServices(this._echoClient);
     await this._echoHost.open(ctx);
     await this._echoClient.open(ctx);
+  }
+
+  /**
+   * Bridges the host's effect-rpc Handlers to the effect-rpc client surface in-process (no wire),
+   * and connects the given client. The bridged clients live on {@link _serviceScope}.
+   */
+  private async _connectServices(client: EchoClient): Promise<void> {
+    invariant(this._serviceScope, 'Service scope not initialized');
+    const [dataService, queryService, feedService] = await EffectEx.runPromise(
+      Effect.all([
+        makeInProcessClient(DataService.Rpcs, this._echoHost.dataService),
+        makeInProcessClient(QueryService.Rpcs, this._echoHost.queryService),
+        makeInProcessClient(FeedService.Rpcs, this._echoHost.feedService),
+      ]).pipe(Effect.provideService(Scope.Scope, this._serviceScope)),
+    );
+    client.connectToService({ dataService, queryService, feedService });
   }
 
   protected override async _close(ctx: Context): Promise<void> {
@@ -168,6 +188,10 @@ export class EchoTestPeer extends Resource {
       client.disconnectFromService();
     }
     await this._echoHost.close(ctx);
+    if (this._serviceScope) {
+      await EffectEx.runPromise(Scope.close(this._serviceScope, Exit.void));
+      this._serviceScope = undefined;
+    }
     await this._managedRuntime.dispose();
     // _persistentRuntime is intentionally preserved here so that data survives close()/open() cycles.
     // EchoTestBuilder._close() calls disposeStorage() for final cleanup.
@@ -223,11 +247,7 @@ export class EchoTestPeer extends Resource {
     const client = new EchoClient();
     await client.graph.registry.add(this._types);
     this._clients.add(client);
-    client.connectToService({
-      dataService: this._echoHost.dataService,
-      queryService: this._echoHost.queryService,
-      feedService: this._echoHost.feedService,
-    });
+    await this._connectServices(client);
     await client.open();
     return client;
   }

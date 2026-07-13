@@ -21,25 +21,27 @@ import {
   EventArticle,
   EventCard,
   MailboxArticle,
-  MailboxFactsCompanion,
   MailboxProperties,
   MessageArticle,
   MessageCard,
   RelatedToContact,
   RelatedToOrganization,
   SaveFilterPopover,
+  TopicsArticle,
 } from '#containers';
 import { Calendar, DraftMessage, Mailbox } from '#types';
 
-import { MAILBOX_DRAFTS_NODE_DATA, MAILBOX_FACTS_NODE_DATA, POPOVER_SAVE_FILTER } from '../constants';
-import { getDraftsId } from '../paths';
+import { MAILBOX_DRAFTS_NODE_DATA, MAILBOX_TOPICS_NODE_DATA, POPOVER_SAVE_FILTER } from '../constants';
+import { getDraftsId, getTopicsId } from '../paths';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
   Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
 
 /** A single non-draft message or a non-empty conversation (thread) of them. */
 const isMessageOrThread = (subject: unknown): subject is Message.Message | Message.Message[] =>
-  Array.isArray(subject) ? subject.length > 0 && subject.every(isNonDraftMessage) : isNonDraftMessage(subject);
+  Array.isArray(subject)
+    ? subject.length > 0 && subject.every(Obj.instanceOf(Message.Message))
+    : isNonDraftMessage(subject);
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -64,6 +66,25 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
+        id: 'topics',
+        filter: Surface.makeFilter(AppSurface.Article, (data) => {
+          const mailbox = data.properties?.mailbox;
+          const lastSegment = data.attendableId.split('/').pop();
+          return (
+            lastSegment === getTopicsId() && Mailbox.instanceOf(mailbox) && data.subject === MAILBOX_TOPICS_NODE_DATA
+          );
+        }),
+        component: ({ data, role }) => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          const mailbox = (data.properties as { mailbox: Mailbox.Mailbox }).mailbox;
+          return <TopicsArticle role={role} space={space} attendableId={data.attendableId} mailbox={mailbox} />;
+        },
+      }),
+      Surface.create({
         id: 'mailbox',
         filter: AppSurface.object(AppSurface.Article, Mailbox.Mailbox),
         component: ({ data }) => {
@@ -71,21 +92,6 @@ export default Capability.makeModule(() =>
             <MailboxArticle subject={data.subject} filter={data.properties?.filter} attendableId={data.attendableId} />
           );
         },
-      }),
-      Surface.create({
-        id: 'mailboxFacts',
-        // Companion off a Mailbox article: subject is the facts sentinel, and `companionTo` carries the
-        // Mailbox. The sentinel-subject clause keeps this from matching the message companion (whose
-        // companionTo is also a Mailbox) or the primary Mailbox surface.
-        filter: AppSurface.allOf(
-          AppSurface.subject(
-            AppSurface.Article,
-            (value): value is typeof MAILBOX_FACTS_NODE_DATA => value === MAILBOX_FACTS_NODE_DATA,
-          ),
-          AppSurface.companion(AppSurface.Article, Mailbox.Mailbox),
-        ),
-        component: ({ data }) =>
-          Mailbox.instanceOf(data.companionTo) ? <MailboxFactsCompanion mailbox={data.companionTo} /> : null,
       }),
       Surface.create({
         id: 'draftMessage',

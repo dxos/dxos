@@ -2,17 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Runtime from 'effect/Runtime';
+
 import { Event, Trigger, synchronized } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
-import type { Stream } from '@dxos/codec-protobuf/stream';
 import { Config } from '@dxos/config';
 import type { PublicKey } from '@dxos/keys';
 import { type CallMetadata, type LogFilter, log, parseFilter } from '@dxos/log';
+import { subscribeStream } from '@dxos/protocols';
 import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { type ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
-import { RPC_TIMEOUT } from '../common';
 import { STORAGE_LOCK_KEY } from '../lock-key';
 import { ClientServicesProxy } from './service-proxy';
 import { SharedWorkerConnection } from './shared-worker-connection';
@@ -44,7 +45,7 @@ export class WorkerClientServices implements ClientServicesProvider {
 
   private _runtime!: SharedWorkerConnection;
   private _services!: ClientServicesProxy;
-  private _loggingStream?: Stream<LogEntry>;
+  private _loggingStreamCleanup?: () => void;
 
   constructor({ config, createWorker, logFilter = 'error,warn' }: WorkerClientServicesProps) {
     this._config = config;
@@ -54,6 +55,10 @@ export class WorkerClientServices implements ClientServicesProvider {
 
   get descriptors(): ServiceBundle<ClientServices> {
     return clientServiceBundle;
+  }
+
+  get rpc() {
+    return this._services.rpc;
   }
 
   get services(): Partial<ClientServices> {
@@ -100,31 +105,32 @@ export class WorkerClientServices implements ClientServicesProvider {
       }
     });
 
-    this._loggingStream = this._services.services.LoggingService.queryLogs(
+    this._loggingStreamCleanup = subscribeStream(
+      Runtime.defaultRuntime,
+      this._services.rpc.LoggingService.queryLogs({ filters: this._logFilter }),
       {
-        filters: this._logFilter,
+        onData: (entry) => {
+          switch (entry.level) {
+            case LogLevel.DEBUG:
+              log.debug(entry.message, entry.context, mapLogMeta(entry.meta));
+              break;
+            case LogLevel.VERBOSE:
+              log.verbose(entry.message, entry.context, mapLogMeta(entry.meta));
+              break;
+            case LogLevel.INFO:
+              log.info(entry.message, entry.context, mapLogMeta(entry.meta));
+              break;
+            case LogLevel.WARN:
+              log.warn(entry.message, entry.context, mapLogMeta(entry.meta));
+              break;
+            case LogLevel.ERROR:
+              log.error(entry.message, entry.context, mapLogMeta(entry.meta));
+              break;
+          }
+        },
+        onError: (err) => log.catch(err),
       },
-      { timeout: RPC_TIMEOUT },
     );
-    this._loggingStream.subscribe((entry) => {
-      switch (entry.level) {
-        case LogLevel.DEBUG:
-          log.debug(entry.message, entry.context, mapLogMeta(entry.meta));
-          break;
-        case LogLevel.VERBOSE:
-          log.verbose(entry.message, entry.context, mapLogMeta(entry.meta));
-          break;
-        case LogLevel.INFO:
-          log.info(entry.message, entry.context, mapLogMeta(entry.meta));
-          break;
-        case LogLevel.WARN:
-          log.warn(entry.message, entry.context, mapLogMeta(entry.meta));
-          break;
-        case LogLevel.ERROR:
-          log.error(entry.message, entry.context, mapLogMeta(entry.meta));
-          break;
-      }
-    });
 
     log('opened');
     this._isOpen = true;
@@ -137,7 +143,8 @@ export class WorkerClientServices implements ClientServicesProvider {
     }
 
     log('closing...');
-    await this._loggingStream?.close();
+    this._loggingStreamCleanup?.();
+    this._loggingStreamCleanup = undefined;
     await this._runtime.close();
     await this._services.close();
 

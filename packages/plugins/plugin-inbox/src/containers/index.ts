@@ -11,10 +11,10 @@ export const EditMessageArticle: ComponentType<any> = lazy(() => import('./EditM
 export const EventArticle: ComponentType<any> = lazy(() => import('./EventArticle'));
 export const EventCard: ComponentType<any> = lazy(() => import('./EventCard'));
 export const MailboxArticle: ComponentType<any> = lazy(() => import('./MailboxArticle'));
-export const MailboxFactsCompanion: ComponentType<any> = lazy(() => import('./MailboxFactsCompanion'));
 export const MailboxProperties: ComponentType<any> = lazy(() => import('./MailboxProperties'));
 export const MessageArticle: ComponentType<any> = lazy(() => import('./MessageArticle'));
 export const MessageCard: ComponentType<any> = lazy(() => import('./MessageCard'));
 export const SaveFilterPopover: ComponentType<any> = lazy(() => import('./SaveFilterPopover'));
+export const TopicsArticle: ComponentType<any> = lazy(() => import('./TopicsArticle'));
 export const RelatedToContact: ComponentType<any> = lazy(() => import('./RelatedToContact'));
 export const RelatedToOrganization: ComponentType<any> = lazy(() => import('./RelatedToOrganization'));

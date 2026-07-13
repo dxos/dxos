@@ -390,11 +390,10 @@ describe('PluginManager', () => {
           Plugin.addModule({
             activatesOn: DefectEvent,
             id: 'DefectImmediate',
-            activate: () => {
+            activate: (): Effect.Effect<void> => {
               // This throws immediately before even returning an Effect.
               // This is the most severe type of defect.
               throw new Error('immediate throw before Effect');
-              return Effect.succeed(undefined);
             },
           }),
           Plugin.make,

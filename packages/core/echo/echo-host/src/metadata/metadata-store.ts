@@ -3,6 +3,7 @@
 //
 
 import CRC32 from 'crc-32';
+import * as EffectContext from 'effect/Context';
 
 import { Event, scheduleTaskInterval, synchronized } from '@dxos/async';
 import { type Codec } from '@dxos/codec-protobuf';
@@ -66,6 +67,14 @@ export interface IMetadataStore {
   readonly deletedSpaces: PublicKey[];
   addDeletedSpace(spaceKey: PublicKey): Promise<void>;
 }
+
+/**
+ * Effect service tag for {@link IMetadataStore}.
+ */
+export class IMetadataStoreService extends EffectContext.Tag('@dxos/echo-host/IMetadataStore')<
+  IMetadataStoreService,
+  IMetadataStore
+>() {}
 
 export interface AddSpaceOptions {
   key: PublicKey;

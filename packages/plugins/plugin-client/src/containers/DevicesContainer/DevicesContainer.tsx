@@ -293,3 +293,5 @@ const InvitationComplete = ({ statusValue }: { statusValue: number }) => {
     <Icon icon='ph--x--regular' size={6} classNames='m-1.5' />
   );
 };
+
+DevicesContainer.displayName = 'DevicesContainer';

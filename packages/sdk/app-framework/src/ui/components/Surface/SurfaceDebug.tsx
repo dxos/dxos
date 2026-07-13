@@ -16,6 +16,7 @@ import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
 import { addEventListener, combine } from '@dxos/async';
+import { mx } from '@dxos/ui-theme';
 
 import { type SurfaceContext } from './context';
 import { type SurfaceMetric, surfaceMetricKey, surfaceMetrics } from './SurfaceMetrics';
@@ -23,6 +24,7 @@ import { type SurfaceMetric, surfaceMetricKey, surfaceMetrics } from './SurfaceM
 declare global {
   interface Window {
     __DX_DEBUG__?: boolean;
+    __DX__?: { surfaces: (component?: string) => HTMLElement[] };
   }
 }
 
@@ -34,6 +36,27 @@ const DEBUG_FLAG = '__DX_DEBUG__';
 export const DX_SURFACE_TAG = 'dx-surface';
 
 /**
+ * Installs the `window.__DX__` DevTools helper. `__DX__.surfaces(component?)` returns the mounted
+ * `<dx-surface>` elements (optionally filtered by `data-component`) — a console shortcut for the
+ * otherwise-verbose `document.querySelectorAll('dx-surface[data-component="…"]')`.
+ */
+const ensureDebugApi = (): void => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.__DX__ = {
+    ...window.__DX__,
+    surfaces: (component?: string) =>
+      Array.from(
+        document.querySelectorAll<HTMLElement>(
+          component ? `${DX_SURFACE_TAG}[data-component="${component}"]` : DX_SURFACE_TAG,
+        ),
+      ),
+  };
+};
+
+/**
  * Whether surface debugging is enabled, via the `VITE_DEBUG` build flag or the
  * `__DX_DEBUG__` runtime global. The runtime flag is toggleable without a
  * rebuild and takes effect on the next render.
@@ -42,8 +65,26 @@ export const isSurfaceDebugEnabled = (): boolean =>
   Boolean(import.meta.env?.VITE_DEBUG) || (typeof window !== 'undefined' && DEBUG_FLAG in window);
 
 /**
- * Toggles the `__DX_DEBUG__` runtime flag. Surfaces pick up the change on their
- * next render.
+ * Whether the `<dx-surface>` wrapper is rendered. Enabled in any development build (or when
+ * `VITE_DEBUG` is set) so the wrapper's `data-*` attributes and `window.__DX__` helpers are available
+ * for DOM inspection independent of the runtime highlight flag. Production renders no wrapper.
+ */
+export const isSurfaceWrapperEnabled = (): boolean =>
+  Boolean(import.meta.env?.DEV) || Boolean(import.meta.env?.VITE_DEBUG);
+
+// Notifies the overlay when the runtime highlight flag toggles: the overlay is a separate React root,
+// so it does not re-render on a surface render and needs an explicit signal to redraw.
+const flagListeners = new Set<() => void>();
+const subscribeFlag = (listener: () => void): (() => void) => {
+  flagListeners.add(listener);
+  return () => {
+    flagListeners.delete(listener);
+  };
+};
+
+/**
+ * Toggles the `__DX_DEBUG__` runtime flag, which gates the visual highlight overlay (not the
+ * `<dx-surface>` wrapper). The overlay redraws immediately; surfaces pick it up on their next render.
  */
 export const setSurfaceDebug = (enabled: boolean): void => {
   if (typeof window === 'undefined') {
@@ -55,6 +96,9 @@ export const setSurfaceDebug = (enabled: boolean): void => {
   } else {
     delete window[DEBUG_FLAG];
   }
+  for (const listener of flagListeners) {
+    listener();
+  }
 };
 
 let elementRegistered = false;
@@ -63,6 +107,7 @@ const ensureSurfaceElement = (): void => {
   if (elementRegistered || typeof customElements === 'undefined') {
     return;
   }
+
   elementRegistered = true;
   if (!customElements.get(DX_SURFACE_TAG)) {
     // Defined lazily (not at module scope) so importing this module never evaluates
@@ -140,24 +185,48 @@ const ensureOverlay = (): void => {
 };
 
 /**
- * Measures the contents of a `display: contents` element (which has no box of
- * its own) via a Range spanning its children.
+ * Measures a `display: contents` element (which has no box of its own) by unioning the border boxes
+ * of its rendered children. Deliberately uses each child's own `getBoundingClientRect` rather than a
+ * Range over all contents: a Range unions every descendant rect, so content overflowing an inner
+ * `overflow: auto` scroll container inflates the width past the surface's visible bounds. A direct
+ * child's box is clipped to its own border box, so the highlight stays tight to what is on screen.
  */
 const measureContents = (element: HTMLElement): DOMRect | null => {
-  if (typeof document === 'undefined' || typeof document.createRange !== 'function') {
+  if (typeof document === 'undefined' || typeof getComputedStyle !== 'function') {
     return null;
   }
-  const range = document.createRange();
-  range.selectNodeContents(element);
-  // Range.getBoundingClientRect is unavailable in some non-browser DOMs (tests / SSR).
-  if (typeof range.getBoundingClientRect !== 'function') {
+
+  const boxes: DOMRect[] = [];
+  const collect = (node: Element): void => {
+    for (const child of node.children) {
+      // A nested `display: contents` child also has no box; descend to the elements that do.
+      if (getComputedStyle(child).display === 'contents') {
+        collect(child);
+      } else {
+        const rect = child.getBoundingClientRect();
+        if (rect.width > 0 || rect.height > 0) {
+          boxes.push(rect);
+        }
+      }
+    }
+  };
+  collect(element);
+
+  if (boxes.length === 0) {
     return null;
   }
-  const rect = range.getBoundingClientRect();
-  if (rect.width === 0 && rect.height === 0 && rect.top === 0 && rect.left === 0) {
-    return null;
+
+  let left = Infinity;
+  let top = Infinity;
+  let right = -Infinity;
+  let bottom = -Infinity;
+  for (const box of boxes) {
+    left = Math.min(left, box.left);
+    top = Math.min(top, box.top);
+    right = Math.max(right, box.right);
+    bottom = Math.max(bottom, box.bottom);
   }
-  return rect;
+  return new DOMRect(left, top, right - left, bottom - top);
 };
 
 const EMPTY_RECTS: ReadonlyMap<number, DOMRect> = new Map();
@@ -168,11 +237,13 @@ const EMPTY_RECTS: ReadonlyMap<number, DOMRect> = new Map();
  */
 const SurfaceDebugOverlay = (): ReactNode => {
   const entries = useSyncExternalStore(manager.subscribe, manager.getSnapshot, manager.getSnapshot);
+  // The `__DX_DEBUG__` flag gates only this visual overlay; the `<dx-surface>` wrappers stay mounted.
+  const enabled = useSyncExternalStore(subscribeFlag, isSurfaceDebugEnabled, isSurfaceDebugEnabled);
   const [rects, setRects] = useState<ReadonlyMap<number, DOMRect>>(EMPTY_RECTS);
 
   useLayoutEffect(() => {
-    // No registered surfaces: clear rects and install no global listeners.
-    if (entries.length === 0) {
+    // Draw nothing (and install no listeners) while the flag is off or there are no surfaces.
+    if (!enabled || entries.length === 0) {
       setRects(EMPTY_RECTS);
       return;
     }
@@ -201,7 +272,11 @@ const SurfaceDebugOverlay = (): ReactNode => {
     return combine(addEventListener(window, 'scroll', measure, true), addEventListener(window, 'resize', measure), () =>
       observer?.disconnect(),
     );
-  }, [entries]);
+  }, [entries, enabled]);
+
+  if (!enabled) {
+    return null;
+  }
 
   return createPortal(
     <>
@@ -241,16 +316,18 @@ const SurfaceHighlight = ({ infoRef, rect }: { infoRef: InfoRef; rect: DOMRect }
             setExpand(false);
           }}
         >
-          <pre className='absolute left-2 bottom-2 bg-card-surface inline-block ring-2 ring-separator opacity-80 p-2 text-xs text-description font-mono'>
-            {JSON.stringify({ info, metric }, null, 2)}
-          </pre>
+          <div className='absolute left-1 right-1 bottom-1 max-h-[20rem] overflow-auto bg-card-surface ring-2 ring-separator rounded-sm opacity-90'>
+            <pre className='inline-block p-2 text-xs text-description font-mono font-thin'>
+              {JSON.stringify({ info, metric }, null, 2)}
+            </pre>
+          </div>
         </div>
       ) : (
         <span
-          className={
-            (concern ? 'text-rose-500' : 'text-green-500') +
-            ' absolute right-1 bottom-0 flex items-center p-1 opacity-80 hover:opacity-100 text-sm cursor-pointer pointer-events-auto'
-          }
+          className={mx(
+            concern ? 'text-rose-500' : 'text-green-500',
+            'absolute right-2 bottom-1 flex items-center p-1 opacity-80 hover:opacity-100 text-sm cursor-pointer pointer-events-auto',
+          )}
           title={metricSummary(info.id ?? '', metric)}
           onPointerDown={(ev) => ev.stopPropagation()}
           onClick={(ev) => {
@@ -285,6 +362,31 @@ const metricSummary = (surfaceId: string, metric: SurfaceMetric | undefined): st
 };
 
 /**
+ * Recovers the rendered surface component's name from the React fiber. Surfaces are registered as
+ * anonymous `component: (props) => <Real .../>` wrappers, so the static component carries no useful
+ * name; walking the fiber's child chain to the first component with a display name (as DevTools does)
+ * finds the real one. The wrapper's own inferred name is the property key ('component'), so skip it.
+ */
+const renderedComponentName = (element: HTMLElement): string | undefined => {
+  // React fiber internals are untyped; the fiber hangs off a `__reactFiber$<id>` own-property and its
+  // `child` chain is the rendered subtree.
+  const node = element as any;
+  const fiberKey = Object.keys(node).find((key) => key.startsWith('__reactFiber$'));
+  let fiber = fiberKey ? node[fiberKey]?.child : undefined;
+  while (fiber) {
+    const { type } = fiber;
+    if (typeof type === 'function') {
+      const name: string | undefined = type.displayName ?? type.name;
+      if (name && name !== 'component') {
+        return name;
+      }
+    }
+    fiber = fiber.child;
+  }
+  return undefined;
+};
+
+/**
  * Debug wrapper that mounts each React surface inside a `<dx-surface>` element
  * and registers it with the centralized overlay. The element is named and
  * inspectable in DevTools and queryable (`document.querySelectorAll('dx-surface')`).
@@ -298,12 +400,20 @@ export const DebugSurface = ({ info, children }: PropsWithChildren<{ info: Surfa
   useEffect(() => {
     ensureSurfaceElement();
     ensureOverlay();
+    ensureDebugApi();
     const { id, role } = infoRef.current;
     if (id) {
       surfaceMetrics.recordMount(id, role);
     }
     const element = elementRef.current;
     const unregister = element ? manager.register(element, infoRef) : undefined;
+    // Names the rendered component (`data-component`) once mounted — read from the fiber because the
+    // surface wrapper is anonymous, so no static name is available at render time.
+    const component = element ? renderedComponentName(element) : undefined;
+    if (element && component) {
+      element.setAttribute('data-component', component);
+    }
+
     return () => {
       if (id) {
         surfaceMetrics.recordUnmount(id, role);
@@ -312,5 +422,14 @@ export const DebugSurface = ({ info, children }: PropsWithChildren<{ info: Surfa
     };
   }, []);
 
-  return createElement(DX_SURFACE_TAG, { 'ref': elementRef, 'data-id': info.id, 'data-role': info.role }, children);
+  return createElement(
+    DX_SURFACE_TAG,
+    {
+      'className': 'contents',
+      'data-id': info.id,
+      'data-role': info.role,
+      'ref': elementRef,
+    },
+    children,
+  );
 };

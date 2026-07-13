@@ -260,7 +260,7 @@ export const ArrayField = ({
   return (
     <>
       {header}
-      <div className='flex flex-col gap-2'>
+      <div className='flex flex-col gap-2 pb-2'>
         {values?.map((_, index) => {
           const isLast = index === values.length - 1;
           return (

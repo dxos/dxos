@@ -113,3 +113,5 @@ export const SupportArticle = ({ role, subject: ticket }: SupportArticleProps) =
     </Panel.Root>
   );
 };
+
+SupportArticle.displayName = 'SupportArticle';

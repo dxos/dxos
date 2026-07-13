@@ -121,6 +121,31 @@ describe('Blob', () => {
     }
   });
 
+  test('exceeding a backend maxSize fails with BlobTooLargeError', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Blob.Blob] });
+    const db = await peer.createDatabase();
+    const testLayer = Database.layer(db);
+
+    const cleanup = db.graph.registerBlobBackend('capped', {
+      schemes: ['capped'],
+      maxSize: 2,
+      put: async ({ data, contentHash }) => ({ uri: `capped:${contentHash}` }),
+      get: async () => undefined,
+      has: async () => false,
+    });
+
+    const bytes = new Uint8Array([1, 2, 3]);
+    try {
+      await expect(
+        Effect.gen(function* () {
+          yield* Blob.fromBytes(bytes, { storage: 'capped' });
+        }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors),
+      ).rejects.toBeInstanceOf(Err.BlobTooLargeError);
+    } finally {
+      cleanup();
+    }
+  });
+
   test('unregistered scheme fails with BlobNotAvailableError', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Blob.Blob] });
     const db = await peer.createDatabase();

@@ -74,3 +74,5 @@ export const Toaster = ({ toasts, onDismissToast }: ToasterProps) => {
     </>
   );
 };
+
+Toast.displayName = 'Toast';

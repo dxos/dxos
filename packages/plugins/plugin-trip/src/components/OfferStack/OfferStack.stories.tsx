@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Mosaic } from '@dxos/react-ui-mosaic';
+import { Dnd } from '@dxos/react-ui-dnd';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -47,7 +47,7 @@ const OFFERS: BookingSearchType.FlightOffer[] = [
 ];
 
 const DefaultStory = () => (
-  <Mosaic.Root>
+  <Dnd.Root>
     <OfferStack
       offers={OFFERS}
       onSelect={(offer) => {
@@ -55,7 +55,7 @@ const DefaultStory = () => (
         console.log('select offer', offer.id);
       }}
     />
-  </Mosaic.Root>
+  </Dnd.Root>
 );
 
 const meta = {

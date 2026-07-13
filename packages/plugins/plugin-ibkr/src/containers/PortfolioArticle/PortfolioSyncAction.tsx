@@ -79,3 +79,5 @@ export const PortfolioSyncAction = ({ subject }: PortfolioSyncActionProps) => {
     <Surface.Surface type={ConnectorAuth} data={CONNECTOR_AUTH_DATA} limit={1} />
   ) : null;
 };
+
+PortfolioSyncAction.displayName = 'PortfolioSyncAction';
