@@ -41,6 +41,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../worker-framework"
     }
   ]
 }
