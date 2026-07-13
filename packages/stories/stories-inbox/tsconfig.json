@@ -43,6 +43,9 @@
       "path": "../../core/compute/extractor"
     },
     {
+      "path": "../../core/compute/functions-runtime"
+    },
+    {
       "path": "../../core/compute/pipeline-email"
     },
     {
@@ -80,6 +83,9 @@
     },
     {
       "path": "../../plugins/plugin-progress"
+    },
+    {
+      "path": "../../plugins/plugin-routine"
     },
     {
       "path": "../../plugins/plugin-space"
