@@ -330,18 +330,28 @@ export default Capability.makeModule(
     subscriptions.add(() => viewingSub.unsubscribe());
 
     // Enable edge replication for all spaces.
-    try {
-      yield* Effect.tryPromise(() =>
-        Promise.all(
-          client.spaces
-            .get()
-            .map((space) => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED)),
-        ),
-      );
-      registry.update(stateAtom, (current) => ({ ...current, enabledEdgeReplication: true }));
-    } catch (err) {
-      log.catch(err);
-    }
+    // Per-space failures (e.g. a timeout waiting for the property to propagate) must not
+    // block activation of the whole plugin, so each space is enabled independently.
+    yield* Effect.tryPromise(() =>
+      Promise.allSettled(
+        client.spaces
+          .get()
+          .filter((space) => space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED)
+          .map((space) => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED)),
+      ),
+    ).pipe(
+      Effect.tap((results) =>
+        Effect.sync(() => {
+          results.forEach((result) => {
+            if (result.status === 'rejected') {
+              log.catch(result.reason);
+            }
+          });
+        }),
+      ),
+      Effect.catchAll((err) => Effect.sync(() => log.catch(err))),
+    );
+    registry.update(stateAtom, (current) => ({ ...current, enabledEdgeReplication: true }));
 
     return Capability.contributes(Capabilities.Null, null, () =>
       Effect.gen(function* () {

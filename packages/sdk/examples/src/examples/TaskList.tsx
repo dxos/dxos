@@ -6,14 +6,14 @@ import React, { type ChangeEventHandler, type KeyboardEventHandler, useState } f
 
 import { Filter, Obj } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
-import { useDatabase, useQuery } from '@dxos/react-client/echo';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Input } from '@dxos/react-ui';
 
 import { TaskType } from '../types';
 
 const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
-  const db = useDatabase(spaceId);
-  const tasks = useQuery(db, Filter.type(TaskType));
+  const space = useSpace(spaceId);
+  const tasks = useQuery(space?.db, Filter.type(TaskType));
   const [value, setValue] = useState('');
 
   const handleChange: ChangeEventHandler<HTMLInputElement> = (event) => {
@@ -21,10 +21,10 @@ const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
   };
 
   const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
-    if (event.key === 'Enter' && db && value) {
+    if (event.key === 'Enter' && space?.db && value) {
       const task = Obj.make(TaskType, { title: value, completed: false });
       setValue('');
-      db.add(task);
+      space?.db.add(task);
     }
   };
 
@@ -63,7 +63,7 @@ const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
               iconOnly
               noTooltip
               variant='ghost'
-              onClick={() => db?.remove(task)}
+              onClick={() => space?.db?.remove(task)}
             />
           </li>
         ))}

@@ -8,3 +8,4 @@ export * from './Entity';
 export * from './Extract';
 export * from './Fact';
 export * from './Factuality';
+export * from './Illocution';

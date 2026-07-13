@@ -283,3 +283,5 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 );
 
 export const NavTreeContainer = memo(NavTreeContainer$);
+
+NavTreeContainer.displayName = 'NavTreeContainer';

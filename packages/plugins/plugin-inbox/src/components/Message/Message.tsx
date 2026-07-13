@@ -21,13 +21,14 @@ import { type Actor, ContentBlock } from '@dxos/types';
 
 import { InboxCapabilities, Mailbox, Starred } from '#types';
 
-import { useExtractedObjects, useMessageTags } from '../../hooks';
+import { useMessageTags } from '../../hooks';
 import { formatDateTime } from '../../util';
 import { Header } from '../Header';
 import { HtmlViewer } from '../HtmlViewer';
 import { MarkdownViewer } from '../MarkdownViewer';
 import { Row } from '../Row';
 import { type ViewMode } from '../ViewMode';
+import { useMessageExtractedObjects } from './useMessageExtractedObjects';
 import { useMessageActions } from './useToolbar';
 
 //
@@ -48,6 +49,8 @@ type MessageContextValue = {
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
+  /** Generates an AI reply draft grounded on thread context and known facts. */
+  onAiReply?: () => void;
   onDelete?: () => void;
 };
 
@@ -79,6 +82,7 @@ const MessageRoot = ({
   onReply,
   onReplyAll,
   onForward,
+  onAiReply,
   onDelete,
   ...props
 }: MessageRootProps) => {
@@ -90,6 +94,7 @@ const MessageRoot = ({
       onReply={onReply}
       onReplyAll={onReplyAll}
       onForward={onForward}
+      onAiReply={onAiReply}
       onDelete={onDelete}
       {...props}
     >
@@ -107,7 +112,7 @@ MessageRoot.displayName = 'Message.Root';
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
 const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { attendableId, message, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward, onDelete } =
+  const { attendableId, message, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward, onAiReply, onDelete } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
 
   // Settings capability is optional (see MessageBody); fall back to safe defaults outside the plugin.
@@ -135,6 +140,7 @@ const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
     onReply,
     onReplyAll,
     onForward,
+    onAiReply,
     onDelete,
   });
 
@@ -190,20 +196,21 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   const { message, mailbox } = useMessageContext(MESSAGE_HEADER_NAME);
   const space = getSpace(message);
   const db = space?.db;
-  const relationObjects = useExtractedObjects(db, message);
-  const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
+
   // `useQuery` only fires when the matching set changes, not when nested fields mutate.
-  // Subscribe directly to each mailbox so a tag-only extractor run (no created objects,
-  // no relation, just a `mailbox.tags`/`mailbox.extracted` mutation) still re-renders.
+  // Subscribe to the owning mailbox so a tag-only extractor run (no created objects, no relation,
+  // just a `mailbox.tags`/`mailbox.extracted` mutation) still re-renders.
   const [, bump] = useReducer((tick: number) => tick + 1, 0);
   useEffect(() => {
-    const unsubs = mailboxes.map((mailbox) => Obj.subscribe(mailbox, bump));
-    return () => unsubs.forEach((unsub) => unsub());
-  }, [mailboxes]);
+    if (!mailbox) {
+      return;
+    }
+    return Obj.subscribe(mailbox, bump);
+  }, [mailbox]);
 
   // Resolve the message's tag uris (from the Mailbox tag index) to Tag objects for label/hue.
   const tagObjects = useQuery(db, Filter.type(Tag.Tag));
-  const messageTags = useMessageTags(mailboxes, message, tagObjects);
+  const messageTags = useMessageTags(mailbox, message, tagObjects);
 
   // Starring uses the owning mailbox's tag index (messages are feed objects). Subscribe to the index
   // via `TagIndex.atom` so the star reflects toggles immediately (membership-scoped reactivity).
@@ -221,21 +228,8 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
     }
   }, [mailbox, message, db]);
 
-  // Merge objects from `ExtractedFrom` relations (live space-db sources) with those recorded on
-  // the Mailbox keyed by message id (feed-stored sources, which can't be relation endpoints),
-  // deduped by id. The recorded ids reference space-db objects resolved via `getObjectById`.
-  const objects = useMemo(() => {
-    const byId = new Map<string, Obj.Any>(relationObjects.map((object) => [object.id, object]));
-    for (const id of mailboxes.flatMap((mailbox) => Mailbox.getExtractedObjectIds(mailbox, message.id))) {
-      if (!byId.has(id)) {
-        const object = db?.query(Filter.id(id)).runSync()[0];
-        if (object) {
-          byId.set(id, object);
-        }
-      }
-    }
-    return [...byId.values()];
-  }, [relationObjects, mailboxes, message.id, db]);
+  // Extracted objects — trips, people, etc.
+  const objects = useMessageExtractedObjects(db, mailbox, message);
 
   return (
     <Header.Root data-testid='message-header'>
@@ -269,6 +263,9 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
       {objects.map((object) => (
         <Row.Ref key={Obj.getURI(object).toString()} object={object} />
       ))}
+
+      {/* Attachments row. */}
+      <Row.Attachments attachments={message.attachments} />
 
       {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
       <Row.Tags tags={messageTags} />
@@ -321,7 +318,14 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   // markdown renderer.
   if (viewMode === 'html' && html) {
     return (
-      <HtmlViewer classNames={classNames} html={html} loadRemoteImages={loadRemoteImages} isPersonal={isPersonal} />
+      <HtmlViewer
+        classNames={classNames}
+        html={html}
+        loadRemoteImages={loadRemoteImages}
+        isPersonal={isPersonal}
+        attachments={message.attachments}
+        db={db}
+      />
     );
   }
 

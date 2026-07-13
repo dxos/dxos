@@ -15,10 +15,6 @@ import { loadRefTarget } from './utils';
  * Subscribes to target object changes and resolves to undefined when the target is deleted.
  */
 export const refSimpleFamily = Atom.family(<T>(ref: Ref<T>): Atom.Atom<T | undefined> => {
-  // `keepAlive` pins the node for the registry's lifetime: an atom that pushes updates from an external
-  // `subscribe` callback must never be swept, or the callback can fire against an already-disposed
-  // lifetime and throw `Cannot use context of disposed Atom` (DX-1103). Mirrors `refFamily` in
-  // `Obj/atoms.ts`.
   return Atom.make<T | undefined>((get) => {
     let unsubscribeTarget: (() => void) | undefined;
 

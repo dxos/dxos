@@ -2,15 +2,25 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+
 import { type PushStream, TimeoutError, type Trigger, scheduleTask } from '@dxos/async';
 import { INVITATION_TIMEOUT, getExpirationTime } from '@dxos/client-protocol';
 import { type Context, ContextDisposedError } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
-import { type EdgeHttpClient } from '@dxos/edge-client';
+import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type SwarmConnection, type SwarmNetworkManager, createTeleportProtocolFactory } from '@dxos/network-manager';
+import {
+  type SwarmConnection,
+  type SwarmNetworkManager,
+  SwarmNetworkManagerService,
+  createTeleportProtocolFactory,
+} from '@dxos/network-manager';
 import { InvalidInvitationError, InvalidInvitationExtensionRoleError } from '@dxos/protocols';
 import { type AdmissionKeypair, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -64,6 +74,14 @@ export type InvitationConnectionProps = {
  *  TODO: the flow logic should either be contained in invitations-handler or in extensions, not be split across
  *  TODO: potentially re-evaluate host-side API to allow multiple concurrent connection, so that mutex can be removed
  */
+/**
+ * Effect service tag for {@link InvitationsHandler}.
+ */
+export class InvitationsHandlerService extends EffectContext.Tag('@dxos/client-services/InvitationsHandler')<
+  InvitationsHandlerService,
+  InvitationsHandler
+>() {}
+
 export class InvitationsHandler {
   /**
    * @internal
@@ -563,3 +581,22 @@ export const createAdmissionKeypair = (): AdmissionKeypair => {
   const keypair = createKeyPair();
   return { publicKey: PublicKey.from(keypair.publicKey), privateKey: keypair.secretKey };
 };
+
+export type InvitationsHandlerLayerOptions = {
+  connectionProps?: InvitationConnectionProps;
+};
+
+/**
+ * Effect Layer constructing an {@link InvitationsHandler}.
+ */
+export const InvitationsHandlerLayer = (
+  options: InvitationsHandlerLayerOptions = {},
+): Layer.Layer<InvitationsHandlerService, never, SwarmNetworkManagerService> =>
+  Layer.effect(
+    InvitationsHandlerService,
+    Effect.gen(function* () {
+      const networkManager = yield* SwarmNetworkManagerService;
+      const edgeClient = yield* Effect.serviceOption(EdgeHttpClientService);
+      return new InvitationsHandler(networkManager, Option.getOrUndefined(edgeClient), options.connectionProps);
+    }),
+  );

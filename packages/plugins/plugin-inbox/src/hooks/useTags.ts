@@ -15,9 +15,13 @@ import { GoogleMail } from '../apis';
 /**
  * Resolve the message's tag uris (from the Mailbox tag index) to Tag objects for label/hue.
  */
-export const useMessageTags = (mailboxes: Mailbox.Mailbox[], message: Mailbox.MessageLike, tagObjects: Tag.Tag[]) => {
+export const useMessageTags = (
+  mailbox: Mailbox.Mailbox | undefined,
+  message: Mailbox.MessageLike,
+  tagObjects: Tag.Tag[],
+) => {
   const tagByUri = new Map(tagObjects.map((tag) => [Obj.getURI(tag).toString(), tag]));
-  const tagUris = mailboxes.flatMap((mailbox) => Mailbox.getTagsForMessage(mailbox, message));
+  const tagUris = mailbox ? Mailbox.getTagsForMessage(mailbox, message) : [];
   const tags = [...new Set(tagUris)].flatMap((uri) => {
     const tag = tagByUri.get(uri);
     return tag ? [{ id: uri, label: tag.label, hue: tag.hue }] : [];

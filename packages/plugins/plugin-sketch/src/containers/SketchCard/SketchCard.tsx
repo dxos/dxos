@@ -25,3 +25,5 @@ export const SketchCard = ({ subject, editable = false }: SketchCardProps) => {
 };
 
 export default SketchCard;
+
+SketchCard.displayName = 'SketchCard';

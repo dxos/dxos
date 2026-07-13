@@ -19,12 +19,11 @@ import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useDefaultValue } from '@dxos/react-hooks';
 
-import { Capabilities } from '../../../common';
-import * as Role from '../../../common/Role';
+import { Capabilities, Role } from '../../../common';
 import { type CapabilityManager } from '../../../core';
 import { usePluginManager } from '../PluginManager';
 import { SurfaceContext } from './context';
-import { DebugSurface, isSurfaceDebugEnabled } from './SurfaceDebug';
+import { DebugSurface, isSurfaceDebugEnabled, isSurfaceWrapperEnabled } from './SurfaceDebug';
 import { indexByRole } from './SurfaceManager';
 import { useSurfaceManager } from './SurfaceManagerContext';
 import { nextDataChurn, surfaceMetrics } from './SurfaceMetrics';
@@ -148,7 +147,9 @@ const SurfaceContextProvider = memo(
         component
       );
 
-    if (isSurfaceDebugEnabled()) {
+    // Dev builds wrap every surface in `<dx-surface>` for DOM inspection / `window.__DX__`; the
+    // `__DX_DEBUG__` flag separately gates the visual highlight overlay (see SurfaceDebug).
+    if (isSurfaceWrapperEnabled()) {
       return (
         <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback} onError={onError}>
           <SurfaceContext.Provider value={contextValue}>

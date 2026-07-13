@@ -18,6 +18,7 @@ const API_URL = 'https://api.fastmail.com/jmap/api/';
 
 const SESSION = {
   apiUrl: API_URL,
+  downloadUrl: 'https://api.fastmail.com/jmap/download/{accountId}/{blobId}/{name}?type={type}',
   username: 'alice@fastmail.com',
   primaryAccounts: {
     'urn:ietf:params:jmap:mail': ACCOUNT_ID,

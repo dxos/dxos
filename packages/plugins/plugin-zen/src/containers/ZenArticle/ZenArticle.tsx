@@ -28,3 +28,5 @@ export const ZenArticle = ({ role, subject: dream, attendableId: _attendableId }
     </Panel.Root>
   );
 };
+
+ZenArticle.displayName = 'ZenArticle';

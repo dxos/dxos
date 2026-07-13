@@ -16,3 +16,5 @@ export const NavTreeDocumentTitle = ({ node }: { node?: Node.Node }) => {
   }, [node?.properties?.label]);
   return null;
 };
+
+NavTreeDocumentTitle.displayName = 'NavTreeDocumentTitle';

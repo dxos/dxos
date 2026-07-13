@@ -181,3 +181,5 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
     );
   },
 );
+
+PlankControls.displayName = 'PlankControls';

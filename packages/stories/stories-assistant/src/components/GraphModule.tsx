@@ -10,17 +10,16 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { useFlush } from '@dxos/plugin-assistant/hooks';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { useGraphModel } from '@dxos/plugin-explorer/hooks';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, Toolbar, composable, composableProps } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
-import { ResearchInputQueue } from '../testing';
-import { type ModuleProps } from './types';
+import { ResearchInputQueue } from '../testing/schema';
 
-export const GraphModule = ({ space }: ModuleProps) => {
+export const GraphModule = ({ space }: { space: Space }) => {
   const [filter, setFilter] = useState<Filter.Any>();
   const [open, setOpen] = useState(false);
 
@@ -79,7 +78,7 @@ export const GraphModule = ({ space }: ModuleProps) => {
   );
 };
 
-type SearchBarProps = ModuleProps & Pick<ChatEditorProps, 'onSubmit'>;
+type SearchBarProps = { space: Space } & Pick<ChatEditorProps, 'onSubmit'>;
 
 export const SearchBar = composable<HTMLDivElement, SearchBarProps>(({ space, onSubmit, ...props }, forwardedRef) => {
   const { state: flushState, handleFlush } = useFlush(space);

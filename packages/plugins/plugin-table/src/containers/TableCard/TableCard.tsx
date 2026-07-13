@@ -70,3 +70,5 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
     </Card.Body>
   );
 };
+
+TableCard.displayName = 'TableCard';

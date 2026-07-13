@@ -241,3 +241,5 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     </div>
   );
 };
+
+CalendarArticle.displayName = 'CalendarArticle';

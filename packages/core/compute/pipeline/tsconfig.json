@@ -6,6 +6,12 @@
   "references": [
     {
       "path": "../../../common/effect"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../progress"
     }
   ]
 }

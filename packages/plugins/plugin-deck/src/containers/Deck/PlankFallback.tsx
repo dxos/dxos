@@ -40,3 +40,7 @@ export const PlankErrorFallback = ({ error }: ErrorFallbackProps) => {
     </div>
   );
 };
+
+PlankLoading.displayName = 'PlankLoading';
+
+PlankErrorFallback.displayName = 'PlankErrorFallback';

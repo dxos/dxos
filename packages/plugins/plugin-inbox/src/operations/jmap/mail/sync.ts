@@ -28,7 +28,7 @@ import { JmapCredentials, JmapMailApi } from '../../../services';
 import { EmailStage, type SyncDirection, type SyncWindow, resolveSyncWindow } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
 import { readBindingOptions } from '../../../util';
-import { type DecodedEmail, decodeBody, mapToMessage } from './mapper';
+import { type AttachmentMetadata, type DecodedEmail, decodeBody, mapToMessage } from './mapper';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
@@ -82,12 +82,15 @@ export const runJmapSync = ({
       log.warn('jmap sync: session has no mail account', { username: session.username });
       return { newMessages: 0 };
     }
-    const target: JmapMail.Target = { apiUrl: session.apiUrl, accountId };
+    const target: JmapMail.Target = { apiUrl: session.apiUrl, accountId, downloadUrl: session.downloadUrl };
     log('jmap sync: session resolved', { apiUrl: session.apiUrl, accountId });
 
     const { db } = yield* Database.Service;
     const feed = yield* Database.load(mailbox.feed);
     const tagIndex = yield* Database.load(mailbox.tags);
+    // Pool already-sent drafts once for this run; `EmailStage.reconcileDrafts` matches each incoming
+    // message against it so the canonical copy's arrival removes its now-redundant draft in the commit.
+    const draftPool = yield* EmailStage.queryDraftPool(mailbox);
 
     // TODO(wittjosiah): Migrate this folder→Tag sync onto a pipeline too (source: folders; sink:
     //   find-or-create Tag), rather than the imperative loop below.
@@ -117,7 +120,7 @@ export const runJmapSync = ({
 
     // Resolve the sender contact, build the ECHO message, and resolve folder ids to tag URIs via the
     // (JMAP-specific) folder map captured here.
-    const mapToMessageStage: Stage.Stage<DecodedEmail, EmailStage.Mapped, never, Resolver> = Stage.map(
+    const mapToMessageStage: Stage.Stage<DecodedEmail, EmailStage.Mapped, never, Resolver | JmapMailApi> = Stage.map(
       'map-to-message',
       (decoded: DecodedEmail) =>
         Effect.gen(function* () {
@@ -131,11 +134,13 @@ export const runJmapSync = ({
             const uri = folderTagMap.get(folderId);
             return uri ? [uri] : [];
           });
+          const attachments = yield* fetchAttachments(target, decoded.attachments);
           return {
             message: mapped.message,
             foreignId: decoded.raw.id,
             key: new Date(decoded.raw.receivedAt).getTime(),
             tagUris,
+            attachments,
           };
         }),
     );
@@ -150,8 +155,11 @@ export const runJmapSync = ({
       ),
       decodeBodyStage,
       mapToMessageStage,
+      EmailStage.processAttachments(),
       EmailStage.onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
+      EmailStage.reconcileDrafts(draftPool),
+      EmailStage.toCommitUnit(),
       Stream.grouped(COMMIT_PAGE_SIZE),
       Pipeline.run({ sink: SyncBinding.commit }),
       Effect.provide(
@@ -202,6 +210,39 @@ const decodeBodyStage: Stage.Stage<JmapMail.Email, DecodedEmail, never, never> =
   'decode-body',
   (email: JmapMail.Email) => Effect.sync(() => decodeBody(email) ?? undefined),
 );
+
+/**
+ * Downloads each attachment's bytes via `JmapMailApi.downloadBlob`. One failed download (including a
+ * session with no `downloadUrl`) is logged and dropped rather than failing the whole message.
+ */
+const fetchAttachments = (
+  target: JmapMail.Target,
+  attachments: readonly AttachmentMetadata[],
+): Effect.Effect<readonly EmailStage.Attachment[], never, JmapMailApi> =>
+  Effect.gen(function* () {
+    const api = yield* JmapMailApi;
+    const fetched = yield* Effect.forEach(
+      attachments,
+      (attachment) =>
+        api.downloadBlob(target, attachment.blobId, { name: attachment.name, type: attachment.mimeType }).pipe(
+          Effect.map(
+            (bytes): EmailStage.Attachment => ({
+              name: attachment.name,
+              mimeType: attachment.mimeType,
+              size: attachment.size ?? bytes.byteLength,
+              bytes,
+              contentId: attachment.contentId,
+            }),
+          ),
+          Effect.catchAll((error) => {
+            log.catch(error, { blobId: attachment.blobId, name: attachment.name });
+            return Effect.succeed(undefined);
+          }),
+        ),
+      { concurrency: FETCH_CONCURRENCY },
+    );
+    return fetched.filter((attachment): attachment is EmailStage.Attachment => attachment !== undefined);
+  });
 
 /**
  * Streams JMAP emails over the resolved {@link SyncWindow}: build the query filter (folder scope +

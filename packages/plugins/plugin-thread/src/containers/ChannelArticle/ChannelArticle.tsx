@@ -133,3 +133,5 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
     </Panel.Root>
   );
 };
+
+ChannelArticle.displayName = 'ChannelArticle';

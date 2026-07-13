@@ -43,9 +43,7 @@ export const MAILBOX_DRAFTS_TYPE = `${meta.profile.key}.drafts`;
  */
 export const MAILBOX_DRAFTS_NODE_DATA = `${meta.profile.key}.drafts-folder` as const;
 
-/**
- * Sentinel `subject` value for the mailbox facts companion node. Distinct from any ECHO object so the
- * facts companion surface never collides with the primary Mailbox article surface (whose filter also
- * matches a Mailbox subject); the companion's Mailbox is carried on `data.companionTo` instead.
- */
-export const MAILBOX_FACTS_NODE_DATA = `${meta.profile.key}.facts-companion` as const;
+export const MAILBOX_TOPICS_TYPE = `${meta.profile.key}.topics`;
+
+/** Sentinel `data` value for the topics folder graph node (non-null, mirrors the drafts node). */
+export const MAILBOX_TOPICS_NODE_DATA = `${meta.profile.key}.topics-folder` as const;
