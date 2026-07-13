@@ -1,0 +1,18 @@
+{
+  // Cloudflare Workers (Static Assets) config for the docs site — assets-only (no Worker script).
+  // Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
+  // Local dev: `moon run docs:bundle && wrangler dev`.
+  "name": "docs",
+  "compatibility_date": "2024-11-01",
+  "assets": {
+    "directory": "./dist",
+    // Multi-page static site: serve /404.html for unmatched routes.
+    "not_found_handling": "404-page",
+  },
+  // Per-env Worker names (production = bare name / custom domain; others suffixed). Inherits assets.
+  "env": {
+    "production": { "name": "docs" },
+    "staging": { "name": "docs-staging" },
+    "main": { "name": "docs-main" },
+  },
+}

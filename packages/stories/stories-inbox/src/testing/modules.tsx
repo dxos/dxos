@@ -18,6 +18,7 @@ import {
   MailboxModule,
   MessageModule,
   StatsModule,
+  TopicsModule,
 } from '../components';
 
 // `ModuleProps` (space + attendableId) and the `withModuleProps` adapter now live in the shared
@@ -34,6 +35,7 @@ export const Module = {
   Mailbox: Role.make<Record<string, any>>('org.dxos.storybook.inbox.mailbox'),
   Message: Role.make<Record<string, any>>('org.dxos.storybook.inbox.message'),
   Facts: Role.make<Record<string, any>>('org.dxos.storybook.inbox.facts'),
+  Topics: Role.make<Record<string, any>>('org.dxos.storybook.inbox.topics'),
   Connector: Role.make<Record<string, any>>('org.dxos.storybook.inbox.connector'),
   Archive: Role.make<Record<string, any>>('org.dxos.storybook.inbox.archive'),
   Stats: Role.make<Record<string, any>>('org.dxos.storybook.inbox.stats'),
@@ -60,6 +62,11 @@ const moduleSurfaces: Surface.Definition[] = [
     id: 'inbox.facts',
     filter: Surface.makeFilter(Module.Facts),
     component: withModuleProps(FactsModule),
+  }),
+  Surface.create({
+    id: 'inbox.topics',
+    filter: Surface.makeFilter(Module.Topics),
+    component: withModuleProps(TopicsModule),
   }),
   Surface.create({
     id: 'inbox.connector',

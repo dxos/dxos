@@ -1,0 +1,373 @@
+---
+id: org.dxos.plugin.devtools
+name: DevtoolsPlugin
+version: 0.1.0
+---
+
+Developer inspector plugin for `DXOS` Composer — structured devtools panels for Client/HALO/ECHO/Mesh/EDGE subsystems, an app-graph inspector, and a tools explorer. Debugging utilities (object generation, wireframe overlays, per-object inspection, stats) live in the sibling `@dxos/plugin-debug`.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+
+## Types
+
+```mdl
+type Settings
+  fields:
+    wireframe?: boolean         # overlay every article/section surface with a labelled border
+    traceAll?: boolean          # enable verbose operation tracing across all plugins
+```
+
+```mdl
+type DebugPluginOptions
+  fields:
+    logStore?: IdbLogStore      # shared persistent log store for capturing and downloading logs
+```
+
+```mdl
+type DebugContextType
+  fields:
+    running: boolean
+    start(cb: TimerCallback, options: TimerOptions): void
+    stop(): void
+```
+
+## Components
+
+```mdl
+component DebugSettings
+  desc: Settings panel rendered in the plugin-settings article slot; controls wireframe and traceAll toggles and exposes log download.
+  props:
+    settings: Settings
+    logStore?: IdbLogStore
+  actions:
+    updateSettings(patch: Partial<Settings>)
+    downloadLogs()
+```
+
+```mdl
+component DebugStatus
+  desc: Status-indicator surface shown in the main toolbar; reflects the generator timer running state.
+  state:
+    running: boolean
+```
+
+```mdl
+component DevtoolsOverviewContainer
+  desc: Deck-companion panel that provides quick access to all devtools sections via a categorised link list.
+  layout: |
+    ┌─────────────────────────────┐
+    │  Client  ▸ Config / Storage │
+    │            Logs / Diag      │
+    │  HALO    ▸ Identity / Keys  │
+    │  ECHO    ▸ Spaces / Feeds   │
+    │            Objects / Schema │
+    │  Mesh    ▸ Signal / Swarm   │
+    │  EDGE    ▸ Dashboard / …    │
+    └─────────────────────────────┘
+```
+
+```mdl
+component DebugObjectPanel
+  desc: Companion panel for any ECHO object that shows raw field values, type info, and DXN.
+  props:
+    companionTo: string         # DXN of the object being inspected
+```
+
+```mdl
+component DebugSpaceObjectsPanel
+  desc: Deck-companion panel listing all objects in the active space with their type, ID, and field count.
+  props:
+    space: Space
+```
+
+```mdl
+component DebugGraph
+  desc: Visual representation of the Composer app-graph as a collapsible JSON tree.
+  props:
+    graph: Graph.Graph
+    root: string                # node ID used as the traversal root
+```
+
+```mdl
+component SpaceGenerator
+  desc: Article view for generating synthetic ECHO objects into a space; controls count, type mix, and relation density.
+  props:
+    space: Space
+  actions:
+    generateObjects(count: number, types: string[])
+    clear()
+  emits:
+    onCreateObjects(objects: Obj.Unknown[])
+```
+
+```mdl
+component Wireframe
+  desc: Transparent overlay that wraps any article or section surface and renders a labelled border for layout debugging.
+  props:
+    label: string               # "role:name" descriptor shown in the corner badge
+    object: Obj.Unknown
+    classNames?: string
+```
+
+```mdl
+component SchemaTable
+  desc: Tabular display of all registered ECHO schemas with typename, fields, and version.
+```
+
+```mdl
+component GithubPanel
+  desc: Developer panel linking to open GitHub issues and CI run status for the current build.
+```
+```
+
+## Components (Devtools Panels)
+
+The following components are thin wrappers around `@dxos/devtools` panel components, each bound to a specific `Devtools.*` node:
+
+| Component              | Devtools node              | Displays                                |
+|------------------------|----------------------------|-----------------------------------------|
+| ConfigPanel            | Client.Config              | Vault config JSON viewer                |
+| StoragePanel           | Client.Storage             | Local storage browser                   |
+| LoggingPanel           | Client.Logs                | Live log stream; download via logStore  |
+| DiagnosticsPanel       | Client.Diagnostics         | Client health / metric charts           |
+| IdentityPanel          | Halo.Identity              | Local identity key + device list        |
+| DeviceListPanel        | Halo.Devices               | All devices paired with this identity   |
+| KeyringPanel           | Halo.Keyring               | Raw keyring entries                     |
+| CredentialsPanel       | Halo.Credentials           | Credentials held in the active space    |
+| SpaceListPanel         | Echo.Spaces                | All spaces with state + select action   |
+| SpaceInfoPanel         | Echo.Space                 | Selected space feeds / pipelines        |
+| FeedsPanel             | Echo.Feeds                 | Feed entries for the active space       |
+| ObjectsPanel           | Echo.Objects               | All objects in the active space         |
+| SchemaPanel            | Echo.Schema                | Schemas registered in the active space  |
+| AutomergePanel         | Echo.Automerge             | Automerge document internals            |
+| QueuesPanel            | Echo.Queues                | Pending queue items                     |
+| MembersPanel           | Echo.Members               | Space members with last-seen            |
+| MetadataPanel          | Echo.Metadata              | Space/feed metadata blobs               |
+| SignalPanel            | Mesh.Signal                | Signal-server connection state          |
+| SwarmPanel             | Mesh.Swarm                 | Active swarm peers                      |
+| NetworkPanel           | Mesh.Network               | Full network topology for active space  |
+| EdgeDashboardPanel     | Edge.Dashboard             | EDGE node health / worker stats         |
+| WorkflowPanel          | Edge.Workflows             | Workflow definitions in active space    |
+| InvocationTraceContainer | Edge.Traces              | Invocation trace timeline from feed     |
+| TestingPanel           | Edge.Testing               | Integration test harness for EDGE       |
+| ToolsExplorer          | ToolsExplorer              | MCP-backed tools explorer               |
+
+## Operations
+
+No first-party operations are defined by DebugPlugin. The plugin invokes `SpaceOperation.AddObject`, `SpaceOperation.Migrate`, `LayoutOperation.Open`, and `ScriptOperation.CreateScript` from other plugins via `useOperationInvoker` inside its surfaces.
+
+## Features
+
+```mdl
+feat F-1: Devtools Graph Node
+
+  req F-1.1:
+    when: DebugPlugin is loaded
+    then: a "Devtools" node appears pinned at the end of each root and space in the nav graph
+
+  req F-1.2: The Devtools node contains sub-trees for Client, HALO, ECHO, Mesh, and EDGE categories.
+  req F-1.3: An app-graph sub-node renders DebugGraph rooted at the current space or root.
+  req F-1.4: A tools-explorer sub-node renders ToolsExplorer connected to the MCP introspect service.
+```
+
+```mdl
+feat F-2: Object Debug Companion
+
+  req F-2.1:
+    when: any ECHO object is open in the deck
+    then: a "Debug" companion tab is injected at the last position
+
+  req F-2.2: DebugObjectPanel shows raw object fields, DXN, and typename for the companion target.
+```
+
+```mdl
+feat F-3: Space Object Explorer
+
+  req F-3.1:
+    when: user opens the "Space Objects" deck companion
+    then: DebugSpaceObjectsPanel lists all ECHO objects in the active space
+
+  req F-3.2: List updates reactively as objects are added or removed.
+```
+
+```mdl
+feat F-4: Devtools Overview Companion
+
+  req F-4.1:
+    when: user opens the "Devtools" deck companion
+    then: DevtoolsOverviewContainer renders a categorised link list to all devtools panels
+
+  req F-4.2: Clicking a category link navigates the deck to the corresponding devtools article.
+```
+
+```mdl
+feat F-5: Space Data Generator
+
+  req F-5.1:
+    when: user navigates to the debug node under a space
+    then: SpaceGenerator is rendered as the article
+
+  req F-5.2:
+    when: user triggers object generation
+    then: synthetic ECHO objects are created via op:SpaceOperation.AddObject in the active collection
+
+  req F-5.3: DebugStatus indicator in the toolbar shows a running state while generation is active.
+```
+
+```mdl
+feat F-6: Wireframe Overlay
+
+  req F-6.1:
+    when: settings.wireframe is true
+    then: Wireframe wraps every article and section surface with a labelled border
+
+  req F-6.2:
+    when: settings.wireframe is false or unset
+    then: no overlay is injected; the Wireframe surface filter returns false immediately
+```
+
+```mdl
+feat F-7: Log Capture and Download
+
+  req F-7.1:
+    when: logStore is provided in DebugPluginOptions
+    then: LoggingPanel can stream and display captured log entries
+
+  req F-7.2:
+    when: user clicks download in DebugSettings
+    then: captured logs are serialised and offered as a file download via the file uploader capability
+```
+
+```mdl
+feat F-8: Global Dev Utilities
+
+  req F-8.1:
+    when: DebugPlugin activates
+    then: globalThis.composer.changeStorageVersionInMetadata is registered for manual storage-migration testing
+
+  req F-8.2: The function destroys the client, rewrites the storage version metadata, and reloads the page.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Devtools node appears in nav graph
+  given: Composer loaded with DebugPlugin enabled
+  when: user opens the navigation tree
+  then:
+    - "Devtools" node is visible pinned at the end of the root
+    - sub-nodes Client, HALO, ECHO, Mesh, EDGE are present
+```
+
+```mdl
+test T-2: Debug companion on ECHO object
+  given: a Document is open in the deck
+  when: user clicks the "Debug" companion tab
+  then:
+    - DebugObjectPanel renders with the object's DXN and field map
+```
+
+```mdl
+test T-3: Wireframe overlay toggle
+  given: DebugPlugin settings panel is open
+  when: user enables the wireframe toggle
+  then:
+    - every article and section surface shows a labelled border
+  when: user disables the wireframe toggle
+  then:
+    - borders are removed immediately
+```
+
+```mdl
+test T-4: Space object generation
+  given: a space with an empty collection is active
+  when: user opens the debug space node and generates 10 objects
+  then:
+    - 10 new objects appear in the active collection
+    - DebugStatus shows "running" while generation is in progress
+```
+
+```mdl
+test T-5: Log download
+  given: logStore is configured and some log entries have been captured
+  when: user clicks "Download Logs" in DebugSettings
+  then:
+    - a file download is triggered containing the serialised log entries
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```

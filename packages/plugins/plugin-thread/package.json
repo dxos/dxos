@@ -132,10 +132,10 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-menu": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/react-ui-form": "workspace:^",
+    "@dxos/react-ui-menu": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
     "@effect-atom/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",

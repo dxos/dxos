@@ -36,5 +36,5 @@ export const refSimpleFamily = Atom.family(<T>(ref: Ref<T>): Atom.Atom<T | undef
     });
 
     return loadRefTarget(ref, get, setupSubscription);
-  });
+  }).pipe(Atom.keepAlive);
 });

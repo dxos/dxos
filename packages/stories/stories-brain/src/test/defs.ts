@@ -33,6 +33,18 @@ export const LADDER_REFERENCE = process.env.LADDER_REFERENCE?.trim() ?? 'haiku';
 export const LADDER_TOLERANCE = process.env.LADDER_TOLERANCE ? Number(process.env.LADDER_TOLERANCE) : 0.95;
 
 //
+// Sender-type triage (classify-sender ground-truth eval).
+//
+
+/** Model used to bootstrap the candidate sender-label gold set (a name substring; strongest by default). */
+export const SENDER_LABEL_MODEL = process.env.SENDER_LABEL_MODEL?.trim() ?? 'opus';
+
+/** Confidence at/above which the hybrid arm trusts the heuristic instead of calling the model. */
+export const SENDER_HYBRID_THRESHOLD = process.env.SENDER_HYBRID_THRESHOLD
+  ? Number(process.env.SENDER_HYBRID_THRESHOLD)
+  : 0.9;
+
+//
 // Qualitative artifacts (topics / profiles / sample drafts) — a wider corpus slice, single model.
 //
 
@@ -68,7 +80,11 @@ export const EVAL_SCORE = process.env.EVAL_SCORE !== '0';
 /** Default message count for the intentionally-small html-vs-text benchmark. */
 export const DEFAULT_HTML_VS_TEXT_N = 10;
 
-/** Optional user instructions steering the draft-responses benchmark (a proxy for the Mailbox Instructions object). */
+/**
+ * Overrides the reply-style instructions for the draft-responses benchmark (a proxy for the Mailbox
+ * Instructions object). Unset → the pipeline's `DEFAULT_DRAFT_INSTRUCTIONS` (plain/direct/no hedging);
+ * set to empty to draft with the base rules only.
+ */
 export const DRAFT_INSTRUCTIONS = process.env.DRAFT_INSTRUCTIONS?.trim();
 
 /** Preferred subject when none is given and it is present in the fact store. */

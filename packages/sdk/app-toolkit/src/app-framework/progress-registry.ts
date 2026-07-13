@@ -45,6 +45,7 @@ export const createProgressRegistry = (registry: Registry.Registry): AppCapabili
     snapshotAtom,
     monitorAtom,
     register,
+    cancel: (name) => core.cancel(name),
     snapshot: () => registry.get(snapshotAtom),
   };
 };

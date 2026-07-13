@@ -403,6 +403,9 @@
       "path": "packages/plugins/plugin-deck/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-devtools/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-discord/tsconfig.json"
     },
     {
@@ -421,13 +424,7 @@
       "path": "packages/plugins/plugin-freeq/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-gallery/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-game/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-generator/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-github/tsconfig.json"
@@ -436,7 +433,13 @@
       "path": "packages/plugins/plugin-graph/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-heygen/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-ibkr/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-ideogram/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
@@ -560,6 +563,9 @@
     },
     {
       "path": "packages/plugins/plugin-status-bar/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-studio/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-support/tsconfig.json"

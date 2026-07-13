@@ -49,7 +49,11 @@ const primaryCount = (doc) => {
     return doc.factCount;
   }
   if (Array.isArray(doc.rows) && doc.rows.length) {
-    return doc.rows.reduce((sum, r) => sum + (r.facts ?? r.processed ?? 0), 0);
+    // Fact rows carry `facts`/`processed`; graded rows (model-ladder, classify-sender) carry item
+    // counts (`n`/`scored`) with accuracy instead — fall back to the row count so a graded run whose
+    // rows have no fact tally isn't mis-flagged EMPTY.
+    const summed = doc.rows.reduce((sum, r) => sum + (r.facts ?? r.processed ?? r.n ?? r.scored ?? 0), 0);
+    return summed || doc.rows.length;
   }
   if (Array.isArray(doc.variants) && doc.variants.length) {
     const metrics = doc.variants.map((v) => v.metrics ?? {});
@@ -68,8 +72,15 @@ const mdBlocks = (jsonPath) => {
 };
 
 // Tests whose corpus is NOT the full message feed, so a count < feedCount is expected (not partial):
-// html-vs-text is intentionally small; summarize-threads is counted in threads, not messages.
-const NON_FEED_TESTS = new Set(['html-vs-text', 'summarize-threads', 'html-to-markdown']);
+// html-vs-text is intentionally small; summarize-threads is counted in threads, not messages;
+// model-ladder grades a capped set (LADDER_N); classify-sender counts unique senders, not messages.
+const NON_FEED_TESTS = new Set([
+  'html-vs-text',
+  'summarize-threads',
+  'html-to-markdown',
+  'model-ladder',
+  'classify-sender',
+]);
 
 const files = readdirSync(resultsDir).filter((f) => f.endsWith('.json') && f !== 'progress.json');
 const rows = [];

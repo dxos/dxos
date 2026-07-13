@@ -13,7 +13,7 @@ export type PopoverStyleProps = Partial<{
 
 const content: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
   mx(
-    'dx-popover-surface overflow-hidden border border-separator rounded-sm',
+    'dx-popover-surface overflow-hidden border border-separator rounded-md',
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),
     'dx-focus-ring',

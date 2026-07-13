@@ -65,6 +65,13 @@ const STREAMING_CONFIG = {
 } as const;
 
 /**
+ * Progress-registry key for a mailbox's Gmail sync monitor — the mailbox URI with a `#sync` suffix so
+ * distinct monitor types (e.g. `#topics`) can coexist for the same mailbox. Peer of
+ * `createTopicsProgressKey`; `MailboxArticle` subscribes to it to show the sync meter.
+ */
+export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#sync';
+
+/**
  * Runs the Gmail sync pipeline for a binding against the {@link GoogleMailApi} service (plus the
  * ambient operation services). It *requires* the service rather than providing HTTP/credentials
  * itself, so a test can drive the whole sync against a mock Gmail API + a real ECHO db — the
@@ -162,6 +169,11 @@ export const runGmailSync = ({
         Effect.gen(function* () {
           const fromHeader = decoded.raw.payload.headers.find(({ name }) => name === 'From');
           const from = fromHeader ? parseFromHeader(fromHeader.value) : undefined;
+          // Drop messages excluded by the mailbox's filters before the costly attachment fetch;
+          // returning undefined removes the item from the pipeline (see `decodeBodyStage`).
+          if (Mailbox.isFiltered(mailbox, { sender: from })) {
+            return undefined;
+          }
           const contact = from?.email ? yield* resolve(Person.Person, { email: from.email }) : undefined;
           const mapped = mapToMessage(decoded, contact ?? undefined);
           const tagUris = mapped.labelIds.flatMap((labelId) => {
@@ -192,13 +204,26 @@ export const runGmailSync = ({
       store.compartment(meta.profile.key),
     );
 
+    // Cooperative cancellation: the meter's cancel control aborts the controller; the `cancelStage`
+    // below then drops all further messages so the stream drains and the run stops without error.
+    const controller = new AbortController();
+
     // Live progress monitor (optional — no host in headless/test runs, so `getAll` yields nothing).
     // Keyed by the mailbox URI so MailboxArticle and the R0 popover can subscribe to this run.
-    const mailboxUri = Obj.getURI(mailbox).toString();
     const progressMonitors = (yield* Capability.getAll(AppCapabilities.ProgressRegistry)).map((registry) =>
-      registry.register(mailboxUri, { label: mailbox.name ?? 'Mailbox' }),
+      registry.register(createSyncProgressKey(mailbox), {
+        label: mailbox.name ?? 'Mailbox',
+        onCancel: () => controller.abort(),
+      }),
     );
     const advanceProgress = (by: number) => progressMonitors.forEach((monitor) => monitor.advance(by));
+
+    // Drops every message once cancelled (returning undefined removes it — see `decodeBodyStage`), so
+    // the pipeline skips all remaining fetch/decode/commit work and completes promptly.
+    const cancelStage: Stage.Stage<GoogleMail.Message, GoogleMail.Message, never, never> = Stage.map(
+      'cancel',
+      (message: GoogleMail.Message) => Effect.sync(() => (controller.signal.aborted ? undefined : message)),
+    );
     const startedAt = new Date().toISOString();
     const startMs = Date.now();
     const threads = new Set<string>();
@@ -268,6 +293,7 @@ export const runGmailSync = ({
       end: rangeEnd,
       searchFilter: targetOptions.filter,
     }).pipe(
+      cancelStage,
       SyncBinding.dedupStage<GoogleMail.Message>(
         'dedup',
         (message) => message.id,
@@ -301,8 +327,10 @@ export const runGmailSync = ({
       ),
       Effect.tapError((error) =>
         Effect.sync(() => {
-          const message = error instanceof Error ? error.message : String(error);
-          progressMonitors.forEach((monitor) => monitor.fail(message));
+          // Log the raw error for debugging; the meter shows only a short reason (the full exception —
+          // provider errors, auth tokens — must not reach the UI).
+          log.warn('gmail sync failed', { error });
+          progressMonitors.forEach((monitor) => monitor.fail('Sync failed'));
         }),
       ),
     );
@@ -319,11 +347,15 @@ export const runGmailSync = ({
     publishStats();
 
     progressMonitors.forEach((monitor) => {
-      monitor.done();
+      if (controller.signal.aborted) {
+        monitor.note('Cancelled');
+      } else {
+        monitor.done();
+      }
       monitor.remove();
     });
 
-    log('gmail sync complete', { newMessages: stats.newMessages });
+    log('gmail sync complete', { newMessages: stats.newMessages, cancelled: controller.signal.aborted });
     return { newMessages: stats.newMessages };
   }).pipe(Effect.withSpan('gmail-sync'));
 
