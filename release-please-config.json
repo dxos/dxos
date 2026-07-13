@@ -735,11 +735,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-gallery/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-game/package.json",
           "jsonpath": "$.version"
         },
@@ -761,6 +756,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-ibkr/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-ideogram/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -966,6 +966,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-status-bar/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-studio/package.json",
           "jsonpath": "$.version"
         },
         {
