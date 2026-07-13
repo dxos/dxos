@@ -106,6 +106,7 @@ export const ConnectorAuthButton = ({ connectorIds, db, existingTarget }: Connec
         <IconButton
           icon='ph--plugs--regular'
           label={t('connect-connection.label', { connector: connector.label ?? connector.id })}
+          data-testid={`connector.connect.${connector.id}`}
           onClick={() => handleCreateNew(connector.id)}
         />
       );
@@ -115,7 +116,7 @@ export const ConnectorAuthButton = ({ connectorIds, db, existingTarget }: Connec
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <IconButton icon='ph--plugs--regular' label={t('connect.label')} />
+        <IconButton icon='ph--plugs--regular' label={t('connect.label')} data-testid='connector.connect' />
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content>
@@ -131,7 +132,11 @@ export const ConnectorAuthButton = ({ connectorIds, db, existingTarget }: Connec
             ))}
             {connections.length > 0 && offered.length > 0 && <DropdownMenu.Separator />}
             {offered.map((connector) => (
-              <DropdownMenu.Item key={connector.id} onClick={() => handleCreateNew(connector.id)}>
+              <DropdownMenu.Item
+                key={connector.id}
+                data-testid={`connector.connect.${connector.id}`}
+                onClick={() => handleCreateNew(connector.id)}
+              >
                 {t('connect-connection.label', { connector: connector.label ?? connector.id })}
               </DropdownMenu.Item>
             ))}

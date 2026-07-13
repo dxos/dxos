@@ -24,6 +24,7 @@ tasks:
       - '--entryPoint=src/plugin.ts'
       - '--entryPoint=src/plugin.workerd.ts'
       - '--entryPoint=src/testing.ts'
+      - '--entryPoint=src/testing/http-mock.ts'
       - '--entryPoint=src/translations.ts'
       - '--entryPoint=src/types/index.ts'
       - '--platform=neutral'

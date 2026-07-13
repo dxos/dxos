@@ -21,6 +21,8 @@ export type InitializeActionProps<T extends Obj.Any> = {
   syncLabel: string;
   /** Per-phase notifications shown for the sync invocation. */
   notify?: Operation.NotifyOptions;
+  /** Optional test id for the sync button (e2e targeting). */
+  syncTestId?: string;
 };
 
 /**
@@ -37,6 +39,7 @@ export const InitializeAction = <T extends Obj.Any>({
   connectorIds,
   syncLabel,
   notify,
+  syncTestId,
 }: InitializeActionProps<T>) => {
   const pluginManager = usePluginManager();
   const { connection, sync, syncing } = useTargetSync(target, notify);
@@ -53,6 +56,7 @@ export const InitializeAction = <T extends Obj.Any>({
         iconClassNames={syncing ? 'animate-spin' : undefined}
         icon={syncing ? 'ph--spinner-gap--regular' : 'ph--arrow-clockwise--regular'}
         label={syncLabel}
+        data-testid={syncTestId}
         onClick={sync}
       />
     );

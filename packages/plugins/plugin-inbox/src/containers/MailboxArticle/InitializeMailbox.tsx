@@ -46,6 +46,7 @@ export const InitializeMailboxAction = ({ mailbox }: InitializeMailboxProps) => 
       target={mailbox}
       connectorIds={CONNECTOR_IDS}
       syncLabel={t('sync-mailbox.label')}
+      syncTestId='inbox.mailbox.sync'
       notify={{
         success: ['sync-mailbox-success.title', { ns: meta.profile.key }],
         error: ['sync-mailbox-error.title', { ns: meta.profile.key }],
