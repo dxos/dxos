@@ -66,15 +66,20 @@ Promotion: `Obj.make(Topic, suggestion)` + `AnchoredTo(Topic → Mailbox)`, then
 
 **Detail container.** New `TopicArticle` (peer of `MessageArticle`) rendering one `Topic`:
 
+> **Shipped scope (v1) vs deferred.** v1 renders the topic's stored fields (`label`, `summary`, keyword
+> chips, participants, rolled-up `questions`/`tasks`) and lists the thread ids; master→detail opens via
+> `useShowItem` (companion). **Deferred (TASKS follow-ups):** resolving `threadIds` to live feed messages,
+> thread click-through, and the multi-mode deck-peer path. The bullets below describe the full target.
+
 - Header: `label`; body: `summary`, keyword chips, participants, rolled-up `questions` / `tasks`.
 - Member threads: `threadIds` are string keys, not refs. Resolve to messages by querying the mailbox
   feed and grouping by `threadId` (reuse the mailbox's existing aggregate/threading). Render the
   thread list (subject + participant/message count); clicking a thread selects it in the mailbox
-  (the same `LayoutOperation.Select` / `Open` path messages already use).
+  (the same `LayoutOperation.Select` / `Open` path messages already use). _[deferred — v1 lists thread ids]_
 
-**Master → detail.** `TopicsArticle` selection opens `TopicArticle` following the **same
-`layout.mode` branching MailboxArticle already uses** for messages: `simple` → companion
-(`UpdateComplementary`), `multi` → deck peer (`Open`), else → companion (`UpdateCompanion`).
+**Master → detail.** `TopicsArticle` selection opens `TopicArticle` via `useShowItem` (companion in v1).
+The full target follows the **same `layout.mode` branching MailboxArticle uses** for messages: `simple` →
+companion (`UpdateComplementary`), `multi` → deck peer (`Open`) _[deferred]_, else → companion (`UpdateCompanion`).
 
 **Surface + graph.** New react-surface `AppSurface.object(Article, Topic)` → `TopicArticle`. Topic
 nodes are reachable via selection from the Topics list; no new app-graph node required in v1.
@@ -118,10 +123,11 @@ message tile (mirroring the ignore-sender gating fix) and handled in the mailbox
 
 1. Build the message's thread (`buildThreads` over its thread members).
 2. Seed a single `Topic` from that one thread (label from subject/keywords; LLM `summary`).
-3. Run fact extraction on the thread's messages (reuse the existing fact pipeline).
+3. Run fact extraction on the thread's messages (reuse the existing fact pipeline). _[deferred — TASKS follow-up]_
 4. Persist `Topic` + `AnchoredTo`, then open `TopicArticle` in the companion.
 
-v1 is single-thread; cross-thread "find related" is deferred.
+v1 is single-thread and does **not** run fact extraction (step 3 deferred); cross-thread "find related"
+is also deferred.
 
 **Testing.** Storybook play test with a mock `AiService`: invoke the menu action on a seeded message,
 assert a `Topic` is created and `TopicArticle` opens.

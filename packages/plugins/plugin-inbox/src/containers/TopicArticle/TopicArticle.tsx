@@ -13,7 +13,6 @@ import { meta } from '#meta';
 export type TopicArticleProps = {
   role?: string;
   subject: Topic;
-  attendableId?: string;
 };
 
 /** A single labelled list section (questions / tasks / thread subjects); omitted when empty. */

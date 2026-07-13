@@ -56,7 +56,7 @@ const Story = () => {
   const { invokePromise } = useOperationInvoker();
 
   const handleCreate = useCallback(() => {
-    if (!mailbox) {
+    if (!mailbox || !space) {
       return;
     }
     const message = Obj.make(Message.Message, {
@@ -68,7 +68,7 @@ const Story = () => {
     void invokePromise(
       InboxOperation.CreateTopicFromMessage,
       { mailbox: Ref.make(mailbox), message },
-      { spaceId: space!.id },
+      { spaceId: space.id },
     );
   }, [mailbox, space, invokePromise]);
 

@@ -41,13 +41,14 @@ export const orderSuggestions = ({
   personEmails,
   existingLabels,
 }: OrderSuggestionsInput): TopicDraft[] => {
-  const seen = new Set(existingLabels);
+  // Dedup case-insensitively — LLM-generated labels differing only in casing are the same topic.
+  const seen = new Set(Array.from(existingLabels, (label) => label.toLowerCase()));
   const kept: TopicDraft[] = [];
   for (const draft of drafts) {
-    if (seen.has(draft.label) || isBulkCluster(draft, bulkThreadIds)) {
+    if (seen.has(draft.label.toLowerCase()) || isBulkCluster(draft, bulkThreadIds)) {
       continue;
     }
-    seen.add(draft.label);
+    seen.add(draft.label.toLowerCase());
     kept.push(draft);
   }
 

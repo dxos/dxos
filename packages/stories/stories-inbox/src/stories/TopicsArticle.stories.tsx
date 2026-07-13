@@ -125,6 +125,15 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/** Type-guarded `closest` — narrows `Element | null` to `HTMLElement` (avoids a cast) and fails loudly. */
+const closestElement = (element: Element, selector: string): HTMLElement => {
+  const found = element.closest(selector);
+  if (!(found instanceof HTMLElement)) {
+    throw new Error(`Expected an ancestor matching "${selector}"`);
+  }
+  return found;
+};
+
 /** The master list: accepted topic cards below a "Suggested" section. */
 export const Default: Story = {};
 
@@ -134,8 +143,8 @@ export const DeleteTest: Story = {
     const canvas = within(canvasElement);
     const body = within(document.body);
 
-    const budgetCard = await waitFor(
-      () => canvas.getByText('q2 report budget').closest('[data-testid="topic-card"]') as HTMLElement,
+    const budgetCard = await waitFor(() =>
+      closestElement(canvas.getByText('q2 report budget'), '[data-testid="topic-card"]'),
     );
     void expect(canvas.getByText('launch planning')).toBeInTheDocument();
 
@@ -156,9 +165,7 @@ export const SuggestionsTest: Story = {
     const section = await waitFor(() => canvas.getByTestId('topics-suggested'));
     await waitFor(() => expect(within(section).getAllByTestId('topic-suggestion')).toHaveLength(2));
 
-    const invoiceCard = within(section)
-      .getByText('invoice acme')
-      .closest('[data-testid="topic-suggestion"]') as HTMLElement;
+    const invoiceCard = closestElement(within(section).getByText('invoice acme'), '[data-testid="topic-suggestion"]');
     await userEvent.click(within(invoiceCard).getByRole('button', { name: /action menu/i }));
     await userEvent.click(await waitFor(() => body.getByText(/^accept$/i)));
 

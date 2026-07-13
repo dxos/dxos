@@ -27,6 +27,7 @@ import {
   type ToggleGroupItemProps,
   type ToggleProps,
 } from '../Button';
+import { Icon } from '../Icon';
 import { Link, type LinkProps } from '../Link';
 import { DropdownMenu } from '../Menu';
 import { Separator, type SeparatorProps } from '../Separator';
@@ -331,8 +332,9 @@ function ToolbarMenu<T extends any | void = void>({ context, items }: ToolbarMen
         <DropdownMenu.Portal>
           <DropdownMenu.Content>
             <DropdownMenu.Viewport>
-              {items?.map(({ label, onClick: onSelect }, index) => (
+              {items?.map(({ label, icon, onClick: onSelect }, index) => (
                 <DropdownMenu.Item key={index} onSelect={() => onSelect(context as T)}>
+                  {icon && <Icon icon={icon} />}
                   {label}
                 </DropdownMenu.Item>
               ))}

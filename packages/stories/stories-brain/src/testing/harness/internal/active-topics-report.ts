@@ -14,8 +14,37 @@ const check = (value: boolean): string => (value ? '✓' : '✗');
 
 const pct = (value: number): string => `${Math.round(value * 100)}%`;
 
-/** The `index.md` overview: active + suggested tables with confidence, rationale, and a field checklist. */
-export const renderIndex = ({ active, suggested }: ActiveTopicsResult): string => {
+/** Escape a value for a markdown table cell — `|` would split the row, newlines break it. */
+const escapeCell = (value: string): string => value.replace(/\|/g, '\\|').replace(/\r?\n+/g, ' ');
+
+/**
+ * Assign each active topic a unique filesystem slug, disambiguating collisions (labels that normalize to
+ * the same slug) with a numeric suffix so reports never overwrite each other.
+ */
+export const uniqueSlugs = (active: readonly ActiveTopic[]): Map<ActiveTopic, string> => {
+  const used = new Set<string>();
+  const slugs = new Map<ActiveTopic, string>();
+  for (const topic of active) {
+    const base = topicSlug(topic.label);
+    let candidate = base;
+    let suffix = 2;
+    while (used.has(candidate)) {
+      candidate = `${base}-${suffix++}`;
+    }
+    used.add(candidate);
+    slugs.set(topic, candidate);
+  }
+  return slugs;
+};
+
+/**
+ * The `index.md` overview: active + suggested tables with confidence, rationale, and a field checklist.
+ * `slugFor` supplies each active topic's report filename so links match the files actually written.
+ */
+export const renderIndex = (
+  { active, suggested }: ActiveTopicsResult,
+  slugFor: (topic: ActiveTopic) => string = (topic) => topicSlug(topic.label),
+): string => {
   const lines: string[] = ['# Active Topics', ''];
 
   lines.push(`## Active (${active.length})`, '');
@@ -27,7 +56,7 @@ export const renderIndex = ({ active, suggested }: ActiveTopicsResult): string =
     for (const topic of active) {
       const done = populatedChecklist(topic);
       lines.push(
-        `| [${topic.label}](${topicSlug(topic.label)}.md) | ${pct(topic.confidence)} | ${check(done.status)} | ${check(done.facts)} | ${check(done.tasks)} | ${check(done.drafts)} | ${topic.rationale} |`,
+        `| [${escapeCell(topic.label)}](${slugFor(topic)}.md) | ${pct(topic.confidence)} | ${check(done.status)} | ${check(done.facts)} | ${check(done.tasks)} | ${check(done.drafts)} | ${escapeCell(topic.rationale)} |`,
       );
     }
     lines.push('');
@@ -41,7 +70,7 @@ export const renderIndex = ({ active, suggested }: ActiveTopicsResult): string =
     lines.push('| --- | --- | --- | --- | --- |');
     for (const topic of suggested) {
       lines.push(
-        `| ${topic.label} | ${pct(topic.confidence)} | ${topic.threadCount} | ${topic.participantCount} | ${topic.rationale} |`,
+        `| ${escapeCell(topic.label)} | ${pct(topic.confidence)} | ${topic.threadCount} | ${topic.participantCount} | ${escapeCell(topic.rationale)} |`,
       );
     }
     lines.push('');
@@ -101,9 +130,12 @@ export const serializeActiveTopics = ({ active, suggested }: ActiveTopicsResult)
 /** Writes `index.md`, one `<slug>.md` per active topic, and `active-topics.json` into `dir`. */
 export const writeActiveTopicsReports = (dir: string, result: ActiveTopicsResult): void => {
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, 'index.md'), renderIndex(result));
+  // One resolved slug per active topic — shared by the index links and the report filenames.
+  const slugs = uniqueSlugs(result.active);
+  const slugFor = (topic: ActiveTopic): string => slugs.get(topic) ?? topicSlug(topic.label);
+  writeFileSync(join(dir, 'index.md'), renderIndex(result, slugFor));
   for (const topic of result.active) {
-    writeFileSync(join(dir, `${topicSlug(topic.label)}.md`), renderTopicReport(topic));
+    writeFileSync(join(dir, `${slugFor(topic)}.md`), renderTopicReport(topic));
   }
   writeFileSync(join(dir, 'active-topics.json'), JSON.stringify(serializeActiveTopics(result), null, 2));
 };

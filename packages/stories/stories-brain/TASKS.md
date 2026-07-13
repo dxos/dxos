@@ -253,9 +253,9 @@ triage, make topics opt-in suggestions rather than eager objects, and finish the
 
 ### Topic suggestions (opt-in)
 
-- [ ] **Lightweight topic suggestions on Mailbox** → detailed as **Phase B** in the Topics UX v2 plan
+- [x] **Lightweight topic suggestions on Mailbox** → shipped as **Phase B** in the Topics UX v2 plan
       below (spec `agents/superpowers/specs/2026-07-12-topics-ux-v2-design.md`).
-- [ ] **Message → "Create Topic" menu** → detailed as **Phase C** in the Topics UX v2 plan below
+- [x] **Message → "Create Topic" menu** → shipped as **Phase C** in the Topics UX v2 plan below
       (single-thread seed in v1).
 
 ### UI
@@ -269,7 +269,7 @@ triage, make topics opt-in suggestions rather than eager objects, and finish the
       item (`ph--trash` icon) → `space.db.remove(topic)`. New `topics.delete.label` translation. Verified
       by a storybook play test (`Topics.stories.tsx` — seeds two topics, deletes one, asserts removal).
       FOLLOW-UP: also remove the `AnchoredTo` relation when deleting (currently orphaned).
-- [ ] **`TopicArticle` + master/detail** → detailed as **Phase A** in the Topics UX v2 plan below.
+- [x] **`TopicArticle` + master/detail** → shipped as **Phase A** in the Topics UX v2 plan below.
 
 ## Topics UX v2 — implementation plan
 

@@ -59,7 +59,7 @@ const DetailStory = ({ label }: { label: string }) => {
     return <Loading data={{ db: !!space?.db, topic: !!topic }} />;
   }
 
-  return <TopicArticle role='article' subject={topic} attendableId='story' />;
+  return <TopicArticle role='article' subject={topic} />;
 };
 
 const meta = {

@@ -41,7 +41,7 @@ const handler = InboxOperation.CreateTopicFromMessage.pipe(
 
       // Gather the message's thread (sibling messages sharing its derived thread id).
       const threadId = deriveThreadId(message);
-      const messages = (yield* Effect.promise(() =>
+      const messages = (yield* Effect.tryPromise(() =>
         db.query(Query.select(Filter.type(Message.Message)).from(feed)).run(),
       )).filter((candidate) => deriveThreadId(candidate) === threadId);
 
@@ -79,7 +79,7 @@ const handler = InboxOperation.CreateTopicFromMessage.pipe(
         }),
       );
       db.add(AnchoredTo.make({ [Relation.Source]: topic, [Relation.Target]: mailbox }));
-      yield* Effect.promise(() => db.flush());
+      yield* Effect.tryPromise(() => db.flush());
 
       return { topicId: topic.id };
     }),

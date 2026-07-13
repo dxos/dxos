@@ -89,9 +89,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'topic',
         filter: AppSurface.object(AppSurface.Article, Topic),
-        component: ({ data, role }) => (
-          <TopicArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: ({ data, role }) => <TopicArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: 'mailbox',

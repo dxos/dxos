@@ -8,14 +8,6 @@ import { Message } from '@dxos/types';
 
 import { resolveTopicThreads } from './resolve-threads';
 
-const msg = (subject: string, created: string) =>
-  Message.make({
-    created,
-    sender: { email: 'alice@example.com' },
-    blocks: [{ _tag: 'text', text: 'body' }],
-    properties: { subject },
-  });
-
 describe('resolveTopicThreads', () => {
   test('returns only threads referenced by the topic, grouped and ordered', ({ expect }) => {
     // Two messages thread on the normalized subject "q2 report"; a third is a separate thread.
@@ -39,3 +31,11 @@ describe('resolveTopicThreads', () => {
     expect(threads.map((thread) => thread.threadId)).toEqual(['q2 report', 'launch plan']);
   });
 });
+
+const msg = (subject: string, created: string) =>
+  Message.make({
+    created,
+    sender: { email: 'alice@example.com' },
+    blocks: [{ _tag: 'text', text: 'body' }],
+    properties: { subject },
+  });

@@ -18,6 +18,7 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
@@ -233,12 +234,15 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
               InboxOperation.CreateTopicFromMessage,
               { mailbox: EchoRef.make(mailbox), message },
               { spaceId: db.spaceId },
-            ).then((result) => {
-              const topicId = result?.data?.topicId;
-              if (topicId) {
-                void showItem({ contextId: id, selectionId: topicId, companion: linkedSegment('topic') });
-              }
-            });
+            )
+              .then((result) => {
+                const topicId = result?.data?.topicId;
+                if (topicId) {
+                  void showItem({ contextId: id, selectionId: topicId, companion: linkedSegment('topic') });
+                }
+              })
+              // Surface the failure instead of silently swallowing it (AI timeout / DB error).
+              .catch((err) => log.catch(err));
           }
           break;
         }

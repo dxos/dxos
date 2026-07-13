@@ -29,11 +29,12 @@ export const resolveTopicThreads = (
     if (!wanted.has(threadId)) {
       continue;
     }
-    const bucket = byThread.get(threadId) ?? [];
-    if (bucket.length === 0) {
-      byThread.set(threadId, bucket);
+    const bucket = byThread.get(threadId);
+    if (bucket) {
+      bucket.push(message);
+    } else {
+      byThread.set(threadId, [message]);
     }
-    bucket.push(message);
   }
 
   return topic.threadIds.flatMap((threadId) => {

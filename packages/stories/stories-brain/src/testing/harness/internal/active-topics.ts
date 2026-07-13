@@ -89,9 +89,9 @@ export const activityScore = (signals: ClusterSignals, options: ActivityOptions)
   return signals.automated ? score * (options.automatedFactor ?? 0.35) : score;
 };
 
-/** Blends the LLM confidence with the deterministic activity score (`w` weights the LLM). */
-export const combineConfidence = (activity: number, llm: number, w = 0.6): number =>
-  Math.min(1, Math.max(0, w * llm + (1 - w) * activity));
+/** Blends the LLM confidence with the deterministic activity score (`weight` weights the LLM). */
+export const combineConfidence = (activity: number, llm: number, weight = 0.6): number =>
+  Math.min(1, Math.max(0, weight * llm + (1 - weight) * activity));
 
 /** A scored candidate before the active/suggested split. */
 export type ScoredCandidate = {
@@ -199,6 +199,7 @@ export type ActiveTopicsResult = {
   readonly suggested: readonly SuggestedTopic[];
 };
 
+/** Converts a scored candidate into its unpopulated `SuggestedTopic` (label/summary/counts + confidence). */
 export const toSuggestedTopic = (candidate: ScoredCandidate): SuggestedTopic => ({
   label: candidate.draft.label,
   summary: candidate.draft.summary,

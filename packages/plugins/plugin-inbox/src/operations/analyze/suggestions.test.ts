@@ -8,17 +8,6 @@ import { type TopicDraft } from '@dxos/pipeline-email';
 
 import { orderSuggestions } from './suggestions';
 
-const draft = (overrides: Partial<TopicDraft>): TopicDraft => ({
-  label: 'topic',
-  summary: '',
-  threadIds: ['t1'],
-  participants: [],
-  keywords: [],
-  questions: [],
-  tasks: [],
-  ...overrides,
-});
-
 describe('orderSuggestions', () => {
   test('suppresses bulk-dominated clusters', ({ expect }) => {
     const drafts = [
@@ -59,4 +48,26 @@ describe('orderSuggestions', () => {
     });
     expect(result.map((entry) => entry.label)).toEqual(['q2 report']);
   });
+
+  test('dedup is case-insensitive', ({ expect }) => {
+    const drafts = [draft({ label: 'Q2 Report' }), draft({ label: 'q2 report' })];
+    const result = orderSuggestions({
+      drafts,
+      bulkThreadIds: new Set(),
+      personEmails: new Set(),
+      existingLabels: new Set(),
+    });
+    expect(result.map((entry) => entry.label)).toEqual(['Q2 Report']);
+  });
+});
+
+const draft = (overrides: Partial<TopicDraft>): TopicDraft => ({
+  label: 'topic',
+  summary: '',
+  threadIds: ['t1'],
+  participants: [],
+  keywords: [],
+  questions: [],
+  tasks: [],
+  ...overrides,
 });
