@@ -14,3 +14,4 @@ tasks:
       - '--entryPoint=src/Client/index.ts'
       - '--entryPoint=src/Worker.ts'
       - '--entryPoint=src/Coordinator/index.ts'
+      - '--entryPoint=src/WorkerProtocol.ts'

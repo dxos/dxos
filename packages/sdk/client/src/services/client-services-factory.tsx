@@ -4,10 +4,11 @@
 
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
+import { failUndefined, raise } from '@dxos/debug';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import * as Coordinator from '@dxos/worker-framework/Coordinator';
 
 import { DedicatedWorkerClientServices, type DedicatedWorkerClientServicesOptions } from './dedicated';
-import { SharedWorkerCoordinator, SingleClientCoordinator } from './dedicated';
 import { type LocalClientServicesParams, fromHost } from './local-client-services';
 import { fromSocket } from './socket';
 
@@ -91,12 +92,12 @@ export const createClientServices = async (
       const singleClientMode = config.values.runtime?.client?.singleClientMode;
       return new DedicatedWorkerClientServices({
         createWorker: createDedicatedWorker,
-        createCoordinator: () =>
+        createCoordinator: async () =>
           singleClientMode
-            ? new SingleClientCoordinator()
+            ? new Coordinator.SingleClient()
             : createCoordinatorWorker
-              ? new SharedWorkerCoordinator(createCoordinatorWorker)
-              : new SharedWorkerCoordinator(),
+              ? new Coordinator.SharedWorker({ createWorker: createCoordinatorWorker })
+              : raise(new TypeError('createCoordinatorWorker is required when singleClientMode is false')),
         config,
       });
     }

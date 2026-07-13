@@ -7,7 +7,7 @@ import { Config } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
-import * as Worker from '@dxos/worker-framework/worker';
+import * as Worker from '@dxos/worker-framework/Worker';
 
 import { STORAGE_LOCK_KEY } from '../lock-key';
 

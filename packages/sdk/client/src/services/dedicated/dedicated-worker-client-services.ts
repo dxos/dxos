@@ -23,7 +23,7 @@ import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/servi
 import { type ServiceBundle } from '@dxos/rpc';
 import type { MaybePromise } from '@dxos/util';
 import { WorkerProtocol } from '@dxos/worker-framework';
-import * as Client from '@dxos/worker-framework/client';
+import * as Client from '@dxos/worker-framework/Client';
 
 import { ClientServicesProxy } from '../service-proxy';
 

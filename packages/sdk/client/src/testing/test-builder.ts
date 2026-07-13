@@ -31,6 +31,8 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
+import * as Coordinator from '@dxos/worker-framework/Coordinator';
+import * as WorkerProtocol from '@dxos/worker-framework/WorkerProtocol';
 
 import { Client } from '../client';
 import {
@@ -38,7 +40,6 @@ import {
   DedicatedWorkerClientServices,
   type LeaderTimeoutOptions,
   LocalClientServices,
-  MemoryWorkerCoordiantor,
 } from '../services';
 import { TestWorkerFactory } from './test-worker-factory';
 
@@ -68,7 +69,7 @@ export class TestBuilder {
   public sqlitePath?: string;
 
   _transport: TransportKind;
-  private _coordinator?: MemoryWorkerCoordiantor;
+  private _coordinator?: WorkerProtocol.WorkerCoordinator;
   private _workerFactory?: TestWorkerFactory;
 
   // TODO(burdon): Pass in params as object.
@@ -164,7 +165,7 @@ export class TestBuilder {
   }): DedicatedWorkerClientServices {
     // Shared coordinator for leader election across all services.
     if (!this._coordinator) {
-      this._coordinator = new MemoryWorkerCoordiantor();
+      this._coordinator = new Coordinator.Memory();
     }
 
     // Shared worker factory.

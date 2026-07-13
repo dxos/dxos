@@ -6,7 +6,7 @@ import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
-import * as Worker from '@dxos/worker-framework/worker';
+import * as Worker from '@dxos/worker-framework/Worker';
 
 import { STORAGE_LOCK_KEY } from '../../lock-key';
 
