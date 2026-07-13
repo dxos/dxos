@@ -183,7 +183,9 @@ Because these tags are force-moved on every deploy, a plain `git pull`/`git fetc
 git config remote.origin.tagOpt --no-tags
 ```
 
-You can still pull a specific one on demand: `git fetch origin tag composer/labs`, or check without touching local refs at all: `git ls-remote --tags origin 'composer/*'`.
+You can still pull a specific one on demand: `git fetch origin tag composer/labs --force` (still needs
+`--force` — an explicit fetch doesn't skip the clobber check, only the automatic tag-following does), or
+check without touching local refs at all: `git ls-remote --tags origin 'composer/*'`.
 
 | Env            | Trigger                | Apps               | Notes                                    |
 | -------------- | ---------------------- | ------------------ | ---------------------------------------- |
