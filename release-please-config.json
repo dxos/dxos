@@ -700,6 +700,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-devtools/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-discord/package.json",
           "jsonpath": "$.version"
         },

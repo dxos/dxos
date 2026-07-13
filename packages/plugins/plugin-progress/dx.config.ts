@@ -14,5 +14,6 @@ export default Config2.make({
       Hosts the progress-monitor capability: a registry of live progress providers exposed as
       reactive atoms, plus an R0 status-indicator popover that lists all active providers.
     `,
+    tags: ['system'],
   },
 });

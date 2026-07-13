@@ -18,7 +18,7 @@ export type CardStyleProps = {
 const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
   mx(
     'dx-card dx-card-surface dx-card-min-width dx-card-max-width min-h-(--dx-rail-item) group/card relative overflow-hidden',
-    border && 'border border-subdued-separator rounded-sm dx-focus-ring-group-y-indicator',
+    border && 'border-2 border-separator rounded-md dx-focus-ring-group-y-indicator',
     fullWidth && 'max-w-none!',
     ...etc,
   );

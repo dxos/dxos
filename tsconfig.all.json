@@ -403,6 +403,9 @@
       "path": "packages/plugins/plugin-deck/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-devtools/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-discord/tsconfig.json"
     },
     {

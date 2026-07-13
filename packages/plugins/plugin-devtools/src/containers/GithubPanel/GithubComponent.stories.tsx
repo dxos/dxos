@@ -22,7 +22,7 @@ const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'plugins/plugin-debug/containers/GithubComponent',
+  title: 'plugins/plugin-devtools/containers/GithubComponent',
   component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-(--dx-r1-size)' })],
   parameters: {
