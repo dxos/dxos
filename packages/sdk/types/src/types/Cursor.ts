@@ -153,9 +153,13 @@ export const resolveWindow = ({
   defaultSyncBackDays = 30, // TODO(burdon): Should be 90
 }: ResolveWindowOptions): Window => {
   const resolved: Direction = direction ?? (cursorKey > 0 ? 'forward' : 'backward');
+  // A backward backfill's horizon is `syncBackDays` before `before` (the anchor it walks back from),
+  // not before `now` — else a `before` far in the past would leave the horizon after it, inverting
+  // the range.
+  const horizonAnchor = resolved === 'backward' && before !== undefined ? new Date(before) : now;
   const horizon =
     syncBackDays !== undefined
-      ? addCalendarDays(now, -syncBackDays)
+      ? addCalendarDays(horizonAnchor, -syncBackDays)
       : after !== undefined
         ? new Date(after)
         : addCalendarDays(now, -defaultSyncBackDays);

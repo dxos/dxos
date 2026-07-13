@@ -145,6 +145,21 @@ describe('resolveWindow', () => {
     expect(window.start).toEqual(addCalendarDays(NOW, -7));
   });
 
+  test('backward + before + syncBackDays anchors the horizon to before, not now', ({ expect }) => {
+    const cursorKey = new Date('2026-06-01T00:00:00.000Z').getTime();
+    const before = new Date('2020-01-01T00:00:00.000Z').getTime();
+    const window = Cursor.resolveWindow({
+      cursorKey,
+      now: NOW,
+      direction: 'backward',
+      before,
+      syncBackDays: 7,
+    });
+    expect(window.start).toEqual(addCalendarDays(new Date(before), -7));
+    expect(window.end).toEqual(new Date(before));
+    expect(window.start.getTime()).toBeLessThan(window.end.getTime());
+  });
+
   test('after sets the horizon when syncBackDays is absent', ({ expect }) => {
     const after = '2026-01-01T00:00:00.000Z';
     const window = Cursor.resolveWindow({ cursorKey: 0, now: NOW, after });

@@ -36,7 +36,7 @@ export const htmlToMarkdown = <In extends Bodied, E, R>(self: Stream.Stream<In, 
  * A mapped message flowing through the generic email stages (attachments, contact extraction, …) —
  * each is Mapped → Mapped, so they compose in any order, simply recording what they found
  * (`message.attachments`, `contact`) rather than each building its own deferred write.
- * `plugin-inbox`'s `EmailStage.toCommitUnit` is the stage that turns those into a
+ * `plugin-inbox`'s `EmailCommit.toCommitUnit` is the stage that turns those into a
  * `SyncBinding.CommitUnit`'s `commitEffects`, and must run last.
  */
 export type Mapped = {
@@ -46,9 +46,9 @@ export type Mapped = {
   readonly tagUris: readonly string[];
   /** Attachments fetched by a provider-specific stage upstream of {@link processAttachments}. */
   readonly attachments?: readonly Attachment[];
-  /** Contact resolved by {@link extractContacts}, added to the database by `EmailStage.toCommitUnit`. */
+  /** Contact resolved by {@link extractContacts}, added to the database by `EmailCommit.toCommitUnit`. */
   readonly contact?: Person.Person;
-  /** Local drafts this synced message supersedes ({@link reconcileDrafts}), removed by `EmailStage.toCommitUnit`. */
+  /** Local drafts this synced message supersedes ({@link reconcileDrafts}), removed by `EmailCommit.toCommitUnit`. */
   readonly supersededDrafts?: readonly Message.Message[];
 };
 
@@ -64,7 +64,7 @@ export type Attachment = {
 
 /**
  * Builds a Person (+ Organization link by domain) from the message sender and records it on the
- * item as {@link Mapped.contact} — the stage writes nothing itself; `EmailStage.toCommitUnit` defers
+ * item as {@link Mapped.contact} — the stage writes nothing itself; `EmailCommit.toCommitUnit` defers
  * the actual `db.add` to commit. A stage factory: call it once per pipeline run so its
  * {@link ContactLookup} is scoped to that run.
  *
@@ -94,7 +94,7 @@ export const extractContacts = (): Stage.Stage<Mapped, Mapped, never, Database.S
 /**
  * Turns each of the item's `attachments` into a Blob object (via the database's configured storage
  * backend — edge in Composer) and adds a {@link Message.Attachment} pointing at it to the message.
- * `EmailStage.toCommitUnit` finds these blobs again via each attachment's ref (inlined, since the
+ * `EmailCommit.toCommitUnit` finds these blobs again via each attachment's ref (inlined, since the
  * blob isn't attached to a database yet) to defer their feed append to commit. A no-op when the item
  * has no attachments.
  *
@@ -172,7 +172,7 @@ export const queryDraftPool = Effect.fn('queryDraftPool')(function* (parent: Obj
  * Records the local drafts each incoming message supersedes — matched by the provider message id the
  * draft captured at send time (`properties.sentMessageId`), which equals the synced message's
  * `foreignId` — from a pool built once per run and keyed by that id. Writes nothing itself;
- * `EmailStage.toCommitUnit` defers the `db.remove` to commit, so the canonical message is appended
+ * `EmailCommit.toCommitUnit` defers the `db.remove` to commit, so the canonical message is appended
  * to the feed before its now-redundant drafts are deleted. A stage factory: pass the run's draft
  * pool once.
  *

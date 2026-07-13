@@ -247,9 +247,12 @@ const fetchAttachments = (
 
 /**
  * Streams JMAP emails over the resolved {@link Cursor.Window}: build the query filter (folder scope +
- * `after`/`before` date bounds + optional user DSL), paginate ids (newest-first within the window),
- * then fetch each email. Direction is realized via the window's bounds — forward resumes from the
- * cursor, backward/backfill bounds the range with `before` — while the query is always newest-first.
+ * `after`/`before` date bounds + optional user DSL), paginate ids, then fetch each email. Direction is
+ * realized via both the window's bounds and the query's sort order — forward resumes from the cursor
+ * and pages oldest-first, so a run capped by {@link MAX_SCAN} advances the cursor gap-free instead of
+ * jumping straight to the newest key and stranding the older, unprocessed middle; backward/backfill
+ * bounds the range with `before` and pages newest-first, since it never advances the cursor and so has
+ * no gap to strand.
  */
 const jmapSource = (
   target: JmapMail.Target,
@@ -296,7 +299,7 @@ const jmapSource = (
         Effect.gen(function* () {
           const { ids } = yield* api.emailQuery(target, {
             filter,
-            sort: [{ property: 'receivedAt', isAscending: false }],
+            sort: [{ property: 'receivedAt', isAscending: window.direction === 'forward' }],
             position,
             limit: QUERY_PAGE_SIZE,
           });
