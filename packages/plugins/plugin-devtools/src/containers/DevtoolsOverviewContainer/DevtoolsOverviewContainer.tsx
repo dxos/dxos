@@ -5,9 +5,8 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { StatsPanel, useStats } from '@dxos/devtools';
-
-import { DevtoolsOverview } from '#types';
 
 export const DevtoolsOverviewContainer = () => {
   const [stats, refreshStats] = useStats();
@@ -45,7 +44,7 @@ export const DevtoolsOverviewContainer = () => {
       onRefresh={refreshStats}
       onClearSurfaceProfiler={handleClearSurfaceProfiler}
     >
-      <Surface.Surface type={DevtoolsOverview} />
+      <Surface.Surface type={AppSurface.DevtoolsOverview} />
     </StatsPanel>
   );
 };

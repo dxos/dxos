@@ -1,9 +1,8 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 export * from './debug';
-export * from './surface';
+export * as DebugNodes from './DebugNodes';
 export * as DebugSurface from './DebugSurface';
-export * as Devtools from './Devtools';
 export * as Settings from './Settings';

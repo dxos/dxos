@@ -4,18 +4,19 @@
 
 import React from 'react';
 
-import { IconButton } from '@dxos/react-ui';
+import { IconButton, ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
-export type SchemaTableProps = {
+export type SchemaTableProps = ThemedClassName<{
   types: any[];
   objects?: Record<string, number | undefined>;
   label: string;
   onClick: (typename: string) => void;
-};
+}>;
 
-export const SchemaTable = ({ types, objects = {}, label, onClick }: SchemaTableProps) => {
+export const SchemaTable = ({ classNames, types, objects = {}, label, onClick }: SchemaTableProps) => {
   return (
-    <div className='grid grid-cols-[1fr_80px_40px] gap-1 overflow-none'>
+    <div className={mx('grid grid-cols-[1fr_80px_40px] gap-1 overflow-none', classNames)}>
       <h2 className='p-2'>{label}</h2>
       {types.map((type) => (
         <div key={type.typename} className='grid grid-cols-subgrid col-span-3 items-center'>
