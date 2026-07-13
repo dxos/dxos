@@ -7,11 +7,11 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 import { Pipeline } from '@dxos/pipeline';
-import { type RDF } from '@dxos/pipeline-rdf';
+import { type FactUnit, type RDF } from '@dxos/pipeline-rdf';
 import { captureSink } from '@dxos/pipeline/testing';
 import { Message } from '@dxos/types';
 
-import { type FactExtractor, type FactUnit, extractFactsUnitStage } from './extract-facts-commit';
+import { type FactExtractor, extractFactsUnitStage } from './extract-facts-commit';
 
 const ALICE_FACT: RDF.Fact = {
   id: 'fact-1',

@@ -10,6 +10,3 @@ export * from './pipeline';
 export * from './topics-pipeline';
 export * from './stages';
 export * from './types';
-
-export * as EmailStage from './stages/EmailStage';
-export * as FactCommit from './FactCommit';

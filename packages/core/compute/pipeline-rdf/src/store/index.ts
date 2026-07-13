@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * from './fact-commit';
 export * from './fact-graph';
 export * from './fact-store';
 export * from './feed-cursors';

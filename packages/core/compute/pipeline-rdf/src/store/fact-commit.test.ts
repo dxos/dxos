@@ -9,13 +9,13 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { FactStore, type RDF } from '@dxos/pipeline-rdf';
 import { Cursor, SyncBinding } from '@dxos/types';
 
-import * as FactCommit from './FactCommit';
-import { type FactUnit } from './stages';
+import { type Fact } from '../types';
+import { type FactUnit, factsCommit } from './fact-commit';
+import { FactStore } from './fact-store';
 
-const makeFact = (id: string): RDF.Fact => ({
+const makeFact = (id: string): Fact => ({
   id,
   assertion: {
     subject: { entity: 'alice' },
@@ -35,7 +35,7 @@ const makeFact = (id: string): RDF.Fact => ({
   sourceHash: 'abc123',
 });
 
-describe('FactCommit.factsCommit', () => {
+describe('factsCommit', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -61,7 +61,7 @@ describe('FactCommit.factsCommit', () => {
     ]);
 
     const result = await Effect.gen(function* () {
-      yield* FactCommit.factsCommit(page);
+      yield* factsCommit(page);
       const store = yield* FactStore;
       const facts = yield* store.query({});
       const state = yield* SyncBinding.Service;
@@ -87,7 +87,7 @@ describe('FactCommit.factsCommit', () => {
     const originalValue = cursor.value;
 
     await Effect.gen(function* () {
-      yield* FactCommit.factsCommit(Chunk.empty());
+      yield* factsCommit(Chunk.empty());
     }).pipe(
       Effect.provide(
         SyncBinding.layer({ binding, foreignKeySource: 'inbox.facts', cursorKey: 0, stats: { newMessages: 0 } }),

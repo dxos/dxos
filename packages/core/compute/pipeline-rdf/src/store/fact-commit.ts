@@ -2,15 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 
-import { FactStore } from '@dxos/pipeline-rdf';
 import { Cursor, SyncBinding } from '@dxos/types';
 
-import { type FactUnit } from './stages';
+import { type Fact } from '../types';
+import { FactStore } from './fact-store';
+
+/** Terminal unit for the cursored fact pipeline: extracted facts plus the keys the sink needs to dedup and advance the cursor. */
+export type FactUnit = {
+  readonly facts: Fact[];
+  /** Stable per-source id (e.g. `messageSource`); the dedup foreign id. */
+  readonly foreignId: string;
+  /** Monotonic cursor key. */
+  readonly key: number;
+};
 
 /**
  * `Pipeline.run` sink for the cursored fact pipeline. Persists a page of {@link FactUnit} facts to
