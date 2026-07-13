@@ -50,7 +50,7 @@ const seedTopics = (space: Space) => {
   );
 };
 
-const DetailStory = ({ label }: { label: string }) => {
+const DefaultStory = ({ label = FULL_TOPIC }: { label?: string }) => {
   const [space] = useSpaces();
   const topics = useQuery(space?.db, Filter.type(Topic));
   const topic = topics.find((entry) => entry.label === label);
@@ -64,7 +64,7 @@ const DetailStory = ({ label }: { label: string }) => {
 
 const meta = {
   title: 'stories/stories-inbox/TopicArticle',
-  render: () => <DetailStory label={FULL_TOPIC} />,
+  render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
@@ -104,7 +104,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /** A bare topic (label + summary only) — the empty sections are omitted. */
-export const Minimal: Story = { render: () => <DetailStory label={BARE_TOPIC} /> };
+export const Minimal: Story = { render: () => <DefaultStory label={BARE_TOPIC} /> };
 
 /** Asserts the detail view surfaces each stored field of the full topic. */
 export const Test: Story = {

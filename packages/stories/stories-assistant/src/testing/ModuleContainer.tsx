@@ -16,15 +16,18 @@ import { EffectEx } from '@dxos/effect';
 import { Assistant } from '@dxos/plugin-assistant';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { type ModuleLayout, ModuleContainer as StoryModuleContainer } from '@dxos/story-modules';
+import {
+  type ModuleLayout,
+  ModuleContainer as StoryModuleContainer,
+  ModuleContainerProps as StoryModuleContainerProps,
+} from '@dxos/story-modules';
 import { isNonNullable } from '@dxos/util';
 
 import { Module } from './modules';
 
-export type ModuleContainerProps = {
-  layout: ModuleLayout;
-  skills?: string[];
+export type ModuleContainerProps = Pick<StoryModuleContainerProps, 'layout'> & {
   showContext?: boolean;
+  skills?: string[];
 };
 
 /**
@@ -32,7 +35,7 @@ export type ModuleContainerProps = {
  * assistant-specific behaviors — binding story skills into the chat context and appending the
  * ContextModule column — on top of the reusable surface-grid mechanism.
  */
-export const ModuleContainer = ({ layout: layoutProp, skills = [], showContext }: ModuleContainerProps) => {
+export const ModuleContainer = ({ layout: layoutProp, showContext, skills = [] }: ModuleContainerProps) => {
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const skillsDefinitions = useCapabilities(AppCapabilities.SkillDefinition);
   const [space] = useSpaces();
