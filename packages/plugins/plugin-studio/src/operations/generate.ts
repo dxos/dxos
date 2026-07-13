@@ -77,27 +77,36 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
 
       // Synchronous providers implement `generate`; asynchronous ones implement `enqueue` +
       // `awaitResult` and persist the job id on the artifact so a long poll resumes across remount.
+      // (Locals narrow the optional methods so no non-null assertion is needed.)
+      const { enqueue, awaitResult, generate } = service;
+      const clearJobId = () =>
+        Obj.update(artifactObj, (artifactObj) => {
+          artifactObj.jobId = undefined;
+        });
       const run = Effect.gen(function* () {
-        if (service.enqueue && service.awaitResult) {
+        if (enqueue && awaitResult) {
           let jobId = artifactObj.jobId;
           if (!jobId) {
-            const enqueued = yield* Effect.tryPromise({
-              try: () => service.enqueue!(request, options),
-              catch: toError,
-            });
+            const enqueued = yield* Effect.tryPromise({ try: () => enqueue(request, options), catch: toError });
             jobId = enqueued.jobId;
             Obj.update(artifactObj, (artifactObj) => {
               artifactObj.jobId = jobId;
             });
           }
-          const awaited = yield* Effect.tryPromise({ try: () => service.awaitResult!(jobId, options), catch: toError });
-          Obj.update(artifactObj, (artifactObj) => {
-            artifactObj.jobId = undefined;
+          // Clear the persisted jobId on failure/abort too — otherwise the article's resume effect
+          // would re-invoke this op in a loop (or silently restart a poll the user just cancelled).
+          const awaited = yield* Effect.tryPromise({
+            try: () => awaitResult(jobId, options),
+            catch: (error) => {
+              clearJobId();
+              return toError(error);
+            },
           });
+          clearJobId();
           return awaited;
         }
-        if (service.generate) {
-          return yield* Effect.tryPromise({ try: () => service.generate!(request, options), catch: toError });
+        if (generate) {
+          return yield* Effect.tryPromise({ try: () => generate(request, options), catch: toError });
         }
         return yield* Effect.fail(
           new GenerationService.GenerationError(`Provider ${service.id} implements neither generate nor enqueue.`),

@@ -214,4 +214,27 @@ describe('generate', () => {
     await db.flush();
     expect(artifact.jobId).toBeUndefined();
   });
+
+  test('async provider: clears jobId when awaitResult fails (no resume loop / cancel restart)', async ({ expect }) => {
+    const artifact = addArtifact('A dancing avatar.', 'video');
+    await db.flush();
+
+    const failing: GenerationService.GenerationService = {
+      kind: 'video',
+      id: 'async-mock',
+      label: 'Async Mock',
+      contentType: 'video/mp4',
+      requestSchema: RequestSchema,
+      enqueue: async () => ({ jobId: 'job-9' }),
+      awaitResult: async () => {
+        throw new Error('boom');
+      },
+    };
+
+    await expect(run(artifact, { services: [failing] })).rejects.toThrow(/boom/);
+    await db.flush();
+    // jobId is cleared on failure so the article's resume effect won't loop.
+    expect(artifact.jobId).toBeUndefined();
+    expect(artifact.variants ?? []).toHaveLength(0);
+  });
 });

@@ -40,9 +40,21 @@ describe('HeyGenProvider', () => {
 
   test('enqueue requires avatar and voice ids', async ({ expect }) => {
     const fetchImpl = (async () => new Response('{}')) as typeof fetch;
+    // Missing avatar.
     await expect(
       provider(fetchImpl).enqueue({ type: 'video', prompt: 'x', voiceId: 'vo-1' }, { apiKey: 'sk' }),
     ).rejects.toBeInstanceOf(ProviderFailureError);
+    // Missing voice.
+    await expect(
+      provider(fetchImpl).enqueue({ type: 'video', prompt: 'x', avatarId: 'av-1' }, { apiKey: 'sk' }),
+    ).rejects.toBeInstanceOf(ProviderFailureError);
+  });
+
+  test('supports video but not audio', ({ expect }) => {
+    const fetchImpl = (async () => new Response('{}')) as typeof fetch;
+    const instance = provider(fetchImpl);
+    expect(instance.supports('video')).toBe(true);
+    expect(instance.supports('audio')).toBe(false);
   });
 
   test('awaitResult polls until completed and returns the url', async ({ expect }) => {
