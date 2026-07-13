@@ -73,7 +73,7 @@ export const ArtifactsArticle = ({ role, space }: ArtifactsArticleProps) => {
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Select.Root value={kind} onValueChange={(value) => setKind(value as Kind)}>
+          <Select.Root value={kind} onValueChange={(value) => setKind(value === 'video' ? 'video' : 'image')}>
             <Select.TriggerButton placeholder={t('kind.placeholder')} />
             <Select.Portal>
               <Select.Content>
