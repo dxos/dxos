@@ -4,17 +4,9 @@
 
 import { type Message } from '@dxos/types';
 
-import {
-  type Summarizer,
-  type TopicDraft,
-  type TopicOptions,
-  clusterThreads,
-  materializeTopics,
-  summarizeTopics,
-} from './corpus';
+import { type Summarizer, type TopicDraft, type TopicOptions, clusterThreads, summarizeTopics } from './corpus';
 import { buildThreads } from './internal/threads';
 import { type TagResult } from './stages/tag';
-import { type Topic } from './types';
 
 // The topics pipeline (productized from the research harness): tag each message, then cluster its
 // threads into `Topic` objects with LLM summaries. Pure orchestration — the LLM-bearing steps (`tag`,
@@ -63,16 +55,20 @@ export type TopicsPipelineDeps = {
 
 export type TopicsPipelineResult = {
   readonly messageTags: readonly MessageTags[];
-  /** Newly materialized topics (excludes any skipped by `skipTopic`). */
-  readonly topics: readonly Topic[];
+  /**
+   * Summarized topic drafts (plain values, not ECHO objects — excludes any skipped by `skipTopic` /
+   * dropped by `keepTopic`). The caller decides what to do with them: materialize `Topic` objects, or
+   * write them to `Mailbox.topicSuggestions` for the user to curate.
+   */
+  readonly topicDrafts: readonly TopicDraft[];
 };
 
 const messageIdOf = (message: Message.Message): string => String(message.properties?.messageId ?? message.id);
 
 /**
  * Runs the topics pipeline: tag (bounded/resumable) → `buildThreads` → `clusterThreads` →
- * `summarizeTopics` → `materializeTopics`. Returns per-message tags and the newly materialized topics
- * for the caller to persist. Tagging failures degrade per message (the injected `tag` should not
+ * `summarizeTopics`. Returns per-message tags and the summarized topic drafts for the caller to
+ * materialize or suggest. Tagging failures degrade per message (the injected `tag` should not
  * reject); clustering is deterministic.
  */
 export const runTopicsPipeline = async (
@@ -95,16 +91,15 @@ export const runTopicsPipeline = async (
 
   // Cancelled during tagging — skip the (LLM) topic phase and return what was tagged.
   if (signal?.aborted) {
-    return { messageTags, topics: [] };
+    return { messageTags, topicDrafts: [] };
   }
 
-  // Phase 2 — cluster threads into topic drafts (deterministic), summarize the new ones, materialize.
+  // Phase 2 — cluster threads into topic drafts (deterministic), summarize the new ones.
   const threads = buildThreads(messages, { ownerEmail, now });
   const drafts = clusterThreads(threads, topicOptions);
   const fresh = drafts.filter((draft: TopicDraft) => !skipTopic?.(draft.label) && (keepTopic?.(draft) ?? true));
   const summarized = await summarizeTopics(fresh, deps.summarize);
   summarized.forEach((_, index) => onProgress?.('topic', index + 1, summarized.length));
-  const topics = materializeTopics(summarized);
 
-  return { messageTags, topics };
+  return { messageTags, topicDrafts: summarized };
 };

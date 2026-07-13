@@ -677,7 +677,7 @@ export const AnalyzeTopics = Operation.make({
   meta: {
     key: makeKey('analyzeTopics'),
     name: 'Analyze Topics',
-    description: 'Tags every message and clusters the mailbox threads into Topic objects with summaries.',
+    description: 'Tags every message and clusters the mailbox threads into suggested topics for review.',
     icon: 'ph--stack--regular',
   },
   // Capability.Service: read the ProgressRegistry to publish a live monitor for the run.
@@ -694,7 +694,7 @@ export const AnalyzeTopics = Operation.make({
   }),
   output: Schema.Struct({
     tagged: Schema.Number,
-    topics: Schema.Number,
+    suggestions: Schema.Number,
   }),
 });
 

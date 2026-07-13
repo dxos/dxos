@@ -20,6 +20,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
+import { AnchoredTo } from '@dxos/types';
 
 // Two deterministic topics — no LLM needed; TopicsArticle just queries + renders `Topic` objects.
 const seedTopics = (space: Space) => {
@@ -47,6 +48,31 @@ const seedTopics = (space: Space) => {
   );
 };
 
+// Two unaccepted suggestions on the mailbox (same field shape as a Topic).
+const seedSuggestions = (mailbox: Mailbox.Mailbox) =>
+  Obj.update(mailbox, (mailbox) => {
+    mailbox.topicSuggestions = [
+      {
+        label: 'invoice acme',
+        summary: 'Acme invoice thread.',
+        threadIds: ['inv1'],
+        participants: ['ap@acme.com'],
+        keywords: ['invoice', 'acme'],
+        questions: [],
+        tasks: [],
+      },
+      {
+        label: 'welcome onboarding',
+        summary: 'Onboarding welcome.',
+        threadIds: ['w1'],
+        participants: ['team@corp.com'],
+        keywords: ['welcome'],
+        questions: [],
+        tasks: [],
+      },
+    ];
+  });
+
 const DefaultStory = () => {
   const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
@@ -70,13 +96,14 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Mailbox.Mailbox, Topic],
+          types: [Mailbox.Mailbox, Topic, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(async () => {
-                personalSpace.db.add(Mailbox.make());
+                const mailbox = personalSpace.db.add(Mailbox.make());
                 seedTopics(personalSpace);
+                seedSuggestions(mailbox);
                 await personalSpace.db.flush({ indexes: true });
               });
             }),
@@ -130,30 +157,56 @@ export const DetailTest: Story = {
   },
 };
 
+/** Accepts one suggestion (→ becomes a Topic) and dismisses another; asserts the Suggested list shrinks. */
+export const SuggestionsTest: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+
+    const section = await waitFor(() => canvas.getByTestId('topics-suggested'));
+    const sectionScope = within(section);
+    await waitFor(() => expect(within(section).getAllByTestId('topic-suggestion')).toHaveLength(2));
+    void expect(sectionScope.getByText('invoice acme')).toBeInTheDocument();
+
+    // Accept the "invoice acme" suggestion via its action menu.
+    const invoiceCard = sectionScope
+      .getByText('invoice acme')
+      .closest('[data-testid="topic-suggestion"]') as HTMLElement;
+    await userEvent.click(within(invoiceCard).getByRole('button', { name: /action menu/i }));
+    await userEvent.click(await waitFor(() => body.getByText(/^accept$/i)));
+
+    // One suggestion remains; "invoice acme" is no longer a suggestion (it became a Topic).
+    await waitFor(() => expect(canvas.getAllByTestId('topic-suggestion')).toHaveLength(1));
+    void expect(within(canvas.getByTestId('topics-suggested')).queryByText('invoice acme')).toBeNull();
+
+    // Dismiss the remaining "welcome onboarding" suggestion.
+    const remaining = canvas.getByTestId('topic-suggestion');
+    await userEvent.click(within(remaining).getByRole('button', { name: /action menu/i }));
+    await userEvent.click(await waitFor(() => body.getByText(/^dismiss$/i)));
+
+    // The Suggested section is gone; "welcome onboarding" no longer appears anywhere.
+    await waitFor(() => expect(canvas.queryByTestId('topics-suggested')).toBeNull());
+    void expect(canvas.queryByText('welcome onboarding')).toBeNull();
+  },
+};
+
 /** Opens the first card's action menu, deletes that topic, and asserts the card is removed. */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
 
-    // Both seeded topics render.
-    await waitFor(() => expect(canvas.getByText('q2 report budget')).toBeInTheDocument());
+    // Both seeded topics render as topic cards.
+    const budgetCard = await waitFor(
+      () => canvas.getByText('q2 report budget').closest('[data-testid="topic-card"]') as HTMLElement,
+    );
     void expect(canvas.getByText('launch planning')).toBeInTheDocument();
 
-    // Open the first card's action menu. TopicsArticle has no other buttons, so every button is a
-    // card's `Card.Menu` trigger — one per topic.
-    const menuTriggers = await waitFor(() => {
-      const triggers = canvas.getAllByRole('button');
-      void expect(triggers.length).toBeGreaterThanOrEqual(2);
-      return triggers;
-    });
-    await userEvent.click(menuTriggers[0]);
+    // Open that topic card's action menu and delete it.
+    await userEvent.click(within(budgetCard).getByRole('button', { name: /action menu/i }));
+    await userEvent.click(await waitFor(() => body.getByText(/delete topic/i)));
 
-    // The dropdown offers "Delete topic".
-    const deleteItem = await waitFor(() => body.getByText(/delete topic/i));
-    await userEvent.click(deleteItem);
-
-    // The first topic is gone; the second remains.
+    // The deleted topic is gone; the other remains.
     await waitFor(() => expect(canvas.queryByText('q2 report budget')).not.toBeInTheDocument());
     void expect(canvas.getByText('launch planning')).toBeInTheDocument();
   },

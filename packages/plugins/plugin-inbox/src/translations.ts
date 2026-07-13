@@ -157,6 +157,9 @@ export const translations = [
         'topics.threads.label': 'Threads',
         'topics.questions.label': 'Questions',
         'topics.tasks.label': 'Tasks',
+        'topics.suggested.title': 'Suggested',
+        'topics.accept.label': 'Accept',
+        'topics.dismiss.label': 'Dismiss',
         'create-draft.label': 'Create draft',
 
         'related-contacts.title': 'Related contacts',

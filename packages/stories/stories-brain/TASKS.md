@@ -223,21 +223,19 @@ triage, make topics opt-in suggestions rather than eager objects, and finish the
 
 ### Phase B — topic suggestions
 
-- [ ] **Suggestion classify/order (pure, tested)** — `plugin-inbox/src/operations/analyze/suggestions.ts`:
-      `classifyClusters(drafts, { tagIndex, personEmails })` → drops clusters whose member messages are
-      majority-`bulk`, tags each survivor `{ ...draft, personLinked }`, sorts personLinked first, dedups
-      by label against `existingLabels`. Unit test: bulk cluster dropped; person-linked first; dedup.
-- [ ] **`AnalyzeTopics` writes suggestions** — `analyze-topics.ts`: replace topic materialization with
-      writing `classifyClusters(...)` output to `mailbox.topicSuggestions` (via `Obj.update`), deduped
-      against existing Topics + suggestions. Keep tag application. `keepTopic` hard filter removed (now a
-      ranking signal inside `classifyClusters`). Build green.
-- [ ] **`TopicsArticle` "Suggested" section** — render `mailbox.topicSuggestions` above accepted Topics;
-      each card: label/summary/counts + **Accept** (`Obj.make(Topic, suggestion)` + `AnchoredTo`, splice
-      out of the array) + **Dismiss** (splice out). Person-linked badge. New translations
-      `topics.suggested.title`, `topics.accept.label`, `topics.dismiss.label`.
-- [ ] **Storybook play test** — seed 2 suggestions on the mailbox; Accept one (assert a `Topic` exists +
-      suggestion gone), Dismiss the other (assert gone, no Topic).
-- [ ] **Commit** `feat(inbox): opt-in topic suggestions`.
+- [x] **Suggestion classify/order (pure, tested)** — `analyze/suggestions.ts` `orderSuggestions`:
+      drops bulk-majority clusters (`isBulkCluster`), flags person-linked (`isPersonLinked`), sorts
+      person-first (stable), dedups by label vs existing. 3 unit tests.
+- [x] **`AnalyzeTopics` writes suggestions** — pipeline now returns `topicDrafts` (not materialized);
+      the operation computes bulk-thread ids from this run's tags + person emails, calls `orderSuggestions`,
+      appends to `mailbox.topicSuggestions` (deduped vs existing Topics + suggestions). `keepTopic` hard
+      gate dropped. Output schema `{ tagged, suggestions }`. Builds green.
+- [x] **`TopicsArticle` "Suggested" section** — `SuggestionCard` (Accept/Dismiss menu) above the topics;
+      Accept → `Obj.make(Topic, …)` + `AnchoredTo` + splice; Dismiss → splice. New translations
+      `topics.suggested.title` / `accept` / `dismiss`.
+- [x] **Storybook play test** — `Topics.stories.tsx` `SuggestionsTest`: Accept one (→ Topic, suggestion
+      gone), Dismiss the other (section gone). 5/5 storybook tests green.
+- [x] **Commit** `feat(inbox): opt-in topic suggestions`.
 
 ### Phase C — Create Topic from message
 
