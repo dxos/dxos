@@ -527,8 +527,12 @@ export class ClientServicesHost {
     } catch (err) {
       // A partially-opened stack still owns scoped resources (e.g. EchoHost); dispose it so a failed
       // open cannot leak them or leave background work running (`close` bails out while `_open` is false).
+      // The resource lock and logging service are acquired before the try, so release them here too —
+      // otherwise a failed open holds the lock (blocking retries) and leaves the log processor installed.
       await this.#stackRuntime?.dispose().catch(() => {});
       this.#stackRuntime = undefined;
+      await this._loggingService.close().catch(() => {});
+      await this._resourceLock?.release().catch(() => {});
       this._opening = false;
       throw err;
     }
