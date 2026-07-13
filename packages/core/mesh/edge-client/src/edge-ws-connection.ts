@@ -4,7 +4,7 @@
 
 import WebSocket from 'isomorphic-ws';
 
-import { scheduleTask, scheduleTaskInterval } from '@dxos/async';
+import { Mutex, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
@@ -52,10 +52,10 @@ export class EdgeWsConnection extends Resource {
    * WebSocket frames arrive in order, but converting frame data to bytes is async
    * (the `Blob` fallback path awaits `blob.arrayBuffer()`), and concurrent conversions
    * are not guaranteed to complete in arrival order. Segmented-message reassembly in
-   * `WebSocketMuxer` requires chunks to reach `receiveData` in arrival order, so every
-   * message is processed by chaining onto this promise instead of running independently.
+   * `WebSocketMuxer` requires chunks to reach `receiveData` in arrival order, so message
+   * processing is serialized through this lock.
    */
-  private _receiveChain: Promise<void> = Promise.resolve();
+  private readonly _receiveMutex = new Mutex();
 
   constructor(
     private readonly _identity: EdgeIdentity,
@@ -184,13 +184,12 @@ export class EdgeWsConnection extends Resource {
         return;
       }
 
-      // Chain each message onto the previous one so bytes reach `muxer.receiveData` in
-      // arrival order. Catching within the chained callback (rather than on
-      // `_receiveChain` itself) keeps `_receiveChain` resolved, so a single bad message
-      // is logged and dropped instead of stalling every message queued after it.
-      this._receiveChain = this._receiveChain.then(() =>
-        this._receiveMessage(event.data, muxer).catch((err) => log.catch(err)),
-      );
+      // Serialize processing so bytes reach `muxer.receiveData` in arrival order. The lock
+      // releases even if `_receiveMessage` throws, so a single bad message is logged and
+      // dropped instead of stalling every message queued after it.
+      void this._receiveMutex
+        .executeSynchronized(() => this._receiveMessage(event.data, muxer))
+        .catch((err) => log.catch(err));
     };
   }
 

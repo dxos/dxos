@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, expect, onTestFinished, test, vi } from 'vitest';
+import { describe, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { bufWkt } from '@dxos/protocols/buf';
 import { type Message, TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
@@ -55,6 +56,69 @@ vi.mock('isomorphic-ws', () => ({ default: FakeWebSocket }));
 
 const { EdgeWsConnection } = await import('./edge-ws-connection');
 
+const testIdentity: EdgeIdentity = {
+  peerKey: 'test-peer-key',
+  identityDid: 'did:halo:test',
+  presentCredentials: async () => {
+    throw new Error('not implemented');
+  },
+};
+
+describe('EdgeWsConnection', () => {
+  test('reassembles segmented messages delivered as Blobs out of order', async ({ expect }) => {
+    const [chunksA, chunksB] = await buildSegmentedChunks([MESSAGE_A_CONTENT, MESSAGE_B_CONTENT]);
+    expect(chunksA).toHaveLength(2);
+    expect(chunksB).toHaveLength(4);
+
+    const { ws, received, allReceived } = await openTestConnection(2);
+
+    const deferredA = chunksA.map(deferredChunk);
+    const deferredB = chunksB.map(deferredChunk);
+
+    // Dispatch every chunk in correct wire order, as a real WebSocket would.
+    for (const { blob } of [...deferredA, ...deferredB]) {
+      ws.onmessage?.({ data: blob, type: 'message' });
+    }
+
+    // Resolve the underlying `arrayBuffer()` reads out of order, simulating the browser
+    // race where concurrent Blob reads do not complete in arrival order.
+    deferredA[0].resolve();
+    deferredB[0].resolve();
+    deferredB[1].resolve();
+    deferredA[1].resolve();
+    deferredB[2].resolve();
+    deferredB[3].resolve();
+
+    await allReceived.wait();
+    expect(received).toHaveLength(2);
+
+    const [messageA, messageB] = received;
+    invariant(messageA.payload);
+    invariant(messageB.payload);
+    expect(bufWkt.anyUnpack(messageA.payload, TextMessageSchema)?.message).toStrictEqual(MESSAGE_A_CONTENT);
+    expect(bufWkt.anyUnpack(messageB.payload, TextMessageSchema)?.message).toStrictEqual(MESSAGE_B_CONTENT);
+  });
+
+  test('reassembles segmented messages delivered as ArrayBuffers', async ({ expect }) => {
+    const [chunksA, chunksB] = await buildSegmentedChunks([MESSAGE_A_CONTENT, MESSAGE_B_CONTENT]);
+
+    const { ws, received, allReceived } = await openTestConnection(2);
+
+    for (const chunk of [...chunksA, ...chunksB]) {
+      ws.onmessage?.({ data: toArrayBuffer(chunk), type: 'message' });
+    }
+
+    await allReceived.wait();
+    expect(received).toHaveLength(2);
+
+    const [messageA, messageB] = received;
+    invariant(messageA.payload);
+    invariant(messageB.payload);
+    expect(bufWkt.anyUnpack(messageA.payload, TextMessageSchema)?.message).toStrictEqual(MESSAGE_A_CONTENT);
+    expect(bufWkt.anyUnpack(messageB.payload, TextMessageSchema)?.message).toStrictEqual(MESSAGE_B_CONTENT);
+  });
+});
+
 /**
  * A Blob whose `arrayBuffer()` resolves only when `resolve()` is called, so tests can
  * control the order in which concurrent `blob.arrayBuffer()` reads complete.
@@ -81,7 +145,7 @@ type DeferredChunk = {
 };
 
 const deferredChunk = (bytes: Uint8Array): DeferredChunk => {
-  let resolveResult!: (buffer: ArrayBuffer) => void;
+  let resolveResult: (buffer: ArrayBuffer) => void = () => {};
   const result = new Promise<ArrayBuffer>((res) => {
     resolveResult = res;
   });
@@ -125,14 +189,6 @@ const buildSegmentedChunks = async (contents: string[]): Promise<Uint8Array[][]>
   return chunksByMessage;
 };
 
-const testIdentity: EdgeIdentity = {
-  peerKey: 'test-peer-key',
-  identityDid: 'did:halo:test',
-  presentCredentials: async () => {
-    throw new Error('not implemented');
-  },
-};
-
 const openTestConnection = async (expectedMessages: number) => {
   const received: Message[] = [];
   const allReceived = new Trigger();
@@ -155,59 +211,9 @@ const openTestConnection = async (expectedMessages: number) => {
     await connection.close();
   });
 
-  const ws = FakeWebSocket.instances.at(-1)!;
+  const ws = FakeWebSocket.instances.at(-1);
+  invariant(ws, 'FakeWebSocket instance not created');
   ws.onopen?.();
 
   return { connection, ws, received, allReceived };
 };
-
-describe('EdgeWsConnection', () => {
-  test('reassembles segmented messages delivered as Blobs out of order', async () => {
-    const [chunksA, chunksB] = await buildSegmentedChunks([MESSAGE_A_CONTENT, MESSAGE_B_CONTENT]);
-    expect(chunksA).toHaveLength(2);
-    expect(chunksB).toHaveLength(4);
-
-    const { ws, received, allReceived } = await openTestConnection(2);
-
-    const deferredA = chunksA.map(deferredChunk);
-    const deferredB = chunksB.map(deferredChunk);
-
-    // Dispatch every chunk in correct wire order, as a real WebSocket would.
-    for (const { blob } of [...deferredA, ...deferredB]) {
-      ws.onmessage?.({ data: blob, type: 'message' });
-    }
-
-    // Resolve the underlying `arrayBuffer()` reads out of order, simulating the browser
-    // race where concurrent Blob reads do not complete in arrival order.
-    deferredA[0].resolve();
-    deferredB[0].resolve();
-    deferredB[1].resolve();
-    deferredA[1].resolve();
-    deferredB[2].resolve();
-    deferredB[3].resolve();
-
-    await allReceived.wait();
-    expect(received).toHaveLength(2);
-
-    const [messageA, messageB] = received;
-    expect(bufWkt.anyUnpack(messageA.payload!, TextMessageSchema)?.message).toStrictEqual(MESSAGE_A_CONTENT);
-    expect(bufWkt.anyUnpack(messageB.payload!, TextMessageSchema)?.message).toStrictEqual(MESSAGE_B_CONTENT);
-  });
-
-  test('reassembles segmented messages delivered as ArrayBuffers', async () => {
-    const [chunksA, chunksB] = await buildSegmentedChunks([MESSAGE_A_CONTENT, MESSAGE_B_CONTENT]);
-
-    const { ws, received, allReceived } = await openTestConnection(2);
-
-    for (const chunk of [...chunksA, ...chunksB]) {
-      ws.onmessage?.({ data: toArrayBuffer(chunk), type: 'message' });
-    }
-
-    await allReceived.wait();
-    expect(received).toHaveLength(2);
-
-    const [messageA, messageB] = received;
-    expect(bufWkt.anyUnpack(messageA.payload!, TextMessageSchema)?.message).toStrictEqual(MESSAGE_A_CONTENT);
-    expect(bufWkt.anyUnpack(messageB.payload!, TextMessageSchema)?.message).toStrictEqual(MESSAGE_B_CONTENT);
-  });
-});
