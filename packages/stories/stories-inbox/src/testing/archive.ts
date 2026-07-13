@@ -6,9 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { type Mailbox } from '@dxos/plugin-inbox';
-import { Message } from '@dxos/types';
+import { Connection, Message, SyncBinding } from '@dxos/types';
 
 /**
  * Feed export/import for the MailboxSync story's `ArchiveModule`. The exported JSON is for local

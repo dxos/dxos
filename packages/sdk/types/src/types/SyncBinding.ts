@@ -15,9 +15,9 @@ import { Format } from '@dxos/echo/Format';
 import { invariant } from '@dxos/invariant';
 import { Stage } from '@dxos/pipeline';
 import { Tagging, type TagIndex } from '@dxos/schema';
-import { Cursor } from '@dxos/types';
 
 import * as Connection from './Connection';
+import * as Cursor from './Cursor';
 
 /**
  * One synced thing. Source = the {@link Connection} that authenticates the sync;
@@ -165,7 +165,7 @@ export type CommitUnit = {
 export type CommitEffect = (units: readonly CommitUnit[]) => Effect.Effect<void, never, Database.Service>;
 
 /** Effect Requirements tag carrying the per-run {@link State}. */
-export class Service extends Context.Tag('@dxos/plugin-connector/SyncBinding')<Service, State>() {}
+export class Service extends Context.Tag('@dxos/types/SyncBinding')<Service, State>() {}
 
 /**
  * Dependencies supplied by the caller; the Layer seeds `dedupSet` and defaults `formatCursor` to the

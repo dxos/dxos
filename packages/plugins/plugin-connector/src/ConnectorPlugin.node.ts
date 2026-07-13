@@ -6,11 +6,10 @@ import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Feed } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
-import { AccessToken, Cursor } from '@dxos/types';
+import { AccessToken, Connection, Cursor, DerivedBinding, SyncBinding } from '@dxos/types';
 
 import { AppGraphBuilder, CreateObject, Migrations, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { Connection, DerivedBinding, SyncBinding } from '#types';
 
 import { connector } from './commands';
 

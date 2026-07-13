@@ -7,8 +7,9 @@ import { useCallback, useState } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Operation } from '@dxos/compute';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { Connection, Connector, SyncBinding } from '@dxos/plugin-connector';
+import { Connector } from '@dxos/plugin-connector';
 import { useQuery } from '@dxos/react-client/echo';
+import { Connection, SyncBinding } from '@dxos/types';
 
 /**
  * Find the {@link Connection} bound to the given `target` object via a

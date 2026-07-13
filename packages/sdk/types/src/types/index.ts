@@ -7,8 +7,11 @@ import * as Account from './Account';
 import * as Actor from './Actor';
 import * as AnchoredTo from './AnchoredTo';
 import * as Channel from './Channel';
+import * as Connection from './Connection';
 import * as ContentBlock from './ContentBlock';
 import * as Cursor from './Cursor';
+import * as DerivedBinding from './DerivedBinding';
+import * as DraftMessage from './DraftMessage';
 import * as Employer from './Employer';
 import * as Event from './Event';
 import * as File from './File';
@@ -22,6 +25,7 @@ import * as Person from './Person';
 import * as Pipeline from './Pipeline';
 import * as Project from './Project';
 import * as Provider from './Provider';
+import * as SyncBinding from './SyncBinding';
 import * as Task from './Task';
 import * as Thread from './Thread';
 import * as Transcript from './Transcript';
@@ -49,8 +53,11 @@ export {
   //
   AnchoredTo,
   Channel,
+  Connection,
   ContentBlock,
   Cursor,
+  DerivedBinding,
+  DraftMessage,
   Employer,
   Event,
   File,
@@ -64,6 +71,7 @@ export {
   Pipeline,
   Project,
   Provider,
+  SyncBinding,
   Task,
   Thread,
   Transcript,

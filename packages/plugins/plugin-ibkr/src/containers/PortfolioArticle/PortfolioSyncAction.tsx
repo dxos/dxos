@@ -7,9 +7,10 @@ import React, { useCallback, useState } from 'react';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Connection, ConnectorAuth } from '@dxos/plugin-connector';
+import { ConnectorAuth } from '@dxos/plugin-connector';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Connection } from '@dxos/types';
 
 import { IBKR_CONNECTOR_ID } from '../../constants';
 import { meta } from '../../meta';

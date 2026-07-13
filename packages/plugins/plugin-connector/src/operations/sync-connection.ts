@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { SyncBinding } from '@dxos/types';
 
-import { Connector, ConnectorOperation, SyncBinding } from '../types';
+import { Connector, ConnectorOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> = ConnectorOperation.SyncConnection.pipe(
   Operation.withHandler(

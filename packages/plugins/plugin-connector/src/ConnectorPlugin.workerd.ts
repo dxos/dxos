@@ -5,11 +5,10 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Feed } from '@dxos/echo';
-import { AccessToken, Cursor } from '@dxos/types';
+import { AccessToken, Connection, Cursor, DerivedBinding, SyncBinding } from '@dxos/types';
 
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { Connection, DerivedBinding, SyncBinding } from '#types';
 
 export const ConnectorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),

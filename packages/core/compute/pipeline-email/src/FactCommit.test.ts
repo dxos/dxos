@@ -9,12 +9,11 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { type FactUnit } from '@dxos/pipeline-email';
 import { FactStore, type RDF } from '@dxos/pipeline-rdf';
-import { SyncBinding } from '@dxos/plugin-connector';
-import { Cursor } from '@dxos/types';
+import { Cursor, SyncBinding } from '@dxos/types';
 
 import * as FactCommit from './FactCommit';
+import { type FactUnit } from './stages';
 
 const makeFact = (id: string): RDF.Fact => ({
   id,

@@ -16,7 +16,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Database, type Ref } from '@dxos/echo';
-import { Connection } from '@dxos/plugin-connector';
+import { Connection } from '@dxos/types';
 
 import { LINEAR_API_URL } from '../constants';
 import { LinearGraphQLError } from '../errors';

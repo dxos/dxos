@@ -10,6 +10,7 @@ import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { SchemaEx } from '@dxos/effect';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
+import { Connection, SyncBinding } from '@dxos/types';
 
 import { ConnectorAuthButton } from '#components';
 import {
@@ -19,7 +20,7 @@ import {
   CustomTokenDialog,
   SyncTargetsDialog,
 } from '#containers';
-import { Connection, Connector, ConnectorAnnotationId, ConnectorAuth, SyncBinding } from '#types';
+import { Connector, ConnectorAnnotationId, ConnectorAuth } from '#types';
 
 import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
 

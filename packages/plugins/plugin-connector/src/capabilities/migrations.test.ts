@@ -7,9 +7,8 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Expando } from '@dxos/schema';
-import { AccessToken, Cursor } from '@dxos/types';
+import { AccessToken, Connection, Cursor, SyncBinding } from '@dxos/types';
 
-import { Connection, SyncBinding } from '../types';
 import { migrations } from './migrations';
 
 describe('SyncBinding migrations', () => {

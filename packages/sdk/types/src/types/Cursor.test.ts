@@ -105,6 +105,53 @@ describe('Cursor idempotency', () => {
   });
 });
 
+/** Calendar-day arithmetic mirroring {@link Cursor.resolveSyncWindow}'s internal helper. */
+const addCalendarDays = (date: Date, days: number): Date => {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+};
+
+describe('resolveSyncWindow', () => {
+  const NOW = new Date('2026-07-06T00:00:00.000Z');
+
+  test('no cursor → backward initial from the default horizon to today', ({ expect }) => {
+    const window = Cursor.resolveSyncWindow({ cursorKey: 0, now: NOW });
+    expect(window.direction).toBe('backward');
+    expect(window.start).toEqual(addCalendarDays(NOW, -30));
+    expect(window.end).toEqual(addCalendarDays(NOW, 1));
+  });
+
+  test('cursor → forward incremental from the cursor', ({ expect }) => {
+    const cursorKey = new Date('2026-06-01T00:00:00.000Z').getTime();
+    const window = Cursor.resolveSyncWindow({ cursorKey, now: NOW });
+    expect(window.direction).toBe('forward');
+    expect(window.start).toEqual(new Date(cursorKey));
+    expect(window.end).toEqual(addCalendarDays(NOW, 1));
+  });
+
+  test('direction: backward + before → backfill older gaps, ignoring the cursor as the start', ({ expect }) => {
+    const cursorKey = new Date('2026-06-01T00:00:00.000Z').getTime();
+    const before = new Date('2026-05-01T00:00:00.000Z').getTime();
+    const window = Cursor.resolveSyncWindow({ cursorKey, now: NOW, direction: 'backward', before });
+    expect(window.direction).toBe('backward');
+    // Backward never resumes from the cursor; it walks from the horizon up to `before`.
+    expect(window.start).toEqual(addCalendarDays(NOW, -30));
+    expect(window.end).toEqual(new Date(before));
+  });
+
+  test('syncBackDays overrides the horizon', ({ expect }) => {
+    const window = Cursor.resolveSyncWindow({ cursorKey: 0, now: NOW, syncBackDays: 7 });
+    expect(window.start).toEqual(addCalendarDays(NOW, -7));
+  });
+
+  test('after sets the horizon when syncBackDays is absent', ({ expect }) => {
+    const after = '2026-01-01T00:00:00.000Z';
+    const window = Cursor.resolveSyncWindow({ cursorKey: 0, now: NOW, after });
+    expect(window.start).toEqual(new Date(after));
+  });
+});
+
 // One source item: an id and a monotonic key (e.g. an updated-at time / offset).
 type Item = { readonly id: string; readonly key: number };
 const ITEMS: readonly Item[] = [

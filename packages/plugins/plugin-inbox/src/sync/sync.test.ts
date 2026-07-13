@@ -12,15 +12,14 @@ import { Blob, Database, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/e
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Pipeline, Stage } from '@dxos/pipeline';
+import { EmailStage } from '@dxos/pipeline-email';
 import { captureSink } from '@dxos/pipeline/testing';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
 import { TagIndex } from '@dxos/schema';
-import { AccessToken, Cursor, Message, Organization, Person } from '@dxos/types';
+import { AccessToken, Connection, Cursor, DraftMessage, Message, Organization, Person, SyncBinding } from '@dxos/types';
 
 import { GMAIL_SOURCE } from '../constants';
 import { seedMailboxBinding } from '../testing/sync-fixture';
-import { DraftMessage, type Mailbox } from '../types';
-import { EmailStage } from './index';
+import { type Mailbox } from '../types';
 
 const TEST_SOURCE = 'test.mail';
 

@@ -8,8 +8,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { Connection, SyncBinding } from '@dxos/plugin-connector';
-import { AccessToken, Cursor, Project, Task } from '@dxos/types';
+import { AccessToken, Connection, Cursor, Project, SyncBinding, Task } from '@dxos/types';
 
 import { LINEAR_SOURCE } from '../constants';
 import { LinearApi } from '../services';

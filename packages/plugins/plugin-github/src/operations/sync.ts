@@ -12,8 +12,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { SyncBinding } from '@dxos/plugin-connector';
-import { Cursor, Organization, Person, Project, Task } from '@dxos/types';
+import { Cursor, Organization, Person, Project, SyncBinding, Task } from '@dxos/types';
 
 import { meta } from '#meta';
 

@@ -7,10 +7,11 @@ import { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { Connection } from '@dxos/types';
 
 import { useConnector } from '#hooks';
 
-import { Connection, ConnectorOperation } from '../types';
+import { ConnectorOperation } from '../types';
 
 export type UseSyncConnectionResult = {
   /** True when the connection's connector exposes a `sync` operation. Drives sync button visibility. */

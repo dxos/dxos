@@ -7,18 +7,12 @@
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
 import { Blob, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { type ContactLookup, buildContactFromActor, buildContactLookup } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { normalizeText } from '@dxos/markdown';
 import { Stage } from '@dxos/pipeline';
-import { SyncBinding } from '@dxos/plugin-connector';
-import { Message, Person } from '@dxos/types';
-
-import { DraftMessage, type Mailbox } from '../types';
-import { runOnArrivalExtractors } from '../util/mailbox-sync';
+import { DraftMessage, Message, Person, SyncBinding } from '@dxos/types';
 
 /**
  * Reusable email-processing pipeline stages, on top of the generic sync machinery in
@@ -37,10 +31,10 @@ export const htmlToMarkdown = <In extends Bodied, E, R>(self: Stream.Stream<In, 
   Stage.map('html-to-markdown', (item: In) => Effect.sync(() => ({ ...item, body: normalizeText(item.body) })))(self);
 
 /**
- * A mapped message flowing through the generic email stages (attachments, on-arrival extractors,
- * contact extraction, …) — each is Mapped → Mapped, so they compose in any order, simply recording
- * what they found (`message.attachments`, `contact`) rather than each building its own deferred
- * write. {@link toCommitUnit} is the one stage that turns those into the {@link SyncBinding.CommitUnit}'s
+ * A mapped message flowing through the generic email stages (attachments, contact extraction, …) —
+ * each is Mapped → Mapped, so they compose in any order, simply recording what they found
+ * (`message.attachments`, `contact`) rather than each building its own deferred write.
+ * {@link toCommitUnit} is the one stage that turns those into the {@link SyncBinding.CommitUnit}'s
  * `commitEffects`, and must run last.
  */
 export type Mapped = {
@@ -142,33 +136,19 @@ export const processAttachments = (): Stage.Stage<Mapped, Mapped, never, Databas
   );
 
 /**
- * Optional stage that runs the mailbox's configured on-arrival extractors (AI and others) for each
- * item's message, passing the item through unchanged. Self-gating: a no-op when the mailbox has no
- * extractors enabled. Sender→contact extraction is handled unconditionally by {@link extractContacts};
- * this stage covers the remaining, config-gated extractors.
+ * Queries the parent container's already-sent drafts once per sync run and pools them by the provider
+ * message id captured at send time (`properties.sentMessageId`) — the key {@link reconcileDrafts}
+ * matches each incoming message's `foreignId` against. Doing this once (rather than per item) keeps
+ * reconciliation off the database as messages stream through. Unsent drafts (no `sentMessageId`) are
+ * never pooled and thus never eligible for removal.
  *
- * TODO(wittjosiah): Factor these extractors out into their own downstream pipeline.
+ * `parent` is the local root object drafts are scoped to (e.g. a Mailbox) — only its URI is read, so
+ * any object works.
  */
-export const onArrivalExtractors =
-  (mailbox: Mailbox.Mailbox) =>
-  <In extends { readonly message: Message.Message }, E, R>(
-    self: Stream.Stream<In, E, R>,
-  ): Stream.Stream<In, E, R | Capability.Service | Operation.Service> =>
-    Stage.map('on-arrival-extractors', (item: In) =>
-      runOnArrivalExtractors(mailbox, [item.message]).pipe(Effect.as(item)),
-    )(self);
-
-/**
- * Queries the mailbox's already-sent drafts once per sync run and pools them by the provider message id
- * captured at send time (`properties.sentMessageId`) — the key {@link reconcileDrafts} matches each
- * incoming message's `foreignId` against. Doing this once (rather than per item) keeps reconciliation
- * off the database as messages stream through. Unsent drafts (no `sentMessageId`) are never pooled and
- * thus never eligible for removal.
- */
-export const queryDraftPool = Effect.fn('queryDraftPool')(function* (mailbox: Mailbox.Mailbox) {
-  const mailboxUri = Obj.getURI(mailbox);
-  const drafts = (yield* Database.query(Filter.type(Message.Message, { properties: { mailbox: mailboxUri } }))
-    .run).filter((candidate) => DraftMessage.belongsTo(candidate, mailboxUri) && candidate.properties?.sentMessageId);
+export const queryDraftPool = Effect.fn('queryDraftPool')(function* (parent: Obj.Unknown) {
+  const parentUri = Obj.getURI(parent);
+  const drafts = (yield* Database.query(Filter.type(Message.Message, { properties: { mailbox: parentUri } }))
+    .run).filter((candidate) => DraftMessage.belongsTo(candidate, parentUri) && candidate.properties?.sentMessageId);
 
   const pool = new Map<string, Message.Message[]>();
   for (const draft of drafts) {

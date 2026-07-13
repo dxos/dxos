@@ -14,16 +14,15 @@ import { Feed, Filter, Key, Obj, Order, Query, Ref, Scope, Type } from '@dxos/ec
 import { EID } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Connection, ConnectorOperation, SyncBinding } from '@dxos/plugin-connector';
+import { ConnectorOperation } from '@dxos/plugin-connector';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
-import { Event, Message } from '@dxos/types';
+import { Connection, DraftMessage, Event, Message, SyncBinding } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
-import { InboxOperation } from '#types';
-import { Calendar, DraftMessage, Mailbox } from '#types';
+import { Calendar, InboxOperation, Mailbox } from '#types';
 
 import {
   MAILBOX_DRAFTS_NODE_DATA,

@@ -14,15 +14,9 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { OperationInvoker } from '@dxos/operation';
 import { Expando } from '@dxos/schema';
-import { AccessToken, Cursor } from '@dxos/types';
+import { AccessToken, Connection, Cursor, SyncBinding } from '@dxos/types';
 
-import {
-  Connection,
-  type ConnectorEntry,
-  MaterializeTargetInput,
-  MaterializeTargetOutput,
-  SyncBinding,
-} from '../types';
+import { type ConnectorEntry, MaterializeTargetInput, MaterializeTargetOutput } from '../types';
 import { type SyncTargetSelection, reconcileSyncBindings } from './reconcile-sync-bindings';
 
 describe('reconcileSyncBindings', () => {

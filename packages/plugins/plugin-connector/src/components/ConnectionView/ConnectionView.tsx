@@ -10,10 +10,9 @@ import { useObject } from '@dxos/react-client/echo';
 import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Empty } from '@dxos/react-ui-list';
+import { SyncBinding } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import { SyncBinding } from '../../types';
 
 // The action section uses Form's `settings` variant purely for its labeled-row chrome
 // (action-mode `Form.Row`s); there are no fields to bind, so the schema is empty.

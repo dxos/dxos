@@ -8,8 +8,8 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref } from '@dxos/echo';
-import { Connection, type CredentialForm } from '@dxos/plugin-connector';
-import { AccessToken } from '@dxos/types';
+import { type CredentialForm } from '@dxos/plugin-connector';
+import { AccessToken, Connection } from '@dxos/types';
 
 import { Jmap } from '../apis';
 import { JMAP_DEFAULT_HOST } from '../constants';

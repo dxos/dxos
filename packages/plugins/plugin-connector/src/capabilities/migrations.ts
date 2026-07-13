@@ -7,9 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { Migration, Ref, Relation } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Cursor } from '@dxos/types';
-
-import { SyncBinding } from '#types';
+import { Cursor, SyncBinding } from '@dxos/types';
 
 export const migrations = [
   // 0.1.0 → 0.2.0: cursor + run status moved from inline binding fields to a referenced `Cursor`

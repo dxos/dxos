@@ -18,14 +18,14 @@ import { type Resolver, resolve } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-import { SyncBinding } from '@dxos/plugin-connector';
-import { Cursor, Person } from '@dxos/types';
+import { EmailStage } from '@dxos/pipeline-email';
+import { Cursor, Person, SyncBinding } from '@dxos/types';
 
 import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { type JmapApiError } from '../../../errors';
 import { JmapCredentials, JmapMailApi } from '../../../services';
-import { EmailStage, type SyncDirection, type SyncWindow, resolveSyncWindow } from '../../../sync';
+import { onArrivalExtractors } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
 import { readBindingOptions } from '../../../util';
 import { type AttachmentMetadata, type DecodedEmail, decodeBody, mapToMessage } from './mapper';
@@ -61,7 +61,7 @@ export const runJmapSync = ({
    * Override the walk direction. Default is inferred from the cursor: no cursor → `backward` (initial
    * sync); a cursor → `forward` (incremental). Pass `backward` (with `before` = oldest-synced) to backfill.
    */
-  direction?: SyncDirection;
+  direction?: Cursor.SyncDirection;
 }): Effect.Effect<
   { newMessages: number },
   JmapApiError | EntityNotFoundError,
@@ -109,7 +109,7 @@ export const runJmapSync = ({
 
     // Range + direction (shared with Gmail): no cursor → backward initial from today to the horizon;
     // cursor → forward incremental; `direction: backward` + `before` = oldest-synced → backfill.
-    const window = resolveSyncWindow({
+    const window = Cursor.resolveSyncWindow({
       cursorKey,
       now: new Date(),
       after,
@@ -156,7 +156,7 @@ export const runJmapSync = ({
       decodeBodyStage,
       mapToMessageStage,
       EmailStage.processAttachments(),
-      EmailStage.onArrivalExtractors(mailbox),
+      onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
       EmailStage.reconcileDrafts(draftPool),
       EmailStage.toCommitUnit(),
@@ -245,7 +245,7 @@ const fetchAttachments = (
   });
 
 /**
- * Streams JMAP emails over the resolved {@link SyncWindow}: build the query filter (folder scope +
+ * Streams JMAP emails over the resolved {@link Cursor.SyncWindow}: build the query filter (folder scope +
  * `after`/`before` date bounds + optional user DSL), paginate ids (newest-first within the window),
  * then fetch each email. Direction is realized via the window's bounds — forward resumes from the
  * cursor, backward/backfill bounds the range with `before` — while the query is always newest-first.
@@ -253,7 +253,7 @@ const fetchAttachments = (
 const jmapSource = (
   target: JmapMail.Target,
   folders: readonly JmapMail.Mailbox[],
-  window: SyncWindow,
+  window: Cursor.SyncWindow,
   options: { filter?: string },
 ) =>
   Stream.unwrap(

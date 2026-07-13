@@ -9,7 +9,8 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { DXN, Ref } from '@dxos/echo';
-import { Connection, MaterializeTargetInput, MaterializeTargetOutput, SyncBinding } from '@dxos/plugin-connector';
+import { MaterializeTargetInput, MaterializeTargetOutput } from '@dxos/plugin-connector';
+import { Connection, SyncBinding } from '@dxos/types';
 
 import { meta } from '#meta';
 

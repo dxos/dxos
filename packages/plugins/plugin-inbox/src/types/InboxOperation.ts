@@ -12,17 +12,15 @@ import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FactStore, FeedCursors } from '@dxos/pipeline-rdf';
 import {
-  Connection,
   GetSyncTargetsInput,
   GetSyncTargetsOutput,
   MaterializeTargetInput,
   MaterializeTargetOutput,
-  SyncBinding,
 } from '@dxos/plugin-connector';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
 // TypeScript to name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { Actor, Event, Message, type Person } from '@dxos/types';
+import { Actor, Connection, Event, Message, type Person, SyncBinding } from '@dxos/types';
 
 import { meta } from '#meta';
 

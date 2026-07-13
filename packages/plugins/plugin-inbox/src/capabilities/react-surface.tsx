@@ -11,7 +11,7 @@ import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { getParentId, useNode } from '@dxos/plugin-graph';
-import { Event, Message, Organization, Person } from '@dxos/types';
+import { DraftMessage, Event, Message, Organization, Person } from '@dxos/types';
 
 import {
   CalendarArticle,
@@ -29,7 +29,7 @@ import {
   SaveFilterPopover,
   TopicsArticle,
 } from '#containers';
-import { Calendar, DraftMessage, Mailbox } from '#types';
+import { Calendar, Mailbox } from '#types';
 
 import { MAILBOX_DRAFTS_NODE_DATA, MAILBOX_TOPICS_NODE_DATA, POPOVER_SAVE_FILTER } from '../constants';
 import { getDraftsId, getTopicsId } from '../paths';

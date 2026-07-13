@@ -4,8 +4,7 @@
 
 import { FormBuilder } from '@dxos/cli-util';
 import { OAuthProvider } from '@dxos/protocols';
-
-import { type Connection } from '../../types';
+import { type Connection } from '@dxos/types';
 
 /**
  * OAuth flow descriptor for the CLI `connector add` preset list. Mirrors the `oauth`

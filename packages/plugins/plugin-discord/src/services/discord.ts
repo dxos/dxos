@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 
 import { Database, Err, type Ref } from '@dxos/echo';
-import { Connection } from '@dxos/plugin-connector';
+import { Connection } from '@dxos/types';
 
 import { DISCORD_API_BASE } from '../constants';
 import { makeEdgeProxyHttpClientLayer } from './proxy-http-client';

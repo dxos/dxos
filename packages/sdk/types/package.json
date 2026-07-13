@@ -36,6 +36,7 @@
     "@dxos/echo-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/pipeline": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -43,7 +44,6 @@
   },
   "devDependencies": {
     "@dxos/effect": "workspace:*",
-    "@dxos/pipeline": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",

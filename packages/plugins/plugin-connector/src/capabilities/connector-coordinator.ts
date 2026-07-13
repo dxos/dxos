@@ -16,9 +16,9 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { AccessToken } from '@dxos/types';
+import { AccessToken, Connection, SyncBinding } from '@dxos/types';
 
-import { Connection, Connector, ConnectorCoordinator, type ConnectorEntry, SyncBinding } from '#types';
+import { Connector, ConnectorCoordinator, type ConnectorEntry } from '#types';
 
 import {
   PROVIDER_FORM_DIALOG,

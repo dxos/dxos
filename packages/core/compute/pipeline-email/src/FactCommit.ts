@@ -7,10 +7,10 @@
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 
-import { type FactUnit } from '@dxos/pipeline-email';
 import { FactStore } from '@dxos/pipeline-rdf';
-import { SyncBinding } from '@dxos/plugin-connector';
-import { Cursor } from '@dxos/types';
+import { Cursor, SyncBinding } from '@dxos/types';
+
+import { type FactUnit } from './stages';
 
 /**
  * `Pipeline.run` sink for the cursored fact pipeline. Persists a page of {@link FactUnit} facts to

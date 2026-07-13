@@ -9,11 +9,10 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useObject, useQuery } from '@dxos/react-client/echo';
+import { type Connection, SyncBinding } from '@dxos/types';
 
 import { ConnectionView } from '#components';
 import { useConnector, useSyncConnection, useSyncTargetsChecklist } from '#hooks';
-
-import { type Connection, SyncBinding } from '../../types';
 
 export type ConnectionArticleProps = AppSurface.ObjectArticleProps<Connection.Connection>;
 

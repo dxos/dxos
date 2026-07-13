@@ -14,10 +14,10 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import { Connection, SyncBinding } from '@dxos/types';
 
 import { useConnector } from '#hooks';
 import { meta } from '#meta';
-import { Connection, SyncBinding } from '#types';
 
 import { connectionDeckSubject } from '../../constants';
 

@@ -15,10 +15,9 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Expando } from '@dxos/schema';
-import { AccessToken, Cursor } from '@dxos/types';
+import { AccessToken, Connection, Cursor, SyncBinding } from '@dxos/types';
 
 import { translations } from '#translations';
-import { Connection, SyncBinding } from '#types';
 
 import { ConnectionView } from './ConnectionView';
 

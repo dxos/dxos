@@ -9,9 +9,9 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
-import { Connection, Connector, type CredentialForm, type OnTokenCreated } from '@dxos/plugin-connector';
+import { Connector, type CredentialForm, type OnTokenCreated } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
-import { AccessToken } from '@dxos/types';
+import { AccessToken, Connection } from '@dxos/types';
 
 import {
   DISCORD_BOT_LABEL,

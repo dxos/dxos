@@ -9,11 +9,9 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { DXN, Ref, Type } from '@dxos/echo';
-import { AccessToken } from '@dxos/types';
+import { AccessToken, Connection } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import * as Connection from './Connection';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 

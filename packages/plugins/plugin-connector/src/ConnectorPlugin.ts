@@ -6,7 +6,7 @@ import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Feed } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
-import { AccessToken, Cursor } from '@dxos/types';
+import { AccessToken, Connection, Cursor, DerivedBinding, SyncBinding } from '@dxos/types';
 
 import {
   AppGraphBuilder,
@@ -19,7 +19,6 @@ import {
   ReactSurface,
 } from '#capabilities';
 import { meta } from '#meta';
-import { Connection, DerivedBinding, SyncBinding } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
