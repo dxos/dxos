@@ -4,7 +4,7 @@
 
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
-import { failUndefined, raise } from '@dxos/debug';
+import { raise } from '@dxos/debug';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import * as Coordinator from '@dxos/worker-framework/Coordinator';
 
