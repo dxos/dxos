@@ -1,6 +1,6 @@
-# @dxos/plugin-kanban
+# @dxos/plugin-devtools
 
-Surface plugin for kanban entities.
+Developer inspector plugin for DXOS.
 
 ## DXOS Resources
 
@@ -12,4 +12,4 @@ Surface plugin for kanban entities.
 
 Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md), the [issue guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues), and the [PR contribution guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs).
 
-License: [FSL-1.1-Apache-2.0](./LICENSE) Copyright 2023 © DXOS
+License: [FSL-1.1-Apache-2.0](./LICENSE) Copyright 2026 © DXOS

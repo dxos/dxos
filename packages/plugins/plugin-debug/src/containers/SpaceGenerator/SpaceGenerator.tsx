@@ -171,7 +171,8 @@ const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
   }, []);
 
   const handleStart = useCallback(() => {
-    if (!registry || running) {
+    // Guard on the timer ref too: `running` (derived from the registry) can lag a fast second click.
+    if (!registry || running || intervalRef.current) {
       return;
     }
 
