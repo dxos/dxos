@@ -36,6 +36,36 @@ categorization) but fall below on synthetic tasks (thread/topic summaries, draft
       Headline: **H0 inverted** — open weights strongest on _drafts_ (gemma-12b/qwen3-30b clear the
       bar), weakest on _labeling_; faithfulness universally high; gpt-oss-20b best all-rounder.
 
+## Next experiment: Active Topics (overnight)
+
+Spec: `agents/superpowers/specs/2026-07-13-active-topics-experiment-design.md`. Build fully-populated
+topic structures from the private fixture + a confidence-ranked active/suggested split, for morning
+human review. Harness-only (informs the product `Topic` schema). Prereqs: Ollama + `.env` (opus/haiku).
+
+### Tasks
+
+- [ ] **`ActiveTopic` type + assembly (pure, tested)** — `harness/pipelines/active-topics.ts`:
+      `ActiveTopic` (TopicProps + status/facts/tasks(Outline)/drafts/confidence/rationale/kind);
+      `assembleActiveTopic(draft, parts)`. Unit-test assembly.
+- [ ] **`activityScore` (deterministic, tested)** — normalized combine of recency + `awaiting-mine`
+      thread state + person-linked + open-item count → `[0,1]`; candidate prefilter floor. Unit test.
+- [ ] **Confidence combine + split (pure, tested)** — `confidence = w·llm + (1−w)·activity`;
+      `kind='active'` when `≥ ACTIVE_THRESHOLD`, capped at `ACTIVE_TOP`; rest `'suggested'`. Unit test.
+- [ ] **Action-items → `Outline`** — extract action items (thread `actionItems` + an LLM pass), render
+      nested `- [ ]` markdown, wrap in `Outline.make({ name, content })`. Pure render unit-tested; add
+      `@dxos/plugin-outliner` workspace dep to stories-brain.
+- [ ] **Populate stage** — per active topic: LLM `status`, facts (reuse `pipelines/facts.ts` +
+      fact-store), tasks Outline, drafts (`pipelines/draft.ts` for replyable threads).
+- [ ] **Reports + JSON writer** — `results/active-topics/{index.md, <slug>.md, active-topics.json}`
+      (index: label/kind/confidence/rationale + populated-field checklist).
+- [ ] **`active-topics.mjs` driver + `stories-brain:active-topics` moon task** — non-interactive; env
+      `ACTIVE_N` / `ACTIVE_TOP` / `ACTIVE_THRESHOLD` / `MODEL_POLICY`.
+- [ ] **RUN overnight** over the private fixture; review `index.md` in the morning (expect ≈3–5 active,
+      each fully populated + a suggested list). Record findings in `fixtures/REPORT.md`.
+
+Follow-ups (deferred): automated judge scoring; held-out incoming-mail contextualization; promote the
+validated `ActiveTopic` fields into the product `Topic`.
+
 ## Next — model routing & sender-type triage (from REPORT §5)
 
 **Direction:** triage by sender type first, spend LLM effort only where it pays off. Sync is 100%
