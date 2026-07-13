@@ -19,7 +19,7 @@ If `FILES` is empty, report clean and stop.
 ## 2. Commit
 
 - Group changes into **one or more** logical commits when unrelated (e.g. separate features, separate packages).
-- Message format: `scope: description` (no `feat`/`fix`/`chore` type prefix — see `AGENTS.md`).
+- Message format: `scope: description` (see `AGENTS.md`).
 - Stage **only** in-scope files; never stage excluded paths.
 - Create commits immediately — no review pass, no code changes.
 - **Do not push.**

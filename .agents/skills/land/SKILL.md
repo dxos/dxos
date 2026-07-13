@@ -109,7 +109,7 @@ For each failing check:
    - Format: `pnpm format`
 3. Apply the fix at the **root cause** — no casts, no `// @ts-ignore`, no `--no-verify`.
 4. Run the specific check locally to confirm the fix.
-5. Commit with a `scope: description` message (no type prefix — see `AGENTS.md`) and push.
+5. Commit with a `scope: description` message (see `AGENTS.md`) and push.
 
 **Prohibited shortcuts:**
 
@@ -261,7 +261,7 @@ This project uses:
 - `moon` for task running (`moon run <package>:task`)
 - `pnpm` for package management
 - `mcp__github__*` tools for all GitHub operations (no `gh` CLI in remote environments)
-- `scope: description` commit/PR-title format (no type prefix — see `AGENTS.md`)
+- `scope: description` commit/PR-title format (see `AGENTS.md`)
 - TypeScript with strict linting
 - Single quotes, functional patterns, TailwindCSS
 
