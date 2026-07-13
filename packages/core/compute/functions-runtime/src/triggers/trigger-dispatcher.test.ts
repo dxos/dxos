@@ -20,6 +20,7 @@ import {
   ServiceResolver,
   Trace,
   Trigger,
+  TriggerEvent,
 } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
@@ -98,6 +99,43 @@ describe('TriggerDispatcher', () => {
   });
 
   describe('Manual Invocation', () => {
+    it.effect(
+      'should invoke manual trigger with caller-provided data',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specManual(),
+        });
+        yield* Database.add(trigger);
+        const dispatcher = yield* TriggerDispatcher;
+        const { result } = yield* dispatcher.invokeTrigger({
+          trigger,
+          event: { data: { tick: 42 } } satisfies TriggerEvent.ManualEvent,
+        });
+
+        expect(result).toEqual(Exit.succeed({ data: { tick: 42 } }));
+      }, Effect.provide(TestTriggerDispatcherLayer)),
+    );
+
+    it.effect(
+      'should not invoke manual triggers from scheduled dispatch',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specManual(),
+        });
+        yield* Database.add(trigger);
+        const dispatcher = yield* TriggerDispatcher;
+        const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['manual'] });
+
+        expect(invocations).toEqual([]);
+      }, Effect.provide(TestTriggerDispatcherLayer)),
+    );
+
     it.effect(
       'should manually invoke trigger',
       Effect.fnUntraced(function* ({ expect }) {
