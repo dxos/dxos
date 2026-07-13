@@ -19,8 +19,7 @@ let logStoreInstalled = false;
 let onConnectHandler: ((ev: MessageEvent) => void) | undefined;
 
 onconnect = async (ev) => {
-  // TODO(dmaretskyi): Replace with direct import from '@dxos/worker-framework/coordinator' -- runCoordinator();
-  const { createCoordinatorOnConnect } = await import('@dxos/client/coordinator-worker-onconnect');
+  const Coordinator = await import('@dxos/worker-framework/coordinator');
 
   if (!logStoreInstalled) {
     logStoreInstalled = true;
@@ -31,12 +30,12 @@ onconnect = async (ev) => {
     log.addProcessor(logStore.processor);
   }
 
-  onConnectHandler ??= createCoordinatorOnConnect();
+  onConnectHandler ??= Coordinator.createOnConnect();
   return onConnectHandler(ev);
 };
 
 // const initializeObservability = async () => {s
-//   const { log } = await import('@dxos/log');
+//   const { log } = await impsort('@dxos/log');
 //   const { isTauri } = await import('@dxos/util');
 //   const Config = await import('./config');
 

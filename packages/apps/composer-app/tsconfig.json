@@ -517,6 +517,9 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../sdk/worker-framework"
+    },
+    {
       "path": "../../ui/brand"
     },
     {
