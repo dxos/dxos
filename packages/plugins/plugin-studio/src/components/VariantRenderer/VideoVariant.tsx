@@ -40,6 +40,9 @@ export const VideoVariant = ({ variant }: VideoVariantProps) => {
         className='is-full bs-full rounded'
         src={embedUrl}
         title={variant.generation?.prompt ?? 'video'}
+        // Sandbox the cross-origin embed so it cannot navigate the top-level window; these flags are
+        // the minimum YouTube/Vimeo players need (mirrors react-ui MediaPlayer's DEFAULT_IFRAME_SANDBOX).
+        sandbox='allow-scripts allow-same-origin allow-presentation'
         allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
         allowFullScreen
       />
