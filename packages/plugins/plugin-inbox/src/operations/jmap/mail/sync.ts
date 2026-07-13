@@ -26,7 +26,7 @@ import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { type JmapApiError } from '../../../errors';
 import { JmapCredentials, JmapMailApi } from '../../../services';
-import { toCommitUnit } from '../../../sync/to-commit-unit';
+import { EmailCommit } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
 import { onArrivalExtractors, readBindingOptions } from '../../../util';
 import { type AttachmentMetadata, type DecodedEmail, decodeBody, mapToMessage } from './mapper';
@@ -160,7 +160,7 @@ export const runJmapSync = ({
       onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
       EmailStage.reconcileDrafts(draftPool),
-      toCommitUnit(),
+      EmailCommit.toCommitUnit(),
       Stream.grouped(COMMIT_PAGE_SIZE),
       Pipeline.run({ sink: SyncBinding.commit }),
       Effect.provide(

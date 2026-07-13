@@ -36,7 +36,7 @@ import {
   type GoogleMailApiError,
   type GoogleMailApiService,
 } from '../../../services';
-import { toCommitUnit } from '../../../sync/to-commit-unit';
+import { EmailCommit } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
 import { onArrivalExtractors, readBindingOptions } from '../../../util';
 import { parseFromHeader } from '../../util';
@@ -313,7 +313,7 @@ export const runGmailSync = ({
       onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
       EmailStage.reconcileDrafts(draftPool),
-      toCommitUnit(),
+      EmailCommit.toCommitUnit(),
       Stream.grouped(STREAMING_CONFIG.pageSize),
       Pipeline.run({ sink: SyncBinding.commit }),
       Effect.provide(
