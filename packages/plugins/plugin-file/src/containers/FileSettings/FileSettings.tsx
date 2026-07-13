@@ -68,3 +68,5 @@ export const FileSettings = ({ settings, onSettingsChange }: FileSettingsProps) 
     </Form.Root>
   );
 };
+
+FileSettings.displayName = 'FileSettings';

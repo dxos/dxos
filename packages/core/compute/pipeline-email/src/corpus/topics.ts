@@ -49,6 +49,11 @@ export type TopicOptions = {
   readonly stopwords?: readonly string[];
   /** Keywords retained per topic (most frequent first). */
   readonly maxKeywords?: number;
+  /**
+   * Drop identifier tokens (invoice hashes, order numbers, tracking codes) from subject signatures.
+   * These are unique per message, so they fragment otherwise-identical automated mail into singletons.
+   */
+  readonly dropIdTokens?: boolean;
 };
 
 export const DEFAULT_TOPIC_OPTIONS: Required<TopicOptions> = {
@@ -57,6 +62,7 @@ export const DEFAULT_TOPIC_OPTIONS: Required<TopicOptions> = {
   minTokenLength: 3,
   stopwords: DEFAULT_STOPWORDS,
   maxKeywords: 5,
+  dropIdTokens: true,
 };
 
 /** A topic before ECHO materialization: plain values so LLM enrichment can rewrite them freely. */
@@ -66,6 +72,10 @@ export type TopicDraft = {
   readonly threadIds: readonly string[];
   readonly participants: readonly string[];
   readonly keywords: readonly string[];
+  /** Open questions rolled up (deduped) from the member threads. */
+  readonly questions: readonly string[];
+  /** Action items rolled up (deduped) from the member threads. */
+  readonly tasks: readonly string[];
 };
 
 type Signature = {
@@ -74,12 +84,35 @@ type Signature = {
   readonly participants: Set<string>;
 };
 
+// Identifiers (invoice hashes, order numbers, tracking codes, years) carry no topical signal and are
+// unique per message, so they must be dropped or near-identical automated mail never collapses. A
+// token is an id if it is a pure number, a hex-looking string, or a digit-heavy alphanumeric code;
+// short version-like tokens ("q4", "v2") are kept.
+const isIdToken = (token: string): boolean => {
+  if (/^\d+$/.test(token)) {
+    return true;
+  }
+  const digits = (token.match(/\d/g) ?? []).length;
+  if (digits === 0) {
+    return false;
+  }
+  if (/^[0-9a-f]+$/.test(token) && token.length >= 6) {
+    return true;
+  }
+  return token.length >= 5 && digits / token.length >= 0.3;
+};
+
 const tokenize = (subject: string, options: Required<TopicOptions>): Set<string> =>
   new Set(
     subject
       .toLowerCase()
       .split(/[^a-z0-9]+/)
-      .filter((token) => token.length >= options.minTokenLength && !options.stopwords.includes(token)),
+      .filter(
+        (token) =>
+          token.length >= options.minTokenLength &&
+          !options.stopwords.includes(token) &&
+          !(options.dropIdTokens && isIdToken(token)),
+      ),
   );
 
 const jaccard = (left: Set<string>, right: Set<string>): number => {
@@ -160,6 +193,10 @@ export const clusterThreads = (threads: readonly Thread[], options?: TopicOption
       member.thread.summary.length > 0 ? [member.thread.summary] : [],
     );
 
+    // Roll up open questions / action items from the member threads (deduped, order-preserving).
+    const questions = [...new Set(cluster.members.flatMap((member) => member.thread.openQuestions ?? []))];
+    const tasks = [...new Set(cluster.members.flatMap((member) => member.thread.actionItems ?? []))];
+
     // Label from top keywords; a keyword-less cluster (e.g. blank subjects) falls back through the
     // first thread's subject to its threadId so the label is never empty.
     const first = cluster.members[0].thread;
@@ -169,6 +206,8 @@ export const clusterThreads = (threads: readonly Thread[], options?: TopicOption
       threadIds: cluster.members.map((member) => member.thread.threadId),
       participants: [...cluster.participants].sort(),
       keywords,
+      questions,
+      tasks,
     };
   });
 };
@@ -207,5 +246,7 @@ export const materializeTopics = (drafts: readonly TopicDraft[]): Topic[] =>
       threadIds: [...draft.threadIds],
       participants: [...draft.participants],
       keywords: [...draft.keywords],
+      questions: [...draft.questions],
+      tasks: [...draft.tasks],
     }),
   );

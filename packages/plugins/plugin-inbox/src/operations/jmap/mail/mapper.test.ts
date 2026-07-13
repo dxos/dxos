@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
@@ -11,7 +11,7 @@ import { Person } from '@dxos/types';
 
 import { JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
-import { mapEmail } from './mapper';
+import { decodeBody, mapEmail } from './mapper';
 
 const makeJmapEmail = (overrides?: Partial<JmapMail.Email>): JmapMail.Email => ({
   id: 'email-001',
@@ -113,4 +113,36 @@ describe('mapEmail', () => {
       ),
     ),
   );
+});
+
+describe('decodeBody attachments', () => {
+  test('collects attachment metadata from Email.attachments', ({ expect }) => {
+    const email = makeJmapEmail({
+      attachments: [
+        { blobId: 'blob-1', name: 'photo.png', type: 'image/png', size: 1234 },
+        { partId: 'body-2', type: 'text/plain' }, // a body part with no blobId can't be downloaded.
+      ],
+    });
+    const decoded = decodeBody(email);
+    expect(decoded?.attachments).toEqual([{ blobId: 'blob-1', name: 'photo.png', mimeType: 'image/png', size: 1234 }]);
+  });
+
+  test('is empty when the email has no attachments', ({ expect }) => {
+    const decoded = decodeBody(makeJmapEmail());
+    expect(decoded?.attachments).toEqual([]);
+  });
+
+  test('extracts a Content-ID for inline attachments, stripping enclosing angle brackets if present', ({ expect }) => {
+    const email = makeJmapEmail({
+      attachments: [
+        { blobId: 'blob-1', name: 'signature.png', type: 'image/png', size: 999, cid: '<ii_mrcqn4871>' },
+        { blobId: 'blob-2', name: 'bare-cid.png', type: 'image/png', size: 111, cid: 'bare-id' },
+      ],
+    });
+    const decoded = decodeBody(email);
+    expect(decoded?.attachments).toEqual([
+      { blobId: 'blob-1', name: 'signature.png', mimeType: 'image/png', size: 999, contentId: 'ii_mrcqn4871' },
+      { blobId: 'blob-2', name: 'bare-cid.png', mimeType: 'image/png', size: 111, contentId: 'bare-id' },
+    ]);
+  });
 });

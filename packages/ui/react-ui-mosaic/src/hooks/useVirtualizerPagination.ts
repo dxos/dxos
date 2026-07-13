@@ -5,7 +5,7 @@
 import { type Virtualizer } from '@tanstack/react-virtual';
 import { type MutableRefObject, useCallback, useLayoutEffect, useRef, useState } from 'react';
 
-import { type GetId } from '../components';
+import { type GetId } from '@dxos/react-ui-dnd';
 
 /** Rows from either loaded edge at which the next/previous page is requested. */
 const DEFAULT_THRESHOLD = 12;

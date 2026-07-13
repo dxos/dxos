@@ -90,3 +90,5 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
 
   return <Transcript id={`${uri}/transcript`} source={video.transcript} onSeek={handleSeek} />;
 };
+
+TranscriptSection.displayName = 'TranscriptSection';

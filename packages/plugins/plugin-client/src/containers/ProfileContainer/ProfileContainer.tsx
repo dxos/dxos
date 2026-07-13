@@ -184,3 +184,5 @@ export const ProfileContainer = () => {
     </Clipboard.Provider>
   );
 };
+
+ProfileContainer.displayName = 'ProfileContainer';

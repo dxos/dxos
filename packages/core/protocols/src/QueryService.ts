@@ -5,21 +5,29 @@
 import * as Rpc from '@effect/rpc/Rpc';
 import type * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
-import * as Schema from 'effect/Schema';
 
-import * as IndexingPb from './proto/gen/dxos/echo/indexing';
-import * as QueryPb from './proto/gen/dxos/echo/query';
+import { protoMessage, serviceError } from './service-rpc.ts';
 
+/**
+ * Effect RPC definitions for `dxos.echo.query.QueryService`.
+ * Shared proto types remain protobuf-encoded on the wire.
+ */
 export class Rpcs extends RpcGroup.make(
   Rpc.make('setConfig', {
-    payload: Schema.declare<IndexingPb.IndexConfig>((_): _ is IndexingPb.IndexConfig => true),
+    payload: protoMessage('dxos.echo.indexing.IndexConfig'),
+    error: serviceError,
   }),
   Rpc.make('execQuery', {
-    payload: Schema.declare<QueryPb.QueryRequest>((_): _ is QueryPb.QueryRequest => true),
-    success: Schema.declare<QueryPb.QueryResponse>((_): _ is QueryPb.QueryResponse => true),
+    payload: protoMessage('dxos.echo.query.QueryRequest'),
+    success: protoMessage('dxos.echo.query.QueryResponse'),
+    error: serviceError,
     stream: true,
   }),
-  Rpc.make('reindex', {}),
+  Rpc.make('reindex', {
+    error: serviceError,
+  }),
 ).prefix('QueryService.') {}
 
 export interface Client extends RpcClient.RpcClient<RpcGroup.Rpcs<typeof Rpcs>> {}
+
+export interface Handlers extends RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof Rpcs>> {}

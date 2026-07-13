@@ -81,3 +81,5 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
     />
   );
 };
+
+ConnectionArticle.displayName = 'ConnectionArticle';

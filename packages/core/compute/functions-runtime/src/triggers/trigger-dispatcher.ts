@@ -108,6 +108,7 @@ export type InvocationsState = {
 
 export type TriggerDispatcherState = {
   enabled: boolean;
+  // TODO(dmaretskyi): Rework this to be grouped by trigger, with Ref's to objects, and the current state of the trigger: cursor, time when runs, rerun's, etc..
   invocations: InvocationsState[];
   errors: Error[];
 };
@@ -115,6 +116,7 @@ export type TriggerDispatcherState = {
 const MAX_TRACKED_INVOCATIONS = 10;
 const MAX_TRACKED_ERRORS = 10;
 
+// TODO(dmaretskyi): Extract a separate TriggerMonmitor service to @dxos/compute that would work with both local and edge dispatcher.
 export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispatcher')<
   TriggerDispatcher,
   {
@@ -303,6 +305,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       log.info('TriggerDispatcher stopped');
     }).pipe(Effect.provide(this._services));
 
+  // TODO(dmaretskyi): Respect concurrency limit.
   invokeTrigger = (options: InvokeTriggerOptions): Effect.Effect<TriggerExecutionResult> =>
     Effect.gen(this, function* () {
       const { trigger, event } = options;
@@ -581,6 +584,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             }
             break;
           }
+          case 'manual':
+            // Manual triggers are only invoked through invokeTrigger.
+            break;
           default: {
             return yield* Effect.dieMessage(`Unknown trigger kind: ${kind}`);
           }

@@ -171,3 +171,5 @@ export const Table = ({ rows }: TableProps) => {
     </div>
   );
 };
+
+CallDebugPanel.displayName = 'CallDebugPanel';

@@ -12,6 +12,7 @@ import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { type Operation, OperationHandlerSet, Process } from '@dxos/compute';
 import { Annotation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { log } from '@dxos/log';
 
 import { meta } from '#meta';
 import { DeckCapabilities } from '#types';
@@ -82,20 +83,21 @@ export default Capability.makeModule(
         } else if (process.state === Process.State.SUCCEEDED && notify.success) {
           addToast({ id: `notify-success-${process.pid}`, title: notify.success, duration: NOTIFY_TOAST_DURATION });
         } else if (process.state === Process.State.FAILED && notify.error) {
-          // A failing error may carry `context.notifyOverride` (see `LayoutOperation.getNotifyOverride`)
-          // to replace the generic title/description with a specific message and action — e.g. a
-          // connector reporting an expired credential instead of the raw provider error.
+          // Surface only the curated `notify.error` title. The raw exception (provider errors, stack
+          // traces, auth tokens) is logged for debugging, never forwarded to the toast.
+          if (process.error) {
+            log.warn('operation failed', { pid: process.pid, error: process.error });
+          }
+          // A failing error may still carry `context.notifyOverride` (see `LayoutOperation.getNotifyOverride`)
+          // to replace the generic title with a specific, curated message and an action — e.g. a
+          // connector reporting an expired credential. Its fields are safe to display (no raw error).
           const override = LayoutOperation.getNotifyOverride(process.failure);
           const actionLabel = override?.actionLabel;
           const action = override?.action;
           addToast({
             id: `notify-error-${process.pid}`,
             title: override?.title ?? notify.error,
-            ...(override?.description !== undefined
-              ? { description: override.description }
-              : process.error
-                ? { description: process.error }
-                : {}),
+            ...(override?.description !== undefined ? { description: override.description } : {}),
             icon: 'ph--warning--regular',
             duration: ERROR_TOAST_DURATION,
             // The override carries a serializable invocation; the tracker holds the live invoker to run it.

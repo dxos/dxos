@@ -2,27 +2,27 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Trigger, asyncTimeout } from '@dxos/async';
-import {
-  type IframeServiceBundle,
-  PROXY_CONNECTION_TIMEOUT,
-  iframeServiceBundle,
-  workerServiceBundle,
-} from '@dxos/client-protocol';
-import { invariant } from '@dxos/invariant';
+import * as Effect from 'effect/Effect';
+
+import { Trigger } from '@dxos/async';
+import { ClientRpcServer, PROXY_CONNECTION_TIMEOUT, makeBridgeServiceClient } from '@dxos/client-protocol';
 import { log, logInfo } from '@dxos/log';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
+import { type WorkerService } from '@dxos/protocols/rpc';
 import { Callback, type MaybePromise } from '@dxos/util';
 
-import { ClientRpcServer, type ClientRpcServerProps, type ClientServicesHost } from '../services';
+import { type ClientServicesHost } from '../services';
 
 export type WorkerSessionProps = {
   serviceHost: ClientServicesHost;
-  systemPort: RpcPort;
-  appPort: RpcPort;
+  /**
+   * Reverse-direction (worker→tab) channel serving the tab's {@link BridgeService} (WebRTC transport)
+   * over effect-rpc. The worker is the client; the tab is the runner.
+   */
+  systemPort: MessagePort;
+  appPort: MessagePort;
   // TODO(wittjosiah): Remove shellPort.
-  shellPort?: RpcPort;
+  shellPort?: MessagePort;
   readySignal: Trigger<Error | undefined>;
 };
 
@@ -32,9 +32,10 @@ export type WorkerSessionProps = {
 export class WorkerSession {
   private readonly _clientRpc: ClientRpcServer;
   private readonly _shellClientRpc?: ClientRpcServer;
-  private readonly _iframeRpc: ProtoRpcPeer<IframeServiceBundle>;
   private readonly _startTrigger = new Trigger();
   private readonly _serviceHost: ClientServicesHost;
+  private readonly _systemPort: MessagePort;
+  #closeBridge?: () => Promise<void>;
 
   public readonly onClose = new Callback<() => Promise<void>>();
 
@@ -46,80 +47,70 @@ export class WorkerSession {
 
   public bridgeService?: BridgeService;
 
+  // Per-session `WorkerService` control handlers, served over the app port alongside the client
+  // services (both run tab→worker). `start` conveys the tab origin / liveness lock and releases the
+  // gate below; `stop` tears the session down.
+  readonly #workerServiceHandlers: WorkerService.Handlers = {
+    'WorkerService.start': (payload) =>
+      Effect.sync(() => {
+        this.origin = payload.origin;
+        this.lockKey = payload.lockKey;
+        this._startTrigger.wake();
+      }),
+    'WorkerService.stop': () =>
+      Effect.sync(() => {
+        // Close on the next tick so the RPC response is delivered before the transport tears down.
+        setTimeout(() => {
+          void this.close().catch((err) => log.catch(err));
+        });
+      }),
+  };
+
   constructor({ serviceHost, systemPort, appPort, shellPort, readySignal }: WorkerSessionProps) {
-    invariant(serviceHost);
     this._serviceHost = serviceHost;
+    this._systemPort = systemPort;
 
-    const middleware: Pick<ClientRpcServerProps, 'handleCall' | 'handleStream'> = {
-      handleCall: async (method, params, handler, options) => {
-        const error = await readySignal.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
-        if (error) {
-          throw error;
-        }
-
-        return handler(method, params, options);
-      },
-      handleStream: async (method, params, handler, options) => {
-        const error = await readySignal.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
-        if (error) {
-          throw error;
-        }
-
-        return handler(method, params, options);
-      },
+    // Hold requests until the worker runtime is ready; propagate startup errors to callers.
+    const onRequest = async () => {
+      const error = await readySignal.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
+      if (error) {
+        throw error;
+      }
     };
 
+    const services = () => ({
+      ...this._serviceHost.serviceRegistry.services,
+      WorkerService: this.#workerServiceHandlers,
+    });
+
     this._clientRpc = new ClientRpcServer({
-      serviceRegistry: this._serviceHost.serviceRegistry,
+      services,
       port: appPort,
-      ...middleware,
+      onRequest,
     });
 
     this._shellClientRpc = shellPort
       ? new ClientRpcServer({
-          serviceRegistry: this._serviceHost.serviceRegistry,
+          services,
           port: shellPort,
-          ...middleware,
+          onRequest,
         })
       : undefined;
-
-    this._iframeRpc = createProtoRpcPeer({
-      requested: iframeServiceBundle,
-      exposed: workerServiceBundle,
-      handlers: {
-        WorkerService: {
-          start: async (request) => {
-            this.origin = request.origin;
-            this.lockKey = request.lockKey;
-            this._startTrigger.wake();
-          },
-
-          stop: async () => {
-            setTimeout(async () => {
-              try {
-                await this.close();
-              } catch (err: any) {
-                log.catch(err);
-              }
-            });
-          },
-        },
-      },
-      port: systemPort,
-      timeout: 1_000, // With low timeout heartbeat may fail if the tab's thread is saturated.
-    });
-
-    this.bridgeService = this._iframeRpc.rpc.BridgeService;
   }
 
   async open(): Promise<void> {
     log('opening...');
-    await Promise.all([this._clientRpc.open(), this._iframeRpc.open(), this._maybeOpenShell()]);
+    // The tab serves the WebRTC `BridgeService` on the system port; build a client the worker's
+    // network stack can proxy through.
+    const { bridgeService, close } = await makeBridgeServiceClient(this._systemPort);
+    this.bridgeService = bridgeService;
+    this.#closeBridge = close;
 
-    // Wait until the worker's RPC service has started.
+    await Promise.all([this._clientRpc.open(), this._maybeOpenShell()]);
+
+    // Wait until the tab calls `WorkerService.start` (conveys origin + liveness lock).
     await this._startTrigger.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
 
-    // TODO(burdon): Comment required.
     if (this.lockKey) {
       void this._afterLockReleases(this.lockKey, () => this.close());
     }
@@ -135,13 +126,15 @@ export class WorkerSession {
       log.catch(err);
     }
 
-    await Promise.all([this._clientRpc.close(), this._iframeRpc.close()]);
+    await Promise.all([this._clientRpc.close(), this._shellClientRpc?.close(), this.#closeBridge?.()]);
+    this.bridgeService = undefined;
+    this.#closeBridge = undefined;
     log.debug('closed');
   }
 
   private async _maybeOpenShell(): Promise<void> {
     try {
-      this._shellClientRpc && (await asyncTimeout(this._shellClientRpc.open(), 1_000));
+      this._shellClientRpc && (await this._shellClientRpc.open());
     } catch {
       log.info('No shell connected.');
     }

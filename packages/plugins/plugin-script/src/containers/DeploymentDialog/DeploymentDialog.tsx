@@ -103,3 +103,5 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
     </Dialog.Content>
   );
 };
+
+DeploymentDialog.displayName = 'DeploymentDialog';

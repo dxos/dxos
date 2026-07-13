@@ -49,7 +49,7 @@ export const resolveSyncWindow = ({
   before,
   direction,
   syncBackDays,
-  defaultSyncBackDays = 30,
+  defaultSyncBackDays = 30, // TODO(burdon): Should be 90
 }: ResolveSyncWindowOptions): SyncWindow => {
   const resolved: SyncDirection = direction ?? (cursorKey > 0 ? 'forward' : 'backward');
   const horizon =

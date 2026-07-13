@@ -17,7 +17,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { ConnectorAuth } from '@dxos/plugin-connector';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { AccessToken, Message, Person } from '@dxos/types';
 
@@ -62,11 +62,10 @@ type StoryArgs = {
 };
 
 const DefaultStory = (_: StoryArgs) => {
-  const spaces = useSpaces();
-  const db = useDatabase(spaces[0]?.id);
-  const [mailbox] = useQuery(db, Filter.type(Mailbox.Mailbox));
-  if (!db || !mailbox) {
-    return <Loading data={{ db: !!db, mailbox: !!mailbox }} />;
+  const [space] = useSpaces();
+  const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
+  if (!space?.db || !mailbox) {
+    return <Loading data={{ db: !!space?.db, mailbox: !!mailbox }} />;
   }
 
   return <InitializeMailbox mailbox={mailbox} />;

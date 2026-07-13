@@ -334,7 +334,10 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
       }
 
       const spec = triggerFormSpec(values);
-      setKind(spec.kind);
+      // `triggerFormSpec` maps `values.kind` 1:1 onto `spec.kind`; use the already-narrowed form kind so
+      // the state stays typed as the selectable `TriggerKind` subset (the wider `Trigger.Spec` union now
+      // also carries the invoke-only `manual` kind, which the form never produces).
+      setKind(values.kind);
       const enabled = values.enabled === true;
       const remote = values.remote;
       // Edit the spec, `enabled`, and `remote` on the trigger directly from the form values.

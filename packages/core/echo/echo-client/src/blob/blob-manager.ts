@@ -126,6 +126,9 @@ export class BlobManager {
     if (!registered) {
       throw new Err.BlobNotAvailableError({ backend: storage, key: '', reason: 'backend-not-registered' });
     }
+    if (registered.backend.maxSize !== undefined && data.byteLength > registered.backend.maxSize) {
+      throw new Err.BlobTooLargeError({ size: data.byteLength, limit: registered.backend.maxSize });
+    }
 
     const contentHash = await digestHexFromBytes(data);
     let response: { uri: string };

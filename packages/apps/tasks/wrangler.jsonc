@@ -1,0 +1,15 @@
+{
+  // Cloudflare Workers (Static Assets) config for tasks — assets-only (no Worker script).
+  // Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
+  // Local dev: `moon run tasks:bundle && wrangler dev`.
+  "name": "tasks",
+  "compatibility_date": "2024-11-01",
+  "assets": {
+    "directory": "./out/tasks",
+    "not_found_handling": "single-page-application",
+  },
+  "env": {
+    "production": { "name": "tasks" },
+    "main": { "name": "tasks-main" },
+  },
+}

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Topic } from '@dxos/pipeline-email';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
 import { TagIndex } from '@dxos/schema';
@@ -15,7 +16,6 @@ import {
   AppGraphBuilder,
   Connector,
   CreateObject,
-  FactStore,
   InboxSettings,
   NavigationResolver,
   OperationHandler,
@@ -44,6 +44,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       Message.Message,
       ExtractedFrom.ExtractedFrom,
       TagIndex.TagIndex,
+      Topic,
     ],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
@@ -56,10 +57,6 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupConnectors,
     activate: Connector,
-  }),
-  Plugin.addModule({
-    activatesOn: ActivationEvents.SetupProcessManager,
-    activate: FactStore,
   }),
   Plugin.addModule({
     id: 'contact-extractor',

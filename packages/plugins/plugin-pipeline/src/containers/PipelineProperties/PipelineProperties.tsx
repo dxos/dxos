@@ -208,3 +208,5 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
     </Form.Section>
   );
 };
+
+PipelineProperties.displayName = 'PipelineProperties';

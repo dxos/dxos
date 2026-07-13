@@ -42,9 +42,10 @@ export class TextEditNotFoundError extends BaseError.extend('TextEditNotFoundErr
 }
 
 /**
- * Thrown when a blob's bytes exceed the inline storage size limit.
+ * Thrown when a blob's bytes exceed the size limit of the storage backend writing them (inline
+ * storage's fixed cap, or a registered backend's own `maxSize`).
  */
-export class BlobTooLargeError extends BaseError.extend('BlobTooLargeError', 'Blob is too large for inline storage') {
+export class BlobTooLargeError extends BaseError.extend('BlobTooLargeError', 'Blob is too large for its backend') {
   constructor(context: { size: number; limit: number }, options?: BaseErrorOptions) {
     super({ context, ...options });
   }

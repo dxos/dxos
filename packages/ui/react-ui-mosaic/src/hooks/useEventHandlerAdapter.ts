@@ -6,12 +6,11 @@ import { useMemo } from 'react';
 
 import { type Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { type DndContainerHandler, type GetId } from '@dxos/react-ui-dnd';
 import { arrayMove } from '@dxos/util';
 
-import { type GetId, type MosaicEventHandler } from '../components';
-
 export type UseEventHandlerProps<TItem = any, TObject extends Obj.Unknown = Obj.Unknown> = Pick<
-  MosaicEventHandler<TItem>,
+  DndContainerHandler<TItem>,
   'id' | 'canDrop'
 > & {
   /**
@@ -53,8 +52,8 @@ export const useEventHandlerAdapter = <TItem = any, TObject extends Obj.Unknown 
   make,
   onChange,
   ...props
-}: UseEventHandlerProps<TItem, TObject>): MosaicEventHandler<TItem> => {
-  return useMemo<MosaicEventHandler<TItem>>(
+}: UseEventHandlerProps<TItem, TObject>): DndContainerHandler<TItem> => {
+  return useMemo<DndContainerHandler<TItem>>(
     () => ({
       ...props,
       onTake: ({ source }, cb) => {

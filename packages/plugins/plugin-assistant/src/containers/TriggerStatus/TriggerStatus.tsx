@@ -121,3 +121,7 @@ const TriggerStatusPopover = ({
     </div>
   );
 };
+
+SpaceStatus.displayName = 'SpaceStatus';
+
+TriggerStatusPopover.displayName = 'TriggerStatusPopover';

@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Registry } from '@effect-atom/atom-react';
 import { format, subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { Database, Feed, Filter, Obj, Query, Ref, Scope, Tag } from '@dxos/echo';
+import { createProgressRegistry } from '@dxos/app-toolkit';
+import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Message, Person } from '@dxos/types';
@@ -15,11 +17,24 @@ import { GMAIL_SOURCE } from '../../../constants';
 import { generateGmailDataset } from '../../../testing/gmail-fixtures';
 import { inboxSyncTestServices, seedMailboxBinding } from '../../../testing/sync-fixture';
 import { Mailbox } from '../../../types';
-import { runGmailSync } from './sync';
+import { createSyncProgressKey, runGmailSync } from './sync';
 
 /** Reads all synced messages from a seeded mailbox's feed. */
 const queryFeedMessages = (db: Database.Database, mailbox: Mailbox.Mailbox) =>
   db.query(Query.select(Filter.type(Message.Message)).from(Scope.feed(Feed.getFeedUri(mailbox.feed.target!)!))).run();
+
+/** Feed insertion order (oldest-inserted first) as message `created` timestamps. */
+const insertionOrderTimestamps = async (db: Database.Database, mailbox: Mailbox.Mailbox) => {
+  const feed = mailbox.feed.target!;
+  const messages = await db
+    .query(
+      Query.select(Filter.type(Message.Message))
+        .from(Scope.feed(Feed.getFeedUri(feed)!))
+        .orderBy(Order.natural('asc')),
+    )
+    .run();
+  return messages.map((message) => Date.parse(message.created));
+};
 
 // The Gmail sync driven end-to-end against a real ECHO db + a mock Gmail API — no live account.
 // `runGmailSync` requires `GoogleMailApi` rather than providing the live HTTP client itself, so the
@@ -91,6 +106,39 @@ describe('runGmailSync against a mock Gmail API', () => {
     const afterRerun = await queryFeedMessages(db, mailbox);
     expect(afterRerun.length).toBe(feedMessages.length);
     expect((await db.query(Filter.type(Person.Person)).run()).length).toBe(people.length);
+  });
+
+  test('advances a live progress monitor keyed by the mailbox URI, and removes it on success', async ({ expect }) => {
+    const end = subDays(new Date(), 3);
+    const start = subDays(new Date(), 12);
+    const dataset = generateGmailDataset({ count: 20, seed: 17, start, end });
+    const after = format(subDays(new Date(), 14), 'yyyy-MM-dd');
+
+    const { db, mailbox, binding } = await seedMailboxBinding(builder);
+
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    // The monitor is removed on success, so the final snapshot can't show it — subscribe instead to
+    // capture `current` as the run advances it, one message at a time.
+    const seen: number[] = [];
+    const unsubscribe = registry.subscribe(progress.snapshotAtom, (snapshot) => {
+      const task = snapshot.tasks.find((task) => task.name === createSyncProgressKey(mailbox));
+      if (task) {
+        seen.push(task.current);
+      }
+    });
+
+    await EffectEx.runPromise(
+      runGmailSync({ binding: Ref.make(binding), after }).pipe(
+        Effect.provide(inboxSyncTestServices(db, dataset, { progressRegistry: progress })),
+      ),
+    );
+    unsubscribe();
+
+    expect(seen.length).toBeGreaterThan(0);
+    expect(Math.max(...seen)).toBeGreaterThan(0);
+    // Removed on success, so the mailbox's task is gone from the final snapshot.
+    expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(0);
   });
 
   test('initial backward, incremental forward, and backfill (cursor stays put)', async ({ expect }) => {
@@ -166,5 +214,130 @@ describe('runGmailSync against a mock Gmail API', () => {
     const ids = await feedIds();
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids.length).toBe(mid.messages.length + recent.messages.length + older.messages.length);
+  });
+
+  test('attachments land as Blobs on the feed with resolvable attachment refs', async ({ expect }) => {
+    const end = subDays(new Date(), 3);
+    const message = generateGmailDataset({ count: 1, seed: 5, start: subDays(end, 1), end }).messages[0];
+    // These bytes base64url-encode to `-__-` — deliberately chosen to contain both `-` and `_`, since
+    // that's the exact character class a base64-only encode (e.g. bytes like [1,2,3,4]) never
+    // exercises. A prior version decoded via `Buffer.from(data, 'base64url')`, which threw in the
+    // browser `Buffer` polyfill regardless of content (the encoding name itself is unsupported there)
+    // but happened to work in this Node-based test — this fixture's job is the follow-on byte-equality
+    // assertion below, proving the `-`/`_` → `+`/`/` substitution in the fix is actually correct.
+    const bytes = new Uint8Array([0xfb, 0xff, 0xfe]);
+    // The fixture generates a single-part message (body directly on `payload.body`); once `parts` is
+    // present the mapper treats it as multipart, so the plaintext body must move into a part too.
+    const withAttachment = {
+      ...message,
+      payload: {
+        ...message.payload,
+        body: undefined,
+        parts: [
+          { mimeType: 'text/plain', body: message.payload.body! },
+          { mimeType: 'image/png', filename: 'photo.png', body: { size: bytes.byteLength, attachmentId: 'att-1' } },
+        ],
+      },
+    };
+    const dataset = {
+      labels: [],
+      messages: [withAttachment],
+      attachments: { 'att-1': { size: bytes.byteLength, data: Buffer.from(bytes).toString('base64url') } },
+    };
+    const after = format(subDays(new Date(), 14), 'yyyy-MM-dd');
+
+    const { db, mailbox, binding } = await seedMailboxBinding(builder);
+    await EffectEx.runPromise(
+      runGmailSync({ binding: Ref.make(binding), after }).pipe(Effect.provide(inboxSyncTestServices(db, dataset))),
+    );
+
+    const feedMessages = await queryFeedMessages(db, mailbox);
+    expect(feedMessages).toHaveLength(1);
+    const [attachment] = feedMessages[0].attachments ?? [];
+    if (!attachment) {
+      throw new Error('expected an attachment');
+    }
+    expect(attachment.name).toBe('photo.png');
+
+    const blobs = await db
+      .query(Query.select(Filter.type(Blob.Blob)).from(Scope.feed(Feed.getFeedUri(mailbox.feed.target!)!)))
+      .run();
+    expect(blobs).toHaveLength(1);
+
+    const loadedBlob = await attachment.ref.load();
+    expect(loadedBlob.id).toEqual(blobs[0].id);
+    if (!Obj.instanceOf(Blob.Blob, loadedBlob)) {
+      throw new Error('expected the attachment ref to resolve to a Blob');
+    }
+    // Round-trips exactly — proves the base64url decode (including the `-`/`_` substitution) is correct.
+    const loadedBytes = await Blob.read(loadedBlob).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
+    expect(Array.from(loadedBytes)).toEqual(Array.from(bytes));
+  });
+
+  test("within a single chunk, backward keeps Gmail's newest-first order and forward reverses to oldest-first", async ({
+    expect,
+  }) => {
+    // Small enough (4 messages, 2-day span) to land in one date chunk and one commit page, so feed
+    // insertion order directly reflects `fetchMessagesForDateRange`'s within-chunk message order.
+    const end = subDays(new Date(), 3);
+    const dataset = generateGmailDataset({ count: 4, seed: 7, start: subDays(end, 2), end });
+    const after = format(subDays(new Date(), 14), 'yyyy-MM-dd');
+
+    // No cursor → backward (initial sync): Gmail's native newest-first order should be preserved.
+    const backward = await seedMailboxBinding(builder);
+    await EffectEx.runPromise(
+      runGmailSync({ binding: Ref.make(backward.binding), after }).pipe(
+        Effect.provide(inboxSyncTestServices(backward.db, dataset)),
+      ),
+    );
+    const backwardOrder = await insertionOrderTimestamps(backward.db, backward.mailbox);
+    expect(backwardOrder).toEqual([...backwardOrder].sort((left, right) => right - left));
+
+    // Explicit forward (incremental resume): within-chunk order reverses to oldest-first, matching the
+    // chunk-level walk direction.
+    const forward = await seedMailboxBinding(builder);
+    await EffectEx.runPromise(
+      runGmailSync({ binding: Ref.make(forward.binding), after, direction: 'forward' }).pipe(
+        Effect.provide(inboxSyncTestServices(forward.db, dataset)),
+      ),
+    );
+    const forwardOrder = await insertionOrderTimestamps(forward.db, forward.mailbox);
+    expect(forwardOrder).toEqual([...forwardOrder].sort((left, right) => left - right));
+  });
+
+  test('a chunk spanning multiple Gmail listMessages pages orders (and advances the cursor) across the whole chunk, not per page', async ({
+    expect,
+  }) => {
+    // More than one Gmail `listMessages` page (`STREAMING_CONFIG.maxResults` = 500) within a single
+    // date chunk (`dateChunkDays` = 7): reversing page-by-page would only be locally oldest-first
+    // within each 500-message page, not globally across the chunk — this is the regression this test
+    // guards against.
+    const end = subDays(new Date(), 3);
+    const dataset = generateGmailDataset({ count: 510, seed: 13, start: subDays(end, 2), end });
+    const after = format(subDays(new Date(), 14), 'yyyy-MM-dd');
+
+    // Backward (initial sync): Gmail's native newest-first order is never reversed, so it's already
+    // globally consistent across pages — asserted here as a regression guard alongside forward.
+    const backward = await seedMailboxBinding(builder);
+    await EffectEx.runPromise(
+      runGmailSync({ binding: Ref.make(backward.binding), after }).pipe(
+        Effect.provide(inboxSyncTestServices(backward.db, dataset)),
+      ),
+    );
+    const backwardOrder = await insertionOrderTimestamps(backward.db, backward.mailbox);
+    expect(backwardOrder).toHaveLength(510);
+    expect(backwardOrder).toEqual([...backwardOrder].sort((left, right) => right - left));
+
+    // Forward (incremental resume): must be oldest-first across the *entire* chunk (both pages), not
+    // just within each page.
+    const forward = await seedMailboxBinding(builder);
+    await EffectEx.runPromise(
+      runGmailSync({ binding: Ref.make(forward.binding), after, direction: 'forward' }).pipe(
+        Effect.provide(inboxSyncTestServices(forward.db, dataset)),
+      ),
+    );
+    const forwardOrder = await insertionOrderTimestamps(forward.db, forward.mailbox);
+    expect(forwardOrder).toHaveLength(510);
+    expect(forwardOrder).toEqual([...forwardOrder].sort((left, right) => left - right));
   });
 });

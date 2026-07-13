@@ -16,8 +16,13 @@ import { SqliteMetadataStore } from '@dxos/echo-host';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { SqliteKeyring } from '@dxos/keyring';
-import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
-import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
+import {
+  MemorySignalManager,
+  MemorySignalManagerContext,
+  type SignalManager,
+  SignalManagerService,
+} from '@dxos/messaging';
+import { MemoryTransportFactory, SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { StorageType } from '@dxos/random-access-storage';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
@@ -25,7 +30,13 @@ import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { SqliteBlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';
-import { ClientServicesHost, ServiceContext, type ServiceContextRuntimeProps } from '../services';
+import {
+  ClientServicesHost,
+  type ServiceContext,
+  ServiceContextLayer,
+  type ServiceContextRuntimeProps,
+  ServiceContextService,
+} from '../services';
 import { SqliteStorage } from '../services/sqlite-storage';
 import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces';
 
@@ -62,16 +73,32 @@ export const createServiceContext = async ({
     transportFactory: MemoryTransportFactory,
   });
 
-  const runtime = ManagedRuntime.make(
-    SqlTransaction.layer
-      .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
-      .pipe(Layer.orDie),
-  ).runtimeEffect;
-
-  return new ServiceContext(networkManager, signalManager, undefined, undefined, runtime, {
+  const stackLayer = ServiceContextLayer({
     invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
     ...runtimeProps,
-  });
+  }).pipe(
+    Layer.provideMerge(Layer.succeed(SwarmNetworkManagerService, networkManager)),
+    Layer.provideMerge(Layer.succeed(SignalManagerService, signalManager)),
+    Layer.provideMerge(
+      SqlTransaction.layer.pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer)),
+    ),
+    Layer.orDie,
+  );
+
+  const runtime = ManagedRuntime.make(stackLayer);
+  const serviceContext = await runtime.runPromise(ServiceContextService);
+
+  // The runtime owns the layer-scoped component finalizers (e.g. EchoHost close), so dispose it once
+  // the context is closed to avoid leaking those resources across tests. `ClientServicesHost` owns
+  // this disposal in production; here the test builder is the runtime owner.
+  const closeServiceContext = serviceContext.close.bind(serviceContext);
+  serviceContext.close = async (ctx) => {
+    await closeServiceContext(ctx);
+    await runtime.dispose();
+    return serviceContext;
+  };
+
+  return serviceContext;
 };
 
 export const createPeers = async (numPeers: number, signalManagerFactory?: () => Promise<SignalManager>) => {
@@ -204,7 +231,7 @@ export class TestPeer {
       spaceManager: this.spaceManager,
       metadataStore: this.metadataStore,
       keyring: this.keyring,
-      signingContext: this.identity,
+      signingContextProvider: () => this.identity,
       feedStore: this.feedStore,
       echoHost: this.echoHost,
       invitationsManager: this.invitationsManager,
@@ -216,17 +243,18 @@ export class TestPeer {
   }
 
   get invitationsManager() {
-    return (this._props.invitationsManager ??= new InvitationsManager(
-      new InvitationsHandler(this.networkManager),
-      (invitation) => {
+    if (!this._props.invitationsManager) {
+      const manager = new InvitationsManager(new InvitationsHandler(this.networkManager), this.metadataStore);
+      manager.setInvitationHandlerFactory((invitation) => {
         if (invitation.kind === Invitation.Kind.SPACE) {
           return new SpaceInvitationProtocol(this.dataSpaceManager, this.identity!, this.keyring, invitation.spaceKey!);
         } else {
           throw new Error('not implemented');
         }
-      },
-      this.metadataStore,
-    ));
+      });
+      this._props.invitationsManager = manager;
+    }
+    return this._props.invitationsManager;
   }
 
   async createIdentity(): Promise<void> {

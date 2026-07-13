@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Surface, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Connection, ConnectorAuth } from '@dxos/plugin-connector';
@@ -33,7 +33,7 @@ export type PortfolioSyncActionProps = {
  */
 export const PortfolioSyncAction = ({ subject }: PortfolioSyncActionProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const pluginManager = usePluginManager();
+  const isSurfaceAvailable = Surface.useIsAvailable();
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(subject);
   const connections = useQuery(db, Filter.type(Connection.Connection));
@@ -75,7 +75,9 @@ export const PortfolioSyncAction = ({ subject }: PortfolioSyncActionProps) => {
   }
 
   // No connection yet: render the connector's auth button through its Surface (like "Connect Gmail").
-  return Surface.isAvailable(pluginManager.capabilities, { type: ConnectorAuth, data: CONNECTOR_AUTH_DATA }) ? (
+  return isSurfaceAvailable({ type: ConnectorAuth, data: CONNECTOR_AUTH_DATA }) ? (
     <Surface.Surface type={ConnectorAuth} data={CONNECTOR_AUTH_DATA} limit={1} />
   ) : null;
 };
+
+PortfolioSyncAction.displayName = 'PortfolioSyncAction';

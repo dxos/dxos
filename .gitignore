@@ -4,6 +4,9 @@
 # Claude Code harness session lock — per-machine runtime state, not source.
 .claude/scheduled_tasks.lock
 
+# Response-verbosity toggle state — per-user runtime, not repo policy.
+.claude/.response-mode
+
 .dev.vars
 
 # Logs
@@ -18,6 +21,8 @@ debug-storybook.log
 app.log
 # vite-plugin-log Vitest NDJSON sink (per-package `test.log`).
 test.log
+# vite-plugin-log Vitest browser NDJSON sink (per-package `test-browser.log`).
+test-browser.log
 
 # Vitest
 vitest-results.json
@@ -177,6 +182,7 @@ tools/intellij-plugin/build/
 
 # cloudflare
 .wrangler/
+wrangler.deploy.json
 
 # blade-runner
 dump.rdb

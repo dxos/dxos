@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { type GetId, type MosaicTileData } from '../components';
+import { type DndTileData, type GetId } from '@dxos/react-ui-dnd';
 
 export type UseVisibleItemsProps<TItem = any> = {
   /** Container id. */
@@ -14,7 +14,7 @@ export type UseVisibleItemsProps<TItem = any> = {
   items?: readonly TItem[] | TItem[];
 
   /** Currently dragging item. */
-  dragging: MosaicTileData<TItem> | undefined;
+  dragging: DndTileData<TItem> | undefined;
 
   /** ID getter */
   getId: GetId<TItem>;

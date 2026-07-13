@@ -138,3 +138,5 @@ export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) =
     </Panel.Root>
   );
 };
+
+PostArticle.displayName = 'PostArticle';

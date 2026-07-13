@@ -5,13 +5,16 @@
 import * as Reactivity from '@effect/experimental/Reactivity';
 import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Scope from 'effect/Scope';
 
 import { Trigger } from '@dxos/async';
 import { DEFAULT_WORKER_BROADCAST_CHANNEL } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
@@ -21,7 +24,8 @@ import {
   setIdentityTags,
 } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
-import { type RpcPort } from '@dxos/rpc';
+import { makeInProcessClient } from '@dxos/protocols';
+import { DevicesService, IdentityService } from '@dxos/protocols/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
@@ -30,11 +34,12 @@ import { type MaybePromise } from '@dxos/util';
 import { ClientServicesHost } from '../services';
 import { WorkerSession } from './worker-session';
 
-// NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
+// All session ports are native MessagePorts served via effect-rpc: appPort carries the client
+// services (+ WorkerService); systemPort carries the reverse-direction BridgeService.
 export type CreateSessionProps = {
-  appPort: RpcPort;
-  systemPort: RpcPort;
-  shellPort?: RpcPort;
+  appPort: MessagePort;
+  systemPort: MessagePort;
+  shellPort?: MessagePort;
   onClose?: () => Promise<void>;
 };
 
@@ -48,6 +53,13 @@ export type WorkerRuntimeOptions = {
    * @default true
    */
   automaticallyConnectWebrtc?: boolean;
+
+  /**
+   * Whether this runtime manages worker displacement itself (broadcasting a stop to prior workers).
+   * Set false when running under worker-framework, which owns liveness and displacement.
+   * @default true
+   */
+  manageLifecycle?: boolean;
 
   /**
    * Optional SQLite layer for Effect. Defaults to LocalSqliteOpfsLayer.
@@ -72,12 +84,17 @@ export class WorkerRuntime {
   private readonly _clientServices!: ClientServicesHost;
   private readonly _channel: string;
   private readonly _automaticallyConnectWebrtc: boolean;
-  private readonly _livenessLock = new WebLockWrapper(`@dxos/client-services/WorkerRuntime/${crypto.randomUUID()}`);
+  // When false, liveness and worker displacement are owned by the enclosing runner (worker-framework's
+  // runWorker) rather than by this runtime. The shared-worker path (which does not run under
+  // worker-framework) keeps managing displacement itself.
+  private readonly _manageLifecycle: boolean;
   private _broadcastChannel?: BroadcastChannel;
+  private _stopped = false;
   private _sessionForNetworking?: WorkerSession; // TODO(burdon): Expose to client QueryStatusResponse.
   private _config!: Config;
   private _signalMetadataTags: any = { runtime: 'worker-runtime' };
   private _signalTelemetryEnabled: boolean = false;
+  private _serviceScope?: Scope.CloseableScope;
   private _runtime!: ManagedRuntime.ManagedRuntime<
     SqlTransaction.SqlTransaction | SqlClient.SqlClient | SqlExport.SqlExport,
     never
@@ -90,6 +107,7 @@ export class WorkerRuntime {
     releaseLock,
     onStop,
     automaticallyConnectWebrtc = true,
+    manageLifecycle = true,
     sqliteLayer,
   }: WorkerRuntimeOptions) {
     this._configProvider = configProvider;
@@ -97,6 +115,7 @@ export class WorkerRuntime {
     this._releaseLock = releaseLock;
     this._onStop = onStop;
     this._channel = channel;
+    this._manageLifecycle = manageLifecycle;
     if (sqliteLayer) {
       log.warn('Using testing SQLite layer');
     }
@@ -122,26 +141,22 @@ export class WorkerRuntime {
     return this._clientServices;
   }
 
-  get livenessLockKey(): string {
-    return this._livenessLock.key;
-  }
-
   async start(): Promise<void> {
     log('starting...');
     try {
-      log('worker-runtime: acquiring liveness lock (background)');
-      void this._livenessLock.acquire();
-
-      // Steal the lock from the other worker.
-      log('worker-runtime: broadcasting stop to displace previous worker');
-      this._broadcastChannel = new BroadcastChannel(this._channel);
-      this._broadcastChannel.postMessage({ action: 'stop' });
-      this._broadcastChannel.onmessage = async (event) => {
-        if (event.data?.action === 'stop') {
-          log('worker-runtime: received stop broadcast');
-          await this.stop();
-        }
-      };
+      // Displacement of a previous worker. Owned by worker-framework when running under it; the
+      // shared-worker path manages it here.
+      if (this._manageLifecycle) {
+        log('worker-runtime: broadcasting stop to displace previous worker');
+        this._broadcastChannel = new BroadcastChannel(this._channel);
+        this._broadcastChannel.postMessage({ action: 'stop' });
+        this._broadcastChannel.onmessage = async (event) => {
+          if (event.data?.action === 'stop') {
+            log('worker-runtime: received stop broadcast');
+            await this.stop();
+          }
+        };
+      }
 
       log('worker-runtime: acquiring storage lock');
       await this._acquireLock();
@@ -170,9 +185,17 @@ export class WorkerRuntime {
       log('worker-runtime: client services host opened, signalling ready');
       this._ready.wake(undefined);
       log('started');
+      // Bridge the host identity/devices Handlers to the effect-rpc client surface in-process.
+      this._serviceScope = Effect.runSync(Scope.make());
+      const [identityService, devicesService] = await EffectEx.runPromise(
+        Effect.all([
+          makeInProcessClient(IdentityService.Rpcs, this._clientServices.services.IdentityService!),
+          makeInProcessClient(DevicesService.Rpcs, this._clientServices.services.DevicesService!),
+        ]).pipe(Effect.provideService(Scope.Scope, this._serviceScope)),
+      );
       setIdentityTags({
-        identityService: this._clientServices.services.IdentityService!,
-        devicesService: this._clientServices.services.DevicesService!,
+        identityService,
+        devicesService,
         setTag: (k: string, v: string) => {
           this._signalMetadataTags[k] = v;
         },
@@ -184,14 +207,21 @@ export class WorkerRuntime {
   }
 
   async stop(): Promise<void> {
+    if (this._stopped) {
+      return;
+    }
+    this._stopped = true;
     // Release the lock to notify remote clients that the worker is terminating.
     this._releaseLock();
     this._broadcastChannel?.close();
     this._broadcastChannel = undefined;
     await this._clientServices.close(Context.default());
+    if (this._serviceScope) {
+      await EffectEx.runPromise(Scope.close(this._serviceScope, Exit.void));
+      this._serviceScope = undefined;
+    }
     await this._runtime.dispose();
     await this._onStop?.();
-    await this._livenessLock.release();
   }
 
   /**
@@ -317,35 +347,3 @@ const LocalSqliteOpfsLayer = SqlExportLayer.pipe(
   Layer.provideMerge(SqliteClient.layerOpfs({ dbName: DB_NAME })),
   Layer.provideMerge(Reactivity.layer),
 );
-
-// TODO(wittjosiah): Factor out to a separate module.
-class WebLockWrapper {
-  readonly #key: string;
-  #release?: () => void;
-
-  constructor(key: string) {
-    this.#key = key;
-  }
-
-  get key(): string {
-    return this.#key;
-  }
-
-  acquire(options: LockOptions = {}) {
-    return navigator.locks.request(this.#key, options, async () => {
-      await new Promise<void>((resolve) => {
-        this.#release = resolve;
-      }); // Blocks for the duration of the worker's lifetime.
-      this.#release = undefined;
-    });
-  }
-
-  release() {
-    this.#release?.();
-    this.#release = undefined;
-  }
-
-  [Symbol.dispose]() {
-    this.release();
-  }
-}

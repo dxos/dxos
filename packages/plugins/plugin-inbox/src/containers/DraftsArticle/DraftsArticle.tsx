@@ -115,3 +115,5 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
     </Panel.Root>
   );
 };
+
+DraftsArticle.displayName = 'DraftsArticle';
