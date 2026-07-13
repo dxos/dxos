@@ -72,6 +72,24 @@ human review. Harness-only (informs the product `Topic` schema). Prereqs: Ollama
 - [ ] **Active Topics v2 (next iteration)** — LLM labels (replace keyword-salad); wire `personEmails`
       (contacts) so the person signal fires; fact extraction on short person threads. See ROADMAP C2.
 
+## ⚠️ CI BLOCKER (PR #12178) — decide in the morning
+
+`assistant-e2e:test` is red — 5 tests (`crm-mailbox`/`database`/`markdown`) fail with **"No memoized
+conversation found for the given prompt."** Root cause: `Mailbox.topicSuggestions` (Phase B) is
+serialized into the agents' JSON-schema prompt, invalidating the committed `*.conversations.json`
+fixtures. Surfaced now because a `pipeline-email` edit pulled `assistant-e2e` into the affected set.
+`FormInputAnnotation.set(false)` does NOT drop a field from the serialized schema (no annotation
+shortcut). Two resolutions (NOT done autonomously — ~18 MB paid, non-deterministic fixture rewrite in
+another package):
+
+1. Regenerate: `ALLOW_LLM_GENERATION=1 moon run assistant-e2e:test` → commit the updated
+   `crm-mailbox`/`database`/`markdown` `.conversations.json`. (`regenerate-memoized-llm` skill; needs
+   `DX_ANTHROPIC_API_KEY`.)
+2. Move topic suggestions off the `Mailbox` schema (separate object — one of the original design forks)
+   so the Mailbox schema stops changing and no regen is needed.
+
+Diagnosis posted as a PR comment. Everything else on the PR is green/verified.
+
 ## Roadmap, CRM spec & parallel-experiment plan (asks 2026-07-13)
 
 **Direction:** the north star is an **AI-assisted, Topic-anchored CRM** — analyze personal/team email,
