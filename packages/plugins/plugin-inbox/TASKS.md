@@ -1,5 +1,40 @@
 # plugin-inbox — Tasks
 
+## Test suite — PLUGIN.mdl enforcement
+
+Layered suite enforcing every `PLUGIN.mdl` acceptance scenario (`test T-#`) — see
+`DESIGN.md` for tier architecture, the spec↔tier coverage map, and the browser-e2e
+OAuth/mock design (§6). **Current branch delivers Tier 4 (browser-e2e, task #7).**
+The F-11 code deficiencies (#1–#5) are tracked separately and gate a few scenarios
+(T-10/T-11/T-12) — noted where relevant.
+
+### Tasks
+
+- [ ] **#7 Browser-e2e Playwright inbox spec — THIS BRANCH**
+  - `composer-app/src/playwright/inbox.spec.ts` + `plugins/inbox.ts` helper.
+  - Helper: seed the `accessToken` ECHO object (reuse `seedMailboxBinding`) so the app
+    boots connected — no Google login / 2FA driven.
+  - Mock provider: small Effect `HttpApp` over the shared response Schemas →
+    `HttpApp.toWebHandler` → bridged into Playwright `page.route('**/gmail.googleapis.com/**')`.
+    Primary data path via JMAP (`target.apiUrl` → same app bound to a port). Keep `DX_PWA=false`.
+  - Scenarios: interactivity-during-sync (T-10), no-false-empty-state (T-11), selection→companion.
+  - Run: `DX_PWA=false moon run composer-app:e2e`.
+- [ ] **#6 Unskip inbox agent-e2e** — `assistant-e2e/src/testing/inbox-enable.test.ts`
+    (register the skill), then add read/draft scenario tests. Enforces F-6.
+- [ ] **#8 Latency benchmarks with budget assertions** — assert F-11.3/F-11.4 400ms budgets at
+    N=1k/4k/10k; budgets in `src/testing/budgets.ts` shared with `PLUGIN.mdl`. Depends on #2/#3.
+- [ ] **#9 Overlapping-sync duplicate test** — Tier 0 executable spec of T-13's concurrency clause;
+    expected-fail until the F-11.5 mailbox lock (#4) lands.
+- [ ] **#10 Spec↔test traceability check** — moon task parsing `PLUGIN.mdl` `test T-#` ids; fails
+    when an id has neither an automated test nor a runbook entry.
+- [ ] **#11 Live-validation runbook** — normalize credential-gated suites (`GOOGLE_ACCESS_TOKEN`,
+    `JMAP_TOKEN`, `functions-e2e` tag) into one documented Tier 6 with human-verified assertions.
+
+### References
+
+- `DESIGN.md` §1–6 (audit, tiers, coverage map, sync convention, OAuth/mock design).
+- `PLUGIN.mdl` — acceptance scenarios T-1..T-13, `feat F-11` responsiveness reqs.
+
 ## Mailbox reply & triage
 
 Reply drafting plus signals to decide which messages are worth replying to.
