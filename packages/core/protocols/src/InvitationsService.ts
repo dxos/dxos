@@ -5,12 +5,34 @@
 import * as Rpc from '@effect/rpc/Rpc';
 import type * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
+import * as Schema from 'effect/Schema';
 
 import { protoMessage, serviceError } from './service-rpc.ts';
 
+//
+// RPC message schemas.
+//
+
+export const AcceptInvitationRequest = Schema.Struct({
+  invitation: protoMessage('dxos.client.services.Invitation'),
+  deviceProfile: Schema.optional(protoMessage('dxos.halo.credentials.DeviceProfileDocument')),
+});
+export interface AcceptInvitationRequest extends Schema.Schema.Type<typeof AcceptInvitationRequest> {}
+
+export const AuthenticationRequest = Schema.Struct({
+  invitationId: Schema.String,
+  authCode: Schema.String,
+});
+export interface AuthenticationRequest extends Schema.Schema.Type<typeof AuthenticationRequest> {}
+
+export const CancelInvitationRequest = Schema.Struct({
+  invitationId: Schema.String,
+});
+export interface CancelInvitationRequest extends Schema.Schema.Type<typeof CancelInvitationRequest> {}
+
 /**
  * Effect RPC definitions for `dxos.client.services.InvitationsService`.
- * Generated from the protobuf service definition; payloads are protobuf-encoded on the wire.
+ * Service-only payloads use Effect schemas; shared proto types remain protobuf-encoded on the wire.
  */
 export class Rpcs extends RpcGroup.make(
   Rpc.make('createInvitation', {
@@ -20,17 +42,17 @@ export class Rpcs extends RpcGroup.make(
     stream: true,
   }),
   Rpc.make('acceptInvitation', {
-    payload: protoMessage('dxos.client.services.AcceptInvitationRequest'),
+    payload: AcceptInvitationRequest,
     success: protoMessage('dxos.client.services.Invitation'),
     error: serviceError,
     stream: true,
   }),
   Rpc.make('authenticate', {
-    payload: protoMessage('dxos.client.services.AuthenticationRequest'),
+    payload: AuthenticationRequest,
     error: serviceError,
   }),
   Rpc.make('cancelInvitation', {
-    payload: protoMessage('dxos.client.services.CancelInvitationRequest'),
+    payload: CancelInvitationRequest,
     error: serviceError,
   }),
   Rpc.make('queryInvitations', {

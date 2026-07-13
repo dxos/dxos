@@ -89,8 +89,19 @@ export type RuntimeHandle = {
   flush: () => void;
 };
 
+// Per-realm guard: the runtime may be installed via both the page HTML injection and a direct
+// import (e.g. a vitest browser setup file). Each JS realm (page / worker) gets its own globalThis,
+// so a single processor is installed per realm and log lines are not duplicated.
+const RUNTIME_HANDLE_KEY = '__DXOS_VITE_PLUGIN_LOG_RUNTIME__';
+
 /** Register the log processor and start forwarding entries through `transport`. */
 export const installRuntime = (transport: Transport): RuntimeHandle => {
+  const realm = globalThis as Record<string, unknown>;
+  const existing = realm[RUNTIME_HANDLE_KEY] as RuntimeHandle | undefined;
+  if (existing !== undefined) {
+    return existing;
+  }
+
   let buffer = '';
   let flushTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -121,5 +132,7 @@ export const installRuntime = (transport: Transport): RuntimeHandle => {
 
   log.addProcessor(processor);
 
-  return { flush };
+  const handle: RuntimeHandle = { flush };
+  realm[RUNTIME_HANDLE_KEY] = handle;
+  return handle;
 };

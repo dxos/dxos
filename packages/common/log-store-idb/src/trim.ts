@@ -37,7 +37,8 @@ export const trimJsonlToSize = (lines: readonly string[], maxSize: number): stri
 
 const utf8Encoder = typeof TextEncoder !== 'undefined' ? new TextEncoder() : undefined;
 
-const byteLengthUtf8 = (value: string): number => {
+/** UTF-8 byte length of a string (used by eviction and trim). */
+export const byteLengthUtf8 = (value: string): number => {
   if (utf8Encoder) {
     return utf8Encoder.encode(value).length;
   }
