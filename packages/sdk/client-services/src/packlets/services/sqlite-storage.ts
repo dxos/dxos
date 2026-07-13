@@ -172,6 +172,11 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
     }
     if (!this.#loading) {
       this.#loading = this._loadFromDb();
+      // Mark the cached load promise as handled so that if it rejects after every awaiter is gone
+      // (e.g. the SQL runtime is disposed at teardown without close() being called on this file),
+      // the rejection is never surfaced as an unhandled rejection. Legitimate awaiters still observe
+      // the error through their own `.then`/`.catch` on the same promise returned below.
+      this.#loading.catch(() => {});
     }
     return this.#loading;
   }

@@ -892,6 +892,9 @@
       "path": "packages/core/mesh/websocket-rpc/tsconfig.json"
     },
     {
+      "path": "packages/sdk/worker-framework/tsconfig.json"
+    },
+    {
       "path": "tools/x/tsconfig.json"
     }
   ],

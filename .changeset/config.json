@@ -214,6 +214,7 @@
       "@dxos/web-context-react",
       "@dxos/web-context-solid",
       "@dxos/websocket-rpc",
+      "@dxos/worker-framework",
       "@dxos/x"
     ],
     [
