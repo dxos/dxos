@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type TopicDraft } from '@dxos/pipeline-email';
+import { type Thread, type TopicDraft, buildThreads, clusterThreads, deriveThreadId } from '@dxos/pipeline-email';
 import { Outline } from '@dxos/plugin-outliner';
+import { type Message } from '@dxos/types';
 
 // Active Topics experiment (spec 2026-07-13): score clustered topics for how "active" they are, split
 // high-confidence active topics from lower-confidence suggestions, and assemble the fully-populated
@@ -172,6 +173,12 @@ export type SuggestedTopic = {
   readonly kind: 'suggested';
 };
 
+/** The experiment's output: the populated active topics + the lower-confidence suggestions. */
+export type ActiveTopicsResult = {
+  readonly active: readonly ActiveTopic[];
+  readonly suggested: readonly SuggestedTopic[];
+};
+
 export const toSuggestedTopic = (candidate: ScoredCandidate): SuggestedTopic => ({
   label: candidate.draft.label,
   summary: candidate.draft.summary,
@@ -189,6 +196,147 @@ export const populatedChecklist = (topic: ActiveTopic): Record<'status' | 'facts
   tasks: (topic.tasks.content.target?.content ?? '').trim().length > 0,
   drafts: topic.drafts.length > 0,
 });
+
+// Per-cluster context handed to the injected LLM deps so they can build prompts from the raw threads
+// and messages, not just the draft's rolled-up fields.
+export type TopicContext = {
+  readonly draft: TopicDraft;
+  readonly threads: Thread[];
+  readonly messages: Message.Message[];
+};
+
+/** Effectful dependencies, injected so the orchestration stays pure/testable (the driver wires LLMs). */
+export type ActiveTopicsDeps = {
+  readonly confidence: (context: TopicContext) => Promise<{ confidence: number; rationale: string }>;
+  readonly status: (context: TopicContext) => Promise<string>;
+  readonly facts: (context: TopicContext) => Promise<string[]>;
+  readonly tasks: (context: TopicContext) => Promise<string[]>;
+  readonly draft: (context: TopicContext) => Promise<Array<{ threadId: string; draft: string }>>;
+};
+
+export type ActiveTopicsInput = {
+  readonly messages: readonly Message.Message[];
+  /** Wall-clock now (ms), injected. */
+  readonly nowMs: number;
+  /** Mailbox owner email — steers `buildThreads` awaiting-mine inference. */
+  readonly ownerEmail?: string;
+  /** Known-person emails (lowercased) — the person-linked activity signal. */
+  readonly personEmails?: ReadonlySet<string>;
+  readonly activity?: Omit<ActivityOptions, 'nowMs'>;
+  /** Minimum activity score to be scored by the LLM (prefilter). */
+  readonly prefilterFloor?: number;
+  /** Max candidates scored by the LLM (highest activity first). */
+  readonly candidateLimit?: number;
+  /** LLM weight in the confidence blend. */
+  readonly confidenceWeight?: number;
+  readonly split?: SplitOptions;
+};
+
+const latestCreatedMsByThread = (messages: readonly Message.Message[]): Map<string, number> => {
+  const recency = new Map<string, number>();
+  for (const message of messages) {
+    const threadId = deriveThreadId(message);
+    const created = new Date(message.created).getTime();
+    recency.set(threadId, Math.max(recency.get(threadId) ?? 0, Number.isFinite(created) ? created : 0));
+  }
+  return recency;
+};
+
+/** Deterministic per-cluster signals from precomputed thread maps + the draft's rolled-up fields. Pure. */
+export const computeClusterSignals = (
+  draft: TopicDraft,
+  maps: {
+    readonly threadRecency: ReadonlyMap<string, number>;
+    readonly awaitingThreadIds: ReadonlySet<string>;
+    readonly personEmails?: ReadonlySet<string>;
+  },
+): ClusterSignals => ({
+  latestCreatedMs: Math.max(0, ...draft.threadIds.map((id) => maps.threadRecency.get(id) ?? 0)),
+  awaitingMine: draft.threadIds.some((id) => maps.awaitingThreadIds.has(id)),
+  personLinked: draft.participants.some((email) => maps.personEmails?.has(email.toLowerCase()) ?? false),
+  openItemCount: draft.questions.length + draft.tasks.length,
+});
+
+/**
+ * Runs the Active Topics experiment: cluster → deterministic activity score + prefilter → LLM
+ * confidence → split active/suggested → populate active topics (status / facts / tasks / drafts). The
+ * LLM steps are INJECTED (`deps`) so this is unit-testable with stubs; the driver wires the real
+ * model-backed deps.
+ */
+export const runActiveTopics = async (
+  input: ActiveTopicsInput,
+  deps: ActiveTopicsDeps,
+): Promise<ActiveTopicsResult> => {
+  const nowIso = new Date(input.nowMs).toISOString();
+  const threads = buildThreads(input.messages, { ownerEmail: input.ownerEmail ?? '', now: nowIso });
+  const threadById = new Map(threads.map((thread) => [thread.threadId, thread] as const));
+  const messagesByThread = new Map<string, Message.Message[]>();
+  for (const message of input.messages) {
+    const threadId = deriveThreadId(message);
+    (messagesByThread.get(threadId) ?? messagesByThread.set(threadId, []).get(threadId)!).push(message);
+  }
+  const threadRecency = latestCreatedMsByThread(input.messages);
+  const awaitingThreadIds = new Set(
+    threads.filter((thread) => thread.state === 'awaiting-mine').map((thread) => thread.threadId),
+  );
+
+  const contextFor = (draft: TopicDraft): TopicContext => ({
+    draft,
+    threads: draft.threadIds.flatMap((id) => (threadById.has(id) ? [threadById.get(id)!] : [])),
+    messages: draft.threadIds.flatMap((id) => messagesByThread.get(id) ?? []),
+  });
+
+  // Deterministic activity score + prefilter → candidates (highest activity first, capped).
+  const floor = input.prefilterFloor ?? 0.15;
+  const scoredByActivity = clusterThreads(threads)
+    .map((draft) => ({
+      draft,
+      activity: activityScore(
+        computeClusterSignals(draft, { threadRecency, awaitingThreadIds, personEmails: input.personEmails }),
+        {
+          nowMs: input.nowMs,
+          ...input.activity,
+        },
+      ),
+    }))
+    .filter((entry) => entry.activity >= floor)
+    .sort((left, right) => right.activity - left.activity)
+    .slice(0, input.candidateLimit ?? 20);
+
+  // LLM confidence per candidate (degrades to the activity score on failure).
+  const candidates: ScoredCandidate[] = [];
+  for (const { draft, activity } of scoredByActivity) {
+    const context = contextFor(draft);
+    let llm = { confidence: activity, rationale: '' };
+    try {
+      llm = await deps.confidence(context);
+    } catch {
+      // Keep the deterministic score.
+    }
+    candidates.push({
+      draft,
+      confidence: combineConfidence(activity, llm.confidence, input.confidenceWeight),
+      rationale: llm.rationale,
+    });
+  }
+
+  const { active: activeCandidates, suggested } = classifyTopics(candidates, input.split);
+
+  // Populate each active topic.
+  const active: ActiveTopic[] = [];
+  for (const candidate of activeCandidates) {
+    const context = contextFor(candidate.draft);
+    const [status, facts, tasks, drafts] = await Promise.all([
+      deps.status(context),
+      deps.facts(context),
+      deps.tasks(context),
+      deps.draft(context),
+    ]);
+    active.push(assembleActiveTopic(candidate, { status, facts, tasks, drafts }));
+  }
+
+  return { active, suggested: suggested.map(toSuggestedTopic) };
+};
 
 /** Stable filesystem slug for a topic label (report filenames). */
 export const topicSlug = (label: string): string =>

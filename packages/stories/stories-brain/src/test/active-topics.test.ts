@@ -5,8 +5,10 @@
 import { describe, test } from 'vitest';
 
 import { type TopicDraft } from '@dxos/pipeline-email';
+import { Message } from '@dxos/types';
 
 import {
+  type ActiveTopicsDeps,
   type ScoredCandidate,
   activityScore,
   assembleActiveTopic,
@@ -14,9 +16,11 @@ import {
   combineConfidence,
   populatedChecklist,
   renderTasksMarkdown,
+  runActiveTopics,
   topicSlug,
   toSuggestedTopic,
 } from '../testing/harness/internal/active-topics';
+import { renderIndex, renderTopicReport } from '../testing/harness/internal/active-topics-report';
 
 const NOW = new Date('2026-01-15T00:00:00.000Z').getTime();
 const DAY = 24 * 60 * 60 * 1000;
@@ -129,5 +133,81 @@ describe('toSuggestedTopic + topicSlug', () => {
   test('slugifies labels', ({ expect }) => {
     expect(topicSlug('Q2 Report & Budget!')).toBe('q2-report-budget');
     expect(topicSlug('///')).toBe('topic');
+  });
+});
+
+describe('runActiveTopics', () => {
+  const OWNER = 'me@x.com';
+  const NOW_MS = new Date('2026-01-10T12:00:00.000Z').getTime();
+  const msg = (subject: string, from: string, created: string) =>
+    Message.make({
+      created,
+      sender: { email: from },
+      blocks: [{ _tag: 'text', text: 'body' }],
+      properties: { subject, messageId: `<${from}:${created}>` },
+    });
+
+  // A recent person thread (last from Alice → awaiting-mine) and a recent org thread.
+  const messages = () => [
+    msg('Project alpha', 'alice@x.com', '2026-01-09T10:00:00.000Z'),
+    msg('RE: Project alpha', 'alice@x.com', '2026-01-10T09:00:00.000Z'),
+    msg('Newsletter digest', 'news@corp.com', '2026-01-10T08:00:00.000Z'),
+  ];
+
+  const stubDeps = (): ActiveTopicsDeps => ({
+    // High confidence for the person topic, low for the org one (keyed off the label).
+    confidence: async (context) =>
+      context.draft.label.includes('project')
+        ? { confidence: 0.9, rationale: 'awaiting your reply' }
+        : { confidence: 0.2, rationale: 'bulk digest' },
+    status: async () => 'Awaiting your reply.',
+    facts: async () => ['alice owns project alpha'],
+    tasks: async () => ['Reply to Alice'],
+    draft: async (context) => context.threads.map((thread) => ({ threadId: thread.threadId, draft: 'On it.' })),
+  });
+
+  test('splits active (populated) from suggested and fills the active fields', async ({ expect }) => {
+    const result = await runActiveTopics(
+      { messages: messages(), nowMs: NOW_MS, ownerEmail: OWNER, personEmails: new Set(['alice@x.com']) },
+      stubDeps(),
+    );
+    expect(result.active).toHaveLength(1);
+    const [topic] = result.active;
+    expect(topic.label).toContain('project');
+    expect(populatedChecklist(topic)).toEqual({ status: true, facts: true, tasks: true, drafts: true });
+    expect(topic.tasks.content.target?.content).toBe('- [ ] Reply to Alice');
+    expect(result.suggested.some((entry) => entry.label.includes('newsletter'))).toBe(true);
+  });
+});
+
+describe('report renderers', () => {
+  const candidate: ScoredCandidate = { draft: draft(), confidence: 0.82, rationale: 'awaiting reply' };
+  const topic = assembleActiveTopic(candidate, {
+    status: 'Awaiting Alice on the budget.',
+    facts: ['alice owns q2 report'],
+    tasks: ['Review draft', 'Send budget'],
+    drafts: [{ threadId: 'q2 report', draft: 'Thanks — will review by Friday.' }],
+  });
+
+  test('index lists active (with checklist + link) and suggested rows', ({ expect }) => {
+    const index = renderIndex({
+      active: [topic],
+      suggested: [toSuggestedTopic({ draft: draft({ label: 'newsletter' }), confidence: 0.2, rationale: 'stale' })],
+    });
+    expect(index).toContain('## Active (1)');
+    expect(index).toContain('[q2 report](q2-report.md)');
+    expect(index).toContain('82%');
+    expect(index).toContain('## Suggested (1)');
+    expect(index).toContain('newsletter');
+  });
+
+  test('topic report includes status, task outline, facts, and drafts', ({ expect }) => {
+    const report = renderTopicReport(topic);
+    expect(report).toContain('# q2 report');
+    expect(report).toContain('Awaiting Alice on the budget.');
+    expect(report).toContain('- [ ] Review draft');
+    expect(report).toContain('- [ ] Send budget');
+    expect(report).toContain('- alice owns q2 report');
+    expect(report).toContain('Thanks — will review by Friday.');
   });
 });
