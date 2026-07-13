@@ -85,6 +85,18 @@ describe('TagIndex', () => {
     tags.unsetTag(later, first);
     expect(registry.get(tagsForObject(first))).toEqual([urgent]);
   });
+
+  // Regression for DX-1103: these atoms push updates from an external `Obj.subscribe` callback, so
+  // their nodes must be kept alive. A swept (disposed) node whose subscription is still live would
+  // throw `Cannot use context of disposed Atom` from `get.setSelf` during a mutation notification.
+  test('reactive atoms are kept alive so mutation notifications never hit a disposed lifetime', () => {
+    const tagIndex = TagIndex.make();
+    const objectId = EntityId.random();
+    const urgent = 'dxn:tag:urgent';
+
+    expect(TagIndex.atom(tagIndex, objectId, urgent).keepAlive).toBe(true);
+    expect(TagIndex.atom(tagIndex)(objectId).keepAlive).toBe(true);
+  });
 });
 
 describe('TagIndex (feed integration)', () => {

@@ -59,6 +59,16 @@ describe('StateMap', () => {
     expect(state.get(itemA.id)).toEqual({});
     expect(state.ids()).toEqual([itemB.id]);
   });
+
+  // Regression for DX-1103: the slice atom pushes updates from an external `Obj.subscribe` callback,
+  // so its node must be kept alive. A swept (disposed) node whose subscription is still live would
+  // throw `Cannot use context of disposed Atom` from `get.setSelf` during a mutation notification.
+  test('reactive slice atom is kept alive so mutation notifications never hit a disposed lifetime', () => {
+    const stateMap = StateMap.make();
+    const itemA = Obj.make(Item, { text: 'a' });
+
+    expect(StateMap.atom<PostState>(stateMap, itemA.id).keepAlive).toBe(true);
+  });
 });
 
 describe('StateMap (database integration)', () => {

@@ -64,6 +64,10 @@ type TagKey = readonly [TagIndex, EntityId, string | undefined];
 const tagsEqual = (left: readonly string[], right: readonly string[]): boolean =>
   left.length === right.length && left.every((value, index) => value === right[index]);
 
+// `keepAlive` pins the node for the registry's lifetime: an atom that pushes updates from an external
+// `Obj.subscribe` callback (rather than deriving from other atoms) must never be swept, or the callback
+// can fire against an already-disposed lifetime and throw `Cannot use context of disposed Atom` during a
+// mutation's notification (DX-1103). Every ECHO reactive atom family follows this same rule.
 const tagFamily = Atom.family((key: TagKey) =>
   Atom.make<boolean>((get) => {
     const [tagIndex, objectId, tagUri] = key;
@@ -83,7 +87,7 @@ const tagFamily = Atom.family((key: TagKey) =>
     });
     get.addFinalizer(() => unsubscribe());
     return previous;
-  }),
+  }).pipe(Atom.keepAlive),
 );
 
 const objectTagsFamily = Atom.family((key: TagKey) =>
@@ -100,7 +104,7 @@ const objectTagsFamily = Atom.family((key: TagKey) =>
     });
     get.addFinalizer(() => unsubscribe());
     return previous;
-  }),
+  }).pipe(Atom.keepAlive),
 );
 
 /**

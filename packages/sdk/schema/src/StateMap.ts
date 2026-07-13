@@ -63,6 +63,10 @@ const shallowEqual = (a: Record<string, unknown>, b: Record<string, unknown>): b
 
 type SliceKey = readonly [StateMap, EntityId];
 
+// `keepAlive` pins the node for the registry's lifetime: an atom that pushes updates from an external
+// `Obj.subscribe` callback (rather than deriving from other atoms) must never be swept, or the callback
+// can fire against an already-disposed lifetime and throw `Cannot use context of disposed Atom` during a
+// mutation's notification (DX-1103). Every ECHO reactive atom family follows this same rule.
 const sliceFamily = Atom.family((key: SliceKey) =>
   Atom.make<Record<string, unknown>>((get) => {
     const [stateMap, id] = key;
@@ -77,7 +81,7 @@ const sliceFamily = Atom.family((key: SliceKey) =>
     });
     get.addFinalizer(() => unsubscribe());
     return previous;
-  }),
+  }).pipe(Atom.keepAlive),
 );
 
 /**
