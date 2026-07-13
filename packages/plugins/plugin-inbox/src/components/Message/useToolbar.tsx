@@ -85,6 +85,7 @@ export const useMessageActions = ({
                 {
                   label: ['message-toolbar-reply.menu', { ns: meta.profile.key }],
                   icon: 'ph--arrow-bend-up-left--regular',
+                  testId: 'inbox.message.reply',
                 },
                 onReply,
               )),
@@ -97,6 +98,7 @@ export const useMessageActions = ({
                 {
                   label: ['message-toolbar-reply-all.menu', { ns: meta.profile.key }],
                   icon: 'ph--arrow-bend-double-up-left--regular',
+                  testId: 'inbox.message.replyAll',
                 },
                 onReplyAll,
               )),
@@ -109,6 +111,7 @@ export const useMessageActions = ({
                 {
                   label: ['message-toolbar-forward.menu', { ns: meta.profile.key }],
                   icon: 'ph--arrow-bend-up-right--regular',
+                  testId: 'inbox.message.forward',
                 },
                 onForward,
               )),
@@ -121,6 +124,7 @@ export const useMessageActions = ({
                 {
                   label: ['message-toolbar-ai-reply.menu', { ns: meta.profile.key }],
                   icon: 'ph--sparkle--regular',
+                  testId: 'inbox.message.aiReply',
                 },
                 onAiReply,
               )),

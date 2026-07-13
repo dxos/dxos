@@ -42,11 +42,13 @@ delivers Tier 4 (browser-e2e, task #7).**
   - **⚠ Productionization dependency.** These tests rely on sync running IN THE BROWSER. Sync is not
     yet on edge; when it moves, add an env-var flag to force in-browser sync for e2e, or the mocked
     HTTP (page.route) won't intercept it. Same for the Gmail connection bridge staying dev/e2e-gated.
-  - Build order: (a) add inbox testids per the skill (Sync action, reply/AI-reply/forward/generate
-    toolbar actions via `properties.testId`, message tiles + mailbox list, message-article);
-    (b) mock `HttpApp` (Gmail + JMAP contracts) + `page.route` bridge + fixtures; (c) `plugins/inbox.ts`
-    helper (JMAP form-fill + Gmail connection bridge) + provider adapter; (d) JMAP suite (sync +
-    generic + reply); (e) Gmail suite (gated: sync + reply).
+  - Build order: [x] (a) inbox testids — Sync action (`inbox.mailbox.sync`), reply/replyAll/forward/
+    aiReply (`inbox.message.*`), generate (`inbox.draft.generate`), message+conversation rows
+    (`inbox.message.row`/`inbox.conversation.row`), mailbox root (`inbox.mailbox`); companion via
+    existing `message-header`, send via existing `save-button`. Compiles + lints.
+    [ ] (b) mock `HttpApp` (Gmail + JMAP contracts) + `page.route` bridge + fixtures; [ ] (c)
+    `plugins/inbox.ts` helper (JMAP form-fill + Gmail connection bridge) + provider adapter; [ ] (d)
+    JMAP suite (sync + generic + reply); [ ] (e) Gmail suite (gated: sync + reply).
 - [ ] **#6 Unskip inbox agent-e2e** — `assistant-e2e/src/testing/inbox-enable.test.ts`
     (register the skill), then add read/draft scenario tests. Enforces F-6.
 - [ ] **#8 Latency benchmarks with budget assertions** — F-11.3/F-11.4 at N=1k/4k/10k; fail above

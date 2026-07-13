@@ -580,6 +580,7 @@ export default Capability.makeModule(
                 label: ['sync-mailbox.label', { ns: meta.profile.key }],
                 icon: 'ph--arrows-clockwise--regular',
                 disposition: 'list-item',
+                testId: 'inbox.mailbox.sync',
               },
             },
           ]);

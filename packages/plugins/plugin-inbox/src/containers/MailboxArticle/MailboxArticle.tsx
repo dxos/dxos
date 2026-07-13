@@ -262,7 +262,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   }, [filter, filterText, handleAction]);
 
   return (
-    <Panel.Root>
+    <Panel.Root data-testid='inbox.mailbox'>
       <ElevationProvider elevation='positioned'>
         <Menu.Root {...menuActions} attendableId={id}>
           <Panel.Toolbar asChild>
