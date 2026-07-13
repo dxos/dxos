@@ -9,5 +9,7 @@ export * from './dx';
 export * from './reflect';
 export * from './function';
 export * from './hub';
+export * from './identity';
+export * from './mailbox';
 export * from './repl';
 export * from './reset';
