@@ -130,8 +130,8 @@ const createTriggerSpec = (props: { triggerKind?: Trigger.Kind; spaceId?: SpaceI
     case 'feed': {
       return { kind: 'feed' } satisfies Trigger.FeedSpec;
     }
-    case 'manual':
-      return Trigger.specManual();
+    case 'direct':
+      return Trigger.specDirect();
   }
 };
 
@@ -142,7 +142,7 @@ const getOutputSchema = (kind: Trigger.Kind) => {
     ['timer']: TriggerEvent.TimerEvent,
     ['webhook']: TriggerEvent.WebhookEvent,
     ['feed']: TriggerEvent.FeedEvent,
-    ['manual']: TriggerEvent.ManualEvent,
+    ['direct']: TriggerEvent.DirectEvent,
   };
   return kindToSchema[kind];
 };

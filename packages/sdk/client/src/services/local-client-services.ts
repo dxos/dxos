@@ -16,7 +16,6 @@ import {
   type ClientServices,
   type ClientServicesProvider,
   type ClientServicesRpc,
-  clientServiceBundle,
   makeInProcessClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
@@ -29,7 +28,6 @@ import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type ServiceBundle } from '@dxos/rpc';
 import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
@@ -177,10 +175,6 @@ export class LocalClientServices implements ClientServicesProvider {
         this.signalMetadataTags.origin = window.location.origin;
       }
     }
-  }
-
-  get descriptors(): ServiceBundle<ClientServices> {
-    return clientServiceBundle;
   }
 
   get rpc() {

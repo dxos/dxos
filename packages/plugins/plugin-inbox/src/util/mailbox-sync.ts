@@ -32,6 +32,7 @@ export const readBindingOptions = (binding: SyncBinding.SyncBinding) => {
   if (!raw || typeof raw !== 'object') {
     return { syncBackDays: undefined as undefined | number, filter: undefined as undefined | string };
   }
+
   // Reject NaN/Infinity/negative — these feed `subDays`, which would otherwise yield an invalid date.
   const syncBackDays = raw.syncBackDays;
   return {

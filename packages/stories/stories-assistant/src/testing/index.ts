@@ -4,9 +4,9 @@
 
 export * from './data';
 export * from './decorators';
+export * from './modules';
 export * from './profiles';
 export * from './schema';
 export * from './snapshot';
 
 export * from './ModuleContainer';
-export * from './modules';

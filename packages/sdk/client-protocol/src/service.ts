@@ -87,11 +87,6 @@ export interface ClientServicesProvider {
    */
   services: Partial<ClientServices>;
 
-  /**
-   * @deprecated Protobuf service descriptors; retained for legacy transports and devtools.
-   */
-  descriptors: ServiceBundle<ClientServices>;
-
   // TODO(burdon): Should take context from parent?
   open(): Promise<unknown>;
   close(): Promise<unknown>;

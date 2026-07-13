@@ -584,8 +584,8 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             }
             break;
           }
-          case 'manual':
-            // Manual triggers are only invoked through invokeTrigger.
+          case 'direct':
+            // Direct triggers are only invoked through invokeTrigger.
             break;
           default: {
             return yield* Effect.dieMessage(`Unknown trigger kind: ${kind}`);
