@@ -13,8 +13,9 @@ import { type Space as ClientSpace, SpaceState } from '@dxos/client/echo';
 import { Space as HaloSpace, SpaceError } from '@dxos/halo';
 import { IdentityDid, type SpaceId } from '@dxos/keys';
 import { SpaceArchive, type SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { isOnline, makeFlow, streamFromObservable, toAccess, toShareOptions } from './util';
+import { fromAccess, isOnline, makeFlow, streamFromObservable, toAccess, toShareOptions } from './util';
 
 const toState = (state: SpaceState): HaloSpace.State => {
   switch (state) {
@@ -57,6 +58,22 @@ const resolveSpace = (client: Client, id: SpaceId): ClientSpace => {
   return space;
 };
 
+// The HALO API addresses members by DID; the legacy proxy needs the identity key, resolved here
+// from the materialized membership.
+const setMemberRole = async (
+  client: Client,
+  id: SpaceId,
+  subject: IdentityDid,
+  newRole: HaloSpaceMember.Role,
+): Promise<void> => {
+  const space = resolveSpace(client, id);
+  const member = space.members.get().find((entry) => entry.identity?.did === subject);
+  if (!member) {
+    throw new Error(`Member not found: ${subject}`);
+  }
+  await space.updateMemberRole({ memberKey: member.identity.identityKey, newRole });
+};
+
 /**
  * Builds the {@link HaloSpace.Service} implementation over a client's `spaces` proxy.
  */
@@ -96,6 +113,24 @@ export const makeSpaceService = (client: Client): Context.Tag.Service<HaloSpace.
     const space = client.spaces.get(id);
     return space ? streamFromObservable(space.members).pipe(Stream.map(toMembers)) : Stream.empty;
   },
+
+  updateMemberRole: (id, subject, role) =>
+    Effect.tryPromise({
+      try: async () => {
+        const newRole = fromAccess(role);
+        if (newRole === undefined) {
+          throw new Error(`No legacy role for access level: ${role}`);
+        }
+        await setMemberRole(client, id, subject, newRole);
+      },
+      catch: (error) => new SpaceError({ context: { error } }),
+    }),
+
+  removeMember: (id, subject) =>
+    Effect.tryPromise({
+      try: () => setMemberRole(client, id, subject, HaloSpaceMember.Role.REMOVED),
+      catch: (error) => new SpaceError({ context: { error } }),
+    }),
 
   share: (id, options) =>
     Effect.try({

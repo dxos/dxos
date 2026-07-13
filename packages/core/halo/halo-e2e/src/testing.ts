@@ -62,7 +62,8 @@ export const TestNetworkLive = Layer.scoped(
     const clients: Client[] = [];
     yield* Effect.addFinalizer(() =>
       Effect.promise(async () => {
-        await Promise.all(clients.map((client) => client.destroy()));
+        // allSettled so one failed destroy() doesn't strand the remaining peers.
+        await Promise.allSettled(clients.map((client) => client.destroy()));
       }),
     );
     return {
@@ -91,8 +92,10 @@ const isTerminal = (event: Invitation.Event): boolean =>
  */
 export const awaitTerminal = (flow: Invitation.Flow): Effect.Effect<Invitation.Event> =>
   flow.events.pipe(
-    Stream.takeUntil(isTerminal),
-    Stream.runLast,
+    // filter + runHead so a stream that ends without a terminal event yields Option.none
+    // (triggering the fallback), rather than returning the last non-terminal event.
+    Stream.filter(isTerminal),
+    Stream.runHead,
     Effect.map(
       Option.getOrElse(
         (): Invitation.Event => ({ _tag: 'error', message: 'invitation stream ended without a terminal event' }),

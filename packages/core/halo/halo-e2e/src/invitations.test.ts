@@ -69,6 +69,10 @@ describe('Invitations', () => {
     30_000,
   );
 
+  // NOTE: `Space.updateMemberRole` / `removeMember` are defined and the adapter maps them to
+  // `space.updateMemberRole`, but removal re-keys the space and does not converge reliably in the
+  // in-memory test harness, so it is not exercised e2e here.
+
   it.effect(
     'active invitations are observable for a space',
     Effect.fn(function* ({ expect }) {

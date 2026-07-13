@@ -210,11 +210,14 @@ Three services (`Context.Tag`s), one per aspect:
 ```
 
 ```ts
-import { Identity, Space, Invitation } from '@dxos/halo';
+import { Effect } from 'effect';
+import { Identity, Invitation, Space } from '@dxos/halo';
 
 // Initiation lives on Identity/Space; the returned flow is an Invitation.Flow:
-const flow = yield * Space.share({ space: space.id }); // Space.Service → Invitation.Flow
-yield * Invitation.authenticate(flow, code); // Invitation.Service manages the lifecycle
+const program = Effect.gen(function* () {
+  const flow = yield* Space.share(space.id); // Space.Service → Invitation.Flow
+  yield* Invitation.authenticate(flow, code); // Invitation.Service manages the lifecycle
+});
 ```
 
 The split matches the audit: identity/device consumers (§2.1–2.4) rarely touch spaces;
@@ -251,27 +254,32 @@ Types: `Profile` and `Device` already exist in this package as Effect schemas; `
 `{ did, profile }` — `spaceKey` consumers (composer-app `queryAllCredentials`,
 plugin-onboarding `util.ts`) are credential plumbing that the credential verbs below absorb.
 
-Credentials are transitional (they dissolve into Keyhive membership ops): keep a minimal
-`Identity.credentials` / `Identity.writeCredential` pair to cover §2.3, but mark it legacy so
-new consumers don't grow on it. The plugin-script `ServiceAccess` credential should become an
-explicit capability grant verb when the EDGE shim lands.
+The table above is the full target surface. The **first shipped cut** (this PR) implements the
+common path — `current`/`changes`, `create`, `recover`, `updateProfile`, `devices`/`deviceChanges`,
+`share`/`join`. The remaining verbs are **deferred** to keep the package definitions-only and
+lean: `createRecoveryKey` / `requestRecoveryChallenge`, `localDevice` / `updateDevice`, `attest`,
+and the transitional `credentials` / `writeCredential` pair. Credentials in particular dissolve
+into Keyhive membership ops and would drag the protobuf `Credential` type into this
+definitions-only package, so recovery/credential flows stay on the raw `IdentityService` until
+that type is modeled here. The plugin-script `ServiceAccess` credential should become an explicit
+capability-grant verb when the EDGE shim lands.
 
 ### 3.3 `Space.Service` — space management & membership
 
-| Verb                                                                          | Replaces                                                                                                                                   |
-| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Space.spaces` / `Space.changes`                                              | `client.spaces.get()`, `client.spaces.subscribe()`, `useSpaces`                                                                            |
-| `Space.get(id)` → `Option<Space>`                                             | `client.spaces.get(id)`, `useSpace(id)`                                                                                                    |
-| `Space.create(props?, { tags?, membershipPolicy? })`                          | `client.spaces.create()`                                                                                                                   |
-| `Space.waitReady(id)` (or `Space.state(id): Stream`)                          | `space.waitUntilReady()`, `space.state.get()`, `SpaceState`                                                                                |
-| `Space.update(id, { name, icon, hue, tags })`                                 | direct property writes (plugin-space rename)                                                                                               |
-| `Space.members(id)` / `Space.memberChanges(id)`                               | `useMembers`, `SpaceMember` reads                                                                                                          |
-| `Space.updateMemberRole(id, member, role)` / `Space.removeMember(id, member)` | (no current consumer; Keyhive delegation/revocation — define now)                                                                          |
-| `Space.export(id, { format })` / `Space.import(archive, opts?)`               | `space.internal.export()`, `client.spaces.import()`                                                                                        |
-| `Space.migrate(id)`                                                           | `space.internal.migrate()`, `db.runMigrations`                                                                                             |
-| `Space.setReplication(id, setting)` / `Space.replication(id)`                 | `space.internal.setEdgeReplicationPreference`, `data.edgeReplication` (becomes "delegate `pull` to EDGE" under Keyhive, MIGRATION.md §5.1) |
-| `Space.share(id, { type, authMethod, multiUse, target })` → `Invitation.Flow` | `space.share()` — space-invitation initiation (delegates the lifecycle to `Invitation`)                                                    |
-| `Space.join(code)` → `Invitation.Flow`                                        | `client.spaces.join()`                                                                                                                     |
+| Verb                                                                            | Replaces                                                                                                                                   |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Space.spaces` / `Space.changes`                                                | `client.spaces.get()`, `client.spaces.subscribe()`, `useSpaces`                                                                            |
+| `Space.get(id)` → `Option<Space>`                                               | `client.spaces.get(id)`, `useSpace(id)`                                                                                                    |
+| `Space.create(props?, { tags?, membershipPolicy? })`                            | `client.spaces.create()`                                                                                                                   |
+| `Space.waitReady(id)` (or `Space.state(id): Stream`)                            | `space.waitUntilReady()`, `space.state.get()`, `SpaceState`                                                                                |
+| `Space.update(id, { name, icon, hue, tags })`                                   | direct property writes (plugin-space rename)                                                                                               |
+| `Space.members(id)` / `Space.memberChanges(id)`                                 | `useMembers`, `SpaceMember` reads                                                                                                          |
+| `Space.updateMemberRole(id, subject, role)` / `Space.removeMember(id, subject)` | Keyhive delegation/revocation (no current consumer). Shipped: adapter maps to `space.updateMemberRole` (member resolved by DID)            |
+| `Space.export(id, { format })` / `Space.import(archive, opts?)`                 | `space.internal.export()`, `client.spaces.import()`                                                                                        |
+| `Space.migrate(id)`                                                             | `space.internal.migrate()`, `db.runMigrations`                                                                                             |
+| `Space.setReplication(id, setting)` / `Space.replication(id)`                   | `space.internal.setEdgeReplicationPreference`, `data.edgeReplication` (becomes "delegate `pull` to EDGE" under Keyhive, MIGRATION.md §5.1) |
+| `Space.share(id, { type, authMethod, multiUse, target })` → `Invitation.Flow`   | `space.share()` — space-invitation initiation (delegates the lifecycle to `Invitation`)                                                    |
+| `Space.join(code)` → `Invitation.Flow`                                          | `client.spaces.join()`                                                                                                                     |
 
 The returned `Space` value is a plain data snapshot (id, state, properties, tags) — **not** a
 live proxy owning `db`. Database access stays on the `@dxos/echo` `Database` service keyed by

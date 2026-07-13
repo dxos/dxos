@@ -36,6 +36,8 @@ export type ShareOptions = {
   readonly authMethod?: AuthMethod;
   readonly type?: Type;
   readonly multiUse?: boolean;
+  /** Restrict a `known-public-key` invitation to a specific guest (key/DID). */
+  readonly target?: string;
 };
 
 /**

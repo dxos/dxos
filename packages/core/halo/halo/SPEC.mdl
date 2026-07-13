@@ -72,6 +72,8 @@ module Space
     create: (options?) => Effect
     waitReady: (id) => Effect            # resolve once the space is ready.
     members / memberChanges              # membership snapshot + reactive stream.
+    updateMemberRole: (id, subject, role) => Effect  # Keyhive delegation.
+    removeMember: (id, subject) => Effect            # Keyhive revocation.
     share: (id, options?) => Effect      # space invitation → Invitation.Flow.
     join: (code) => Effect               # space join → Invitation.Flow.
     exportSpace / importSpace

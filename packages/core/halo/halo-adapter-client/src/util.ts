@@ -115,6 +115,7 @@ export const toShareOptions = (options?: HaloInvitation.ShareOptions): Partial<C
   authMethod: toAuthMethod(options?.authMethod),
   type: toType(options?.type),
   ...(options?.multiUse !== undefined ? { multiUse: options.multiUse } : {}),
+  ...(options?.target !== undefined ? { target: options.target } : {}),
 });
 
 const toAuthMethod = (method?: HaloInvitation.AuthMethod): ClientInvitation.AuthMethod => {
@@ -154,6 +155,23 @@ export const toAccess = (role: HaloSpaceMember.Role): Group.Access | undefined =
       return 'edit';
     case HaloSpaceMember.Role.READER:
       return 'read';
+    default:
+      return undefined;
+  }
+};
+
+/**
+ * Maps a Keyhive-aligned {@link Group.Access} level to a legacy space-member role.
+ * Returns `undefined` for `pull` (no legacy equivalent — reject at the call site).
+ */
+export const fromAccess = (access: Group.Access): HaloSpaceMember.Role | undefined => {
+  switch (access) {
+    case 'admin':
+      return HaloSpaceMember.Role.ADMIN;
+    case 'edit':
+      return HaloSpaceMember.Role.EDITOR;
+    case 'read':
+      return HaloSpaceMember.Role.READER;
     default:
       return undefined;
   }

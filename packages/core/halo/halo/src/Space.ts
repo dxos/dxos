@@ -83,6 +83,14 @@ export class Service extends Context.Tag('@dxos/halo/Space')<
     readonly members: (id: SpaceId) => Effect.Effect<readonly Member[], SpaceError>;
     /** Reactive stream of a space's membership. */
     readonly memberChanges: (id: SpaceId) => Stream.Stream<readonly Member[]>;
+    /** Change a member's access level (Keyhive delegation). */
+    readonly updateMemberRole: (
+      id: SpaceId,
+      subject: IdentityDid,
+      role: Group.Access,
+    ) => Effect.Effect<void, SpaceError>;
+    /** Remove a member (Keyhive revocation). */
+    readonly removeMember: (id: SpaceId, subject: IdentityDid) => Effect.Effect<void, SpaceError>;
     /** Initiate a space invitation (host side). */
     readonly share: (id: SpaceId, options?: Invitation.ShareOptions) => Effect.Effect<Invitation.Flow, SpaceError>;
     /** Redeem a space-invitation code (guest side). */
@@ -121,6 +129,18 @@ export const members = (id: SpaceId): Effect.Effect<readonly Member[], SpaceErro
 /** Reactive stream of a space's membership (requires {@link Service}). */
 export const memberChanges = (id: SpaceId): Stream.Stream<readonly Member[], never, Service> =>
   Stream.unwrap(Effect.map(Service, (service) => service.memberChanges(id)));
+
+/** Change a member's access level (requires {@link Service}). */
+export const updateMemberRole = (
+  id: SpaceId,
+  subject: IdentityDid,
+  role: Group.Access,
+): Effect.Effect<void, SpaceError, Service> =>
+  Effect.flatMap(Service, (service) => service.updateMemberRole(id, subject, role));
+
+/** Remove a member (requires {@link Service}). */
+export const removeMember = (id: SpaceId, subject: IdentityDid): Effect.Effect<void, SpaceError, Service> =>
+  Effect.flatMap(Service, (service) => service.removeMember(id, subject));
 
 /** Initiate a space invitation (requires {@link Service}). */
 export const share = (
