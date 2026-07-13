@@ -121,3 +121,34 @@ describe('message filters', () => {
     expect(Mailbox.isFiltered({}, sender('a@x.com'))).toBe(false);
   });
 });
+
+describe('subscriptions', () => {
+  const msg = (email: string, name: string, listUnsubscribe?: string) =>
+    Message.make({
+      created: '2026-01-01T00:00:00.000Z',
+      sender: { email, name },
+      blocks: [{ _tag: 'text', text: 'body' }],
+      properties: { subject: 's', ...(listUnsubscribe ? { listUnsubscribe } : {}) },
+    });
+
+  test('parseUnsubscribe extracts http (one-click) and mailto targets', ({ expect }) => {
+    expect(Mailbox.parseUnsubscribe('<https://x.io/u?t=1>, <mailto:unsub@x.io>')).toEqual({
+      http: 'https://x.io/u?t=1',
+      mailto: 'mailto:unsub@x.io',
+    });
+    expect(Mailbox.parseUnsubscribe('<mailto:unsub@x.io>')).toEqual({ mailto: 'mailto:unsub@x.io' });
+    expect(Mailbox.parseUnsubscribe('not a header')).toEqual({});
+  });
+
+  test('deriveSubscriptions groups senders with an unsubscribe affordance, noisiest first', ({ expect }) => {
+    const subs = Mailbox.deriveSubscriptions([
+      msg('news@a.io', 'A News', '<https://a.io/u>'),
+      msg('news@a.io', 'A News', '<https://a.io/u>'),
+      msg('digest@b.io', 'B Digest', '<mailto:unsub@b.io>'),
+      msg('alice@x.com', 'Alice'), // no unsubscribe → not a subscription
+    ]);
+    expect(subs.map((sub) => sub.email)).toEqual(['news@a.io', 'digest@b.io']);
+    expect(subs[0]).toMatchObject({ email: 'news@a.io', name: 'A News', count: 2 });
+    expect(subs.some((sub) => sub.email === 'alice@x.com')).toBe(false);
+  });
+});
