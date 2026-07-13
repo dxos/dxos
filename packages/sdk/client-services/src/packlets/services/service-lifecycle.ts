@@ -3,6 +3,7 @@
 //
 
 import * as SqlClient from '@effect/sql/SqlClient';
+import type * as SqlError from '@effect/sql/SqlError';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
@@ -27,6 +28,7 @@ import {
 import {
   type EdgeConnection,
   EdgeConnectionService,
+  type EdgeHttpClient,
   EdgeHttpClientService,
   type EdgeIdentity,
   createChainEdgeIdentity,
@@ -65,9 +67,17 @@ import {
   InvitationsManagerService,
   SpaceInvitationProtocol,
 } from '../invitations';
-import { DataSpaceManager, DataSpaceManagerService, SigningContextProviderService } from '../spaces';
-import { CrossDeviceSpaceSynchronizerService } from './cross-device-space-synchronizer';
-import { FeedSyncerService } from './feed-syncer';
+import {
+  DataSpaceManager,
+  DataSpaceManagerService,
+  type SigningContextProvider,
+  SigningContextProviderService,
+} from '../spaces';
+import {
+  type CrossDeviceSpaceSynchronizer,
+  CrossDeviceSpaceSynchronizerService,
+} from './cross-device-space-synchronizer';
+import { type FeedSyncer, FeedSyncerService } from './feed-syncer';
 import { type ServiceContextComponents, StorageMigrationService } from './service-context';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
@@ -88,9 +98,42 @@ export type ServiceStackRuntime = ManagedRuntime.ManagedRuntime<
 >;
 
 /**
+ * The component instances resolved once from the stack (the composition root). Lifecycle functions
+ * receive this bundle rather than re-resolving each tag from the runtime on every call. Optional
+ * components (edge clients, replicators, feed syncer) are absent when their config path is disabled.
+ */
+type ServiceComponents = {
+  readonly networkManager: SwarmNetworkManager;
+  readonly signalManager: SignalManager;
+  readonly metadataStore: IMetadataStore;
+  readonly blobStore: BlobStoreApi;
+  readonly keyring: KeyringApi;
+  readonly feedStore: FeedStore<FeedMessage>;
+  readonly spaceManager: SpaceManager;
+  readonly identityManager: IdentityManager;
+  readonly recoveryManager: EdgeIdentityRecoveryManager;
+  readonly invitations: InvitationsHandler;
+  readonly invitationsManager: InvitationsManager;
+  readonly echoHost: EchoHost;
+  readonly dataSpaceManager: DataSpaceManager;
+  readonly edgeAgentManager: EdgeAgentManager;
+  readonly deviceSpaceSync: CrossDeviceSpaceSynchronizer;
+  readonly signingContextProvider: SigningContextProvider;
+
+  readonly edgeConnection?: EdgeConnection;
+  readonly edgeHttpClient?: EdgeHttpClient;
+  readonly meshReplicator?: AutomergeReplicator;
+  readonly echoEdgeReplicator?: EdgeAutomergeReplicator;
+  readonly feedSyncer?: FeedSyncer;
+
+  // Stage-2 storage work: the combined migration effect and the runtime that can run it.
+  readonly storageMigrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag>;
+  readonly runtimeProvider: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
+};
+
+/**
  * Orchestration state that is not itself a service: the readiness gate, the edge-identity update
- * mutex, and the invitation handler factories. Held per stack instance; services are resolved from
- * the runtime on demand rather than cached here.
+ * mutex, and the invitation handler factories.
  */
 export type ServiceLifecycleState = {
   readonly initialized: Trigger;
@@ -155,9 +198,9 @@ export interface ServiceContext extends ClientLifecycle {
 }
 
 /**
- * Assembles a {@link ServiceContext} handle from a runtime that provides the composed components.
- * Resolves the component instances for the legacy handle surface and wires the callbacks that point
- * "up the stack" (recovery, invitation handlers, feed sync).
+ * Assembles a {@link ServiceContext} handle from a runtime that provides the composed components:
+ * resolves every component once, wires the callbacks that point "up the stack" (recovery, invitation
+ * handlers, feed sync), and binds the lifecycle operations over the resolved bundle.
  */
 export const makeServiceContext = async (runtime: ServiceStackRuntime): Promise<ServiceContext> => {
   const state: ServiceLifecycleState = {
@@ -168,7 +211,43 @@ export const makeServiceContext = async (runtime: ServiceStackRuntime): Promise<
     opened: false,
   };
 
-  const components = await runtime.runPromise(
+  const components = await resolveComponents(runtime);
+  wireServiceContext(components, state);
+
+  return {
+    initialized: state.initialized,
+    networkManager: components.networkManager,
+    signalManager: components.signalManager,
+    metadataStore: components.metadataStore,
+    blobStore: components.blobStore,
+    keyring: components.keyring,
+    feedStore: components.feedStore,
+    spaceManager: components.spaceManager,
+    identityManager: components.identityManager,
+    recoveryManager: components.recoveryManager,
+    invitations: components.invitations,
+    invitationsManager: components.invitationsManager,
+    echoHost: components.echoHost,
+    dataSpaceManager: components.dataSpaceManager,
+    edgeAgentManager: components.edgeAgentManager,
+    edgeConnection: components.edgeConnection,
+    open: (ctx = Context.default()) => openServiceContext(components, state, ctx),
+    close: (ctx) => closeServiceContext(components, state, ctx),
+    getInvitationHandler: (invitation) => getInvitationHandler(state, components.identityManager, invitation),
+    createIdentity: (params = {}, ctx) => createIdentity(components, state, params, ctx),
+    whenInitialized: () => state.initialized.wait(),
+    broadcastProfileUpdate: (profile) => broadcastProfileUpdate(components, profile),
+    whenDataSpaceManagerReady: () => whenDataSpaceManagerReady(components, state),
+    whenEdgeAgentManagerReady: () => whenEdgeAgentManagerReady(components, state),
+  };
+};
+
+/**
+ * Resolves every stack component once. Required components are gathered in one pass; optional ones
+ * (absent when their config path is disabled) are read via `serviceOption`.
+ */
+const resolveComponents = async (runtime: ServiceStackRuntime): Promise<ServiceComponents> => {
+  const required = await runtime.runPromise(
     Effect.all({
       networkManager: SwarmNetworkManagerService,
       signalManager: SignalManagerService,
@@ -184,26 +263,29 @@ export const makeServiceContext = async (runtime: ServiceStackRuntime): Promise<
       echoHost: EchoHostService,
       dataSpaceManager: DataSpaceManagerService,
       edgeAgentManager: EdgeAgentManagerService,
+      deviceSpaceSync: CrossDeviceSpaceSynchronizerService,
+      signingContextProvider: SigningContextProviderService,
+      storageMigrate: StorageMigrationService,
+      runtimeProvider: RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>(),
     }),
   );
-  const edgeConnection = Option.getOrUndefined(await runtime.runPromise(Effect.serviceOption(EdgeConnectionService)));
-
-  await wireServiceContext(runtime, state);
-
-  log('serviceContext runtimeProps resolved', { hasIdentity: !!components.identityManager.identity });
+  const optional = await runtime.runPromise(
+    Effect.all({
+      edgeConnection: Effect.serviceOption(EdgeConnectionService),
+      edgeHttpClient: Effect.serviceOption(EdgeHttpClientService),
+      meshReplicator: Effect.serviceOption(MeshEchoReplicatorService),
+      echoEdgeReplicator: Effect.serviceOption(EdgeAutomergeReplicatorService),
+      feedSyncer: Effect.serviceOption(FeedSyncerService),
+    }),
+  );
 
   return {
-    ...components,
-    edgeConnection,
-    initialized: state.initialized,
-    open: (ctx = Context.default()) => openServiceContext(runtime, state, ctx),
-    close: (ctx) => closeServiceContext(runtime, state, ctx),
-    getInvitationHandler: (invitation) => getInvitationHandler(state, components.identityManager, invitation),
-    createIdentity: (params = {}, ctx) => createIdentity(runtime, state, params, ctx),
-    whenInitialized: () => state.initialized.wait(),
-    broadcastProfileUpdate: (profile) => broadcastProfileUpdate(runtime, profile),
-    whenDataSpaceManagerReady: () => whenDataSpaceManagerReady(runtime, state),
-    whenEdgeAgentManagerReady: () => whenEdgeAgentManagerReady(runtime, state),
+    ...required,
+    edgeConnection: Option.getOrUndefined(optional.edgeConnection),
+    edgeHttpClient: Option.getOrUndefined(optional.edgeHttpClient),
+    meshReplicator: Option.getOrUndefined(optional.meshReplicator),
+    echoEdgeReplicator: Option.getOrUndefined(optional.echoEdgeReplicator),
+    feedSyncer: Option.getOrUndefined(optional.feedSyncer),
   };
 };
 
@@ -211,13 +293,8 @@ export const makeServiceContext = async (runtime: ServiceStackRuntime): Promise<
  * Wires the components that point "up the stack": the device invitation protocol factory, recovered
  * identity acceptance, the invitation handler factory, and the echo-host feed sync handlers.
  */
-const wireServiceContext = async (runtime: ServiceStackRuntime, state: ServiceLifecycleState): Promise<void> => {
-  const keyring = await runtime.runPromise(KeyringApiService);
-  const identityManager = await runtime.runPromise(IdentityManagerService);
-  const recoveryManager = await runtime.runPromise(EdgeIdentityRecoveryManagerService);
-  const invitationsManager = await runtime.runPromise(InvitationsManagerService);
-  const echoHost = await runtime.runPromise(EchoHostService);
-  const feedSyncer = Option.getOrUndefined(await runtime.runPromise(Effect.serviceOption(FeedSyncerService)));
+const wireServiceContext = (components: ServiceComponents, state: ServiceLifecycleState): void => {
+  const { keyring, identityManager, recoveryManager, invitationsManager, echoHost, feedSyncer } = components;
 
   state.handlerFactories.set(
     Invitation.Kind.DEVICE,
@@ -225,11 +302,11 @@ const wireServiceContext = async (runtime: ServiceStackRuntime, state: ServiceLi
       new DeviceInvitationProtocol(
         keyring,
         () => identityManager.identity ?? failUndefined(),
-        (params) => acceptIdentity(runtime, state, params),
+        (params) => acceptIdentity(components, state, params),
       ),
   );
 
-  recoveryManager.setAcceptRecoveredIdentity((params) => acceptIdentity(runtime, state, params));
+  recoveryManager.setAcceptRecoveredIdentity((params) => acceptIdentity(components, state, params));
   invitationsManager.setInvitationHandlerFactory((invitation) =>
     getInvitationHandler(state, identityManager, invitation),
   );
@@ -258,7 +335,7 @@ const wireServiceContext = async (runtime: ServiceStackRuntime, state: ServiceLi
  * components, wire replicators, and open identity-bound services once an identity is available.
  */
 const openServiceContext = async (
-  runtime: ServiceStackRuntime,
+  components: ServiceComponents,
   state: ServiceLifecycleState,
   ctx: Context,
 ): Promise<void> => {
@@ -267,62 +344,61 @@ const openServiceContext = async (
   }
   state.ctx = ctx;
 
+  const {
+    identityManager,
+    echoHost,
+    metadataStore,
+    spaceManager,
+    signalManager,
+    networkManager,
+    invitationsManager,
+    edgeConnection,
+    meshReplicator,
+    echoEdgeReplicator,
+    feedSyncer,
+    storageMigrate,
+    runtimeProvider,
+  } = components;
+
   log('running storage migrations...');
-  const runtimeProvider = await runtime.runPromise(
-    RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>(),
-  );
-  const storageMigrate = await runtime.runPromise(StorageMigrationService);
   await RuntimeProvider.runPromise(runtimeProvider)(storageMigrate);
 
-  await checkStorageVersion(runtime);
+  await checkStorageVersion(components);
 
   log('running sqlite health check...');
   await runSqliteHealthCheck(runtimeProvider);
   log('sqlite health check passed');
 
-  const identityManager = await runtime.runPromise(IdentityManagerService);
   log('opening identityManager...');
   await identityManager.open(ctx);
   log('identityManager opened', { hasIdentity: !!identityManager.identity });
 
   log('setting network identity...');
-  await setNetworkIdentity(runtime, state, { identity: identityManager.identity });
+  await setNetworkIdentity(components, state, { identity: identityManager.identity });
 
-  const edgeConnection = Option.getOrUndefined(await runtime.runPromise(Effect.serviceOption(EdgeConnectionService)));
   log('opening edge connection...');
   await edgeConnection?.open(ctx);
 
-  const signalManager = await runtime.runPromise(SignalManagerService);
   log('opening signal manager...');
   await signalManager.open(ctx);
 
-  const networkManager = await runtime.runPromise(SwarmNetworkManagerService);
   log('opening network manager...');
   await networkManager.open();
 
   // EchoHost open/close is owned by its layer scope (see `echoHostLayer`); the host is already open
   // here, so only the identity/network-bound replicator wiring remains below.
-  const echoHost = await runtime.runPromise(EchoHostService);
-  const meshReplicator: AutomergeReplicator | undefined = Option.getOrUndefined(
-    await runtime.runPromise(Effect.serviceOption(MeshEchoReplicatorService)),
-  );
   if (meshReplicator) {
     log('adding mesh replicator...');
     await echoHost.addReplicator(ctx, meshReplicator);
   }
-  const echoEdgeReplicator: EdgeAutomergeReplicator | undefined = Option.getOrUndefined(
-    await runtime.runPromise(Effect.serviceOption(EdgeAutomergeReplicatorService)),
-  );
   if (echoEdgeReplicator) {
     log('adding edge replicator...');
     await echoHost.addReplicator(ctx, echoEdgeReplicator);
   }
 
-  const metadataStore = await runtime.runPromise(IMetadataStoreService);
   log('loading metadata store...');
   await metadataStore.load();
 
-  const spaceManager = await runtime.runPromise(SpaceManagerService);
   log('opening space manager...');
   await spaceManager.open();
 
@@ -331,16 +407,14 @@ const openServiceContext = async (
     await identityManager.identity.joinNetwork(ctx);
 
     log('initializing spaces...');
-    await initialize(runtime, state, ctx);
+    await initialize(components, state, ctx);
   } else {
     log('no identity, skipping network join and space initialization');
   }
 
-  const feedSyncer = Option.getOrUndefined(await runtime.runPromise(Effect.serviceOption(FeedSyncerService)));
   log('opening feed syncer...');
   await feedSyncer?.open(ctx);
 
-  const invitationsManager = await runtime.runPromise(InvitationsManagerService);
   log('loading persistent invitations...');
   const loadedInvitations = await invitationsManager.loadPersistentInvitations(ctx);
   log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
@@ -350,7 +424,7 @@ const openServiceContext = async (
 };
 
 const closeServiceContext = async (
-  runtime: ServiceStackRuntime,
+  components: ServiceComponents,
   state: ServiceLifecycleState,
   ctx: Context = Context.default(),
 ): Promise<void> => {
@@ -359,76 +433,53 @@ const closeServiceContext = async (
   }
   log('closing...');
 
-  const feedSyncer = Option.getOrUndefined(await runtime.runPromise(Effect.serviceOption(FeedSyncerService)));
-  await feedSyncer?.close();
-
-  const deviceSpaceSync = await runtime.runPromise(CrossDeviceSpaceSynchronizerService);
-  await deviceSpaceSync.close?.();
-
-  const dataSpaceManager = await runtime.runPromise(DataSpaceManagerService);
-  await dataSpaceManager.close(ctx);
-
-  const edgeAgentManager = await runtime.runPromise(EdgeAgentManagerService);
-  await edgeAgentManager.close();
-
-  const identityManager = await runtime.runPromise(IdentityManagerService);
-  await identityManager.close(ctx);
-
-  const spaceManager = await runtime.runPromise(SpaceManagerService);
-  await spaceManager.close();
+  await components.feedSyncer?.close();
+  await components.deviceSpaceSync.close?.();
+  await components.dataSpaceManager.close(ctx);
+  await components.edgeAgentManager.close();
+  await components.identityManager.close(ctx);
+  await components.spaceManager.close();
   // EchoHost close is owned by its layer scope and runs when the runtime is disposed.
 
-  const networkManager = await runtime.runPromise(SwarmNetworkManagerService);
-  await networkManager.close(ctx);
-
-  const signalManager = await runtime.runPromise(SignalManagerService);
-  await signalManager.close();
-
-  const edgeConnection = Option.getOrUndefined(await runtime.runPromise(Effect.serviceOption(EdgeConnectionService)));
-  await edgeConnection?.close();
-
-  const feedStore = await runtime.runPromise(FeedStoreService);
-  await feedStore.close();
-
-  const metadataStore = await runtime.runPromise(IMetadataStoreService);
-  await metadataStore.close();
+  await components.networkManager.close(ctx);
+  await components.signalManager.close();
+  await components.edgeConnection?.close();
+  await components.feedStore.close();
+  await components.metadataStore.close();
 
   state.opened = false;
   log('closed');
 };
 
 const createIdentity = async (
-  runtime: ServiceStackRuntime,
+  components: ServiceComponents,
   state: ServiceLifecycleState,
   params: CreateIdentityOptions = {},
-  ctx?: Context,
+  ctx: Context = state.ctx,
 ): Promise<Identity> => {
-  ctx ??= state.ctx;
-  const identityManager = await runtime.runPromise(IdentityManagerService);
-  const identity = await identityManager.createIdentity(params, ctx);
-  await setNetworkIdentity(runtime, state, { identity });
+  const identity = await components.identityManager.createIdentity(params, ctx);
+  await setNetworkIdentity(components, state, { identity });
   await identity.joinNetwork(ctx);
-  await initialize(runtime, state, ctx);
+  await initialize(components, state, ctx);
   return identity;
 };
 
 const acceptIdentity = async (
-  runtime: ServiceStackRuntime,
+  components: ServiceComponents,
   state: ServiceLifecycleState,
   params: JoinIdentityProps,
 ): Promise<Identity> => {
-  const identityManager = await runtime.runPromise(IdentityManagerService);
-  const { identity, identityRecord } = await identityManager.prepareIdentity(params, state.ctx);
+  const { identity, identityRecord } = await components.identityManager.prepareIdentity(params, state.ctx);
   invariant(params.authorizedDeviceCredential, 'authorizedDeviceCredential is required to accept an identity.');
-  await setNetworkIdentity(runtime, state, { deviceCredential: params.authorizedDeviceCredential, identity });
+  await setNetworkIdentity(components, state, { deviceCredential: params.authorizedDeviceCredential, identity });
   await identity.joinNetwork(state.ctx);
-  await identityManager.acceptIdentity(identity, identityRecord, params.deviceProfile);
-  await initialize(runtime, state, state.ctx);
+  await components.identityManager.acceptIdentity(identity, identityRecord, params.deviceProfile);
+  await initialize(components, state, state.ctx);
   return identity;
 };
 
-const checkStorageVersion = async (runtime: ServiceStackRuntime): Promise<void> => {
-  const metadataStore = await runtime.runPromise(IMetadataStoreService);
+const checkStorageVersion = async (components: ServiceComponents): Promise<void> => {
+  const { metadataStore } = components;
   await metadataStore.load();
   if (metadataStore.version !== STORAGE_VERSION) {
     throw new InvalidStorageVersionError(STORAGE_VERSION, metadataStore.version);
@@ -439,21 +490,18 @@ const checkStorageVersion = async (runtime: ServiceStackRuntime): Promise<void> 
 /**
  * Stage 3: opens the identity-bound services once an identity is available.
  */
-const initialize = async (runtime: ServiceStackRuntime, state: ServiceLifecycleState, ctx: Context): Promise<void> => {
+const initialize = async (components: ServiceComponents, state: ServiceLifecycleState, ctx: Context): Promise<void> => {
   log('_initialize: start');
-  const identityManager = await runtime.runPromise(IdentityManagerService);
+  const { identityManager, dataSpaceManager, edgeAgentManager, signingContextProvider, keyring, deviceSpaceSync } =
+    components;
   const identity = identityManager.identity ?? failUndefined();
 
-  const dataSpaceManager = await runtime.runPromise(DataSpaceManagerService);
   await dataSpaceManager.open(ctx);
   log('_initialize: DataSpaceManager opened');
 
-  const edgeAgentManager = await runtime.runPromise(EdgeAgentManagerService);
   await edgeAgentManager.open(ctx);
   log('_initialize: EdgeAgentManager opened');
 
-  const signingContextProvider = await runtime.runPromise(SigningContextProviderService);
-  const keyring = await runtime.runPromise(KeyringApiService);
   state.handlerFactories.set(
     Invitation.Kind.SPACE,
     (invitation) =>
@@ -461,13 +509,12 @@ const initialize = async (runtime: ServiceStackRuntime, state: ServiceLifecycleS
   );
   state.initialized.wake();
 
-  const deviceSpaceSync = await runtime.runPromise(CrossDeviceSpaceSynchronizerService);
   deviceSpaceSync.setIdentity(identity);
   await deviceSpaceSync.open?.(ctx);
 };
 
 const setNetworkIdentity = async (
-  runtime: ServiceStackRuntime,
+  components: ServiceComponents,
   state: ServiceLifecycleState,
   params?: { deviceCredential?: Credential; identity?: Identity },
 ): Promise<void> => {
@@ -475,9 +522,7 @@ const setNetworkIdentity = async (
   using _guard = await state.edgeIdentityUpdateMutex.acquire();
   log('_setNetworkIdentity: mutex acquired');
 
-  const networkManager = await runtime.runPromise(SwarmNetworkManagerService);
-  const edgeConnection = Option.getOrUndefined(await runtime.runPromise(Effect.serviceOption(EdgeConnectionService)));
-  const edgeHttpClient = Option.getOrUndefined(await runtime.runPromise(Effect.serviceOption(EdgeHttpClientService)));
+  const { networkManager, edgeConnection, edgeHttpClient } = components;
 
   let edgeIdentity: EdgeIdentity;
   const identity = params?.identity;
@@ -533,15 +578,14 @@ const getInvitationHandler = (
 };
 
 const broadcastProfileUpdate = async (
-  runtime: ServiceStackRuntime,
+  components: ServiceComponents,
   profile: ProfileDocument | undefined,
 ): Promise<void> => {
   if (!profile) {
     return;
   }
 
-  const dataSpaceManager = await runtime.runPromise(DataSpaceManagerService);
-  for (const space of dataSpaceManager.spaces.values()) {
+  for (const space of components.dataSpaceManager.spaces.values()) {
     await space.updateOwnProfile(profile);
   }
 };
@@ -550,20 +594,20 @@ const broadcastProfileUpdate = async (
  * Resolves the {@link DataSpaceManager} once identity-bound services have opened (`initialized`).
  */
 const whenDataSpaceManagerReady = async (
-  runtime: ServiceStackRuntime,
+  components: ServiceComponents,
   state: ServiceLifecycleState,
 ): Promise<DataSpaceManager> => {
   await state.initialized.wait();
-  return runtime.runPromise(DataSpaceManagerService);
+  return components.dataSpaceManager;
 };
 
 /**
  * Resolves the {@link EdgeAgentManager} once identity-bound services have opened (`initialized`).
  */
 const whenEdgeAgentManagerReady = async (
-  runtime: ServiceStackRuntime,
+  components: ServiceComponents,
   state: ServiceLifecycleState,
 ): Promise<EdgeAgentManager> => {
   await state.initialized.wait();
-  return runtime.runPromise(EdgeAgentManagerService);
+  return components.edgeAgentManager;
 };
