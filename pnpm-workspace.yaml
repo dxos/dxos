@@ -50,7 +50,7 @@ catalog:
   '@changesets/changelog-github': ^0.7.0
   '@changesets/cli': ^2.31.0
   '@cloudflare/ai-chat': ^0.0.6
-  '@cloudflare/vitest-pool-workers': ^0.16.8
+  '@cloudflare/vitest-pool-workers': ^0.18.4
   '@cloudflare/workers-types': ^4.20260302.0
   '@codemirror/autocomplete': ^6.20.3
   '@codemirror/commands': ^6.10.4
@@ -157,7 +157,7 @@ catalog:
   '@opentui/core-win32-x64': 0.1.61
   '@opentui/solid': 0.1.61
   '@oxc-project/runtime': ^0.129.0
-  '@oxc-project/types': 0.128.0
+  '@oxc-project/types': 0.139.0
   '@peermetrics/webrtc-stats': 5.7.1
   '@phosphor-icons/core': ^2.1.1
   '@phosphor-icons/react': 2.1.10
@@ -319,17 +319,17 @@ catalog:
   '@uiw/codemirror-theme-vscode': ^4.25.2
   '@valtown/codemirror-continue': ^2.3.1
   '@valtown/codemirror-ts': ^2.3.1
-  '@vitejs/plugin-react': ^6.0.2
+  '@vitejs/plugin-react': ^6.0.3
   '@vitejs/plugin-react-swc': ^4.3.1
-  '@vitest/browser': ^4.1.8
-  '@vitest/browser-playwright': ^4.1.8
-  '@vitest/coverage-v8': ^4.1.8
-  '@vitest/expect': ^4.1.8
-  '@vitest/runner': ^4.1.8
-  '@vitest/snapshot': ^4.1.8
-  '@vitest/spy': ^4.1.8
-  '@vitest/ui': ^4.1.8
-  '@vitest/utils': ^4.1.8
+  '@vitest/browser': ^4.1.10
+  '@vitest/browser-playwright': ^4.1.10
+  '@vitest/coverage-v8': ^4.1.10
+  '@vitest/expect': ^4.1.10
+  '@vitest/runner': ^4.1.10
+  '@vitest/snapshot': ^4.1.10
+  '@vitest/spy': ^4.1.10
+  '@vitest/ui': ^4.1.10
+  '@vitest/utils': ^4.1.10
   '@vscode/vsce': ^3.7.1
   '@x402/core': ^2.17.0
   '@x402/evm': ^2.17.0
@@ -605,7 +605,7 @@ catalog:
   resize-observer-polyfill: ^1.5.1
   reveal.js: ^5.1.0
   rmdir: ~1.2.0
-  rolldown: 1.0.0-rc.18
+  rolldown: 1.1.5
   rollup: ^3.29.5
   rollup-plugin-sourcemaps: ^0.6.3
   rollup-plugin-visualizer: ^5.12.0
@@ -669,18 +669,18 @@ catalog:
   varint: 6.0.0
   versor: ^0.2.0
   viem: ^2.21.26
-  vite: ^8.0.16
+  vite: ^8.1.4
   vite-node: ^6.0.0
   vite-plugin-devtools-json: ^1.0.0
   vite-plugin-glslify: ^2.3.0
-  vite-plugin-inspect: ^11.3.3
+  vite-plugin-inspect: ^12.0.2
   vite-plugin-pwa: ^1.2.0
   vite-plugin-solid: ^2.11.12
   vite-plugin-top-level-await: ^1.6.0
   vite-plugin-turbosnap: ^1.0.3
   vite-plugin-wasm: ^3.6.0
   vite-tsconfig-paths: ^6.1.1
-  vitest: 4.1.8
+  vitest: 4.1.10
   wait-on: ^8.0.3
   wavefile: ^11.0.0
   web-tree-sitter: ^0.25.10
@@ -782,7 +782,7 @@ overrides:
   tar-fs: '>=3.1.1'
   typescript: 'catalog:'
   undici: '>=7.18.2'
-  vite: '>=8.0.16'
+  vite: '>=8.1.4'
   wrangler: '>=4.59.1'
   ws: '>=8.17.1'
 
@@ -791,11 +791,11 @@ patchedDependencies:
   '@automerge/automerge-subduction@0.16.0': patches/@automerge__automerge-subduction@0.16.0.patch
   '@changesets/assemble-release-plan@6.0.10': patches/@changesets__assemble-release-plan@6.0.10.patch
   '@effect-atom/atom@0.5.3': patches/@effect-atom__atom@0.5.3.patch
-  '@vitest/browser@4.1.8': patches/@vitest__browser@4.1.8.patch
+  '@vitest/browser@4.1.10': patches/@vitest__browser@4.1.10.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch
-  vitest@4.1.8: patches/vitest@4.1.8.patch
+  vitest@4.1.10: patches/vitest@4.1.10.patch
 
 peerDependencyRules:
   allowedVersions:
