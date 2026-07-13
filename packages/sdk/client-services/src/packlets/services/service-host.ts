@@ -14,7 +14,6 @@ import { Event, synchronized } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesHandlers,
-  clientServiceBundle,
   makeInProcessClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
@@ -33,7 +32,6 @@ import {
   createRtcTransportFactory,
 } from '@dxos/network-manager';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type ServiceBundle } from '@dxos/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace as Trace } from '@dxos/tracing';
@@ -192,14 +190,9 @@ export class ClientServicesHost {
     this.diagnosticsBroadcastHandler = createCollectDiagnosticsBroadcastHandler(this._systemService);
     this._loggingService = new LoggingServiceImpl();
 
-    // The proto `clientServiceBundle` descriptor is retained only for the deprecated `descriptors`
-    // surface (legacy transports/devtools); the registry itself now holds effect-rpc handlers.
-    this._serviceRegistry = new ServiceRegistry<ClientServicesHandlers>(
-      clientServiceBundle as unknown as ServiceBundle<ClientServicesHandlers>,
-      {
-        SystemService: this._systemService,
-      },
-    );
+    this._serviceRegistry = new ServiceRegistry<ClientServicesHandlers>({
+      SystemService: this._systemService,
+    });
   }
 
   get isOpen() {
@@ -216,10 +209,6 @@ export class ClientServicesHost {
 
   get serviceRegistry() {
     return this._serviceRegistry;
-  }
-
-  get descriptors() {
-    return this._serviceRegistry.descriptors;
   }
 
   get services() {
