@@ -13,7 +13,7 @@ import {
 } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, ProgressMeter, useProgress, useShowItem } from '@dxos/app-toolkit/ui';
-import { Aggregate, type Database, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
+import { Aggregate, type Database, Ref as EchoRef, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -226,6 +226,23 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
           break;
         }
 
+        case 'create-topic': {
+          const message = messages.find((message) => message.id === action.messageId);
+          if (message && db) {
+            void invokePromise(
+              InboxOperation.CreateTopicFromMessage,
+              { mailbox: EchoRef.make(mailbox), message },
+              { spaceId: db.spaceId },
+            ).then((result) => {
+              const topicId = result?.data?.topicId;
+              if (topicId) {
+                void showItem({ contextId: id, selectionId: topicId, companion: linkedSegment('topic') });
+              }
+            });
+          }
+          break;
+        }
+
         case 'select-tag': {
           setFilterText((prevFilterText) => {
             // Check if tag already exists.
@@ -298,6 +315,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             starredAtom={starredAtom}
             pagination={feed ? pagination : undefined}
             enableIgnoreSender
+            enableCreateTopic
             onAction={handleAction}
           />
         )}

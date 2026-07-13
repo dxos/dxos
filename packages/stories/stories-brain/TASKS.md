@@ -239,17 +239,18 @@ triage, make topics opt-in suggestions rather than eager objects, and finish the
 
 ### Phase C — Create Topic from message
 
-- [ ] **`enableCreateTopic` gate + menu item** — `MessageStack.tsx`: add the prop + a "Create Topic"
-      tile menu item (`ph--stack` icon) emitting a new `create-topic` action; `MailboxArticle` sets the
-      prop and handles the action.
-- [ ] **`CreateTopicFromMessage` operation** — `plugin-inbox/src/operations/analyze/create-topic-from-message.ts`:
-      load the message + feed, `buildThreads` over its thread members, seed one `Topic` (label from
-      keywords/subject, LLM `summary` via `resolveModel('summarize-topic')`), run fact extraction on the
-      thread's messages (reuse the existing fact stage), persist `Topic` + `AnchoredTo`, open
-      `TopicArticle` in the companion. Register in the handler set.
-- [ ] **Storybook play test** — mock `AiService` (like ExtractMessage): invoke the action on a seeded
-      message, assert a `Topic` is created and `TopicArticle` opens.
-- [ ] **Commit** `feat(inbox): create topic from message`.
+- [x] **`enableCreateTopic` gate + menu item** — `MessageStack.tsx`: prop + "Create Topic" tile menu
+      item (`ph--stack`) emitting `create-topic`; `MailboxArticle` sets the prop and handles it
+      (invokes the op with `{ spaceId }`, then opens the topic via `useShowItem`).
+- [x] **`CreateTopicFromMessage` operation** — `analyze/create-topic-from-message.ts`: gathers the
+      message's thread (siblings by `deriveThreadId`), `clusterThreads` → one draft, LLM `summary`
+      (`resolveModel('summarize-topic')`), persists `Topic` + `AnchoredTo`, returns `{ topicId }`.
+      Registered in the handler set; output schema `{ topicId }`. FACT EXTRACTION deferred (follow-up).
+- [x] **Storybook play test** — `CreateTopic.stories.tsx` (mock `AiService`): click "Create Topic" →
+      operation runs → a Topic card appears. Caught + fixed a missing `{ spaceId }` on the invoke.
+- [x] **Commit** `feat(inbox): create topic from message`.
+- [ ] **FOLLOW-UP (C)**: run fact extraction on the thread's messages inside the operation (reuse the
+      fact stage) once the product fact pipeline is wired.
 
 ### Follow-ups (landed)
 

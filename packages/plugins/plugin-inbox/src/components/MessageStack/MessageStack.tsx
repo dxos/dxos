@@ -26,6 +26,7 @@ export type MessageStackAction =
   | { type: 'select-tag'; label: string }
   | { type: 'star'; messageId: string }
   | { type: 'ignore-sender'; messageId: string }
+  | { type: 'create-topic'; messageId: string }
   | { type: 'save'; filter: string };
 
 export type MessageStackActionHandler = (action: MessageStackAction) => void;
@@ -87,6 +88,8 @@ export type MessageStackProps = {
    * `ignore-sender` action, so other consumers (e.g. drafts) must not render a no-op menu item.
    */
   enableIgnoreSender?: boolean;
+  /** Show the "Create Topic" tile menu item. Off by default (only the mailbox handles `create-topic`). */
+  enableCreateTopic?: boolean;
   onAction?: MessageStackActionHandler;
 };
 
@@ -95,7 +98,18 @@ export type MessageStackProps = {
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
   (
-    { items, tagsAtom, currentId, selectedIds, starredAtom, pagination, enableIgnoreSender, onAction, ...props },
+    {
+      items,
+      tagsAtom,
+      currentId,
+      selectedIds,
+      starredAtom,
+      pagination,
+      enableIgnoreSender,
+      enableCreateTopic,
+      onAction,
+      ...props
+    },
     forwardedRef,
   ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
@@ -112,6 +126,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
                   // Conversations show the latest message; star reflects/toggles that message.
                   starredAtom: starredAtom?.(item.messages[0]?.id),
                   enableIgnoreSender,
+                  enableCreateTopic,
                   onAction,
                 }
               : {
@@ -119,10 +134,11 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
                   tagsAtom: tagsAtom?.(item.id),
                   starredAtom: starredAtom?.(item.id),
                   enableIgnoreSender,
+                  enableCreateTopic,
                   onAction,
                 },
         ),
-      [items, tagsAtom, starredAtom, enableIgnoreSender, onAction],
+      [items, tagsAtom, starredAtom, enableIgnoreSender, enableCreateTopic, onAction],
     );
 
     // The incoming `currentId` is a message ID (set when a specific message becomes selected),
@@ -245,13 +261,14 @@ type MessageTileData = {
   tagsAtom?: Atom.Atom<MessageStackTag[]>;
   starredAtom?: Atom.Atom<boolean>;
   enableIgnoreSender?: boolean;
+  enableCreateTopic?: boolean;
   onAction?: MessageStackActionHandler;
 };
 
 type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current'>;
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
-  const { message, tagsAtom, starredAtom, enableIgnoreSender, onAction } = data;
+  const { message, tagsAtom, starredAtom, enableIgnoreSender, enableCreateTopic, onAction } = data;
   const { date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
   const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
   const tags = useAtomValue(tagsAtom ?? EMPTY_TAGS_ATOM);
@@ -281,19 +298,27 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
 
   const handleTagClick = useCallback((label: string) => onAction?.({ type: 'select-tag', label }), [onAction]);
 
-  const menuItems = useMemo(
-    () =>
-      enableIgnoreSender && onAction && message.sender?.email
-        ? [
-            {
-              label: 'Ignore sender',
-              icon: 'ph--prohibit--regular',
-              onClick: () => onAction({ type: 'ignore-sender', messageId: message.id }),
-            },
-          ]
-        : undefined,
-    [enableIgnoreSender, onAction, message.sender?.email, message.id],
-  );
+  const menuItems = useMemo(() => {
+    if (!onAction) {
+      return undefined;
+    }
+    const items = [];
+    if (enableIgnoreSender && message.sender?.email) {
+      items.push({
+        label: 'Ignore sender',
+        icon: 'ph--prohibit--regular',
+        onClick: () => onAction({ type: 'ignore-sender', messageId: message.id }),
+      });
+    }
+    if (enableCreateTopic) {
+      items.push({
+        label: 'Create Topic',
+        icon: 'ph--stack--regular',
+        onClick: () => onAction({ type: 'create-topic', messageId: message.id }),
+      });
+    }
+    return items.length > 0 ? items : undefined;
+  }, [enableIgnoreSender, enableCreateTopic, onAction, message.sender?.email, message.id]);
 
   return (
     <Tile.Root
@@ -344,6 +369,7 @@ type ConversationTileData = {
   total?: number;
   starredAtom?: Atom.Atom<boolean>;
   enableIgnoreSender?: boolean;
+  enableCreateTopic?: boolean;
   onAction?: MessageStackActionHandler;
 };
 
@@ -351,7 +377,7 @@ type ConversationTileProps = Pick<MosaicTileProps<ConversationTileData>, 'data' 
 
 const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
   ({ data, location, current }, forwardedRef) => {
-    const { conversationId, messages, total, starredAtom, enableIgnoreSender, onAction } = data;
+    const { conversationId, messages, total, starredAtom, enableIgnoreSender, enableCreateTopic, onAction } = data;
     const latest = messages[0];
     // `messages` is already the capped preview; `total` (when larger) is the full thread size.
     const remaining = total !== undefined ? total - messages.length : 0;
@@ -403,13 +429,26 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
         <Tile.Header
           menu
           menuItems={
-            enableIgnoreSender && onAction && latest.sender?.email
+            onAction
               ? [
-                  {
-                    label: 'Ignore sender',
-                    icon: 'ph--prohibit--regular',
-                    onClick: () => onAction({ type: 'ignore-sender', messageId: latest.id }),
-                  },
+                  ...(enableIgnoreSender && latest.sender?.email
+                    ? [
+                        {
+                          label: 'Ignore sender',
+                          icon: 'ph--prohibit--regular',
+                          onClick: () => onAction({ type: 'ignore-sender', messageId: latest.id }),
+                        },
+                      ]
+                    : []),
+                  ...(enableCreateTopic
+                    ? [
+                        {
+                          label: 'Create Topic',
+                          icon: 'ph--stack--regular',
+                          onClick: () => onAction({ type: 'create-topic', messageId: latest.id }),
+                        },
+                      ]
+                    : []),
                 ]
               : undefined
           }

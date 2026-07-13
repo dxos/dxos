@@ -698,6 +698,27 @@ export const AnalyzeTopics = Operation.make({
   }),
 });
 
+export const CreateTopicFromMessage = Operation.make({
+  meta: {
+    key: makeKey('createTopicFromMessage'),
+    name: 'Create Topic',
+    description: "Creates a Topic seeded from a message's thread, with an LLM summary.",
+    icon: 'ph--stack--regular',
+  },
+  services: [AiService.AiService, Database.Service],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox the message belongs to; the created topic is anchored to it.',
+    }),
+    message: Type.getSchema(Message.Message).annotations({
+      description: 'Message whose thread seeds the topic.',
+    }),
+  }),
+  output: Schema.Struct({
+    topicId: Schema.String,
+  }),
+});
+
 /** Default number of thread messages included in the {@link GenerateReply} prompt. */
 export const DEFAULT_GENERATE_REPLY_THREAD_LIMIT = 5;
 
