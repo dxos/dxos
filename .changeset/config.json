@@ -86,6 +86,7 @@
       "@dxos/functions-simulator-cloudflare",
       "@dxos/functions-testing",
       "@dxos/graph",
+      "@dxos/halo",
       "@dxos/hypercore",
       "@dxos/i18n",
       "@dxos/index-core",
