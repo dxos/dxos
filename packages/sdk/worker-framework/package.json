@@ -26,7 +26,7 @@
       "node": "./dist/lib/node-esm/Client/index.mjs"
     },
     "./Worker": {
-      "source": "./src/Worker/index.ts",
+      "source": "./src/Worker.ts",
       "types": "./dist/types/src/Worker.d.ts",
       "browser": "./dist/lib/browser/Worker.mjs",
       "node": "./dist/lib/node-esm/Worker.mjs"
