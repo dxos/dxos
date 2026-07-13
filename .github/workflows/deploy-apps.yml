@@ -227,6 +227,22 @@ jobs:
           lfs: true
           ref: ${{ needs.release.outputs.sha || github.sha }}
 
+      # Fires before any setup/deploy work so every attempt gets a "started" message — including one that
+      # fails during env setup — pairing correctly with the "succeeded"/"failed" steps below. Notify on
+      # labs/staging/production only — main is the rolling auto-deploy-on-push preview and would be
+      # constant noise. continue-on-error: a webhook hiccup must never block the actual deploy or read as
+      # a deploy failure; --fail-with-body still surfaces a bad response in the log for debugging.
+      - name: Notify Discord — deploy started
+        if: env.DEPLOY_ENV != 'main'
+        continue-on-error: true
+        env:
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          payload=$(jq -nc --arg env "$DEPLOY_ENV" --arg app "$DEPLOY_APP" --arg url "$RUN_URL" \
+            '{content: (":rocket: Deploying **" + $app + "** to `" + $env + "`\nRun: " + $url)}')
+          curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
+
       # Select the env file by the DEPLOY environment (not the git branch) — environment is a deploy
       # parameter, so a production deploy running from main must still read env/production.
       - name: Set environment variables (Cloudflare creds, PostHog, …)
@@ -248,18 +264,6 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
-
-      # Notify on labs/staging/production only — main is the rolling auto-deploy-on-push preview and would
-      # be constant noise. Matches the "Update deploy pointer tags" gate below.
-      - name: Notify Discord — deploy started
-        if: env.DEPLOY_ENV != 'main'
-        env:
-          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          payload=$(jq -nc --arg env "$DEPLOY_ENV" --arg app "$DEPLOY_APP" --arg url "$RUN_URL" \
-            '{content: (":rocket: Deploying **" + $app + "** to `" + $env + "`\nRun: " + $url)}')
-          curl -sS -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
       # Reuse the prebuilt Composer bundle when the prep job produced one — populating out/composer means
       # bundle-env.mjs reuses it instead of rebuilding.
@@ -296,23 +300,25 @@ jobs:
 
       - name: Notify Discord — deploy succeeded
         if: success() && env.DEPLOY_ENV != 'main'
+        continue-on-error: true
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           payload=$(jq -nc --arg env "$DEPLOY_ENV" --arg app "$DEPLOY_APP" --arg url "$RUN_URL" \
             '{content: (":white_check_mark: Deployed **" + $app + "** to `" + $env + "`\nRun: " + $url)}')
-          curl -sS -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
+          curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
       - name: Notify Discord — deploy failed
         if: failure() && env.DEPLOY_ENV != 'main'
+        continue-on-error: true
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           payload=$(jq -nc --arg env "$DEPLOY_ENV" --arg app "$DEPLOY_APP" --arg url "$RUN_URL" \
             '{content: (":x: Deploy of **" + $app + "** to `" + $env + "` failed\nRun: " + $url)}')
-          curl -sS -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
+          curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
   # Desktop/mobile build for Composer, for the named environments (not `main` — a signed build per push is
   # too costly). CrabNebula channel is derived from the environment inside the reusable workflow; iOS → App
