@@ -244,17 +244,19 @@ jobs:
           path: packages/apps/composer-app/out/composer
 
       - name: Fetch Ollama runtime
-        run: (cd packages/apps/composer-app && node scripts/fetch-ollama.mjs)
+        run: (cd packages/apps/composer-app && node scripts/fetch-ollama.mjs --packaged)
 
       # The `ollama` launcher itself is a Tauri sidecar (Tauri signs it as part of `tauri build`), but its
-      # sibling libraries (llama-server, libggml*/libllama*/mlx_metal_*) are plain vendored files copied in
-      # via tauri.conf.json's `bundle.macOS.files` — they must live under Contents/MacOS/ (the launcher
-      # only looks for them next to itself, ignoring OLLAMA_LIBRARY_PATH, see plugin-native/ollama.ts), but
+      # sibling libraries (llama-server, libggml*/libllama*) are plain vendored files copied in via
+      # tauri.conf.json's `bundle.macOS.files` — they must live under Contents/MacOS/ (the launcher only
+      # looks for them next to itself, ignoring OLLAMA_LIBRARY_PATH, see plugin-native/ollama.ts), but
       # Tauri's own nested-code signing walk only descends into framework/xpc/app-style subfolders and only
       # recognizes `.dylib`/extension-less files — it never reaches `MacOS/lib/ollama`. Any file codesign
-      # finds unsigned under Contents/MacOS/ at final bundle-signing time fails the whole build (e.g.
-      # `mlx_metal_v4/mlx.metallib`: "code object is not signed at all"). Sign every file in the runtime
-      # directory up front so Tauri's final (non-deep) codesign pass finds them already valid.
+      # finds unsigned under Contents/MacOS/ at final bundle-signing time fails the whole build. Sign every
+      # file in the runtime directory up front so Tauri's final (non-deep) codesign pass finds them already
+      # valid. This intentionally skips mlx.metallib (not Mach-O, so its signature can't survive Tauri's
+      # blanket `xattr -crs` before signing) — fetch-ollama.mjs replaces those with symlinks into
+      # sidecar/ollama-metal.framework, which Tauri signs itself as a `bundle.macOS.frameworks` member.
       - name: Sign Ollama runtime libraries
         if: matrix.os == 'depot-macos-latest'
         run: |
