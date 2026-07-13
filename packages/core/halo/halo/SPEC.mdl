@@ -4,70 +4,134 @@ name: Halo
 version: 0.1.0
 ---
 
-HALO identity, device, space, and invitation model — **definitions only**.
-This package exports Effect service tags, their interfaces, verbs, and schemas;
-concrete implementations ship as separate layers (e.g. `@dxos/halo-adapter-client`
-over `@dxos/client`). See `API_AUDIT.md` for the consumer audit and `MIGRATION.md`
-for the HALO → Keyhive plan.
+HALO identity, device, space, and invitation model — **definitions only**. This package
+exports Effect service tags, their interfaces, verbs, and ECHO schemas; concrete
+implementations ship as separate layers (e.g. `@dxos/halo-adapter-client` over `@dxos/client`).
+See `API_AUDIT.md` for the consumer audit and `MIGRATION.md` for the HALO → Keyhive plan.
 
-The `Invitation` service is a leaf lifecycle module; `Identity` and `Space` own
-invitation initiation (`share`/`join`) and depend on it.
+The `Invitation` module is a leaf lifecycle module; `Identity` and `Space` own invitation
+initiation (`share`/`join`) and depend on it.
+
+Modules follow the DXOS namespace-module styleguide: PascalCase file in `src/`, marked
+`// @import-as-namespace`, re-exported from `index.ts` as `export * as <Name> from './<Name>'`,
+and consumed as a namespace (`Identity.current`, never a bare `identityCurrent`).
 
 ## Extensions
 
 | Term      | URI                          |
 | --------- | ---------------------------- |
-| `service` | `org.dxos.mdl.service@1.0`   |
+| `module`  | `org.dxos.mdl.module@1.0`    |
 
-## Services
+## Modules
+
+### Service modules
 
 ```mdl
-service Identity
-  desc: Identity and device management, plus device-invitation initiation.
-  verbs:
-    - current / changes         # local identity snapshot + reactive stream
-    - create / recover          # create identity; re-admit a device via recovery credential
-    - updateProfile
-    - devices / deviceChanges
-    - share / join              # device invitation (returns an Invitation.Flow)
-  depends: [Invitation]
+module Identity
+  desc: |
+    Identity and device management, plus device-invitation initiation. `share`/`join` return an
+    `Invitation.Flow`; the flow's lifecycle is driven through `Invitation`. Depends on Invitation.
+  api:
+    # Service
+    Service: Context.Tag                 # the Effect service tag ('@dxos/halo/Identity').
+
+    # Schemas / types
+    Info: Schema.Struct                  # { did: IdentityDid; displayName? } — local identity view.
+    DeviceInfo: Schema.Struct            # { key; kind?; label?; current } — a device.
+    RecoverArgs: union                   # { recoveryCode } | { token } | { recoveryProof }.
+
+    # Verbs (Effects requiring Service)
+    current: Effect                      # Option<Info> snapshot.
+    changes: Stream                      # reactive Option<Info>.
+    create: (options?) => Effect         # create identity (+ first device).
+    recover: (RecoverArgs) => Effect     # re-admit a device via a recovery credential.
+    updateProfile: (profile) => Effect
+    devices: Effect                      # readonly DeviceInfo[].
+    deviceChanges: Stream
+    share: (options?) => Effect          # device invitation → Invitation.Flow.
+    join: (code) => Effect               # device join → Invitation.Flow.
 ```
 
 ```mdl
-service Space
-  desc: Space management and membership, plus space-invitation initiation.
-  verbs:
-    - list / changes / get
-    - create / waitReady
-    - members / memberChanges
-    - share / join              # space invitation (returns an Invitation.Flow)
-    - export / import
-  note: Info is a plain snapshot; ECHO database access stays on @dxos/echo.
-  depends: [Invitation]
+module Space
+  desc: |
+    Space management and membership, plus space-invitation initiation. `Info` is a plain snapshot
+    — ECHO database access stays on `@dxos/echo` keyed by SpaceId. Depends on Invitation.
+  api:
+    # Service
+    Service: Context.Tag                 # the Effect service tag ('@dxos/halo/Space').
+
+    # Schemas / types
+    State: 'inactive' | 'closed' | 'ready'
+    Member: Schema.Struct                # { did?; role: Group.Access; online }.
+    Info: Schema.Struct                  # { id: SpaceId; name?; state }.
+    Archive: { filename; contents }      # export / import payload.
+
+    # Verbs (Effects requiring Service)
+    list / changes / get                 # enumerate + resolve spaces.
+    create: (options?) => Effect
+    waitReady: (id) => Effect            # resolve once the space is ready.
+    members / memberChanges              # membership snapshot + reactive stream.
+    share: (id, options?) => Effect      # space invitation → Invitation.Flow.
+    join: (code) => Effect               # space join → Invitation.Flow.
+    exportSpace / importSpace
 ```
 
 ```mdl
-service Invitation
-  desc: Invitation lifecycle only — does not initiate invitations.
-  verbs:
-    - active / activeChanges    # observe host-created flows for a scope
-  flow:
-    - events                    # tagged event stream (connecting → success | cancelled | error)
-    - authenticate / cancel / code
+module Invitation
+  desc: |
+    Invitation lifecycle only — does NOT initiate invitations (that is Identity/Space). Models the
+    legacy interactive state machine as a tagged event stream on a Flow handle.
+  api:
+    # Service
+    Service: Context.Tag                 # the Effect service tag ('@dxos/halo/Invitation').
+
+    # Schemas / types
+    Kind: 'device' | 'space'
+    AuthMethod: 'none' | 'shared-secret' | 'known-public-key'
+    Type: 'interactive' | 'delegated' | 'multiuse'
+    ShareOptions: { authMethod?; type?; multiUse? }
+    Event: union                         # connecting → readyForAuthentication → success | cancelled | error.
+    Flow: interface                      # { id; kind; events: Stream<Event>; authenticate; cancel; code }.
+    Scope: { device } | { spaceId }
+
+    # Verbs
+    active: (Scope) => Effect            # host-created flows for a scope (readonly Flow[]).
+    activeChanges: (Scope) => Stream
+    authenticate: (Flow, code) => Effect # supply the auth code to an in-flight flow.
+    cancel: (Flow) => Effect
+    events: (Flow) => Stream<Event>
+    code: (Flow) => Effect               # encoded, shareable invitation code.
 ```
+
+### Schema modules
+
+ECHO object / value schemas backing the durable, application-visible types. These are plain
+`Schema` modules (no service): `Profile` (identity profile), `Device` (device metadata),
+`Group` (membership view + the `Access` capability level), and `AddressBook` (contacts).
+
+### Membership prototype
+
+`Keyhive` is a pure-TypeScript prototype of the Keyhive membership model (delegation/revocation
+DAG, contact cards, causal replication). It carries an in-memory implementation and, per the
+definitions-only rule (`API_AUDIT.md` §3.5), its runtime is slated to move to a separate
+`@dxos/halo-keyhive` package.
 
 ---
 
 ## Appendix: Extension Definitions
 
 ```mdl
-ext service
-  uri: org.dxos.mdl.service@1.0
-  desc: An Effect service tag with a verb interface; implementations provided as Layers.
+ext module
+  uri: org.dxos.mdl.module@1.0
+  desc: |
+    An ESM namespace module following the DXOS namespace-module styleguide: PascalCase file in
+    src/, marked `// @import-as-namespace`, and re-exported from index.ts as
+    `export * as <Name> from './<Name>'`. Callers import it as a namespace, so members are
+    unprefixed (`Identity.Info`, not `IdentityInfo`). The file path is inferred from the block
+    name (`Identity` → `src/Identity.ts`).
+  styleguide: ../../../../docs/style/namespace-modules.md
   fields:
-    desc?:     Prose
-    verbs?:    ProseList        # named operations on the service
-    flow?:     ProseList        # operations on a value the service produces
-    depends?:  Identifier[]     # other services this one references
-    note?:     Prose
+    desc?: Prose
+    api: ApiMap         # public members reached as `<Name>.<member>`  (name: TypeExpr # comment)
 ```

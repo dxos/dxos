@@ -6840,6 +6840,10 @@ importers:
       effect:
         specifier: 3.21.4
         version: 3.21.4
+    devDependencies:
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 0.29.0(effect@3.21.4)(vitest@4.1.8)
 
   packages/core/halo/keyring:
     dependencies:

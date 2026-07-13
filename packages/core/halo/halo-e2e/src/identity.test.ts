@@ -2,63 +2,88 @@
 // Copyright 2026 DXOS.org
 //
 
+import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import { describe, expect, test } from 'vitest';
+import * as Stream from 'effect/Stream';
+import { describe } from 'vitest';
 
 import { Identity } from '@dxos/halo';
 
-import { createClients, runWith } from './testing';
+import { makeClientLayer } from './testing';
 
 describe('Identity', () => {
-  test('no identity before creation', async () => {
-    const [client] = await createClients(1, { identity: false });
-    const current = await runWith(client, Identity.current);
-    expect(Option.isNone(current)).toBe(true);
-  });
+  it.effect(
+    'no identity before creation',
+    Effect.fn(
+      function* ({ expect }) {
+        const current = yield* Identity.current;
+        expect(Option.isNone(current)).toBe(true);
+      },
+      Effect.provide(makeClientLayer({ identity: false })),
+    ),
+  );
 
-  test('creates an identity', async () => {
-    const [client] = await createClients(1, { identity: false });
+  it.effect(
+    'creates an identity',
+    Effect.fn(
+      function* ({ expect }) {
+        const info = yield* Identity.create({ displayName: 'test-user' });
+        expect(info.displayName).toEqual('test-user');
+        expect(info.did).toBeTypeOf('string');
 
-    const info = await runWith(client, Identity.create({ displayName: 'test-user' }));
-    expect(info.displayName).toEqual('test-user');
-    expect(info.did).toBeTypeOf('string');
+        const current = yield* Identity.current;
+        expect(Option.getOrThrow(current).did).toEqual(info.did);
 
-    const current = await runWith(client, Identity.current);
-    expect(Option.getOrThrow(current).did).toEqual(info.did);
+        const devices = yield* Identity.devices;
+        expect(devices).toHaveLength(1);
+        expect(devices[0].current).toBe(true);
+      },
+      Effect.provide(makeClientLayer({ identity: false })),
+    ),
+  );
 
-    const devices = await runWith(client, Identity.devices);
-    expect(devices).toHaveLength(1);
-    expect(devices[0].current).toBe(true);
-  });
+  it.effect(
+    'creates an identity with a custom device label',
+    Effect.fn(
+      function* ({ expect }) {
+        yield* Identity.create({ displayName: 'test-user', deviceLabel: 'custom-device' });
+        const devices = yield* Identity.devices;
+        expect(devices).toHaveLength(1);
+        expect(devices[0].label).toEqual('custom-device');
+      },
+      Effect.provide(makeClientLayer({ identity: false })),
+    ),
+  );
 
-  test('creates an identity with a custom device label', async () => {
-    const [client] = await createClients(1, { identity: false });
+  it.effect(
+    'updates the profile',
+    Effect.fn(
+      function* ({ expect }) {
+        yield* Identity.create({ displayName: 'test-user' });
+        const updated = yield* Identity.updateProfile({ displayName: 'test-user-updated' });
+        expect(updated.displayName).toEqual('test-user-updated');
 
-    await runWith(client, Identity.create({ displayName: 'test-user', deviceLabel: 'custom-device' }));
+        const current = yield* Identity.current;
+        expect(Option.getOrThrow(current).displayName).toEqual('test-user-updated');
+      },
+      Effect.provide(makeClientLayer({ identity: false })),
+    ),
+  );
 
-    const devices = await runWith(client, Identity.devices);
-    expect(devices).toHaveLength(1);
-    expect(devices[0].label).toEqual('custom-device');
-  });
-
-  test('updates the profile', async () => {
-    const [client] = await createClients(1, { identity: false });
-
-    await runWith(client, Identity.create({ displayName: 'test-user' }));
-    const updated = await runWith(client, Identity.updateProfile({ displayName: 'test-user-updated' }));
-    expect(updated.displayName).toEqual('test-user-updated');
-
-    const current = await runWith(client, Identity.current);
-    expect(Option.getOrThrow(current).displayName).toEqual('test-user-updated');
-  });
-
-  test('identity changes stream emits the created identity', async () => {
-    const [client] = await createClients(1, { identity: false });
-
-    // Snapshot after creation via the reactive stream.
-    await runWith(client, Identity.create({ displayName: 'streamed' }));
-    const current = await runWith(client, Effect.map(Identity.current, Option.getOrThrow));
-    expect(current.displayName).toEqual('streamed');
-  });
+  it.effect(
+    'changes stream emits the created identity',
+    Effect.fn(
+      function* ({ expect }) {
+        yield* Identity.create({ displayName: 'streamed' });
+        const first = yield* Identity.changes.pipe(
+          Stream.filter(Option.isSome),
+          Stream.runHead,
+          Effect.map(Option.flatten),
+        );
+        expect(Option.getOrThrow(first).displayName).toEqual('streamed');
+      },
+      Effect.provide(makeClientLayer({ identity: false })),
+    ),
+  );
 });

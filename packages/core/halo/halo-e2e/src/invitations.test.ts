@@ -2,65 +2,84 @@
 // Copyright 2026 DXOS.org
 //
 
+import { it } from '@effect/vitest';
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import { describe, expect, test } from 'vitest';
+import { describe } from 'vitest';
 
 import { Identity, Invitation, Space } from '@dxos/halo';
 
-import { awaitTerminal, createClients, runFlow, runWith } from './testing';
+import { TestNetwork, TestNetworkLive, awaitTerminal, makeClientLayer, pollUntil } from './testing';
 
 describe('Invitations', () => {
-  test('device invitation admits a new device to the identity', { timeout: 30_000 }, async () => {
-    const [host, guest] = await createClients(2, { identity: false });
-    await runWith(host, Identity.create({ displayName: 'host' }));
+  it.effect(
+    'device invitation admits a new device to the identity',
+    Effect.fn(function* ({ expect }) {
+      const network = yield* TestNetwork;
+      const host = yield* network.spawn();
+      const guest = yield* network.spawn({ identity: false });
 
-    const hostFlow = await runWith(host, Identity.share());
-    const code = await runFlow(hostFlow.code);
-    const guestFlow = await runWith(guest, Identity.join(code));
+      const hostFlow = yield* Identity.share().pipe(Effect.provide(host));
+      const code = yield* hostFlow.code;
+      const guestFlow = yield* Identity.join(code).pipe(Effect.provide(guest));
 
-    const [hostTerminal, guestTerminal] = await Promise.all([awaitTerminal(hostFlow), awaitTerminal(guestFlow)]);
-    expect(hostTerminal._tag).toEqual('success');
-    expect(guestTerminal._tag).toEqual('success');
+      const [hostTerminal, guestTerminal] = yield* Effect.all([awaitTerminal(hostFlow), awaitTerminal(guestFlow)], {
+        concurrency: 'unbounded',
+      });
+      expect(hostTerminal._tag).toEqual('success');
+      expect(guestTerminal._tag).toEqual('success');
 
-    // The guest joined the host's identity.
-    const guestIdentity = await runWith(guest, Identity.current);
-    const hostIdentity = await runWith(host, Identity.current);
-    expect(Option.getOrThrow(guestIdentity).did).toEqual(Option.getOrThrow(hostIdentity).did);
+      // The guest joined the host's identity.
+      const guestIdentity = yield* Identity.current.pipe(Effect.provide(guest));
+      const hostIdentity = yield* Identity.current.pipe(Effect.provide(host));
+      expect(Option.getOrThrow(guestIdentity).did).toEqual(Option.getOrThrow(hostIdentity).did);
 
-    // The host now sees two devices.
-    await expect.poll(async () => (await runWith(host, Identity.devices)).length, { timeout: 5_000 }).toEqual(2);
-  });
+      // The host now sees two devices.
+      yield* pollUntil(Identity.devices.pipe(Effect.provide(host)), (devices) => devices.length === 2);
+    }, Effect.provide(TestNetworkLive)),
+    30_000,
+  );
 
-  test('space invitation admits a new member', { timeout: 30_000 }, async () => {
-    const [host, guest] = await createClients(2);
+  it.effect(
+    'space invitation admits a new member',
+    Effect.fn(function* ({ expect }) {
+      const network = yield* TestNetwork;
+      const host = yield* network.spawn();
+      const guest = yield* network.spawn();
 
-    const space = await runWith(host, Space.create({ name: 'shared' }));
-    await runWith(host, Space.waitReady(space.id));
+      const space = yield* Space.create({ name: 'shared' }).pipe(Effect.provide(host));
+      yield* Space.waitReady(space.id).pipe(Effect.provide(host));
 
-    const hostFlow = await runWith(host, Space.share(space.id));
-    const code = await runFlow(hostFlow.code);
-    const guestFlow = await runWith(guest, Space.join(code));
+      const hostFlow = yield* Space.share(space.id).pipe(Effect.provide(host));
+      const code = yield* hostFlow.code;
+      const guestFlow = yield* Space.join(code).pipe(Effect.provide(guest));
 
-    const [hostTerminal, guestTerminal] = await Promise.all([awaitTerminal(hostFlow), awaitTerminal(guestFlow)]);
-    expect(hostTerminal._tag).toEqual('success');
-    expect(guestTerminal._tag).toEqual('success');
+      const [hostTerminal, guestTerminal] = yield* Effect.all([awaitTerminal(hostFlow), awaitTerminal(guestFlow)], {
+        concurrency: 'unbounded',
+      });
+      expect(hostTerminal._tag).toEqual('success');
+      expect(guestTerminal._tag).toEqual('success');
 
-    // The host space now has two members.
-    await expect.poll(async () => (await runWith(host, Space.members(space.id))).length, { timeout: 5_000 }).toEqual(2);
+      // The host space now has two members.
+      yield* pollUntil(Space.members(space.id).pipe(Effect.provide(host)), (members) => members.length === 2);
 
-    // The guest gained access to the space.
-    await expect.poll(async () => (await runWith(guest, Space.list)).length, { timeout: 5_000 }).toBeGreaterThan(0);
-  });
+      // The guest gained access to the space.
+      yield* pollUntil(Space.list.pipe(Effect.provide(guest)), (spaces) => spaces.length > 0);
+    }, Effect.provide(TestNetworkLive)),
+    30_000,
+  );
 
-  test('active invitations are observable for a space', { timeout: 30_000 }, async () => {
-    const [host] = await createClients(1);
+  it.effect(
+    'active invitations are observable for a space',
+    Effect.fn(function* ({ expect }) {
+      const space = yield* Space.create({ name: 'shared' });
+      yield* Space.waitReady(space.id);
 
-    const space = await runWith(host, Space.create({ name: 'shared' }));
-    await runWith(host, Space.waitReady(space.id));
-
-    await runWith(host, Space.share(space.id));
-    const active = await runWith(host, Invitation.active({ spaceId: space.id }));
-    expect(active.length).toBeGreaterThan(0);
-    expect(active[0].kind).toEqual('space');
-  });
+      yield* Space.share(space.id);
+      const active = yield* Invitation.active({ spaceId: space.id });
+      expect(active.length).toBeGreaterThan(0);
+      expect(active[0].kind).toEqual('space');
+    }, Effect.provide(makeClientLayer())),
+    30_000,
+  );
 });

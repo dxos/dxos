@@ -7,12 +7,11 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
 
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { Identity, type Invitation, Space } from '@dxos/halo';
+import { Identity, Invitation, Space } from '@dxos/halo';
 import { makeIdentityService, makeInvitationService, makeSpaceService } from '@dxos/halo-adapter-client';
 
 /** Every HALO service, provided by one client adapter. */
@@ -39,7 +38,7 @@ export const makeClientLayer = (options?: { identity?: boolean }): Layer.Layer<H
       yield* Effect.promise(() => client.initialize());
       const context = clientContext(client);
       if (options?.identity !== false) {
-        yield* Identity.create({ displayName: 'Peer' }).pipe(Effect.provide(context));
+        yield* Identity.create({ displayName: 'Peer' }).pipe(Effect.provide(context), Effect.orDie);
       }
       return context;
     }),
@@ -75,7 +74,7 @@ export const TestNetworkLive = Layer.scoped(
           yield* Effect.promise(() => client.initialize());
           const context = clientContext(client);
           if (options?.identity !== false) {
-            yield* Identity.create({ displayName: `Peer ${index}` }).pipe(Effect.provide(context));
+            yield* Identity.create({ displayName: `Peer ${index}` }).pipe(Effect.provide(context), Effect.orDie);
           }
           return context;
         }),
@@ -104,15 +103,16 @@ export const awaitTerminal = (flow: Invitation.Flow): Effect.Effect<Invitation.E
   );
 
 /**
- * Repeats an effect until its result satisfies the predicate (bounded by a timeout). Effect-native
- * replacement for `expect.poll` when the polled read needs the service context.
+ * Repeats an effect (100ms spacing, 10s cap) until its result satisfies the predicate. Returns
+ * the satisfying value. Effect-native replacement for `expect.poll` when the polled read needs the
+ * service context.
  */
 export const pollUntil = <A, E, R>(
   effect: Effect.Effect<A, E, R>,
   predicate: (value: A) => boolean,
-): Effect.Effect<A, E, R> =>
-  effect.pipe(
-    Effect.repeat({ schedule: Schedule.spaced(Duration.millis(100)), until: predicate }),
-    Effect.timeout(Duration.seconds(10)),
-    Effect.orDie,
+): Effect.Effect<A, never, R> => {
+  const loop: Effect.Effect<A, E, R> = Effect.flatMap(effect, (value) =>
+    predicate(value) ? Effect.succeed(value) : Effect.flatMap(Effect.sleep(Duration.millis(100)), () => loop),
   );
+  return loop.pipe(Effect.timeout(Duration.seconds(10)), Effect.orDie);
+};

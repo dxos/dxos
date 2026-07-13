@@ -2,70 +2,74 @@
 // Copyright 2026 DXOS.org
 //
 
+import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import { describe, expect, test } from 'vitest';
+import { describe } from 'vitest';
 
 import { Space } from '@dxos/halo';
 import { SpaceId } from '@dxos/keys';
 
-import { createClients, runWith } from './testing';
+import { makeClientLayer } from './testing';
 
 describe('Spaces', () => {
-  test('creates a space', async () => {
-    const [client] = await createClients(1);
+  it.effect(
+    'creates a space',
+    Effect.fn(function* ({ expect }) {
+      const info = yield* Space.create({ name: 'notes' });
+      expect(SpaceId.isValid(info.id)).toBe(true);
 
-    const info = await runWith(client, Space.create({ name: 'notes' }));
-    expect(SpaceId.isValid(info.id)).toBe(true);
+      yield* Space.waitReady(info.id);
 
-    await runWith(client, Space.waitReady(info.id));
+      const resolved = yield* Space.get(info.id);
+      expect(Option.getOrThrow(resolved).id).toEqual(info.id);
+    }, Effect.provide(makeClientLayer())),
+  );
 
-    const resolved = await runWith(client, Space.get(info.id));
-    expect(Option.getOrThrow(resolved).id).toEqual(info.id);
-  });
+  it.effect(
+    'lists spaces',
+    Effect.fn(function* ({ expect }) {
+      const before = yield* Space.list;
+      const info = yield* Space.create({ name: 'one' });
+      yield* Space.waitReady(info.id);
+      const after = yield* Space.list;
+      expect(after.length).toEqual(before.length + 1);
+    }, Effect.provide(makeClientLayer())),
+  );
 
-  test('lists spaces', async () => {
-    const [client] = await createClients(1);
+  it.effect(
+    'a fresh space has one (admin) member',
+    Effect.fn(function* ({ expect }) {
+      const info = yield* Space.create({ name: 'solo' });
+      yield* Space.waitReady(info.id);
 
-    const before = await runWith(client, Space.list);
-    await runWith(
-      client,
-      Effect.flatMap(Space.create({ name: 'one' }), (info) => Space.waitReady(info.id)),
-    );
-    const after = await runWith(client, Space.list);
+      const members = yield* Space.members(info.id);
+      expect(members).toHaveLength(1);
+      expect(members[0].role).toEqual('admin');
+    }, Effect.provide(makeClientLayer())),
+  );
 
-    expect(after.length).toEqual(before.length + 1);
-  });
+  it.effect(
+    'get returns none for an unknown space',
+    Effect.fn(function* ({ expect }) {
+      const resolved = yield* Space.get(SpaceId.random());
+      expect(Option.isNone(resolved)).toBe(true);
+    }, Effect.provide(makeClientLayer())),
+  );
 
-  test('a fresh space has one (admin) member', async () => {
-    const [client] = await createClients(1);
+  it.effect(
+    'exports and imports a space archive',
+    Effect.fn(function* ({ expect }) {
+      const source = yield* Space.create({ name: 'source' });
+      yield* Space.waitReady(source.id);
 
-    const info = await runWith(client, Space.create({ name: 'solo' }));
-    await runWith(client, Space.waitReady(info.id));
+      const archive = yield* Space.exportSpace(source.id);
+      expect(archive.contents.length).toBeGreaterThan(0);
 
-    const members = await runWith(client, Space.members(info.id));
-    expect(members).toHaveLength(1);
-    expect(members[0].role).toEqual('admin');
-  });
-
-  test('get returns none for an unknown space', async () => {
-    const [client] = await createClients(1);
-    const resolved = await runWith(client, Space.get(SpaceId.random()));
-    expect(Option.isNone(resolved)).toBe(true);
-  });
-
-  test('exports and imports a space archive', async () => {
-    const [client] = await createClients(1);
-
-    const source = await runWith(client, Space.create({ name: 'source' }));
-    await runWith(client, Space.waitReady(source.id));
-
-    const archive = await runWith(client, Space.exportSpace(source.id));
-    expect(archive.contents.length).toBeGreaterThan(0);
-
-    const imported = await runWith(client, Space.importSpace(archive));
-    await runWith(client, Space.waitReady(imported.id));
-    // Import creates a distinct space.
-    expect(imported.id).not.toEqual(source.id);
-  });
+      const imported = yield* Space.importSpace(archive);
+      yield* Space.waitReady(imported.id);
+      // Import creates a distinct space.
+      expect(imported.id).not.toEqual(source.id);
+    }, Effect.provide(makeClientLayer())),
+  );
 });
