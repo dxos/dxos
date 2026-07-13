@@ -259,3 +259,5 @@ const updateConfig = (config: ConfigProto, setConfig: (newConfig: ConfigProto) =
     await SaveConfig(storageConfigCopy);
   });
 };
+
+DebugSettings.displayName = 'DebugSettings';

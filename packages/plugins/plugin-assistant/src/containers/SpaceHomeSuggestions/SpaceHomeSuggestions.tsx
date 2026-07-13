@@ -80,3 +80,5 @@ export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
     </HomeSection.Root>
   );
 };
+
+SpaceHomeSuggestions.displayName = 'SpaceHomeSuggestions';

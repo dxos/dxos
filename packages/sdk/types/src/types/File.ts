@@ -18,8 +18,6 @@ import { CollectionItemAnnotation } from '@dxos/schema';
 export class File extends Type.makeObject<File>(DXN.make('org.dxos.type.file', '0.2.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
-    type: Schema.String.pipe(FormInputAnnotation.set(false)),
-    size: Schema.Number.pipe(FormInputAnnotation.set(false)),
     data: Ref.Ref(Blob.Blob).pipe(FormInputAnnotation.set(false)),
     timestamp: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
@@ -53,7 +51,7 @@ export const fromBytes = (
 ): Effect.Effect<File, Err.BlobTooLargeError | Err.BlobWriteError, Database.Service> =>
   Effect.gen(function* () {
     const blob = yield* Blob.fromBytes(bytes, { type: options.type, storage: options.storage });
-    const file = make({ name: options.name, type: options.type, size: blob.size, data: Ref.make(blob) });
+    const file = make({ name: options.name, data: Ref.make(blob) });
     Obj.setParent(blob, file);
     yield* Database.add(blob);
     return file;

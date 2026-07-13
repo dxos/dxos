@@ -9,18 +9,18 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Ref from 'effect/Ref';
 import { readFileSync } from 'node:fs';
 import { expect } from 'vitest';
 
+import { Pipeline } from '@dxos/pipeline';
 import { FactStore } from '@dxos/pipeline-rdf';
 
 import { AgentRegistry } from './AgentRegistry';
-import { run } from './Crawler';
-import { type Stage } from './Stage';
-import { makeAgentProfileStage } from './stages/agent-profile';
-import { makeExtractFactsStage } from './stages/extract-facts';
+import * as Crawler from './Crawler';
+import { agentProfileStage } from './stages/agent-profile';
+import { extractFactsStage } from './stages/extract-facts';
 import { extractTopics } from './stages/topics';
-import { StateStore } from './StateStore';
 import { type Fixture, TestLayer } from './testing';
 import type * as Type from './types';
 
@@ -35,15 +35,17 @@ describe('demo', () => {
     Effect.fnUntraced(
       function* () {
         const config: Type.Config = { channels: [fixture.state.channelId], descendThreads: true };
-        const stages: Stage[] = [makeAgentProfileStage(), makeExtractFactsStage()];
+        const steps = yield* Ref.make(0);
+        yield* Crawler.stream(config, { steps }).pipe(
+          agentProfileStage(),
+          extractFactsStage(),
+          Pipeline.run({ sink: Crawler.commit }),
+        );
+        const summary = { ...(yield* Crawler.summarize()), steps: yield* Ref.get(steps) };
 
-        const summary = yield* run(config, stages);
-
-        const state = yield* StateStore;
         const registry = yield* AgentRegistry;
         const store = yield* FactStore;
 
-        const status = yield* state.getRunStatus();
         const agents = yield* registry.list();
         const facts = yield* store.query({});
         const report = yield* extractTopics({ limit: 15 });
@@ -53,7 +55,7 @@ describe('demo', () => {
         yield* Effect.sync(() => {
           console.log(heading('Crawl'));
           console.log(`  channel:  ${fixture.state.channelId}`);
-          console.log(`  steps:    ${summary.steps}  (status: ${status})`);
+          console.log(`  steps:    ${summary.steps}  (${summary.done ? 'done' : 'paused'})`);
           console.log(`  messages: ${fixture.messages.length}  threads: ${fixture.threads?.length ?? 0}`);
           console.log(`  facts:    ${facts.length}`);
 

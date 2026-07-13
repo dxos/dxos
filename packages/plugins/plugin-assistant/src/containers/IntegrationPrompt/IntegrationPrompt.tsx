@@ -77,3 +77,5 @@ const matchConnectors = (connectors: ConnectorEntry[], service: string): Connect
     return candidates.some((value) => value === needle || value === base || value.includes(base));
   });
 };
+
+IntegrationPrompt.displayName = 'IntegrationPrompt';

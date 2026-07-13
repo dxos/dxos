@@ -20,7 +20,40 @@ import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 export type MappedEmail = { message: Message.Message; mailboxIds: readonly string[] };
 
 /** A JMAP email with its raw HTML and/or plaintext body (JMAP delivers decoded values; no markdown). */
-export type DecodedEmail = { raw: JmapMail.Email; html?: string; plain?: string };
+export type DecodedEmail = {
+  raw: JmapMail.Email;
+  html?: string;
+  plain?: string;
+  attachments: readonly AttachmentMetadata[];
+};
+
+/** Metadata for an attachment part (`Email.attachments`, distinct from the `textBody`/`htmlBody` parts). */
+export type AttachmentMetadata = {
+  readonly blobId: string;
+  readonly name?: string;
+  readonly mimeType?: string;
+  readonly size?: number;
+  /** The part's `Content-ID` (angle brackets stripped, if present), if any — matches a `cid:` reference in an HTML body. */
+  readonly contentId?: string;
+};
+
+/** Attachment parts carry a `blobId` to fetch bytes for; parts without one can't be downloaded. */
+const collectAttachments = (attachments: readonly JmapMail.EmailBodyPart[] | undefined): AttachmentMetadata[] =>
+  (attachments ?? []).flatMap((part) =>
+    part.blobId
+      ? [
+          {
+            blobId: part.blobId,
+            name: part.name ?? undefined,
+            mimeType: part.type,
+            size: part.size,
+            // Servers vary on whether `cid` includes the enclosing `<...>`; strip it defensively so it
+            // matches the bare id an HTML body's `cid:` reference uses.
+            contentId: part.cid ? part.cid.replace(/^<|>$/g, '') : undefined,
+          },
+        ]
+      : [],
+  );
 
 /**
  * Extracts the raw HTML and plaintext bodies from a JMAP email (values fetched via
@@ -39,7 +72,7 @@ export const decodeBody = (email: JmapMail.Email): DecodedEmail | null => {
     });
     return null;
   }
-  return { raw: email, html, plain };
+  return { raw: email, html, plain, attachments: collectAttachments(email.attachments) };
 };
 
 /**

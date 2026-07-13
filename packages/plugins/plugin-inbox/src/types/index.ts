@@ -3,7 +3,6 @@
 //
 
 export * from './SyncOptions';
-export * from './FeedCursors';
 
 export * as Calendar from './Calendar';
 export * as DraftMessage from './DraftMessage';

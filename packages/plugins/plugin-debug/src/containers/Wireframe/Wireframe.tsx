@@ -39,3 +39,5 @@ export const Wireframe = ({ classNames, label, object }: WireframeProps) => {
     </div>
   );
 };
+
+Wireframe.displayName = 'Wireframe';

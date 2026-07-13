@@ -300,6 +300,20 @@ op draftEmailAndOpen
 ```
 
 ```mdl
+op generateReply
+  desc: |
+    Drafts a reply to a message, grounded on the thread (same normalized subject from the mailbox
+    feed) and on facts the space fact store knows about the participants. Fact lookup is advisory
+    (degrades to none); the LLM is instructed to hedge non-certain facts and invent nothing.
+  input:
+    mailbox: Ref<Mailbox>
+    message: Message
+  output: { subject: string, body: string }
+  effects: [echo:read, feed:read, factstore:read, llm]
+  requires: [FactStore, AiService]
+```
+
+```mdl
 op readEmail
   desc: Reads recent messages from a mailbox as a single text payload.
   input:
@@ -642,6 +656,14 @@ feat F-6: AI Assistance
   req F-6.3:
     when: agent calls op:extractMessage on a confirmation email
     then: structured objects (e.g. Trip segments) are created or updated
+
+  req F-6.4:
+    when: the user clicks "AI Reply" in the message toolbar
+    then: op:generateReply drafts a grounded reply body and a prefilled reply draft opens
+
+  req F-6.5:
+    when: the user clicks "Generate" in the reply-draft toolbar
+    then: op:generateReply fills the open draft's body from the message it replies to
 ```
 
 ```mdl

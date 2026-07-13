@@ -490,7 +490,7 @@ const TranscriptView = ({ lines, summary }: { lines: readonly string[]; summary?
 );
 
 const meta = {
-  title: 'stories/stories-brain/stories/Pipeline',
+  title: 'stories/stories-brain/Pipeline',
   render: DefaultStory,
   decorators: createMarkdownStoryDecorators({
     layout: 'fullscreen',

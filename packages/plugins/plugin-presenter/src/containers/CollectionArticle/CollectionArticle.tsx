@@ -42,3 +42,5 @@ export const CollectionArticle = ({ role, subject: collection }: CollectionArtic
     </Panel.Root>
   );
 };
+
+CollectionArticle.displayName = 'CollectionArticle';

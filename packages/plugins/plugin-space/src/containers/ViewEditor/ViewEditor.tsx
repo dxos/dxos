@@ -98,3 +98,5 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
     />
   );
 };
+
+ViewEditor.displayName = 'ViewEditor';

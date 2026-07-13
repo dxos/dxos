@@ -11,7 +11,8 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { type Capability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
@@ -23,10 +24,11 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 // InboxOperation.GoogleMailSync's schema; the import lets TypeScript name it in .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Connection, SyncBinding } from '@dxos/plugin-connector';
-import { Cursor, Person } from '@dxos/types';
+import { ContentBlock, Cursor, Person } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
 import { GMAIL_SOURCE } from '../../../constants';
+import { meta } from '../../../meta';
 import {
   GoogleCredentials,
   GoogleMailApi,
@@ -37,7 +39,7 @@ import { EmailStage, type SyncDirection, resolveSyncWindow } from '../../../sync
 import { InboxOperation, Mailbox } from '../../../types';
 import { readBindingOptions } from '../../../util';
 import { parseFromHeader } from '../../util';
-import { type DecodedMessage, decodeBody, mapToMessage } from './mapper';
+import { type AttachmentMetadata, type DecodedMessage, decodeBody, mapToMessage } from './mapper';
 
 type DateChunk = {
   readonly start: Date;
@@ -61,6 +63,13 @@ const STREAMING_CONFIG = {
   /** Commit page size — kept ≤ 15 so each `Feed.append` is a single atomic queue insert. */
   pageSize: 10,
 } as const;
+
+/**
+ * Progress-registry key for a mailbox's Gmail sync monitor — the mailbox URI with a `#sync` suffix so
+ * distinct monitor types (e.g. `#topics`) can coexist for the same mailbox. Peer of
+ * `createTopicsProgressKey`; `MailboxArticle` subscribes to it to show the sync meter.
+ */
+export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) => Obj.getURI(mailbox).toString() + '#sync';
 
 /**
  * Runs the Gmail sync pipeline for a binding against the {@link GoogleMailApi} service (plus the
@@ -143,6 +152,9 @@ export const runGmailSync = ({
     const feed = yield* Database.load(mailbox.feed);
     // Resolve the child tag index so provider-label tags can be applied synchronously during commit.
     const tagIndex = yield* Database.load(mailbox.tags);
+    // Pool already-sent drafts once for this run; `EmailStage.reconcileDrafts` matches each incoming
+    // message against it so the canonical copy's arrival removes its now-redundant draft in the commit.
+    const draftPool = yield* EmailStage.queryDraftPool(mailbox);
     const labelMap = yield* syncLabels(mailbox, userId).pipe(
       Effect.catchAll((error) => {
         log.catch(error);
@@ -152,30 +164,127 @@ export const runGmailSync = ({
 
     // Resolve the sender contact, build the ECHO message, and resolve label ids to tag URIs via the
     // (Gmail-specific) label map captured here.
-    const mapToMessageStage: Stage.Stage<DecodedMessage, EmailStage.Mapped, never, Resolver> = Stage.map(
-      'map-to-message',
-      (decoded: DecodedMessage) =>
+    const mapToMessageStage: Stage.Stage<DecodedMessage, EmailStage.Mapped, never, Resolver | GoogleMailApi> =
+      Stage.map('map-to-message', (decoded: DecodedMessage) =>
         Effect.gen(function* () {
           const fromHeader = decoded.raw.payload.headers.find(({ name }) => name === 'From');
           const from = fromHeader ? parseFromHeader(fromHeader.value) : undefined;
+          // Drop messages excluded by the mailbox's filters before the costly attachment fetch;
+          // returning undefined removes the item from the pipeline (see `decodeBodyStage`).
+          if (Mailbox.isFiltered(mailbox, { sender: from })) {
+            return undefined;
+          }
           const contact = from?.email ? yield* resolve(Person.Person, { email: from.email }) : undefined;
           const mapped = mapToMessage(decoded, contact ?? undefined);
           const tagUris = mapped.labelIds.flatMap((labelId) => {
             const uri = labelMap.get(labelId);
             return uri ? [uri] : [];
           });
+          const attachments = yield* fetchAttachments(userId, decoded.raw.id, decoded.attachments);
           return {
             message: mapped.message,
             foreignId: decoded.raw.id,
             key: Number.parseInt(decoded.raw.internalDate),
             tagUris,
+            attachments,
           };
         }),
-    );
+      );
 
     // fetch → dedup → decode → map → extract-contacts → (optional) on-arrival extractors →
     // record-threads → commit each page. The SyncBinding layer advances the binding cursor per page.
     const stats: SyncBinding.Stats = { newMessages: 0 };
+
+    // Coarse sync telemetry (message/thread/sender counts + body-part coverage) written to the
+    // transient stats store, keyed by mailbox, so a surface (plugin-debug) can display it live. The
+    // store is optional — `getAll` yields nothing without a host plugin, so this is a no-op in
+    // production; only body-part coverage (which parts each message carried) is Gmail-specific.
+    // Write only this plugin's compartment (indexed by plugin key); other plugins own their own slots.
+    const statsCompartments = (yield* Capability.getAll(AppCapabilities.StatsPanel)).map((store) =>
+      store.compartment(meta.profile.key),
+    );
+
+    // Cooperative cancellation: the meter's cancel control aborts the controller; the `cancelStage`
+    // below then drops all further messages so the stream drains and the run stops without error.
+    const controller = new AbortController();
+
+    // Live progress monitor (optional — no host in headless/test runs, so `getAll` yields nothing).
+    // Keyed by the mailbox URI so MailboxArticle and the R0 popover can subscribe to this run.
+    const progressMonitors = (yield* Capability.getAll(AppCapabilities.ProgressRegistry)).map((registry) =>
+      registry.register(createSyncProgressKey(mailbox), {
+        label: mailbox.name ?? 'Mailbox',
+        onCancel: () => controller.abort(),
+      }),
+    );
+    const advanceProgress = (by: number) => progressMonitors.forEach((monitor) => monitor.advance(by));
+
+    // Drops every message once cancelled (returning undefined removes it — see `decodeBodyStage`), so
+    // the pipeline skips all remaining fetch/decode/commit work and completes promptly.
+    const cancelStage: Stage.Stage<GoogleMail.Message, GoogleMail.Message, never, never> = Stage.map(
+      'cancel',
+      (message: GoogleMail.Message) => Effect.sync(() => (controller.signal.aborted ? undefined : message)),
+    );
+    const startedAt = new Date().toISOString();
+    const startMs = Date.now();
+    const threads = new Set<string>();
+    const senders = new Set<string>();
+    const coverage = { plain: 0, synthesizedMarkdown: 0, htmlOnly: 0, none: 0 };
+    let processed = 0;
+    let attachmentCount = 0;
+    let finishedAt: string | undefined;
+    let finishedMs: number | undefined;
+    const publishStats = () => {
+      if (statsCompartments.length === 0) {
+        return;
+      }
+      const snapshot = {
+        startedAt,
+        ...(finishedAt ? { finishedAt } : {}),
+        durationMs: (finishedMs ?? Date.now()) - startMs,
+        range: {
+          syncBackDays: targetOptions.syncBackDays,
+          direction: resolvedDirection,
+          start: format(start, 'yyyy-MM-dd'),
+          end: format(rangeEnd, 'yyyy-MM-dd'),
+        },
+        processed,
+        newMessages: stats.newMessages,
+        threads: threads.size,
+        senders: senders.size,
+        coverage,
+        attachments: attachmentCount,
+      };
+      statsCompartments.forEach((compartment) => compartment.set(snapshot));
+    };
+    // Pass-through stage: accumulates telemetry as each mapped message flows by, publishing a fresh
+    // snapshot so a subscribed surface ticks up live during the sync.
+    const collectStats = Stage.map('collect-stats', (mapped: EmailStage.Mapped) =>
+      Effect.sync(() => {
+        processed += 1;
+        if (mapped.message.threadId) {
+          threads.add(mapped.message.threadId);
+        }
+        if (mapped.message.sender?.email) {
+          senders.add(mapped.message.sender.email);
+        }
+        const textBlocks = mapped.message.blocks.filter((block): block is ContentBlock.Text => block._tag === 'text');
+        const has = (mimeType: string) => textBlocks.some((block) => block.mimeType === mimeType);
+        if (has('text/plain')) {
+          coverage.plain += 1;
+        } else if (has('text/markdown')) {
+          coverage.synthesizedMarkdown += 1;
+        } else if (has('text/html')) {
+          coverage.htmlOnly += 1;
+        } else {
+          coverage.none += 1;
+        }
+        attachmentCount += mapped.attachments?.length ?? 0;
+        publishStats();
+        advanceProgress(1);
+        return mapped;
+      }),
+    );
+
     yield* gmailSource({
       userId,
       label,
@@ -184,6 +293,7 @@ export const runGmailSync = ({
       end: rangeEnd,
       searchFilter: targetOptions.filter,
     }).pipe(
+      cancelStage,
       SyncBinding.dedupStage<GoogleMail.Message>(
         'dedup',
         (message) => message.id,
@@ -197,8 +307,12 @@ export const runGmailSync = ({
       //   (docs/superpowers/specs/2026-07-04-mail-sync-performance-exploration.md) quantifies it.
       // EmailStage.htmlToMarkdown,
       mapToMessageStage,
+      collectStats,
+      EmailStage.processAttachments(),
       EmailStage.onArrivalExtractors(mailbox),
       EmailStage.extractContacts(),
+      EmailStage.reconcileDrafts(draftPool),
+      EmailStage.toCommitUnit(),
       Stream.grouped(STREAMING_CONFIG.pageSize),
       Pipeline.run({ sink: SyncBinding.commit }),
       Effect.provide(
@@ -211,13 +325,37 @@ export const runGmailSync = ({
           stats,
         }),
       ),
+      Effect.tapError((error) =>
+        Effect.sync(() => {
+          // Log the raw error for debugging; the meter shows only a short reason (the full exception —
+          // provider errors, auth tokens — must not reach the UI).
+          log.warn('gmail sync failed', { error });
+          progressMonitors.forEach((monitor) => monitor.fail('Sync failed'));
+        }),
+      ),
     );
 
     // Flush indexes once, at the end of the run, so cross-run dedup / contact resolution observe this
     // run's writes (per-page commits no longer flush — see `SyncBinding.commit`).
     yield* Database.flush({ indexes: true });
 
-    log('gmail sync complete', { newMessages: stats.newMessages });
+    // Final publish so the committed `newMessages` count (advanced per page by the commit sink) is
+    // reflected after the last item's mid-stream snapshot, and the run's end time / total duration
+    // are recorded.
+    finishedMs = Date.now();
+    finishedAt = new Date(finishedMs).toISOString();
+    publishStats();
+
+    progressMonitors.forEach((monitor) => {
+      if (controller.signal.aborted) {
+        monitor.note('Cancelled');
+      } else {
+        monitor.done();
+      }
+      monitor.remove();
+    });
+
+    log('gmail sync complete', { newMessages: stats.newMessages, cancelled: controller.signal.aborted });
     return { newMessages: stats.newMessages };
   }).pipe(Effect.withSpan('gmail-sync'));
 
@@ -273,6 +411,58 @@ const decodeBodyStage: Stage.Stage<GoogleMail.Message, DecodedMessage, never, ne
   (message: GoogleMail.Message) => Effect.sync(() => decodeBody(message) ?? undefined),
 );
 
+/**
+ * Normalizes RFC 4648 §5 base64url (Gmail's attachment/body encoding) to standard base64 with
+ * padding. The browser `Buffer` polyfill (`@dxos/node-std`, used when this pipeline runs client-side)
+ * does not implement the `'base64url'` encoding name that Node's own `Buffer` accepts — decoding via
+ * `Buffer.from(data, 'base64url')` throws `Unknown encoding` there, so normalize and use `'base64'`.
+ */
+const base64UrlToBase64 = (data: string): string => {
+  const base64 = data.replace(/-/g, '+').replace(/_/g, '/');
+  const padding = base64.length % 4 === 0 ? '' : '='.repeat(4 - (base64.length % 4));
+  return base64 + padding;
+};
+
+/**
+ * Downloads each attachment's bytes via `GoogleMailApi.getAttachment`, decoding the base64url `data`
+ * field. One failed download or decode error is logged and dropped rather than failing the whole
+ * message — `Effect.try` wraps the decode step so a thrown error there is caught by `catchAll` below
+ * rather than becoming an uncatchable defect that aborts the whole sync run.
+ */
+const fetchAttachments = (
+  userId: string,
+  messageId: string,
+  attachments: readonly AttachmentMetadata[],
+): Effect.Effect<readonly EmailStage.Attachment[], never, GoogleMailApi> =>
+  Effect.gen(function* () {
+    const api = yield* GoogleMailApi;
+    const fetched = yield* Effect.forEach(
+      attachments,
+      (attachment) =>
+        api.getAttachment(userId, messageId, attachment.attachmentId).pipe(
+          Effect.flatMap((body) =>
+            // The single-arg form suffices: `catchAll` below discards the error regardless of its
+            // shape, so there's no reason to map it to a specific type here.
+            Effect.try(
+              (): EmailStage.Attachment => ({
+                name: attachment.filename,
+                mimeType: attachment.mimeType,
+                size: attachment.size,
+                bytes: Buffer.from(base64UrlToBase64(body.data ?? ''), 'base64'),
+                contentId: attachment.contentId,
+              }),
+            ),
+          ),
+          Effect.catchAll((error) => {
+            log.catch(error, { messageId, attachmentId: attachment.attachmentId });
+            return Effect.succeed(undefined);
+          }),
+        ),
+      { concurrency: STREAMING_CONFIG.messageFetchConcurrency },
+    );
+    return fetched.filter((attachment): attachment is EmailStage.Attachment => attachment !== undefined);
+  });
+
 type GmailSourceConfig = {
   readonly userId: string;
   readonly label: string;
@@ -286,7 +476,9 @@ type GmailSourceConfig = {
 /**
  * Streams Gmail message ids over the [start, end) range in `direction` order (forward = oldest→newest
  * windows for incremental resume; backward = newest→oldest for initial/backfill), then fetches each
- * full message. Direction only changes the *order* windows are visited; both cover the same range.
+ * full message. Direction only changes the *order* windows are visited and messages within each
+ * window are emitted; both cover the same range (see `fetchMessagesForDateRange`'s within-chunk
+ * ordering).
  */
 const gmailSource = (config: GmailSourceConfig) =>
   // Resolve the API service once, then build the stream (id fetch → per-message fetch) against it.
@@ -303,7 +495,15 @@ const gmailSource = (config: GmailSourceConfig) =>
       const messageIds = Function.pipe(
         generateDateRanges(rangeConfig),
         Stream.flatMap(
-          (dateChunk) => fetchMessagesForDateRange(api, config.userId, config.label, dateChunk, config.searchFilter),
+          (dateChunk) =>
+            fetchMessagesForDateRange(
+              api,
+              config.userId,
+              config.label,
+              dateChunk,
+              config.direction,
+              config.searchFilter,
+            ),
           {
             concurrency: 1,
           },
@@ -356,40 +556,43 @@ const fetchMessagesForDateRange = (
   userId: string,
   label: string,
   dateChunk: DateChunk,
+  direction: SyncDirection,
   searchFilter?: string,
 ) =>
-  Stream.unfoldChunkEffect({ pageToken: Option.none<string>(), done: false }, (state) =>
+  Stream.unwrap(
     Effect.gen(function* () {
-      if (state.done) {
-        return Option.none();
-      }
-
       // `'all'` → All Mail (incl. Sent) minus Spam/Trash/Drafts/Chats, so conversations are complete;
       // any other value restricts to that Gmail label.
       const folderScope =
         label === 'all' ? 'in:anywhere -in:spam -in:trash -in:drafts -in:chats' : `in:anywhere label:${label}`;
       const scope = `${folderScope} after:${format(dateChunk.start, 'yyyy/MM/dd')} before:${format(dateChunk.end, 'yyyy/MM/dd')}`;
       const query = searchFilter ? `${scope} ${searchFilter}` : scope;
-      log('fetching message IDs', {
-        query,
-        pageToken: Option.getOrUndefined(state.pageToken),
-      });
 
-      const { messages, nextPageToken } = yield* api
-        .listMessages(userId, query, STREAMING_CONFIG.maxResults, Option.getOrUndefined(state.pageToken))
-        .pipe(Effect.withSpan('gmail-sync.fetch.list'));
+      // Gathers every page of the chunk's query into memory before ordering. Gmail paginates
+      // newest-first *within* each page but reversing page-by-page would only be locally correct: a
+      // `forward` walk needs the whole chunk oldest-first so the cursor advances monotonically —
+      // reversing per page would let a newer page's messages commit (and raise the cursor) before an
+      // older page from the same chunk, which can permanently skip that older page if the run is
+      // interrupted between them (a later forward run's query starts *from* the cursor, so it would
+      // never re-fetch dates before it). Chunks stay small (`chunkDays`) so this comfortably fits in
+      // memory; shrink `chunkDays` further if a mailbox's volume ever makes that not true.
+      const messageIds: string[] = [];
+      let pageToken: string | undefined;
+      do {
+        log('fetching message IDs', { query, pageToken });
+        const { messages, nextPageToken } = yield* api
+          .listMessages(userId, query, STREAMING_CONFIG.maxResults, pageToken)
+          .pipe(Effect.withSpan('gmail-sync.fetch.list'));
+        messageIds.push(...(messages ?? []).map((message) => message.id));
+        log('fetched message IDs', { count: messages?.length ?? 0, done: !nextPageToken });
+        pageToken = nextPageToken;
+      } while (pageToken);
 
-      log('fetched message IDs', {
-        count: messages?.length ?? 0,
-        done: !nextPageToken,
-      });
-
-      const messageIds = (messages ?? []).map((message) => message.id).reverse();
-      const nextState = {
-        pageToken: Option.fromNullable(nextPageToken),
-        done: !nextPageToken,
-      };
-
-      return Option.some([Chunk.fromIterable(messageIds), nextState]);
+      // Gmail returns messages newest-first across the whole query (every page). A `backward` walk
+      // (initial sync/backfill) wants that native order preserved end-to-end so the most recent
+      // messages commit first; a `forward` walk (incremental resume) wants oldest-first across the
+      // whole chunk, matching the chunk-level walk direction (see `generateDateRanges`).
+      const orderedMessageIds = direction === 'forward' ? messageIds.slice().reverse() : messageIds;
+      return Stream.fromIterable(orderedMessageIds);
     }),
   );

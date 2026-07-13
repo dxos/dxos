@@ -5,7 +5,7 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 
 import { Splitter, type SplitterMode } from '@dxos/react-ui';
-import { Mosaic } from '@dxos/react-ui-mosaic';
+import { Dnd } from '@dxos/react-ui-dnd';
 
 import { useSimpleLayoutState } from '#hooks';
 
@@ -33,7 +33,7 @@ export const SimpleLayout = () => {
   return (
     <DebugOverlay.Root enabled={false}>
       <PopoverRoot>
-        <Mosaic.Root>
+        <Dnd.Root>
           <MobileLayout.Root
             classNames='dx-container grid relative bg-toolbar-surface'
             onKeyboardOpenChange={(nextKeyboardOpen) => setKeyboardOpen(nextKeyboardOpen)}
@@ -51,7 +51,7 @@ export const SimpleLayout = () => {
               <PopoverContent />
             </MobileLayout.Panel>
           </MobileLayout.Root>
-        </Mosaic.Root>
+        </Dnd.Root>
       </PopoverRoot>
     </DebugOverlay.Root>
   );

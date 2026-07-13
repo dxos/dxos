@@ -70,7 +70,7 @@ const createToolbarActions = ({
     nodes: [
       createMenuAction('build', onBuild, {
         label: [buildBusy ? 'action.build.busy.label' : 'action.build.label', { ns: meta.profile.key }],
-        icon: 'ph--hammer--regular',
+        icon: 'ph--lightning--regular',
         disabled: anyBusy,
         testId: 'code-toolbar.build',
       }),

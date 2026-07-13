@@ -28,7 +28,7 @@ const WithActionsStory = () => (
 );
 
 const meta = {
-  title: 'sdk/app-framework/HomeSection',
+  title: 'sdk/app-framework/components/HomeSection',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen', classNames: 'p-4' })],
   parameters: { layout: 'fullscreen' },

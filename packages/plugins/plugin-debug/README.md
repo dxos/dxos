@@ -1,15 +1,5 @@
-# @dxos/plugin-kanban
+# @dxos/plugin-debug
 
-Surface plugin for kanban entities.
-
-## DXOS Resources
-
-- [Website](https://dxos.org)
-- [Developer Documentation](https://docs.dxos.org)
-- Talk to us on [Discord](https://dxos.org/discord)
-
-## Contributions
-
-Your ideas, issues, and code are most welcome. Please take a look at our [community code of conduct](https://github.com/dxos/dxos/blob/main/CODE_OF_CONDUCT.md), the [issue guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-issues), and the [PR contribution guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md#submitting-prs).
-
-License: [FSL-1.1-Apache-2.0](./LICENSE) Copyright 2023 © DXOS
+Developer debugging utilities for DXOS Composer: synthetic-object generation, a per-object Debug
+companion, a space-objects browser, a wireframe overlay, and a transient-stats panel. Rendered under
+a Debug node in the SYSTEM navigation group, alongside the Devtools inspector (`@dxos/plugin-devtools`).
