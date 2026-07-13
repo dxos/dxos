@@ -104,6 +104,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
           api_host,
           mask_all_text: true,
           capture_exceptions: true,
+          // Cookies stay scoped to the exact host; the cross-subdomain dmn_chk_* probe fails on public-suffix hosts (e.g. *.pages.dev) and spams the console.
+          cross_subdomain_cookie: false,
           ...posthogConfig,
         });
         if (release || environment) {
