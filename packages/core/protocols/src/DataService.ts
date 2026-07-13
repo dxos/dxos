@@ -204,6 +204,7 @@ export class Rpcs extends RpcGroup.make(
   Rpc.make('updateIndexes', {
     error: serviceError,
   }),
+  // TODO(dmaretskyi): Stream subscription.
   Rpc.make('subscribeSpaceSyncState', {
     payload: GetSpaceSyncStateRequest,
     success: protoMessage('dxos.echo.service.SpaceSyncState'),

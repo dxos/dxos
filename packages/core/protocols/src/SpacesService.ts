@@ -81,6 +81,14 @@ export const QueryCredentialsRequest = Schema.Struct({
 });
 export interface QueryCredentialsRequest extends Schema.Schema.Type<typeof QueryCredentialsRequest> {}
 
+/**
+ * Epoch migration to perform.
+ * - INIT_AUTOMERGE: Init empty automerge document as the space root. Disables legacy ECHO snapshot creation.
+ * - PRUNE_AUTOMERGE_ROOT_HISTORY: Init new automerge root by clonning the current space root. History is pruned.
+ * - FRAGMENT_AUTOMERGE_ROOT: Create a new space root and move objects from the current space root to separate automerge documents and.
+ * - REPLACE_AUTOMERGE_ROOT: Replace the current automerge root with a new one specified by the user.
+ * - MIGRATE_REFERENCES_TO_DXN: Upgrade references data structure.
+ */
 export const Migration = Schema.Enums({
   NONE: 0,
   INIT_AUTOMERGE: 1,
@@ -134,6 +142,11 @@ export const JoinBySpaceKeyRequest = Schema.Struct({
 });
 export interface JoinBySpaceKeyRequest extends Schema.Schema.Type<typeof JoinBySpaceKeyRequest> {}
 
+/**
+ * Archive encoding format.
+ * - BINARY: Tar-based binary archive (default).
+ * - JSON: JSON encoding of {@link dxos.echo.db.SerializedSpace}.
+ */
 export const SpaceArchiveFormat = Schema.Enums({
   BINARY: 0,
   JSON: 1,
@@ -149,6 +162,9 @@ export interface SpaceArchive extends Schema.Schema.Type<typeof SpaceArchive> {}
 
 export const ExportSpaceRequest = Schema.Struct({
   spaceId: Schema.String,
+  /**
+   * Archive format to produce. Defaults to BINARY.
+   */
   format: Schema.optional(SpaceArchiveFormat),
 });
 export interface ExportSpaceRequest extends Schema.Schema.Type<typeof ExportSpaceRequest> {}
@@ -207,20 +223,32 @@ export class Rpcs extends RpcGroup.make(
     success: protoMessage('dxos.client.services.JoinSpaceResponse'),
     error: serviceError,
   }),
+  /**
+   * Broadcast an ephemeral message to the space swarm.
+   */
   Rpc.make('postMessage', {
     payload: PostMessageRequest,
     error: serviceError,
   }),
+  /**
+   * Subscribe to messages from the space swarm.
+   */
   Rpc.make('subscribeMessages', {
     payload: SubscribeMessagesRequest,
     success: protoMessage('dxos.mesh.teleport.gossip.GossipMessage'),
     error: serviceError,
     stream: true,
   }),
+  /**
+   * Write credentials to the space control feed.
+   */
   Rpc.make('writeCredentials', {
     payload: WriteCredentialsRequest,
     error: serviceError,
   }),
+  /**
+   * Query credentials from the space control feed.
+   */
   Rpc.make('queryCredentials', {
     payload: QueryCredentialsRequest,
     success: protoMessage('dxos.halo.credentials.Credential'),
