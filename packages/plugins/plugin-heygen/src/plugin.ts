@@ -6,4 +6,4 @@ import { Plugin } from '@dxos/app-framework';
 
 import { meta } from './meta';
 
-export const GeneratorPlugin = Plugin.lazy(meta, () => import('#plugin'));
+export const HeyGenPlugin = Plugin.lazy(meta, () => import('#plugin'));

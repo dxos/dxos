@@ -4,3 +4,4 @@
 
 export * from './GenerationProvider';
 export * from './HeyGenProvider';
+export * from './heygen-service';

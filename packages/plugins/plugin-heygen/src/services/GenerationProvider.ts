@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Generation } from '#types';
+/** Media kind a provider can produce. */
+export type MediaKind = 'video' | 'audio';
 
 /** Input passed to a GenerationProvider. */
 export type GenerateInput = {
-  type: Generation.Kind;
+  type: MediaKind;
   prompt: string;
   /** Provider-specific avatar / character identifier. Optional — providers that don't use one ignore it. */
   avatarId?: string;
@@ -20,9 +21,8 @@ export type GenerateResult = {
 };
 
 /**
- * Identified option returned by `listAvatars` / `listVoices`.
- * `id` is the value to assign to `Generation.avatarId` / `Generation.voiceId`.
- * `name` is a human-readable label suitable for a picker.
+ * Identified option returned by `listAvatars` / `listVoices`. `id` is the value to assign to the
+ * request's `avatarId` / `voiceId`; `name` is a human-readable label suitable for a picker.
  */
 export type GenerationOption = {
   id: string;
@@ -36,24 +36,15 @@ export type ProviderCallOptions = {
 };
 
 /**
- * Provider-agnostic interface for media generation back-ends.
- * Implementations adapt a remote service (HeyGen, Veo, Sora, ElevenLabs, ...)
- * to a single uniform shape so the plugin's article surface and settings do
- * not depend on any particular vendor.
- *
- * Generation is intentionally split into `enqueue` (submit, returns a job id)
- * and `awaitResult` (poll an existing job to completion). Callers persist
- * the `jobId` between the two so a long-running job survives navigation /
- * remount — the next mount can resume polling instead of starting over.
- *
- * `generate` is the convenience composition of the two for fire-and-forget callers.
- *
- * Providers that don't model "avatars" or "voices" return an empty array.
+ * Provider-agnostic interface for media generation back-ends (HeyGen, Veo, Sora, …). Generation is
+ * split into `enqueue` (submit, returns a job id) and `awaitResult` (poll to completion) so a
+ * long-running job survives navigation/remount — the caller persists the job id between the two.
+ * `generate` is the convenience composition. Providers that don't model avatars/voices return `[]`.
  */
 export interface GenerationProvider {
   readonly id: string;
   /** Returns true if the provider can produce media of the given kind. */
-  supports(kind: Generation.Kind): boolean;
+  supports(kind: MediaKind): boolean;
   /** Submit a generation job. Returns the provider-specific id the caller should persist. */
   enqueue(input: GenerateInput, options: ProviderCallOptions): Promise<{ jobId: string }>;
   /** Poll an existing job until it reaches a terminal state and returns its artefact. */
@@ -74,7 +65,7 @@ export class MissingApiKeyError extends Error {
 }
 
 export class UnsupportedKindError extends Error {
-  constructor(kind: Generation.Kind, provider: string) {
+  constructor(kind: MediaKind, provider: string) {
     super(`Provider ${provider} does not support media kind ${kind}.`);
     this.name = 'UnsupportedKindError';
   }

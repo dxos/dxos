@@ -4,13 +4,12 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { type Generation } from '#types';
-
 import {
   type GenerateInput,
   type GenerateResult,
   type GenerationOption,
   type GenerationProvider,
+  type MediaKind,
   MissingApiKeyError,
   type ProviderCallOptions,
   ProviderFailureError,
@@ -21,23 +20,13 @@ const V3_BASE_URL = 'https://api.heygen.com/v3';
 
 const LIMIT = 50;
 
-/**
- * v3 create-video endpoint with a flat body (no `video_inputs` wrapper) and a
- * top-level `fit` field. We send `fit: 'cover'` so HeyGen crops/scales the
- * avatar to fill the output frame rather than letterboxing.
- * https://developers.heygen.com/reference/create-video#body-one-of-0-fit-one-of-0
- */
+// v3 create-video endpoint with a flat body and a top-level `fit` field.
+// https://developers.heygen.com/reference/create-video
 const GENERATE_URL = `${V3_BASE_URL}/videos`;
-// v3 status check: `GET /v3/videos/{video_id}` — REST style instead of v2's
-// `video_status.get?video_id=...` query param.
-// https://developers.heygen.com/commands#video-status
+// v3 status check: `GET /v3/videos/{video_id}`.
 const STATUS_URL = `${V3_BASE_URL}/videos`;
 
-// v3 list endpoints with server-side ownership/type filters. See:
-// https://developers.heygen.com/commands#filter-flags-for-avatar-list
-// `ownership=private` (avatars) / `type=private` (voices) restrict the response to
-// user-owned entries, so we don't need to do any client-side filtering.
-
+// v3 list endpoints with server-side ownership/type filters restrict to user-owned entries.
 const AVATARS_URL = `${V3_BASE_URL}/avatars?ownership=private&limit=${LIMIT}`;
 const VOICES_URL = `${V3_BASE_URL}/voices?type=private&limit=${LIMIT}`;
 
@@ -51,15 +40,10 @@ export type HeyGenProviderOptions = {
 };
 
 /**
- * HeyGen video generation adapter.
- *
- * Submits a generation request, then polls the status endpoint until the job
- * reaches a terminal state. HeyGen does not produce audio-only artefacts, so
- * `supports('audio')` returns false — callers should select a different
- * provider for audio generation.
- *
- * The v2 API requires `avatar_id` and `voice_id`; both are read from the
- * `GenerateInput` (which the article populates from the Generation object).
+ * HeyGen video generation adapter. Submits a generation request, then polls the status endpoint
+ * until the job reaches a terminal state. HeyGen does not produce audio-only artefacts, so
+ * `supports('audio')` returns false. The v3 API requires `avatar_id` and `voice_id`; both are read
+ * from the {@link GenerateInput} (which the caller populates from the artifact's request config).
  */
 export class HeyGenProvider implements GenerationProvider {
   readonly id = 'heygen';
@@ -73,7 +57,7 @@ export class HeyGenProvider implements GenerationProvider {
     this.#fetch = options.fetch ?? globalThis.fetch.bind(globalThis);
   }
 
-  supports(kind: Generation.Kind): boolean {
+  supports(kind: MediaKind): boolean {
     return kind === 'video';
   }
 
@@ -121,9 +105,6 @@ export class HeyGenProvider implements GenerationProvider {
       throw new ProviderFailureError(`HeyGen listAvatars failed: ${response.status} ${await readErrorBody(response)}`);
     }
 
-    // v3 returns `{ data: [...] }` (flat array, not `{ data: { avatars: [...] } }`)
-    // and already restricts via `ownership=private`; trust the server and just map.
-    // Some endpoints use `avatar_id` instead of `id` — coalesce defensively.
     const body = (await response.json()) as {
       data?: Array<{ id?: string; avatar_id?: string; name?: string }>;
     };
@@ -146,9 +127,6 @@ export class HeyGenProvider implements GenerationProvider {
       throw new ProviderFailureError(`HeyGen listVoices failed: ${response.status} ${await readErrorBody(response)}`);
     }
 
-    // v3 returns `{ data: [...] }` (flat array, same shape as /v3/avatars) and
-    // already restricts via `type=private`; trust the server and just map. v3
-    // voices still expose `voice_id` (rather than `id`), so coalesce defensively.
     const body = (await response.json()) as {
       data?: Array<{ id?: string; voice_id?: string; name?: string }>;
     };
@@ -157,9 +135,6 @@ export class HeyGenProvider implements GenerationProvider {
       .filter((entry): entry is GenerationOption => typeof entry.id === 'string' && typeof entry.name === 'string');
   }
 
-  /**
-   * https://developers.heygen.com/reference/create-video#body-one-of-0-fit-one-of-0
-   */
   async #postGenerate(input: GenerateInput, options: ProviderCallOptions): Promise<string> {
     const response = await this.#fetch(GENERATE_URL, {
       method: 'POST',
@@ -172,8 +147,6 @@ export class HeyGenProvider implements GenerationProvider {
         avatar_id: input.avatarId,
         voice_id: input.voiceId,
         script: input.prompt,
-        // TODO(burdon): Make configurable via props.
-        // fit: 'contain',
         aspect_ratio: '16:9',
         resolution: '1080p',
         remove_background: true,
@@ -200,8 +173,6 @@ export class HeyGenProvider implements GenerationProvider {
   async #poll(videoId: string, options: ProviderCallOptions): Promise<string> {
     const deadline = Date.now() + this.#timeoutMs;
     while (Date.now() < deadline) {
-      // v3: `GET /v3/videos/{video_id}`. The `url`/`video_url` field is populated
-      // once `status === 'completed'`.
       const response = await this.#fetch(`${STATUS_URL}/${encodeURIComponent(videoId)}`, {
         method: 'GET',
         headers: { 'X-Api-Key': options.apiKey },
@@ -225,10 +196,6 @@ export class HeyGenProvider implements GenerationProvider {
       }
 
       await new Promise<void>((resolve, reject) => {
-        // Register a named abort handler so we can remove it when the timer fires
-        // — `{ once: true }` only auto-removes after an abort event, so without
-        // explicit cleanup listeners would pile up on the (long-lived) signal across
-        // every poll iteration.
         const onAbort = () => {
           clearTimeout(timer);
           reject(options.signal?.reason);
@@ -245,7 +212,7 @@ export class HeyGenProvider implements GenerationProvider {
   }
 }
 
-/** Best-effort decode of an error response body so the user sees the actual reason instead of a bare status. */
+/** Best-effort decode of an error response body so the user sees the actual reason. */
 const readErrorBody = async (response: Response): Promise<string> => {
   try {
     const text = await response.text();
