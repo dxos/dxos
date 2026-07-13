@@ -87,6 +87,8 @@
       "@dxos/functions-testing",
       "@dxos/graph",
       "@dxos/halo",
+      "@dxos/halo-adapter-client",
+      "@dxos/halo-e2e",
       "@dxos/hypercore",
       "@dxos/i18n",
       "@dxos/index-core",

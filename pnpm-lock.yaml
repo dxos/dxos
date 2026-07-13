@@ -6787,6 +6787,57 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
 
+  packages/core/halo/halo-adapter-client:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../../sdk/client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../../sdk/client-protocol
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../halo
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
+
+  packages/core/halo/halo-e2e:
+    dependencies:
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../../sdk/client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../halo
+      '@dxos/halo-adapter-client':
+        specifier: workspace:*
+        version: link:../halo-adapter-client
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      effect:
+        specifier: 3.21.4
+        version: 3.21.4
+
   packages/core/halo/keyring:
     dependencies:
       '@dxos/async':

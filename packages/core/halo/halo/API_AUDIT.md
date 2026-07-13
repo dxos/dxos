@@ -319,7 +319,7 @@ owns client construction. Plugins import only `@dxos/halo`:
    ▲                        ▲
    │                        │  provide layers at composition:
    │                        │
-@dxos/halo-client   ──  layerClient(client)                    (wraps HaloProxy/EchoProxy/InvitationsProxy)
+@dxos/halo-adapter-client ── layerClient(client)               (wraps HaloProxy/EchoProxy/InvitationsProxy)
 @dxos/halo-keyhive  ──  layerKeyhive / layerEdge  (future)     (Keyhive prototype impl relocates here, MIGRATION.md §A.2)
    ▲
    │
@@ -338,9 +338,10 @@ Suggested sequence:
 1. **Define services** in `@dxos/halo` (tags, verbs, event/error schemas — no layers). Reuse
    `Profile`, `Device`; add `Space`, `Member`, `InvitationEvent`, `Invitation.Flow` schemas.
    Move the `Keyhive.ts` implementation out to `@dxos/halo-keyhive`, leaving its interface.
-2. **`layerClient`** in a `@dxos/halo-client` package (keeps `@dxos/halo` free of the client
-   dependency), provided by `plugin-client` alongside — then instead of —
-   `ClientCapabilities.Client`.
+2. **`layerClient`** in a `@dxos/halo-adapter-client` package (keeps `@dxos/halo` free of the
+   client dependency), provided by `plugin-client` alongside — then instead of —
+   `ClientCapabilities.Client`. **(Implemented — see `@dxos/halo-adapter-client`, with an
+   integration suite in `@dxos/halo-e2e`.)**
 3. **Port operation handlers** (§2.8) — the concentrated mutation sites — from `client.*` to
    service verbs. Plugin control flow (operations) is unchanged.
 4. **Port hooks**: reimplement `useIdentity`/`useDevices`/`useSpaces`/`useSpace`/`useMembers`/
