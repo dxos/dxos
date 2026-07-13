@@ -54,10 +54,14 @@ const marker = join(sidecarDir, '.ollama-version');
 const launcher = join(runtimeDir, 'ollama');
 const frameworkDir = join(sidecarDir, 'ollama-metal.framework');
 const frameworkLibrariesDir = join(frameworkDir, 'Libraries');
-// Framework validity requires the framework's main binary to be named after the framework itself
-// (`<name>.framework/<name>`) — verified locally; a mismatched name fails as "bundle format
-// unrecognized, invalid, or unsuitable" once nested inside another app bundle.
-const frameworkBinary = join(frameworkDir, 'ollama-metal');
+// Resource-only framework: an Info.plist without CFBundleExecutable is enough for codesign to
+// accept the directory as a well-formed framework bundle (verified locally) — no main binary
+// needed. Tauri signs the framework bundle itself with `is_an_executable: false` (no hardened
+// runtime), so a real binary there would fail Apple's notarization ("signature of the binary is
+// invalid" — verified against a real notarization run); omitting it avoids that entirely, since
+// the only executable code left is the metallib files in Libraries/, which do get hardened
+// runtime via Tauri's normal per-file framework signing.
+const frameworkInfoPlist = join(frameworkDir, 'Info.plist');
 
 // Packaged builds place the runtime at `Contents/MacOS/lib/ollama` and the framework at
 // `Contents/Frameworks/ollama-metal.framework` (4 levels up, then down into Frameworks/); local
@@ -121,11 +125,21 @@ const ensureSidecars = async () => {
 const ensureMetalFramework = async () => {
   await mkdir(frameworkLibrariesDir, { recursive: true });
 
-  if (!(await exists(frameworkBinary))) {
-    const stubSource = join(sidecarDir, '.ollama-metal-stub.c');
-    await writeFile(stubSource, 'int OllamaMetalFrameworkMarker = 1;\n');
-    execFileSync('clang', ['-dynamiclib', '-o', frameworkBinary, stubSource]);
-    await rm(stubSource, { force: true });
+  if (!(await exists(frameworkInfoPlist))) {
+    await writeFile(
+      frameworkInfoPlist,
+      [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">',
+        '<plist version="1.0">',
+        '<dict>',
+        '  <key>CFBundleIdentifier</key><string>org.dxos.composer.ollama-metal</string>',
+        '  <key>CFBundlePackageType</key><string>FMWK</string>',
+        '</dict>',
+        '</plist>',
+        '',
+      ].join('\n'),
+    );
   }
 
   for (const variant of METAL_VARIANTS) {
