@@ -23,6 +23,22 @@ export type ClusterSignals = {
   readonly personLinked: boolean;
   /** Rolled-up open questions + action items across the cluster. */
   readonly openItemCount: number;
+  /**
+   * Every non-owner sender is an automated / no-reply / role address (no human counterparty). Such
+   * topics (deletion notices, security alerts, receipts) can be time-sensitive but aren't the
+   * relationship topics a CRM centers on — they're down-weighted so person/team topics surface.
+   */
+  readonly automated: boolean;
+};
+
+// No-reply / role local parts that mark an automated sender (no human on the other end).
+const AUTOMATED_LOCALPART_RE =
+  /^(no-?reply|do-?not-?reply|donotreply|noreply|notifications?|notify|alerts?|updates?|news(letter)?|digest|mailer(-daemon)?|postmaster|bounce|receipts?|billing|invoices?|payments?|accounts?|support|help(desk)?|hello|info|team|sales|marketing|promo(tions)?|security|system|automated|admin)([._+\-]|$)/i;
+
+/** Whether an email address looks automated (no-reply / role local part). */
+export const isAutomatedAddress = (email: string): boolean => {
+  const localPart = email.split('@')[0] ?? '';
+  return AUTOMATED_LOCALPART_RE.test(localPart);
 };
 
 export type ActivityOptions = {
@@ -34,6 +50,8 @@ export type ActivityOptions = {
   readonly maxOpenItems?: number;
   /** Signal weights (normalized internally; need not sum to 1). */
   readonly weights?: Partial<Record<'recency' | 'awaiting' | 'person' | 'items', number>>;
+  /** Multiplier applied to a fully-automated topic's score (default 0.35), so person topics rank above. */
+  readonly automatedFactor?: number;
 };
 
 const DEFAULT_WEIGHTS = { recency: 0.35, awaiting: 0.25, person: 0.25, items: 0.15 } as const;
@@ -66,7 +84,9 @@ export const activityScore = (signals: ClusterSignals, options: ActivityOptions)
     weights.awaiting * parts.awaiting +
     weights.person * parts.person +
     weights.items * parts.items;
-  return weighted / totalWeight;
+  const score = weighted / totalWeight;
+  // Fully-automated topics (no human counterparty) are down-weighted so relationship topics rank above.
+  return signals.automated ? score * (options.automatedFactor ?? 0.35) : score;
 };
 
 /** Blends the LLM confidence with the deterministic activity score (`w` weights the LLM). */
@@ -249,13 +269,19 @@ export const computeClusterSignals = (
     readonly threadRecency: ReadonlyMap<string, number>;
     readonly awaitingThreadIds: ReadonlySet<string>;
     readonly personEmails?: ReadonlySet<string>;
+    readonly ownerEmails?: ReadonlySet<string>;
   },
-): ClusterSignals => ({
-  latestCreatedMs: Math.max(0, ...draft.threadIds.map((id) => maps.threadRecency.get(id) ?? 0)),
-  awaitingMine: draft.threadIds.some((id) => maps.awaitingThreadIds.has(id)),
-  personLinked: draft.participants.some((email) => maps.personEmails?.has(email.toLowerCase()) ?? false),
-  openItemCount: draft.questions.length + draft.tasks.length,
-});
+): ClusterSignals => {
+  // Non-owner senders; a topic is automated when every one of them is a no-reply/role address.
+  const counterparties = draft.participants.filter((email) => !maps.ownerEmails?.has(email.toLowerCase()));
+  return {
+    latestCreatedMs: Math.max(0, ...draft.threadIds.map((id) => maps.threadRecency.get(id) ?? 0)),
+    awaitingMine: draft.threadIds.some((id) => maps.awaitingThreadIds.has(id)),
+    personLinked: draft.participants.some((email) => maps.personEmails?.has(email.toLowerCase()) ?? false),
+    openItemCount: draft.questions.length + draft.tasks.length,
+    automated: counterparties.length > 0 && counterparties.every(isAutomatedAddress),
+  };
+};
 
 /**
  * Runs the Active Topics experiment: cluster → deterministic activity score + prefilter → LLM
@@ -279,6 +305,11 @@ export const runActiveTopics = async (
   const awaitingThreadIds = new Set(
     threads.filter((thread) => thread.state === 'awaiting-mine').map((thread) => thread.threadId),
   );
+  const ownerEmails = new Set(
+    (Array.isArray(input.ownerEmail) ? input.ownerEmail : input.ownerEmail ? [input.ownerEmail] : []).map((email) =>
+      email.toLowerCase(),
+    ),
+  );
 
   const contextFor = (draft: TopicDraft): TopicContext => ({
     draft,
@@ -292,7 +323,12 @@ export const runActiveTopics = async (
     .map((draft) => ({
       draft,
       activity: activityScore(
-        computeClusterSignals(draft, { threadRecency, awaitingThreadIds, personEmails: input.personEmails }),
+        computeClusterSignals(draft, {
+          threadRecency,
+          awaitingThreadIds,
+          personEmails: input.personEmails,
+          ownerEmails,
+        }),
         {
           nowMs: input.nowMs,
           ...input.activity,

@@ -59,11 +59,39 @@ human review. Harness-only (informs the product `Topic` schema). Prereqs: Ollama
 - [x] **`active-topics.mjs` driver + `stories-brain:active-topics` moon task** — non-interactive; env
       `ACTIVE_N` / `ACTIVE_TOP` / `ACTIVE_THRESHOLD` / `MODEL_POLICY`. Runs `active-topics.bench.test.ts`
       (guarded by `fixtureExists()` → CI skips; 13 unit tests + skip verified).
-- [ ] **RUN overnight** over the private fixture (`moon run stories-brain:active-topics`, Ollama + `.env`);
-      review `index.md` in the morning (expect ≈3–5 active, each fully populated + a suggested list).
-      Record findings in `fixtures/REPORT.md`. NOTE: first run is a shakedown (real-model glue unverified
-      locally) — expect prompt/parse tweaks like the original `overnight` needed. Optional: wire
-      `personEmails` (contacts) + `OWNER_EMAIL` so the person / awaiting-mine signals fire.
+- [x] **Shakedown (smoke, LIMIT=15)** — found + fixed: wall-clock recency (fixture is historical →
+      anchor "now" to the corpus's latest message) and multi-alias owner support in `buildThreads`
+      (`string | string[]` + test). Smoke: 2 active + 6 suggested, status/facts/tasks populated; drafts
+      correctly skipped for automated senders (e.g. `noreply@safesendreturns.com`).
+- [~] **RUN full** (`ACTIVE_TOP=8`, both aliases, all 495) — IN PROGRESS (background). Review
+  `index.md` + per-topic reports; record findings in `fixtures/REPORT.md`.
+- [ ] **Intervention: automated/no-reply down-weight** — the activity model reads every unanswered
+      inbound thread as `awaiting-mine`, so receipts/reminders rank near-active. Fold the `bulk`/org
+      (no-reply localpart) signal into `activityScore` (or the prefilter) so genuine person topics rank
+      above automated mail. Re-run + compare. Plus any other tuning the full run surfaces (e.g. LLM
+      topic labels instead of keyword-salad).
+
+## Roadmap, CRM spec & parallel-experiment plan (asks 2026-07-13)
+
+**Direction:** the north star is an **AI-assisted, Topic-anchored CRM** — analyze personal/team email,
+discover Topics, and drive custom workflows off them. The Active Topics experiment is the first probe.
+These deliverables come AFTER the full experiment run + review.
+
+### Tasks
+
+- [ ] **`ROADMAP.md`** (`packages/stories/stories-brain/ROADMAP.md`) — future-research directions +
+      a technique survey with background web research. MUST cover **N3/RDF**: we still haven't validated
+      whether the `FactStore` earns its keep — design + recommend (or execute) concrete validation tests
+      (e.g. fact-grounded QA vs. raw-thread QA; N3 rules / reasoning over extracted facts; retrieval
+      value). Survey adjacent techniques (embeddings/RAG, entity resolution, temporal/event modeling).
+- [x] **CRM product spec** (`agents/superpowers/specs/2026-07-13-crm-workflow-design.md`) — drafted:
+      vision (Topic as the organizing primitive), 7-layer architecture, the 7 features + 6 proposed
+      additions (workflow engine, triage/two-tier, relationship graph, provenance layer, team mode,
+      digest), tests per feature, cross-cutting eval/model-routing/FactStore, open questions. For morning refinement.
+- [ ] **Experimental roadmap for parallel agents** — independent, self-contained experiment briefs
+      (each runnable by a separate agent) advancing the research + product. A section of `ROADMAP.md`
+      (or its own doc). Refineable in the morning.
+- [ ] **Track everything here** (this section) — keep updated as the above land.
 
 Follow-ups (deferred): automated judge scoring; held-out incoming-mail contextualization; promote the
 validated `ActiveTopic` fields into the product `Topic`.

@@ -9,11 +9,14 @@ import { Message } from '@dxos/types';
 
 import {
   type ActiveTopicsDeps,
+  type ClusterSignals,
   type ScoredCandidate,
   activityScore,
   assembleActiveTopic,
   classifyTopics,
   combineConfidence,
+  computeClusterSignals,
+  isAutomatedAddress,
   populatedChecklist,
   renderTasksMarkdown,
   runActiveTopics,
@@ -36,33 +39,64 @@ const draft = (overrides: Partial<TopicDraft> = {}): TopicDraft => ({
   ...overrides,
 });
 
+const signals = (overrides: Partial<ClusterSignals> = {}): ClusterSignals => ({
+  latestCreatedMs: NOW,
+  awaitingMine: false,
+  personLinked: false,
+  openItemCount: 0,
+  automated: false,
+  ...overrides,
+});
+
 describe('activityScore', () => {
   test('a recent, awaiting-mine, person-linked topic with open items scores high', ({ expect }) => {
     const score = activityScore(
-      { latestCreatedMs: NOW, awaitingMine: true, personLinked: true, openItemCount: 5 },
+      signals({ latestCreatedMs: NOW, awaitingMine: true, personLinked: true, openItemCount: 5 }),
       { nowMs: NOW },
     );
     expect(score).toBeCloseTo(1, 5);
   });
 
   test('a stale, org, no-action topic scores low', ({ expect }) => {
-    const score = activityScore(
-      { latestCreatedMs: NOW - 120 * DAY, awaitingMine: false, personLinked: false, openItemCount: 0 },
-      { nowMs: NOW },
-    );
+    const score = activityScore(signals({ latestCreatedMs: NOW - 120 * DAY }), { nowMs: NOW });
     expect(score).toBeLessThan(0.05);
   });
 
   test('recency decays to ~half a weight at one half-life', ({ expect }) => {
-    const recent = activityScore(
-      { latestCreatedMs: NOW, awaitingMine: false, personLinked: false, openItemCount: 0 },
-      { nowMs: NOW, halfLifeMs: 14 * DAY },
-    );
-    const oneHalfLife = activityScore(
-      { latestCreatedMs: NOW - 14 * DAY, awaitingMine: false, personLinked: false, openItemCount: 0 },
-      { nowMs: NOW, halfLifeMs: 14 * DAY },
-    );
+    const recent = activityScore(signals({ latestCreatedMs: NOW }), { nowMs: NOW, halfLifeMs: 14 * DAY });
+    const oneHalfLife = activityScore(signals({ latestCreatedMs: NOW - 14 * DAY }), {
+      nowMs: NOW,
+      halfLifeMs: 14 * DAY,
+    });
     expect(oneHalfLife).toBeCloseTo(recent / 2, 5);
+  });
+
+  test('a fully-automated topic is down-weighted below the same non-automated topic', ({ expect }) => {
+    const base = signals({ latestCreatedMs: NOW, awaitingMine: true });
+    const automated = activityScore({ ...base, automated: true }, { nowMs: NOW });
+    const human = activityScore(base, { nowMs: NOW });
+    expect(automated).toBeLessThan(human);
+    expect(automated).toBeCloseTo(human * 0.35, 5);
+  });
+});
+
+describe('isAutomatedAddress / computeClusterSignals automated', () => {
+  test('flags no-reply / role local parts', ({ expect }) => {
+    expect(isAutomatedAddress('no-reply@grafana.com')).toBe(true);
+    expect(isAutomatedAddress('notifications@1password.com')).toBe(true);
+    expect(isAutomatedAddress('receipts@stripe.com')).toBe(true);
+    expect(isAutomatedAddress('graham@dxos.org')).toBe(false);
+    expect(isAutomatedAddress('rich@braneframe.com')).toBe(false);
+  });
+
+  test('a topic is automated only when every non-owner sender is automated', ({ expect }) => {
+    const maps = { threadRecency: new Map(), awaitingThreadIds: new Set<string>(), ownerEmails: new Set(['me@x.com']) };
+    expect(computeClusterSignals(draft({ participants: ['no-reply@grafana.com', 'me@x.com'] }), maps).automated).toBe(
+      true,
+    );
+    expect(computeClusterSignals(draft({ participants: ['graham@dxos.org', 'no-reply@x.com'] }), maps).automated).toBe(
+      false,
+    );
   });
 });
 
