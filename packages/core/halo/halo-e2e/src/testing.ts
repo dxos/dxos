@@ -2,74 +2,117 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Context from 'effect/Context';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
-import { onTestFinished } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { EffectEx } from '@dxos/effect';
-import { Identity } from '@dxos/halo';
-import type { Invitation, Space } from '@dxos/halo';
-import { layerClient } from '@dxos/halo-adapter-client';
-import { range } from '@dxos/util';
+import { Identity, type Invitation, Space } from '@dxos/halo';
+import { makeIdentityService, makeInvitationService, makeSpaceService } from '@dxos/halo-adapter-client';
 
 /** Every HALO service, provided by one client adapter. */
 export type HaloServices = Identity.Service | Space.Service | Invitation.Service;
 
-/**
- * Runs a HALO program against a client via the client adapter, returning a promise (rejecting on
- * a typed failure). All three services are provided.
- */
-export const runWith = <A, E>(client: Client, program: Effect.Effect<A, E, HaloServices>): Promise<A> =>
-  EffectEx.runPromise(Effect.provide(program, layerClient(client)));
+/** Builds the HALO-services context for a client (all three adapter services). */
+const clientContext = (client: Client): Context.Context<HaloServices> =>
+  Context.empty().pipe(
+    Context.add(Identity.Service, makeIdentityService(client)),
+    Context.add(Space.Service, makeSpaceService(client)),
+    Context.add(Invitation.Service, makeInvitationService(client)),
+  );
 
 /**
- * Runs a flow's service-free Effect (e.g. `flow.code`) to a promise.
+ * A scoped layer providing the three HALO services backed by a freshly-initialized client.
+ * The client (and, by default, its identity) is created on build and destroyed on scope close,
+ * so each test that provides this layer gets an isolated peer.
  */
-export const runFlow = <A, E>(program: Effect.Effect<A, E>): Promise<A> => EffectEx.runPromise(program);
-
-/**
- * Creates `count` clients sharing an in-memory network (so they can invite one another).
- * Registers teardown with the current test. When `identity` is set, each client creates an
- * identity through the new API.
- */
-export const createClients = async (count: number, options?: { identity?: boolean }): Promise<Client[]> => {
-  const testBuilder = new TestBuilder();
-  const clients = range(count, () => new Client({ services: testBuilder.createLocalClientServices() }));
-  onTestFinished(async () => {
-    await Promise.all(clients.map((client) => client.destroy()));
-  });
-
-  await Promise.all(
-    clients.map(async (client, index) => {
-      await client.initialize();
+export const makeClientLayer = (options?: { identity?: boolean }): Layer.Layer<HaloServices> =>
+  Layer.scopedContext(
+    Effect.gen(function* () {
+      const client = new Client({ services: new TestBuilder().createLocalClientServices() });
+      yield* Effect.addFinalizer(() => Effect.promise(() => client.destroy()));
+      yield* Effect.promise(() => client.initialize());
+      const context = clientContext(client);
       if (options?.identity !== false) {
-        await runWith(client, Identity.create({ displayName: `Peer ${index}` }));
+        yield* Identity.create({ displayName: 'Peer' }).pipe(Effect.provide(context));
       }
+      return context;
     }),
   );
-  return clients;
-};
+
+/**
+ * Spawns client peers on a shared in-memory network so they can invite one another. Used by
+ * multi-client (invitation) tests; peers are torn down when the layer scope closes.
+ */
+export class TestNetwork extends Context.Tag('@dxos/halo-e2e/TestNetwork')<
+  TestNetwork,
+  {
+    spawn(options?: { identity?: boolean }): Effect.Effect<Context.Context<HaloServices>>;
+  }
+>() {}
+
+export const TestNetworkLive = Layer.scoped(
+  TestNetwork,
+  Effect.gen(function* () {
+    const testBuilder = new TestBuilder();
+    const clients: Client[] = [];
+    yield* Effect.addFinalizer(() =>
+      Effect.promise(async () => {
+        await Promise.all(clients.map((client) => client.destroy()));
+      }),
+    );
+    return {
+      spawn: (options) =>
+        Effect.gen(function* () {
+          const index = clients.length;
+          const client = new Client({ services: testBuilder.createLocalClientServices() });
+          clients.push(client);
+          yield* Effect.promise(() => client.initialize());
+          const context = clientContext(client);
+          if (options?.identity !== false) {
+            yield* Identity.create({ displayName: `Peer ${index}` }).pipe(Effect.provide(context));
+          }
+          return context;
+        }),
+    };
+  }),
+);
 
 const isTerminal = (event: Invitation.Event): boolean =>
   event._tag === 'success' || event._tag === 'cancelled' || event._tag === 'error';
 
 /**
  * Consumes an invitation flow's event stream until its terminal event, returning that event.
- * The flow's streams/effects require no services, so no layer is needed here.
+ * The flow's streams/effects require no services.
  */
-export const awaitTerminal = (flow: Invitation.Flow): Promise<Invitation.Event> =>
-  EffectEx.runPromise(
-    flow.events.pipe(
-      Stream.takeUntil(isTerminal),
-      Stream.runLast,
-      Effect.map(
-        Option.getOrElse(
-          (): Invitation.Event => ({ _tag: 'error', message: 'invitation stream ended without a terminal event' }),
-        ),
+export const awaitTerminal = (flow: Invitation.Flow): Effect.Effect<Invitation.Event> =>
+  flow.events.pipe(
+    Stream.takeUntil(isTerminal),
+    Stream.runLast,
+    Effect.map(
+      Option.getOrElse(
+        (): Invitation.Event => ({ _tag: 'error', message: 'invitation stream ended without a terminal event' }),
       ),
-      Effect.timeout('20 seconds'),
     ),
+    Effect.timeout(Duration.seconds(20)),
+    Effect.orDie,
+  );
+
+/**
+ * Repeats an effect until its result satisfies the predicate (bounded by a timeout). Effect-native
+ * replacement for `expect.poll` when the polled read needs the service context.
+ */
+export const pollUntil = <A, E, R>(
+  effect: Effect.Effect<A, E, R>,
+  predicate: (value: A) => boolean,
+): Effect.Effect<A, E, R> =>
+  effect.pipe(
+    Effect.repeat({ schedule: Schedule.spaced(Duration.millis(100)), until: predicate }),
+    Effect.timeout(Duration.seconds(10)),
+    Effect.orDie,
   );

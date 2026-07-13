@@ -5,21 +5,80 @@
 import * as Rpc from '@effect/rpc/Rpc';
 import type * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
+import * as Schema from 'effect/Schema';
 
 import { protoMessage, serviceError } from './service-rpc.ts';
+import { publicKey } from './service-schemas.ts';
+
+//
+// RPC message schemas.
+//
+
+export const CreateIdentityRequest = Schema.Struct({
+  profile: Schema.optional(protoMessage('dxos.halo.credentials.ProfileDocument')),
+  deviceProfile: Schema.optional(protoMessage('dxos.halo.credentials.DeviceProfileDocument')),
+});
+export interface CreateIdentityRequest extends Schema.Schema.Type<typeof CreateIdentityRequest> {}
+
+export const RequestRecoveryChallengeResponse = Schema.Struct({
+  deviceKey: publicKey,
+  controlFeedKey: publicKey,
+  challenge: Schema.String,
+});
+export interface RequestRecoveryChallengeResponse extends Schema.Schema.Type<typeof RequestRecoveryChallengeResponse> {}
+
+export const RecoveryCredentialData = Schema.Struct({
+  /**
+   * Recovery key used to validate recovery challenge signature.
+   */
+  recoveryKey: publicKey,
+  /**
+   * Public key used to identify the recovery key.
+   */
+  lookupKey: publicKey,
+  /**
+   * Algorithm used to generate the recovery key.
+   */
+  algorithm: Schema.String,
+});
+export interface RecoveryCredentialData extends Schema.Schema.Type<typeof RecoveryCredentialData> {}
+
+export const CreateRecoveryCredentialRequest = Schema.Struct({
+  /**
+   * If not provided, a new key will be generated.
+   */
+  data: Schema.optional(RecoveryCredentialData),
+});
+export interface CreateRecoveryCredentialRequest extends Schema.Schema.Type<typeof CreateRecoveryCredentialRequest> {}
+
+export const CreateRecoveryCredentialResponse = Schema.Struct({
+  recoveryCode: Schema.optional(Schema.String),
+});
+export interface CreateRecoveryCredentialResponse extends Schema.Schema.Type<typeof CreateRecoveryCredentialResponse> {}
+
+export const QueryIdentityResponse = Schema.Struct({
+  identity: Schema.optional(protoMessage('dxos.client.services.Identity')),
+});
+export interface QueryIdentityResponse extends Schema.Schema.Type<typeof QueryIdentityResponse> {}
+
+export const SignPresentationRequest = Schema.Struct({
+  presentation: protoMessage('dxos.halo.credentials.Presentation'),
+  nonce: Schema.optional(Schema.Uint8Array),
+});
+export interface SignPresentationRequest extends Schema.Schema.Type<typeof SignPresentationRequest> {}
 
 /**
  * Effect RPC definitions for `dxos.client.services.IdentityService`.
- * Generated from the protobuf service definition; payloads are protobuf-encoded on the wire.
+ * Service-only payloads use Effect schemas; shared proto types remain protobuf-encoded on the wire.
  */
 export class Rpcs extends RpcGroup.make(
   Rpc.make('createIdentity', {
-    payload: protoMessage('dxos.client.services.CreateIdentityRequest'),
+    payload: CreateIdentityRequest,
     success: protoMessage('dxos.client.services.Identity'),
     error: serviceError,
   }),
   Rpc.make('requestRecoveryChallenge', {
-    success: protoMessage('dxos.client.services.RequestRecoveryChallengeResponse'),
+    success: RequestRecoveryChallengeResponse,
     error: serviceError,
   }),
   Rpc.make('recoverIdentity', {
@@ -28,12 +87,12 @@ export class Rpcs extends RpcGroup.make(
     error: serviceError,
   }),
   Rpc.make('createRecoveryCredential', {
-    payload: protoMessage('dxos.client.services.CreateRecoveryCredentialRequest'),
-    success: protoMessage('dxos.client.services.CreateRecoveryCredentialResponse'),
+    payload: CreateRecoveryCredentialRequest,
+    success: CreateRecoveryCredentialResponse,
     error: serviceError,
   }),
   Rpc.make('queryIdentity', {
-    success: protoMessage('dxos.client.services.QueryIdentityResponse'),
+    success: QueryIdentityResponse,
     error: serviceError,
     stream: true,
   }),
@@ -43,7 +102,7 @@ export class Rpcs extends RpcGroup.make(
     error: serviceError,
   }),
   Rpc.make('signPresentation', {
-    payload: protoMessage('dxos.client.services.SignPresentationRequest'),
+    payload: SignPresentationRequest,
     success: protoMessage('dxos.halo.credentials.Presentation'),
     error: serviceError,
   }),
