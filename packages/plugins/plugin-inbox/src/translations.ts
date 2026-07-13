@@ -154,6 +154,9 @@ export const translations = [
         'topics.count.label':
           '{{threads}} threads · {{participants}} participants · {{questions}} questions · {{tasks}} tasks',
         'topics.delete.label': 'Delete topic',
+        'topics.threads.label': 'Threads',
+        'topics.questions.label': 'Questions',
+        'topics.tasks.label': 'Tasks',
         'create-draft.label': 'Create draft',
 
         'related-contacts.title': 'Related contacts',

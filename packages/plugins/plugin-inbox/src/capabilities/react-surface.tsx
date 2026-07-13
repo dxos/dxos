@@ -10,6 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { Topic } from '@dxos/pipeline-email';
 import { getParentId, useNode } from '@dxos/plugin-graph';
 import { Event, Message, Organization, Person } from '@dxos/types';
 
@@ -27,6 +28,7 @@ import {
   RelatedToContact,
   RelatedToOrganization,
   SaveFilterPopover,
+  TopicArticle,
   TopicsArticle,
 } from '#containers';
 import { Calendar, DraftMessage, Mailbox } from '#types';
@@ -83,6 +85,13 @@ export default Capability.makeModule(() =>
           const mailbox = (data.properties as { mailbox: Mailbox.Mailbox }).mailbox;
           return <TopicsArticle role={role} space={space} attendableId={data.attendableId} mailbox={mailbox} />;
         },
+      }),
+      Surface.create({
+        id: 'topic',
+        filter: AppSurface.object(AppSurface.Article, Topic),
+        component: ({ data, role }) => (
+          <TopicArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
       }),
       Surface.create({
         id: 'mailbox',

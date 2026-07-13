@@ -13,7 +13,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { Topic } from '@dxos/pipeline-email';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Mailbox } from '@dxos/plugin-inbox';
-import { TopicsArticle } from '@dxos/plugin-inbox/containers';
+import { TopicArticle, TopicsArticle } from '@dxos/plugin-inbox/containers';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -99,6 +99,36 @@ type Story = StoryObj<typeof meta>;
 
 /** Renders the seeded topics as cards, each with an action menu offering "Delete topic". */
 export const Default: Story = {};
+
+/** Renders the `TopicArticle` detail for one seeded topic. */
+const DetailStory = () => {
+  const [space] = useSpaces();
+  const topics = useQuery(space?.db, Filter.type(Topic));
+  const topic = topics.find((entry) => entry.label === 'q2 report budget');
+
+  if (!space?.db || !topic) {
+    return <Loading data={{ db: !!space?.db, topic: !!topic }} />;
+  }
+
+  return <TopicArticle role='article' subject={topic} attendableId='story' />;
+};
+
+/** The detail view renders the topic's summary, keyword chips, participants, questions, and tasks. */
+export const Detail: Story = { render: DetailStory };
+
+/** Asserts the detail view surfaces each stored field. */
+export const DetailTest: Story = {
+  render: DetailStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getByText('q2 report budget')).toBeInTheDocument());
+    void expect(canvas.getByText('Alice circulated the Q2 report and budget.')).toBeInTheDocument();
+    void expect(canvas.getByText('q2')).toBeInTheDocument(); // keyword chip
+    void expect(canvas.getByText(/alice@example\.com/)).toBeInTheDocument(); // participants
+    void expect(canvas.getByText('When is the budget due?')).toBeInTheDocument(); // question
+    void expect(canvas.getByText('Review the draft.')).toBeInTheDocument(); // task
+  },
+};
 
 /** Opens the first card's action menu, deletes that topic, and asserts the card is removed. */
 export const Test: Story = {

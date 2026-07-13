@@ -200,33 +200,26 @@ triage, make topics opt-in suggestions rather than eager objects, and finish the
 
 ### Phase 0 — shared model (prereq for A/B)
 
-- [ ] **Extract `TopicProps`** — `pipeline-email/src/types/Topic.ts`: pull the inner `Schema.Struct`
-      into `export const TopicProps = Schema.Struct({...})`; `Topic` extends `Type.makeObject(...)(TopicProps)`.
-      Verify `pipeline-email:build` + existing `topics-pipeline.test.ts` still green (materialize uses the
-      same fields).
-- [ ] **Add `Mailbox.topicSuggestions`** — `plugin-inbox/src/types/Mailbox.ts`: import `TopicProps` from
-      `@dxos/pipeline-email`; add `topicSuggestions: Schema.optional(Schema.Array(TopicProps))` to the
-      Mailbox struct. `plugin-inbox:build` green.
+- [x] **Extract `TopicProps`** — done in `pipeline-email/src/types/Topic.ts`; `Topic` extends it.
+      `deriveThreadId`/`normalizeSubject` now exported from the package index too. Tests green.
+- [x] **Add `Mailbox.topicSuggestions`** — `Schema.optional(Schema.Array(TopicProps))` added; builds green.
 
 ### Phase A — `TopicArticle` master/detail
 
-- [ ] **`resolveTopicThreads` helper (pure, tested)** — `plugin-inbox/src/containers/TopicArticle/`
-      (new dir): given a `Topic` and the mailbox's messages, group messages by `threadId` and return
-      only the threads whose id is in `topic.threadIds`, each as `{ threadId, subject, messages }`.
-      Unit test with 3 synthetic messages across 2 threadIds; assert only referenced threads returned
-      and the stored count is preserved when a threadId has no messages.
-- [ ] **`TopicArticle` container** — renders one `Topic`: `Card`/`Panel` header (`label`), summary,
-      keyword chips (reuse the tag-chip atom style), participants row, questions/tasks lists, and the
-      resolved member-thread list. Clicking a thread fires `LayoutOperation.Select` for the latest
-      message (same call MailboxArticle uses). Arrow-fn component, named react-ui imports, theme tokens.
-- [ ] **react-surface + master→detail wiring** — `plugin-inbox/src/capabilities/react-surface.tsx`: add
-      `Surface.create({ filter: AppSurface.object(Article, Topic), component: … <TopicArticle/> })`.
-      In `TopicsArticle`, on card current-change dispatch open-detail following MailboxArticle's
-      `layout.mode` branch (`simple`→`UpdateComplementary`, `multi`→`Open`, else→`UpdateCompanion`).
-- [ ] **Storybook play test** — extend `Topics.stories.tsx` (or a `TopicArticle` story): seed a Topic +
-      its member Messages, render `TopicArticle`, assert summary + keyword chips + thread list + counts;
-      click a thread, assert the select action fired (mock the layout op like ExtractMessage does).
-- [ ] **Commit** `feat(inbox): TopicArticle master/detail`.
+- [x] **`resolveTopicThreads` helper (pure, tested)** — `TopicArticle/resolve-threads.ts`: groups
+      messages by `deriveThreadId`, returns only the topic's referenced threads in order, omits threads
+      with no messages. 2 unit tests green. (Wired into the live feed = the follow-up below.)
+- [x] **`TopicArticle` container** — `TopicArticle/TopicArticle.tsx`: renders the topic's stored fields
+      (summary, keyword chips via `Row.Tags`, participants, questions/tasks/thread-subject list
+      sections). Self-contained (no cross-object resolution in v1).
+- [x] **react-surface + master→detail wiring** — added `AppSurface.object(Article, Topic)` → `TopicArticle`;
+      `TopicsArticle` card current-change calls `useShowItem` with `linkedSegment('topic')` (companion in
+      simple mode; deck-peer path is a follow-up).
+- [x] **Storybook play test** — `Topics.stories.tsx` `Detail` + `DetailTest`: renders `TopicArticle` for a
+      seeded topic and asserts summary, keyword chip, participants, question, task. 4/4 storybook tests green.
+- [x] **Commit** `feat(inbox): TopicArticle master/detail`.
+- [ ] **FOLLOW-UP (A)**: wire `resolveTopicThreads` to live feed messages + click a thread → open it in
+      the mailbox; add a deck-peer topic path so multi-mode opens a plank. Needs the running deck to verify.
 
 ### Phase B — topic suggestions
 

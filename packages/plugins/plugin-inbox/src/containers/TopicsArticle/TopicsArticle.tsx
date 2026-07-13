@@ -4,12 +4,12 @@
 
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { Topic } from '@dxos/pipeline-email';
 import { useQuery } from '@dxos/react-client/echo';
 import { Card, Icon, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { useSelection } from '@dxos/react-ui-attention';
+import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 
@@ -85,10 +85,21 @@ TopicTile.displayName = 'TopicTile';
  */
 export const TopicsArticle = ({ role, space, attendableId, mailbox }: TopicsArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const id = attendableId ?? Obj.getURI(mailbox);
+  const id = String(attendableId ?? Obj.getURI(mailbox));
   const currentId = useSelection(id, 'single');
   const topics = useQuery(space.db, Filter.type(Topic));
+  const showItem = useShowItem();
   const handleDelete = useCallback((topic: Topic) => space.db.remove(topic), [space.db]);
+  // Open the selected topic's detail (`TopicArticle`) following the layout mode — companion in
+  // simple mode, companion swap otherwise (deck-peer needs a topic path; a follow-up).
+  const handleOpen = useCallback(
+    (topicId: string | undefined) => {
+      if (topicId) {
+        void showItem({ contextId: id, selectionId: topicId, companion: linkedSegment('topic') });
+      }
+    },
+    [id, showItem],
+  );
   const items = useMemo(() => topics.map((topic) => ({ topic, onDelete: handleDelete })), [topics, handleDelete]);
 
   return (
@@ -98,7 +109,7 @@ export const TopicsArticle = ({ role, space, attendableId, mailbox }: TopicsArti
           <Empty label={t('topics.empty.message')} />
         ) : (
           <Focus.Group asChild>
-            <Mosaic.Container asChild withFocus currentId={currentId}>
+            <Mosaic.Container asChild withFocus currentId={currentId} onCurrentChange={handleOpen}>
               <ScrollArea.Root orientation='vertical' padding thin>
                 <ScrollArea.Viewport>
                   <Mosaic.Stack Tile={TopicTile} items={items} draggable={false} getId={(item) => item.topic.id} />

@@ -8,6 +8,7 @@ import { AppAnnotation } from '@dxos/app-toolkit';
 import { Instructions } from '@dxos/compute';
 import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
+import { TopicProps } from '@dxos/pipeline-email';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -93,6 +94,9 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
         filter: Schema.String,
       }),
     ).pipe(FormInputAnnotation.set(false)),
+    // Proposed topics the user has not yet accepted (see {@link TopicProps}). `AnalyzeTopics` writes
+    // these instead of materializing `Topic` objects; accepting one promotes it via `Obj.make(Topic, …)`.
+    topicSuggestions: Schema.optional(Schema.Array(TopicProps)),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
     FeedAnnotation.set(true),
