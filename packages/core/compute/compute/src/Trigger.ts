@@ -151,9 +151,11 @@ export const specWebhook = (opts?: { method?: string; port?: number }): WebhookS
 /**
  * Trigger schema.
  */
-export const Spec = Schema.Union(EmailSpec, FeedSpec, ManualSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations({
-  title: 'Trigger',
-});
+export const Spec = Schema.Union(EmailSpec, FeedSpec, ManualSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations(
+  {
+    title: 'Trigger',
+  },
+);
 export type Spec = Schema.Schema.Type<typeof Spec>;
 
 /**
@@ -225,3 +227,8 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);
+
+/**
+ * Checks if a trigger having this spec can be manually invoked.
+ */
+export const isManuallyInvokable = (spec?: Spec): boolean => spec?.kind === 'manual' || spec?.kind === 'timer';
