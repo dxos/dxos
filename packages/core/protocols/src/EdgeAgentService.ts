@@ -10,7 +10,7 @@ import { protoMessage, serviceError } from './service-rpc.ts';
 
 /**
  * Effect RPC definitions for `dxos.client.services.EdgeAgentService`.
- * Generated from the protobuf service definition; payloads are protobuf-encoded on the wire.
+ * Shared proto types remain protobuf-encoded on the wire.
  */
 export class Rpcs extends RpcGroup.make(
   Rpc.make('queryEdgeStatus', {

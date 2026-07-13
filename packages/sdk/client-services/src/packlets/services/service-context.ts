@@ -21,17 +21,9 @@ import {
   EchoHostService,
   type EdgeAutomergeReplicator,
   EdgeAutomergeReplicatorService,
-  type IMetadataStore,
-  IMetadataStoreService,
   MeshEchoReplicatorLayer,
   MeshEchoReplicatorService,
-  type SpaceManager,
-  SpaceManagerLayer,
-  SpaceManagerService,
-  SqliteMetadataStore,
-  SqliteMetadataStoreLayer,
   runSqliteHealthCheck,
-  valueEncoding,
 } from '@dxos/echo-host';
 import { createChainEdgeIdentity, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import {
@@ -93,6 +85,9 @@ import {
   InvitationsManagerService,
   SpaceInvitationProtocol,
 } from '../invitations';
+import { type IMetadataStore, IMetadataStoreService, SqliteMetadataStore, SqliteMetadataStoreLayer } from '../metadata';
+import { valueEncoding } from '../pipeline';
+import { type SpaceManager, SpaceManagerLayer, SpaceManagerService } from '../space';
 import {
   DataSpaceManager,
   DataSpaceManagerLayer,
@@ -570,12 +565,14 @@ export const ServiceContextLayer = (
     return serviceContextServiceLayer(options).pipe(Layer.provideMerge(coreLayers(options)));
   }
 
-  // Edge: the optional feed-syncer / edge-replicator sit above the core so their `EchoHostService`
-  // requirement is satisfied by it, and the edge inputs are provided internally at the bottom.
+  // Edge: the feed-syncer sits above the core for its `EchoHostService` requirement. The edge
+  // replicator sits below the core — it needs only the edge inputs — so `DataSpaceManagerLayer`
+  // (inside the core) resolves `EdgeAutomergeReplicatorService` via `serviceOption`, exactly the
+  // way it resolves the mesh replicator. Edge inputs are provided at the bottom.
   return serviceContextServiceLayer(options).pipe(
     Layer.provideMerge(feedSyncerLayer),
-    Layer.provideMerge(edgeReplicatorLayer(options)),
     Layer.provideMerge(coreLayers(options)),
+    Layer.provideMerge(edgeReplicatorLayer(options)),
     Layer.provideMerge(edgeInputLayer(edgeConnection, edgeHttpClient)),
   );
 };

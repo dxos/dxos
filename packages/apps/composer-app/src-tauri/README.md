@@ -101,7 +101,7 @@ log stream --predicate 'process == "Composer"' --level debug
 
 ## CI/CD
 
-The Tauri app is built and published via GitHub Actions in `.github/workflows/publish-tauri.yaml`.
+The Tauri app is built and published via GitHub Actions in `.github/workflows/deploy-tauri.yaml`.
 
 ### iOS Build Process
 

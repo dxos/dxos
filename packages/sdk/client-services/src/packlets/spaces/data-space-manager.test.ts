@@ -7,13 +7,13 @@ import { describe, expect, test } from 'vitest';
 import { asyncTimeout, latch } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createAdmissionCredentials } from '@dxos/credentials';
-import { AuthStatus } from '@dxos/echo-host';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { openAndClose } from '@dxos/test-utils';
 
+import { AuthStatus } from '../space';
 import { TestBuilder, type TestPeer } from '../testing';
 
 describe('DataSpaceManager', () => {
