@@ -9,7 +9,7 @@ import * as Stream from 'effect/Stream';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-import { FactStore, type FactUnit, type FeedCursorsApi } from '@dxos/pipeline-rdf';
+import { FactCommit, FactStore, type FeedCursorsApi } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
 import {
@@ -113,7 +113,7 @@ export const runFactPipeline = (options: {
       ),
       extractFactsUnitStage(extract, concurrency),
       // Observability stage: confirms units flow through and how many facts each carries.
-      Stage.map('facts-log', (unit: FactUnit) =>
+      Stage.map('facts-log', (unit: FactCommit.FactUnit) =>
         Effect.sync(() => {
           log.info('analyze: extracted unit', { foreignId: unit.foreignId, key: unit.key, facts: unit.facts.length });
           return unit;

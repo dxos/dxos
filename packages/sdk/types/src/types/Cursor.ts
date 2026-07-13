@@ -99,18 +99,18 @@ export const commit =
     });
 
 /** Which end of the [start, end) range a sync walk begins from. */
-export type SyncDirection = 'forward' | 'backward';
+export type Direction = 'forward' | 'backward';
 
 /** A resolved sync range plus the direction its provider should walk it. */
-export type SyncWindow = {
-  readonly direction: SyncDirection;
+export type Window = {
+  readonly direction: Direction;
   /** Inclusive-ish lower (oldest) bound. */
   readonly start: Date;
   /** Exclusive upper (newest) bound. */
   readonly end: Date;
 };
 
-export type ResolveSyncWindowOptions = {
+export type ResolveWindowOptions = {
   /** High-water cursor key (epoch-ms), or 0 when the source hasn't synced yet. */
   readonly cursorKey: number;
   /** Reference "now" (injected for testability). */
@@ -120,7 +120,7 @@ export type ResolveSyncWindowOptions = {
   /** Newest bound — epoch-ms or a `Date`-parseable string. Backfill passes the oldest-synced date. */
   readonly before?: string | number;
   /** Override the walk direction; otherwise inferred from the cursor. */
-  readonly direction?: SyncDirection;
+  readonly direction?: Direction;
   /** Horizon expressed as days-before-now (from binding options); takes precedence over `after`. */
   readonly syncBackDays?: number;
   /** Horizon used when neither `syncBackDays` nor `after` is given. */
@@ -143,7 +143,7 @@ const addCalendarDays = (date: Date, days: number): Date => {
  *    guard means these older keys never advance it).
  * Direction sets the walk order; both cover the same `[start, end)` range.
  */
-export const resolveSyncWindow = ({
+export const resolveWindow = ({
   cursorKey,
   now,
   after,
@@ -151,8 +151,8 @@ export const resolveSyncWindow = ({
   direction,
   syncBackDays,
   defaultSyncBackDays = 30, // TODO(burdon): Should be 90
-}: ResolveSyncWindowOptions): SyncWindow => {
-  const resolved: SyncDirection = direction ?? (cursorKey > 0 ? 'forward' : 'backward');
+}: ResolveWindowOptions): Window => {
+  const resolved: Direction = direction ?? (cursorKey > 0 ? 'forward' : 'backward');
   const horizon =
     syncBackDays !== undefined
       ? addCalendarDays(now, -syncBackDays)

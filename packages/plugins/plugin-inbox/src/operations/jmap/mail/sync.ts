@@ -25,9 +25,8 @@ import { Jmap, JmapMail } from '../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../constants';
 import { type JmapApiError } from '../../../errors';
 import { JmapCredentials, JmapMailApi } from '../../../services';
-import { onArrivalExtractors } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
-import { readBindingOptions } from '../../../util';
+import { onArrivalExtractors, readBindingOptions } from '../../../util';
 import { type AttachmentMetadata, type DecodedEmail, decodeBody, mapToMessage } from './mapper';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
@@ -61,7 +60,7 @@ export const runJmapSync = ({
    * Override the walk direction. Default is inferred from the cursor: no cursor → `backward` (initial
    * sync); a cursor → `forward` (incremental). Pass `backward` (with `before` = oldest-synced) to backfill.
    */
-  direction?: Cursor.SyncDirection;
+  direction?: Cursor.Direction;
 }): Effect.Effect<
   { newMessages: number },
   JmapApiError | EntityNotFoundError,
@@ -109,7 +108,7 @@ export const runJmapSync = ({
 
     // Range + direction (shared with Gmail): no cursor → backward initial from today to the horizon;
     // cursor → forward incremental; `direction: backward` + `before` = oldest-synced → backfill.
-    const window = Cursor.resolveSyncWindow({
+    const window = Cursor.resolveWindow({
       cursorKey,
       now: new Date(),
       after,
@@ -245,7 +244,7 @@ const fetchAttachments = (
   });
 
 /**
- * Streams JMAP emails over the resolved {@link Cursor.SyncWindow}: build the query filter (folder scope +
+ * Streams JMAP emails over the resolved {@link Cursor.Window}: build the query filter (folder scope +
  * `after`/`before` date bounds + optional user DSL), paginate ids (newest-first within the window),
  * then fetch each email. Direction is realized via the window's bounds — forward resumes from the
  * cursor, backward/backfill bounds the range with `before` — while the query is always newest-first.
@@ -253,7 +252,7 @@ const fetchAttachments = (
 const jmapSource = (
   target: JmapMail.Target,
   folders: readonly JmapMail.Mailbox[],
-  window: Cursor.SyncWindow,
+  window: Cursor.Window,
   options: { filter?: string },
 ) =>
   Stream.unwrap(

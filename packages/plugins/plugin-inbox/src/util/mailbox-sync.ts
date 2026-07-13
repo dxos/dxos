@@ -15,11 +15,13 @@
  */
 
 import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { Stage } from '@dxos/pipeline';
 import { Message, type SyncBinding } from '@dxos/types';
 
 import { isAiServiceUnavailable } from '../operations/extractor';
@@ -98,3 +100,21 @@ export const runOnArrivalExtractors = (mailbox: Mailbox.Mailbox, messages: reado
       }
     }
   });
+
+/**
+ * Pipeline stage wrapping {@link runOnArrivalExtractors}: runs the mailbox's configured on-arrival
+ * extractors (AI and others) for each item's message, passing the item through unchanged.
+ * Self-gating: a no-op when the mailbox has no extractors enabled. Sender→contact extraction is
+ * handled unconditionally by `@dxos/pipeline-email`'s `EmailStage.extractContacts`; this stage
+ * covers the remaining, config-gated extractors.
+ *
+ * TODO(wittjosiah): Factor these extractors out into their own downstream pipeline.
+ */
+export const onArrivalExtractors =
+  (mailbox: Mailbox.Mailbox) =>
+  <In extends { readonly message: Message.Message }, E, R>(
+    self: Stream.Stream<In, E, R>,
+  ): Stream.Stream<In, E, R | Capability.Service | Operation.Service> =>
+    Stage.map('on-arrival-extractors', (item: In) =>
+      runOnArrivalExtractors(mailbox, [item.message]).pipe(Effect.as(item)),
+    )(self);

@@ -35,9 +35,8 @@ import {
   type GoogleMailApiError,
   type GoogleMailApiService,
 } from '../../../services';
-import { onArrivalExtractors } from '../../../sync';
 import { InboxOperation, Mailbox } from '../../../types';
-import { readBindingOptions } from '../../../util';
+import { onArrivalExtractors, readBindingOptions } from '../../../util';
 import { parseFromHeader } from '../../util';
 import { type AttachmentMetadata, type DecodedMessage, decodeBody, mapToMessage } from './mapper';
 
@@ -53,7 +52,7 @@ type DateRangeConfig = {
   readonly end: Date;
   readonly chunkDays: number;
   /** `forward` walks oldest→newest windows (incremental resume); `backward` walks newest→oldest (initial/backfill). */
-  readonly direction: Cursor.SyncDirection;
+  readonly direction: Cursor.Direction;
 };
 
 const STREAMING_CONFIG = {
@@ -101,7 +100,7 @@ export const runGmailSync = ({
    * sync, newest-first from today); a cursor → `forward` (incremental, from the cursor). Pass
    * `backward` explicitly (with `before` = oldest-synced) to backfill older gaps.
    */
-  direction?: Cursor.SyncDirection;
+  direction?: Cursor.Direction;
 }): Effect.Effect<
   { newMessages: number },
   GoogleMailApiError | EntityNotFoundError,
@@ -130,7 +129,7 @@ export const runGmailSync = ({
       direction: resolvedDirection,
       start: rangeStart,
       end: upperBound,
-    } = Cursor.resolveSyncWindow({
+    } = Cursor.resolveWindow({
       cursorKey,
       now: new Date(),
       after,
@@ -466,7 +465,7 @@ const fetchAttachments = (
 type GmailSourceConfig = {
   readonly userId: string;
   readonly label: string;
-  readonly direction: Cursor.SyncDirection;
+  readonly direction: Cursor.Direction;
   /** Full [start, end) range to cover; the walk order within it is set by `direction`. */
   readonly start: Date;
   readonly end: Date;
@@ -556,7 +555,7 @@ const fetchMessagesForDateRange = (
   userId: string,
   label: string,
   dateChunk: DateChunk,
-  direction: Cursor.SyncDirection,
+  direction: Cursor.Direction,
   searchFilter?: string,
 ) =>
   Stream.unwrap(

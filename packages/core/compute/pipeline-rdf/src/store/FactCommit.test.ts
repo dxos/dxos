@@ -12,8 +12,8 @@ import { EffectEx } from '@dxos/effect';
 import { Cursor, SyncBinding } from '@dxos/types';
 
 import { type Fact } from '../types';
-import { type FactUnit, factsCommit } from './fact-commit';
 import { FactStore } from './fact-store';
+import * as FactCommit from './FactCommit';
 
 const makeFact = (id: string): Fact => ({
   id,
@@ -35,7 +35,7 @@ const makeFact = (id: string): Fact => ({
   sourceHash: 'abc123',
 });
 
-describe('factsCommit', () => {
+describe('FactCommit.factsCommit', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -55,13 +55,13 @@ describe('factsCommit', () => {
 
   test('persists a page of facts and advances the cursor to the page max key', async ({ expect }) => {
     const { db, cursor, binding } = await setup();
-    const page: Chunk.Chunk<FactUnit> = Chunk.fromIterable([
+    const page: Chunk.Chunk<FactCommit.FactUnit> = Chunk.fromIterable([
       { facts: [makeFact('fact-1')], foreignId: 'm1', key: 100 },
       { facts: [makeFact('fact-2')], foreignId: 'm2', key: 200 },
     ]);
 
     const result = await Effect.gen(function* () {
-      yield* factsCommit(page);
+      yield* FactCommit.factsCommit(page);
       const store = yield* FactStore;
       const facts = yield* store.query({});
       const state = yield* SyncBinding.Service;
@@ -87,7 +87,7 @@ describe('factsCommit', () => {
     const originalValue = cursor.value;
 
     await Effect.gen(function* () {
-      yield* factsCommit(Chunk.empty());
+      yield* FactCommit.factsCommit(Chunk.empty());
     }).pipe(
       Effect.provide(
         SyncBinding.layer({ binding, foreignKeySource: 'inbox.facts', cursorKey: 0, stats: { newMessages: 0 } }),
