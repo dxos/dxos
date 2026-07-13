@@ -23,6 +23,12 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/markdown"
+    },
+    {
       "path": "../../common/sql-sqlite"
     },
     {
@@ -35,7 +41,16 @@
       "path": "../../core/compute/ai"
     },
     {
+      "path": "../../core/compute/assistant-toolkit"
+    },
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
       "path": "../../core/compute/crawler"
+    },
+    {
+      "path": "../../core/compute/functions-runtime"
     },
     {
       "path": "../../core/compute/nlp"
@@ -59,6 +74,12 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../plugins/plugin-brain"
+    },
+    {
       "path": "../../plugins/plugin-client"
     },
     {
@@ -66,6 +87,9 @@
     },
     {
       "path": "../../plugins/plugin-graph"
+    },
+    {
+      "path": "../../plugins/plugin-inbox"
     },
     {
       "path": "../../plugins/plugin-markdown"

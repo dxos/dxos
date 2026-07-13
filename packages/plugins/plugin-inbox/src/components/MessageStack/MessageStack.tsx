@@ -25,6 +25,7 @@ export type MessageStackAction =
   | { type: 'select'; messageId: string }
   | { type: 'select-tag'; label: string }
   | { type: 'star'; messageId: string }
+  | { type: 'ignore-sender'; messageId: string }
   | { type: 'save'; filter: string };
 
 export type MessageStackActionHandler = (action: MessageStackAction) => void;
@@ -269,6 +270,14 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
 
   const handleTagClick = useCallback((label: string) => onAction?.({ type: 'select-tag', label }), [onAction]);
 
+  const menuItems = useMemo(
+    () =>
+      onAction && message.sender?.email
+        ? [{ label: 'Ignore sender', onClick: () => onAction({ type: 'ignore-sender', messageId: message.id }) }]
+        : undefined,
+    [onAction, message.sender?.email, message.id],
+  );
+
   return (
     <Tile.Root
       ref={forwardedRef}
@@ -280,6 +289,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
     >
       <Tile.Header
         menu
+        menuItems={menuItems}
         starred={starred}
         onToggleStar={onAction ? handleToggleStar : undefined}
         title={
@@ -374,6 +384,11 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
       >
         <Tile.Header
           menu
+          menuItems={
+            onAction && latest.sender?.email
+              ? [{ label: 'Ignore sender', onClick: () => onAction({ type: 'ignore-sender', messageId: latest.id }) }]
+              : undefined
+          }
           starred={starred}
           onToggleStar={onAction ? handleToggleStar : undefined}
           title={<span className='grow truncate font-medium'>{subject}</span>}

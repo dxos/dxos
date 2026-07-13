@@ -15,7 +15,28 @@ set -euo pipefail
 input=$(cat)
 project_dir="${CLAUDE_PROJECT_DIR:-}"
 
-# Only enforce inside a worktree session (path contains /.claude/worktrees/).
+# Fallback chain: CLAUDE_PROJECT_DIR can be UNSET (or point at the bare repo root),
+# which used to silently disable this guard — the exact hole that once let a full
+# feature land on `main`. When it does not name a worktree, derive the worktree
+# context from the hook's cwd, then from the git worktree root.
+case "$project_dir" in
+  */.claude/worktrees/*) ;;
+  *)
+    cwd="$(pwd)"
+    case "$cwd" in
+      */.claude/worktrees/*) project_dir="$cwd" ;;
+      *)
+        gitwt="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+        case "$gitwt" in
+          */.claude/worktrees/*) project_dir="$gitwt" ;;
+        esac
+        ;;
+    esac
+    ;;
+esac
+
+# Only enforce when a worktree context could be identified. A genuine main-checkout
+# session (no worktree in env, cwd, or git root) is left untouched.
 case "$project_dir" in
   */.claude/worktrees/*) ;;
   *) exit 0 ;;

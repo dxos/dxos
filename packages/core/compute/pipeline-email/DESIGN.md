@@ -2,7 +2,7 @@
 
 Agentic-inbox discovery over an email corpus, built on `@dxos/pipeline` (streaming stages) and
 `@dxos/pipeline-rdf` (advisory fact graph). Master spec:
-[`docs/superpowers/specs/2026-07-03-agentic-inbox-discovery-design.md`](../../../../docs/superpowers/specs/2026-07-03-agentic-inbox-discovery-design.md).
+[`agents/superpowers/specs/2026-07-03-agentic-inbox-discovery-design.md`](../../../../agents/superpowers/specs/2026-07-03-agentic-inbox-discovery-design.md).
 
 **Canonicality rule (spec §4):** ECHO objects are canonical; the fact graph is tentative, advisory
 evidence (conflict-prone, sender/context-dependent, goes stale). Facts inform and ground decisions —
@@ -110,4 +110,4 @@ Verified against `plugin-crm`, `plugin-inbox`, and `assistant-e2e` (`crm-mailbox
   CI; this package's Enron test is env-gated (`ROOT_DIR` + Ollama). Both suites pass alongside this
   package's changes (verified in the phase-3 run).
 - Known gap: a transient unhandled rejection escaping the real-Ollama extraction path under the
-  gated Enron test (assertions pass; investigation in `docs/superpowers` ledger; deferred, CI-safe).
+  gated Enron test (assertions pass; investigation in `agents/superpowers` ledger; deferred, CI-safe).

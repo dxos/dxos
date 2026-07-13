@@ -1,0 +1,35 @@
+{
+  "name": "@dxos/progress",
+  "version": "0.9.0",
+  "description": "Shared progress primitives (registry, snapshots, ETA) for pipelines and app surfaces.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./dist/lib/neutral/index.mjs",
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {},
+  "dependencies": {},
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

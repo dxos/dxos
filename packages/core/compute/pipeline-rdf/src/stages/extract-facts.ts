@@ -64,6 +64,15 @@ export const extractDocFacts = (
           continue;
         }
 
+        // Speech act: a non-assertive force, or a non-declarative mood (interrogative/imperative ⇒
+        // directive), records an `illocution`; a plain assertion (the default) leaves it absent.
+        const illocution =
+          candidate.force && candidate.force !== 'assertive'
+            ? { force: candidate.force, ...(candidate.mood ? { mood: candidate.mood } : {}) }
+            : candidate.mood && candidate.mood !== 'declarative'
+              ? { force: 'directive' as const, mood: candidate.mood }
+              : undefined;
+
         const fact: Fact = {
           id: factId(doc.source, hash, index++),
           assertion: {
@@ -80,6 +89,7 @@ export const extractDocFacts = (
             ...(candidate.confidence !== undefined ? { confidence: candidate.confidence } : {}),
             ...(candidate.nature ? { nature: candidate.nature } : {}),
           },
+          ...(illocution ? { illocution } : {}),
           attribution: {
             ...(doc.author ? { agent: normalizeEntityId(doc.author) } : {}),
             source: doc.source,

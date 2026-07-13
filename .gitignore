@@ -180,6 +180,7 @@ tools/intellij-plugin/build/
 
 # cloudflare
 .wrangler/
+wrangler.deploy.json
 
 # blade-runner
 dump.rdb

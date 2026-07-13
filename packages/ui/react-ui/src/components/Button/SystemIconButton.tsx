@@ -203,33 +203,40 @@ UploadIconButton.displayName = 'SystemIconButton.Upload';
 
 type DownloadIconButtonProps = StaticPresetProps & {
   filename: string;
-  onDownload: () => Blob | null;
+  // Blob may be produced asynchronously (e.g. serialized from a query) or synchronously.
+  onDownload: () => Blob | null | Promise<Blob | null>;
 };
 
 const DownloadIconButton = forwardRef<HTMLButtonElement, DownloadIconButtonProps>(
   ({ filename, onDownload, label, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const handleDownload = useCallback(() => {
-      const blob = onDownload();
-      if (!blob) {
-        return;
+    const handleDownload = useCallback(async () => {
+      try {
+        const blob = await onDownload();
+        if (!blob) {
+          return;
+        }
+
+        const url = URL.createObjectURL(blob);
+
+        // TODO(burdon): Use Domino.
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+
+        URL.revokeObjectURL(url);
+      } catch {
+        // Best-effort: blob generation or the download click may fail; swallow to avoid an unhandled
+        // promise rejection (the click handler discards the returned promise with `void`).
       }
-
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-
-      URL.revokeObjectURL(url);
-    }, [onDownload]);
+    }, [onDownload, filename]);
     return (
       <IconButton
         icon='ph--download-simple--regular'
         label={label ?? t('system-button.download.label')}
         {...props}
-        onClick={handleDownload}
+        onClick={() => void handleDownload()}
         ref={forwardedRef}
       />
     );

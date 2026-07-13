@@ -8,7 +8,7 @@
 
 **Tech Stack:** React 19, TypeScript, Tailwind v4 with CSS-first config (`@theme`, `@utility`), vitest, Storybook 9, moon for builds.
 
-**Spec:** [docs/superpowers/specs/2026-04-26-shimmer-stopwatch-textcrawl-design.md](../specs/2026-04-26-shimmer-stopwatch-textcrawl-design.md)
+**Spec:** [agents/superpowers/specs/2026-04-26-shimmer-stopwatch-textcrawl-design.md](../specs/2026-04-26-shimmer-stopwatch-textcrawl-design.md)
 
 **Conventions to honor (from CLAUDE.md):**
 
