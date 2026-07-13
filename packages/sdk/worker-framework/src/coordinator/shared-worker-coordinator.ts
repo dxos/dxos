@@ -3,6 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
+import { log } from '@dxos/log';
 
 import * as WorkerProtocol from '../WorkerProtocol';
 
@@ -20,8 +21,14 @@ export class SharedWorker implements WorkerProtocol.WorkerCoordinator {
 
   constructor(options: SharedWorkerOptions) {
     this.#worker = options.createWorker();
+    this.#worker.onerror = (event: ErrorEvent) => {
+      log.error('coordinator worker error', { error: event.error });
+    };
     this.#worker.port.onmessage = (event: MessageEvent<WorkerProtocol.CoordinatorMessage>) => {
       this.onMessage.emit(event.data);
+    };
+    this.#worker.port.onmessageerror = (event: MessageEvent) => {
+      log.error('coordinator worker port message error', { error: event.data });
     };
     this.#worker.port.start();
   }
