@@ -121,8 +121,8 @@
   },
   "peerDependencies": {
     "@babel/core": "catalog:",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
