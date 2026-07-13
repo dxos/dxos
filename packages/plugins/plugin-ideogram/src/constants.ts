@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-/** Provider id contributed as `ImageGenerationService.id`. */
+/** Provider id contributed as `GenerationService.id`. */
 export const IDEOGRAM_ID = 'ideogram';
 
 /** `Connector.id` / `Connection.connectorId` for the Ideogram connector. */

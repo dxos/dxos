@@ -2,58 +2,32 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type MouseEvent, useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type Collection, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
-import { log } from '@dxos/log';
 import { Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useListSelection } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 
 import { GalleryImage } from '#components';
 import { meta } from '#meta';
-import { type Gallery, type Image, ImageArtifact } from '#types';
+import { Artifact } from '#types';
 
-import { useImageSource } from '../../hooks';
+import { useArtifactCoverSource } from '../../hooks';
+
+const isArtifact = Obj.instanceOf(Artifact.Artifact);
 
 type TileData = {
-  artifact: Obj.Snapshot<ImageArtifact.ImageArtifact>;
+  artifact: Obj.Snapshot<Artifact.Artifact>;
   index: number;
 };
 
-/** Resolve an ImageArtifact's thumbnail: the source of its first generated/uploaded Image. */
-const useArtifactThumbnail = (artifact?: Obj.Snapshot<ImageArtifact.ImageArtifact>): string | undefined => {
-  const firstRef = artifact?.images?.[0];
-  const key = firstRef?.uri;
-  const [image, setImage] = useState<Image.Image>();
-  useEffect(() => {
-    if (!firstRef) {
-      setImage(undefined);
-      return;
-    }
-    let cancelled = false;
-    void firstRef
-      .load()
-      .then((loaded) => {
-        if (!cancelled) {
-          setImage(loaded);
-        }
-      })
-      .catch((err) => log.catch(err));
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
-  return useImageSource(image);
-};
-
 const ArtifactTile = ({ data, selected }: { data?: TileData; selected?: boolean }) => {
-  const src = useArtifactThumbnail(data?.artifact);
+  const src = useArtifactCoverSource(data?.artifact);
   if (!data) {
     return null;
   }
@@ -65,48 +39,54 @@ const ArtifactTile = ({ data, selected }: { data?: TileData; selected?: boolean 
   );
 };
 
-export type GalleryArticleProps = AppSurface.ObjectArticleProps<Gallery.Gallery>;
+export type GalleryArticleProps = AppSurface.ObjectArticleProps<Collection.Collection>;
 
 /**
- * Article surface for a Gallery: a masonry of its owned ImageArtifacts (rendered as thumbnails). The
- * toolbar creates a new empty ImageArtifact (added to the gallery and opened) and deletes the
+ * Article surface for a masonry gallery: a `Collection` of {@link Artifact}s rendered as thumbnails.
+ * The toolbar creates a new Artifact (added to the collection and opened) and deletes the
  * multi-selected ones. Selection state is owned here via `useListSelection` (multi); the masonry
  * renders the outline and emits tile clicks.
  */
-export const GalleryArticle = ({ role, subject: gallery }: GalleryArticleProps) => {
+export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
-  const db = Obj.getDatabase(gallery);
+  const db = Obj.getDatabase(collection);
 
-  const [gallerySnapshot] = useObject(gallery);
-  const artifactRefs = gallerySnapshot?.images ?? [];
-  const artifacts = useObjects(artifactRefs);
-  const items = useMemo(() => artifacts.map((artifact, index) => ({ artifact, index })), [artifacts]);
+  const [collectionSnapshot] = useObject(collection);
+  const objectRefs = collectionSnapshot?.objects ?? [];
+  const objects = useObjects(objectRefs);
+  const items = useMemo(
+    () =>
+      objects
+        .filter((object): object is Obj.Snapshot<Artifact.Artifact> => isArtifact(object))
+        .map((artifact, index) => ({ artifact, index })),
+    [objects],
+  );
 
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set());
   const { bind } = useListSelection({ mode: 'multi', value: selectedIds, onValueChange: setSelectedIds });
 
-  // Create a new empty ImageArtifact owned by (parented to) the gallery, then open it to author.
+  // Create a new Artifact owned by (parented to) the collection, then open it to author.
   const handleCreate = useCallback(async () => {
     if (!db) {
       return;
     }
-    const artifact = ImageArtifact.make();
-    Obj.setParent(artifact, gallery);
+    const artifact = Artifact.make();
+    Obj.setParent(artifact, collection);
     db.add(artifact);
-    Obj.update(gallery, (gallery) => {
-      gallery.images = [...(gallery.images ?? []), Ref.make(artifact)];
+    Obj.update(collection, (collection) => {
+      collection.objects = [...(collection.objects ?? []), Ref.make(artifact)];
     });
     await invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(artifact)] });
-  }, [db, gallery, invokePromise]);
+  }, [db, collection, invokePromise]);
 
   const handleDelete = useCallback(() => {
     if (!db || selectedIds.size === 0) {
       return;
     }
-    const remaining: Ref.Ref<ImageArtifact.ImageArtifact>[] = [];
-    const removed: ImageArtifact.ImageArtifact[] = [];
-    for (const ref of gallery.images ?? []) {
+    const remaining: Ref.Ref<Obj.Unknown>[] = [];
+    const removed: Obj.Unknown[] = [];
+    for (const ref of collection.objects ?? []) {
       const target = ref.target;
       if (target && selectedIds.has(target.id)) {
         removed.push(target);
@@ -114,14 +94,14 @@ export const GalleryArticle = ({ role, subject: gallery }: GalleryArticleProps) 
         remaining.push(ref);
       }
     }
-    Obj.update(gallery, (gallery) => {
-      gallery.images = remaining;
+    Obj.update(collection, (collection) => {
+      collection.objects = remaining;
     });
-    for (const artifact of removed) {
-      db.remove(artifact);
+    for (const object of removed) {
+      db.remove(object);
     }
     setSelectedIds(new Set());
-  }, [db, gallery, selectedIds]);
+  }, [db, collection, selectedIds]);
 
   const handleSelect = useCallback((id: string, _event: MouseEvent) => bind(id).toggle(), [bind]);
 
@@ -137,7 +117,7 @@ export const GalleryArticle = ({ role, subject: gallery }: GalleryArticleProps) 
           />
           <IconButton
             icon='ph--trash--regular'
-            label={t('delete-image.label')}
+            label={t('delete-variant.label')}
             disabled={selectedIds.size === 0}
             onClick={handleDelete}
           />

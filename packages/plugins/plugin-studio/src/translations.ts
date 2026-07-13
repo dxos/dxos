@@ -6,52 +6,40 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Gallery, Image, ImageArtifact } from '#types';
+import { Artifact, Variant } from '#types';
 
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(Gallery.Gallery)]: {
-        'typename.label': 'Gallery',
-        'typename.label_zero': 'Galleries',
-        'typename.label_one': 'Gallery',
-        'typename.label_other': 'Galleries',
-        'object-name.placeholder': 'New gallery',
-        'add-object.label': 'Add gallery',
-        'rename-object.label': 'Rename gallery',
-        'delete-object.label': 'Delete gallery',
-        'object-deleted.label': 'Gallery deleted',
+      [Type.getTypename(Artifact.Artifact)]: {
+        'typename.label': 'Artifact',
+        'typename.label_zero': 'Artifacts',
+        'typename.label_one': 'Artifact',
+        'typename.label_other': 'Artifacts',
+        'object-name.placeholder': 'New artifact',
+        'add-object.label': 'Add artifact',
+        'rename-object.label': 'Rename artifact',
+        'delete-object.label': 'Delete artifact',
+        'object-deleted.label': 'Artifact deleted',
       },
-      [Type.getTypename(ImageArtifact.ImageArtifact)]: {
-        'typename.label': 'Image',
-        'typename.label_zero': 'Images',
-        'typename.label_one': 'Image',
-        'typename.label_other': 'Images',
-        'object-name.placeholder': 'New image',
-        'add-object.label': 'Add image',
-        'rename-object.label': 'Rename image',
-        'delete-object.label': 'Delete image',
-        'object-deleted.label': 'Image deleted',
-      },
-      [Type.getTypename(Image.Image)]: {
-        'typename.label': 'Image',
-        'typename.label_other': 'Images',
+      [Type.getTypename(Variant.Variant)]: {
+        'typename.label': 'Variant',
+        'typename.label_other': 'Variants',
       },
       [meta.profile.key]: {
         'plugin.name': 'Studio',
         'generate.label': 'Generate',
         'generating.label': 'Generating…',
-        'create.label': 'Create image',
-        'generate-error.title': 'Image generation failed',
-        'upload.label': 'Upload image',
+        'create.label': 'Create artifact',
+        'generate-error.title': 'Generation failed',
+        'upload.label': 'Upload',
         'close.label': 'Close',
         'all.tab.label': 'All',
-        'empty.message': 'No images yet.',
-        'delete-image.label': 'Delete',
-        'prompt.placeholder': 'Describe the image to generate…',
-        'model.label': 'Model',
-        'resolution.label': 'Resolution',
-        'seed.label': 'Seed',
+        'empty.message': 'No variants yet.',
+        'delete-variant.label': 'Delete',
+        'prompt.placeholder': 'Describe what to generate…',
+        'center.label': 'Center',
+        'zoom.label': 'Toggle zoom',
       },
     },
   },

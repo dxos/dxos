@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+export * from './ArtifactCard';
 export * from './GalleryImage';
-export * from './ImageGallery';
-export * from './ImageView';
+export * from './GenerateForm';
 export * from './PromptEditor';
+export * from './VariantGallery';
+export * from './VariantRenderer';

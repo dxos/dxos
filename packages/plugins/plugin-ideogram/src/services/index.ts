@@ -3,4 +3,5 @@
 //
 
 export * from './ideogram-mapping';
+export * from './ideogram-request';
 export * from './IdeogramClient';

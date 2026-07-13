@@ -5,15 +5,15 @@
 import * as Redacted from 'effect/Redacted';
 import { afterEach, describe, test } from 'vitest';
 
-import { ImageGeneration } from '@dxos/plugin-studio/types';
+import { GenerationService } from '@dxos/plugin-studio/types';
 
 import { IDEOGRAM_GENERATE_URL } from '../constants';
-import { mapIdeogramResponse } from './ideogram-mapping';
 import { generateWithIdeogram } from './IdeogramClient';
+import { mapIdeogramResponse } from './ideogram-mapping';
 
 describe('ideogram mapping', () => {
-  test('maps data entries and drops url-less ones', ({ expect }) => {
-    const images = mapIdeogramResponse(
+  test('maps data entries to variants and drops url-less ones', ({ expect }) => {
+    const variants = mapIdeogramResponse(
       {
         created: '2026-07-11T00:00:00Z',
         request_id: 'req-1',
@@ -29,20 +29,24 @@ describe('ideogram mapping', () => {
           { url: null, prompt: 'filtered' },
         ],
       },
-      { prompt: 'a', model: 'V_2' },
+      { model: 'V_2' },
     );
 
-    expect(images).toHaveLength(1);
-    expect(images[0]).toMatchObject({
-      url: 'https://img/1.png',
-      prompt: 'a',
+    expect(variants).toHaveLength(1);
+    expect(variants[0]).toMatchObject({ contentType: 'image/png', url: 'https://img/1.png' });
+    expect(variants[0].generation).toMatchObject({
+      provider: 'ideogram',
       model: 'V_2',
-      resolution: '1024x1024',
+      prompt: 'a',
       seed: 7,
+      requestId: 'req-1',
+      createdAt: '2026-07-11T00:00:00Z',
+    });
+    expect(variants[0].generation?.parameters).toMatchObject({
+      resolution: '1024x1024',
       styleType: 'REALISTIC',
       isImageSafe: true,
     });
-    expect(images[0].metadata).toMatchObject({ requestId: 'req-1', created: '2026-07-11T00:00:00Z' });
   });
 });
 
@@ -68,7 +72,7 @@ describe('generateWithIdeogram', () => {
       Redacted.make('sk-test'),
     );
 
-    expect(result.images.map((image) => image.url)).toEqual(['https://img/a.png', 'https://img/b.png']);
+    expect(result.variants.map((variant) => variant.url)).toEqual(['https://img/a.png', 'https://img/b.png']);
     // Proxied via the edge CORS proxy: URL rewritten to /<host><path>, Api-Key passed through.
     expect(captured?.url).toContain(new URL(IDEOGRAM_GENERATE_URL).host);
     expect(captured?.url).toContain('/generate');
@@ -83,14 +87,14 @@ describe('generateWithIdeogram', () => {
       return new Response('{}');
     }) as typeof fetch;
 
-    await expect(generateWithIdeogram({ prompt: 'x' })).rejects.toBeInstanceOf(ImageGeneration.MissingCredentialError);
+    await expect(generateWithIdeogram({ prompt: 'x' })).rejects.toBeInstanceOf(GenerationService.MissingCredentialError);
     expect(called).toBe(false);
   });
 
   test('throws GenerationError on non-2xx', async ({ expect }) => {
     globalThis.fetch = (async () => new Response('nope', { status: 401 })) as typeof fetch;
     await expect(generateWithIdeogram({ prompt: 'x' }, Redacted.make('sk'))).rejects.toBeInstanceOf(
-      ImageGeneration.GenerationError,
+      GenerationService.GenerationError,
     );
   });
 });

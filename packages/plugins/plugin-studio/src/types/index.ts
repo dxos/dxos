@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as Gallery from './Gallery';
-export * as Image from './Image';
+export * as Artifact from './Artifact';
+export * as Generation from './Generation';
+export * as GenerationService from './GenerationService';
 export * as StudioCapabilities from './StudioCapabilities';
-export * as ImageArtifact from './ImageArtifact';
-export * as ImageArtifactOperation from './ImageArtifactOperation';
-export * as ImageGeneration from './ImageGeneration';
+export * as StudioOperation from './StudioOperation';
+export * as Variant from './Variant';

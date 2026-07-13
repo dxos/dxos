@@ -8,13 +8,15 @@ import { Capability } from '@dxos/app-framework';
 
 import { meta } from '#meta';
 
-import type * as ImageGeneration from './ImageGeneration';
-
 /**
- * Plugins contribute image-generation providers via this capability (e.g. plugin-ideogram). The
- * `generateImage` operation resolves all contributions and uses the first (or the one matching the
- * requested provider id).
+ * Plugins contribute generation providers via this capability (e.g. plugin-ideogram), one per
+ * kind/provider. The `generate` operation resolves all contributions and picks the one matching the
+ * artifact's `kind` (and optional provider id).
+ *
+ * The provider type is referenced via an inline `import(...)` type so the sibling contract module
+ * (imported elsewhere as the `GenerationService` namespace) does not collide with this capability's
+ * `GenerationService` export.
  */
-export const ImageGenerationService = Capability.make<ImageGeneration.ImageGenerationService>(
-  `${meta.profile.key}.capability.image-generation-service`,
+export const GenerationService = Capability.make<import('./GenerationService').GenerationService>(
+  `${meta.profile.key}.capability.generation-service`,
 );

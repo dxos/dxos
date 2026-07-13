@@ -5,7 +5,7 @@
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 
-import { Connector, ImageGenerationService } from '#capabilities';
+import { Connector, GenerationService } from '#capabilities';
 import { meta } from '#meta';
 
 export const IdeogramPlugin = Plugin.define(meta).pipe(
@@ -15,9 +15,9 @@ export const IdeogramPlugin = Plugin.define(meta).pipe(
     activate: Connector,
   }),
   Plugin.addModule({
-    id: `${meta.profile.key}/image-generation-service`,
+    id: `${meta.profile.key}/generation-service`,
     activatesOn: ActivationEvents.Startup,
-    activate: ImageGenerationService,
+    activate: GenerationService,
   }),
   Plugin.make,
 );

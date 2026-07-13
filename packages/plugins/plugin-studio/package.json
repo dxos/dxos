@@ -39,6 +39,11 @@
       "types": "./dist/types/src/operations/index.d.ts",
       "default": "./dist/lib/neutral/operations/index.mjs"
     },
+    "#surfaces": {
+      "source": "./src/surfaces.ts",
+      "types": "./dist/types/src/surfaces.d.ts",
+      "default": "./dist/lib/neutral/surfaces.mjs"
+    },
     "#plugin": {
       "source": "./src/StudioPlugin.tsx",
       "types": "./dist/types/src/StudioPlugin.d.ts",
@@ -103,6 +108,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/schema": "workspace:*",

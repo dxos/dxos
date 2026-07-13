@@ -9,28 +9,16 @@ import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
-import { Gallery, ImageArtifact } from '#types';
+import { Artifact } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(ImageArtifact.ImageArtifact),
+        id: Type.getTypename(Artifact.Artifact),
         createObject: (_props, options) =>
           Effect.gen(function* () {
-            const object = ImageArtifact.make();
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              targetNodeId: options.targetNodeId,
-            });
-          }),
-      }),
-      Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Gallery.Gallery),
-        createObject: (_props, options) =>
-          Effect.gen(function* () {
-            const object = Gallery.make();
+            const object = Artifact.make();
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,

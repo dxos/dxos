@@ -27,7 +27,7 @@ export type PromptEditorProps = {
 };
 
 /**
- * Editable view of an ImageArtifact's prompt, live-bound to the Instructions `text` object. Mirrors
+ * Editable view of an Artifact's prompt, live-bound to the Instructions `text` object. Mirrors
  * plugin-bookmarks' Summary: the CodeMirror `EditorView` is owned locally and never carried in a
  * React prop, keeping the container's prop graph free of non-serializable editor state.
  */

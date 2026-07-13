@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './ImageView';
+export * from './GenerateForm';

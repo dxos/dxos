@@ -10,22 +10,21 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Instructions } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { withLayout } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
-import { Image, ImageArtifact } from '#types';
+import { Artifact, Variant } from '#types';
 
-import { ImageArtifactArticle } from './ImageArtifactArticle';
+import { ArtifactCard } from './ArtifactCard';
 
 const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const artifacts = useQuery(space?.db, Filter.type(ImageArtifact.ImageArtifact));
-  const [artifact, setArtifact] = useState<ImageArtifact.ImageArtifact>();
+  const artifacts = useQuery(space?.db, Filter.type(Artifact.Artifact));
+  const [artifact, setArtifact] = useState<Artifact.Artifact>();
 
   useEffect(() => {
     if (artifacts.length && !artifact) {
@@ -37,53 +36,45 @@ const DefaultStory = () => {
     return null;
   }
 
-  return <ImageArtifactArticle role='article' subject={artifact} attendableId='test' />;
+  return (
+    <div className='is-64'>
+      <ArtifactCard subject={artifact} />
+    </div>
+  );
 };
 
 const meta = {
-  title: 'plugins/plugin-studio/containers/ImageArtifactArticle',
+  title: 'plugins/plugin-studio/components/ArtifactCard',
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'fullscreen' }),
+    withTheme(),
+    withLayout(),
     withPluginManager({
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [ImageArtifact.ImageArtifact, Image.Image, Instructions.Instructions, Text.Text],
+          types: [Artifact.Artifact, Variant.Variant, Instructions.Instructions, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
-              const prompt = 'A serene mountain lake at dawn.';
-              const artifact = space.db.add(ImageArtifact.make({ name: 'Test image', prompt }));
-              // Seed a few generated images (remote placeholders) to exercise the tabs + gallery.
+              const artifact = space.db.add(Artifact.make({ name: 'Mountain lake', kind: 'image' }));
+              const variant = space.db.add(
+                Variant.make({ contentType: 'image/png', url: 'https://picsum.photos/seed/studio-card/512/512' }),
+              );
+              Obj.setParent(variant, artifact);
               Obj.update(artifact, (artifact) => {
-                artifact.images = Array.from({ length: 3 }, (_, index) =>
-                  Ref.make(
-                    space.db.add(
-                      Image.make({
-                        url: `https://picsum.photos/seed/dxos-${index}/512/512`,
-                        prompt,
-                        seed: index,
-                        model: 'demo',
-                        resolution: '512x512',
-                      }),
-                    ),
-                  ),
-                );
+                artifact.variants = [Ref.make(variant)];
+                artifact.cover = Ref.make(variant);
               });
             }),
         }),
         StorybookPlugin({}),
-        PreviewPlugin(),
       ],
     }),
   ],
-  parameters: {
-    layout: 'fullscreen',
-    translations,
-  },
+  parameters: { translations },
 };
 
 export default meta;

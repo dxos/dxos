@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Instructions } from '@dxos/compute';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Collection, Filter, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -17,27 +17,29 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
-import { Gallery, Image, ImageArtifact } from '#types';
+import { Artifact, Variant } from '#types';
 
 import { GalleryArticle } from './GalleryArticle';
+
+import { StudioPlugin } from '../../StudioPlugin';
 
 const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const galleries = useQuery(space?.db, Filter.type(Gallery.Gallery));
-  const [gallery, setGallery] = useState<Gallery.Gallery>();
+  const collections = useQuery(space?.db, Filter.type(Collection.Collection));
+  const [collection, setCollection] = useState<Collection.Collection>();
 
   useEffect(() => {
-    if (galleries.length && !gallery) {
-      setGallery(galleries[0]);
+    if (collections.length && !collection) {
+      setCollection(collections[0]);
     }
-  }, [galleries]);
+  }, [collections]);
 
-  if (!gallery) {
+  if (!collection) {
     return null;
   }
 
-  return <GalleryArticle role='article' subject={gallery} attendableId='test' />;
+  return <GalleryArticle role='article' subject={collection} attendableId='test' />;
 };
 
 const meta = {
@@ -49,28 +51,35 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Gallery.Gallery, ImageArtifact.ImageArtifact, Image.Image, Instructions.Instructions, Text.Text],
+          types: [Collection.Collection, Artifact.Artifact, Variant.Variant, Instructions.Instructions, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
-              const gallery = space.db.add(Gallery.make({ name: 'Test gallery' }));
-              // Seed a few ImageArtifacts, each with one generated (url) image, as gallery members.
-              Obj.update(gallery, (gallery) => {
-                gallery.images = Array.from({ length: 6 }, (_, index) => {
-                  const artifact = ImageArtifact.make({ name: `Image ${index + 1}` });
-                  const image = space.db.add(Image.make({ url: `https://picsum.photos/seed/dxos-${index}/512/512` }));
-                  Obj.setParent(image, artifact);
+              const collection = space.db.add(Collection.make({ name: 'Test gallery' }));
+              // Seed a few Artifacts, each with one generated (url) cover variant, as members.
+              Obj.update(collection, (collection) => {
+                collection.objects = Array.from({ length: 6 }, (_, index) => {
+                  const artifact = Artifact.make({ name: `Artifact ${index + 1}`, kind: 'image' });
+                  const variant = space.db.add(
+                    Variant.make({
+                      contentType: 'image/png',
+                      url: `https://picsum.photos/seed/dxos-${index}/512/512`,
+                    }),
+                  );
+                  Obj.setParent(variant, artifact);
                   Obj.update(artifact, (artifact) => {
-                    artifact.images = [Ref.make(image)];
+                    artifact.variants = [Ref.make(variant)];
+                    artifact.cover = Ref.make(variant);
                   });
-                  Obj.setParent(artifact, gallery);
+                  Obj.setParent(artifact, collection);
                   return Ref.make(space.db.add(artifact));
                 });
               });
             }),
         }),
+        StudioPlugin(),
         StorybookPlugin({}),
         PreviewPlugin(),
       ],

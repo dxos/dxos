@@ -8,25 +8,83 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Collection, Obj } from '@dxos/echo';
 
-import { GalleryArticle, ImageArtifactArticle } from '#containers';
-import { Gallery, ImageArtifact } from '#types';
+import { ArtifactCard, GenerateForm as GenerateFormComponent, ImageVariant, VideoVariant } from '#components';
+import { ArtifactArticle, GalleryArticle } from '#containers';
+import { GenerateForm, VariantRenderer } from '#surfaces';
+import { Artifact } from '#types';
+
+const isArtifact = Obj.instanceOf(Artifact.Artifact);
+
+/** A Collection is a studio gallery when its (loaded) members are all Artifacts and at least one is. */
+const isArtifactCollection = (collection?: Collection.Collection): boolean => {
+  const objects = collection?.objects ?? [];
+  let sawArtifact = false;
+  for (const ref of objects) {
+    const target = ref.target;
+    if (!target) {
+      continue;
+    }
+    if (!isArtifact(target)) {
+      return false;
+    }
+    sawArtifact = true;
+  }
+  return sawArtifact;
+};
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'article',
-        filter: AppSurface.object(AppSurface.Article, ImageArtifact.ImageArtifact),
+        id: 'artifactArticle',
+        filter: AppSurface.object(AppSurface.Article, Artifact.Artifact),
         component: ({ role, data }) => (
-          <ImageArtifactArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+          <ArtifactArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
         id: 'galleryArticle',
-        filter: AppSurface.object(AppSurface.Article, Gallery.Gallery),
+        filter: AppSurface.object(AppSurface.Article, Collection.Collection, (data) =>
+          isArtifactCollection(data.subject),
+        ),
         component: ({ role, data }) => (
           <GalleryArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
+      }),
+
+      // Card rendering of an Artifact (cover thumbnail) — composes Artifacts into collections/boards.
+      Surface.create({
+        id: 'artifactCard',
+        filter: AppSurface.object(AppSurface.CardContent, Artifact.Artifact),
+        component: ({ data }) => <ArtifactCard subject={data.subject} />,
+      }),
+
+      // Default variant renderers (image/*, video/*), overridable per contentType via Position.first.
+      Surface.create({
+        id: 'imageVariant',
+        filter: Surface.makeFilter(
+          VariantRenderer,
+          (data) => typeof data.contentType === 'string' && data.contentType.startsWith('image/'),
+        ),
+        component: ({ data }) => <ImageVariant variant={data.variant} />,
+      }),
+      Surface.create({
+        id: 'videoVariant',
+        filter: Surface.makeFilter(
+          VariantRenderer,
+          (data) => typeof data.contentType === 'string' && data.contentType.startsWith('video/'),
+        ),
+        component: ({ data }) => <VideoVariant variant={data.variant} />,
+      }),
+
+      // Default schema-driven generate form, overridable per kind via Position.first.
+      Surface.create({
+        id: 'generateForm',
+        filter: Surface.makeFilter(GenerateForm, (data) => !!data.schema),
+        component: ({ data }) => (
+          <GenerateFormComponent schema={data.schema} value={data.value} onChange={data.onChange} />
         ),
       }),
     ]),

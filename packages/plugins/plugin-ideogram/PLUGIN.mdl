@@ -12,9 +12,9 @@ contributes two things:
    credential form, so the user connects Ideogram through the generic
    `plugin-connector` UI. On submit the key is stored as an `AccessToken`
    (source `ideogram.ai`) plus a `Connection` in ECHO.
-2. An **`ImageGenerationService`** implementation (the abstraction owned by
+2. An **`GenerationService`** implementation (the abstraction owned by
    `plugin-studio`) whose `generate()` calls the Ideogram HTTP API and
-   maps the response to `GeneratedImageData[]`.
+   maps the response to `VariantData[]`.
 
 The credential set up by the Connector is resolved back at generation time
 by `plugin-studio`'s `generateImage` operation through
@@ -56,8 +56,8 @@ feat IdeogramConnector
 ```mdl
 feat IdeogramImageGenerationService
   desc: >
-    Contributes an ImageGenerationService via
-    Capability.contributes(StudioCapabilities.ImageGenerationService,
+    Contributes an GenerationService via
+    Capability.contributes(StudioCapabilities.GenerationService,
     [service]) on Startup. Provider-agnostic contract from
     @dxos/plugin-studio/types.
   id: ideogram
@@ -80,7 +80,7 @@ feat IdeogramImageGenerationService
       # { created, request_id?, data: [{ url, prompt, resolution, seed,
       #   is_image_safe, style_type? }] }
       map: >
-        data[] → GeneratedImageData {
+        data[] → VariantData {
           url, prompt, model: request.model ?? "V_2", resolution, seed,
           styleType: style_type, isImageSafe: is_image_safe,
           metadata: { requestId, created }
@@ -110,20 +110,20 @@ packages/plugins/plugin-ideogram/
     IdeogramPlugin.tsx               # Plugin.define(meta).pipe(addModule Connector on SetupConnectors, addModule Provider on Startup, Plugin.make)
     dx.config.ts
     capabilities/
-      index.ts                       # Capability.lazy(Connector, ImageGenerationService)
+      index.ts                       # Capability.lazy(Connector, GenerationService)
       connector.ts                   # Capability.contributes(Connector, [entry])
-      image-generation-service.ts    # Capability.contributes(StudioCapabilities.ImageGenerationService, [service])
+      generation-service.ts    # Capability.contributes(StudioCapabilities.GenerationService, [service])
     services/
       index.ts
-      IdeogramClient.ts              # generate(request, { apiKey }) → GeneratedImageData[]
-      ideogram-mapping.ts            # response → GeneratedImageData[]
+      IdeogramClient.ts              # generate(request, { apiKey }) → VariantData[]
+      ideogram-mapping.ts            # response → VariantData[]
       ideogram-mapping.test.ts       # fixture-based unit test
 ```
 
 ## Dependencies
 
 - `@dxos/plugin-studio` (workspace:\*) — `/types` subpath for the
-  `ImageGenerationService` capability key + request/result schemas.
+  `GenerationService` capability key + request/result schemas.
 - `@dxos/plugin-connector` (workspace:\*) — `Connector` capability key +
   `Connection` type; `@dxos/types` for `AccessToken`.
 - `@dxos/app-framework`, `@dxos/app-toolkit`, `@dxos/echo`, `effect`.
@@ -153,7 +153,7 @@ test T-3: Response mapping (mocked fetch)
   given: a mocked /generate response with 2 data entries
   when: IdeogramClient.generate({ prompt }, { apiKey }) runs
   then:
-    - 2 GeneratedImageData returned, url/seed/resolution/isImageSafe mapped
+    - 2 VariantData returned, url/seed/resolution/isImageSafe mapped
     - the request body nests fields under image_request and sends header Api-Key
 ```
 

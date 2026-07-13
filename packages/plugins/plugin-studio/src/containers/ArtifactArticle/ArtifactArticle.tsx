@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
@@ -17,38 +17,52 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { type Text } from '@dxos/schema';
 import { type File } from '@dxos/types';
 
-import { ImageGallery, type ImageSource, ImageView, PromptEditor } from '#components';
+import { PromptEditor, VariantGallery } from '#components';
 import { meta } from '#meta';
-import { Image, type ImageArtifact, ImageArtifactOperation, StudioCapabilities } from '#types';
+import { GenerateForm, VariantRenderer } from '#surfaces';
+import { type Artifact, StudioCapabilities, StudioOperation, Variant } from '#types';
 
 import { useFileUpload } from '../../hooks';
 
-export type ImageArtifactArticleProps = AppSurface.ObjectArticleProps<ImageArtifact.ImageArtifact>;
+export type ArtifactArticleProps = AppSurface.ObjectArticleProps<Artifact.Artifact>;
 
 type Selected = 'all' | number;
 
 /**
- * Main article surface for an ImageArtifact: a Toolbar with per-image tabs (plus an "All" gallery
- * tab), Upload + Connect/Generate actions, the editable prompt below, and the selected image (or the
- * gallery) below that. Images may be generated (remote URL) or uploaded (file blob).
+ * Media-agnostic article surface for an {@link Artifact}: a Toolbar with per-variant tabs (plus an
+ * "All" gallery tab), Upload + Connect/Generate actions, the editable prompt, the kind-specific
+ * request form (a schema-driven {@link GenerateForm} surface, overridable per kind), and the selected
+ * variant (rendered via the {@link VariantRenderer} surface for its contentType) or the gallery.
  */
-export const ImageArtifactArticle = ({ role, subject: artifact, attendableId }: ImageArtifactArticleProps) => {
+export const ArtifactArticle = ({ role, subject: artifact, attendableId }: ArtifactArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const pluginManager = usePluginManager();
   const { invokePromise } = useOperationInvoker();
 
   const db = Obj.getDatabase(artifact);
-  const providers = useCapabilities(StudioCapabilities.ImageGenerationService);
-  const provider = providers[0];
 
-  // Reactive view of the artifact's images.
+  // Resolve the provider for the artifact's kind (first registered, matching by kind).
+  const services = useCapabilities(StudioCapabilities.GenerationService);
+  const provider = useMemo(
+    () => services.find((candidate) => candidate.kind === artifact.kind),
+    [services, artifact.kind],
+  );
+
+  // Reactive view of the artifact's variants + config.
   const [artifactSnapshot] = useObject(artifact);
-  const imageRefs = artifactSnapshot?.images ?? [];
-  const images = useObjects(imageRefs);
-  const imageSources = useMemo<ImageSource[]>(
-    () => images.map((image) => ({ url: image.url, file: image.file, name: image.prompt ?? undefined })),
-    [images],
+  const variantRefs = artifactSnapshot?.variants ?? [];
+  const variants = useObjects(variantRefs);
+  const galleryItems = useMemo(
+    () =>
+      variants.map((variant) => ({
+        id: variant.id,
+        url: variant.url,
+        content: variant.content,
+        contentType: variant.contentType,
+        label: variant.generation?.prompt ?? undefined,
+      })),
+    [variants],
   );
 
   // Load the live prompt Text object (edits persist to its content).
@@ -90,17 +104,27 @@ export const ImageArtifactArticle = ({ role, subject: artifact, attendableId }: 
     !connected &&
     Surface.isAvailable(pluginManager.capabilities, { type: ConnectorAuth, data: connectorData });
 
+  // The kind-specific request config (validated against the provider's requestSchema).
+  const configValue = useMemo<Record<string, unknown>>(
+    () => ({ ...(provider?.defaultRequest ?? {}), ...(artifactSnapshot?.config ?? {}) }),
+    [provider?.defaultRequest, artifactSnapshot?.config],
+  );
+  const handleConfigChange = useCallback(
+    (next: Record<string, unknown>) => {
+      Obj.update(artifact, (artifact) => {
+        artifact.config = next;
+      });
+    },
+    [artifact],
+  );
+
   const handleGenerate = useCallback(async () => {
     if (!db) {
       return;
     }
     setGenerating(true);
     try {
-      await invokePromise(
-        ImageArtifactOperation.GenerateImage,
-        { artifact: Ref.make(artifact) },
-        { spaceId: db.spaceId },
-      );
+      await invokePromise(StudioOperation.Generate, { artifact: Ref.make(artifact) }, { spaceId: db.spaceId });
       setSelected('all');
     } catch (error) {
       log.catch(error);
@@ -117,25 +141,28 @@ export const ImageArtifactArticle = ({ role, subject: artifact, attendableId }: 
     }
   }, [invokePromise, artifact, db]);
 
-  // Uploaded images become file-backed Image objects owned by the artifact.
+  // Uploaded files become content-backed Variant objects owned by the artifact.
   const handleUpload = useCallback(
-    (uploaded: File.File) => {
+    (uploaded: File.File, source: globalThis.File) => {
       if (!db) {
         return;
       }
-      const image = Image.make({ file: Ref.make(uploaded) });
-      Obj.setParent(image, artifact);
-      db.add(image);
+      const variant = Variant.make({ content: Ref.make(uploaded), contentType: source.type || undefined });
+      Obj.setParent(variant, artifact);
+      db.add(variant);
       Obj.update(artifact, (artifact) => {
-        artifact.images = [...(artifact.images ?? []), Ref.make(image)];
+        artifact.variants = [...(artifact.variants ?? []), Ref.make(variant)];
+        if (!artifact.cover) {
+          artifact.cover = Ref.make(variant);
+        }
       });
       setSelected('all');
     },
     [db, artifact],
   );
-  const upload = useFileUpload({ subject: artifact, accept: 'image/*', multiple: true, onUpload: handleUpload });
+  const upload = useFileUpload({ subject: artifact, accept: 'image/*,video/*', multiple: true, onUpload: handleUpload });
 
-  const selectedImage = typeof selected === 'number' ? images[selected] : undefined;
+  const selectedVariant = typeof selected === 'number' ? variants[selected] : undefined;
 
   return (
     <Panel.Root role={role}>
@@ -144,9 +171,9 @@ export const ImageArtifactArticle = ({ role, subject: artifact, attendableId }: 
           <Button variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
             {t('all.tab.label')}
           </Button>
-          {images.map((image, index) => (
+          {variants.map((variant, index) => (
             <Button
-              key={image.id}
+              key={variant.id}
               variant={selected === index ? 'primary' : 'ghost'}
               onClick={() => setSelected(index)}
             >
@@ -176,29 +203,48 @@ export const ImageArtifactArticle = ({ role, subject: artifact, attendableId }: 
           )}
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='grid grid-rows-[8rem_1fr] p-2'>
-        <PromptEditor
-          id={`${artifactId}/prompt`}
-          text={promptText}
-          placeholder={t('prompt.placeholder')}
-          classNames='shrink-0 border border-separator rounded p-2 max-bs-32 overflow-auto'
-        />
-        <div role='none' className='grow min-bs-0'>
-          {selected === 'all' ? (
-            <ImageGallery images={imageSources} emptyMessage={t('empty.message')} />
-          ) : (
-            <ImageView
-              image={
-                selectedImage && {
-                  url: selectedImage.url,
-                  file: selectedImage.file,
-                  prompt: selectedImage.prompt,
-                  model: selectedImage.model,
-                  resolution: selectedImage.resolution,
-                  seed: selectedImage.seed,
-                }
-              }
+      <Panel.Content classNames='grid grid-rows-[auto_1fr] p-2 gap-2'>
+        <div role='none' className='flex flex-col gap-2 shrink-0'>
+          <PromptEditor
+            id={`${artifactId}/prompt`}
+            text={promptText}
+            placeholder={t('prompt.placeholder')}
+            classNames='border border-separator rounded p-2 max-bs-32 overflow-auto'
+          />
+          {provider && (
+            <Surface.Surface
+              type={GenerateForm}
+              data={{
+                kind: artifact.kind,
+                schema: provider.requestSchema,
+                value: configValue,
+                onChange: handleConfigChange,
+              }}
+              limit={1}
             />
+          )}
+        </div>
+        <div role='none' className='grow min-bs-0 overflow-auto'>
+          {selected === 'all' ? (
+            <VariantGallery variants={galleryItems} emptyMessage={t('empty.message')} />
+          ) : selectedVariant ? (
+            <Surface.Surface
+              type={VariantRenderer}
+              data={{
+                variant: {
+                  contentType: selectedVariant.contentType,
+                  url: selectedVariant.url,
+                  content: selectedVariant.content,
+                  generation: selectedVariant.generation,
+                },
+                contentType: selectedVariant.contentType ?? provider?.contentType ?? '',
+              }}
+              limit={1}
+            />
+          ) : (
+            <div role='status' className='flex items-center justify-center bs-full text-subdued'>
+              {t('empty.message')}
+            </div>
           )}
         </div>
         {upload.input}
@@ -207,4 +253,4 @@ export const ImageArtifactArticle = ({ role, subject: artifact, attendableId }: 
   );
 };
 
-ImageArtifactArticle.displayName = 'ImageArtifactArticle';
+ArtifactArticle.displayName = 'ArtifactArticle';

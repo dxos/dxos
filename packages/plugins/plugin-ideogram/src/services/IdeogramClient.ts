@@ -5,7 +5,7 @@
 import * as Redacted from 'effect/Redacted';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
-import { ImageGeneration } from '@dxos/plugin-studio/types';
+import { GenerationService } from '@dxos/plugin-studio/types';
 
 import {
   IDEOGRAM_CONNECTOR_ID,
@@ -15,19 +15,23 @@ import {
   IDEOGRAM_TIMEOUT_MS,
 } from '../constants';
 import { type IdeogramGenerateResponse, mapIdeogramResponse } from './ideogram-mapping';
+import { IdeogramRequestConfig, decodeIdeogramConfig } from './ideogram-request';
 
 /** Builds the Ideogram `/generate` request body (fields nested under `image_request`). */
-const toRequestBody = (request: ImageGeneration.ImageGenerationRequest) => ({
-  image_request: {
-    prompt: request.prompt,
-    ...(request.aspectRatio ? { aspect_ratio: request.aspectRatio } : {}),
-    ...(request.model ? { model: request.model } : {}),
-    ...(request.negativePrompt ? { negative_prompt: request.negativePrompt } : {}),
-    ...(request.styleType ? { style_type: request.styleType } : {}),
-    ...(request.seed !== undefined ? { seed: request.seed } : {}),
-    ...(request.count !== undefined ? { num_images: request.count } : {}),
-  },
-});
+const toRequestBody = (request: GenerationService.GenerationRequest) => {
+  const config = decodeIdeogramConfig(request);
+  return {
+    image_request: {
+      prompt: request.prompt,
+      ...(config.aspectRatio ? { aspect_ratio: config.aspectRatio } : {}),
+      ...(config.model ? { model: config.model } : {}),
+      ...(config.negativePrompt ? { negative_prompt: config.negativePrompt } : {}),
+      ...(config.styleType ? { style_type: config.styleType } : {}),
+      ...(config.seed !== undefined ? { seed: config.seed } : {}),
+      ...(request.count !== undefined ? { num_images: request.count } : {}),
+    },
+  };
+};
 
 /**
  * Calls the Ideogram `/generate` endpoint. The API key (resolved by the caller from the
@@ -35,11 +39,11 @@ const toRequestBody = (request: ImageGeneration.ImageGenerationRequest) => ({
  * ephemeral and expire after a short period.
  */
 export const generateWithIdeogram = async (
-  request: ImageGeneration.ImageGenerationRequest,
+  request: GenerationService.GenerationRequest,
   apiKey?: Redacted.Redacted<string>,
-): Promise<ImageGeneration.ImageGenerationResult> => {
+): Promise<GenerationService.GenerationResult> => {
   if (!apiKey) {
-    throw new ImageGeneration.MissingCredentialError(IDEOGRAM_SOURCE);
+    throw new GenerationService.MissingCredentialError(IDEOGRAM_SOURCE);
   }
 
   // Route through the DXOS edge CORS proxy — api.ideogram.ai does not permit browser CORS. The
@@ -64,23 +68,27 @@ export const generateWithIdeogram = async (
 
   if (!response.ok) {
     const detail = await response.text().catch(() => '');
-    throw new ImageGeneration.GenerationError(`Ideogram request failed (${response.status}): ${detail}`);
+    throw new GenerationService.GenerationError(`Ideogram request failed (${response.status}): ${detail}`);
   }
 
   // `Response.json()` is typed `any`; assign to the response type (no cast) and guard the shape so an
   // unexpected envelope fails loudly rather than mapping to silent garbage.
   const json: IdeogramGenerateResponse = await response.json();
   if (typeof json !== 'object' || json === null) {
-    throw new ImageGeneration.GenerationError('Ideogram returned an unexpected response shape.');
+    throw new GenerationService.GenerationError('Ideogram returned an unexpected response shape.');
   }
-  return { images: mapIdeogramResponse(json, request) };
+  return { variants: mapIdeogramResponse(json, decodeIdeogramConfig(request)) };
 };
 
-/** The Ideogram {@link ImageGeneration.ImageGenerationService}. */
-export const makeIdeogramImageGenerationService = (): ImageGeneration.ImageGenerationService => ({
+/** The Ideogram `kind: 'image'` {@link GenerationService.GenerationService}. */
+export const makeIdeogramGenerationService = (): GenerationService.GenerationService => ({
+  kind: 'image',
   id: IDEOGRAM_ID,
   label: 'Ideogram',
+  contentType: 'image/png',
   source: IDEOGRAM_SOURCE,
   connectorId: IDEOGRAM_CONNECTOR_ID,
+  requestSchema: IdeogramRequestConfig,
+  defaultRequest: { model: 'V_2' },
   generate: (request, { apiKey }) => generateWithIdeogram(request, apiKey),
 });
