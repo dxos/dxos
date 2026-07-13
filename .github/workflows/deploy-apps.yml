@@ -21,10 +21,6 @@ on:
   push:
     branches:
       - main
-      # TEMP(remove before merge): exercise the pipeline end-to-end on this release branch (deploys labs;
-      # tauri stays skipped since it's a push, not a dispatch). Push is the only pre-merge test path — a new
-      # workflow isn't workflow_dispatch-able until it lands on main.
-      - claude/hopeful-jennings-bd7969
   workflow_dispatch:
     inputs:
       environment:
