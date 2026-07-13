@@ -14,7 +14,6 @@ import { Event, synchronized } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesHandlers,
-  clientServiceBundle,
   makeInProcessClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
@@ -54,7 +53,6 @@ import {
 import { FeedProtocol } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime as RuntimeConfig } from '@dxos/protocols/proto/dxos/config';
-import { type ServiceBundle } from '@dxos/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { SqliteBlobStore, SqliteBlobStoreLayer } from '@dxos/teleport-extension-object-sync';
@@ -181,9 +179,9 @@ export class ClientServicesHost {
 
   private _config?: Config;
   // Optional test overrides for the base services (otherwise constructed from config via layers).
-  private _signalManagerOverride?: SignalManager;
-  private _transportFactoryOverride?: TransportFactory;
-  private _connectionLog = true;
+  #signalManagerOverride?: SignalManager;
+  #transportFactoryOverride?: TransportFactory;
+  #connectionLog = true;
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
 
@@ -278,14 +276,9 @@ export class ClientServicesHost {
     this.diagnosticsBroadcastHandler = createCollectDiagnosticsBroadcastHandler(this._systemService);
     this._loggingService = new LoggingServiceImpl();
 
-    // The proto `clientServiceBundle` descriptor is retained only for the deprecated `descriptors`
-    // surface (legacy transports/devtools); the registry itself now holds effect-rpc handlers.
-    this._serviceRegistry = new ServiceRegistry<ClientServicesHandlers>(
-      clientServiceBundle as unknown as ServiceBundle<ClientServicesHandlers>,
-      {
-        SystemService: this._systemService,
-      },
-    );
+    this._serviceRegistry = new ServiceRegistry<ClientServicesHandlers>({
+      SystemService: this._systemService,
+    });
   }
 
   get isOpen() {
@@ -302,10 +295,6 @@ export class ClientServicesHost {
 
   get serviceRegistry() {
     return this._serviceRegistry;
-  }
-
-  get descriptors() {
-    return this._serviceRegistry.descriptors;
   }
 
   get services() {
@@ -360,9 +349,9 @@ export class ClientServicesHost {
     // Retain any explicit overrides (e.g. memory transport / signaling in tests). The base services
     // (edge clients, signal manager, transport factory, network manager) are otherwise constructed
     // from config via layers when the host opens.
-    this._transportFactoryOverride = options.transportFactory;
-    this._signalManagerOverride = options.signalManager;
-    this._connectionLog = options.connectionLog ?? true;
+    this.#transportFactoryOverride = options.transportFactory;
+    this.#signalManagerOverride = options.signalManager;
+    this.#connectionLog = options.connectionLog ?? true;
 
     log('initialized');
   }
@@ -380,9 +369,9 @@ export class ClientServicesHost {
 
     const lifecycleLayer = Layer.succeed(ClientLifecycleService, this.#lifecycle);
     const runtimeProviderLayer = RuntimeProvider.toLayer(this._runtime);
-    const networkManagerLayer = SwarmNetworkManagerLayer({ enableDevtoolsLogging: this._connectionLog });
-    const transportFactoryLayer = this._transportFactoryOverride
-      ? Layer.succeed(TransportFactoryService, this._transportFactoryOverride)
+    const networkManagerLayer = SwarmNetworkManagerLayer({ enableDevtoolsLogging: this.#connectionLog });
+    const transportFactoryLayer = this.#transportFactoryOverride
+      ? Layer.succeed(TransportFactoryService, this.#transportFactoryOverride)
       : RtcTransportFactoryLayer({
           webrtcConfig: { iceServers: config.get('runtime.services.ice') },
           iceProviders: config.get('runtime.services.iceProviders'),
@@ -399,8 +388,8 @@ export class ClientServicesHost {
         EdgeConnectionLayer({ socketEndpoint: endpoint, clientTag }),
         EdgeHttpClientLayer(endpoint, { clientTag }),
       );
-      const signalManagerLayer = this._signalManagerOverride
-        ? Layer.succeed(SignalManagerService, this._signalManagerOverride)
+      const signalManagerLayer = this.#signalManagerOverride
+        ? Layer.succeed(SignalManagerService, this.#signalManagerOverride)
         : edgeFeatures?.signaling
           ? EdgeSignalManagerLayer()
           : WebsocketSignalManagerLayer(config.get('runtime.services.signaling') ?? []);
@@ -421,8 +410,8 @@ export class ClientServicesHost {
       );
     }
 
-    const signalManagerLayer = this._signalManagerOverride
-      ? Layer.succeed(SignalManagerService, this._signalManagerOverride)
+    const signalManagerLayer = this.#signalManagerOverride
+      ? Layer.succeed(SignalManagerService, this.#signalManagerOverride)
       : WebsocketSignalManagerLayer(config.get('runtime.services.signaling') ?? []);
 
     return ManagedRuntime.make(
@@ -457,83 +446,92 @@ export class ClientServicesHost {
 
     await this._loggingService.open();
 
-    // Build the runtime from the component layer stack plus the client RPC service handlers and the
-    // lifecycle surface layered on top. The base services (network / signal / transport, and — when
-    // configured — edge clients) are constructed by layers merged beneath the stack.
-    this.#stackRuntime = this.#buildStackRuntime(config);
-    const resolved = await this.#stackRuntime.runPromise(
-      Effect.all({
-        identityService: IdentityServiceRpc,
-        contactsService: ContactsServiceRpc,
-        invitationsService: InvitationsServiceRpc,
-        devicesService: DevicesServiceRpc,
-        spacesService: SpacesServiceRpc,
-        networkService: NetworkServiceRpc,
-        edgeAgentService: EdgeAgentServiceRpc,
-        dataService: DataServiceRpc,
-        queryService: QueryServiceRpc,
-        feedService: FeedServiceRpc,
-      }),
-    );
+    try {
+      // Build the runtime from the component layer stack plus the client RPC service handlers and the
+      // lifecycle surface layered on top. The base services (network / signal / transport, and — when
+      // configured — edge clients) are constructed by layers merged beneath the stack.
+      this.#stackRuntime = this.#buildStackRuntime(config);
+      const resolved = await this.#stackRuntime.runPromise(
+        Effect.all({
+          identityService: IdentityServiceRpc,
+          contactsService: ContactsServiceRpc,
+          invitationsService: InvitationsServiceRpc,
+          devicesService: DevicesServiceRpc,
+          spacesService: SpacesServiceRpc,
+          networkService: NetworkServiceRpc,
+          edgeAgentService: EdgeAgentServiceRpc,
+          dataService: DataServiceRpc,
+          queryService: QueryServiceRpc,
+          feedService: FeedServiceRpc,
+        }),
+      );
 
-    // Assemble the service context handle from the resolved component stack; `#lifecycle` delegates
-    // to it once populated here, before any RPC handler can be invoked (host opens below).
-    this._serviceContext = await makeServiceContext(this.#stackRuntime);
-    const identityService = resolved.identityService;
+      // Assemble the service context handle from the resolved component stack; `#lifecycle` delegates
+      // to it once populated here, before any RPC handler can be invoked (host opens below).
+      this._serviceContext = await makeServiceContext(this.#stackRuntime);
+      const identityService = resolved.identityService;
 
-    this._serviceRegistry.setServices({
-      SystemService: this._systemService,
-      IdentityService: identityService,
-      ContactsService: resolved.contactsService,
+      this._serviceRegistry.setServices({
+        SystemService: this._systemService,
+        IdentityService: identityService,
+        ContactsService: resolved.contactsService,
 
-      InvitationsService: resolved.invitationsService,
+        InvitationsService: resolved.invitationsService,
 
-      DevicesService: resolved.devicesService,
+        DevicesService: resolved.devicesService,
 
-      SpacesService: resolved.spacesService,
+        SpacesService: resolved.spacesService,
 
-      DataService: resolved.dataService,
-      QueryService: resolved.queryService,
-      FeedService: resolved.feedService,
+        DataService: resolved.dataService,
+        QueryService: resolved.queryService,
+        FeedService: resolved.feedService,
 
-      NetworkService: resolved.networkService,
+        NetworkService: resolved.networkService,
 
-      LoggingService: this._loggingService,
+        LoggingService: this._loggingService,
 
-      // TODO(burdon): Move to new protobuf definitions.
-      DevtoolsHost: new DevtoolsServiceImpl({
-        events: new DevtoolsHostEvents(),
-        config: this._config,
-        context: this._serviceContext,
-        exportSqliteDatabase: () => this.exportSqliteDatabase(),
-        runSqliteQuery: (query, params) => this.runSqliteQuery(query, params),
-      }),
+        // TODO(burdon): Move to new protobuf definitions.
+        DevtoolsHost: new DevtoolsServiceImpl({
+          events: new DevtoolsHostEvents(),
+          config: this._config,
+          context: this._serviceContext,
+          exportSqliteDatabase: () => this.exportSqliteDatabase(),
+          runSqliteQuery: (query, params) => this.runSqliteQuery(query, params),
+        }),
 
-      EdgeAgentService: resolved.edgeAgentService,
-    });
+        EdgeAgentService: resolved.edgeAgentService,
+      });
 
-    log('service-host: opening service context...');
-    await this._serviceContext.open(ctx);
-    log('service-host: service context opened');
+      log('service-host: opening service context...');
+      await this._serviceContext.open(ctx);
+      log('service-host: service context opened');
 
-    log('service-host: opening identity service...');
-    await identityService.open();
-    log('service-host: identity service opened');
+      log('service-host: opening identity service...');
+      await identityService.open();
+      log('service-host: identity service opened');
 
-    const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
-    if (devtoolsProxy) {
-      // TODO(dxos): The devtools websocket proxy serves the protobuf service bundle, which is
-      // incompatible with the effect-rpc Handlers the host now provides. Re-enable once this legacy
-      // transport is migrated to effect-rpc (or bridged via makeInProcessClient + a proto adapter).
-      log.warn('devtoolsProxy is not supported with effect-rpc services; skipping', { devtoolsProxy });
+      const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
+      if (devtoolsProxy) {
+        // TODO(dxos): The devtools websocket proxy serves the protobuf service bundle, which is
+        // incompatible with the effect-rpc Handlers the host now provides. Re-enable once this legacy
+        // transport is migrated to effect-rpc (or bridged via makeInProcessClient + a proto adapter).
+        log.warn('devtoolsProxy is not supported with effect-rpc services; skipping', { devtoolsProxy });
+      }
+      this.diagnosticsBroadcastHandler.start();
+
+      this._opening = false;
+      this._open = true;
+      this._statusUpdate.emit();
+      const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
+      log('opened', { deviceKey });
+    } catch (err) {
+      // A partially-opened stack still owns scoped resources (e.g. EchoHost); dispose it so a failed
+      // open cannot leak them or leave background work running (`close` bails out while `_open` is false).
+      await this.#stackRuntime?.dispose().catch(() => {});
+      this.#stackRuntime = undefined;
+      this._opening = false;
+      throw err;
     }
-    this.diagnosticsBroadcastHandler.start();
-
-    this._opening = false;
-    this._open = true;
-    this._statusUpdate.emit();
-    const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
-    log('opened', { deviceKey });
   }
 
   @synchronized
@@ -564,6 +562,11 @@ export class ClientServicesHost {
     this._resetting = true;
     this._statusUpdate.emit();
     await this._serviceContext?.close();
+    // Dispose the managed stack (releasing layer-scoped resources such as EchoHost and stopping any
+    // background work) before wiping storage, so nothing writes to SQLite mid-deletion.
+    await this.#stackRuntime?.dispose().catch(() => {});
+    this.#stackRuntime = undefined;
+    this._open = false;
     // Wipe all SQLite tables so next open starts fresh.
     await RuntimeProvider.runPromise(this._runtime)(
       Effect.gen(function* () {

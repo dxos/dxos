@@ -192,8 +192,5 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
 /**
  * Layer constructing a {@link WebsocketSignalManager} from the configured signaling servers.
  */
-export const WebsocketSignalManagerLayer = (
-  hosts: Runtime.Services.Signal[],
-  getMetadata?: () => any,
-): Layer.Layer<SignalManagerService> =>
-  Layer.sync(SignalManagerService, () => new WebsocketSignalManager(hosts, getMetadata));
+export const WebsocketSignalManagerLayer = (hosts: Runtime.Services.Signal[]): Layer.Layer<SignalManagerService> =>
+  Layer.sync(SignalManagerService, () => new WebsocketSignalManager(hosts));
