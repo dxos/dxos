@@ -15,10 +15,26 @@
 // (haiku/opus for the LLM stages). Defaults below apply only when the var is unset (.env / shell win).
 
 import { spawnSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const PACKAGE_ROOT = resolve(fileURLToPath(new URL('../', import.meta.url)));
+
+// Seed process.env from a local `.env` (git-ignored) — shell env already set wins over the file.
+const loadDotEnv = () => {
+  const path = resolve(PACKAGE_ROOT, '.env');
+  if (!existsSync(path)) {
+    return;
+  }
+  for (const line of readFileSync(path, 'utf8').split('\n')) {
+    const match = line.match(/^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+    if (match && process.env[match[1]] === undefined) {
+      process.env[match[1]] = match[2].trim().replace(/^["']|["']$/g, '');
+    }
+  }
+};
+loadDotEnv();
 
 const DEFAULTS = {
   ACTIVE_N: '20', // Candidates scored by the LLM (highest activity first).

@@ -218,8 +218,8 @@ export type ActiveTopicsInput = {
   readonly messages: readonly Message.Message[];
   /** Wall-clock now (ms), injected. */
   readonly nowMs: number;
-  /** Mailbox owner email — steers `buildThreads` awaiting-mine inference. */
-  readonly ownerEmail?: string;
+  /** Mailbox owner email(s) — steers `buildThreads` awaiting-mine inference (accepts aliases). */
+  readonly ownerEmail?: string | readonly string[];
   /** Known-person emails (lowercased) — the person-linked activity signal. */
   readonly personEmails?: ReadonlySet<string>;
   readonly activity?: Omit<ActivityOptions, 'nowMs'>;
