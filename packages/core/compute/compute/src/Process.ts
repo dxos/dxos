@@ -502,7 +502,7 @@ export interface Info {
    * notify layer reading a failure's toast override. Only set for a process in FAILED state; not
    * guaranteed to survive a serialized/persisted monitor.
    */
-  readonly failure: unknown;
+  readonly failure?: unknown;
 
   /**
    * UNIX timestamp in milliseconds.

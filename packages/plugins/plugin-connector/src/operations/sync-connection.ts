@@ -43,7 +43,10 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
       // failure boundary, so it's data (operation key + input), not a live callback.
       const openConnection: Operation.SerializedInvocation = {
         operation: DXN.getName(LayoutOperation.Open.meta.key),
-        input: { subject: [connectionDeckSubject(Paths.getSpacePath(spaceId), connection.id)], navigation: 'immediate' },
+        input: {
+          subject: [connectionDeckSubject(Paths.getSpacePath(spaceId), connection.id)],
+          navigation: 'immediate',
+        },
       };
       yield* Effect.all(
         bindings.map((binding) =>

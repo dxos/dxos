@@ -58,10 +58,7 @@ export class ConnectionNotReauthenticatableError extends BaseError.extend(
  * (the error crosses the process failure boundary, so it can't carry a live callback); the caller
  * supplies the navigate-to-connection invocation.
  */
-export class ConnectionAuthExpiredError extends BaseError.extend(
-  'ConnectionAuthExpiredError',
-  AUTH_EXPIRED_MESSAGE,
-) {
+export class ConnectionAuthExpiredError extends BaseError.extend('ConnectionAuthExpiredError', AUTH_EXPIRED_MESSAGE) {
   constructor(input: { connectionId: string; action: Operation.SerializedInvocation; cause?: unknown }) {
     super({
       cause: input.cause,
