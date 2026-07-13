@@ -62,12 +62,13 @@ import {
   QueryServiceRpc,
   SpacesServiceRpc,
 } from './client-services-layer';
+import { type ServiceContextComponents, ServiceContextLayer, type ServiceContextRuntimeProps } from './service-context';
 import {
-  ServiceContext,
-  ServiceContextLayer,
-  type ServiceContextRuntimeProps,
-  ServiceContextService,
-} from './service-context';
+  type ClientLifecycle,
+  ClientLifecycleService,
+  type ServiceContext,
+  makeServiceContext,
+} from './service-lifecycle';
 import { ServiceRegistry } from './service-registry';
 
 export type ClientServicesHostProps = {
@@ -114,7 +115,28 @@ export class ClientServicesHost {
   private _edgeHttpClient?: EdgeHttpClient = undefined;
 
   private _serviceContext!: ServiceContext;
-  #stackRuntime?: ManagedRuntime.ManagedRuntime<ServiceContextService | ClientServicesRpcContext, never>;
+
+  // Lifecycle surface provided into the stack so RPC handlers can drive identity creation and
+  // readiness gates. Delegates to the resolved {@link ServiceContext} handle, which is populated
+  // during `open` before any RPC call can arrive.
+  readonly #lifecycle: ClientLifecycle = {
+    createIdentity: (params, ctx) => this._serviceContext.createIdentity(params, ctx),
+    whenInitialized: () => this._serviceContext.whenInitialized(),
+    broadcastProfileUpdate: (profile) => this._serviceContext.broadcastProfileUpdate(profile),
+    whenDataSpaceManagerReady: () => this._serviceContext.whenDataSpaceManagerReady(),
+    whenEdgeAgentManagerReady: () => this._serviceContext.whenEdgeAgentManagerReady(),
+  };
+
+  #stackRuntime?: ManagedRuntime.ManagedRuntime<
+    | ClientServicesRpcContext
+    | ClientLifecycleService
+    | ServiceContextComponents
+    | SwarmNetworkManagerService
+    | SignalManagerService
+    | SqlClient.SqlClient
+    | SqlTransaction.SqlTransaction,
+    never
+  >;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<
     SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction
   >;
@@ -335,9 +357,10 @@ export class ClientServicesHost {
 
     await this._loggingService.open();
 
-    // Build a single runtime from the ServiceContext layer stack plus the client RPC service
-    // handlers layered on top, then resolve the orchestrator and every handler from it.
+    // Build a single runtime from the component layer stack plus the client RPC service handlers
+    // and the lifecycle surface layered on top, then resolve the handle and every handler from it.
     const stackLayer = ClientServicesRpcLayer.pipe(
+      Layer.provideMerge(Layer.succeed(ClientLifecycleService, this.#lifecycle)),
       Layer.provideMerge(
         ServiceContextLayer({
           ...this._runtimeProps,
@@ -354,7 +377,6 @@ export class ClientServicesHost {
     this.#stackRuntime = ManagedRuntime.make(stackLayer);
     const resolved = await this.#stackRuntime.runPromise(
       Effect.all({
-        serviceContext: ServiceContextService,
         identityService: IdentityServiceRpc,
         contactsService: ContactsServiceRpc,
         invitationsService: InvitationsServiceRpc,
@@ -367,7 +389,10 @@ export class ClientServicesHost {
         feedService: FeedServiceRpc,
       }),
     );
-    this._serviceContext = resolved.serviceContext;
+
+    // Assemble the service context handle from the resolved component stack; `#lifecycle` delegates
+    // to it once populated here, before any RPC handler can be invoked (host opens below).
+    this._serviceContext = await makeServiceContext(this.#stackRuntime);
     const identityService = resolved.identityService;
 
     this._serviceRegistry.setServices({

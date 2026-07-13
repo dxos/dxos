@@ -35,7 +35,7 @@ import {
   type ServiceContext,
   ServiceContextLayer,
   type ServiceContextRuntimeProps,
-  ServiceContextService,
+  makeServiceContext,
 } from '../services';
 import { SqliteStorage } from '../services/sqlite-storage';
 import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces';
@@ -86,7 +86,7 @@ export const createServiceContext = async ({
   );
 
   const runtime = ManagedRuntime.make(stackLayer);
-  const serviceContext = await runtime.runPromise(ServiceContextService);
+  const serviceContext = await makeServiceContext(runtime);
 
   // The runtime owns the layer-scoped component finalizers (e.g. EchoHost close), so dispose it once
   // the context is closed to avoid leaking those resources across tests. `ClientServicesHost` owns
@@ -95,7 +95,6 @@ export const createServiceContext = async ({
   serviceContext.close = async (ctx) => {
     await closeServiceContext(ctx);
     await runtime.dispose();
-    return serviceContext;
   };
 
   return serviceContext;
