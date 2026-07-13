@@ -71,7 +71,7 @@ export interface IMetadataStore {
 /**
  * Effect service tag for {@link IMetadataStore}.
  */
-export class IMetadataStoreService extends EffectContext.Tag('@dxos/echo-host/IMetadataStore')<
+export class IMetadataStoreService extends EffectContext.Tag('@dxos/client-services/IMetadataStore')<
   IMetadataStoreService,
   IMetadataStore
 >() {}

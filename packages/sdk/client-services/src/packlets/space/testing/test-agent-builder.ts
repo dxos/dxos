@@ -17,9 +17,9 @@ import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
-import { MetadataStore } from '../metadata';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, type Space, SpaceManager, SpaceProtocol } from '../space';
-import { TestFeedBuilder } from './test-feed-builder';
+import { MetadataStore } from '../../metadata';
+import { TestFeedBuilder } from '../../pipeline/testing';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, type Space, SpaceManager, SpaceProtocol } from '../index';
 
 export type NetworkManagerProvider = () => SwarmNetworkManager;
 

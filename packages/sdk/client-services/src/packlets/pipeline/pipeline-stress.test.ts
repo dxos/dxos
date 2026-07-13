@@ -15,8 +15,8 @@ import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
-import { TestFeedBuilder } from '../testing';
 import { Pipeline } from './pipeline';
+import { TestFeedBuilder } from './testing';
 
 const NUM_AGENTS = 2;
 const NUM_MESSAGES = 10;

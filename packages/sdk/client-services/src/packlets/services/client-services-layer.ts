@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { type EchoHost, EchoHostService, SpaceManagerService } from '@dxos/echo-host';
+import { type EchoHost, EchoHostService } from '@dxos/echo-host';
 import { EdgeConnectionService } from '@dxos/edge-client';
 import { KeyringApiService } from '@dxos/keyring';
 import { SignalManagerService } from '@dxos/messaging';
@@ -21,6 +21,7 @@ import { ContactsServiceImpl } from '../identity/contacts-service';
 import { EdgeIdentityRecoveryManagerService } from '../identity/identity-recovery-manager';
 import { InvitationsManagerService, InvitationsServiceImpl } from '../invitations';
 import { NetworkServiceImpl } from '../network';
+import { SpaceManagerService } from '../space';
 import { SpacesServiceImpl } from '../spaces';
 import { ServiceContextService } from './service-context';
 

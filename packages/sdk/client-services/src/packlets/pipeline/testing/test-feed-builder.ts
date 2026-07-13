@@ -5,7 +5,7 @@
 import { TestBuilder } from '@dxos/feed-store/testing';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
-import { valueEncoding } from '../common';
+import { valueEncoding } from '../codec';
 
 /**
  * Builder with default encoder and generator.

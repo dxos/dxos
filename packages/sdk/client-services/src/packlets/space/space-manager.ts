@@ -11,6 +11,7 @@ import { Trigger, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
+import { createIdFromSpaceKey } from '@dxos/echo-host';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -22,7 +23,6 @@ import { type Teleport } from '@dxos/teleport';
 import { type BlobStoreApi, BlobStoreApiService } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
-import { createIdFromSpaceKey } from '../common/space-id';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata';
 import { CredentialRetrieverExtension } from './admission-discovery-extension';
 import { Space } from './space';
@@ -61,7 +61,7 @@ export type RequestSpaceAdmissionCredentialProps = {
 /**
  * Effect service tag for {@link SpaceManager}.
  */
-export class SpaceManagerService extends EffectContext.Tag('@dxos/echo-host/SpaceManager')<
+export class SpaceManagerService extends EffectContext.Tag('@dxos/client-services/SpaceManager')<
   SpaceManagerService,
   SpaceManager
 >() {}
