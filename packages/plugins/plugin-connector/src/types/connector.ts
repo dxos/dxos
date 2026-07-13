@@ -7,6 +7,7 @@ import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import type { Client } from '@dxos/client';
 import type { Operation } from '@dxos/compute';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import type { OAuthProvider } from '@dxos/protocols';
@@ -83,6 +84,25 @@ export type OnTokenCreated = (input: {
    */
   existingTarget?: Ref.Ref<Obj.Unknown>;
 }) => Effect.Effect<void, never, HttpClient.HttpClient>;
+
+/**
+ * Probe whether a connection's stored credential is still valid.
+ *
+ * Success means the credential authenticates against the live service; a typed
+ * `Effect.fail` carries a user-facing reason (e.g. "Google rejected the
+ * credential (401)."). Runs when a connection is opened so the UI can offer to
+ * reauthenticate a connection whose token has expired or been revoked.
+ *
+ * `client` is supplied for connectors whose credentials layer resolves through
+ * the client/Edge (e.g. atproto proxying); HTTP-only connectors ignore it.
+ * Optional on the interface: connectors without it are treated as
+ * "cannot test" and never prompt to reauthenticate on open.
+ */
+export type TestConnection = (input: {
+  accessToken: AccessToken.AccessToken;
+  connection: Connection.Connection;
+  client: Client;
+}) => Effect.Effect<void, Error, HttpClient.HttpClient>;
 
 /** OAuth spec for Connector.oauth. */
 export type ConnectorOAuthSpec = {
@@ -171,6 +191,12 @@ export type ConnectorEntry = {
    */
   credentialForm?: CredentialForm<any>;
   onTokenCreated?: OnTokenCreated;
+  /**
+   * Probe whether the stored credential still works (see {@link TestConnection}).
+   * When present, the connection is tested on open and — if the connector also
+   * declares {@link oauth} — the user is offered a reauthenticate action on failure.
+   */
+  testConnection?: TestConnection;
 };
 
 /**

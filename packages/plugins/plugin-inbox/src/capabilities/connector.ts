@@ -6,12 +6,14 @@ import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
+import * as Predicate from 'effect/Predicate';
+import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
-import { Connector, type OnTokenCreated } from '@dxos/plugin-connector';
+import { Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import {
@@ -51,6 +53,45 @@ const getAccountEmail = (accessToken: { token: string; account?: string }) =>
     return userInfo.email;
   });
 
+/** `HttpClient.filterStatusOk` failure whose response is a 401/403 — an actual rejected grant. */
+const isGoogleAuthRejection = (error: unknown): boolean =>
+  Predicate.isRecord(error) &&
+  error._tag === 'ResponseError' &&
+  Predicate.isRecord(error.response) &&
+  (error.response.status === 401 || error.response.status === 403);
+
+/**
+ * Google `testConnection`: probe the userinfo endpoint with the stored token. Retries transient
+ * failures (network blips, CORS preflight hiccups — see `makeGoogleApiRequest`) the same way real
+ * sync does, so a single flaky request doesn't falsely report a healthy credential as expired. Only
+ * an actual 401/403 (an expired or revoked grant) is surfaced as "reauthenticate"; any other failure
+ * after retries exhausted is reported as a distinct, less alarming message.
+ */
+const testGoogleConnection: TestConnection = ({ accessToken }) =>
+  Effect.gen(function* () {
+    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(accessToken.token, 'Bearer')));
+    const httpClientWithTracerDisabled = httpClient.pipe(
+      HttpClient.withTracerDisabledWhen(() => true),
+      HttpClient.filterStatusOk,
+    );
+
+    yield* HttpClientRequest.get('https://www.googleapis.com/oauth2/v3/userinfo').pipe(
+      httpClientWithTracerDisabled.execute,
+      Effect.scoped,
+      Effect.timeout('10 seconds'),
+      Effect.retry({
+        schedule: Schedule.exponential('1 second').pipe(Schedule.compose(Schedule.recurs(2))),
+        while: (error) => !isGoogleAuthRejection(error),
+      }),
+    );
+  }).pipe(
+    Effect.mapError((error) =>
+      isGoogleAuthRejection(error)
+        ? new Error('Google rejected the credential. Reauthenticate to continue syncing.')
+        : new Error('Could not verify the connection. Check your network and try again.'),
+    ),
+  );
+
 /**
  * Google `onTokenCreated`: populate `accessToken.account` with the authenticated
  * email so connections/mailboxes get a sensible default name. The sync target is
@@ -89,6 +130,7 @@ export default Capability.makeModule(
         materializeTarget: InboxOperation.MaterializeGmailTarget,
         sync: InboxOperation.GoogleMailSync,
         onTokenCreated,
+        testConnection: testGoogleConnection,
       },
       {
         id: JMAP_MAIL_CONNECTOR_ID,
@@ -122,6 +164,7 @@ export default Capability.makeModule(
         materializeTarget: InboxOperation.MaterializeCalendarTarget,
         sync: InboxOperation.GoogleCalendarSync,
         onTokenCreated,
+        testConnection: testGoogleConnection,
       },
       {
         id: GOOGLE_CONTACTS_CONNECTOR_ID,
@@ -140,6 +183,7 @@ export default Capability.makeModule(
         getSyncTargets: InboxOperation.GetGoogleContactGroups,
         sync: InboxOperation.SyncContacts,
         onTokenCreated,
+        testConnection: testGoogleConnection,
       },
     ]);
   }),

@@ -206,6 +206,17 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
         }),
       ),
     );
+    // The raw failed value (fail or die payload) — every operation handler is wrapped in `Effect.orDie`
+    // before running as a process, so a typed error thrown in a nested invoke arrives as a defect, not
+    // a `Fail`; check both channels. Consumers (e.g. the notify layer) inspect this for typed errors.
+    const failure = Option.getOrNull(
+      Option.flatMap(status.exit, (ex) =>
+        Exit.match(ex, {
+          onFailure: (cause) => Cause.failureOption(cause).pipe(Option.orElse(() => Cause.dieOption(cause))),
+          onSuccess: () => Option.none(),
+        }),
+      ),
+    );
     return {
       pid: this.pid,
       parentPid: this.parentId,
@@ -213,6 +224,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       params: this.params,
       state: status.state,
       error,
+      failure,
       startedAt: status.startedAt.getTime(),
       completedAt: Option.map(status.completedAt, (date) => date.getTime()),
       metrics: {

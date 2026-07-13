@@ -8,9 +8,10 @@ import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 import { Capabilities, Capability, type PluginManager } from '@dxos/app-framework';
-import { type LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
-import { Process } from '@dxos/compute';
+import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
+import { type Operation, OperationHandlerSet, Process } from '@dxos/compute';
 import { Annotation } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 
 import { meta } from '#meta';
 import { DeckCapabilities } from '#types';
@@ -41,6 +42,18 @@ export default Capability.makeModule(
       registry.set(ephemeralAtom, { ...state, toasts: [...state.toasts, toast] });
     };
 
+    // Run a serialized invocation carried by an error's `notifyOverride` (see `LayoutOperation.NotifyOverride`):
+    // resolve the operation by key against the merged handler pool, then invoke it with this module's
+    // live invoker. Fire-and-forget; a missing handler / operation failure surfaces via the invoker.
+    const runInvocation = (action: Operation.SerializedInvocation) =>
+      void EffectEx.runPromise(
+        Effect.gen(function* () {
+          const handlers = OperationHandlerSet.merge(...capabilities.getAll(Capabilities.OperationHandler));
+          const operation = yield* OperationHandlerSet.getHandlerByKey(handlers, action.operation);
+          yield* invoker.invoke(operation, action.input);
+        }),
+      ).catch(() => {});
+
     //
     // Notifications — driven by the process monitor.
     //
@@ -69,12 +82,27 @@ export default Capability.makeModule(
         } else if (process.state === Process.State.SUCCEEDED && notify.success) {
           addToast({ id: `notify-success-${process.pid}`, title: notify.success, duration: NOTIFY_TOAST_DURATION });
         } else if (process.state === Process.State.FAILED && notify.error) {
+          // A failing error may carry `context.notifyOverride` (see `LayoutOperation.getNotifyOverride`)
+          // to replace the generic title/description with a specific message and action — e.g. a
+          // connector reporting an expired credential instead of the raw provider error.
+          const override = LayoutOperation.getNotifyOverride(process.failure);
+          const actionLabel = override?.actionLabel;
+          const action = override?.action;
           addToast({
             id: `notify-error-${process.pid}`,
-            title: notify.error,
-            ...(process.error ? { description: process.error } : {}),
+            title: override?.title ?? notify.error,
+            ...(override?.description !== undefined
+              ? { description: override.description }
+              : process.error
+                ? { description: process.error }
+                : {}),
             icon: 'ph--warning--regular',
             duration: ERROR_TOAST_DURATION,
+            // The override carries a serializable invocation; the tracker holds the live invoker to run it.
+            // `actionAlt` is required for the toast to render its action button (defaults to the label).
+            ...(actionLabel && action
+              ? { actionLabel, actionAlt: override?.actionAlt ?? actionLabel, onAction: () => runInvocation(action) }
+              : {}),
           });
         }
       }

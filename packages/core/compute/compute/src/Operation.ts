@@ -474,6 +474,20 @@ export const NotifyOptionsAnnotation = Annotation.make({
 });
 
 /**
+ * A serializable reference to an operation invocation — the target operation's key plus its input.
+ * Describes a deferred/late-bound invocation that must survive a serialization boundary (e.g. riding
+ * on a process-failure error, or persisted) where a live {@link Definition} cannot. Resolve the key
+ * with `OperationHandlerSet.getHandlerByKey` and hand the result to the invoker. Carries no functions,
+ * so `input` must itself be serializable.
+ */
+export interface SerializedInvocation {
+  /** Target operation key as a bare NSID (the `dxn:` prefix omitted), e.g. `org.dxos.plugin.deck.operation.open`. */
+  readonly operation: DXN.Name<string>;
+  /** Input passed to the operation; must be serializable. */
+  readonly input?: unknown;
+}
+
+/**
  * Options for operation invocation.
  */
 export interface InvokeOptions {

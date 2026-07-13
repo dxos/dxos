@@ -5,9 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
 
+import { connectionDeckSubject } from '../constants';
+import { ConnectionAuthExpiredError, isUnauthorizedError } from '../errors';
 import { Connector, ConnectorOperation, SyncBinding } from '../types';
 
 const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> = ConnectorOperation.SyncConnection.pipe(
@@ -36,8 +39,32 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
 
       const sync = connector.sync;
       const spaceId = db.spaceId;
+      // Serialized invocation the reauth toast runs on click — it rides on the error across the process
+      // failure boundary, so it's data (operation key + input), not a live callback.
+      const openConnection: Operation.SerializedInvocation = {
+        operation: DXN.getName(LayoutOperation.Open.meta.key),
+        input: { subject: [connectionDeckSubject(Paths.getSpacePath(spaceId), connection.id)], navigation: 'immediate' },
+      };
       yield* Effect.all(
-        bindings.map((binding) => Operation.invoke(sync, { binding: Ref.make(binding) }, { spaceId })),
+        bindings.map((binding) =>
+          Operation.invoke(sync, { binding: Ref.make(binding) }, { spaceId }).pipe(
+            // A nested `Operation.invoke` runs as a tracked child process; `Process.fromOperation`
+            // unconditionally promotes whatever the handler fails with to a defect (`Effect.orDie`)
+            // before it reaches the caller, so retagging 401s here must intercept the defect channel —
+            // `Effect.mapError` never sees it.
+            Effect.catchAllDefect((defect) =>
+              isUnauthorizedError(defect)
+                ? Effect.fail(
+                    new ConnectionAuthExpiredError({
+                      connectionId: connection.id,
+                      action: openConnection,
+                      cause: defect,
+                    }),
+                  )
+                : Effect.die(defect),
+            ),
+          ),
+        ),
         { concurrency: 'unbounded' },
       );
 

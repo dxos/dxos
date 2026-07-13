@@ -6,11 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Connector, type CredentialForm } from '@dxos/plugin-connector';
+import { Ref } from '@dxos/echo';
+import { Connector, type CredentialForm, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants';
 import { BlueskyOperation } from '../operations';
+import { BlueskyApi } from '../services';
 import { BlueskyTargetOptions } from '../types';
 
 /**
@@ -59,6 +61,20 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof AtprotoPreflightF
 };
 
 /**
+ * Bluesky `testConnection`: fetch the actor's preferences through Edge's
+ * atproto proxy with the stored session. A rejected/expired session or
+ * transport failure surfaces as a user-facing error so the connection UI can
+ * offer to reauthenticate. Credentials resolve through the client (handle → PDS
+ * → proxy), so `client` is required here where HTTP-only connectors ignore it.
+ */
+const testConnection: TestConnection = ({ connection, client }) =>
+  BlueskyApi.getSavedFeeds().pipe(
+    Effect.provide(BlueskyApi.Credentials.fromConnection(Ref.make(connection), client)),
+    Effect.asVoid,
+    Effect.mapError(() => new Error('Bluesky rejected the credential. Reauthenticate to continue syncing.')),
+  );
+
+/**
  * Contributes the Bluesky connector entry. plugin-connector looks up by
  * `id`; sync runs through `BlueskyOperation.SyncBlueskyTargets` (one binding
  * per call), target discovery runs through `BlueskyOperation.GetBlueskyTargets`,
@@ -84,6 +100,7 @@ export default Capability.makeModule(
         materializeTarget: BlueskyOperation.MaterializeBlueskyTarget,
         getSyncTargets: BlueskyOperation.GetBlueskyTargets,
         sync: BlueskyOperation.SyncBlueskyTargets,
+        testConnection,
       },
     ]);
   }),

@@ -497,6 +497,14 @@ export interface Info {
   readonly error: string | null;
 
   /**
+   * The raw value the process failed with (the fail or die payload of its cause), for consumers that
+   * need to inspect the typed error rather than the `Cause.pretty` string in {@link error} — e.g. the
+   * notify layer reading a failure's toast override. Only set for a process in FAILED state; not
+   * guaranteed to survive a serialized/persisted monitor.
+   */
+  readonly failure: unknown;
+
+  /**
    * UNIX timestamp in milliseconds.
    */
   readonly startedAt: number;
