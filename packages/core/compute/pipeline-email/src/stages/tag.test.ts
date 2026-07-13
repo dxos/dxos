@@ -67,6 +67,19 @@ describe('classifyBulk', () => {
     expect(classifyBulk({ subject: 'Update', senderEmail: 'no-reply@service.io' })).toBe('bulk');
     expect(classifyBulk({ subject: 'Update', senderEmail: 'notifications@service.io' })).toBe('bulk');
   });
+
+  test('an unsubscribe affordance (header or body link) deterministically marks bulk', ({ expect }) => {
+    // List-Unsubscribe header (real synced mail).
+    expect(classifyBulk({ subject: 'Interview with Eric Ries', listUnsubscribe: '<https://x.io/unsub>' })).toBe('bulk');
+    // Unsubscribe link in the body (e.g. the fixture, no header).
+    expect(classifyBulk({ subject: 'Interview with Eric Ries', bodyText: 'Great read.\n\nUnsubscribe here.' })).toBe(
+      'bulk',
+    );
+    // Outranks an action-looking subject — transactional invoices don't carry an unsubscribe link.
+    expect(classifyBulk({ subject: 'Invoice #12 payment due', bodyText: 'Click to unsubscribe.' })).toBe('bulk');
+    // No unsubscribe → the normal person path.
+    expect(classifyBulk({ subject: 'Interview with Eric Ries', bodyText: 'Looking forward to it.' })).toBe('unknown');
+  });
 });
 
 describe('applyBulkTag', () => {

@@ -47,16 +47,30 @@ const ACTION_SUBJECT_RE =
 const BULK_LOCALPART_RE =
   /^(no-?reply|do-?not-?reply|receipts?|notifications?|notify|alerts?|updates?|news(letter)?|digest|mailer|postmaster)([._+-]|$)/i;
 
+// A body-level unsubscribe affordance — the strongest deterministic bulk give-away (a person doesn't
+// put an unsubscribe link on a real message). Matched when the `List-Unsubscribe` header is absent.
+const UNSUBSCRIBE_BODY_RE = /\bunsubscribe\b/i;
+
 /**
- * Deterministic bulk / no-action signal from the subject + sender. Returns `'action'` when the mail
- * clearly requires a response (invoice / payment request) — such mail is never bulk even if it also
- * looks automated; `'bulk'` for no-action transactional / automated mail (receipts, login and
- * security notices, order confirmations, newsletters); `'unknown'` otherwise. Pure.
+ * Deterministic bulk / no-action signal. Returns `'bulk'` for mailing-list / automated mail —
+ * **any unsubscribe affordance** (a `List-Unsubscribe` header or an unsubscribe link in the body) is
+ * the top-priority give-away (RFC 2369), followed by receipts / logins / order confirmations /
+ * newsletters and no-reply role senders. Returns `'action'` when the mail requires a response
+ * (invoice / payment request) and has no unsubscribe affordance; `'unknown'` otherwise. Pure.
  */
 export const classifyBulk = (input: {
   readonly subject?: string;
   readonly senderEmail?: string;
+  /** `List-Unsubscribe` header value, when present (real synced mail). */
+  readonly listUnsubscribe?: string;
+  /** Message body text, scanned for an unsubscribe link when the header is absent (e.g. fixtures). */
+  readonly bodyText?: string;
 }): 'bulk' | 'action' | 'unknown' => {
+  // An unsubscribe affordance deterministically marks bulk — it outranks even action-looking subjects,
+  // since transactional invoices/payment requests don't carry one.
+  if ((input.listUnsubscribe ?? '').length > 0 || UNSUBSCRIBE_BODY_RE.test(input.bodyText ?? '')) {
+    return 'bulk';
+  }
   const subject = input.subject ?? '';
   if (ACTION_SUBJECT_RE.test(subject)) {
     return 'action';
@@ -112,8 +126,9 @@ export const tagMessage = (
 ): Effect.Effect<TagResult, never, AiService.AiService> =>
   Effect.gen(function* () {
     const subject = String(message.properties?.subject ?? '');
+    const body = Message.extractText(message);
     const raw = yield* LanguageModel.generateText({
-      prompt: `${TAG_PROMPT}\n\nSubject: ${subject}\n\n${Message.extractText(message)}`,
+      prompt: `${TAG_PROMPT}\n\nSubject: ${subject}\n\n${body}`,
     }).pipe(
       Effect.provide(AiService.model(resolveModel('tag', options.policy)).pipe(Layer.orDie)),
       Effect.timeout('30 seconds'),
@@ -121,9 +136,15 @@ export const tagMessage = (
       Effect.orElse(() => Effect.succeed('')),
     );
     const parsed = parseTagResult(raw);
-    // Deterministic bulk gate overrides the model: it adds `bulk` for no-action mail the model missed
-    // and strips it from invoices / payment requests the model wrongly tagged.
-    const classification = classifyBulk({ subject, senderEmail: message.sender?.email });
+    // Deterministic bulk gate overrides the model: an unsubscribe affordance (header or body link)
+    // forces `bulk`, adds it for no-action mail the model missed, and strips it from invoices.
+    const listUnsubscribe = message.properties?.listUnsubscribe;
+    const classification = classifyBulk({
+      subject,
+      senderEmail: message.sender?.email,
+      listUnsubscribe: typeof listUnsubscribe === 'string' ? listUnsubscribe : undefined,
+      bodyText: body,
+    });
     const tags = applyBulkTag(parsed.tags, classification);
     return { tags, spam: parsed.spam, bulk: tags.includes('bulk') };
   });
