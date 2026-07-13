@@ -4,6 +4,8 @@ Plan for rewriting HALO — replacing the protocol-buffer credential definitions
 
 Status: draft. Backwards compatibility is explicitly out of scope at this stage.
 
+See [API_AUDIT.md](./API_AUDIT.md) for the consumer-side audit (Composer/plugins) and the proposed Effect service surface that fronts this migration.
+
 ## 1. Current HALO implementation
 
 ### 1.1 Architecture
