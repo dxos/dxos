@@ -832,7 +832,7 @@ catalogs:
       specifier: ^4.3.1
       version: 4.3.1
     '@vitest/browser':
-      specifier: ^4.1.10
+      specifier: 4.1.10
       version: 4.1.10
     '@vitest/browser-playwright':
       specifier: ^4.1.10
