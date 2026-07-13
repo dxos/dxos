@@ -7,7 +7,7 @@
 declare module 'zen-push' {
   import { type Observable } from 'zen-observable/esm';
 
-  declare class PushStream<T> {
+  class PushStream<T> {
     readonly observable: Observable<T>;
     readonly observed: number;
     next(x: T): void;

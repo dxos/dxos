@@ -56,11 +56,12 @@ export const translations = [
         'action-mark-read.menu': 'Mark as read',
         'message.label': 'Message',
         'event.label': 'Event',
+        'facts.label': 'Facts',
         'inbox.label': 'Inbox',
 
         'no-connections.label': 'No connections configured',
 
-        'sync-mailbox.label': 'Sync mailbox',
+        'sync-mailbox.label': 'Sync',
         'sync-mailbox-error.title': 'Failed to sync mailbox',
         'sync-mailbox-success.title': 'Mailbox sync complete',
         'empty-mailbox.message': 'Mailbox empty',
@@ -93,6 +94,7 @@ export const translations = [
         'view-trigger.label': 'View trigger',
 
         'view-mode.menu': 'View mode',
+        'view-mode-html.menu': 'HTML',
         'view-mode-enriched.menu': 'Enriched',
         'view-mode-markdown.menu': 'Markdown',
         'view-mode-plain.menu': 'Plain text',
@@ -118,6 +120,9 @@ export const translations = [
         'message-toolbar-reply.menu': 'Reply',
         'message-toolbar-reply-all.menu': 'Reply All',
         'message-toolbar-forward.menu': 'Forward',
+        'message-toolbar-ai-reply.menu': 'AI reply',
+        'draft-toolbar.label': 'Draft toolbar',
+        'draft-toolbar-generate.menu': 'Generate reply',
         'message-toolbar-delete.menu': 'Delete',
         'message-toolbar-extract.menu': 'Extract',
         'message-toolbar-load-images.menu': 'Load remote images',
@@ -141,6 +146,13 @@ export const translations = [
         'drafts.label': 'Drafts',
         'drafts.article.description': 'Draft list (coming soon).',
         'drafts.empty.message': 'No drafts yet.',
+        'topics.label': 'Topics',
+        'analyze-topics.label': 'Analyze Topics',
+        'analyze-topics-success.title': 'Topics updated.',
+        'analyze-topics-error.title': 'Failed to analyze topics.',
+        'topics.empty.message': 'No topics yet. Run "Analyze Topics" from the mailbox toolbar.',
+        'topics.count.label':
+          '{{threads}} threads · {{participants}} participants · {{questions}} questions · {{tasks}} tasks',
         'create-draft.label': 'Create draft',
 
         'related-contacts.title': 'Related contacts',
@@ -152,8 +164,10 @@ export const translations = [
         'compose-email-dialog.title': 'Compose Email',
         'close.label': 'Close',
         'send-email-button.label': 'Send',
+        'send-email-success.title': 'Message sent',
         'send-email-error.title': 'Failed to send email',
-        'send-email-error-unknown.message': 'An unknown error occurred',
+        'draft-message.title': 'Draft',
+        'delete-draft-button.label': 'Delete draft',
         'send-as-email.label': 'Send as email',
 
         'draft-subject.label': 'Subject',

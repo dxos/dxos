@@ -19,7 +19,7 @@ import { type Message } from '@dxos/types';
 import { GoogleMail } from '../../../apis';
 import { GmailSendMessageInvalidError } from '../../../errors';
 import { GoogleCredentials } from '../../../services/google-credentials';
-import { InboxOperation } from '../../../types';
+import { InboxOperation, Mailbox } from '../../../types';
 
 export default InboxOperation.GmailSend.pipe(
   Operation.withHandler(({ userId = 'me', message, connection: connectionRef }) =>
@@ -60,6 +60,9 @@ export default InboxOperation.GmailSend.pipe(
       return {
         id: response.id,
         threadId: response.threadId,
+        // Gmail auto-applies its well-known `SENT` system label; the same tag the canonical copy syncs
+        // down with, so the caller can tag the local draft to match.
+        sentTag: { source: Mailbox.GMAIL_TAG_SOURCE, id: 'SENT', label: 'Sent' },
       };
     }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(GoogleCredentials.fromConnection(connectionRef))),
   ),

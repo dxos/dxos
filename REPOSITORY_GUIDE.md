@@ -179,6 +179,23 @@ The filter consists of a series of filename pattern/level tuples separated by co
 The apps published are defined in [`.github/workflows/scripts/apps.sh`](https://github.com/dxos/dxos/blob/main/.github/workflows/scripts/apps.sh).
 In order to include a new app in the publish loop it needs to be added to the `APPS` list in this file.
 
+### New npm packages
+
+New packages are created with `"private": true` in their `package.json` (see [New Packages](./AGENTS.md#new-packages)). Publishing a package to npm for the first time requires an initial manual publish, since npm's OIDC trusted publishing (used by [`publish-all.yml`](https://github.com/dxos/dxos/blob/main/.github/workflows/publish-all.yml)) can only be configured for a package that already exists on the registry:
+
+1. Build the package and its dependencies: `moon run <package-name>:build` (this also builds upstream deps via `moon`'s task graph).
+2. Set the package's `version` to `0.0.0` and remove `"private": true` from its `package.json` at the same time — a private package cannot be published.
+3. Run `npm login && pnpm publish-package @dxos/<PACKAGE>`
+4. On npmjs.com, go to the package's **Settings → Trusted Publisher** and add GitHub Actions as a trusted publisher:
+   - Repository: `dxos/dxos`
+   - Workflow file: `publish-all.yml`
+   - Environment: leave blank unless the workflow specifies one.
+   - Allowed actions: `npm publish` only — do not enable `npm stage publish` (staged/review release flow that `publish-all.yml` does not use).
+   - Click "Setup Connection"
+5. Revert the package's `version` back to align with the rest of the packages in the monorepo, now that the trusted publisher is configured and `publish-all.yml` will handle future releases.
+
+For bulk setup (roughly **10+ packages** at once), the [npm-trusted-publisher](https://github.com/wittjosiah/npm-trusted-publisher) Chrome extension automates step 4 across many packages. Below that threshold, doing it manually per package is faster.
+
 ## Dependencies
 
 Packages can be locked to a particular version as required by updating `pnpm.overrides` in `package.json`.
@@ -328,3 +345,32 @@ This is currently how the HALO vault's service worker is setup (though it will l
 ```bash
 pnpm -r --filter "./packages/core/**" --filter "\!@dxos/automerge" exec depcheck --quiet --skip-missing=true --oneline  --ignores=@dxos/node-std,@bufbuild/protoc-gen-es
 ```
+
+## Cloud / headless environments (Cursor Cloud, CI VMs)
+
+### Toolchain
+
+This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.4, all managed by **proto** (see `.prototools`). In a cloud VM, proto is installed at `~/.proto` and must be on PATH:
+
+```bash
+export PROTO_HOME="$HOME/.proto"
+export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
+```
+
+Do **not** use nvm; proto shims must take precedence.
+
+### Running services
+
+- **Composer app** (main app): `moon run composer-app:serve --quiet` starts a Vite dev server on port 5173. The app auto-creates a local identity on first load; no external auth is required.
+- **Tasks app**: `moon run tasks-app:serve`
+- **Docs site**: `moon run docs:serve`
+
+See the [Run commands](#run-commands) section above for the full list.
+
+### Gotchas
+
+- `pnpm install` must run with `CI=true` or `HUSKY=0` in non-interactive environments to skip the husky git-hooks setup prompt.
+- The `DEPOT_TOKEN` warning from moon is expected and harmless (remote-cache auth token).
+- The `pnpm.onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` controls which native addons are built; warnings about "ignored build scripts" for packages not in the list are normal.
+- Builds must complete before running `serve` commands, because moon tasks have `deps` on `:prebuild`/`:build` targets.
+- No Docker or external services are required for unit tests or local dev. Signal servers for networking tests are pre-compiled binaries spawned automatically by tests.

@@ -176,3 +176,5 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
     </Dialog.Content>
   );
 };
+
+SyncTargetsDialog.displayName = 'SyncTargetsDialog';

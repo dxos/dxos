@@ -9,7 +9,6 @@ import { synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type AudioChunk, type AudioRecorder, type WavConfig } from '@dxos/pipeline-transcription';
-import { trace } from '@dxos/tracing';
 
 // `extendable-media-recorder` references browser-only globals (Worker/AudioWorklet) at module load,
 // so it is imported lazily — keeping this package importable in non-browser contexts (node tests,
@@ -36,7 +35,6 @@ export type MediaStreamRecorderProps = {
  *
  * It records MediaStream using https://www.npmjs.com/package/extendable-media-recorder.
  */
-@trace.resource()
 export class MediaStreamRecorder implements AudioRecorder {
   private readonly _mediaStreamTrack: MediaStreamTrack;
   /**

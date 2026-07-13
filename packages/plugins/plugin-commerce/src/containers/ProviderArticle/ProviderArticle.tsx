@@ -121,3 +121,5 @@ const useMenuActions = (
 
   return { actions: menuActions, onAction };
 };
+
+ProviderArticle.displayName = 'ProviderArticle';

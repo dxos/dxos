@@ -31,7 +31,7 @@ import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector';
 const RECURRING_KINDS = ['hourly', 'daily', 'weekly', 'monthly', 'custom'] as const satisfies readonly ScheduleKind[];
 
 // `enabled` is extended onto every spec form so it renders inline with the kind's fields.
-const EnabledForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('enabled', 'computeEnvironment'));
+const EnabledForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('enabled', 'remote'));
 
 // Scoped trigger form, modeled as a top-level discriminated union (one member per pluggable variant) so the
 // Form renders the chosen kind's fields as one flat field set (no nested, bordered sub-fieldset). The kind
@@ -307,13 +307,9 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
     () => ({
       ...triggerFormValues(trigger?.spec),
       enabled: trigger?.enabled,
+      remote: trigger?.remote,
     }),
-    [trigger, trigger?.spec, trigger?.enabled],
-  );
-
-  const defaultComputeEnvironment = useMemo(
-    () => ({ computeEnvironment: trigger?.computeEnvironment }),
-    [trigger?.computeEnvironment],
+    [trigger, trigger?.spec, trigger?.enabled, trigger?.remote],
   );
 
   // Mirror the active kind: gates the variant picker (shown only while unset) and the variant-specific notes.
@@ -340,8 +336,8 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
       const spec = triggerFormSpec(values);
       setKind(spec.kind);
       const enabled = values.enabled === true;
-      const computeEnvironment = values.computeEnvironment;
-      // Edit the spec, `enabled`, and `computeEnvironment` on the trigger directly from the form values.
+      const remote = values.remote;
+      // Edit the spec, `enabled`, and `remote` on the trigger directly from the form values.
       // The trigger's `function` and `input` (including the instructions binding and any operation-specific
       // bindings like `{ magazine }`) are wired once by `Routine.make`, so they are not re-derived here.
       if (trigger) {
@@ -351,12 +347,12 @@ const useTriggerForm = (routine: Routine.Routine, trigger?: Trigger.Trigger) => 
           // (mirrors commands/trigger/update/subscription.ts).
           trigger.spec = spec as typeof trigger.spec;
           trigger.enabled = enabled;
-          trigger.computeEnvironment = computeEnvironment;
+          trigger.remote = remote;
         });
       } else {
         // Defensive: the draft normally carries an owned trigger already (see `Routine.make`). If absent,
         // create one in memory and attach it to the routine graph — nothing is persisted until save.
-        const created = Trigger.make({ spec, enabled, computeEnvironment: computeEnvironment ?? 'local' });
+        const created = Trigger.make({ spec, enabled, remote });
         Obj.setParent(created, routine);
         Obj.update(routine, (routine) => {
           routine.triggers.push(Ref.make(created));

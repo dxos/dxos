@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, type Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 
 import { type Game, GameCapabilities } from '#types';
@@ -15,10 +15,7 @@ export type GameCardProps = AppSurface.ObjectCardProps<Game>;
 
 export const GameCard = ({ role, subject: game }: GameCardProps) => {
   const variants = useCapabilities(GameCapabilities.VariantProvider);
-  const ref = game.variant as Ref.Ref<Obj.Unknown>;
-  // Subscribe for re-renders; pass the live ref target down to variant components.
-  useObject(ref);
-  const variant = ref?.target as Obj.Unknown | undefined;
+  const [variant] = useObject(game.variant);
 
   if (!variant) {
     return null;
@@ -33,3 +30,5 @@ export const GameCard = ({ role, subject: game }: GameCardProps) => {
   const Component = match.card;
   return <Component game={game} variant={variant} role={role} />;
 };
+
+GameCard.displayName = 'GameCard';

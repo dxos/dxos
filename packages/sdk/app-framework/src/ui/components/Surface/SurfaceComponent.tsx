@@ -19,23 +19,16 @@ import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useDefaultValue } from '@dxos/react-hooks';
 
-import { Capabilities } from '../../../common';
+import { Capabilities, Role } from '../../../common';
 import { type CapabilityManager } from '../../../core';
 import { usePluginManager } from '../PluginManager';
 import { SurfaceContext } from './context';
-import { DebugSurface, isSurfaceDebugEnabled } from './SurfaceDebug';
+import { DebugSurface, isSurfaceDebugEnabled, isSurfaceWrapperEnabled } from './SurfaceDebug';
 import { indexByRole } from './SurfaceManager';
 import { useSurfaceManager } from './SurfaceManagerContext';
 import { nextDataChurn, surfaceMetrics } from './SurfaceMetrics';
 import { useSurfaceProfilerCallback } from './SurfaceProfilerContext';
-import {
-  type Definition,
-  type Props,
-  type RoleToken,
-  type TokenData,
-  type TypedProps,
-  type WebComponentDefinition,
-} from './types';
+import { type Definition, type Props, type TypedProps, type WebComponentDefinition } from './types';
 
 const DEBUG = import.meta.env?.VITE_DEBUG;
 
@@ -154,7 +147,9 @@ const SurfaceContextProvider = memo(
         component
       );
 
-    if (isSurfaceDebugEnabled()) {
+    // Dev builds wrap every surface in `<dx-surface>` for DOM inspection / `window.__DX__`; the
+    // `__DX_DEBUG__` flag separately gates the visual highlight overlay (see SurfaceDebug).
+    if (isSurfaceWrapperEnabled()) {
       return (
         <ErrorBoundary name='surface' resetKeys={[data]} FallbackComponent={fallback} onError={onError}>
           <SurfaceContext.Provider value={contextValue}>
@@ -177,7 +172,7 @@ SurfaceContextProvider.displayName = 'SurfaceContextProvider';
 
 /**
  * A surface is a named region of the screen that can be populated by plugins.
- * The `type` prop is a {@link RoleToken} that defines which region and its
+ * The `type` prop is a {@link Role.Role} that defines which region and its
  * associated data contract.
  *
  * A surface is a boundary that may resolve to zero, one, or many components, so
@@ -192,7 +187,7 @@ export const SurfaceComponent = memo(
     limit,
     placeholder = DEFAULT_PLACEHOLDER,
     ...rest
-  }: TypedProps<RoleToken<any>>) => {
+  }: TypedProps<Role.Role<any>>) => {
     const data = useDefaultValue(dataProp, () => ({}));
     const surfaceManager = useSurfaceManager();
     // Subscribe only to this role's contributions: contributing/removing a surface for a
@@ -253,8 +248,8 @@ export const SurfaceComponent = memo(
     );
   },
   // The generic call signature is reattached here because `memo` erases it from the inferred type.
-) as (<TToken extends RoleToken<any>>(props: TypedProps<TToken>) => React.ReactNode) &
-  NamedExoticComponent<TypedProps<RoleToken<any>>>;
+) as (<TToken extends Role.Role<any>>(props: TypedProps<TToken>) => React.ReactNode) &
+  NamedExoticComponent<TypedProps<Role.Role<any>>>;
 
 SurfaceComponent.displayName = 'Surface';
 
@@ -305,9 +300,9 @@ export const useSurfaces = () => {
  * Typed: pass a `type` role token and `data` is constrained to the token's
  * declared contract (e.g. `AppSurface.Section` requires `attendableId`).
  */
-export function isSurfaceAvailable<TToken extends RoleToken<any>>(
+export function isSurfaceAvailable<TToken extends Role.Role<any>>(
   capabilityManager: CapabilityManager.CapabilityManager,
-  args: { type: TToken; data?: TokenData<TToken> },
+  args: { type: TToken; data?: Role.Data<TToken> },
 ): boolean {
   const effectiveRole = args.type?.role;
   if (effectiveRole == null) {

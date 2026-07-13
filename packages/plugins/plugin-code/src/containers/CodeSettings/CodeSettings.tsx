@@ -90,3 +90,5 @@ export const CodeSettings = ({ settings, onSettingsChange }: CodeSettingsProps) 
 };
 
 export default CodeSettings;
+
+CodeSettings.displayName = 'CodeSettings';

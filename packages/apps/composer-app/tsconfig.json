@@ -235,10 +235,16 @@
       "path": "../../plugins/plugin-bookmarks"
     },
     {
+      "path": "../../plugins/plugin-brain"
+    },
+    {
       "path": "../../plugins/plugin-calls"
     },
     {
       "path": "../../plugins/plugin-chess"
+    },
+    {
+      "path": "../../plugins/plugin-chess-com"
     },
     {
       "path": "../../plugins/plugin-client"
@@ -271,6 +277,9 @@
       "path": "../../plugins/plugin-deck"
     },
     {
+      "path": "../../plugins/plugin-devtools"
+    },
+    {
       "path": "../../plugins/plugin-discord"
     },
     {
@@ -289,9 +298,6 @@
       "path": "../../plugins/plugin-freeq"
     },
     {
-      "path": "../../plugins/plugin-gallery"
-    },
-    {
       "path": "../../plugins/plugin-game"
     },
     {
@@ -305,6 +311,9 @@
     },
     {
       "path": "../../plugins/plugin-ibkr"
+    },
+    {
+      "path": "../../plugins/plugin-ideogram"
     },
     {
       "path": "../../plugins/plugin-inbox"
@@ -329,9 +338,6 @@
     },
     {
       "path": "../../plugins/plugin-markdown"
-    },
-    {
-      "path": "../../plugins/plugin-masonry"
     },
     {
       "path": "../../plugins/plugin-meeting"
@@ -371,6 +377,9 @@
     },
     {
       "path": "../../plugins/plugin-preview"
+    },
+    {
+      "path": "../../plugins/plugin-progress"
     },
     {
       "path": "../../plugins/plugin-pwa"
@@ -428,6 +437,9 @@
     },
     {
       "path": "../../plugins/plugin-status-bar"
+    },
+    {
+      "path": "../../plugins/plugin-studio"
     },
     {
       "path": "../../plugins/plugin-support"

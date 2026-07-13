@@ -18,7 +18,7 @@ export type Any = Order<any>;
 class OrderClass implements Order<any> {
   private static 'variance': Order<any>['~Order'] = {} as Order<any>['~Order'];
 
-  static 'is'(value: unknown): value is Order<any> {
+  static 'is'(value: unknown): value is Any {
     return typeof value === 'object' && value !== null && '~Order' in value;
   }
 
@@ -27,7 +27,12 @@ class OrderClass implements Order<any> {
   '~Order' = OrderClass.variance;
 }
 
-export const natural: Order<any> = new OrderClass({ kind: 'natural' });
+/**
+ * Order by the database's default order. For non-feed sources this is by id; for feed sources
+ * this is insertion order, so `desc` reads newest-first. Defaults to `asc`.
+ */
+export const natural = (direction: QueryAST.OrderDirection = 'asc'): Order<any> =>
+  new OrderClass({ kind: 'natural', direction });
 export const property = <T>(property: keyof T & string, direction: QueryAST.OrderDirection): Order<T> =>
   new OrderClass({
     kind: 'property',

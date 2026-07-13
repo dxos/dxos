@@ -6,10 +6,6 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
-  "files": [
-    "dist",
-    "src"
-  ],
   "type": "module",
   "exports": {
     ".": {
@@ -18,10 +14,14 @@
       "default": "./dist/lib/default/index.mjs"
     }
   },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {},
+  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {},
-  "devDependencies": {},
   "beast": {}
 }

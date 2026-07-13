@@ -9,10 +9,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type URI } from '@dxos/keys';
 
+import type * as Blob from './Blob';
 import type * as Entity from './Entity';
 import * as Err from './Err';
 import type * as Feed from './Feed';
@@ -191,11 +191,6 @@ export interface Database extends Queryable {
   removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void>;
 
   /**
-   * Queries items in a feed associated with this database.
-   */
-  queryFeed(feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<any>;
-
-  /**
    * Syncs a feed with the server.
    */
   syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void>;
@@ -204,6 +199,30 @@ export interface Database extends Queryable {
    * Returns queue replication backlog for the feed's namespace.
    */
   getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
+
+  /**
+   * Hashes and uploads `bytes` via the chosen storage backend, returning an un-added Blob object.
+   * Rejects with `Err.BlobTooLargeError` (over inline storage's fixed cap, or the backend's own
+   * `maxSize`), `Err.BlobWriteError` (backend upload failure), or `Err.BlobNotAvailableError`
+   * (`reason: 'backend-not-registered'` — the requested storage name has no registered backend).
+   */
+  createBlob(bytes: Uint8Array, options?: { type?: string; storage?: string }): Promise<Blob.Blob>;
+
+  /**
+   * Loads a blob's bytes. Rejects with `Err.BlobNotAvailableError` if the backend for the blob's
+   * storage scheme is not registered, offline, or cannot find the bytes.
+   */
+  readBlob(blob: Blob.Blob): Promise<Uint8Array>;
+
+  /**
+   * Checks whether a blob's bytes are currently available.
+   */
+  blobExists(blob: Blob.Blob): Promise<boolean>;
+
+  /**
+   * Returns a renderable URL for the blob, if one can be produced.
+   */
+  getBlobUrl(blob: Blob.Blob): Promise<string | undefined>;
 }
 
 export const isDatabase = (obj: unknown): obj is Database => {
@@ -276,7 +295,7 @@ export const resolve: {
   Effect.gen(function* () {
     const { db } = yield* Service;
     const dxn = typeof ref === 'string' ? ref : ref.uri;
-    const object = yield* EffectEx.promiseWithCauseCapture(() =>
+    const object = yield* Effect.promise(() =>
       db.graph
         .createRefResolver({
           context: {
@@ -307,7 +326,7 @@ export const resolve: {
  */
 export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError, never> = Effect.fn('Database.load')(
   function* (ref) {
-    const object = yield* EffectEx.promiseWithCauseCapture(() => ref.tryLoad());
+    const object = yield* Effect.promise(() => ref.tryLoad());
     if (!object) {
       return yield* Effect.fail(new Err.EntityNotFoundError(ref.uri));
     }
@@ -327,7 +346,7 @@ export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Eff
  * @see {@link Database.addType}
  */
 export const addType = <T extends Type.AnyEntity>(type: T): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.addType(type)))).pipe(
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.addType(type)))).pipe(
     Effect.withSpan('Database.addType'),
   );
 
@@ -343,25 +362,25 @@ export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, ne
  * @see {@link Database.appendToFeed}
  */
 export const appendToFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
-  Service.pipe(
-    Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.appendToFeed(feed, entities))),
-  ).pipe(Effect.withSpan('Database.appendToFeed'));
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.appendToFeed(feed, entities)))).pipe(
+    Effect.withSpan('Database.appendToFeed'),
+  );
 
 /**
  * Removes entities from a feed.
  * @see {@link Database.deleteFromFeed}
  */
 export const deleteFromFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
-  Service.pipe(
-    Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.deleteFromFeed(feed, entities))),
-  ).pipe(Effect.withSpan('Database.deleteFromFeed'));
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.deleteFromFeed(feed, entities)))).pipe(
+    Effect.withSpan('Database.deleteFromFeed'),
+  );
 
 /**
  * Flushes pending changes to disk.
  * @see {@link Database.flush}
  */
 export const flush = (opts?: FlushOptions) =>
-  Service.pipe(Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.flush(opts)))).pipe(
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.flush(opts)))).pipe(
     Effect.withSpan('Database.flush'),
   );
 

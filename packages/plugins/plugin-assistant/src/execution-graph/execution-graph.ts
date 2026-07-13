@@ -93,6 +93,17 @@ export interface BuildExecutionGraphParams {
   activeProcesses?: readonly Process.Info[];
   collapseCompletedSpans?: boolean;
   eventLimit?: number;
+  /**
+   * Duration a span may sit open with no new events before it's force-closed with a synthetic
+   * end event. Only takes effect when `now` is also provided. Defaults to
+   * `DEFAULT_SPAN_TIMEOUT_MS`.
+   */
+  spanTimeoutMs?: number;
+  /**
+   * Reference time used to detect abandoned spans. Force-closing is skipped entirely when this
+   * is omitted.
+   */
+  now?: number;
 }
 
 /**
@@ -121,8 +132,10 @@ export const buildExecutionGraph = ({
   activeProcesses = [],
   collapseCompletedSpans = false,
   eventLimit = 500,
+  spanTimeoutMs,
+  now,
 }: BuildExecutionGraphParams): ExecutionGraph => {
-  const spanTree = buildSpanTree(traceMessages, { eventLimit });
+  const spanTree = buildSpanTree(traceMessages, { eventLimit, spanTimeoutMs, now });
   const toolCallContext = buildToolCallContext(traceMessages);
   const built = spanTreeToCommits(spanTree, activeProcesses, toolCallContext, collapseCompletedSpans);
   log('trace execution graph', {

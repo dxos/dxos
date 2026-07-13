@@ -1,0 +1,57 @@
+{
+  "name": "@dxos/pipeline-discord",
+  "version": "0.10.0",
+  "private": true,
+  "description": "Incremental chat-crawl pipeline: crawl → persist messages → extract facts → answer standing questions.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "default": "./dist/lib/neutral/testing/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/crawler": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/pipeline": "workspace:*",
+    "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/ai": "catalog:",
+    "@effect/sql": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@effect/sql-sqlite-node": "catalog:",
+    "@effect/vitest": "catalog:",
+    "effect": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
+  }
+}

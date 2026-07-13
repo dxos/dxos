@@ -66,6 +66,31 @@ export const packageNameFromPath = (relativePath: string): string | null => {
   return packageNameFromSpecifier(tail);
 };
 
+/** Resolves the workspace package name that owns a file, or `null` outside any package. */
+export type WorkspacePackageResolver = (absoluteFile: string) => string | null;
+
+/** Prefix marking a graph node that is an unresolved external specifier rather than a file. */
+export const EXTERNAL_PREFIX = '[external] ';
+
+export const externalKey = (specifier: string): string => `${EXTERNAL_PREFIX}${specifier}`;
+
+export const isExternalKey = (key: string): boolean => key.startsWith(EXTERNAL_PREFIX);
+
+export const externalSpecifierOf = (key: string): string => key.slice(EXTERNAL_PREFIX.length);
+
+/** Build matcher input for a resolved file, preferring its node_modules package name. */
+export const fileMatcherInput = (file: string, resolveWorkspacePackage: WorkspacePackageResolver): MatcherInput => {
+  const resolvedAbsolute = normalizeFsPath(file);
+  const packageName = packageNameFromPath(resolvedAbsolute) ?? resolveWorkspacePackage(resolvedAbsolute);
+  return { resolvedAbsolute, packageName: packageName ?? null, externalSpecifier: null };
+};
+
+/** Match a graph node key (a file path or `[external] <specifier>`) against the matcher. */
+export const matchesKey = (key: string, matcher: Matcher, resolveWorkspacePackage: WorkspacePackageResolver): boolean =>
+  isExternalKey(key)
+    ? matcher.matches({ resolvedAbsolute: null, packageName: null, externalSpecifier: externalSpecifierOf(key) })
+    : matcher.matches(fileMatcherInput(key, resolveWorkspacePackage));
+
 /**
  * Walks up from `absoluteFile` looking for a `package.json` with a `name`
  * field, mapping a workspace file to its package. Cached on the path of the
@@ -74,7 +99,7 @@ export const packageNameFromPath = (relativePath: string): string | null => {
  * Walks all the way up to the filesystem root so that workspace packages
  * outside the current working directory still resolve.
  */
-export const createWorkspacePackageResolver = (_absWorkingDir: string) => {
+export const createWorkspacePackageResolver = (_absWorkingDir: string): WorkspacePackageResolver => {
   const cache = new Map<string, string | null>();
   return (absoluteFile: string): string | null => {
     let dir = path.dirname(absoluteFile);

@@ -10,8 +10,6 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Ref as EchoRef, Obj, Relation } from '@dxos/echo';
 import { type Resolver } from '@dxos/extractor';
@@ -31,9 +29,19 @@ import { mapEvent } from './mapper';
 
 const COMMIT_PAGE_SIZE = 10;
 
+const DEFAULT_SYNC_BACK_DAYS = 30;
+const DEFAULT_SYNC_FORWARD_DAYS = 365;
+const DEFAULT_PAGE_SIZE = 100;
+
 export default InboxOperation.GoogleCalendarSync.pipe(
   Operation.withHandler(
-    ({ binding: bindingRef, googleCalendarId = 'primary', syncBackDays = 30, syncForwardDays = 365, pageSize = 100 }) =>
+    ({
+      binding: bindingRef,
+      googleCalendarId = 'primary',
+      syncBackDays = DEFAULT_SYNC_BACK_DAYS,
+      syncForwardDays = DEFAULT_SYNC_FORWARD_DAYS,
+      pageSize = DEFAULT_PAGE_SIZE,
+    }) =>
       Effect.gen(function* () {
         const bindingObj = bindingRef.target;
         const db = bindingObj ? Obj.getDatabase(bindingObj) : undefined;
@@ -98,11 +106,20 @@ export default InboxOperation.GoogleCalendarSync.pipe(
             ),
           );
 
+          // Flush indexes once at the end of the run (per-page commits no longer flush — see
+          // `SyncBinding.commit`) so cross-run dedup / resolution observe this run's writes.
+          yield* Database.flush({ indexes: true });
+
           log('calendar sync complete', { newEvents: stats.newMessages, isInitialSync });
           return { newEvents: stats.newMessages };
         }).pipe(
           Effect.provide(
-            Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromConnection(connectionRef)),
+            Layer.mergeAll(
+              FetchHttpClient.layer,
+              InboxResolver.Live,
+              GoogleCredentials.fromConnection(connectionRef),
+              Database.layer(db),
+            ),
           ),
         );
       }),
@@ -123,7 +140,6 @@ const mapEventStage: Stage.Stage<GoogleCalendar.Event, SyncBinding.CommitUnit, n
               foreignId: event.id,
               key: event.updated ? Date.parse(event.updated) : 0,
               tagUris: [],
-              extractedObjects: [],
             }
           : undefined,
       ),

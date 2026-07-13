@@ -385,7 +385,17 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/pipeline-discord/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/pipeline-email/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/pipeline-rdf/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -395,7 +405,7 @@
         },
         {
           "type": "json",
-          "path": "packages/core/compute/semantic-index/package.json",
+          "path": "packages/core/compute/progress/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -620,12 +630,22 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-brain/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-calls/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/plugins/plugin-chess/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-chess-com/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -680,6 +700,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-devtools/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-discord/package.json",
           "jsonpath": "$.version"
         },
@@ -710,11 +735,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-gallery/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-game/package.json",
           "jsonpath": "$.version"
         },
@@ -736,6 +756,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-ibkr/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-ideogram/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -776,11 +801,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-markdown/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-masonry/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -846,6 +866,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-preview/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-progress/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -941,6 +966,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-status-bar/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-studio/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1140,7 +1170,7 @@
         },
         {
           "type": "json",
-          "path": "packages/stories/stories-ui/package.json",
+          "path": "packages/stories/story-modules/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1311,6 +1341,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-pickers/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-rdf/package.json",
           "jsonpath": "$.version"
         },
         {

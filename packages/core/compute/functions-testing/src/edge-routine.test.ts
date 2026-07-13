@@ -51,10 +51,6 @@ describe('Edge instructions', { tags: ['functions-e2e'] }, () => {
 
     await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
 
-    Obj.update(space.properties, (properties) => {
-      properties.computeEnvironment = 'edge';
-    });
-
     space.db.add(Obj.make(TestSchema.Organization, { name: 'Acme Corp' }));
     space.db.add(Obj.make(TestSchema.Organization, { name: 'Globex Industries' }));
     space.db.add(Obj.make(TestSchema.Organization, { name: 'Initech' }));
@@ -80,6 +76,7 @@ describe('Edge instructions', { tags: ['functions-e2e'] }, () => {
     const trigger = space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
+        remote: true,
         runnable: Ref.make(fn),
         spec: Trigger.specTimer('* * * * * *'),
         input: {

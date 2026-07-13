@@ -4,8 +4,11 @@
 
 // @import-as-namespace
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
+
+import * as Progress from './Progress';
 
 /**
  * Overflow policy applied when a consumer cannot keep pace, mapped onto `Stream.buffer` strategies.
@@ -126,3 +129,28 @@ export const filter =
   <In>(id: string, pred: (item: In) => boolean): Stage<In, In> =>
   <E0, R0>(self: Stream.Stream<In, E0, R0>) =>
     self.pipe(Stream.filter(pred));
+
+/**
+ * A pass-through stage that reports live progress to the {@link Progress} registry: it registers the
+ * task (with an optional item `total`), advances the item index as each item flows through, marks the
+ * task done only when the stream ends successfully, and marks it failed if the stream errors.
+ * Progress is thus an artifact of the pipeline itself — the same stage works in the app (feeding a
+ * reactive panel) and in tests (feeding a file sink).
+ */
+export const track =
+  <In>(name: string, options: { total?: number; label?: string } = {}): Stage<In, In, never, Progress.Progress> =>
+  <E0, R0>(self: Stream.Stream<In, E0, R0>) =>
+    Stream.unwrap(
+      Effect.map(Progress.Progress, (progress) => {
+        const handle = progress.task(name, options);
+        // `done` only on successful completion (a concatenated terminal effect, unreached on error);
+        // `fail` on the error path. A finalizer/`ensuring` would report done even for a failed stream.
+        return Stream.concat(
+          self.pipe(
+            Stream.tap(() => Effect.sync(() => handle.advance())),
+            Stream.tapErrorCause((cause) => Effect.sync(() => handle.fail(Cause.pretty(cause)))),
+          ),
+          Stream.execute(Effect.sync(() => handle.done())),
+        );
+      }),
+    );

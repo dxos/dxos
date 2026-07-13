@@ -11,13 +11,14 @@ import { DXN } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
 import { ActivationEvents, Capabilities } from '../../../common';
+import * as Role from '../../../common/Role';
 import { Capability, Plugin } from '../../../core';
 import { createTestApp } from '../../../testing/harness';
 import { render } from '../../../testing/react';
 import { SurfaceComponent, useSurfaces } from './SurfaceComponent';
 import { setSurfaceDebug } from './SurfaceDebug';
 import { surfaceMetrics } from './SurfaceMetrics';
-import { type Definition, create, makeFilter, makeType } from './types';
+import { type Definition, create, makeFilter } from './types';
 
 // Flush the metrics store's rAF-batched notification (the actual signal it uses), not a fixed delay.
 const flushMetrics = () =>
@@ -27,8 +28,8 @@ const flushMetrics = () =>
     );
   });
 
-const RoleA = makeType<Record<string, unknown>>('org.dxos.test.role.alpha');
-const RoleB = makeType<Record<string, unknown>>('org.dxos.test.role.beta');
+const RoleA = Role.make<Record<string, unknown>>('org.dxos.test.role.alpha');
+const RoleB = Role.make<Record<string, unknown>>('org.dxos.test.role.beta');
 
 const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.surfacePerf'), name: 'SurfacePerfTest' });
 
@@ -160,7 +161,7 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
   const ROUNDS = ROLE_COUNT; // one contribution per role.
 
   const roles = Array.from({ length: ROLE_COUNT }, (_, i) =>
-    makeType<Record<string, unknown>>(`org.dxos.test.role.r${i}`),
+    Role.make<Record<string, unknown>>(`org.dxos.test.role.r${i}`),
   );
 
   const benchMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.surfaceBench'), name: 'SurfaceBenchTest' });

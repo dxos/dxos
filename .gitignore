@@ -4,6 +4,9 @@
 # Claude Code harness session lock — per-machine runtime state, not source.
 .claude/scheduled_tasks.lock
 
+# Response-verbosity toggle state — per-user runtime, not repo policy.
+.claude/.response-mode
+
 .dev.vars
 
 # Logs
@@ -97,6 +100,7 @@ tmp
 temp
 .vite-inspect
 *.tsbuildinfo
+bench-results.json
 
 # Web Extensions
 web-ext-artifacts

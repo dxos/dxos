@@ -27,6 +27,9 @@ describe('Local AI', () => {
       `,
       skills: [Ref.make(DatabaseSkill.make())],
     }),
-    { timeout: agentTestTimeout({ disableLlmMemoization: true }), tags: ['llm'] },
+    {
+      timeout: agentTestTimeout({ disableLlmMemoization: true }),
+      tags: ['manual'],
+    },
   );
 });

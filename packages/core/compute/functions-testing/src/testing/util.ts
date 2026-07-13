@@ -85,7 +85,7 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
   while (true) {
     try {
       const traceFeed = space.properties.invocationTraceFeed?.target;
-      const traceFeedDXN = traceFeed ? Feed.getQueueUri(traceFeed) : undefined;
+      const traceFeedDXN = traceFeed ? Feed.getFeedUri(traceFeed) : undefined;
       const invocations = traceFeedDXN
         ? await space.db.query(Query.select(Filter.everything()).from(Scope.feed(traceFeedDXN))).run()
         : [];

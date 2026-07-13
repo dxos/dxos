@@ -8,7 +8,10 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, type Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+// #region DEBUG
+import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
+// #endregion DEBUG
 
 import { meta } from '#meta';
 import { type Game, GameCapabilities } from '#types';
@@ -19,11 +22,14 @@ export const GameArticle = ({ role, attendableId, subject: game }: GameArticlePr
   const { t } = useTranslation(meta.profile.key);
   const variants = useCapabilities(GameCapabilities.VariantProvider);
   const ref = game.variant as Ref.Ref<Obj.Unknown>;
-  // Subscribe via useObject so the article re-renders when the variant ref loads or changes.
-  // The snapshot is discarded; we pass the live ref target to variant components so they can
-  // subscribe to their own properties via useObject(state, 'prop').
-  useObject(ref);
-  const variant = ref?.target as Obj.Unknown | undefined;
+  const [variant] = useObject(ref);
+  // #region DEBUG
+  log('[DEBUG H2] game article variant', {
+    gameId: game.id,
+    variantLoaded: Boolean(variant),
+    variantTypename: variant ? Obj.getTypename(variant) : undefined,
+  });
+  // #endregion DEBUG
 
   if (!variant) {
     return null;
@@ -40,3 +46,5 @@ export const GameArticle = ({ role, attendableId, subject: game }: GameArticlePr
   const Component = match.article;
   return <Component game={game} variant={variant} role={role} attendableId={attendableId} />;
 };
+
+GameArticle.displayName = 'GameArticle';

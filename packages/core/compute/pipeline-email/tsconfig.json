@@ -35,7 +35,7 @@
       "path": "../pipeline"
     },
     {
-      "path": "../semantic-index"
+      "path": "../pipeline-rdf"
     }
   ]
 }

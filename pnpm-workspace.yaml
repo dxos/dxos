@@ -11,6 +11,9 @@ packages:
   - '!**/dist/**'
   - '!**/out/**'
 
+allowedDeprecatedVersions:
+  sparqljs: 3.7.4
+
 catalog:
   3d-force-graph: ^1.76.1
   '@ai-sdk/react': ^3.0.99
@@ -70,6 +73,7 @@ catalog:
   '@dnd-kit/utilities': ^3.2.0
   '@dxos/client': ^0.8.3
   '@dxos/echo': ^0.8.3
+  '@dxos/log': ^0.10.0
   '@dxos/ui-types': ^0.9.0
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.5.3
@@ -657,6 +661,7 @@ catalog:
   use-deep-compare-effect: ^1.8.1
   use-resize-observer: ^9.1.0
   use-sync-external-store: ^1.6.0
+  usearch: ^2.25.3
   util: ^0.12.4
   uuid: ^9.0.0
   varint: 6.0.0
@@ -820,3 +825,4 @@ trustPolicyExclude:
   - semver@6.3.1
   - semver@5.7.2
   - ua-parser-js@1.0.41
+  - graphql@15.10.2

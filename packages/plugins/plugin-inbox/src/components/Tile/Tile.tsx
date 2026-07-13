@@ -48,6 +48,9 @@ TileRoot.displayName = 'Tile.Root';
 // Header
 //
 
+/** A single `Card.Menu` dropdown item. */
+export type TileMenuItem = { label: string; onClick: () => void };
+
 type TileHeaderProps = {
   /** Header title content (rendered in a flex row). */
   title: ReactNode;
@@ -56,19 +59,21 @@ type TileHeaderProps = {
   onToggleStar?: () => void;
   /** Render the trailing `Card.Menu` action slot. */
   menu?: boolean;
+  /** Items for the `Card.Menu` dropdown (the trigger is disabled when empty). */
+  menuItems?: TileMenuItem[];
 };
 
 /**
  * Tile header row: leading `Row.Star` · title · optional `Card.Menu`. Shared by message/conversation
  * tiles (with menu) and event tiles (star + title only).
  */
-const TileHeader = ({ title, starred, onToggleStar, menu = false }: TileHeaderProps) => (
+const TileHeader = ({ title, starred, onToggleStar, menu = false, menuItems }: TileHeaderProps) => (
   <Card.Header>
     <Card.Block>
       <Row.Star starred={starred} onToggle={onToggleStar} />
     </Card.Block>
     <Card.Title classNames='flex items-center gap-3'>{title}</Card.Title>
-    {menu && <Card.Menu />}
+    {menu && <Card.Menu items={menuItems} />}
   </Card.Header>
 );
 

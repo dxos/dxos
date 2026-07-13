@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
+
 import { Event, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { assertArgument, invariant } from '@dxos/invariant';
@@ -59,6 +61,14 @@ export type SwarmNetworkManagerOptions = {
   enableDevtoolsLogging?: boolean; // Log to devtools.
   peerInfo?: PeerInfo;
 };
+
+/**
+ * Effect service tag for {@link SwarmNetworkManager}.
+ */
+export class SwarmNetworkManagerService extends EffectContext.Tag('@dxos/network-manager/SwarmNetworkManager')<
+  SwarmNetworkManagerService,
+  SwarmNetworkManager
+>() {}
 
 /**
  * Manages p2p connection to the swarm.

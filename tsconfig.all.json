@@ -217,13 +217,19 @@
       "path": "packages/core/compute/pipeline/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/pipeline-discord/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/pipeline-email/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/pipeline-rdf/tsconfig.json"
     },
     {
       "path": "packages/core/compute/pipeline-transcription/tsconfig.json"
     },
     {
-      "path": "packages/core/compute/semantic-index/tsconfig.json"
+      "path": "packages/core/compute/progress/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo/tsconfig.json"
@@ -355,10 +361,16 @@
       "path": "packages/plugins/plugin-bookmarks/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-brain/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-calls/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-chess/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-chess-com/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-client/tsconfig.json"
@@ -391,6 +403,9 @@
       "path": "packages/plugins/plugin-deck/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-devtools/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-discord/tsconfig.json"
     },
     {
@@ -409,9 +424,6 @@
       "path": "packages/plugins/plugin-freeq/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-gallery/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-game/tsconfig.json"
     },
     {
@@ -425,6 +437,9 @@
     },
     {
       "path": "packages/plugins/plugin-ibkr/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-ideogram/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
@@ -449,9 +464,6 @@
     },
     {
       "path": "packages/plugins/plugin-markdown/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-masonry/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-meeting/tsconfig.json"
@@ -491,6 +503,9 @@
     },
     {
       "path": "packages/plugins/plugin-preview/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-progress/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-pwa/tsconfig.json"
@@ -548,6 +563,9 @@
     },
     {
       "path": "packages/plugins/plugin-status-bar/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-studio/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-support/tsconfig.json"
@@ -667,7 +685,7 @@
       "path": "packages/stories/stories-inbox/tsconfig.json"
     },
     {
-      "path": "packages/stories/stories-ui/tsconfig.json"
+      "path": "packages/stories/story-modules/tsconfig.json"
     },
     {
       "path": "packages/ui/brand/tsconfig.json"
@@ -770,6 +788,9 @@
     },
     {
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-rdf/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-search/tsconfig.json"

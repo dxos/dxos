@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type CleanupFn } from '@dxos/async';
+import { type BlobBackend } from '@dxos/echo-protocol';
 import { type URI } from '@dxos/keys';
 
 import type * as Database from './Database';
@@ -72,4 +74,20 @@ export interface Hypergraph extends Database.Queryable {
    * @returns The database for the given space ID, or undefined if not found.
    */
   getDatabase(spaceId: Key.SpaceId): Database.Database | undefined;
+
+  /**
+   * Registers a pluggable blob storage backend under `name`, claiming its declared URI schemes.
+   * Registering a scheme already claimed by another backend is an error.
+   *
+   * @param options.default - When true, `name` becomes the storage used when
+   *   `Blob.fromBytes`'s `storage` option is omitted.
+   * @returns A cleanup function that unregisters the backend.
+   */
+  registerBlobBackend(name: string, backend: BlobBackend, options?: { default?: boolean }): CleanupFn;
+
+  /**
+   * Storage name `Blob.fromBytes` uses when its `storage` option is omitted. Starts as `'inline'`;
+   * reflects the most recent `registerBlobBackend(name, backend, { default: true })` call.
+   */
+  get defaultBlobStorage(): string;
 }

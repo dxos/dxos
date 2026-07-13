@@ -15,10 +15,9 @@ import { Process, ServiceResolver, Trace } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type Space } from '@dxos/react-client/echo';
 import { Card, Panel, ScrollArea, Tag, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-
-import { type ModuleProps } from './types';
 
 const atomEmpty = Atom.make(() => [] as const);
 
@@ -176,7 +175,7 @@ const useEphemeralFeedsByPid = (
 /**
  * Temporary debug panel: lists active processes and per-pid ephemeral trace subscriptions.
  */
-export const EphemeralDebugModule = ({ space }: ModuleProps) => {
+export const EphemeralDebugModule = ({ space }: { space: Space }) => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
   const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
 

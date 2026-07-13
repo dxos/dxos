@@ -5,12 +5,12 @@
 import { type Decorator } from '@storybook/react-vite';
 import React from 'react';
 
-import { Mosaic } from '../components';
+import { Dnd } from '@dxos/react-ui-dnd';
 
 export const withMosaic = (): Decorator => {
   return (Story) => (
-    <Mosaic.Root>
+    <Dnd.Root>
       <Story />
-    </Mosaic.Root>
+    </Dnd.Root>
   );
 };
