@@ -151,6 +151,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/worker-framework": "workspace:*",
     "@effect/ai": "catalog:",
     "@effect/ai-anthropic": "catalog:",
     "@effect/ai-openai": "catalog:",

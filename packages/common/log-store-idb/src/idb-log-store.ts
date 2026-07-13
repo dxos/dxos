@@ -13,15 +13,17 @@ import {
   shouldLog,
 } from '@dxos/log';
 
-import { trimJsonlToSize } from './trim';
+import { byteLengthUtf8, trimJsonlToSize } from './trim';
 
 const DEFAULT_STORE_NAME = 'logs';
 const DEFAULT_LOG_FILTER = 'debug';
 const DEFAULT_FLUSH_INTERVAL = 250;
 const DEFAULT_FLUSH_BATCH_SIZE = 500;
 // Sized for ~50 MB on disk at the observed Composer average of ~350 bytes per JSONL line.
-// Adjust `maxRecords` if your workload's per-entry size differs significantly.
 const DEFAULT_MAX_RECORDS = 150_000;
+const DEFAULT_MAX_BYTES = 50 * 1024 * 1024;
+/** Max UTF-8 bytes for user-initiated log downloads from app UI (Reset dialog, debug settings, devtools hook). */
+export const MANUAL_LOG_EXPORT_MAX_BYTES = 200 * 1024 * 1024;
 const DEFAULT_EVICTION_INTERVAL = 30_000;
 const EVICTION_LOCK_NAME = '@dxos/log-store-idb:evictor';
 // v2 introduced chunked rows with out-of-line array keys (v1 stored one row per line
@@ -57,11 +59,14 @@ export type IdbLogStoreOptions = {
   flushBatchSize?: number;
   /**
    * Soft cap on retained log records (JSONL lines). Eviction drops whole flush chunks,
-   * oldest first; the newest chunk is always retained. Default `150_000`, sized for
-   * roughly 50 MB on disk at typical JSONL line sizes (~350 bytes average observed in
-   * the Composer app).
+   * oldest first; the newest chunk is always retained. Default `150_000`.
    */
   maxRecords?: number;
+  /**
+   * Soft cap on retained log bytes (UTF-8). Eviction drops whole flush chunks, oldest
+   * first; the newest chunk is always retained. Default `50 MiB`.
+   */
+  maxBytes?: number;
   /** Eviction sweep interval in milliseconds. Default `30_000`. */
   evictionInterval?: number;
   /**
@@ -96,6 +101,7 @@ export class IdbLogStore {
   readonly #flushInterval: number;
   readonly #flushBatchSize: number;
   readonly #maxRecords: number;
+  readonly #maxBytes: number;
   readonly #evictionInterval: number;
   readonly #tabId: string;
   readonly #filters: LogFilter[];
@@ -119,6 +125,7 @@ export class IdbLogStore {
     this.#flushInterval = options.flushInterval ?? DEFAULT_FLUSH_INTERVAL;
     this.#flushBatchSize = options.flushBatchSize ?? DEFAULT_FLUSH_BATCH_SIZE;
     this.#maxRecords = options.maxRecords ?? DEFAULT_MAX_RECORDS;
+    this.#maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
     this.#evictionInterval = options.evictionInterval ?? DEFAULT_EVICTION_INTERVAL;
     this.#tabId = options.tabId ?? inferEnvironmentName();
     this.#filters = parseFilter(options.logFilter ?? DEFAULT_LOG_FILTER);
@@ -183,17 +190,32 @@ export class IdbLogStore {
    *
    * If `maxSize` is provided (in bytes), the newest lines are kept and older lines
    * are dropped from the front; lines are never split.
+   *
+   * For full exports of very large stores, prefer {@link exportBlob} — building one
+   * giant string can exceed the engine's maximum string length.
    */
   async export(options: { maxSize?: number } = {}): Promise<string> {
+    const blob = await this.exportBlob(options);
+    return blob.text();
+  }
+
+  /**
+   * Read all retained log lines as an NDJSON blob without materializing one giant string.
+   * Prefer this for browser downloads of large log stores.
+   */
+  async exportBlob(options: { maxSize?: number } = {}): Promise<Blob> {
     await this.flush();
+    await this.#maybeEvict();
     const db = await this.#open();
     const chunks = await readAllChunks(db, this.#storeName);
-    if (options.maxSize !== undefined && options.maxSize >= 0) {
+    const maxSize = options.maxSize ?? this.#maxBytes;
+    if (maxSize >= 0) {
       // Trim on individual lines so the size cap never under-fills by a whole chunk.
       const lines = chunks.flatMap((chunk) => chunk.split('\n'));
-      return trimJsonlToSize(lines, options.maxSize);
+      const trimmed = trimJsonlToSize(lines, maxSize);
+      return new Blob([trimmed], { type: 'application/x-ndjson' });
     }
-    return chunks.join('\n');
+    return buildNdjsonBlob(chunks);
   }
 
   /**
@@ -212,9 +234,9 @@ export class IdbLogStore {
   }
 
   /**
-   * Run an eviction sweep now: trim the store down to `maxRecords` if it has grown past.
-   * Eviction runs automatically on a timer; this method is exposed for tests and for
-   * callers that want to force a sweep at a particular moment.
+   * Run an eviction sweep now: trim the store down to `maxRecords` / `maxBytes` if it
+   * has grown past. Eviction runs automatically on a timer; this method is exposed for
+   * tests and for callers that want to force a sweep at a particular moment.
    */
   async evictNow(): Promise<void> {
     await this.#maybeEvict();
@@ -267,6 +289,7 @@ export class IdbLogStore {
       await runTransaction(db, this.#storeName, 'readwrite', (store) => {
         store.add(chunk, key);
       });
+      void this.#maybeEvict();
     } catch {
       // Ignore write errors.
     }
@@ -333,11 +356,17 @@ export class IdbLogStore {
     }
 
     await runTransaction(db, this.#storeName, 'readwrite', async (store) => {
-      // Keys carry per-chunk line counts, so the retention budget is computed from
-      // getAllKeys() alone — no count() pre-pass and no chunk values are read.
-      // Cast: IDB types keys as IDBValidKey[]; this store only ever receives ChunkKey keys.
       const keys = (await promisifyRequest(store.getAllKeys())) as ChunkKey[];
-      const cutoff = findEvictionCutoff(keys, this.#maxRecords);
+      if (keys.length === 0) {
+        return;
+      }
+      const rows = (await promisifyRequest(store.getAll())) as LogChunk[];
+      const chunks = keys.map((key, index) => ({
+        key,
+        lineCount: key[3],
+        byteLength: byteLengthUtf8(rows[index]!.lines),
+      }));
+      const cutoff = findEvictionCutoff(chunks, this.#maxRecords, this.#maxBytes);
       if (cutoff !== undefined) {
         store.delete(IDBKeyRange.upperBound(cutoff));
       }
@@ -464,19 +493,43 @@ const readAllChunks = async (db: IDBDatabase, storeName: string): Promise<string
   );
 };
 
+/** Assemble chunk payloads into one NDJSON blob without `Array.join` (avoids max-string-length errors). */
+const buildNdjsonBlob = (chunks: readonly string[]): Blob => {
+  if (chunks.length === 0) {
+    return new Blob([], { type: 'application/x-ndjson' });
+  }
+  const parts: BlobPart[] = [chunks[0]!];
+  for (let index = 1; index < chunks.length; index++) {
+    parts.push('\n', chunks[index]!);
+  }
+  return new Blob(parts, { type: 'application/x-ndjson' });
+};
+
+type ChunkRetentionStats = {
+  key: ChunkKey;
+  lineCount: number;
+  byteLength: number;
+};
+
 /**
- * Given all chunk keys in ascending (key) order, return the key of the newest chunk that
- * must be evicted — delete it and everything older — so the retained line total stays
- * within `maxRecords`. The newest chunk is always retained, even if it alone exceeds the
- * budget. Returns `undefined` when everything fits.
+ * Given all chunks in ascending (key) order, return the key of the newest chunk that
+ * must be evicted — delete it and everything older — so retained totals stay within
+ * `maxRecords` and `maxBytes`. The newest chunk is always retained, even if it alone
+ * exceeds the budget. Returns `undefined` when everything fits.
  */
-const findEvictionCutoff = (keys: readonly ChunkKey[], maxRecords: number): ChunkKey | undefined => {
-  let retained = 0;
-  for (let index = keys.length - 1; index >= 0; index--) {
-    const [, , , lineCount] = keys[index];
-    retained += lineCount;
-    if (retained > maxRecords && index < keys.length - 1) {
-      return keys[index];
+const findEvictionCutoff = (
+  chunks: readonly ChunkRetentionStats[],
+  maxRecords: number,
+  maxBytes: number,
+): ChunkKey | undefined => {
+  let retainedLines = 0;
+  let retainedBytes = 0;
+  for (let index = chunks.length - 1; index >= 0; index--) {
+    const chunk = chunks[index]!;
+    retainedLines += chunk.lineCount;
+    retainedBytes += chunk.byteLength;
+    if ((retainedLines > maxRecords || retainedBytes > maxBytes) && index < chunks.length - 1) {
+      return chunk.key;
     }
   }
   return undefined;

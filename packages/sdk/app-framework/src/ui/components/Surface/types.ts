@@ -232,30 +232,24 @@ const expandBindings = <T extends Record<string, any>>(
 };
 
 /**
- * Validates that a surface or extension local ID follows NSID conventions:
- * each dot-separated segment must be alphanumeric, and the final segment must
- * be camelCase (no hyphens). This mirrors the rule enforced when the id is
- * appended to a plugin's NSID to form a full DXN path.
+ * Whether a surface or extension local ID follows NSID conventions: the final
+ * dot-separated segment must be camelCase (letters and digits only, starting
+ * with a letter — no hyphens or underscores). This mirrors the rule enforced
+ * when the id is appended to a plugin's NSID to form a full DXN path.
+ *
+ * A definition with an invalid id is dropped at dispatch rather than rejected
+ * here, so a single malformed contribution cannot crash plugin activation.
  *
  * @example Valid:   'about', 'integrationArticle', 'article.journal'
  * @example Invalid: 'integration-article', 'plugin-spec'
  */
-const validateLocalId = (id: string): void => {
-  const segments = id.split('.');
-  const finalSegment = segments[segments.length - 1];
-  if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(finalSegment)) {
-    throw new Error(
-      `Invalid surface id: "${id}". The final segment "${finalSegment}" must be camelCase (letters and digits only, starting with a letter — no hyphens or underscores).`,
-    );
-  }
-};
+export const isValidLocalId = (id: string): boolean => /^[a-zA-Z][a-zA-Z0-9]*$/.test(id.split('.').pop() ?? '');
 
 /**
  * Creates a React surface definition from a typed filter.
  */
 export function create<T extends Record<string, any> = any>(definition: TypedReactDefinition<T>): ReactDefinition<T>;
 export function create<T extends Record<string, any> = any>(definition: TypedReactDefinition<T>): ReactDefinition<T> {
-  validateLocalId(definition.id);
   const { id, filter, component, position } = definition;
   const { role, guard } = expandBindings(filter);
   return { kind: 'react', id, role, position, component, filter: guard };
@@ -270,7 +264,6 @@ export function createWeb<T extends Record<string, any> = any>(
 export function createWeb<T extends Record<string, any> = any>(
   definition: TypedWebComponentDefinition<T>,
 ): WebComponentDefinition<T> {
-  validateLocalId(definition.id);
   const { id, filter, tagName, position } = definition;
   const { role, guard } = expandBindings(filter);
   return { kind: 'web-component', id, role, position, tagName, filter: guard };

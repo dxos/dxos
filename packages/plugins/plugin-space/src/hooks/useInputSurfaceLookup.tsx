@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Surface, usePluginManager } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type FormFieldProvider } from '@dxos/react-ui-form';
 
@@ -15,7 +15,7 @@ import { type FormFieldProvider } from '@dxos/react-ui-form';
  */
 // TODO(burdon): Factor out?
 export const useInputSurfaceLookup = (baseData?: Record<string, any>): FormFieldProvider => {
-  const pluginManager = usePluginManager();
+  const isSurfaceAvailable = Surface.useIsAvailable();
   return useCallback<FormFieldProvider>(
     ({ schema, prop, fieldProps }) => {
       const data = {
@@ -26,10 +26,10 @@ export const useInputSurfaceLookup = (baseData?: Record<string, any>): FormField
         ...baseData,
       };
       const { type: _fieldPropertyAstExcluded, ...surfaceFieldProps } = fieldProps as Record<string, any>;
-      if (Surface.isAvailable(pluginManager.capabilities, { type: AppSurface.FormInput, data })) {
+      if (isSurfaceAvailable({ type: AppSurface.FormInput, data })) {
         return <Surface.Surface type={AppSurface.FormInput} data={data} {...surfaceFieldProps} />;
       }
     },
-    [pluginManager, baseData],
+    [isSurfaceAvailable, baseData],
   );
 };

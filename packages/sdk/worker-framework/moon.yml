@@ -1,0 +1,17 @@
+layer: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - ts-test-browser
+  - ts-test-storybook
+  - pack
+  - storybook
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/Client/index.ts'
+      - '--entryPoint=src/Worker.ts'
+      - '--entryPoint=src/Coordinator/index.ts'
+      - '--entryPoint=src/WorkerProtocol.ts'
