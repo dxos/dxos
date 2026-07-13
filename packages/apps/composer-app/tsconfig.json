@@ -277,6 +277,9 @@
       "path": "../../plugins/plugin-deck"
     },
     {
+      "path": "../../plugins/plugin-devtools"
+    },
+    {
       "path": "../../plugins/plugin-discord"
     },
     {
@@ -295,13 +298,7 @@
       "path": "../../plugins/plugin-freeq"
     },
     {
-      "path": "../../plugins/plugin-gallery"
-    },
-    {
       "path": "../../plugins/plugin-game"
-    },
-    {
-      "path": "../../plugins/plugin-generator"
     },
     {
       "path": "../../plugins/plugin-github"
@@ -310,7 +307,13 @@
       "path": "../../plugins/plugin-graph"
     },
     {
+      "path": "../../plugins/plugin-heygen"
+    },
+    {
       "path": "../../plugins/plugin-ibkr"
+    },
+    {
+      "path": "../../plugins/plugin-ideogram"
     },
     {
       "path": "../../plugins/plugin-inbox"
@@ -376,6 +379,9 @@
       "path": "../../plugins/plugin-preview"
     },
     {
+      "path": "../../plugins/plugin-progress"
+    },
+    {
       "path": "../../plugins/plugin-pwa"
     },
     {
@@ -431,6 +437,9 @@
     },
     {
       "path": "../../plugins/plugin-status-bar"
+    },
+    {
+      "path": "../../plugins/plugin-studio"
     },
     {
       "path": "../../plugins/plugin-support"

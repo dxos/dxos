@@ -4,6 +4,7 @@
 
 import { type Heads } from '@automerge/automerge';
 import { type DocumentId } from '@automerge/automerge-repo';
+import * as EffectContext from 'effect/Context';
 
 import { type Context } from '@dxos/context';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -39,6 +40,14 @@ export interface AutomergeReplicator {
 }
 
 /**
+ * Effect service tag for {@link AutomergeReplicator}.
+ */
+export class AutomergeReplicatorService extends EffectContext.Tag('@dxos/echo-host/AutomergeReplicator')<
+  AutomergeReplicatorService,
+  AutomergeReplicator
+>() {}
+
+/**
  * Replicator with explicit per-space wiring (used by edge replicators that maintain one logical
  * connection per `SpaceId`). `DataSpaceManager` drives these lifecycle hooks on space open/close.
  */
@@ -46,6 +55,14 @@ export interface EdgeAutomergeReplicator extends AutomergeReplicator {
   connectToSpace(ctx: Context, spaceId: SpaceId): Promise<void>;
   disconnectFromSpace(spaceId: SpaceId): Promise<void>;
 }
+
+/**
+ * Effect service tag for {@link EdgeAutomergeReplicator}.
+ */
+export class EdgeAutomergeReplicatorService extends EffectContext.Tag('@dxos/echo-host/EdgeAutomergeReplicator')<
+  EdgeAutomergeReplicatorService,
+  EdgeAutomergeReplicator
+>() {}
 
 export interface AutomergeReplicatorContext {
   /**

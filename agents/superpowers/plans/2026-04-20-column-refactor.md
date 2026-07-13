@@ -8,7 +8,7 @@
 
 **Tech Stack:** CSS custom properties, CSS subgrid, Tailwind arbitrary values, DXOS ui-theme system.
 
-**Spec:** `docs/superpowers/specs/2026-04-20-column-refactor-design.md`
+**Spec:** `agents/superpowers/specs/2026-04-20-column-refactor-design.md`
 
 ---
 

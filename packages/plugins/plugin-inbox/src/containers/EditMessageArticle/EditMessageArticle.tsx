@@ -2,77 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
-import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
-import { AiService } from '@dxos/ai';
-import { useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { ServiceResolver } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { type AssistantOptions, assistant } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type Message } from '@dxos/types';
 
 import { EditMessage } from '#components';
+import { useEmailComposerExtensions, useSendEmail } from '#hooks';
 import { meta } from '#meta';
 
-import { type EditMessageProps } from '../../components';
-import { email } from '../../extensions';
-import { GmailFunctions } from '../../operations/google/gmail';
 import { InboxOperation, Mailbox } from '../../types';
-import { REPLY_REGEXP, stripQuotedMessage } from '../../util';
+import { REPLY_REGEXP } from '../../util';
 
 export type EditMessageArticleProps = AppSurface.ObjectArticleProps<Message.Message>;
 
 export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageArticleProps) => {
   const db = Obj.getDatabase(subject);
-  const runtime = useProcessManagerRuntime();
   const spaceId = db?.spaceId;
-
-  const extensions = useMemo(() => {
-    if (!spaceId) {
-      return [];
-    }
-
-    const generate: AssistantOptions['generate'] = ({ instructions, content }) =>
-      runtime.runPromise(
-        Effect.gen(function* () {
-          const prompt = [instructions, stripQuotedMessage(content)].join('\n\n');
-          const response = yield* LanguageModel.generateText({ prompt });
-          return response.text;
-        }).pipe(
-          Effect.provide(
-            AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
-              Layer.orDie,
-              Layer.provide(ServiceResolver.provide({ space: spaceId }, AiService.AiService)),
-            ),
-          ),
-        ),
-      );
-
-    return [assistant({ generate }), email()];
-  }, [runtime, spaceId]);
-
-  const handleSend = useCallback<NonNullable<EditMessageProps['onSend']>>(
-    async (message) => {
-      if (!spaceId) {
-        throw new TypeError('Space not available.');
-      }
-
-      await runtime.runPromise(
-        Operation.invoke(GmailFunctions.Send, { message }, { spaceId }).pipe(
-          Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service)),
-        ),
-      );
-    },
-    [runtime, spaceId],
-  );
+  const extensions = useEmailComposerExtensions(subject);
+  const onSend = useSendEmail(subject);
 
   // Generate: fill the reply draft's body from the message it replies to (thread + facts grounded).
   // Only offered for reply drafts scoped to a resolvable mailbox.
@@ -136,7 +89,7 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
         </Menu.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <EditMessage key={generation} message={subject} extensions={extensions} onSend={handleSend} />
+        <EditMessage key={generation} message={subject} extensions={extensions} onSend={onSend} />
       </Panel.Content>
     </Panel.Root>
   );

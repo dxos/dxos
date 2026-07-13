@@ -62,11 +62,15 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
     // disagree. After internal typing the prop will already match the editor's
     // doc, and dispatching anyway would race fast keystrokes — a stale rAF
     // closure can replace doc content with an older value, dropping characters.
+    //
+    // `undefined` means uncontrolled: the doc was seeded once from `value` at creation and the caller
+    // isn't driving it, so leave it be (coalescing undefined→'' here would wipe that seed on mount). A
+    // controlled caller clears the doc by passing '' explicitly.
     useEffect(() => {
-      if (!view) {
+      if (!view || value === undefined) {
         return;
       }
-      const next = value ?? '';
+      const next = value;
       if (view.state.doc.toString() === next) {
         return;
       }

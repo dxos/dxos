@@ -40,4 +40,25 @@ describe('Fact schema', () => {
       Schema.decodeUnknownSync(Fact)({ ...ALICE_FACT, factuality: { ...ALICE_FACT.factuality, value: 'NOPE' } }),
     ).toThrow();
   });
+
+  test('a fact without illocution is valid (defaults to assertive)', ({ expect }) => {
+    const decoded = Schema.decodeUnknownSync(Fact)(Schema.encodeSync(Fact)(ALICE_FACT));
+    expect(decoded.illocution).toBeUndefined();
+  });
+
+  test('round-trips a directive/interrogative illocution (a question)', ({ expect }) => {
+    const question: Fact = {
+      ...ALICE_FACT,
+      id: 'fact-q',
+      assertion: { subject: { entity: 'meeting' }, predicate: 'startsAt', object: { literal: '?' } },
+      factuality: { value: 'Uu', polarity: '?' },
+      illocution: { force: 'directive', mood: 'interrogative', addressee: 'bob' },
+    };
+    const decoded = Schema.decodeUnknownSync(Fact)(JSON.parse(JSON.stringify(Schema.encodeSync(Fact)(question))));
+    expect(decoded).toEqual(question);
+  });
+
+  test('rejects an invalid illocutionary force', ({ expect }) => {
+    expect(() => Schema.decodeUnknownSync(Fact)({ ...ALICE_FACT, illocution: { force: 'promising' } })).toThrow();
+  });
 });

@@ -88,5 +88,7 @@ export const SummarizeSubject = Operation.make({
   output: Schema.Struct({
     summary: Schema.String,
     factCount: Schema.Number,
+    /** Distinct source message DXNs the summarized facts were extracted from (for citation / opening). */
+    sources: Schema.Array(Schema.String),
   }),
 }).pipe(Operation.visible);

@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Registry } from '@effect-atom/atom-react';
 import { format, subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
+import { createProgressRegistry } from '@dxos/app-toolkit';
 import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
@@ -15,7 +17,7 @@ import { GMAIL_SOURCE } from '../../../constants';
 import { generateGmailDataset } from '../../../testing/gmail-fixtures';
 import { inboxSyncTestServices, seedMailboxBinding } from '../../../testing/sync-fixture';
 import { Mailbox } from '../../../types';
-import { runGmailSync } from './sync';
+import { createSyncProgressKey, runGmailSync } from './sync';
 
 /** Reads all synced messages from a seeded mailbox's feed. */
 const queryFeedMessages = (db: Database.Database, mailbox: Mailbox.Mailbox) =>
@@ -104,6 +106,39 @@ describe('runGmailSync against a mock Gmail API', () => {
     const afterRerun = await queryFeedMessages(db, mailbox);
     expect(afterRerun.length).toBe(feedMessages.length);
     expect((await db.query(Filter.type(Person.Person)).run()).length).toBe(people.length);
+  });
+
+  test('advances a live progress monitor keyed by the mailbox URI, and removes it on success', async ({ expect }) => {
+    const end = subDays(new Date(), 3);
+    const start = subDays(new Date(), 12);
+    const dataset = generateGmailDataset({ count: 20, seed: 17, start, end });
+    const after = format(subDays(new Date(), 14), 'yyyy-MM-dd');
+
+    const { db, mailbox, binding } = await seedMailboxBinding(builder);
+
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    // The monitor is removed on success, so the final snapshot can't show it — subscribe instead to
+    // capture `current` as the run advances it, one message at a time.
+    const seen: number[] = [];
+    const unsubscribe = registry.subscribe(progress.snapshotAtom, (snapshot) => {
+      const task = snapshot.tasks.find((task) => task.name === createSyncProgressKey(mailbox));
+      if (task) {
+        seen.push(task.current);
+      }
+    });
+
+    await EffectEx.runPromise(
+      runGmailSync({ binding: Ref.make(binding), after }).pipe(
+        Effect.provide(inboxSyncTestServices(db, dataset, { progressRegistry: progress })),
+      ),
+    );
+    unsubscribe();
+
+    expect(seen.length).toBeGreaterThan(0);
+    expect(Math.max(...seen)).toBeGreaterThan(0);
+    // Removed on success, so the mailbox's task is gone from the final snapshot.
+    expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(0);
   });
 
   test('initial backward, incremental forward, and backfill (cursor stays put)', async ({ expect }) => {

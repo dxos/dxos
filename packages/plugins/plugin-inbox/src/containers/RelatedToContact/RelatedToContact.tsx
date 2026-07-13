@@ -11,6 +11,7 @@ import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
+import { Card } from '@dxos/react-ui';
 import { Event, Message, type Person } from '@dxos/types';
 
 import { RelatedEvents, RelatedMessages } from '#components';
@@ -27,7 +28,6 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
 
   const mailbox = mailboxes[0];
   const calendar = calendars[0];
-  // TODO(burdon): API REVIEW!!!
   // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
   useObject(mailbox);
   useObject(calendar);
@@ -105,10 +105,10 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
   );
 
   return (
-    <>
+    <Card.Body>
       <RelatedMessages messages={relatedMessages} onMessageClick={handleMessageClick} />
       <RelatedEvents recent={sortedRecentEvents} upcoming={sortedUpcomingEvents} onEventClick={handleEventClick} />
-    </>
+    </Card.Body>
   );
 };
 

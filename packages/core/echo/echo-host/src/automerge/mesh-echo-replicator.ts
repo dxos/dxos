@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
+import * as Layer from 'effect/Layer';
+
 import { type Context } from '@dxos/context';
 import type { CollectionId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -198,3 +201,20 @@ export class MeshEchoReplicator implements AutomergeReplicator {
     }
   }
 }
+
+/**
+ * Effect service tag for {@link MeshEchoReplicator}.
+ *
+ * Distinct from the generic {@link AutomergeReplicatorService} because `DataSpaceManager` drives
+ * mesh-specific hooks (`authorizeDevice`, `createExtension`) not present on the base interface.
+ */
+export class MeshEchoReplicatorService extends EffectContext.Tag('@dxos/echo-host/MeshEchoReplicator')<
+  MeshEchoReplicatorService,
+  MeshEchoReplicator
+>() {}
+
+/**
+ * Effect Layer constructing a {@link MeshEchoReplicator}.
+ */
+export const MeshEchoReplicatorLayer = (): Layer.Layer<MeshEchoReplicatorService> =>
+  Layer.succeed(MeshEchoReplicatorService, new MeshEchoReplicator());

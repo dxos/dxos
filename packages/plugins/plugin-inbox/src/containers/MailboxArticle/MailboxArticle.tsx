@@ -5,9 +5,14 @@
 import { Atom } from '@effect-atom/atom-react';
 import React, { type Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useAtomCapability, useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
+import {
+  useAtomCapability,
+  useAtomCapabilityState,
+  useOperationInvoker,
+  useOptionalCapability,
+} from '@dxos/app-framework/ui';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { type AppSurface, ProgressMeter, useProgress, useShowItem } from '@dxos/app-toolkit/ui';
 import { Aggregate, type Database, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
@@ -36,6 +41,8 @@ import { InboxOperation } from '#types';
 import { InboxCapabilities, Mailbox, Starred } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
+import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics';
+import { createSyncProgressKey } from '../../operations/google/gmail/sync';
 import { InitializeMailbox, InitializeMailboxAction } from './InitializeMailbox';
 
 /** Messages per page for the lazily-loaded message window. */
@@ -58,6 +65,15 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const currentId = useSelection(id, 'single');
   const db = Obj.getDatabase(mailbox);
   const showItem = useShowItem();
+
+  // Mailbox-scoped operations register a monitor keyed by the mailbox URI (`#sync` for Gmail sync,
+  // `#topics` for topic analysis); subscribe to both and show whichever run is active in the statusbar.
+  const syncProgress = useProgress(createSyncProgressKey(mailbox));
+  const topicsProgress = useProgress(createTopicsProgressKey(mailbox));
+  const progress =
+    topicsProgress?.status === 'running' || topicsProgress?.status === 'error' ? topicsProgress : syncProgress;
+  // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
+  const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
 
   const filterEditorRef = useRef<EditorController>(null);
   const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
@@ -128,18 +144,18 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         result.push({ id: entry.threadId, messages: entry.items, total: entry.count });
       }
     }
-    return result;
-  }, [pagination.items]);
+    // Drop messages excluded by the mailbox's filters (e.g. "Ignore sender"); collapse now-empty groups.
+    return result.flatMap((item): MessageStackItem[] => {
+      if (isMessageGroup(item)) {
+        const messages = item.messages.filter((message) => !Mailbox.isFiltered(mailbox, message));
+        return messages.length > 0 ? [{ ...item, messages }] : [];
+      }
+      return Mailbox.isFiltered(mailbox, item) ? [] : [item];
+    });
+  }, [pagination.items, mailbox, mailbox.messageFilters]);
 
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
-
-  // Mark the mailbox as viewed when opened, advancing its `viewedAt` cursor so the navtree new-message
-  // badge clears. Uses the live `subject` (not the `mailbox` snapshot) since this mutates, and is keyed on
-  // the mailbox id so it runs once per opened mailbox rather than on every update.
-  useEffect(() => {
-    Mailbox.markViewed(mailbox);
-  }, [mailbox.id]);
 
   // TODO(burdon): Actual test should be if we have synced; not number of messages.
   // Show the message list as soon as any messages are present; only fall back to the empty state
@@ -196,6 +212,16 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
           const message = messages.find((message) => message.id === action.messageId);
           if (message && db) {
             void Starred.toggleStarred(mailbox, message, db);
+          }
+          break;
+        }
+
+        case 'ignore-sender': {
+          const message = messages.find((message) => message.id === action.messageId);
+          const email = message?.sender?.email;
+          if (email && db) {
+            Mailbox.ignoreSender(mailbox, email);
+            void db.flush();
           }
           break;
         }
@@ -275,6 +301,15 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
           />
         )}
       </Panel.Content>
+      {progress && (progress.status === 'running' || progress.status === 'error') && (
+        <Panel.Statusbar asChild>
+          <ProgressMeter
+            state={progress}
+            classNames='h-16 p-2 border-t border-separator'
+            onCancel={progressRegistry ? () => progressRegistry.cancel(progress.name) : undefined}
+          />
+        </Panel.Statusbar>
+      )}
     </Panel.Root>
   );
 };

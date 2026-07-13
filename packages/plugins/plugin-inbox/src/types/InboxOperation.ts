@@ -108,6 +108,18 @@ export const DraftEmailAndOpen = Operation.make({
   output: Schema.Void,
 });
 
+/**
+ * The provider's "sent" tag, returned by the send ops so the caller can tag the local draft with the
+ * same tag its canonical synced copy will carry — Gmail's `SENT` label (a well-known id) or the JMAP
+ * account's Sent folder (a server-assigned id resolved by folder role). The `source`/`id` form the
+ * tag's foreign key; `label` is a fallback used only when the tag doesn't exist yet (pre first sync).
+ */
+const SentTagOutput = Schema.Struct({
+  source: Schema.String,
+  id: Schema.String,
+  label: Schema.String,
+});
+
 export const GmailSend = Operation.make({
   meta: {
     key: makeKey('googleMailSend'),
@@ -125,6 +137,7 @@ export const GmailSend = Operation.make({
   output: Schema.Struct({
     id: Schema.String,
     threadId: Schema.String,
+    sentTag: SentTagOutput,
   }),
   services: [Credential.CredentialsService],
 }).pipe(Operation.visible);
@@ -264,6 +277,7 @@ export const JmapSend = Operation.make({
   output: Schema.Struct({
     id: Schema.String,
     threadId: Schema.String,
+    sentTag: SentTagOutput,
   }),
 }).pipe(Operation.visible);
 
@@ -656,6 +670,31 @@ export const AnalyzeMailbox = Operation.make({
   output: Schema.Struct({
     processed: Schema.Number,
     facts: Schema.Number,
+  }),
+});
+
+export const AnalyzeTopics = Operation.make({
+  meta: {
+    key: makeKey('analyzeTopics'),
+    name: 'Analyze Topics',
+    description: 'Tags every message and clusters the mailbox threads into Topic objects with summaries.',
+    icon: 'ph--stack--regular',
+  },
+  // Capability.Service: read the ProgressRegistry to publish a live monitor for the run.
+  services: [Capability.Service, AiService.AiService, Database.Service],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox whose messages are tagged and whose threads are clustered into topics.',
+    }),
+    limit: Schema.optional(
+      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+        description: 'Cap messages tagged this run (resumable-lite; re-invoke to continue).',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    tagged: Schema.Number,
+    topics: Schema.Number,
   }),
 });
 

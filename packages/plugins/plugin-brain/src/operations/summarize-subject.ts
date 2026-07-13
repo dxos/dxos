@@ -55,9 +55,12 @@ export const summarizeSubject = ({
     const store = yield* FactStore;
     const facts = yield* store.query({ entity: normalizeEntityId(subject) });
     if (facts.length === 0) {
-      return { summary: '', factCount: 0 };
+      return { summary: '', factCount: 0, sources: [] };
     }
 
+    // Fact→source bridge: the distinct message DXNs these facts were extracted from, so the caller
+    // can cite or open the underlying emails (PROV `attribution.source`), deduped, order preserved.
+    const sources = [...new Set(facts.map((fact) => fact.attribution.source).filter(Boolean))];
     const lines = facts.map((fact) => factLine(toCompactFact(fact))).join('\n');
     // LLM failures (provider error, 30s hang) are defects, not domain errors: the store query is the
     // recoverable part; a broken model configuration should surface loudly rather than as ''.
@@ -67,5 +70,5 @@ export const summarizeSubject = ({
       Effect.map((response) => response.text),
       Effect.orDie,
     );
-    return { summary, factCount: facts.length };
+    return { summary, factCount: facts.length, sources };
   });

@@ -5,6 +5,8 @@
 import * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Runtime from 'effect/Runtime';
 import * as Scope from 'effect/Scope';
 
@@ -22,9 +24,10 @@ import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity
 import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { EdgeSignalManager, type SignalManager, WebsocketSignalManager } from '@dxos/messaging';
+import { EdgeSignalManager, type SignalManager, SignalManagerService, WebsocketSignalManager } from '@dxos/messaging';
 import {
   SwarmNetworkManager,
+  SwarmNetworkManagerService,
   type TransportFactory,
   createIceProvider,
   createRtcTransportFactory,
@@ -36,23 +39,35 @@ import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
-import { EdgeAgentServiceImpl } from '../agents';
-import { DevicesServiceImpl } from '../devices';
 import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
 import {
   type CollectDiagnosticsBroadcastHandler,
   createCollectDiagnosticsBroadcastHandler,
   createDiagnostics,
 } from '../diagnostics';
-import { type CreateIdentityOptions, IdentityServiceImpl } from '../identity';
-import { ContactsServiceImpl } from '../identity/contacts-service';
-import { InvitationsServiceImpl } from '../invitations';
 import { Lock, type ResourceLock } from '../locks';
 import { LoggingServiceImpl } from '../logging';
-import { NetworkServiceImpl } from '../network';
-import { SpacesServiceImpl } from '../spaces';
 import { SystemServiceImpl } from '../system';
-import { ServiceContext, type ServiceContextRuntimeProps } from './service-context';
+import {
+  type ClientServicesRpcContext,
+  ClientServicesRpcLayer,
+  ContactsServiceRpc,
+  DataServiceRpc,
+  DevicesServiceRpc,
+  EdgeAgentServiceRpc,
+  FeedServiceRpc,
+  IdentityServiceRpc,
+  InvitationsServiceRpc,
+  NetworkServiceRpc,
+  QueryServiceRpc,
+  SpacesServiceRpc,
+} from './client-services-layer';
+import {
+  ServiceContext,
+  ServiceContextLayer,
+  type ServiceContextRuntimeProps,
+  ServiceContextService,
+} from './service-context';
 import { ServiceRegistry } from './service-registry';
 
 export type ClientServicesHostProps = {
@@ -99,6 +114,7 @@ export class ClientServicesHost {
   private _edgeHttpClient?: EdgeHttpClient = undefined;
 
   private _serviceContext!: ServiceContext;
+  #stackRuntime?: ManagedRuntime.ManagedRuntime<ServiceContextService | ClientServicesRpcContext, never>;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<
     SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction
   >;
@@ -308,6 +324,9 @@ export class ClientServicesHost {
     invariant(this._config, 'config not set');
     invariant(this._signalManager, 'signal manager not set');
     invariant(this._networkManager, 'network manager not set');
+    const config = this._config;
+    const signalManager = this._signalManager;
+    const networkManager = this._networkManager;
 
     this._opening = true;
     log('opening...', { lockKey: this._resourceLock?.lockKey });
@@ -316,63 +335,57 @@ export class ClientServicesHost {
 
     await this._loggingService.open();
 
-    this._serviceContext = new ServiceContext(
-      this._networkManager,
-      this._signalManager,
-      this._edgeConnection,
-      this._edgeHttpClient,
-      this._runtime,
-      this._runtimeProps,
-      this._config.get('runtime.client.edgeFeatures'),
+    // Build a single runtime from the ServiceContext layer stack plus the client RPC service
+    // handlers layered on top, then resolve the orchestrator and every handler from it.
+    const stackLayer = ClientServicesRpcLayer.pipe(
+      Layer.provideMerge(
+        ServiceContextLayer({
+          ...this._runtimeProps,
+          edgeFeatures: config.get('runtime.client.edgeFeatures'),
+          edgeConnection: this._edgeConnection,
+          edgeHttpClient: this._edgeHttpClient,
+        }),
+      ),
+      Layer.provideMerge(Layer.succeed(SwarmNetworkManagerService, networkManager)),
+      Layer.provideMerge(Layer.succeed(SignalManagerService, signalManager)),
+      Layer.provideMerge(RuntimeProvider.toLayer(this._runtime)),
+      Layer.orDie,
     );
-
-    const dataSpaceManagerProvider = async () => {
-      await this._serviceContext.initialized.wait();
-      return this._serviceContext.dataSpaceManager!;
-    };
-
-    const agentManagerProvider = async () => {
-      await this._serviceContext.initialized.wait();
-      return this._serviceContext.edgeAgentManager!;
-    };
-
-    const identityService = new IdentityServiceImpl(
-      this._serviceContext.identityManager,
-      this._serviceContext.recoveryManager,
-      this._serviceContext.keyring,
-      (params, ctx) => this._createIdentity(params, ctx),
-      (profile) => this._serviceContext.broadcastProfileUpdate(profile),
+    this.#stackRuntime = ManagedRuntime.make(stackLayer);
+    const resolved = await this.#stackRuntime.runPromise(
+      Effect.all({
+        serviceContext: ServiceContextService,
+        identityService: IdentityServiceRpc,
+        contactsService: ContactsServiceRpc,
+        invitationsService: InvitationsServiceRpc,
+        devicesService: DevicesServiceRpc,
+        spacesService: SpacesServiceRpc,
+        networkService: NetworkServiceRpc,
+        edgeAgentService: EdgeAgentServiceRpc,
+        dataService: DataServiceRpc,
+        queryService: QueryServiceRpc,
+        feedService: FeedServiceRpc,
+      }),
     );
+    this._serviceContext = resolved.serviceContext;
+    const identityService = resolved.identityService;
 
     this._serviceRegistry.setServices({
       SystemService: this._systemService,
       IdentityService: identityService,
-      ContactsService: new ContactsServiceImpl(
-        this._serviceContext.identityManager,
-        this._serviceContext.spaceManager,
-        dataSpaceManagerProvider,
-      ),
+      ContactsService: resolved.contactsService,
 
-      InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitationsManager),
+      InvitationsService: resolved.invitationsService,
 
-      DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager, this._edgeConnection),
+      DevicesService: resolved.devicesService,
 
-      SpacesService: new SpacesServiceImpl(
-        this._serviceContext.identityManager,
-        this._serviceContext.spaceManager,
-        this._serviceContext.echoHost,
-        dataSpaceManagerProvider,
-      ),
+      SpacesService: resolved.spacesService,
 
-      DataService: this._serviceContext.echoHost.dataService,
-      QueryService: this._serviceContext.echoHost.queryService,
-      FeedService: this._serviceContext.echoHost.feedService,
+      DataService: resolved.dataService,
+      QueryService: resolved.queryService,
+      FeedService: resolved.feedService,
 
-      NetworkService: new NetworkServiceImpl(
-        this._serviceContext.networkManager,
-        this._serviceContext.signalManager,
-        this._edgeConnection,
-      ),
+      NetworkService: resolved.networkService,
 
       LoggingService: this._loggingService,
 
@@ -385,7 +398,7 @@ export class ClientServicesHost {
         runSqliteQuery: (query, params) => this.runSqliteQuery(query, params),
       }),
 
-      EdgeAgentService: new EdgeAgentServiceImpl(agentManagerProvider, this._edgeConnection),
+      EdgeAgentService: resolved.edgeAgentService,
     });
 
     log('service-host: opening service context...');
@@ -426,6 +439,8 @@ export class ClientServicesHost {
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._loggingService.close();
     await this._serviceContext.close();
+    await this.#stackRuntime?.dispose();
+    this.#stackRuntime = undefined;
     this._open = false;
     this._statusUpdate.emit();
     log('closed', { deviceKey });
@@ -470,11 +485,5 @@ export class ClientServicesHost {
     );
     log.info('reset');
     await this._callbacks?.onReset?.();
-  }
-
-  private async _createIdentity(params: CreateIdentityOptions, ctx?: Context) {
-    const identity = await this._serviceContext.createIdentity(params, ctx);
-    await this._serviceContext.initialized.wait();
-    return identity;
   }
 }

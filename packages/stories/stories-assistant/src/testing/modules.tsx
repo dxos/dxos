@@ -2,12 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type FC, type ReactNode } from 'react';
+import React from 'react';
 
 import { Role } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import { type Space } from '@dxos/react-client/echo';
+import { withModuleProps } from '@dxos/story-modules';
 
 import {
   ChatModule,
@@ -36,19 +35,10 @@ import {
 } from '../components';
 
 /**
- * Resolves the active space at the surface boundary and mounts the module with it.
- * The guard lives here (not inside each module) so module bodies never call hooks
- * conditionally — mirrors the `useActiveSpace()` pattern used by plugin react-surfaces.
- */
-const withActiveSpace = (Component: FC<{ space: Space }>) => (): ReactNode => {
-  const space = useActiveSpace();
-  return space ? <Component space={space} /> : null;
-};
-
-/**
  * Role tokens for the stories-assistant modules. Each module is contributed as a dedicated
  * `Capabilities.ReactSurface` under its own role NSID (role-only dispatch), so a story layout is a
- * plain grid of these tokens and each surface resolves the active space via `useActiveSpace()`.
+ * plain grid of these tokens; `ModuleContainer` injects the active space + attendable id into each
+ * surface (`withModuleProps`).
  */
 export const Module = {
   Chat: Role.make<Record<string, any>>('org.dxos.storybook.module.chat'),
@@ -84,17 +74,17 @@ export const moduleSurfaces: Surface.Definition[] = [
   Surface.create({
     id: 'module.chat',
     filter: Surface.makeFilter(Module.Chat),
-    component: withActiveSpace(ChatModule),
+    component: withModuleProps(ChatModule),
   }),
   Surface.create({
     id: 'module.chess',
     filter: Surface.makeFilter(Module.Chess),
-    component: withActiveSpace(ChessModule),
+    component: withModuleProps(ChessModule),
   }),
   Surface.create({
     id: 'module.comments',
     filter: Surface.makeFilter(Module.Comments),
-    component: withActiveSpace(CommentsModule),
+    component: withModuleProps(CommentsModule),
   }),
   Surface.create({
     id: 'module.context',
@@ -104,77 +94,77 @@ export const moduleSurfaces: Surface.Definition[] = [
   Surface.create({
     id: 'module.database',
     filter: Surface.makeFilter(Module.Database),
-    component: withActiveSpace(DatabaseModule),
+    component: withModuleProps(DatabaseModule),
   }),
   Surface.create({
     id: 'module.ephemeralDebug',
     filter: Surface.makeFilter(Module.EphemeralDebug),
-    component: withActiveSpace(EphemeralDebugModule),
+    component: withModuleProps(EphemeralDebugModule),
   }),
   Surface.create({
     id: 'module.executionGraph',
     filter: Surface.makeFilter(Module.ExecutionGraph),
-    component: withActiveSpace(ExecutionGraphModule),
+    component: withModuleProps(ExecutionGraphModule),
   }),
   Surface.create({
     id: 'module.graph',
     filter: Surface.makeFilter(Module.Graph),
-    component: withActiveSpace(GraphModule),
+    component: withModuleProps(GraphModule),
   }),
   Surface.create({
     id: 'module.inbox',
     filter: Surface.makeFilter(Module.Inbox),
-    component: withActiveSpace(InboxModule),
+    component: withModuleProps(InboxModule),
   }),
   Surface.create({
     id: 'module.invocations',
     filter: Surface.makeFilter(Module.Invocations),
-    component: withActiveSpace(InvocationsModule),
+    component: withModuleProps(InvocationsModule),
   }),
   Surface.create({
     id: 'module.message',
     filter: Surface.makeFilter(Module.Message),
-    component: withActiveSpace(MessageModule),
+    component: withModuleProps(MessageModule),
   }),
   Surface.create({
     id: 'module.project',
     filter: Surface.makeFilter(Module.Project),
-    component: withActiveSpace(ProjectModule),
+    component: withModuleProps(ProjectModule),
   }),
   Surface.create({
     id: 'module.researchInput',
     filter: Surface.makeFilter(Module.ResearchInput),
-    component: withActiveSpace(ResearchInputModule),
+    component: withModuleProps(ResearchInputModule),
   }),
   Surface.create({
     id: 'module.researchOutput',
     filter: Surface.makeFilter(Module.ResearchOutput),
-    component: withActiveSpace(ResearchOutputModule),
+    component: withModuleProps(ResearchOutputModule),
   }),
   Surface.create({
     id: 'module.routine',
     filter: Surface.makeFilter(Module.Routine),
-    component: withActiveSpace(RoutineModule),
+    component: withModuleProps(RoutineModule),
   }),
   Surface.create({
     id: 'module.routineCompanion',
     filter: Surface.makeFilter(Module.RoutineCompanion),
-    component: withActiveSpace(RoutineCompanionModule),
+    component: withModuleProps(RoutineCompanionModule),
   }),
   Surface.create({
     id: 'module.script',
     filter: Surface.makeFilter(Module.Script),
-    component: withActiveSpace(ScriptModule),
+    component: withModuleProps(ScriptModule),
   }),
   Surface.create({
     id: 'module.skill',
     filter: Surface.makeFilter(Module.Skill),
-    component: withActiveSpace(SkillModule),
+    component: withModuleProps(SkillModule),
   }),
   Surface.create({
     id: 'module.tasks',
     filter: Surface.makeFilter(Module.Tasks),
-    component: withActiveSpace(TasksModule),
+    component: withModuleProps(TasksModule),
   }),
   Surface.create({ id: 'module.test', filter: Surface.makeFilter(Module.Test), component: () => <TestModule /> }),
   Surface.create({
