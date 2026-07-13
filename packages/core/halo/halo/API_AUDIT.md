@@ -184,23 +184,44 @@ types a new home — not redesigning plugin control flow.
 
 ### 3.1 Shape
 
-Three Effect services (`Context.Tag`s) in `@dxos/halo`, one per aspect, following the
-namespace-export pattern already used by `Keyhive.ts` in this package (verb functions at module
-level that consume the tag; implementations delivered as `Layer`s):
+**`@dxos/halo` holds definitions only — no implementations.** The package exports service tags
+(`Context.Tag`), their interfaces, verb functions (module-level `Effect`s that consume the tag),
+and the Effect schemas for the domain types. Every concrete backing — the client adapter, the
+Keyhive/EDGE layers, any in-memory test double — lives in a **separate implementation package**
+and is provided as a `Layer` at composition time. This keeps `@dxos/halo` free of `@dxos/client`
+(and of `keyhive_wasm`) and makes the backend a layer swap. (The `Keyhive.ts` prototype currently
+in this package is a feasibility spike under this rule its `make`/`layerMemory` implementation
+moves to an impl package, see §3.5.)
+
+Three services (`Context.Tag`s), one per aspect:
+
+- **`Invitation`** — purely the invitation _lifecycle_: the flow handle, its event stream,
+  authenticate/cancel, encode/decode, and observing active invitations. It does **not** know how
+  to _start_ an invitation against an identity or a space.
+- **`Identity`** — identity & device management, **plus** device-invitation _initiation_
+  (`share`/`join`). Depends on `Invitation` (returns/consumes its `Flow`).
+- **`Space`** — space management & membership, **plus** space-invitation _initiation_
+  (`share`/`join`). Depends on `Invitation`.
+
+```text
+        Identity ─────┐
+                      ├──▶ Invitation      (Invitation depends on neither)
+        Space ────────┘
+```
 
 ```ts
 import { Identity, Space, Invitation } from '@dxos/halo';
 
-// Verbs are Effects that require the service tag:
-const profile = yield * Identity.current; // Identity.Service
-const space = yield * Space.create({ name: 'Notes' }); // Space.Service
-const flow = yield * Invitation.share({ space: space.id }); // Invitation.Service
+// Initiation lives on Identity/Space; the returned flow is an Invitation.Flow:
+const flow = yield * Space.share({ space: space.id }); // Space.Service → Invitation.Flow
+yield * Invitation.authenticate(flow, code); // Invitation.Service manages the lifecycle
 ```
 
 The split matches the audit: identity/device consumers (§2.1–2.4) rarely touch spaces;
-space-resolution consumers (§2.5–2.6) rarely touch identity; invitations (§2.7) are their own
-state-machine world used by exactly two plugins. Separate tags let a plugin declare precisely
-what it needs — most plugins need only `Space.Service`.
+space-resolution consumers (§2.5–2.6) rarely touch identity; the invitation _lifecycle_ (§2.7) is
+a self-contained state-machine world. Putting _initiation_ on `Identity`/`Space` means a consumer
+that only shares a space depends on `Space` (+ `Invitation`) without pulling in identity, while
+`Invitation` stays a leaf dependency reusable by both.
 
 Reactivity: the current API mixes `MulticastObservable`, callbacks, and React hooks. The
 services expose each reactive read as an `Effect` (snapshot) plus a `Stream`/`Atom` (changes)
@@ -222,6 +243,8 @@ atom-based, so `Atom` is the natural currency for the React layer.
 | `Identity.localDevice`                                      | `halo.device`                                                                                                   |
 | `Identity.updateDevice(profile)`                            | raw `DevicesService.updateDevice`                                                                               |
 | `Identity.attest({ challenge, audience? })`                 | `createEdgeIdentity(client).presentCredentials()` (§2.4) — signed, audience-bound message per MIGRATION.md §5.1 |
+| `Identity.share(opts?)` → `Invitation.Flow`                 | `client.halo.share()` — device-invitation initiation (delegates the lifecycle to `Invitation`)                  |
+| `Identity.join(code)` → `Invitation.Flow`                   | `client.halo.join()` — device/account join                                                                      |
 
 Types: `Profile` and `Device` already exist in this package as Effect schemas; `Identity`
 (the proxy type: `did`, `identityKey`, `spaceKey`, `profile`) collapses into
@@ -247,6 +270,8 @@ explicit capability grant verb when the EDGE shim lands.
 | `Space.export(id, { format })` / `Space.import(archive, opts?)`               | `space.internal.export()`, `client.spaces.import()`                                                                                        |
 | `Space.migrate(id)`                                                           | `space.internal.migrate()`, `db.runMigrations`                                                                                             |
 | `Space.setReplication(id, setting)` / `Space.replication(id)`                 | `space.internal.setEdgeReplicationPreference`, `data.edgeReplication` (becomes "delegate `pull` to EDGE" under Keyhive, MIGRATION.md §5.1) |
+| `Space.share(id, { type, authMethod, multiUse, target })` → `Invitation.Flow` | `space.share()` — space-invitation initiation (delegates the lifecycle to `Invitation`)                                                    |
+| `Space.join(code)` → `Invitation.Flow`                                        | `client.spaces.join()`                                                                                                                     |
 
 The returned `Space` value is a plain data snapshot (id, state, properties, tags) — **not** a
 live proxy owning `db`. Database access stays on the `@dxos/echo` `Database` service keyed by
@@ -258,50 +283,63 @@ Roles map forward to Keyhive `Access` (`read`/`edit`/`admin`/`pull`) per MIGRATI
 member `presence` is not credential data and should move to a presence/network concern rather
 than ride on `SpaceMember`.
 
-### 3.4 `Invitation.Service` — invitations
+### 3.4 `Invitation.Service` — invitation lifecycle
 
-| Verb                                                                              | Replaces                                                                                                                                     |
-| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Invitation.share({ kind: 'device' })`                                            | `client.halo.share()`                                                                                                                        |
-| `Invitation.share({ kind: 'space', space, type, authMethod, multiUse, target })`  | `space.share()`                                                                                                                              |
-| `Invitation.accept(code)`                                                         | `client.halo.join()`, `client.spaces.join()`                                                                                                 |
-| flow handle: `{ events: Stream<InvitationEvent>, authenticate(code), cancel() }`  | `CancellableInvitationObservable`, `AuthenticatingInvitationObservable`, `Invitation.State` polling, `hostInvitation`/`waitForState` helpers |
-| `Invitation.invitations(space?)` / changes                                        | `useSpaceInvitations`                                                                                                                        |
-| `Invitation.encode/decode` (pure)                                                 | `InvitationEncoder`                                                                                                                          |
-| Schemas: `InvitationKind`, `AuthMethod`, `Type`, `InvitationEvent` (tagged union) | `Invitation.State/Type/AuthMethod` protobuf enums (also used in operation schemas via `Schema.Enums`)                                        |
+Purely the mechanics of an in-flight invitation. It does **not** initiate invitations — that is
+`Identity.share`/`Identity.join` (§3.2) and `Space.share`/`Space.join` (§3.3), which construct
+and return an `Invitation.Flow` this service then drives. `Invitation` depends on neither
+`Identity` nor `Space`.
+
+| Verb / type                                                                       | Replaces                                                                                                                   |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `Invitation.Flow`: `{ events: Stream<InvitationEvent>; id }`                      | `CancellableInvitationObservable`, `AuthenticatingInvitationObservable` (the object `Identity`/`Space` initiation returns) |
+| `Invitation.authenticate(flow, code)`                                             | `observable.authenticate()` / `Invitation.State` polling                                                                   |
+| `Invitation.cancel(flow)`                                                         | `observable.cancel()`                                                                                                      |
+| `Invitation.events(flow)` → `Stream<InvitationEvent>`                             | `Invitation.State` polling, `hostInvitation`/`waitForState` helpers                                                        |
+| `Invitation.active(scope?)` / changes                                             | `useSpaceInvitations`                                                                                                      |
+| `Invitation.encode(invitation)` / `Invitation.decode(code)` (pure)                | `InvitationEncoder`                                                                                                        |
+| Schemas: `InvitationKind`, `AuthMethod`, `Type`, `InvitationEvent` (tagged union) | `Invitation.State/Type/AuthMethod` protobuf enums (also used in operation schemas via `Schema.Enums`)                      |
 
 Modeling the flow as a `Stream` of tagged events (`connecting` → `readyForAuth(authCode?)` →
 `success(result)` | `cancelled` | `error`) removes every `state >= Invitation.State.X`
-comparison in the dialogs and the CLI's hand-rolled `waitForState`. Under Keyhive the same
-verbs survive with a different engine: `share` mints an ephemeral invitation key or prekey
-delegation; `accept` becomes contact-card exchange + delegation (MIGRATION.md §4.6) — which is
-exactly why invitations deserve their own service rather than living on `Identity`/`Space`.
+comparison in the dialogs and the CLI's hand-rolled `waitForState`. Under Keyhive the lifecycle
+is unchanged — only what `Identity`/`Space` initiation does behind the flow differs: `share`
+mints an ephemeral invitation key or prekey delegation; `join`/`accept` becomes contact-card
+exchange + delegation (MIGRATION.md §4.6). Keeping the lifecycle in one leaf service lets both
+initiation paths and every dialog/CLI consumer share exactly one state machine.
 
 ### 3.5 Layering & migration mechanics
 
-Dependency inversion: plugins import **only** `@dxos/halo` (tags, verbs, schemas). One
-composition root — today `plugin-client`, which already owns client construction — provides
-the implementation layers:
+`@dxos/halo` is **definitions only** (tags, verbs, schemas); implementations are separate
+packages provided as `Layer`s at one composition root — today `plugin-client`, which already
+owns client construction. Plugins import only `@dxos/halo`:
 
 ```text
-@dxos/halo            Identity.Service / Space.Service / Invitation.Service   (tags + verbs + schemas)
+@dxos/halo            Identity.Service / Space.Service / Invitation.Service   (tags + verbs + schemas, NO impl)
    ▲                        ▲
-   │ layerClient(client)    │ layerKeyhive / layerEdge (future, MIGRATION.md §A.2)
+   │                        │  provide layers at composition:
    │                        │
+@dxos/halo-client   ──  layerClient(client)                    (wraps HaloProxy/EchoProxy/InvitationsProxy)
+@dxos/halo-keyhive  ──  layerKeyhive / layerEdge  (future)     (Keyhive prototype impl relocates here, MIGRATION.md §A.2)
+   ▲
+   │
 plugin-client  ──────  composition root; sole remaining importer of @dxos/client
 ```
 
-`layerClient` wraps the existing proxies (`HaloProxy`, `EchoProxy` spaces, `InvitationsProxy`)
-— a mechanical adapter, no behavior change. Later, `layerKeyhive` (or the EDGE-endpoint shim)
-replaces it without touching a single plugin. This is the same seam strategy as
-`Keyhive.layerMemory()` vs the future WASM layer (MIGRATION.md §5).
+`layerClient` (in `@dxos/halo-client`) wraps the existing proxies (`HaloProxy`, `EchoProxy`
+spaces, `InvitationsProxy`) — a mechanical adapter, no behavior change. Later, `layerKeyhive`
+(or the EDGE-endpoint shim) replaces it without touching a single plugin. Because `@dxos/halo`
+carries no implementation, this is a pure layer swap. The `Keyhive.ts` prototype's runtime
+(`make`/`layerMemory`) is the first tenant of `@dxos/halo-keyhive`; `@dxos/halo` retains only its
+tag/verb/schema surface.
 
 Suggested sequence:
 
-1. **Define services** in `@dxos/halo` (tags, verbs, event/error schemas). Reuse `Profile`,
-   `Device`; add `Space`, `Member`, `InvitationEvent` schemas.
-2. **`layerClient`** adapter package (e.g. `@dxos/halo-client` to keep `@dxos/halo` free of the
-   client dependency), provided by `plugin-client` alongside — then instead of —
+1. **Define services** in `@dxos/halo` (tags, verbs, event/error schemas — no layers). Reuse
+   `Profile`, `Device`; add `Space`, `Member`, `InvitationEvent`, `Invitation.Flow` schemas.
+   Move the `Keyhive.ts` implementation out to `@dxos/halo-keyhive`, leaving its interface.
+2. **`layerClient`** in a `@dxos/halo-client` package (keeps `@dxos/halo` free of the client
+   dependency), provided by `plugin-client` alongside — then instead of —
    `ClientCapabilities.Client`.
 3. **Port operation handlers** (§2.8) — the concentrated mutation sites — from `client.*` to
    service verbs. Plugin control flow (operations) is unchanged.
@@ -339,3 +377,7 @@ Suggested sequence:
 6. **Shell UI components** — `SpaceMemberList`/`InvitationList`/`AuthCode` from
    `@dxos/shell/react` embed observable-based logic; they should be rebuilt on the new hooks in
    `react-ui-*` (the `MembersContainer` TODO already wants this).
+7. **Definitions-only invariant** — `@dxos/halo` must not gain a runtime dependency. The current
+   `Keyhive.ts` prototype (`make`/`layerMemory`) violates this and moves to `@dxos/halo-keyhive`
+   (§3.5); a lint/dep-cruiser rule should keep `@dxos/halo` from importing anything but schema
+   and type primitives so no future layer sneaks back in.
