@@ -15,12 +15,7 @@ import {
   EchoHostService,
   MeshEchoReplicatorLayer,
 } from '@dxos/echo-host';
-import {
-  type EdgeConnection,
-  EdgeConnectionService,
-  type EdgeHttpClient,
-  EdgeHttpClientService,
-} from '@dxos/edge-client';
+import { EdgeConnectionService, EdgeHttpClientService } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedFactoryLayer, FeedStoreLayer, FeedStoreService } from '@dxos/feed-store';
 import { KeyringApiService, SqliteKeyring, SqliteKeyringLayer } from '@dxos/keyring';
@@ -91,8 +86,6 @@ export class StorageMigrationService extends EffectContext.Tag('@dxos/client-ser
 
 export type ServiceContextLayerOptions = ServiceContextRuntimeProps & {
   edgeFeatures?: Runtime.Client.EdgeFeatures;
-  edgeConnection?: EdgeConnection;
-  edgeHttpClient?: EdgeHttpClient;
 };
 
 /**
@@ -122,6 +115,10 @@ export type ServiceContextComponents =
  * Effect Layer composing the dormant service components, constructed before identity is ready.
  * Exposes the component tags in {@link ServiceContextComponents}; the service lifecycle (see
  * `service-lifecycle.ts`) drives migrate/open, identity creation and readiness on top of them.
+ *
+ * Network, signal, transport and (when configured) edge clients are provided beneath this layer by
+ * the host; the edge-only {@link feedSyncerLayer} / {@link edgeReplicatorLayer} are composed around
+ * it by the host in edge mode (they resolve the edge clients from that base).
  */
 export const ServiceContextLayer = (
   options: ServiceContextLayerOptions,
@@ -129,24 +126,7 @@ export const ServiceContextLayer = (
   ServiceContextComponents,
   never,
   SwarmNetworkManagerService | SignalManagerService | SqlClient.SqlClient | SqlTransactionTag
-> => {
-  const { edgeConnection, edgeHttpClient } = options;
-
-  // Non-edge: just the core.
-  if (!edgeConnection || !edgeHttpClient) {
-    return coreLayers(options);
-  }
-
-  // Edge: the feed-syncer sits above the core for its `EchoHostService` requirement. The edge
-  // replicator sits below the core — it needs only the edge inputs — so `DataSpaceManagerLayer`
-  // (inside the core) resolves `EdgeAutomergeReplicatorService` via `serviceOption`, exactly the
-  // way it resolves the mesh replicator. Edge inputs are provided at the bottom.
-  return feedSyncerLayer.pipe(
-    Layer.provideMerge(coreLayers(options)),
-    Layer.provideMerge(edgeReplicatorLayer(options)),
-    Layer.provideMerge(edgeInputLayer(edgeConnection, edgeHttpClient)),
-  );
-};
+> => coreLayers(options);
 
 /**
  * Composes the non-optional core layers into a single stack that callers merge beneath their top layer.
@@ -182,8 +162,10 @@ const meshReplicatorLayer = (options: ServiceContextLayerOptions): Layer.Layer<n
 
 /**
  * Optional edge replicator (subduction / echo / none) — `ROut` hidden, read via `serviceOption`.
+ * Composed beneath {@link ServiceContextLayer} by the host in edge mode; resolves the edge clients
+ * from the base of the stack.
  */
-const edgeReplicatorLayer = (
+export const edgeReplicatorLayer = (
   options: ServiceContextLayerOptions,
 ): Layer.Layer<never, never, EdgeConnectionService | EdgeHttpClientService> =>
   options.edgeFeatures?.subductionReplicator
@@ -193,21 +175,10 @@ const edgeReplicatorLayer = (
       : Layer.empty;
 
 /**
- * Provides the edge inputs internally so they never appear in the stack's declared requirements.
+ * Feed syncer, composed above {@link ServiceContextLayer} by the host in edge mode: it needs
+ * `EchoHostService` from the core (below it) and the `EdgeConnectionService` from the base.
  */
-const edgeInputLayer = (
-  edgeConnection: EdgeConnection,
-  edgeHttpClient: EdgeHttpClient,
-): Layer.Layer<EdgeConnectionService | EdgeHttpClientService> =>
-  Layer.mergeAll(
-    Layer.succeed(EdgeConnectionService, edgeConnection),
-    Layer.succeed(EdgeHttpClientService, edgeHttpClient),
-  );
-
-/**
- * Optional feed syncer (only wired into the stack when edge is configured).
- */
-const feedSyncerLayer = FeedSyncerLayer({
+export const feedSyncerLayer = FeedSyncerLayer({
   peerId: '',
   syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
 });

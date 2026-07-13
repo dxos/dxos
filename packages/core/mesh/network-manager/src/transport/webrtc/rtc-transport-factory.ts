@@ -2,8 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Layer from 'effect/Layer';
+
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+
+import { createIceProvider } from '../../signal';
 import type { IceProvider } from '../../signal';
-import type { TransportFactory } from '../transport';
+import { type TransportFactory, TransportFactoryService } from '../transport';
 import { getRtcConnectionFactory } from './rtc-connection-factory';
 import { RtcPeerConnection } from './rtc-peer-connection';
 
@@ -27,3 +32,14 @@ export const createRtcTransportFactory = (
     },
   };
 };
+
+/**
+ * Layer constructing the WebRTC {@link TransportFactory} from optional ICE configuration.
+ */
+export const RtcTransportFactoryLayer = (options?: {
+  webrtcConfig?: RTCConfiguration;
+  iceProviders?: Runtime.Services.IceProvider[];
+}): Layer.Layer<TransportFactoryService> =>
+  Layer.sync(TransportFactoryService, () =>
+    createRtcTransportFactory(options?.webrtcConfig, options?.iceProviders && createIceProvider(options.iceProviders)),
+  );

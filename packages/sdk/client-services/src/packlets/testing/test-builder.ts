@@ -95,8 +95,11 @@ export const createServiceContext = async ({
   // this disposal in production; here the test builder is the runtime owner.
   const closeServiceContext = serviceContext.close.bind(serviceContext);
   serviceContext.close = async (ctx) => {
-    await closeServiceContext(ctx);
-    await runtime.dispose();
+    try {
+      await closeServiceContext(ctx);
+    } finally {
+      await runtime.dispose();
+    }
   };
 
   return serviceContext;

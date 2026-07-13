@@ -6,9 +6,12 @@
 // (proto field 2). The dual-read fallback that still gates removing that field lives on the
 // edge side (which relays peers from not-yet-migrated senders); nothing here needs it.
 
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
 import { Event, scheduleMicroTask } from '@dxos/async';
 import { type Context, Resource, cancelWithContext } from '@dxos/context';
-import { type EdgeConnection, EdgeIdentityChangedError, protocol } from '@dxos/edge-client';
+import { type EdgeConnection, EdgeConnectionService, EdgeIdentityChangedError, protocol } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -25,7 +28,7 @@ import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type Message, type PeerInfo, PeerInfoHash, type SwarmEvent } from '../signal-methods';
-import { type SignalManager } from './signal-manager';
+import { type SignalManager, SignalManagerService } from './signal-manager';
 
 export class EdgeSignalManager extends Resource implements SignalManager {
   /**
@@ -255,3 +258,12 @@ const createMessageSource = (topic: PublicKey, peerInfo: PeerInfo): buf.MessageI
     ...peerInfo,
   };
 };
+
+/**
+ * Layer constructing an {@link EdgeSignalManager} over the resolved {@link EdgeConnectionService}.
+ */
+export const EdgeSignalManagerLayer = (): Layer.Layer<SignalManagerService, never, EdgeConnectionService> =>
+  Layer.effect(
+    SignalManagerService,
+    Effect.map(EdgeConnectionService, (edgeConnection) => new EdgeSignalManager({ edgeConnection })),
+  );

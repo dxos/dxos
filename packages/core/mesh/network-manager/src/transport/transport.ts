@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import * as Context from 'effect/Context';
+
 import { type Event } from '@dxos/async';
 import { type ErrorStream } from '@dxos/debug';
 import { type PublicKey } from '@dxos/keys';
@@ -74,6 +76,14 @@ export type TransportOptions = {
 export interface TransportFactory {
   createTransport(options: TransportOptions): Transport;
 }
+
+/**
+ * Effect service tag for {@link TransportFactory}.
+ */
+export class TransportFactoryService extends Context.Tag('@dxos/network-manager/TransportFactory')<
+  TransportFactoryService,
+  TransportFactory
+>() {}
 
 export type TransportStats = {
   bytesSent: number;

@@ -20,17 +20,22 @@ import {
 } from '@dxos/client-protocol';
 import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
+import { EdgeConnectionLayer, EdgeHttpClientLayer } from '@dxos/edge-client';
 import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { EdgeSignalManager, type SignalManager, SignalManagerService, WebsocketSignalManager } from '@dxos/messaging';
 import {
-  SwarmNetworkManager,
+  EdgeSignalManagerLayer,
+  type SignalManager,
+  SignalManagerService,
+  WebsocketSignalManagerLayer,
+} from '@dxos/messaging';
+import {
+  RtcTransportFactoryLayer,
+  SwarmNetworkManagerLayer,
   SwarmNetworkManagerService,
   type TransportFactory,
-  createIceProvider,
-  createRtcTransportFactory,
+  TransportFactoryService,
 } from '@dxos/network-manager';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type ServiceBundle } from '@dxos/rpc';
@@ -62,7 +67,13 @@ import {
   QueryServiceRpc,
   SpacesServiceRpc,
 } from './client-services-layer';
-import { type ServiceContextComponents, ServiceContextLayer, type ServiceContextRuntimeProps } from './service-context';
+import {
+  type ServiceContextComponents,
+  ServiceContextLayer,
+  type ServiceContextRuntimeProps,
+  edgeReplicatorLayer,
+  feedSyncerLayer,
+} from './service-context';
 import {
   type ClientLifecycle,
   ClientLifecycleService,
@@ -97,6 +108,22 @@ export type InitializeOptions = {
 };
 
 /**
+ * Runtime built by the host: the composed component stack plus the client RPC handlers and the
+ * lifecycle surface. The concrete runtime provides a superset (transport factory, and edge clients
+ * when configured); {@link ManagedRuntime}'s `ROut` is contravariant, so it is assignable here.
+ */
+type StackRuntime = ManagedRuntime.ManagedRuntime<
+  | ClientServicesRpcContext
+  | ClientLifecycleService
+  | ServiceContextComponents
+  | SwarmNetworkManagerService
+  | SignalManagerService
+  | SqlClient.SqlClient
+  | SqlTransaction.SqlTransaction,
+  never
+>;
+
+/**
  * Remote service implementation.
  */
 export class ClientServicesHost {
@@ -107,12 +134,12 @@ export class ClientServicesHost {
   private readonly _statusUpdate = new Event<void>();
 
   private _config?: Config;
-  private _signalManager?: SignalManager;
-  private _networkManager?: SwarmNetworkManager;
+  // Optional test overrides for the base services (otherwise constructed from config via layers).
+  private _signalManagerOverride?: SignalManager;
+  private _transportFactoryOverride?: TransportFactory;
+  private _connectionLog = true;
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
-  private _edgeConnection?: EdgeConnection = undefined;
-  private _edgeHttpClient?: EdgeHttpClient = undefined;
 
   private _serviceContext!: ServiceContext;
 
@@ -127,16 +154,7 @@ export class ClientServicesHost {
     whenEdgeAgentManagerReady: () => this._serviceContext.whenEdgeAgentManagerReady(),
   };
 
-  #stackRuntime?: ManagedRuntime.ManagedRuntime<
-    | ClientServicesRpcContext
-    | ClientLifecycleService
-    | ServiceContextComponents
-    | SwarmNetworkManagerService
-    | SignalManagerService
-    | SqlClient.SqlClient
-    | SqlTransaction.SqlTransaction,
-    never
-  >;
+  #stackRuntime?: StackRuntime;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<
     SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction
   >;
@@ -293,45 +311,82 @@ export class ClientServicesHost {
       this._config = config;
     }
 
-    // TODO(wittjosiah): This is quite noisy during tests. Make configurable? Remove?
-    if (!options.signalManager) {
-      // log.warn('running signaling without telemetry metadata.');
-    }
-
-    const endpoint = config?.get('runtime.services.edge.url');
-    if (endpoint) {
-      const clientTag = resolveTelemetryTag(config);
-      this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag });
-      this._edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
-    }
-
-    const {
-      connectionLog = true,
-      transportFactory = createRtcTransportFactory(
-        { iceServers: this._config?.get('runtime.services.ice') },
-        this._config?.get('runtime.services.iceProviders') &&
-          createIceProvider(this._config!.get('runtime.services.iceProviders')!),
-      ),
-      signalManager = this._edgeConnection && this._config?.get('runtime.client.edgeFeatures')?.signaling
-        ? new EdgeSignalManager({ edgeConnection: this._edgeConnection })
-        : new WebsocketSignalManager(this._config?.get('runtime.services.signaling') ?? []),
-    } = options;
-    this._signalManager = signalManager;
-
-    invariant(!this._networkManager, 'network manager already set');
-    this._networkManager = new SwarmNetworkManager({
-      enableDevtoolsLogging: connectionLog,
-      transportFactory,
-      signalManager,
-      peerInfo: this._edgeConnection
-        ? {
-            identityDid: this._edgeConnection.identityDid,
-            peerKey: this._edgeConnection.peerKey,
-          }
-        : undefined,
-    });
+    // Retain any explicit overrides (e.g. memory transport / signaling in tests). The base services
+    // (edge clients, signal manager, transport factory, network manager) are otherwise constructed
+    // from config via layers when the host opens.
+    this._transportFactoryOverride = options.transportFactory;
+    this._signalManagerOverride = options.signalManager;
+    this._connectionLog = options.connectionLog ?? true;
 
     log('initialized');
+  }
+
+  /**
+   * Composes the runtime for the service stack. The base services (network / signal / transport, and
+   * — when an edge endpoint is configured — the edge clients) are constructed by layers merged
+   * beneath the component stack. Edge clients sit at the base so the edge signal manager, edge
+   * replicator and feed syncer all share the single connection.
+   */
+  #buildStackRuntime(config: Config): StackRuntime {
+    const edgeFeatures = config.get('runtime.client.edgeFeatures');
+    const endpoint = config.get('runtime.services.edge.url');
+    const serviceContextOptions = { ...this._runtimeProps, edgeFeatures };
+
+    const lifecycleLayer = Layer.succeed(ClientLifecycleService, this.#lifecycle);
+    const runtimeProviderLayer = RuntimeProvider.toLayer(this._runtime);
+    const networkManagerLayer = SwarmNetworkManagerLayer({ enableDevtoolsLogging: this._connectionLog });
+    const transportFactoryLayer = this._transportFactoryOverride
+      ? Layer.succeed(TransportFactoryService, this._transportFactoryOverride)
+      : RtcTransportFactoryLayer({
+          webrtcConfig: { iceServers: config.get('runtime.services.ice') },
+          iceProviders: config.get('runtime.services.iceProviders'),
+        });
+
+    if (endpoint) {
+      const clientTag = resolveTelemetryTag(config);
+      const edgeClientsLayer = Layer.mergeAll(
+        EdgeConnectionLayer({ socketEndpoint: endpoint, clientTag }),
+        EdgeHttpClientLayer(endpoint, { clientTag }),
+      );
+      const signalManagerLayer = this._signalManagerOverride
+        ? Layer.succeed(SignalManagerService, this._signalManagerOverride)
+        : edgeFeatures?.signaling
+          ? EdgeSignalManagerLayer()
+          : WebsocketSignalManagerLayer(config.get('runtime.services.signaling') ?? []);
+
+      // Edge stack: the feed syncer sits above the core (needs `EchoHostService`); the edge
+      // replicator and edge-aware signal manager sit above the edge clients at the base.
+      return ManagedRuntime.make(
+        ClientServicesRpcLayer.pipe(
+          Layer.provideMerge(lifecycleLayer),
+          Layer.provideMerge(feedSyncerLayer),
+          Layer.provideMerge(ServiceContextLayer(serviceContextOptions)),
+          Layer.provideMerge(edgeReplicatorLayer(serviceContextOptions)),
+          Layer.provideMerge(networkManagerLayer),
+          Layer.provideMerge(signalManagerLayer),
+          Layer.provideMerge(transportFactoryLayer),
+          Layer.provideMerge(edgeClientsLayer),
+          Layer.provideMerge(runtimeProviderLayer),
+          Layer.orDie,
+        ),
+      );
+    }
+
+    const signalManagerLayer = this._signalManagerOverride
+      ? Layer.succeed(SignalManagerService, this._signalManagerOverride)
+      : WebsocketSignalManagerLayer(config.get('runtime.services.signaling') ?? []);
+
+    return ManagedRuntime.make(
+      ClientServicesRpcLayer.pipe(
+        Layer.provideMerge(lifecycleLayer),
+        Layer.provideMerge(ServiceContextLayer(serviceContextOptions)),
+        Layer.provideMerge(networkManagerLayer),
+        Layer.provideMerge(signalManagerLayer),
+        Layer.provideMerge(transportFactoryLayer),
+        Layer.provideMerge(runtimeProviderLayer),
+        Layer.orDie,
+      ),
+    );
   }
 
   @synchronized
@@ -344,11 +399,7 @@ export class ClientServicesHost {
     log('opening service host');
 
     invariant(this._config, 'config not set');
-    invariant(this._signalManager, 'signal manager not set');
-    invariant(this._networkManager, 'network manager not set');
     const config = this._config;
-    const signalManager = this._signalManager;
-    const networkManager = this._networkManager;
 
     this._opening = true;
     log('opening...', { lockKey: this._resourceLock?.lockKey });
@@ -357,24 +408,10 @@ export class ClientServicesHost {
 
     await this._loggingService.open();
 
-    // Build a single runtime from the component layer stack plus the client RPC service handlers
-    // and the lifecycle surface layered on top, then resolve the handle and every handler from it.
-    const stackLayer = ClientServicesRpcLayer.pipe(
-      Layer.provideMerge(Layer.succeed(ClientLifecycleService, this.#lifecycle)),
-      Layer.provideMerge(
-        ServiceContextLayer({
-          ...this._runtimeProps,
-          edgeFeatures: config.get('runtime.client.edgeFeatures'),
-          edgeConnection: this._edgeConnection,
-          edgeHttpClient: this._edgeHttpClient,
-        }),
-      ),
-      Layer.provideMerge(Layer.succeed(SwarmNetworkManagerService, networkManager)),
-      Layer.provideMerge(Layer.succeed(SignalManagerService, signalManager)),
-      Layer.provideMerge(RuntimeProvider.toLayer(this._runtime)),
-      Layer.orDie,
-    );
-    this.#stackRuntime = ManagedRuntime.make(stackLayer);
+    // Build the runtime from the component layer stack plus the client RPC service handlers and the
+    // lifecycle surface layered on top. The base services (network / signal / transport, and — when
+    // configured — edge clients) are constructed by layers merged beneath the stack.
+    this.#stackRuntime = this.#buildStackRuntime(config);
     const resolved = await this.#stackRuntime.runPromise(
       Effect.all({
         identityService: IdentityServiceRpc,

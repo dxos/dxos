@@ -3,13 +3,15 @@
 //
 
 import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { Event, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Messenger, type PeerInfo, type SignalManager } from '@dxos/messaging';
+import { Messenger, type PeerInfo, type SignalManager, SignalManagerService } from '@dxos/messaging';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap } from '@dxos/util';
 
@@ -17,7 +19,7 @@ import { ConnectionLog } from './connection-log';
 import { type SignalConnection } from './signal';
 import { ConnectionLimiter, Swarm, SwarmMapper } from './swarm';
 import { type Topology } from './topology';
-import { type TransportFactory } from './transport';
+import { type TransportFactory, TransportFactoryService } from './transport';
 import { type WireProtocolProvider } from './wire-protocol';
 /**
  * Represents a single connection to a remote peer.
@@ -264,3 +266,26 @@ export class SwarmNetworkManager {
     this.connectionStateChanged.emit(this._connectionState);
   }
 }
+
+/**
+ * Layer constructing a {@link SwarmNetworkManager} from the {@link TransportFactoryService} and
+ * {@link SignalManagerService}. Initial peer info is optional — the client lifecycle sets it via
+ * `setPeerInfo` while opening, before any swarm activity.
+ */
+export const SwarmNetworkManagerLayer = (options?: {
+  enableDevtoolsLogging?: boolean;
+  peerInfo?: PeerInfo;
+}): Layer.Layer<SwarmNetworkManagerService, never, TransportFactoryService | SignalManagerService> =>
+  Layer.effect(
+    SwarmNetworkManagerService,
+    Effect.gen(function* () {
+      const transportFactory = yield* TransportFactoryService;
+      const signalManager = yield* SignalManagerService;
+      return new SwarmNetworkManager({
+        transportFactory,
+        signalManager,
+        enableDevtoolsLogging: options?.enableDevtoolsLogging,
+        peerInfo: options?.peerInfo,
+      });
+    }),
+  );
