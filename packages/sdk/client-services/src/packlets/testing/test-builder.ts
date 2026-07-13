@@ -11,8 +11,7 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithChain } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { EchoHost, MeshEchoReplicator, SpaceManager, valueEncoding } from '@dxos/echo-host';
-import { SqliteMetadataStore } from '@dxos/echo-host';
+import { EchoHost, MeshEchoReplicator } from '@dxos/echo-host';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { SqliteKeyring } from '@dxos/keyring';
@@ -30,6 +29,8 @@ import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { SqliteBlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';
+import { SqliteMetadataStore } from '../metadata';
+import { valueEncoding } from '../pipeline';
 import {
   ClientServicesHost,
   type ServiceContext,
@@ -38,6 +39,7 @@ import {
   ServiceContextService,
 } from '../services';
 import { SqliteStorage } from '../services/sqlite-storage';
+import { SpaceManager } from '../space';
 import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces';
 
 //

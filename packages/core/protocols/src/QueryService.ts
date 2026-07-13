@@ -10,9 +10,8 @@ import { protoMessage, serviceError } from './service-rpc.ts';
 
 /**
  * Effect RPC definitions for `dxos.echo.query.QueryService`.
- * Generated from the protobuf service definition; payloads are protobuf-encoded on the wire.
+ * Shared proto types remain protobuf-encoded on the wire.
  */
-// TODO(dmaretskyi): Copy jsdocs over from .proto files for service itself and each method.
 export class Rpcs extends RpcGroup.make(
   Rpc.make('setConfig', {
     payload: protoMessage('dxos.echo.indexing.IndexConfig'),
