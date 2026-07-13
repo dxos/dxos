@@ -18,7 +18,9 @@ export const ImageVariant = ({ variant }: ImageVariantProps) => {
   if (!src) {
     return null;
   }
-  return <img src={src} alt={variant.generation?.prompt ?? ''} className='block max-is-full bs-auto mli-auto rounded' />;
+  return (
+    <img src={src} alt={variant.generation?.prompt ?? ''} className='block max-is-full bs-auto mli-auto rounded' />
+  );
 };
 
 ImageVariant.displayName = 'ImageVariant';

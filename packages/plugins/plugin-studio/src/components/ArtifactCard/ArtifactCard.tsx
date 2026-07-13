@@ -6,8 +6,8 @@ import React from 'react';
 
 import { type Artifact } from '#types';
 
-import { GalleryImage } from '../GalleryImage';
 import { useArtifactCoverSource } from '../../hooks';
+import { GalleryImage } from '../GalleryImage';
 
 export type ArtifactCardProps = {
   subject: Artifact.Artifact;

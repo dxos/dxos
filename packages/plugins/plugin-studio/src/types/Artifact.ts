@@ -45,7 +45,11 @@ export class Artifact extends Type.makeObject<Artifact>(DXN.make('org.dxos.type.
  * Creates an Artifact with an owned {@link Instructions} object (holding the prompt), parented so it
  * cascade-deletes and deep-clones with the artifact. `kind` defaults to `'image'`.
  */
-export const make = ({ name, kind = 'image', prompt }: { name?: string; kind?: string; prompt?: string } = {}): Artifact => {
+export const make = ({
+  name,
+  kind = 'image',
+  prompt,
+}: { name?: string; kind?: string; prompt?: string } = {}): Artifact => {
   const instructions = Instructions.make({ name, text: prompt ?? '' });
   const artifact = Obj.make(Artifact, {
     name,

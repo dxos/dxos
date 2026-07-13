@@ -19,9 +19,8 @@ import { Text } from '@dxos/schema';
 import { translations } from '#translations';
 import { Artifact, Variant } from '#types';
 
-import { GalleryArticle } from './GalleryArticle';
-
 import { StudioPlugin } from '../../StudioPlugin';
+import { GalleryArticle } from './GalleryArticle';
 
 const DefaultStory = () => {
   const spaces = useSpaces();

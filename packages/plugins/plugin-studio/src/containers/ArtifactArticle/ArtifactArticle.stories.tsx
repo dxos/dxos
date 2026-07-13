@@ -21,9 +21,8 @@ import { Text } from '@dxos/schema';
 import { translations } from '#translations';
 import { Artifact, type GenerationService, StudioCapabilities, Variant } from '#types';
 
-import { ArtifactArticle } from './ArtifactArticle';
-
 import { StudioPlugin } from '../../StudioPlugin';
+import { ArtifactArticle } from './ArtifactArticle';
 
 /** The request config the mock provider exposes (drives the schema-driven GenerateForm). */
 const MockRequestSchema = Schema.Struct({

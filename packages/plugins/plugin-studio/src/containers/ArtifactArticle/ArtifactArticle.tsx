@@ -160,7 +160,12 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     },
     [db, artifact],
   );
-  const upload = useFileUpload({ subject: artifact, accept: 'image/*,video/*', multiple: true, onUpload: handleUpload });
+  const upload = useFileUpload({
+    subject: artifact,
+    accept: 'image/*,video/*',
+    multiple: true,
+    onUpload: handleUpload,
+  });
 
   const selectedVariant = typeof selected === 'number' ? variants[selected] : undefined;
 

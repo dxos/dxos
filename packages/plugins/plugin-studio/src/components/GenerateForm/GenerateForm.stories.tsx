@@ -8,9 +8,8 @@ import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { GenerateForm } from './GenerateForm';
-
 import { translations } from '../../translations';
+import { GenerateForm } from './GenerateForm';
 
 /** A representative kind-specific request schema (mirrors an image provider's knobs). */
 const RequestSchema = Schema.Struct({

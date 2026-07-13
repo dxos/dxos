@@ -10,8 +10,8 @@ import { Masonry } from '@dxos/react-ui-masonry';
 
 import { meta } from '#meta';
 
-import { GalleryImage } from '../GalleryImage';
 import { useVariantSource } from '../../hooks';
+import { GalleryImage } from '../GalleryImage';
 
 /** The subset of a {@link Variant} a gallery tile needs (a live object or a snapshot). */
 export type VariantTileSource = {

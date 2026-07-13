@@ -8,8 +8,8 @@ import { afterEach, describe, test } from 'vitest';
 import { GenerationService } from '@dxos/plugin-studio/types';
 
 import { IDEOGRAM_GENERATE_URL } from '../constants';
-import { generateWithIdeogram } from './IdeogramClient';
 import { mapIdeogramResponse } from './ideogram-mapping';
+import { generateWithIdeogram } from './IdeogramClient';
 
 describe('ideogram mapping', () => {
   test('maps data entries to variants and drops url-less ones', ({ expect }) => {
@@ -87,7 +87,9 @@ describe('generateWithIdeogram', () => {
       return new Response('{}');
     }) as typeof fetch;
 
-    await expect(generateWithIdeogram({ prompt: 'x' })).rejects.toBeInstanceOf(GenerationService.MissingCredentialError);
+    await expect(generateWithIdeogram({ prompt: 'x' })).rejects.toBeInstanceOf(
+      GenerationService.MissingCredentialError,
+    );
     expect(called).toBe(false);
   });
 
