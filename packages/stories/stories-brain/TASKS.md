@@ -51,14 +51,19 @@ human review. Harness-only (informs the product `Topic` schema). Prereqs: Ollama
 - [x] **Confidence combine + split (pure, tested)** — `combineConfidence` (w·llm + (1−w)·activity, clamped) + `classifyTopics` (≥ threshold, capped at top, highest-first). Unit-tested.
 - [x] **Action-items → `Outline`** — `renderTasksMarkdown` (nested `- [ ]`) + `makeTasksOutline`
       (`Outline.make`); `@dxos/plugin-outliner` workspace dep added. Render unit-tested. 10/10 node tests green.
-- [ ] **Populate stage** — per active topic: LLM `status`, facts (reuse `pipelines/facts.ts` +
-      fact-store), tasks Outline, drafts (`pipelines/draft.ts` for replyable threads).
-- [ ] **Reports + JSON writer** — `results/active-topics/{index.md, <slug>.md, active-topics.json}`
-      (index: label/kind/confidence/rationale + populated-field checklist).
-- [ ] **`active-topics.mjs` driver + `stories-brain:active-topics` moon task** — non-interactive; env
-      `ACTIVE_N` / `ACTIVE_TOP` / `ACTIVE_THRESHOLD` / `MODEL_POLICY`.
-- [ ] **RUN overnight** over the private fixture; review `index.md` in the morning (expect ≈3–5 active,
-      each fully populated + a suggested list). Record findings in `fixtures/REPORT.md`.
+- [x] **Populate stage** — `pipelines/active-topics.ts` `makeActiveTopicsDeps`: model-backed
+      confidence/status/tasks (via `generateText` + policy), facts (`extractDocFacts` per message,
+      rendered), drafts (`draftReply` per thread, skips bulk). Build-verified (runs under models).
+- [x] **Reports + JSON writer** — `internal/active-topics-report.ts` `renderIndex` / `renderTopicReport`
+      / `serializeActiveTopics` / `writeActiveTopicsReports`. Renderers unit-tested.
+- [x] **`active-topics.mjs` driver + `stories-brain:active-topics` moon task** — non-interactive; env
+      `ACTIVE_N` / `ACTIVE_TOP` / `ACTIVE_THRESHOLD` / `MODEL_POLICY`. Runs `active-topics.bench.test.ts`
+      (guarded by `fixtureExists()` → CI skips; 13 unit tests + skip verified).
+- [ ] **RUN overnight** over the private fixture (`moon run stories-brain:active-topics`, Ollama + `.env`);
+      review `index.md` in the morning (expect ≈3–5 active, each fully populated + a suggested list).
+      Record findings in `fixtures/REPORT.md`. NOTE: first run is a shakedown (real-model glue unverified
+      locally) — expect prompt/parse tweaks like the original `overnight` needed. Optional: wire
+      `personEmails` (contacts) + `OWNER_EMAIL` so the person / awaiting-mine signals fire.
 
 Follow-ups (deferred): automated judge scoring; held-out incoming-mail contextualization; promote the
 validated `ActiveTopic` fields into the product `Topic`.
