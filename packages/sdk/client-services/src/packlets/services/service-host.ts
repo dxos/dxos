@@ -20,9 +20,23 @@ import {
 } from '@dxos/client-protocol';
 import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { EdgeConnectionLayer, EdgeHttpClientLayer } from '@dxos/edge-client';
+import {
+  EchoEdgeReplicatorLayer,
+  EchoEdgeSubductionReplicatorLayer,
+  EchoHostLayer,
+  EchoHostService,
+  MeshEchoReplicatorLayer,
+} from '@dxos/echo-host';
+import {
+  EdgeConnectionLayer,
+  EdgeConnectionService,
+  EdgeHttpClientLayer,
+  EdgeHttpClientService,
+} from '@dxos/edge-client';
 import { EffectEx, RuntimeProvider } from '@dxos/effect';
+import { FeedFactoryLayer, FeedStoreLayer } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
+import { SqliteKeyring, SqliteKeyringLayer } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import {
   EdgeSignalManagerLayer,
@@ -37,21 +51,38 @@ import {
   type TransportFactory,
   TransportFactoryService,
 } from '@dxos/network-manager';
+import { FeedProtocol } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { type Runtime as RuntimeConfig } from '@dxos/protocols/proto/dxos/config';
 import { type ServiceBundle } from '@dxos/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
+import { SqliteBlobStore, SqliteBlobStoreLayer } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
+import { EdgeAgentManagerLayer } from '../agents';
 import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
 import {
   type CollectDiagnosticsBroadcastHandler,
   createCollectDiagnosticsBroadcastHandler,
   createDiagnostics,
 } from '../diagnostics';
+import {
+  IdentityManagerLayer,
+  type IdentityManagerProps,
+  IdentityManagerService,
+  IdentityProviderService,
+  identityProviderFromManager,
+} from '../identity';
+import { EdgeIdentityRecoveryManagerLayer } from '../identity/identity-recovery-manager';
+import { type InvitationConnectionProps, InvitationsHandlerLayer, InvitationsManagerLayer } from '../invitations';
 import { Lock, type ResourceLock } from '../locks';
 import { LoggingServiceImpl } from '../logging';
+import { SqliteMetadataStore, SqliteMetadataStoreLayer } from '../metadata';
+import { valueEncoding } from '../pipeline';
+import { SpaceManagerLayer, SpaceManagerService } from '../space';
+import { DataSpaceManagerLayer, type DataSpaceManagerRuntimeProps, SigningContextProviderLayer } from '../spaces';
 import { SystemServiceImpl } from '../system';
 import {
   type ClientServicesRpcContext,
@@ -67,20 +98,35 @@ import {
   QueryServiceRpc,
   SpacesServiceRpc,
 } from './client-services-layer';
-import {
-  type ServiceContextComponents,
-  ServiceContextLayer,
-  type ServiceContextRuntimeProps,
-  edgeReplicatorLayer,
-  feedSyncerLayer,
-} from './service-context';
+import { CrossDeviceSpaceSynchronizerLayer } from './cross-device-space-synchronizer';
+import { FeedSyncerLayer } from './feed-syncer';
 import {
   type ClientLifecycle,
   ClientLifecycleService,
   type ServiceContext,
+  type ServiceContextComponents,
+  StorageMigrationService,
   makeServiceContext,
 } from './service-lifecycle';
 import { ServiceRegistry } from './service-registry';
+import { FeedStorageDirectoryLayer, SqliteStorage, SqliteStorageLayer } from './sqlite-storage';
+
+// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
+type SqlTransactionTag = SqlTransaction.SqlTransaction;
+
+export type ServiceContextRuntimeProps = Pick<
+  IdentityManagerProps,
+  'devicePresenceOfflineTimeout' | 'devicePresenceAnnounceInterval'
+> &
+  DataSpaceManagerRuntimeProps & {
+    invitationConnectionDefaultProps?: InvitationConnectionProps;
+    disableP2pReplication?: boolean;
+    enableVectorIndexing?: boolean;
+  };
+
+export type ServiceContextLayerOptions = ServiceContextRuntimeProps & {
+  edgeFeatures?: RuntimeConfig.Client.EdgeFeatures;
+};
 
 export type ClientServicesHostProps = {
   /**
@@ -342,6 +388,11 @@ export class ClientServicesHost {
           iceProviders: config.get('runtime.services.iceProviders'),
         });
 
+    // Two compositions because the edge stack genuinely requires the edge-client services that the
+    // non-edge stack neither provides nor needs — `Layer`'s `ROut` is contravariant, so `Layer.empty`
+    // cannot stand in as a provider of those services. Edge clients sit at the base so the edge
+    // signal manager, edge replicator and feed syncer share the single connection; the feed syncer
+    // sits above the core for its `EchoHostService`.
     if (endpoint) {
       const clientTag = resolveTelemetryTag(config);
       const edgeClientsLayer = Layer.mergeAll(
@@ -354,8 +405,6 @@ export class ClientServicesHost {
           ? EdgeSignalManagerLayer()
           : WebsocketSignalManagerLayer(config.get('runtime.services.signaling') ?? []);
 
-      // Edge stack: the feed syncer sits above the core (needs `EchoHostService`); the edge
-      // replicator and edge-aware signal manager sit above the edge clients at the base.
       return ManagedRuntime.make(
         ClientServicesRpcLayer.pipe(
           Layer.provideMerge(lifecycleLayer),
@@ -549,3 +598,154 @@ export class ClientServicesHost {
     await this._callbacks?.onReset?.();
   }
 }
+
+/**
+ * Effect Layer composing the dormant service components, constructed before identity is ready.
+ * Exposes the component tags in {@link ServiceContextComponents}; the service lifecycle (see
+ * `service-lifecycle.ts`) drives migrate/open, identity creation and readiness on top of them.
+ *
+ * Network, signal, transport and (when configured) edge clients are provided beneath this layer by
+ * the host; the edge-only {@link feedSyncerLayer} / {@link edgeReplicatorLayer} are composed around
+ * it by the host in edge mode (they resolve the edge clients from that base).
+ */
+export const ServiceContextLayer = (
+  options: ServiceContextLayerOptions,
+): Layer.Layer<
+  ServiceContextComponents,
+  never,
+  SwarmNetworkManagerService | SignalManagerService | SqlClient.SqlClient | SqlTransactionTag
+> => coreLayers(options);
+
+/**
+ * Composes the non-optional core layers into a single stack that callers merge beneath their top layer.
+ */
+const coreLayers = (options: ServiceContextLayerOptions) =>
+  CrossDeviceSpaceSynchronizerLayer.pipe(
+    Layer.provideMerge(EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures })),
+    Layer.provideMerge(DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures })),
+    Layer.provideMerge(SigningContextProviderLayer),
+    Layer.provideMerge(identityProviderLayer),
+    Layer.provideMerge(meshReplicatorLayer(options)),
+    Layer.provideMerge(echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator })),
+    Layer.provideMerge(InvitationsManagerLayer()),
+    Layer.provideMerge(InvitationsHandlerLayer({ connectionProps: options.invitationConnectionDefaultProps })),
+    Layer.provideMerge(EdgeIdentityRecoveryManagerLayer()),
+    Layer.provideMerge(
+      IdentityManagerLayer({
+        devicePresenceOfflineTimeout: options.devicePresenceOfflineTimeout,
+        devicePresenceAnnounceInterval: options.devicePresenceAnnounceInterval,
+        edgeFeatures: options.edgeFeatures,
+      }),
+    ),
+    Layer.provideMerge(SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication })),
+    Layer.provideMerge(storageLayer),
+  );
+
+/**
+ * Optional mesh replicator: read via `serviceOption`, so its `ROut` is hidden (`Layer<never>`) —
+ * absence when p2p is disabled is modelled by not providing it, not by a null value.
+ */
+const meshReplicatorLayer = (options: ServiceContextLayerOptions): Layer.Layer<never, never, never> =>
+  options.disableP2pReplication ? Layer.empty : MeshEchoReplicatorLayer();
+
+/**
+ * Optional edge replicator (subduction / echo / none) — `ROut` hidden, read via `serviceOption`.
+ * Composed beneath {@link ServiceContextLayer} by the host in edge mode; resolves the edge clients
+ * from the base of the stack.
+ */
+const edgeReplicatorLayer = (
+  options: ServiceContextLayerOptions,
+): Layer.Layer<never, never, EdgeConnectionService | EdgeHttpClientService> =>
+  options.edgeFeatures?.subductionReplicator
+    ? EchoEdgeSubductionReplicatorLayer()
+    : options.edgeFeatures?.echoReplicator
+      ? EchoEdgeReplicatorLayer()
+      : Layer.empty;
+
+/**
+ * Feed syncer, composed above {@link ServiceContextLayer} by the host in edge mode: it needs
+ * `EchoHostService` from the core (below it) and the `EdgeConnectionService` from the base.
+ */
+const feedSyncerLayer = FeedSyncerLayer({
+  peerId: '',
+  syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
+});
+
+/**
+ * Provides the {@link IdentityProviderService} from the resolved {@link IdentityManager}.
+ */
+const identityProviderLayer = Layer.effect(
+  IdentityProviderService,
+  Effect.gen(function* () {
+    const identityManager = yield* IdentityManagerService;
+    return identityProviderFromManager(identityManager);
+  }),
+);
+
+/**
+ * Combined storage migration effect. Storage migrations are idempotent `CREATE TABLE` effects that
+ * do not depend on store instance state, so they are extracted from throwaway instances to keep the
+ * store layers individual. Run in stage 2 by the service lifecycle open sequence.
+ */
+const storageMigrationLayer = Layer.effect(
+  StorageMigrationService,
+  Effect.gen(function* () {
+    const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+    return Effect.all(
+      [
+        new SqliteMetadataStore({ runtime }).migrate,
+        new SqliteBlobStore({ runtime }).migrate,
+        new SqliteKeyring({ runtime }).migrate,
+        new SqliteStorage({ runtime }).migrate,
+      ],
+      { discard: true },
+    );
+  }),
+);
+
+/**
+ * Storage / feed layers composed from the individual store layers plus the combined migration.
+ */
+const storageLayer = Layer.empty.pipe(
+  Layer.provideMerge(FeedStoreLayer()),
+  Layer.provideMerge(FeedFactoryLayer({ hypercore: { valueEncoding, stats: true } })),
+  Layer.provideMerge(FeedStorageDirectoryLayer()),
+  Layer.provideMerge(SqliteMetadataStoreLayer()),
+  Layer.provideMerge(SqliteBlobStoreLayer()),
+  Layer.provideMerge(SqliteKeyringLayer()),
+  Layer.provideMerge(SqliteStorageLayer()),
+  Layer.provideMerge(storageMigrationLayer),
+);
+
+/**
+ * Constructs the {@link EchoHost}, resolving the identity/space callbacks that point down the stack.
+ * The feed sync handlers (which point up) are wired later via `EchoHost.setFeedSyncHandlers`.
+ *
+ * The host is self-contained (runs its own migrations, owns its feed/automerge stores), so its
+ * open/close is owned by the layer scope: it opens when the stack is built and closes when the
+ * runtime is disposed. Identity-, network-, and storage-bound lifecycle stays in the service lifecycle.
+ */
+const echoHostLayer = (options: { useSubduction?: boolean }) =>
+  Layer.scopedDiscard(
+    Effect.gen(function* () {
+      const echoHost = yield* EchoHostService;
+      yield* Effect.acquireRelease(
+        Effect.promise(() => echoHost.open()),
+        () => Effect.promise(() => echoHost.close()),
+      );
+    }),
+  ).pipe(
+    Layer.provideMerge(
+      Layer.unwrapEffect(
+        Effect.gen(function* () {
+          const identityManager = yield* IdentityManagerService;
+          const spaceManager = yield* SpaceManagerService;
+          return EchoHostLayer({
+            peerIdProvider: () => identityManager.identity?.deviceKey?.toHex(),
+            getSpaceKeyByRootDocumentId: (documentId) => spaceManager.findSpaceByRootDocumentId(documentId)?.key,
+            useSubduction: options.useSubduction,
+          });
+        }),
+      ),
+    ),
+  );

@@ -76,10 +76,41 @@ import {
   CrossDeviceSpaceSynchronizerService,
 } from './cross-device-space-synchronizer';
 import { type FeedSyncer, FeedSyncerService } from './feed-syncer';
-import { type ServiceContextComponents, StorageMigrationService } from './service-context';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
+
+/**
+ * Combined storage migration effect gathered from the concrete SQLite stores. Internal to the stack;
+ * provided by `storageMigrationLayer` and run during open (stage 2) by the service lifecycle.
+ */
+export class StorageMigrationService extends EffectContext.Tag('@dxos/client-services/StorageMigration')<
+  StorageMigrationService,
+  Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag>
+>() {}
+
+/**
+ * Component tags the composed stack exposes so client RPC service layers and the service lifecycle
+ * can depend on each component directly rather than reaching through an orchestrator. Optional
+ * components (mesh/edge replicators, feed syncer) are resolved via `Effect.serviceOption` and are
+ * therefore intentionally absent from this union.
+ */
+export type ServiceContextComponents =
+  | EchoHostService
+  | IMetadataStoreService
+  | BlobStoreApiService
+  | KeyringApiService
+  | FeedStoreService
+  | StorageMigrationService
+  | SpaceManagerService
+  | IdentityManagerService
+  | EdgeIdentityRecoveryManagerService
+  | InvitationsHandlerService
+  | InvitationsManagerService
+  | SigningContextProviderService
+  | DataSpaceManagerService
+  | EdgeAgentManagerService
+  | CrossDeviceSpaceSynchronizerService;
 
 /**
  * Runtime resolving the composed service components. The concrete runtime built by the host (or the
