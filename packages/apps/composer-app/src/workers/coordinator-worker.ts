@@ -19,7 +19,7 @@ let logStoreInstalled = false;
 let onConnectHandler: ((ev: MessageEvent) => void) | undefined;
 
 onconnect = async (ev) => {
-  const Coordinator = await import('@dxos/worker-framework/coordinator');
+  const Coordinator = await import('@dxos/worker-framework/Coordinator');
 
   if (!logStoreInstalled) {
     logStoreInstalled = true;
