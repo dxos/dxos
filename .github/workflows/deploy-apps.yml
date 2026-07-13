@@ -249,6 +249,18 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      # Notify on labs/staging/production only — main is the rolling auto-deploy-on-push preview and would
+      # be constant noise. Matches the "Update deploy pointer tags" gate below.
+      - name: Notify Discord — deploy started
+        if: env.DEPLOY_ENV != 'main'
+        env:
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          payload=$(jq -nc --arg env "$DEPLOY_ENV" --arg app "$DEPLOY_APP" --arg url "$RUN_URL" \
+            '{content: (":rocket: Deploying **" + $app + "** to `" + $env + "`\nRun: " + $url)}')
+          curl -sS -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
+
       # Reuse the prebuilt Composer bundle when the prep job produced one — populating out/composer means
       # bundle-env.mjs reuses it instead of rebuilding.
       - name: Download Composer bundle
@@ -281,6 +293,26 @@ jobs:
             git tag -f "$tag" "$DEPLOY_REF"
             git push -f origin "refs/tags/$tag"
           done
+
+      - name: Notify Discord — deploy succeeded
+        if: success() && env.DEPLOY_ENV != 'main'
+        env:
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          payload=$(jq -nc --arg env "$DEPLOY_ENV" --arg app "$DEPLOY_APP" --arg url "$RUN_URL" \
+            '{content: (":white_check_mark: Deployed **" + $app + "** to `" + $env + "`\nRun: " + $url)}')
+          curl -sS -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
+
+      - name: Notify Discord — deploy failed
+        if: failure() && env.DEPLOY_ENV != 'main'
+        env:
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          payload=$(jq -nc --arg env "$DEPLOY_ENV" --arg app "$DEPLOY_APP" --arg url "$RUN_URL" \
+            '{content: (":x: Deploy of **" + $app + "** to `" + $env + "` failed\nRun: " + $url)}')
+          curl -sS -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
   # Desktop/mobile build for Composer, for the named environments (not `main` — a signed build per push is
   # too costly). CrabNebula channel is derived from the environment inside the reusable workflow; iOS → App
