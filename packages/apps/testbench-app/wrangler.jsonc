@@ -5,7 +5,7 @@
   "name": "testbench",
   "compatibility_date": "2024-11-01",
   "assets": {
-    "directory": "./out/testbench",
+    "directory": "./out/testbench-app",
     "not_found_handling": "single-page-application",
   },
   "env": {
