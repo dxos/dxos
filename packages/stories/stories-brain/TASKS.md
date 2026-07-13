@@ -63,13 +63,14 @@ human review. Harness-only (informs the product `Topic` schema). Prereqs: Ollama
       anchor "now" to the corpus's latest message) and multi-alias owner support in `buildThreads`
       (`string | string[]` + test). Smoke: 2 active + 6 suggested, status/facts/tasks populated; drafts
       correctly skipped for automated senders (e.g. `noreply@safesendreturns.com`).
-- [~] **RUN full** (`ACTIVE_TOP=8`, both aliases, all 495) — IN PROGRESS (background). Review
-  `index.md` + per-topic reports; record findings in `fixtures/REPORT.md`.
-- [ ] **Intervention: automated/no-reply down-weight** — the activity model reads every unanswered
-      inbound thread as `awaiting-mine`, so receipts/reminders rank near-active. Fold the `bulk`/org
-      (no-reply localpart) signal into `activityScore` (or the prefilter) so genuine person topics rank
-      above automated mail. Re-run + compare. Plus any other tuning the full run surfaces (e.g. LLM
-      topic labels instead of keyword-salad).
+- [x] **RUN full** (`ACTIVE_TOP=8`, both aliases, all 495) — done (run1 + run2). Findings in
+      `fixtures/REPORT.md §6`. Run1: active list dominated by automated notices; run2 (post-intervention):
+      real person/team topics, 5/8 with drafts.
+- [x] **Intervention: automated/no-reply down-weight** — `activityScore` down-weights (×0.35) topics whose
+      every non-owner sender is a no-reply/role address (`isAutomatedAddress` + `computeClusterSignals.automated`).
+      Re-ran; clear win (REPORT §6). 16 unit tests.
+- [ ] **Active Topics v2 (next iteration)** — LLM labels (replace keyword-salad); wire `personEmails`
+      (contacts) so the person signal fires; fact extraction on short person threads. See ROADMAP C2.
 
 ## Roadmap, CRM spec & parallel-experiment plan (asks 2026-07-13)
 
@@ -79,19 +80,20 @@ These deliverables come AFTER the full experiment run + review.
 
 ### Tasks
 
-- [ ] **`ROADMAP.md`** (`packages/stories/stories-brain/ROADMAP.md`) — future-research directions +
-      a technique survey with background web research. MUST cover **N3/RDF**: we still haven't validated
-      whether the `FactStore` earns its keep — design + recommend (or execute) concrete validation tests
-      (e.g. fact-grounded QA vs. raw-thread QA; N3 rules / reasoning over extracted facts; retrieval
-      value). Survey adjacent techniques (embeddings/RAG, entity resolution, temporal/event modeling).
+- [x] **`ROADMAP.md`** (`packages/stories/stories-brain/ROADMAP.md`) — done. Part A technique survey
+      (N3/EYE reasoning, GraphRAG-vs-vectorRAG, KG hallucination eval/GraphEval, relationship-intelligence
+      CRM) with cited web research; Part B the FactStore question + 5 concrete validation experiments
+      (B1 fact-vs-thread QA is the decisive test, B3 N3 rules, B4 faithfulness gate, B5 facts-as-memory);
+      Part C the parallelizable experiment roadmap; Part D near-term follow-ups.
 - [x] **CRM product spec** (`agents/superpowers/specs/2026-07-13-crm-workflow-design.md`) — drafted:
       vision (Topic as the organizing primitive), 7-layer architecture, the 7 features + 6 proposed
       additions (workflow engine, triage/two-tier, relationship graph, provenance layer, team mode,
       digest), tests per feature, cross-cutting eval/model-routing/FactStore, open questions. For morning refinement.
-- [ ] **Experimental roadmap for parallel agents** — independent, self-contained experiment briefs
-      (each runnable by a separate agent) advancing the research + product. A section of `ROADMAP.md`
-      (or its own doc). Refineable in the morning.
-- [ ] **Track everything here** (this section) — keep updated as the above land.
+- [x] **Experimental roadmap for parallel agents** — `ROADMAP.md` Part C: 8 self-contained briefs
+      (C1 FactStore validation, C2 Active Topics v2, C3 N3 workflow rules, C4 contact entity-resolution,
+      C5 task extraction, C6 draft re-score, C7 research agent, C8 two-tier latency) with parallelization
+      notes (C1/C4/C5/C6/C8 independent today). Refineable in the morning.
+- [x] **Track everything here** — kept current.
 
 Follow-ups (deferred): automated judge scoring; held-out incoming-mail contextualization; promote the
 validated `ActiveTopic` fields into the product `Topic`.
