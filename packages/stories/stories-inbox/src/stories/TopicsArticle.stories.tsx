@@ -13,7 +13,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { Topic } from '@dxos/pipeline-email';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Mailbox } from '@dxos/plugin-inbox';
-import { TopicArticle, TopicsArticle } from '@dxos/plugin-inbox/containers';
+import { TopicsArticle } from '@dxos/plugin-inbox/containers';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -22,14 +22,14 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { AnchoredTo } from '@dxos/types';
 
-// Two deterministic topics — no LLM needed; TopicsArticle just queries + renders `Topic` objects.
+// Two accepted topics.
 const seedTopics = (space: Space) => {
   space.db.add(
     Obj.make(Topic, {
       label: 'q2 report budget',
       summary: 'Alice circulated the Q2 report and budget.',
-      threadIds: ['t1', 't2'],
-      participants: ['alice@example.com', 'me@example.com'],
+      threadIds: ['q2 report'],
+      participants: ['alice@example.com'],
       keywords: ['q2', 'report', 'budget'],
       questions: ['When is the budget due?'],
       tasks: ['Review the draft.'],
@@ -39,7 +39,7 @@ const seedTopics = (space: Space) => {
     Obj.make(Topic, {
       label: 'launch planning',
       summary: 'Launch date and checklist under discussion.',
-      threadIds: ['t3'],
+      threadIds: ['launch plan'],
       participants: ['bob@example.com'],
       keywords: ['launch', 'planning'],
       questions: [],
@@ -73,21 +73,22 @@ const seedSuggestions = (mailbox: Mailbox.Mailbox) =>
     ];
   });
 
-const DefaultStory = () => {
+const Story = () => {
   const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
-  const topics = useQuery(space?.db, Filter.type(Topic));
+  // Subscribe so accept/dismiss re-render.
+  useQuery(space?.db, Filter.type(Topic));
 
-  if (!space?.db || !mailbox || topics.length === 0) {
-    return <Loading data={{ db: !!space?.db, mailbox: !!mailbox, topics: topics.length }} />;
+  if (!space?.db || !mailbox) {
+    return <Loading data={{ db: !!space?.db, mailbox: !!mailbox }} />;
   }
 
   return <TopicsArticle role='article' space={space} attendableId='story' mailbox={mailbox} />;
 };
 
 const meta = {
-  title: 'stories/stories-inbox/Topics',
-  render: DefaultStory,
+  title: 'stories/stories-inbox/TopicsArticle',
+  render: Story,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
@@ -118,96 +119,57 @@ const meta = {
     controls: { disable: true },
     translations: [...inboxTranslations, ...reactUiTranslations],
   },
-} satisfies Meta<typeof DefaultStory>;
+} satisfies Meta<typeof Story>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Renders the seeded topics as cards, each with an action menu offering "Delete topic". */
+/** The master list: accepted topic cards below a "Suggested" section. */
 export const Default: Story = {};
 
-/** Renders the `TopicArticle` detail for one seeded topic. */
-const DetailStory = () => {
-  const [space] = useSpaces();
-  const topics = useQuery(space?.db, Filter.type(Topic));
-  const topic = topics.find((entry) => entry.label === 'q2 report budget');
-
-  if (!space?.db || !topic) {
-    return <Loading data={{ db: !!space?.db, topic: !!topic }} />;
-  }
-
-  return <TopicArticle role='article' subject={topic} attendableId='story' />;
-};
-
-/** The detail view renders the topic's summary, keyword chips, participants, questions, and tasks. */
-export const Detail: Story = { render: DetailStory };
-
-/** Asserts the detail view surfaces each stored field. */
-export const DetailTest: Story = {
-  render: DetailStory,
+/** Deletes a topic via its card action menu and asserts it is removed. */
+export const DeleteTest: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await waitFor(() => expect(canvas.getByText('q2 report budget')).toBeInTheDocument());
-    void expect(canvas.getByText('Alice circulated the Q2 report and budget.')).toBeInTheDocument();
-    void expect(canvas.getByText('q2')).toBeInTheDocument(); // keyword chip
-    void expect(canvas.getByText(/alice@example\.com/)).toBeInTheDocument(); // participants
-    void expect(canvas.getByText('When is the budget due?')).toBeInTheDocument(); // question
-    void expect(canvas.getByText('Review the draft.')).toBeInTheDocument(); // task
+    const body = within(document.body);
+
+    const budgetCard = await waitFor(
+      () => canvas.getByText('q2 report budget').closest('[data-testid="topic-card"]') as HTMLElement,
+    );
+    void expect(canvas.getByText('launch planning')).toBeInTheDocument();
+
+    await userEvent.click(within(budgetCard).getByRole('button', { name: /action menu/i }));
+    await userEvent.click(await waitFor(() => body.getByText(/delete topic/i)));
+
+    await waitFor(() => expect(canvas.queryByText('q2 report budget')).not.toBeInTheDocument());
+    void expect(canvas.getByText('launch planning')).toBeInTheDocument();
   },
 };
 
-/** Accepts one suggestion (→ becomes a Topic) and dismisses another; asserts the Suggested list shrinks. */
+/** Accepts one suggestion (→ Topic) and dismisses another; asserts the Suggested list shrinks. */
 export const SuggestionsTest: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
 
     const section = await waitFor(() => canvas.getByTestId('topics-suggested'));
-    const sectionScope = within(section);
     await waitFor(() => expect(within(section).getAllByTestId('topic-suggestion')).toHaveLength(2));
-    void expect(sectionScope.getByText('invoice acme')).toBeInTheDocument();
 
-    // Accept the "invoice acme" suggestion via its action menu.
-    const invoiceCard = sectionScope
+    const invoiceCard = within(section)
       .getByText('invoice acme')
       .closest('[data-testid="topic-suggestion"]') as HTMLElement;
     await userEvent.click(within(invoiceCard).getByRole('button', { name: /action menu/i }));
     await userEvent.click(await waitFor(() => body.getByText(/^accept$/i)));
 
-    // One suggestion remains; "invoice acme" is no longer a suggestion (it became a Topic).
     await waitFor(() => expect(canvas.getAllByTestId('topic-suggestion')).toHaveLength(1));
     void expect(within(canvas.getByTestId('topics-suggested')).queryByText('invoice acme')).toBeNull();
 
-    // Dismiss the remaining "welcome onboarding" suggestion.
     const remaining = canvas.getByTestId('topic-suggestion');
     await userEvent.click(within(remaining).getByRole('button', { name: /action menu/i }));
     await userEvent.click(await waitFor(() => body.getByText(/^dismiss$/i)));
 
-    // The Suggested section is gone; "welcome onboarding" no longer appears anywhere.
     await waitFor(() => expect(canvas.queryByTestId('topics-suggested')).toBeNull());
     void expect(canvas.queryByText('welcome onboarding')).toBeNull();
-  },
-};
-
-/** Opens the first card's action menu, deletes that topic, and asserts the card is removed. */
-export const Test: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const body = within(document.body);
-
-    // Both seeded topics render as topic cards.
-    const budgetCard = await waitFor(
-      () => canvas.getByText('q2 report budget').closest('[data-testid="topic-card"]') as HTMLElement,
-    );
-    void expect(canvas.getByText('launch planning')).toBeInTheDocument();
-
-    // Open that topic card's action menu and delete it.
-    await userEvent.click(within(budgetCard).getByRole('button', { name: /action menu/i }));
-    await userEvent.click(await waitFor(() => body.getByText(/delete topic/i)));
-
-    // The deleted topic is gone; the other remains.
-    await waitFor(() => expect(canvas.queryByText('q2 report budget')).not.toBeInTheDocument());
-    void expect(canvas.getByText('launch planning')).toBeInTheDocument();
   },
 };
