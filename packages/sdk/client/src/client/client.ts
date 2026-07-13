@@ -34,6 +34,7 @@ import {
   subscribeStream,
 } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { type RpcPort } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
@@ -588,25 +589,24 @@ export class Client {
       await this._shellManager.open();
       log('client._open: shell manager opened');
     }
-    if (this._iframeManager?.iframe) {
+    const iframeManager = this._iframeManager;
+    const shellIframe = iframeManager?.iframe;
+    if (iframeManager && shellIframe) {
       // TODO(wittjosiah): Remove. Workaround for socket runtime bug.
       //   https://github.com/socketsupply/socket/issues/893
       const origin =
-        this._iframeManager.source.origin === 'null'
-          ? this._iframeManager.source.toString().split('/').slice(0, 3).join('/')
-          : this._iframeManager.source.origin;
+        iframeManager.source.origin === 'null'
+          ? iframeManager.source.toString().split('/').slice(0, 3).join('/')
+          : iframeManager.source.origin;
 
       // Re-serve the client services to the shell iframe over effect-rpc, matching the shell's
       // `ClientServicesProxy` consumer. Handlers are derived from the already-open effect-native
       // `rpc` surface so calls forward straight to the underlying provider (worker or host).
       const shellServicesHandlers = makeHandlersFromRpc(this._services.rpc);
+      const shellPort: RpcPort = createIFramePort({ channel: DEFAULT_CLIENT_CHANNEL, iframe: shellIframe, origin });
       this._shellClientServer = new ClientRpcServer({
         services: () => shellServicesHandlers,
-        port: createIFramePort({
-          channel: DEFAULT_CLIENT_CHANNEL,
-          iframe: this._iframeManager.iframe,
-          origin,
-        }),
+        port: shellPort,
       });
 
       await this._shellClientServer.open();
