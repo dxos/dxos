@@ -33,6 +33,7 @@ jobs:
 
     outputs:
       version: ${{ steps.bump-version.outputs.version }}
+      ios_bundle_version: ${{ steps.bump-version.outputs.ios_bundle_version }}
 
     steps:
       - uses: actions/checkout@v5
@@ -80,11 +81,16 @@ jobs:
           fi
           echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           echo "Tauri version: $NEW_VERSION (env=${{ inputs.environment }})"
+          # CFBundleVersion (Apple's build number) must be plain digits separated by dots — our prerelease
+          # suffix (e.g. "-labs.abc1234") fails that even after Tauri's own semver-prerelease stripping, so
+          # override it separately with the always-numeric, always-increasing run number.
+          echo "ios_bundle_version=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
 
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
         with:
           version: ${{ steps.bump-version.outputs.version }}
+          ios-bundle-version: ${{ steps.bump-version.outputs.ios_bundle_version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
 
       - name: Create draft non-production release
@@ -132,6 +138,7 @@ jobs:
         uses: ./.github/actions/cn-config
         with:
           version: ${{ needs.draft_tauri.outputs.version }}
+          ios-bundle-version: ${{ needs.draft_tauri.outputs.ios_bundle_version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
 
       # TODO(wittjosiah): Having pnpm install run through moon was causing OOM issues.
@@ -236,6 +243,24 @@ jobs:
           name: composer-bundle
           path: packages/apps/composer-app/out/composer
 
+      - name: Fetch Ollama runtime
+        run: (cd packages/apps/composer-app && node scripts/fetch-ollama.mjs)
+
+      # The `ollama` launcher itself is a Tauri sidecar (Tauri signs it as part of `tauri build`), but its
+      # sibling libraries (llama-server, libggml*/libllama*/mlx_metal_*) are plain vendored files copied in
+      # via tauri.conf.json's `bundle.macOS.files` — they must live under Contents/MacOS/ (the launcher
+      # only looks for them next to itself, ignoring OLLAMA_LIBRARY_PATH, see plugin-native/ollama.ts), but
+      # Tauri's own nested-code signing walk only descends into framework/xpc/app-style subfolders and only
+      # recognizes `.dylib`/extension-less files — it never reaches `MacOS/lib/ollama`. Any file codesign
+      # finds unsigned under Contents/MacOS/ at final bundle-signing time fails the whole build (e.g.
+      # `mlx_metal_v4/mlx.metallib`: "code object is not signed at all"). Sign every file in the runtime
+      # directory up front so Tauri's final (non-deep) codesign pass finds them already valid.
+      - name: Sign Ollama runtime libraries
+        if: matrix.os == 'depot-macos-latest'
+        run: |
+          find packages/apps/composer-app/src-tauri/sidecar/ollama-runtime -type f -print0 |
+            xargs -0 -I{} codesign --force --options runtime --sign "$CERT_ID" "{}"
+
       - name: Build Tauri app
         # With a prebuilt bundle: `tauri build` bare (no moon) — beforeBuildCommand is empty, so it embeds
         # the downloaded out/composer and only does the native compile (+ the desktop ollama sidecar).
@@ -243,7 +268,7 @@ jobs:
         run: |
           if [ -f packages/apps/composer-app/out/composer/index.html ]; then
             echo "Using prebuilt Composer bundle — tauri build bare (no moon)."
-            ( cd packages/apps/composer-app && node scripts/fetch-ollama.mjs && pnpm exec tauri build )
+            ( cd packages/apps/composer-app && pnpm exec tauri build )
           else
             echo "No prebuilt bundle (unexpected) — falling back to moon."
             moon run composer-app:tauri-build
@@ -296,6 +321,7 @@ jobs:
         uses: ./.github/actions/cn-config
         with:
           version: ${{ needs.draft_tauri.outputs.version }}
+          ios-bundle-version: ${{ needs.draft_tauri.outputs.ios_bundle_version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
 
       # TODO(wittjosiah): Having pnpm install run through moon was causing OOM issues.
@@ -452,6 +478,7 @@ jobs:
         uses: ./.github/actions/cn-config
         with:
           version: ${{ needs.draft_tauri.outputs.version }}
+          ios-bundle-version: ${{ needs.draft_tauri.outputs.ios_bundle_version }}
           working-directory: ./packages/apps/composer-app/src-tauri/
 
       - name: Publish release
