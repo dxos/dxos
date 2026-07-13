@@ -9,7 +9,6 @@ import { Event as AsyncEvent, type Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { type IMetadataStore, type SpaceManager } from '@dxos/echo-host';
 import { type FeedStore } from '@dxos/feed-store';
 import { type KeyringApi } from '@dxos/keyring';
 import { type SignalManager } from '@dxos/messaging';
@@ -56,6 +55,8 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { type BlobStoreApi } from '@dxos/teleport-extension-object-sync';
 
+import { type IMetadataStore } from '../metadata';
+import { type SpaceManager } from '../space';
 import { type DataSpaceManager } from '../spaces';
 import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds';
 import { subscribeToKeyringKeys } from './keys';

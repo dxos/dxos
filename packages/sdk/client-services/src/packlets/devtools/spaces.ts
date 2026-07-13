@@ -4,13 +4,14 @@
 
 import { type Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { type IMetadataStore, type Space, type SpaceManager } from '@dxos/echo-host';
 import {
   type SubscribeToSpacesRequest,
   type SubscribeToSpacesResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 
+import { type IMetadataStore } from '../metadata';
+import { type Space, type SpaceManager } from '../space';
 import { type DataSpaceManager } from '../spaces';
 
 type SpacesContext = {
@@ -50,7 +51,11 @@ export const subscribeToSpaces = (context: SpacesContext, { spaceKeys = [] }: Su
 
     const timeout = setTimeout(async () => {
       await context.initialized.wait();
-      unsubscribe = context.dataSpaceManager!.updated.on(() => update());
+      // DataSpaceManager is present once identity-bound services have opened; guard for the
+      // pre-identity / partially-initialised case rather than asserting.
+      if (context.dataSpaceManager) {
+        unsubscribe = context.dataSpaceManager.updated.on(() => update());
+      }
 
       // Send initial spaces.
       await update();

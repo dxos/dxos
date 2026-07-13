@@ -18,11 +18,7 @@ import {
   EchoHostService,
   type EdgeAutomergeReplicator,
   EdgeAutomergeReplicatorService,
-  type IMetadataStore,
-  IMetadataStoreService,
   MeshEchoReplicatorService,
-  type SpaceManager,
-  SpaceManagerService,
   runSqliteHealthCheck,
 } from '@dxos/echo-host';
 import {
@@ -67,6 +63,8 @@ import {
   InvitationsManagerService,
   SpaceInvitationProtocol,
 } from '../invitations';
+import { type IMetadataStore, IMetadataStoreService } from '../metadata';
+import { type SpaceManager, SpaceManagerService } from '../space';
 import {
   DataSpaceManager,
   DataSpaceManagerService,

@@ -13,13 +13,7 @@ import {
   EchoEdgeSubductionReplicatorLayer,
   EchoHostLayer,
   EchoHostService,
-  IMetadataStoreService,
   MeshEchoReplicatorLayer,
-  SpaceManagerLayer,
-  SpaceManagerService,
-  SqliteMetadataStore,
-  SqliteMetadataStoreLayer,
-  valueEncoding,
 } from '@dxos/echo-host';
 import {
   type EdgeConnection,
@@ -56,6 +50,9 @@ import {
   InvitationsManagerLayer,
   InvitationsManagerService,
 } from '../invitations';
+import { IMetadataStoreService, SqliteMetadataStore, SqliteMetadataStoreLayer } from '../metadata';
+import { valueEncoding } from '../pipeline';
+import { SpaceManagerLayer, SpaceManagerService } from '../space';
 import {
   DataSpaceManagerLayer,
   type DataSpaceManagerRuntimeProps,
