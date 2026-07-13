@@ -49,16 +49,12 @@ test.describe('Inbox', () => {
     await expect(host.page.getByTestId('message-header').first()).toBeVisible();
   });
 
-  // FIXME(wittjosiah): The send op fails client-side with JmapSendMessageInvalidError ("Missing to or
-  //   content"): Playwright's synthetic input into the EditMessage form (To field) and CodeMirror body
-  //   isn't propagating to the ECHO message (onValuesChanged / editor onChange don't commit under
-  //   test input), so `message.properties.to` + text block read empty at send. The mock, connect, and
-  //   sync paths are all validated by the tests above; this needs the trace viewer to pin the
-  //   form→object write-back. Reply must also be covered for Gmail (task #7e).
-  test.fixme('JMAP: reply sends', async () => {
-    await openSyncedMailbox();
+  test('JMAP: reply sends', async () => {
+    const mock = await openSyncedMailbox();
     await Inbox.selectFirstThread(host.page);
-    await Inbox.reply(host.page, { to: 'bob@jmap.test', body: 'Thanks, sounds good.' });
-    await expect(host.page.getByText('Message sent')).toBeVisible();
+    await Inbox.reply(host.page, 'Thanks, sounds good.');
+    // The reply round-trips through JMAP submission; assert on the recorded provider calls (the
+    // success toast is transient and its text is duplicated across notification nodes).
+    await expect.poll(() => mock.calls, { timeout: 15_000 }).toContain('EmailSubmission/set');
   });
 });

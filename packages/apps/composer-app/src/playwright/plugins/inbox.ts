@@ -41,16 +41,13 @@ export const Inbox = {
     await page.getByTestId('message-header').first().waitFor();
   },
 
-  /** Draft and send a reply to the currently-open thread. */
-  reply: async (page: Page, { to, body }: { to: string; body: string }) => {
+  /** Draft and send a reply to the currently-open thread. Reply-mode prefills the recipient. */
+  reply: async (page: Page, body: string) => {
     await page.getByTestId('inbox.message.reply').first().click();
-    const form = page.getByTestId('edit-email-form');
-    await form.waitFor();
-    // Ensure a recipient (reply-mode prefill depends on a loaded sender contact); then the body,
-    // which is a CodeMirror editor rendered after the form fields.
-    await form.getByLabel('To').fill(to);
-    // The body is a CodeMirror editor — fill() is unreliable on contenteditable, so type into it.
-    const bodyEditor = form.getByRole('textbox').last();
+    await page.getByTestId('edit-email-form').waitFor();
+    // The body is a CodeMirror editor rendered as a sibling of the form (Form.Root puts the testid on
+    // an inner element), and the reply draft is appended at the thread tail, so its editor is the last.
+    const bodyEditor = page.locator('.cm-content').last();
     await bodyEditor.click();
     await bodyEditor.pressSequentially(body);
     await page.getByTestId('save-button').click();
