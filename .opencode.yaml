@@ -10,6 +10,7 @@ instructions: |
   - When reaching a natural stopping point, run the linter for impacted packages
   - Create a new branch before starting work
   - Use `gh pr create` to create a pull request
+  - Commit messages and PR titles use `scope: description` (no feat/fix/chore type prefix) — scope is the package or area most affected
   - Consumer-relevant changes need a `.changeset/*.md` before opening the PR — see agents/instructions/changesets.md
   - Ask for confirmation to ensure all work is complete and if so check that all packages build and pass linting and fix any problems that come up
   - Composer is the main product; it is made up from a set of plugins (in packages/plugins); each plugin has a `meta.ts` file

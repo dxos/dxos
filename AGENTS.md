@@ -111,6 +111,11 @@ Deeper conventions:
 
 ## Git & PR workflow
 
+- **Commit messages and PR titles: `scope: description`** — no type prefix
+  (`feat`/`fix`/`chore`/…). Scope is the package or area most affected (e.g.
+  `echo`, `plugin-markdown`, `release`), description is a concise, imperative
+  summary. Not CI-enforced — a convention, not a gate. ([Why not Conventional
+  Commits?](https://sumnerevans.com/posts/software-engineering/stop-using-conventional-commits/))
 - **CI is one workflow, "Check"** — build, test, lint, fmt. A red Check is your
   failure, not pre-existing; fix the root cause on the branch, never merge
   around it. Inspect: `gh run list --branch <branch> --workflow "Check"`, then

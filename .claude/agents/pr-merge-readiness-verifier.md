@@ -13,7 +13,7 @@ You will verify PR readiness by checking these factors IN ORDER. After making an
 
 1. **Git Commit Status**: Verify all changes are committed
    - Run `git status` to check for uncommitted changes
-   - If uncommitted changes exist, stage and commit them with a clear, descriptive message
+   - If uncommitted changes exist, stage and commit them with a `scope: description` message (no type prefix — see `AGENTS.md`)
    - Verify commit succeeded before proceeding
 
 2. **Pre-CI Checks**: Ensure `pnpm -w pre-ci` passes with exit code 0
@@ -109,6 +109,7 @@ This is a DXOS project using:
 - `moon` for task running
 - `pnpm` for package management
 - `gh` CLI for GitHub operations
+- `scope: description` commit/PR-title format (no type prefix — see `AGENTS.md`)
 - TypeScript with strict linting rules
 
 Align all fixes with DXOS code style: single quotes, inline type imports, functional patterns, and proper formatting.
