@@ -10,6 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { Topic } from '@dxos/pipeline-email';
 import { getParentId, useNode } from '@dxos/plugin-graph';
 import { DraftMessage, Event, Message, Organization, Person } from '@dxos/types';
 
@@ -27,12 +28,19 @@ import {
   RelatedToContact,
   RelatedToOrganization,
   SaveFilterPopover,
+  SubscriptionsArticle,
+  TopicArticle,
   TopicsArticle,
 } from '#containers';
 import { Calendar, Mailbox } from '#types';
 
-import { MAILBOX_DRAFTS_NODE_DATA, MAILBOX_TOPICS_NODE_DATA, POPOVER_SAVE_FILTER } from '../constants';
-import { getDraftsId, getTopicsId } from '../paths';
+import {
+  MAILBOX_DRAFTS_NODE_DATA,
+  MAILBOX_SUBSCRIPTIONS_NODE_DATA,
+  MAILBOX_TOPICS_NODE_DATA,
+  POPOVER_SAVE_FILTER,
+} from '../constants';
+import { getDraftsId, getSubscriptionsId, getTopicsId } from '../paths';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
   Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
@@ -82,6 +90,32 @@ export default Capability.makeModule(() =>
 
           const mailbox = (data.properties as { mailbox: Mailbox.Mailbox }).mailbox;
           return <TopicsArticle role={role} space={space} attendableId={data.attendableId} mailbox={mailbox} />;
+        },
+      }),
+      Surface.create({
+        id: 'topic',
+        filter: AppSurface.object(AppSurface.Article, Topic),
+        component: ({ data, role }) => <TopicArticle role={role} subject={data.subject} />,
+      }),
+      Surface.create({
+        id: 'subscriptions',
+        filter: Surface.makeFilter(AppSurface.Article, (data) => {
+          const mailbox = data.properties?.mailbox;
+          const lastSegment = data.attendableId.split('/').pop();
+          return (
+            lastSegment === getSubscriptionsId() &&
+            Mailbox.instanceOf(mailbox) &&
+            data.subject === MAILBOX_SUBSCRIPTIONS_NODE_DATA
+          );
+        }),
+        component: ({ data, role }) => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          const mailbox = (data.properties as { mailbox: Mailbox.Mailbox }).mailbox;
+          return <SubscriptionsArticle role={role} space={space} attendableId={data.attendableId} mailbox={mailbox} />;
         },
       }),
       Surface.create({

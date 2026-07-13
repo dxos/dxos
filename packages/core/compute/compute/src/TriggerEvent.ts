@@ -52,10 +52,10 @@ export type SubscriptionEvent = Schema.Schema.Type<typeof SubscriptionEvent>;
 export const TimerEvent = Schema.Struct({ tick: Schema.Number });
 export type TimerEvent = Schema.Schema.Type<typeof TimerEvent>;
 
-export const ManualEvent = Schema.Struct({
+export const DirectEvent = Schema.Struct({
   data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
 });
-export type ManualEvent = Schema.Schema.Type<typeof ManualEvent>;
+export type DirectEvent = Schema.Schema.Type<typeof DirectEvent>;
 
 export const WebhookEvent = Schema.Struct({
   url: Schema.String,
@@ -68,7 +68,7 @@ export type WebhookEvent = Schema.Schema.Type<typeof WebhookEvent>;
 export const TriggerEvent = Schema.Union(
   EmailEvent,
   FeedEvent,
-  ManualEvent,
+  DirectEvent,
   SubscriptionEvent,
   TimerEvent,
   WebhookEvent,

@@ -15,7 +15,6 @@ import {
   makeRpcFromServices,
 } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
-import { type ServiceBundle } from '@dxos/rpc';
 import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 export const getUnixSocket = (profile: string, protocol = 'unix') =>
@@ -42,10 +41,6 @@ export class AgentClientServiceProvider implements ClientServicesProvider {
   private readonly _rpc: ClientServicesRpc = makeRpcFromServices(() => this.services);
 
   constructor(private readonly _profile: string) {}
-
-  get descriptors(): ServiceBundle<ClientServices> {
-    return clientServiceBundle;
-  }
 
   get rpc() {
     return this._rpc;

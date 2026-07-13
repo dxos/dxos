@@ -14,6 +14,8 @@ import { normalizeText } from '@dxos/markdown';
 import { Stage } from '@dxos/pipeline';
 import { DraftMessage, Message, Person } from '@dxos/types';
 
+// TODO(burdon): Factor out.
+
 /**
  * Reusable, generic email-processing pipeline stages. The stage that turns a {@link Mapped} item
  * into a plugin-connector `SyncBinding.CommitUnit` (`toCommitUnit`) lives in `@dxos/plugin-inbox`
