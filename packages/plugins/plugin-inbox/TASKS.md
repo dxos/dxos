@@ -46,9 +46,12 @@ delivers Tier 4 (browser-e2e, task #7).**
     aiReply (`inbox.message.*`), generate (`inbox.draft.generate`), message+conversation rows
     (`inbox.message.row`/`inbox.conversation.row`), mailbox root (`inbox.mailbox`); companion via
     existing `message-header`, send via existing `save-button`. Compiles + lints.
-    [ ] (b) mock `HttpApp` (Gmail + JMAP contracts) + `page.route` bridge + fixtures; [ ] (c)
-    `plugins/inbox.ts` helper (JMAP form-fill + Gmail connection bridge) + provider adapter; [ ] (d)
-    JMAP suite (sync + generic + reply); [ ] (e) Gmail suite (gated: sync + reply).
+    [x] (b) HTTP mock — `plugin-inbox/src/testing/http-mock.ts` (`createInboxHttpMock`; Gmail REST +
+    JMAP envelope, fixture-backed, mirrors the in-memory filter/sort/paginate; also implements JMAP
+    send which the in-memory mock omits), exported via `@dxos/plugin-inbox/testing/http-mock`;
+    `page.route` bridge `composer-app/src/playwright/plugins/inbox.ts` (`installInboxMock`). Typechecks.
+    [ ] (c) `plugins/inbox.ts` page-object (JMAP form-fill + Gmail connection bridge) + provider
+    adapter; [ ] (d) JMAP suite (sync + generic + reply); [ ] (e) Gmail suite (gated: sync + reply).
 - [ ] **#6 Unskip inbox agent-e2e** — `assistant-e2e/src/testing/inbox-enable.test.ts`
     (register the skill), then add read/draft scenario tests. Enforces F-6.
 - [ ] **#8 Latency benchmarks with budget assertions** — F-11.3/F-11.4 at N=1k/4k/10k; fail above
