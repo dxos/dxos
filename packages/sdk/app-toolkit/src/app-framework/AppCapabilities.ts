@@ -335,8 +335,13 @@ export type ProgressRegistry = Readonly<{
   snapshotAtom: Atom.Atom<Progress.ProgressSnapshot>;
   /** One provider's reactive state, by name (stable/memoized per name). */
   monitorAtom: (name: string) => Atom.Atom<Progress.TaskProgress | undefined>;
-  /** Register (or resume) a provider and mark it running. */
-  register: (name: string, options?: { label?: string; total?: number }) => ProgressMonitor;
+  /**
+   * Register (or resume) a provider and mark it running. Pass `onCancel` to make it cancellable — the
+   * meter then shows a cancel control that invokes {@link ProgressRegistry.cancel}.
+   */
+  register: (name: string, options?: { label?: string; total?: number; onCancel?: () => void }) => ProgressMonitor;
+  /** Invoke a provider's registered `onCancel` handler (no-op if it is not cancellable). */
+  cancel: (name: string) => void;
   /** Non-reactive read of the current snapshot. */
   snapshot: () => Progress.ProgressSnapshot;
 }>;

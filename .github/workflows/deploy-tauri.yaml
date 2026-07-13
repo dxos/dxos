@@ -1,0 +1,463 @@
+name: Composer Tauri Release
+
+# Reusable workflow — invoked only by deploy-apps.yml (its `tauri` job) for the labs/staging/production
+# environments, alongside the Composer web deploy. Not standalone (no workflow_dispatch): to run it, dispatch
+# Deploy Apps with app=composer. Multi-job/multi-runner (ubuntu draft/publish + macOS desktop + macOS iOS),
+# so it's a reusable workflow, not a composite action. The CrabNebula channel is derived from the
+# `environment` input; the desktop version comes from composer-app's package.json.
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Target environment (labs | staging | production).
+        type: string
+        required: true
+      ref:
+        description: Git ref to build (default the triggering commit).
+        type: string
+        default: ''
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.environment }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read # Builds + publishes to CrabNebula / App Store Connect via secrets; no git writes.
+
+env:
+  CN_APPLICATION: dxos/composer
+
+jobs:
+  draft_tauri:
+    runs-on: depot-ubuntu-24.04
+
+    outputs:
+      version: ${{ steps.bump-version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Install semver
+        run: pnpm install -g semver
+
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Install CrabNebula CLI
+        run: |
+          # Download the latest cn CLI for Linux
+          curl -L -o cn https://cdn.crabnebula.app/download/crabnebula/cn-cli/latest/cn_linux
+          chmod +x cn
+          sudo mv cn /usr/local/bin/
+
+          # Verify installation
+          cn --version
+
+      - name: Compute Tauri version
+        id: bump-version
+        run: |
+          # composer-app/package.json is the source of truth for the version: bumped by deploy-apps' release
+          # job for a production release, current otherwise. Production ships the clean version to the primary
+          # CrabNebula channel; labs/staging get a unique per-commit prerelease tagged with the env name
+          # (which selects its channel).
+          BASE=$(jq -r '.version' packages/apps/composer-app/package.json)
+          if [ "${{ inputs.environment }}" = "production" ]; then
+            NEW_VERSION="$BASE"
+          else
+            NEW_VERSION="${BASE}-${{ inputs.environment }}.${GITHUB_SHA::7}"
+          fi
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Tauri version: $NEW_VERSION (env=${{ inputs.environment }})"
+
+      - name: Update tauri.conf.json
+        uses: ./.github/actions/cn-config
+        with:
+          version: ${{ steps.bump-version.outputs.version }}
+          working-directory: ./packages/apps/composer-app/src-tauri/
+
+      - name: Create draft non-production release
+        uses: ./.github/actions/cn-release
+        with:
+          api-key: ${{ secrets.CN_API_KEY }}
+          application: ${{ env.CN_APPLICATION }}
+          command: draft
+          working-directory: ./packages/apps/composer-app/src-tauri/
+
+  build_tauri:
+    needs: draft_tauri
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - depot-macos-latest
+          # - depot-ubuntu-24.04-4
+          # - depot-windows-2022-4
+
+    runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'depot-ubuntu-24.04-4'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq webkit2gtk-4.1
+
+      - uses: tecolicom/actions-use-homebrew-tools@v1
+        if: matrix.os == 'depot-macos-latest'
+        with:
+          tools: cairo giflib git-lfs jpeg jq libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
+
+      - name: Update tauri.conf.json
+        uses: ./.github/actions/cn-config
+        with:
+          version: ${{ needs.draft_tauri.outputs.version }}
+          working-directory: ./packages/apps/composer-app/src-tauri/
+
+      # TODO(wittjosiah): Having pnpm install run through moon was causing OOM issues.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: true
+
+      - uses: moonrepo/setup-toolchain@v0
+        with:
+          # IMPORTANT: Keep in-sync with .prototools
+          moon-version: '2.2.3'
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          cache: true
+
+      - name: Import Apple Developer Certificate
+        if: matrix.os == 'depot-macos-latest'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+
+      - name: Verify Certificate
+        if: matrix.os == 'depot-macos-latest'
+        run: |
+          CERT_INFO=$(security find-identity -v -p codesigning build.keychain | grep -E "(Developer ID Application)" | head -1)
+          CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
+          echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
+
+      - name: Save Apple API Key
+        if: matrix.os == 'depot-macos-latest'
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+        run: |
+          # Use heredoc to preserve exact formatting including newlines
+          cat > ${{ github.workspace }}/apple-api-key.p8 << EOF
+          $APPLE_API_KEY
+          EOF
+          sudo chmod 400 ${{ github.workspace }}/apple-api-key.p8
+
+      - name: Verify Apple API Key
+        if: matrix.os == 'depot-macos-latest'
+        run: |
+          if [ ! -f ${{ github.workspace }}/apple-api-key.p8 ]; then
+            echo "Apple API Key not found!"
+            exit 1
+          fi
+
+      - name: Install macOS Provisioning Profile
+        if: matrix.os == 'depot-macos-latest'
+        env:
+          MACOS_PROVISION_PROFILE: ${{ secrets.MACOS_PROVISION_PROFILE }}
+        run: |
+          if [ -z "$MACOS_PROVISION_PROFILE" ]; then
+            echo "Error: MACOS_PROVISION_PROFILE secret is not set"
+            exit 1
+          fi
+          echo "$MACOS_PROVISION_PROFILE" | base64 --decode > packages/apps/composer-app/src-tauri/embedded.provisionprofile
+          if [ ! -s packages/apps/composer-app/src-tauri/embedded.provisionprofile ]; then
+            echo "Error: Provisioning profile is empty after decoding"
+            exit 1
+          fi
+
+      - name: Set environment variables from secrets and env files
+        run: .github/workflows/scripts/populate-env.sh "${{ inputs.environment }}" >> $GITHUB_ENV
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+          COMPOSER_APP_PROD_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+          COMPOSER_APP_TEST_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_API_KEY }}
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          DX_OTEL_ENDPOINT: ${{ secrets.DX_OTEL_ENDPOINT }}
+          DX_OTEL_HEADERS: ${{ secrets.DX_OTEL_HEADERS }}
+          DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
+          IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
+          IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
+
+      # The Tauri build doesn't run deploy-env.mjs (which performs this mapping for
+      # the web deploy), so reproduce it here before the Vite bundle runs.
+      - name: Export DX_POSTHOG_API_KEY for Tauri bundle
+        run: echo "DX_POSTHOG_API_KEY=$COMPOSER_APP_POSTHOG_API_KEY" >> $GITHUB_ENV
+
+      # Reuse the web bundle built once by deploy-apps.yml's build-bundle job. Normally always present (the
+      # tauri job only runs when build-bundle succeeded); the moon fallback below is defensive.
+      - name: Download Composer bundle
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: composer-bundle
+          path: packages/apps/composer-app/out/composer
+
+      - name: Build Tauri app
+        # With a prebuilt bundle: `tauri build` bare (no moon) — beforeBuildCommand is empty, so it embeds
+        # the downloaded out/composer and only does the native compile (+ the desktop ollama sidecar).
+        # Without one: fall back to `moon run` (which builds the bundle + sidecar via task deps).
+        run: |
+          if [ -f packages/apps/composer-app/out/composer/index.html ]; then
+            echo "Using prebuilt Composer bundle — tauri build bare (no moon)."
+            ( cd packages/apps/composer-app && node scripts/fetch-ollama.mjs && pnpm exec tauri build )
+          else
+            echo "No prebuilt bundle (unexpected) — falling back to moon."
+            moon run composer-app:tauri-build
+          fi
+        env:
+          # The following environment variables are only set when building on macOS runners (depot-macos-latest).
+          # This ensures that Apple-specific signing and notarization steps are only attempted on macOS,
+          # and are skipped on other platforms (Linux, Windows).
+          APPLE_API_ISSUER: ${{ matrix.os == 'depot-macos-latest' && secrets.APPLE_API_ISSUER || '' }}
+          APPLE_API_KEY: ${{ matrix.os == 'depot-macos-latest' && secrets.APPLE_API_KEY_ID || '' }}
+          APPLE_API_KEY_PATH: ${{ matrix.os == 'depot-macos-latest' && format('{0}/apple-api-key.p8', github.workspace) || '' }}
+          APPLE_CERTIFICATE: ${{ matrix.os == 'depot-macos-latest' && secrets.MACOS_CERTIFICATE || '' }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ matrix.os == 'depot-macos-latest' && secrets.MACOS_CERTIFICATE_PASSWORD || '' }}
+          APPLE_SIGNING_IDENTITY: ${{ matrix.os == 'depot-macos-latest' && env.CERT_ID || '' }}
+          # Omit DEPOT_TOKEN for the production environment, otherwise include it.
+          DEPOT_TOKEN: ${{ inputs.environment == 'production' && '' || secrets.DEPOT_TOKEN }}
+          NODE_ENV: production
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Upload assets
+        uses: ./.github/actions/cn-release
+        with:
+          api-key: ${{ secrets.CN_API_KEY }}
+          application: ${{ env.CN_APPLICATION }}
+          command: upload
+          working-directory: ./packages/apps/composer-app/src-tauri/
+
+  build_tauri_ios:
+    needs: draft_tauri
+
+    runs-on: depot-macos-latest
+
+    timeout-minutes: 90
+
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
+          ref: ${{ inputs.ref || github.sha }}
+
+      - uses: tecolicom/actions-use-homebrew-tools@v1
+        with:
+          tools: cairo giflib git-lfs jpeg jq libpng librsvg pango pkg-config python-setuptools git unzip gzip xz xcodegen
+
+      - name: Update tauri.conf.json
+        uses: ./.github/actions/cn-config
+        with:
+          version: ${{ needs.draft_tauri.outputs.version }}
+          working-directory: ./packages/apps/composer-app/src-tauri/
+
+      # TODO(wittjosiah): Having pnpm install run through moon was causing OOM issues.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: true
+
+      - uses: moonrepo/setup-toolchain@v0
+        with:
+          # IMPORTANT: Keep in-sync with .prototools
+          moon-version: '2.2.3'
+
+      - name: Install stable toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          cache: true
+
+      - name: Install iOS target
+        run: rustup target add aarch64-apple-ios
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Setup Apple API key
+        run: |
+          APPLE_API_KEY_PATH="$RUNNER_TEMP/AuthKey_$APPLE_API_KEY_ID.p8"
+          # Use heredoc to preserve exact formatting including newlines
+          cat > $APPLE_API_KEY_PATH << EOF
+          $APPLE_API_KEY
+          EOF
+          chmod 400 $APPLE_API_KEY_PATH
+          echo "APPLE_API_KEY_PATH=$APPLE_API_KEY_PATH" >> $GITHUB_ENV
+          echo "API_PRIVATE_KEYS_DIR=$RUNNER_TEMP" >> $GITHUB_ENV
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+
+      - name: Set environment variables from secrets and env files
+        run: .github/workflows/scripts/populate-env.sh "${{ inputs.environment }}" >> $GITHUB_ENV
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+          COMPOSER_APP_PROD_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+          COMPOSER_APP_TEST_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_API_KEY }}
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          DX_OTEL_ENDPOINT: ${{ secrets.DX_OTEL_ENDPOINT }}
+          DX_OTEL_HEADERS: ${{ secrets.DX_OTEL_HEADERS }}
+          DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
+          IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
+          IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
+
+      # The Tauri build doesn't run deploy-env.mjs (which performs this mapping for
+      # the web deploy), so reproduce it here before the Vite bundle runs.
+      - name: Export DX_POSTHOG_API_KEY for Tauri bundle
+        run: echo "DX_POSTHOG_API_KEY=$COMPOSER_APP_POSTHOG_API_KEY" >> $GITHUB_ENV
+
+      - name: Initialize iOS project
+        run: |
+          pnpm tauri ios init --ci
+          ./scripts/ios-init.sh
+        working-directory: ./packages/apps/composer-app
+
+      # Reuse the web bundle built once by deploy-apps.yml (when called from there); absent on standalone
+      # dispatch — the build step falls back to moon. iOS embeds the frontend but needs no ollama sidecar.
+      - name: Download Composer bundle
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: composer-bundle
+          path: packages/apps/composer-app/out/composer
+
+      - name: Build Tauri app for iOS
+        run: |
+          if [ -f packages/apps/composer-app/out/composer/index.html ]; then
+            echo "Using prebuilt Composer bundle — tauri ios build bare (no moon)."
+            ( cd packages/apps/composer-app && pnpm exec tauri ios build --export-method=app-store-connect )
+          else
+            echo "No prebuilt bundle (unexpected) — falling back to moon."
+            moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
+          fi
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          # Omit DEPOT_TOKEN for the production environment, otherwise include it.
+          DEPOT_TOKEN: ${{ inputs.environment == 'production' && '' || secrets.DEPOT_TOKEN }}
+          IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}
+          NODE_ENV: production
+
+      - name: Upload assets to CN
+        timeout-minutes: 30
+        uses: ./.github/actions/cn-release
+        with:
+          api-key: ${{ secrets.CN_API_KEY }}
+          application: ${{ env.CN_APPLICATION }}
+          command: upload
+          working-directory: ./packages/apps/composer-app/src-tauri/
+
+      # https://tauri.app/distribute/app-store/#ios
+      - name: Upload assets to App Store Connect
+        # TODO(wittjosiah): Switch to staging? Need to figure out TestFlight -> App Store release process.
+        if: inputs.environment == 'labs'
+        run: |
+          xcrun altool \
+            --upload-app \
+            --type ios \
+            --file "./packages/apps/composer-app/src-tauri/gen/apple/build/arm64/Composer.ipa" \
+            --apiKey $APPLE_API_KEY \
+            --apiIssuer $APPLE_API_ISSUER
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Notify Discord on iOS build failure
+        if: failure() || cancelled()
+        env:
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          REF_NAME: ${{ inputs.environment }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          payload=$(jq -nc --arg ref "$REF_NAME" --arg url "$RUN_URL" \
+            '{content: (":warning: **build_tauri_ios** failed on `" + $ref + "`\nRun: " + $url)}')
+          curl -sS -X POST "$DX_DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "$payload"
+
+  publish_tauri:
+    needs:
+      - draft_tauri
+      - build_tauri
+      - build_tauri_ios
+
+    runs-on: depot-ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Update tauri.conf.json
+        uses: ./.github/actions/cn-config
+        with:
+          version: ${{ needs.draft_tauri.outputs.version }}
+          working-directory: ./packages/apps/composer-app/src-tauri/
+
+      - name: Publish release
+        uses: ./.github/actions/cn-release
+        with:
+          api-key: ${{ secrets.CN_API_KEY }}
+          application: ${{ env.CN_APPLICATION }}
+          command: publish
+          working-directory: ./packages/apps/composer-app/src-tauri/

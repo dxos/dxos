@@ -47,6 +47,8 @@ catalog:
   '@ch-ui/icons': ^1.0.1
   '@ch-ui/tailwind-tokens': 2.8.1
   '@ch-ui/tokens': 3.0.1
+  '@changesets/changelog-github': ^0.7.0
+  '@changesets/cli': ^2.31.0
   '@cloudflare/ai-chat': ^0.0.6
   '@cloudflare/vitest-pool-workers': ^0.16.8
   '@cloudflare/workers-types': ^4.20260302.0
@@ -787,6 +789,7 @@ overrides:
 patchedDependencies:
   '@automerge/automerge-repo@2.6.0-subduction.40': patches/@automerge__automerge-repo@2.6.0-subduction.40.patch
   '@automerge/automerge-subduction@0.16.0': patches/@automerge__automerge-subduction@0.16.0.patch
+  '@changesets/assemble-release-plan@6.0.10': patches/@changesets__assemble-release-plan@6.0.10.patch
   '@effect-atom/atom@0.5.3': patches/@effect-atom__atom@0.5.3.patch
   '@vitest/browser@4.1.8': patches/@vitest__browser@4.1.8.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch

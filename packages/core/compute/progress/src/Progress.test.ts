@@ -55,6 +55,29 @@ describe('Progress', () => {
     expect(progress.snapshot().tasks).toHaveLength(0);
   });
 
+  test('cancel invokes the registered handler and marks the task cancellable', () => {
+    const progress = Progress.make();
+    let cancelled = 0;
+    progress.task('a', { onCancel: () => cancelled++ });
+    expect(progress.snapshot().tasks[0].cancellable).toBe(true);
+    progress.cancel('a');
+    expect(cancelled).toBe(1);
+    // Unknown / non-cancellable tasks are a no-op.
+    progress.task('b');
+    expect(progress.snapshot().tasks.find((task) => task.name === 'b')?.cancellable).toBeUndefined();
+    expect(() => progress.cancel('b')).not.toThrow();
+    expect(() => progress.cancel('missing')).not.toThrow();
+  });
+
+  test('remove clears the cancel handler', () => {
+    const progress = Progress.make();
+    let cancelled = 0;
+    const handle = progress.task('a', { onCancel: () => cancelled++ });
+    handle.remove();
+    progress.cancel('a');
+    expect(cancelled).toBe(0);
+  });
+
   test('subscribers are notified on change until unsubscribed', () => {
     const progress = Progress.make();
     let notifications = 0;

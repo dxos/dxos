@@ -11,6 +11,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { useQuery } from '@dxos/react-client/echo';
+import { Card } from '@dxos/react-ui';
 import { Table } from '@dxos/react-ui-table/types';
 import { getTypeURIFromQuery } from '@dxos/schema';
 import { type Organization, Person } from '@dxos/types';
@@ -47,7 +48,11 @@ export const RelatedToOrganization = ({
     [invoke, db, contacts, spaceContactTable],
   );
 
-  return <RelatedContacts contacts={related} onContactClick={handleContactClick} />;
+  return (
+    <Card.Body>
+      <RelatedContacts contacts={related} onContactClick={handleContactClick} />
+    </Card.Body>
+  );
 };
 
 RelatedToOrganization.displayName = 'RelatedToOrganization';

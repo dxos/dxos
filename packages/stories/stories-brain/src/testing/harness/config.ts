@@ -29,6 +29,13 @@ export const FIXTURE = process.env.MAILBOX_FEED_FIXTURE ?? join(PACKAGE_ROOT, 'f
 export const FACT_STORE_FIXTURE =
   process.env.FACT_STORE_FIXTURE ?? join(PACKAGE_ROOT, 'fixtures/local/fact-store.json');
 
+/**
+ * Human-reviewed ground-truth sender labels (person/org) for the classify-sender eval (git-ignored,
+ * private). The bootstrap test writes a `.candidate.json` sibling; promote it to this path after
+ * review. Override with `SENDER_LABELS`.
+ */
+export const SENDER_LABELS = process.env.SENDER_LABELS ?? join(PACKAGE_ROOT, 'fixtures/local/sender-labels.json');
+
 /** Cap on messages, for fast iteration (`LIMIT=10`). Undefined → all messages. */
 export const LIMIT = process.env.LIMIT ? Math.max(0, Number(process.env.LIMIT)) : undefined;
 
@@ -59,6 +66,9 @@ export const SAMPLES = process.env.SAMPLES ? Number(process.env.SAMPLES) : undef
 
 /** Model-variant filter (`local` | `remote` | comma-separated name substrings). */
 export const MODELS = process.env.MODELS?.trim();
+
+/** Per-stage model overrides for the policy map (`stage=variant,...`, e.g. `draft=gpt-oss-20b,tag=haiku`). */
+export const MODEL_POLICY = process.env.MODEL_POLICY?.trim();
 
 /** Ollama embedding model + endpoint for the vector index. */
 export const EMBED_MODEL = process.env.EMBED_MODEL ?? 'nomic-embed-text';

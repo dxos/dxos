@@ -9,3 +9,4 @@ export * from './extract-facts-commit';
 export * from './facts';
 export * from './stats';
 export * from './summarize';
+export * from './tag';

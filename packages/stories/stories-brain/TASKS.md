@@ -41,27 +41,128 @@ categorization) but fall below on synthetic tasks (thread/topic summaries, draft
 **Direction:** triage by sender type first, spend LLM effort only where it pays off. Sync is 100%
 deterministic (no LLM) → foreground stays fast; all LLM cost is batchable enrichment.
 
-- [ ] **`classify-sender` (person/org) stage + ground-truth eval** — the gate for everything
-      downstream; currently "needs-eval". (My recommended next step — unblocks the triage design.)
-- [ ] **`Mailbox.isReplyable` → person-only** — draft replies only to people (person AND not
-      no-reply/unsubscribe).
-- [ ] **Minimize non-people summarization** — one-line label ("this is a bill") instead of a full
-      summary for org mail; reserve summary budget for person mail.
-- [ ] **Default draft `Instructions`** — plain/direct/concise, no obsequious hedging ("if I may be so
-      bold"). Ship the object + re-score drafts with it.
-- [ ] **Model-policy map** — declarative `stageId → model DXN`, overridable per run, defaults seeded
-      from the ladder (generalize `ExtractOptions.model`).
+- [x] **`classify-sender` (person/org) stage + ground-truth eval** — shipped. Stage
+      (`pipelines/classify-sender.ts`): `uniqueSenders` (per-sender dedup), `classifySenderHeuristic`
+      (deterministic role-address/company/person-name signals + confidence), `classifySender` (LLM),
+      `classifySenderHybrid` (heuristic-when-confident-else-LLM). Scorer `scoreSenders` in `grade.ts`
+      (accuracy + per-class/macro F1 + directional confusion). Eval `classify-sender.bench.test.ts`:
+      a bootstrap test seeds a candidate gold set via the strong model → human reviews + promotes to
+      `fixtures/local/sender-labels.json` → the eval scores heuristic / hybrid / each model vs gold.
+      Deterministic unit test (`classify-sender.test.ts`, 8 cases) passes in CI; build+lint+fmt clean.
+      **To run the measurement:** bootstrap over the private corpus, review labels, re-run the eval.
+- [x] **`Mailbox.isReplyable` → person-only** — extended in `plugin-inbox/types/Mailbox.ts`: added
+      `isOrgSender` (deterministic strong-signal role-localpart / org-name check, errs toward person so
+      real individuals aren't suppressed); `isReplyable` now returns false for no-reply/unsubscribe/
+      mailer-daemon OR an org sender, and accepts an optional `{ senderClass }` so the background
+      classify-sender result overrides the heuristic (no-reply gate still wins). 4 tests in
+      `Mailbox.test.ts`; full plugin-inbox suite green. FOLLOW-UP: pass the classify-sender class into
+      `isReplyable({ senderClass })` at the product draft-creation call site.
+- [x] **Minimize non-people summarization** — `pipelines/summarize.ts`: `labelMessage` (one-line
+      category label, cheaper prompt), `summaryKindFor` (pure routing, reuses `Mailbox.isReplyable` so
+      summarize + reply agree on "person"), and `summarizeTriaged` (full summary for people, label for
+      org/bulk). `SummaryResult` gains `kind: 'summary' | 'label'`; `senderClass` overrides the
+      heuristic. 3 routing tests (`summarize-triage.test.ts`); build/lint/fmt clean.
+- [x] **Default draft `Instructions`** — shipped `DEFAULT_DRAFT_INSTRUCTIONS` (plain/direct, no
+      obsequious hedging) in `pipelines/draft.ts`; `draftReply` applies it by default (omit → default;
+      `''` opts out; a custom string overrides). Extracted a pure `buildDraftPrompt` + unit test
+      (`draft-instructions.test.ts`). `DRAFT_INSTRUCTIONS` env still overrides. **Re-score** = run
+      `draft-responses.bench.test.ts` over the corpus (needs models).
+- [x] **Model-policy map** — `harness/model-policy.ts`: `StageId` (the 7 LLM stages), `ModelPolicy`
+      (`stage → variant name`), `DEFAULT_MODEL_POLICY` seeded from §4/§5, `resolveModel`/`resolveModelName`
+      (default ← per-run policy ← `MODEL_POLICY` env; substring match vs `ALL_VARIANTS`; throws on typo).
+      Unit test (`model-policy.test.ts`, 8 cases: every default resolves, override precedence, env parse).
+      FOLLOW-UP: migrate single-run tests off `OLLAMA_MODEL`/`ARTIFACT_MODEL` onto `resolveModel(stage)` —
+      deferred because it changes those tests' default model (deliberate step, not silent).
 - [ ] **Two-tier latency** — foreground (sync + classify + tag) vs background prioritized batching of
       summarize/facts/draft, gated by labels.
-- [ ] **Single per-message LLM pass** — fold tag + summarize + facts into one pass (shared context) to
-      cut latency + tokens.
-- [ ] **Topics clustering fix** (`corpus/topics.ts`) — strip hex/numeric tokens; normalize subjects
-      (drop trailing hashes/ids) so automated mail collapses to one topic (currently ~11).
-- [ ] **eval-only cleanup** — `analyze-results.mjs` doesn't recognize the `model-ladder.json` schema
-      (false EMPTY → exit 1); one-line fix.
+- [x] **Single per-message LLM pass** — `pipelines/enrich.ts`: `enrichMessage` folds tag + spam +
+      triage-appropriate summary/label + salient facts into ONE model call (message read once).
+      Pure `buildEnrichPrompt` (summary vs label by triage `kind`) + `parseEnrichResponse` (lenient
+      JSON, spam inference/dedup, degrades to empty) are unit-tested (`enrich.test.ts`, 7 cases). The
+      structured RDF fact pipeline stays separate. Latency/token comparison vs 3 passes = a bench run.
+- [x] **Topics clustering fix** (`corpus/topics.ts`) — `tokenize` now drops id tokens (pure numbers,
+      hex hashes, digit-heavy codes) via `isIdToken`, gated by a `dropIdTokens` option (default true);
+      short version tokens (`q4`, `v2`) are kept. Subjects are already reply-prefix/whitespace-
+      normalized at threading time (`internal/threading.ts` `normalizeSubject`), so the per-message
+      invoice/order ids were the remaining fragmenter. Tests: automated invoices with unique hashes
+      now collapse to one topic; ids no longer leak into keywords. Full pipeline-email suite green.
+- [x] **eval-only cleanup** — `analyze-results.mjs` now counts graded-row schemas (`model-ladder`,
+      `classify-sender`): `primaryCount` falls back to `r.n ?? r.scored ?? rows.length` (was summing
+      only `facts`/`processed` → false EMPTY), and both are added to `NON_FEED_TESTS` (capped/unique-
+      sender corpora, so `< feedCount` isn't PARTIAL). Verified end-to-end on synthetic results → OK.
 
 Risks: reasoning models (qwen3, gpt-oss) → higher latency + may break strict JSON (parse leniently).
 Ollama up during runs; opus/haiku need `.env` (`moon run stories-brain:env` renders it via 1Password).
+
+## Next phase: Topics pipeline (productization)
+
+**Direction:** turn the research topics work into a product feature — tag messages, cluster into
+`Topic` objects with summaries, run it from the mailbox UI with a progress meter, and browse the
+result. Reuses `@dxos/pipeline-email` corpus (`buildThreads`→`clusterThreads`→`summarizeTopics`→
+`materializeTopics`), the #12171 progress-monitor capability, and the `InboxCapabilities.MailboxAction`
+toolbar-injection seam. First real consumer of the incremental design (`DESIGN.md`) — one-shot v1 will
+hit the operation max-run-time on large mailboxes; bound it now, generalize later.
+
+### Decisions (locked)
+
+1. **Orchestration** — a headless **`@dxos/pipeline-email` runnable**; the plugin-inbox operation wraps it.
+2. **Tagger** — **promote the research tagger** (free-form multi-tag + spam) into pipeline-email; the
+   runnable returns per-message tag results, the operation applies them via `Mailbox.applyTag`.
+3. **Progress key** — distinct **`${mailboxUri}#topics`** via an exported `createTopicsProgressKey(mailbox)`
+   helper (following `createSyncProgressKey` in `sync.ts` — one factory ties producer + consumer +
+   tests together); `MailboxArticle` also subscribes so the inline statusbar meter shows the run.
+4. **Model routing** — **promote the `model-policy` map to a product package** (prerequisite; move it
+   out of the stories-brain harness with product-appropriate variants) and resolve stage→model there.
+5. **Scale** — **one-shot, resumable-lite**: idempotent, skip messages/threads already tagged /
+   materialized so re-invoking the toolbar action resumes. Full trigger/cursor incremental (`DESIGN.md`)
+   is a later phase.
+
+### Tasks
+
+- [x] **(prereq) Promote `model-policy` map** — `pipeline-email/model-policy.ts` (Anthropic tiers,
+      `resolveModel`); unit-tested.
+- [x] **(prereq) Promote the tagger** — `pipeline-email/stages/tag.ts` (`tagMessage` + pure
+      `parseTagResult`, model via the policy); unit-tested.
+- [x] **Topics runnable** — `pipeline-email/topics-pipeline.ts` `runTopicsPipeline`: tag → buildThreads
+      → clusterThreads → summarizeTopics → materializeTopics; LLM steps injected (pure/testable);
+      idempotent (limit / skipMessage / skipTopic) + progress hook. Unit-tested with stubs.
+- [x] **`AnalyzeTopics` operation** — `plugin-inbox/operations/analyze/analyze-topics.ts`: wires the
+      runnable to AiService, applies tags via `Mailbox.applyTag`, persists Topics, registers the
+      `${mailboxUri}#topics` monitor (`createTopicsProgressKey`). Registered in the handler set.
+- [x] **Mailbox → Topic `Relation`** — each Topic persisted with an `AnchoredTo` relation (source=Topic,
+      target=Mailbox). ⚠️ REVIEW: idiomatic AnchoredTo direction (Topic anchored to Mailbox), not the
+      literal "Mailbox ⇒ Topic".
+- [x] **Toolbar menu option** — `InboxCapabilities.MailboxAction` "Analyze Topics" contributed from
+      `InboxPlugin` (auto-renders in the extract dropdown).
+- [x] **`MailboxArticle` inline meter** — subscribes to `${mailboxUri}#topics` too; shows whichever
+      run (sync/topics) is active.
+- [x] **App-graph node** — Topics node under the mailbox (peer of Drafts) in `app-graph-builder.ts`.
+- [x] **`TopicsArticle`** — `react-ui-mosaic` stack of Topic cards (label, summary, thread/participant
+      count); wired via a react-surface. `Topic` schema registered in the plugin.
+- [x] **`TopicsModule`** (stories-inbox) — renders the Topics article surface; registered in
+      `testing/modules.tsx` + a column in `MailboxSync.stories.tsx`.
+
+**All 9 tasks landed (build/lint/fmt/tests green).** Verified to build + unit-test level; end-to-end
+(running AnalyzeTopics to see real topics) needs models + the storybook. Follow-ups: scope the Topics
+query to the mailbox via the AnchoredTo relation; confirm the relation direction.
+
+### Follow-ups (open)
+
+- [ ] **Re-sync creates duplicate messages after deleting the connection.** Deleting the connection
+      and syncing again re-imports every message as a duplicate. The mailbox must retain the previous
+      sync state (cursor / seen-message set) independent of the connection lifecycle, and the sync
+      operation must dedup so re-syncing never creates duplicates. (plugin-inbox Gmail sync + cursor.)
+
+### Follow-ups (landed)
+
+- [x] **Questions + tasks per topic** — `Topic` gains `questions` / `tasks`; `clusterThreads` rolls
+      them up (deduped) from each member thread's `openQuestions` / `actionItems`; `TopicsArticle` shows
+      the counts. (Threads carry the fields but aren't populated until thread-level extraction runs, so
+      topics inherit whatever the threads have.)
+- [x] **Mailbox sync filters** — `Mailbox.syncFilters.skipSenders` (email/domain substrings) + a
+      `shouldSkipSender` helper; the Gmail sync `map-to-message` stage drops matching senders before the
+      attachment fetch (never committed to the feed). Unit-tested. FOLLOW-UP: a settings/toolbar UI to
+      edit the skip list (currently set programmatically on the Mailbox).
 
 ## Bugs
 
@@ -80,9 +181,10 @@ Ollama up during runs; opus/haiku need `.env` (`moon run stories-brain:env` rend
 
 ## Requested follow-ups
 
-- [ ] **Use `@dxos/markdown` `htmlToMarkdown` in `pickBody`** instead of the regex `stripHtml`.
-      Benchmark (`html-to-markdown.bench.test.ts`) shows it's ~free: 99 msgs, ~4.1 ms/msg, ~9.8M
-      chars/sec, compressing HTML to 15% — structured markdown at negligible cost.
+- [x] **Use `@dxos/markdown` `htmlToMarkdown` in `pickBody`** — already satisfied: harness `pickBody`
+      (`fixture.ts`) calls `@dxos/markdown` `normalizeText` (turndown), not a regex `stripHtml` (the
+      remaining `stripHtml` lives only in the unrelated plugin-feed/plugin-magazine). No change needed.
+      Benchmark (`html-to-markdown.bench.test.ts`) confirms it's ~free (99 msgs, ~4.1 ms/msg, HTML→15%).
 - [ ] **Summary prompt tweak** — drop the "The email…" preamble, make summaries terser, use bullet
       lists (`summarize-messages` + `summarize-threads`).
 - [ ] **New "draft responses" test** — generate draft replies to messages.

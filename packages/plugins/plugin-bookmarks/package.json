@@ -124,7 +124,7 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui": "workspace:^",
     "react": "catalog:"
   }
 }

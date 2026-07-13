@@ -16,6 +16,8 @@ describe('Topic', () => {
       threadIds: ['q2 report', 'budget numbers'],
       participants: ['alice@enron.com', 'bob@enron.com'],
       keywords: ['q2', 'report', 'budget'],
+      questions: ['When is the budget due?'],
+      tasks: ['Confirm the Q2 numbers'],
     });
 
     expect(Obj.instanceOf(Topic, topic)).toBe(true);
