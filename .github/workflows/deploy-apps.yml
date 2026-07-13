@@ -227,11 +227,6 @@ jobs:
           lfs: true
           ref: ${{ needs.release.outputs.sha || github.sha }}
 
-      # Fires before any setup/deploy work so every attempt gets a "started" message — including one that
-      # fails during env setup — pairing correctly with the "succeeded"/"failed" steps below. Notify on
-      # labs/staging/production only — main is the rolling auto-deploy-on-push preview and would be
-      # constant noise. continue-on-error: a webhook hiccup must never block the actual deploy or read as
-      # a deploy failure; --fail-with-body still surfaces a bad response in the log for debugging.
       - name: Notify Discord — deploy started
         if: env.DEPLOY_ENV != 'main'
         continue-on-error: true
