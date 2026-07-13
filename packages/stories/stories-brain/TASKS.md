@@ -436,6 +436,22 @@ triage, make topics opt-in suggestions rather than eager objects, and finish the
 - [x] `defs.ts` — single source of truth for all env knobs/defaults (`SUBJECT`, models, `LIMIT`,
       fixture/result paths, `SAMPLES`, `SKILL_MODES`, …); every test + harness module reads from it.
 
+## Story UI follow-ups
+
+- [ ] **Convert `Facts.stories.tsx` + `Pipeline.stories.tsx` to the `ModuleContainer` pattern**
+      (the TODO in `Facts.stories.tsx:247`). Analysis done — both are single-controller stories, not
+      independent-surface layouts: every panel funnels through one crawl/pipeline controller
+      (`facts`/`context`/`options`/stats/handlers + the Effect store). Only Pipeline's Objects list is
+      space-native (`useQuery`). Faithful conversion needs: (1) brain module infra (`Module` tokens +
+      `moduleSurfaces` + `StoryModulesPlugin`, mirroring inbox/assistant), (2) a story-scoped React
+      Context carrying the controller that surfaces read (Pipeline's Objects stays a real space
+      surface), (3) relax `@dxos/story-modules` `ModuleContainer`'s `if (!space)` gate so it renders
+      space-lessly for Facts (which has no client/space) — keep `ModuleProps.space` REQUIRED (making it
+      optional ripples to all 31 inbox+assistant modules that access `space.db`). Facts still needs the
+      plugin-manager decorator (`corePlugins` + `StorybookPlugin` + `StoryModulesPlugin`), just no
+      client/space. Runtime paths aren't headlessly verifiable (crawler needs a Discord token;
+      pipelines need edge AI creds) — verify build/lint + story render.
+
 ## Done
 
 - [x] Phase 1 multi-model pipeline benchmark harness (tags, summaries, contacts, facts, questions) +
