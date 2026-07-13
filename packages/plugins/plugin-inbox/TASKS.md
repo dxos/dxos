@@ -33,11 +33,20 @@ delivers Tier 4 (browser-e2e, task #7).**
     labels/roles. Inbox UI is missing them: reply/AI-reply/forward/generate toolbar actions expose
     no testid (add `properties.testId` — `@dxos/react-ui-menu` only emits one when set), and message
     tiles (`MessageStack`) / mailbox list have none. Add testids as a first step.
-  - Build order: (a) add inbox testids per the skill; (b) mock (Gmail + JMAP contracts) + fixtures;
-    (c) `plugins/inbox.ts` helper + provider adapter; (d) JMAP suite (sync + generic + reply);
-    (e) Gmail suite (gated: sync + reply). NOTE: mock mechanism (page.route vs env-var/real-server)
-    and sync-trigger path (prod sync is an edge function — needs a client-side trigger/bridge) are
-    open decisions pending review — see the design synthesis.
+  - **Decisions (settled).** Mock = one Effect `HttpApp` served via Playwright `page.route`
+    interception for both providers (Gmail `googleapis.com`; JMAP well-known + discovered `apiUrl`) —
+    no product base-URL refactor. JMAP: drive the REAL credential form (host `mail.test`, fake
+    token). Gmail: inject the Connection/AccessToken/Mailbox/SyncBinding via a dev/e2e-gated bridge
+    (no OAuth, no seed bridge exists). Trigger sync via the existing mailbox **Sync** graph action
+    (`sync-mailbox.label`) — runs client-side today, so `page.route` catches its fetches.
+  - **⚠ Productionization dependency.** These tests rely on sync running IN THE BROWSER. Sync is not
+    yet on edge; when it moves, add an env-var flag to force in-browser sync for e2e, or the mocked
+    HTTP (page.route) won't intercept it. Same for the Gmail connection bridge staying dev/e2e-gated.
+  - Build order: (a) add inbox testids per the skill (Sync action, reply/AI-reply/forward/generate
+    toolbar actions via `properties.testId`, message tiles + mailbox list, message-article);
+    (b) mock `HttpApp` (Gmail + JMAP contracts) + `page.route` bridge + fixtures; (c) `plugins/inbox.ts`
+    helper (JMAP form-fill + Gmail connection bridge) + provider adapter; (d) JMAP suite (sync +
+    generic + reply); (e) Gmail suite (gated: sync + reply).
 - [ ] **#6 Unskip inbox agent-e2e** — `assistant-e2e/src/testing/inbox-enable.test.ts`
     (register the skill), then add read/draft scenario tests. Enforces F-6.
 - [ ] **#8 Latency benchmarks with budget assertions** — F-11.3/F-11.4 at N=1k/4k/10k; fail above
