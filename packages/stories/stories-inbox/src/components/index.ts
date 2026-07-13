@@ -10,3 +10,4 @@ export * from './MailboxModule';
 export * from './MessageModule';
 export * from './StatsModule';
 export * from './TopicsModule';
+export * from './TriggersModule';
