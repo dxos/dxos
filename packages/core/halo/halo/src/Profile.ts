@@ -34,4 +34,7 @@ export class Profile extends Type.makeObject<Profile>(DXN.make('org.dxos.halo.pr
   }).pipe(Annotation.LabelAnnotation.set(['displayName'])),
 ) {}
 
+/**
+ * Creates a {@link Profile} ECHO object.
+ */
 export const make = (props: Obj.MakeProps<typeof Profile>): Profile => Obj.make(Profile, props);

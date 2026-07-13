@@ -89,6 +89,43 @@ describe('Keyhive prototype', () => {
     expect(afterReAdd.some((member) => member.subject === guest.active)).toBe(true);
   });
 
+  test('non-admin revocation requires causal seniority', async ({ expect }) => {
+    const host = await Keyhive.make();
+    const senior = await Keyhive.make();
+    const guest = await Keyhive.make();
+    const junior = await Keyhive.make();
+
+    const group = await EffectEx.runPromise(host.createGroup());
+    const seniorId = await EffectEx.runPromise(
+      Effect.flatMap(senior.contactCard(), (card) => host.receiveContactCard(card)),
+    );
+    await EffectEx.runPromise(host.delegate({ group, subject: seniorId, access: 'edit' }));
+    const guestId = await EffectEx.runPromise(
+      Effect.flatMap(guest.contactCard(), (card) => host.receiveContactCard(card)),
+    );
+    await EffectEx.runPromise(host.delegate({ group, subject: guestId, access: 'edit' }));
+
+    // The guest (non-admin) must not be able to issue a revoke against a causally senior
+    // member — replay would drop the op, so issuing must fail up front with the same rule.
+    await EffectEx.runPromise(Effect.flatMap(host.ops(group), (ops) => guest.receiveOps(ops)));
+    const rejected = await EffectEx.runPromise(
+      guest
+        .revoke({ group, subject: seniorId })
+        .pipe(Effect.catchTag('NotAuthorizedError', () => Effect.succeed('rejected' as const))),
+    );
+    expect(rejected).toBe('rejected');
+
+    // A member the guest admitted itself is causally junior, so revocation is permitted.
+    const juniorId = await EffectEx.runPromise(
+      Effect.flatMap(junior.contactCard(), (card) => guest.receiveContactCard(card)),
+    );
+    await EffectEx.runPromise(guest.delegate({ group, subject: juniorId, access: 'edit' }));
+    await EffectEx.runPromise(guest.revoke({ group, subject: juniorId }));
+    const members = await EffectEx.runPromise(guest.members(group));
+    expect(members.some((member) => member.subject === junior.active)).toBe(false);
+    expect(members.some((member) => member.subject === senior.active)).toBe(true);
+  });
+
   test('ops replicate to a second peer and converge', async ({ expect }) => {
     const host = await Keyhive.make();
     const guest = await Keyhive.make();

@@ -78,9 +78,9 @@ export type Access = 'pull' | 'read' | 'edit' | 'admin';
 const ACCESS_ORDER: Record<Access, number> = { pull: 0, read: 1, edit: 2, admin: 3 };
 
 /**
- * Returns true if `a` implies (is at least) `b`.
+ * Returns true if `granted` implies (is at least) `required`.
  */
-export const implies = (a: Access, b: Access): boolean => ACCESS_ORDER[a] >= ACCESS_ORDER[b];
+export const implies = (granted: Access, required: Access): boolean => ACCESS_ORDER[granted] >= ACCESS_ORDER[required];
 
 /**
  * Membership grant: adds `subject` to `group` with (attenuated) `access`.
@@ -296,15 +296,52 @@ const makeSignedOp = async (keyPair: KeyPair, payload: Op): Promise<SignedOp> =>
 };
 
 /**
- * Evaluates the membership DAG into effective access per subject, applying the rules from the
+ * Materialized view of a group's membership DAG: effective access plus the causal metadata
+ * needed to evaluate revocation authority.
+ */
+type Projection = {
+  access: Map<PrincipalId, Access>;
+  /** Earliest admission op per subject (for causal seniority). */
+  firstAdmission: Map<PrincipalId, OpId>;
+  /** Transitive causal ancestors per op (for removal-wins and seniority). */
+  ancestors: Map<OpId, Set<OpId>>;
+};
+
+/**
+ * Revocation authority rule, shared by {@link materialize} (replay) and `revoke` (issuing) so an
+ * issued op is never silently dropped on replay: admins may revoke anyone; non-admins only
+ * members whose earliest admission causally succeeds their own.
+ */
+const hasRevocationAuthority = (
+  projection: Projection,
+  author: PrincipalId,
+  subject: PrincipalId,
+  authorAccess: Access,
+): boolean => {
+  if (authorAccess === 'admin') {
+    return true;
+  }
+  const authorFirst = projection.firstAdmission.get(author);
+  const subjectFirst = projection.firstAdmission.get(subject);
+  return (
+    authorFirst !== undefined &&
+    subjectFirst !== undefined &&
+    (projection.ancestors.get(subjectFirst)?.has(authorFirst) ?? false)
+  );
+};
+
+/**
+ * Evaluates the membership DAG into a {@link Projection}, applying the rules from the
  * module comment (attenuation, causal seniority, removal wins).
  */
-const materialize = (group: PrincipalId, state: GroupState): Map<PrincipalId, Access> => {
+const materialize = (group: PrincipalId, state: GroupState): Projection => {
   const result = new Map<PrincipalId, Access>();
   // Ancestor sets for the removal-wins and seniority rules.
   const ancestors = new Map<OpId, Set<OpId>>();
   // Earliest admission op per subject (for causal seniority).
   const firstAdmission = new Map<PrincipalId, OpId>();
+  // The maps are shared with the fold below, so the helper sees state as of the current op.
+  const projection: Projection = { access: result, firstAdmission, ancestors };
   const revocations: SignedOp[] = [];
 
   for (const op of state.ops.values()) {
@@ -341,23 +378,15 @@ const materialize = (group: PrincipalId, state: GroupState): Map<PrincipalId, Ac
     } else {
       const { subject } = op.payload;
       const authorAccess = op.author === group ? 'admin' : result.get(op.author);
-      if (!authorAccess) {
+      if (!authorAccess || !hasRevocationAuthority(projection, op.author, subject, authorAccess)) {
         continue;
-      }
-      // Causal seniority: non-admins may only revoke members admitted causally after themselves.
-      if (authorAccess !== 'admin') {
-        const authorFirst = firstAdmission.get(op.author);
-        const subjectFirst = firstAdmission.get(subject);
-        if (!authorFirst || !subjectFirst || !(ancestors.get(subjectFirst)?.has(authorFirst) ?? false)) {
-          continue;
-        }
       }
       result.delete(subject);
       revocations.push(op);
     }
   }
 
-  return result;
+  return projection;
 };
 
 /**
@@ -439,7 +468,7 @@ export const make = async (): Promise<Context.Tag.Service<Service>> => {
         if (!knownKeys.has(subject)) {
           return yield* Effect.fail(new UnknownPrincipalError({ context: { principal: subject } }));
         }
-        const current = materialize(group, state).get(active.did);
+        const current = materialize(group, state).access.get(active.did);
         if (!current || !implies(current, access)) {
           return yield* Effect.fail(new NotAuthorizedError({ context: { group, subject, access } }));
         }
@@ -449,9 +478,13 @@ export const make = async (): Promise<Context.Tag.Service<Service>> => {
     revoke: ({ group, subject }) =>
       Effect.gen(function* () {
         const state = yield* requireGroup(group);
-        const membership = materialize(group, state);
-        const current = membership.get(active.did);
-        if (!current || !membership.has(subject)) {
+        const projection = materialize(group, state);
+        const current = projection.access.get(active.did);
+        if (
+          !current ||
+          !projection.access.has(subject) ||
+          !hasRevocationAuthority(projection, active.did, subject, current)
+        ) {
           return yield* Effect.fail(new NotAuthorizedError({ context: { group, subject } }));
         }
         return yield* issueOp(state, { kind: 'revocation', group, subject, authPred: [...state.heads] });
@@ -459,7 +492,7 @@ export const make = async (): Promise<Context.Tag.Service<Service>> => {
 
     members: (group) =>
       Effect.map(requireGroup(group), (state) =>
-        Array.from(materialize(group, state), ([subject, access]) => ({ subject, access })),
+        Array.from(materialize(group, state).access, ([subject, access]) => ({ subject, access })),
       ),
 
     ops: (group) => Effect.map(requireGroup(group), (state) => [...state.ops.values()]),

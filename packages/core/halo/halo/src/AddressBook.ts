@@ -28,4 +28,7 @@ export class AddressBook extends Type.makeObject<AddressBook>(DXN.make('org.dxos
   }),
 ) {}
 
+/**
+ * Creates an {@link AddressBook} ECHO object.
+ */
 export const make = (props: Obj.MakeProps<typeof AddressBook>): AddressBook => Obj.make(AddressBook, props);

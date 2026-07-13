@@ -283,7 +283,7 @@ Dependency inversion: plugins import **only** `@dxos/halo` (tags, verbs, schemas
 composition root — today `plugin-client`, which already owns client construction — provides
 the implementation layers:
 
-```
+```text
 @dxos/halo            Identity.Service / Space.Service / Invitation.Service   (tags + verbs + schemas)
    ▲                        ▲
    │ layerClient(client)    │ layerKeyhive / layerEdge (future, MIGRATION.md §A.2)
