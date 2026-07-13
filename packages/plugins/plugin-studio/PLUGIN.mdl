@@ -201,10 +201,11 @@ feat kind:image
   content: generated (ephemeral url) or uploaded (Ref<File>)
 
 feat kind:video
-  provider: a video GenerationService (e.g. HeyGen, to live in its own headless
-    plugin like plugin-ideogram) — enqueue + poll an async job.
-  requestSchema: { avatarId?, voiceId?, … } — provider-specific config held in
-    Artifact.config; the prompt is Artifact.instructions.
+  provider: plugin-heygen (GenerationService id 'heygen', source 'heygen.com') —
+    asynchronous: enqueue → poll (awaitResult). The generate op persists the job
+    id on the Artifact and resumes the poll across remount.
+  requestSchema: { avatarId?, voiceId? } — provider-specific config held in
+    Artifact.config; the prompt (script) is Artifact.instructions.
   renderer: VideoVariant (<video>) plays the produced video URL / uploaded bytes.
   variants: each completed generation is a Variant (most-recent-first ⇒ carousel).
 ```
@@ -260,24 +261,24 @@ test T-5: Video playback
 
 - `plugin-ideogram` (`org.dxos.plugin.ideogram`) — headless; contributes the
   `kind:'image'` `GenerationService` (Ideogram API) + a Connector for
-  `ideogram.ai`. Depends on `@dxos/plugin-studio/types`.
+  `ideogram.ai`.
+- `plugin-heygen` (`org.dxos.plugin.heygen`) — headless; contributes the
+  asynchronous `kind:'video'` `GenerationService` (HeyGen API; enqueue → poll)
+  + a Connector for `heygen.com`. Request config is `{ avatarId, voiceId }`.
+
+Both depend on `@dxos/plugin-studio/types` and resolve their credential via
+`CredentialsService`. (This subsumes the former `plugin-generator`; `plugin-video`
+— video display + YouTube transcription — is unrelated and separate.)
 
 ## Roadmap (out of scope this milestone)
 
-- **Reconcile `plugin-generator`** (AI video/audio generation) into the Artifact
-  ontology: its `Generation{type, prompt, avatarId, voiceId, urls, jobId}` maps
-  to `Artifact{kind:'video'|'audio'}` — `prompt` → `instructions`,
-  `avatarId`/`voiceId` → `config`, `urls` → `variants`. Extract **HeyGen** into
-  its own headless provider plugin (`plugin-heygen`, mirroring `plugin-ideogram`):
-  a Connector for `heygen.com` + a `GenerationService{kind:'video'}`. Model the
-  async job (enqueue → poll) and the avatar/voice pickers as a provider-supplied
-  custom `GenerateForm` surface (`listAvatars`/`listVoices`). Add an `audio/*`
-  default `VariantRenderer`. Then delete `plugin-generator`.
-  (`plugin-video` — video display + YouTube transcription — is unrelated and stays.)
+- **HeyGen avatar/voice pickers**: a provider-supplied custom `GenerateForm`
+  surface driven by `listAvatars`/`listVoices` (v1 accepts the ids via the
+  schema-driven form).
+- **`kind:'audio'`**: an `audio/*` default `VariantRenderer` + an audio provider.
 - **Graduate** `Artifact`/`Variant`/`Generation` to `@dxos/types` (namespace
   re-export; no call-site changes).
-- **Materialize** ephemeral generated URLs into `File`s for permanence; persist
-  the in-flight provider `jobId` on the Artifact so a long poll survives remount.
+- **Materialize** ephemeral generated URLs into `File`s for permanence.
 - Multi-account credential selection; a `DerivedFrom` relation for heavy
   downstream chains.
 ```
