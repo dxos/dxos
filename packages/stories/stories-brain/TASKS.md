@@ -44,16 +44,13 @@ human review. Harness-only (informs the product `Topic` schema). Prereqs: Ollama
 
 ### Tasks
 
-- [ ] **`ActiveTopic` type + assembly (pure, tested)** — `harness/pipelines/active-topics.ts`:
-      `ActiveTopic` (TopicProps + status/facts/tasks(Outline)/drafts/confidence/rationale/kind);
-      `assembleActiveTopic(draft, parts)`. Unit-test assembly.
-- [ ] **`activityScore` (deterministic, tested)** — normalized combine of recency + `awaiting-mine`
-      thread state + person-linked + open-item count → `[0,1]`; candidate prefilter floor. Unit test.
-- [ ] **Confidence combine + split (pure, tested)** — `confidence = w·llm + (1−w)·activity`;
-      `kind='active'` when `≥ ACTIVE_THRESHOLD`, capped at `ACTIVE_TOP`; rest `'suggested'`. Unit test.
-- [ ] **Action-items → `Outline`** — extract action items (thread `actionItems` + an LLM pass), render
-      nested `- [ ]` markdown, wrap in `Outline.make({ name, content })`. Pure render unit-tested; add
-      `@dxos/plugin-outliner` workspace dep to stories-brain.
+- [x] **`ActiveTopic` type + assembly (pure, tested)** — `harness/internal/active-topics.ts`:
+      `ActiveTopic`/`SuggestedTopic`/`ScoredCandidate` + `assembleActiveTopic` / `toSuggestedTopic` /
+      `populatedChecklist` / `topicSlug`. Unit-tested.
+- [x] **`activityScore` (deterministic, tested)** — recency (exp decay) + `awaiting-mine` + person-linked + open-item count, weighted → `[0,1]`. Unit-tested (recent+awaiting+person+items → ~1; stale/org → <0.05).
+- [x] **Confidence combine + split (pure, tested)** — `combineConfidence` (w·llm + (1−w)·activity, clamped) + `classifyTopics` (≥ threshold, capped at top, highest-first). Unit-tested.
+- [x] **Action-items → `Outline`** — `renderTasksMarkdown` (nested `- [ ]`) + `makeTasksOutline`
+      (`Outline.make`); `@dxos/plugin-outliner` workspace dep added. Render unit-tested. 10/10 node tests green.
 - [ ] **Populate stage** — per active topic: LLM `status`, facts (reuse `pipelines/facts.ts` +
       fact-store), tasks Outline, drafts (`pipelines/draft.ts` for replyable threads).
 - [ ] **Reports + JSON writer** — `results/active-topics/{index.md, <slug>.md, active-topics.json}`

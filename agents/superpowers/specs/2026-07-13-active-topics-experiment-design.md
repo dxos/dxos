@@ -5,7 +5,7 @@ _Date: 2026-07-13 · Project: mailbox-research · Harness: `packages/stories/sto
 ## Context
 
 The Topics feature (product) now tags mail, clusters threads, and proposes opt-in suggestions
-(PR #12178). The open research question is what a *fully-populated, high-value* topic looks like and
+(PR #12178). The open research question is what a _fully-populated, high-value_ topic looks like and
 how to tell a small number of genuinely **active** topics from the long tail. This experiment runs
 over the private inbox fixture (git-ignored, local-only) to build rich topic structures and a
 confidence-ranked active/suggested split, for morning human review. Its output `ActiveTopic` shape is
@@ -41,19 +41,19 @@ type ActiveTopic = {
   participants: string[];
   keywords: string[];
   // Populated only for active topics:
-  status: string;                          // current-status summary (LLM)
-  facts: string[];                         // salient facts (facts pipeline / fact-store)
-  tasks: Outline.Outline;                  // plugin-outliner Outline; content Text is nested `- [ ]` markdown
+  status: string; // current-status summary (LLM)
+  facts: string[]; // salient facts (facts pipeline / fact-store)
+  tasks: Outline.Outline; // plugin-outliner Outline; content Text is nested `- [ ]` markdown
   drafts: { threadId: string; draft: string }[]; // per replyable thread
   // Ranking:
-  confidence: number;                      // 0..1 combined score
-  rationale: string;                       // LLM one-line justification
+  confidence: number; // 0..1 combined score
+  rationale: string; // LLM one-line justification
   kind: 'active' | 'suggested';
 };
 ```
 
 An `Outline` is `{ name?, content: Ref(Text.Text) }` (see `plugin-outliner/types/Outline.ts`); its Text
-holds the nested `- [ ]` task markdown, so a real ECHO `Outline` *is* the task outline and is
+holds the nested `- [ ]` task markdown, so a real ECHO `Outline` _is_ the task outline and is
 constructible headlessly with `Outline.make({ name, content })`.
 
 ## Pipeline
@@ -66,7 +66,7 @@ Over the full fixture corpus (`loadFixtureMessages`), reusing `resolveModel(stag
    - thread state `awaiting-mine` (from `buildThreads`),
    - person-linked (a participant is a known contact / `classify-sender` = person),
    - open-item count (rolled-up `openQuestions` / `actionItems`).
-   Pure + unit-tested. Produces `activityScore ∈ [0,1]` and a candidate set (score ≥ prefilter floor).
+     Pure + unit-tested. Produces `activityScore ∈ [0,1]` and a candidate set (score ≥ prefilter floor).
 3. **LLM confidence** — for each candidate, prompt for `{ confidence: 0..1, rationale }` ("is this an
    active topic that needs the owner's attention?"). Degrades to the deterministic score on failure.
 4. **Combine + split** — `confidence = w·llm + (1−w)·activity` (default `w=0.6`); `kind = 'active'`
