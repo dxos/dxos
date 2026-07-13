@@ -9,13 +9,14 @@ import * as Stream from 'effect/Stream';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-import { FactStore, type FactUnit, type FeedCursorsApi } from '@dxos/pipeline-rdf';
+import { FactStore, type FeedCursorsApi } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
 import {
   EmailPipelineCtx,
   type FactExtractor,
   type FactIndexer,
+  type FactUnit,
   type Stats,
   emptyStats,
   extractFactsStage,

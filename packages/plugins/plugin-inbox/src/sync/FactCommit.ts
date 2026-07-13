@@ -7,7 +7,8 @@
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 
-import { FactStore, type FactUnit } from '@dxos/pipeline-rdf';
+import { type FactUnit } from '@dxos/pipeline-email';
+import { FactStore } from '@dxos/pipeline-rdf';
 import { SyncBinding } from '@dxos/plugin-connector';
 import { Cursor } from '@dxos/types';
 
