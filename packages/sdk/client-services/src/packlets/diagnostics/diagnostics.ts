@@ -9,6 +9,7 @@ import { type Config, type ConfigProto } from '@dxos/config';
 import { createDidFromIdentityKey, credentialTypeFilter } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import {
   type Device,
@@ -24,9 +25,18 @@ import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { DXOS_VERSION } from '../../version';
-import { type ServiceContext } from '../services';
+import { type IdentityManager } from '../identity';
 import { getPlatform } from '../services/platform';
-import { type DataSpace } from '../spaces';
+import { type DataSpace, type DataSpaceManager } from '../spaces';
+
+/**
+ * Minimal component surface required to gather diagnostics, rather than the whole service context.
+ */
+export type DiagnosticsContext = {
+  readonly identityManager: IdentityManager;
+  readonly networkManager: SwarmNetworkManager;
+  readonly dataSpaceManager?: DataSpaceManager;
+};
 
 const DEFAULT_TIMEOUT = 1_000;
 
@@ -77,7 +87,7 @@ export type SpaceStats = {
  */
 export const createDiagnostics = async (
   clientServices: Partial<ClientServices>,
-  serviceContext: ServiceContext,
+  serviceContext: DiagnosticsContext,
   config: Config,
 ): Promise<Diagnostics['services']> => {
   const diagnostics: Diagnostics['services'] = {

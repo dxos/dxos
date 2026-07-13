@@ -2,22 +2,30 @@
 // Copyright 2020 DXOS.org
 //
 
+import { type Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { type Space } from '@dxos/echo-host';
+import { type IMetadataStore, type Space, type SpaceManager } from '@dxos/echo-host';
 import {
   type SubscribeToSpacesRequest,
   type SubscribeToSpacesResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 
-import { type ServiceContext } from '../services';
+import { type DataSpaceManager } from '../spaces';
 
-export const subscribeToSpaces = (context: ServiceContext, { spaceKeys = [] }: SubscribeToSpacesRequest) => {
+type SpacesContext = {
+  readonly initialized: Trigger;
+  readonly spaceManager: SpaceManager;
+  readonly metadataStore: IMetadataStore;
+  readonly dataSpaceManager?: DataSpaceManager;
+};
+
+export const subscribeToSpaces = (context: SpacesContext, { spaceKeys = [] }: SubscribeToSpacesRequest) => {
   return new Stream<SubscribeToSpacesResponse>(({ next }) => {
     let unsubscribe: () => void;
 
     const update = async () => {
-      const spaces: Space[] = [...context.spaceManager!.spaces.values()];
+      const spaces: Space[] = [...context.spaceManager.spaces.values()];
       const filteredSpaces = spaces.filter(
         (space) => !spaceKeys?.length || spaceKeys.some((spaceKey) => spaceKey.equals(space.key)),
       );

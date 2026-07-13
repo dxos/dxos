@@ -5,10 +5,15 @@
 import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
-import { Event as AsyncEvent } from '@dxos/async';
+import { Event as AsyncEvent, type Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { type IMetadataStore, type SpaceManager } from '@dxos/echo-host';
+import { type FeedStore } from '@dxos/feed-store';
+import { type KeyringApi } from '@dxos/keyring';
+import { type SignalManager } from '@dxos/messaging';
+import { type SwarmNetworkManager } from '@dxos/network-manager';
 import {
   type ClearSnapshotsRequest,
   type EnableDebugLoggingRequest,
@@ -47,9 +52,11 @@ import {
   type SubscribeToSwarmInfoRequest,
   type SubscribeToSwarmInfoResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
+import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
+import { type BlobStoreApi } from '@dxos/teleport-extension-object-sync';
 
-import { type ServiceContext } from '../services';
+import { type DataSpaceManager } from '../spaces';
 import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds';
 import { subscribeToKeyringKeys } from './keys';
 import { subscribeToMetadata } from './metadata';
@@ -60,10 +67,25 @@ export class DevtoolsHostEvents {
   readonly ready = new AsyncEvent();
 }
 
+/**
+ * Minimal component surface the (deprecated) devtools host reads, rather than the whole service context.
+ */
+export type DevtoolsContext = {
+  readonly initialized: Trigger;
+  readonly blobStore: BlobStoreApi;
+  readonly keyring: KeyringApi;
+  readonly feedStore: FeedStore<FeedMessage>;
+  readonly signalManager: SignalManager;
+  readonly networkManager: SwarmNetworkManager;
+  readonly spaceManager: SpaceManager;
+  readonly metadataStore: IMetadataStore;
+  readonly dataSpaceManager?: DataSpaceManager;
+};
+
 export type DevtoolsServiceProps = {
   events: DevtoolsHostEvents;
   config: Config;
-  context: ServiceContext;
+  context: DevtoolsContext;
   exportSqliteDatabase: () => Promise<Uint8Array>;
   runSqliteQuery: (query: string, params?: unknown[]) => Promise<readonly Record<string, unknown>[]>;
 };
