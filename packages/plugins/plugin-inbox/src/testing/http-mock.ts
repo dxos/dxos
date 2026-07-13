@@ -124,7 +124,11 @@ const handleGmail = (
   // POST .../messages/send
   if (method === 'POST' && rest.length === 2 && rest[0] === 'messages' && rest[1] === 'send') {
     const parsed = body ? (JSON.parse(body) as { threadId?: string }) : {};
-    return json({ id: `sent-${dataset.messages.length}`, threadId: parsed.threadId ?? 'sent-thread', labelIds: ['SENT'] });
+    return json({
+      id: `sent-${dataset.messages.length}`,
+      threadId: parsed.threadId ?? 'sent-thread',
+      labelIds: ['SENT'],
+    });
   }
 
   // POST .../messages/{id}/trash
@@ -165,7 +169,9 @@ const listGmailMessages = (dataset: GmailDataset, params: URLSearchParams) => {
   const matching = dataset.messages
     .filter((message) => {
       const date = Number.parseInt(message.internalDate, 10);
-      return (window.after === undefined || date >= window.after) && (window.before === undefined || date < window.before);
+      return (
+        (window.after === undefined || date >= window.after) && (window.before === undefined || date < window.before)
+      );
     })
     .sort((a, b) => Number.parseInt(b.internalDate, 10) - Number.parseInt(a.internalDate, 10));
 
@@ -225,7 +231,14 @@ const invokeJmapMethod = (
       const position = args.position ?? 0;
       const limit = args.limit ?? matching.length;
       const page = matching.slice(position, position + limit);
-      return { accountId, queryState: 'mock', position, total: matching.length, limit, ids: page.map((email) => email.id) };
+      return {
+        accountId,
+        queryState: 'mock',
+        position,
+        total: matching.length,
+        limit,
+        ids: page.map((email) => email.id),
+      };
     }
 
     case 'Email/get': {
@@ -241,14 +254,19 @@ const invokeJmapMethod = (
       // Send flow: acknowledge the created draft with a synthetic id/thread.
       if (args.create) {
         const created = Object.fromEntries(
-          Object.keys(args.create).map((key) => [key, { id: `sent-${key}`, blobId: `blob-${key}`, threadId: `sent-thread-${key}`, size: 0 }]),
+          Object.keys(args.create).map((key) => [
+            key,
+            { id: `sent-${key}`, blobId: `blob-${key}`, threadId: `sent-thread-${key}`, size: 0 },
+          ]),
         );
         return { accountId, oldState: 'mock', newState: 'mock', created };
       }
       return { accountId, oldState: 'mock', newState: 'mock', updated: {} };
 
     case 'EmailSubmission/set': {
-      const created = Object.fromEntries(Object.keys(args.create ?? {}).map((key) => [key, { id: `submission-${key}` }]));
+      const created = Object.fromEntries(
+        Object.keys(args.create ?? {}).map((key) => [key, { id: `submission-${key}` }]),
+      );
       return { accountId, newState: 'mock', created };
     }
 

@@ -8,7 +8,7 @@ description: >-
 
 # Browser E2E Tests (Playwright)
 
-Browser e2e drives the real Composer app in a browser — the only tier that verifies *perceived*
+Browser e2e drives the real Composer app in a browser — the only tier that verifies _perceived_
 behavior: interactivity during async work, no false empty states, and full click→render flows.
 Distinct from `agent-e2e-tests` (the LLM agent harness) and storybook interaction tests.
 
@@ -40,7 +40,7 @@ ambiguous when several controls share a name. **`data-testid` is the only stable
 ## Selector priority (only when a testid genuinely can't exist yet)
 
 1. `data-testid` — the default; add it if missing.
-2. Framework/ARIA *state* that encodes behavior, not copy: `aria-selected`, `aria-current`, ids/
+2. Framework/ARIA _state_ that encodes behavior, not copy: `aria-selected`, `aria-current`, ids/
    classes the framework sets (e.g. a Mosaic tile's `id`, `dx-current`/`dx-selected`).
 3. Role — only scoped inside a testid'd container, never role + translated name as the primary hook.
 
@@ -55,12 +55,19 @@ import { expect, test } from '@playwright/test';
 import { AppManager } from './app-manager';
 
 // The PWA service worker breaks routing/interception; require it disabled.
-if (process.env.DX_PWA !== 'false') { throw new Error('run with DX_PWA=false'); }
+if (process.env.DX_PWA !== 'false') {
+  throw new Error('run with DX_PWA=false');
+}
 
 test.describe('Inbox', () => {
   let host: AppManager;
-  test.beforeEach(async ({ browser }) => { host = new AppManager(browser, false); await host.init(); });
-  test.afterEach(async () => { await host.closePage(); });
+  test.beforeEach(async ({ browser }) => {
+    host = new AppManager(browser, false);
+    await host.init();
+  });
+  test.afterEach(async () => {
+    await host.closePage();
+  });
 
   test('selecting a thread opens the companion', async () => {
     // Drive via page objects + testids — no inline selectors, no labels.
@@ -102,14 +109,14 @@ Every interaction lives behind a page-object so specs read as intent, not select
 
 ## Anti-patterns
 
-| Don't | Do |
-|---|---|
-| `getByRole('button', { name: 'Reply' })` | add `properties.testId` → `getByTestId('inbox.message.reply')` |
-| `getByText('Send')` / `getByLabelText('To')` | testid on the field/control |
-| Fall back to a label when the testid is missing | add the testid to the component |
-| `page.waitForTimeout(1000)` | `expect(locator).toBeVisible()` / `waitFor()` |
-| Inline selectors scattered across a spec | a page-object helper under `plugins/` |
-| Live provider credentials / real third-party network | mock + a gated test bridge; `DX_PWA=false` |
+| Don't                                                | Do                                                             |
+| ---------------------------------------------------- | -------------------------------------------------------------- |
+| `getByRole('button', { name: 'Reply' })`             | add `properties.testId` → `getByTestId('inbox.message.reply')` |
+| `getByText('Send')` / `getByLabelText('To')`         | testid on the field/control                                    |
+| Fall back to a label when the testid is missing      | add the testid to the component                                |
+| `page.waitForTimeout(1000)`                          | `expect(locator).toBeVisible()` / `waitFor()`                  |
+| Inline selectors scattered across a spec             | a page-object helper under `plugins/`                          |
+| Live provider credentials / real third-party network | mock + a gated test bridge; `DX_PWA=false`                     |
 
 > An earlier Stagehand (AI-driven act/extract) experiment is **not** the convention and is not
 > currently landed. Author plain Playwright with testid-scoped page objects.

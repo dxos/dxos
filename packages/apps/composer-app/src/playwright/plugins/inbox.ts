@@ -4,7 +4,11 @@
 
 import { type Locator, type Page } from '@playwright/test';
 
-import { type InboxHttpMock, type InboxHttpMockOptions, createInboxHttpMock } from '@dxos/plugin-inbox/testing/http-mock';
+import {
+  type InboxHttpMock,
+  type InboxHttpMockOptions,
+  createInboxHttpMock,
+} from '@dxos/plugin-inbox/testing/http-mock';
 
 // Page-object for the inbox/mailbox surface. All selectors are data-testid (see the
 // `browser-e2e-tests` skill); the credential-form fields are the one exception — they're
@@ -75,7 +79,11 @@ export const installInboxMock = async (page: Page, options?: InboxHttpMockOption
       return route.fulfill({ status: 204, headers: CORS_HEADERS });
     }
 
-    const response = mock.handle({ method: request.method(), url: request.url(), body: request.postData() ?? undefined });
+    const response = mock.handle({
+      method: request.method(),
+      url: request.url(),
+      body: request.postData() ?? undefined,
+    });
     if (!response) {
       // Not a request the mock owns — let it hit the network (or a later route).
       return route.fallback();

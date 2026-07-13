@@ -15,7 +15,7 @@ delivers Tier 4 (browser-e2e, task #7).**
   - **Provider-parameterized structure.** Provider-specific behaviour (sync, reply) is tested for
     BOTH providers via a shared test body + a per-provider adapter; generic mailbox behaviour
     (select thread, open companion, etc.) is written once. Adding a future provider = one adapter.
-  - **JMAP suite — always runs.** Drives the REAL creation flow: fill the JMAP credential *form*
+  - **JMAP suite — always runs.** Drives the REAL creation flow: fill the JMAP credential _form_
     (host = mock URL, fake access token) — no OAuth, no env var, no ECHO seeding. Hosts:
     JMAP sync + JMAP reply (provider-specific) AND all **generic mailbox tests** (thread select,
     companion, T-10/T-11 perceived behaviour) so they always run in CI.
@@ -63,18 +63,18 @@ delivers Tier 4 (browser-e2e, task #7).**
   - Follow-ups (deferred per user): Gmail bridge + suite; provider-parameterized adapter (introduce
     when Gmail gives the shared generic bodies a second consumer).
 - [ ] **#6 Unskip inbox agent-e2e** — `assistant-e2e/src/testing/inbox-enable.test.ts`
-    (register the skill), then add read/draft scenario tests. Enforces F-6.
+      (register the skill), then add read/draft scenario tests. Enforces F-6.
 - [ ] **#8 Latency benchmarks with budget assertions** — F-11.3/F-11.4 at N=1k/4k/10k; fail above
-    the 400ms p95 ceiling and track against the 100ms target. Budgets in `src/testing/budgets.ts`
-    shared with `PLUGIN.mdl`. Depends on F-11 code fixes (below).
+      the 400ms p95 ceiling and track against the 100ms target. Budgets in `src/testing/budgets.ts`
+      shared with `PLUGIN.mdl`. Depends on F-11 code fixes (below).
 - [ ] **#9 Overlapping-sync duplicate test** — Tier 0 executable spec of T-13's concurrency clause;
-    expected-fail until the F-11.5 mailbox lock lands.
+      expected-fail until the F-11.5 mailbox lock lands.
 - [ ] **#10 Spec↔test traceability check** — moon task parsing `PLUGIN.mdl` `test T-#` ids; fails
-    when an id has neither an automated test nor a runbook entry.
+      when an id has neither an automated test nor a runbook entry.
 - [ ] **#11 Live-validation runbook** — normalize credential-gated suites into one Tier 6:
-    `GOOGLE_ACCESS_TOKEN` (a human clears 2FA once with `access_type=offline&prompt=consent`; store
-    the **refresh token** as a secret, exchange at runtime), `JMAP_TOKEN` (+ vitest tag),
-    `functions-e2e`. Runbook enumerates human-verified assertions → T-1/T-3/T-6/T-7/T-8/T-13.
+      `GOOGLE_ACCESS_TOKEN` (a human clears 2FA once with `access_type=offline&prompt=consent`; store
+      the **refresh token** as a secret, exchange at runtime), `JMAP_TOKEN` (+ vitest tag),
+      `functions-e2e`. Runbook enumerates human-verified assertions → T-1/T-3/T-6/T-7/T-8/T-13.
 
 ### F-11 responsiveness — implementation ideas (gate T-10/T-11/T-12)
 
