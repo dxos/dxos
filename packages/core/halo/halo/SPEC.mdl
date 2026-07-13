@@ -1,0 +1,73 @@
+---
+id: org.dxos.halo
+name: Halo
+version: 0.1.0
+---
+
+HALO identity, device, space, and invitation model — **definitions only**.
+This package exports Effect service tags, their interfaces, verbs, and schemas;
+concrete implementations ship as separate layers (e.g. `@dxos/halo-adapter-client`
+over `@dxos/client`). See `API_AUDIT.md` for the consumer audit and `MIGRATION.md`
+for the HALO → Keyhive plan.
+
+The `Invitation` service is a leaf lifecycle module; `Identity` and `Space` own
+invitation initiation (`share`/`join`) and depend on it.
+
+## Extensions
+
+| Term      | URI                          |
+| --------- | ---------------------------- |
+| `service` | `org.dxos.mdl.service@1.0`   |
+
+## Services
+
+```mdl
+service Identity
+  desc: Identity and device management, plus device-invitation initiation.
+  verbs:
+    - current / changes         # local identity snapshot + reactive stream
+    - create / recover          # create identity; re-admit a device via recovery credential
+    - updateProfile
+    - devices / deviceChanges
+    - share / join              # device invitation (returns an Invitation.Flow)
+  depends: [Invitation]
+```
+
+```mdl
+service Space
+  desc: Space management and membership, plus space-invitation initiation.
+  verbs:
+    - list / changes / get
+    - create / waitReady
+    - members / memberChanges
+    - share / join              # space invitation (returns an Invitation.Flow)
+    - export / import
+  note: Info is a plain snapshot; ECHO database access stays on @dxos/echo.
+  depends: [Invitation]
+```
+
+```mdl
+service Invitation
+  desc: Invitation lifecycle only — does not initiate invitations.
+  verbs:
+    - active / activeChanges    # observe host-created flows for a scope
+  flow:
+    - events                    # tagged event stream (connecting → success | cancelled | error)
+    - authenticate / cancel / code
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext service
+  uri: org.dxos.mdl.service@1.0
+  desc: An Effect service tag with a verb interface; implementations provided as Layers.
+  fields:
+    desc?:     Prose
+    verbs?:    ProseList        # named operations on the service
+    flow?:     ProseList        # operations on a value the service produces
+    depends?:  Identifier[]     # other services this one references
+    note?:     Prose
+```
