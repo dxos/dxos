@@ -160,6 +160,12 @@ export const translations = [
         'topics.suggested.title': 'Suggested',
         'topics.accept.label': 'Accept',
         'topics.dismiss.label': 'Dismiss',
+        'subscriptions.label': 'Subscriptions',
+        'subscriptions.empty.message': 'No bulk-mail subscriptions found.',
+        'subscriptions.count.label': '{{email}} · {{count}} messages',
+        'subscriptions.remove.label_zero': 'Remove',
+        'subscriptions.remove.label_one': 'Remove ({{count}})',
+        'subscriptions.remove.label_other': 'Remove ({{count}})',
         'create-draft.label': 'Create draft',
 
         'related-contacts.title': 'Related contacts',

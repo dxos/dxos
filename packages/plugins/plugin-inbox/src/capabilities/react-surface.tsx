@@ -28,13 +28,19 @@ import {
   RelatedToContact,
   RelatedToOrganization,
   SaveFilterPopover,
+  SubscriptionsArticle,
   TopicArticle,
   TopicsArticle,
 } from '#containers';
 import { Calendar, DraftMessage, Mailbox } from '#types';
 
-import { MAILBOX_DRAFTS_NODE_DATA, MAILBOX_TOPICS_NODE_DATA, POPOVER_SAVE_FILTER } from '../constants';
-import { getDraftsId, getTopicsId } from '../paths';
+import {
+  MAILBOX_DRAFTS_NODE_DATA,
+  MAILBOX_SUBSCRIPTIONS_NODE_DATA,
+  MAILBOX_TOPICS_NODE_DATA,
+  POPOVER_SAVE_FILTER,
+} from '../constants';
+import { getDraftsId, getSubscriptionsId, getTopicsId } from '../paths';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
   Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
@@ -90,6 +96,27 @@ export default Capability.makeModule(() =>
         id: 'topic',
         filter: AppSurface.object(AppSurface.Article, Topic),
         component: ({ data, role }) => <TopicArticle role={role} subject={data.subject} />,
+      }),
+      Surface.create({
+        id: 'subscriptions',
+        filter: Surface.makeFilter(AppSurface.Article, (data) => {
+          const mailbox = data.properties?.mailbox;
+          const lastSegment = data.attendableId.split('/').pop();
+          return (
+            lastSegment === getSubscriptionsId() &&
+            Mailbox.instanceOf(mailbox) &&
+            data.subject === MAILBOX_SUBSCRIPTIONS_NODE_DATA
+          );
+        }),
+        component: ({ data, role }) => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          const mailbox = (data.properties as { mailbox: Mailbox.Mailbox }).mailbox;
+          return <SubscriptionsArticle role={role} space={space} attendableId={data.attendableId} mailbox={mailbox} />;
+        },
       }),
       Surface.create({
         id: 'mailbox',
