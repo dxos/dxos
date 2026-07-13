@@ -18,7 +18,7 @@ import * as Runnable from './Runnable';
  * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
  */
-export const Kinds = ['email', 'feed', 'subscription', 'timer', 'webhook'] as const;
+export const Kinds = ['email', 'feed', 'manual', 'subscription', 'timer', 'webhook'] as const;
 export type Kind = (typeof Kinds)[number];
 
 const kindLiteralAnnotations = { title: 'Kind' };
@@ -91,6 +91,19 @@ export const specSubscription = (
 });
 
 /**
+ * Manual invocation only; never scheduled by the dispatcher.
+ */
+export const ManualSpec = Schema.Struct({
+  kind: Schema.Literal('manual').annotations(kindLiteralAnnotations),
+});
+export type ManualSpec = Schema.Schema.Type<typeof ManualSpec>;
+
+/**
+ * Construct a Manual trigger spec.
+ */
+export const specManual = (): ManualSpec => ({ kind: 'manual' });
+
+/**
  * Cron timer.
  */
 export const TimerSpec = Schema.Struct({
@@ -138,7 +151,7 @@ export const specWebhook = (opts?: { method?: string; port?: number }): WebhookS
 /**
  * Trigger schema.
  */
-export const Spec = Schema.Union(EmailSpec, FeedSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations({
+export const Spec = Schema.Union(EmailSpec, FeedSpec, ManualSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations({
   title: 'Trigger',
 });
 export type Spec = Schema.Schema.Type<typeof Spec>;
