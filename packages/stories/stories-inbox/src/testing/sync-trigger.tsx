@@ -7,9 +7,9 @@ import { useEffect, useRef } from 'react';
 
 import { Operation, Trigger } from '@dxos/compute';
 import { DXN, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { SyncBinding } from '@dxos/plugin-connector';
 import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { SyncBinding } from '@dxos/types';
 
 /** Cron expression for hourly Gmail sync (minute 0 of every hour). */
 export const MAILBOX_SYNC_CRON = '0 * * * *';
