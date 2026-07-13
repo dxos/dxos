@@ -6,7 +6,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, Trigger, asyncTimeout } from '@dxos/async';
 
-import * as Worker from '../worker';
+import * as Worker from '../Worker';
 import * as WorkerProtocol from '../WorkerProtocol';
 import { Connection } from './worker-connection';
 

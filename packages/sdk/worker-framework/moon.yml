@@ -11,6 +11,6 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/client/index.ts'
-      - '--entryPoint=src/worker/index.ts'
-      - '--entryPoint=src/coordinator/index.ts'
+      - '--entryPoint=src/Client/index.ts'
+      - '--entryPoint=src/Worker.ts'
+      - '--entryPoint=src/Coordinator/index.ts'

@@ -12,8 +12,8 @@ import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import * as Client from '@dxos/worker-framework/client';
-import * as Coordinator from '@dxos/worker-framework/coordinator';
+import * as Client from '@dxos/worker-framework/Client';
+import * as Coordinator from '@dxos/worker-framework/Coordinator';
 
 import * as Rpc from '../internal/rpc';
 import { COUNTER_LEADER_LOCK_KEY } from './counter-constants';

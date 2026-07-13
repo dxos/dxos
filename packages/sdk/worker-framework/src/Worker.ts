@@ -5,7 +5,7 @@
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import * as WorkerProtocol from '../WorkerProtocol';
+import * as WorkerProtocol from './WorkerProtocol';
 
 export type RuntimeHandle = {
   createSession(args: {

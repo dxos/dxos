@@ -19,23 +19,23 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
-    "./client": {
-      "source": "./src/client/index.ts",
-      "types": "./dist/types/src/client/index.d.ts",
-      "browser": "./dist/lib/browser/client/index.mjs",
-      "node": "./dist/lib/node-esm/client/index.mjs"
+    "./Client": {
+      "source": "./src/Client/index.ts",
+      "types": "./dist/types/src/Client/index.d.ts",
+      "browser": "./dist/lib/browser/Client/index.mjs",
+      "node": "./dist/lib/node-esm/Client/index.mjs"
     },
-    "./worker": {
-      "source": "./src/worker/index.ts",
-      "types": "./dist/types/src/worker/index.d.ts",
-      "browser": "./dist/lib/browser/worker/index.mjs",
-      "node": "./dist/lib/node-esm/worker/index.mjs"
+    "./Worker": {
+      "source": "./src/Worker/index.ts",
+      "types": "./dist/types/src/Worker.d.ts",
+      "browser": "./dist/lib/browser/Worker.mjs",
+      "node": "./dist/lib/node-esm/Worker.mjs"
     },
-    "./coordinator": {
-      "source": "./src/coordinator/index.ts",
-      "types": "./dist/types/src/coordinator/index.d.ts",
-      "browser": "./dist/lib/browser/coordinator/index.mjs",
-      "node": "./dist/lib/node-esm/coordinator/index.mjs"
+    "./Coordinator": {
+      "source": "./src/Coordinator/index.ts",
+      "types": "./dist/types/src/Coordinator/index.d.ts",
+      "browser": "./dist/lib/browser/Coordinator/index.mjs",
+      "node": "./dist/lib/node-esm/Coordinator/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
