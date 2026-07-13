@@ -2,30 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
-import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
+import { describe, onTestFinished, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { DiagnosticsCollector } from '@dxos/client-services';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
-import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 describe.skip('DiagnosticsCollector', () => {
-  beforeEach(() => {
-    TRACE_PROCESSOR.resources.clear();
-  });
-
-  test('collects configs and traces if client was not initialized', async () => {
+  test('collects configs if client was not initialized', async ({ expect }) => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 
     const diagnostics = await DiagnosticsCollector.collect();
     expect(diagnostics.client.config).not.to.be.undefined;
-    expect(diagnostics.client.trace).not.to.be.undefined;
     expect(diagnostics.services).to.be.undefined;
   });
 
-  test('collects with local services', async () => {
+  test('collects with local services', async ({ expect }) => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 
@@ -38,7 +32,7 @@ describe.skip('DiagnosticsCollector', () => {
     expect(diagnostics.services).not.to.be.undefined;
   });
 
-  test('collects with remote server', async () => {
+  test('collects with remote server', async ({ expect }) => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 

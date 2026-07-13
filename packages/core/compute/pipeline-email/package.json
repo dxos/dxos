@@ -1,7 +1,6 @@
 {
   "name": "@dxos/pipeline-email",
   "version": "0.9.0",
-  "private": true,
   "description": "Worked email pipeline over the Enron dataset (parquet source → summarize/extract/stats stages).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,14 +14,14 @@
   "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/lib/neutral/index.mjs",
       "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/neutral/index.mjs"
     },
     "./testing": {
-      "default": "./dist/lib/neutral/testing/index.mjs",
       "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts"
+      "types": "./dist/types/src/testing/index.d.ts",
+      "default": "./dist/lib/neutral/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -34,6 +33,7 @@
     "@dxos/ai": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/extractor-lib": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
@@ -45,12 +45,14 @@
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/log": "workspace:*",
     "effect": "catalog:",
     "hyparquet-writer": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

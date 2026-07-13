@@ -36,7 +36,6 @@ export default DownloadFile.pipe(
         yield* Database.add(blob);
         Obj.update(loadedDest, (loadedDest) => {
           loadedDest.name = fileName;
-          loadedDest.size = blob.size;
           loadedDest.data = Ref.make(blob);
           loadedDest.timestamp = new Date().toISOString();
         });

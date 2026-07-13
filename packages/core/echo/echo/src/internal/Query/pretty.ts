@@ -160,5 +160,19 @@ export const prettyQuery = (query: QueryAST.Query): string => {
       return `${prettyQuery(query.query)}.limit(${query.limit})`;
     case 'skip':
       return `${prettyQuery(query.query)}.skip(${query.skip})`;
+    case 'aggregate': {
+      const aggregates = query.aggregates.map((aggregate) => {
+        const arg =
+          aggregate.kind === 'items'
+            ? aggregate.limit !== undefined
+              ? `{ limit: ${aggregate.limit} }`
+              : ''
+            : aggregate.kind === 'count'
+              ? ''
+              : JSON.stringify(aggregate.property);
+        return `${JSON.stringify(aggregate.name)}: Aggregate.${aggregate.kind}(${arg})`;
+      });
+      return `${prettyQuery(query.query)}.aggregate({ ${aggregates.join(', ')} })`;
+    }
   }
 };

@@ -28,12 +28,13 @@ const handler: Operation.WithHandler<typeof FileOperation.Read> = FileOperation.
     Effect.fn(function* ({ file }) {
       const obj = yield* Database.load(file);
       const blob = yield* Database.load(obj.data);
+      const type = blob.type ?? 'application/octet-stream';
       const urlOption = yield* Blob.url(blob);
       const url = yield* Option.match(urlOption, {
         onSome: Effect.succeed,
         // No renderable URL from the backend (e.g. external storage without `getUrl`) — fall back
         // to reading the bytes directly and encoding them as a `data:` URL.
-        onNone: () => Blob.read(blob).pipe(Effect.map((bytes) => `data:${obj.type};base64,${bytesToBase64(bytes)}`)),
+        onNone: () => Blob.read(blob).pipe(Effect.map((bytes) => `data:${type};base64,${bytesToBase64(bytes)}`)),
       });
 
       return ContentBlock.ContentBlockResult.make({
@@ -41,7 +42,7 @@ const handler: Operation.WithHandler<typeof FileOperation.Read> = FileOperation.
           ContentBlock.File.make({
             url,
             name: obj.name,
-            mediaType: obj.type,
+            mediaType: type,
           }),
         ],
       });

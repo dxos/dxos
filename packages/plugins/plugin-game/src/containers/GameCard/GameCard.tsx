@@ -30,3 +30,5 @@ export const GameCard = ({ role, subject: game }: GameCardProps) => {
   const Component = match.card;
   return <Component game={game} variant={variant} role={role} />;
 };
+
+GameCard.displayName = 'GameCard';

@@ -149,6 +149,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-dashboard": "workspace:*",
+    "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
@@ -156,6 +157,7 @@
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
+    "@dxos/react-ui-table": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/types": "workspace:*",
@@ -188,8 +190,8 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "effect": "catalog:",

@@ -27,3 +27,5 @@ export const SkillArticle = ({ role, attendableId, subject }: SkillArticleProps)
     </Panel.Root>
   );
 };
+
+SkillArticle.displayName = 'SkillArticle';

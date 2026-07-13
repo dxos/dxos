@@ -21,6 +21,8 @@ export const TEST_TAGS: NonNullable<TestProjectConfiguration['test']>['tags'] = 
   {
     name: 'manual',
     description: 'Opt-in tests run only when explicitly selected (local services, manual setup).',
-    skip: ['1', 'true'].includes(process.env.DX_RUN_MANUAL_TESTS ?? ''),
+    // Skipped by DEFAULT; DX_RUN_MANUAL_TESTS=1 opts in (these tests need local services
+    // like Ollama/LM Studio that a plain `moon run :test` machine does not have).
+    skip: !['1', 'true'].includes(process.env.DX_RUN_MANUAL_TESTS ?? ''),
   },
 ];

@@ -6,10 +6,10 @@ import React, { useMemo, useState } from 'react';
 
 import { type RDF } from '@dxos/pipeline-rdf';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { FactViewer } from '@dxos/react-ui-rdf';
 import { mx } from '@dxos/ui-theme';
 
 import { EntityList } from '../EntityList';
-import { FactViewer } from '../FactViewer';
 import { PredicateList } from '../PredicateList';
 import { entitiesFromFacts, predicatesFromFacts } from '../types';
 
@@ -30,7 +30,7 @@ export const FactPanel = ({ classNames, facts }: FactPanelProps) => {
 
   return (
     <div role='none' className={mx('grid grid-rows-[1fr_1fr] gap-2 min-h-0', classNames)}>
-      <FactViewer facts={facts} context={context} predicate={predicate} />
+      <FactViewer.Root facts={facts} context={context} predicate={predicate} />
       <div className='grid grid-cols-[1fr_1fr] min-h-0'>
         <EntityList entities={entities} selected={context} onSelect={setContext} />
         <PredicateList predicates={predicates} selected={predicate} onSelect={setPredicate} />

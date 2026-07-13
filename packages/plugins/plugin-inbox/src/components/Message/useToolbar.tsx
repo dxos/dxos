@@ -4,9 +4,9 @@
 
 import { type Graph, type Node } from '@dxos/app-graph';
 import { MenuBuilder, graphActions, useMenuBuilder } from '@dxos/react-ui-menu';
-import { type Message } from '@dxos/types';
 
 import { meta } from '#meta';
+import { Mailbox } from '#types';
 
 import { deleteAction, openGroup } from '../Toolbar';
 import { type ViewMode, viewModeGroup } from '../ViewMode';
@@ -20,11 +20,12 @@ export type UseMessageToolbarActionsProps = {
   graph?: Graph.ReadableGraph;
   /** Graph node id of the message (its URI / attendableId); contributed actions hang off this. */
   nodeId?: string;
-  message: Message.Message;
+  message: Mailbox.MessageLike;
   /** Whether remote images are currently loaded inline. */
   loadRemoteImages: boolean;
   viewMode: ViewMode;
-  setViewMode: (mode: ViewMode) => void;
+  /** Omit to hide the view-mode switcher (read-only body). */
+  setViewMode?: (mode: ViewMode) => void;
   /** Toggle the remote-image loading setting. */
   onToggleLoadImages: () => void;
   onOpen?: () => void;
@@ -32,6 +33,8 @@ export type UseMessageToolbarActionsProps = {
   onReply?: () => void;
   onReplyAll?: () => void;
   onForward?: () => void;
+  /** Generates an AI reply draft grounded on thread context and known facts. */
+  onAiReply?: () => void;
 };
 
 export const useMessageActions = ({
@@ -47,14 +50,9 @@ export const useMessageActions = ({
   onReply,
   onReplyAll,
   onForward,
+  onAiReply,
 }: UseMessageToolbarActionsProps) => {
   const extractorActions = useExtractorActions(message);
-
-  // The enriched option is only offered when the message carries a non-empty enriched (second) block.
-  const enrichedAvailable = (() => {
-    const textBlocks = message.blocks.filter((block) => 'text' in block);
-    return textBlocks.length > 1 && !!textBlocks[1]?.text;
-  })();
 
   return useMenuBuilder(
     (get) =>
@@ -62,12 +60,9 @@ export const useMessageActions = ({
         .root({ label: ['message-toolbar.label', { ns: meta.profile.key }] })
         .subgraph(onOpen && openGroup({ ns: meta.profile.key, labelKey: 'message-toolbar-open.menu', onOpen }))
         .subgraph(
-          viewModeGroup({
-            ns: meta.profile.key,
-            viewMode,
-            setViewMode,
-            modes: enrichedAvailable ? ['enriched', 'markdown', 'plain'] : ['markdown', 'plain'],
-          }),
+          // Only offer the view-mode switcher when the body is controllable (a setter was provided).
+          // Messages offer all view modes (the group's default); markdown/plain derive in-memory.
+          setViewMode && viewModeGroup({ ns: meta.profile.key, viewMode, setViewMode }),
         )
         .subgraph((b) =>
           b.action(
@@ -118,6 +113,18 @@ export const useMessageActions = ({
                 onForward,
               )),
         )
+        .subgraph(
+          onAiReply &&
+            ((b) =>
+              b.action(
+                'ai-reply',
+                {
+                  label: ['message-toolbar-ai-reply.menu', { ns: meta.profile.key }],
+                  icon: 'ph--sparkle--regular',
+                },
+                onAiReply,
+              )),
+        )
         .separator()
         .subgraph((b) => {
           if (extractorActions.length > 0) {
@@ -152,13 +159,13 @@ export const useMessageActions = ({
       viewMode,
       setViewMode,
       loadRemoteImages,
-      enrichedAvailable,
       extractorActions,
       onToggleLoadImages,
       onOpen,
       onReply,
       onReplyAll,
       onForward,
+      onAiReply,
       onDelete,
     ],
   );

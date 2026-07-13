@@ -116,3 +116,5 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
     </>
   );
 };
+
+DiscordAction.displayName = 'DiscordAction';

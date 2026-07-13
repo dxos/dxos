@@ -77,6 +77,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
+    "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:"
@@ -92,8 +93,8 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

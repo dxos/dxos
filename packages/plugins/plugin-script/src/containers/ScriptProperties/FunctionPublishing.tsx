@@ -119,3 +119,5 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
     </div>
   );
 };
+
+FunctionPublishing.displayName = 'FunctionPublishing';

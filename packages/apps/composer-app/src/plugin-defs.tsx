@@ -14,6 +14,7 @@ import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
 import { BlueskyPlugin } from '@dxos/plugin-bluesky/plugin';
 import { BoardPlugin } from '@dxos/plugin-board/plugin';
 import { BookmarksPlugin } from '@dxos/plugin-bookmarks/plugin';
+import { BrainPlugin } from '@dxos/plugin-brain/plugin';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ChessComPlugin } from '@dxos/plugin-chess-com/plugin';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
@@ -27,18 +28,19 @@ import { CrmPlugin } from '@dxos/plugin-crm/plugin';
 import { CrxPlugin } from '@dxos/plugin-crx/plugin';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
 import { DeckPlugin } from '@dxos/plugin-deck/plugin';
+import { DevtoolsPlugin } from '@dxos/plugin-devtools/plugin';
 import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
 import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
 import { DuffelPlugin } from '@dxos/plugin-duffel/plugin';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
 import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { FreeqPlugin } from '@dxos/plugin-freeq/plugin';
-import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
-import { GeneratorPlugin } from '@dxos/plugin-generator/plugin';
 import { GitHubPlugin } from '@dxos/plugin-github/plugin';
 import { GraphPlugin } from '@dxos/plugin-graph/plugin';
+import { HeyGenPlugin } from '@dxos/plugin-heygen/plugin';
 import { IbkrPlugin } from '@dxos/plugin-ibkr/plugin';
+import { IdeogramPlugin } from '@dxos/plugin-ideogram/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
 import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
@@ -47,7 +49,6 @@ import { MagazinePlugin } from '@dxos/plugin-magazine/plugin';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid/plugin';
 import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
-import { MasonryPlugin } from '@dxos/plugin-masonry/plugin';
 import { MeetingPlugin } from '@dxos/plugin-meeting/plugin';
 import { MermaidPlugin } from '@dxos/plugin-mermaid/plugin';
 import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem/plugin';
@@ -61,6 +62,7 @@ import { PaymentsPlugin } from '@dxos/plugin-payments/plugin';
 import { PipelinePlugin } from '@dxos/plugin-pipeline/plugin';
 import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
+import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { PwaPlugin } from '@dxos/plugin-pwa/plugin';
 import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
@@ -80,6 +82,7 @@ import { SpacetimePlugin } from '@dxos/plugin-spacetime/plugin';
 import { SpotlightPlugin } from '@dxos/plugin-spotlight/plugin';
 import { StackPlugin } from '@dxos/plugin-stack/plugin';
 import { StatusBarPlugin } from '@dxos/plugin-status-bar/plugin';
+import { StudioPlugin } from '@dxos/plugin-studio/plugin';
 import { SupportPlugin } from '@dxos/plugin-support/plugin';
 import { TablePlugin } from '@dxos/plugin-table/plugin';
 import { ThemePlugin } from '@dxos/plugin-theme/plugin';
@@ -126,7 +129,6 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     InboxPlugin.meta.profile.key,
     KanbanPlugin.meta.profile.key,
     MarkdownPlugin.meta.profile.key,
-    MasonryPlugin.meta.profile.key,
     SearchPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
     SketchPlugin.meta.profile.key,
@@ -134,7 +136,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     ThreadPlugin.meta.profile.key,
 
     // Dev
-    isDev && DebugPlugin.meta.profile.key,
+    isDev && [DebugPlugin.meta.profile.key, DevtoolsPlugin.meta.profile.key],
 
     // Local
     isLocal && SamplePlugin.meta.profile.key,
@@ -147,8 +149,10 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       CodePlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
       MagazinePlugin.meta.profile.key,
-      GalleryPlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
+      IdeogramPlugin.meta.profile.key,
+      HeyGenPlugin.meta.profile.key,
+      StudioPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
       OsrmPlugin.meta.profile.key,
       OutlinerPlugin.meta.profile.key,
@@ -188,6 +192,7 @@ export const getPlugins = ({
     AttentionPlugin(),
     BoardPlugin(),
     BookmarksPlugin(),
+    BrainPlugin(),
     CallsPlugin(),
     ChessPlugin(),
     ChessComPlugin(),
@@ -212,14 +217,17 @@ export const getPlugins = ({
     ConnectorPlugin(),
     !isTauri && CrxPlugin(),
     DebugPlugin({ logStore }),
+    DevtoolsPlugin(),
     DiscordPlugin(),
     DoctorPlugin(),
     DuffelPlugin(),
     IbkrPlugin(),
+    IdeogramPlugin(),
+    HeyGenPlugin(),
+    StudioPlugin(),
     ExplorerPlugin(),
     MagazinePlugin(),
     GamePlugin(),
-    GeneratorPlugin(),
     GraphPlugin(),
     InboxPlugin(),
     KanbanPlugin(),
@@ -227,7 +235,6 @@ export const getPlugins = ({
     MapPlugin(),
     isLocal && MapPluginSolid(),
     MarkdownPlugin(),
-    MasonryPlugin(),
     MeetingPlugin(),
     MermaidPlugin(),
     isTauri && !isMobile && !isPopover && NativePlugin(),
@@ -245,6 +252,7 @@ export const getPlugins = ({
     PresenterPlugin(),
     PreviewPlugin(),
     ProcessManagerPlugin(),
+    ProgressPlugin(),
     CommercePlugin(),
     CrmPlugin(),
     !isTauri && isPwa && PwaPlugin(),
@@ -279,7 +287,6 @@ export const getPlugins = ({
     // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
     BlueskyPlugin(),
     FreeqPlugin(),
-    GalleryPlugin(),
     GitHubPlugin(),
     IrohBeaconPlugin(),
     LinearPlugin(),

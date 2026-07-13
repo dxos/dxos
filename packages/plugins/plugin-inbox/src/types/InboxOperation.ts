@@ -10,6 +10,7 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { FactStore, FeedCursors } from '@dxos/pipeline-rdf';
 import {
   Connection,
   GetSyncTargetsInput,
@@ -107,6 +108,18 @@ export const DraftEmailAndOpen = Operation.make({
   output: Schema.Void,
 });
 
+/**
+ * The provider's "sent" tag, returned by the send ops so the caller can tag the local draft with the
+ * same tag its canonical synced copy will carry — Gmail's `SENT` label (a well-known id) or the JMAP
+ * account's Sent folder (a server-assigned id resolved by folder role). The `source`/`id` form the
+ * tag's foreign key; `label` is a fallback used only when the tag doesn't exist yet (pre first sync).
+ */
+const SentTagOutput = Schema.Struct({
+  source: Schema.String,
+  id: Schema.String,
+  label: Schema.String,
+});
+
 export const GmailSend = Operation.make({
   meta: {
     key: makeKey('googleMailSend'),
@@ -124,6 +137,7 @@ export const GmailSend = Operation.make({
   output: Schema.Struct({
     id: Schema.String,
     threadId: Schema.String,
+    sentTag: SentTagOutput,
   }),
   services: [Credential.CredentialsService],
 }).pipe(Operation.visible);
@@ -148,13 +162,21 @@ export const GoogleMailSync = Operation.make({
     ),
     after: Schema.Union(Schema.Number, Schema.String).pipe(
       Schema.annotations({
-        description: 'Date to start syncing from, either a unix timestamp or yyyy-MM-dd string.',
+        description: 'Oldest bound of the range to sync (the horizon), a unix timestamp or yyyy-MM-dd string.',
       }),
       Schema.optional,
     ),
-    restrictedMode: Schema.Boolean.pipe(
+    before: Schema.Union(Schema.Number, Schema.String).pipe(
       Schema.annotations({
-        description: 'Use restricted mode to limit to single date range and max 20 messages. Reduces subrequests.',
+        description:
+          'Newest bound of the range to sync, a unix timestamp or yyyy-MM-dd string. Defaults to today; backfill passes the oldest-synced date to cap a backward walk.',
+      }),
+      Schema.optional,
+    ),
+    direction: Schema.Literal('forward', 'backward').pipe(
+      Schema.annotations({
+        description:
+          'Override the walk direction. Inferred from the cursor by default: no cursor → backward (initial, newest-first); a cursor → forward (incremental). Pass backward with `before` to backfill older gaps.',
       }),
       Schema.optional,
     ),
@@ -193,6 +215,26 @@ export const JmapSync = Operation.make({
     binding: Ref.Ref(SyncBinding.SyncBinding).annotations({
       description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
     }),
+    after: Schema.Union(Schema.Number, Schema.String).pipe(
+      Schema.annotations({
+        description: 'Oldest bound of the range to sync (the horizon), a unix timestamp or ISO string.',
+      }),
+      Schema.optional,
+    ),
+    before: Schema.Union(Schema.Number, Schema.String).pipe(
+      Schema.annotations({
+        description:
+          'Newest bound of the range to sync, a unix timestamp or ISO string. Defaults to today; backfill passes the oldest-synced date to cap a backward walk.',
+      }),
+      Schema.optional,
+    ),
+    direction: Schema.Literal('forward', 'backward').pipe(
+      Schema.annotations({
+        description:
+          'Override the walk direction. Inferred from the cursor by default: no cursor → backward (initial, newest-first); a cursor → forward (incremental). Pass backward with `before` to backfill older gaps.',
+      }),
+      Schema.optional,
+    ),
   }),
   output: Schema.Struct({
     newMessages: Schema.Number,
@@ -235,6 +277,7 @@ export const JmapSend = Operation.make({
   output: Schema.Struct({
     id: Schema.String,
     threadId: Schema.String,
+    sentTag: SentTagOutput,
   }),
 }).pipe(Operation.visible);
 
@@ -547,7 +590,9 @@ export const ExtractMessage = Operation.make({
   meta: { key: makeKey('extractMessage'), name: 'Extract Message' },
   services: [Capability.Service, AiService.AiService, Database.Service],
   input: Schema.Struct({
-    source: Obj.Unknown,
+    // Live object or an immutable snapshot (feed messages resolve to snapshots); the handler
+    // re-resolves the live proxy by id when available and reads only `source.id` otherwise.
+    source: Schema.Any,
     extractorId: Schema.optional(Schema.String),
   }),
   output: Schema.Struct({
@@ -589,5 +634,95 @@ export const ExtractMailbox = Operation.make({
     failed: Schema.Number,
     created: Schema.Number,
     updated: Schema.Number,
+  }),
+});
+
+/** Default page size for {@link AnalyzeMailbox} fact-store commits. */
+export const DEFAULT_ANALYZE_MAILBOX_PAGE_SIZE = 10;
+
+export const AnalyzeMailbox = Operation.make({
+  meta: {
+    key: makeKey('analyzeMailbox'),
+    name: 'Analyze Mailbox',
+    description: 'Extracts RDF facts from every message in a mailbox feed into the shared space fact store.',
+    icon: 'ph--brain--regular',
+  },
+  services: [AiService.AiService, Database.Service, FactStore, FeedCursors],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox whose feed messages are analyzed.',
+    }),
+    pageSize: Schema.optional(
+      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+        description: 'Number of messages processed per fact-store commit.',
+      }),
+    ),
+    model: Schema.optional(
+      Schema.String.annotations({ description: 'Extraction model DXN; defaults to the edge Claude model.' }),
+    ),
+    provider: Schema.optional(
+      Schema.String.annotations({ description: 'AI provider id (e.g. ollama) for local extraction.' }),
+    ),
+    strict: Schema.optional(
+      Schema.Boolean.annotations({ description: 'Strict structured output; set false for weak local models.' }),
+    ),
+  }),
+  output: Schema.Struct({
+    processed: Schema.Number,
+    facts: Schema.Number,
+  }),
+});
+
+export const AnalyzeTopics = Operation.make({
+  meta: {
+    key: makeKey('analyzeTopics'),
+    name: 'Analyze Topics',
+    description: 'Tags every message and clusters the mailbox threads into Topic objects with summaries.',
+    icon: 'ph--stack--regular',
+  },
+  // Capability.Service: read the ProgressRegistry to publish a live monitor for the run.
+  services: [Capability.Service, AiService.AiService, Database.Service],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox whose messages are tagged and whose threads are clustered into topics.',
+    }),
+    limit: Schema.optional(
+      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
+        description: 'Cap messages tagged this run (resumable-lite; re-invoke to continue).',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    tagged: Schema.Number,
+    topics: Schema.Number,
+  }),
+});
+
+/** Default number of thread messages included in the {@link GenerateReply} prompt. */
+export const DEFAULT_GENERATE_REPLY_THREAD_LIMIT = 5;
+
+/** Default maximum number of facts included in the {@link GenerateReply} prompt. */
+export const DEFAULT_GENERATE_REPLY_FACT_LIMIT = 20;
+
+export const GenerateReply = Operation.make({
+  meta: {
+    key: makeKey('generateReply'),
+    name: 'Generate Reply',
+    description:
+      'Drafts a reply to an email, grounded on the thread context and facts the space fact store knows about the participants.',
+    icon: 'ph--sparkle--regular',
+  },
+  services: [AiService.AiService, Database.Service, FactStore],
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Mailbox whose feed holds the thread.',
+    }),
+    message: Schema.Any.annotations({
+      description: 'The message to reply to.',
+    }),
+  }),
+  output: Schema.Struct({
+    subject: Schema.String,
+    body: Schema.String,
   }),
 });

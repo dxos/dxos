@@ -77,3 +77,5 @@ const Container = composable<HTMLDivElement, PropsWithChildren<{ fill?: boolean 
     </Flex>
   ),
 );
+
+SketchArticle.displayName = 'SketchArticle';

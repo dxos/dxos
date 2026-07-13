@@ -38,3 +38,5 @@ export const SpacetimeArticle = ({ subject, attendableId, role }: SpacetimeArtic
     </SpacetimeEditor.Root>
   );
 };
+
+SpacetimeArticle.displayName = 'SpacetimeArticle';

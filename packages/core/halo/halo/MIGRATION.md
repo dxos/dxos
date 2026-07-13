@@ -241,3 +241,8 @@ API change.
 ## A. ISSUES
 
 1. Migration from protobuf?
+2. Alt:
+   - a. Old API => Old Hypercore impl.
+   - b. New API => Old Hypercore impl.
+   - c. New API => New EDGE endpoint impl (shim).
+   - d. New API => Keyhive service impl.

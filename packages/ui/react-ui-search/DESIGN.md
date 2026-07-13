@@ -26,7 +26,7 @@ sites.
   `RangeList` (plugin-sheet), `Mixer` (plugin-zen), `SelectOptionField` (react-ui-form),
   `ToolList` (react-ui-mcp).
 
-Design doc: `docs/superpowers/specs/2026-06-13-react-ui-list-aspects-design.md`.
+Design doc: `agents/superpowers/specs/2026-06-13-react-ui-list-aspects-design.md`.
 Audit + grammar: `packages/ui/react-ui-list/AUDIT.md`.
 
 ## Where we are now
@@ -242,7 +242,7 @@ Starting from least risk → most value:
 
 ## References
 
-- `docs/superpowers/specs/2026-06-13-react-ui-list-aspects-design.md` — aspect-layer design
+- `agents/superpowers/specs/2026-06-13-react-ui-list-aspects-design.md` — aspect-layer design
   this roadmap extends.
 - `packages/ui/react-ui-list/AUDIT.md` — full inventory + grammar rules.
 - `packages/ui/react-ui-stack/PLAN.md` — the original retirement plan for E1.

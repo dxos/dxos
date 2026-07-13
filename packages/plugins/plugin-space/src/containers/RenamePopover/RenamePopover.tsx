@@ -123,3 +123,5 @@ export const RenamePopover = ({ subject }: RenamePopoverProps) => {
     </div>
   );
 };
+
+RenamePopover.displayName = 'RenamePopover';
