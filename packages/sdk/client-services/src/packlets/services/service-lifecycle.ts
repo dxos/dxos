@@ -419,7 +419,8 @@ const acceptIdentity = async (
 ): Promise<Identity> => {
   const identityManager = await runtime.runPromise(IdentityManagerService);
   const { identity, identityRecord } = await identityManager.prepareIdentity(params, state.ctx);
-  await setNetworkIdentity(runtime, state, { deviceCredential: params.authorizedDeviceCredential!, identity });
+  invariant(params.authorizedDeviceCredential, 'authorizedDeviceCredential is required to accept an identity.');
+  await setNetworkIdentity(runtime, state, { deviceCredential: params.authorizedDeviceCredential, identity });
   await identity.joinNetwork(state.ctx);
   await identityManager.acceptIdentity(identity, identityRecord, params.deviceProfile);
   await initialize(runtime, state, state.ctx);
