@@ -95,6 +95,9 @@
       "path": "../../plugins/plugin-markdown"
     },
     {
+      "path": "../../plugins/plugin-outliner"
+    },
+    {
       "path": "../../plugins/plugin-space"
     },
     {

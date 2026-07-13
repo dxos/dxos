@@ -20,6 +20,8 @@ import { Message, Person } from '@dxos/types';
 import { DraftMessage, type Mailbox } from '../types';
 import { runOnArrivalExtractors } from '../util/mailbox-sync';
 
+// TODO(burdon): Factor out.
+
 /**
  * Reusable email-processing pipeline stages, on top of the generic sync machinery in
  * `SyncBinding` (source, dedup, commit). Provider-specific decode/map stages stay in each sync op.

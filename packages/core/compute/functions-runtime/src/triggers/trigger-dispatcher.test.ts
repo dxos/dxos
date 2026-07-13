@@ -106,13 +106,13 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           runnable: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specManual(),
+          spec: Trigger.specDirect(),
         });
         yield* Database.add(trigger);
         const dispatcher = yield* TriggerDispatcher;
         const { result } = yield* dispatcher.invokeTrigger({
           trigger,
-          event: { data: { tick: 42 } } satisfies TriggerEvent.ManualEvent,
+          event: { data: { tick: 42 } } satisfies TriggerEvent.DirectEvent,
         });
 
         expect(result).toEqual(Exit.succeed({ data: { tick: 42 } }));
@@ -120,17 +120,17 @@ describe('TriggerDispatcher', () => {
     );
 
     it.effect(
-      'should not invoke manual triggers from scheduled dispatch',
+      'should not invoke direct triggers from scheduled dispatch',
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           runnable: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specManual(),
+          spec: Trigger.specDirect(),
         });
         yield* Database.add(trigger);
         const dispatcher = yield* TriggerDispatcher;
-        const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['manual'] });
+        const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['direct'] });
 
         expect(invocations).toEqual([]);
       }, Effect.provide(TestTriggerDispatcherLayer)),

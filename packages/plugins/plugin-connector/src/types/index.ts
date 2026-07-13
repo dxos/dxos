@@ -10,5 +10,4 @@ export * from './surface';
 
 export * as Connection from './Connection';
 export * as ConnectorOperation from './ConnectorOperation';
-export * as DerivedBinding from './DerivedBinding';
 export * as SyncBinding from './SyncBinding';

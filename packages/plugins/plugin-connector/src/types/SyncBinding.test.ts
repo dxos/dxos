@@ -26,7 +26,7 @@ describe('SyncBinding.layer', () => {
   test('accepts a bare CursorHolder binding without a Connection source', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Cursor.Cursor] });
     const cursor = db.add(Cursor.make({ value: 'seed' }));
-    // A `DerivedBinding`-shaped relation would look like this: only a cursor, no `Connection` source.
+    // A cursor-only relation (no `Connection` source) satisfies CursorHolder structurally.
     const binding: SyncBinding.CursorHolder = { cursor: Ref.make(cursor) };
 
     const state = await Effect.gen(function* () {
