@@ -6381,9 +6381,6 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
-      '@dxos/credentials':
-        specifier: workspace:*
-        version: link:../../halo/credentials
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
@@ -6408,21 +6405,12 @@ importers:
       '@dxos/feed':
         specifier: workspace:*
         version: link:../feed
-      '@dxos/feed-store':
-        specifier: workspace:*
-        version: link:../../../common/feed-store
-      '@dxos/hypercore':
-        specifier: workspace:*
-        version: link:../../../common/hypercore
       '@dxos/index-core':
         specifier: workspace:*
         version: link:../index-core
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
-      '@dxos/keyring':
-        specifier: workspace:*
-        version: link:../../halo/keyring
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
@@ -6432,21 +6420,12 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
-      '@dxos/messaging':
-        specifier: workspace:*
-        version: link:../../mesh/messaging
-      '@dxos/network-manager':
-        specifier: workspace:*
-        version: link:../../mesh/network-manager
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
-      '@dxos/random-access-storage':
-        specifier: workspace:*
-        version: link:../../../common/random-access-storage
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../../common/sql-sqlite
@@ -6456,15 +6435,6 @@ importers:
       '@dxos/teleport-extension-automerge-replicator':
         specifier: workspace:*
         version: link:../../mesh/teleport-extension-automerge-replicator
-      '@dxos/teleport-extension-gossip':
-        specifier: workspace:*
-        version: link:../../mesh/teleport-extension-gossip
-      '@dxos/teleport-extension-object-sync':
-        specifier: workspace:*
-        version: link:../../mesh/teleport-extension-object-sync
-      '@dxos/teleport-extension-replicator':
-        specifier: workspace:*
-        version: link:../../mesh/teleport-extension-replicator
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../../common/timeframe
@@ -6486,9 +6456,6 @@ importers:
       bs58check:
         specifier: 'catalog:'
         version: 4.0.0
-      crc-32:
-        specifier: 'catalog:'
-        version: 1.2.2
       effect:
         specifier: 3.21.4
         version: 3.21.4
@@ -6508,9 +6475,6 @@ importers:
       '@types/semver':
         specifier: 'catalog:'
         version: 7.7.1
-      fast-check:
-        specifier: 'catalog:'
-        version: 3.23.2
       get-port-please:
         specifier: 'catalog:'
         version: 3.1.1
@@ -18605,6 +18569,9 @@ importers:
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../common/feed-store
+      '@dxos/hypercore':
+        specifier: workspace:*
+        version: link:../../common/hypercore
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -18653,6 +18620,9 @@ importers:
       '@dxos/teleport-extension-object-sync':
         specifier: workspace:*
         version: link:../../core/mesh/teleport-extension-object-sync
+      '@dxos/teleport-extension-replicator':
+        specifier: workspace:*
+        version: link:../../core/mesh/teleport-extension-replicator
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
@@ -18680,6 +18650,9 @@ importers:
       cbor-x:
         specifier: 'catalog:'
         version: 1.5.4
+      crc-32:
+        specifier: 'catalog:'
+        version: 1.2.2
       effect:
         specifier: 3.21.4
         version: 3.21.4
@@ -18705,6 +18678,9 @@ importers:
       '@types/readable-stream':
         specifier: 'catalog:'
         version: 2.3.14
+      fast-check:
+        specifier: 'catalog:'
+        version: 3.23.2
       get-port-please:
         specifier: 'catalog:'
         version: 3.1.1
