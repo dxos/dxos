@@ -25,13 +25,6 @@ const videoVariant: VariantContent = {
   generation: { provider: 'mock', prompt: 'A blooming flower time-lapse.' },
 };
 
-// External provider URL — the renderer derives an embeddable player via toEmbedUrl.
-const youTubeVariant: VariantContent = {
-  contentType: 'video/mp4',
-  url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-  generation: { provider: 'mock', prompt: 'A YouTube video.' },
-};
-
 const meta: Meta = {
   title: 'plugins/plugin-studio/components/VariantRenderer',
   decorators: [withTheme(), withLayout()],
@@ -54,14 +47,6 @@ export const Video: Story = {
   render: () => (
     <div className='is-96'>
       <VideoVariant variant={videoVariant} />
-    </div>
-  ),
-};
-
-export const VideoEmbed: Story = {
-  render: () => (
-    <div className='is-96'>
-      <VideoVariant variant={youTubeVariant} />
     </div>
   ),
 };

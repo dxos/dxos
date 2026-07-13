@@ -60,22 +60,3 @@ export const make = ({
   Obj.setParent(instructions, artifact);
   return artifact;
 };
-
-/**
- * Creates a video {@link Artifact} (`kind: 'video'`) from a source `url`, attaching it as the cover
- * {@link Variant}. The nominal `video/mp4` contentType routes to the `VideoVariant` renderer, which
- * derives an embeddable player from the URL (YouTube/Vimeo/direct). Owned variant cascade-deletes
- * and deep-clones with the artifact.
- */
-export const makeVideo = ({ name, url }: { name?: string; url?: string } = {}): Artifact => {
-  const artifact = make({ name, kind: 'video' });
-  if (url) {
-    const variant = Variant.make({ contentType: 'video/mp4', url });
-    Obj.setParent(variant, artifact);
-    Obj.update(artifact, (artifact) => {
-      artifact.variants = [Ref.make(variant)];
-      artifact.cover = Ref.make(variant);
-    });
-  }
-  return artifact;
-};
