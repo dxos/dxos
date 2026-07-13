@@ -11,8 +11,8 @@ import { type Stream as PbStream } from '@dxos/codec-protobuf/stream';
 import { EffectEx } from '@dxos/effect';
 import { type BridgeService as BridgeServiceRpc } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { BridgeService } from '@dxos/protocols/rpc';
-import { Rpc } from '@dxos/worker-framework';
 
+import * as Rpc from './Rpc';
 import { pbStreamToStream, streamToPbStream } from './service-rpc';
 
 /**

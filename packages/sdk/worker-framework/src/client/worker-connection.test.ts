@@ -6,8 +6,8 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, Trigger, asyncTimeout } from '@dxos/async';
 
-import * as Messages from '../Messages';
 import * as Worker from '../worker';
+import * as WorkerProtocol from '../WorkerProtocol';
 import { Connection } from './worker-connection';
 
 /**
@@ -16,18 +16,18 @@ import { Connection } from './worker-connection';
  * coordinator it can be told to drop a tab's first `request-port`, modelling a lost/raced message.
  */
 const createHub = () => {
-  type Entry = { onMessage: Event<Messages.CoordinatorMessage> };
+  type Entry = { onMessage: Event<WorkerProtocol.CoordinatorMessage> };
   const entries = new Set<Entry>();
   const portsByClient = new Map<string, Entry>();
   const dropOnceFor = new Set<string>();
 
-  const connect = (): Messages.WorkerCoordinator => {
-    const onMessage = new Event<Messages.CoordinatorMessage>();
+  const connect = (): WorkerProtocol.WorkerCoordinator => {
+    const onMessage = new Event<WorkerProtocol.CoordinatorMessage>();
     const entry: Entry = { onMessage };
     entries.add(entry);
     return {
       onMessage,
-      sendMessage: (message: Messages.CoordinatorMessage) => {
+      sendMessage: (message: WorkerProtocol.CoordinatorMessage) => {
         if (message.type === 'request-port') {
           portsByClient.set(message.clientId, entry);
           if (dropOnceFor.has(message.clientId)) {
@@ -74,7 +74,7 @@ const createWorkerFactory = (storageLockKey: string) => () => {
       stop: async () => {},
     }),
   });
-  return channel.port2 as Messages.WorkerOrPort;
+  return channel.port2 as WorkerProtocol.WorkerOrPort;
 };
 
 type Connected = { appPort: MessagePort; systemPort: MessagePort; isOwner: boolean };

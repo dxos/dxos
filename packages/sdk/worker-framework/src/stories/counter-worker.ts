@@ -5,9 +5,10 @@
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import { Rpc, RpcTiming } from '@dxos/worker-framework';
+import { RpcTiming } from '@dxos/worker-framework';
 import * as Worker from '@dxos/worker-framework/worker';
 
+import * as Rpc from '../internal/rpc';
 import { COUNTER_LIVENESS_LOCK_KEY, COUNTER_STORAGE_LOCK_KEY } from './counter-constants';
 import { CounterRpcs, TimingStatsSample, TimingStatsSnapshot } from './counter-service';
 

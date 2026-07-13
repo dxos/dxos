@@ -6,19 +6,19 @@ import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 
-import * as Messages from '../Messages';
+import * as WorkerProtocol from '../WorkerProtocol';
 import { SingleClient } from './single-client-coordinator';
 
 describe('SingleClient coordinator', () => {
   test('echoes messages back to sender', async ({ expect }) => {
     const coordinator = new SingleClient();
-    const received = new Trigger<Messages.CoordinatorMessage>();
+    const received = new Trigger<WorkerProtocol.CoordinatorMessage>();
 
     coordinator.onMessage.on((msg) => {
       received.wake(msg);
     });
 
-    const message: Messages.CoordinatorMessage = {
+    const message: WorkerProtocol.CoordinatorMessage = {
       type: 'new-leader',
       leaderId: 'test-leader',
     };
@@ -30,13 +30,13 @@ describe('SingleClient coordinator', () => {
 
   test('echoes request-port messages', async ({ expect }) => {
     const coordinator = new SingleClient();
-    const received = new Trigger<Messages.CoordinatorMessage>();
+    const received = new Trigger<WorkerProtocol.CoordinatorMessage>();
 
     coordinator.onMessage.on((msg) => {
       received.wake(msg);
     });
 
-    const message: Messages.CoordinatorMessage = {
+    const message: WorkerProtocol.CoordinatorMessage = {
       type: 'request-port',
       clientId: 'test-client-123',
     };

@@ -12,7 +12,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import * as Rpc from './Rpc';
+import * as Rpc from './internal/rpc';
 import * as RpcTiming from './RpcTiming';
 
 class TimingRpcs extends RpcGroup.make(

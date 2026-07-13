@@ -33,8 +33,8 @@ import {
   WorkerService,
 } from '@dxos/protocols/rpc';
 import { type RpcPort, layerProtocolRpcPortClient } from '@dxos/rpc';
-import { Rpc } from '@dxos/worker-framework';
 
+import * as Rpc from './Rpc';
 import { type ClientServices } from './service';
 
 export type MessagePortLike = MessagePort;
