@@ -147,10 +147,14 @@ Phased; no backwards compatibility. Each phase lands behind the new `@dxos/halo`
 
 ## 5. Prototype service and HALO shim feasibility
 
-`src/Keyhive.ts` implements a pure-TypeScript, in-memory prototype of the Keyhive membership
-model (Keyhive is not published to npm; see the module comment for scope and omissions). The
-`Keyhive.Service` interface mirrors the `keyhive_wasm` bindings so a WASM-backed layer can
-replace `layerMemory()` unchanged.
+> Note: the pure-TypeScript Keyhive prototype (`Keyhive.ts`) has been **removed from
+> `@dxos/halo`** to keep that package definitions-only (see `API_AUDIT.md` §3.5); its runtime is
+> destined for a separate `@dxos/halo-keyhive`. The feasibility analysis below is retained as
+> design rationale.
+
+The prototype implemented a pure-TypeScript, in-memory model of the Keyhive membership layer
+(Keyhive is not published to npm). Its `Keyhive.Service` interface mirrored the `keyhive_wasm`
+bindings so a WASM-backed layer could replace `layerMemory()` unchanged.
 
 **Can the existing HALO implementation be shimmed behind this API?**
 Mostly yes for the membership core; no for encryption. A `layerLegacy()` backed by `@dxos/credentials` +

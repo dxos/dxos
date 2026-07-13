@@ -107,15 +107,8 @@ module Invitation
 ### Schema modules
 
 ECHO object / value schemas backing the durable, application-visible types. These are plain
-`Schema` modules (no service): `Profile` (identity profile), `Device` (device metadata),
-`Group` (membership view + the `Access` capability level), and `AddressBook` (contacts).
-
-### Membership prototype
-
-`Keyhive` is a pure-TypeScript prototype of the Keyhive membership model (delegation/revocation
-DAG, contact cards, causal replication). It carries an in-memory implementation and, per the
-definitions-only rule (`API_AUDIT.md` §3.5), its runtime is slated to move to a separate
-`@dxos/halo-keyhive` package.
+`Schema` modules (no service): `Profile` (identity profile), `Device` (device metadata), and
+`Group` (membership view + the `Access` capability level, reused by `Space.Member`).
 
 ---
 

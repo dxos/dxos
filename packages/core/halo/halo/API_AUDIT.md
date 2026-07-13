@@ -189,9 +189,9 @@ types a new home — not redesigning plugin control flow.
 and the Effect schemas for the domain types. Every concrete backing — the client adapter, the
 Keyhive/EDGE layers, any in-memory test double — lives in a **separate implementation package**
 and is provided as a `Layer` at composition time. This keeps `@dxos/halo` free of `@dxos/client`
-(and of `keyhive_wasm`) and makes the backend a layer swap. (The `Keyhive.ts` prototype currently
-in this package is a feasibility spike under this rule its `make`/`layerMemory` implementation
-moves to an impl package, see §3.5.)
+(and of `keyhive_wasm`) and makes the backend a layer swap. (The Keyhive membership prototype has
+been removed from this package to honor this rule; a future `@dxos/halo-keyhive` will host that
+runtime — see §3.5.)
 
 Three services (`Context.Tag`s), one per aspect:
 
@@ -326,18 +326,17 @@ owns client construction. Plugins import only `@dxos/halo`:
 plugin-client  ──────  composition root; sole remaining importer of @dxos/client
 ```
 
-`layerClient` (in `@dxos/halo-client`) wraps the existing proxies (`HaloProxy`, `EchoProxy`
-spaces, `InvitationsProxy`) — a mechanical adapter, no behavior change. Later, `layerKeyhive`
-(or the EDGE-endpoint shim) replaces it without touching a single plugin. Because `@dxos/halo`
-carries no implementation, this is a pure layer swap. The `Keyhive.ts` prototype's runtime
-(`make`/`layerMemory`) is the first tenant of `@dxos/halo-keyhive`; `@dxos/halo` retains only its
-tag/verb/schema surface.
+`layerClient` (in `@dxos/halo-adapter-client`) wraps the existing proxies (`HaloProxy`,
+`EchoProxy` spaces, `InvitationsProxy`) — a mechanical adapter, no behavior change. Later,
+`layerKeyhive` (or the EDGE-endpoint shim) replaces it without touching a single plugin. Because
+`@dxos/halo` carries no implementation, this is a pure layer swap; the Keyhive membership runtime
+will live in a future `@dxos/halo-keyhive`, not in `@dxos/halo`.
 
 Suggested sequence:
 
 1. **Define services** in `@dxos/halo` (tags, verbs, event/error schemas — no layers). Reuse
    `Profile`, `Device`; add `Space`, `Member`, `InvitationEvent`, `Invitation.Flow` schemas.
-   Move the `Keyhive.ts` implementation out to `@dxos/halo-keyhive`, leaving its interface.
+   Keep the Keyhive membership runtime out of `@dxos/halo` (destined for `@dxos/halo-keyhive`).
 2. **`layerClient`** in a `@dxos/halo-adapter-client` package (keeps `@dxos/halo` free of the
    client dependency), provided by `plugin-client` alongside — then instead of —
    `ClientCapabilities.Client`. **(Implemented — see `@dxos/halo-adapter-client`, with an
@@ -378,7 +377,7 @@ Suggested sequence:
 6. **Shell UI components** — `SpaceMemberList`/`InvitationList`/`AuthCode` from
    `@dxos/shell/react` embed observable-based logic; they should be rebuilt on the new hooks in
    `react-ui-*` (the `MembersContainer` TODO already wants this).
-7. **Definitions-only invariant** — `@dxos/halo` must not gain a runtime dependency. The current
-   `Keyhive.ts` prototype (`make`/`layerMemory`) violates this and moves to `@dxos/halo-keyhive`
-   (§3.5); a lint/dep-cruiser rule should keep `@dxos/halo` from importing anything but schema
-   and type primitives so no future layer sneaks back in.
+7. **Definitions-only invariant** — `@dxos/halo` must not gain a runtime dependency. The Keyhive
+   membership prototype (`make`/`layerMemory`) has been removed for this reason and will live in
+   `@dxos/halo-keyhive` (§3.5); a lint/dep-cruiser rule should keep `@dxos/halo` from importing
+   anything but schema and type primitives so no future layer sneaks back in.

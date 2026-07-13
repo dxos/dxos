@@ -4,10 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { EID, IdentityDid, SpaceId } from '@dxos/keys';
 
-import * as AddressBook from './AddressBook';
 import * as Device from './Device';
 import * as Group from './Group';
 import * as Profile from './Profile';
@@ -37,12 +36,5 @@ describe('halo types', () => {
     expect(Obj.instanceOf(Group.Group, group)).toBe(true);
     expect(group.members).toHaveLength(2);
     expect(group.members[0].access).toBe('admin');
-  });
-
-  test('address book', ({ expect }) => {
-    const profile = Profile.make({ did: IdentityDid.random(), displayName: 'Bob' });
-    const addressBook = AddressBook.make({ contacts: [Ref.make(profile)] });
-    expect(Obj.instanceOf(AddressBook.AddressBook, addressBook)).toBe(true);
-    expect(addressBook.contacts).toHaveLength(1);
   });
 });
