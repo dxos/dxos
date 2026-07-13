@@ -8,11 +8,6 @@ import { describe, expect, test } from 'vitest';
 import * as QueryService from './QueryService.ts';
 import { protoMessage } from './service-rpc.ts';
 
-// A 4-byte (astral) character at char offset 8191 makes protobufjs's `utf8.read` overshoot its 8192-unit
-// flush boundary, then a later block spreads a stale, reused `chunk` slot — injecting a lone low-surrogate
-// (`\udfe9` for U+1F7E9) and shifting every following code unit. The corrupted string then breaks JSON.parse.
-const buildLargeString = (): string => 'a'.repeat(8191) + '\u{1F7E9}' + 'b'.repeat(8192) + 'TAIL';
-
 describe('QueryService wire schema', () => {
   test('round-trips a >8KB documentJson containing an astral character', () => {
     const documentJson = buildLargeString();
@@ -63,3 +58,8 @@ describe('QueryService wire schema', () => {
     expect(decoded.results?.[0]?.documentJson).not.toEqual(documentJson);
   });
 });
+
+// A 4-byte (astral) character at char offset 8191 makes protobufjs's `utf8.read` overshoot its 8192-unit
+// flush boundary, then a later block spreads a stale, reused `chunk` slot — injecting a lone low-surrogate
+// (`\udfe9` for U+1F7E9) and shifting every following code unit. The corrupted string then breaks JSON.parse.
+const buildLargeString = (): string => 'a'.repeat(8191) + '\u{1F7E9}' + 'b'.repeat(8192) + 'TAIL';
