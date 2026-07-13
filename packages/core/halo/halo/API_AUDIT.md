@@ -17,18 +17,18 @@ surface the new package must also serve.
 
 Import counts across Composer + plugins (production code and stories):
 
-| Import source                    | Files | Notes                                                            |
-| -------------------------------- | ----- | ---------------------------------------------------------------- |
+| Import source                    | Files | Notes                                                                                                                                         |
+| -------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@dxos/react-client/echo`        | 268   | Mostly ECHO db/query hooks (out of scope), but also `useSpaces`, `useSpace`, `useMembers`, `useSpaceInvitations`, `SpaceMember`, `SpaceState` |
-| `@dxos/client`                   | 88    | `Client` type, `ClientService`, `PublicKey` re-export             |
-| `@dxos/react-client`             | 64    | `useClient`, `useConfig`, `useMulticastObservable`                |
-| `@dxos/client/echo`              | 52    | `getSpace`, `Space`, `SpaceState`, `SpaceMember`                  |
-| `@dxos/react-client/halo`        | 26    | `useIdentity`, `useDevices`, `useCredentials`, `Identity`, `Device`, `Credential` types |
-| `@dxos/client/invitations`       | 7     | `Invitation`, `InvitationEncoder`, `hostInvitation`, observables  |
-| `@dxos/react-client/invitations` | 4     | Same, from React entry point                                      |
-| `@dxos/client/halo`              | 4     | `Identity`, `Device`, `DeviceKind`, `DeviceType`, `Credential`    |
-| `@dxos/client/edge`              | 5     | `createEdgeIdentity` (credential-presentation auth)               |
-| `@dxos/shell/react`              | 2+    | `SpaceMemberList`, `InvitationList`, `AuthCode` UI components     |
+| `@dxos/client`                   | 88    | `Client` type, `ClientService`, `PublicKey` re-export                                                                                         |
+| `@dxos/react-client`             | 64    | `useClient`, `useConfig`, `useMulticastObservable`                                                                                            |
+| `@dxos/client/echo`              | 52    | `getSpace`, `Space`, `SpaceState`, `SpaceMember`                                                                                              |
+| `@dxos/react-client/halo`        | 26    | `useIdentity`, `useDevices`, `useCredentials`, `Identity`, `Device`, `Credential` types                                                       |
+| `@dxos/client/invitations`       | 7     | `Invitation`, `InvitationEncoder`, `hostInvitation`, observables                                                                              |
+| `@dxos/react-client/invitations` | 4     | Same, from React entry point                                                                                                                  |
+| `@dxos/client/halo`              | 4     | `Identity`, `Device`, `DeviceKind`, `DeviceType`, `Credential`                                                                                |
+| `@dxos/client/edge`              | 5     | `createEdgeIdentity` (credential-presentation auth)                                                                                           |
+| `@dxos/shell/react`              | 2+    | `SpaceMemberList`, `InvitationList`, `AuthCode` UI components                                                                                 |
 
 Almost all plugins obtain the client via the `ClientCapabilities.Client` capability provided by
 `plugin-client` — the capability system is already the single injection point, which makes the
@@ -41,38 +41,38 @@ service swap tractable.
 `client.halo.identity` (a `MulticastObservable<Identity | null>`) is by far the most used API
 (~40 call sites + 20 hook usages).
 
-| API                                   | Count | Consumers                                                                                                           |
-| ------------------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------- |
-| `halo.identity.get()`                 | ~40   | Gating ("has identity?"): plugin-space (`navigation-handler`, `operations/join`, `spaces-ready`), plugin-registry, plugin-onboarding, plugin-client CLI commands. Reading fields (`identityKey`, `did`, `spaceKey`, `profile`): composer-app recovery pages, plugin-script deploy, plugin-transcription, plugin-meeting, plugin-iroh-beacon |
-| `halo.identity.subscribe()`           | 5     | plugin-client (`capabilities/client.ts` — layout mode on login), plugin-calls (`call-manager`), plugin-onboarding (`onboarding-manager`), plugin-assistant (`edge-model-resolver`)                          |
-| `CreateAtom.fromObservable(identity)` | 1     | plugin-client `app-graph-builder` — bridges the observable into the atom-based graph                                  |
-| `useIdentity()` hook                  | ~20   | plugin-assistant (Chat), plugin-thread, plugin-comments, plugin-markdown (collab identity), plugin-code, plugin-script, plugin-space (SpacePresence), plugin-transcription, plugin-onboarding (WelcomeScreen), plugin-client (Account/Profile containers) |
-| `halo.createIdentity(profile?)`       | 14    | Operation handler (`plugin-client/operations/create-identity`), testing (`initializeIdentity`), ~10 story fixtures, import scripts (plugin-inbox, plugin-onboarding)                                        |
-| `halo.recoverIdentity({...})`         | 4     | plugin-client `account login` and `halo recover` CLI commands                                                          |
-| `halo.updateProfile(profile)`         | 1     | plugin-client `ProfileContainer`                                                                                        |
-| `identity.did` / `identityKey` / `spaceKey` / `profile` | many | Field reads wherever identity is obtained                                                            |
+| API                                                     | Count | Consumers                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `halo.identity.get()`                                   | ~40   | Gating ("has identity?"): plugin-space (`navigation-handler`, `operations/join`, `spaces-ready`), plugin-registry, plugin-onboarding, plugin-client CLI commands. Reading fields (`identityKey`, `did`, `spaceKey`, `profile`): composer-app recovery pages, plugin-script deploy, plugin-transcription, plugin-meeting, plugin-iroh-beacon |
+| `halo.identity.subscribe()`                             | 5     | plugin-client (`capabilities/client.ts` — layout mode on login), plugin-calls (`call-manager`), plugin-onboarding (`onboarding-manager`), plugin-assistant (`edge-model-resolver`)                                                                                                                                                          |
+| `CreateAtom.fromObservable(identity)`                   | 1     | plugin-client `app-graph-builder` — bridges the observable into the atom-based graph                                                                                                                                                                                                                                                        |
+| `useIdentity()` hook                                    | ~20   | plugin-assistant (Chat), plugin-thread, plugin-comments, plugin-markdown (collab identity), plugin-code, plugin-script, plugin-space (SpacePresence), plugin-transcription, plugin-onboarding (WelcomeScreen), plugin-client (Account/Profile containers)                                                                                   |
+| `halo.createIdentity(profile?)`                         | 14    | Operation handler (`plugin-client/operations/create-identity`), testing (`initializeIdentity`), ~10 story fixtures, import scripts (plugin-inbox, plugin-onboarding)                                                                                                                                                                        |
+| `halo.recoverIdentity({...})`                           | 4     | plugin-client `account login` and `halo recover` CLI commands                                                                                                                                                                                                                                                                               |
+| `halo.updateProfile(profile)`                           | 1     | plugin-client `ProfileContainer`                                                                                                                                                                                                                                                                                                            |
+| `identity.did` / `identityKey` / `spaceKey` / `profile` | many  | Field reads wherever identity is obtained                                                                                                                                                                                                                                                                                                   |
 
 ### 2.2 Devices
 
-| API                                       | Count | Consumers                                                                                    |
-| ------------------------------------------ | ----- | --------------------------------------------------------------------------------------------- |
-| `halo.device`                              | 6     | plugin-client `device info/update` commands, plugin-calls (presence key), plugin-iroh-beacon (`deviceKey`) |
+| API                                        | Count | Consumers                                                                                                                             |
+| ------------------------------------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `halo.device`                              | 6     | plugin-client `device info/update` commands, plugin-calls (presence key), plugin-iroh-beacon (`deviceKey`)                            |
 | `halo.devices.get()` / `useDevices()`      | 4     | plugin-client `DevicesContainer`, `device list` command, plugin-onboarding (`onboarding-manager` — device count gates recovery hints) |
-| `Device`, `DeviceKind`, `DeviceType` types | 3     | plugin-client device UI/CLI formatting                                                          |
-| `DevicesService.updateDevice` (raw RPC)    | 1     | plugin-client `device update` command — no proxy-level API exists                               |
+| `Device`, `DeviceKind`, `DeviceType` types | 3     | plugin-client device UI/CLI formatting                                                                                                |
+| `DevicesService.updateDevice` (raw RPC)    | 1     | plugin-client `device update` command — no proxy-level API exists                                                                     |
 
 ### 2.3 Credentials & recovery
 
-| API                                              | Count | Consumers                                                                                      |
-| ------------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------ |
-| `halo.credentials.subscribe()` / `useCredentials()` | 3   | plugin-client `credential list` command, `RecoveryCredentialsContainer` (filters `IdentityRecovery` credentials) |
-| `halo.queryCredentials({ type })`                 | 1     | plugin-client `credential list`                                                                   |
-| `halo.writeCredentials([...])`                    | 2     | plugin-client `credential add`; plugin-script (writes a `ServiceAccess` credential before deploy) |
-| `space.internal.getCredentials()`                 | 1     | plugin-client `credential list --space`                                                           |
-| `SpacesService.queryCredentials` (raw RPC)        | 1     | composer-app `util/halo.ts` `queryAllCredentials` — works around `queryCredentials` being sync/incomplete |
-| `IdentityService.createRecoveryCredential` (raw RPC) | 3  | plugin-client `create-recovery-code`, `create-passkey` operations                                 |
-| `IdentityService.requestRecoveryChallenge` (raw RPC) | 1  | plugin-client `redeem-passkey` operation                                                          |
-| `IdentityService.recoverIdentity` (raw RPC)       | 2     | plugin-client `redeem-passkey`, `redeem-token` operations (proof/token variants not on the proxy) |
+| API                                                  | Count | Consumers                                                                                                        |
+| ---------------------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------- |
+| `halo.credentials.subscribe()` / `useCredentials()`  | 3     | plugin-client `credential list` command, `RecoveryCredentialsContainer` (filters `IdentityRecovery` credentials) |
+| `halo.queryCredentials({ type })`                    | 1     | plugin-client `credential list`                                                                                  |
+| `halo.writeCredentials([...])`                       | 2     | plugin-client `credential add`; plugin-script (writes a `ServiceAccess` credential before deploy)                |
+| `space.internal.getCredentials()`                    | 1     | plugin-client `credential list --space`                                                                          |
+| `SpacesService.queryCredentials` (raw RPC)           | 1     | composer-app `util/halo.ts` `queryAllCredentials` — works around `queryCredentials` being sync/incomplete        |
+| `IdentityService.createRecoveryCredential` (raw RPC) | 3     | plugin-client `create-recovery-code`, `create-passkey` operations                                                |
+| `IdentityService.requestRecoveryChallenge` (raw RPC) | 1     | plugin-client `redeem-passkey` operation                                                                         |
+| `IdentityService.recoverIdentity` (raw RPC)          | 2     | plugin-client `redeem-passkey`, `redeem-token` operations (proof/token variants not on the proxy)                |
 
 The recovery/passkey flows reach past `client.halo` into raw RPC services because the proxy API
 is incomplete — a clear signal for what the new service must cover as first-class verbs.
@@ -82,32 +82,32 @@ is incomplete — a clear signal for what the new service must cover as first-cl
 `createEdgeIdentity(client)` builds an `EdgeIdentity` whose `presentCredentials({ challenge })`
 signs a nonce challenge with the device key — HALO's auth handshake toward EDGE.
 
-| Consumer          | Site                                                    |
-| ------------------ | -------------------------------------------------------- |
-| plugin-assistant   | `edge-model-resolver` (AI service auth)                   |
-| plugin-connector   | `connector-coordinator` (EDGE websocket auth)             |
-| plugin-payments    | `services/edge-auth` (`Authorization: VerifiablePresentation` header) |
-| plugin-client      | `useHubClient`, `edge status` command                     |
+| Consumer         | Site                                                                  |
+| ---------------- | --------------------------------------------------------------------- |
+| plugin-assistant | `edge-model-resolver` (AI service auth)                               |
+| plugin-connector | `connector-coordinator` (EDGE websocket auth)                         |
+| plugin-payments  | `services/edge-auth` (`Authorization: VerifiablePresentation` header) |
+| plugin-client    | `useHubClient`, `edge status` command                                 |
 
 ### 2.5 Space management
 
 Space CRUD/lifecycle — HALO-adjacent because membership and space keys are credential-backed:
 
-| API                                        | Count | Consumers                                                                                     |
-| ------------------------------------------- | ----- | ----------------------------------------------------------------------------------------------- |
-| `client.spaces.get()` / `.get(id)`          | 57    | Ubiquitous space resolution: plugin-space, plugin-assistant, plugin-inbox, plugin-wnfs, plugin-search, plugin-thread, plugin-meeting, plugin-connector, plugin-discord/bluesky/slack sync, plugin-deck, plugin-simple-layout, composer-app recovery |
-| `client.spaces.create(props?, options?)`    | 34    | plugin-space `operations/create`, personal-space bootstrap (`identity-created`, `initializeIdentity`, `halo create` — with `tags`, `membershipPolicy`), plugin-native-filesystem mirror space, ~20 story fixtures |
-| `client.spaces.subscribe()`                 | 8     | plugin-space (`spaces-ready` ×3, `save-tracker`, `JoinDialog`), plugin-client (`capabilities/client.ts`), plugin-routine (`trigger-runtime-controller`)  |
-| `client.spaces.join(code)`                  | 1     | plugin-space `space join` command                                                                |
-| `client.spaces.import(archive, opts?)`      | 4     | plugin-space `operations/import-space`, plugin-onboarding exemplar space, plugin-assistant snapshot testing |
-| `space.waitUntilReady()`                    | ~20   | Everywhere a space is created/joined/opened                                                      |
-| `space.state.get()` / `SpaceState`          | 4     | plugin-doctor, plugin-space `react-surface`                                                      |
-| `useSpaces()` / `useSpace(id)`              | ~80   | plugin-space containers + story fixtures across ~25 plugins                                      |
-| `space.internal.export({ format })`         | 3     | plugin-space `operations/export-space`, onboarding/inbox scripts                                 |
-| `space.internal.migrate()` / `db.runMigrations` | 3 | plugin-space `operations/migrate`, `spaces-ready`; plugin-client `migrations`                    |
-| `space.internal.setEdgeReplicationPreference` / `data.edgeReplication` | 6 | plugin-space (`operations/create`, `spaces-ready`, sync-status UI), plugin-client `halo create` |
-| `space.internal.db.saveStateChanged`        | 2     | plugin-space `save-tracker`                                                                      |
-| `AppSpace.*` (`@dxos/app-toolkit`)          | ~48   | `getPersonalSpace`, `getActiveSpace`, `isPersonalSpace`, tags — an existing app-level façade over `client.spaces` |
+| API                                                                    | Count | Consumers                                                                                                                                                                                                                                           |
+| ---------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `client.spaces.get()` / `.get(id)`                                     | 57    | Ubiquitous space resolution: plugin-space, plugin-assistant, plugin-inbox, plugin-wnfs, plugin-search, plugin-thread, plugin-meeting, plugin-connector, plugin-discord/bluesky/slack sync, plugin-deck, plugin-simple-layout, composer-app recovery |
+| `client.spaces.create(props?, options?)`                               | 34    | plugin-space `operations/create`, personal-space bootstrap (`identity-created`, `initializeIdentity`, `halo create` — with `tags`, `membershipPolicy`), plugin-native-filesystem mirror space, ~20 story fixtures                                   |
+| `client.spaces.subscribe()`                                            | 8     | plugin-space (`spaces-ready` ×3, `save-tracker`, `JoinDialog`), plugin-client (`capabilities/client.ts`), plugin-routine (`trigger-runtime-controller`)                                                                                             |
+| `client.spaces.join(code)`                                             | 1     | plugin-space `space join` command                                                                                                                                                                                                                   |
+| `client.spaces.import(archive, opts?)`                                 | 4     | plugin-space `operations/import-space`, plugin-onboarding exemplar space, plugin-assistant snapshot testing                                                                                                                                         |
+| `space.waitUntilReady()`                                               | ~20   | Everywhere a space is created/joined/opened                                                                                                                                                                                                         |
+| `space.state.get()` / `SpaceState`                                     | 4     | plugin-doctor, plugin-space `react-surface`                                                                                                                                                                                                         |
+| `useSpaces()` / `useSpace(id)`                                         | ~80   | plugin-space containers + story fixtures across ~25 plugins                                                                                                                                                                                         |
+| `space.internal.export({ format })`                                    | 3     | plugin-space `operations/export-space`, onboarding/inbox scripts                                                                                                                                                                                    |
+| `space.internal.migrate()` / `db.runMigrations`                        | 3     | plugin-space `operations/migrate`, `spaces-ready`; plugin-client `migrations`                                                                                                                                                                       |
+| `space.internal.setEdgeReplicationPreference` / `data.edgeReplication` | 6     | plugin-space (`operations/create`, `spaces-ready`, sync-status UI), plugin-client `halo create`                                                                                                                                                     |
+| `space.internal.db.saveStateChanged`                                   | 2     | plugin-space `save-tracker`                                                                                                                                                                                                                         |
+| `AppSpace.*` (`@dxos/app-toolkit`)                                     | ~48   | `getPersonalSpace`, `getActiveSpace`, `isPersonalSpace`, tags — an existing app-level façade over `client.spaces`                                                                                                                                   |
 
 Note: `space.db` / ECHO query APIs (the 268 `@dxos/react-client/echo` imports) are the ECHO
 migration track (`Database` service in `@dxos/echo`), not HALO — they are out of scope here
@@ -115,12 +115,12 @@ except where noted.
 
 ### 2.6 Membership & presence
 
-| API                                   | Count | Consumers                                                                          |
-| -------------------------------------- | ----- | ------------------------------------------------------------------------------------ |
-| `useMembers(spaceKey)`                 | 7     | plugin-space (`SpacePresence`, `SpaceHomeDashboard`), plugin-thread (Channel/Thread), plugin-comments, plugin-transcription |
-| `SpaceMember` type / `PresenceState`   | 6     | plugin-space `members` command + presence UI, plugin-thread                            |
-| `member.presence`, `member.identity`   | 6     | Same                                                                                   |
-| `SpaceMemberList` (`@dxos/shell/react`) | 2    | plugin-space `MembersContainer` (annotated `TODO: Copied from Shell`)                  |
+| API                                     | Count | Consumers                                                                                                                   |
+| --------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------- |
+| `useMembers(spaceKey)`                  | 7     | plugin-space (`SpacePresence`, `SpaceHomeDashboard`), plugin-thread (Channel/Thread), plugin-comments, plugin-transcription |
+| `SpaceMember` type / `PresenceState`    | 6     | plugin-space `members` command + presence UI, plugin-thread                                                                 |
+| `member.presence`, `member.identity`    | 6     | Same                                                                                                                        |
+| `SpaceMemberList` (`@dxos/shell/react`) | 2     | plugin-space `MembersContainer` (annotated `TODO: Copied from Shell`)                                                       |
 
 No consumer calls role management (`updateMemberRole`) or member removal today — the UI simply
 doesn't offer it. The new API should still define these verbs (Keyhive makes revocation
@@ -130,29 +130,29 @@ first-class).
 
 Device (HALO) invitations:
 
-| API                 | Consumers                                                                     |
-| -------------------- | ------------------------------------------------------------------------------ |
-| `client.halo.share(opts?)` | plugin-client `DevicesContainer` (QR + auth code), `halo share` command   |
-| `client.halo.join(invitation)` | plugin-client `halo join`, `account login` commands                    |
+| API                            | Consumers                                                               |
+| ------------------------------ | ----------------------------------------------------------------------- |
+| `client.halo.share(opts?)`     | plugin-client `DevicesContainer` (QR + auth code), `halo share` command |
+| `client.halo.join(invitation)` | plugin-client `halo join`, `account login` commands                     |
 
 Space invitations:
 
-| API                                    | Consumers                                                                    |
-| --------------------------------------- | ------------------------------------------------------------------------------ |
+| API                                                   | Consumers                                                                                                                                                        |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `space.share({ type, authMethod, multiUse, target })` | plugin-space `operations/share`, `operations/get-share-link` (delegated + known-public-key), `MembersContainer` (interactive + delegated), `space share` command |
-| `client.spaces.join(code)`              | plugin-space `space join` command                                              |
-| `useSpaceInvitations(spaceKey)`         | plugin-space `MembersContainer`                                                |
+| `client.spaces.join(code)`                            | plugin-space `space join` command                                                                                                                                |
+| `useSpaceInvitations(spaceKey)`                       | plugin-space `MembersContainer`                                                                                                                                  |
 
 Shared machinery:
 
-| API                                                        | Consumers                                        |
-| ----------------------------------------------------------- | -------------------------------------------------- |
-| `InvitationEncoder.encode/decode`                           | 12 sites (plugin-client, plugin-space)             |
-| `Invitation.State` (state-machine polling)                  | 20 sites — CLI `waitForState`, dialog state UIs    |
+| API                                                                                                         | Consumers                                                                              |
+| ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `InvitationEncoder.encode/decode`                                                                           | 12 sites (plugin-client, plugin-space)                                                 |
+| `Invitation.State` (state-machine polling)                                                                  | 20 sites — CLI `waitForState`, dialog state UIs                                        |
 | `Invitation.Type` (`INTERACTIVE`/`DELEGATED`), `Invitation.AuthMethod` (`SHARED_SECRET`/`KNOWN_PUBLIC_KEY`) | plugin-space share/get-share-link, operation schemas (`Schema.Enums(Invitation.Type)`) |
-| `CancellableInvitationObservable` / `AuthenticatingInvitationObservable` | Devices/Members containers, CLI utils |
-| `hostInvitation` helper                                     | plugin-client `halo share`, plugin-space `space share` |
-| `InvitationResult`                                          | Join dialogs (plugin-client, plugin-space)         |
+| `CancellableInvitationObservable` / `AuthenticatingInvitationObservable`                                    | Devices/Members containers, CLI utils                                                  |
+| `hostInvitation` helper                                                                                     | plugin-client `halo share`, plugin-space `space share`                                 |
+| `InvitationResult`                                                                                          | Join dialogs (plugin-client, plugin-space)                                             |
 
 ### 2.8 Existing verb layer (key observation)
 
@@ -192,9 +192,9 @@ level that consume the tag; implementations delivered as `Layer`s):
 import { Identity, Space, Invitation } from '@dxos/halo';
 
 // Verbs are Effects that require the service tag:
-const profile = yield* Identity.current;                      // Identity.Service
-const space = yield* Space.create({ name: 'Notes' });         // Space.Service
-const flow = yield* Invitation.share({ space: space.id });    // Invitation.Service
+const profile = yield * Identity.current; // Identity.Service
+const space = yield * Space.create({ name: 'Notes' }); // Space.Service
+const flow = yield * Invitation.share({ space: space.id }); // Invitation.Service
 ```
 
 The split matches the audit: identity/device consumers (§2.1–2.4) rarely touch spaces;
@@ -209,19 +209,19 @@ atom-based, so `Atom` is the natural currency for the React layer.
 
 ### 3.2 `Identity.Service` — identity & device management
 
-| Verb                                             | Replaces                                                                  |
-| ------------------------------------------------- | --------------------------------------------------------------------------- |
-| `Identity.current` → `Option<Profile>`            | `halo.identity.get()`                                                       |
-| `Identity.changes` → `Stream<Option<Profile>>`    | `halo.identity.subscribe()`, `useIdentity`                                  |
-| `Identity.create(profile?)`                       | `halo.createIdentity()`                                                     |
-| `Identity.updateProfile(profile)`                 | `halo.updateProfile()`                                                      |
-| `Identity.recover({ code \| token \| proof })`    | `halo.recoverIdentity()` + raw `IdentityService.recoverIdentity` (§2.3)     |
-| `Identity.createRecoveryKey({ key, algorithm, lookupKey })` | raw `IdentityService.createRecoveryCredential` (recovery code + passkey) |
-| `Identity.requestRecoveryChallenge()`             | raw `IdentityService.requestRecoveryChallenge`                              |
-| `Identity.devices` / `Identity.deviceChanges`     | `halo.devices`, `useDevices`                                                |
-| `Identity.localDevice`                            | `halo.device`                                                               |
-| `Identity.updateDevice(profile)`                  | raw `DevicesService.updateDevice`                                           |
-| `Identity.attest({ challenge, audience? })`       | `createEdgeIdentity(client).presentCredentials()` (§2.4) — signed, audience-bound message per MIGRATION.md §5.1 |
+| Verb                                                        | Replaces                                                                                                        |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `Identity.current` → `Option<Profile>`                      | `halo.identity.get()`                                                                                           |
+| `Identity.changes` → `Stream<Option<Profile>>`              | `halo.identity.subscribe()`, `useIdentity`                                                                      |
+| `Identity.create(profile?)`                                 | `halo.createIdentity()`                                                                                         |
+| `Identity.updateProfile(profile)`                           | `halo.updateProfile()`                                                                                          |
+| `Identity.recover({ code \| token \| proof })`              | `halo.recoverIdentity()` + raw `IdentityService.recoverIdentity` (§2.3)                                         |
+| `Identity.createRecoveryKey({ key, algorithm, lookupKey })` | raw `IdentityService.createRecoveryCredential` (recovery code + passkey)                                        |
+| `Identity.requestRecoveryChallenge()`                       | raw `IdentityService.requestRecoveryChallenge`                                                                  |
+| `Identity.devices` / `Identity.deviceChanges`               | `halo.devices`, `useDevices`                                                                                    |
+| `Identity.localDevice`                                      | `halo.device`                                                                                                   |
+| `Identity.updateDevice(profile)`                            | raw `DevicesService.updateDevice`                                                                               |
+| `Identity.attest({ challenge, audience? })`                 | `createEdgeIdentity(client).presentCredentials()` (§2.4) — signed, audience-bound message per MIGRATION.md §5.1 |
 
 Types: `Profile` and `Device` already exist in this package as Effect schemas; `Identity`
 (the proxy type: `did`, `identityKey`, `spaceKey`, `profile`) collapses into
@@ -235,18 +235,18 @@ explicit capability grant verb when the EDGE shim lands.
 
 ### 3.3 `Space.Service` — space management & membership
 
-| Verb                                                    | Replaces                                                         |
-| -------------------------------------------------------- | ------------------------------------------------------------------ |
-| `Space.spaces` / `Space.changes`                          | `client.spaces.get()`, `client.spaces.subscribe()`, `useSpaces`    |
-| `Space.get(id)` → `Option<Space>`                         | `client.spaces.get(id)`, `useSpace(id)`                            |
-| `Space.create(props?, { tags?, membershipPolicy? })`      | `client.spaces.create()`                                           |
-| `Space.waitReady(id)` (or `Space.state(id): Stream`)      | `space.waitUntilReady()`, `space.state.get()`, `SpaceState`        |
-| `Space.update(id, { name, icon, hue, tags })`             | direct property writes (plugin-space rename)                        |
-| `Space.members(id)` / `Space.memberChanges(id)`           | `useMembers`, `SpaceMember` reads                                  |
-| `Space.updateMemberRole(id, member, role)` / `Space.removeMember(id, member)` | (no current consumer; Keyhive delegation/revocation — define now) |
-| `Space.export(id, { format })` / `Space.import(archive, opts?)` | `space.internal.export()`, `client.spaces.import()`          |
-| `Space.migrate(id)`                                       | `space.internal.migrate()`, `db.runMigrations`                     |
-| `Space.setReplication(id, setting)` / `Space.replication(id)` | `space.internal.setEdgeReplicationPreference`, `data.edgeReplication` (becomes "delegate `pull` to EDGE" under Keyhive, MIGRATION.md §5.1) |
+| Verb                                                                          | Replaces                                                                                                                                   |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Space.spaces` / `Space.changes`                                              | `client.spaces.get()`, `client.spaces.subscribe()`, `useSpaces`                                                                            |
+| `Space.get(id)` → `Option<Space>`                                             | `client.spaces.get(id)`, `useSpace(id)`                                                                                                    |
+| `Space.create(props?, { tags?, membershipPolicy? })`                          | `client.spaces.create()`                                                                                                                   |
+| `Space.waitReady(id)` (or `Space.state(id): Stream`)                          | `space.waitUntilReady()`, `space.state.get()`, `SpaceState`                                                                                |
+| `Space.update(id, { name, icon, hue, tags })`                                 | direct property writes (plugin-space rename)                                                                                               |
+| `Space.members(id)` / `Space.memberChanges(id)`                               | `useMembers`, `SpaceMember` reads                                                                                                          |
+| `Space.updateMemberRole(id, member, role)` / `Space.removeMember(id, member)` | (no current consumer; Keyhive delegation/revocation — define now)                                                                          |
+| `Space.export(id, { format })` / `Space.import(archive, opts?)`               | `space.internal.export()`, `client.spaces.import()`                                                                                        |
+| `Space.migrate(id)`                                                           | `space.internal.migrate()`, `db.runMigrations`                                                                                             |
+| `Space.setReplication(id, setting)` / `Space.replication(id)`                 | `space.internal.setEdgeReplicationPreference`, `data.edgeReplication` (becomes "delegate `pull` to EDGE" under Keyhive, MIGRATION.md §5.1) |
 
 The returned `Space` value is a plain data snapshot (id, state, properties, tags) — **not** a
 live proxy owning `db`. Database access stays on the `@dxos/echo` `Database` service keyed by
@@ -260,15 +260,15 @@ than ride on `SpaceMember`.
 
 ### 3.4 `Invitation.Service` — invitations
 
-| Verb                                                              | Replaces                                                           |
-| ------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| `Invitation.share({ kind: 'device' })`                             | `client.halo.share()`                                                |
-| `Invitation.share({ kind: 'space', space, type, authMethod, multiUse, target })` | `space.share()`                                        |
-| `Invitation.accept(code)`                                          | `client.halo.join()`, `client.spaces.join()`                         |
-| flow handle: `{ events: Stream<InvitationEvent>, authenticate(code), cancel() }` | `CancellableInvitationObservable`, `AuthenticatingInvitationObservable`, `Invitation.State` polling, `hostInvitation`/`waitForState` helpers |
-| `Invitation.invitations(space?)` / changes                         | `useSpaceInvitations`                                                |
-| `Invitation.encode/decode` (pure)                                  | `InvitationEncoder`                                                  |
-| Schemas: `InvitationKind`, `AuthMethod`, `Type`, `InvitationEvent` (tagged union) | `Invitation.State/Type/AuthMethod` protobuf enums (also used in operation schemas via `Schema.Enums`) |
+| Verb                                                                              | Replaces                                                                                                                                     |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Invitation.share({ kind: 'device' })`                                            | `client.halo.share()`                                                                                                                        |
+| `Invitation.share({ kind: 'space', space, type, authMethod, multiUse, target })`  | `space.share()`                                                                                                                              |
+| `Invitation.accept(code)`                                                         | `client.halo.join()`, `client.spaces.join()`                                                                                                 |
+| flow handle: `{ events: Stream<InvitationEvent>, authenticate(code), cancel() }`  | `CancellableInvitationObservable`, `AuthenticatingInvitationObservable`, `Invitation.State` polling, `hostInvitation`/`waitForState` helpers |
+| `Invitation.invitations(space?)` / changes                                        | `useSpaceInvitations`                                                                                                                        |
+| `Invitation.encode/decode` (pure)                                                 | `InvitationEncoder`                                                                                                                          |
+| Schemas: `InvitationKind`, `AuthMethod`, `Type`, `InvitationEvent` (tagged union) | `Invitation.State/Type/AuthMethod` protobuf enums (also used in operation schemas via `Schema.Enums`)                                        |
 
 Modeling the flow as a `Stream` of tagged events (`connecting` → `readyForAuth(authCode?)` →
 `success(result)` | `cancelled` | `error`) removes every `state >= Invitation.State.X`
