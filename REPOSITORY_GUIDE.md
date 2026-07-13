@@ -158,7 +158,7 @@ DXOS is **trunk-based**: `main` is the only long-lived integration branch.
 
 - Work happens on feature branches that merge to `main` via PRs; the **Check** workflow (build, test, lint, fmt) must pass. External contributors fork and PR from their fork.
 - Feature branches are **squashed** on merge, keeping `main` linear.
-- Consumer-relevant changes carry a `.changeset/*.md` — see the [changeset authoring guide](./agents/instructions/changesets.md). (There is no longer a CI-enforced conventional-commit PR-title check; conventional PR titles remain a documented convention — see the PR Naming Convention in `AGENTS.md`.)
+- Consumer-relevant changes carry a `.changeset/*.md` — see the [changeset authoring guide](./agents/instructions/changesets.md). PR titles and commit messages have no required format — write them clear and descriptive.
 - `labs` / `staging` / `production` are **deploy environments**, not long-lived branches — you deploy a chosen commit to one via the Deploy Apps workflow, and "what's deployed where" is tracked by floating `<app>/<environment>` git tags.
 
 Full design (versioning policy, publish groups, cross-repo contract): [`.github/RELEASE-SPEC.md`](./.github/RELEASE-SPEC.md).

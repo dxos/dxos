@@ -109,7 +109,7 @@ For each failing check:
    - Format: `pnpm format`
 3. Apply the fix at the **root cause** — no casts, no `// @ts-ignore`, no `--no-verify`.
 4. Run the specific check locally to confirm the fix.
-5. Commit with a conventional commit message and push.
+5. Commit with a clear, descriptive message and push.
 
 **Prohibited shortcuts:**
 
@@ -261,7 +261,6 @@ This project uses:
 - `moon` for task running (`moon run <package>:task`)
 - `pnpm` for package management
 - `mcp__github__*` tools for all GitHub operations (no `gh` CLI in remote environments)
-- Conventional Commits (`feat:`, `fix:`, `chore:`, etc.)
 - TypeScript with strict linting
 - Single quotes, functional patterns, TailwindCSS
 

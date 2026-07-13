@@ -25,10 +25,9 @@ runs in. To land (merge) an existing PR, use the `land` skill.
    behind silently — commit them or confirm exclusion with the user.
 6. **Push**, then verify `git status` shows a clean working tree. If anything
    remains, commit it or confirm before proceeding.
-7. **Open the PR** with `gh`. Title uses conventional-commit format
-   (`feat(scope): …`). In the description, summarize the changes and the
-   reasoning behind major decisions, and link any Linear issue as
-   `closes DX-123` or `part of DX-123`.
+7. **Open the PR** with `gh`. Title clearly and concisely describes the change.
+   In the description, summarize the changes and the reasoning behind major
+   decisions, and link any Linear issue as `closes DX-123` or `part of DX-123`.
 8. **Monitor CI every 5 minutes:**
    `gh run list --branch <branch> --limit 3 --workflow "Check"` and
    `pnpm -w gh-action --verify --watch`. Diagnose and, where possible, fix ALL

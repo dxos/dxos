@@ -111,9 +111,6 @@ Deeper conventions:
 
 ## Git & PR workflow
 
-- **PR titles use conventional-commit format**, scope when relevant:
-  `feat(echo): add group aggregates`, `fix: resolve subscription leak`,
-  `refactor: simplify error handling`, `docs: update Space API`.
 - **CI is one workflow, "Check"** — build, test, lint, fmt. A red Check is your
   failure, not pre-existing; fix the root cause on the branch, never merge
   around it. Inspect: `gh run list --branch <branch> --workflow "Check"`, then
