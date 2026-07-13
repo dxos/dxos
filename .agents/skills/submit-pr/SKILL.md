@@ -23,17 +23,21 @@ runs in. To land (merge) an existing PR, use the `land` skill.
 5. **Account for every file.** `git status`; commit ALL modified/untracked files,
    including edits the user made in the shared worktree. Never leave changes
    behind silently — commit them or confirm exclusion with the user.
-6. **Push**, then verify `git status` shows a clean working tree. If anything
+6. **Changeset.** If the change is consumer-relevant, add a `.changeset/*.md`
+   and commit it with the rest — see
+   [`agents/instructions/changesets.md`](../../../agents/instructions/changesets.md)
+   for when one is needed, which package to name, and bump levels.
+7. **Push**, then verify `git status` shows a clean working tree. If anything
    remains, commit it or confirm before proceeding.
-7. **Open the PR** with `gh`. Title clearly and concisely describes the change.
+8. **Open the PR** with `gh`. Title clearly and concisely describes the change.
    In the description, summarize the changes and the reasoning behind major
    decisions, and link any Linear issue as `closes DX-123` or `part of DX-123`.
-8. **Monitor CI every 5 minutes:**
+9. **Monitor CI every 5 minutes:**
    `gh run list --branch <branch> --limit 3 --workflow "Check"` and
    `pnpm -w gh-action --verify --watch`. Diagnose and, where possible, fix ALL
    CI errors — even ones unrelated to this branch. Never merge around a red
    Check; fix the root cause with `gh run view <id> --log-failed`.
-9. **Address and RESPOND to every PR review comment.**
+10. **Address and RESPOND to every PR review comment.**
 
 ## Composer preview URL — always surface
 
