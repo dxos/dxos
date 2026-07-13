@@ -8,12 +8,15 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { isSpace } from '@dxos/client/echo';
 import { Collection, Obj } from '@dxos/echo';
 
 import { ArtifactCard, GenerateForm as GenerateFormComponent, ImageVariant, VideoVariant } from '#components';
-import { ArtifactArticle, GalleryArticle, LightboxArticle } from '#containers';
+import { ArtifactArticle, ArtifactsArticle, GalleryArticle, LightboxArticle } from '#containers';
 import { GenerateForm, VariantRenderer } from '#surfaces';
 import { Artifact, Lightbox } from '#types';
+
+import { ARTIFACTS_NODE_DATA } from '../constants';
 
 const isArtifact = Obj.instanceOf(Artifact.Artifact);
 
@@ -43,6 +46,16 @@ export default Capability.makeModule(() =>
         component: ({ role, data }) => (
           <ArtifactArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
+      }),
+
+      // Virtual "Artifacts" navtree node → the browse/create hub (bound by data sentinel, not an object).
+      Surface.create({
+        id: 'artifactsArticle',
+        filter: Surface.makeFilter(AppSurface.Article, (data) => data.subject === ARTIFACTS_NODE_DATA),
+        component: ({ role, data }) => {
+          const space = isSpace(data.properties?.space) ? data.properties.space : undefined;
+          return space ? <ArtifactsArticle role={role} space={space} attendableId={data.attendableId} /> : null;
+        },
       }),
       Surface.create({
         id: 'galleryArticle',

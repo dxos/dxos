@@ -12,7 +12,7 @@ import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { Connection, ConnectorAuth } from '@dxos/plugin-connector';
 import { useQuery } from '@dxos/react-client/echo';
-import { Button, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, IconButton, Panel, Select, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type Text } from '@dxos/schema';
 import { type File } from '@dxos/types';
@@ -42,15 +42,28 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
 
   const db = Obj.getDatabase(artifact);
 
-  // Resolve the provider for the artifact's kind (first registered, matching by kind).
+  // Providers for the artifact's kind; a Generator selector lets the user pick among them.
   const services = useCapabilities(StudioCapabilities.GenerationService);
-  const provider = useMemo(
-    () => services.find((candidate) => candidate.kind === artifact.kind),
+  const providers = useMemo(
+    () => services.filter((candidate) => candidate.kind === artifact.kind),
     [services, artifact.kind],
   );
 
   // Reactive view of the artifact's variants + config.
   const [artifactSnapshot] = useObject(artifact);
+
+  // The chosen generator (persisted on the artifact) drives the request form, connect button, and op.
+  const provider = useMemo(
+    () => providers.find((candidate) => candidate.id === artifactSnapshot?.generator) ?? providers[0],
+    [providers, artifactSnapshot?.generator],
+  );
+  const handleGeneratorChange = useCallback(
+    (id: string) =>
+      Obj.update(artifact, (artifact) => {
+        artifact.generator = id;
+      }),
+    [artifact],
+  );
   const variantRefs = artifactSnapshot?.variants ?? [];
   const variants = useObjects(variantRefs);
   const galleryItems = useMemo(
@@ -124,7 +137,11 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     }
     setGenerating(true);
     try {
-      await invokePromise(StudioOperation.Generate, { artifact: Ref.make(artifact) }, { spaceId: db.spaceId });
+      await invokePromise(
+        StudioOperation.Generate,
+        { artifact: Ref.make(artifact), provider: provider?.id },
+        { spaceId: db.spaceId },
+      );
       setSelected('all');
     } catch (error) {
       log.catch(error);
@@ -139,7 +156,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     } finally {
       setGenerating(false);
     }
-  }, [invokePromise, artifact, db]);
+  }, [invokePromise, artifact, db, provider?.id]);
 
   // Resume an in-flight asynchronous generation (persisted jobId) on mount so a long provider poll
   // survives navigation/remount. The generate op detects the stored jobId and polls (no re-enqueue).
@@ -200,6 +217,22 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
             </Button>
           ))}
           <div role='none' className='grow' />
+          {providers.length > 0 && (
+            <Select.Root value={provider?.id} onValueChange={handleGeneratorChange}>
+              <Select.TriggerButton placeholder={t('generator.placeholder')} />
+              <Select.Portal>
+                <Select.Content>
+                  <Select.Viewport>
+                    {providers.map((candidate) => (
+                      <Select.Option key={candidate.id} value={candidate.id}>
+                        {candidate.label}
+                      </Select.Option>
+                    ))}
+                  </Select.Viewport>
+                </Select.Content>
+              </Select.Portal>
+            </Select.Root>
+          )}
           <IconButton
             icon='ph--upload-simple--regular'
             label={t('upload.label')}

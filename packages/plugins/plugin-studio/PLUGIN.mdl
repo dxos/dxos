@@ -54,6 +54,7 @@ type Artifact
     kind: string                      # open discriminator: 'image' | 'video' | … (no enum)
     instructions: Ref<Instructions>   # the prompt (rich text; @dxos/compute Instructions)
     config?: Record<string, unknown>  # current generation request config (validated vs provider.requestSchema)
+    generator?: string                # chosen GenerationService id for this kind (op:generate `provider`)
     variants: Ref<Variant>[]          # owned alternatives of the primary output
     cover?: Ref<Variant>              # chosen/primary variant (used for thumbnails)
     derived?: Ref<Obj.Unknown>[]      # downstream products (transcript, summary, caption, upscale…)
@@ -169,11 +170,21 @@ op generate
 component ArtifactArticle
   desc: >
     Media-agnostic article for an Artifact. Toolbar: variant chooser (tabs) +
+    a Generator selector (the GenerationServices for the artifact's kind) +
     Upload + Connect/Generate. Below: the prompt editor, the kind-specific
     GenerateForm (schema-driven or overridden), and either the selected variant
     (rendered via the VariantRenderer surface for its contentType) or the variant
-    gallery.
+    gallery. The chosen generator is stored in `Artifact.generator` and passed to
+    op:generate as `provider`.
   props: { role, subject: Artifact, attendableId? }
+
+component ArtifactsArticle           # bound to the virtual "Artifacts" navtree node (not an ECHO object)
+  desc: >
+    Browse/create hub for all Artifacts in a space. Toolbar: a kind selector
+    (image | video) that sets the kind of the next created Artifact, and a Create
+    action. Body: a masonry of ArtifactCards (useQuery all Artifacts). Creating or
+    clicking a card navigates to that Artifact's ArtifactArticle.
+  props: { role, space, attendableId? }
 
 component GalleryArticle
   desc: >
@@ -227,6 +238,12 @@ feat F-2: Variants + rendering
   req F-2.1: Variants render via the VariantRenderer surface matching their contentType; studio provides image/* and video/* defaults.
   req F-2.2: A plugin may override a contentType renderer via a Position.first surface.
   req F-2.3: Uploaded files are appended as Variants with content=Ref<File> and no generation.
+
+feat F-0: Navigation hub
+  req F-0.1: A "Studio" section node appears under the navtree `content` group (AppNode.makeSection), always available.
+  req F-0.2: A virtual "Artifacts" child node under Studio opens ArtifactsArticle (bound by node data sentinel, not an ECHO object).
+  req F-0.3: ArtifactsArticle shows a masonry of all Artifacts in the space; a toolbar kind selector sets the create-kind; Create makes an Artifact of that kind and opens it. Clicking a card opens its ArtifactArticle.
+  req F-0.4: ArtifactArticle exposes a Generator selector (GenerationServices for the kind); the choice persists to Artifact.generator and drives op:generate's provider.
 
 feat F-3: Galleries + lightboxes
   req F-3.1: A Collection of Artifacts renders as a masonry gallery; Create adds a new Artifact; multi-select + Delete removes.

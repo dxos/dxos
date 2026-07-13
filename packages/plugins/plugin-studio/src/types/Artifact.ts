@@ -27,6 +27,8 @@ export class Artifact extends Type.makeObject<Artifact>(DXN.make('org.dxos.type.
     instructions: Ref.Ref(Instructions.Instructions).pipe(FormInputAnnotation.set(false)),
     /** Current generation request config (validated against the provider's requestSchema). */
     config: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+    /** Chosen GenerationService id for this kind (passed to op:generate as `provider`). */
+    generator: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
     /** Owned interchangeable alternatives of the primary output. */
     variants: Schema.Array(Ref.Ref(Variant.Variant)).pipe(FormInputAnnotation.set(false), Schema.optional),
     /** The chosen/primary variant (used for thumbnails). */
