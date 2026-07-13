@@ -16,16 +16,20 @@
 // with this token has more than one account, so wrangler can't disambiguate non-interactively without it.
 //
 // Usage:
-//   secrets.mjs dev    --item <1password-item> [--config <wrangler.jsonc>]
-//   secrets.mjs remote <env> --item <1password-item> [--config <wrangler.jsonc>] [--dry-run]
+//   secrets.mjs dev    [--item <1password-item-or-uuid>] [--config <wrangler.jsonc>]
+//   secrets.mjs remote <env> [--item <1password-item-or-uuid>] [--config <wrangler.jsonc>] [--dry-run]
+//
+// `--item` defaults to the "dxos app worker secrets" item's UUID — pinned rather than its display name,
+// since the name can be renamed/retitled in 1Password but the UUID never changes. Pass `--item` to target
+// a different item.
 //
 // <config> is a path to a wrangler.jsonc (default packages/apps/composer-app/wrangler.jsonc — the only
 // app with secrets today). <env> must be one of that config's `env.*` keys (e.g. main, labs, staging,
 // production). `--dry-run` lists what would be pushed without calling `wrangler secret put`.
 //
 // Examples:
-//   node scripts/secrets.mjs dev --item "dxos app worker secrets"
-//   node scripts/secrets.mjs remote main --item "dxos app worker secrets"
+//   node scripts/secrets.mjs dev
+//   node scripts/secrets.mjs remote main
 
 import JSON5 from 'json5';
 import { execFileSync, execSync } from 'node:child_process';
@@ -33,11 +37,13 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const DEFAULT_CONFIG = 'packages/apps/composer-app/wrangler.jsonc';
+// 1Password item "dxos app worker secrets" — referenced by UUID (stable) rather than name (renamable).
+const DEFAULT_ITEM = 'x5yuqygiiomwsd2fikbzvwpd6i';
 
 const args = process.argv.slice(2);
 const mode = args[0];
 if (mode !== 'dev' && mode !== 'remote') {
-  console.error('usage: secrets.mjs <dev|remote> [env] --item <1password-item> [--config <wrangler.jsonc>]');
+  console.error('usage: secrets.mjs <dev|remote> [env] [--item <1password-item>] [--config <wrangler.jsonc>]');
   process.exit(1);
 }
 
@@ -46,17 +52,13 @@ const flagValue = (name) => {
   return i === -1 ? undefined : args[i + 1];
 };
 
-const item = flagValue('item');
-if (!item) {
-  console.error('usage: secrets.mjs <dev|remote> [env] --item <1password-item> [--config <wrangler.jsonc>]');
-  process.exit(1);
-}
+const item = flagValue('item') ?? DEFAULT_ITEM;
 const configPath = flagValue('config') ?? DEFAULT_CONFIG;
 
 // Positional env, only for `remote` (skip over a leading `--flag value` pair if `mode` is the only positional).
 const env = mode === 'remote' ? args[1] : undefined;
 if (mode === 'remote' && (!env || env.startsWith('--'))) {
-  console.error('usage: secrets.mjs remote <env> --item <1password-item> [--config <wrangler.jsonc>]');
+  console.error('usage: secrets.mjs remote <env> [--item <1password-item>] [--config <wrangler.jsonc>]');
   process.exit(1);
 }
 
