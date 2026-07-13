@@ -14,25 +14,29 @@ export {};
 // IDB log store and its `log` processor must be registered exactly once for the
 // lifetime of the worker.
 let logStoreInstalled = false;
+// Routing state must also be shared across every tab port — a fresh handler per connect
+// isolates broadcast/delivery so followers never see leader heartbeats or request-port.
+let onConnectHandler: ((ev: MessageEvent) => void) | undefined;
 
 onconnect = async (ev) => {
-  const { createCoordinatorOnConnect } = await import('@dxos/client/coordinator-worker-onconnect');
+  const Coordinator = await import('@dxos/worker-framework/Coordinator');
 
-  if (!logStoreInstalled) {
-    logStoreInstalled = true;
-    const { log } = await import('@dxos/log');
-    const { IdbLogStore } = await import('@dxos/log-store-idb');
-    const { LOG_STORE_DB_NAME } = await import('../util');
-    const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME });
-    log.addProcessor(logStore.processor);
-  }
+  // TODO(dmaretskyi): This was pulling in wasm modules which apparently breaks the SharedWorker. No log store for coordinator for now.
+  // if (!logStoreInstalled) {
+  //   logStoreInstalled = true;
+  //   const { log } = await import('@dxos/log');
+  //   const { IdbLogStore } = await import('@dxos/log-store-idb');
+  //   const { LOG_STORE_DB_NAME } = await import('../util');
+  //   const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME });
+  //   log.addProcessor(logStore.processor);
+  // }
 
-  const handler = createCoordinatorOnConnect();
-  return handler(ev);
+  onConnectHandler ??= Coordinator.createOnConnect();
+  return onConnectHandler(ev);
 };
 
 // const initializeObservability = async () => {s
-//   const { log } = await import('@dxos/log');
+//   const { log } = await impsort('@dxos/log');
 //   const { isTauri } = await import('@dxos/util');
 //   const Config = await import('./config');
 

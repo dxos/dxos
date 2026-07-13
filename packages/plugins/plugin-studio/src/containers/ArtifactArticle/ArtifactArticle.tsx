@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Surface, useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -37,7 +37,7 @@ type Selected = 'all' | number;
 export const ArtifactArticle = ({ role, subject: artifact, attendableId }: ArtifactArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
-  const pluginManager = usePluginManager();
+  const isSurfaceAvailable = Surface.useIsAvailable();
   const { invokePromise } = useOperationInvoker();
 
   const db = Obj.getDatabase(artifact);
@@ -112,10 +112,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
     () => (provider?.connectorId ? { connectorIds: [provider.connectorId] } : undefined),
     [provider?.connectorId],
   );
-  const showConnect =
-    !!connectorData &&
-    !connected &&
-    Surface.isAvailable(pluginManager.capabilities, { type: ConnectorAuth, data: connectorData });
+  const showConnect = !!connectorData && !connected && isSurfaceAvailable({ type: ConnectorAuth, data: connectorData });
 
   // The kind-specific request config (validated against the provider's requestSchema).
   const configValue = useMemo<Record<string, unknown>>(

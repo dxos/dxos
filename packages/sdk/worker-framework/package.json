@@ -1,0 +1,84 @@
+{
+  "name": "@dxos/worker-framework",
+  "version": "0.10.0",
+  "description": "Generic worker management framework for DXOS client services.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./Client": {
+      "source": "./src/Client/index.ts",
+      "types": "./dist/types/src/Client/index.d.ts",
+      "browser": "./dist/lib/browser/Client/index.mjs",
+      "node": "./dist/lib/node-esm/Client/index.mjs"
+    },
+    "./Worker": {
+      "source": "./src/Worker.ts",
+      "types": "./dist/types/src/Worker.d.ts",
+      "browser": "./dist/lib/browser/Worker.mjs",
+      "node": "./dist/lib/node-esm/Worker.mjs"
+    },
+    "./Coordinator": {
+      "source": "./src/Coordinator/index.ts",
+      "types": "./dist/types/src/Coordinator/index.d.ts",
+      "browser": "./dist/lib/browser/Coordinator/index.mjs",
+      "node": "./dist/lib/node-esm/Coordinator/index.mjs"
+    },
+    "./WorkerProtocol": {
+      "source": "./src/WorkerProtocol.ts",
+      "types": "./dist/types/src/WorkerProtocol.d.ts",
+      "browser": "./dist/lib/browser/WorkerProtocol.mjs",
+      "node": "./dist/lib/node-esm/WorkerProtocol.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "@effect/platform-browser": "catalog:",
+    "@effect/rpc": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/effect": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

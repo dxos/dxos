@@ -97,8 +97,8 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/react-ui-form": "workspace:^",
     "effect": "catalog:",
     "react": "catalog:"
   },

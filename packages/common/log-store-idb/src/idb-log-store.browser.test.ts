@@ -92,6 +92,17 @@ describe('IdbLogStore', () => {
     await drop(dbName);
   });
 
+  test('exportBlob matches export for small stores', async ({ expect }) => {
+    store = new IdbLogStore({ dbName, flushInterval: 10 });
+    store.processor(fakeConfig, makeEntry(LogLevel.INFO, 'hello'));
+    store.processor(fakeConfig, makeEntry(LogLevel.WARN, 'world'));
+    await store.flush();
+
+    const jsonl = await store.export();
+    const blobText = await (await store.exportBlob()).text();
+    expect(blobText).toBe(jsonl);
+  });
+
   test('persists log entries and exports them as JSONL', async ({ expect }) => {
     store = new IdbLogStore({ dbName, flushInterval: 10 });
     store.processor(fakeConfig, makeEntry(LogLevel.INFO, 'hello'));
@@ -257,6 +268,25 @@ describe('IdbLogStore', () => {
     expect(messages).toHaveLength(12);
     expect(messages[0]).toBe('new-0');
     expect(messages[11]).toBe('new-11');
+  });
+
+  test('eviction trims down to maxBytes when lines are large', async ({ expect }) => {
+    const hugeLine = 'x'.repeat(8_000);
+    store = new IdbLogStore({
+      dbName,
+      flushInterval: 10,
+      maxRecords: 10_000,
+      maxBytes: 20_000,
+      evictionInterval: 0,
+    });
+    for (let i = 0; i < 5; i++) {
+      store.processor(fakeConfig, makeEntry(LogLevel.INFO, `${i}:${hugeLine}`));
+      await store.flush();
+    }
+    await store.evictNow();
+    const blob = await store.exportBlob();
+    expect(blob.size).toBeLessThanOrEqual(20_000);
+    expect(blob.size).toBeGreaterThan(0);
   });
 
   test('upgrades a v1 database, discarding old single-line rows', async ({ expect }) => {
