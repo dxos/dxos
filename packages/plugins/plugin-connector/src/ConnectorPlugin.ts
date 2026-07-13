@@ -19,7 +19,7 @@ import {
   ReactSurface,
 } from '#capabilities';
 import { meta } from '#meta';
-import { Connection, DerivedBinding, SyncBinding } from '#types';
+import { Connection, SyncBinding } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -42,7 +42,6 @@ export const ConnectorPlugin = Plugin.define(meta).pipe(
       SyncBinding.SyncBinding,
       // Registered so the 0.1.0 → 0.2.0 migration can decode legacy bindings.
       SyncBinding.SyncBindingV1,
-      DerivedBinding.DerivedBinding,
     ],
   }),
   Plugin.addModule({

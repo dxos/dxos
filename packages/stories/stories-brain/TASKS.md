@@ -109,11 +109,11 @@ bulk tell.
 - [ ] **Priority 1 — manual topics + management + task tracking** — `CreateTopicFromMessage` seeds;
       build out topic management + task tracking surfaces. (Auto active-topics ranking deprioritized.)
 - [~] **Priority 2 — live-space test framework (extend the CLI)** — decided: extend `@dxos/cli`
-      (already has ClientService + `spaceLayer`→Database.Service + registered inbox types). Shipped
-      (`ad52e31`): `dx identity join <invitation>` (headless device join via `client.halo.join`) +
-      `dx mailbox subscriptions` (spaceLayer + mailbox feed → `deriveSubscriptions` over live data).
-      Build-verified; RUNTIME needs the user to device-join + run. NEXT: more `dx mailbox` subcommands
-      (topics/tag/active-topics over live data), then promote to the edge service (same substrate).
+  (already has ClientService + `spaceLayer`→Database.Service + registered inbox types). Shipped
+  (`ad52e31`): `dx identity join <invitation>` (headless device join via `client.halo.join`) +
+  `dx mailbox subscriptions` (spaceLayer + mailbox feed → `deriveSubscriptions` over live data).
+  Build-verified; RUNTIME needs the user to device-join + run. NEXT: more `dx mailbox` subcommands
+  (topics/tag/active-topics over live data), then promote to the edge service (same substrate).
 
 ## Roadmap, CRM spec & parallel-experiment plan (asks 2026-07-13)
 
