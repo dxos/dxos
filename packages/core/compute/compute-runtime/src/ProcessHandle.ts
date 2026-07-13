@@ -208,7 +208,10 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
           onFailure: (cause) =>
             Option.some({
               message: Cause.pretty(cause),
-              value: Cause.failureOption(cause).pipe(Option.orElse(() => Cause.dieOption(cause)), Option.getOrNull),
+              value: Cause.failureOption(cause).pipe(
+                Option.orElse(() => Cause.dieOption(cause)),
+                Option.getOrNull,
+              ),
             }),
           onSuccess: () => Option.none(),
         }),
