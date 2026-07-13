@@ -7,14 +7,14 @@ import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
 import {
-  type ClientServices,
+  ClientRpcServer,
   type ClientServicesProvider,
   DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
   SpaceProperties,
   STATUS_TIMEOUT,
-  clientServiceBundle,
+  makeHandlersFromRpc,
 } from '@dxos/client-protocol';
 import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -34,7 +34,6 @@ import {
   subscribeStream,
 } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
@@ -119,7 +118,7 @@ export class Client {
   private _statusTimeout?: NodeJS.Timeout;
   private _iframeManager?: IFrameManager;
   private _shellManager?: ShellManager;
-  private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
+  private _shellClientServer?: ClientRpcServer;
   private _edgeHttpClient?: EdgeHttpClient = undefined;
   private _edgeApi?: ClientEdgeAPI = undefined;
   private _edgeIdentitySubscription?: { unsubscribe: () => void };
@@ -597,20 +596,20 @@ export class Client {
           ? this._iframeManager.source.toString().split('/').slice(0, 3).join('/')
           : this._iframeManager.source.origin;
 
-      this._shellClientProxy = createProtoRpcPeer({
-        exposed: clientServiceBundle,
-        handlers: this._services.services as ClientServices,
+      // Re-serve the client services to the shell iframe over effect-rpc, matching the shell's
+      // `ClientServicesProxy` consumer. Handlers are derived from the already-open effect-native
+      // `rpc` surface so calls forward straight to the underlying provider (worker or host).
+      const shellServicesHandlers = makeHandlersFromRpc(this._services.rpc);
+      this._shellClientServer = new ClientRpcServer({
+        services: () => shellServicesHandlers,
         port: createIFramePort({
           channel: DEFAULT_CLIENT_CHANNEL,
           iframe: this._iframeManager.iframe,
           origin,
         }),
-        handlerRpcOptions: {
-          timeout: 60_000, // Timeout is specifically very high because shell will be managing its own timeouts on RPCs.
-        },
       });
 
-      await this._shellClientProxy.open();
+      await this._shellClientServer.open();
     }
 
     log('opened');
@@ -646,6 +645,8 @@ export class Client {
     this._statusStreamCleanup = undefined;
     await this._runtime?.close(this._ctx);
     await this._echoClient.close(this._ctx);
+    await this._shellClientServer?.close();
+    this._shellClientServer = undefined;
     log.verbose('client._close: closing services...');
     await this._services?.close();
     this._edgeIdentitySubscription?.unsubscribe();
