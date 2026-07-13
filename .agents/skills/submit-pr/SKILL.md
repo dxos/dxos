@@ -20,13 +20,14 @@ runs in. To land (merge) an existing PR, use the `land` skill.
 2. **Format.** Run `pnpm format` (oxfmt — CI checks `oxfmt --check`).
 3. **Lint.** `moon run :lint -- --fix` must succeed.
 4. **Test.** `moon run :test` must pass.
-5. **Account for every file.** `git status`; commit ALL modified/untracked files,
-   including edits the user made in the shared worktree. Never leave changes
-   behind silently — commit them or confirm exclusion with the user.
-6. **Changeset.** If the change is consumer-relevant, add a `.changeset/*.md`
-   and commit it with the rest — see
+5. **Changeset.** If the change is consumer-relevant, add a `.changeset/*.md`
+   — see
    [`agents/instructions/changesets.md`](../../../agents/instructions/changesets.md)
    for when one is needed, which package to name, and bump levels.
+6. **Account for every file.** `git status`; commit ALL modified/untracked
+   files, including the changeset and edits the user made in the shared
+   worktree. Never leave changes behind silently — commit them or confirm
+   exclusion with the user.
 7. **Push**, then verify `git status` shows a clean working tree. If anything
    remains, commit it or confirm before proceeding.
 8. **Open the PR** with `gh`. Title uses `scope: description`. In the
