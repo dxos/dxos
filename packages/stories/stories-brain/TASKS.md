@@ -173,12 +173,10 @@ triage, make topics opt-in suggestions rather than eager objects, and finish the
 
 ### Topic suggestions (opt-in)
 
-- [ ] **Lightweight topic suggestions on Mailbox** — add an array of suggestion descriptors (NOT
-      separate `Topic` objects) to `Mailbox`; render them for the user to select/delete; a selected
-      suggestion is promoted to a real `Topic`. AnalyzeTopics writes suggestions, not objects.
-- [ ] **Message → "Create Topic" menu** — a Message context-menu action kicks off an operation that
-      finds related information across other threads and triggers the fact-extraction pipeline (shown
-      in the companion).
+- [ ] **Lightweight topic suggestions on Mailbox** → detailed as **Phase B** in the Topics UX v2 plan
+      below (spec `agents/superpowers/specs/2026-07-12-topics-ux-v2-design.md`).
+- [ ] **Message → "Create Topic" menu** → detailed as **Phase C** in the Topics UX v2 plan below
+      (single-thread seed in v1).
 
 ### UI
 
@@ -191,8 +189,76 @@ triage, make topics opt-in suggestions rather than eager objects, and finish the
       item (`ph--trash` icon) → `space.db.remove(topic)`. New `topics.delete.label` translation. Verified
       by a storybook play test (`Topics.stories.tsx` — seeds two topics, deletes one, asserts removal).
       FOLLOW-UP: also remove the `AnchoredTo` relation when deleting (currently orphaned).
-- [ ] **`TopicArticle` + master/detail** — add a `TopicArticle` surface and implement master/detail
-      for topics (mirroring the `MailboxArticle` / `MessageArticle` pattern).
+- [ ] **`TopicArticle` + master/detail** → detailed as **Phase A** in the Topics UX v2 plan below.
+
+## Topics UX v2 — implementation plan
+
+> Spec: `agents/superpowers/specs/2026-07-12-topics-ux-v2-design.md`. Build order **A → B → C**; each
+> phase is a separate commit, build/lint/fmt clean with its storybook play test green. TDD where a pure
+> unit exists. Single-file test runs: `pnpm --filter <pkg> exec vitest run --project=node <file>`;
+> storybook: `pnpm --filter @dxos/stories-inbox exec vitest run --project=storybook <file>`.
+
+### Phase 0 — shared model (prereq for A/B)
+
+- [ ] **Extract `TopicProps`** — `pipeline-email/src/types/Topic.ts`: pull the inner `Schema.Struct`
+      into `export const TopicProps = Schema.Struct({...})`; `Topic` extends `Type.makeObject(...)(TopicProps)`.
+      Verify `pipeline-email:build` + existing `topics-pipeline.test.ts` still green (materialize uses the
+      same fields).
+- [ ] **Add `Mailbox.topicSuggestions`** — `plugin-inbox/src/types/Mailbox.ts`: import `TopicProps` from
+      `@dxos/pipeline-email`; add `topicSuggestions: Schema.optional(Schema.Array(TopicProps))` to the
+      Mailbox struct. `plugin-inbox:build` green.
+
+### Phase A — `TopicArticle` master/detail
+
+- [ ] **`resolveTopicThreads` helper (pure, tested)** — `plugin-inbox/src/containers/TopicArticle/`
+      (new dir): given a `Topic` and the mailbox's messages, group messages by `threadId` and return
+      only the threads whose id is in `topic.threadIds`, each as `{ threadId, subject, messages }`.
+      Unit test with 3 synthetic messages across 2 threadIds; assert only referenced threads returned
+      and the stored count is preserved when a threadId has no messages.
+- [ ] **`TopicArticle` container** — renders one `Topic`: `Card`/`Panel` header (`label`), summary,
+      keyword chips (reuse the tag-chip atom style), participants row, questions/tasks lists, and the
+      resolved member-thread list. Clicking a thread fires `LayoutOperation.Select` for the latest
+      message (same call MailboxArticle uses). Arrow-fn component, named react-ui imports, theme tokens.
+- [ ] **react-surface + master→detail wiring** — `plugin-inbox/src/capabilities/react-surface.tsx`: add
+      `Surface.create({ filter: AppSurface.object(Article, Topic), component: … <TopicArticle/> })`.
+      In `TopicsArticle`, on card current-change dispatch open-detail following MailboxArticle's
+      `layout.mode` branch (`simple`→`UpdateComplementary`, `multi`→`Open`, else→`UpdateCompanion`).
+- [ ] **Storybook play test** — extend `Topics.stories.tsx` (or a `TopicArticle` story): seed a Topic +
+      its member Messages, render `TopicArticle`, assert summary + keyword chips + thread list + counts;
+      click a thread, assert the select action fired (mock the layout op like ExtractMessage does).
+- [ ] **Commit** `feat(inbox): TopicArticle master/detail`.
+
+### Phase B — topic suggestions
+
+- [ ] **Suggestion classify/order (pure, tested)** — `plugin-inbox/src/operations/analyze/suggestions.ts`:
+      `classifyClusters(drafts, { tagIndex, personEmails })` → drops clusters whose member messages are
+      majority-`bulk`, tags each survivor `{ ...draft, personLinked }`, sorts personLinked first, dedups
+      by label against `existingLabels`. Unit test: bulk cluster dropped; person-linked first; dedup.
+- [ ] **`AnalyzeTopics` writes suggestions** — `analyze-topics.ts`: replace topic materialization with
+      writing `classifyClusters(...)` output to `mailbox.topicSuggestions` (via `Obj.update`), deduped
+      against existing Topics + suggestions. Keep tag application. `keepTopic` hard filter removed (now a
+      ranking signal inside `classifyClusters`). Build green.
+- [ ] **`TopicsArticle` "Suggested" section** — render `mailbox.topicSuggestions` above accepted Topics;
+      each card: label/summary/counts + **Accept** (`Obj.make(Topic, suggestion)` + `AnchoredTo`, splice
+      out of the array) + **Dismiss** (splice out). Person-linked badge. New translations
+      `topics.suggested.title`, `topics.accept.label`, `topics.dismiss.label`.
+- [ ] **Storybook play test** — seed 2 suggestions on the mailbox; Accept one (assert a `Topic` exists +
+      suggestion gone), Dismiss the other (assert gone, no Topic).
+- [ ] **Commit** `feat(inbox): opt-in topic suggestions`.
+
+### Phase C — Create Topic from message
+
+- [ ] **`enableCreateTopic` gate + menu item** — `MessageStack.tsx`: add the prop + a "Create Topic"
+      tile menu item (`ph--stack` icon) emitting a new `create-topic` action; `MailboxArticle` sets the
+      prop and handles the action.
+- [ ] **`CreateTopicFromMessage` operation** — `plugin-inbox/src/operations/analyze/create-topic-from-message.ts`:
+      load the message + feed, `buildThreads` over its thread members, seed one `Topic` (label from
+      keywords/subject, LLM `summary` via `resolveModel('summarize-topic')`), run fact extraction on the
+      thread's messages (reuse the existing fact stage), persist `Topic` + `AnchoredTo`, open
+      `TopicArticle` in the companion. Register in the handler set.
+- [ ] **Storybook play test** — mock `AiService` (like ExtractMessage): invoke the action on a seeded
+      message, assert a `Topic` is created and `TopicArticle` opens.
+- [ ] **Commit** `feat(inbox): create topic from message`.
 
 ### Follow-ups (landed)
 
