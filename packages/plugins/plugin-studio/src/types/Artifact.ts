@@ -33,6 +33,11 @@ export class Artifact extends Type.makeObject<Artifact>(DXN.make('org.dxos.type.
     cover: Schema.optional(Ref.Ref(Variant.Variant).pipe(FormInputAnnotation.set(false))),
     /** Downstream products (transcript, summary, caption, upscale, …). */
     derived: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false), Schema.optional),
+    /**
+     * In-flight generation job id for an asynchronous provider (set between enqueue and completion;
+     * cleared once variants are appended). Lets a long-running poll resume across navigation/remount.
+     */
+    jobId: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
     /** Extensibility escape hatch (media-specific extras). */
     meta: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
   }).pipe(

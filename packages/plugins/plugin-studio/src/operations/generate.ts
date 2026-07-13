@@ -6,10 +6,17 @@ import * as Effect from 'effect/Effect';
 import * as Redacted from 'effect/Redacted';
 
 import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Credential, Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 
+import { meta } from '#meta';
+
 import { GenerationService, StudioCapabilities, StudioOperation, Variant } from '../types';
+
+/** Route a provider rejection to the failure channel, preserving the original Error for name matching. */
+const toError = (error: unknown): Error =>
+  error instanceof Error ? error : new GenerationService.GenerationError(String(error));
 
 const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOperation.Generate.pipe(
   Operation.withHandler(
@@ -47,12 +54,57 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
         ...(count !== undefined ? { count } : {}),
       };
 
-      // `tryPromise` routes a provider rejection to the operation's failure channel, preserving the
-      // original Error so callers can match by name.
-      const result = yield* Effect.tryPromise({
-        try: () => service.generate(request, { apiKey }),
-        catch: (error) => (error instanceof Error ? error : new GenerationService.GenerationError(String(error))),
+      // Publish a progress monitor when the app registry is present (absent in headless tests); the
+      // provider drives it via `onProgress`, and the meter's cancel aborts the in-flight request.
+      const registry = (yield* Capability.getAll(AppCapabilities.ProgressRegistry))[0];
+      const controller = new AbortController();
+      const monitor = registry?.register(`${meta.profile.key}/${artifactObj.id}`, {
+        label: `Generating ${artifactObj.kind}…`,
+        onCancel: () => controller.abort(),
       });
+      const options: GenerationService.GenerateOptions = {
+        apiKey,
+        signal: controller.signal,
+        onProgress: ({ current, total }) => {
+          if (total !== undefined) {
+            monitor?.total(total);
+          }
+          if (current !== undefined) {
+            monitor?.set(current);
+          }
+        },
+      };
+
+      // Synchronous providers implement `generate`; asynchronous ones implement `enqueue` +
+      // `awaitResult` and persist the job id on the artifact so a long poll resumes across remount.
+      const run = Effect.gen(function* () {
+        if (service.enqueue && service.awaitResult) {
+          let jobId = artifactObj.jobId;
+          if (!jobId) {
+            const enqueued = yield* Effect.tryPromise({
+              try: () => service.enqueue!(request, options),
+              catch: toError,
+            });
+            jobId = enqueued.jobId;
+            Obj.update(artifactObj, (artifactObj) => {
+              artifactObj.jobId = jobId;
+            });
+          }
+          const awaited = yield* Effect.tryPromise({ try: () => service.awaitResult!(jobId, options), catch: toError });
+          Obj.update(artifactObj, (artifactObj) => {
+            artifactObj.jobId = undefined;
+          });
+          return awaited;
+        }
+        if (service.generate) {
+          return yield* Effect.tryPromise({ try: () => service.generate!(request, options), catch: toError });
+        }
+        return yield* Effect.fail(
+          new GenerationService.GenerationError(`Provider ${service.id} implements neither generate nor enqueue.`),
+        );
+      });
+
+      const result = yield* run.pipe(Effect.ensuring(Effect.sync(() => monitor?.remove())));
 
       for (const data of result.variants) {
         const variant = Variant.make({
