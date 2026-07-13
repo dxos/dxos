@@ -298,13 +298,7 @@
       "path": "../../plugins/plugin-freeq"
     },
     {
-      "path": "../../plugins/plugin-gallery"
-    },
-    {
       "path": "../../plugins/plugin-game"
-    },
-    {
-      "path": "../../plugins/plugin-generator"
     },
     {
       "path": "../../plugins/plugin-github"
@@ -313,7 +307,13 @@
       "path": "../../plugins/plugin-graph"
     },
     {
+      "path": "../../plugins/plugin-heygen"
+    },
+    {
       "path": "../../plugins/plugin-ibkr"
+    },
+    {
+      "path": "../../plugins/plugin-ideogram"
     },
     {
       "path": "../../plugins/plugin-inbox"
@@ -439,6 +439,9 @@
       "path": "../../plugins/plugin-status-bar"
     },
     {
+      "path": "../../plugins/plugin-studio"
+    },
+    {
       "path": "../../plugins/plugin-support"
     },
     {
@@ -518,6 +521,9 @@
     },
     {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../../sdk/worker-framework"
     },
     {
       "path": "../../ui/brand"

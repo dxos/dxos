@@ -54,6 +54,10 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
 - **Workspace deps use `workspace:*`.** Any in-repo `@dxos` package is added with
   `workspace:*`, never from the catalog. The catalog is for external packages
   only. Add deps with `pnpm add --filter "<project>" --save-catalog "<package>"`.
+  **`peerDependencies` use `workspace:^`** (caret, not `*`) — a `*` pin reads as
+  out-of-range on any bump and would cascade the fixed publish group to a
+  spurious major. Do not "simplify" it to `*`. Why it matters:
+  `.github/RELEASE-SPEC.md`.
 - **Never edit the main checkout.** All file edits target the assigned worktree
   path, never the bare repo root or another worktree (the `guard-worktree.sh`
   hook denies these).
@@ -107,9 +111,9 @@ Deeper conventions:
 
 ## Git & PR workflow
 
-- **PR titles use conventional-commit format**, scope when relevant:
-  `feat(echo): add group aggregates`, `fix: resolve subscription leak`,
-  `refactor: simplify error handling`, `docs: update Space API`.
+- **Commit messages and PR titles: `scope: description`.** Scope is the
+  package or area most affected (e.g. `echo`, `plugin-markdown`, `release`);
+  description is a concise, imperative summary.
 - **CI is one workflow, "Check"** — build, test, lint, fmt. A red Check is your
   failure, not pre-existing; fix the root cause on the branch, never merge
   around it. Inspect: `gh run list --branch <branch> --workflow "Check"`, then
@@ -117,6 +121,9 @@ Deeper conventions:
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
   skills. Always surface the Composer preview URL next to the PR link.
+- Consumer-relevant changes need a `.changeset/*.md` before opening the PR —
+  see [`agents/instructions/changesets.md`](agents/instructions/changesets.md)
+  for when to add one, which package to name, and bump levels.
 
 ## Where things live
 

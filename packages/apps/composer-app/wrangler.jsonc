@@ -1,0 +1,49 @@
+{
+  // Cloudflare Workers (Static Assets) config for Composer. Migrated from Pages advanced mode: `_worker.js`
+  // is the Worker entry (main), static assets are served via the ASSETS binding, and /api/* runs the Worker
+  // first (feedback-logs, RSS proxy, OTel -> SigNoz) while every other route is asset-first with SPA fallback.
+  // Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
+  // `_worker.js` lives in the asset dir (the still-on-Pages preview build also consumes it there), so it is
+  // kept out of the asset upload with a generated `.assetsignore`. Bindings match what `_worker.ts` reads.
+  // Local dev: `moon run composer-app:bundle && wrangler dev` (uses the default bindings below).
+  // Tail production logs: `wrangler tail composer`.
+  "name": "composer",
+  "main": "./out/composer/_worker.js",
+  "compatibility_date": "2024-04-05",
+  // Default / local-dev bindings (wrangler dev); per-env deploys use the `env` sections below.
+  "vars": { "ENVIRONMENT": "dev", "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud" },
+  "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
+  "assets": {
+    "directory": "./out/composer",
+    "binding": "ASSETS",
+    // Unmatched routes return index.html (client-side router owns them)...
+    "not_found_handling": "single-page-application",
+    // ...except /api/*, which must reach the Worker before the SPA fallback swallows it.
+    "run_worker_first": ["/api/*"],
+  },
+  // Per-env Workers (name = the deployed Worker; production = the bare name that carries the custom domain,
+  // others suffixed). Bindings are NOT inherited, so each env repeats them. Cloudflare-side: each Worker
+  // needs its R2 bucket + the SIGNOZ_INGESTION_KEY secret (`wrangler secret put --env <env>`).
+  "env": {
+    "production": {
+      "name": "composer",
+      "vars": { "ENVIRONMENT": "production", "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud" },
+      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs" }],
+    },
+    "staging": {
+      "name": "composer-staging",
+      "vars": { "ENVIRONMENT": "staging", "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud" },
+      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-preview" }],
+    },
+    "labs": {
+      "name": "composer-labs",
+      "vars": { "ENVIRONMENT": "labs", "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud" },
+      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
+    },
+    "main": {
+      "name": "composer-main",
+      "vars": { "ENVIRONMENT": "main", "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud" },
+      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
+    },
+  },
+}

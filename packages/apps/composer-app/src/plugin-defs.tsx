@@ -35,12 +35,12 @@ import { DuffelPlugin } from '@dxos/plugin-duffel/plugin';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
 import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { FreeqPlugin } from '@dxos/plugin-freeq/plugin';
-import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
-import { GeneratorPlugin } from '@dxos/plugin-generator/plugin';
 import { GitHubPlugin } from '@dxos/plugin-github/plugin';
 import { GraphPlugin } from '@dxos/plugin-graph/plugin';
+import { HeyGenPlugin } from '@dxos/plugin-heygen/plugin';
 import { IbkrPlugin } from '@dxos/plugin-ibkr/plugin';
+import { IdeogramPlugin } from '@dxos/plugin-ideogram/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
 import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
@@ -82,6 +82,7 @@ import { SpacetimePlugin } from '@dxos/plugin-spacetime/plugin';
 import { SpotlightPlugin } from '@dxos/plugin-spotlight/plugin';
 import { StackPlugin } from '@dxos/plugin-stack/plugin';
 import { StatusBarPlugin } from '@dxos/plugin-status-bar/plugin';
+import { StudioPlugin } from '@dxos/plugin-studio/plugin';
 import { SupportPlugin } from '@dxos/plugin-support/plugin';
 import { TablePlugin } from '@dxos/plugin-table/plugin';
 import { ThemePlugin } from '@dxos/plugin-theme/plugin';
@@ -148,8 +149,10 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       CodePlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
       MagazinePlugin.meta.profile.key,
-      GalleryPlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
+      IdeogramPlugin.meta.profile.key,
+      HeyGenPlugin.meta.profile.key,
+      StudioPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
       OsrmPlugin.meta.profile.key,
       OutlinerPlugin.meta.profile.key,
@@ -219,10 +222,12 @@ export const getPlugins = ({
     DoctorPlugin(),
     DuffelPlugin(),
     IbkrPlugin(),
+    IdeogramPlugin(),
+    HeyGenPlugin(),
+    StudioPlugin(),
     ExplorerPlugin(),
     MagazinePlugin(),
     GamePlugin(),
-    GeneratorPlugin(),
     GraphPlugin(),
     InboxPlugin(),
     KanbanPlugin(),
@@ -282,7 +287,6 @@ export const getPlugins = ({
     // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
     BlueskyPlugin(),
     FreeqPlugin(),
-    GalleryPlugin(),
     GitHubPlugin(),
     IrohBeaconPlugin(),
     LinearPlugin(),

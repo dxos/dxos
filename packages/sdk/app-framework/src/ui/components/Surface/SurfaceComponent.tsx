@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import React, {
   type FC,
   Fragment,
@@ -10,6 +10,8 @@ import React, {
   Profiler,
   Suspense,
   memo,
+  useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -20,11 +22,9 @@ import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useDefaultValue } from '@dxos/react-hooks';
 
 import { Capabilities, Role } from '../../../common';
-import { type CapabilityManager } from '../../../core';
 import { usePluginManager } from '../PluginManager';
 import { SurfaceContext } from './context';
 import { DebugSurface, isSurfaceDebugEnabled, isSurfaceWrapperEnabled } from './SurfaceDebug';
-import { indexByRole } from './SurfaceManager';
 import { useSurfaceManager } from './SurfaceManagerContext';
 import { nextDataChurn, surfaceMetrics } from './SurfaceMetrics';
 import { useSurfaceProfilerCallback } from './SurfaceProfilerContext';
@@ -295,22 +295,34 @@ export const useSurfaces = () => {
 };
 
 /**
- * @returns `true` if there is a contributed surface which matches the specified role & data, `false` otherwise.
+ * Reports whether a contributed surface matches the given role & data, without mounting it.
  *
  * Typed: pass a `type` role token and `data` is constrained to the token's
  * declared contract (e.g. `AppSurface.Section` requires `attendableId`).
  */
-export function isSurfaceAvailable<TToken extends Role.Role<any>>(
-  capabilityManager: CapabilityManager.CapabilityManager,
-  args: { type: TToken; data?: Role.Data<TToken> },
-): boolean {
-  const effectiveRole = args.type?.role;
-  if (effectiveRole == null) {
-    return false;
-  }
+type IsSurfaceAvailable = <TToken extends Role.Role<any>>(args: { type: TToken; data?: Role.Data<TToken> }) => boolean;
 
-  const surfaces = capabilityManager.getAll(Capabilities.ReactSurface);
-  const index = indexByRole(surfaces.flat());
-  const candidates = matchCandidates(index.get(effectiveRole), effectiveRole, args.data as Props['data']);
-  return candidates.length > 0;
-}
+/**
+ * @returns a stable function that checks whether a contributed surface is available for a
+ * role & data. The surface manager is captured via context, so the returned function carries
+ * no dependency of its own and is safe to store and invoke later — e.g. from inside another
+ * callback such as a render-prop or event handler — since it calls no hooks itself.
+ */
+export const useIsSurfaceAvailable = (): IsSurfaceAvailable => {
+  const surfaceManager = useSurfaceManager();
+  const registry = useContext(RegistryContext);
+  return useCallback(
+    (args: { type: Role.Role<any>; data?: Props['data'] }) => {
+      const effectiveRole = args.type?.role;
+      if (effectiveRole == null) {
+        return false;
+      }
+
+      const roleCandidates = registry.get(surfaceManager.candidatesAtom(effectiveRole));
+      return matchCandidates(roleCandidates, effectiveRole, args.data).length > 0;
+    },
+    [surfaceManager, registry],
+    // `useCallback` widens a generic callback to its inferred concrete parameter type; cast back
+    // to the generic signature so callers still get `data` narrowed to the passed token's contract.
+  ) as IsSurfaceAvailable;
+};
