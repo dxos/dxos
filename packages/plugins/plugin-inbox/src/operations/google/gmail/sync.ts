@@ -218,6 +218,15 @@ export const runGmailSync = ({
       }),
     );
     const advanceProgress = (by: number) => progressMonitors.forEach((monitor) => monitor.advance(by));
+    // Accumulate the exact retrieval total as each date chunk's id list is enumerated (known before any
+    // full-message fetch), revising the meter's total so it renders a determinate bar even without a
+    // time estimate. Chunks enumerate serially and always before their ids reach the fetch stage, so
+    // `total` leads `current`.
+    let totalToRetrieve = 0;
+    const addToTotal = (count: number) => {
+      totalToRetrieve += count;
+      progressMonitors.forEach((monitor) => monitor.total(totalToRetrieve));
+    };
 
     // Drops every message once cancelled (returning undefined removes it — see `decodeBodyStage`), so
     // the pipeline skips all remaining fetch/decode/commit work and completes promptly.
@@ -281,7 +290,6 @@ export const runGmailSync = ({
         }
         attachmentCount += mapped.attachments?.length ?? 0;
         publishStats();
-        advanceProgress(1);
         return mapped;
       }),
     );
@@ -293,6 +301,10 @@ export const runGmailSync = ({
       start,
       end: rangeEnd,
       searchFilter: targetOptions.filter,
+      onEnumerated: addToTotal,
+      // Advance at retrieval (one per fetched message) so `current` reaches `total`; dedup/decode drops
+      // happen downstream of the source, so counting there would leave the bar short of 100%.
+      onRetrieved: () => advanceProgress(1),
     }).pipe(
       cancelStage,
       SyncBinding.dedupStage<GoogleMail.Message>(
@@ -472,6 +484,10 @@ type GmailSourceConfig = {
   readonly start: Date;
   readonly end: Date;
   readonly searchFilter?: string;
+  /** Called with each date chunk's enumerated id count, to accumulate the retrieval total. */
+  readonly onEnumerated?: (count: number) => void;
+  /** Called once per message retrieved (full fetch), to advance progress. */
+  readonly onRetrieved?: () => void;
 };
 
 /**
@@ -504,6 +520,7 @@ const gmailSource = (config: GmailSourceConfig) =>
               dateChunk,
               config.direction,
               config.searchFilter,
+              config.onEnumerated,
             ),
           {
             concurrency: 1,
@@ -513,7 +530,11 @@ const gmailSource = (config: GmailSourceConfig) =>
 
       return messageIds.pipe(
         Stream.mapEffect(
-          (messageId) => api.getMessage(config.userId, messageId).pipe(Effect.withSpan('gmail-sync.fetch.message')),
+          (messageId) =>
+            api.getMessage(config.userId, messageId).pipe(
+              Effect.withSpan('gmail-sync.fetch.message'),
+              Effect.tap(() => Effect.sync(() => config.onRetrieved?.())),
+            ),
           { concurrency: STREAMING_CONFIG.messageFetchConcurrency },
         ),
       );
@@ -559,6 +580,7 @@ const fetchMessagesForDateRange = (
   dateChunk: DateChunk,
   direction: Cursor.Direction,
   searchFilter?: string,
+  onEnumerated?: (count: number) => void,
 ) =>
   Stream.unwrap(
     Effect.gen(function* () {
@@ -594,6 +616,9 @@ const fetchMessagesForDateRange = (
       // messages commit first; a `forward` walk (incremental resume) wants oldest-first across the
       // whole chunk, matching the chunk-level walk direction (see `generateDateRanges`).
       const orderedMessageIds = direction === 'forward' ? messageIds.slice().reverse() : messageIds;
+      // Report this chunk's exact count now (before any full-message fetch) so the meter's retrieval
+      // total leads the per-message advance.
+      onEnumerated?.(orderedMessageIds.length);
       return Stream.fromIterable(orderedMessageIds);
     }),
   );
