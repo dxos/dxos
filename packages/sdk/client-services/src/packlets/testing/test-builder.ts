@@ -52,9 +52,12 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
     signalManager: new MemorySignalManager(signalManagerContext),
     transportFactory: MemoryTransportFactory,
     runtime: ManagedRuntime.make(
-      SqlTransaction.layer
-        .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
-        .pipe(Layer.orDie),
+      Layer.empty.pipe(
+        Layer.provideMerge(SqlTransaction.layer),
+        Layer.provideMerge(sqliteLayerMemory),
+        Layer.provideMerge(Reactivity.layer),
+        Layer.orDie,
+      ),
     ).runtimeEffect,
   });
 };
@@ -75,15 +78,18 @@ export const createServiceContext = async ({
     transportFactory: MemoryTransportFactory,
   });
 
-  const stackLayer = ServiceContextLayer({
-    invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
-    ...runtimeProps,
-  }).pipe(
+  const stackLayer = Layer.empty.pipe(
+    Layer.provideMerge(
+      ServiceContextLayer({
+        invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
+        ...runtimeProps,
+      }),
+    ),
     Layer.provideMerge(Layer.succeed(SwarmNetworkManagerService, networkManager)),
     Layer.provideMerge(Layer.succeed(SignalManagerService, signalManager)),
-    Layer.provideMerge(
-      SqlTransaction.layer.pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer)),
-    ),
+    Layer.provideMerge(SqlTransaction.layer),
+    Layer.provideMerge(sqliteLayerMemory),
+    Layer.provideMerge(Reactivity.layer),
     Layer.orDie,
   );
 
@@ -161,9 +167,12 @@ export type TestPeerProps = {
 export class TestPeer {
   private _props: TestPeerProps = {};
   private readonly _runtime = ManagedRuntime.make(
-    SqlTransaction.layer
-      .pipe(Layer.provideMerge(sqliteLayerMemory), Layer.provideMerge(Reactivity.layer))
-      .pipe(Layer.orDie),
+    Layer.empty.pipe(
+      Layer.provideMerge(SqlTransaction.layer),
+      Layer.provideMerge(sqliteLayerMemory),
+      Layer.provideMerge(Reactivity.layer),
+      Layer.orDie,
+    ),
   );
   private readonly _feedStorage = new SqliteStorage({ runtime: this._runtime.runtimeEffect });
 

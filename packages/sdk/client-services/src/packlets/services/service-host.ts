@@ -377,11 +377,15 @@ export class ClientServicesHost {
           iceProviders: config.get('runtime.services.iceProviders'),
         });
 
-    // Two compositions because the edge stack genuinely requires the edge-client services that the
-    // non-edge stack neither provides nor needs — `Layer`'s `ROut` is contravariant, so `Layer.empty`
-    // cannot stand in as a provider of those services. Edge clients sit at the base so the edge
-    // signal manager, edge replicator and feed syncer share the single connection; the feed syncer
-    // sits above the core for its `EchoHostService`.
+    // The edge and non-edge stacks cannot collapse into a single parameterized stack (the layer style
+    // guide's "one stack, variations as options"): the edge-only layers — edge clients, edge
+    // replicator, feed syncer and the edge signal manager — genuinely *require* the edge-client
+    // services, and `Layer`'s `ROut` is contravariant, so a `Layer.empty` in those slots cannot stand
+    // in as their provider without `EdgeConnectionService` leaking into the runtime's requirements.
+    // The two stacks are therefore built from the same shared layer bindings (above) and diverge only
+    // in the edge-only insertions below. Edge clients sit at the base so the edge signal manager, edge
+    // replicator and feed syncer share the single connection; the feed syncer sits above the core for
+    // its `EchoHostService`.
     if (endpoint) {
       const clientTag = resolveTelemetryTag(config);
       const edgeClientsLayer = Layer.mergeAll(
@@ -395,7 +399,8 @@ export class ClientServicesHost {
           : WebsocketSignalManagerLayer(config.get('runtime.services.signaling') ?? []);
 
       return ManagedRuntime.make(
-        ClientServicesRpcLayer.pipe(
+        Layer.empty.pipe(
+          Layer.provideMerge(ClientServicesRpcLayer),
           Layer.provideMerge(lifecycleLayer),
           Layer.provideMerge(feedSyncerLayer),
           Layer.provideMerge(ServiceContextLayer(serviceContextOptions)),
@@ -415,7 +420,8 @@ export class ClientServicesHost {
       : WebsocketSignalManagerLayer(config.get('runtime.services.signaling') ?? []);
 
     return ManagedRuntime.make(
-      ClientServicesRpcLayer.pipe(
+      Layer.empty.pipe(
+        Layer.provideMerge(ClientServicesRpcLayer),
         Layer.provideMerge(lifecycleLayer),
         Layer.provideMerge(ServiceContextLayer(serviceContextOptions)),
         Layer.provideMerge(networkManagerLayer),
@@ -627,7 +633,8 @@ export const ServiceContextLayer = (
  * Composes the non-optional core layers into a single stack that callers merge beneath their top layer.
  */
 const coreLayers = (options: ServiceContextLayerOptions) =>
-  CrossDeviceSpaceSynchronizerLayer.pipe(
+  Layer.empty.pipe(
+    Layer.provideMerge(CrossDeviceSpaceSynchronizerLayer),
     Layer.provideMerge(EdgeAgentManagerLayer({ edgeFeatures: options.edgeFeatures })),
     Layer.provideMerge(DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures })),
     Layer.provideMerge(SigningContextProviderLayer),
